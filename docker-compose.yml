@@ -1,0 +1,46 @@
+version: '3'
+
+
+services:
+
+  spm_db: 
+    container_name: spm_db
+    build:
+      context: .
+      dockerfile: database/Dockerfile
+    image: spm/db:latest
+    restart: unless-stopped
+    ports: [ "5432:5432" ]
+    volumes:
+      - spm-db-data:/var/lib/pgsql/data
+      - ./data:/data
+
+  spm_plat:
+    container_name: spm_plat
+    build:
+      context: .
+      dockerfile: platform/Dockerfile
+    image: spm/platform-mock:latest
+    restart: unless-stopped
+    ports:
+      - 9092:9092
+    volumes:
+      - ./data:/data
+
+  spm_proto_py:
+    container_name: spm_proto_py
+    build:
+      context: .
+      dockerfile: './prototypes/py/Dockerfile'
+    depends_on:
+      - spm_db
+      - spm_plat
+    image: spm/prototype-pye:latest
+    restart: unless-stopped
+    ports: 
+      - 8000:8000
+    volumes:
+      - ./data:/data
+  
+volumes:
+  spm-db-data:
