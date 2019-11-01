@@ -1,20 +1,31 @@
 version: '3'
 
-services:
 
-  spm_db: 
-    container_name: spm_db
-    build:
-      context: .
-      dockerfile: database/Dockerfile
-    image: spm/db:latest
-    restart: unless-stopped
-    ports: [ "5432:5432" ]
+services:
+#  spm_db:
+#    container_name: spm_db
+#    build:
+#      context: .
+#      dockerfile: database/Dockerfile
+#    image: spm/db:latest
+#    restart: unless-stopped
+#    ports: [ "5432:5432" ]
+#    volumes:
+#      - spm-db-data:/var/lib/pgsql/data
+#      - ./data:/data:z
+#    env_file:
+#      - ./conf/common.env
+
+  spm_db:
+    image: postgres:10.0-alpine
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: spm
+      POSTGRES_USER: spm_admin
+      POSTGRES_PASSWORD: spm_admin_pwd
     volumes:
-      - spm-db-data:/var/lib/pgsql/data
-      - ./data:/data:z
-    env_file:
-      - ./conf/common.env
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
 
   spm_plat:
     container_name: spm_plat
@@ -30,7 +41,6 @@ services:
     env_file:
       - ./conf/common.env
 
-
   spm_proto_py:
     container_name: spm_proto_py
     build:
@@ -41,12 +51,44 @@ services:
       - spm_plat
     image: spm/prototype-pye:latest
     restart: unless-stopped
-    ports: 
+    ports:
       - 8000:8000
     volumes:
       - ./data:/data:z
     env_file:
       - ./conf/common.env
+
+  go:
+    image: golang:1.12.3
+    environment:
+      GOPATH: /go
+
+      DB_TYPE: postgres
+      DB_HOST: spm_db
+      DB_NAME: spm
+      DB_USER: spm_admin
+      DB_PASSWD: spm_admin_pwd
+      DB_PORT: 5432
+
+      PRIVATE_API_USER: admin
+      PRIVATE_API_PASSWD: passwd
+
+      GIN_MODE: release
+      LOG_LEVEL: debug
+      LOG_STYLE: json
+
+      LISTENER_KAFKA_TOPIC: host.packages
+      LISTENER_KAFKA_ADDRESS: spm_plat:9092
+      LISTENER_BUFFER_SIZE: "10"
+    volumes:
+      - ./prototypes/go:/go/src/gin-container
+    working_dir: /go/src/gin-container
+    command: go run -v main.go --listener
+    ports:
+      - 8080:8080
+    depends_on:
+      - spm_db
+      - spm_plat
 
 volumes:
   spm-db-data:

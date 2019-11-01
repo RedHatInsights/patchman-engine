@@ -1,0 +1,13 @@
+version: '3'
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      GOPATH: /go
+      GIN_MODE: release
+      LOG_LEVEL: debug
+      LOG_STYLE: json
+    working_dir: /go/src/gin-container
+    command: ./scripts/go_test.sh

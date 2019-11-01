@@ -1,0 +1,3 @@
+FROM golang:1.12.3
+
+COPY . /go/src/gin-container

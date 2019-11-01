@@ -1,0 +1,60 @@
+version: '3'
+services:
+  web:
+    image: golang:1.12.3
+    environment:
+      GOPATH: /go
+
+      DB_TYPE: postgres
+      DB_HOST: db
+      DB_NAME: app
+      DB_USER: admin
+      DB_PASSWD: passwd
+      DB_PORT: 5432
+
+      PRIVATE_API_USER: admin
+      PRIVATE_API_PASSWD: passwd
+
+      GIN_MODE: release
+      LOG_LEVEL: debug
+      LOG_STYLE: json
+    volumes:
+      - .:/go/src/gin-container
+    working_dir: /go/src/gin-container
+    command: go run -v main.go
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+
+  listener:
+    image: golang:1.12.3
+    environment:
+      GOPATH: /go
+
+      DB_TYPE: postgres
+      DB_HOST: db
+      DB_NAME: app
+      DB_USER: admin
+      DB_PASSWD: passwd
+      DB_PORT: 5432
+
+      LOG_LEVEL: debug
+      LOG_STYLE: json
+    volumes:
+      - .:/go/src/gin-container
+    working_dir: /go/src/gin-container
+    command: go run -v main.go listener
+    depends_on:
+      - db
+
+  db:
+    image: postgres:10.0-alpine
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: passwd
+    volumes:
+      - ./migrations/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
