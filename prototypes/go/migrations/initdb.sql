@@ -1,4 +1,3 @@
-
 create table if not exists hosts
 (
     id       integer primary key,

@@ -1,0 +1,5 @@
+FROM golang:1.12.3
+
+COPY . /go/src/gin-container
+
+RUN cd /go/src/gin-container && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o appbin
