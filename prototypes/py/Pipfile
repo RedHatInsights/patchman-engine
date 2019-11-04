@@ -7,6 +7,11 @@ verify_ssl = true
 
 [packages]
 connexion = {extras = ["swagger-ui"],version = "*"}
+peewee = "*"
+psycopg2-binary = "*"
+aiokafka = "==0.5.0"
+kafka-python = "==1.4.3"
+watchtower = "==0.6.0"
 
 [requires]
 python_version = "3.6"

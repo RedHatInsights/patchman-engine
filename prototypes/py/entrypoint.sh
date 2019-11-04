@@ -1,4 +1,5 @@
 #!/bin/sh
 
 cd $(dirname $0)
-exec python3 -m main
+
+exec ./wait-for-services.sh python3 -m main
