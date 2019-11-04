@@ -46,11 +46,14 @@ done
 # create topics with multiple partitions for scaling
 for topic in host.packages host.test
 do
-    ./kafka/bin/kafka-topics.sh --create --topic $topic --partitions 2 --zookeeper localhost:2181 --replication-factor 1
+    ./kafka/bin/kafka-topics.sh --create --topic $topic --partitions 1 --zookeeper localhost:2181 --replication-factor 1
 done
+
+# generate kafka request messages
+./generate_requests.py
+
+# send messages to kafka
+./send-kafka-requests.sh
 
 # run upload mock
 exec ./wait-for-services.sh sleep 5000000
-
-
-
