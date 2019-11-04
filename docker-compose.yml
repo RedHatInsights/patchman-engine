@@ -1,6 +1,5 @@
 version: '3'
 
-
 services:
 
   spm_db: 
@@ -13,7 +12,9 @@ services:
     ports: [ "5432:5432" ]
     volumes:
       - spm-db-data:/var/lib/pgsql/data
-      - ./data:/data
+      - ./data:/data:z
+    env_file:
+      - ./conf/common.env
 
   spm_plat:
     container_name: spm_plat
@@ -23,9 +24,12 @@ services:
     image: spm/platform-mock:latest
     restart: unless-stopped
     ports:
-      - 9092:9092
+      - "9092:9092"
     volumes:
-      - ./data:/data
+      - ./data:/data:z
+    env_file:
+      - ./conf/common.env
+
 
   spm_proto_py:
     container_name: spm_proto_py
@@ -40,7 +44,9 @@ services:
     ports: 
       - 8000:8000
     volumes:
-      - ./data:/data
-  
+      - ./data:/data:z
+    env_file:
+      - ./conf/common.env
+
 volumes:
   spm-db-data:
