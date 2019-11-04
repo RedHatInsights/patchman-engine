@@ -13,20 +13,14 @@ RUN cd /platform && \
     curl https://www.apache.org/dist/kafka/2.2.0/kafka_2.12-2.2.0.tgz \
     | tar -xz --strip-components=1 -C kafka/
 
-
 ENV LC_ALL=en_US.utf8
 ENV LANG=en_US.utf8
 RUN pip install --upgrade pip pipenv kafka
 
-
-RUN adduser --gid 0 -d /platform --no-create-home insights && \
-    chown -R insights /platform
-
-USER insights
-
 EXPOSE 2181 9092
 
 ADD /platform /platform/
-ADD /scripts/*.sh /platform/
+ADD /data     /platform/data
+ADD /scripts/* /platform/
 
 CMD /platform/entrypoint.sh
