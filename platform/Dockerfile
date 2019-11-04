@@ -6,7 +6,6 @@ RUN yum -y install centos-release-scl && \
 
 ENV PATH=/opt/rh/rh-python36/root/usr/bin:$PATH
 
-
 WORKDIR /platform
 
 RUN cd /platform && \
@@ -14,13 +13,20 @@ RUN cd /platform && \
     curl https://www.apache.org/dist/kafka/2.2.0/kafka_2.12-2.2.0.tgz \
     | tar -xz --strip-components=1 -C kafka/
 
+
+ENV LC_ALL=en_US.utf8
+ENV LANG=en_US.utf8
+RUN pip install --upgrade pip pipenv kafka
+
+
 RUN adduser --gid 0 -d /platform --no-create-home insights && \
     chown -R insights /platform
 
 USER insights
 
-EXPOSE 9092
+EXPOSE 2181 9092
 
+ADD /platform /platform/
 ADD /scripts/*.sh /platform/
 
-CMD /platform/wait-for-kafka.sh
+CMD /platform/entrypoint.sh
