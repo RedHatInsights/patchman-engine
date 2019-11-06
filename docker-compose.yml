@@ -1,40 +1,37 @@
 version: '3'
 
-
 services:
-  spm_db:
+  db:
     image: postgres:10.0-alpine
     ports:
       - 5432:5432
     environment:
-      POSTGRES_DB: spm
-      POSTGRES_USER: spm_admin
-      POSTGRES_PASSWORD: spm_admin_pwd
+      POSTGRES_DB: app
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: passwd
     volumes:
       - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
 
-  spm_plat:
-    container_name: spm_plat
+  platform:
     build:
       context: .
       dockerfile: platform/Dockerfile
-    image: spm/platform-mock:latest
     restart: unless-stopped
     ports:
-      - "9092:9092"
+      - 9092:9092
     volumes:
       - ./data:/data:z
     env_file:
       - ./conf/common.env
 
-  spm_proto_py:
+  python:
     container_name: spm_proto_py
     build:
       context: .
-      dockerfile: './prototypes/py/Dockerfile'
+      dockerfile: ./prototypes/py/Dockerfile
     depends_on:
-      - spm_db
-      - spm_plat
+      - db
+      - platform
     image: spm/prototype-pye:latest
     restart: unless-stopped
     ports:
@@ -52,10 +49,10 @@ services:
       GOPATH: /go
 
       DB_TYPE: postgres
-      DB_HOST: spm_db
-      DB_NAME: spm
-      DB_USER: spm_admin
-      DB_PASSWD: spm_admin_pwd
+      DB_HOST: db
+      DB_NAME: app
+      DB_USER: admin
+      DB_PASSWD: passwd
       DB_PORT: 5432
 
       PRIVATE_API_USER: admin
@@ -66,16 +63,15 @@ services:
       LOG_STYLE: json
 
       LISTENER_KAFKA_TOPIC: host.packages
-      LISTENER_KAFKA_ADDRESS: spm_plat:9092
+      LISTENER_KAFKA_ADDRESS: platform:9092
       LISTENER_BUFFER_SIZE: "10"
 
       BENCHMARK_MESSAGES: "30"
     volumes:
       - ./prototypes/go/app:/go/src/gin-container/app
-    working_dir: /go/src/gin-container
     command: go run -v main.go --listener
     ports:
       - 8080:8080
     depends_on:
-      - spm_db
-      - spm_plat
+      - db
+      - platform
