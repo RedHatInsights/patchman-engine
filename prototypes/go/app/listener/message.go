@@ -16,7 +16,7 @@ type Message struct {
 func (msg *Message) FilterPackages() {
 	packages2 := make([]string, 0, len(*msg.Packages))
 	for _, pkg := range *msg.Packages {
-		nevra, err := utils.ParseRpmName(pkg)
+		nevra, err := utils.ParseNevra(pkg)
 		if err != nil {
 			utils.Log("err", err.Error(), "nevra", pkg).Error("unable to parse nevra")
 		}
