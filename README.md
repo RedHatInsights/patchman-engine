@@ -23,3 +23,7 @@ cd prototypes/go/scripts
 ./list.sh # see output
 ./get_host.sh 1 # get item of id 1, check content
 ~~~
+- Terminal 4
+~~~bash
+docker-compose up --build ab # run apache benchmark (n - requests, c - parallel)
+~~~
