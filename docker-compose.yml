@@ -2,20 +2,6 @@ version: '3'
 
 
 services:
-#  spm_db:
-#    container_name: spm_db
-#    build:
-#      context: .
-#      dockerfile: database/Dockerfile
-#    image: spm/db:latest
-#    restart: unless-stopped
-#    ports: [ "5432:5432" ]
-#    volumes:
-#      - spm-db-data:/var/lib/pgsql/data
-#      - ./data:/data:z
-#    env_file:
-#      - ./conf/common.env
-
   spm_db:
     image: postgres:10.0-alpine
     ports:
