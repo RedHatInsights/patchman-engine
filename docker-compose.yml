@@ -45,7 +45,9 @@ services:
       - ./conf/common.env
 
   go:
-    image: golang:1.12.3
+    build:
+      context: ./prototypes/go
+      dockerfile: Dockerfile
     environment:
       GOPATH: /go
 
@@ -69,7 +71,7 @@ services:
 
       BENCHMARK_MESSAGES: "30"
     volumes:
-      - ./prototypes/go:/go/src/gin-container
+      - ./prototypes/go/app:/go/src/gin-container/app
     working_dir: /go/src/gin-container
     command: go run -v main.go --listener
     ports:
@@ -77,6 +79,3 @@ services:
     depends_on:
       - spm_db
       - spm_plat
-
-volumes:
-  spm-db-data:
