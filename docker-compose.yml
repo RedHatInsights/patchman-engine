@@ -24,6 +24,11 @@ services:
     env_file:
       - ./conf/common.env
 
+  ab:
+    build:
+      context: apache-benchmark
+    command: ab -n 100 -c 10 go:8080/hosts/1
+
   python:
     container_name: spm_proto_py
     build:
