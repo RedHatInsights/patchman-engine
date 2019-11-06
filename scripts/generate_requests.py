@@ -6,7 +6,7 @@ import os
 PKGLIST = open("./data/pkglist.txt")
 ARCHS = ['i386', 'i586', 'i686', 'x86_64']
 PKGS = PKGLIST.read().splitlines()
-N_REQS = int(os.getenv('GENERATE_MESSAGES'))
+N_REQS = int(os.getenv('BENCHMARK_MESSAGES'))
 
 os.makedirs('data/body', exist_ok=True)
 

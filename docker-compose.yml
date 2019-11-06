@@ -19,6 +19,8 @@ services:
       context: .
       dockerfile: platform/Dockerfile
     restart: unless-stopped
+    depends_on:
+      - db
     ports:
       - 9092:9092
     volumes:
@@ -34,17 +36,16 @@ services:
     command: ab -n 100 -c 10 go:8080/hosts/1
 
   python:
-    container_name: spm_proto_py
     build:
       context: .
       dockerfile: ./prototypes/py/Dockerfile
     depends_on:
       - db
       - platform
-    image: spm/prototype-pye:latest
+    image: spm/prototype-py:latest
     restart: unless-stopped
     ports:
-      - 8000:8000
+      - 8081:8081
     volumes:
       - ./data:/data:z
     env_file:
@@ -59,13 +60,6 @@ services:
     environment:
       GOPATH: /go
 
-      DB_TYPE: postgres
-      DB_HOST: db
-      DB_NAME: app
-      DB_USER: admin
-      DB_PASSWD: passwd
-      DB_PORT: 5432
-
       PRIVATE_API_USER: admin
       PRIVATE_API_PASSWD: passwd
 
@@ -73,12 +67,8 @@ services:
       LOG_LEVEL: debug
       LOG_STYLE: json
 
-      LISTENER_KAFKA_TOPIC: host.packages
-      LISTENER_KAFKA_ADDRESS: platform:9092
-      LISTENER_BUFFER_SIZE: "10"
-      LISTENER_BATCH_WRITE: "on"
-
-      BENCHMARK_MESSAGES: "30"
+    env_file:
+      - ./conf/common.env
     volumes:
       - ./prototypes/go/app:/go/src/gin-container/app
     command: go run -v main.go --listener
