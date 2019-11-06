@@ -53,7 +53,7 @@ done
 ./generate_requests.py
 
 # send messages to kafka
-./send-kafka-requests.sh
+./wait-for-services.sh ./send-kafka-requests.sh
 
 # run upload mock
 exec ./wait-for-services.sh sleep 5000000

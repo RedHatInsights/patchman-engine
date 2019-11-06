@@ -4,9 +4,9 @@ set -e
 
 cmd="$@"
 
-if [ ! -z "$POSTGRESQL_DATABASE" ]; then
+if [ ! -z "$DB_HOST" ]; then
   >&2 echo "Checking if PostgreSQL is up"
-  until PGPASSWORD="$POSTGRESQL_PASSWORD" psql -h "$POSTGRESQL_HOST" -p "$POSTGRESQL_PORT" -U "$POSTGRESQL_USER" -d "$POSTGRESQL_DATABASE" -c '\q' -q 2>/dev/null; do
+  until PGPASSWORD="$DB_PASSWD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c '\q' -q 2>/dev/null; do
     >&2 echo "PostgreSQL is unavailable - sleeping"
     sleep 1
   done
