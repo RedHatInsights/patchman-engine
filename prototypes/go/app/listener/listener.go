@@ -11,9 +11,10 @@ import (
 )
 
 var (
-	kafkaReader        *kafka.Reader
-	storage            *Storage
-	benchmarkMessages  int
+	kafkaReader       *kafka.Reader
+	storage           *Storage
+	benchmarkMessages int
+	useBatchWrite     bool
 )
 
 func configure() {
@@ -29,8 +30,8 @@ func configure() {
 	})
 
 	bufferSize := utils.GetIntEnvOrFail("LISTENER_BUFFER_SIZE")
-	storage = InitStorage(bufferSize)
-
+	useBatchWrite = utils.GetenvOrFail("LISTENER_BATCH_WRITE") == "on"
+	storage = InitStorage(bufferSize, useBatchWrite)
 	benchmarkMessages = utils.GetIntEnvOrFail("BENCHMARK_MESSAGES")
 }
 

@@ -70,6 +70,7 @@ services:
       LISTENER_KAFKA_TOPIC: host.packages
       LISTENER_KAFKA_ADDRESS: platform:9092
       LISTENER_BUFFER_SIZE: "10"
+      LISTENER_BATCH_WRITE: "on"
 
       BENCHMARK_MESSAGES: "30"
     volumes:

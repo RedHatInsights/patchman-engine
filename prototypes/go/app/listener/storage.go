@@ -1,17 +1,23 @@
 package listener
 
 import (
+	"fmt"
 	"gin-container/app/database"
 	"gin-container/app/structures"
+	"gin-container/app/utils"
+	"strconv"
+	"strings"
 )
 
 type Storage struct {
-	buffer  *[]structures.HostDAO
+	buffer        *[]structures.HostDAO
+	useBatchWrite bool
 }
 
-func InitStorage(bufferSize int) *Storage{
+func InitStorage(bufferSize int, useBatchWrite bool) *Storage{
 	buffer := make([]structures.HostDAO, 0, bufferSize) // init empty array with given capacity
-	storage := Storage{buffer: &buffer}
+	storage := Storage{buffer: &buffer, useBatchWrite: useBatchWrite}
+	utils.Log("useBatchWrite", useBatchWrite).Info("buffered storage created")
 	return &storage
 }
 
@@ -39,6 +45,17 @@ func (s *Storage) clean() {
 }
 
 func (s *Storage) Flush() error {
+	if s.useBatchWrite {
+		err := s.flushBatch()
+		return err
+	} else {
+		err := s.flushSimple()
+		return err
+	}
+}
+
+// slower solution working with both PostgreSQL and SQLite
+func (s *Storage) flushSimple() error {
 	for _, item := range *s.buffer {
 		err := database.Db.Save(&item).Error
 		if err != nil {
@@ -46,5 +63,49 @@ func (s *Storage) Flush() error {
 		}
 	}
 	s.clean()
+	return nil
+}
+
+// https://stackoverflow.com/questions/12486436/how-do-i-batch-sql-statements-with-package-database-sql
+func replaceSQL(stmt, pattern string, len int) string {
+    pattern += ","
+    stmt = fmt.Sprintf(stmt, strings.Repeat(pattern, len))
+    n := 0
+    for strings.IndexByte(stmt, '?') != -1 {
+        n++
+        param := "$" + strconv.Itoa(n)
+        stmt = strings.Replace(stmt, "?", param, 1)
+    }
+    return strings.TrimSuffix(stmt, ",")
+}
+
+// use writing into the database in batches, doesn't work with SQLite
+func (s *Storage) flushBatch() error {
+	var vals []interface{}
+	for _, item := range *s.buffer  {
+		vals = append(vals, item.ID, item.Request, item.Checksum)
+	}
+
+	smt := `INSERT INTO hosts(id, request, checksum) VALUES %s`
+	smt = replaceSQL(smt, "(?, ?, ?)", len(*s.buffer))
+	tx, err := database.Db.DB().Begin()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(smt, vals...)
+	if err != nil {
+		errRb := tx.Rollback()
+		if errRb != nil {
+			return errRb
+		}
+		return err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	storage.clean()
 	return nil
 }

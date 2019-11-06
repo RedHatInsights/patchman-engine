@@ -10,14 +10,14 @@ import (
 )
 
 func TestStorageInit(t *testing.T) {
-	storage := InitStorage(3)
+	storage := InitStorage(3, false)
 	assert.Equal(t, 0, storage.StoredItems())
 	assert.Equal(t, 3, storage.Capacity())
 }
 
 func TestStorageFlush(t *testing.T) {
 	core.SetupTestEnvironment()
-	storage := InitStorage(3)
+	storage := InitStorage(3, false)
 
 	for _, item := range []structures.HostDAO{{ID: 1}, {ID: 2}} {
 		err := storage.Add(&item)
@@ -37,7 +37,7 @@ func TestStorageFlush(t *testing.T) {
 
 func TestStorageBuffer(t *testing.T) {
 	core.SetupTestEnvironment()
-	storage := InitStorage(2)
+	storage := InitStorage(2, false)
 
 	for _, item := range []structures.HostDAO{{ID: 1}, {ID: 2}, {ID: 3}} {
 		err := storage.Add(&item)
