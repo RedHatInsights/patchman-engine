@@ -14,17 +14,44 @@ type Message struct {
 }
 
 func (msg *Message) FilterPackages() {
-	packages2 := make([]string, 0, len(*msg.Packages))
-	for _, pkg := range *msg.Packages {
-		nevra, err := utils.ParseNevra(pkg)
-		if err != nil {
-			utils.Log("err", err.Error(), "nevra", pkg).Error("unable to parse nevra")
-		}
-		if nevra.Arch == msg.Arch {
-			packages2 = append(packages2, pkg)
+	// filter packages in parallel using go-routines
+	nPkgs := len(*msg.Packages)
+	channel := make(chan int, nPkgs)
+	for i, pkg := range *msg.Packages {
+		go filterNevra(i, pkg, msg.Arch, channel)
+	}
+
+	// create mask of filtered packages
+	packagesMask := make([]int, nPkgs)
+	for i := 0; i < nPkgs; i++ {
+		index, _ := <- channel
+		if index != -1 {
+			packagesMask[index] = 1
 		}
 	}
-	msg.Packages = &packages2
+
+	// select packages according to mask
+	filteredPackages := make([]string, 0, nPkgs)
+	for i, pkgMask := range packagesMask {
+		if pkgMask == 1 {
+			filteredPackages = append(filteredPackages, (*msg.Packages)[i])
+		}
+	}
+	msg.Packages = &filteredPackages
+}
+
+// parse nevra and check arch, send index to channel, or -1 to remove
+func filterNevra(index int, pkg, arch string, channel chan int) {
+	nevra, err := utils.ParseNevra(pkg)
+	if err != nil {
+		utils.Log("err", err.Error(), "nevra", pkg).Error("unable to parse nevra")
+	}
+
+	if nevra.Arch == arch {
+		channel <- index
+	} else {
+		channel <- -1
+	}
 }
 
 func (msg *Message) ToJSON() []byte {
