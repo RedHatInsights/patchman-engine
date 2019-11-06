@@ -7,7 +7,6 @@ The purpose of this repository is to store source code for System Patch Manager 
 This is the guide how to test Go prototype:
 - Terminal 1
 ~~~bash
-sudo setenforce 0 # turn off selinux, avoid troubles with docker-compose
 docker-compose up --build db platform # start database and platform-mock
 # wait for messages to be send (>>>>>>).
 ~~~

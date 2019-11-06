@@ -11,6 +11,8 @@ services:
       POSTGRES_PASSWORD: passwd
     volumes:
       - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    security_opt:
+      - label=disable
 
   platform:
     build:
@@ -23,6 +25,8 @@ services:
       - ./data:/data:z
     env_file:
       - ./conf/common.env
+    security_opt:
+      - label=disable
 
   ab:
     build:
@@ -45,6 +49,8 @@ services:
       - ./data:/data:z
     env_file:
       - ./conf/common.env
+    security_opt:
+      - label=disable
 
   go:
     build:
@@ -81,3 +87,5 @@ services:
     depends_on:
       - db
       - platform
+    security_opt:
+      - label=disable
