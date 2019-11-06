@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	kafkaReader *kafka.Reader
-	storage     *Storage
+	kafkaReader        *kafka.Reader
+	storage            *Storage
+	benchmarkMessages  int
 )
 
 func configure() {
@@ -29,6 +30,8 @@ func configure() {
 
 	bufferSize := utils.GetIntEnvOrFail("LISTENER_BUFFER_SIZE")
 	storage = InitStorage(bufferSize)
+
+	benchmarkMessages = utils.GetIntEnvOrFail("BENCHMARK_MESSAGES")
 }
 
 func shutdown() {
@@ -43,7 +46,7 @@ func RunListener() {
 	configure()
 	defer shutdown()
 
-	err := database.DelteAllHosts()
+	err := database.DelteAllHosts() // start with clean database, remove existing items
 	if err != nil {
 		panic(err)
 	}
@@ -51,15 +54,11 @@ func RunListener() {
 	var msg Message // struct to parse Kafka message into
 	var host structures.HostDAO // struct to store parsed msg from Kafka
 	ctx, _ := context.WithTimeout(context.Background(), time.Second * 5)
-	measStart := time.Now()
-	nWritten := 0
-	for {
-		if nWritten == 50 {
-			lastBatchDuration := time.Since(measStart).Seconds()
-			utils.Log("write/sec", float64(nWritten) / lastBatchDuration, "items", nWritten,
-				"duration", lastBatchDuration).Info("batch finished")
-		}
 
+	// Benchmark
+	benchmark := InitBenchmark(benchmarkMessages, storage)
+
+	for {
 		m, err := kafkaReader.ReadMessage(ctx)
 		if err != nil {
 			if err.Error() == "context deadline exceeded" {
@@ -88,6 +87,7 @@ func RunListener() {
 		if err != nil {
 			utils.Log("err", err.Error()).Error("unable to add item to storage")
 		}
-		nWritten += 1
+
+		benchmark.Increment()
 	}
 }

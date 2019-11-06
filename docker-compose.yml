@@ -80,6 +80,8 @@ services:
       LISTENER_KAFKA_TOPIC: host.packages
       LISTENER_KAFKA_ADDRESS: spm_plat:9092
       LISTENER_BUFFER_SIZE: "10"
+
+      BENCHMARK_MESSAGES: "30"
     volumes:
       - ./prototypes/go:/go/src/gin-container
     working_dir: /go/src/gin-container

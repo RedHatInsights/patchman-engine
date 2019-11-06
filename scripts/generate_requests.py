@@ -6,18 +6,18 @@ import os
 PKGLIST = open("./data/pkglist.txt")
 ARCHS = ['i386', 'i586', 'i686', 'x86_64']
 PKGS = PKGLIST.read().splitlines()
-N_REQS = 20
+N_REQS = int(os.getenv('GENERATE_MESSAGES'))
 
 os.makedirs('data/body', exist_ok=True)
 
-for i in range(0, N_REQS):
+for i in range(1, N_REQS+1):
     data = {
-        'id': random.randint(1, 16384),
-        'arch': random.choice(ARCHS),
+        'id': i,
+        'arch': ARCHS[i % len(ARCHS)],
         'packages' : []
     }
     for p in range(0, 4000):
         data['packages'].append(random.choice(PKGS))
     out = open(f'data/body/{i}.json', 'w')
     out.write(json.dumps(data))
-    print(f'{i+1}/{N_REQS}')
+    print(f'JSON generated: {i}/{N_REQS}')
