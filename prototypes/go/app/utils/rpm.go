@@ -1,7 +1,18 @@
 package utils
 
-import "strings"
-import "errors"
+import (
+	"errors"
+	"regexp"
+)
+
+var (
+	nevraRegex *regexp.Regexp
+)
+
+func init() {
+	nevraRegex = regexp.MustCompile(
+		`((?P<e1>[0-9]+):)?(?P<pn>[^:]+)-((?P<e2>[0-9]+):)?(?P<ver>[^-:]+)-(?P<rel>[^-:]+)\.(?P<arch>[a-z0-9_]+)`)
+}
 
 type Nevra struct {
 	Name    string
@@ -11,11 +22,18 @@ type Nevra struct {
 	Arch    string
 }
 
-func ParseRpmName(rpmName string) (*Nevra, error) {
-	chunks := strings.Split(rpmName, ".")
-	if len(chunks) == 0 {
-		return nil, errors.New("unable to parse arch using .")
+// parse package components
+func ParseNevra(nevra string) (*Nevra, error) {
+	parsed := nevraRegex.FindStringSubmatch(nevra)
+	if len(parsed) != 9 {
+		return nil, errors.New("unable to parse nevra")
 	}
-	res := Nevra{Arch: chunks[len(chunks)-1]}
+	res := Nevra{
+		Name: parsed[3],
+		Epoch: parsed[2],
+		Version: parsed[6],
+		Release: parsed[7],
+		Arch: parsed[8],
+	}
 	return &res, nil
 }
