@@ -58,6 +58,30 @@ services:
     security_opt:
       - label=disable
 
+  rust:
+    build:
+      context: .
+      dockerfile: './prototypes/rust/Dockerfile'
+    depends_on:
+      - platform
+      - db
+    restart: unless-stopped
+    ports:
+      - 8000:8001
+    volumes:
+      - ./data:/data
+      - ./prototypes/rust:/prototype
+      - /tmp:/cargo_home
+      - /tmp:/out
+    env_file:
+      - ./conf/common.env
+    security_opt:
+      - label=disable
+      - seccomp:unconfined
+    cap_add:
+        - SYS_PTRACE
+
+
   go:
     container_name: go
     hostname: go
