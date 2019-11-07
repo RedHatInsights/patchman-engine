@@ -1,10 +1,19 @@
 from peewee import *
+from common.peewee_database import DB
 
-database = PostgresqlDatabase("spm_db")
 
-class Host(Model):
+class BaseModel(Model):
+    """Base class for tables"""
+    class Meta:
+        """Base class for table metadata"""
+        database = DB
+
+
+class Host(BaseModel):
     id = PrimaryKeyField(),
     request = CharField()
     checksum = CharField()
+    class Meta:
+        table_name = "hosts"
 
 

@@ -5,44 +5,45 @@ Various utility functions.
 import os
 from time import sleep
 from datetime import datetime
-
-from prometheus_client import Counter
-import requests
+import re
 
 from common.logging import get_logger
-
-VMAAS_REQUEST_RETRIES = int(os.getenv("VMAAS_REQUEST_RETRIES", "3"))
-
 LOGGER = get_logger(__name__)
 
-# prometheus probes
-# counts
-VMAAS_RETURN_ERR = Counter('ve_evaluator_vmaas_return_errors', 'Number of non-200 RCs from VMaaS')
-VMAAS_CNX_ERR = Counter('ve_evaluator_vmaas_cnx_errors', 'Number of connection-errors from VMaaS')
+NEVRA_RE = re.compile(r'(.*)-(([0-9]+):)?([^-]+)-([^-]+)\.([a-z0-9_]+)')
+def split_packagename(filename):
+    """
+    Split rpm name (incl. epoch) to NEVRA components.
 
+    Return a name, epoch, version, release, arch, e.g.::
+        foo-1.0-1.i386.rpm returns foo, 0, 1.0, 1, i386
+        bar-1:9-123a.ia64.rpm returns bar, 1, 9, 123a, ia64
+    """
 
-def vmaas_post_request(endpoint, data_json, session=None):
-    """Sends request to VMAAS"""
-    headers = {'Content-type': 'application/json',
-               'Accept': 'application/json'}
-    for _ in range(VMAAS_REQUEST_RETRIES):
+    if filename[-4:] == '.rpm':
+        filename = filename[:-4]
+
+    match = NEVRA_RE.match(filename)
+    if not match:
+        return '', '', '', '', ''
+
+    name, _, epoch, version, release, arch = match.groups()
+    if epoch is None:
+        epoch = '0'
+    return name, epoch, version, release, arch
+
+def join_packagename(name, epoch, version, release, arch):
+    """
+    Build a package name from the separate NEVRA parts
+    """
+    if name and epoch and version and release and arch:
         try:
-            if session:
-                response = session.post(endpoint, json=data_json, headers=headers)
-            else:
-                response = requests.post(endpoint, json=data_json, headers=headers)
-            if response.status_code == 200:
-                return response.json()
-            VMAAS_RETURN_ERR.inc()
-            LOGGER.error("Error during request to VMaaS endpoint %s: HTTP %s, %s",
-                         endpoint, response.status_code, response.text)
-            LOGGER.debug("JSON: %s", str(data_json))
-        except requests.exceptions.RequestException:
-            VMAAS_CNX_ERR.inc()
-            LOGGER.exception("Error calling VMAAS: ")
-        sleep(0.1)
-    return None
+            epoch = ("%s:" % epoch) if int(epoch) else ''
+        except Exception as _: # pylint: disable=broad-except
+            epoch = ''
+        return "%s-%s%s-%s.%s" % (name, epoch, version, release, arch)
 
+    return None
 
 def on_thread_done(future):
     """Callback to call after ThreadPoolExecutor worker finishes."""
