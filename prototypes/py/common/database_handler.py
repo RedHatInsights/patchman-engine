@@ -7,11 +7,11 @@ from psycopg2.pool import ThreadedConnectionPool
 from psycopg2 import InterfaceError, DatabaseError
 from common.logging import init_logging, get_logger
 
-DB_NAME = os.getenv('POSTGRESQL_DATABASE', "vulnerability")
-DB_USER = os.getenv('POSTGRESQL_USER', "ve_db_user_unknown")
-DB_PASS = os.getenv('POSTGRESQL_PASSWORD', "ve_db_user_unknown_pwd")
-DB_HOST = os.getenv('POSTGRESQL_HOST', "ve_database")
-DB_PORT = int(os.getenv('POSTGRESQL_PORT', "5432"))
+DB_NAME = os.getenv('DB_NAME', "spm")
+DB_USER = os.getenv('DB_USER', "spm_admin")
+DB_PASS = os.getenv('DB_PASSWD', "spm_admin_pwd")
+DB_HOST = os.getenv('DB_HOST', "spm_db")
+DB_PORT = int(os.getenv('DB_PORT', "5432"))
 
 LOGGER = get_logger(__name__)
 init_logging()

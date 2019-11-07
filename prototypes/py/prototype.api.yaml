@@ -5,63 +5,29 @@ info:
   title: "SPM Prototype in Python"
 
 paths:
-  /create_host:
-    post:
-      operationId: handler.create_host
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateHostBody'
+  /host/{id}:
+    get:
+      operationId: handler.get_host
       responses:
         200:
           description: "System created"
           content:
             application/json:
               schema:
-                type: object
-                
-  /update_host:
-    post:
-      operationId: handler.update_host
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateHostBody'
-      responses:
-        200:
-          description: "Host updated"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UpdateHostResponse"
-                
+                $ref: '#/components/schemas/PackageList'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+
 components:
   schemas:
-    CreateHostBody:
+    PackageList:
       type: object
       properties:
-        name: 
-          type: string
-        content:
-          type: object
-          properties: 
-            pkgs:
-              type: array
-              items:
-                type: string
-      
-    UpdateHostBody:
-      type: object
-      additionalProperties:
-        type: string
-        example: 'pkg_name'
-      
-    UpdateHostResponse:
-      type: object
-      properties:
-        updated_systems:
-          type: integer
-                
-          
+        package_list:
+          type: array
+          items:
+            type: string
