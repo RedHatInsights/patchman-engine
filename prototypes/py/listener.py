@@ -34,8 +34,8 @@ class Benchmark:
             self.start_time = time.perf_counter()
 
         self.msgs.append(msg)
-
-        db.Host.save(dict_to_model(db.Host, data=msg))
+        #host = dict_to_model(db.Host, data=msg)
+        LOGGER.info(db.Host.insert(msg).execute())
 
         if len(self.msgs) == self.benchmark_msgs:
             finish_time = time.perf_counter()
