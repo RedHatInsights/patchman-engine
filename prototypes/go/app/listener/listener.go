@@ -54,13 +54,12 @@ func RunListener() {
 
 	var msg Message // struct to parse Kafka message into
 	var host structures.HostDAO // struct to store parsed msg from Kafka
-	ctx, _ := context.WithTimeout(context.Background(), time.Second * 5)
 
 	// Benchmark
 	benchmark := InitBenchmark(benchmarkMessages, storage)
 
 	for {
-		m, err := kafkaReader.ReadMessage(ctx)
+		m, err := kafkaReader.ReadMessage(context.Background())
 		if err != nil {
 			if err.Error() == "context deadline exceeded" {
 				utils.Log().Info("waiting for messages")
