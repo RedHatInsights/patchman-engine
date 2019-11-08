@@ -5,7 +5,7 @@ info:
   title: "SPM Prototype in Python"
 
 paths:
-  /host/{id}:
+  /hosts/{id}:
     get:
       operationId: handler.get_host
       responses:
@@ -21,7 +21,16 @@ paths:
           required: true
           schema:
             type: integer
-
+  /hosts:
+    get:
+      operationId: handler.all_hosts
+      responses:
+        200:
+          description: "HostList"
+          content:
+            application/json:
+              schema:
+                type: object
 components:
   schemas:
     PackageList:

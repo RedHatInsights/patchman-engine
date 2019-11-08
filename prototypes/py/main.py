@@ -7,6 +7,8 @@ from common.logging import init_logging
 
 init_logging()
 
+db.Host.delete().execute()
+
 list_thread = Thread(target=listener.main)
 list_thread.start()
 

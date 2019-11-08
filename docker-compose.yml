@@ -2,6 +2,7 @@ version: '3'
 
 services:
   db:
+    container_name: db
     image: postgres:10.0-alpine
     ports:
       - 5432:5432
@@ -15,6 +16,8 @@ services:
       - label=disable
 
   platform:
+    container_name: platform
+    hostname: platform
     build:
       context: .
       dockerfile: platform/Dockerfile
@@ -36,6 +39,8 @@ services:
     command: ab -n 100 -c 10 go:8080/hosts/1
 
   python:
+    container_name: python
+    hostname: python
     build:
       context: .
       dockerfile: ./prototypes/py/Dockerfile
@@ -54,6 +59,8 @@ services:
       - label=disable
 
   go:
+    container_name: go
+    hostname: go
     build:
       context: ./prototypes/go
       dockerfile: Dockerfile
