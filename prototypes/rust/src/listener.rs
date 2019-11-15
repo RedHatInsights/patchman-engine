@@ -1,13 +1,15 @@
-use serde::*;
-use json;
-use sha2::Digest;
-use diesel::{RunQueryDsl, ExpressionMethods};
-use rayon::prelude::*;
 use std::{
-    time::{Instant, Duration},
     str::FromStr,
-    sync::{Mutex, Arc}
+    sync::{Arc, Mutex},
+    time::{Duration, Instant},
 };
+
+use diesel::{ExpressionMethods, RunQueryDsl};
+use json;
+use rayon::prelude::*;
+use serde::*;
+use sha2::Digest;
+
 use crate::nevra::Nevra;
 
 #[derive(Debug, Deserialize)]
@@ -33,6 +35,7 @@ impl Bencher {
             println!("Saved :{:?} items, {:?} item/s", self.saved_count, self.total_count as f64 / end.duration_since(start.clone()).as_secs_f64());
             self.start_time = None;
             self.saved_count = 0;
+            //#std::process::exit(0)
         }
     }
 }
@@ -51,12 +54,12 @@ fn kafka_runner<F: FnMut(HostPackages)>(mut handler: F) {
     let consumer: BaseConsumer = rdkafka::config::ClientConfig::new()
         .set("bootstrap.servers", &url)
         .set("broker.address.family", "v4")
-        .set("group.id", "worker")
+        .set("group.id", "spm")
 
         .set("enable.partition.eof", "false")
         .set("session.timeout.ms", "6000")
         .set("enable.auto.commit", "true")
-        .set("auto.offset.reset", "earliest")
+        .set("auto.offset.reset", "latest")
         .set_log_level(RDKafkaLogLevel::Debug)
         .create()
         .expect("Consumer");
@@ -73,7 +76,6 @@ fn kafka_runner<F: FnMut(HostPackages)>(mut handler: F) {
 }
 
 fn run(pool: crate::db::Pool) {
-
     let bench = Bencher {
         start_time: None,
         total_count: std::env::var("BENCHMARK_MESSAGES").unwrap().parse().unwrap(),
@@ -83,6 +85,7 @@ fn run(pool: crate::db::Pool) {
     let bench = Arc::new(Mutex::new(bench));
 
     kafka_runner(|data| {
+        println!("Hosts: {:?}", data.id);
         let pool = pool.clone();
         let bench = bench.clone();
 
@@ -90,7 +93,7 @@ fn run(pool: crate::db::Pool) {
         rayon::spawn_fifo(move || {
             let arch = data.arch;
 
-            let mut packages: Vec<_> = data.packages.iter().map(|s| {
+            let mut packages: Vec<_> = data.packages.into_iter().map(|s| {
                 Nevra::from_str(&s).unwrap()
             }).collect();
 
@@ -100,15 +103,14 @@ fn run(pool: crate::db::Pool) {
             });
 
             let request = json::json!({
-                    "package_list" : data.packages
-                });
+                "package_list" : packages
+            });
 
             let req = json::to_string(&request).unwrap();
             let mut sha = sha2::Sha256::new();
             sha.input(&req);
             let sha = sha.result();
             let checksum = hex::encode(&sha[..]);
-
 
             let value = crate::db::schema::Host {
                 id: data.id,
@@ -127,14 +129,14 @@ fn run(pool: crate::db::Pool) {
                     .set(
                         (
                             request.eq(excluded(request)),
-                            checksum.eq(excluded(checksum))
+                            checksum.eq(excluded(checksum)),
+                            updated.eq(diesel::dsl::now)
                         )
                     )
                     .execute(&pool.get().unwrap()).unwrap();
 
                 bench.lock().unwrap().save();
             }
-
         })
     })
 }

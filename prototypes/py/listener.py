@@ -87,7 +87,7 @@ def main():
     def process(msg):
         executor.submit(process_msg, msg, bench)
 
-    reader = MQReader(LISTENER_TOPIC)
+    reader = MQReader(LISTENER_TOPIC,)
     reader.listen(process)
 
     loop.run_forever()

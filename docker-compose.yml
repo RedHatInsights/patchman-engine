@@ -59,6 +59,8 @@ services:
       - label=disable
 
   rust:
+    container_name: rust
+    hostname: rust
     build:
       context: .
       dockerfile: './prototypes/rust/Dockerfile'
@@ -67,7 +69,7 @@ services:
       - db
     restart: unless-stopped
     ports:
-      - 8000:8001
+      - 8082:8082
     volumes:
       - ./data:/data
       - ./prototypes/rust:/prototype

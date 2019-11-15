@@ -9,7 +9,9 @@ def all_hosts():
     hosts = db.Host.select(
         db.Host.id,
         db.Host.request,
-        db.Host.checksum)
+        db.Host.checksum,
+        db.Host.updated
+    )
     return [host for host in hosts.dicts()]
 
 def get_host(id):
@@ -22,7 +24,6 @@ def get_host(id):
 
     request = host['request']
     checksum = hashlib.sha256(request.encode('utf-8')).hexdigest()
-    request = json.loads(request)
 
     if checksum != host['checksum']:
         return {"err": "Invalid checksum"}, 206

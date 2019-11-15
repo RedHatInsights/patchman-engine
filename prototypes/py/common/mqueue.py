@@ -62,7 +62,7 @@ class MQReader(MQClient):
         if isinstance(topic, str):
             topic = [topic]
         consumer = AIOKafkaConsumer(*topic, loop=self.loop, bootstrap_servers=bootstrap_servers, group_id=group_id,
-                                    auto_offset_reset='latest', session_timeout_ms=30000, **kwargs)
+                                    auto_offset_reset='earliest', session_timeout_ms=30000, **kwargs)
         super(MQReader, self).__init__(consumer, 'AIOKafka Consumer')
 
     async def consume(self, func):

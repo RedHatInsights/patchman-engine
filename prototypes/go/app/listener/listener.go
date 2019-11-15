@@ -24,6 +24,7 @@ func configure() {
 	kafkaReader = kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   []string{kafkaAddress},
 		Topic:	   topic,
+		GroupID:   "spm",
 		Partition: 0,
 		MinBytes:  10e3, // 10KB
 		MaxBytes:  10e6, // 10MB

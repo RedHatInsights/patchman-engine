@@ -24,13 +24,14 @@ func InitBenchmark(nItemsToWrite int, storage *Storage) *Benchmark {
 
 func (b *Benchmark) Increment() {
 	b.nWritten += 1
-	if b.nWritten == b.nItemsToWrite {
-		err := b.storage.Flush()
-		if err != nil {
-			utils.Log("err", err.Error()).Info("cannot flush to storage to finish benchmark!!!")
-			return
-		}
 
+	err := b.storage.Flush()
+    if err != nil {
+        utils.Log("err", err.Error()).Info("cannot flush to storage to finish benchmark!!!")
+        return
+    }
+
+	if b.nWritten == b.nItemsToWrite {
 		duration := time.Since(b.startTime).Seconds()
 		utils.Log("write/sec", float64(b.nWritten) / duration, "items", b.nWritten,
 			"duration", duration).Info("batch finished")
