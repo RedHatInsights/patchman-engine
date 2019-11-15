@@ -13,6 +13,7 @@ class Host(BaseModel):
     id = PrimaryKeyField(),
     request = CharField()
     checksum = CharField()
+    updated = DateTimeField()
 
     class Meta:
         table_name = "hosts"

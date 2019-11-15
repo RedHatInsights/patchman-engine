@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 
+set -x
 trap ctrl_c INT
 
-COUNT=100
+# Load up common env variables
+set -o allexport
+source conf/common.env
+set +o allexport
+
+COUNT=${BENCHMARK_MESSAGES}
 
 function ctrl_c() {
   kill -9 $BG_PID
@@ -10,6 +16,20 @@ function ctrl_c() {
   kill -9 $python_PID
   kill -9 $rust_PID
   exit  1
+}
+
+function start_collection(){
+  ./dev/collect-stats.sh out/usages.csv &
+  BG_PID=$!
+}
+
+function stop_collection() {
+  kill -9 $BG_PID
+}
+
+function send_message_batch() {
+  echo "Sending a new batch of requests"
+  docker exec -it platform bash -c "./send_kafka_requests.py"
 }
 
 function perform_benchmark() {
@@ -20,7 +40,6 @@ function perform_benchmark() {
   docker-compose build $TYPE
   echo "Starting the $TYPE container benchmark"
   docker-compose up --build $TYPE  | tee out/$TYPE.log &
-  "${TYPE}_PID"=$!
 
   sleep 10
   until curl -XGET -u admin:passwd --fail http://localhost:$PORT/hosts/$COUNT > out/$TYPE-$COUNT.json 2> /dev/null;
@@ -28,17 +47,14 @@ function perform_benchmark() {
     sleep 1
   done
 
+  sleep 5
+
   echo "Retrieved last item, all must be processed"
-  echo $(curl -XGET -u admin:passwd  http://localhost:$PORT/hosts/1) > out/$TYPE-1.json
+  echo "$(curl -XGET -u admin:passwd  http://localhost:$PORT/hosts/1)" > out/$TYPE-1.json
 
   docker-compose stop $TYPE
 
-
-  echo "Sending a new batch of requests"
-  docker exec -it platform bash -c "./send_kafka_requests.py"
 }
-
-
 
 docker-compose down
 
@@ -48,18 +64,28 @@ echo "Waiting for db to come up"
 docker exec -it platform bash -c "./wait-for-services.sh true"
 
 
-
 mkdir -p out
-
 echo "Starting the stats collection"
-./dev/collect-stats.sh out/usages.csv &
-BG_PID=$!
 
 
-
-sleep 2
-
+start_collection
 perform_benchmark go 8080
+stop_collection
+
+send_message_batch
+
+
+start_collection
+perform_benchmark rust 8082
+stop_collection
+
+
+send_message_batch
+
+
+start_collection
 perform_benchmark python 8081
+stop_collection
+
 
 ctrl_c

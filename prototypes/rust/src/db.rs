@@ -41,13 +41,24 @@ pub mod schema {
             id -> Int4,
             request -> Varchar,
             checksum -> Varchar,
+            updated -> Timestamptz,
         }
     }
 
-    #[derive(Debug, Clone, Queryable,Insertable, AsChangeset, Deserialize, Serialize)]
+    #[derive(Debug, Clone, Queryable, Insertable, AsChangeset, Deserialize, Serialize)]
+    #[diesel(table_name = "hosts")]
     pub struct Host {
         pub id: i32,
         pub request: String,
         pub checksum: String,
+    }
+
+    #[derive(Debug, Clone, Queryable,  Deserialize, Serialize)]
+    #[diesel(table_name = "hosts")]
+    pub struct ReadHost {
+        pub id: i32,
+        pub request: String,
+        pub checksum: String,
+        pub updated : chrono::NaiveDateTime
     }
 }

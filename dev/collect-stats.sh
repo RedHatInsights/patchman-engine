@@ -4,7 +4,7 @@ set -e
 
 DATA_FILE=$1
 timestamp() {
-  date +"%T"
+  date -u +"%T"
 }
 
 while true; do
