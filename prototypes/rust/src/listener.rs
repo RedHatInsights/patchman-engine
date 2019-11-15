@@ -1,22 +1,24 @@
 use std::{
     str::FromStr,
     sync::{Arc, Mutex},
-    time::{Duration, Instant},
+    time::Instant,
 };
 
-use diesel::{ExpressionMethods, RunQueryDsl};
+use diesel::{ExpressionMethods, RunQueryDsl, pg::upsert::*};
 use json;
 use rayon::prelude::*;
 use serde::*;
 use sha2::Digest;
 
 use crate::nevra::Nevra;
+use crate::db::schema::hosts;
 
 #[derive(Debug, Deserialize)]
-pub struct HostPackages {
+pub struct HostPackages<'a> {
     id: i32,
     arch: String,
-    packages: Vec<String>,
+    #[serde(borrow)]
+    packages: Vec<&'a str>,
 }
 
 pub struct Bencher {
@@ -49,7 +51,6 @@ fn kafka_runner<F: FnMut(HostPackages)>(mut handler: F) {
     let topic = std::env::var("LISTENER_KAFKA_TOPIC").unwrap();
 
     println!("Connecting to kafka on : {:?}", url);
-    let hosts = vec!(url.to_owned());
 
     let consumer: BaseConsumer = rdkafka::config::ClientConfig::new()
         .set("bootstrap.servers", &url)
@@ -93,18 +94,16 @@ fn run(pool: crate::db::Pool) {
         rayon::spawn_fifo(move || {
             let arch = data.arch;
 
-            let mut packages: Vec<_> = data.packages.into_iter().map(|s| {
+            let packages: Vec<_> = data.packages.into_iter().map(|s| {
                 Nevra::from_str(&s).unwrap()
+            }).filter(|pkg| {
+                pkg.arch == arch
             }).collect();
 
-            // Drop Invalid packages
-            packages.retain(|pkg| {
-                pkg.arch == arch
-            });
 
             let request = json::json!({
-                "package_list" : packages
-            });
+            "package_list" : packages
+        });
 
             let req = json::to_string(&request).unwrap();
             let mut sha = sha2::Sha256::new();
@@ -118,25 +117,21 @@ fn run(pool: crate::db::Pool) {
                 checksum: checksum,
             };
 
-            {
-                use crate::db::schema::hosts::dsl::*;
-                use diesel::pg::upsert::*;
 
-                diesel::insert_into(hosts)
-                    .values(&value)
-                    .on_conflict(id)
-                    .do_update()
-                    .set(
-                        (
-                            request.eq(excluded(request)),
-                            checksum.eq(excluded(checksum)),
-                            updated.eq(diesel::dsl::now)
-                        )
+            diesel::insert_into(hosts::table)
+                .values(&value)
+                .on_conflict(hosts::id)
+                .do_update()
+                .set(
+                    (
+                        hosts::request.eq(excluded(hosts::request)),
+                        hosts::checksum.eq(excluded(hosts::checksum)),
+                        hosts::updated.eq(diesel::dsl::now)
                     )
-                    .execute(&pool.get().unwrap()).unwrap();
+                )
+                .execute(&pool.get().unwrap()).unwrap();
 
-                bench.lock().unwrap().save();
-            }
+            bench.lock().unwrap().save();
         })
     })
 }

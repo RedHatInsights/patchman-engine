@@ -63,13 +63,20 @@ for lang in LANGS:
         time = datetime.strptime(log[0], TIME_FORMAT).time()
         if log[1] == lang and end_time >= time >= start_time:
             rows.append(log)
-            CPUS.setdefault(lang, []).append(log[2])
-            RAMS.setdefault(lang, []).append(log[3])
+            CPUS.setdefault(lang, []).append(float(log[2].strip(" %")))
+            ram = log[3].split('/')[0].split(' ')
 
-    print(rows)
+            if ram[1].lower().split() == "gb":
+                ram[0] = float(ram[0])  * 1000
+            else:
+                ram[0] = float(ram[0])
 
-print(CPUS)
-print(RAMS)
+
+            RAMS.setdefault(lang, []).append(ram[0])
+
+    print("CPU: ", CPUS[lang])
+    print("RAM: ", RAMS[lang])
+
 
 with open('report.csv', 'w') as out_file:
     writer = csv.writer(out_file)

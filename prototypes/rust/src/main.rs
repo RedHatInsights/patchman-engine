@@ -17,7 +17,7 @@ pub mod nevra;
 pub mod db;
 pub mod listener;
 
-use crate::db::schema::{Host, ReadHost};
+use crate::db::schema::{ReadHost};
 use sha2::Digest;
 
 fn single_host((host_id, db): (web::Path<i32>, web::Data<db::Pool>)) -> impl Responder {
@@ -47,7 +47,7 @@ fn single_host((host_id, db): (web::Path<i32>, web::Data<db::Pool>)) -> impl Res
     Either::B(Json(host))
 }
 
-fn all_hosts((db): (web::Data<db::Pool>)) -> impl Responder {
+fn all_hosts(db: web::Data<db::Pool>) -> impl Responder {
     let conn = db.get().unwrap();
     use db::schema::hosts;
 
@@ -68,7 +68,6 @@ fn all_hosts((db): (web::Data<db::Pool>)) -> impl Responder {
 
 fn delete_all_hosts(pool: &db::Pool) {
     use crate::db::schema::hosts::dsl::*;
-    use diesel::pg::upsert::*;
 
     diesel::delete(hosts)
         .execute(&pool.get().unwrap()).unwrap();
@@ -87,7 +86,6 @@ fn main() {
     let list = listener::spawn(pool.clone());
 
     println!("RUNNING WEB");
-
 
     actix_web::HttpServer::new(move || {
         App::new()
