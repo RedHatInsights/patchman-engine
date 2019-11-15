@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
 
 DATA_FILE=$1
 timestamp() {
@@ -8,15 +7,12 @@ timestamp() {
 }
 
 while true; do
-  STATS=$(docker stats --no-stream | tail -n +2)
+  STATS=$(docker stats --format "{{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}" --no-stream)
   IFS=$'\n'
   for l in $STATS; do
-    ID=$(echo $l | tr -s ' ' | cut -d' ' -f1)
-    CPU=$(echo $l | tr -s ' ' | cut -d' ' -f2)
-    MEM=$(echo $l | tr -s ' ' | cut -d' ' -f3)
-    NAME=$(docker ps --format '{{.ID}} {{.Names}}' | grep $ID | tr -s 't' | cut -d' ' -f2)
-
-    #echo "NAME:" $NAME $'\t\t' "CPU: " $CPU $'\t' "MEM: " $MEM
+    NAME=$(echo $l | cut -d$'\t' -f1)
+    CPU=$(echo $l  | cut -d$'\t' -f2)
+    MEM=$(echo $l  | cut -d$'\t' -f3 | cut -d'/' -f1 )
     echo $(timestamp) "," $NAME "," $CPU "," $MEM >> $DATA_FILE
   done
 done

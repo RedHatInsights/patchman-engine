@@ -33,10 +33,26 @@ services:
     security_opt:
       - label=disable
 
-  ab:
+  ab-go:
+    container_name: ab-go
+    hostname: ab-go
     build:
       context: apache-benchmark
     command: ab -n 100 -c 10 go:8080/hosts/1
+
+  ab-python:
+    container_name: ab-python
+    hostname: ab-python
+    build:
+      context: apache-benchmark
+    command: ab -n 100 -c 10 python:8081/hosts/1
+
+  ab-rust:
+    container_name: ab-rust
+    hostname: ab-rust
+    build:
+      context: apache-benchmark
+    command: ab -n 1000 -c 50 rust:8082/hosts/1
 
   python:
     container_name: python
