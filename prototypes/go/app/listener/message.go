@@ -18,7 +18,7 @@ func (msg *Message) FilterPackages() {
 	nPkgs := len(*msg.Packages)
 	channel := make(chan int, nPkgs)
 	for i, pkg := range *msg.Packages {
-		go filterNevra(i, pkg, msg.Arch, channel)
+		filterNevra(i, pkg, msg.Arch, channel)
 	}
 
 	// create mask of filtered packages
