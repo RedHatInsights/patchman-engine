@@ -7,6 +7,7 @@ import (
 	"gin-container/app/structures"
 	"gin-container/app/utils"
 	"github.com/segmentio/kafka-go"
+	"sync"
 	"time"
 )
 
@@ -43,6 +44,34 @@ func shutdown() {
 	}
 }
 
+func runMessage(benchmark *Benchmark, m kafka.Message, mutex *sync.Mutex) {
+	var msg Message // struct to parse Kafka message into
+	var host structures.HostDAO // struct to store parsed msg from Kafka
+
+	err := json.Unmarshal(m.Value, &msg)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("unable to parse message from Kafka reader")
+		return
+	}
+
+	msg.FilterPackages()
+
+	host.ID = msg.ID
+	host.Request = string(msg.ToJSON())
+	host.Checksum = msg.JSONChecksum()
+
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	err = storage.Add(&host)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("unable to add item to storage")
+	}
+
+	benchmark.Increment()
+}
+
+
 func RunListener() {
 	utils.Log().Info("listener starting")
 	configure()
@@ -53,11 +82,10 @@ func RunListener() {
 		panic(err)
 	}
 
-	var msg Message // struct to parse Kafka message into
-	var host structures.HostDAO // struct to store parsed msg from Kafka
-
 	// Benchmark
 	benchmark := InitBenchmark(benchmarkMessages, storage)
+
+	var mutex = sync.Mutex{}
 
 	for {
 		m, err := kafkaReader.ReadMessage(context.Background())
@@ -65,30 +93,12 @@ func RunListener() {
 			if err.Error() == "context deadline exceeded" {
 				utils.Log().Info("waiting for messages")
 				time.Sleep(time.Second)
-				continue
+				return
 			}
 
 			utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
-			continue
+			return
 		}
-
-		err = json.Unmarshal(m.Value, &msg)
-		if err != nil {
-			utils.Log("err", err.Error()).Error("unable to parse message from Kafka reader")
-			continue
-		}
-
-		msg.FilterPackages()
-
-		host.ID = msg.ID
-		host.Request = string(msg.ToJSON())
-		host.Checksum = msg.JSONChecksum()
-
-		err = storage.Add(&host)
-		if err != nil {
-			utils.Log("err", err.Error()).Error("unable to add item to storage")
-		}
-
-		benchmark.Increment()
+		go runMessage(benchmark, m, &mutex)
 	}
 }
