@@ -98,5 +98,6 @@ fn main() {
         .unwrap()
         .run()
         .unwrap();
+
     list.join().unwrap();
 }
