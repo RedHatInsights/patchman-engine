@@ -14,11 +14,10 @@ use crate::nevra::Nevra;
 use crate::db::schema::hosts;
 
 #[derive(Debug, Deserialize)]
-pub struct HostPackages<'a> {
+pub struct HostPackages {
     id: i32,
     arch: String,
-    #[serde(borrow)]
-    packages: Vec<&'a str>,
+    packages: Vec<String>,
 }
 
 pub struct Bencher {
@@ -106,6 +105,7 @@ fn run(pool: crate::db::Pool) {
         });
 
             let req = json::to_string(&request).unwrap();
+            std::mem::drop(request);
             let mut sha = sha2::Sha256::new();
             sha.input(&req);
             let sha = sha.result();

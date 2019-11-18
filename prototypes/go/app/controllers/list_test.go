@@ -39,7 +39,7 @@ func TestGetHostOK(t *testing.T) {
 	initRouterWithPath(GetHostHandler, "/:id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, `{"id":1,"request":"r","checksum":"454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1"}`, w.Body.String())
+	assert.Equal(t, `{"id":1,"request":"r","checksum":"454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1","updated":"0001-01-01T00:00:00Z"}`, w.Body.String())
 }
 
 func TestGetHostNotFound(t *testing.T) {
