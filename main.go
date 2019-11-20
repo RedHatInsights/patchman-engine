@@ -11,7 +11,6 @@ import (
 func main() {
 	core.ConfigureApp()
 
-	// optionally run listener
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "listener":

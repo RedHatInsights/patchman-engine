@@ -106,6 +106,5 @@ func (s *Storage) flushBatch() error {
 	if err != nil {
 		return err
 	}
-	storage.clean()
 	return nil
 }

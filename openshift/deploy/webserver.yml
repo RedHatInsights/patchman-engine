@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: spm-engine-listener
+  name: spm-engine-webserver
 
 parameters:
   - name: IMAGE_NAMESPACE
@@ -15,32 +15,32 @@ objects:
     kind: DeploymentConfig
     metadata:
       labels: { app: spm-engine }
-      name: spm-engine-listener
+      name: spm-engine-webserver
     spec:
       replicas: 1
       selector:
         app: spm-engine
-        deploymentconfig: spm-engine-listener
+        deploymentconfig: spm-engine-webserver
       template:
         metadata:
           labels:
             app: spm-engine
-            deploymentconfig: spm-engine-listener
-          name: spm-engine-listener
+            deploymentconfig: spm-engine-webserver
+          name: spm-engine-webserver
         spec:
           containers:
-            - image: ${IMAGE_NAMESPACE}/spm-engine-listener:${IMAGE_TAG}
+            - image: ${IMAGE_NAMESPACE}/spm-engine-webserver:${IMAGE_TAG}
               imagePullPolicy: Always
-              name: spm-engine-listener
-              command: [ ./listener/entrypoint.sh ]
+              name: spm-engine-webserver
+              command: [ ./webserver/entrypoint.sh ]
               resources:
                 limits: { cpu: 500m,  memory: 512Mi }
                 requests: { cpu: 200m, memory: 512Mi }
               env:
-                - { name: KAFKA_HOST, value: platform }
-                - { name: KAFKA_GROUP, value: spm }
-                - { name: UPLOAD_TOPIC, value: platform.upload.available }
-                - { name: EVENTS_TOPIC, value: platform.inventory.events }
+                - { name: POSTGRESQL_HOST, value: spm-engine-database }
+                - { name: POSTGRESQL_USER, value: admin }
+                - { name: POSTGRESQL_PASSWORD, value: passwd }
+                - { name: POSTGRESQL_DATABASE, value: spm }
           dnsPolicy: ClusterFirst
           restartPolicy: Always
       triggers:
@@ -48,27 +48,31 @@ objects:
         - imageChangeParams:
             automatic: true
             containerNames:
-              - spm-engine-listener
+              - spm-engine-webserver
             from:
               kind: ImageStreamTag
-              name: spm-engine-listener:${IMAGE_TAG}
+              name: spm-engine-webserver:${IMAGE_TAG}
               namespace: ${IMAGE_NAMESPACE}
           type: ImageChange
 
   - apiVersion: v1
     kind: Service
     metadata:
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: '8080'
+        prometheus.io/scrape: "true"
       labels:
         app: spm-engine
-      name: spm-engine-listener
+      name: spm-engine-webserver
     spec:
       type: ClusterIP
       ports:
-        - name: 8081-tcp
-          port: 8081
+        - name: 8080-tcp
+          port: 8080
           protocol: TCP
-          targetPort: 8081
+          targetPort: 8080
       selector:
         app: spm-engine
-        deploymentconfig: spm-engine-listener
+        deploymentconfig: spm-engine-webserver
 
