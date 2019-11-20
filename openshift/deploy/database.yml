@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: spm-engine-database
+
+parameters:
+  - name: IMAGE_NAMESPACE
+    displayName: Image namespace
+    value: spm-test
+  - name: IMAGE_TAG
+    displayName: Image tag
+    value: latest
+  - name: VOLUME_SIZE
+    description: Requested volume size for spm-engine-database-data
+    value: 1Gi
+objects:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: spm-engine
+      name: spm-engine-database-data
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources:
+        requests:
+          storage: ${VOLUME_SIZE}
+    status: {}
+
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      labels: { app: spm-engine }
+      name: spm-engine-database
+    spec:
+      replicas: 1
+      selector:
+        app: spm-engine
+        deploymentconfig: spm-engine-database
+      template:
+        metadata:
+          labels:
+            app: spm-engine
+            deploymentconfig: spm-engine-database
+          name: spm-engine-database
+        spec:
+          containers:
+            - image: ${IMAGE_NAMESPACE}/spm-engine-database:${IMAGE_TAG}
+              imagePullPolicy: Always
+              name: spm-engine-database
+              resources:
+                limits: { cpu: 500m,  memory: 512Mi }
+                requests: { cpu: 200m, memory: 512Mi }
+              volumeMounts:
+                - mountPath: /var/lib/pgsql/data
+                  name: spm-engine-database-data
+              env:
+                - { name: POSTGRESQL_DATABASE, value: spm }
+                - { name: POSTGRESQL_HOST, value: spm-engine-database }
+                - { name: POSTGRESQL_USER, value: admin }
+                - { name: POSTGRESQL_PASSWORD, value: passwd }
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          volumes:
+            - name: spm-engine-database-data
+              persistentVolumeClaim:
+                claimName: spm-engine-database-data
+      triggers:
+        - type: ConfigChange
+        - imageChangeParams:
+            automatic: true
+            containerNames:
+              - spm-engine-database
+            from:
+              kind: ImageStreamTag
+              name: spm-engine-database:${IMAGE_TAG}
+              namespace: ${IMAGE_NAMESPACE}
+          type: ImageChange
+
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app: spm-engine
+      name: spm-engine-database
+    spec:
+      type: ClusterIP
+      ports:
+        - name: 5432-tcp
+          port: 5432
+          protocol: TCP
+          targetPort: 5432
+      selector:
+        app: spm-engine
+        deploymentconfig: spm-engine-database
+

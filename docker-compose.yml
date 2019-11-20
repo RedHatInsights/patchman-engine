@@ -1,20 +1,20 @@
 version: '3'
 
 services:
-
   db:
     container_name: db
-    image: postgres:10.0-alpine
+    build:
+      context: .
+      dockerfile: database/Dockerfile
     ports:
       - 5432:5432
-    environment:
-      POSTGRES_DB: app
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: passwd
-    volumes:
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    env_file:
+      - ./conf/common.env
+      - ./conf/database.env
     security_opt:
       - label=disable
+    volumes:
+      - spm-engine-database-data:/var/lib/pgsql/data
 
   platform:
     container_name: platform
@@ -41,7 +41,7 @@ services:
       - ./conf/listener.env
     command: go run -v main.go listener
     ports:
-      - 8080:8080
+      - 8081:8081
     depends_on:
       - db
       - platform
@@ -54,7 +54,6 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./conf/common.env
-      - ./conf/listener.env
     command: go run -v main.go webserver
     ports:
       - 8080:8080
@@ -63,3 +62,6 @@ services:
       - platform
     security_opt:
       - label=disable
+
+volumes:
+  spm-engine-database-data:
