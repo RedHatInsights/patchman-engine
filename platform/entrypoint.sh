@@ -26,11 +26,5 @@ do
     ./kafka/bin/kafka-topics.sh --create --topic $topic --partitions 1 --zookeeper localhost:2181 --replication-factor 1
 done
 
-# generate kafka request messages
-./generate_requests.py
-
-# send messages to kafka
-./wait-for-services.sh ./send_kafka_requests.py
-
 # run upload mock
 exec ./wait-for-services.sh sleep 5000000

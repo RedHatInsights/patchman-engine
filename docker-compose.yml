@@ -1,6 +1,7 @@
 version: '3'
 
 services:
+
   db:
     container_name: db
     image: postgres:10.0-alpine
@@ -26,103 +27,37 @@ services:
       - db
     ports:
       - 9092:9092
-    volumes:
-      - ./data:/data:z
     env_file:
       - ./conf/common.env
     security_opt:
       - label=disable
 
-  ab-go:
-    container_name: ab-go
-    hostname: ab-go
-    build:
-      context: apache-benchmark
-    command: ab -n 100 -c 10 go:8080/hosts/1
-
-  ab-python:
-    container_name: ab-python
-    hostname: ab-python
-    build:
-      context: apache-benchmark
-    command: ab -n 100 -c 10 python:8081/hosts/1
-
-  ab-rust:
-    container_name: ab-rust
-    hostname: ab-rust
-    build:
-      context: apache-benchmark
-    command: ab -n 1000 -c 50 rust:8082/hosts/1
-
-  python:
-    container_name: python
-    hostname: python
+  listener:
     build:
       context: .
-      dockerfile: ./prototypes/py/Dockerfile
-    depends_on:
-      - db
-      - platform
-    image: spm/prototype-py:latest
-    restart: unless-stopped
-    ports:
-      - 8081:8081
-    volumes:
-      - ./data:/data:z
-    env_file:
-      - ./conf/common.env
-    security_opt:
-      - label=disable
-
-  rust:
-    container_name: rust
-    hostname: rust
-    build:
-      context: .
-      dockerfile: './prototypes/rust/Dockerfile'
-    depends_on:
-      - platform
-      - db
-    restart: unless-stopped
-    ports:
-      - 8082:8082
-    volumes:
-      - ./data:/data
-      - ./prototypes/rust:/prototype
-      - /tmp:/cargo_home
-      - /tmp:/out
-    env_file:
-      - ./conf/common.env
-    security_opt:
-      - label=disable
-      - seccomp:unconfined
-    cap_add:
-        - SYS_PTRACE
-
-
-  go:
-    container_name: go
-    hostname: go
-    build:
-      context: ./prototypes/go
       dockerfile: Dockerfile
-    environment:
-      GOPATH: /go
-
-      PRIVATE_API_USER: admin
-      PRIVATE_API_PASSWD: passwd
-
-      GIN_MODE: release
-      LOG_LEVEL: debug
-      LOG_STYLE: json
-
     env_file:
       - ./conf/common.env
-    volumes:
-      - ./prototypes/go/app:/go/src/gin-container/app
-    command: go run -v main.go --listener
+      - ./conf/listener.env
+    command: go run -v main.go listener
     ports:
       - 8080:8080
+    depends_on:
+      - db
+      - platform
+    security_opt:
+      - label=disable
+
+  webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ./conf/common.env
+      - ./conf/listener.env
+    command: go run -v main.go webserver
+    ports:
+      8080:8080
     depends_on:
       - db
       - platform
