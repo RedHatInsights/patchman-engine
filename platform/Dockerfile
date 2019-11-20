@@ -20,7 +20,7 @@ RUN pip install --upgrade pip pipenv kafka
 EXPOSE 2181 9092
 
 ADD /platform /platform/
-ADD /data     /platform/data
 ADD /scripts/* /platform/
 
 CMD /platform/entrypoint.sh
+
