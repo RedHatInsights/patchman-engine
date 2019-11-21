@@ -2,6 +2,7 @@ package routes
 
 import (
 	"app/webserver/controllers"
+	"app/webserver/graphql"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,4 +15,5 @@ func Init(app *gin.Engine) {
 	app.GET("/hosts/:id", controllers.GetHostHandler)
 	app.GET("/create", controllers.CreateHandler)
 	app.GET("/delete", controllers.DeleteHandler)
+	app.GET("/graphql", graphql.Handler)
 }
