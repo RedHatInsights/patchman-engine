@@ -57,7 +57,7 @@ services:
       - ./conf/listener.env
     command: go run -v main.go webserver
     ports:
-      8080:8080
+      - 8080:8080
     depends_on:
       - db
       - platform
