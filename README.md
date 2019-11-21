@@ -1,29 +1,26 @@
 # patchman-engine
-The purpose of this repository is to store source code for System Patch Manager prototype
+System Patch Manager application for [cloud.redhat.com](cloud.redhat.com).
 
-## Prototypes evaluation
+## Components
+The project is written as a set of communicating containers. The core components are `listener`, `manager` and `database` 
+- Listener - Connects to kafka service, and listens for messages.
+- Manager - Contains implementation of a REST API, which serves as a primary interface for interacting with the application
+- Database - Self explanatory
 
-### Go
-This is the guide how to test Go prototype:
-- Terminal 1
+## Deploying
+This project can be deployed either locally or in the cloud using openshift.
+
+### Local deployment
+Uses `docker-compose` to deploy the individual project components and supporting containers, which simulate the CMSfR platform and database respectively into local docker instance:
 ~~~bash
-docker-compose up --build db platform # start database and platform-mock
-# wait for messages to be send (>>>>>>).
+docker-compose up --build # Build images if needed and start containers
+docker-compose down       # Stop and remove containers
 ~~~
-- Terminal 2
+
+### Cloud deployment
+Relies on the [ocdeployer](https://github.com/bsquizz/ocdeployer) tool. This tool reads templates and supporting configuration files from the `openshift` directory, and
+deploys the resulting openshfit templates into specified cluster. 
+
 ~~~bash
-docker-compose up --build go # run go application
-# you should see this output:
-# {"@timestamp":"2019-11-06T11:48:14Z","duration":0.374642801,"items":30,"levelname":"info","message":"batch finished","write/sec":80.07627510771253}
-~~~
-- Terminal 3
-~~~bash
-cd prototypes/go/scripts
-./list.sh | grep '"id"' | wc -l # check expected number of returned items (30)
-./list.sh # see output
-./get_host.sh 1 # get item of id 1, check content
-~~~
-- Terminal 4
-~~~bash
-docker-compose up --build ab # run apache benchmark (n - requests, c - parallel)
+ocdeployer deploy -t openshift patchman-engine-ci -s build,deploy --secrets-local-dir openshift/secrets -e ./openshift/ci-env.yml
 ~~~

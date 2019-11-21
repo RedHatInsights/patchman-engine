@@ -3,7 +3,7 @@ package main
 import (
 	"app/base/core"
 	"app/listener"
-	"app/webserver"
+	"app/manager"
 	"log"
 	"os"
 )
@@ -16,8 +16,8 @@ func main() {
 		case "listener":
 			listener.RunListener()
 			return
-		case "webserver":
-			webserver.RunWebserver()
+		case "manager":
+			manager.RunManager()
 			return
 		}
 	}

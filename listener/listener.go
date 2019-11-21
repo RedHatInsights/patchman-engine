@@ -3,27 +3,39 @@ package listener
 import (
 	"app/base/utils"
 	"context"
+	"github.com/gin-gonic/gin"
 	"github.com/segmentio/kafka-go"
-	"time"
+	ginprometheus "github.com/zsais/go-gin-prometheus"
 )
 
 var (
 	uploadReader *kafka.Reader
+	eventsReader *kafka.Reader
 )
 
 func configure() {
-	topic := utils.GetenvOrFail("UPLOAD_TOPIC")
-	kafkaAddress := utils.GetenvOrFail("KAFKA_HOST")
-	utils.Log().Info("Connecting to ", kafkaAddress, " listening for ", topic)
+	uploadTopic := utils.GetenvOrFail("UPLOAD_TOPIC")
+	eventsTopic := utils.GetenvOrFail("EVENTS_TOPIC")
 
-	uploadReader = kafka.NewReader(kafka.ReaderConfig{
-		Brokers:   []string{kafkaAddress},
-		Topic:     topic,
-		GroupID:   "spm",
-		Partition: 0,
-		MinBytes:  10e3, // 10KB
-		MaxBytes:  10e6, // 10MB
-	})
+	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
+	kafkaGroup := utils.GetenvOrFail("KAFKA_GROUP")
+
+	utils.Log("KafkaAddress", kafkaAddress).Info("Connecting to kafka")
+
+	uploadConfig := kafka.ReaderConfig{
+		Brokers:        []string{kafkaAddress},
+		Topic:          uploadTopic,
+		GroupID:        kafkaGroup,
+		MinBytes:       1,
+		MaxBytes:       10e6, // 1MB
+	}
+
+	uploadReader = kafka.NewReader(uploadConfig)
+
+	eventsConfig := uploadConfig
+	eventsConfig.Topic = eventsTopic
+
+	eventsReader = kafka.NewReader(eventsConfig)
 
 }
 
@@ -32,27 +44,56 @@ func shutdown() {
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to shutdown Kafka reader")
 	}
+	err = eventsReader.Close()
+	if err != nil {
+		utils.Log("err", err.Error()).Error("unable to shutdown Kafka reader")
+	}
+
 }
 
+func baseListener(reader *kafka.Reader, handler func(message kafka.Message)) {
+	for {
+		m, err := reader.ReadMessage(context.Background())
+		if err != nil {
+			utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
+			panic(err)
+
+		}
+		handler(m)
+
+	}
+}
+
+func logHandler(m kafka.Message) {
+	utils.Log().Info("Received message [", m.Topic,"] ", string(m.Value))
+}
+
+func runMetrics() {
+	// create web app
+	app := gin.New()
+
+	prometheus := ginprometheus.NewPrometheus("gin")
+	prometheus.Use(app)
+	err := app.Run(":8081")
+	if err != nil {
+		utils.Log("err", err.Error()).Error()
+		panic(err)
+	}
+}
 
 func RunListener() {
 	utils.Log().Info("listener starting")
+
+	// Start a web server for handling metrics so that readiness probe works
+	go runMetrics()
+
 	configure()
 	defer shutdown()
 
-	for {
-		m, err := uploadReader.ReadMessage(context.Background())
-		if err != nil {
-			if err.Error() == "context deadline exceeded" {
-				utils.Log().Info("waiting for messages")
-				time.Sleep(time.Second)
-				return
-			}
+	go baseListener(uploadReader, logHandler)
+	go baseListener(eventsReader, logHandler)
 
-			utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
-			return
-		}
-		utils.Log().Info("Received message", m)
+	// Just block. Any error will panic and kill the process.
+	<- make(chan bool)
 
-	}
 }
