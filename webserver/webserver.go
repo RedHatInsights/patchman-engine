@@ -14,15 +14,17 @@ func RunWebserver() {
 	// create web app
 	app := gin.New()
 
-	// middlewares
 	prometheus := ginprometheus.NewPrometheus("gin")
 	prometheus.Use(app)
 	app.Use(middlewares.RequestResponseLogger())
-	app.Use(gzip.Gzip(gzip.DefaultCompression))
 	app.HandleMethodNotAllowed = true
 
-	// routes
-	routes.Init(app)
+	api := app.Group("/")
+	api.Use(gzip.Gzip(gzip.DefaultCompression))
+	routes.InitAPI(api)
+
+	private := app.Group("/private")
+	routes.InitGraphQLPlayground(private)
 
 	err := app.Run(":8080")
 	if err != nil {

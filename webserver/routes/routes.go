@@ -7,8 +7,7 @@ import (
 )
 
 // Init routes.
-func Init(app *gin.Engine) {
-	// public routes
+func InitAPI(app *gin.RouterGroup) {
 	app.GET("/health", controllers.HealthHandler)
 	app.GET("/db_health", controllers.HealthDBHandler)
 	app.GET("/samples", controllers.ListHandler)
@@ -16,4 +15,9 @@ func Init(app *gin.Engine) {
 	app.GET("/create", controllers.CreateHandler)
 	app.GET("/delete", controllers.DeleteHandler)
 	app.GET("/graphql", graphql.Handler)
+}
+
+func InitGraphQLPlayground(app *gin.RouterGroup) {
+	app.GET("/playground", graphql.PlaygroundHandler)
+	app.POST("/playground", graphql.PlaygroundHandler)
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/graphql-go/graphql"
+	"github.com/graphql-go/handler"
 )
 
 var hosts = map[int]structures.HostDAO{}
@@ -87,4 +88,14 @@ func Handler(c *gin.Context) {
 	result := executeQuery(query, schema)
 	c.JSON(http.StatusOK, result)
 	return
+}
+
+func PlaygroundHandler(c *gin.Context) {
+	h := handler.New(&handler.Config{
+		Schema: &schema,
+		Pretty: true,
+		GraphiQL: false,
+		Playground: true,
+	})
+	h.ServeHTTP(c.Writer, c.Request)
 }
