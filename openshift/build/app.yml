@@ -1,10 +1,13 @@
+# Common template for both manager and listener
 apiVersion: v1
 kind: Template
 metadata:
-  name: spm-builder-listener
+  name: patchman-engine-builder-app
 parameters:
+  - name: NAMESPACE
+    description: Name of your project (e.g. myproject)
   - name: SOURCE_REPOSITORY_URL
-    description: Github URL for Insights SPM project
+    description: Github URL for Software Patch Manager project
     value: https://github.com/RedHatInsights/patchman-engine
   - name: SOURCE_REPOSITORY_REF
     description: branch name
@@ -17,15 +20,15 @@ objects:
   - apiVersion: v1
     kind: BuildConfig
     metadata:
-      labels: { app: spm-engine }
-      name:  spm-engine-listener
+      labels: { app: patchman-engine }
+      name:  patchman-engine-app
     spec:
       resources:
         limits: { cpu: 500m, memory: 512Mi }
       output:
         to:
           kind: ImageStreamTag
-          name: spm-engine-listener:latest
+          name: patchman-engine-app:latest
       source:
         git:
           ref: ${SOURCE_REPOSITORY_REF}
@@ -39,12 +42,13 @@ objects:
       triggers:
         - type: ConfigChange
         # TODO: Github based trigger
+
   - apiVersion: v1
     kind: ImageStream
     metadata:
-      name: spm-engine-listener
+      name: patchman-engine-app
       labels:
-        app: spm-engine
+        app: patchman-engine
       spec:
         dockerImageRepository: ""
         tags:

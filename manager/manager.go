@@ -1,16 +1,16 @@
-package webserver
+package manager
 
 import (
 	"app/base/utils"
-	"app/webserver/middlewares"
-	"app/webserver/routes"
+	"app/manager/middlewares"
+	"app/manager/routes"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/zsais/go-gin-prometheus"
 )
 
-func RunWebserver() {
-	utils.Log().Info("webserver starting")
+func RunManager() {
+	utils.Log().Info("Manager starting")
 	// create web app
 	app := gin.New()
 

@@ -1,6 +1,7 @@
 version: '3'
 
 services:
+  
   db:
     container_name: db
     build:
@@ -14,7 +15,7 @@ services:
     security_opt:
       - label=disable
     volumes:
-      - spm-engine-database-data:/var/lib/pgsql/data
+      - patchman-engine-database-data:/var/lib/pgsql/data
 
   platform:
     container_name: platform
@@ -22,15 +23,14 @@ services:
     build:
       context: .
       dockerfile: platform/Dockerfile
+    env_file:
+      - ./conf/common.env
+      - ./conf/platform.env
     restart: unless-stopped
     depends_on:
       - db
     ports:
       - 9092:9092
-    env_file:
-      - ./conf/common.env
-    security_opt:
-      - label=disable
 
   listener:
     build:
@@ -39,29 +39,26 @@ services:
     env_file:
       - ./conf/common.env
       - ./conf/listener.env
-    command: go run -v main.go listener
+    command: ./listener/entrypoint.sh
     ports:
       - 8081:8081
     depends_on:
       - db
       - platform
-    security_opt:
-      - label=disable
 
-  webserver:
+  manager:
     build:
       context: .
       dockerfile: Dockerfile
     env_file:
       - ./conf/common.env
-    command: go run -v main.go webserver
+      - conf/manager.env
+    command: ./manager/entrypoint.sh
     ports:
       - 8080:8080
     depends_on:
       - db
       - platform
-    security_opt:
-      - label=disable
 
 volumes:
-  spm-engine-database-data:
+  patchman-engine-database-data:

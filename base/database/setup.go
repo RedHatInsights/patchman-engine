@@ -1,8 +1,8 @@
 package database
 
 import (
-	"fmt"
 	"app/base/utils"
+	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"os"

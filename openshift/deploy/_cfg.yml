@@ -1,0 +1,8 @@
+secrets:
+  - "patchman-engine-database-passwords"
+deploy_order:
+  stage0:
+    components:
+      - "database"
+      - "listener"
+      - "manager"

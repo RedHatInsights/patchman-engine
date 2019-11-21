@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"app/base/database"
-	"app/webserver/middlewares"
+	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
 
 	"app/base/structures"
