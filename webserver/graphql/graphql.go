@@ -11,9 +11,9 @@ import (
 	"github.com/graphql-go/handler"
 )
 
-var hosts = map[int]structures.HostDAO{}
+var hosts = []structures.HostDAO{}
 
-var hostSchema = graphql.NewObject(
+var hostType = graphql.NewObject(
 	graphql.ObjectConfig{
 		Name: "host",
 		Fields: graphql.Fields{
@@ -33,23 +33,27 @@ var hostSchema = graphql.NewObject(
 	},
 )
 
+var hostsType = graphql.NewList(hostType)
+
 var querySchema = graphql.NewObject(
 	graphql.ObjectConfig{
 		Name: "Query",
 		Fields: graphql.Fields{
-			"host": &graphql.Field{
-				Type: hostSchema,
+			"hosts": &graphql.Field{
+				Type: hostsType,
 				Args: graphql.FieldConfigArgument{
-					"id": &graphql.ArgumentConfig{
+					"limit": &graphql.ArgumentConfig{
 						Type: graphql.Int,
+						DefaultValue: 1,
+						Description: "Number of items to return",
 					},
 				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					query, found := p.Args["id"].(int)
-					if found {
-						return hosts[query], nil
+					limit, found := p.Args["limit"].(int)
+					if !found {
+						return nil, nil
 					}
-					return nil, nil
+					return hosts[:limit], nil
 				},
 			},
 		},
@@ -74,13 +78,15 @@ func executeQuery(query string, schema graphql.Schema) *graphql.Result {
 
 // TODO: tmp create some hosts to play with
 func init() {
-	addHost(1, "host1", "abc")
-	addHost(2, "host2", "def")
-	addHost(3, "host3", "gah")
+	addHost(1, "{}", "abc")
+	addHost(2, "{}", "def")
+	addHost(3, "{}", "ghi")
+	addHost(4, "{}", "jkl")
+	addHost(5, "{}", "mno")
 }
 
 func addHost(id int, request, checksum string) {
-	hosts[id] = structures.HostDAO{id, request, checksum, time.Now()}
+	hosts = append(hosts, structures.HostDAO{id, request, checksum, time.Now()})
 }
 
 func Handler(c *gin.Context) {

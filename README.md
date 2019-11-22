@@ -36,12 +36,12 @@ docker-compose up --build webserver
 
 2. Run playground (<http://localhost:8080/private/playground>) and paste query
 ~~~graphql
-query {
-  host(id:1){
-    id,
-    request,
-    checksum
+query{
+  hosts(limit: 3) {
+    id
     updated
+    request
+    checksum
   }
 }
 ~~~
