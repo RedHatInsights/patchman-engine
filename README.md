@@ -27,3 +27,26 @@ cd prototypes/go/scripts
 ~~~bash
 docker-compose up --build ab # run apache benchmark (n - requests, c - parallel)
 ~~~
+
+## GraphQL
+1. Run webserver:
+~~~bash
+docker-compose up --build webserver
+~~~
+
+2. Run playground (<http://localhost:8080/private/playground>) and paste query
+~~~graphql
+query {
+  host(id:1){
+    id,
+    request,
+    checksum
+    updated
+  }
+}
+~~~
+
+3. Try request using curl:
+~~~bash
+./scripts/graphql.sh
+~~~
