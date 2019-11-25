@@ -13,6 +13,7 @@ RUN go mod vendor
 ADD /base       /go/src/app/base
 ADD /manager    /go/src/app/manager
 ADD /listener   /go/src/app/listener
+ADD /docs       /go/src/app/docs
 ADD main.go     /go/src/app/
 
 RUN adduser --gid 0 -d /go --no-create-home insights

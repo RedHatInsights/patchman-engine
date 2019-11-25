@@ -24,3 +24,20 @@ deploys the resulting openshfit templates into specified cluster.
 ~~~bash
 ocdeployer deploy -t openshift patchman-engine-ci -s build,deploy --secrets-local-dir openshift/secrets -e ./openshift/ci-env.yml
 ~~~
+
+## Test API mockups
+Test using dev shell scripts:
+~~~bash
+# Terminal 1
+docker-compose up --build webserver # term 1
+
+# Terminal 2
+cd dev/scripts
+./advisories_list.sh
+./advisory_detail.sh
+./systems_applicable.sh 1
+./systems_list.sh
+./system_detail.sh 1
+~~~
+
+Test using Swagger, open <http://localhost:8080/swagger/index.html>.
