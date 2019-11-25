@@ -1,0 +1,266 @@
+definitions:
+  controllers.AdvisoryDetailAttributes:
+    properties:
+      cves:
+        items:
+          type: string
+        type: array
+      description:
+        type: string
+      fixes:
+        type: string
+      modified_date:
+        type: string
+      public_date:
+        type: string
+      references:
+        items:
+          type: string
+        type: array
+      severity:
+        type: string
+      solution:
+        type: string
+      synopsis:
+        type: string
+      topic:
+        type: string
+    type: object
+  controllers.AdvisoryDetailResponse:
+    properties:
+      attributes:
+        $ref: '#/definitions/controllers.AdvisoryDetailAttributes'
+        type: object
+      id:
+        type: string
+      type:
+        type: string
+    type: object
+  controllers.AdvisoryItem:
+    properties:
+      attributes:
+        $ref: '#/definitions/controllers.AdvisoryItemAttributes'
+        type: object
+      id:
+        type: string
+      type:
+        type: string
+    type: object
+  controllers.AdvisoryItemAttributes:
+    properties:
+      advisory_type:
+        type: integer
+      applicable_systems:
+        type: integer
+      description:
+        type: string
+      public_date:
+        type: string
+      severity:
+        type: string
+      synopsis:
+        type: string
+    type: object
+  controllers.AdvisoryMeta:
+    properties:
+      data_format:
+        type: string
+      filter:
+        type: string
+      limit:
+        type: integer
+      offset:
+        type: integer
+      page:
+        type: integer
+      page_size:
+        type: integer
+      pages:
+        type: integer
+      public_from:
+        type: integer
+      public_to:
+        type: integer
+      severity:
+        type: string
+      show_all:
+        type: boolean
+      sort:
+        type: boolean
+      total_items:
+        type: integer
+    type: object
+  controllers.Links:
+    properties:
+      first:
+        type: string
+      last:
+        type: string
+      next:
+        type: string
+      previous:
+        type: string
+    type: object
+  controllers.SystemDetailResponse:
+    properties:
+      data:
+        description: advisories items
+        items:
+          $ref: '#/definitions/controllers.AdvisoryItem'
+        type: array
+      links:
+        $ref: '#/definitions/controllers.Links'
+        type: object
+      meta:
+        $ref: '#/definitions/controllers.AdvisoryMeta'
+        type: object
+    type: object
+  controllers.SystemItem:
+    properties:
+      attributes:
+        $ref: '#/definitions/controllers.SystemItemAttributes'
+        type: object
+      id:
+        type: string
+      type:
+        type: string
+    type: object
+  controllers.SystemItemAttributes:
+    properties:
+      enabled:
+        type: boolean
+      last_evaluation:
+        type: string
+      last_upload:
+        type: string
+      rhba_count:
+        type: integer
+      rhea_count:
+        type: integer
+      rhsa_count:
+        type: integer
+    type: object
+  controllers.SystemsApplicableMeta:
+    properties:
+      advisory:
+        type: string
+      data_format:
+        type: string
+      enabled:
+        type: boolean
+      filter:
+        type: string
+      limit:
+        type: integer
+      offset:
+        type: integer
+      page:
+        type: integer
+      page_size:
+        type: integer
+      pages:
+        type: integer
+      total_items:
+        type: integer
+    type: object
+  controllers.SystemsApplicableResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/controllers.SystemItem'
+        type: array
+      links:
+        $ref: '#/definitions/controllers.Links'
+        type: object
+      meta:
+        $ref: '#/definitions/controllers.SystemsApplicableMeta'
+        type: object
+    type: object
+info:
+  contact: {}
+  license: {}
+paths:
+  /api/patch/v1/advisories:
+    get:
+      consumes:
+      - application/json
+      description: Show me all applicable errata for all my systems
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.SystemDetailResponse'
+      summary: Show me all applicable errata for all my systems
+  /api/patch/v1/advisories/{advisory_id}:
+    get:
+      consumes:
+      - application/json
+      description: Show me details an advisory by given advisory name
+      parameters:
+      - description: Advisory ID
+        in: path
+        name: advisory_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.AdvisoryDetailResponse'
+      summary: Show me details an advisory by given advisory name
+  /api/patch/v1/advisories/{advisory_id}/applicable_systems:
+    get:
+      consumes:
+      - application/json
+      description: Show me all my systems
+      parameters:
+      - description: Advisory ID
+        in: path
+        name: advisory_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.SystemsApplicableResponse'
+      summary: Show me all my systems
+  /api/patch/v1/systems:
+    get:
+      consumes:
+      - application/json
+      description: Show me all my systems
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.SystemDetailResponse'
+      summary: Show me all my systems
+  /api/patch/v1/systems/{inventory_id}:
+    get:
+      consumes:
+      - application/json
+      description: Show me details about a system by given inventory id
+      parameters:
+      - description: Inventory ID
+        in: path
+        name: inventory_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.SystemDetailResponse'
+      summary: Show me details about a system by given inventory id
+swagger: "2.0"
