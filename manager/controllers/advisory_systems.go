@@ -6,13 +6,13 @@ import (
 	"time"
 )
 
-type SystemsApplicableResponse struct {
-	Data  []SystemItem           `json:"data"`
-	Links Links                  `json:"links"`
-	Meta  SystemsApplicableMeta  `json:"meta"`
+type AdvisorySystemsResponse struct {
+	Data  []SystemItem        `json:"data"`
+	Links Links               `json:"links"`
+	Meta  AdvisorySystemsMeta `json:"meta"`
 }
 
-type SystemsApplicableMeta struct {
+type AdvisorySystemsMeta struct {
 	DataFormat string  `json:"data_format"`
 	Filter     *string `json:"filter"`
 	Limit      int     `json:"limit"`
@@ -25,15 +25,15 @@ type SystemsApplicableMeta struct {
 	TotalItems int     `json:"total_items"`
 }
 
-// @Summary Show me all my systems
-// @Description Show me all my systems
+// @Summary Show me systems on which the given advisory is applicable
+// @Description Show me systems on which the given advisory is applicable
 // @Accept   json
 // @Produce  json
 // @Param    advisory_id    path    string   true "Advisory ID"
-// @Success 200 {object} SystemsApplicableResponse
-// @Router /api/patch/v1/advisories/{advisory_id}/applicable_systems [get]
-func ApplicableSystemsListHandler(c *gin.Context) {
-	var resp = SystemsApplicableResponse{
+// @Success 200 {object} AdvisorySystemsResponse
+// @Router /api/patch/v1/advisories/{advisory_id}/systems [get]
+func AdvisorySystemsListHandler(c *gin.Context) {
+	var resp = AdvisorySystemsResponse{
 		Data: []SystemItem{{
 			Attributes: SystemItemAttributes{
 				LastEvaluation: time.Now(),
@@ -47,12 +47,12 @@ func ApplicableSystemsListHandler(c *gin.Context) {
 			Type: "system" },
 		},
 		Links: Links{
-			First: "/api/patch/v1/advisories/$ERRATAID/applicable_systems?offset=0&limit=25&data_format=json&show_all=True",
-			Last: "/api/patch/v1/advisories/$ERRATAID/applicable_systems?offset=21475&limit=25&data_format=json&show_all=True",
-			Next: "/api/patch/v1/advisories/$ERRATAID/applicable_systems?offset=25&limit=25&data_format=json&show_all=True",
+			First: "/api/patch/v1/advisories/$ADVISORY_ID/systems?offset=0&limit=25&data_format=json&show_all=True",
+			Last: "/api/patch/v1/advisories/$ADVISORY_ID/systems?offset=21475&limit=25&data_format=json&show_all=True",
+			Next: "/api/patch/v1/advisories/$ADVISORY_ID/systems?offset=25&limit=25&data_format=json&show_all=True",
 			Previous: nil,
 		},
-		Meta:  SystemsApplicableMeta{
+		Meta:  AdvisorySystemsMeta{
 			DataFormat: "json",
 			Filter: nil,
 			Limit: 25,

@@ -7,9 +7,7 @@ import (
 )
 
 type SystemDetailResponse struct {
-	Data  []AdvisoryItem `json:"data"`  // advisories items
-	Links Links          `json:"links"`
-	Meta  AdvisoryMeta   `json:"meta"`
+	Data  SystemItem     `json:"data"`
 }
 
 // @Summary Show me details about a system by given inventory id
@@ -21,37 +19,16 @@ type SystemDetailResponse struct {
 // @Router /api/patch/v1/systems/{inventory_id} [get]
 func SystemDetailHandler(c *gin.Context) {
 	var resp = SystemDetailResponse{
-		Data: []AdvisoryItem{{
-			Attributes: AdvisoryItemAttributes{
-				Description: "The kernel-rt packages provide the Real Time Linux Kernel, ...",
-				Severity: "Important",
-				PublicDate: time.Now(),
-				Synopsis: "Important: kernel-rt security update",
-				AdvisoryType: 2,
-				ApplicableSystems: 6 },
-			Id: "RHSA-2019:3908",
-			Type: "advisory" },
-		},
-		Links: Links{
-			First: "/api/patch/v1/advisories?offset=0&limit=25&data_format=json&show_all=True",
-			Last: "/api/patch/v1/advisories?offset=21475&limit=25&data_format=json&show_all=True",
-			Next: "/api/patch/v1/advisories?offset=25&limit=25&data_format=json&show_all=True",
-			Previous: nil,
-		},
-		Meta:  AdvisoryMeta{
-			DataFormat: "json",
-			Filter: nil,
-			Severity: nil,
-			Limit: 25,
-			Offset: 0,
-			Page: 1,
-			PageSize: 25,
-			Pages: 10,
-			PublicFrom: nil,
-			PublicTo: nil,
-			ShowAll: true,
-			Sort: nil,
-			TotalItems: 250,
+		Data: SystemItem{
+			Attributes: SystemItemAttributes{
+				LastEvaluation: time.Now(),
+				LastUpload:     nil,
+				RhsaCount:      2,
+				RhbaCount:      5,
+				RheaCount:      1,
+				Enabled:        true },
+			Id: "b89e2f25-8b28-4e1c-9879-947143c2cee9",
+			Type: "system",
 		},
 	}
 	c.JSON(http.StatusOK, &resp)
