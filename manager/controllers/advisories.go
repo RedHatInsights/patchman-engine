@@ -16,7 +16,7 @@ type AdvisoriesResponse struct {
 // @Description Show me all applicable errata for all my systems
 // @Accept   json
 // @Produce  json
-// @Success 200 {object} SystemDetailResponse
+// @Success 200 {object} AdvisoriesResponse
 // @Router /api/patch/v1/advisories [get]
 func AdvisoriesListHandler(c *gin.Context) {
 	var resp = AdvisoriesResponse{

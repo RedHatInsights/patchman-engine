@@ -28,7 +28,7 @@ type SystemsMeta struct {
 // @Description Show me all my systems
 // @Accept   json
 // @Produce  json
-// @Success 200 {object} SystemDetailResponse
+// @Success 200 {object} SystemsResponse
 // @Router /api/patch/v1/systems [get]
 func SystemsListHandler(c *gin.Context) {
 	var resp = SystemsResponse{

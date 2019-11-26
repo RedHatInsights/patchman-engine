@@ -1,4 +1,18 @@
 definitions:
+  controllers.AdvisoriesResponse:
+    properties:
+      data:
+        description: advisories items
+        items:
+          $ref: '#/definitions/controllers.AdvisoryItem'
+        type: array
+      links:
+        $ref: '#/definitions/controllers.Links'
+        type: object
+      meta:
+        $ref: '#/definitions/controllers.AdvisoryMeta'
+        type: object
+    type: object
   controllers.AdvisoryDetailAttributes:
     properties:
       cves:
@@ -26,7 +40,7 @@ definitions:
       topic:
         type: string
     type: object
-  controllers.AdvisoryDetailResponse:
+  controllers.AdvisoryDetailItem:
     properties:
       attributes:
         $ref: '#/definitions/controllers.AdvisoryDetailAttributes'
@@ -35,6 +49,12 @@ definitions:
         type: string
       type:
         type: string
+    type: object
+  controllers.AdvisoryDetailResponse:
+    properties:
+      data:
+        $ref: '#/definitions/controllers.AdvisoryDetailItem'
+        type: object
     type: object
   controllers.AdvisoryItem:
     properties:
@@ -90,6 +110,42 @@ definitions:
       total_items:
         type: integer
     type: object
+  controllers.AdvisorySystemsMeta:
+    properties:
+      advisory:
+        type: string
+      data_format:
+        type: string
+      enabled:
+        type: boolean
+      filter:
+        type: string
+      limit:
+        type: integer
+      offset:
+        type: integer
+      page:
+        type: integer
+      page_size:
+        type: integer
+      pages:
+        type: integer
+      total_items:
+        type: integer
+    type: object
+  controllers.AdvisorySystemsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/controllers.SystemItem'
+        type: array
+      links:
+        $ref: '#/definitions/controllers.Links'
+        type: object
+      meta:
+        $ref: '#/definitions/controllers.AdvisorySystemsMeta'
+        type: object
+    type: object
   controllers.Links:
     properties:
       first:
@@ -101,7 +157,7 @@ definitions:
       previous:
         type: string
     type: object
-  controllers.SystemDetailResponse:
+  controllers.SystemAdvisoriesResponse:
     properties:
       data:
         description: advisories items
@@ -113,6 +169,12 @@ definitions:
         type: object
       meta:
         $ref: '#/definitions/controllers.AdvisoryMeta'
+        type: object
+    type: object
+  controllers.SystemDetailResponse:
+    properties:
+      data:
+        $ref: '#/definitions/controllers.SystemItem'
         type: object
     type: object
   controllers.SystemItem:
@@ -140,10 +202,8 @@ definitions:
       rhsa_count:
         type: integer
     type: object
-  controllers.SystemsApplicableMeta:
+  controllers.SystemsMeta:
     properties:
-      advisory:
-        type: string
       data_format:
         type: string
       enabled:
@@ -163,7 +223,7 @@ definitions:
       total_items:
         type: integer
     type: object
-  controllers.SystemsApplicableResponse:
+  controllers.SystemsResponse:
     properties:
       data:
         items:
@@ -173,7 +233,7 @@ definitions:
         $ref: '#/definitions/controllers.Links'
         type: object
       meta:
-        $ref: '#/definitions/controllers.SystemsApplicableMeta'
+        $ref: '#/definitions/controllers.SystemsMeta'
         type: object
     type: object
 info:
@@ -191,7 +251,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/controllers.SystemDetailResponse'
+            $ref: '#/definitions/controllers.AdvisoriesResponse'
       summary: Show me all applicable errata for all my systems
   /api/patch/v1/advisories/{advisory_id}:
     get:
@@ -212,11 +272,11 @@ paths:
           schema:
             $ref: '#/definitions/controllers.AdvisoryDetailResponse'
       summary: Show me details an advisory by given advisory name
-  /api/patch/v1/advisories/{advisory_id}/applicable_systems:
+  /api/patch/v1/advisories/{advisory_id}/systems:
     get:
       consumes:
       - application/json
-      description: Show me all my systems
+      description: Show me systems on which the given advisory is applicable
       parameters:
       - description: Advisory ID
         in: path
@@ -229,8 +289,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/controllers.SystemsApplicableResponse'
-      summary: Show me all my systems
+            $ref: '#/definitions/controllers.AdvisorySystemsResponse'
+      summary: Show me systems on which the given advisory is applicable
   /api/patch/v1/systems:
     get:
       consumes:
@@ -242,7 +302,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/controllers.SystemDetailResponse'
+            $ref: '#/definitions/controllers.SystemsResponse'
       summary: Show me all my systems
   /api/patch/v1/systems/{inventory_id}:
     get:
@@ -263,4 +323,23 @@ paths:
           schema:
             $ref: '#/definitions/controllers.SystemDetailResponse'
       summary: Show me details about a system by given inventory id
+  /api/patch/v1/systems/{inventory_id}/advisories:
+    get:
+      consumes:
+      - application/json
+      description: Show me advisories for a system by given inventory id
+      parameters:
+      - description: Inventory ID
+        in: path
+        name: inventory_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.SystemAdvisoriesResponse'
+      summary: Show me advisories for a system by given inventory id
 swagger: "2.0"

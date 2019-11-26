@@ -15,8 +15,8 @@ func Init(app *gin.Engine) {
 func InitAPI(group *gin.RouterGroup) {
 	group.GET("/advisories", controllers.AdvisoriesListHandler)
 	group.GET("/advisories/:advisory_id", controllers.AdvisoryDetailHandler)
-	group.GET("/advisories/:advisory_id/applicable_systems",
-		controllers.ApplicableSystemsListHandler)
+	group.GET("/advisories/:advisory_id/systems", controllers.AdvisorySystemsListHandler)
 	group.GET("/systems", controllers.SystemsListHandler)
 	group.GET("/systems/:inventory_id", controllers.SystemDetailHandler)
+	group.GET("/systems/:inventory_id/advisories", controllers.SystemAdvisoriesHandler)
 }
