@@ -13,7 +13,7 @@ parameters:
     value: master
   - name: DOCKERFILE
     description: Source Dockerfile filename
-    value: database/Dockerfile
+    value: database/Dockerfile.rhel7
 
 objects:
   - apiVersion: v1

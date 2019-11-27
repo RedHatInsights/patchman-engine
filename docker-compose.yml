@@ -6,7 +6,7 @@ services:
     container_name: db
     build:
       context: .
-      dockerfile: database/Dockerfile
+      dockerfile: database/Dockerfile.centos
     ports:
       - 5432:5432
     env_file:
@@ -35,7 +35,7 @@ services:
   listener:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.centos
     env_file:
       - ./conf/common.env
       - ./conf/listener.env
@@ -49,7 +49,7 @@ services:
   manager:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.centos
     env_file:
       - ./conf/common.env
       - conf/manager.env

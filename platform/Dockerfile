@@ -1,5 +1,5 @@
 FROM centos:7
-
+# This Dockerfile is for local purposes only, we don't need a RHEL alternative
 RUN yum -y install centos-release-scl && \
     yum -y install rh-python36 which java-openjdk-headless postgresql && \
     rm -rf /var/cache/yum/*
