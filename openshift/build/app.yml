@@ -14,7 +14,7 @@ parameters:
     value: master
   - name: DOCKERFILE
     description: Source Dockerfile filename
-    value: Dockerfile
+    value: Dockerfile.rhel8
 
 objects:
   - apiVersion: v1
