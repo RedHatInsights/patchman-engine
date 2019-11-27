@@ -25,6 +25,12 @@ deploys the resulting openshfit templates into specified cluster.
 ocdeployer deploy -t openshift patchman-engine-ci -s build,deploy --secrets-local-dir openshift/secrets -e ./openshift/ci-env.yml
 ~~~
 
+## (Re)generate API docs
+~~~bash
+go get -u github.com/swaggo/swag/cmd/swag # download binary to generate, do it first time only
+./scripts/generate_docs.sh
+~~~
+
 ## Test API mockups
 Test using dev shell scripts:
 ~~~bash
