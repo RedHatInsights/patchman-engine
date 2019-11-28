@@ -1,5 +1,4 @@
--- Create specific users for different components of the application
-
+CREATE USER evaluator;
 CREATE USER listener;
-
 CREATE USER manager;
+CREATE USER vmaas_sync;
