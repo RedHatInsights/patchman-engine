@@ -1,15 +1,10 @@
-create table if not exists hosts
+CREATE TABLE IF NOT EXISTS hosts
 (
-    id       integer primary key,
-    request  varchar                     not null,
-    checksum varchar                     not null,
+    id       INTEGER PRIMARY KEY,
+    request  VARCHAR                     NOT NULL,
+    checksum VARCHAR                     NOT NULL,
     updated  TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
-
-INSERT INTO hosts
-VALUES (1, '{"req":"pkg1"}', 'abcd');
-INSERT INTO hosts
-VALUES (2, '{"req":"pkg2"}', 'efgh');
 
 -- set_last_updated
 CREATE OR REPLACE FUNCTION set_last_updated()
@@ -24,7 +19,6 @@ BEGIN
 END;
 $set_last_updated$
     LANGUAGE 'plpgsql';
-
 
 CREATE TRIGGER hosts_last_updated
     BEFORE INSERT OR UPDATE
