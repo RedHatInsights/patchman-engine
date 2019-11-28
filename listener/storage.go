@@ -10,18 +10,18 @@ import (
 )
 
 type Storage struct {
-	buffer        *[]structures.HostDAO
+	buffer        *[]structures.SystemDAO
 	useBatchWrite bool
 }
 
 func InitStorage(bufferSize int, useBatchWrite bool) *Storage{
-	buffer := make([]structures.HostDAO, 0, bufferSize) // init empty array with given capacity
+	buffer := make([]structures.SystemDAO, 0, bufferSize) // init empty array with given capacity
 	storage := Storage{buffer: &buffer, useBatchWrite: useBatchWrite}
 	utils.Log("useBatchWrite", useBatchWrite).Info("buffered storage created")
 	return &storage
 }
 
-func (s *Storage) Add(host *structures.HostDAO) error {
+func (s *Storage) Add(host *structures.SystemDAO) error {
 	if s.Capacity() == s.StoredItems() {
 		err := s.Flush()
 		if err != nil {

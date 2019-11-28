@@ -4,14 +4,14 @@ import (
     "time"
 )
 
-type HostDAO struct {
-	ID              int        `json:"id"       gorm:"not null;primary_key" binding:"required"`
-	Request         string     `json:"request"  gorm:"not null"             binding:"required"`
-	Checksum        string     `json:"checksum" gorm:"not null"             binding:"required"`
-	Updated         time.Time  `json:"updated"  gorm:"-"`
+type SystemDAO struct {
+	ID              int        `gorm:"column:id"`
+	Request         string     `gorm:"column:"`
+	Checksum        string     `gorm:"column:"`
+	Updated         time.Time  `gorm:"column:"`
 }
 
 // db table name, for gorm
-func (HostDAO) TableName() string {
-	return "hosts"
+func (SystemDAO) TableName() string {
+	return "system_platform"
 }

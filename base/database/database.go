@@ -8,12 +8,12 @@ import (
 
 // database cleaning method
 func DelteAllHosts() error {
-	err := Db.Delete(structures.HostDAO{}).Error
+	err := Db.Delete(structures.SystemDAO{}).Error
 	return err
 }
 
 func HostsCount() (int, error) {
 	cnt := 0
-	err := Db.Model(structures.HostDAO{}).Count(&cnt).Error
+	err := Db.Model(structures.SystemDAO{}).Count(&cnt).Error
 	return cnt, err
 }
