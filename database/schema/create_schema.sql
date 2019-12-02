@@ -77,80 +77,80 @@ $opt_out_system_update_cache$
     IF (TG_OP = 'UPDATE') AND NEW.last_evaluation IS NOT NULL THEN
       -- system opted out
       IF OLD.opt_out = FALSE AND NEW.opt_out = TRUE THEN
-        -- decrement affected cve counts for system
-        WITH to_update_cves AS (
-          SELECT cad.cve_id, cad.status_id AS global_status_id, sv.status_id
-          FROM cve_account_data cad INNER JOIN
-               system_vulnerabilities sv ON cad.cve_id = sv.cve_id
-          WHERE cad.rh_account_id = NEW.rh_account_id AND
-                sv.system_id = NEW.id AND
-                sv.when_mitigated IS NULL
-          ORDER BY cad.cve_id
-          FOR UPDATE OF cad
+        -- decrement affected errata counts for system
+        WITH to_update_advisories AS (
+          SELECT ead.errata_id, ead.status_id AS global_status_id, sa.status_id
+          FROM errata_account_data ead INNER JOIN
+               system_advisories sa ON ead.errata_id = sa.errata_id
+          WHERE ead.rh_account_id = NEW.rh_account_id AND
+                sa.system_id = NEW.id AND
+                sa.when_patched IS NULL
+          ORDER BY ead.errata_id
+          FOR UPDATE OF ead
         -- decrement systems_affected and systems_status_divergent in case status is different
         ), update_divergent AS (
-          UPDATE cve_account_data cad
+          UPDATE errata_account_data ead
           SET systems_affected = systems_affected - 1,
               systems_status_divergent = systems_status_divergent - 1
-          FROM to_update_cves
-          WHERE cad.cve_id = to_update_cves.cve_id AND
-                cad.rh_account_id = NEW.rh_account_id AND
-                to_update_cves.global_status_id != to_update_cves.status_id
+          FROM to_update_advisories
+          WHERE ead.errata_id = to_update_advisories.errata_id AND
+                ead.rh_account_id = NEW.rh_account_id AND
+                to_update_advisories.global_status_id != to_update_advisories.status_id
         )
         -- decrement only systems_affected in case status is same
-        UPDATE cve_account_data cad
+        UPDATE errata_account_data ead
         SET systems_affected = systems_affected - 1
-        FROM to_update_cves
-        WHERE cad.cve_id = to_update_cves.cve_id AND
-              cad.rh_account_id = NEW.rh_account_id AND
-              to_update_cves.global_status_id = to_update_cves.status_id;
-        -- delete zero cve counts
-        DELETE FROM cve_account_data
+        FROM to_update_advisories
+        WHERE ead.errata_id = to_update_advisories.errata_id AND
+              ead.rh_account_id = NEW.rh_account_id AND
+              to_update_advisories.global_status_id = to_update_advisories.status_id;
+        -- delete zero errata counts
+        DELETE FROM errata_account_data
         WHERE rh_account_id = NEW.rh_account_id AND
               systems_affected = 0;
 
       -- system opted in
       ELSIF OLD.opt_out = TRUE AND NEW.opt_out = FALSE THEN
-        -- increment affected cve counts for system
-        WITH to_update_cves AS (
-          SELECT cad.cve_id, cad.status_id AS global_status_id, sv.status_id
-          FROM cve_account_data cad INNER JOIN
-               system_vulnerabilities sv ON cad.cve_id = sv.cve_id
-          WHERE cad.rh_account_id = NEW.rh_account_id AND
-                sv.system_id = NEW.id AND
-                sv.when_mitigated IS NULL
-          ORDER BY cad.cve_id
-          FOR UPDATE OF cad
+        -- increment affected errata counts for system
+        WITH to_update_advisories AS (
+          SELECT ead.errata_id, ead.status_id AS global_status_id, sa.status_id
+          FROM errata_account_data ead INNER JOIN
+               system_advisories sa ON ead.errata_id = sa.errata_id
+          WHERE ead.rh_account_id = NEW.rh_account_id AND
+                sa.system_id = NEW.id AND
+                sa.when_patched IS NULL
+          ORDER BY ead.errata_id
+          FOR UPDATE OF ead
         -- increment systems_affected and systems_status_divergent in case status is different
         ), update_divergent AS (
-          UPDATE cve_account_data cad
+          UPDATE errata_account_data ead
           SET systems_affected = systems_affected + 1,
               systems_status_divergent = systems_status_divergent + 1
-          FROM to_update_cves
-          WHERE cad.cve_id = to_update_cves.cve_id AND
-                cad.rh_account_id = NEW.rh_account_id AND
-                to_update_cves.global_status_id != to_update_cves.status_id
+          FROM to_update_advisories
+          WHERE ead.errata_id = to_update_advisories.errata_id AND
+                ead.rh_account_id = NEW.rh_account_id AND
+                to_update_advisories.global_status_id != to_update_advisories.status_id
         )
         -- increment only systems_affected in case status is same
-        UPDATE cve_account_data cad
+        UPDATE errata_account_data ead
         SET systems_affected = systems_affected + 1
-        FROM to_update_cves
-        WHERE cad.cve_id = to_update_cves.cve_id AND
-              cad.rh_account_id = NEW.rh_account_id AND
-              to_update_cves.global_status_id = to_update_cves.status_id;
+        FROM to_update_advisories
+        WHERE ead.errata_id = to_update_advisories.errata_id AND
+              ead.rh_account_id = NEW.rh_account_id AND
+              to_update_advisories.global_status_id = to_update_advisories.status_id;
         -- insert cache if not exists
-        INSERT INTO cve_account_data (cve_id, rh_account_id, systems_affected)
-        SELECT sv.cve_id, NEW.rh_account_id, 1
-        FROM system_vulnerabilities sv
-        WHERE sv.system_id = NEW.id AND
-              sv.when_mitigated IS NULL AND
+        INSERT INTO errata_account_data (errata_id, rh_account_id, systems_affected)
+        SELECT sa.errata_id, NEW.rh_account_id, 1
+        FROM system_advisories sa
+        WHERE sa.system_id = NEW.id AND
+              sa.when_patched IS NULL AND
               NOT EXISTS (
-                SELECT 1 FROM cve_account_data
+                SELECT 1 FROM errata_account_data
                 WHERE rh_account_id = NEW.rh_account_id AND
-                      cve_id = sv.cve_id
+                      errata_id = sa.errata_id
               )
-        ON CONFLICT (cve_id, rh_account_id) DO UPDATE SET
-          systems_affected = cve_account_data.systems_affected + EXCLUDED.systems_affected;
+        ON CONFLICT (errata_id, rh_account_id) DO UPDATE SET
+          systems_affected = errata_account_data.systems_affected + EXCLUDED.systems_affected;
       END IF;
     END IF;
     RETURN NEW;
@@ -165,41 +165,41 @@ CREATE OR REPLACE FUNCTION refresh_all_cached_counts()
   RETURNS void AS
 $refresh_all_cached_counts$
   BEGIN
-    -- update cve count for ordered systems
+    -- update errata count for ordered systems
     WITH to_update_systems AS (
       SELECT sp.id
       FROM system_platform sp
       ORDER BY sp.rh_account_id, sp.id
       FOR UPDATE OF sp
     )
-    UPDATE system_platform sp SET cve_count_cache = (
-      SELECT COUNT(cve_id) FROM system_vulnerabilities sv
-      WHERE sv.system_id = sp.id AND sv.when_mitigated IS NULL
+    UPDATE system_platform sp SET errata_count_cache = (
+      SELECT COUNT(errata_id) FROM system_advisories sa
+      WHERE sa.system_id = sp.id AND sa.when_patched IS NULL
     )
     FROM to_update_systems
     WHERE sp.id = to_update_systems.id;
 
-    -- update system count for ordered cves
+    -- update system count for ordered errata
     WITH locked_rows AS (
-      SELECT cad.rh_account_id, cad.cve_id
-      FROM cve_account_data cad
-      ORDER BY cad.rh_account_id, cad.cve_id
-      FOR UPDATE OF cad
+      SELECT ead.rh_account_id, ead.errata_id
+      FROM errata_account_data ead
+      ORDER BY ead.rh_account_id, ead.errata_id
+      FOR UPDATE OF ead
     ), current_counts AS (
-      SELECT sv.cve_id, sp.rh_account_id, count(sv.system_id) as systems_affected
-      FROM system_vulnerabilities sv INNER JOIN
-           system_platform sp ON sv.system_id = sp.id
+      SELECT sa.errata_id, sp.rh_account_id, count(sa.system_id) as systems_affected
+      FROM system_advisories sa INNER JOIN
+           system_platform sp ON sa.system_id = sp.id
       WHERE sp.last_evaluation IS NOT NULL AND
             sp.opt_out = FALSE AND
-            sv.when_mitigated IS NULL
-      GROUP BY sv.cve_id, sp.rh_account_id
+            sa.when_patched IS NULL
+      GROUP BY sa.errata_id, sp.rh_account_id
     ), upserted AS (
-      INSERT INTO cve_account_data (cve_id, rh_account_id, systems_affected)
-        SELECT cve_id, rh_account_id, systems_affected FROM current_counts
-      ON CONFLICT (cve_id, rh_account_id) DO UPDATE SET
+      INSERT INTO errata_account_data (errata_id, rh_account_id, systems_affected)
+        SELECT errata_id, rh_account_id, systems_affected FROM current_counts
+      ON CONFLICT (errata_id, rh_account_id) DO UPDATE SET
         systems_affected = EXCLUDED.systems_affected
     )
-    DELETE FROM cve_account_data WHERE (cve_id, rh_account_id) NOT IN (SELECT cve_id, rh_account_id FROM current_counts);
+    DELETE FROM errata_account_data WHERE (errata_id, rh_account_id) NOT IN (SELECT errata_id, rh_account_id FROM current_counts);
   END;
 $refresh_all_cached_counts$
   LANGUAGE 'plpgsql';
@@ -211,7 +211,7 @@ $refresh_account_cached_counts$
   DECLARE
     rh_account_id_in INT;
   BEGIN
-    -- update cve count for ordered systems
+    -- update errata count for ordered systems
     SELECT id FROM rh_account WHERE name = rh_account_in INTO rh_account_id_in;
     WITH to_update_systems AS (
       SELECT sp.id
@@ -220,115 +220,115 @@ $refresh_account_cached_counts$
       ORDER BY sp.id
       FOR UPDATE OF sp
     )
-    UPDATE system_platform sp SET cve_count_cache = (
-      SELECT COUNT(cve_id) FROM system_vulnerabilities sv
-      WHERE sv.system_id = sp.id AND sv.when_mitigated IS NULL
+    UPDATE system_platform sp SET errata_count_cache = (
+      SELECT COUNT(errata_id) FROM system_advisories sa
+      WHERE sa.system_id = sp.id AND sa.when_patched IS NULL
     )
     FROM to_update_systems
     WHERE sp.id = to_update_systems.id;
 
-    -- update system count for ordered cves
+    -- update system count for ordered errata
     WITH locked_rows AS (
-      SELECT cad.cve_id
-      FROM cve_account_data cad
-      WHERE cad.rh_account_id = rh_account_id_in
-      ORDER BY cad.cve_id
-      FOR UPDATE OF cad
+      SELECT ead.errata_id
+      FROM errata_account_data ead
+      WHERE ead.rh_account_id = rh_account_id_in
+      ORDER BY ead.errata_id
+      FOR UPDATE OF ead
     ), current_counts AS (
-      SELECT sv.cve_id, count(sv.system_id) as systems_affected
-      FROM system_vulnerabilities sv INNER JOIN
-           system_platform sp ON sv.system_id = sp.id
+      SELECT sa.errata_id, count(sa.system_id) as systems_affected
+      FROM system_advisories sa INNER JOIN
+           system_platform sp ON sa.system_id = sp.id
       WHERE sp.last_evaluation IS NOT NULL AND
             sp.opt_out = FALSE AND
-            sv.when_mitigated IS NULL AND
+            sa.when_patched IS NULL AND
             sp.rh_account_id = rh_account_id_in
-      GROUP BY sv.cve_id
+      GROUP BY sa.errata_id
     ), upserted AS (
-      INSERT INTO cve_account_data (cve_id, rh_account_id, systems_affected)
-        SELECT cve_id, rh_account_id_in, systems_affected FROM current_counts
-      ON CONFLICT (cve_id, rh_account_id) DO UPDATE SET
+      INSERT INTO errata_account_data (errata_id, rh_account_id, systems_affected)
+        SELECT errata_id, rh_account_id_in, systems_affected FROM current_counts
+      ON CONFLICT (errata_id, rh_account_id) DO UPDATE SET
         systems_affected = EXCLUDED.systems_affected
     )
-    DELETE FROM cve_account_data WHERE cve_id NOT IN (SELECT cve_id FROM current_counts)
+    DELETE FROM errata_account_data WHERE errata_id NOT IN (SELECT errata_id FROM current_counts)
       AND rh_account_id = rh_account_id_in;
   END;
 $refresh_account_cached_counts$
   LANGUAGE 'plpgsql';
 
 
-CREATE OR REPLACE FUNCTION refresh_cve_cached_counts(cve_in varchar)
+CREATE OR REPLACE FUNCTION refresh_errata_cached_counts(advisory_in varchar)
   RETURNS void AS
-$refresh_cve_cached_counts$
+$refresh_errata_cached_counts$
   DECLARE
-    cve_md_id INT;
+    errata_md_id INT;
   BEGIN
-    -- update system count for cve
-    SELECT id FROM cve_metadata WHERE cve = cve_in INTO cve_md_id;
+    -- update system count for errata
+    SELECT id FROM errata_metadata WHERE advisory = advisory_in INTO errata_md_id;
     WITH locked_rows AS (
-      SELECT cad.rh_account_id
-      FROM cve_account_data cad
-      WHERE cad.cve_id = cve_md_id
-      ORDER BY cad.rh_account_id
-      FOR UPDATE OF cad
+      SELECT ead.rh_account_id
+      FROM errata_account_data ead
+      WHERE ead.errata_id = errata_md_id
+      ORDER BY ead.rh_account_id
+      FOR UPDATE OF ead
     ), current_counts AS (
-      SELECT sp.rh_account_id, count(sv.system_id) as systems_affected
-      FROM system_vulnerabilities sv INNER JOIN
-           system_platform sp ON sv.system_id = sp.id
+      SELECT sp.rh_account_id, count(sa.system_id) as systems_affected
+      FROM system_advisories sa INNER JOIN
+           system_platform sp ON sa.system_id = sp.id
       WHERE sp.last_evaluation IS NOT NULL AND
             sp.opt_out = FALSE AND
-            sv.when_mitigated IS NULL AND
-            sv.cve_id = cve_md_id
+            sa.when_patched IS NULL AND
+            sa.errata_id = errata_md_id
       GROUP BY sp.rh_account_id
     ), upserted AS (
-      INSERT INTO cve_account_data (cve_id, rh_account_id, systems_affected)
-        SELECT cve_md_id, rh_account_id, systems_affected FROM current_counts
-      ON CONFLICT (cve_id, rh_account_id) DO UPDATE SET
+      INSERT INTO errata_account_data (errata_id, rh_account_id, systems_affected)
+        SELECT errata_md_id, rh_account_id, systems_affected FROM current_counts
+      ON CONFLICT (errata_id, rh_account_id) DO UPDATE SET
         systems_affected = EXCLUDED.systems_affected
     )
-    DELETE FROM cve_account_data WHERE rh_account_id NOT IN (SELECT rh_account_id FROM current_counts)
-      AND cve_id = cve_md_id;
+    DELETE FROM errata_account_data WHERE rh_account_id NOT IN (SELECT rh_account_id FROM current_counts)
+      AND errata_id = errata_md_id;
   END;
-$refresh_cve_cached_counts$
+$refresh_errata_cached_counts$
   LANGUAGE 'plpgsql';
 
 
-CREATE OR REPLACE FUNCTION refresh_cve_account_cached_counts(cve_in varchar, rh_account_in varchar)
+CREATE OR REPLACE FUNCTION refresh_errata_account_cached_counts(advisory_in varchar, rh_account_in varchar)
   RETURNS void AS
-$refresh_cve_account_cached_counts$
+$refresh_errata_account_cached_counts$
   DECLARE
-    cve_md_id INT;
+    errata_md_id INT;
     rh_account_id_in INT;
   BEGIN
-    -- update system count for ordered cves
-    SELECT id FROM cve_metadata WHERE cve = cve_in INTO cve_md_id;
+    -- update system count for ordered errata
+    SELECT id FROM errata_metadata WHERE advisory = advisory_in INTO errata_md_id;
     SELECT id FROM rh_account WHERE name = rh_account_in INTO rh_account_id_in;
     WITH locked_rows AS (
-      SELECT cad.rh_account_id, cad.cve_id
-      FROM cve_account_data cad
-      WHERE cad.cve_id = cve_md_id AND
-            cad.rh_account_id = rh_account_id_in
-      FOR UPDATE OF cad
+      SELECT ead.rh_account_id, ead.errata_id
+      FROM errata_account_data ead
+      WHERE ead.errata_id = errata_md_id AND
+            ead.rh_account_id = rh_account_id_in
+      FOR UPDATE OF ead
     ), current_counts AS (
-      SELECT sv.cve_id, sp.rh_account_id, count(sv.system_id) as systems_affected
-      FROM system_vulnerabilities sv INNER JOIN
-           system_platform sp ON sv.system_id = sp.id
+      SELECT sa.errata_id, sp.rh_account_id, count(sa.system_id) as systems_affected
+      FROM system_advisories sa INNER JOIN
+           system_platform sp ON sa.system_id = sp.id
       WHERE sp.last_evaluation IS NOT NULL AND
             sp.opt_out = FALSE AND
-            sv.when_mitigated IS NULL AND
-            sv.cve_id = cve_md_id AND
+            sa.when_patched IS NULL AND
+            sa.errata_id = errata_md_id AND
             sp.rh_account_id = rh_account_id_in
-      GROUP BY sv.cve_id, sp.rh_account_id
+      GROUP BY sa.errata_id, sp.rh_account_id
     ), upserted AS (
-      INSERT INTO cve_account_data (cve_id, rh_account_id, systems_affected)
-        SELECT cve_md_id, rh_account_id_in, systems_affected FROM current_counts
-      ON CONFLICT (cve_id, rh_account_id) DO UPDATE SET
+      INSERT INTO errata_account_data (errata_id, rh_account_id, systems_affected)
+        SELECT errata_md_id, rh_account_id_in, systems_affected FROM current_counts
+      ON CONFLICT (errata_id, rh_account_id) DO UPDATE SET
         systems_affected = EXCLUDED.systems_affected
     )
-    DELETE FROM cve_account_data WHERE NOT EXISTS (SELECT 1 FROM current_counts)
-      AND cve_id = cve_md_id
+    DELETE FROM errata_account_data WHERE NOT EXISTS (SELECT 1 FROM current_counts)
+      AND errata_id = errata_md_id
       AND rh_account_id = rh_account_id_in;
   END;
-$refresh_cve_account_cached_counts$
+$refresh_errata_account_cached_counts$
   LANGUAGE 'plpgsql';
 
 
@@ -336,10 +336,10 @@ CREATE OR REPLACE FUNCTION refresh_system_cached_counts(inventory_id_in varchar)
   RETURNS void AS
 $refresh_system_cached_counts$
   BEGIN
-    -- update cve count for system
-    UPDATE system_platform sp SET cve_count_cache = (
-      SELECT COUNT(cve_id) FROM system_vulnerabilities sv
-      WHERE sv.system_id = sp.id AND sv.when_mitigated IS NULL
+    -- update errata count for system
+    UPDATE system_platform sp SET errata_count_cache = (
+      SELECT COUNT(errata_id) FROM system_advisories sa
+      WHERE sa.system_id = sp.id AND sa.when_patched IS NULL
     ) WHERE sp.inventory_id = inventory_id_in;
   END;
 $refresh_system_cached_counts$
@@ -359,7 +359,7 @@ $delete_system$
     )
     UPDATE system_platform SET opt_out = true
     WHERE inventory_id = inventory_id_in;
-    DELETE FROM system_vulnerabilities
+    DELETE FROM system_advisories
     WHERE system_id = (SELECT id from system_platform WHERE inventory_id = inventory_id_in);
     DELETE FROM system_repo
     WHERE system_id = (SELECT id from system_platform WHERE inventory_id = inventory_id_in);
@@ -417,7 +417,7 @@ CREATE TABLE IF NOT EXISTS system_platform (
   unchanged_since TIMESTAMP WITH TIME ZONE NOT NULL,
   last_evaluation TIMESTAMP WITH TIME ZONE,
   opt_out BOOLEAN NOT NULL DEFAULT FALSE,
-  cve_count_cache INT NOT NULL DEFAULT 0,
+  errata_count_cache INT NOT NULL DEFAULT 0,
   PRIMARY KEY (id),
   last_upload TIMESTAMP WITH TIME ZONE,
   UNIQUE (inventory_id),
@@ -448,47 +448,46 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON system_platform TO listener;
 -- evaluator needs to update last_evaluation
 GRANT UPDATE ON system_platform TO evaluator;
 -- manager needs to update cache and delete systems
-GRANT UPDATE (cve_count_cache), DELETE ON system_platform TO manager;
+GRANT UPDATE (errata_count_cache), DELETE ON system_platform TO manager;
 
--- cve_impact
-CREATE TABLE IF NOT EXISTS cve_impact (
+-- errata_type
+CREATE TABLE IF NOT EXISTS errata_type (
   id INT NOT NULL,
   name TEXT NOT NULL UNIQUE, CHECK (NOT empty(name)),
   PRIMARY KEY (id)
 )TABLESPACE pg_default;
 
-INSERT INTO cve_impact (id, name) VALUES
-  (0, 'NotSet'), (1, 'None'), (2, 'Low'), (3, 'Medium'), (4, 'Moderate'),
-  (5, 'Important'), (6, 'High'), (7, 'Critical');
+INSERT INTO errata_type (id, name) VALUES
+  (0, 'NotSet'),
+  (1, 'Product Enhancement Advisory'),
+  (2, 'Bug Fix Advisory'),
+  (3, 'Security Advisory');
 
 
--- cve_metadata
-CREATE TABLE IF NOT EXISTS cve_metadata (
+-- errata_metadata
+CREATE TABLE IF NOT EXISTS errata_metadata (
   id SERIAL,
-  cve TEXT NOT NULL, CHECK (NOT empty(cve)),
+  advisory TEXT NOT NULL, CHECK (NOT empty(advisory)),
+  advisory_name TEXT NOT NULL, CHECK (NOT empty(advisory_name)),
   description TEXT NOT NULL, CHECK (NOT empty(description)),
-  impact_id INT NOT NULL,
+  synopsis TEXT NOT NULL, CHECK (NOT empty(synopsis)),
+  topic TEXT NOT NULL, CHECK (NOT empty(topic)),
+  solution TEXT NOT NULL, CHECK (NOT empty(solution)),
+  errata_type_id INT NOT NULL,
   public_date TIMESTAMP WITH TIME ZONE NULL,
   modified_date TIMESTAMP WITH TIME ZONE NULL,
-  cvss3_score NUMERIC(5,3),
-  cvss3_metrics TEXT,
-  cvss2_score NUMERIC(5,3),
-  cvss2_metrics TEXT,
-  redhat_url TEXT,
-  secondary_url TEXT,
-  UNIQUE (cve),
+  url TEXT,
+  UNIQUE (advisory),
   PRIMARY KEY (id),
-  CONSTRAINT impact_id
-    FOREIGN KEY (impact_id)
-    REFERENCES cve_impact (id)
+  CONSTRAINT errata_type_id
+    FOREIGN KEY (errata_type_id)
+    REFERENCES errata_type (id)
 ) TABLESPACE pg_default;
 
-CREATE INDEX ON cve_metadata(impact_id);
-CREATE INDEX ON cve_metadata(cvss3_score);
-CREATE INDEX ON cve_metadata(cvss2_score);
+CREATE INDEX ON errata_metadata(errata_type_id);
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON cve_metadata TO evaluator;
-GRANT SELECT, INSERT, UPDATE, DELETE ON cve_metadata TO vmaas_sync;
+GRANT SELECT, INSERT, UPDATE, DELETE ON errata_metadata TO evaluator;
+GRANT SELECT, INSERT, UPDATE, DELETE ON errata_metadata TO vmaas_sync;
 
 
 -- status table
@@ -500,43 +499,43 @@ CREATE TABLE IF NOT EXISTS status (
 
 INSERT INTO status (id, name) VALUES
   (0, 'Not Reviewed'), (1, 'In-Review'), (2, 'On-Hold'), (3, 'Scheduled for Patch'), (4, 'Resolved'),
-  (5, 'No Action - Risk Accepted'), (6, 'Resolved via Mitigation (e.g. done without deploying a patch)') ;
+  (5, 'No Action');
 
 
--- system_vulnerabilities
-CREATE TABLE IF NOT EXISTS system_vulnerabilities (
+-- system_advisories
+CREATE TABLE IF NOT EXISTS system_advisories (
   id SERIAL,
   system_id INT NOT NULL,
-  cve_id INT NOT NULL,
+  errata_id INT NOT NULL,
   first_reported TIMESTAMP WITH TIME ZONE NOT NULL,
-  when_mitigated TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+  when_patched TIMESTAMP WITH TIME ZONE DEFAULT NULL,
   status_id INT DEFAULT 0,
   status_text TEXT,
-  UNIQUE (system_id, cve_id),
+  UNIQUE (system_id, errata_id),
   PRIMARY KEY (id),
   CONSTRAINT system_platform_id
     FOREIGN KEY (system_id)
     REFERENCES system_platform (id),
-  CONSTRAINT cve_metadata_cve_id
-    FOREIGN KEY (cve_id)
-    REFERENCES cve_metadata (id),
+  CONSTRAINT errata_metadata_errata_id
+    FOREIGN KEY (errata_id)
+    REFERENCES errata_metadata (id),
   CONSTRAINT status_id
     FOREIGN KEY (status_id)
     REFERENCES status (id)
 ) TABLESPACE pg_default;
 
-CREATE INDEX ON system_vulnerabilities(status_id);
+CREATE INDEX ON system_advisories(status_id);
 
-CREATE TRIGGER system_vulnerabilities_set_first_reported BEFORE INSERT ON system_vulnerabilities
+CREATE TRIGGER system_advisories_set_first_reported BEFORE INSERT ON system_advisories
   FOR EACH ROW EXECUTE PROCEDURE set_first_reported();
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON system_vulnerabilities TO evaluator;
--- manager needs to be able to update things like 'status' on a sysid/cve combination, also needs to delete
-GRANT UPDATE, DELETE ON system_vulnerabilities TO manager;
+GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO evaluator;
+-- manager needs to be able to update things like 'status' on a sysid/errata combination, also needs to delete
+GRANT UPDATE, DELETE ON system_advisories TO manager;
 -- manager needs to be able to update opt_out column
 GRANT UPDATE (opt_out) ON system_platform TO manager;
 -- listener deletes systems
-GRANT DELETE ON system_vulnerabilities TO listener;
+GRANT DELETE ON system_advisories TO listener;
 
 -- business_risk table
 CREATE TABLE IF NOT EXISTS business_risk (
@@ -549,9 +548,9 @@ CREATE TABLE IF NOT EXISTS business_risk (
 INSERT INTO business_risk (id, name) VALUES
   (0, 'Not Defined'), (1, 'Low'), (2, 'Medium'), (3, 'High');
 
--- cve_preferences
-CREATE TABLE IF NOT EXISTS cve_account_data (
-  cve_id INT NOT NULL,
+-- errata_account_data
+CREATE TABLE IF NOT EXISTS errata_account_data (
+  errata_id INT NOT NULL,
   rh_account_id INT NOT NULL,
   business_risk_id INT NOT NULL DEFAULT 0,
   business_risk_text TEXT,
@@ -559,9 +558,9 @@ CREATE TABLE IF NOT EXISTS cve_account_data (
   status_text TEXT,
   systems_affected INT NOT NULL DEFAULT 0,
   systems_status_divergent INT NOT NULL DEFAULT 0,
-  CONSTRAINT cve_id
-    FOREIGN KEY (cve_id)
-    REFERENCES cve_metadata (id),
+  CONSTRAINT errata_id
+    FOREIGN KEY (errata_id)
+    REFERENCES errata_metadata (id),
   CONSTRAINT rh_account_id
     FOREIGN KEY (rh_account_id)
     REFERENCES rh_account (id),
@@ -571,18 +570,18 @@ CREATE TABLE IF NOT EXISTS cve_account_data (
   CONSTRAINT status_id
     FOREIGN KEY (status_id)
     REFERENCES status (id),
-  UNIQUE (cve_id, rh_account_id)
+  UNIQUE (errata_id, rh_account_id)
 ) TABLESPACE pg_default;
 
--- manager needs to write into cve_account_preferences table
-GRANT SELECT, INSERT, UPDATE, DELETE ON cve_account_data TO manager;
+-- manager needs to write into errata_account_data table
+GRANT SELECT, INSERT, UPDATE, DELETE ON errata_account_data TO manager;
 
 -- manager user needs to change this table for opt-out functionality
-GRANT SELECT, INSERT, UPDATE, DELETE ON cve_account_data TO manager;
+GRANT SELECT, INSERT, UPDATE, DELETE ON errata_account_data TO manager;
 -- evaluator user needs to change this table
-GRANT SELECT, INSERT, UPDATE, DELETE ON cve_account_data TO evaluator;
+GRANT SELECT, INSERT, UPDATE, DELETE ON errata_account_data TO evaluator;
 -- listner user needs to change this table when deleting system
-GRANT SELECT, INSERT, UPDATE, DELETE ON cve_account_data TO listener;
+GRANT SELECT, INSERT, UPDATE, DELETE ON errata_account_data TO listener;
 
 
 CREATE TABLE IF NOT EXISTS deleted_systems (
@@ -636,8 +635,8 @@ CREATE TABLE IF NOT EXISTS timestamp_kv (
 GRANT SELECT, INSERT, UPDATE, DELETE ON timestamp_kv TO vmaas_sync;
 
 -- vmaas_sync needs to delete from this tables to sync CVEs correctly
-GRANT DELETE ON system_vulnerabilities TO vmaas_sync;
-GRANT DELETE ON cve_account_data TO vmaas_sync;
+GRANT DELETE ON system_advisories TO vmaas_sync;
+GRANT DELETE ON errata_account_data TO vmaas_sync;
 
 -- ----------------------------------------------------------------------------
 -- Read access for all users
