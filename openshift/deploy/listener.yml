@@ -9,6 +9,10 @@ parameters:
   - name: IMAGE_TAG
     displayName: Image tag
     value: latest
+  - name: KAFKA_ADDRESS
+  - name: INVENTORY_ADDRESS
+  - name: VMAAS_ADDRESS
+
 objects:
   - apiVersion: v1
     kind: DeploymentConfig
@@ -44,10 +48,13 @@ objects:
                 - { name: LOG_STYLE, value: plain }
                 - { name: GIN_MODE, value: release }
 
-                - { name: KAFKA_ADDRESS, value: "platform:9092" }
+                - { name: KAFKA_ADDRESS, value: "${KAFKA_ADDRESS}" }
                 - { name: KAFKA_GROUP, value: patchman }
                 - { name: UPLOAD_TOPIC, value: platform.upload.available }
                 - { name: EVENTS_TOPIC, value: platform.inventory.events }
+
+                - { name: INVENTORY_ADDRESS, value: "${INVENTORY_ADDRESS}" }
+                - { name: VMAAS_ADDRESS, value: "${VMAAS_ADDRESS}" }
 
                 - { name: DB_TYPE, value: postgres }
                 - { name: DB_HOST, value: patchman-engine-database }
