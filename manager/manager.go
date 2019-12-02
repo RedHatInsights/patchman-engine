@@ -8,7 +8,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @title Patchman-engine API
+// @version 1.0
+// @description Description here
 
+// @securityDefinitions.apikey RhIdentity
+// @in header
+// @name x-rh-identity
 func RunManager() {
 	utils.Log().Info("Manager starting")
 	// create web app
