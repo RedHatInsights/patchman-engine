@@ -8,3 +8,7 @@ build:
 deploy:
   parameters:
     IMAGE_NAMESPACE: patchman-engine-ci
+    KAFKA_ADDRESS: "FILL ME"
+    INVENTORY_ADDRESS: "FILL ME"
+    VMAAS_ADDRESS: "FILL ME"
+

@@ -3,7 +3,6 @@ version: '3'
 services:
   
   db:
-    container_name: db
     build:
       context: .
       dockerfile: database/Dockerfile.centos
@@ -18,7 +17,6 @@ services:
       - patchman-engine-database-data:/var/lib/pgsql/data
 
   platform:
-    container_name: platform
     hostname: platform
     build:
       context: .

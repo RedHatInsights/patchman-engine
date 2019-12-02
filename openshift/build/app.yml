@@ -24,7 +24,7 @@ objects:
       name:  patchman-engine-app
     spec:
       resources:
-        limits: { cpu: 500m, memory: 512Mi }
+        limits: { cpu: "1", memory: 1Gi }
       output:
         to:
           kind: ImageStreamTag
