@@ -6,8 +6,6 @@ import (
 	"app/manager/routes"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
-	"github.com/zsais/go-gin-prometheus"
-
 	swaggerFiles "github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
 
@@ -21,8 +19,7 @@ func RunManager() {
 	app := gin.New()
 
 	// middlewares
-	prometheus := ginprometheus.NewPrometheus("gin")
-	prometheus.Use(app)
+	middlewares.Prometheus().Use(app)
 	app.Use(middlewares.RequestResponseLogger())
 	app.Use(gzip.Gzip(gzip.DefaultCompression))
 	app.HandleMethodNotAllowed = true
