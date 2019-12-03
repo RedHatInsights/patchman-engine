@@ -4,6 +4,7 @@ import (
 	"app/base/core"
 	"app/listener"
 	"app/manager"
+	"app/vmaas_sync"
 	"log"
 	"os"
 )
@@ -18,6 +19,9 @@ func main() {
 			return
 		case "manager":
 			manager.RunManager()
+			return
+		case "vmaas_sync":
+			vmaas_sync.RunVmaasSync()
 			return
 		}
 	}
