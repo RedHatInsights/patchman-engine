@@ -1,15 +1,15 @@
 package listener
 
 import (
-	"app/_generated/cmsfr/inventory"
-	"app/_generated/cmsfr/vmaas"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"context"
 	"encoding/json"
+	"github.com/RedHatInsights/patchman-clients/inventory"
+	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
 	"github.com/gin-gonic/gin"
 	"github.com/segmentio/kafka-go"
-	ginprometheus "github.com/zsais/go-gin-prometheus"
 )
 
 const INVENTORY_API_PREFIX = "/api/inventory/v1"
@@ -144,9 +144,8 @@ func downloadSystemProfile(hostId string, identity string) {
 func runMetrics() {
 	// create web app
 	app := gin.New()
+	middlewares.Prometheus().Use(app)
 
-	prometheus := ginprometheus.NewPrometheus("gin")
-	prometheus.Use(app)
 	err := app.Run(":8081")
 	if err != nil {
 		utils.Log("err", err.Error()).Error()
