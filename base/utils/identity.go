@@ -21,7 +21,8 @@ type Identity struct {
 	Identity     IdentityDetail         `json:"identity"`
 }
 
-func ParseIdentity(identityString string) (ident *Identity, err error) {
+func ParseIdentity(identityString string) (*Identity, error) {
+	var ident Identity
 	decoded, err := base64.StdEncoding.DecodeString(identityString)
 	if err != nil {
 		return nil, err
@@ -30,7 +31,7 @@ func ParseIdentity(identityString string) (ident *Identity, err error) {
 	if err != nil {
 		return nil, err
 	}
-	return ident, nil
+	return &ident, nil
 }
 
 func (this *Identity) IsSmartEntitled() bool {
