@@ -6,3 +6,4 @@ deploy_order:
       - "database"
       - "listener"
       - "manager"
+      - "vmaas_sync"

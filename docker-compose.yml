@@ -14,7 +14,7 @@ services:
     security_opt:
       - label=disable
     volumes:
-      - patchman-engine-database-data:/var/lib/pgsql/data
+      - patchman-engine-database-data:/var/lib/pgsql/data:Z
 
   platform:
     hostname: platform
@@ -55,6 +55,21 @@ services:
     command: ./manager/entrypoint.sh
     ports:
       - 8080:8080
+    depends_on:
+      - db
+      - platform
+
+  vmaas_sync:
+    build:
+      context: .
+      dockerfile: Dockerfile.centos
+    env_file:
+      - ./conf/common.env
+      - ./conf/vmaas_sync.env
+    command: ./vmaas_sync/entrypoint.sh
+    ports:
+      # Reserving 8082 for evaluator :)
+      - 8083:8083
     depends_on:
       - db
       - platform
