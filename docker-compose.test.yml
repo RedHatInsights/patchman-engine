@@ -1,0 +1,21 @@
+version: '3'
+services:
+  db:
+    build:
+      context: .
+      dockerfile: database/Dockerfile.centos
+    ports:
+      - 5432:5432
+    env_file:
+      - ./conf/common.env
+      - ./conf/database.env
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    env_file:
+      - ./conf/test.env
+    depends_on:
+      - db
+    command: ./scripts/go_test.sh

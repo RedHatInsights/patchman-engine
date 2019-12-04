@@ -10,18 +10,18 @@ import (
 )
 
 type Storage struct {
-	buffer        *[]structures.HostDAO
+	buffer        *[]structures.RhAccountDAO
 	useBatchWrite bool
 }
 
 func InitStorage(bufferSize int, useBatchWrite bool) *Storage{
-	buffer := make([]structures.HostDAO, 0, bufferSize) // init empty array with given capacity
+	buffer := make([]structures.RhAccountDAO, 0, bufferSize) // init empty array with given capacity
 	storage := Storage{buffer: &buffer, useBatchWrite: useBatchWrite}
 	utils.Log("useBatchWrite", useBatchWrite).Info("buffered storage created")
 	return &storage
 }
 
-func (s *Storage) Add(host *structures.HostDAO) error {
+func (s *Storage) Add(host *structures.RhAccountDAO) error {
 	if s.Capacity() == s.StoredItems() {
 		err := s.Flush()
 		if err != nil {
@@ -83,11 +83,11 @@ func replaceSQL(stmt, pattern string, len int) string {
 func (s *Storage) flushBatch() error {
 	var vals []interface{}
 	for _, item := range *s.buffer  {
-		vals = append(vals, item.ID, item.Request, item.Checksum)
+		vals = append(vals, item.ID)
 	}
 
-	smt := `INSERT INTO hosts(id, request, checksum) VALUES %s`
-	smt = replaceSQL(smt, "(?, ?, ?)", len(*s.buffer))
+	smt := `INSERT INTO hosts(id) VALUES %s`
+	smt = replaceSQL(smt, "(?)", len(*s.buffer))
 	tx, err := database.Db.DB().Begin()
 
 	if err != nil {
