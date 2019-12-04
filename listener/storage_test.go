@@ -3,6 +3,7 @@ package listener
 import (
 	"app/base/database"
 	"app/base/structures"
+	"app/base/utils"
 	"github.com/bmizerany/assert"
 	"testing"
 
@@ -16,6 +17,7 @@ func TestStorageInit(t *testing.T) {
 }
 
 func TestStorageFlush(t *testing.T) {
+	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	storage := InitStorage(3, false)
 
@@ -36,6 +38,7 @@ func TestStorageFlush(t *testing.T) {
 }
 
 func TestStorageBuffer(t *testing.T) {
+	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	storage := InitStorage(2, false)
 
