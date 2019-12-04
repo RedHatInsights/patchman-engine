@@ -47,3 +47,8 @@ cd dev/scripts
 ~~~
 
 Test using Swagger, open <http://localhost:8080/swagger/index.html>.
+
+## Run tests
+~~~bash
+docker-compose -f docker-compose.test.yml up --build test # Run testing Postgres db and tests against.
+~~~

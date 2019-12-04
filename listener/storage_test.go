@@ -19,7 +19,7 @@ func TestStorageFlush(t *testing.T) {
 	core.SetupTestEnvironment()
 	storage := InitStorage(3, false)
 
-	for _, item := range []structures.HostDAO{{ID: 1}, {ID: 2}} {
+	for _, item := range []structures.RhAccountDAO{{1, "1"}, {2, "2"}} {
 		err := storage.Add(&item)
 		assert.Equal(t, nil, err)
 	}
@@ -31,7 +31,7 @@ func TestStorageFlush(t *testing.T) {
 
 	// ensure items in database
 	cnt := 0
-	database.Db.Model(&structures.HostDAO{}).Count(&cnt)
+	database.Db.Model(&structures.RhAccountDAO{}).Count(&cnt)
 	assert.Equal(t, 2, cnt)
 }
 
@@ -39,7 +39,7 @@ func TestStorageBuffer(t *testing.T) {
 	core.SetupTestEnvironment()
 	storage := InitStorage(2, false)
 
-	for _, item := range []structures.HostDAO{{ID: 1}, {ID: 2}, {ID: 3}} {
+	for _, item := range []structures.RhAccountDAO{{1, "1"}, {2, "2"}, {3, "3"}} {
 		err := storage.Add(&item)
 		assert.Equal(t, nil, err)
 	}
@@ -48,6 +48,6 @@ func TestStorageBuffer(t *testing.T) {
 
 	// ensure items in database
 	cnt := 0
-	database.Db.Model(&structures.HostDAO{}).Count(&cnt)
+	database.Db.Model(&structures.RhAccountDAO{}).Count(&cnt)
 	assert.Equal(t, 2, cnt)
 }

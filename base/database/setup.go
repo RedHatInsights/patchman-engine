@@ -18,7 +18,7 @@ var (
 func Configure() {
 	if os.Getenv("DB_TYPE") == "postgres" {
 		utils.Log().Info("using PostgreSQL database")
-		pgConfig := loadEnvPostgreSQLConfig()
+		pgConfig := loadEnvPostgreSQLConfig("DB_")
 		Db = openPostgreSQL(pgConfig)
 		check(Db)
 	} else {
@@ -47,7 +47,8 @@ type PostgreSQLConfig struct {
 
 // open database connection
 func openPostgreSQL(dbConfig *PostgreSQLConfig) *gorm.DB {
-	db, err := gorm.Open("postgres", dataSourceName(dbConfig))
+	connectString := dataSourceName(dbConfig)
+	db, err := gorm.Open("postgres", connectString)
 	if err != nil {
 		panic(err)
 	}
@@ -66,14 +67,8 @@ func check(db *gorm.DB) {
 	}
 }
 
-// load database config from env. vars using "DB_" prefix
-func loadEnvPostgreSQLConfig() *PostgreSQLConfig {
-	config := loadEnvMySQLConfig("DB_")
-	return config
-}
-
 // load database config from environment vars using inserted prefix
-func loadEnvMySQLConfig(envprefix string) *PostgreSQLConfig {
+func loadEnvPostgreSQLConfig(envprefix string) *PostgreSQLConfig {
 	port, err := strconv.Atoi(utils.Getenv(envprefix + "PORT", "FILL"))
 	if err != nil {
 		panic(err)

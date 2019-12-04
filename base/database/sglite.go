@@ -18,7 +18,7 @@ func ConfigureSQLite() {
 	}
 	check(db)
 
-	db.AutoMigrate(&structures.HostDAO{})
+	db.AutoMigrate(&structures.RhAccountDAO{})
 
 	Db = db
 }

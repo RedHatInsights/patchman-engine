@@ -5,20 +5,16 @@ import (
 	"testing"
 )
 
-func TestConfigFromEnvsd(t *testing.T) {
-	if os.Getenv("DB_TYPE") != "mysql" {
-		t.Skip(" Non-MySQL config - skipping")
+func SkipMissingPostgres(t *testing.T) {
+	if os.Getenv("DB_TYPE") != "postgres" {
+		t.Skip(" Non-PostgreSQL config - skipping")
 	}
-
-	loadEnvPostgreSQLConfig()
 }
 
 func TestDBCheck(t *testing.T) {
-	if os.Getenv("DB_TYPE") != "mysql" {
-		t.Skip(" Non-MySQL config - skipping")
-	}
+	SkipMissingPostgres(t)
 
-	config := loadEnvPostgreSQLConfig()
+	config := loadEnvPostgreSQLConfig("DB_")
 	conn := openPostgreSQL(config)
 
 	check(conn)
