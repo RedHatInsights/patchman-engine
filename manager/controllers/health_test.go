@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/database"
+	"app/base/utils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,7 +12,6 @@ import (
 )
 
 func TestHealthRoute(t *testing.T) {
-	core.SetupTestEnvironment()
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/", nil)
 	initRouter(HealthHandler).ServeHTTP(w, req)
@@ -21,6 +21,7 @@ func TestHealthRoute(t *testing.T) {
 }
 
 func TestHealthDBRouteFail(t *testing.T) {
+	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	database.Configure()
 	err := database.Db.Close()
@@ -37,6 +38,7 @@ func TestHealthDBRouteFail(t *testing.T) {
 }
 
 func TestHealthDBRouteOK(t *testing.T) {
+	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	database.Configure()
 	w := httptest.NewRecorder()
