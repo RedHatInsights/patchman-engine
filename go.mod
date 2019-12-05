@@ -29,7 +29,7 @@ require (
 	github.com/mattn/go-isatty v0.0.11 // indirect
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible // indirect
 	github.com/pierrec/lz4 v2.3.0+incompatible // indirect
-	github.com/prometheus/client_golang v1.2.1 // indirect
+	github.com/prometheus/client_golang v1.2.1
 	github.com/prometheus/client_model v0.0.0-20191202183732-d1d2010b5bee // indirect
 	github.com/prometheus/procfs v0.0.8 // indirect
 	github.com/segmentio/kafka-go v0.3.4
@@ -43,7 +43,7 @@ require (
 	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553 // indirect
 	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6 // indirect
 	golang.org/x/sys v0.0.0-20191210023423-ac6580df4449 // indirect
-	golang.org/x/tools v0.0.0-20191213032237-7093a17b0467 // indirect
+	golang.org/x/tools v0.0.0-20191217033636-bbbf87ae2631 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/go-playground/validator.v9 v9.30.2 // indirect

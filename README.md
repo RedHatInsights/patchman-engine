@@ -17,6 +17,10 @@ docker-compose up --build # Build images if needed and start containers
 docker-compose down       # Stop and remove containers
 ~~~
 
+#### VMaaS 
+This project uses [VMaaS](https://github.com/RedHatInsights/vmaas) for retrieving information about advisories, and resolving which advisories can be applied to whic systems.
+For local development, you need to clone VMaaS, and deploy it alongside this project.
+
 ### Cloud deployment
 Relies on the [ocdeployer](https://github.com/bsquizz/ocdeployer) tool. This tool reads templates and supporting configuration files from the `openshift` directory, and
 deploys the resulting openshfit templates into specified cluster. 
