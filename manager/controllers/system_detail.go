@@ -18,10 +18,11 @@ type SystemDetailResponse struct {
 // @Success 200 {object} SystemDetailResponse
 // @Router /api/patch/v1/systems/{inventory_id} [get]
 func SystemDetailHandler(c *gin.Context) {
+	le := time.Now()
 	var resp = SystemDetailResponse{
 		Data: SystemItem{
 			Attributes: SystemItemAttributes{
-				LastEvaluation: time.Now(),
+				LastEvaluation: &le,
 				LastUpload:     nil,
 				RhsaCount:      2,
 				RhbaCount:      5,

@@ -35,7 +35,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		Links: Links{
 			First: "/api/patch/v1/systems/$INVENTORY_ID/advisories?offset=0&limit=25&data_format=json&show_all=True",
 			Last: "/api/patch/v1/systems/$INVENTORY_ID/advisories?offset=21475&limit=25&data_format=json&show_all=True",
-			Next: "/api/patch/v1/systems/$INVENTORY_ID/advisories?offset=25&limit=25&data_format=json&show_all=True",
+			Next: nil,
 			Previous: nil,
 		},
 		Meta:  AdvisoryMeta{

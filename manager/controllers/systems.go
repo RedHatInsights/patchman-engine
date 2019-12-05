@@ -1,14 +1,17 @@
 package controllers
 
 import (
+	"app/base/core"
+	"app/base/database"
+	"app/base/models"
+	"app/base/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"time"
 )
 
 type SystemsResponse struct {
 	Data  []SystemItem `json:"data"`
-	Links Links  `json:"links"`
+	Links Links        `json:"links"`
 	Meta  SystemsMeta  `json:"meta"`
 }
 
@@ -31,37 +34,75 @@ type SystemsMeta struct {
 // @Success 200 {object} SystemsResponse
 // @Router /api/patch/v1/systems [get]
 func SystemsListHandler(c *gin.Context) {
+	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
+	if err != nil {
+		LogAndRespBadRequest(c, err, err.Error())
+		return
+	}
+	
+	var total int
+	err = database.Db.Model(models.SystemPlatform{}).Count(&total).Error
+	if err != nil {
+		LogAndRespError(c, err, "db error")
+		return
+	}
+
+	if offset > total {
+		c.JSON(http.StatusBadRequest, ErrorResponse{"too big offset"})
+		return
+	}
+
+	var systems []models.SystemPlatform
+	err = database.Db.Limit(limit).Offset(offset).Find(&systems).Error
+	if err != nil {
+		LogAndRespError(c, err, "db error")
+		return
+	}
+
+	data := buildData(&systems)
+	links := CreateLinks("/api/patch/v1/systems", offset, limit, total,
+		"&data_format=json")
+	meta := buildMeta(limit, offset, total)
 	var resp = SystemsResponse{
-		Data: []SystemItem{{
-			Attributes: SystemItemAttributes{
-				LastEvaluation: time.Now(),
-				LastUpload:     nil,
-				RhsaCount:      2,
-				RhbaCount:      5,
-				RheaCount:      1,
-				Enabled:        true,
-		},
-			Id: "b89e2f25-8b28-4e1c-9879-947143c2cee9",
-			Type: "system" },
-		},
-		Links: Links{
-			First: "/api/patch/v1/systems?offset=0&limit=25&data_format=json&show_all=True",
-			Last: "/api/patch/v1/systems?offset=21475&limit=25&data_format=json&show_all=True",
-			Next: "/api/patch/v1/systems?offset=25&limit=25&data_format=json&show_all=True",
-			Previous: nil,
-		},
-		Meta:  SystemsMeta{
-			DataFormat: "json",
-			Filter: nil,
-			Limit: 25,
-			Offset: 0,
-			Page: 1,
-			PageSize: 25,
-			Pages: 10,
-			Enabled: true,
-			TotalItems: 250,
-		},
+		Data: *data,
+		Links: links,
+		Meta:  *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
 	return
+}
+
+func buildMeta(limit, offset, total int) *SystemsMeta{
+	meta := SystemsMeta{
+		DataFormat: "json",
+		Filter:     nil,
+		Limit:      limit,
+		Offset:     offset,
+		Page:       offset / limit,
+		PageSize:   limit,
+		Pages:      total / limit,
+		Enabled:    true,
+		TotalItems: total,
+	}
+	return &meta
+}
+
+func buildData(systems *[]models.SystemPlatform) *[]SystemItem {
+	data := make([]SystemItem, len(*systems))
+	for i := 0; i < len(*systems); i++ {
+		system := (*systems)[i]
+		data[i] = SystemItem{
+			Attributes: SystemItemAttributes{
+				LastEvaluation: system.LastEvaluation,
+				LastUpload:     system.LastUpload,
+				RhsaCount:      system.ErrataCountCache,
+				RhbaCount:      0,
+				RheaCount:      0,
+				Enabled:        !system.OptOut,
+			},
+			Id: system.InventoryID,
+			Type: "system",
+		}
+	}
+	return &data
 }

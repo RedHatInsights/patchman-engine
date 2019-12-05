@@ -5,7 +5,7 @@ import "time"
 type Links struct {
 	First    string  `json:"first"`
 	Last     string  `json:"last"`
-	Next     string  `json:"next"`
+	Next     *string `json:"next"`
 	Previous *string `json:"previous"`
 }
 
@@ -47,10 +47,14 @@ type SystemItem struct {
 }
 
 type SystemItemAttributes struct {
-	LastEvaluation  time.Time    `json:"last_evaluation"`
+	LastEvaluation  *time.Time   `json:"last_evaluation"`
 	LastUpload      *time.Time   `json:"last_upload"`
 	RhsaCount       int          `json:"rhsa_count"`
 	RhbaCount       int          `json:"rhba_count"`
 	RheaCount       int          `json:"rhea_count"`
 	Enabled         bool         `json:"enabled"`
+}
+
+type ErrorResponse struct {
+	Error string  `json:"error"`
 }

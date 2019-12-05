@@ -23,7 +23,6 @@ func TestHealthRoute(t *testing.T) {
 func TestHealthDBRouteFail(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	database.Configure()
 	err := database.Db.Close()
 	if err != nil { panic(err) }
 
