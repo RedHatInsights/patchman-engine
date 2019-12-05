@@ -77,13 +77,13 @@ func baseListener(reader *kafka.Reader, handler func(message kafka.Message)) {
 			utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
 			panic(err)
 		}
-		// Spawn handler, not blocking the receiving thread
+		// Spawn handler, not blocking the receiving goroutine
 		go handler(m)
 	}
 }
 
 func logHandler(m kafka.Message) {
-	utils.Log().Info("Received message [", m.Topic, "] ", string(m.Value))
+	utils.Log("topic", m.Topic, "value", string(m.Value)).Info("Received message ")
 }
 
 func uploadHandler(m kafka.Message) {
@@ -96,39 +96,38 @@ func uploadHandler(m kafka.Message) {
 		return
 	}
 	// We need the b64 identity in order to call the inventory
-	if event.B64Identity != nil && event.Url != nil {
-		identity, err := utils.ParseIdentity(*event.B64Identity)
-		if err != nil {
-			utils.Log("err", err.Error()).Error("Could not parse identity")
-			return
-		}
-
-
-		if identity.IsSmartEntitled() {
-			utils.Log("url", *event.Url).Error("Downloading system profile")
-			downloadSystemProfile(event.Id, *event.B64Identity)
-		} else {
-			utils.Log("account", identity.Identity.AccountNumber).Info("Is not smart entitled")
-		}
-	} else {
-		utils.Log("event", event).Info("Not a valid upload request")
+	if event.B64Identity == nil {
+		utils.Log("No identity provided")
+		return
 	}
+
+	identity, err := utils.ParseIdentity(*event.B64Identity)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("Could not parse identity")
+		return
+	}
+
+	if !identity.IsSmartEntitled() {
+		utils.Log("account", identity.Identity.AccountNumber).Info("Is not smart entitled")
+		return
+	}
+
+	downloadSystemProfile(event.Id, *event.B64Identity)
 }
 
 func downloadSystemProfile(hostId string, identity string) {
-	utils.Log("hostId", hostId, "identity", identity).Error("Downloading system profile")
+	utils.Log("hostId", hostId, "identity", identity).Debug("Downloading system profile")
 
 	// Create new context, which has the apikey value set. This value is then used as a value for `x-rh-identity`
 	ctx := context.WithValue(context.Background(), inventory.ContextAPIKey, inventory.APIKey{Prefix: "", Key: identity})
 
 	data, res, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{hostId}, nil)
-
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Could not Download body")
 		return
 	}
 
-	utils.Log("data", data, "res", res).Error("Download complete")
+	utils.Log("data", data, "res", res).Debug("Download complete")
 
 	vars := vmaas.AppUpdatesHandlerV2PostPostOpts{
 		UpdatesRequest: optional.NewInterface(vmaas.UpdatesRequest{
@@ -162,9 +161,5 @@ func RunListener() {
 	configure()
 
 	go baseListener(uploadReader, uploadHandler)
-	go baseListener(eventsReader, logHandler)
-
-	// Just block. Any error will panic and kill the process.
-	<-make(chan bool)
-
+	baseListener(eventsReader, logHandler)
 }

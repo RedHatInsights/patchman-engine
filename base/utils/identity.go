@@ -13,7 +13,7 @@ type IdentityDetail struct {
 	AccountNumber string `json:"account_number"`
 	Type          string `json:"type"`
 	// Additional information, we don't parse this
-	Internal      map[string]interface{}
+	Internal map[string]interface{}
 }
 
 type Identity struct {

@@ -14,7 +14,7 @@ func SetupTestEnvironment() {
 	utils.SetenvOrFail("LOG_LEVEL", "debug")
 
 	ConfigureApp()
-	err := database.DelteAllRhAccounts()
+	err := database.DeleteAllRhAccounts()
 	if err != nil {
 		panic(err)
 	}
