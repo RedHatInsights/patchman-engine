@@ -33,10 +33,11 @@ type AdvisorySystemsMeta struct {
 // @Success 200 {object} AdvisorySystemsResponse
 // @Router /api/patch/v1/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListHandler(c *gin.Context) {
+	le := time.Now()
 	var resp = AdvisorySystemsResponse{
 		Data: []SystemItem{{
 			Attributes: SystemItemAttributes{
-				LastEvaluation: time.Now(),
+				LastEvaluation: &le,
 				LastUpload:     nil,
 				RhsaCount:      2,
 				RhbaCount:      5,
@@ -49,7 +50,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 		Links: Links{
 			First: "/api/patch/v1/advisories/$ADVISORY_ID/systems?offset=0&limit=25&data_format=json&show_all=True",
 			Last: "/api/patch/v1/advisories/$ADVISORY_ID/systems?offset=21475&limit=25&data_format=json&show_all=True",
-			Next: "/api/patch/v1/advisories/$ADVISORY_ID/systems?offset=25&limit=25&data_format=json&show_all=True",
+			Next: nil,
 			Previous: nil,
 		},
 		Meta:  AdvisorySystemsMeta{

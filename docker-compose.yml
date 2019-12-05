@@ -50,7 +50,7 @@ services:
       dockerfile: Dockerfile.centos
     env_file:
       - ./conf/common.env
-      - conf/manager.env
+      - ./conf/manager.env
     command: ./manager/entrypoint.sh
     ports:
       - 8080:8080
