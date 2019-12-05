@@ -1,66 +1,10 @@
-package platform
+package main
 
 import (
-	"app/base/utils"
-	"app/listener"
-	"context"
-	"encoding/json"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/gin-gonic/gin"
-	"github.com/segmentio/kafka-go"
 	"net/http"
 )
-
-// Init routes.
-func Init(app *gin.Engine) {
-	// public routes
-	app.GET("/api/inventory/v1/:host_id/system_profile", SystemProfileHandler)
-	app.POST("/api/mock_upload", MockUploadHandler)
-}
-
-func SystemProfileHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, makeSystemProfile(c.Param("host_id")))
-}
-func MockUploadHandler(c *gin.Context) {
-	writer := kafka.NewWriter(kafka.WriterConfig{
-		Brokers:  []string{"localhost:9092"},
-		Topic:    "platform.upload.available",
-		Balancer: &kafka.LeastBytes{},
-	})
-
-	identity, err := utils.Identity{
-		Entitlements: map[string]utils.Entitlement{
-			"smart_management": {Entitled: true},
-		},
-		Identity: utils.IdentityDetail{
-			AccountNumber: "0",
-			Type:          "User",
-		},
-	}.Encode()
-
-	if err != nil {
-		panic(err)
-	}
-
-	event := listener.PlatformEvent{
-		Id:          "bblabla",
-		B64Identity: &identity,
-	}
-	encoded, err := json.Marshal(event)
-	if err != nil {
-		panic(err)
-	}
-
-	err = writer.WriteMessages(context.Background(), kafka.Message{
-		Key:   []byte{},
-		Value: encoded,
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	c.Status(http.StatusOK)
-}
 
 var pkgs = []string{
 	"kernel-debug-devel-2.6.32-220.el6.i686",
@@ -91,16 +35,21 @@ func makeSystemProfile(Id string) inventory.SystemProfileByHostOut {
 		SystemProfile: inventory.SystemProfileIn{
 			Arch:              "i686",
 			InstalledPackages: pkgs,
-			// TODO : Add repo id after https://github.com/RedHatInsights/insights-host-inventory/pull/536
 			YumRepos: []inventory.YumRepo{
 				{
+					Id:       "repo1",
 					Name:     "Debug packages",
 					Baseurl:  "http://repo.com/$arch/$releasever/$product/repo",
 					Enabled:  true,
 					Gpgcheck: false,
 				},
 			},
-			// TODO: Add modules
+			DnfModules: []inventory.DnfModule{
+				{
+					Name:   "firefox",
+					Stream: "60",
+				},
+			},
 		},
 	}
 
@@ -111,4 +60,14 @@ func makeSystemProfile(Id string) inventory.SystemProfileByHostOut {
 		PerPage: 1,
 		Results: []inventory.HostSystemProfileOut{profile},
 	}
+}
+
+func systemProfileHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, makeSystemProfile(c.Param("host_id")))
+}
+
+// InitInventory routes.
+func InitInventory(app *gin.Engine) {
+	// Mock inventory system_profile endpoint
+	app.GET("/api/inventory/v1/hosts/:host_id/system_profile", systemProfileHandler)
 }

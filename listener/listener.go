@@ -137,7 +137,11 @@ func downloadSystemProfile(hostId string, identity string) {
 	}
 
 	vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV2PostPost(ctx, &vars)
-	utils.Log("data", vmaasData, "res", resp).Error("VMAAS query complete")
+	if err != nil {
+		utils.Log("err", err.Error()).Error("Could not make VMaaS query")
+		return
+	}
+	utils.Log("data", vmaasData, "res", resp).Info("VMAAS query complete")
 }
 
 func runMetrics() {

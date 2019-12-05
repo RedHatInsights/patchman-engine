@@ -1,26 +1,30 @@
-FROM centos:7
-# This Dockerfile is for local purposes only, we don't need a RHEL alternative
-RUN yum -y install centos-release-scl && \
-    yum -y install rh-python36 which java-openjdk-headless postgresql && \
-    rm -rf /var/cache/yum/*
+FROM centos:8
 
-ENV PATH=/opt/rh/rh-python36/root/usr/bin:$PATH
+RUN yum module -y install go-toolset postgresql && yum -y install git java-1.8.0-openjdk-devel
+ENV GOPATH=/go
+ENV GO111MODULE=on
 
-WORKDIR /platform
+ADD go.mod  /go/src/app/
+ADD go.sum  /go/src/app/
 
-RUN cd /platform && \
-    mkdir kafka && \
+RUN adduser --gid 0 -d /go --no-create-home insights
+RUN chown -R insights:0 /go
+USER insights
+
+WORKDIR /go/src/app
+RUN go mod download
+
+RUN mkdir kafka && \
     curl https://www.apache.org/dist/kafka/2.2.0/kafka_2.12-2.2.0.tgz \
     | tar -xz --strip-components=1 -C kafka/
 
-ENV LC_ALL=en_US.utf8
-ENV LANG=en_US.utf8
-RUN pip install --upgrade pip pipenv kafka
+ADD /base           /go/src/app/base
+ADD /platform/      /go/src/app/
+ADD /scripts/*.sh   /go/src/app/
 
-EXPOSE 2181 9092
+RUN go build -v platform.go inventory.go vmaas.go
 
-ADD /platform /platform/
-ADD /scripts/* /platform/
+EXPOSE 9001 2181 9092
 
-CMD /platform/entrypoint.sh
+CMD /go/src/app/entrypoint.sh
 
