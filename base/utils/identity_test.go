@@ -21,6 +21,7 @@ func TestParseIdentity(t *testing.T) {
 	assert.Equal(t, nil, err)
 	assert.Equal(t, entitlements, identity.Entitlements)
 	assert.Equal(t, "6089719", identity.Identity.AccountNumber)
-
 	assert.Equal(t, true, identity.IsSmartEntitled())
+	identity.Entitlements["smart_management"] = Entitlement{Entitled: false}
+	assert.Equal(t, false, identity.IsSmartEntitled())
 }

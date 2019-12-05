@@ -27,4 +27,4 @@ do
 done
 
 # run upload mock
-exec ./wait-for-services.sh sleep 5000000
+exec ./wait-for-services.sh ./platform
