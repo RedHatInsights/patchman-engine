@@ -34,6 +34,15 @@ func ParseIdentity(identityString string) (*Identity, error) {
 	return &ident, nil
 }
 
+func (this Identity) Encode() (string, error) {
+	data, err := json.Marshal(&this)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(data), nil
+}
+
 func (this *Identity) IsSmartEntitled() bool {
 	mgmt, contains := this.Entitlements["smart_management"]
 	if contains {
