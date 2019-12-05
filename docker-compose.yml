@@ -70,6 +70,7 @@ services:
     ports:
       # Reserving 8082 for evaluator :)
       - 8083:8083
+    restart: unless-stopped
     depends_on:
       - db
       - platform

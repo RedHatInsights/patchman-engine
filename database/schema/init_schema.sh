@@ -1,8 +1,9 @@
 #!/usr/bin/bash
 
+# Create users if they don't exist
+psql -d ${POSTGRESQL_DATABASE} -f ${CONTAINER_SCRIPTS_PATH}/start/create_users.sql
+
 if $PG_INITIALIZED ; then
-    # Create users if they don't exist
-    psql -d ${POSTGRESQL_DATABASE} -f ${CONTAINER_SCRIPTS_PATH}/start/create_users.sql
 
     # Need to make sure admin role has createrole attribute
     psql -c "ALTER USER ${POSTGRESQL_USER} WITH CREATEROLE" -d ${POSTGRESQL_DATABASE}
@@ -18,3 +19,4 @@ echo "Setting user passwords"
 # Set specific password for each user. If the users are already created, change the password.
 psql -c "ALTER USER listener WITH PASSWORD '${LISTENER_PASSWORD}'" -d ${POSTGRESQL_DATABASE}
 psql -c "ALTER USER manager WITH PASSWORD '${MANAGER_PASSWORD}'" -d ${POSTGRESQL_DATABASE}
+psql -c "ALTER USER vmaas_sync WITH PASSWORD '${VMAAS_SYNC_PASSWORD}'" -d ${POSTGRESQL_DATABASE}

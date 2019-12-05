@@ -2,17 +2,28 @@ package vmaas_sync
 
 import (
 	"app/base/utils"
+	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	ginprometheus "github.com/zsais/go-gin-prometheus"
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+var (
+	messagesReceived = prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace: "patchman_engine",
+		Subsystem: "vmaas_sync",
+		Name:      "websocket_msgs",
+	})
+)
+
+func init() {
+	prometheus.MustRegister(messagesReceived)
+}
 
 func runMetrics() {
 	// create web app
 	app := gin.New()
-
-	prometheus := ginprometheus.NewPrometheus("gin")
-	prometheus.Use(app)
+	middlewares.Prometheus().Use(app)
 	err := app.Run(":8083")
 	if err != nil {
 		utils.Log("err", err.Error()).Error()
@@ -23,13 +34,14 @@ func runMetrics() {
 func runWebsocket(conn *websocket.Conn, handler func(data []byte, conn *websocket.Conn)) {
 	defer conn.Close()
 
-	err:= conn.WriteMessage(websocket.TextMessage, []byte("subscribe-listener"))
+	err := conn.WriteMessage(websocket.TextMessage, []byte("subscribe-listener"))
 	if err != nil {
 		utils.Log("err", err.Error()).Fatal("Could not subscribe for updates")
 		panic(err)
 	}
 
 	for {
+		messagesReceived.Add(1)
 		typ, msg, err := conn.ReadMessage()
 		if err != nil {
 			utils.Log("err", err.Error()).Fatal("Failed to retrive VMaaS websocket message")
@@ -56,5 +68,4 @@ func RunVmaasSync() {
 		panic(err)
 	}
 	runWebsocket(conn, websocketHandler)
-
 }
