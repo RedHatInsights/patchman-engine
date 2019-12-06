@@ -537,23 +537,10 @@ GRANT UPDATE (opt_out) ON system_platform TO manager;
 -- listener deletes systems
 GRANT DELETE ON system_advisories TO listener;
 
--- business_risk table
-CREATE TABLE IF NOT EXISTS business_risk (
-  id INT NOT NULL,
-  name VARCHAR NOT NULL UNIQUE,
-  CHECK (NOT empty(name)),
-  PRIMARY KEY (id)
-) TABLESPACE pg_default;
-
-INSERT INTO business_risk (id, name) VALUES
-  (0, 'Not Defined'), (1, 'Low'), (2, 'Medium'), (3, 'High');
-
 -- errata_account_data
 CREATE TABLE IF NOT EXISTS errata_account_data (
   errata_id INT NOT NULL,
   rh_account_id INT NOT NULL,
-  business_risk_id INT NOT NULL DEFAULT 0,
-  business_risk_text TEXT,
   status_id INT NOT NULL DEFAULT 0,
   status_text TEXT,
   systems_affected INT NOT NULL DEFAULT 0,
@@ -564,9 +551,6 @@ CREATE TABLE IF NOT EXISTS errata_account_data (
   CONSTRAINT rh_account_id
     FOREIGN KEY (rh_account_id)
     REFERENCES rh_account (id),
-  CONSTRAINT business_risk_id
-    FOREIGN KEY (business_risk_id)
-    REFERENCES business_risk (id),
   CONSTRAINT status_id
     FOREIGN KEY (status_id)
     REFERENCES status (id),
