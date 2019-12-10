@@ -1,14 +1,13 @@
 package database
 
-import "github.com/jinzhu/gorm"
-
 type TestTable struct {
+	ID    uint `gorm:"primary_key"`
 	Name  string
 	Email string
-	gorm.Model
 }
 
 type TestTableSlice []TestTable
+
 func (this TestTableSlice) MakeInterfaceSlice() []interface{} {
 	res := make([]interface{}, len(this))
 	for i := range this {

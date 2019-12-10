@@ -2,9 +2,19 @@ package database
 
 import (
 	"app/base/utils"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+var defaultValues = TestTableSlice{
+	{Name: "A", Email: "B",},
+	{Name: "C", Email: "D",},
+	{Name: "E", Email: "F",},
+	{Name: "G", Email: "H",},
+	{Name: "I", Email: "J",},
+	{Name: "K", Email: "L",},
+	{Name: "M", Email: "N",},
+}
 
 func TestBatchInsert(t *testing.T) {
 	utils.SkipWithoutDB(t)
@@ -13,32 +23,40 @@ func TestBatchInsert(t *testing.T) {
 	Db.AutoMigrate(&TestTable{})
 	Db.Unscoped().Delete(&TestTable{})
 
-	vals := TestTableSlice{
-		{
-			Name:  "A",
-			Email: "B",
-		},
-		{
-			Name:  "A",
-			Email: "B",
-		},
-		{
-			Name:  "A",
-			Email: "B",
-		},
-	}
-	arr := vals.MakeInterfaceSlice()
+	arr := defaultValues.MakeInterfaceSlice()
 
 	err := BulkInsert(Db, arr)
-	assert.Equal(t, nil, err)
+	assert.Nil(t, err)
 
 	var res []TestTable
-	assert.Equal(t, nil, Db.Find(&res).Error)
+	assert.Nil(t, Db.Find(&res).Error)
 
-	assert.Equal(t, len(vals), len(res))
-	for i := range vals {
-		assert.Equal(t, res[i].Name, vals[i].Name)
-		assert.Equal(t, res[i].Email, vals[i].Email)
+	assert.Equal(t, len(defaultValues), len(res))
+	for i := range defaultValues {
+		assert.Equal(t, res[i].Name, defaultValues[i].Name)
+		assert.Equal(t, res[i].Email, defaultValues[i].Email)
+	}
+}
+
+func TestBatchInsertChunked(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	Configure()
+
+	Db.AutoMigrate(&TestTable{})
+	Db.Unscoped().Delete(&TestTable{})
+
+	arr := defaultValues.MakeInterfaceSlice()
+
+	err := BulkInsertChunk(Db, arr, 2)
+	assert.Nil(t, err)
+
+	var res []TestTable
+	assert.Nil(t, Db.Find(&res).Error)
+
+	assert.Equal(t, len(defaultValues), len(res))
+	for i := range defaultValues {
+		assert.Equal(t, res[i].Name, defaultValues[i].Name)
+		assert.Equal(t, res[i].Email, defaultValues[i].Email)
 	}
 }
 
@@ -50,34 +68,19 @@ func TestBatchInsertOnConflictUpdate(t *testing.T) {
 	db.AutoMigrate(&TestTable{})
 	db.Unscoped().Delete(&TestTable{}, "true")
 
-	inputs := TestTableSlice{
-		{
-			Name:  "A",
-			Email: "B",
-		},
-		{
-			Name:  "A",
-			Email: "B",
-		},
-		{
-			Name:  "A",
-			Email: "B",
-		},
-	}
-
-	arr := inputs.MakeInterfaceSlice()
+	arr := defaultValues.MakeInterfaceSlice()
 
 	// Perform first insert
 	err := BulkInsert(db, arr)
-	assert.Equal(t, nil, err)
+	assert.Nil(t, err)
 
 	var outputs []TestTable
-	assert.Equal(t, nil, db.Find(&outputs).Error)
+	assert.Nil(t, db.Find(&outputs).Error)
 
-	assert.Equal(t, len(inputs), len(outputs))
-	for i := range inputs {
-		assert.Equal(t, inputs[i].Name, outputs[i].Name)
-		assert.Equal(t, inputs[i].Email, outputs[i].Email)
+	assert.Equal(t, len(defaultValues), len(outputs))
+	for i := range defaultValues {
+		assert.Equal(t, defaultValues[i].Name, outputs[i].Name)
+		assert.Equal(t, defaultValues[i].Email, outputs[i].Email)
 
 		outputs[i].Name = ""
 	}
@@ -86,11 +89,11 @@ func TestBatchInsertOnConflictUpdate(t *testing.T) {
 	// Try to re-insert, and update values
 	db = OnConflictUpdate(db, "id", "name", "email")
 	err = BulkInsert(db, arr)
-	assert.Equal(t, nil, err)
+	assert.Nil(t, err)
 
 	// Re-load data from database
 	var modified []TestTable
-	assert.Equal(t, nil, db.Find(&modified).Error)
+	assert.Nil(t, db.Find(&modified).Error)
 
 	for i := range outputs {
 		assert.Equal(t, outputs[i].Name, modified[i].Name)
