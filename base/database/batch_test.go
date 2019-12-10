@@ -1,8 +1,6 @@
-package batch
+package database
 
 import (
-	"app/base/core"
-	"app/base/database"
 	"app/base/utils"
 	"github.com/bmizerany/assert"
 	"testing"
@@ -10,12 +8,12 @@ import (
 
 func TestBatchInsert(t *testing.T) {
 	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	Configure()
 
-	database.Db.AutoMigrate(&database.TestTable{})
-	database.Db.Unscoped().Delete(&database.TestTable{})
+	Db.AutoMigrate(&TestTable{})
+	Db.Unscoped().Delete(&TestTable{})
 
-	vals := database.TestTableSlice{
+	vals := TestTableSlice{
 		{
 			Name:  "A",
 			Email: "B",
@@ -31,11 +29,11 @@ func TestBatchInsert(t *testing.T) {
 	}
 	arr := vals.MakeInterfaceSlice()
 
-	err := BulkInsert(database.Db, arr)
+	err := BulkInsert(Db, arr)
 	assert.Equal(t, nil, err)
 
-	var res []database.TestTable
-	assert.Equal(t, nil, database.Db.Find(&res).Error)
+	var res []TestTable
+	assert.Equal(t, nil, Db.Find(&res).Error)
 
 	assert.Equal(t, len(vals), len(res))
 	for i := range vals {
@@ -46,13 +44,13 @@ func TestBatchInsert(t *testing.T) {
 
 func TestBatchInsertOnConflictUpdate(t *testing.T) {
 	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-	db := database.Db
+	Configure()
+	db := Db
 
-	db.AutoMigrate(&database.TestTable{})
-	db.Unscoped().Delete(&database.TestTable{}, "true")
+	db.AutoMigrate(&TestTable{})
+	db.Unscoped().Delete(&TestTable{}, "true")
 
-	inputs := database.TestTableSlice{
+	inputs := TestTableSlice{
 		{
 			Name:  "A",
 			Email: "B",
@@ -73,7 +71,7 @@ func TestBatchInsertOnConflictUpdate(t *testing.T) {
 	err := BulkInsert(db, arr)
 	assert.Equal(t, nil, err)
 
-	var outputs []database.TestTable
+	var outputs []TestTable
 	assert.Equal(t, nil, db.Find(&outputs).Error)
 
 	assert.Equal(t, len(inputs), len(outputs))
@@ -83,15 +81,15 @@ func TestBatchInsertOnConflictUpdate(t *testing.T) {
 
 		outputs[i].Name = ""
 	}
-	arr = database.TestTableSlice(outputs).MakeInterfaceSlice()
+	arr = TestTableSlice(outputs).MakeInterfaceSlice()
 
 	// Try to re-insert, and update values
-	db = database.OnConflictUpdate(db, "id", "name", "email")
+	db = OnConflictUpdate(db, "id", "name", "email")
 	err = BulkInsert(db, arr)
 	assert.Equal(t, nil, err)
 
 	// Re-load data from database
-	var modified []database.TestTable
+	var modified []TestTable
 	assert.Equal(t, nil, db.Find(&modified).Error)
 
 	for i := range outputs {

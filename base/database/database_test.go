@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestOnConflictDoNothing(t *testing.T) {
+func TestOnConflictDoUpdate(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
 
