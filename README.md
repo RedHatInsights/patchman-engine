@@ -46,7 +46,7 @@ cd dev/scripts
 ./system_detail.sh 1
 ~~~
 
-Test using Swagger, open <http://localhost:8080/swagger/index.html>.
+Test using Swagger, open <http://localhost:8080/openapi/index.html>.
 
 ## Run tests
 ~~~bash

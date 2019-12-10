@@ -31,6 +31,7 @@ type AdvisoryDetailAttributes struct {
 
 // @Summary Show me details an advisory by given advisory name
 // @Description Show me details an advisory by given advisory name
+// @Security RhIdentity
 // @Accept   json
 // @Produce  json
 // @Param    advisory_id    path    string   true "Advisory ID"
