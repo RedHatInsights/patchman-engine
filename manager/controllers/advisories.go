@@ -14,6 +14,7 @@ type AdvisoriesResponse struct {
 
 // @Summary Show me all applicable errata for all my systems
 // @Description Show me all applicable errata for all my systems
+// @Security RhIdentity
 // @Accept   json
 // @Produce  json
 // @Success 200 {object} AdvisoriesResponse

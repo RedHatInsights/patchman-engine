@@ -27,6 +27,7 @@ type AdvisorySystemsMeta struct {
 
 // @Summary Show me systems on which the given advisory is applicable
 // @Description Show me systems on which the given advisory is applicable
+// @Security RhIdentity
 // @Accept   json
 // @Produce  json
 // @Param    advisory_id    path    string   true "Advisory ID"

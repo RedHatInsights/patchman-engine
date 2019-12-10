@@ -14,6 +14,7 @@ type SystemAdvisoriesResponse struct {
 
 // @Summary Show me advisories for a system by given inventory id
 // @Description Show me advisories for a system by given inventory id
+// @Security RhIdentity
 // @Accept   json
 // @Produce  json
 // @Param    inventory_id    path    string   true "Inventory ID"
