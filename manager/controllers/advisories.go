@@ -12,8 +12,8 @@ type AdvisoriesResponse struct {
 	Meta  AdvisoryMeta   `json:"meta"`
 }
 
-// @Summary Show me all applicable errata for all my systems
-// @Description Show me all applicable errata for all my systems
+// @Summary Show me all applicable advisories for all my systems
+// @Description Show me all applicable advisories for all my systems
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json

@@ -165,7 +165,7 @@ CREATE OR REPLACE FUNCTION refresh_all_cached_counts()
   RETURNS void AS
 $refresh_all_cached_counts$
   BEGIN
-    -- update adviosrt count for ordered systems
+    -- update advisories count for ordered systems
     WITH to_update_systems AS (
       SELECT sp.id
       FROM system_platform sp
