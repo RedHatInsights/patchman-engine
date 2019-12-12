@@ -15,11 +15,12 @@ type SystemPlatform struct {
 	ID                    int
 	InventoryID           string
 	RhAccountID           int
-	FirstReported         time.Time
+	// All times need to be stored as pointers, since they are set to 0000-00-00 00:00 by gorm if not present
+	FirstReported         *time.Time
 	VmaasJSON             string
 	JsonChecksum          string
-	LastUpdated           time.Time
-	UnchangedSince        time.Time
+	LastUpdated           *time.Time
+	UnchangedSince        *time.Time
 	LastEvaluation        *time.Time
 	OptOut                bool
 	AdvisoryCountCache    int
@@ -54,7 +55,7 @@ type SystemAdvisories struct {
 	ID            int
 	SystemID      int
 	AdvisoryID    int
-	FirstReported time.Time
+	FirstReported *time.Time
 	WhenPatched   *time.Time
 	StatusID      *int
 }
@@ -73,6 +74,16 @@ type AdvisoryAccountData struct {
 
 func (AdvisoryAccountData) TableName() string {
 	return "advisory_account_data"
+}
+
+type SystemAdvisoriesSlice []SystemAdvisories
+
+func (this SystemAdvisoriesSlice) ToInterfaceSlice() []interface{} {
+	res := make([]interface{}, len(this))
+	for i, v := range this {
+		res[i] = v
+	}
+	return res
 }
 
 type Repo struct {

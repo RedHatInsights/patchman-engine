@@ -14,10 +14,10 @@ func OnConflictUpdate(db *gorm.DB, key string, updateCols ...string) *gorm.DB {
 // Appends `ON CONFLICT (key...) DO UPDATE SET (fields) to following insert query with multiple key fields
 func OnConflictUpdateMulti(db *gorm.DB, keys []string, updateCols ...string) *gorm.DB {
 	keyStr := strings.Join(keys, ",")
-	updateExprs := []string{}
-	for _, v := range updateCols {
+	updateExprs := make([]string, len(updateCols))
+	for i, v := range updateCols {
 		val := fmt.Sprintf("%v = excluded.%v", v, v)
-		updateExprs = append(updateExprs, val)
+		updateExprs[i] = val
 	}
 	valStr := strings.Join(updateExprs, ",")
 	if valStr != "" {
