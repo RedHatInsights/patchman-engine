@@ -15,8 +15,8 @@
     "paths": {
         "/api/patch/v1/advisories": {
             "get": {
-                "summary": "Show me all applicable errata for all my systems",
-                "description": "Show me all applicable errata for all my systems",
+                "summary": "Show me all applicable advisories for all my systems",
+                "description": "Show me all applicable advisories for all my systems",
                 "responses": {
                     "200": {
                         "description": "OK",

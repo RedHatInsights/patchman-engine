@@ -40,7 +40,7 @@ func SystemsListHandler(c *gin.Context) {
 		LogAndRespBadRequest(c, err, err.Error())
 		return
 	}
-	
+
 	var total int
 	err = database.Db.Model(models.SystemPlatform{}).Count(&total).Error
 	if err != nil {
@@ -65,7 +65,7 @@ func SystemsListHandler(c *gin.Context) {
 		"&data_format=json")
 	meta := buildMeta(limit, offset, total)
 	var resp = SystemsResponse{
-		Data: *data,
+		Data:  *data,
 		Links: links,
 		Meta:  *meta,
 	}
@@ -73,7 +73,7 @@ func SystemsListHandler(c *gin.Context) {
 	return
 }
 
-func buildMeta(limit, offset, total int) *SystemsMeta{
+func buildMeta(limit, offset, total int) *SystemsMeta {
 	meta := SystemsMeta{
 		DataFormat: "json",
 		Filter:     nil,
@@ -96,12 +96,12 @@ func buildData(systems *[]models.SystemPlatform) *[]SystemItem {
 			Attributes: SystemItemAttributes{
 				LastEvaluation: system.LastEvaluation,
 				LastUpload:     system.LastUpload,
-				RhsaCount:      system.ErrataCountCache,
+				RhsaCount:      0,
 				RhbaCount:      0,
 				RheaCount:      0,
 				Enabled:        !system.OptOut,
 			},
-			Id: system.InventoryID,
+			Id:   system.InventoryID,
 			Type: "system",
 		}
 	}

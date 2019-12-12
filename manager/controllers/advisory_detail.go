@@ -47,7 +47,7 @@ func AdvisoryDetailHandler(c *gin.Context) {
 				PublicDate: time.Now(),
 				Topic: "A new kpatch-patch-4_18_0-147_0_3 package is now available for Red Hat Enterprise Linux 8.",
 				Synopsis: "new package: kpatch-patch-4_18_0-147_0_3",
-				Solution: "Before applying this update, make sure all previously released errata relevant to your system " +
+				Solution: "Before applying this update, make sure all previously released advisories relevant to your system " +
 					"have been applied.",
 				Fixes: nil,
 				Cves: []string{},
