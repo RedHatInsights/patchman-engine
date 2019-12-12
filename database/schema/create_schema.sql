@@ -77,80 +77,80 @@ $opt_out_system_update_cache$
     IF (TG_OP = 'UPDATE') AND NEW.last_evaluation IS NOT NULL THEN
       -- system opted out
       IF OLD.opt_out = FALSE AND NEW.opt_out = TRUE THEN
-        -- decrement affected errata counts for system
+        -- decrement affected advisory counts for system
         WITH to_update_advisories AS (
-          SELECT ead.errata_id, ead.status_id AS global_status_id, sa.status_id
-          FROM errata_account_data ead INNER JOIN
-               system_advisories sa ON ead.errata_id = sa.errata_id
+          SELECT ead.advisory_id, ead.status_id AS global_status_id, sa.status_id
+          FROM advisory_account_data ead INNER JOIN
+               system_advisories sa ON ead.advisory_id = sa.advisory_id
           WHERE ead.rh_account_id = NEW.rh_account_id AND
                 sa.system_id = NEW.id AND
                 sa.when_patched IS NULL
-          ORDER BY ead.errata_id
+          ORDER BY ead.advisory_id
           FOR UPDATE OF ead
         -- decrement systems_affected and systems_status_divergent in case status is different
         ), update_divergent AS (
-          UPDATE errata_account_data ead
+          UPDATE advisory_account_data ead
           SET systems_affected = systems_affected - 1,
               systems_status_divergent = systems_status_divergent - 1
           FROM to_update_advisories
-          WHERE ead.errata_id = to_update_advisories.errata_id AND
+          WHERE ead.advisory_id = to_update_advisories.advisory_id AND
                 ead.rh_account_id = NEW.rh_account_id AND
                 to_update_advisories.global_status_id != to_update_advisories.status_id
         )
         -- decrement only systems_affected in case status is same
-        UPDATE errata_account_data ead
+        UPDATE advisory_account_data ead
         SET systems_affected = systems_affected - 1
         FROM to_update_advisories
-        WHERE ead.errata_id = to_update_advisories.errata_id AND
+        WHERE ead.advisory_id = to_update_advisories.advisory_id AND
               ead.rh_account_id = NEW.rh_account_id AND
               to_update_advisories.global_status_id = to_update_advisories.status_id;
-        -- delete zero errata counts
-        DELETE FROM errata_account_data
+        -- delete zero advisory counts
+        DELETE FROM advisory_account_data
         WHERE rh_account_id = NEW.rh_account_id AND
               systems_affected = 0;
 
       -- system opted in
       ELSIF OLD.opt_out = TRUE AND NEW.opt_out = FALSE THEN
-        -- increment affected errata counts for system
+        -- increment affected advisory counts for system
         WITH to_update_advisories AS (
-          SELECT ead.errata_id, ead.status_id AS global_status_id, sa.status_id
-          FROM errata_account_data ead INNER JOIN
-               system_advisories sa ON ead.errata_id = sa.errata_id
+          SELECT ead.advisory_id, ead.status_id AS global_status_id, sa.status_id
+          FROM advisory_account_data ead INNER JOIN
+               system_advisories sa ON ead.advisory_id = sa.advisory_id
           WHERE ead.rh_account_id = NEW.rh_account_id AND
                 sa.system_id = NEW.id AND
                 sa.when_patched IS NULL
-          ORDER BY ead.errata_id
+          ORDER BY ead.advisory_id
           FOR UPDATE OF ead
         -- increment systems_affected and systems_status_divergent in case status is different
         ), update_divergent AS (
-          UPDATE errata_account_data ead
+          UPDATE advisory_account_data ead
           SET systems_affected = systems_affected + 1,
               systems_status_divergent = systems_status_divergent + 1
           FROM to_update_advisories
-          WHERE ead.errata_id = to_update_advisories.errata_id AND
+          WHERE ead.advisory_id = to_update_advisories.advisory_id AND
                 ead.rh_account_id = NEW.rh_account_id AND
                 to_update_advisories.global_status_id != to_update_advisories.status_id
         )
         -- increment only systems_affected in case status is same
-        UPDATE errata_account_data ead
+        UPDATE advisory_account_data ead
         SET systems_affected = systems_affected + 1
         FROM to_update_advisories
-        WHERE ead.errata_id = to_update_advisories.errata_id AND
+        WHERE ead.advisory_id = to_update_advisories.advisory_id AND
               ead.rh_account_id = NEW.rh_account_id AND
               to_update_advisories.global_status_id = to_update_advisories.status_id;
         -- insert cache if not exists
-        INSERT INTO errata_account_data (errata_id, rh_account_id, systems_affected)
-        SELECT sa.errata_id, NEW.rh_account_id, 1
+        INSERT INTO advisory_account_data (advisory_id, rh_account_id, systems_affected)
+        SELECT sa.advisory_id, NEW.rh_account_id, 1
         FROM system_advisories sa
         WHERE sa.system_id = NEW.id AND
               sa.when_patched IS NULL AND
               NOT EXISTS (
-                SELECT 1 FROM errata_account_data
+                SELECT 1 FROM advisory_account_data
                 WHERE rh_account_id = NEW.rh_account_id AND
-                      errata_id = sa.errata_id
+                      advisory_id = sa.advisory_id
               )
-        ON CONFLICT (errata_id, rh_account_id) DO UPDATE SET
-          systems_affected = errata_account_data.systems_affected + EXCLUDED.systems_affected;
+        ON CONFLICT (advisory_id, rh_account_id) DO UPDATE SET
+          systems_affected = advisory_account_data.systems_affected + EXCLUDED.systems_affected;
       END IF;
     END IF;
     RETURN NEW;
@@ -165,41 +165,41 @@ CREATE OR REPLACE FUNCTION refresh_all_cached_counts()
   RETURNS void AS
 $refresh_all_cached_counts$
   BEGIN
-    -- update errata count for ordered systems
+    -- update adviosrt count for ordered systems
     WITH to_update_systems AS (
       SELECT sp.id
       FROM system_platform sp
       ORDER BY sp.rh_account_id, sp.id
       FOR UPDATE OF sp
     )
-    UPDATE system_platform sp SET errata_count_cache = (
-      SELECT COUNT(errata_id) FROM system_advisories sa
+    UPDATE system_platform sp SET advisory_count_cache = (
+      SELECT COUNT(advisory_id) FROM system_advisories sa
       WHERE sa.system_id = sp.id AND sa.when_patched IS NULL
     )
     FROM to_update_systems
     WHERE sp.id = to_update_systems.id;
 
-    -- update system count for ordered errata
+    -- update system count for ordered advisory
     WITH locked_rows AS (
-      SELECT ead.rh_account_id, ead.errata_id
-      FROM errata_account_data ead
-      ORDER BY ead.rh_account_id, ead.errata_id
+      SELECT ead.rh_account_id, ead.advisory_id
+      FROM advisory_account_data ead
+      ORDER BY ead.rh_account_id, ead.advisory_id
       FOR UPDATE OF ead
     ), current_counts AS (
-      SELECT sa.errata_id, sp.rh_account_id, count(sa.system_id) as systems_affected
+      SELECT sa.advisory_id, sp.rh_account_id, count(sa.system_id) as systems_affected
       FROM system_advisories sa INNER JOIN
            system_platform sp ON sa.system_id = sp.id
       WHERE sp.last_evaluation IS NOT NULL AND
             sp.opt_out = FALSE AND
             sa.when_patched IS NULL
-      GROUP BY sa.errata_id, sp.rh_account_id
+      GROUP BY sa.advisory_id, sp.rh_account_id
     ), upserted AS (
-      INSERT INTO errata_account_data (errata_id, rh_account_id, systems_affected)
-        SELECT errata_id, rh_account_id, systems_affected FROM current_counts
-      ON CONFLICT (errata_id, rh_account_id) DO UPDATE SET
+      INSERT INTO advisory_account_data (advisory_id, rh_account_id, systems_affected)
+        SELECT advisory_id, rh_account_id, systems_affected FROM current_counts
+      ON CONFLICT (advisory_id, rh_account_id) DO UPDATE SET
         systems_affected = EXCLUDED.systems_affected
     )
-    DELETE FROM errata_account_data WHERE (errata_id, rh_account_id) NOT IN (SELECT errata_id, rh_account_id FROM current_counts);
+    DELETE FROM advisory_account_data WHERE (advisory_id, rh_account_id) NOT IN (SELECT advisory_id, rh_account_id FROM current_counts);
   END;
 $refresh_all_cached_counts$
   LANGUAGE 'plpgsql';
@@ -211,7 +211,7 @@ $refresh_account_cached_counts$
   DECLARE
     rh_account_id_in INT;
   BEGIN
-    -- update errata count for ordered systems
+    -- update advisory count for ordered systems
     SELECT id FROM rh_account WHERE name = rh_account_in INTO rh_account_id_in;
     WITH to_update_systems AS (
       SELECT sp.id
@@ -220,54 +220,54 @@ $refresh_account_cached_counts$
       ORDER BY sp.id
       FOR UPDATE OF sp
     )
-    UPDATE system_platform sp SET errata_count_cache = (
-      SELECT COUNT(errata_id) FROM system_advisories sa
+    UPDATE system_platform sp SET advisory_count_cache = (
+      SELECT COUNT(advisory_id) FROM system_advisories sa
       WHERE sa.system_id = sp.id AND sa.when_patched IS NULL
     )
     FROM to_update_systems
     WHERE sp.id = to_update_systems.id;
 
-    -- update system count for ordered errata
+    -- update system count for ordered advisory
     WITH locked_rows AS (
-      SELECT ead.errata_id
-      FROM errata_account_data ead
+      SELECT ead.advisory_id
+      FROM advisory_account_data ead
       WHERE ead.rh_account_id = rh_account_id_in
-      ORDER BY ead.errata_id
+      ORDER BY ead.advisory_id
       FOR UPDATE OF ead
     ), current_counts AS (
-      SELECT sa.errata_id, count(sa.system_id) as systems_affected
+      SELECT sa.advisory_id, count(sa.system_id) as systems_affected
       FROM system_advisories sa INNER JOIN
            system_platform sp ON sa.system_id = sp.id
       WHERE sp.last_evaluation IS NOT NULL AND
             sp.opt_out = FALSE AND
             sa.when_patched IS NULL AND
             sp.rh_account_id = rh_account_id_in
-      GROUP BY sa.errata_id
+      GROUP BY sa.advisory_id
     ), upserted AS (
-      INSERT INTO errata_account_data (errata_id, rh_account_id, systems_affected)
-        SELECT errata_id, rh_account_id_in, systems_affected FROM current_counts
-      ON CONFLICT (errata_id, rh_account_id) DO UPDATE SET
+      INSERT INTO advisory_account_data (advisory_id, rh_account_id, systems_affected)
+        SELECT advisory_id, rh_account_id_in, systems_affected FROM current_counts
+      ON CONFLICT (advisory_id, rh_account_id) DO UPDATE SET
         systems_affected = EXCLUDED.systems_affected
     )
-    DELETE FROM errata_account_data WHERE errata_id NOT IN (SELECT errata_id FROM current_counts)
+    DELETE FROM advisory_account_data WHERE advisory_id NOT IN (SELECT advisory_id FROM current_counts)
       AND rh_account_id = rh_account_id_in;
   END;
 $refresh_account_cached_counts$
   LANGUAGE 'plpgsql';
 
 
-CREATE OR REPLACE FUNCTION refresh_errata_cached_counts(advisory_in varchar)
+CREATE OR REPLACE FUNCTION refresh_advisory_cached_counts(advisory_name varchar)
   RETURNS void AS
-$refresh_errata_cached_counts$
+$refresh_advisory_cached_counts$
   DECLARE
-    errata_md_id INT;
+    advisory_md_id INT;
   BEGIN
-    -- update system count for errata
-    SELECT id FROM errata_metadata WHERE advisory = advisory_in INTO errata_md_id;
+    -- update system count for advisory
+    SELECT id FROM advisory_metadata WHERE name = advisory_name INTO advisory_md_id;
     WITH locked_rows AS (
       SELECT ead.rh_account_id
-      FROM errata_account_data ead
-      WHERE ead.errata_id = errata_md_id
+      FROM advisory_account_data ead
+      WHERE ead.advisory_id = advisory_md_id
       ORDER BY ead.rh_account_id
       FOR UPDATE OF ead
     ), current_counts AS (
@@ -277,58 +277,58 @@ $refresh_errata_cached_counts$
       WHERE sp.last_evaluation IS NOT NULL AND
             sp.opt_out = FALSE AND
             sa.when_patched IS NULL AND
-            sa.errata_id = errata_md_id
+            sa.advisory_id = advisory_md_id
       GROUP BY sp.rh_account_id
     ), upserted AS (
-      INSERT INTO errata_account_data (errata_id, rh_account_id, systems_affected)
-        SELECT errata_md_id, rh_account_id, systems_affected FROM current_counts
-      ON CONFLICT (errata_id, rh_account_id) DO UPDATE SET
+      INSERT INTO advisory_account_data (advisory_id, rh_account_id, systems_affected)
+        SELECT advisory_md_id, rh_account_id, systems_affected FROM current_counts
+      ON CONFLICT (advisory_id, rh_account_id) DO UPDATE SET
         systems_affected = EXCLUDED.systems_affected
     )
-    DELETE FROM errata_account_data WHERE rh_account_id NOT IN (SELECT rh_account_id FROM current_counts)
-      AND errata_id = errata_md_id;
+    DELETE FROM advisory_account_data WHERE rh_account_id NOT IN (SELECT rh_account_id FROM current_counts)
+      AND advisory_id = advisory_md_id;
   END;
-$refresh_errata_cached_counts$
+$refresh_advisory_cached_counts$
   LANGUAGE 'plpgsql';
 
 
-CREATE OR REPLACE FUNCTION refresh_errata_account_cached_counts(advisory_in varchar, rh_account_in varchar)
+CREATE OR REPLACE FUNCTION refresh_advisory_account_cached_counts(advisory_name varchar, rh_account_name varchar)
   RETURNS void AS
-$refresh_errata_account_cached_counts$
+$refresh_advisory_account_cached_counts$
   DECLARE
-    errata_md_id INT;
+    advisory_md_id INT;
     rh_account_id_in INT;
   BEGIN
-    -- update system count for ordered errata
-    SELECT id FROM errata_metadata WHERE advisory = advisory_in INTO errata_md_id;
-    SELECT id FROM rh_account WHERE name = rh_account_in INTO rh_account_id_in;
+    -- update system count for ordered advisories
+    SELECT id FROM advisory_metadata WHERE name = advisory_name INTO advisory_md_id;
+    SELECT id FROM rh_account WHERE name = rh_account_name INTO rh_account_id_in;
     WITH locked_rows AS (
-      SELECT ead.rh_account_id, ead.errata_id
-      FROM errata_account_data ead
-      WHERE ead.errata_id = errata_md_id AND
+      SELECT ead.rh_account_id, ead.advisory_id
+      FROM advisory_account_data ead
+      WHERE ead.advisory_id = advisory_md_id AND
             ead.rh_account_id = rh_account_id_in
       FOR UPDATE OF ead
     ), current_counts AS (
-      SELECT sa.errata_id, sp.rh_account_id, count(sa.system_id) as systems_affected
+      SELECT sa.advisory_id, sp.rh_account_id, count(sa.system_id) as systems_affected
       FROM system_advisories sa INNER JOIN
            system_platform sp ON sa.system_id = sp.id
       WHERE sp.last_evaluation IS NOT NULL AND
             sp.opt_out = FALSE AND
             sa.when_patched IS NULL AND
-            sa.errata_id = errata_md_id AND
+            sa.advisory_id = advisory_md_id AND
             sp.rh_account_id = rh_account_id_in
-      GROUP BY sa.errata_id, sp.rh_account_id
+      GROUP BY sa.advisory_id, sp.rh_account_id
     ), upserted AS (
-      INSERT INTO errata_account_data (errata_id, rh_account_id, systems_affected)
-        SELECT errata_md_id, rh_account_id_in, systems_affected FROM current_counts
-      ON CONFLICT (errata_id, rh_account_id) DO UPDATE SET
+      INSERT INTO advisory_account_data (advisory_id, rh_account_id, systems_affected)
+        SELECT advisory_md_id, rh_account_id_in, systems_affected FROM current_counts
+      ON CONFLICT (advisory_id, rh_account_id) DO UPDATE SET
         systems_affected = EXCLUDED.systems_affected
     )
-    DELETE FROM errata_account_data WHERE NOT EXISTS (SELECT 1 FROM current_counts)
-      AND errata_id = errata_md_id
+    DELETE FROM advisory_account_data WHERE NOT EXISTS (SELECT 1 FROM current_counts)
+      AND advisory_id = advisory_md_id
       AND rh_account_id = rh_account_id_in;
   END;
-$refresh_errata_account_cached_counts$
+$refresh_advisory_account_cached_counts$
   LANGUAGE 'plpgsql';
 
 
@@ -336,9 +336,9 @@ CREATE OR REPLACE FUNCTION refresh_system_cached_counts(inventory_id_in varchar)
   RETURNS void AS
 $refresh_system_cached_counts$
   BEGIN
-    -- update errata count for system
-    UPDATE system_platform sp SET errata_count_cache = (
-      SELECT COUNT(errata_id) FROM system_advisories sa
+    -- update advisory count for system
+    UPDATE system_platform sp SET advisory_count_cache = (
+      SELECT COUNT(advisory_id) FROM system_advisories sa
       WHERE sa.system_id = sp.id AND sa.when_patched IS NULL
     ) WHERE sp.inventory_id = inventory_id_in;
   END;
@@ -410,14 +410,13 @@ CREATE TABLE IF NOT EXISTS system_platform (
   inventory_id TEXT NOT NULL, CHECK (NOT empty(inventory_id)),
   rh_account_id INT NOT NULL,
   first_reported TIMESTAMP WITH TIME ZONE NOT NULL,
-  s3_url TEXT,
   vmaas_json TEXT,
   json_checksum TEXT,
   last_updated TIMESTAMP WITH TIME ZONE NOT NULL,
   unchanged_since TIMESTAMP WITH TIME ZONE NOT NULL,
   last_evaluation TIMESTAMP WITH TIME ZONE,
   opt_out BOOLEAN NOT NULL DEFAULT FALSE,
-  errata_count_cache INT NOT NULL DEFAULT 0,
+  advisory_count_cache INT NOT NULL DEFAULT 0,
   PRIMARY KEY (id),
   last_upload TIMESTAMP WITH TIME ZONE,
   UNIQUE (inventory_id),
@@ -448,46 +447,45 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON system_platform TO listener;
 -- evaluator needs to update last_evaluation
 GRANT UPDATE ON system_platform TO evaluator;
 -- manager needs to update cache and delete systems
-GRANT UPDATE (errata_count_cache), DELETE ON system_platform TO manager;
+GRANT UPDATE (advisory_count_cache), DELETE ON system_platform TO manager;
 
--- errata_type
-CREATE TABLE IF NOT EXISTS errata_type (
+-- advisory_type
+CREATE TABLE IF NOT EXISTS advisory_type (
   id INT NOT NULL,
   name TEXT NOT NULL UNIQUE, CHECK (NOT empty(name)),
   PRIMARY KEY (id)
 )TABLESPACE pg_default;
 
-INSERT INTO errata_type (id, name) VALUES
-  (0, 'NotSet'),
-  (1, 'Product Enhancement Advisory'),
-  (2, 'Bug Fix Advisory'),
-  (3, 'Security Advisory');
+INSERT INTO advisory_type (id, name) VALUES
+  (0, 'unknown'),
+  (1, 'enhancement'),
+  (2, 'bugfix'),
+  (3, 'security');
 
 
--- errata_metadata
-CREATE TABLE IF NOT EXISTS errata_metadata (
+-- advisory_metadata
+CREATE TABLE IF NOT EXISTS advisory_metadata (
   id SERIAL,
-  advisory TEXT NOT NULL, CHECK (NOT empty(advisory)),
-  advisory_name TEXT NOT NULL, CHECK (NOT empty(advisory_name)),
+  name TEXT NOT NULL, CHECK (NOT empty(name)),
   description TEXT NOT NULL, CHECK (NOT empty(description)),
   synopsis TEXT NOT NULL, CHECK (NOT empty(synopsis)),
-  topic TEXT NOT NULL, CHECK (NOT empty(topic)),
+  summary TEXT NOT NULL, CHECK (NOT empty(summary)),
   solution TEXT NOT NULL, CHECK (NOT empty(solution)),
-  errata_type_id INT NOT NULL,
+  advisory_type_id INT NOT NULL,
   public_date TIMESTAMP WITH TIME ZONE NULL,
   modified_date TIMESTAMP WITH TIME ZONE NULL,
   url TEXT,
-  UNIQUE (advisory),
+  UNIQUE (name),
   PRIMARY KEY (id),
-  CONSTRAINT errata_type_id
-    FOREIGN KEY (errata_type_id)
-    REFERENCES errata_type (id)
+  CONSTRAINT advisory_type_id
+    FOREIGN KEY (advisory_type_id)
+    REFERENCES advisory_type (id)
 ) TABLESPACE pg_default;
 
-CREATE INDEX ON errata_metadata(errata_type_id);
+CREATE INDEX ON advisory_metadata(advisory_type_id);
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON errata_metadata TO evaluator;
-GRANT SELECT, INSERT, UPDATE, DELETE ON errata_metadata TO vmaas_sync;
+GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO evaluator;
+GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO vmaas_sync;
 
 
 -- status table
@@ -506,19 +504,19 @@ INSERT INTO status (id, name) VALUES
 CREATE TABLE IF NOT EXISTS system_advisories (
   id SERIAL,
   system_id INT NOT NULL,
-  errata_id INT NOT NULL,
+  advisory_id INT NOT NULL,
   first_reported TIMESTAMP WITH TIME ZONE NOT NULL,
   when_patched TIMESTAMP WITH TIME ZONE DEFAULT NULL,
   status_id INT DEFAULT 0,
   status_text TEXT,
-  UNIQUE (system_id, errata_id),
+  UNIQUE (system_id, advisory_id),
   PRIMARY KEY (id),
   CONSTRAINT system_platform_id
     FOREIGN KEY (system_id)
     REFERENCES system_platform (id),
-  CONSTRAINT errata_metadata_errata_id
-    FOREIGN KEY (errata_id)
-    REFERENCES errata_metadata (id),
+  CONSTRAINT advisory_metadata_id
+    FOREIGN KEY (advisory_id)
+    REFERENCES advisory_metadata (id),
   CONSTRAINT status_id
     FOREIGN KEY (status_id)
     REFERENCES status (id)
@@ -530,42 +528,42 @@ CREATE TRIGGER system_advisories_set_first_reported BEFORE INSERT ON system_advi
   FOR EACH ROW EXECUTE PROCEDURE set_first_reported();
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO evaluator;
--- manager needs to be able to update things like 'status' on a sysid/errata combination, also needs to delete
+-- manager needs to be able to update things like 'status' on a sysid/advisory combination, also needs to delete
 GRANT UPDATE, DELETE ON system_advisories TO manager;
 -- manager needs to be able to update opt_out column
 GRANT UPDATE (opt_out) ON system_platform TO manager;
 -- listener deletes systems
 GRANT DELETE ON system_advisories TO listener;
 
--- errata_account_data
-CREATE TABLE IF NOT EXISTS errata_account_data (
-  errata_id INT NOT NULL,
+-- advisory_account_data
+CREATE TABLE IF NOT EXISTS advisory_account_data (
+  advisory_id INT NOT NULL,
   rh_account_id INT NOT NULL,
   status_id INT NOT NULL DEFAULT 0,
   status_text TEXT,
   systems_affected INT NOT NULL DEFAULT 0,
   systems_status_divergent INT NOT NULL DEFAULT 0,
-  CONSTRAINT errata_id
-    FOREIGN KEY (errata_id)
-    REFERENCES errata_metadata (id),
+  CONSTRAINT advisory_metadata_id
+    FOREIGN KEY (advisory_id)
+    REFERENCES advisory_metadata (id),
   CONSTRAINT rh_account_id
     FOREIGN KEY (rh_account_id)
     REFERENCES rh_account (id),
   CONSTRAINT status_id
     FOREIGN KEY (status_id)
     REFERENCES status (id),
-  UNIQUE (errata_id, rh_account_id)
+  UNIQUE (advisory_id, rh_account_id)
 ) TABLESPACE pg_default;
 
--- manager needs to write into errata_account_data table
-GRANT SELECT, INSERT, UPDATE, DELETE ON errata_account_data TO manager;
+-- manager needs to write into advisory_account_data table
+GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO manager;
 
 -- manager user needs to change this table for opt-out functionality
-GRANT SELECT, INSERT, UPDATE, DELETE ON errata_account_data TO manager;
+GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO manager;
 -- evaluator user needs to change this table
-GRANT SELECT, INSERT, UPDATE, DELETE ON errata_account_data TO evaluator;
+GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO evaluator;
 -- listner user needs to change this table when deleting system
-GRANT SELECT, INSERT, UPDATE, DELETE ON errata_account_data TO listener;
+GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO listener;
 
 
 CREATE TABLE IF NOT EXISTS deleted_systems (
@@ -620,7 +618,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON timestamp_kv TO vmaas_sync;
 
 -- vmaas_sync needs to delete from this tables to sync CVEs correctly
 GRANT DELETE ON system_advisories TO vmaas_sync;
-GRANT DELETE ON errata_account_data TO vmaas_sync;
+GRANT DELETE ON advisory_account_data TO vmaas_sync;
 
 -- ----------------------------------------------------------------------------
 -- Read access for all users
