@@ -1,6 +1,8 @@
 package listener
 
 import (
+	"app/base/database"
+	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
 	"context"
@@ -10,6 +12,7 @@ import (
 	"github.com/antihax/optional"
 	"github.com/gin-gonic/gin"
 	"github.com/segmentio/kafka-go"
+	"time"
 )
 
 const INVENTORY_API_PREFIX = "/api/inventory/v1"
@@ -77,7 +80,7 @@ func baseListener(reader *kafka.Reader, handler func(message kafka.Message)) {
 			utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
 			panic(err)
 		}
-		// Spawn handler, not blocking the receiving goroutine
+
 		go handler(m)
 	}
 }
@@ -97,7 +100,7 @@ func uploadHandler(m kafka.Message) {
 	}
 	// We need the b64 identity in order to call the inventory
 	if event.B64Identity == nil {
-		utils.Log("No identity provided")
+		utils.Log().Error("No identity provided")
 		return
 	}
 
@@ -111,37 +114,98 @@ func uploadHandler(m kafka.Message) {
 		utils.Log("account", identity.Identity.AccountNumber).Info("Is not smart entitled")
 		return
 	}
-
-	downloadSystemProfile(event.Id, *event.B64Identity)
+	// Spawn handler, not blocking the receiving goroutine
+	hostUploadReceived(event.Id, identity.Identity.AccountNumber, *event.B64Identity)
 }
 
-func downloadSystemProfile(hostId string, identity string) {
+// Stores or updates the account data
+func getAccountId(account string) (int, error) {
+	rhAccount := models.RhAccount{
+		Name: account,
+	}
+
+	err := database.OnConflictUpdate(database.Db, "name", "name").Create(&rhAccount).Error
+
+	return rhAccount.ID, err
+}
+
+// Stores or updates base system profile
+func updateSystemPlatform(inventoryId string, accountId int, updatesReq *vmaas.UpdatesRequest) (int, error) {
+	updatesReqStr, err := json.Marshal(&updatesReq)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("Serializing vmaas request")
+		return 0, err
+	}
+
+	now := time.Now()
+
+	dbHost := models.SystemPlatform{
+		InventoryID:    inventoryId,
+		RhAccountID:    accountId,
+		FirstReported:  now,
+		VmaasJSON:      string(updatesReqStr),
+		JsonChecksum:   "TODO",
+		LastEvaluation: nil,
+		LastUpload:     &now,
+	}
+
+	err = database.OnConflictUpdate(database.Db, "inventory_id", "vmaas_json", "json_checksum", "last_evaluation", "last_upload").Create(&dbHost).Error
+	if err != nil {
+		utils.Log("err", err.Error()).Error("Saving host into the database")
+		return 0, err
+	}
+	return dbHost.ID, nil
+}
+
+// We have received new upload, update stored host data, and re-evaluate the host against VMaaS
+func hostUploadReceived(hostId string, account string, identity string) {
 	utils.Log("hostId", hostId, "identity", identity).Debug("Downloading system profile")
 
 	// Create new context, which has the apikey value set. This value is then used as a value for `x-rh-identity`
 	ctx := context.WithValue(context.Background(), inventory.ContextAPIKey, inventory.APIKey{Prefix: "", Key: identity})
 
-	data, res, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{hostId}, nil)
+	inventoryData, res, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{hostId}, nil)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Could not Download body")
 		return
 	}
 
-	utils.Log("data", data, "res", res).Debug("Download complete")
+	utils.Log("inventoryData", inventoryData, "res", res).Debug("Download complete")
 
-	vars := vmaas.AppUpdatesHandlerV2PostPostOpts{
-		UpdatesRequest: optional.NewInterface(vmaas.UpdatesRequest{
-			// TODO: Proper logic here. This is just a test
-			PackageList: data.Results[0].SystemProfile.InstalledPackages,
-		}),
-	}
-
-	vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV2PostPost(ctx, &vars)
-	if err != nil {
-		utils.Log("err", err.Error()).Error("Could not make VMaaS query")
+	if inventoryData.Count == 0 {
+		utils.Log().Info("No system details returned")
 		return
 	}
-	utils.Log("data", vmaasData, "res", resp).Info("VMAAS query complete")
+
+	for _, host := range inventoryData.Results {
+
+		accountId, err := getAccountId(account)
+		if err != nil {
+			utils.Log("err", err.Error()).Error("Saving account into the database")
+			return
+		}
+
+		updatesReq := vmaas.UpdatesRequest{
+			PackageList: host.SystemProfile.InstalledPackages,
+		}
+
+		_, err = updateSystemPlatform(host.Id, accountId, &updatesReq)
+		if err != nil {
+			utils.Log("err", err.Error()).Error("Saving account into the database")
+			return
+		}
+
+		callVars := vmaas.AppUpdatesHandlerV2PostPostOpts{
+			UpdatesRequest: optional.NewInterface(updatesReq),
+		}
+
+		vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV2PostPost(ctx, &callVars)
+		if err != nil {
+			utils.Log("err", err.Error()).Error("Could not make VMaaS query")
+			return
+		}
+		utils.Log("data", vmaasData, "res", resp).Info("VMAAS query complete")
+	}
 }
 
 func runMetrics() {
