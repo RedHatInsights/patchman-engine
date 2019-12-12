@@ -9,7 +9,7 @@ ADD go.mod  /go/src/app/
 ADD go.sum  /go/src/app/
 
 WORKDIR /go/src/app
-RUN go mod vendor
+RUN go mod download
 
 ADD /base       /go/src/app/base
 ADD /manager    /go/src/app/manager
