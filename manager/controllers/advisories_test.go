@@ -21,7 +21,7 @@ func TestAdvisoriesDefault(t *testing.T) {
 	var output AdvisoriesResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	// data
-	assert.Equal(t, 3, len(output.Data))
+	assert.Equal(t, 8, len(output.Data))
 	assert.Equal(t, "RH-1", output.Data[0].Id)
 	assert.Equal(t, "advisory", output.Data[0].Type)
 	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
@@ -39,7 +39,7 @@ func TestAdvisoriesDefault(t *testing.T) {
 	assert.Equal(t, 0, output.Meta.Page)
 	assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
 	assert.Equal(t, core.DefaultLimit, output.Meta.PageSize)
-	assert.Equal(t, 3, output.Meta.TotalItems)
+	assert.Equal(t, 8, output.Meta.TotalItems)
 }
 
 func TestAdvisoriesOffsetLimit(t *testing.T) {
@@ -58,7 +58,7 @@ func TestAdvisoriesOffsetLimit(t *testing.T) {
 	assert.Equal(t, 0, output.Meta.Page)
 	assert.Equal(t, 2, output.Meta.Limit)
 	assert.Equal(t, 2, output.Meta.PageSize)
-	assert.Equal(t, 3, output.Meta.TotalItems)
+	assert.Equal(t, 8, output.Meta.TotalItems)
 }
 
 func TestAdvisoriesOffset(t *testing.T) {
@@ -72,12 +72,12 @@ func TestAdvisoriesOffset(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 	var output AdvisoriesResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, 4, len(output.Data))
 	assert.Equal(t, 1, output.Meta.Offset)
 	assert.Equal(t, 0, output.Meta.Page)
 	assert.Equal(t, 4, output.Meta.Limit)
 	assert.Equal(t, 4, output.Meta.PageSize)
-	assert.Equal(t, 3, output.Meta.TotalItems)
+	assert.Equal(t, 8, output.Meta.TotalItems)
 }
 
 func TestAdvisoriesOffsetOverflow(t *testing.T) {

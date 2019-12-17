@@ -1,9 +1,13 @@
 package controllers
 
 import (
+	"app/base/core"
+	"app/base/database"
+	"app/base/models"
+	"app/base/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	"net/http"
-	"time"
 )
 
 type AdvisorySystemsResponse struct {
@@ -34,39 +38,83 @@ type AdvisorySystemsMeta struct {
 // @Success 200 {object} AdvisorySystemsResponse
 // @Router /api/patch/v1/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListHandler(c *gin.Context) {
-	le := time.Now()
+	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
+	if err != nil {
+		LogAndRespBadRequest(c, err, err.Error())
+		return
+	}
+
+	advisoryName := c.Param("advisory_id")
+	if advisoryName == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{"advisory_id param not found"})
+		return
+	}
+
+	query := database.Db.Table("advisory_metadata am").Select("sp.*").
+		Joins("join system_advisories sa ON am.id=sa.advisory_id").
+		Joins("join system_platform sp ON sa.system_id=sp.id").
+		Where("am.name = ?", advisoryName)
+
+	var total int
+	err = query.Count(&total).Error
+	if err != nil {
+		LogAndRespError(c, err, "error getting items count from db")
+		return
+	}
+
+	if offset > total {
+		c.JSON(http.StatusBadRequest, ErrorResponse{"too big offset"})
+		return
+	}
+
+	var dbItems []models.SystemPlatform
+	err = query.Limit(limit).Offset(offset).Scan(&dbItems).Error
+	if gorm.IsRecordNotFoundError(err) {
+		LogAndRespNotFound(c, err, "no systems found")
+		return
+	}
+
+	if err != nil {
+		LogAndRespError(c, err, "database error")
+		return
+	}
+
+	data := buildAdvisorySystemsData(&dbItems)
+	meta := buildAdvisorySystemsMeta(limit, offset, total, advisoryName)
+	links := CreateLinks("/api/patch/v1/advisories/$ADVISORY_ID/systems", offset, limit, total,
+		"&data_format=json")
 	var resp = AdvisorySystemsResponse{
-		Data: []SystemItem{{
-			Attributes: SystemItemAttributes{
-				LastEvaluation: &le,
-				LastUpload:     nil,
-				RhsaCount:      2,
-				RhbaCount:      5,
-				RheaCount:      1,
-				Enabled:        true,
-		},
-			Id: "b89e2f25-8b28-4e1c-9879-947143c2cee9",
-			Type: "system" },
-		},
-		Links: Links{
-			First: "/api/patch/v1/advisories/$ADVISORY_ID/systems?offset=0&limit=25&data_format=json&show_all=True",
-			Last: "/api/patch/v1/advisories/$ADVISORY_ID/systems?offset=21475&limit=25&data_format=json&show_all=True",
-			Next: nil,
-			Previous: nil,
-		},
-		Meta:  AdvisorySystemsMeta{
-			DataFormat: "json",
-			Filter: nil,
-			Limit: 25,
-			Offset: 0,
-			Advisory: "RHEA-2019:3902",
-			Page: 1,
-			PageSize: 25,
-			Pages: 10,
-			Enabled: true,
-			TotalItems: 250,
-		},
+		Data: *data,
+		Links: links,
+		Meta: *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
 	return
+}
+
+func buildAdvisorySystemsData(dbItems *[]models.SystemPlatform) *[]SystemItem {
+	var data []SystemItem
+	for _, model := range *dbItems {
+		item := SystemItem{Id: model.InventoryID, Type: "system", Attributes: SystemItemAttributes{
+			LastUpload: model.LastUpload, Enabled: !model.OptOut, RhsaCount: model.AdvisoryCountCache,
+		}}
+		data = append(data, item)
+	}
+	return &data
+}
+
+func buildAdvisorySystemsMeta(limit, offset, total int, advisoryName string) *AdvisorySystemsMeta{
+	meta := AdvisorySystemsMeta{
+			DataFormat: "json",
+			Filter: nil,
+			Limit: limit,
+			Offset: offset,
+			Advisory: advisoryName,
+			Page: offset / limit,
+			PageSize: limit,
+			Pages: total / limit,
+			Enabled: true,
+			TotalItems: total,
+		}
+	return &meta
 }
