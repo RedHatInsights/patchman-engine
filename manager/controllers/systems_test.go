@@ -27,7 +27,7 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
 	assert.Nil(t, output.Data[0].Attributes.LastEvaluation)
 	assert.Equal(t, true, output.Data[0].Attributes.Enabled)
-	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
+	assert.Equal(t, 8, output.Data[0].Attributes.RhsaCount)
 
 	// links
 	assert.Equal(t, "/api/patch/v1/systems?offset=0&limit=25&data_format=json", output.Links.First)
