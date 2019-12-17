@@ -1,5 +1,11 @@
-DELETE FROM system_repo; DELETE FROM system_platform; DELETE FROM rh_account; DELETE FROM repo;
+DELETE FROM system_advisories;
+DELETE FROM system_repo;
+DELETE FROM system_platform;
+DELETE FROM repo;
 DELETE FROM timestamp_kv;
+DELETE FROM advisory_account_data;
+DELETE FROM advisory_metadata;
+DELETE FROM rh_account;
 
 INSERT INTO rh_account (id, name) VALUES
 (0, '0'), (1, '1'), (2, '2'), (3, '3');
@@ -26,7 +32,38 @@ INSERT INTO system_platform (id, inventory_id, rh_account_id,  vmaas_json, json_
 (10, 'INV-10', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
 (11, 'INV-11', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04');
 
--- TODO add advasories_metadata, system_advasories, adv. account metadata
+INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solution, advisory_type_id,
+                               public_date, modified_date, url) VALUES
+(1, 'RH-1', 'adv-1-des', 'adv-1-syn', 'adv-1-sum', 'adv-1-sol', 1, '2016-09-22 12:00:00-04', '2017-09-22 12:00:00-04', 'url1'),
+(2, 'RH-2', 'adv-2-des', 'adv-2-syn', 'adv-2-sum', 'adv-2-sol', 2, '2016-09-22 12:00:00-04', '2017-09-22 12:00:00-04', 'url2'),
+(3, 'RH-3', 'adv-3-des', 'adv-3-syn', 'adv-3-sum', 'adv-3-sol', 3, '2016-09-22 12:00:00-04', '2017-09-22 12:00:00-04', 'url3'),
+(4, 'RH-4', 'adv-4-des', 'adv-4-syn', 'adv-4-sum', 'adv-4-sol', 1, '2016-09-22 12:00:00-04', '2017-09-22 12:00:00-04', 'url4'),
+(5, 'RH-5', 'adv-5-des', 'adv-5-syn', 'adv-5-sum', 'adv-5-sol', 2, '2016-09-22 12:00:00-05', '2017-09-22 12:00:00-05', 'url5'),
+(6, 'RH-6', 'adv-6-des', 'adv-6-syn', 'adv-6-sum', 'adv-6-sol', 3, '2016-09-22 12:00:00-06', '2017-09-22 12:00:00-06', 'url6'),
+(7, 'RH-7', 'adv-7-des', 'adv-7-syn', 'adv-7-sum', 'adv-7-sol', 1, '2017-09-22 12:00:00-07', '2017-09-22 12:00:00-07', 'url7'),
+(8, 'RH-8', 'adv-8-des', 'adv-8-syn', 'adv-8-sum', 'adv-8-sol', 2, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url8');
+
+INSERT INTO system_advisories (id, system_id, advisory_id, first_reported, when_patched, status_id, status_text) VALUES
+( 1, 0, 1, '2016-09-22 12:00:00-04', NULL, 0, 'Not Reviewed'),
+( 2, 0, 2, '2016-09-22 12:00:00-04', NULL, 1, 'In-Review'),
+( 3, 0, 3, '2016-09-22 12:00:00-04', NULL, 0, 'Not Reviewed'),
+( 4, 0, 4, '2016-09-22 12:00:00-04', NULL, 1, 'In-Review'),
+( 5, 0, 5, '2016-09-22 12:00:00-04', NULL, 2, 'On-Hold'),
+( 6, 0, 6, '2016-09-22 12:00:00-04', NULL, 0, 'Not Reviewed'),
+( 7, 0, 7, '2016-09-22 12:00:00-04', NULL, 1, 'In-Review'),
+( 8, 0, 8, '2016-09-22 12:00:00-04', NULL, 0, 'Not Reviewed'),
+( 9, 1, 1, '2016-09-22 12:00:00-04', NULL, 1, 'In-Review'),
+(10, 2, 1, '2016-09-22 12:00:00-04', NULL, 2, 'On-Hold'),
+(11, 3, 1, '2016-09-22 12:00:00-04', NULL, 0, 'Not Reviewed'),
+(12, 4, 1, '2016-09-22 12:00:00-04', NULL, 1, 'In-Review'),
+(13, 5, 1, '2016-09-22 12:00:00-04', NULL, 0, 'Not Reviewed'),
+(14, 6, 1, '2016-09-22 12:00:00-04', NULL, 1, 'In-Review'),
+(15, 7, 1, '2016-09-22 12:00:00-04', NULL, 2, 'On-Hold'),
+(16, 8, 1, '2016-09-22 12:00:00-04', NULL, 0, 'Not Reviewed'),
+(17, 9, 1, '2016-09-22 12:00:00-04', NULL, 1, 'In-Review'),
+(18, 10, 1, '2016-09-22 12:00:00-04', NULL, 0, 'Not Reviewed'),
+(19, 11, 1, '2016-09-22 12:00:00-04', NULL, 1, 'In-Review'),
+(20, 11, 2, '2016-09-22 12:00:00-04', NULL, 2, 'On-Hold');
 
 INSERT INTO repo (id, name) VALUES
 (1, 'repo1'),
