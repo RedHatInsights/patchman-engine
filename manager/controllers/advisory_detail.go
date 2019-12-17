@@ -1,7 +1,10 @@
 package controllers
 
 import (
+	"app/base/database"
+	"app/base/models"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	"net/http"
 	"time"
 )
@@ -38,22 +41,39 @@ type AdvisoryDetailAttributes struct {
 // @Success 200 {object} AdvisoryDetailResponse
 // @Router /api/patch/v1/advisories/{advisory_id} [get]
 func AdvisoryDetailHandler(c *gin.Context) {
+	advisoryName := c.Param("advisory_id")
+	if advisoryName == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{"advisory_id param not found"})
+		return
+	}
+
+	var advisory models.AdvisoryMetadata
+	err := database.Db.Where("name = ?", advisoryName).First(&advisory).Error
+	if gorm.IsRecordNotFoundError(err) {
+		LogAndRespNotFound(c, err, "advisory not found")
+		return
+	}
+
+	if err != nil {
+		LogAndRespError(c, err, "database error")
+		return
+	}
+
 	var resp = AdvisoryDetailResponse{
 		Data: AdvisoryDetailItem{
 			Attributes: AdvisoryDetailAttributes{
-				Description: "A padding oracle flaw was found in the Secure Sockets Layer version 2.0 (SSLv2) protocol...",
+				Description: advisory.Description,
 				Severity: nil,
-				ModifiedDate: time.Now(),
-				PublicDate: time.Now(),
-				Topic: "A new kpatch-patch-4_18_0-147_0_3 package is now available for Red Hat Enterprise Linux 8.",
-				Synopsis: "new package: kpatch-patch-4_18_0-147_0_3",
-				Solution: "Before applying this update, make sure all previously released advisories relevant to your system " +
-					"have been applied.",
+				ModifiedDate: advisory.ModifiedDate,
+				PublicDate: advisory.PublicDate,
+				Topic: advisory.Topic,
+				Synopsis: advisory.Synopsis,
+				Solution: advisory.Solution,
 				Fixes: nil,
-				Cves: []string{},
-				References: []string{},
+				Cves: []string{}, // TODO joins
+				References: []string{}, // TODO joins
 			},
-			ID: "RHEA-2019:3902",
+			ID: advisory.Name,
 	        Type: "advisory",
 		}}
 	c.JSON(http.StatusOK, &resp)
