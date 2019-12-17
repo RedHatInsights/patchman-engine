@@ -15,3 +15,8 @@ func LogAndRespBadRequest(c *gin.Context, err error, respMsg string) {
 	utils.Log("err", err.Error()).Warn(respMsg)
 	c.JSON(http.StatusBadRequest, ErrorResponse{respMsg})
 }
+
+func LogAndRespNotFound(c *gin.Context, err error, respMsg string) {
+	utils.Log("err", err.Error()).Warn(respMsg)
+	c.JSON(http.StatusNotFound, ErrorResponse{respMsg})
+}
