@@ -1,15 +1,18 @@
 package controllers
 
 import (
+	"app/base/core"
+	"app/base/database"
+	"app/base/models"
+	"app/base/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"time"
 )
 
 type AdvisoriesResponse struct {
-	Data  []AdvisoryItem  `json:"data"`  // advisories items
+	Data  []AdvisoryItem  `json:"data"`
 	Links Links           `json:"links"`
-	Meta  AdvisoryMeta   `json:"meta"`
+	Meta  AdvisoryMeta    `json:"meta"`
 }
 
 // @Summary Show me all applicable advisories for all my systems
@@ -20,40 +23,75 @@ type AdvisoriesResponse struct {
 // @Success 200 {object} AdvisoriesResponse
 // @Router /api/patch/v1/advisories [get]
 func AdvisoriesListHandler(c *gin.Context) {
+	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
+	if err != nil {
+		LogAndRespBadRequest(c, err, err.Error())
+		return
+	}
+
+	var total int
+	err = database.Db.Model(models.AdvisoryMetadata{}).Count(&total).Error
+	if err != nil {
+		LogAndRespError(c, err, "db error")
+		return
+	}
+
+	if offset > total {
+		c.JSON(http.StatusBadRequest, ErrorResponse{"too big offset"})
+		return
+	}
+
+	var advisories []models.AdvisoryMetadata
+	err = database.Db.Limit(limit).Offset(offset).Find(&advisories).Error
+	if err != nil {
+		LogAndRespError(c, err, "db error")
+		return
+	}
+
+	data := buildAdvisoriesData(&advisories)
+	links := CreateLinks("/api/patch/v1/advisories", offset, limit, total,
+		"&data_format=json")
+	meta := buildAdvisoriesMeta(limit, offset, total)
 	var resp = AdvisoriesResponse{
-		Data: []AdvisoryItem{{
-			Attributes: AdvisoryItemAttributes{
-				Description: "The kernel-rt packages provide the Real Time Linux Kernel, ...",
-				Severity: "Important",
-				PublicDate: time.Now(),
-				Synopsis: "Important: kernel-rt security update",
-				AdvisoryType: 2,
-				ApplicableSystems: 6 },
-			Id: "RHSA-2019:3908",
-			Type: "advisory" },
-		},
-		Links: Links{
-			First: "/api/patch/v1/advisories?offset=0&limit=25&data_format=json&show_all=True",
-			Last: "/api/patch/v1/advisories?offset=21475&limit=25&data_format=json&show_all=True",
-			Next: nil,
-			Previous: nil,
-		},
-		Meta: AdvisoryMeta{
-			DataFormat: "json",
-			Filter: nil,
-			Severity: nil,
-			Limit: 25,
-			Offset: 0,
-			Page: 1,
-			PageSize: 25,
-			Pages: 10,
-			PublicFrom: nil,
-			PublicTo: nil,
-			ShowAll: true,
-			Sort: nil,
-			TotalItems: 250,
-		},
+		Data: *data,
+		Links: links,
+		Meta:  *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
 	return
+}
+
+func buildAdvisoriesData(advisories *[]models.AdvisoryMetadata) *[]AdvisoryItem {
+	data := make([]AdvisoryItem, len(*advisories))
+	for i := 0; i < len(*advisories); i++ {
+		advisory := (*advisories)[i]
+		data[i] = AdvisoryItem{
+			Attributes: AdvisoryItemAttributes{
+				// TODO - sync API and DB layout
+				Description: advisory.Description,
+				Severity: "",
+				PublicDate: advisory.PublicDate,
+				Synopsis: advisory.Synopsis,
+				AdvisoryType: advisory.AdvisoryTypeId,
+				// TODO - count using rh-account and advisory_account_data table
+				ApplicableSystems: 6 },
+			Id: advisory.Name,
+			Type: "advisory",
+		}
+	}
+	return &data
+}
+
+func buildAdvisoriesMeta(limit, offset, total int) *AdvisoryMeta{
+	meta := AdvisoryMeta{
+		DataFormat: "json",
+		Filter:     nil,
+		Limit:      limit,
+		Offset:     offset,
+		Page:       offset / limit,
+		PageSize:   limit,
+		Pages:      total / limit,
+		TotalItems: total,
+	}
+	return &meta
 }
