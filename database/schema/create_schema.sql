@@ -172,9 +172,25 @@ $refresh_all_cached_counts$
       ORDER BY sp.rh_account_id, sp.id
       FOR UPDATE OF sp
     )
-    UPDATE system_platform sp SET advisory_count_cache = (
+    UPDATE system_platform sp SET
+    advisory_count_cache = (
       SELECT COUNT(advisory_id) FROM system_advisories sa
       WHERE sa.system_id = sp.id AND sa.when_patched IS NULL
+    ),
+    advisory_enh_count_cache = (
+      SELECT COUNT(advisory_id) FROM system_advisories sa
+      JOIN advisory_metadata am ON sa.advisory_id=am.id
+      WHERE am.advisory_type_id = 1 AND sa.system_id = sp.id AND sa.when_patched IS NULL
+    ),
+    advisory_bug_count_cache = (
+      SELECT COUNT(advisory_id) FROM system_advisories sa
+      JOIN advisory_metadata am ON sa.advisory_id=am.id
+      WHERE am.advisory_type_id = 2 AND sa.system_id = sp.id AND sa.when_patched IS NULL
+    ),
+    advisory_sec_count_cache = (
+      SELECT COUNT(advisory_id) FROM system_advisories sa
+      JOIN advisory_metadata am ON sa.advisory_id=am.id
+      WHERE am.advisory_type_id = 3 AND sa.system_id = sp.id AND sa.when_patched IS NULL
     )
     FROM to_update_systems
     WHERE sp.id = to_update_systems.id;
@@ -417,6 +433,9 @@ CREATE TABLE IF NOT EXISTS system_platform (
   last_evaluation TIMESTAMP WITH TIME ZONE,
   opt_out BOOLEAN NOT NULL DEFAULT FALSE,
   advisory_count_cache INT NOT NULL DEFAULT 0,
+  advisory_enh_count_cache INT NOT NULL DEFAULT 0,
+  advisory_bug_count_cache INT NOT NULL DEFAULT 0,
+  advisory_sec_count_cache INT NOT NULL DEFAULT 0,
   PRIMARY KEY (id),
   last_upload TIMESTAMP WITH TIME ZONE,
   UNIQUE (inventory_id),

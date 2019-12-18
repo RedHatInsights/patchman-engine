@@ -96,10 +96,9 @@ func buildData(systems *[]models.SystemPlatform) *[]SystemItem {
 			Attributes: SystemItemAttributes{
 				LastEvaluation: system.LastEvaluation,
 				LastUpload:     system.LastUpload,
-				// TODO - add separated counters to db
-				RhsaCount:      system.AdvisoryCountCache,
-				RhbaCount:      0,
-				RheaCount:      0,
+				RhsaCount:      system.AdvisorySecCountCache,
+				RheaCount:      system.AdvisoryEnhCountCache,
+				RhbaCount:      system.AdvisoryBugCountCache,
 				Enabled:        !system.OptOut,
 			},
 			Id:   system.InventoryID,
