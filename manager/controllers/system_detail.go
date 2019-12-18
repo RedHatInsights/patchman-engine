@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"app/base/database"
+	"app/base/models"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	"net/http"
-	"time"
 )
 
 type SystemDetailResponse struct {
@@ -19,20 +21,37 @@ type SystemDetailResponse struct {
 // @Success 200 {object} SystemDetailResponse
 // @Router /api/patch/v1/systems/{inventory_id} [get]
 func SystemDetailHandler(c *gin.Context) {
-	le := time.Now()
+	inventoryId := c.Param("inventory_id")
+	if inventoryId == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{"inventory_id param not found"})
+		return
+	}
+
+	var inventory models.SystemPlatform
+	err := database.Db.Where("inventory_id = ?", inventoryId).First(&inventory).Error
+	if gorm.IsRecordNotFoundError(err) {
+		LogAndRespNotFound(c, err, "inventory not found")
+		return
+	}
+
+	if err != nil {
+		LogAndRespError(c, err, "database error")
+		return
+	}
+
 	var resp = SystemDetailResponse{
 		Data: SystemItem{
 			Attributes: SystemItemAttributes{
-				LastEvaluation: &le,
-				LastUpload:     nil,
-				RhsaCount:      2,
-				RhbaCount:      5,
-				RheaCount:      1,
-				Enabled:        true },
-			Id: "b89e2f25-8b28-4e1c-9879-947143c2cee9",
-			Type: "system",
-		},
-	}
+				LastEvaluation: inventory.LastEvaluation,
+				LastUpload: inventory.LastUpload,
+				RhsaCount: inventory.AdvisoryCountCache,
+				RhbaCount: 0,
+				RheaCount: 0,
+				Enabled: !inventory.OptOut,
+			},
+			Id:   inventory.InventoryID,
+	        Type: "system",
+		}}
 	c.JSON(http.StatusOK, &resp)
 	return
 }
