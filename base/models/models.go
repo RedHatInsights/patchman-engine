@@ -12,18 +12,21 @@ func (RhAccount) TableName() string {
 }
 
 type SystemPlatform struct {
-	ID                 int
-	InventoryID        string
-	RhAccountID        int
-	FirstReported      time.Time
-	VmaasJSON          string
-	JsonChecksum       string
-	LastUpdated        time.Time
-	UnchangedSince     time.Time
-	LastEvaluation     *time.Time
-	OptOut             bool
-	AdvisoryCountCache int
-	LastUpload         *time.Time
+	ID                    int
+	InventoryID           string
+	RhAccountID           int
+	FirstReported         time.Time
+	VmaasJSON             string
+	JsonChecksum          string
+	LastUpdated           time.Time
+	UnchangedSince        time.Time
+	LastEvaluation        *time.Time
+	OptOut                bool
+	AdvisoryCountCache    int
+	AdvisoryEnhCountCache int
+	AdvisoryBugCountCache int
+	AdvisorySecCountCache int
+	LastUpload            *time.Time
 }
 
 func (SystemPlatform) TableName() string {
