@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"app/base/utils"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -111,7 +111,7 @@ var upgrader = websocket.Upgrader{} // use default options
 func wshandler(w http.ResponseWriter, r *http.Request, ) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		fmt.Sprintln("Failed to set websocket upgrade: %v", err)
+		utils.Log("err", err.Error()).Error("Failed to set websocket upgrade")
 		return
 	}
 	ws := AddWebsocket()
