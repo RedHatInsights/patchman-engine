@@ -158,6 +158,22 @@ $opt_out_system_update_cache$
 $opt_out_system_update_cache$
   LANGUAGE 'plpgsql';
 
+-- count system advisories according to advisory type
+CREATE OR REPLACE FUNCTION system_advisories_count(system_id_in INT, advisory_type_id_in INT)
+RETURNS INT AS
+$system_advisories_count$
+  DECLARE result_cnt INT;
+  BEGIN
+    SELECT COUNT(advisory_id) FROM system_advisories sa
+    JOIN advisory_metadata am ON sa.advisory_id = am.id
+    WHERE am.advisory_type_id = advisory_type_id_in AND sa.system_id = system_id_in
+    AND sa.when_patched IS NULL
+    INTO result_cnt;
+    RETURN result_cnt;
+  END;
+$system_advisories_count$
+  LANGUAGE 'plpgsql';
+
 -- refresh_all_cached_counts
 -- WARNING: executing this procedure takes long time,
 --          use only when necessary, e.g. during upgrade to populate initial caches
@@ -177,21 +193,9 @@ $refresh_all_cached_counts$
       SELECT COUNT(advisory_id) FROM system_advisories sa
       WHERE sa.system_id = sp.id AND sa.when_patched IS NULL
     ),
-    advisory_enh_count_cache = (
-      SELECT COUNT(advisory_id) FROM system_advisories sa
-      JOIN advisory_metadata am ON sa.advisory_id=am.id
-      WHERE am.advisory_type_id = 1 AND sa.system_id = sp.id AND sa.when_patched IS NULL
-    ),
-    advisory_bug_count_cache = (
-      SELECT COUNT(advisory_id) FROM system_advisories sa
-      JOIN advisory_metadata am ON sa.advisory_id=am.id
-      WHERE am.advisory_type_id = 2 AND sa.system_id = sp.id AND sa.when_patched IS NULL
-    ),
-    advisory_sec_count_cache = (
-      SELECT COUNT(advisory_id) FROM system_advisories sa
-      JOIN advisory_metadata am ON sa.advisory_id=am.id
-      WHERE am.advisory_type_id = 3 AND sa.system_id = sp.id AND sa.when_patched IS NULL
-    )
+    advisory_enh_count_cache = system_advisories_count(sp.id, 1),
+    advisory_bug_count_cache = system_advisories_count(sp.id, 2),
+    advisory_sec_count_cache = system_advisories_count(sp.id, 3)
     FROM to_update_systems
     WHERE sp.id = to_update_systems.id;
 
@@ -236,10 +240,14 @@ $refresh_account_cached_counts$
       ORDER BY sp.id
       FOR UPDATE OF sp
     )
-    UPDATE system_platform sp SET advisory_count_cache = (
+    UPDATE system_platform sp SET
+    advisory_count_cache = (
       SELECT COUNT(advisory_id) FROM system_advisories sa
       WHERE sa.system_id = sp.id AND sa.when_patched IS NULL
-    )
+    ),
+    advisory_enh_count_cache = system_advisories_count(sp.id, 1),
+    advisory_bug_count_cache = system_advisories_count(sp.id, 2),
+    advisory_sec_count_cache = system_advisories_count(sp.id, 3)
     FROM to_update_systems
     WHERE sp.id = to_update_systems.id;
 
@@ -353,10 +361,15 @@ CREATE OR REPLACE FUNCTION refresh_system_cached_counts(inventory_id_in varchar)
 $refresh_system_cached_counts$
   BEGIN
     -- update advisory count for system
-    UPDATE system_platform sp SET advisory_count_cache = (
+    UPDATE system_platform sp SET
+    advisory_count_cache = (
       SELECT COUNT(advisory_id) FROM system_advisories sa
       WHERE sa.system_id = sp.id AND sa.when_patched IS NULL
-    ) WHERE sp.inventory_id = inventory_id_in;
+    ),
+    advisory_enh_count_cache = system_advisories_count(sp.id, 1),
+    advisory_bug_count_cache = system_advisories_count(sp.id, 2),
+    advisory_sec_count_cache = system_advisories_count(sp.id, 3)
+    WHERE sp.inventory_id = inventory_id_in;
   END;
 $refresh_system_cached_counts$
   LANGUAGE 'plpgsql';
@@ -466,7 +479,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON system_platform TO listener;
 -- evaluator needs to update last_evaluation
 GRANT UPDATE ON system_platform TO evaluator;
 -- manager needs to update cache and delete systems
-GRANT UPDATE (advisory_count_cache), DELETE ON system_platform TO manager;
+GRANT UPDATE (advisory_count_cache,
+              advisory_enh_count_cache,
+              advisory_bug_count_cache,
+              advisory_sec_count_cache), DELETE ON system_platform TO manager;
 
 -- advisory_type
 CREATE TABLE IF NOT EXISTS advisory_type (
