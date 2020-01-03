@@ -67,7 +67,7 @@ func AdvisoryDetailHandler(c *gin.Context) {
 				Severity: nil,
 				ModifiedDate: advisory.ModifiedDate,
 				PublicDate: advisory.PublicDate,
-				Topic: advisory.Topic,
+				Topic: advisory.Summary,
 				Synopsis: advisory.Synopsis,
 				Solution: advisory.Solution,
 				Fixes: nil,

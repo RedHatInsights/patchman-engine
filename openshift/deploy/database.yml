@@ -86,6 +86,11 @@ objects:
                       name:  patchman-engine-database-passwords
                       key: manager-database-password
 
+                - name: VMAAS_SYNC_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name:  patchman-engine-database-passwords
+                      key: vmaas-sync-database-password
 
           dnsPolicy: ClusterFirst
           restartPolicy: Always
