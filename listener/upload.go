@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/segmentio/kafka-go"
@@ -15,31 +16,39 @@ import (
 )
 
 func uploadHandler(m kafka.Message) {
-	var event PlatformEvent
 	utils.Log("msg", string(m.Value)).Info("Msg received")
+	event, identity, err := parseUploadMessage(m)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("unable to parse upload msg")
+		return
+	}
+	hostUploadReceived(event.Id, identity.Identity.AccountNumber, *event.B64Identity)
+}
 
+func parseUploadMessage(m kafka.Message) (*PlatformEvent, *utils.Identity, error) {
+	var event PlatformEvent
 	err := json.Unmarshal(m.Value, &event)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Could not deserialize host event")
-		return
+		return nil, nil, errors.New("Could not deserialize host event")
 	}
 	// We need the b64 identity in order to call the inventory
 	if event.B64Identity == nil {
 		utils.Log().Error("No identity provided")
-		return
+		return nil, nil, errors.New("No identity provided")
 	}
 
 	identity, err := utils.ParseIdentity(*event.B64Identity)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Could not parse identity")
-		return
+		return nil, nil, errors.New("Could not parse identity")
 	}
 
 	if !identity.IsSmartEntitled() {
 		utils.Log("account", identity.Identity.AccountNumber).Info("Is not smart entitled")
-		return
+		return nil, nil, errors.New("Is not smart entitled")
 	}
-	hostUploadReceived(event.Id, identity.Identity.AccountNumber, *event.B64Identity)
+	return &event, identity, nil
 }
 
 // Stores or updates the account data, returning the account id
