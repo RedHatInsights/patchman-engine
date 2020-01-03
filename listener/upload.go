@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/antihax/optional"
 	"github.com/segmentio/kafka-go"
 	"time"
 )
@@ -86,11 +85,6 @@ func updateSystemPlatform(inventoryId string, accountId int, updatesReq *vmaas.U
 	return dbHost.ID, nil
 }
 
-func updateSystemAdvisories(systemId int, accountId int, updates vmaas.UpdatesV2Response) error {
-	utils.Log().Error("System advisories not yet implemented - Depends on vmaas_sync")
-	return nil
-}
-
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
 func hostUploadReceived(hostId string, account string, identity string) {
 	utils.Log("hostId", hostId).Debug("Downloading system profile")
@@ -133,20 +127,6 @@ func hostUploadReceived(hostId string, account string, identity string) {
 	}
 
 	// Evaluation part
-	vmaasCallArgs := vmaas.AppUpdatesHandlerV2PostPostOpts{
-		UpdatesRequest: optional.NewInterface(updatesReq),
-	}
-
-	vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV2PostPost(ctx, &vmaasCallArgs)
-	if err != nil {
-		utils.Log("err", err.Error()).Error("Saving account into the database")
-		return
-	}
-	err = updateSystemAdvisories(systemId, accountId, vmaasData)
-	if err != nil {
-		utils.Log("err", err.Error()).Error("Updating system advisories")
-		return
-	}
-	utils.Log("res", resp).Debug("VMAAS query complete")
-
+	utils.Log("systemId", systemId).Info("TODO - evaluate")
+	// TODO call evaluate, later it will be moved to separate component - evaluator
 }
