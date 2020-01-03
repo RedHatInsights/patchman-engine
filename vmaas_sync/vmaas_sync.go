@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/prometheus/client_golang/prometheus"
+	"time"
 )
 
 var (
@@ -31,13 +32,13 @@ func runMetrics() {
 	}
 }
 
-func runWebsocket(conn *websocket.Conn, handler func(data []byte, conn *websocket.Conn)) {
+func runWebsocket(conn *websocket.Conn, handler func(data []byte, conn *websocket.Conn)) error {
 	defer conn.Close()
 
 	err := conn.WriteMessage(websocket.TextMessage, []byte("subscribe-listener"))
 	if err != nil {
 		utils.Log("err", err.Error()).Fatal("Could not subscribe for updates")
-		panic(err)
+		return err
 	}
 
 	for {
@@ -45,27 +46,49 @@ func runWebsocket(conn *websocket.Conn, handler func(data []byte, conn *websocke
 		typ, msg, err := conn.ReadMessage()
 		if err != nil {
 			utils.Log("err", err.Error()).Fatal("Failed to retrive VMaaS websocket message")
-			panic(err)
+			return err
 		}
 		if typ == websocket.BinaryMessage || typ == websocket.TextMessage {
 			handler(msg, conn)
 		}
-		// TODO: Handle control messages
+		if typ == websocket.PingMessage {
+			err = conn.WriteMessage(websocket.PongMessage, msg)
+			if err != nil {
+				return err
+			}
+		}
+		if typ == websocket.CloseMessage {
+			return nil
+		}
 	}
 }
 
 func websocketHandler(data []byte, conn *websocket.Conn) {
+	text := string(data)
 	utils.Log("data", string(data)).Info("Received VMaaS websocket message")
+
+	if text == "webapps-refreshed" {
+		syncAdvisories()
+		// TODO: Cause re-evaluation of systems
+	}
 }
 
 func RunVmaasSync() {
+	configure()
+
 	go runMetrics()
 
-	conn, _, err := websocket.DefaultDialer.Dial(utils.GetenvOrFail("VMAAS_WS_ADDRESS"), nil)
+	// Continually try to reconnect
+	for {
+		conn, _, err := websocket.DefaultDialer.Dial(utils.GetenvOrFail("VMAAS_WS_ADDRESS"), nil)
+		if err != nil {
+			utils.Log("err", err.Error()).Fatal("Failed to connect to VMaaS")
+		}
 
-	if err != nil {
-		utils.Log("err", err.Error()).Fatal("Failed to connect to VMaaS")
-		panic(err)
+		err = runWebsocket(conn, websocketHandler)
+		if err != nil {
+			utils.Log("err", err.Error()).Error("Websocket error occured, waiting")
+		}
+		time.Sleep(2 * time.Second)
 	}
-	runWebsocket(conn, websocketHandler)
 }

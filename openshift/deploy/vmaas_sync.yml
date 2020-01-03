@@ -9,6 +9,7 @@ parameters:
   - name: IMAGE_TAG
     displayName: Image tag
     value: latest
+  - name: VMAAS_ADDRESS
   - name: VMAAS_WS_ADDRESS
 objects:
   - apiVersion: v1
@@ -32,7 +33,7 @@ objects:
             - image: ${IMAGE_NAMESPACE}/patchman-engine-app:${IMAGE_TAG}
               imagePullPolicy: Always
               name: patchman-engine-vmaas-sync
-              command: [ ./vmaas-sync/entrypoint.sh ]
+              command: [ ./vmaas_sync/entrypoint.sh ]
               resources:
                 limits: { cpu: 500m,  memory: 512Mi }
                 requests: { cpu: 200m, memory: 512Mi }
@@ -45,6 +46,7 @@ objects:
                 - { name: LOG_STYLE, value: plain }
                 - { name: GIN_MODE, value: release }
 
+                - { name: VMAAS_ADDRESS, value: "${VMAAS_ADDRESS}"}
                 - { name: VMAAS_WS_ADDRESS, value: "${VMAAS_WS_ADDRESS}"}
 
                 - { name: DB_TYPE, value: postgres }
