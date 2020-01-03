@@ -6,6 +6,7 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
+	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -73,4 +74,12 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	assert.Equal(t, sys, sys2)
 
 	deleteData(t)
+}
+
+func TestParseUploadMessage(t *testing.T) {
+	msg := kafka.Message{Value: []byte(`{"id": "TEST-0000", "b64_identity": "eyJlbnRpdGxlbWVudHMiOnsic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1ZX19LCJpZGVudGl0eSI6eyJhY2NvdW50X251bWJlciI6IjAiLCJ0eXBlIjoiVXNlciIsIkludGVybmFsIjpudWxsfX0="}`)}
+	event, identity, err := parseUploadMessage(msg)
+	assert.Nil(t, err)
+	assert.Equal(t, "TEST-0000", event.Id)
+	assert.Equal(t, "User", identity.Identity.Type)
 }
