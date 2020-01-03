@@ -508,7 +508,6 @@ CREATE TABLE IF NOT EXISTS system_advisories (
   first_reported TIMESTAMP WITH TIME ZONE NOT NULL,
   when_patched TIMESTAMP WITH TIME ZONE DEFAULT NULL,
   status_id INT DEFAULT 0,
-  status_text TEXT,
   UNIQUE (system_id, advisory_id),
   PRIMARY KEY (id),
   CONSTRAINT system_platform_id
@@ -540,7 +539,6 @@ CREATE TABLE IF NOT EXISTS advisory_account_data (
   advisory_id INT NOT NULL,
   rh_account_id INT NOT NULL,
   status_id INT NOT NULL DEFAULT 0,
-  status_text TEXT,
   systems_affected INT NOT NULL DEFAULT 0,
   systems_status_divergent INT NOT NULL DEFAULT 0,
   CONSTRAINT advisory_metadata_id

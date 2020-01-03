@@ -53,8 +53,7 @@ type SystemAdvisories struct {
 	AdvisoryID    int
 	FirstReported time.Time
 	WhenPatched   *time.Time
-	StatusId      *int
-	StatusText    *string
+	StatusID      *int
 }
 
 func (SystemAdvisories) TableName() string {
@@ -62,8 +61,11 @@ func (SystemAdvisories) TableName() string {
 }
 
 type AdvisoryAccountData struct {
-	AdvisoryID  int
-	RhAccountID int
+	AdvisoryID             int
+	RhAccountID            int
+	StatusID               int
+	SystemsAffected        int
+	SystemsStatusDivergent int
 }
 
 func (AdvisoryAccountData) TableName() string {
@@ -80,10 +82,8 @@ func (Repo) TableName() string {
 }
 
 type SystemRepo struct {
-	SystemID   int
-	RepoId     int
-	StatusID   int
-	StatusText *string
+	SystemID int
+	RepoID   int
 }
 
 func (SystemRepo) TableName() string {
