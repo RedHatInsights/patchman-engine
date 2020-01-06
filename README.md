@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/RedHatInsights/patchman-engine.svg?branch=master)](https://travis-ci.org/RedHatInsights/patchman-engine)
+[![Code Coverage](https://codecov.io/gh/RedHatInsights/patchman-engine/branch/master/graph/badge.svg)](https://codecov.io/gh/RedHatInsights/patchman-engine)
+
 # patchman-engine
 System Patch Manager application for [cloud.redhat.com](cloud.redhat.com).
 
