@@ -11,3 +11,9 @@ func SkipWithoutDB(t *testing.T) {
 		t.Skip("testing database not used - skipping")
 	}
 }
+
+func SkipWithoutPlatform(t *testing.T) {
+	if os.Getenv("VMAAS_ADDRESS") == "" {
+		t.Skip("testing platform instance not used - skipping")
+	}
+}

@@ -79,6 +79,7 @@ func TestParseUploadMessage(t *testing.T) {
 
 func TestUploadHandler(t *testing.T) {
 	utils.SkipWithoutDB(t)
+	utils.SkipWithoutPlatform(t)
 	core.SetupTestEnvironment()
 	configure()
 	deleteData(t)
