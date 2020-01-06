@@ -32,7 +32,9 @@ func runMetrics() {
 	}
 }
 
-func runWebsocket(conn *websocket.Conn, handler func(data []byte, conn *websocket.Conn)) error {
+type Handler func(data []byte, conn *websocket.Conn) error
+
+func runWebsocket(conn *websocket.Conn, handler Handler) error {
 	defer conn.Close()
 
 	err := conn.WriteMessage(websocket.TextMessage, []byte("subscribe-listener"))
@@ -49,7 +51,10 @@ func runWebsocket(conn *websocket.Conn, handler func(data []byte, conn *websocke
 			return err
 		}
 		if typ == websocket.BinaryMessage || typ == websocket.TextMessage {
-			handler(msg, conn)
+			err = handler(msg, conn)
+			if err != nil {
+				return err
+			}
 		}
 		if typ == websocket.PingMessage {
 			err = conn.WriteMessage(websocket.PongMessage, msg)
@@ -63,14 +68,19 @@ func runWebsocket(conn *websocket.Conn, handler func(data []byte, conn *websocke
 	}
 }
 
-func websocketHandler(data []byte, conn *websocket.Conn) {
+func websocketHandler(data []byte, conn *websocket.Conn) error {
 	text := string(data)
 	utils.Log("data", string(data)).Info("Received VMaaS websocket message")
 
 	if text == "webapps-refreshed" {
-		syncAdvisories()
+		err := syncAdvisories()
+		if err != nil {
+			// This probably means programming error, better to exit with nonzero error code, so the error is noticed
+			utils.Log("err", err.Error()).Fatal("Failed to sync advisories")
+		}
 		// TODO: Cause re-evaluation of systems
 	}
+	return nil
 }
 
 func RunVmaasSync() {
