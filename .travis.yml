@@ -5,9 +5,7 @@ branches:
     - master
     - stable
 sudo: required
-language: python
-python:
-  - "3.6"
+language: shell
 services:
   - docker
 notifications:
