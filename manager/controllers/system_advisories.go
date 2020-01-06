@@ -38,10 +38,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		return
 	}
 
-	query := database.Db.Table("advisory_metadata am").Select("am.*").
-		Joins("join system_advisories sa ON am.id=sa.advisory_id").
-		Joins("join system_platform sp ON sa.system_id=sp.id").
-		Where("sp.inventory_id = ?", inventoryId)
+	query := database.SystemAdvisoriesQuery(inventoryId)
 
 	var total int
 	err = query.Count(&total).Error
