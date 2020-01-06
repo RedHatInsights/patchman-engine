@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+
+// Should be < 5000
+const SYNC_BATCH_SIZE = 1000
+
 var (
 	vmaasClient *vmaas.APIClient
 )
@@ -41,15 +45,15 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 	}
 
 	for n, v := range data {
-		// Should we skip or report invalid erratas ?
+		// TODO: Should we skip or report invalid erratas ?
 		issued, err := time.Parse(base.RFC_3339_NO_TZ, v.Issued)
 		if err != nil {
-			utils.Log("err", err.Error()).Error("Invalid errata issued date")
+			utils.Log("err", err.Error(), "erratum", n).Error("Invalid errata issued date")
 			continue
 		}
 		modified, err := time.Parse(base.RFC_3339_NO_TZ, v.Updated)
 		if err != nil {
-			utils.Log("err", err.Error()).Error("Invalid errata modified date")
+			utils.Log("err", err.Error(), "erratum", n).Error("Invalid errata modified date")
 			continue
 		}
 
@@ -86,7 +90,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 	}
 
 	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary", "solution", "public_date", "modified_date", "url")
-	errors := database.BulkInsertChunk(tx, advisories.ToInterfaceSlice(), 1000)
+	errors := database.BulkInsertChunk(tx, advisories.ToInterfaceSlice(), SYNC_BATCH_SIZE)
 
 	if errors != nil && len(errors) > 0 {
 		return errors[0]
@@ -99,7 +103,6 @@ func syncAdvisories() error {
 	ctx := context.Background()
 
 	if vmaasClient == nil {
-
 		panic("VMaaS client is nil")
 	}
 
@@ -111,7 +114,7 @@ func syncAdvisories() error {
 		opts := vmaas.AppErrataHandlerPostPostOpts{
 			ErrataRequest: optional.NewInterface(vmaas.ErrataRequest{
 				Page:          float32(pageIdx),
-				PageSize:      1000,
+				PageSize:      SYNC_BATCH_SIZE,
 				ErrataList:    []string{".*"},
 				ModifiedSince: "",
 			}),
@@ -131,7 +134,6 @@ func syncAdvisories() error {
 		err = storeAdvisories(data.ErrataList)
 		if err != nil {
 			return errors.WithMessage(err, "Storing advisories")
-
 		}
 	}
 	return nil
