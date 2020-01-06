@@ -13,6 +13,6 @@ func SetSwagger(app *gin.Engine) {
 	// Serving openapi docs
 	docs.Init(app)
 
-	url := ginSwagger.URL("/docs/openapi.json")
+	url := ginSwagger.URL("/api/patch/v1/openapi.json")
 	app.GET("/openapi/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 }

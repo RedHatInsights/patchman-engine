@@ -11,5 +11,5 @@ func HandleOpenapiSpec(c *gin.Context) {
 }
 
 func Init(app *gin.Engine) {
-	app.GET("/docs/openapi.json", HandleOpenapiSpec)
+	app.GET("/api/patch/v1/openapi.json", HandleOpenapiSpec)
 }
