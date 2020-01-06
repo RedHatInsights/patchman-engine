@@ -29,6 +29,7 @@ type SystemsMeta struct {
 
 // @Summary Show me all my systems
 // @Description Show me all my systems
+// @ID listSystems
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
