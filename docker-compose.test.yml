@@ -10,6 +10,18 @@ services:
       - ./conf/common.env
       - ./conf/database.env
 
+  platform:
+    hostname: platform
+    build:
+      context: .
+      dockerfile: platform/Dockerfile
+    env_file:
+      - ./conf/common.env
+      - ./conf/platform.env
+    ports:
+      - 9092:9092
+      - 9001:9001
+
   test:
     build:
       context: .
@@ -18,4 +30,5 @@ services:
       - ./conf/test.env
     depends_on:
       - db
+      - platform
     command: ./scripts/go_test_db.sh
