@@ -28,7 +28,19 @@ services:
       dockerfile: Dockerfile.test
     env_file:
       - ./conf/test.env
+    environment:
+      - CI
+      - TRAVIS
+      - SHIPPABLE
+      - TRAVIS_BRANCH
+      - TRAVIS_COMMIT
+      - TRAVIS_JOB_NUMBER
+      - TRAVIS_PULL_REQUEST
+      - TRAVIS_JOB_ID
+      - TRAVIS_REPO_SLUG
+      - TRAVIS_TAG
+      - TRAVIS_OS_NAME
     depends_on:
       - db
       - platform
-    command: ./scripts/go_test_db.sh
+    command: ./scripts/go_test_on_ci.sh
