@@ -17,6 +17,7 @@ type AdvisoriesResponse struct {
 
 // @Summary Show me all applicable advisories for all my systems
 // @Description Show me all applicable advisories for all my systems
+// @ID listAdvisories
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json

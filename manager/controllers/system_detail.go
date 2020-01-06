@@ -14,6 +14,7 @@ type SystemDetailResponse struct {
 
 // @Summary Show me details about a system by given inventory id
 // @Description Show me details about a system by given inventory id
+// @ID detailSystem
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
