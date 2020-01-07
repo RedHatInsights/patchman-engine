@@ -598,19 +598,6 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO evaluator;
 -- listner user needs to change this table when deleting system
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO listener;
 
-
-CREATE TABLE IF NOT EXISTS deleted_systems (
-  inventory_id TEXT NOT NULL, CHECK (NOT empty(inventory_id)),
-  when_deleted TIMESTAMP WITH TIME ZONE NOT NULL,
-  UNIQUE (inventory_id)
-) TABLESPACE pg_default;
-
-CREATE INDEX ON deleted_systems(when_deleted);
-
-GRANT SELECT, INSERT, UPDATE, DELETE ON deleted_systems TO listener;
-GRANT SELECT, INSERT, UPDATE, DELETE ON deleted_systems TO manager;
-
-
 -- repo
 CREATE TABLE IF NOT EXISTS repo (
   id SERIAL,

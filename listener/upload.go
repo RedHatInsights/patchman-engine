@@ -11,44 +11,42 @@ import (
 	"errors"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/segmentio/kafka-go"
 	"time"
 )
 
-func uploadHandler(m kafka.Message) {
-	utils.Log("msg", string(m.Value)).Info("Msg received")
-	event, identity, err := parseUploadMessage(m)
+func uploadHandler(event PlatformEvent) {
+	if event.B64Identity == nil {
+		utils.Log().Error("Identity not provided")
+		return
+	}
+
+	identity, err := parseUploadMessage(&event)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to parse upload msg")
 		return
 	}
+
 	hostUploadReceived(event.Id, identity.Identity.AccountNumber, *event.B64Identity)
 }
 
-func parseUploadMessage(m kafka.Message) (*PlatformEvent, *utils.Identity, error) {
-	var event PlatformEvent
-	err := json.Unmarshal(m.Value, &event)
-	if err != nil {
-		utils.Log("err", err.Error()).Error("Could not deserialize host event")
-		return nil, nil, errors.New("Could not deserialize host event")
-	}
+func parseUploadMessage(event *PlatformEvent) (*utils.Identity, error) {
 	// We need the b64 identity in order to call the inventory
 	if event.B64Identity == nil {
 		utils.Log().Error("No identity provided")
-		return nil, nil, errors.New("No identity provided")
+		return nil, errors.New("No identity provided")
 	}
 
 	identity, err := utils.ParseIdentity(*event.B64Identity)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Could not parse identity")
-		return nil, nil, errors.New("Could not parse identity")
+		return nil, errors.New("Could not parse identity")
 	}
 
 	if !identity.IsSmartEntitled() {
 		utils.Log("account", identity.Identity.AccountNumber).Info("Is not smart entitled")
-		return nil, nil, errors.New("Is not smart entitled")
+		return nil, errors.New("Is not smart entitled")
 	}
-	return &event, identity, nil
+	return identity, nil
 }
 
 // Stores or updates the account data, returning the account id
@@ -111,7 +109,7 @@ func hostUploadReceived(hostId string, account string, identity string) {
 	utils.Log("res", res).Debug("System profile download complete")
 
 	if inventoryData.Count == 0 {
-		utils.Log().Info("No system details returned")
+		utils.Log().Info("No system details returned, host is probably deleted")
 		return
 	}
 

@@ -5,12 +5,11 @@ type HostInfo struct {
 }
 
 type PlatformEvent struct {
-	Id        string `json:"id"`
-	Timestamp string `json:"timestamp"`
-	Account   string `json:"account"`
+	Id string `json:"id"`
 
-	// Optional fields
 	Type        *string `json:"type"`
+	Timestamp   *string `json:"timestamp"`
+	Account     *string `json:"account"`
 	B64Identity *string `json:"b64_identity"`
 	Url         *string `json:"url"`
 

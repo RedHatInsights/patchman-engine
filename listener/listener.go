@@ -5,6 +5,7 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"context"
+	"encoding/json"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/gin-gonic/gin"
@@ -64,7 +65,10 @@ func shutdown(reader *kafka.Reader) {
 	}
 }
 
-func baseListener(reader *kafka.Reader, handler func(message kafka.Message)) {
+type KafkaHandler func(message kafka.Message)
+type EventHandler func(event PlatformEvent)
+
+func baseListener(reader *kafka.Reader, handler KafkaHandler) {
 	defer shutdown(reader)
 
 	for {
@@ -78,8 +82,17 @@ func baseListener(reader *kafka.Reader, handler func(message kafka.Message)) {
 	}
 }
 
-func logHandler(m kafka.Message) {
-	utils.Log("topic", m.Topic, "value", string(m.Value)).Info("Received message ")
+// Performs parsing of kafka message, and then dispatches this message into provided functions
+func makeKafkaHandler(eventHandler EventHandler) KafkaHandler {
+	return func(m kafka.Message) {
+		var event PlatformEvent
+		err := json.Unmarshal(m.Value, &event)
+		if err != nil {
+			utils.Log("err", err.Error()).Error("Could not deserialize platform event")
+			return
+		}
+		eventHandler(event)
+	}
 }
 
 func runMetrics() {
@@ -102,6 +115,9 @@ func RunListener() {
 
 	configure()
 
-	go baseListener(uploadReader, uploadHandler)
-	baseListener(eventsReader, logHandler)
+	// Only respond to creation and update msgs on upload topic
+	go baseListener(uploadReader, makeKafkaHandler(uploadHandler))
+
+	// Only respond to deletion on events topic
+	baseListener(eventsReader, makeKafkaHandler(deleteHandler))
 }
