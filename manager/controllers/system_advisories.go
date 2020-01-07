@@ -38,7 +38,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		return
 	}
 
-	query := database.SystemAdvisoriesQuery(inventoryId)
+	query := database.SystemAdvisoriesQueryName(inventoryId)
 
 	var total int
 	err = query.Count(&total).Error
@@ -52,8 +52,8 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		return
 	}
 
-	var dbItems []models.AdvisoryMetadata
-	err = query.Limit(limit).Offset(offset).Scan(&dbItems).Error
+	var dbItems []models.SystemAdvisories
+	err = query.Limit(limit).Offset(offset).Preload("Advisory").Find(&dbItems).Error
 	if gorm.IsRecordNotFoundError(err) {
 		LogAndRespNotFound(c, err, "no systems found")
 		return
@@ -77,12 +77,13 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	return
 }
 
-func buildSystemAdvisoriesData(models *[]models.AdvisoryMetadata) *[]AdvisoryItem {
+func buildSystemAdvisoriesData(models *[]models.SystemAdvisories) *[]AdvisoryItem {
 	var data []AdvisoryItem
-	for _, model := range *models {
-		item := AdvisoryItem{Id: model.Name, Type: "advisory", Attributes: AdvisoryItemAttributes{
-			Description: model.Description, Severity: "", PublicDate: model.PublicDate, Synopsis: model.Synopsis,
-			AdvisoryType: model.AdvisoryTypeId, ApplicableSystems: 0,
+	for _, systemAdvisories := range *models {
+		advisory := systemAdvisories.Advisory
+		item := AdvisoryItem{Id: advisory.Name, Type: "advisory", Attributes: AdvisoryItemAttributes{
+			Description: advisory.Description, Severity: "", PublicDate: advisory.PublicDate, Synopsis: advisory.Synopsis,
+			AdvisoryType: advisory.AdvisoryTypeId, ApplicableSystems: 0,
 		}}
 		data = append(data, item)
 	}

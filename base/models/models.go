@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type RhAccount struct {
 	ID   int
@@ -74,6 +76,7 @@ type SystemAdvisories struct {
 	ID            int
 	SystemID      int
 	AdvisoryID    int
+	Advisory      AdvisoryMetadata
 	FirstReported *time.Time
 	WhenPatched   *time.Time
 	StatusID      *int

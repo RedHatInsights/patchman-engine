@@ -38,19 +38,54 @@ func getReportedAdvisories(vmaasData vmaas.UpdatesV2Response) map[string]bool {
 	return advisories
 }
 
-func getStoredAdvisoriesMap(inventoryId string) (*map[string]models.AdvisoryMetadata, error) {
-	var advisories []models.AdvisoryMetadata
-	query := database.SystemAdvisoriesQuery(inventoryId)
-	err := query.Find(&advisories).Error
+func getStoredAdvisoriesMap(systemID int) (*map[string]models.SystemAdvisories, error) {
+	var advisories []models.SystemAdvisories
+	err := database.SystemAdvisoriesQueryByID(systemID).Preload("Advisory").Find(&advisories).Error
 	if err != nil {
 		return nil, err
 	}
 
-	advisoriesMap := map[string]models.AdvisoryMetadata{}
+	advisoriesMap := map[string]models.SystemAdvisories{}
 	for _, advisory := range advisories {
-		advisoriesMap[advisory.Name] = advisory
+		advisoriesMap[advisory.Advisory.Name] = advisory
 	}
 	return &advisoriesMap, nil
+}
+
+func getNewAndUnpatchedAdvisories(reported map[string]bool, stored map[string]models.SystemAdvisories) (
+	[]string, []int) {
+	newAdvisories := []string{}
+	unpatchedAdvisories := []int{}
+	for reportedAdvisory, _ := range reported {
+		if storedAdvisory, found := stored[reportedAdvisory]; found {
+			if storedAdvisory.WhenPatched != nil { // this advisory was already patched and now is un-patched again
+				unpatchedAdvisories = append(unpatchedAdvisories, storedAdvisory.AdvisoryID)
+			}
+			utils.Log("advisory", storedAdvisory.Advisory.Name).Debug("still not patched")
+		} else {
+			newAdvisories = append(newAdvisories, reportedAdvisory)
+		}
+	}
+	return newAdvisories, unpatchedAdvisories
+}
+
+func getPatchedAdvisories(reported map[string]bool, stored map[string]models.SystemAdvisories) []int {
+	var patchedAdvisories []int
+	for storedAdvisory, storedAdvisoryObj := range stored {
+		if _, found := reported[storedAdvisory]; found {
+			continue
+		}
+
+		// advisory contained in reported - it's patched
+		if storedAdvisoryObj.WhenPatched != nil {
+			// it's already marked as patched
+			continue
+		}
+
+		// advisory was patched from last evaluation, let's mark it as patched
+		patchedAdvisories = append(patchedAdvisories, storedAdvisoryObj.AdvisoryID)
+	}
+	return patchedAdvisories
 }
 
 func updateSystemAdvisories(systemId int, accountId int, updates vmaas.UpdatesV2Response) error {
