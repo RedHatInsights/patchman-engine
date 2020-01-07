@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"strconv"
 )
 

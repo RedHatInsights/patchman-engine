@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 	"regexp"
 )
 

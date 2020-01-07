@@ -64,42 +64,36 @@ func mockIdentity()string {
 	return identity
 }
 
-func MockUploadHandler(c *gin.Context) {
-	utils.Log().Info("Mocking platform upload event")
-	writer := mockKafkaWriter("platform.upload.available")
-	identity := mockIdentity();
-
-	// We need to format this message to not depend on listener.
-	// TODO: Replace with a typed solution, once we move event code to base library
-	event := fmt.Sprintf(`{ "id": "TEST-0000", "type": "created", "b64_identity": "%v"}`, identity)
+func sendMessageToTopic(topic, message string) {
+	writer := mockKafkaWriter(topic)
 
 	err := writer.WriteMessages(context.Background(), kafka.Message{
 		Key:   []byte{},
-		Value: []byte(event),
+		Value: []byte(message),
 	})
+
 	if err != nil {
 		panic(err)
 	}
 
+}
+func MockUploadHandler(c *gin.Context) {
+	utils.Log().Info("Mocking platform upload event")
+	identity := mockIdentity()
+
+	// We need to format this message to not depend on listener.
+	// TODO: Replace with a typed solution, once we move event code to base library
+	event := fmt.Sprintf(`{ "id": "TEST-0000", "type": "created", "b64_identity": "%v"}`, identity)
+	sendMessageToTopic("platform.upload.available", event)
 	c.Status(http.StatusOK)
 }
 
 func MockDeleteHandler(c *gin.Context) {
 	utils.Log().Info("Mocking platform delete event")
-	writer := mockKafkaWriter("platform.inventory.events")
+
 	identity := mockIdentity();
-
-	// We need to format this message to not depend on listener.
-	// TODO: Replace with a typed solution, once we move event code to base library
 	event := fmt.Sprintf(`{ "id": "TEST-0000", "type": "delete", "b64_identity": "%v"}`, identity)
-
-	err := writer.WriteMessages(context.Background(), kafka.Message{
-		Key:   []byte{},
-		Value: []byte(event),
-	})
-	if err != nil {
-		panic(err)
-	}
+	sendMessageToTopic("platform.inventory.events", event)
 	c.Status(http.StatusOK)
 }
 
