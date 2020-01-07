@@ -25,6 +25,7 @@ func platformMock() {
 
 	// Control endpoint handler
 	app.POST("/control/upload", MockUploadHandler)
+	app.POST("/control/delete", MockDeleteHandler)
 	app.POST("/control/sync", MockSyncHandler)
 
 	app.Run(":9001")
@@ -38,14 +39,15 @@ func MockSyncHandler(c *gin.Context) {
 	}
 }
 
-func MockUploadHandler(c *gin.Context) {
-	utils.Log().Info("Mocking platform upload event")
-	writer := kafka.NewWriter(kafka.WriterConfig{
+func mockKafkaWriter(topic string) *kafka.Writer {
+	return kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  []string{"localhost:9092"},
-		Topic:    "platform.upload.available",
+		Topic:    topic,
 		Balancer: &kafka.LeastBytes{},
 	})
+}
 
+func mockIdentity()string {
 	identity, err := utils.Identity{
 		Entitlements: map[string]utils.Entitlement{
 			"smart_management": {Entitled: true},
@@ -59,12 +61,19 @@ func MockUploadHandler(c *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
+	return identity
+}
+
+func MockUploadHandler(c *gin.Context) {
+	utils.Log().Info("Mocking platform upload event")
+	writer := mockKafkaWriter("platform.upload.available")
+	identity := mockIdentity();
 
 	// We need to format this message to not depend on listener.
 	// TODO: Replace with a typed solution, once we move event code to base library
-	event := fmt.Sprintf(`{ "id": "TEST-0000", "b64_identity": "%v"}`, identity)
+	event := fmt.Sprintf(`{ "id": "TEST-0000", "type": "created", "b64_identity": "%v"}`, identity)
 
-	err = writer.WriteMessages(context.Background(), kafka.Message{
+	err := writer.WriteMessages(context.Background(), kafka.Message{
 		Key:   []byte{},
 		Value: []byte(event),
 	})
@@ -73,7 +82,25 @@ func MockUploadHandler(c *gin.Context) {
 	}
 
 	c.Status(http.StatusOK)
+}
 
+func MockDeleteHandler(c *gin.Context) {
+	utils.Log().Info("Mocking platform delete event")
+	writer := mockKafkaWriter("platform.inventory.events")
+	identity := mockIdentity();
+
+	// We need to format this message to not depend on listener.
+	// TODO: Replace with a typed solution, once we move event code to base library
+	event := fmt.Sprintf(`{ "id": "TEST-0000", "type": "delete", "b64_identity": "%v"}`, identity)
+
+	err := writer.WriteMessages(context.Background(), kafka.Message{
+		Key:   []byte{},
+		Value: []byte(event),
+	})
+	if err != nil {
+		panic(err)
+	}
+	c.Status(http.StatusOK)
 }
 
 func main() {
