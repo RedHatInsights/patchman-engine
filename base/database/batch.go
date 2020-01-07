@@ -1,8 +1,8 @@
 package database
 // This file was adapted from https://github.com/bombsimon/gorm-bulk
 import (
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"reflect"
 	"sort"
 	"strings"

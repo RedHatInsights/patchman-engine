@@ -56,6 +56,25 @@ func TestParseUploadMessage(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, id, event.Id)
 	assert.Equal(t, "User", identity.Identity.Type)
+
+
+	ident, err :=  utils.Identity{
+		Entitlements: nil,
+		Identity:     utils.IdentityDetail{},
+	}.Encode()
+
+	event.B64Identity = &ident
+	identity, err = parseUploadMessage(&event)
+	assert.NotNil(t, err, "Should return not entitled error")
+
+	ident = "Invalid"
+	event.B64Identity = &ident
+	identity, err = parseUploadMessage(&event)
+	assert.NotNil(t, err, "Should report invalid identity")
+
+	event.B64Identity = nil
+	identity, err = parseUploadMessage(&event)
+	assert.NotNil(t, err, "Should report missing identity")
 }
 
 func TestUploadHandler(t *testing.T) {

@@ -13,7 +13,7 @@ import (
 const id = "TEST-00000"
 
 func deleteData(t *testing.T) {
-	// Delete debug data from previous run
+	// Delete test data from previous run
 	assert.Nil(t, database.Db.Unscoped().Where("inventory_id = ?", id).Delete(&models.SystemPlatform{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("name = ?", id).Delete(&models.RhAccount{}).Error)
 }
@@ -44,7 +44,6 @@ func assertSystemNotInDb(t *testing.T) {
 	assert.Equal(t, systemCount, 0)
 }
 
-
 func getOrCreateTestAccount(t *testing.T) int {
 	accountId, err := getOrCreateAccount(id)
 	assert.Nil(t, err)
@@ -66,3 +65,20 @@ func createTestDeleteEvent(t *testing.T) PlatformEvent {
 	assert.Nil(t, err)
 	return event
 }
+
+func TestParseEvents(t *testing.T) {
+
+	msg := kafka.Message{Value: []byte(`{"id": "TEST-00000", "type": "delete"}`)}
+
+	reached := false
+
+	makeKafkaHandler(func(event PlatformEvent) {
+		assert.Equal(t, event.Id, "TEST-00000")
+		assert.Equal(t, *event.Type, "delete")
+		reached = true
+	})(msg)
+
+	assert.True(t, reached,"Event handler should have been called")
+}
+
+
