@@ -5,6 +5,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -36,6 +37,8 @@ type SystemsMeta struct {
 // @Success 200 {object} SystemsResponse
 // @Router /api/patch/v1/systems [get]
 func SystemsListHandler(c *gin.Context) {
+	account := c.GetString(middlewares.KEY_ACCOUNT)
+
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
@@ -50,12 +53,17 @@ func SystemsListHandler(c *gin.Context) {
 	}
 
 	if offset > total {
-		c.JSON(http.StatusBadRequest, ErrorResponse{"too big offset"})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{"too big offset"})
 		return
 	}
 
 	var systems []models.SystemPlatform
-	err = database.Db.Limit(limit).Offset(offset).Find(&systems).Error
+
+	err = database.Db.
+		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
+		Where("ra.name = ?", account).
+		Limit(limit).Offset(offset).Find(&systems).Error
+
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return

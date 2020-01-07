@@ -88,7 +88,7 @@ func TestAdvisoriesOffsetOverflow(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/?offset=13&limit=4", nil)
 	initRouter(AdvisoriesListHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	var errResp ErrorResponse
+	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "too big offset", errResp.Error)
 }

@@ -54,7 +54,3 @@ type SystemItemAttributes struct {
 	RheaCount       int          `json:"rhea_count"`
 	Enabled         bool         `json:"enabled"`
 }
-
-type ErrorResponse struct {
-	Error string  `json:"error"`
-}

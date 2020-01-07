@@ -5,6 +5,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"net/http"
@@ -39,6 +40,8 @@ type AdvisorySystemsMeta struct {
 // @Success 200 {object} AdvisorySystemsResponse
 // @Router /api/patch/v1/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListHandler(c *gin.Context) {
+	account := c.GetString(middlewares.KEY_ACCOUNT)
+
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
@@ -47,13 +50,15 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 
 	advisoryName := c.Param("advisory_id")
 	if advisoryName == "" {
-		c.JSON(http.StatusBadRequest, ErrorResponse{"advisory_id param not found"})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{"advisory_id param not found"})
 		return
 	}
 
 	query := database.Db.Table("advisory_metadata am").Select("sp.*").
 		Joins("join system_advisories sa ON am.id=sa.advisory_id").
 		Joins("join system_platform sp ON sa.system_id=sp.id").
+		Joins("inner join rh_account ra on sp.rh_account_id = ra.id").
+		Where("ra.name = ?", account).
 		Where("am.name = ?", advisoryName)
 
 	var total int
@@ -64,7 +69,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 	}
 
 	if offset > total {
-		c.JSON(http.StatusBadRequest, ErrorResponse{"too big offset"})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{"too big offset"})
 		return
 	}
 

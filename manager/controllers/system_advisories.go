@@ -5,6 +5,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"net/http"
@@ -26,6 +27,8 @@ type SystemAdvisoriesResponse struct {
 // @Success 200 {object} SystemAdvisoriesResponse
 // @Router /api/patch/v1/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesHandler(c *gin.Context) {
+	account := c.GetString(middlewares.KEY_ACCOUNT)
+
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
@@ -34,11 +37,13 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 
 	inventoryId := c.Param("inventory_id")
 	if inventoryId == "" {
-		c.JSON(http.StatusBadRequest, ErrorResponse{"inventory_id param not found"})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{"inventory_id param not found"})
 		return
 	}
 
-	query := database.SystemAdvisoriesQueryName(database.Db, inventoryId)
+	query := database.SystemAdvisoriesQueryName(database.Db, inventoryId).
+		Joins("inner join rh_account ra on sp.rh_account_id = ra.id").
+		Where("ra.name = ?", account)
 
 	var total int
 	err = query.Count(&total).Error
@@ -48,7 +53,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	}
 
 	if offset > total {
-		c.JSON(http.StatusBadRequest, ErrorResponse{"too big offset"})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{"too big offset"})
 		return
 	}
 

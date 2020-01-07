@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/database"
 	"app/base/models"
+	"app/base/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"net/http"
@@ -44,7 +45,7 @@ type AdvisoryDetailAttributes struct {
 func AdvisoryDetailHandler(c *gin.Context) {
 	advisoryName := c.Param("advisory_id")
 	if advisoryName == "" {
-		c.JSON(http.StatusBadRequest, ErrorResponse{"advisory_id param not found"})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{"advisory_id param not found"})
 		return
 	}
 
