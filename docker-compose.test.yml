@@ -29,17 +29,12 @@ services:
     env_file:
       - ./conf/test.env
     environment:
-      - CI
-      - TRAVIS
-      - SHIPPABLE
-      - TRAVIS_BRANCH
-      - TRAVIS_COMMIT
-      - TRAVIS_JOB_NUMBER
-      - TRAVIS_PULL_REQUEST
-      - TRAVIS_JOB_ID
-      - TRAVIS_REPO_SLUG
-      - TRAVIS_TAG
-      - TRAVIS_OS_NAME
+      - CODECOV_TOKEN
+      - GITHUB_ACTION
+      - GITHUB_ACTIONS
+      - GITHUB_SHA
+      - GITHUB_REF
+      - GITHUB_REPOSITORY
     depends_on:
       - db
       - platform
