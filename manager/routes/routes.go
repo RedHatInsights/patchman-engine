@@ -2,6 +2,7 @@ package routes
 
 import (
 	"app/manager/controllers"
+	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,6 +14,7 @@ func Init(app *gin.Engine) {
 }
 
 func InitAPI(group *gin.RouterGroup) {
+	group.Use(middlewares.Authenticator())
 	group.GET("/advisories", controllers.AdvisoriesListHandler)
 	group.GET("/advisories/:advisory_id", controllers.AdvisoryDetailHandler)
 	group.GET("/advisories/:advisory_id/systems", controllers.AdvisorySystemsListHandler)

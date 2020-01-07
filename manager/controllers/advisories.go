@@ -38,7 +38,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 	}
 
 	if offset > total {
-		c.JSON(http.StatusBadRequest, ErrorResponse{"too big offset"})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{"too big offset"})
 		return
 	}
 

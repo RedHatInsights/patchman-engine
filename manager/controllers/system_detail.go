@@ -3,6 +3,8 @@ package controllers
 import (
 	"app/base/database"
 	"app/base/models"
+	"app/base/utils"
+	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"net/http"
@@ -22,14 +24,19 @@ type SystemDetailResponse struct {
 // @Success 200 {object} SystemDetailResponse
 // @Router /api/patch/v1/systems/{inventory_id} [get]
 func SystemDetailHandler(c *gin.Context) {
+	account := c.GetString(middlewares.KEY_ACCOUNT)
+
 	inventoryId := c.Param("inventory_id")
 	if inventoryId == "" {
-		c.JSON(http.StatusBadRequest, ErrorResponse{"inventory_id param not found"})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{"inventory_id param not found"})
 		return
 	}
 
 	var inventory models.SystemPlatform
-	err := database.Db.Where("inventory_id = ?", inventoryId).First(&inventory).Error
+	err := database.Db.
+		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
+		Where("ra.name = ?", account).
+		Where("inventory_id = ?", inventoryId).First(&inventory).Error
 	if gorm.IsRecordNotFoundError(err) {
 		LogAndRespNotFound(c, err, "inventory not found")
 		return

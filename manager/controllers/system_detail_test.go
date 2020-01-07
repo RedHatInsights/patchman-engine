@@ -35,7 +35,7 @@ func TestSystemDetailNoIdProvided(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	initRouter(SystemDetailHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	var errResp ErrorResponse
+	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "inventory_id param not found", errResp.Error)
 }
@@ -48,7 +48,7 @@ func TestSystemDetailNotFound(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/foo", nil)
 	initRouterWithPath(SystemDetailHandler, "/:inventory_id").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)
-	var errResp ErrorResponse
+	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "inventory not found", errResp.Error)
 }

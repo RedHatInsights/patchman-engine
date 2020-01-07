@@ -21,7 +21,7 @@ func TestSystemsDefault(t *testing.T) {
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	// data
-	assert.Equal(t, 12, len(output.Data))
+	assert.Equal(t, 8, len(output.Data))
 	assert.Equal(t, "INV-0", output.Data[0].Id)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
@@ -71,15 +71,15 @@ func TestSystemsOffset(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?offset=8&limit=4", nil)
+	req, _ := http.NewRequest("GET", "/?offset=4&limit=4", nil)
 	initRouter(SystemsListHandler).ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 4, len(output.Data))
-	assert.Equal(t, 8, output.Meta.Offset)
-	assert.Equal(t, 2, output.Meta.Page)
+	assert.Equal(t, 4, output.Meta.Offset)
+	assert.Equal(t, 1, output.Meta.Page)
 	assert.Equal(t, 4, output.Meta.Limit)
 	assert.Equal(t, 4, output.Meta.PageSize)
 	assert.Equal(t, 12, output.Meta.TotalItems)
@@ -94,7 +94,7 @@ func TestSystemsOffsetOverflow(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/?offset=13&limit=4", nil)
 	initRouter(SystemsListHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	var errResp ErrorResponse
+	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "too big offset", errResp.Error)
 }

@@ -20,7 +20,7 @@ func TestAdvisorySystemsDefault(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, 11, len(output.Data))
+	assert.Equal(t, 8, len(output.Data))
 	assert.Equal(t, "INV-0", output.Data[0].Id)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
@@ -34,19 +34,19 @@ func TestAdvisorySystemsOffsetLimit(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1?offset=8&limit=3", nil)
+	req, _ := http.NewRequest("GET", "/RH-1?offset=5&limit=3", nil)
 	initRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 3, len(output.Data))
-	assert.Equal(t, "INV-8", output.Data[0].Id)
+	assert.Equal(t, "INV-5", output.Data[0].Id)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
 	assert.Equal(t, true, output.Data[0].Attributes.Enabled)
 	assert.Equal(t, 1, output.Data[0].Attributes.RhsaCount)
-	assert.Equal(t, 2, output.Meta.Page)
+	assert.Equal(t, 1, output.Meta.Page)
 }
 
 func TestAdvisorySystemsOffsetOverflow(t *testing.T) {
@@ -58,7 +58,7 @@ func TestAdvisorySystemsOffsetOverflow(t *testing.T) {
 	initRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	var errResp ErrorResponse
+	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "too big offset", errResp.Error)
 }

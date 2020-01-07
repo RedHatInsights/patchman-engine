@@ -58,7 +58,7 @@ func TestSystemAdvisoriesOffsetOverflow(t *testing.T) {
 	initRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	var errResp ErrorResponse
+	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "too big offset", errResp.Error)
 }
