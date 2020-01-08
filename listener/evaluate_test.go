@@ -2,6 +2,7 @@ package listener
 
 import (
 	"app/base/core"
+	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"context"
@@ -13,7 +14,8 @@ import (
 	"time"
 )
 
-var testDate = time.Date(2020, 1, 1, 1, 1, 1, 1, time.UTC)
+var testDate, _ = time.Parse(time.RFC3339, "2020-01-01T01-01-01")
+
 
 func TestVMaaSGetUpdates(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
@@ -76,6 +78,36 @@ func TestGetPatchedAdvisories(t *testing.T) {
 	assert.Equal(t, 2, patched[0])
 }
 
+func TestUpdatePatchedSystemAdvisories(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	systemID := 1
+	advisoryIDs := []int{2, 3, 4}
+	createTestingSystemAdvisories(t, systemID, advisoryIDs, nil)
+
+	err := updateSystemAdvisoriesWhenPatched(systemID, advisoryIDs, &testDate)
+	assert.Nil(t, err)
+	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, &testDate)
+
+	deleteTestingSystemAdvisories(t, systemID, advisoryIDs)
+}
+
+func TestUpdateUnpatchedSystemAdvisories(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	systemID := 1
+	advisoryIDs := []int{2, 3, 4}
+	createTestingSystemAdvisories(t, systemID, advisoryIDs, &testDate)
+
+	err := updateSystemAdvisoriesWhenPatched(systemID, advisoryIDs, nil)
+	assert.Nil(t, err)
+	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
+
+	deleteTestingSystemAdvisories(t, systemID, advisoryIDs)
+}
+
 func TestEvaluate(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 	utils.SkipWithoutDB(t)
@@ -108,4 +140,40 @@ func createTestStoredAdvisories(advisoryPatched map[int]*time.Time) map[string]m
 			AdvisoryID: advisoryID}
 	}
 	return systemAdvisoriesMap
+}
+
+func createTestingSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int, whenPatched *time.Time) {
+	for i, advisoryID := range advisoryIDs {
+		err := database.Db.Create(&models.SystemAdvisories{
+			ID: (i + 1) * 100, SystemID: systemID, AdvisoryID: advisoryID, WhenPatched: whenPatched}).Error
+		assert.Nil(t, err)
+	}
+	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, whenPatched)
+}
+
+func checkSystemAdvisoriesWhenPatched(t *testing.T, systemID int, advisoryIDs []int, whenPatched *time.Time) {
+	var systemAdvisories []models.SystemAdvisories
+	err := database.Db.Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
+		Find(&systemAdvisories).Error
+	assert.Nil(t, err)
+	assert.Equal(t, len(advisoryIDs), len(systemAdvisories))
+	for _, systemAdvisory := range systemAdvisories {
+		if whenPatched == nil {
+			assert.Nil(t, systemAdvisory.WhenPatched)
+		} else {
+			assert.Equal(t, systemAdvisory.WhenPatched.String(), whenPatched.String())
+		}
+	}
+}
+
+func deleteTestingSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int) {
+	err := database.Db.Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
+		Delete(&models.SystemAdvisories{}).Error
+	assert.Nil(t, err)
+
+	var systemAdvisories []models.SystemAdvisories
+	err = database.Db.Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
+		Find(&systemAdvisories).Error
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(systemAdvisories))
 }
