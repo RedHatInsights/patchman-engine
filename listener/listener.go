@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/RedHatInsights/patchman-clients/inventory"
-	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/gin-gonic/gin"
 	"github.com/segmentio/kafka-go"
 )
@@ -16,7 +15,6 @@ var (
 	uploadReader    *kafka.Reader
 	eventsReader    *kafka.Reader
 	inventoryClient *inventory.APIClient
-	vmaasClient     *vmaas.APIClient
 )
 
 func configure() {
@@ -51,11 +49,6 @@ func configure() {
 	inventoryConfig.Debug = traceApi
 	inventoryConfig.BasePath = inventoryAddr + base.INVENTORY_API_PREFIX
 	inventoryClient = inventory.NewAPIClient(inventoryConfig)
-
-	vmaasConfig := vmaas.NewConfiguration()
-	vmaasConfig.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMAAS_API_PREFIX
-	vmaasConfig.Debug = traceApi
-	vmaasClient = vmaas.NewAPIClient(vmaasConfig)
 }
 
 func shutdown(reader *kafka.Reader) {

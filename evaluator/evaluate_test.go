@@ -1,4 +1,4 @@
-package listener
+package evaluator
 
 import (
 	"app/base/core"
@@ -20,7 +20,7 @@ var testDate, _ = time.Parse(time.RFC3339, "2020-01-01T01-01-01")
 func TestVMaaSGetUpdates(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 
-	configure()
+	Configure()
 	vmaasData := getVMaaSUpdates(t)
 	assert.Equal(t, 2, len(vmaasData.UpdateList["firefox"].AvailableUpdates))
 	assert.Equal(t, 1, len(vmaasData.UpdateList["kernel"].AvailableUpdates))
@@ -29,7 +29,7 @@ func TestVMaaSGetUpdates(t *testing.T) {
 func TestGetReportedAdvisories1(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 
-	configure()
+	Configure()
 	vmaasData := getVMaaSUpdates(t)
 	advisories := getReportedAdvisories(vmaasData)
 	assert.Equal(t, 3, len(advisories))
@@ -106,14 +106,6 @@ func TestUpdateUnpatchedSystemAdvisories(t *testing.T) {
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
 
 	deleteTestingSystemAdvisories(t, systemID, advisoryIDs)
-}
-
-func TestEvaluate(t *testing.T) {
-	utils.SkipWithoutPlatform(t)
-	utils.SkipWithoutDB(t)
-
-	configure()
-	evaluate(12, 2, context.Background(), vmaas.UpdatesRequest{})
 }
 
 func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {

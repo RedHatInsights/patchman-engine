@@ -1,6 +1,7 @@
-package listener
+package evaluator
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
@@ -10,8 +11,20 @@ import (
 	"time"
 )
 
+var (
+	vmaasClient     *vmaas.APIClient
+)
 
-func evaluate(systemId int, accountId int, ctx context.Context, updatesReq vmaas.UpdatesRequest) {
+func Configure() {
+	traceApi := utils.GetenvOrFail("LOG_LEVEL") == "trace"
+
+	vmaasConfig := vmaas.NewConfiguration()
+	vmaasConfig.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMAAS_API_PREFIX
+	vmaasConfig.Debug = traceApi
+	vmaasClient = vmaas.NewAPIClient(vmaasConfig)
+}
+
+func Evaluate(systemId int, accountId int, ctx context.Context, updatesReq vmaas.UpdatesRequest) {
 	vmaasCallArgs := vmaas.AppUpdatesHandlerV2PostPostOpts{
 		UpdatesRequest: optional.NewInterface(updatesReq),
 	}
