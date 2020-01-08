@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const unknown = "unknown"
+
 var (
 	vmaasClient     *vmaas.APIClient
 )
@@ -107,6 +109,75 @@ func updateSystemAdvisoriesWhenPatched(systemID int, advisoryIDs []int, whenPatc
 		Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
 		Update("when_patched", whenPatched).Error
 	return err
+}
+
+// Return advisory IDs, created advisories count, error
+func ensureAdvisoriesInDb(advisories []string) (*[]int, int, error) {
+	var existingAdvisories []models.AdvisoryMetadata
+	err := database.Db.Where("name IN (?)", advisories).Find(&existingAdvisories).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var existingAdvisoryIDs []int
+	for _, existingAdvisory := range existingAdvisories {
+		existingAdvisoryIDs = append(existingAdvisoryIDs, existingAdvisory.ID)
+	}
+
+	if len(existingAdvisories) == len(advisories) {
+		// all advisories are in database
+		return &existingAdvisoryIDs, 0, nil
+	}
+
+	createdAdvisoryIDs, err := createNewAdvisories(advisories, existingAdvisories)
+	if err != nil {
+		return nil, 0, err
+	}
+	existingAdvisoryIDs = append(existingAdvisoryIDs, *createdAdvisoryIDs...)
+
+	return &existingAdvisoryIDs, len(*createdAdvisoryIDs), nil
+}
+
+// Return created advisories IDs, created advisories, error
+func createNewAdvisories(advisories []string, existingAdvisories []models.AdvisoryMetadata) (
+	*[]int, error) {
+	existingAdvisoriesMap := map[string]bool{}
+	for _, advisoryObj := range existingAdvisories {
+		existingAdvisoriesMap[advisoryObj.Name] = true
+	}
+
+	var createdAdvisoryIDs []int
+	for _, advisory := range advisories {
+		if _, found := existingAdvisoriesMap[advisory]; found {
+			continue // advisory is already stored in database
+		}
+
+		item := models.AdvisoryMetadata{Name: advisory,
+			Description: unknown, Synopsis: unknown, Summary: unknown, Solution: unknown}
+		err := database.Db.Create(&item).Error
+		if err != nil {
+			return nil, err
+		}
+		createdAdvisoryIDs = append(createdAdvisoryIDs, item.ID)
+		utils.Log("advisory", advisory).Info("unknown advisory created")
+	}
+
+	return &createdAdvisoryIDs, nil
+}
+
+func addNewSystemAdvisories(systemID int, advisoryIDs []int) error {
+	advisoriesObjs := models.SystemAdvisoriesSlice{}
+	for _, advisoryID := range advisoryIDs {
+		advisoriesObjs = append(advisoriesObjs,
+			models.SystemAdvisories{SystemID: systemID, AdvisoryID: advisoryID})
+	}
+
+	interfaceSlice := advisoriesObjs.ToInterfaceSlice()
+	err := database.BulkInsert(database.Db, interfaceSlice)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func updateSystemAdvisories(systemId int, accountId int, updates vmaas.UpdatesV2Response) error {
