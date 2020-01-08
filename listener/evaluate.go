@@ -7,6 +7,7 @@ import (
 	"context"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
+	"time"
 )
 
 
@@ -86,6 +87,13 @@ func getPatchedAdvisories(reported map[string]bool, stored map[string]models.Sys
 		patchedAdvisories = append(patchedAdvisories, storedAdvisoryObj.AdvisoryID)
 	}
 	return patchedAdvisories
+}
+
+func updateSystemAdvisoriesWhenPatched(systemID int, advisoryIDs []int, whenPatched *time.Time) error {
+	err := database.Db.Model(models.SystemAdvisories{}).
+		Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
+		Update("when_patched", whenPatched).Error
+	return err
 }
 
 func updateSystemAdvisories(systemId int, accountId int, updates vmaas.UpdatesV2Response) error {
