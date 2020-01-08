@@ -108,6 +108,32 @@ func TestUpdateUnpatchedSystemAdvisories(t *testing.T) {
 	deleteTestingSystemAdvisories(t, systemID, advisoryIDs)
 }
 
+func TestEnsureAdvisoriesInDb(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	advisories := []string{"ER-1", "RH-1", "ER-2", "RH-2"}
+	advisoryIDs, nCreated, err := ensureAdvisoriesInDb(advisories)
+	assert.Nil(t, err)
+	assert.Equal(t, 2, nCreated)
+	assert.Equal(t, 4, len(*advisoryIDs))
+	checkAdvisoriesInDb(t, advisories)
+	deleteTestingAdvisories(t, []string{"ER-1", "ER-2"})
+}
+
+func TestAddNewSystemAdvisories(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	systemID := 1
+	advisoryIDs := []int{2, 3, 4}
+	err := addNewSystemAdvisories(systemID, advisoryIDs)
+	assert.Nil(t, err)
+	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
+
+	deleteTestingSystemAdvisories(t, systemID, advisoryIDs)
+}
+
 func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {
 	vmaasCallArgs := vmaas.AppUpdatesHandlerV2PostPostOpts{}
 	vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV2PostPost(context.Background(), &vmaasCallArgs)
@@ -135,9 +161,9 @@ func createTestStoredAdvisories(advisoryPatched map[int]*time.Time) map[string]m
 }
 
 func createTestingSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int, whenPatched *time.Time) {
-	for i, advisoryID := range advisoryIDs {
+	for _, advisoryID := range advisoryIDs {
 		err := database.Db.Create(&models.SystemAdvisories{
-			ID: (i + 1) * 100, SystemID: systemID, AdvisoryID: advisoryID, WhenPatched: whenPatched}).Error
+			SystemID: systemID, AdvisoryID: advisoryID, WhenPatched: whenPatched}).Error
 		assert.Nil(t, err)
 	}
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, whenPatched)
@@ -150,6 +176,7 @@ func checkSystemAdvisoriesWhenPatched(t *testing.T, systemID int, advisoryIDs []
 	assert.Nil(t, err)
 	assert.Equal(t, len(advisoryIDs), len(systemAdvisories))
 	for _, systemAdvisory := range systemAdvisories {
+		assert.NotNil(t, systemAdvisory.FirstReported)
 		if whenPatched == nil {
 			assert.Nil(t, systemAdvisory.WhenPatched)
 		} else {
@@ -168,4 +195,23 @@ func deleteTestingSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int
 		Find(&systemAdvisories).Error
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(systemAdvisories))
+}
+
+func checkAdvisoriesInDb(t *testing.T, advisories []string) {
+	var advisoriesObjs []models.AdvisoryMetadata
+	err := database.Db.Where("name IN (?)", advisories).Find(&advisoriesObjs).Error
+	assert.Nil(t, err)
+	assert.Equal(t, len(advisoriesObjs), len(advisories))
+}
+
+func deleteTestingAdvisories(t *testing.T, advisories []string) {
+	err := database.Db.Where("name IN (?)", advisories).
+		Delete(&models.AdvisoryMetadata{}).Error
+	assert.Nil(t, err)
+
+	var advisoriesObjs []models.AdvisoryMetadata
+	err = database.Db.Where("name IN (?)", advisories).
+		Find(&advisoriesObjs).Error
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(advisoriesObjs))
 }
