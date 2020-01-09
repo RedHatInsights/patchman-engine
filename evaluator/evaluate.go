@@ -8,6 +8,8 @@ import (
 	"context"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
+	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -37,28 +39,38 @@ func Evaluate(systemID int, ctx context.Context, updatesReq vmaas.UpdatesRequest
 		return
 	}
 
-	reported := getReportedAdvisories(vmaasData)
-	stored, err := getStoredAdvisoriesMap(systemID)
+	tx := database.Db.Begin()
+	err = processSystemAdvisories(tx, systemID, vmaasData)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Unable to get system stored advisories")
+		tx.Rollback()
+		utils.Log("err", err.Error()).Error("Unable to process system advisories")
 		return
+	}
+
+	tx.Commit()
+}
+
+func processSystemAdvisories(tx *gorm.DB, systemID int, vmaasData vmaas.UpdatesV2Response) error {
+	reported := getReportedAdvisories(vmaasData)
+	stored, err := getStoredAdvisoriesMap(tx, systemID)
+	if err != nil {
+		return errors.Wrap(err, "Unable to get system stored advisories")
 	}
 
 	patched := getPatchedAdvisories(reported, *stored)
 	newsAdvisoriesNames, unpatched := getNewAndUnpatchedAdvisories(reported, *stored)
 
-	news, nAdded, err := ensureAdvisoriesInDb(newsAdvisoriesNames)
+	news, nAdded, err := ensureAdvisoriesInDb(tx, newsAdvisoriesNames)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Unable to ensure new system advisories in db")
-		return
+		return errors.Wrap(err, "Unable to ensure new system advisories in db")
 	}
 	utils.Log("added", nAdded).Info("Added new unknown advisories into the db")
 
-	err = updateSystemAdvisories(systemID, patched, unpatched, *news)
+	err = updateSystemAdvisories(tx, systemID, patched, unpatched, *news)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Unable to update system advisories")
-		return
+		return errors.Wrap(err, "Unable to update system advisories")
 	}
+	return nil
 }
 
 func getReportedAdvisories(vmaasData vmaas.UpdatesV2Response) map[string]bool {
@@ -71,9 +83,9 @@ func getReportedAdvisories(vmaasData vmaas.UpdatesV2Response) map[string]bool {
 	return advisories
 }
 
-func getStoredAdvisoriesMap(systemID int) (*map[string]models.SystemAdvisories, error) {
+func getStoredAdvisoriesMap(tx *gorm.DB, systemID int) (*map[string]models.SystemAdvisories, error) {
 	var advisories []models.SystemAdvisories
-	err := database.SystemAdvisoriesQueryByID(systemID).Preload("Advisory").Find(&advisories).Error
+	err := database.SystemAdvisoriesQueryByID(tx, systemID).Preload("Advisory").Find(&advisories).Error
 	if err != nil {
 		return nil, err
 	}
@@ -121,17 +133,17 @@ func getPatchedAdvisories(reported map[string]bool, stored map[string]models.Sys
 	return patchedAdvisories
 }
 
-func updateSystemAdvisoriesWhenPatched(systemID int, advisoryIDs []int, whenPatched *time.Time) error {
-	err := database.Db.Model(models.SystemAdvisories{}).
+func updateSystemAdvisoriesWhenPatched(tx *gorm.DB, systemID int, advisoryIDs []int, whenPatched *time.Time) error {
+	err := tx.Model(models.SystemAdvisories{}).
 		Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
 		Update("when_patched", whenPatched).Error
 	return err
 }
 
 // Return advisory IDs, created advisories count, error
-func ensureAdvisoriesInDb(advisories []string) (*[]int, int, error) {
+func ensureAdvisoriesInDb(tx *gorm.DB, advisories []string) (*[]int, int, error) {
 	var existingAdvisories []models.AdvisoryMetadata
-	err := database.Db.Where("name IN (?)", advisories).Find(&existingAdvisories).Error
+	err := tx.Where("name IN (?)", advisories).Find(&existingAdvisories).Error
 	if err != nil {
 		return nil, 0, err
 	}
@@ -146,7 +158,7 @@ func ensureAdvisoriesInDb(advisories []string) (*[]int, int, error) {
 		return &existingAdvisoryIDs, 0, nil
 	}
 
-	createdAdvisoryIDs, err := createNewAdvisories(advisories, existingAdvisories)
+	createdAdvisoryIDs, err := createNewAdvisories(tx, advisories, existingAdvisories)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -156,7 +168,7 @@ func ensureAdvisoriesInDb(advisories []string) (*[]int, int, error) {
 }
 
 // Return created advisories IDs, created advisories, error
-func createNewAdvisories(advisories []string, existingAdvisories []models.AdvisoryMetadata) (
+func createNewAdvisories(tx *gorm.DB, advisories []string, existingAdvisories []models.AdvisoryMetadata) (
 	*[]int, error) {
 	existingAdvisoriesMap := map[string]bool{}
 	for _, advisoryObj := range existingAdvisories {
@@ -171,7 +183,7 @@ func createNewAdvisories(advisories []string, existingAdvisories []models.Adviso
 
 		item := models.AdvisoryMetadata{Name: advisory,
 			Description: unknown, Synopsis: unknown, Summary: unknown, Solution: unknown}
-		err := database.Db.Create(&item).Error
+		err := tx.Create(&item).Error
 		if err != nil {
 			return nil, err
 		}
@@ -182,7 +194,7 @@ func createNewAdvisories(advisories []string, existingAdvisories []models.Adviso
 	return &createdAdvisoryIDs, nil
 }
 
-func addNewSystemAdvisories(systemID int, advisoryIDs []int) error {
+func addNewSystemAdvisories(tx *gorm.DB, systemID int, advisoryIDs []int) error {
 	advisoriesObjs := models.SystemAdvisoriesSlice{}
 	for _, advisoryID := range advisoryIDs {
 		advisoriesObjs = append(advisoriesObjs,
@@ -190,26 +202,26 @@ func addNewSystemAdvisories(systemID int, advisoryIDs []int) error {
 	}
 
 	interfaceSlice := advisoriesObjs.ToInterfaceSlice()
-	err := database.BulkInsert(database.Db, interfaceSlice)
+	err := database.BulkInsert(tx, interfaceSlice)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func updateSystemAdvisories(systemID int, patched, unpatched, news []int) error {
+func updateSystemAdvisories(tx *gorm.DB, systemID int, patched, unpatched, news []int) error {
 	whenPatched := time.Now()
-	err := updateSystemAdvisoriesWhenPatched(systemID, patched, &whenPatched)
+	err := updateSystemAdvisoriesWhenPatched(tx, systemID, patched, &whenPatched)
 	if err != nil {
 		return err
 	}
 
-	err = updateSystemAdvisoriesWhenPatched(systemID, unpatched, nil)
+	err = updateSystemAdvisoriesWhenPatched(tx, systemID, unpatched, nil)
 	if err != nil {
 		return err
 	}
 
-	err = addNewSystemAdvisories(systemID, news)
+	err = addNewSystemAdvisories(tx, systemID, news)
 	if err != nil {
 		return err
 	}

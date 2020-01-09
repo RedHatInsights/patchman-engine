@@ -38,7 +38,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		return
 	}
 
-	query := database.SystemAdvisoriesQueryName(inventoryId)
+	query := database.SystemAdvisoriesQueryName(database.Db, inventoryId)
 
 	var total int
 	err = query.Count(&total).Error
