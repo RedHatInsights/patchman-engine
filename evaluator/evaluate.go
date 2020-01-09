@@ -26,22 +26,39 @@ func Configure() {
 	vmaasClient = vmaas.NewAPIClient(vmaasConfig)
 }
 
-func Evaluate(systemId int, accountId int, ctx context.Context, updatesReq vmaas.UpdatesRequest) {
+func Evaluate(systemID int, ctx context.Context, updatesReq vmaas.UpdatesRequest) {
 	vmaasCallArgs := vmaas.AppUpdatesHandlerV2PostPostOpts{
 		UpdatesRequest: optional.NewInterface(updatesReq),
 	}
 
-	vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV2PostPost(ctx, &vmaasCallArgs)
+	vmaasData, _, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV2PostPost(ctx, &vmaasCallArgs)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Saving account into the database")
+		utils.Log("err", err.Error()).Error("Unable to get updates from VMaaS")
 		return
 	}
-	err = updateSystemAdvisories(systemId, accountId, vmaasData)
+
+	reported := getReportedAdvisories(vmaasData)
+	stored, err := getStoredAdvisoriesMap(systemID)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Updating system advisories")
+		utils.Log("err", err.Error()).Error("Unable to get system stored advisories")
 		return
 	}
-	utils.Log("res", resp).Debug("VMAAS query complete")
+
+	patched := getPatchedAdvisories(reported, *stored)
+	newsAdvisoriesNames, unpatched := getNewAndUnpatchedAdvisories(reported, *stored)
+
+	news, nAdded, err := ensureAdvisoriesInDb(newsAdvisoriesNames)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("Unable to ensure new system advisories in db")
+		return
+	}
+	utils.Log("added", nAdded).Info("Added new unknown advisories into the db")
+
+	err = updateSystemAdvisories(systemID, patched, unpatched, *news)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("Unable to update system advisories")
+		return
+	}
 }
 
 func getReportedAdvisories(vmaasData vmaas.UpdatesV2Response) map[string]bool {
@@ -180,7 +197,21 @@ func addNewSystemAdvisories(systemID int, advisoryIDs []int) error {
 	return nil
 }
 
-func updateSystemAdvisories(systemId int, accountId int, updates vmaas.UpdatesV2Response) error {
-	utils.Log().Error("System advisories not yet implemented - Depends on vmaas_sync")
+func updateSystemAdvisories(systemID int, patched, unpatched, news []int) error {
+	whenPatched := time.Now()
+	err := updateSystemAdvisoriesWhenPatched(systemID, patched, &whenPatched)
+	if err != nil {
+		return err
+	}
+
+	err = updateSystemAdvisoriesWhenPatched(systemID, unpatched, nil)
+	if err != nil {
+		return err
+	}
+
+	err = addNewSystemAdvisories(systemID, news)
+	if err != nil {
+		return err
+	}
 	return nil
 }
