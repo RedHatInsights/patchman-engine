@@ -51,7 +51,7 @@ func TestGetStoredAdvisoriesMap(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemAdvisories, err := getStoredAdvisoriesMap(0)
+	systemAdvisories, err := getStoredAdvisoriesMap(database.Db, 0)
 	assert.Nil(t, err)
 	assert.NotNil(t, systemAdvisories)
 	assert.Equal(t, 8, len(*systemAdvisories))
@@ -86,7 +86,7 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	advisoryIDs := []int{2, 3, 4}
 	createTestingSystemAdvisories(t, systemID, advisoryIDs, nil)
 
-	err := updateSystemAdvisoriesWhenPatched(systemID, advisoryIDs, &testDate)
+	err := updateSystemAdvisoriesWhenPatched(database.Db, systemID, advisoryIDs, &testDate)
 	assert.Nil(t, err)
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, &testDate)
 
@@ -101,7 +101,7 @@ func TestUpdateUnpatchedSystemAdvisories(t *testing.T) {
 	advisoryIDs := []int{2, 3, 4}
 	createTestingSystemAdvisories(t, systemID, advisoryIDs, &testDate)
 
-	err := updateSystemAdvisoriesWhenPatched(systemID, advisoryIDs, nil)
+	err := updateSystemAdvisoriesWhenPatched(database.Db, systemID, advisoryIDs, nil)
 	assert.Nil(t, err)
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
 
@@ -113,7 +113,7 @@ func TestEnsureAdvisoriesInDb(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	advisories := []string{"ER-1", "RH-1", "ER-2", "RH-2"}
-	advisoryIDs, nCreated, err := ensureAdvisoriesInDb(advisories)
+	advisoryIDs, nCreated, err := ensureAdvisoriesInDb(database.Db, advisories)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, nCreated)
 	assert.Equal(t, 4, len(*advisoryIDs))
@@ -127,7 +127,7 @@ func TestAddNewSystemAdvisories(t *testing.T) {
 
 	systemID := 1
 	advisoryIDs := []int{2, 3, 4}
-	err := addNewSystemAdvisories(systemID, advisoryIDs)
+	err := addNewSystemAdvisories(database.Db, systemID, advisoryIDs)
 	assert.Nil(t, err)
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
 
