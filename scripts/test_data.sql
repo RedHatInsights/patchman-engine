@@ -61,9 +61,7 @@ INSERT INTO system_advisories (system_id, advisory_id, first_reported, when_patc
 (7, 1, '2016-09-22 12:00:00-04', NULL, 2),
 (8, 1, '2016-09-22 12:00:00-04', NULL, 0),
 (9, 1, '2016-09-22 12:00:00-04', NULL, 1),
-(10, 1, '2016-09-22 12:00:00-04', NULL, 0),
-(11, 1, '2016-09-22 12:00:00-04', NULL, 1),
-(11, 2, '2016-09-22 12:00:00-04', NULL, 2);
+(10, 1, '2016-09-22 12:00:00-04', NULL, 0);
 
 INSERT INTO repo (id, name) VALUES
 (1, 'repo1'),

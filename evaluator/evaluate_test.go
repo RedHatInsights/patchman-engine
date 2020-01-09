@@ -134,6 +134,24 @@ func TestAddNewSystemAdvisories(t *testing.T) {
 	deleteTestingSystemAdvisories(t, systemID, advisoryIDs)
 }
 
+func TestEvaluate(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	utils.SkipWithoutPlatform(t)
+	core.SetupTestEnvironment()
+
+	Configure()
+
+	systemID := 11
+	expectedAddedAdvisories := []string{"ER1", "ER2", "ER3"}
+	Evaluate(systemID, context.Background(), vmaas.UpdatesRequest{})
+	ids := checkAdvisoriesInDb(t, expectedAddedAdvisories)
+
+	checkSystemAdvisoriesWhenPatched(t, systemID, ids, nil)
+
+	deleteTestingSystemAdvisories(t, systemID, ids)
+	deleteTestingAdvisories(t, expectedAddedAdvisories)
+}
+
 func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {
 	vmaasCallArgs := vmaas.AppUpdatesHandlerV2PostPostOpts{}
 	vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV2PostPost(context.Background(), &vmaasCallArgs)
@@ -197,11 +215,16 @@ func deleteTestingSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int
 	assert.Equal(t, 0, len(systemAdvisories))
 }
 
-func checkAdvisoriesInDb(t *testing.T, advisories []string) {
+func checkAdvisoriesInDb(t *testing.T, advisories []string) []int {
 	var advisoriesObjs []models.AdvisoryMetadata
 	err := database.Db.Where("name IN (?)", advisories).Find(&advisoriesObjs).Error
 	assert.Nil(t, err)
 	assert.Equal(t, len(advisoriesObjs), len(advisories))
+	var ids []int
+	for _, advisoryObj := range advisoriesObjs {
+		ids = append(ids, advisoryObj.ID)
+	}
+	return ids
 }
 
 func deleteTestingAdvisories(t *testing.T, advisories []string) {

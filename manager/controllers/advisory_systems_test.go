@@ -20,7 +20,7 @@ func TestAdvisorySystemsDefault(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, 12, len(output.Data))
+	assert.Equal(t, 11, len(output.Data))
 	assert.Equal(t, "INV-0", output.Data[0].Id)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
