@@ -14,6 +14,7 @@ RUN go mod download
 ADD /base       /go/src/app/base
 ADD /manager    /go/src/app/manager
 ADD /listener   /go/src/app/listener
+ADD /evaluator  /go/src/app/evaluator
 ADD /vmaas_sync /go/src/app/vmaas_sync
 ADD /docs       /go/src/app/docs
 ADD /scripts    /go/src/app/scripts
