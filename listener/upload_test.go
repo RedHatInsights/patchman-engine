@@ -2,6 +2,7 @@ package listener
 
 import (
 	"app/base/core"
+	"app/base/database"
 	"app/base/utils"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/stretchr/testify/assert"
@@ -89,7 +90,8 @@ func TestUploadHandler(t *testing.T) {
 	uploadHandler(event)
 
 	assertSystemInDb(t)
-
+	database.CheckAdvisoriesInDb(t, []string{"ER1", "ER2", "ER3"})
+	database.CheckSystemAdvisoriesFirstReportedGreater(t, "2020-01-01", 3)
 	deleteData(t)
 }
 

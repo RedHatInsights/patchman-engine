@@ -3,6 +3,7 @@ package models
 import (
 	"app/base/core"
 	"app/base/database"
+	"app/base/models"
 	"app/base/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -13,8 +14,8 @@ func TestSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	var systemAdvisories []SystemAdvisories
-	err := database.Db.Model(SystemAdvisories{}).Preload("Advisory").
+	var systemAdvisories []models.SystemAdvisories
+	err := database.Db.Model(models.SystemAdvisories{}).Preload("Advisory").
 		Where("system_id = ?", 0).Find(&systemAdvisories).Error
 	assert.Nil(t, err)
 	assert.Equal(t, 8, len(systemAdvisories))

@@ -14,6 +14,8 @@ const id = "TEST-00000"
 
 func deleteData(t *testing.T) {
 	// Delete test data from previous run
+	assert.Nil(t, database.Db.Unscoped().Where("first_reported > timestamp '2020-01-01'").Delete(&models.SystemAdvisories{}).Error)
+	assert.Nil(t, database.Db.Unscoped().Where("name IN ('ER1', 'ER2', 'ER3')").Delete(&models.AdvisoryMetadata{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("inventory_id = ?", id).Delete(&models.SystemPlatform{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("name = ?", id).Delete(&models.RhAccount{}).Error)
 }
@@ -80,5 +82,3 @@ func TestParseEvents(t *testing.T) {
 
 	assert.True(t, reached,"Event handler should have been called")
 }
-
-

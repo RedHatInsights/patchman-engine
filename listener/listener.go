@@ -3,6 +3,7 @@ package listener
 import (
 	"app/base"
 	"app/base/utils"
+	"app/evaluator"
 	"app/manager/middlewares"
 	"context"
 	"encoding/json"
@@ -49,6 +50,8 @@ func configure() {
 	inventoryConfig.Debug = traceApi
 	inventoryConfig.BasePath = inventoryAddr + base.INVENTORY_API_PREFIX
 	inventoryClient = inventory.NewAPIClient(inventoryConfig)
+
+	evaluator.Configure() // TODO - move to evaluator component
 }
 
 func shutdown(reader *kafka.Reader) {
