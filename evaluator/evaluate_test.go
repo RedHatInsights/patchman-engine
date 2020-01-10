@@ -117,7 +117,7 @@ func TestEnsureAdvisoriesInDb(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 2, nCreated)
 	assert.Equal(t, 4, len(*advisoryIDs))
-	checkAdvisoriesInDb(t, advisories)
+	database.CheckAdvisoriesInDb(t, advisories)
 	deleteTestingAdvisories(t, []string{"ER-1", "ER-2"})
 }
 
@@ -144,7 +144,7 @@ func TestEvaluate(t *testing.T) {
 	systemID := 11
 	expectedAddedAdvisories := []string{"ER1", "ER2", "ER3"}
 	Evaluate(systemID, context.Background(), vmaas.UpdatesRequest{})
-	ids := checkAdvisoriesInDb(t, expectedAddedAdvisories)
+	ids := database.CheckAdvisoriesInDb(t, expectedAddedAdvisories)
 
 	checkSystemAdvisoriesWhenPatched(t, systemID, ids, nil)
 
@@ -213,18 +213,6 @@ func deleteTestingSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int
 		Find(&systemAdvisories).Error
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(systemAdvisories))
-}
-
-func checkAdvisoriesInDb(t *testing.T, advisories []string) []int {
-	var advisoriesObjs []models.AdvisoryMetadata
-	err := database.Db.Where("name IN (?)", advisories).Find(&advisoriesObjs).Error
-	assert.Nil(t, err)
-	assert.Equal(t, len(advisoriesObjs), len(advisories))
-	var ids []int
-	for _, advisoryObj := range advisoriesObjs {
-		ids = append(ids, advisoryObj.ID)
-	}
-	return ids
 }
 
 func deleteTestingAdvisories(t *testing.T, advisories []string) {
