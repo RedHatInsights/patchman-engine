@@ -92,3 +92,24 @@ func TestAdvisoriesOffsetOverflow(t *testing.T) {
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "too big offset", errResp.Error)
 }
+
+
+func TestAdvisoriesOrder(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?sort=-public_date", nil)
+	initRouter(AdvisoriesListHandler).ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output AdvisoriesResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	// Advisoiry RH-7 has latest public date
+	assert.Equal(t, 8, len(output.Data))
+	assert.Equal(t, "RH-7", output.Data[0].Id)
+	assert.Equal(t, "advisory", output.Data[0].Type)
+	assert.Equal(t, "2017-09-22 19:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
+	assert.Equal(t, "adv-7-des", output.Data[0].Attributes.Description)
+	assert.Equal(t, "adv-7-syn", output.Data[0].Attributes.Synopsis)
+}

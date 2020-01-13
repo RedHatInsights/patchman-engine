@@ -30,8 +30,15 @@ func AdvisoriesListHandler(c *gin.Context) {
 		return
 	}
 
+	query := database.Db.Model(models.AdvisoryMetadata{})
+	query, err = ApplySort(c, query, "public_date")
+	if err != nil {
+		LogAndRespError(c, err, "db error")
+		return
+	}
+
 	var total int
-	err = database.Db.Model(models.AdvisoryMetadata{}).Count(&total).Error
+	err = query.Count(&total).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return
@@ -43,7 +50,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 	}
 
 	var advisories []models.AdvisoryMetadata
-	err = database.Db.Limit(limit).Offset(offset).Find(&advisories).Error
+	err = query.Limit(limit).Offset(offset).Find(&advisories).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return

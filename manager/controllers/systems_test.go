@@ -42,7 +42,7 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, 0, output.Meta.Page)
 	assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
 	assert.Equal(t, core.DefaultLimit, output.Meta.PageSize)
-	assert.Equal(t, 12, output.Meta.TotalItems)
+	assert.Equal(t, 8, output.Meta.TotalItems)
 	assert.Equal(t, true, output.Meta.Enabled)
 }
 
@@ -62,7 +62,7 @@ func TestSystemsOffsetLimit(t *testing.T) {
 	assert.Equal(t, 0, output.Meta.Page)
 	assert.Equal(t, 4, output.Meta.Limit)
 	assert.Equal(t, 4, output.Meta.PageSize)
-	assert.Equal(t, 12, output.Meta.TotalItems)
+	assert.Equal(t, 8, output.Meta.TotalItems)
 	assert.Equal(t, true, output.Meta.Enabled)
 }
 
@@ -82,7 +82,7 @@ func TestSystemsOffset(t *testing.T) {
 	assert.Equal(t, 1, output.Meta.Page)
 	assert.Equal(t, 4, output.Meta.Limit)
 	assert.Equal(t, 4, output.Meta.PageSize)
-	assert.Equal(t, 12, output.Meta.TotalItems)
+	assert.Equal(t, 8, output.Meta.TotalItems)
 	assert.Equal(t, true, output.Meta.Enabled)
 }
 

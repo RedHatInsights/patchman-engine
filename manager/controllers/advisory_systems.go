@@ -61,6 +61,12 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 		Where("ra.name = ?", account).
 		Where("am.name = ?", advisoryName)
 
+	query, err = ApplySort(c, query)
+	if err != nil {
+		LogAndRespError(c, err, err.Error())
+		return
+	}
+
 	var total int
 	err = query.Count(&total).Error
 	if err != nil {
@@ -90,9 +96,9 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 	links := CreateLinks("/api/patch/v1/advisories/$ADVISORY_ID/systems", offset, limit, total,
 		"&data_format=json")
 	var resp = AdvisorySystemsResponse{
-		Data: *data,
+		Data:  *data,
 		Links: links,
-		Meta: *meta,
+		Meta:  *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
 }
@@ -100,26 +106,31 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 func buildAdvisorySystemsData(dbItems *[]models.SystemPlatform) *[]SystemItem {
 	var data []SystemItem
 	for _, model := range *dbItems {
-		item := SystemItem{Id: model.InventoryID, Type: "system", Attributes: SystemItemAttributes{
-			LastUpload: model.LastUpload, Enabled: !model.OptOut, RhsaCount: model.AdvisoryCountCache,
-		}}
+		item := SystemItem{
+			Id:   model.InventoryID,
+			Type: "system",
+			Attributes: SystemItemAttributes{
+				LastUpload: model.LastUpload,
+				Enabled:    !model.OptOut,
+				RhsaCount:  model.AdvisoryCountCache,
+			}}
 		data = append(data, item)
 	}
 	return &data
 }
 
-func buildAdvisorySystemsMeta(limit, offset, total int, advisoryName string) *AdvisorySystemsMeta{
+func buildAdvisorySystemsMeta(limit, offset, total int, advisoryName string) *AdvisorySystemsMeta {
 	meta := AdvisorySystemsMeta{
-			DataFormat: "json",
-			Filter: nil,
-			Limit: limit,
-			Offset: offset,
-			Advisory: advisoryName,
-			Page: offset / limit,
-			PageSize: limit,
-			Pages: total / limit,
-			Enabled: true,
-			TotalItems: total,
-		}
+		DataFormat: "json",
+		Filter:     nil,
+		Limit:      limit,
+		Offset:     offset,
+		Advisory:   advisoryName,
+		Page:       offset / limit,
+		PageSize:   limit,
+		Pages:      total / limit,
+		Enabled:    true,
+		TotalItems: total,
+	}
 	return &meta
 }
