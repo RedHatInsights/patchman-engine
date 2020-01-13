@@ -147,6 +147,7 @@ func TestEvaluate(t *testing.T) {
 	ids := database.CheckAdvisoriesInDb(t, expectedAddedAdvisories)
 
 	checkSystemAdvisoriesWhenPatched(t, systemID, ids, nil)
+	database.CheckSystemJustEvaluated(t, "INV-11", 3, 0, 0, 0)
 
 	deleteTestingSystemAdvisories(t, systemID, ids)
 	deleteTestingAdvisories(t, expectedAddedAdvisories)
@@ -213,6 +214,7 @@ func deleteTestingSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int
 		Find(&systemAdvisories).Error
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(systemAdvisories))
+	assert.Nil(t, database.Db.Exec("SELECT * FROM update_system_caches(?)", systemID).Error)
 }
 
 func deleteTestingAdvisories(t *testing.T, advisories []string) {

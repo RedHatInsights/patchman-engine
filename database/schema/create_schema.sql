@@ -158,6 +158,31 @@ $opt_out_system_update_cache$
 $opt_out_system_update_cache$
   LANGUAGE 'plpgsql';
 
+-- update system advisories counts (all and according types)
+CREATE OR REPLACE FUNCTION update_system_caches(system_id_in INT)
+RETURNS VOID AS
+$update_system_caches$
+  BEGIN
+    WITH to_update_systems AS (
+      SELECT sp.id
+      FROM system_platform sp
+      WHERE sp.id = system_id_in
+      ORDER BY sp.rh_account_id, sp.id
+      FOR UPDATE OF sp
+    )
+    UPDATE system_platform sp SET
+    advisory_count_cache = (
+      SELECT COUNT(advisory_id) FROM system_advisories sa
+      WHERE sa.system_id = sp.id AND sa.when_patched IS NULL
+    ),
+    advisory_enh_count_cache = system_advisories_count(sp.id, 1),
+    advisory_bug_count_cache = system_advisories_count(sp.id, 2),
+    advisory_sec_count_cache = system_advisories_count(sp.id, 3)
+    FROM to_update_systems;
+  END;
+$update_system_caches$
+  LANGUAGE 'plpgsql';
+
 -- count system advisories according to advisory type
 CREATE OR REPLACE FUNCTION system_advisories_count(system_id_in INT, advisory_type_id_in INT)
 RETURNS INT AS

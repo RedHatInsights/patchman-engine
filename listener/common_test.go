@@ -34,8 +34,6 @@ func assertSystemInDb(t *testing.T) {
 	assert.True(t, system.LastUpdated.After(now), "Last updated")
 	assert.True(t, system.UnchangedSince.After(now), "Unchanged since")
 	assert.True(t, system.LastUpload.After(now), "Last upload")
-	// Last eval should be nil, system has not yet been evaluated
-	assert.Nil(t, system.LastEvaluation)
 }
 
 func assertSystemNotInDb(t *testing.T) {
