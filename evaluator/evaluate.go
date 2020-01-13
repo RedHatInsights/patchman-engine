@@ -47,6 +47,21 @@ func Evaluate(systemID int, ctx context.Context, updatesReq vmaas.UpdatesRequest
 		return
 	}
 
+	err = tx.Exec("SELECT * FROM update_system_caches(?)", systemID).Error
+	if err != nil {
+		tx.Rollback()
+		utils.Log("err", err.Error()).Error("Unable to update system caches")
+		return
+	}
+
+	err = tx.Model(&models.SystemPlatform{}).Where("id = ?", systemID).
+		Update("last_evaluation", time.Now()).Error
+	if err != nil {
+		tx.Rollback()
+		utils.Log("err", err.Error()).Error("Unable to update last_evaluation timestamp")
+		return
+	}
+
 	tx.Commit()
 }
 
