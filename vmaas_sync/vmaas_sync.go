@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	prometheus.MustRegister(messagesReceivedCnt)
+	prometheus.MustRegister(messagesReceivedCnt, vmaasCallCnt, storeAdvisoriesCnt)
 }
 
 func runMetrics() {

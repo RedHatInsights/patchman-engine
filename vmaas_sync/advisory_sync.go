@@ -121,10 +121,11 @@ func syncAdvisories() error {
 		}
 
 		data, _, err := vmaasClient.ErrataApi.AppErrataHandlerPostPost(ctx, &opts)
-
 		if err != nil {
+			vmaasCallCnt.WithLabelValues("error-download-errata").Inc()
 			return errors.WithMessage(err, "Downloading erratas")
 		}
+		vmaasCallCnt.WithLabelValues("success").Inc()
 
 		maxPageIdx = int(data.Pages)
 		pageIdx += 1
@@ -133,8 +134,10 @@ func syncAdvisories() error {
 
 		err = storeAdvisories(data.ErrataList)
 		if err != nil {
+			storeAdvisoriesCnt.WithLabelValues("error").Add(float64(len(data.ErrataList)))
 			return errors.WithMessage(err, "Storing advisories")
 		}
+		storeAdvisoriesCnt.WithLabelValues("success").Add(float64(len(data.ErrataList)))
 	}
 	return nil
 }
