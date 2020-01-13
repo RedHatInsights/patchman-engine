@@ -45,8 +45,18 @@ func SystemsListHandler(c *gin.Context) {
 		return
 	}
 
+	query := database.Db.Model(models.SystemPlatform{}).
+		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
+		Where("ra.name = ?", account)
+
+	query, err = ApplySort(c, query)
+	if err != nil {
+		LogAndRespError(c, err, err.Error())
+		return
+	}
+
 	var total int
-	err = database.Db.Model(models.SystemPlatform{}).Count(&total).Error
+	err = query.Count(&total).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return
@@ -58,12 +68,7 @@ func SystemsListHandler(c *gin.Context) {
 	}
 
 	var systems []models.SystemPlatform
-
-	err = database.Db.
-		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
-		Where("ra.name = ?", account).
-		Limit(limit).Offset(offset).Find(&systems).Error
-
+	err = query.Limit(limit).Offset(offset).Find(&systems).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return

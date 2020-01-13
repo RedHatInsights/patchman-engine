@@ -45,6 +45,12 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		Joins("inner join rh_account ra on sp.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
 
+	query, err = ApplySort(c, query)
+	if err != nil {
+		LogAndRespError(c, err, err.Error())
+		return
+	}
+
 	var total int
 	err = query.Count(&total).Error
 	if err != nil {
