@@ -9,16 +9,8 @@ import (
 	"time"
 )
 
-var (
-	messagesReceived = prometheus.NewCounter(prometheus.CounterOpts{
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
-		Name:      "websocket_msgs",
-	})
-)
-
 func init() {
-	prometheus.MustRegister(messagesReceived)
+	prometheus.MustRegister(messagesReceivedCnt)
 }
 
 func runMetrics() {
@@ -44,27 +36,39 @@ func runWebsocket(conn *websocket.Conn, handler Handler) error {
 	}
 
 	for {
-		messagesReceived.Add(1)
 		typ, msg, err := conn.ReadMessage()
 		if err != nil {
 			utils.Log("err", err.Error()).Fatal("Failed to retrive VMaaS websocket message")
+			messagesReceivedCnt.WithLabelValues("error-read-msg").Inc()
 			return err
 		}
+		utils.Log("messageType", typ).Info("websocket message received")
+
 		if typ == websocket.BinaryMessage || typ == websocket.TextMessage {
 			err = handler(msg, conn)
 			if err != nil {
+				messagesReceivedCnt.WithLabelValues("error-handled").Inc()
 				return err
 			}
+			messagesReceivedCnt.WithLabelValues("handled").Inc()
+			continue
 		}
+
 		if typ == websocket.PingMessage {
 			err = conn.WriteMessage(websocket.PongMessage, msg)
 			if err != nil {
+				messagesReceivedCnt.WithLabelValues("error-ping-pong").Inc()
 				return err
 			}
+			messagesReceivedCnt.WithLabelValues("ping-pong").Inc()
+			continue
 		}
+
 		if typ == websocket.CloseMessage {
+			messagesReceivedCnt.WithLabelValues("close").Inc()
 			return nil
 		}
+		messagesReceivedCnt.WithLabelValues("unhandled").Inc()
 	}
 }
 
