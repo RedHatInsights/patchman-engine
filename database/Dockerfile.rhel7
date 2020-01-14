@@ -1,5 +1,13 @@
 FROM registry.access.redhat.com/rhscl/postgresql-10-rhel7
 
 # ADD init scripts
+RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.8.0/migrate.linux-amd64.tar.gz \
+ | tar xvz -C . && mv migrate.linux-amd64 migrate
+
+ADD database/migrations/*.sql ${CONTAINER_SCRIPTS_PATH}/migrations/
+ADD database/*.sh ${CONTAINER_SCRIPTS_PATH}/
+
 ADD database/schema/*.sql ${CONTAINER_SCRIPTS_PATH}/start/
 ADD database/schema/*.sh ${CONTAINER_SCRIPTS_PATH}/start/
+
+

@@ -1,0 +1,10 @@
+drop table timestamp_kv;
+drop table system_repo;
+drop table repo;
+drop table advisory_account_data;
+drop table system_advisories;
+drop table status;
+drop table advisory_metadata;
+drop table advisory_type;
+drop table system_platform;
+drop table rh_account;
