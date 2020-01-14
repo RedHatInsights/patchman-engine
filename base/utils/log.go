@@ -18,6 +18,7 @@ func ConfigureLogging() {
 	if style == "json" {
 		initJSONLogStyle()
 	}
+	trySetupCloudWatchLogging()
 }
 
 // implement Log function to enable additional log fields
