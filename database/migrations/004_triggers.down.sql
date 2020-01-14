@@ -1,0 +1,7 @@
+DROP TRIGGER system_platform_set_first_reported ON system_platform;
+
+DROP TRIGGER system_platform_set_last_updated ON system_platform;
+
+DROP TRIGGER system_platform_check_unchanged ON system_platform;
+
+DROP TRIGGER system_advisories_set_first_reported ON system_advisories;
