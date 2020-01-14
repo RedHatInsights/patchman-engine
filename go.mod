@@ -7,6 +7,7 @@ require (
 	github.com/RedHatInsights/patchman-clients/inventory v0.0.0-20200108130128-e981e26237b1
 	github.com/RedHatInsights/patchman-clients/vmaas v0.0.0-20200108130128-e981e26237b1
 	github.com/antihax/optional v1.0.0
+	github.com/aws/aws-sdk-go v1.28.1
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/frankban/quicktest v1.6.0 // indirect
 	github.com/getkin/kin-openapi v0.2.0
@@ -27,6 +28,7 @@ require (
 	github.com/pierrec/lz4 v2.3.0+incompatible // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v1.3.0
+	github.com/redhatinsights/platform-go-middlewares v0.7.0
 	github.com/segmentio/kafka-go v0.3.4
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.4.0
