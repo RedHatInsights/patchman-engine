@@ -128,8 +128,8 @@ func wshandler(w http.ResponseWriter, r *http.Request, ) {
 
 func InitVMaaS(app *gin.Engine) {
 	// Mock updates endpoint for VMaaS
-	app.GET("/api/v2/updates", updatesHandler)
-	app.POST("/api/v2/updates", updatesHandler)
+	app.GET("/api/v3/updates", updatesHandler)
+	app.POST("/api/v3/updates", updatesHandler)
 	// Mock erratas endpoint for VMaaS
 	app.POST("/api/v1/errata", erratasHandler)
 	// Mock websocket endpoint for VMaaS
