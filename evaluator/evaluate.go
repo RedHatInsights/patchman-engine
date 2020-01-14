@@ -28,12 +28,12 @@ func Configure() {
 	vmaasClient = vmaas.NewAPIClient(vmaasConfig)
 }
 
-func Evaluate(systemID int, ctx context.Context, updatesReq vmaas.UpdatesRequest) {
-	vmaasCallArgs := vmaas.AppUpdatesHandlerV2PostPostOpts{
-		UpdatesRequest: optional.NewInterface(updatesReq),
+func Evaluate(systemID int, ctx context.Context, updatesReq vmaas.UpdatesV3Request) {
+	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{
+		UpdatesV3Request: optional.NewInterface(updatesReq),
 	}
 
-	vmaasData, _, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV2PostPost(ctx, &vmaasCallArgs)
+	vmaasData, _, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(ctx, &vmaasCallArgs)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Unable to get updates from VMaaS")
 		return

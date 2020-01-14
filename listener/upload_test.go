@@ -31,7 +31,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	deleteData(t)
 
 	accountId := getOrCreateTestAccount(t)
-	req := vmaas.UpdatesRequest{
+	req := vmaas.UpdatesV3Request{
 		PackageList:    []string{"package0"},
 		RepositoryList: []string{},
 		ModulesList:    []vmaas.UpdatesRequestModulesList{},

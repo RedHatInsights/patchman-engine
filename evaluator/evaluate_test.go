@@ -143,7 +143,7 @@ func TestEvaluate(t *testing.T) {
 
 	systemID := 11
 	expectedAddedAdvisories := []string{"ER1", "ER2", "ER3"}
-	Evaluate(systemID, context.Background(), vmaas.UpdatesRequest{})
+	Evaluate(systemID, context.Background(), vmaas.UpdatesV3Request{})
 	ids := database.CheckAdvisoriesInDb(t, expectedAddedAdvisories)
 
 	checkSystemAdvisoriesWhenPatched(t, systemID, ids, nil)
@@ -154,8 +154,8 @@ func TestEvaluate(t *testing.T) {
 }
 
 func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {
-	vmaasCallArgs := vmaas.AppUpdatesHandlerV2PostPostOpts{}
-	vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV2PostPost(context.Background(), &vmaasCallArgs)
+	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{}
+	vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(context.Background(), &vmaasCallArgs)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	return vmaasData

@@ -61,7 +61,7 @@ func getOrCreateAccount(account string) (int, error) {
 }
 
 // Stores or updates base system profile, returing internal system id
-func updateSystemPlatform(inventoryId string, accountId int, updatesReq *vmaas.UpdatesRequest) (int, error) {
+func updateSystemPlatform(inventoryId string, accountId int, updatesReq *vmaas.UpdatesV3Request) (int, error) {
 	updatesReqJSON, err := json.Marshal(&updatesReq)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Serializing vmaas request")
@@ -123,9 +123,24 @@ func hostUploadReceived(hostId string, account string, identity string) {
 		return
 	}
 
+	var modules []vmaas.UpdatesRequestModulesList
+	for _, m := range host.SystemProfile.DnfModules {
+		modules = append(modules, vmaas.UpdatesRequestModulesList{
+			ModuleName:   m.Name,
+			ModuleStream: m.Stream,
+		})
+	}
+	repos := []string{}
+	for _, r := range host.SystemProfile.YumRepos {
+		repos = append(repos, r.Id)
+	}
 	// Prepare VMaaS request
-	updatesReq := vmaas.UpdatesRequest{
-		PackageList: host.SystemProfile.InstalledPackages,
+	updatesReq := vmaas.UpdatesV3Request{
+		PackageList:    host.SystemProfile.InstalledPackages,
+		Basearch:       host.SystemProfile.Arch,
+		ModulesList:    modules,
+		RepositoryList: repos,
+		SecurityOnly:   false,
 	}
 
 	systemId, err := updateSystemPlatform(host.Id, accountId, &updatesReq)
