@@ -33,6 +33,9 @@ func configure() {
 		GroupID:  kafkaGroup,
 		MinBytes: 1,
 		MaxBytes: 10e6, // 1MB
+		ErrorLogger: kafka.LoggerFunc(func(fmt string, args ...interface{}) {
+			utils.Log("type", "kafka").Errorf(fmt, args)
+		}),
 	}
 
 	uploadReader = kafka.NewReader(uploadConfig)
