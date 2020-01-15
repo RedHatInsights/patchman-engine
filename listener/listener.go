@@ -10,6 +10,7 @@ import (
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/gin-gonic/gin"
 	"github.com/segmentio/kafka-go"
+	"time"
 )
 
 var (
@@ -33,6 +34,7 @@ func configure() {
 		GroupID:  kafkaGroup,
 		MinBytes: 1,
 		MaxBytes: 10e6, // 1MB
+		MaxWait:  time.Second * 30,
 		ErrorLogger: kafka.LoggerFunc(func(fmt string, args ...interface{}) {
 			utils.Log("type", "kafka").Errorf(fmt, args)
 		}),
