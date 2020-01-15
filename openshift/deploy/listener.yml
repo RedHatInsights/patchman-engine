@@ -66,6 +66,19 @@ objects:
                     secretKeyRef:
                       name:  patchman-engine-database-passwords
                       key: listener-database-password
+                - { name: CW_AWS_REGION, value: us-east-1 }
+                - { name: CW_AWS_LOG_GROUP, value: platform-dev }
+                - { name: CW_AWS_LOG_STREAM, value: patchman-engine-listener }
+                - name: CW_AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: cloudwatch
+                      key: CW_AWS_ACCESS_KEY_ID
+                - name: CW_AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: cloudwatch
+                      key: CW_AWS_SECRET_ACCESS_KEY
 
           dnsPolicy: ClusterFirst
           restartPolicy: Always
