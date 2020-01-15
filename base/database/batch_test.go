@@ -23,9 +23,8 @@ func TestBatchInsert(t *testing.T) {
 	Db.AutoMigrate(&TestTable{})
 	Db.Unscoped().Delete(&TestTable{})
 
-	arr := defaultValues.MakeInterfaceSlice()
 
-	err := BulkInsert(Db, arr)
+	err := BulkInsert(Db, defaultValues)
 	assert.Nil(t, err)
 
 	var res []TestTable
@@ -45,9 +44,8 @@ func TestBatchInsertChunked(t *testing.T) {
 	Db.AutoMigrate(&TestTable{})
 	Db.Unscoped().Delete(&TestTable{})
 
-	arr := defaultValues.MakeInterfaceSlice()
 
-	err := BulkInsertChunk(Db, arr, 2)
+	err := BulkInsertChunk(Db.Debug(), defaultValues, 2)
 	assert.Nil(t, err)
 
 	var res []TestTable
@@ -68,10 +66,9 @@ func TestBatchInsertOnConflictUpdate(t *testing.T) {
 	db.AutoMigrate(&TestTable{})
 	db.Unscoped().Delete(&TestTable{}, "true")
 
-	arr := defaultValues.MakeInterfaceSlice()
 
 	// Perform first insert
-	err := BulkInsert(db, arr)
+	err := BulkInsert(db, defaultValues)
 	assert.Nil(t, err)
 
 	var outputs []TestTable
@@ -84,11 +81,10 @@ func TestBatchInsertOnConflictUpdate(t *testing.T) {
 
 		outputs[i].Name = ""
 	}
-	arr = TestTableSlice(outputs).MakeInterfaceSlice()
 
 	// Try to re-insert, and update values
 	db = OnConflictUpdate(db, "id", "name", "email")
-	err = BulkInsert(db, arr)
+	err = BulkInsert(db, outputs)
 	assert.Nil(t, err)
 
 	// Re-load data from database
