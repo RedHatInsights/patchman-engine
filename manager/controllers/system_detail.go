@@ -28,7 +28,7 @@ func SystemDetailHandler(c *gin.Context) {
 
 	inventoryId := c.Param("inventory_id")
 	if inventoryId == "" {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{"inventory_id param not found"})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
 		return
 	}
 
@@ -61,5 +61,4 @@ func SystemDetailHandler(c *gin.Context) {
 	        Type: "system",
 		}}
 	c.JSON(http.StatusOK, &resp)
-	return
 }

@@ -83,16 +83,6 @@ func loadEnvPostgreSQLConfig() *PostgreSQLConfig {
 	return &config
 }
 
-// create config string from additional timeout params
-func timeoutParams(dbConfig *PostgreSQLConfig) string {
-	return fmt.Sprintf(
-		"?sql_mode=TRADITIONAL&timeout=%s&readTimeout=%s&writeTimeout=%s&parseTime=true",
-		dbConfig.Timeout,
-		dbConfig.ReadTimeout,
-		dbConfig.WriteTimeout,
-	)
-}
-
 // create "data source" config string needed for database connection opening
 func dataSourceName(dbConfig *PostgreSQLConfig) string {
 	return fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=disable",

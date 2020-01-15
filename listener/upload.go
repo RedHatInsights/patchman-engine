@@ -69,7 +69,12 @@ func updateSystemPlatform(inventoryId string, accountId int, updatesReq *vmaas.U
 	}
 
 	hash := sha256.New()
-	hash.Write(updatesReqJSON)
+	_, err = hash.Write(updatesReqJSON)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("Unable to hash updates json")
+		return 0, err
+	}
+
 	jsonChecksum := hex.EncodeToString(hash.Sum([]byte{}))
 
 	now := time.Now()

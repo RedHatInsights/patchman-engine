@@ -37,7 +37,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 
 	inventoryId := c.Param("inventory_id")
 	if inventoryId == "" {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{"inventory_id param not found"})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
 		return
 	}
 
@@ -53,7 +53,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	}
 
 	if offset > total {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{"too big offset"})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "too big offset"})
 		return
 	}
 
@@ -79,7 +79,6 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		Meta: *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
-	return
 }
 
 func buildSystemAdvisoriesData(models *[]models.SystemAdvisories) *[]AdvisoryItem {

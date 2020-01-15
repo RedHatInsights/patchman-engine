@@ -90,10 +90,10 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 	}
 
 	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary", "solution", "public_date", "modified_date", "url")
-	errors := database.BulkInsertChunk(tx, advisories.ToInterfaceSlice(), SYNC_BATCH_SIZE)
+	errs := database.BulkInsertChunk(tx, advisories.ToInterfaceSlice(), SYNC_BATCH_SIZE)
 
-	if errors != nil && len(errors) > 0 {
-		return errors[0]
+	if len(errs) > 0 {
+		return errs[0]
 	}
 	return nil
 

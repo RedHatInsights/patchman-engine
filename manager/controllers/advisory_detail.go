@@ -45,7 +45,7 @@ type AdvisoryDetailAttributes struct {
 func AdvisoryDetailHandler(c *gin.Context) {
 	advisoryName := c.Param("advisory_id")
 	if advisoryName == "" {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{"advisory_id param not found"})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "advisory_id param not found"})
 		return
 	}
 
@@ -79,5 +79,4 @@ func AdvisoryDetailHandler(c *gin.Context) {
 	        Type: "advisory",
 		}}
 	c.JSON(http.StatusOK, &resp)
-	return
 }

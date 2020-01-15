@@ -50,7 +50,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 
 	advisoryName := c.Param("advisory_id")
 	if advisoryName == "" {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{"advisory_id param not found"})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "advisory_id param not found"})
 		return
 	}
 
@@ -69,7 +69,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 	}
 
 	if offset > total {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{"too big offset"})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "too big offset"})
 		return
 	}
 
@@ -95,7 +95,6 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 		Meta: *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
-	return
 }
 
 func buildAdvisorySystemsData(dbItems *[]models.SystemPlatform) *[]SystemItem {
