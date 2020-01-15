@@ -64,14 +64,6 @@ func (AdvisoryMetadata) TableName() string {
 
 type AdvisoryMetadataSlice []AdvisoryMetadata
 
-func (t AdvisoryMetadataSlice) ToInterfaceSlice() []interface{} {
-	res := make([]interface{}, len(t))
-	for i, v := range t {
-		res[i] = v
-	}
-	return res
-}
-
 type SystemAdvisories struct {
 	ID            int
 	SystemID      int
@@ -85,6 +77,7 @@ type SystemAdvisories struct {
 func (SystemAdvisories) TableName() string {
 	return "system_advisories"
 }
+type SystemAdvisoriesSlice []SystemAdvisories
 
 type AdvisoryAccountData struct {
 	AdvisoryID             int
@@ -98,26 +91,7 @@ func (AdvisoryAccountData) TableName() string {
 	return "advisory_account_data"
 }
 
-type SystemAdvisoriesSlice []SystemAdvisories
-
-func (t SystemAdvisoriesSlice) ToInterfaceSlice() []interface{} {
-	res := make([]interface{}, len(t))
-	for i, v := range t {
-		res[i] = v
-	}
-	return res
-}
-
 type AdvisoryAccountDataSlice []AdvisoryAccountData
-
-func (t AdvisoryAccountDataSlice) ToInterfaceSlice() []interface{} {
-	res := make([]interface{}, len(t))
-	for i, v := range t {
-		res[i] = v
-	}
-	return res
-}
-
 type Repo struct {
 	ID   int
 	Name string
