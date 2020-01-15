@@ -185,7 +185,7 @@ func ensureAdvisoriesInDb(tx *gorm.DB, advisories []string) (*[]int, error) {
 	}
 
 	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
-	err := database.BulkInsert(txOnConflict, advisoryObjs.ToInterfaceSlice())
+	err := database.BulkInsert(txOnConflict, advisoryObjs)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +206,7 @@ func ensureSystemAdvisories(tx *gorm.DB, systemID int, advisoryIDs []int) error 
 			models.SystemAdvisories{SystemID: systemID, AdvisoryID: advisoryID})
 	}
 
-	interfaceSlice := advisoriesObjs.ToInterfaceSlice()
+	interfaceSlice := advisoriesObjs
 	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
 	err := database.BulkInsert(txOnConflict, interfaceSlice)
 	return err
@@ -219,7 +219,7 @@ func ensureAdvisoryAccountDataInDb(tx *gorm.DB, rhAccountID int, advisoryIDs []i
 	}
 
 	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
-	err := database.BulkInsert(txOnConflict, accountData.ToInterfaceSlice())
+	err := database.BulkInsert(txOnConflict, accountData)
 	return err
 }
 

@@ -83,13 +83,14 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 	if err != nil {
 		return errors.WithMessage(err, "Parsing advisories")
 	}
+
 	if advisories == nil || len(advisories) == 0 {
 		return nil
 	}
 
 	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary",
 		"solution", "public_date", "modified_date", "url")
-	errs := database.BulkInsertChunk(tx, advisories.ToInterfaceSlice(), SyncBatchSize)
+	errs := database.BulkInsertChunk(tx, advisories, SyncBatchSize)
 
 	if len(errs) > 0 {
 		return errs[0]
