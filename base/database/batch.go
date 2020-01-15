@@ -19,24 +19,32 @@ import (
 // nolint: gochecknoglobals
 var bulkNow time.Time
 
-func BulkInsert(db *gorm.DB, objects []interface{}) error {
+func BulkInsert(db *gorm.DB, objects interface{}) error {
 	return bulkExec(db, objects)
 }
 
 // BulkInsertChunk will split the objects passed into the passed chunk size. A
 // slice of errors will be returned (if any).
-func BulkInsertChunk(db *gorm.DB, objects []interface{}, chunkSize int) []error {
+func BulkInsertChunk(db *gorm.DB, objects interface{}, chunkSize int) []error {
 	var allErrors []error
 
-	for {
-		var chunkObjects []interface{}
+	if reflect.TypeOf(objects).Kind() != reflect.Slice {
+		return []error{errors.New("objects arg is not a slice")}
+	}
 
-		if len(objects) <= chunkSize {
-			chunkObjects = objects
-			objects = []interface{}{}
+	// Reflect the objects array into generic value
+	v := reflect.ValueOf(objects)
+
+	for {
+		var chunkObjects interface{}
+
+		if v.Len() <= chunkSize {
+			chunkObjects = v.Interface()
+			v = reflect.ValueOf([]interface{}{})
 		} else {
-			chunkObjects = objects[:chunkSize]
-			objects = objects[chunkSize:]
+			chunkObjects = v.Slice(0, chunkSize).Interface()
+			// TODO: Check whether -1 should not be here
+			v = v.Slice(chunkSize, v.Len())
 		}
 
 		if err := bulkExec(db, chunkObjects); err != nil {
@@ -44,7 +52,7 @@ func BulkInsertChunk(db *gorm.DB, objects []interface{}, chunkSize int) []error 
 		}
 
 		// Nothing more to do
-		if len(objects) < 1 {
+		if v.Len() < 1 {
 			break
 		}
 	}
@@ -57,7 +65,7 @@ func BulkInsertChunk(db *gorm.DB, objects []interface{}, chunkSize int) []error 
 }
 
 // bulkExec will convert a slice of interfaces to bulk SQL statement.
-func bulkExec(db *gorm.DB, objects []interface{}) error {
+func bulkExec(db *gorm.DB, objects interface{}) error {
 	scope, err := scopeFromObjects(db, objects)
 	if err != nil {
 		return err
@@ -71,12 +79,23 @@ func bulkExec(db *gorm.DB, objects []interface{}) error {
 	return db.Exec(scope.SQL, scope.SQLVars...).Error
 }
 
-func scopeFromObjects(db *gorm.DB, objects []interface{}) (*gorm.Scope, error) {
-	if len(objects) < 1 {
+func scopeFromObjects(db *gorm.DB, objects interface{}) (*gorm.Scope, error) {
+	if reflect.TypeOf(objects).Kind() != reflect.Slice {
+		return nil, errors.New("objects arg is not a slice")
+	}
+	// Reflect the objects array into generic value
+	v := reflect.ValueOf(objects)
+	//elemType := reflect.TypeOf(objects).Elem()
+
+	if v.Len() < 1 {
 		return nil, nil
 	}
+	// Retrieve 0th element as an interface
+	firstElem := v.Index(0).Interface()
 
-	scope := db.NewScope(objects[0])
+	var (
+		scope = db.NewScope(firstElem)
+	)
 
 	// Ensure we set the correct time and reset it after we're done.
 	bulkNow = gorm.NowFunc()
@@ -87,7 +106,7 @@ func scopeFromObjects(db *gorm.DB, objects []interface{}) (*gorm.Scope, error) {
 
 	// Get a map of the first element to calculate field names and number of
 	// placeholders.
-	firstObjectFields, err := objectToMap(objects[0])
+	firstObjectFields, err := objectToMap(firstElem)
 	if err != nil {
 		return nil, err
 	}
@@ -103,8 +122,10 @@ func scopeFromObjects(db *gorm.DB, objects []interface{}) (*gorm.Scope, error) {
 		quotedColumnNames[i] = scope.Quote(gorm.ToColumnName(columnNames[i]))
 	}
 
-	groups := make([]string, 0, len(objects))
-	for _, r := range objects {
+	groups := make([]string, 0, v.Len())
+	for i := 0; i < v.Len(); i++ {
+		// Retrieve ith element as an interface
+		r := v.Index(i).Interface()
 		objectScope := db.NewScope(r)
 
 		row, err := objectToMap(r)
@@ -116,10 +137,7 @@ func scopeFromObjects(db *gorm.DB, objects []interface{}) (*gorm.Scope, error) {
 			objectScope.AddToVars(row[key])
 		}
 
-		groups = append(
-			groups,
-			fmt.Sprintf("(%s)", strings.Join(placeholders, ", ")),
-		)
+		groups[i] = fmt.Sprintf("(%s)", strings.Join(placeholders, ", "))
 
 		// Add object vars to the outer scope vars
 		scope.SQLVars = append(scope.SQLVars, objectScope.SQLVars...)
@@ -163,7 +181,10 @@ func insertFunc(scope *gorm.Scope, columnNames, groups []string) {
 		strings.Join(columnNames, ", "),
 		strings.Join(groups, ", "),
 		extraOptions,
+
+
 	))
+
 }
 
 // objectToMap takes any object of type <T> and returns a map with the gorm
