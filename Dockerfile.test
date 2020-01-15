@@ -9,7 +9,9 @@ ADD go.mod  /go/src/app/
 ADD go.sum  /go/src/app/
 
 WORKDIR /go/src/app
-RUN go mod download
+RUN go mod download && \
+    curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
+    | sh -s -- -b $(go env GOPATH)/bin v1.22.2
 
 ADD /base       /go/src/app/base
 ADD /manager    /go/src/app/manager
