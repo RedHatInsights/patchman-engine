@@ -137,14 +137,12 @@ CREATE TABLE IF NOT EXISTS system_advisories
 CREATE INDEX ON system_advisories (status_id);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO evaluator;
--- TODO: Temporary
-GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO listener;
 -- manager needs to be able to update things like 'status' on a sysid/advisory combination, also needs to delete
 GRANT UPDATE, DELETE ON system_advisories TO manager;
 -- manager needs to be able to update opt_out column
 GRANT UPDATE (opt_out) ON system_platform TO manager;
--- listener deletes systems
-GRANT DELETE ON system_advisories TO listener;
+-- listener deletes systems, currently has all the permissions evaluator needs
+GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO listener;
 
 
 -- advisory_account_data
