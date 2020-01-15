@@ -38,7 +38,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 	}
 
 	if offset > total {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{"too big offset"})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "too big offset"})
 		return
 	}
 
@@ -59,7 +59,6 @@ func AdvisoriesListHandler(c *gin.Context) {
 		Meta:  *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
-	return
 }
 
 func buildAdvisoriesData(advisories *[]models.AdvisoryMetadata) *[]AdvisoryItem {

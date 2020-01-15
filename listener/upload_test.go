@@ -63,18 +63,19 @@ func TestParseUploadMessage(t *testing.T) {
 		Entitlements: nil,
 		Identity:     utils.IdentityDetail{},
 	}.Encode()
+	assert.Nil(t, err)
 
 	event.B64Identity = &ident
-	identity, err = parseUploadMessage(&event)
+	_, err = parseUploadMessage(&event)
 	assert.NotNil(t, err, "Should return not entitled error")
 
 	ident = "Invalid"
 	event.B64Identity = &ident
-	identity, err = parseUploadMessage(&event)
+	_, err = parseUploadMessage(&event)
 	assert.NotNil(t, err, "Should report invalid identity")
 
 	event.B64Identity = nil
-	identity, err = parseUploadMessage(&event)
+	_, err = parseUploadMessage(&event)
 	assert.NotNil(t, err, "Should report missing identity")
 }
 

@@ -116,7 +116,7 @@ func getNewAndUnpatchedAdvisories(reported map[string]bool, stored map[string]mo
 	[]string, []int) {
 	newAdvisories := []string{}
 	unpatchedAdvisories := []int{}
-	for reportedAdvisory, _ := range reported {
+	for reportedAdvisory := range reported {
 		if storedAdvisory, found := stored[reportedAdvisory]; found {
 			if storedAdvisory.WhenPatched != nil { // this advisory was already patched and now is un-patched again
 				unpatchedAdvisories = append(unpatchedAdvisories, storedAdvisory.AdvisoryID)

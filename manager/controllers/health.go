@@ -9,7 +9,6 @@ import (
 
 func HealthHandler(c *gin.Context) {
 	c.String(http.StatusOK, "OK")
-	return
 }
 
 func HealthDBHandler(c *gin.Context) {
@@ -19,5 +18,4 @@ func HealthDBHandler(c *gin.Context) {
 	}
 
 	c.String(http.StatusOK, "OK")
-	return
 }

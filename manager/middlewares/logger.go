@@ -17,7 +17,7 @@ func RequestResponseLogger() gin.HandlerFunc {
 		c.Next()
 		var fields []interface{}
 
-		duration := time.Now().Sub(tStart).Nanoseconds() / 1e6
+		duration := time.Since(tStart).Nanoseconds() / 1e6
 		fields = append(fields, "durationMs", duration,
 			"status", c.Writer.Status(),
 			"userAgent", c.Request.UserAgent(),
