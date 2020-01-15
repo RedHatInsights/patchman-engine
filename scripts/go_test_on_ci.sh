@@ -2,6 +2,11 @@
 
 set -e
 
+# Analyse code using lint
+/go/bin/golangci-lint run
+echo "Go code analysed successfully."
+
+# Run project tests
 ./scripts/go_test_db.sh
 
 if [ -n "$CODECOV_TOKEN" ]; then
