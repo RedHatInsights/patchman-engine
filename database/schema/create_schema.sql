@@ -1,10 +1,13 @@
-CREATE TABLE IF NOT EXISTS db_version
+CREATE TABLE IF NOT EXISTS schema_migrations
 (
     version bigint  NOT NULL,
     dirty   boolean NOT NULL,
     PRIMARY KEY (version)
 ) TABLESPACE pg_default;
 
+
+INSERT INTO schema_migrations
+VALUES (5, false);
 -- set the schema version directly in the insert statement here!!
 --INSERT INTO db_version (name, version)
 --VALUES ('schema_version', 1);
