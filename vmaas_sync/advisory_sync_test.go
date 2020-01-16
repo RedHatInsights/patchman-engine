@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-//nolint:lll
+//nolint:lll,misspell
 const testAdvisories = `
 {
    "errata_list":{

@@ -38,7 +38,7 @@ func runWebsocket(conn *websocket.Conn, handler Handler) error {
 	for {
 		typ, msg, err := conn.ReadMessage()
 		if err != nil {
-			utils.Log("err", err.Error()).Fatal("Failed to retrive VMaaS websocket message")
+			utils.Log("err", err.Error()).Fatal("Failed to retrieve VMaaS websocket message")
 			messagesReceivedCnt.WithLabelValues("error-read-msg").Inc()
 			return err
 		}
@@ -101,7 +101,7 @@ func RunVmaasSync() {
 
 		err = runWebsocket(conn, websocketHandler)
 		if err != nil {
-			utils.Log("err", err.Error()).Error("Websocket error occured, waiting")
+			utils.Log("err", err.Error()).Error("Websocket error occurred, waiting")
 		}
 		time.Sleep(2 * time.Second)
 	}
