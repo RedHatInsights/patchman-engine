@@ -113,7 +113,6 @@ func TestParseAdvisories(t *testing.T) {
 	assert.Equal(t, *adv.Url, "URL")
 	assert.Equal(t, adv.Synopsis, "SYN")
 	assert.Equal(t, adv.AdvisoryTypeId, 2)
-
 }
 
 func TestSaveAdvisories(t *testing.T) {

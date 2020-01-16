@@ -78,7 +78,6 @@ func sendMessageToTopic(topic, message string) {
 	if err != nil {
 		panic(err)
 	}
-
 }
 func MockUploadHandler(c *gin.Context) {
 	utils.Log().Info("Mocking platform upload event")
