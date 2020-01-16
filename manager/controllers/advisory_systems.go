@@ -109,8 +109,8 @@ func buildQuery(account, advisoryName string) *gorm.DB {
 }
 
 func buildAdvisorySystemsData(dbItems *[]models.SystemPlatform) *[]SystemItem {
-	var data []SystemItem
-	for _, model := range *dbItems {
+	data := make([]SystemItem, len(*dbItems))
+	for i, model := range *dbItems {
 		item := SystemItem{
 			ID:   model.InventoryID,
 			Type: "system",
@@ -119,7 +119,7 @@ func buildAdvisorySystemsData(dbItems *[]models.SystemPlatform) *[]SystemItem {
 				Enabled:    !model.OptOut,
 				RhsaCount:  model.AdvisoryCountCache,
 			}}
-		data = append(data, item)
+		data[i] = item
 	}
 	return &data
 }
