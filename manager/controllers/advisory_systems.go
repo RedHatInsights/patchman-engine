@@ -54,12 +54,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	query := database.Db.Table("advisory_metadata am").Select("sp.*").
-		Joins("join system_advisories sa ON am.id=sa.advisory_id").
-		Joins("join system_platform sp ON sa.system_id=sp.id").
-		Joins("inner join rh_account ra on sp.rh_account_id = ra.id").
-		Where("ra.name = ?", account).
-		Where("am.name = ?", advisoryName)
+	query := buildQuery(account, advisoryName)
 
 	query, err = ApplySort(c, query)
 	if err != nil {
@@ -101,6 +96,16 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 		Meta:  *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
+}
+
+func buildQuery(account, advisoryName string) *gorm.DB {
+	query := database.Db.Table("advisory_metadata am").Select("sp.*").
+		Joins("join system_advisories sa ON am.id=sa.advisory_id").
+		Joins("join system_platform sp ON sa.system_id=sp.id").
+		Joins("inner join rh_account ra on sp.rh_account_id = ra.id").
+		Where("ra.name = ?", account).
+		Where("am.name = ?", advisoryName)
+	return query
 }
 
 func buildAdvisorySystemsData(dbItems *[]models.SystemPlatform) *[]SystemItem {

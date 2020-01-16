@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestAdvisorySystemsDefault(t *testing.T) {
+func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
@@ -29,7 +29,7 @@ func TestAdvisorySystemsDefault(t *testing.T) {
 	assert.Equal(t, 0, output.Meta.Page)
 }
 
-func TestAdvisorySystemsOffsetLimit(t *testing.T) {
+func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 

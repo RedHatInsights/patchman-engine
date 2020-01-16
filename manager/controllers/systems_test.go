@@ -46,7 +46,7 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, true, output.Meta.Enabled)
 }
 
-func TestSystemsOffsetLimit(t *testing.T) {
+func TestSystemsOffsetLimit(t *testing.T) { //nolint:dupl
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
@@ -66,7 +66,7 @@ func TestSystemsOffsetLimit(t *testing.T) {
 	assert.Equal(t, true, output.Meta.Enabled)
 }
 
-func TestSystemsOffset(t *testing.T) {
+func TestSystemsOffset(t *testing.T) { //nolint:dupl
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 

@@ -158,6 +158,7 @@ func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {
 	vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(context.Background(), &vmaasCallArgs)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Nil(t, resp.Body.Close())
 	return vmaasData
 }
 
