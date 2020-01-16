@@ -21,7 +21,7 @@ func TestSystemAdvisoriesDefault(t *testing.T) {
 	var output SystemAdvisoriesResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 8, len(output.Data))
-	assert.Equal(t, "RH-1", output.Data[0].Id)
+	assert.Equal(t, "RH-1", output.Data[0].ID)
 	assert.Equal(t, "advisory", output.Data[0].Type)
 	assert.Equal(t, "adv-1-des", output.Data[0].Attributes.Description)
 	assert.Equal(t, "adv-1-syn", output.Data[0].Attributes.Synopsis)
@@ -44,7 +44,7 @@ func TestSystemAdvisoriesOffsetLimit(t *testing.T) {
 	var output SystemAdvisoriesResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 3, len(output.Data))
-	assert.Equal(t, "RH-5", output.Data[0].Id)
+	assert.Equal(t, "RH-5", output.Data[0].ID)
 	assert.Equal(t, 0, output.Data[0].Attributes.ApplicableSystems)
 	assert.Equal(t, 1, output.Meta.Page)
 }

@@ -27,7 +27,7 @@ func uploadHandler(event PlatformEvent) {
 		return
 	}
 
-	hostUploadReceived(event.Id, identity.Identity.AccountNumber, *event.B64Identity)
+	hostUploadReceived(event.ID, identity.Identity.AccountNumber, *event.B64Identity)
 }
 
 func parseUploadMessage(event *PlatformEvent) (*utils.Identity, error) {
@@ -61,7 +61,7 @@ func getOrCreateAccount(account string) (int, error) {
 }
 
 // Stores or updates base system profile, returing internal system id
-func updateSystemPlatform(inventoryId string, accountId int, updatesReq *vmaas.UpdatesV3Request) (int, error) {
+func updateSystemPlatform(inventoryID string, accountID int, updatesReq *vmaas.UpdatesV3Request) (int, error) {
 	updatesReqJSON, err := json.Marshal(&updatesReq)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Serializing vmaas request")
@@ -80,10 +80,10 @@ func updateSystemPlatform(inventoryId string, accountId int, updatesReq *vmaas.U
 	now := time.Now()
 
 	dbHost := models.SystemPlatform{
-		InventoryID:    inventoryId,
-		RhAccountID:    accountId,
+		InventoryID:    inventoryID,
+		RhAccountID:    accountID,
 		VmaasJSON:      string(updatesReqJSON),
-		JsonChecksum:   jsonChecksum,
+		JSONChecksum:   jsonChecksum,
 		LastEvaluation: nil,
 		LastUpload:     &now,
 	}
@@ -99,14 +99,14 @@ func updateSystemPlatform(inventoryId string, accountId int, updatesReq *vmaas.U
 }
 
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
-func hostUploadReceived(hostId string, account string, identity string) {
-	utils.Log("hostId", hostId).Debug("Downloading system profile")
+func hostUploadReceived(hostID string, account string, identity string) {
+	utils.Log("hostID", hostID).Debug("Downloading system profile")
 
 	apiKey := inventory.APIKey{Prefix: "", Key: identity}
 	// Create new context, which has the apikey value set. This is then used as a value for `x-rh-identity`
 	ctx := context.WithValue(context.Background(), inventory.ContextAPIKey, apiKey)
 
-	inventoryData, res, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{hostId}, nil)
+	inventoryData, res, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{hostID}, nil)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Could not inventory system profile")
 		return
@@ -122,7 +122,7 @@ func hostUploadReceived(hostId string, account string, identity string) {
 	// We only process one host per message here
 	host := inventoryData.Results[0]
 	// Ensure we have account stored
-	accountId, err := getOrCreateAccount(account)
+	accountID, err := getOrCreateAccount(account)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Saving account into the database")
 		return
@@ -148,12 +148,12 @@ func hostUploadReceived(hostId string, account string, identity string) {
 		SecurityOnly:   false,
 	}
 
-	systemId, err := updateSystemPlatform(host.Id, accountId, &updatesReq)
+	systemID, err := updateSystemPlatform(host.Id, accountID, &updatesReq)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Saving system into the database")
 		return
 	}
 
 	// Evaluation part - TODO - move to evaluator component
-	evaluator.Evaluate(systemId, ctx, updatesReq)
+	evaluator.Evaluate(ctx, systemID, updatesReq)
 }

@@ -79,10 +79,10 @@ func buildAdvisoriesData(advisories *[]models.AdvisoryMetadata) *[]AdvisoryItem 
 				Severity:     "",
 				PublicDate:   advisory.PublicDate,
 				Synopsis:     advisory.Synopsis,
-				AdvisoryType: advisory.AdvisoryTypeId,
+				AdvisoryType: advisory.AdvisoryTypeID,
 				// TODO - count using rh-account and advisory_account_data table
 				ApplicableSystems: 6},
-			Id:   advisory.Name,
+			ID:   advisory.Name,
 			Type: "advisory",
 		}
 	}

@@ -40,7 +40,7 @@ type AdvisorySystemsMeta struct {
 // @Success 200 {object} AdvisorySystemsResponse
 // @Router /api/patch/v1/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListHandler(c *gin.Context) {
-	account := c.GetString(middlewares.KEY_ACCOUNT)
+	account := c.GetString(middlewares.KeyAccount)
 
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
@@ -112,7 +112,7 @@ func buildAdvisorySystemsData(dbItems *[]models.SystemPlatform) *[]SystemItem {
 	var data []SystemItem
 	for _, model := range *dbItems {
 		item := SystemItem{
-			Id:   model.InventoryID,
+			ID:   model.InventoryID,
 			Type: "system",
 			Attributes: SystemItemAttributes{
 				LastUpload: model.LastUpload,

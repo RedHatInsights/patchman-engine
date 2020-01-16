@@ -20,7 +20,7 @@ func TestSystemDetailDefault(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 	var output SystemDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, "INV-0", output.Data.Id)
+	assert.Equal(t, "INV-0", output.Data.ID)
 	assert.Equal(t, "system", output.Data.Type)
 	assert.Nil(t, output.Data.Attributes.LastEvaluation)
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data.Attributes.LastUpload.String())

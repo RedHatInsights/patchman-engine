@@ -45,9 +45,9 @@ func assertSystemNotInDb(t *testing.T) {
 }
 
 func getOrCreateTestAccount(t *testing.T) int {
-	accountId, err := getOrCreateAccount(id)
+	accountID, err := getOrCreateAccount(id)
 	assert.Nil(t, err)
-	return accountId
+	return accountID
 }
 
 func createTestUploadEvent(t *testing.T) PlatformEvent {
@@ -72,7 +72,7 @@ func TestParseEvents(t *testing.T) {
 	reached := false
 
 	makeKafkaHandler(func(event PlatformEvent) {
-		assert.Equal(t, event.Id, "TEST-00000")
+		assert.Equal(t, event.ID, "TEST-00000")
 		assert.Equal(t, *event.Type, "delete")
 		reached = true
 	})(msg)

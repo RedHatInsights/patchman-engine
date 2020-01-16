@@ -21,7 +21,7 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 8, len(output.Data))
-	assert.Equal(t, "INV-0", output.Data[0].Id)
+	assert.Equal(t, "INV-0", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
 	assert.Equal(t, true, output.Data[0].Attributes.Enabled)
@@ -41,7 +41,7 @@ func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 3, len(output.Data))
-	assert.Equal(t, "INV-5", output.Data[0].Id)
+	assert.Equal(t, "INV-5", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
 	assert.Equal(t, true, output.Data[0].Attributes.Enabled)

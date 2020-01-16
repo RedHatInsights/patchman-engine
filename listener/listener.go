@@ -47,13 +47,13 @@ func configure() {
 
 	eventsReader = kafka.NewReader(eventsConfig)
 
-	traceApi := utils.GetenvOrFail("LOG_LEVEL") == "trace"
+	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
 	inventoryAddr := utils.GetenvOrFail("INVENTORY_ADDRESS")
 
 	inventoryConfig := inventory.NewConfiguration()
-	inventoryConfig.Debug = traceApi
-	inventoryConfig.BasePath = inventoryAddr + base.INVENTORY_API_PREFIX
+	inventoryConfig.Debug = traceAPI
+	inventoryConfig.BasePath = inventoryAddr + base.InventoryAPIPrefix
 	inventoryClient = inventory.NewAPIClient(inventoryConfig)
 
 	evaluator.Configure() // TODO - move to evaluator component
