@@ -14,8 +14,10 @@ const id = "TEST-00000"
 
 func deleteData(t *testing.T) {
 	// Delete test data from previous run
-	assert.Nil(t, database.Db.Unscoped().Where("first_reported > timestamp '2020-01-01'").Delete(&models.SystemAdvisories{}).Error)
-	assert.Nil(t, database.Db.Unscoped().Where("name IN ('ER1', 'ER2', 'ER3')").Delete(&models.AdvisoryMetadata{}).Error)
+	assert.Nil(t, database.Db.Unscoped().Where("first_reported > timestamp '2020-01-01'").
+		Delete(&models.SystemAdvisories{}).Error)
+	assert.Nil(t, database.Db.Unscoped().Where("name IN ('ER1', 'ER2', 'ER3')").
+		Delete(&models.AdvisoryMetadata{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("inventory_id = ?", id).Delete(&models.SystemPlatform{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("name = ?", id).Delete(&models.RhAccount{}).Error)
 }
@@ -51,7 +53,7 @@ func getOrCreateTestAccount(t *testing.T) int {
 }
 
 func createTestUploadEvent(t *testing.T) PlatformEvent {
-	msg := kafka.Message{Value: []byte(`{ "id": "TEST-00000","type": "created", "b64_identity": "eyJlbnRpdGxlbWVudHMiOnsic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1ZX19LCJpZGVudGl0eSI6eyJhY2NvdW50X251bWJlciI6IlRFU1QtMDAwMDAiLCJ0eXBlIjoiVXNlciIsIkludGVybmFsIjpudWxsfX0="}`)}
+	msg := kafka.Message{Value: []byte(`{ "id": "TEST-00000","type": "created", "b64_identity": "eyJlbnRpdGxlbWVudHMiOnsic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1ZX19LCJpZGVudGl0eSI6eyJhY2NvdW50X251bWJlciI6IlRFU1QtMDAwMDAiLCJ0eXBlIjoiVXNlciIsIkludGVybmFsIjpudWxsfX0="}`)} //nolint:lll
 	var event PlatformEvent
 	err := json.Unmarshal(msg.Value, &event)
 	assert.Nil(t, err)

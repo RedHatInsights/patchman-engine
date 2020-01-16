@@ -88,7 +88,8 @@ func updateSystemPlatform(inventoryID string, accountID int, updatesReq *vmaas.U
 		LastUpload:     &now,
 	}
 
-	tx := database.OnConflictUpdate(database.Db, "inventory_id", "vmaas_json", "json_checksum", "last_evaluation", "last_upload")
+	tx := database.OnConflictUpdate(database.Db, "inventory_id", "vmaas_json", "json_checksum",
+		"last_evaluation", "last_upload")
 	err = tx.Create(&dbHost).Error
 
 	if err != nil {

@@ -21,7 +21,7 @@ func OnConflictUpdateMulti(db *gorm.DB, keys []string, updateCols ...string) *go
 	}
 	valStr := strings.Join(updateExprs, ",")
 	if valStr != "" {
-		option := fmt.Sprintf("ON CONFLICT (%v) DO UPDATE SET %v", keyStr, valStr)
+		option := fmt.Sprintf("ON CONFLICT (%v) DO UPDATE SET %v", keyStr, valStr) // nolint:gosec
 		return db.Set("gorm:insert_option", option)
 	}
 	return db

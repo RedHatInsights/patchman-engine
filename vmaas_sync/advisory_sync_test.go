@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+//nolint:lll
 const testAdvisories = `
 {
    "errata_list":{
