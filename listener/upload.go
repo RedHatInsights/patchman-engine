@@ -129,12 +129,12 @@ func hostUploadReceived(hostID string, account string, identity string) {
 		return
 	}
 
-	var modules []vmaas.UpdatesRequestModulesList
-	for _, m := range host.SystemProfile.DnfModules {
-		modules = append(modules, vmaas.UpdatesRequestModulesList{
+	modules := make([]vmaas.UpdatesRequestModulesList, len(host.SystemProfile.DnfModules))
+	for i, m := range host.SystemProfile.DnfModules {
+		modules[i] = vmaas.UpdatesRequestModulesList{
 			ModuleName:   m.Name,
 			ModuleStream: m.Stream,
-		})
+		}
 	}
 	repos := []string{}
 	for _, r := range host.SystemProfile.YumRepos {

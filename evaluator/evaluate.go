@@ -130,7 +130,7 @@ func getNewAndUnpatchedAdvisories(reported map[string]bool, stored map[string]mo
 }
 
 func getPatchedAdvisories(reported map[string]bool, stored map[string]models.SystemAdvisories) []int {
-	var patchedAdvisories []int
+	patchedAdvisories := make([]int, 0, len(stored))
 	for storedAdvisory, storedAdvisoryObj := range stored {
 		if _, found := reported[storedAdvisory]; found {
 			continue
@@ -163,9 +163,9 @@ func ensureAdvisoriesInDb(tx *gorm.DB, advisories []string) (*[]int, int, error)
 		return nil, 0, err
 	}
 
-	var existingAdvisoryIDs []int
-	for _, existingAdvisory := range existingAdvisories {
-		existingAdvisoryIDs = append(existingAdvisoryIDs, existingAdvisory.ID)
+	existingAdvisoryIDs := make([]int, len(existingAdvisories))
+	for i, existingAdvisory := range existingAdvisories {
+		existingAdvisoryIDs[i] = existingAdvisory.ID
 	}
 
 	if len(existingAdvisories) == len(advisories) {
@@ -190,7 +190,7 @@ func createNewAdvisories(tx *gorm.DB, advisories []string, existingAdvisories []
 		existingAdvisoriesMap[advisoryObj.Name] = true
 	}
 
-	var createdAdvisoryIDs []int
+	createdAdvisoryIDs := make([]int, 0, len(advisories))
 	for _, advisory := range advisories {
 		if _, found := existingAdvisoriesMap[advisory]; found {
 			continue // advisory is already stored in database

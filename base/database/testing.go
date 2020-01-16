@@ -12,7 +12,7 @@ func CheckAdvisoriesInDb(t *testing.T, advisories []string) []int {
 	err := Db.Where("name IN (?)", advisories).Find(&advisoriesObjs).Error
 	assert.Nil(t, err)
 	assert.Equal(t, len(advisoriesObjs), len(advisories))
-	var ids []int
+	var ids []int //nolint:prealloc
 	for _, advisoryObj := range advisoriesObjs {
 		ids = append(ids, advisoryObj.ID)
 	}

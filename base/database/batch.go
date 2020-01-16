@@ -76,13 +76,7 @@ func scopeFromObjects(db *gorm.DB, objects []interface{}) (*gorm.Scope, error) {
 		return nil, nil
 	}
 
-	var (
-		columnNames       []string
-		quotedColumnNames []string
-		placeholders      []string
-		groups            []string
-		scope             = db.NewScope(objects[0])
-	)
+	scope := db.NewScope(objects[0])
 
 	// Ensure we set the correct time and reset it after we're done.
 	bulkNow = gorm.NowFunc()
@@ -98,16 +92,18 @@ func scopeFromObjects(db *gorm.DB, objects []interface{}) (*gorm.Scope, error) {
 		return nil, err
 	}
 
-	columnNames, placeholders = buildColumnsAndPlaceholders(firstObjectFields, columnNames, placeholders)
+	columnNames, placeholders := buildColumnsAndPlaceholders(firstObjectFields)
 
 	// We must setup quotedColumnNames after sorting columnNames since sorting
 	// of quoted fields might differ from sorting without. This way we know that
 	// columnNames is the master of the order and will be used both when setting
 	// field and values order.
+	quotedColumnNames := make([]string, len(columnNames))
 	for i := range columnNames {
-		quotedColumnNames = append(quotedColumnNames, scope.Quote(gorm.ToColumnName(columnNames[i])))
+		quotedColumnNames[i] = scope.Quote(gorm.ToColumnName(columnNames[i]))
 	}
 
+	groups := make([]string, 0, len(objects))
 	for _, r := range objects {
 		objectScope := db.NewScope(r)
 
@@ -134,8 +130,9 @@ func scopeFromObjects(db *gorm.DB, objects []interface{}) (*gorm.Scope, error) {
 	return scope, nil
 }
 
-func buildColumnsAndPlaceholders(firstObjectFields map[string]interface{}, columnNames, placeholders []string) (
-	[]string, []string) {
+func buildColumnsAndPlaceholders(firstObjectFields map[string]interface{}) ([]string, []string) {
+	columnNames := make([]string, 0, len(firstObjectFields))
+	placeholders := make([]string, 0, len(firstObjectFields))
 	for k := range firstObjectFields {
 		// Add raw column names to use for iteration over each row later to get
 		// the correct order of columns.
