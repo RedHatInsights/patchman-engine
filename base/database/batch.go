@@ -134,7 +134,8 @@ func scopeFromObjects(db *gorm.DB, objects []interface{}) (*gorm.Scope, error) {
 	return scope, nil
 }
 
-func buildColumnsAndPlaceholders(firstObjectFields map[string]interface{}, columnNames, placeholders []string) ([]string, []string) {
+func buildColumnsAndPlaceholders(firstObjectFields map[string]interface{}, columnNames, placeholders []string) (
+	[]string, []string) {
 	for k := range firstObjectFields {
 		// Add raw column names to use for iteration over each row later to get
 		// the correct order of columns.
@@ -159,7 +160,7 @@ func insertFunc(scope *gorm.Scope, columnNames, groups []string) {
 		extraOptions = fmt.Sprintf(" %s", insertOption)
 	}
 
-	scope.Raw(fmt.Sprintf(
+	scope.Raw(fmt.Sprintf( //nolint:gosec
 		"INSERT INTO %s (%s) VALUES %s %s",
 		scope.QuotedTableName(),
 		strings.Join(columnNames, ", "),

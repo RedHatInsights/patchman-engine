@@ -10,6 +10,7 @@ import (
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/gin-gonic/gin"
 	"github.com/segmentio/kafka-go"
+	"io"
 	"time"
 )
 
@@ -59,8 +60,8 @@ func configure() {
 	evaluator.Configure() // TODO - move to evaluator component
 }
 
-func shutdown(reader *kafka.Reader) {
-	err := reader.Close()
+func shutdown(closer io.Closer) {
+	err := closer.Close()
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to shutdown Kafka reader")
 	}
