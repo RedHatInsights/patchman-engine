@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-const KEY_ACCOUNT = "account"
+const KeyAccount = "account"
 
 func Authenticator() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -21,14 +21,14 @@ func Authenticator() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Invalid x-rh-identity header"})
 			return
 		}
-		c.Set(KEY_ACCOUNT, identity.Identity.AccountNumber)
+		c.Set(KeyAccount, identity.Identity.AccountNumber)
 		c.Next()
 	}
 }
 
 func MockAuthenticator(account string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set(KEY_ACCOUNT, account)
+		c.Set(KeyAccount, account)
 		c.Next()
 	}
 }

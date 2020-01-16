@@ -1,4 +1,4 @@
-package vmaas_sync
+package vmaas_sync //nolint:golint
 
 import (
 	"app/base"
@@ -103,16 +103,16 @@ func TestParseAdvisories(t *testing.T) {
 	assert.Equal(t, len(res), 1)
 	adv := res[0]
 
-	time, err := time.Parse(base.RFC_3339_NO_TZ, "2004-09-02T00:00:00+00:00")
+	time, err := time.Parse(base.Rfc3339NoTz, "2004-09-02T00:00:00+00:00")
 	assert.Nil(t, err)
 	assert.Equal(t, adv.PublicDate, time)
 	assert.Equal(t, adv.ModifiedDate, time)
 	assert.Equal(t, adv.Description, "DESC")
 	assert.Equal(t, adv.Solution, "SOL")
 	assert.Equal(t, adv.Summary, "SUM")
-	assert.Equal(t, *adv.Url, "URL")
+	assert.Equal(t, *adv.URL, "URL")
 	assert.Equal(t, adv.Synopsis, "SYN")
-	assert.Equal(t, adv.AdvisoryTypeId, 2)
+	assert.Equal(t, adv.AdvisoryTypeID, 2)
 }
 
 func TestSaveAdvisories(t *testing.T) {

@@ -8,10 +8,10 @@ type TestTable struct {
 
 type TestTableSlice []TestTable
 
-func (this TestTableSlice) MakeInterfaceSlice() []interface{} {
-	res := make([]interface{}, len(this))
-	for i := range this {
-		res[i] = this[i]
+func (t TestTableSlice) MakeInterfaceSlice() []interface{} {
+	res := make([]interface{}, len(t))
+	for i := range t {
+		res[i] = t[i]
 	}
 	return res
 }

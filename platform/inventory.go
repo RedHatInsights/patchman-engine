@@ -28,9 +28,9 @@ var pkgs = []string{
 	"iproute-2.6.18-13.el5.i386",
 	"libbonobo-2.24.2-5.el6.i686"}
 
-func makeSystemProfile(Id string) inventory.SystemProfileByHostOut {
+func makeSystemProfile(id string) inventory.SystemProfileByHostOut {
 	profile := inventory.HostSystemProfileOut{
-		Id: Id,
+		Id: id,
 		SystemProfile: inventory.SystemProfileIn{
 			Arch:              "i686",
 			InstalledPackages: pkgs,

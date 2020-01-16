@@ -142,7 +142,7 @@ func TestEvaluate(t *testing.T) {
 
 	systemID := 11
 	expectedAddedAdvisories := []string{"ER1", "ER2", "ER3"}
-	Evaluate(systemID, context.Background(), vmaas.UpdatesV3Request{})
+	Evaluate(context.Background(), systemID, vmaas.UpdatesV3Request{})
 	ids := database.CheckAdvisoriesInDb(t, expectedAddedAdvisories)
 
 	checkSystemAdvisoriesWhenPatched(t, systemID, ids, nil)

@@ -1,4 +1,4 @@
-package vmaas_sync
+package vmaas_sync //nolint:golint
 
 import (
 	"app/base"
@@ -13,7 +13,7 @@ import (
 )
 
 // Should be < 5000
-const SYNC_BATCH_SIZE = 1000
+const SyncBatchSize = 1000
 
 var (
 	vmaasClient *vmaas.APIClient
@@ -21,7 +21,7 @@ var (
 
 func configure() {
 	cfg := vmaas.NewConfiguration()
-	cfg.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMAAS_API_PREFIX
+	cfg.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
 	cfg.Debug = true
 
 	vmaasClient = vmaas.NewAPIClient(cfg)
@@ -45,12 +45,12 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 
 	for n, v := range data {
 		// TODO: Should we skip or report invalid erratas ?
-		issued, err := time.Parse(base.RFC_3339_NO_TZ, v.Issued)
+		issued, err := time.Parse(base.Rfc3339NoTz, v.Issued)
 		if err != nil {
 			utils.Log("err", err.Error(), "erratum", n).Error("Invalid errata issued date")
 			continue
 		}
-		modified, err := time.Parse(base.RFC_3339_NO_TZ, v.Updated)
+		modified, err := time.Parse(base.Rfc3339NoTz, v.Updated)
 		if err != nil {
 			utils.Log("err", err.Error(), "erratum", n).Error("Invalid errata modified date")
 			continue
@@ -63,14 +63,14 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 
 		advisory := models.AdvisoryMetadata{
 			Name:           n,
-			AdvisoryTypeId: advisoryTypes[v.Type],
+			AdvisoryTypeID: advisoryTypes[v.Type],
 			Description:    v.Description,
 			Synopsis:       v.Synopsis,
 			Summary:        v.Summary,
 			Solution:       v.Solution,
 			PublicDate:     issued,
 			ModifiedDate:   modified,
-			Url:            &v.Url,
+			URL:            &v.Url,
 		}
 
 		advisories = append(advisories, advisory)
@@ -88,7 +88,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 	}
 
 	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary", "solution", "public_date", "modified_date", "url")
-	errs := database.BulkInsertChunk(tx, advisories.ToInterfaceSlice(), SYNC_BATCH_SIZE)
+	errs := database.BulkInsertChunk(tx, advisories.ToInterfaceSlice(), SyncBatchSize)
 
 	if len(errs) > 0 {
 		return errs[0]
@@ -110,7 +110,7 @@ func syncAdvisories() error {
 		opts := vmaas.AppErrataHandlerPostPostOpts{
 			ErrataRequest: optional.NewInterface(vmaas.ErrataRequest{
 				Page:          float32(pageIdx),
-				PageSize:      SYNC_BATCH_SIZE,
+				PageSize:      SyncBatchSize,
 				ErrataList:    []string{".*"},
 				ModifiedSince: "",
 			}),
@@ -124,7 +124,7 @@ func syncAdvisories() error {
 		vmaasCallCnt.WithLabelValues("success").Inc()
 
 		maxPageIdx = int(data.Pages)
-		pageIdx += 1
+		pageIdx++
 
 		utils.Log("count", len(data.ErrataList)).Debug("Downloaded advisories")
 

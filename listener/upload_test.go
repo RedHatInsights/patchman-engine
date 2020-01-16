@@ -15,9 +15,9 @@ func TestGetOrCreateAccount(t *testing.T) {
 
 	deleteData(t)
 
-	accountId1 := getOrCreateTestAccount(t)
-	accountId2 := getOrCreateTestAccount(t)
-	assert.Equal(t, accountId1, accountId2)
+	accountID1 := getOrCreateTestAccount(t)
+	accountID2 := getOrCreateTestAccount(t)
+	assert.Equal(t, accountID1, accountID2)
 
 	deleteData(t)
 }
@@ -28,7 +28,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 
 	deleteData(t)
 
-	accountId := getOrCreateTestAccount(t)
+	accountID := getOrCreateTestAccount(t)
 	req := vmaas.UpdatesV3Request{
 		PackageList:    []string{"package0"},
 		RepositoryList: []string{},
@@ -36,12 +36,12 @@ func TestUpdateSystemPlatform(t *testing.T) {
 		Releasever:     "7Server",
 		Basearch:       "x86_64",
 	}
-	sys, err := updateSystemPlatform(id, accountId, &req)
+	sys, err := updateSystemPlatform(id, accountID, &req)
 	assert.Nil(t, err)
 
 	assertSystemInDb(t)
 
-	sys2, err := updateSystemPlatform(id, accountId, &req)
+	sys2, err := updateSystemPlatform(id, accountID, &req)
 	assert.Nil(t, err)
 
 	assert.Equal(t, sys, sys2)
@@ -53,7 +53,7 @@ func TestParseUploadMessage(t *testing.T) {
 	event := createTestUploadEvent(t)
 	identity, err := parseUploadMessage(&event)
 	assert.Nil(t, err)
-	assert.Equal(t, id, event.Id)
+	assert.Equal(t, id, event.ID)
 	assert.Equal(t, "User", identity.Identity.Type)
 
 	ident, err := utils.Identity{

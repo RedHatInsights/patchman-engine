@@ -23,7 +23,6 @@ func OnConflictUpdateMulti(db *gorm.DB, keys []string, updateCols ...string) *go
 	if valStr != "" {
 		option := fmt.Sprintf("ON CONFLICT (%v) DO UPDATE SET %v", keyStr, valStr)
 		return db.Set("gorm:insert_option", option)
-	} else {
-		return db
 	}
+	return db
 }

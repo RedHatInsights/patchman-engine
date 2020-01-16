@@ -20,7 +20,7 @@ type SystemPlatform struct {
 	// All times need to be stored as pointers, since they are set to 0000-00-00 00:00 by gorm if not present
 	FirstReported         *time.Time
 	VmaasJSON             string
-	JsonChecksum          string
+	JSONChecksum          string
 	LastUpdated           *time.Time
 	UnchangedSince        *time.Time
 	LastEvaluation        *time.Time
@@ -52,10 +52,10 @@ type AdvisoryMetadata struct {
 	Synopsis       string
 	Summary        string
 	Solution       string
-	AdvisoryTypeId int
+	AdvisoryTypeID int
 	PublicDate     time.Time
 	ModifiedDate   time.Time
-	Url            *string
+	URL            *string
 }
 
 func (AdvisoryMetadata) TableName() string {
@@ -64,9 +64,9 @@ func (AdvisoryMetadata) TableName() string {
 
 type AdvisoryMetadataSlice []AdvisoryMetadata
 
-func (this AdvisoryMetadataSlice) ToInterfaceSlice() []interface{} {
-	res := make([]interface{}, len(this))
-	for i, v := range this {
+func (t AdvisoryMetadataSlice) ToInterfaceSlice() []interface{} {
+	res := make([]interface{}, len(t))
+	for i, v := range t {
 		res[i] = v
 	}
 	return res
@@ -100,9 +100,9 @@ func (AdvisoryAccountData) TableName() string {
 
 type SystemAdvisoriesSlice []SystemAdvisories
 
-func (this SystemAdvisoriesSlice) ToInterfaceSlice() []interface{} {
-	res := make([]interface{}, len(this))
-	for i, v := range this {
+func (t SystemAdvisoriesSlice) ToInterfaceSlice() []interface{} {
+	res := make([]interface{}, len(t))
+	for i, v := range t {
 		res[i] = v
 	}
 	return res

@@ -34,8 +34,8 @@ func ParseIdentity(identityString string) (*Identity, error) {
 	return &ident, nil
 }
 
-func (this Identity) Encode() (string, error) {
-	data, err := json.Marshal(&this)
+func (t Identity) Encode() (string, error) {
+	data, err := json.Marshal(&t)
 	if err != nil {
 		return "", err
 	}
@@ -43,8 +43,8 @@ func (this Identity) Encode() (string, error) {
 	return base64.StdEncoding.EncodeToString(data), nil
 }
 
-func (this *Identity) IsSmartEntitled() bool {
-	mgmt, contains := this.Entitlements["smart_management"]
+func (t *Identity) IsSmartEntitled() bool {
+	mgmt, contains := t.Entitlements["smart_management"]
 	if contains {
 		return mgmt.Entitled
 	}

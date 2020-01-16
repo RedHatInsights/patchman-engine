@@ -20,15 +20,15 @@ var (
 )
 
 func Configure() {
-	traceApi := utils.GetenvOrFail("LOG_LEVEL") == "trace"
+	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
 	vmaasConfig := vmaas.NewConfiguration()
-	vmaasConfig.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMAAS_API_PREFIX
-	vmaasConfig.Debug = traceApi
+	vmaasConfig.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
+	vmaasConfig.Debug = traceAPI
 	vmaasClient = vmaas.NewAPIClient(vmaasConfig)
 }
 
-func Evaluate(systemID int, ctx context.Context, updatesReq vmaas.UpdatesV3Request) {
+func Evaluate(ctx context.Context, systemID int, updatesReq vmaas.UpdatesV3Request) {
 	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{
 		UpdatesV3Request: optional.NewInterface(updatesReq),
 	}

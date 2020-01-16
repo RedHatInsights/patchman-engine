@@ -37,7 +37,7 @@ type SystemsMeta struct {
 // @Success 200 {object} SystemsResponse
 // @Router /api/patch/v1/systems [get]
 func SystemsListHandler(c *gin.Context) {
-	account := c.GetString(middlewares.KEY_ACCOUNT)
+	account := c.GetString(middlewares.KeyAccount)
 
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
@@ -114,7 +114,7 @@ func buildData(systems *[]models.SystemPlatform) *[]SystemItem {
 				RhbaCount:      system.AdvisoryBugCountCache,
 				Enabled:        !system.OptOut,
 			},
-			Id:   system.InventoryID,
+			ID:   system.InventoryID,
 			Type: "system",
 		}
 	}

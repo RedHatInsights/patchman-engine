@@ -11,7 +11,7 @@ type Links struct {
 
 type AdvisoryItem struct {
 	Attributes AdvisoryItemAttributes `json:"attributes"`
-	Id         string                 `json:"id"`
+	ID         string                 `json:"id"`
 	Type       string                 `json:"type"`
 }
 
@@ -42,7 +42,7 @@ type AdvisoryMeta struct {
 
 type SystemItem struct {
 	Attributes SystemItemAttributes `json:"attributes"`
-	Id         string               `json:"id"`
+	ID         string               `json:"id"`
 	Type       string               `json:"type"`
 }
 

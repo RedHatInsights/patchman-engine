@@ -4,7 +4,7 @@ import (
 	"app/base/utils"
 	"fmt"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	_ "github.com/jinzhu/gorm/dialects/postgres" // postgres used under gorm
 	"strconv"
 	"time"
 )

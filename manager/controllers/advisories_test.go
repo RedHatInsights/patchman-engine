@@ -22,7 +22,7 @@ func TestAdvisoriesDefault(t *testing.T) {
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	// data
 	assert.Equal(t, 8, len(output.Data))
-	assert.Equal(t, "RH-1", output.Data[0].Id)
+	assert.Equal(t, "RH-1", output.Data[0].ID)
 	assert.Equal(t, "advisory", output.Data[0].Type)
 	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
 	assert.Equal(t, "adv-1-des", output.Data[0].Attributes.Description)
@@ -106,7 +106,7 @@ func TestAdvisoriesOrder(t *testing.T) {
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	// Advisoiry RH-7 has latest public date
 	assert.Equal(t, 8, len(output.Data))
-	assert.Equal(t, "RH-7", output.Data[0].Id)
+	assert.Equal(t, "RH-7", output.Data[0].ID)
 	assert.Equal(t, "advisory", output.Data[0].Type)
 	assert.Equal(t, "2017-09-22 19:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
 	assert.Equal(t, "adv-7-des", output.Data[0].Attributes.Description)

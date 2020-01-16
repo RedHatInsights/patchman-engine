@@ -27,7 +27,7 @@ type SystemAdvisoriesResponse struct {
 // @Success 200 {object} SystemAdvisoriesResponse
 // @Router /api/patch/v1/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesHandler(c *gin.Context) {
-	account := c.GetString(middlewares.KEY_ACCOUNT)
+	account := c.GetString(middlewares.KeyAccount)
 
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
@@ -35,13 +35,13 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		return
 	}
 
-	inventoryId := c.Param("inventory_id")
-	if inventoryId == "" {
+	inventoryID := c.Param("inventory_id")
+	if inventoryID == "" {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
 		return
 	}
 
-	query := database.SystemAdvisoriesQueryName(database.Db, inventoryId).
+	query := database.SystemAdvisoriesQueryName(database.Db, inventoryID).
 		Joins("inner join rh_account ra on sp.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
 
@@ -91,9 +91,9 @@ func buildSystemAdvisoriesData(models *[]models.SystemAdvisories) *[]AdvisoryIte
 	var data []AdvisoryItem
 	for _, systemAdvisories := range *models {
 		advisory := systemAdvisories.Advisory
-		item := AdvisoryItem{Id: advisory.Name, Type: "advisory", Attributes: AdvisoryItemAttributes{
+		item := AdvisoryItem{ID: advisory.Name, Type: "advisory", Attributes: AdvisoryItemAttributes{
 			Description: advisory.Description, Severity: "", PublicDate: advisory.PublicDate, Synopsis: advisory.Synopsis,
-			AdvisoryType: advisory.AdvisoryTypeId, ApplicableSystems: 0,
+			AdvisoryType: advisory.AdvisoryTypeID, ApplicableSystems: 0,
 		}}
 		data = append(data, item)
 	}

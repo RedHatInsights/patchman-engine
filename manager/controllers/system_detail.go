@@ -24,10 +24,10 @@ type SystemDetailResponse struct {
 // @Success 200 {object} SystemDetailResponse
 // @Router /api/patch/v1/systems/{inventory_id} [get]
 func SystemDetailHandler(c *gin.Context) {
-	account := c.GetString(middlewares.KEY_ACCOUNT)
+	account := c.GetString(middlewares.KeyAccount)
 
-	inventoryId := c.Param("inventory_id")
-	if inventoryId == "" {
+	inventoryID := c.Param("inventory_id")
+	if inventoryID == "" {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
 		return
 	}
@@ -36,7 +36,7 @@ func SystemDetailHandler(c *gin.Context) {
 	err := database.Db.
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account).
-		Where("inventory_id = ?", inventoryId).First(&inventory).Error
+		Where("inventory_id = ?", inventoryID).First(&inventory).Error
 	if gorm.IsRecordNotFoundError(err) {
 		LogAndRespNotFound(c, err, "inventory not found")
 		return
@@ -57,7 +57,7 @@ func SystemDetailHandler(c *gin.Context) {
 				RheaCount:      0,
 				Enabled:        !inventory.OptOut,
 			},
-			Id:   inventory.InventoryID,
+			ID:   inventory.InventoryID,
 			Type: "system",
 		}}
 	c.JSON(http.StatusOK, &resp)
