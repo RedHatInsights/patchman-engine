@@ -23,7 +23,12 @@ func trySetupCloudWatchLogging() {
 	secret := GetenvOrFail("CW_AWS_SECRET_ACCESS_KEY")
 	region := Getenv("CW_AWS_REGION", "us-east-1")
 	group := Getenv("CW_AWS_LOG_GROUP", "platform-dev")
-	stream := Getenv("CW_AWS_LOG_STREAM", "patchman-engine")
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		Log("err", err.Error()).Error("unable to get hostname to set CloudWatch log_stream")
+		return
+	}
 
 	log.SetFormatter(&log.JSONFormatter{
 		TimestampFormat: "2006-01-02T15:04:05.999Z",
@@ -36,9 +41,9 @@ func trySetupCloudWatchLogging() {
 
 	cred := credentials.NewStaticCredentials(key, secret, "")
 	awsconf := aws.NewConfig().WithRegion(region).WithCredentials(cred)
-	hook, err := lc.NewBatchingHook(group, stream, awsconf, 10 * time.Second)
+	hook, err := lc.NewBatchingHook(group, hostname, awsconf, 10 * time.Second)
 	if err != nil {
-		log.Error(err)
+		Log("err", err.Error()).Error("unable to setup CloudWatch logging")
 		return
 	}
 	log.AddHook(hook)
