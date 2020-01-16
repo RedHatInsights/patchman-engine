@@ -24,10 +24,14 @@ func TestHealthDBRouteFail(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	err := database.Db.Close()
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 
 	err = database.Db.Close()
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/", nil)

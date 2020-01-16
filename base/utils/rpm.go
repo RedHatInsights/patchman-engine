@@ -29,11 +29,11 @@ func ParseNevra(nevra string) (*Nevra, error) {
 		return nil, errors.New("unable to parse nevra")
 	}
 	res := Nevra{
-		Name: parsed[3],
-		Epoch: parsed[2],
+		Name:    parsed[3],
+		Epoch:   parsed[2],
 		Version: parsed[6],
 		Release: parsed[7],
-		Arch: parsed[8],
+		Arch:    parsed[8],
 	}
 	return &res, nil
 }

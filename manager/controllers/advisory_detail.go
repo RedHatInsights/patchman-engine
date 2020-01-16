@@ -11,26 +11,26 @@ import (
 )
 
 type AdvisoryDetailResponse struct {
-	Data  AdvisoryDetailItem     `json:"data"`
+	Data AdvisoryDetailItem `json:"data"`
 }
 
 type AdvisoryDetailItem struct {
-	Attributes   AdvisoryDetailAttributes `json:"attributes"`
-	ID           string                   `json:"id"`
-	Type         string                   `json:"type"`
+	Attributes AdvisoryDetailAttributes `json:"attributes"`
+	ID         string                   `json:"id"`
+	Type       string                   `json:"type"`
 }
 
 type AdvisoryDetailAttributes struct {
-	Description  string     `json:"description"`
-	Severity     *string    `json:"severity"`
-	ModifiedDate time.Time  `json:"modified_date"`
-	PublicDate   time.Time  `json:"public_date"`
-	Topic        string     `json:"topic"`
-	Synopsis     string     `json:"synopsis"`
-	Solution     string     `json:"solution"`
-	Fixes        *string    `json:"fixes"`
-	Cves         []string   `json:"cves"`
-	References   []string   `json:"references"`
+	Description  string    `json:"description"`
+	Severity     *string   `json:"severity"`
+	ModifiedDate time.Time `json:"modified_date"`
+	PublicDate   time.Time `json:"public_date"`
+	Topic        string    `json:"topic"`
+	Synopsis     string    `json:"synopsis"`
+	Solution     string    `json:"solution"`
+	Fixes        *string   `json:"fixes"`
+	Cves         []string  `json:"cves"`
+	References   []string  `json:"references"`
 }
 
 // @Summary Show me details an advisory by given advisory name
@@ -64,19 +64,19 @@ func AdvisoryDetailHandler(c *gin.Context) {
 	var resp = AdvisoryDetailResponse{
 		Data: AdvisoryDetailItem{
 			Attributes: AdvisoryDetailAttributes{
-				Description: advisory.Description,
-				Severity: nil,
+				Description:  advisory.Description,
+				Severity:     nil,
 				ModifiedDate: advisory.ModifiedDate,
-				PublicDate: advisory.PublicDate,
-				Topic: advisory.Summary,
-				Synopsis: advisory.Synopsis,
-				Solution: advisory.Solution,
-				Fixes: nil,
-				Cves: []string{}, // TODO joins
-				References: []string{}, // TODO joins
+				PublicDate:   advisory.PublicDate,
+				Topic:        advisory.Summary,
+				Synopsis:     advisory.Synopsis,
+				Solution:     advisory.Solution,
+				Fixes:        nil,
+				Cves:         []string{}, // TODO joins
+				References:   []string{}, // TODO joins
 			},
-			ID: advisory.Name,
-	        Type: "advisory",
+			ID:   advisory.Name,
+			Type: "advisory",
 		}}
 	c.JSON(http.StatusOK, &resp)
 }

@@ -5,7 +5,7 @@ import (
 	"app/base/utils"
 )
 
-func deleteHandler(event PlatformEvent)  {
+func deleteHandler(event PlatformEvent) {
 	if event.Type == nil || *event.Type != "delete" {
 		return
 	}

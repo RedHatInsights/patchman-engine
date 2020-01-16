@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	lc "github.com/redhatinsights/platform-go-middlewares/logging/cloudwatch"
+	log "github.com/sirupsen/logrus"
 )
 
 // Try to init CloudWatch logging
@@ -41,7 +41,7 @@ func trySetupCloudWatchLogging() {
 
 	cred := credentials.NewStaticCredentials(key, secret, "")
 	awsconf := aws.NewConfig().WithRegion(region).WithCredentials(cred)
-	hook, err := lc.NewBatchingHook(group, hostname, awsconf, 10 * time.Second)
+	hook, err := lc.NewBatchingHook(group, hostname, awsconf, 10*time.Second)
 	if err != nil {
 		Log("err", err.Error()).Error("unable to setup CloudWatch logging")
 		return

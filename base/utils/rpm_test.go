@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-
 func TestNevraParse(t *testing.T) {
 	nevra, err := ParseNevra("389-ds-base-1.3.7.8-1.fc27.src")
 	assert.Equal(t, nil, err)

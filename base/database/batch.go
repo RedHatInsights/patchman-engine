@@ -1,4 +1,5 @@
 package database
+
 // This file was adapted from https://github.com/bombsimon/gorm-bulk
 import (
 	"fmt"
@@ -171,7 +172,7 @@ func insertFunc(scope *gorm.Scope, columnNames, groups []string) {
 // field DB name as key and the value as value
 func objectToMap(object interface{}) (map[string]interface{}, error) {
 	var attributes = map[string]interface{}{}
-	var	now        = bulkNow
+	var now = bulkNow
 
 	// De-reference pointers (and it's values)
 	rv := reflect.ValueOf(object)

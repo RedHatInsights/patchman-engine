@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	Db    *gorm.DB
+	Db *gorm.DB
 )
 
 // configure database, PostgreSQL or SQLite connection
@@ -67,17 +67,17 @@ func loadEnvPostgreSQLConfig() *PostgreSQLConfig {
 	}
 
 	config := PostgreSQLConfig{
-		User: utils.Getenv("DB_USER", "FILL"),
-		Host: utils.Getenv("DB_HOST", "FILL"),
-		Port: port,
+		User:     utils.Getenv("DB_USER", "FILL"),
+		Host:     utils.Getenv("DB_HOST", "FILL"),
+		Port:     port,
 		Database: utils.Getenv("DB_NAME", "FILL"),
-		Passwd: utils.Getenv("DB_PASSWD", "FILL"),
+		Passwd:   utils.Getenv("DB_PASSWD", "FILL"),
 
-		Timeout: "60s",
-		ReadTimeout: "60s",
-		WriteTimeout: "60s",
-		MaxConnections: 250,
-		MaxIdleConnections: 50,
+		Timeout:               "60s",
+		ReadTimeout:           "60s",
+		WriteTimeout:          "60s",
+		MaxConnections:        250,
+		MaxIdleConnections:    50,
 		MaxConnectionLifetime: 60,
 	}
 	return &config
@@ -87,5 +87,5 @@ func loadEnvPostgreSQLConfig() *PostgreSQLConfig {
 func dataSourceName(dbConfig *PostgreSQLConfig) string {
 	return fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=disable",
 		dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Database, dbConfig.Passwd)
-		// timeoutParams(dbConfig))
+	// timeoutParams(dbConfig))
 }

@@ -16,7 +16,6 @@ import (
 
 var testDate, _ = time.Parse(time.RFC3339, "2020-01-01T01-01-01")
 
-
 func TestVMaaSGetUpdates(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 
@@ -173,9 +172,9 @@ func createTestReportedAdvisories(reportedAdvisories ...string) map[string]bool 
 func createTestStoredAdvisories(advisoryPatched map[int]*time.Time) map[string]models.SystemAdvisories {
 	systemAdvisoriesMap := map[string]models.SystemAdvisories{}
 	for advisoryID, patched := range advisoryPatched {
-		systemAdvisoriesMap["ER-" + strconv.Itoa(advisoryID)] = models.SystemAdvisories{
+		systemAdvisoriesMap["ER-"+strconv.Itoa(advisoryID)] = models.SystemAdvisories{
 			WhenPatched: patched,
-			AdvisoryID: advisoryID}
+			AdvisoryID:  advisoryID}
 	}
 	return systemAdvisoriesMap
 }

@@ -12,7 +12,7 @@ import (
 )
 
 type SystemAdvisoriesResponse struct {
-	Data  []AdvisoryItem `json:"data"`  // advisories items
+	Data  []AdvisoryItem `json:"data"` // advisories items
 	Links Links          `json:"links"`
 	Meta  AdvisoryMeta   `json:"meta"`
 }
@@ -80,9 +80,9 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	links := CreateLinks("/api/patch/v1/systems/$INVENTORY_ID/advisories", offset, limit, total,
 		"&data_format=json")
 	var resp = SystemAdvisoriesResponse{
-		Data: *data,
+		Data:  *data,
 		Links: links,
-		Meta: *meta,
+		Meta:  *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
 }

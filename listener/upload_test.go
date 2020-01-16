@@ -9,8 +9,6 @@ import (
 	"testing"
 )
 
-
-
 func TestGetOrCreateAccount(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
@@ -58,8 +56,7 @@ func TestParseUploadMessage(t *testing.T) {
 	assert.Equal(t, id, event.Id)
 	assert.Equal(t, "User", identity.Identity.Type)
 
-
-	ident, err :=  utils.Identity{
+	ident, err := utils.Identity{
 		Entitlements: nil,
 		Identity:     utils.IdentityDetail{},
 	}.Encode()
