@@ -40,7 +40,7 @@ func Log(args ...interface{}) *log.Entry {
 func parseLogLevel(strlevel string) log.Level {
 	level, err := log.ParseLevel(strlevel)
 	if err != nil {
-		panic(fmt.Errorf("Unable to parse log level: %v", err))
+		panic(fmt.Errorf("unable to parse log level: %v", err))
 	}
 	return level
 }

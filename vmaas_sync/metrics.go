@@ -1,4 +1,4 @@
-package vmaas_sync //nolint:golint
+package vmaas_sync //nolint:golint,stylecheck
 
 import "github.com/prometheus/client_golang/prometheus"
 
