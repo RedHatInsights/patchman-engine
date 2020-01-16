@@ -97,17 +97,7 @@ func scopeFromObjects(db *gorm.DB, objects []interface{}) (*gorm.Scope, error) {
 		return nil, err
 	}
 
-	for k := range firstObjectFields {
-		// Add raw column names to use for iteration over each row later to get
-		// the correct order of columns.
-		columnNames = append(columnNames, k)
-
-		// Add as many placeholders (question marks) as there are columns.
-		placeholders = append(placeholders, "?")
-
-		// Sort the column names to ensure the right order.
-		sort.Strings(columnNames)
-	}
+	columnNames, placeholders = buildColumnsAndPlaceholders(firstObjectFields, columnNames, placeholders)
 
 	// We must setup quotedColumnNames after sorting columnNames since sorting
 	// of quoted fields might differ from sorting without. This way we know that
@@ -143,6 +133,21 @@ func scopeFromObjects(db *gorm.DB, objects []interface{}) (*gorm.Scope, error) {
 	return scope, nil
 }
 
+func buildColumnsAndPlaceholders(firstObjectFields map[string]interface{}, columnNames, placeholders []string) ([]string, []string) {
+	for k := range firstObjectFields {
+		// Add raw column names to use for iteration over each row later to get
+		// the correct order of columns.
+		columnNames = append(columnNames, k)
+
+		// Add as many placeholders (question marks) as there are columns.
+		placeholders = append(placeholders, "?")
+
+		// Sort the column names to ensure the right order.
+		sort.Strings(columnNames)
+	}
+	return columnNames, placeholders
+}
+
 func insertFunc(scope *gorm.Scope, columnNames, groups []string) {
 	var (
 		extraOptions string
@@ -165,10 +170,8 @@ func insertFunc(scope *gorm.Scope, columnNames, groups []string) {
 // objectToMap takes any object of type <T> and returns a map with the gorm
 // field DB name as key and the value as value
 func objectToMap(object interface{}) (map[string]interface{}, error) {
-	var (
-		attributes = map[string]interface{}{}
-		now        = bulkNow
-	)
+	var attributes = map[string]interface{}{}
+	var	now        = bulkNow
 
 	// De-reference pointers (and it's values)
 	rv := reflect.ValueOf(object)
@@ -200,11 +203,9 @@ func objectToMap(object interface{}) (map[string]interface{}, error) {
 			continue
 		}
 
-		// Let the DBM set the default values since these might be meta values
-		// such as 'CURRENT_TIMESTAMP'. Has default will be set to true also for
-		// 'AUTO_INCREMENT' fields which is not primary keys so we must check
-		// that we've ACTUALLY configured a default value and uses the tag
-		// before we skip it.
+		// Let the DBM set the default values since these might be meta values such as 'CURRENT_TIMESTAMP'. Has default
+		// will be set to true also for 'AUTO_INCREMENT' fields which is not primary keys so we must check that we've
+		// ACTUALLY configured a default value and uses the tag before we skip it.
 		if field.StructField.HasDefaultValue && field.IsBlank {
 			if _, ok := field.TagSettingsGet("DEFAULT"); ok {
 				continue
@@ -216,7 +217,6 @@ func objectToMap(object interface{}) (map[string]interface{}, error) {
 		if field.DBName == "id" && field.IsPrimaryKey && field.IsBlank {
 			continue
 		}
-
 
 		if field.Struct.Name == "CreatedAt" || field.Struct.Name == "UpdatedAt" {
 			if field.IsBlank {

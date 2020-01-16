@@ -15,3 +15,7 @@ linters:
 
     # extra linters
     - whitespace # Tool for detection of leading and trailing whitespace [fast: true, auto-fix: true]
+    - bodyclose # checks whether HTTP response body is closed successfully [fast: true, auto-fix: false]
+    - depguard # Go linter that checks if package imports are in a list of acceptable packages [fast: true, auto-fix: false]
+    - dupl # Tool for code clone detection [fast: true, auto-fix: false]
+    - funlen # Tool for detection of long functions [fast: true, auto-fix: false]
