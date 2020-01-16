@@ -16,7 +16,7 @@ import (
 const unknown = "unknown"
 
 var (
-	vmaasClient     *vmaas.APIClient
+	vmaasClient *vmaas.APIClient
 )
 
 func Configure() {

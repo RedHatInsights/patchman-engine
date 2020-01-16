@@ -16,12 +16,12 @@ type AdvisoryItem struct {
 }
 
 type AdvisoryItemAttributes struct {
-	Description string       `json:"description"`
-	Severity    string       `json:"severity"`
-	PublicDate  time.Time    `json:"public_date"`
-	Synopsis    string       `json:"synopsis"`
-	AdvisoryType int         `json:"advisory_type"`
-	ApplicableSystems int    `json:"applicable_systems"`
+	Description       string    `json:"description"`
+	Severity          string    `json:"severity"`
+	PublicDate        time.Time `json:"public_date"`
+	Synopsis          string    `json:"synopsis"`
+	AdvisoryType      int       `json:"advisory_type"`
+	ApplicableSystems int       `json:"applicable_systems"`
 }
 
 type AdvisoryMeta struct {
@@ -47,10 +47,10 @@ type SystemItem struct {
 }
 
 type SystemItemAttributes struct {
-	LastEvaluation  *time.Time   `json:"last_evaluation"`
-	LastUpload      *time.Time   `json:"last_upload"`
-	RhsaCount       int          `json:"rhsa_count"`
-	RhbaCount       int          `json:"rhba_count"`
-	RheaCount       int          `json:"rhea_count"`
-	Enabled         bool         `json:"enabled"`
+	LastEvaluation *time.Time `json:"last_evaluation"`
+	LastUpload     *time.Time `json:"last_upload"`
+	RhsaCount      int        `json:"rhsa_count"`
+	RhbaCount      int        `json:"rhba_count"`
+	RheaCount      int        `json:"rhea_count"`
+	Enabled        bool       `json:"enabled"`
 }

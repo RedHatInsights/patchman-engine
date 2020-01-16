@@ -10,9 +10,9 @@ import (
 )
 
 type AdvisoriesResponse struct {
-	Data  []AdvisoryItem  `json:"data"`
-	Links Links           `json:"links"`
-	Meta  AdvisoryMeta    `json:"meta"`
+	Data  []AdvisoryItem `json:"data"`
+	Links Links          `json:"links"`
+	Meta  AdvisoryMeta   `json:"meta"`
 }
 
 // @Summary Show me all applicable advisories for all my systems
@@ -61,7 +61,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 		"&data_format=json")
 	meta := buildAdvisoriesMeta(limit, offset, total)
 	var resp = AdvisoriesResponse{
-		Data: *data,
+		Data:  *data,
 		Links: links,
 		Meta:  *meta,
 	}
@@ -75,21 +75,21 @@ func buildAdvisoriesData(advisories *[]models.AdvisoryMetadata) *[]AdvisoryItem 
 		data[i] = AdvisoryItem{
 			Attributes: AdvisoryItemAttributes{
 				// TODO - sync API and DB layout
-				Description: advisory.Description,
-				Severity: "",
-				PublicDate: advisory.PublicDate,
-				Synopsis: advisory.Synopsis,
+				Description:  advisory.Description,
+				Severity:     "",
+				PublicDate:   advisory.PublicDate,
+				Synopsis:     advisory.Synopsis,
 				AdvisoryType: advisory.AdvisoryTypeId,
 				// TODO - count using rh-account and advisory_account_data table
-				ApplicableSystems: 6 },
-			Id: advisory.Name,
+				ApplicableSystems: 6},
+			Id:   advisory.Name,
 			Type: "advisory",
 		}
 	}
 	return &data
 }
 
-func buildAdvisoriesMeta(limit, offset, total int) *AdvisoryMeta{
+func buildAdvisoriesMeta(limit, offset, total int) *AdvisoryMeta {
 	meta := AdvisoryMeta{
 		DataFormat: "json",
 		Filter:     nil,

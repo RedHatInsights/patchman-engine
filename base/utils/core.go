@@ -31,7 +31,7 @@ func GetIntEnvOrFail(envname string) int {
 		panic(fmt.Sprintf("Set %s env variable!", envname))
 	}
 
-	value, err:= strconv.Atoi(valueStr)
+	value, err := strconv.Atoi(valueStr)
 	if err != nil {
 		panic(fmt.Sprintf("Unable convert '%s' env var '%s' to int!", envname, valueStr))
 	}

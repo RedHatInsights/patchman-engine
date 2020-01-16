@@ -15,10 +15,10 @@ func CreateLinks(path string, offset, limit, total int, otherParams string) Link
 }
 
 type pager struct {
-	path       string
-	offset     int
-	limit      int
-	total      int
+	path        string
+	offset      int
+	limit       int
+	total       int
 	otherParams string
 }
 
@@ -37,8 +37,8 @@ func (p pager) createLastLink() string {
 	return p.createLink(lastOffset)
 }
 
-func  (p pager) createNextLink() *string {
-	if p.total <= p.offset + p.limit {
+func (p pager) createNextLink() *string {
+	if p.total <= p.offset+p.limit {
 		return nil
 	}
 

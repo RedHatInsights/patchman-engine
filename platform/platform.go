@@ -50,7 +50,7 @@ func mockKafkaWriter(topic string) *kafka.Writer {
 	})
 }
 
-func mockIdentity()string {
+func mockIdentity() string {
 	identity, err := utils.Identity{
 		Entitlements: map[string]utils.Entitlement{
 			"smart_management": {Entitled: true},
@@ -93,7 +93,7 @@ func MockUploadHandler(c *gin.Context) {
 func MockDeleteHandler(c *gin.Context) {
 	utils.Log().Info("Mocking platform delete event")
 
-	identity := mockIdentity();
+	identity := mockIdentity()
 	event := fmt.Sprintf(`{ "id": "TEST-0000", "type": "delete", "b64_identity": "%v"}`, identity)
 	sendMessageToTopic("platform.inventory.events", event)
 	c.Status(http.StatusOK)

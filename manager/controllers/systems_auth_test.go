@@ -9,11 +9,10 @@ import (
 	"testing"
 )
 
-func testAccountSystemCounts(t * testing.T, acc string, count int) {
+func testAccountSystemCounts(t *testing.T, acc string, count int) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	var output SystemsResponse
-
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/", nil)

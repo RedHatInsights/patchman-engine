@@ -93,7 +93,6 @@ func TestAdvisoriesOffsetOverflow(t *testing.T) {
 	assert.Equal(t, "too big offset", errResp.Error)
 }
 
-
 func TestAdvisoriesOrder(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()

@@ -7,13 +7,13 @@ import (
 )
 
 var defaultValues = TestTableSlice{
-	{Name: "A", Email: "B",},
-	{Name: "C", Email: "D",},
-	{Name: "E", Email: "F",},
-	{Name: "G", Email: "H",},
-	{Name: "I", Email: "J",},
-	{Name: "K", Email: "L",},
-	{Name: "M", Email: "N",},
+	{Name: "A", Email: "B"},
+	{Name: "C", Email: "D"},
+	{Name: "E", Email: "F"},
+	{Name: "G", Email: "H"},
+	{Name: "I", Email: "J"},
+	{Name: "K", Email: "L"},
+	{Name: "M", Email: "N"},
 }
 
 func TestBatchInsert(t *testing.T) {

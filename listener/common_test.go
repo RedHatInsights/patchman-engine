@@ -77,5 +77,5 @@ func TestParseEvents(t *testing.T) {
 		reached = true
 	})(msg)
 
-	assert.True(t, reached,"Event handler should have been called")
+	assert.True(t, reached, "Event handler should have been called")
 }

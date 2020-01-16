@@ -108,7 +108,7 @@ func erratasHandler(c *gin.Context) {
 }
 
 var upgrader = websocket.Upgrader{} // use default options
-func wshandler(w http.ResponseWriter, r *http.Request, ) {
+func wshandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Failed to set websocket upgrade")

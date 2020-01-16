@@ -72,7 +72,6 @@ func LoadLimitOffset(c *gin.Context, defaultLimit int) (int, int, error) {
 	return limit, offset, nil
 }
 
-
 type ErrorResponse struct {
-	Error string  `json:"error"`
+	Error string `json:"error"`
 }

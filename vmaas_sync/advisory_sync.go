@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-
 // Should be < 5000
 const SYNC_BATCH_SIZE = 1000
 

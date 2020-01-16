@@ -26,7 +26,7 @@ func RequestResponseLogger() gin.HandlerFunc {
 			"url", c.Request.URL.String())
 
 		for _, param := range c.Params {
-			fields = append(fields, "param_" + param.Key, param.Value)
+			fields = append(fields, "param_"+param.Key, param.Value)
 		}
 
 		if c.Writer.Status() < http.StatusInternalServerError {

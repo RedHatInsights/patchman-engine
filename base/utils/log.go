@@ -26,10 +26,10 @@ func ConfigureLogging() {
 func Log(args ...interface{}) *log.Entry {
 	nArgs := len(args)
 	fields := log.Fields{}
-	if nArgs % 2 != 0 {
+	if nArgs%2 != 0 {
 		log.Warningf("Unable to accept odd (%d) arguments count in utils.DebugLog method.", nArgs)
 	} else {
-		for i := 0; i < nArgs; i+=2 {
+		for i := 0; i < nArgs; i += 2 {
 			fields[args[i].(string)] = args[i+1]
 		}
 	}
@@ -52,7 +52,7 @@ func InitLogging(level log.Level) {
 }
 
 // configure json logging format for Logstash
-func initJSONLogStyle(){
+func initJSONLogStyle() {
 	log.SetFormatter(&log.JSONFormatter{
 		TimestampFormat: time.RFC3339,
 		FieldMap: log.FieldMap{

@@ -11,7 +11,7 @@ import (
 )
 
 type SystemDetailResponse struct {
-	Data  SystemItem     `json:"data"`
+	Data SystemItem `json:"data"`
 }
 
 // @Summary Show me details about a system by given inventory id
@@ -51,14 +51,14 @@ func SystemDetailHandler(c *gin.Context) {
 		Data: SystemItem{
 			Attributes: SystemItemAttributes{
 				LastEvaluation: inventory.LastEvaluation,
-				LastUpload: inventory.LastUpload,
-				RhsaCount: inventory.AdvisoryCountCache,
-				RhbaCount: 0,
-				RheaCount: 0,
-				Enabled: !inventory.OptOut,
+				LastUpload:     inventory.LastUpload,
+				RhsaCount:      inventory.AdvisoryCountCache,
+				RhbaCount:      0,
+				RheaCount:      0,
+				Enabled:        !inventory.OptOut,
 			},
 			Id:   inventory.InventoryID,
-	        Type: "system",
+			Type: "system",
 		}}
 	c.JSON(http.StatusOK, &resp)
 }
