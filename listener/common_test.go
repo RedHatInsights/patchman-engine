@@ -67,7 +67,6 @@ func createTestDeleteEvent(t *testing.T) PlatformEvent {
 }
 
 func TestParseEvents(t *testing.T) {
-
 	msg := kafka.Message{Value: []byte(`{"id": "TEST-00000", "type": "delete"}`)}
 
 	reached := false

@@ -37,5 +37,4 @@ func TestOnConflictDoUpdate(t *testing.T) {
 	assert.Equal(t, obj.ID, read.ID)
 	assert.Equal(t, obj.Name, read.Name)
 	assert.Equal(t, obj.Email, read.Email)
-
 }

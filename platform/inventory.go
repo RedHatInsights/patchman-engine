@@ -29,7 +29,6 @@ var pkgs = []string{
 	"libbonobo-2.24.2-5.el6.i686"}
 
 func makeSystemProfile(Id string) inventory.SystemProfileByHostOut {
-
 	profile := inventory.HostSystemProfileOut{
 		Id: Id,
 		SystemProfile: inventory.SystemProfileIn{

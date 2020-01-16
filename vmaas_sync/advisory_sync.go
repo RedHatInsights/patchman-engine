@@ -80,7 +80,6 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 }
 
 func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
-
 	advisories, err := parseAdvisories(data)
 	if err != nil {
 		return errors.WithMessage(err, "Parsing advisories")
@@ -96,7 +95,6 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 		return errs[0]
 	}
 	return nil
-
 }
 
 func syncAdvisories() error {
@@ -110,7 +108,6 @@ func syncAdvisories() error {
 	maxPageIdx := 1
 
 	for pageIdx < maxPageIdx {
-
 		opts := vmaas.AppErrataHandlerPostPostOpts{
 			ErrataRequest: optional.NewInterface(vmaas.ErrataRequest{
 				Page:          float32(pageIdx),

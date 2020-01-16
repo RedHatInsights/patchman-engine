@@ -99,5 +99,4 @@ func TestBatchInsertOnConflictUpdate(t *testing.T) {
 		assert.Equal(t, outputs[i].Name, modified[i].Name)
 		assert.Equal(t, outputs[i].Email, modified[i].Email)
 	}
-
 }
