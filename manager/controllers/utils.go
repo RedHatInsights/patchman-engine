@@ -38,7 +38,7 @@ func ApplySort(c *gin.Context, tx *gorm.DB, allowedFields ...string) (*gorm.DB, 
 	}
 
 	for _, enteredField := range fields {
-		if strings.HasPrefix(enteredField, "-") && allowedFieldSet[enteredField[1:]] {
+		if strings.HasPrefix(enteredField, "-") && allowedFieldSet[enteredField[1:]] { //nolint:gocritic
 			tx = tx.Order(fmt.Sprintf("%v DESC", enteredField[1:]))
 		} else if allowedFieldSet[enteredField] {
 			tx = tx.Order(fmt.Sprintf("%v ASC", enteredField))

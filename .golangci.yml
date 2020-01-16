@@ -19,3 +19,6 @@ linters:
     - depguard # Go linter that checks if package imports are in a list of acceptable packages [fast: true, auto-fix: false]
     - dupl # Tool for code clone detection [fast: true, auto-fix: false]
     - funlen # Tool for detection of long functions [fast: true, auto-fix: false]
+    - gocognit # Computes and checks the cognitive complexity of functions [fast: true, auto-fix: false]
+    - goconst # Finds repeated strings that could be replaced by a constant [fast: true, auto-fix: false]
+    - gocritic # The most opinionated Go source code linter [fast: true, auto-fix: false]
