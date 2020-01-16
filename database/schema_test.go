@@ -29,7 +29,7 @@ func TestSchemaCompatiblity(t *testing.T) {
 	cfg := postgres.Config{
 		DatabaseName: "patchman",
 		SchemaName:   "public",
-		MigrationsTable: "db_version",
+		MigrationsTable: "schema_migrations",
 	}
 	database.Configure()
 

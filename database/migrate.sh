@@ -1,19 +1,12 @@
 #!/bin/bash
 
-# Install the migrate tool
-#go get -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate
-
-# Allow running migrate either from system installation or local download
-PATH=.:$PATH
-
 set -u
-# Require environment variables to be present
-DB_URL="postgres://${DB_USER}:${DB_PASSWD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable"
 
-args=$@
-ls -allh .
+MIGRATIONS_DIR=${MIGRATIONS_DIR:-database/migrations}
+DB_URL=${DB_URL:-"postgres:///${DB_NAME}?host=/var/run/postgresql/"}
+CMD=${@:-up}
 
-# Run the migrations up to latest
+# Run the migration command, by default updating to newest DB version
 migrate \
-  -source file://database/migrations \
-  -database $DB_URL ${args:-up}
+  -source file://${MIGRATIONS_DIR} \
+  -database $DB_URL $CMD
