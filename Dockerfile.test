@@ -2,7 +2,7 @@ FROM centos:8
 
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial && \
     yum module -y install go-toolset postgresql && \
-    yum -y install git
+    yum -y install git diffutils
 
 ENV GOPATH=/go
 ENV GO111MODULE=on

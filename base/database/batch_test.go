@@ -25,10 +25,10 @@ func TestBatchInsert(t *testing.T) {
 
 	// Bulk insert should create new rows
 	err := BulkInsert(Db, defaultValues)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	var res []TestTable
-	assert.Nil(t, Db.Find(&res).Error)
+	assert.NoError(t, Db.Find(&res).Error)
 
 	// Reading rows should return same data as the inserted rows
 	assert.Equal(t, len(defaultValues), len(res))
@@ -50,7 +50,7 @@ func TestBatchInsertChunked(t *testing.T) {
 	assert.Nil(t, err)
 
 	var res []TestTable
-	assert.Nil(t, Db.Find(&res).Error)
+	assert.NoError(t, Db.Find(&res).Error)
 
 	// Same behavior as before, chunked save should scan database values into the source slice
 	assert.Equal(t, len(defaultValues), len(res))
@@ -71,10 +71,10 @@ func TestBatchInsertOnConflictUpdate(t *testing.T) {
 
 	// Perform first insert
 	err := BulkInsert(db, defaultValues)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	var outputs []TestTable
-	assert.Nil(t, db.Find(&outputs).Error)
+	assert.NoError(t, db.Find(&outputs).Error)
 
 	assert.Equal(t, len(defaultValues), len(outputs))
 	for i := range defaultValues {
@@ -89,11 +89,11 @@ func TestBatchInsertOnConflictUpdate(t *testing.T) {
 	// Try to re-insert, and update values
 	db = OnConflictUpdate(db, "name", "name", "email")
 	err = BulkInsert(db, outputs)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// Re-load data from database
 	var final []TestTable
-	assert.Nil(t, db.Find(&final).Error)
+	assert.NoError(t, db.Find(&final).Error)
 
 	// Final data should match updated data
 	for i := range outputs {

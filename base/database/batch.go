@@ -20,7 +20,13 @@ import (
 var bulkNow time.Time
 
 func BulkInsert(db *gorm.DB, objects interface{}) error {
-	return bulkExec(db, objects)
+	if reflect.TypeOf(objects).Kind() != reflect.Slice {
+		return errors.New("This method only works on slices")
+	}
+	// Reflect the objects array into generic value
+	objectsVal := reflect.ValueOf(objects)
+
+	return bulkExec(db, objectsVal)
 }
 
 // BulkInsertChunk will split the objects passed into the passed chunk size. A
@@ -29,21 +35,20 @@ func BulkInsertChunk(db *gorm.DB, objects interface{}, chunkSize int) []error {
 	var allErrors []error
 
 	if reflect.TypeOf(objects).Kind() != reflect.Slice {
-		return []error{errors.New("objects arg is not a slice")}
+		return []error{errors.New("This method only works on slices")}
 	}
 
 	// Reflect the objects array into generic value
 	objectsVal := reflect.ValueOf(objects)
 
 	for {
-		var chunkObjects interface{}
+		var chunkObjects reflect.Value
 
 		if objectsVal.Len() <= chunkSize {
-			chunkObjects = objectsVal.Interface()
+			chunkObjects = objectsVal
 			objectsVal = reflect.ValueOf([]interface{}{})
 		} else {
-			chunkObjects = objectsVal.Slice(0, chunkSize).Interface()
-			// TODO: Check whether -1 should not be here
+			chunkObjects = objectsVal.Slice(0, chunkSize)
 			objectsVal = objectsVal.Slice(chunkSize, objectsVal.Len())
 		}
 
@@ -65,8 +70,7 @@ func BulkInsertChunk(db *gorm.DB, objects interface{}, chunkSize int) []error {
 }
 
 // bulkExec will convert a slice of interfaces to bulk SQL statement.
-func bulkExec(db *gorm.DB, objects interface{}) error {
-	objectsVal := reflect.ValueOf(objects)
+func bulkExec(db *gorm.DB, objects reflect.Value) error {
 	scope, err := scopeFromObjects(db, objects)
 	if err != nil {
 		return err
@@ -77,10 +81,6 @@ func bulkExec(db *gorm.DB, objects interface{}) error {
 		return nil
 	}
 
-	if objects == nil {
-		objects = []interface{}{}
-	}
-
 	rows, err := db.Raw(scope.SQL, scope.SQLVars...).Rows()
 
 	if err != nil {
@@ -88,9 +88,9 @@ func bulkExec(db *gorm.DB, objects interface{}) error {
 	}
 	defer rows.Close()
 
-	for i := 0; i <= objectsVal.Len() && rows.Next(); i++ {
+	for i := 0; i <= objects.Len() && rows.Next(); i++ {
 		// Perform scan into the address of an element, intepreted as an interface
-		err = db.ScanRows(rows, objectsVal.Index(i).Addr().Interface())
+		err = db.ScanRows(rows, objects.Index(i).Addr().Interface())
 		db.RowsAffected++
 		if err != nil {
 			return err
@@ -99,21 +99,14 @@ func bulkExec(db *gorm.DB, objects interface{}) error {
 	return nil
 }
 
-func scopeFromObjects(db *gorm.DB, objects interface{}) (*gorm.Scope, error) {
-
-	if reflect.TypeOf(objects).Kind() != reflect.Slice {
-		return nil, errors.New("objects arg is not a slice")
-	}
-	// Reflect the objects array into generic value
-	objectsVal := reflect.ValueOf(objects)
-	//elemType := reflect.TypeOf(objects).Elem()
-
-	if objectsVal.Len() < 1 {
+// nolint: funlen
+func scopeFromObjects(db *gorm.DB, objects reflect.Value) (*gorm.Scope, error) {
+	if objects.Len() < 1 {
 		return nil, nil
 	}
-	
+
 	// Retrieve 0th element as an interface
-	firstElem := objectsVal.Index(0).Interface()
+	firstElem := objects.Index(0).Interface()
 
 	var (
 		scope = db.NewScope(firstElem)
@@ -144,11 +137,10 @@ func scopeFromObjects(db *gorm.DB, objects interface{}) (*gorm.Scope, error) {
 		quotedColumnNames[i] = scope.Quote(gorm.ToColumnName(columnNames[i]))
 	}
 
-	groups := make([]string, 0, objectsVal.Len())
-	for i := 0; i < objectsVal.Len(); i++ {
+	groups := make([]string, objects.Len())
+	for i := 0; i < objects.Len(); i++ {
 		// Retrieve ith element as an interface
-		r := objectsVal.Index(i).Interface()
-		objectScope := db.NewScope(r)
+		r := objects.Index(i).Interface()
 
 		row, err := objectToMap(r)
 		if err != nil {
@@ -156,13 +148,10 @@ func scopeFromObjects(db *gorm.DB, objects interface{}) (*gorm.Scope, error) {
 		}
 
 		for _, key := range columnNames {
-			objectScope.AddToVars(row[key])
+			scope.AddToVars(row[key])
 		}
 
 		groups[i] = fmt.Sprintf("(%s)", strings.Join(placeholders, ", "))
-
-		// Add object vars to the outer scope vars
-		scope.SQLVars = append(scope.SQLVars, objectScope.SQLVars...)
 	}
 
 	insertFunc(scope, quotedColumnNames, groups)
@@ -197,13 +186,9 @@ func insertFunc(scope *gorm.Scope, columnNames, groups []string) {
 		extraOptions = fmt.Sprintf(" %s", insertOption)
 	}
 
-<<<<<<< HEAD
-	scope.Raw(fmt.Sprintf( //nolint:gosec
-		"INSERT INTO %s (%s) VALUES %s %s",
-=======
+	// nolint: gosec
 	scope.Raw(fmt.Sprintf(
 		"INSERT INTO %s (%s) VALUES %s %s RETURNING *",
->>>>>>> Scan values when returning from bulk inserts
 		scope.QuotedTableName(),
 		strings.Join(columnNames, ", "),
 		strings.Join(groups, ", "),

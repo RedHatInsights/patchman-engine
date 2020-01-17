@@ -6,7 +6,6 @@ import (
 	"strings"
 )
 
-
 // Appends `ON CONFLICT (key...) DO UPDATE SET (fields) to following insert query
 func OnConflictUpdate(db *gorm.DB, key string, updateCols ...string) *gorm.DB {
 	return OnConflictUpdateMulti(db, []string{key}, updateCols...)
