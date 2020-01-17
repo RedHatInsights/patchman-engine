@@ -77,6 +77,7 @@ type SystemAdvisories struct {
 func (SystemAdvisories) TableName() string {
 	return "system_advisories"
 }
+
 type SystemAdvisoriesSlice []SystemAdvisories
 
 type AdvisoryAccountData struct {
