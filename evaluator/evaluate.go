@@ -75,13 +75,13 @@ func processSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, vmaasData v
 	patched := getPatchedAdvisories(reported, *stored)
 	newsAdvisoriesNames, unpatched := getNewAndUnpatchedAdvisories(reported, *stored)
 
-	news, nAdded, err := ensureAdvisoriesInDb(tx, newsAdvisoriesNames)
+	newIDs, err := ensureAdvisoriesInDb(tx, newsAdvisoriesNames)
 	if err != nil {
 		return errors.Wrap(err, "Unable to ensure new system advisories in db")
 	}
-	utils.Log("added", nAdded).Info("Added new unknown advisories into the db")
+	unpatched = append(unpatched, *newIDs...)
 
-	err = updateSystemAdvisories(tx, systemID, rhAccountID, patched, unpatched, *news)
+	err = updateSystemAdvisories(tx, systemID, rhAccountID, patched, unpatched)
 	if err != nil {
 		return errors.Wrap(err, "Unable to update system advisories")
 	}
@@ -177,60 +177,29 @@ func updateAccountAdvisoriesAffectedSystems(tx *gorm.DB, rhAccountID int, adviso
 }
 
 // Return advisory IDs, created advisories count, error
-func ensureAdvisoriesInDb(tx *gorm.DB, advisories []string) (*[]int, int, error) {
-	var existingAdvisories []models.AdvisoryMetadata
-	err := tx.Where("name IN (?)", advisories).Find(&existingAdvisories).Error
-	if err != nil {
-		return nil, 0, err
-	}
-
-	existingAdvisoryIDs := make([]int, len(existingAdvisories))
-	for i, existingAdvisory := range existingAdvisories {
-		existingAdvisoryIDs[i] = existingAdvisory.ID
-	}
-
-	if len(existingAdvisories) == len(advisories) {
-		// all advisories are in database
-		return &existingAdvisoryIDs, 0, nil
-	}
-
-	createdAdvisoryIDs, err := createNewAdvisories(tx, advisories, existingAdvisories)
-	if err != nil {
-		return nil, 0, err
-	}
-	existingAdvisoryIDs = append(existingAdvisoryIDs, *createdAdvisoryIDs...)
-
-	return &existingAdvisoryIDs, len(*createdAdvisoryIDs), nil
-}
-
-// Return created advisories IDs, created advisories, error
-func createNewAdvisories(tx *gorm.DB, advisories []string, existingAdvisories []models.AdvisoryMetadata) (
-	*[]int, error) {
-	existingAdvisoriesMap := map[string]bool{}
-	for _, advisoryObj := range existingAdvisories {
-		existingAdvisoriesMap[advisoryObj.Name] = true
-	}
-
-	createdAdvisoryIDs := make([]int, 0, len(advisories))
-	for _, advisory := range advisories {
-		if _, found := existingAdvisoriesMap[advisory]; found {
-			continue // advisory is already stored in database
-		}
-
-		item := models.AdvisoryMetadata{Name: advisory,
+func ensureAdvisoriesInDb(tx *gorm.DB, advisories []string) (*[]int, error) {
+	advisoryObjs := make(models.AdvisoryMetadataSlice, len(advisories))
+	for i, advisory := range advisories {
+		advisoryObjs[i] = models.AdvisoryMetadata{Name: advisory,
 			Description: unknown, Synopsis: unknown, Summary: unknown, Solution: unknown}
-		err := tx.Create(&item).Error
-		if err != nil {
-			return nil, err
-		}
-		createdAdvisoryIDs = append(createdAdvisoryIDs, item.ID)
-		utils.Log("advisory", advisory).Info("unknown advisory created")
 	}
 
-	return &createdAdvisoryIDs, nil
+	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	err := database.BulkInsert(txOnConflict, advisoryObjs.ToInterfaceSlice())
+	if err != nil {
+		return nil, err
+	}
+
+	var advisoryIDs []int
+	err = tx.Model(&models.AdvisoryMetadata{}).Where("name IN (?)", advisories).
+		Pluck("id", &advisoryIDs).Error
+	if err != nil {
+		return nil, err
+	}
+	return &advisoryIDs, nil
 }
 
-func addNewSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, advisoryIDs []int) error {
+func ensureSystemAdvisories(tx *gorm.DB, systemID int, advisoryIDs []int) error {
 	advisoriesObjs := models.SystemAdvisoriesSlice{}
 	for _, advisoryID := range advisoryIDs {
 		advisoriesObjs = append(advisoriesObjs,
@@ -238,16 +207,12 @@ func addNewSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, advisoryIDs 
 	}
 
 	interfaceSlice := advisoriesObjs.ToInterfaceSlice()
-	err := database.BulkInsert(tx, interfaceSlice)
-	if err != nil {
-		return err
-	}
-
-	err = addAndUpdateAccountAdvisoriesAffectedSystems(tx, rhAccountID, advisoryIDs)
+	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	err := database.BulkInsert(txOnConflict, interfaceSlice)
 	return err
 }
 
-func addAndUpdateAccountAdvisoriesAffectedSystems(tx *gorm.DB, rhAccountID int, advisoryIDs []int) error {
+func ensureAdvisoryAccountDataInDb(tx *gorm.DB, rhAccountID int, advisoryIDs []int) error {
 	accountData := make(models.AdvisoryAccountDataSlice, len(advisoryIDs))
 	for i, advisoryID := range advisoryIDs {
 		accountData[i] = models.AdvisoryAccountData{RhAccountID: rhAccountID, AdvisoryID: advisoryID}
@@ -255,29 +220,26 @@ func addAndUpdateAccountAdvisoriesAffectedSystems(tx *gorm.DB, rhAccountID int, 
 
 	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
 	err := database.BulkInsert(txOnConflict, accountData.ToInterfaceSlice())
-	if err != nil {
-		return err
-	}
-
-	err = updateAccountAdvisoriesAffectedSystems(tx, rhAccountID, advisoryIDs, 1)
 	return err
 }
 
-func updateSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, patched, unpatched, news []int) error {
+func updateSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, patched, unpatched []int) error {
 	whenPatched := time.Now()
 	err := updateSystemAdvisoriesWhenPatched(tx, systemID, rhAccountID, patched, &whenPatched)
 	if err != nil {
 		return err
 	}
 
-	err = updateSystemAdvisoriesWhenPatched(tx, systemID, rhAccountID, unpatched, nil)
+	err = ensureSystemAdvisories(tx, systemID, unpatched)
 	if err != nil {
 		return err
 	}
 
-	err = addNewSystemAdvisories(tx, systemID, rhAccountID, news)
+	err = ensureAdvisoryAccountDataInDb(tx, rhAccountID, unpatched)
 	if err != nil {
 		return err
 	}
-	return nil
+
+	err = updateSystemAdvisoriesWhenPatched(tx, systemID, rhAccountID, unpatched, nil)
+	return err
 }
