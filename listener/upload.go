@@ -150,12 +150,12 @@ func hostUploadReceived(hostID string, account string, identity string) {
 		SecurityOnly:   false,
 	}
 
-	systemID, err := updateSystemPlatform(host.Id, accountID, &updatesReq)
+	systemPlatform, err := updateSystemPlatform(host.Id, accountID, &updatesReq)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Saving system into the database")
 		return
 	}
 
 	// Evaluation part - TODO - move to evaluator component
-	evaluator.Evaluate(ctx, systemID, updatesReq)
+	evaluator.Evaluate(ctx, systemPlatform.ID, systemPlatform.RhAccountID, updatesReq)
 }

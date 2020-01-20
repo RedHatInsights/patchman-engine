@@ -60,8 +60,8 @@ func TestGetStoredAdvisoriesMap(t *testing.T) {
 }
 
 func TestGetNewAndUnpatchedAdvisories(t *testing.T) {
-	stored := createTestStoredAdvisories(map[int]*time.Time{1: &testDate, 2: nil, 3: nil})
-	reported := createTestReportedAdvisories("ER-1", "ER-3", "ER-4")
+	stored := createStoredAdvisories(map[int]*time.Time{1: &testDate, 2: nil, 3: nil})
+	reported := createReportedAdvisories("ER-1", "ER-3", "ER-4")
 	news, unpatched := getNewAndUnpatchedAdvisories(reported, stored)
 	assert.Equal(t, 1, len(news))
 	assert.Equal(t, "ER-4", news[0])
@@ -70,8 +70,8 @@ func TestGetNewAndUnpatchedAdvisories(t *testing.T) {
 }
 
 func TestGetPatchedAdvisories(t *testing.T) {
-	stored := createTestStoredAdvisories(map[int]*time.Time{1: &testDate, 2: nil, 3: nil})
-	reported := createTestReportedAdvisories("ER-3", "ER-4")
+	stored := createStoredAdvisories(map[int]*time.Time{1: &testDate, 2: nil, 3: nil})
+	reported := createReportedAdvisories("ER-3", "ER-4")
 	patched := getPatchedAdvisories(reported, stored)
 	assert.Equal(t, 1, len(patched))
 	assert.Equal(t, 2, patched[0])
@@ -81,30 +81,38 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemPlatform := models.SystemPlatform{ID: 1, RhAccountID: 0}
+	systemID := 1
+	rhAccountID := 0
 	advisoryIDs := []int{2, 3, 4}
-	createTestingSystemAdvisories(t, systemPlatform.ID, advisoryIDs, nil)
+	createSystemAdvisories(t, systemID, advisoryIDs, nil)
+	createAdvisoryAccountData(t, rhAccountID, advisoryIDs, 1)
 
-	err := updateSystemAdvisoriesWhenPatched(database.Db, &systemPlatform, advisoryIDs, &testDate)
+	err := updateSystemAdvisoriesWhenPatched(database.Db, systemID, rhAccountID, advisoryIDs, &testDate)
 	assert.Nil(t, err)
-	checkSystemAdvisoriesWhenPatched(t, systemPlatform.ID, advisoryIDs, &testDate)
+	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, &testDate)
+	database.CheckAdvisoriesAccountData(t, rhAccountID, advisoryIDs, 0)
 
-	deleteTestingSystemAdvisories(t, systemPlatform.ID, advisoryIDs)
+	deleteSystemAdvisories(t, systemID, advisoryIDs)
+	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 }
 
 func TestUpdateUnpatchedSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemPlatform := models.SystemPlatform{ID: 1, RhAccountID: 0}
+	systemID := 1
+	rhAccountID := 0
 	advisoryIDs := []int{2, 3, 4}
-	createTestingSystemAdvisories(t, systemPlatform.ID, advisoryIDs, &testDate)
+	createSystemAdvisories(t, systemID, advisoryIDs, &testDate)
+	createAdvisoryAccountData(t, rhAccountID, advisoryIDs, 1)
 
-	err := updateSystemAdvisoriesWhenPatched(database.Db, &systemPlatform, advisoryIDs, nil)
+	err := updateSystemAdvisoriesWhenPatched(database.Db, systemID, rhAccountID, advisoryIDs, nil)
 	assert.Nil(t, err)
-	checkSystemAdvisoriesWhenPatched(t, systemPlatform.ID, advisoryIDs, nil)
+	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
+	database.CheckAdvisoriesAccountData(t, rhAccountID, advisoryIDs, 2)
 
-	deleteTestingSystemAdvisories(t, systemPlatform.ID, advisoryIDs)
+	deleteSystemAdvisories(t, systemID, advisoryIDs)
+	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 }
 
 func TestEnsureAdvisoriesInDb(t *testing.T) {
@@ -117,7 +125,7 @@ func TestEnsureAdvisoriesInDb(t *testing.T) {
 	assert.Equal(t, 2, nCreated)
 	assert.Equal(t, 4, len(*advisoryIDs))
 	database.CheckAdvisoriesInDb(t, advisories)
-	deleteTestingAdvisories(t, []string{"ER-1", "ER-2"})
+	deleteAdvisories(t, []string{"ER-1", "ER-2"})
 }
 
 func TestAddNewSystemAdvisories(t *testing.T) {
@@ -125,12 +133,31 @@ func TestAddNewSystemAdvisories(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	systemID := 1
+	rhAccountID := 0
 	advisoryIDs := []int{2, 3, 4}
-	err := addNewSystemAdvisories(database.Db, systemID, advisoryIDs)
+	err := addNewSystemAdvisories(database.Db, systemID, rhAccountID, advisoryIDs)
 	assert.Nil(t, err)
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
 
-	deleteTestingSystemAdvisories(t, systemID, advisoryIDs)
+	deleteSystemAdvisories(t, systemID, advisoryIDs)
+	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
+}
+
+func TestAddAndUpdateAccountAdvisoriesAffectedSystems(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	rhAccountID := 2
+	existingIDs := []int{1, 2}
+	createAdvisoryAccountData(t, rhAccountID, existingIDs, 1)
+
+	advisoryIDs := []int{1, 2, 3, 4}
+	err := addAndUpdateAccountAdvisoriesAffectedSystems(database.Db, rhAccountID, advisoryIDs)
+	assert.Nil(t, err)
+	database.CheckAdvisoriesAccountData(t, rhAccountID, existingIDs, 2)
+	database.CheckAdvisoriesAccountData(t, rhAccountID, []int{3, 4}, 1)
+
+	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 }
 
 func TestEvaluate(t *testing.T) {
@@ -140,16 +167,18 @@ func TestEvaluate(t *testing.T) {
 
 	Configure()
 
-	systemPlatform := models.SystemPlatform{ID: 11, RhAccountID: 2}
+	systemID := 11
+	rhAccountID := 2
 	expectedAddedAdvisories := []string{"ER1", "ER2", "ER3"}
-	Evaluate(context.Background(), &systemPlatform, vmaas.UpdatesV3Request{})
-	ids := database.CheckAdvisoriesInDb(t, expectedAddedAdvisories)
+	Evaluate(context.Background(), systemID, rhAccountID, vmaas.UpdatesV3Request{})
+	advisoryIDs := database.CheckAdvisoriesInDb(t, expectedAddedAdvisories)
 
-	checkSystemAdvisoriesWhenPatched(t, systemPlatform.ID, ids, nil)
+	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
 	database.CheckSystemJustEvaluated(t, "INV-11", 3, 0, 0, 0)
 
-	deleteTestingSystemAdvisories(t, systemPlatform.ID, ids)
-	deleteTestingAdvisories(t, expectedAddedAdvisories)
+	deleteSystemAdvisories(t, systemID, advisoryIDs)
+	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
+	deleteAdvisories(t, expectedAddedAdvisories)
 }
 
 func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {
@@ -161,7 +190,7 @@ func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {
 	return vmaasData
 }
 
-func createTestReportedAdvisories(reportedAdvisories ...string) map[string]bool {
+func createReportedAdvisories(reportedAdvisories ...string) map[string]bool {
 	reportedAdvisoriesMap := map[string]bool{}
 	for _, adv := range reportedAdvisories {
 		reportedAdvisoriesMap[adv] = true
@@ -169,7 +198,7 @@ func createTestReportedAdvisories(reportedAdvisories ...string) map[string]bool 
 	return reportedAdvisoriesMap
 }
 
-func createTestStoredAdvisories(advisoryPatched map[int]*time.Time) map[string]models.SystemAdvisories {
+func createStoredAdvisories(advisoryPatched map[int]*time.Time) map[string]models.SystemAdvisories {
 	systemAdvisoriesMap := map[string]models.SystemAdvisories{}
 	for advisoryID, patched := range advisoryPatched {
 		systemAdvisoriesMap["ER-"+strconv.Itoa(advisoryID)] = models.SystemAdvisories{
@@ -179,7 +208,8 @@ func createTestStoredAdvisories(advisoryPatched map[int]*time.Time) map[string]m
 	return systemAdvisoriesMap
 }
 
-func createTestingSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int, whenPatched *time.Time) {
+func createSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int,
+	whenPatched *time.Time) {
 	for _, advisoryID := range advisoryIDs {
 		err := database.Db.Create(&models.SystemAdvisories{
 			SystemID: systemID, AdvisoryID: advisoryID, WhenPatched: whenPatched}).Error
@@ -188,7 +218,18 @@ func createTestingSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, whenPatched)
 }
 
-func checkSystemAdvisoriesWhenPatched(t *testing.T, systemID int, advisoryIDs []int, whenPatched *time.Time) {
+func createAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int,
+	systemsAffected int) {
+	for _, advisoryID := range advisoryIDs {
+		err := database.Db.Create(&models.AdvisoryAccountData{
+			AdvisoryID: advisoryID, RhAccountID: rhAccountID, SystemsAffected: systemsAffected}).Error
+		assert.Nil(t, err)
+	}
+	database.CheckAdvisoriesAccountData(t, rhAccountID, advisoryIDs, systemsAffected)
+}
+
+func checkSystemAdvisoriesWhenPatched(t *testing.T, systemID int, advisoryIDs []int,
+	whenPatched *time.Time) {
 	var systemAdvisories []models.SystemAdvisories
 	err := database.Db.Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
 		Find(&systemAdvisories).Error
@@ -204,7 +245,7 @@ func checkSystemAdvisoriesWhenPatched(t *testing.T, systemID int, advisoryIDs []
 	}
 }
 
-func deleteTestingSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int) {
+func deleteSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int) {
 	err := database.Db.Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
 		Delete(&models.SystemAdvisories{}).Error
 	assert.Nil(t, err)
@@ -217,7 +258,19 @@ func deleteTestingSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int
 	assert.Nil(t, database.Db.Exec("SELECT * FROM update_system_caches(?)", systemID).Error)
 }
 
-func deleteTestingAdvisories(t *testing.T, advisories []string) {
+func deleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int) {
+	err := database.Db.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
+		Delete(&models.AdvisoryAccountData{}).Error
+	assert.Nil(t, err)
+
+	var advisoryAccountData []models.AdvisoryAccountData
+	err = database.Db.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
+		Find(&advisoryAccountData).Error
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(advisoryAccountData))
+}
+
+func deleteAdvisories(t *testing.T, advisories []string) {
 	err := database.Db.Where("name IN (?)", advisories).
 		Delete(&models.AdvisoryMetadata{}).Error
 	assert.Nil(t, err)
