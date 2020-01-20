@@ -50,7 +50,7 @@ func TestSchemaCompatiblity(t *testing.T) {
 	err = m.Up()
 	assert.NoError(t, err)
 
-	dumpCmd := exec.Command("pg_dump", "-s", "-O")
+	dumpCmd := exec.Command("pg_dump", "-O")
 	setCmdAuth(dumpCmd)
 
 	migrated, err := dumpCmd.Output()
@@ -64,7 +64,7 @@ func TestSchemaCompatiblity(t *testing.T) {
 	_, err = rawCreate.CombinedOutput()
 	assert.NoError(t, err)
 
-	dumpCmd = exec.Command("pg_dump", "-s", "-O")
+	dumpCmd = exec.Command("pg_dump", "-O")
 	setCmdAuth(dumpCmd)
 
 	fromScratch, err := dumpCmd.Output()

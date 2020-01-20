@@ -72,6 +72,6 @@ INSERT INTO timestamp_kv (name, value) VALUES
 
 SELECT refresh_all_cached_counts();
 
-SELECT setval('advisory_metadata_id_seq', 100);
-SELECT setval('system_platform_id_seq', 100);
-SELECT setval('rh_account_id_seq', 100);
+ALTER TABLE advisory_metadata ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE system_platform ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE rh_account ALTER COLUMN id RESTART WITH 100;

@@ -7,12 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (5, false);
--- set the schema version directly in the insert statement here!!
---INSERT INTO db_version (name, version)
---VALUES ('schema_version', 1);
--- INSERT INTO db_version (name, version) VALUES ('schema_version', :schema_version);
-
+VALUES (4, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
