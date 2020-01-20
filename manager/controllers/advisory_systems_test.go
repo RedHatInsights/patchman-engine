@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -61,4 +62,17 @@ func TestAdvisorySystemsOffsetOverflow(t *testing.T) {
 	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "too big offset", errResp.Error)
+}
+
+func TestAdvisorySystemsSorts(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	w := httptest.NewRecorder()
+
+	for _, sort := range SystemsSortFields {
+		req, _ := http.NewRequest("GET", fmt.Sprintf("/RH-1?sort=%v", sort), nil)
+		initRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+
+		assert.Equal(t, 200, w.Code, "Sort field: ", sort)
+	}
 }
