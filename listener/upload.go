@@ -61,25 +61,26 @@ func getOrCreateAccount(account string) (int, error) {
 }
 
 // Stores or updates base system profile, returing internal system id
-func updateSystemPlatform(inventoryID string, accountID int, updatesReq *vmaas.UpdatesV3Request) (int, error) {
+func updateSystemPlatform(inventoryID string, accountID int, updatesReq *vmaas.UpdatesV3Request) (
+	*models.SystemPlatform, error) {
 	updatesReqJSON, err := json.Marshal(&updatesReq)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Serializing vmaas request")
-		return 0, err
+		return nil, err
 	}
 
 	hash := sha256.New()
 	_, err = hash.Write(updatesReqJSON)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Unable to hash updates json")
-		return 0, err
+		return nil, err
 	}
 
 	jsonChecksum := hex.EncodeToString(hash.Sum([]byte{}))
 
 	now := time.Now()
 
-	dbHost := models.SystemPlatform{
+	systemPlatform := models.SystemPlatform{
 		InventoryID:    inventoryID,
 		RhAccountID:    accountID,
 		VmaasJSON:      string(updatesReqJSON),
@@ -90,13 +91,13 @@ func updateSystemPlatform(inventoryID string, accountID int, updatesReq *vmaas.U
 
 	tx := database.OnConflictUpdate(database.Db, "inventory_id", "vmaas_json", "json_checksum",
 		"last_evaluation", "last_upload")
-	err = tx.Create(&dbHost).Error
+	err = tx.Create(&systemPlatform).Error
 
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Saving host into the database")
-		return 0, err
+		return nil, err
 	}
-	return dbHost.ID, nil
+	return &systemPlatform, nil
 }
 
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS

@@ -81,30 +81,30 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemID := 1
+	systemPlatform := models.SystemPlatform{ID: 1, RhAccountID: 0}
 	advisoryIDs := []int{2, 3, 4}
-	createTestingSystemAdvisories(t, systemID, advisoryIDs, nil)
+	createTestingSystemAdvisories(t, systemPlatform.ID, advisoryIDs, nil)
 
-	err := updateSystemAdvisoriesWhenPatched(database.Db, systemID, advisoryIDs, &testDate)
+	err := updateSystemAdvisoriesWhenPatched(database.Db, &systemPlatform, advisoryIDs, &testDate)
 	assert.Nil(t, err)
-	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, &testDate)
+	checkSystemAdvisoriesWhenPatched(t, systemPlatform.ID, advisoryIDs, &testDate)
 
-	deleteTestingSystemAdvisories(t, systemID, advisoryIDs)
+	deleteTestingSystemAdvisories(t, systemPlatform.ID, advisoryIDs)
 }
 
 func TestUpdateUnpatchedSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemID := 1
+	systemPlatform := models.SystemPlatform{ID: 1, RhAccountID: 0}
 	advisoryIDs := []int{2, 3, 4}
-	createTestingSystemAdvisories(t, systemID, advisoryIDs, &testDate)
+	createTestingSystemAdvisories(t, systemPlatform.ID, advisoryIDs, &testDate)
 
-	err := updateSystemAdvisoriesWhenPatched(database.Db, systemID, advisoryIDs, nil)
+	err := updateSystemAdvisoriesWhenPatched(database.Db, &systemPlatform, advisoryIDs, nil)
 	assert.Nil(t, err)
-	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
+	checkSystemAdvisoriesWhenPatched(t, systemPlatform.ID, advisoryIDs, nil)
 
-	deleteTestingSystemAdvisories(t, systemID, advisoryIDs)
+	deleteTestingSystemAdvisories(t, systemPlatform.ID, advisoryIDs)
 }
 
 func TestEnsureAdvisoriesInDb(t *testing.T) {
@@ -140,15 +140,15 @@ func TestEvaluate(t *testing.T) {
 
 	Configure()
 
-	systemID := 11
+	systemPlatform := models.SystemPlatform{ID: 11, RhAccountID: 2}
 	expectedAddedAdvisories := []string{"ER1", "ER2", "ER3"}
-	Evaluate(context.Background(), systemID, vmaas.UpdatesV3Request{})
+	Evaluate(context.Background(), &systemPlatform, vmaas.UpdatesV3Request{})
 	ids := database.CheckAdvisoriesInDb(t, expectedAddedAdvisories)
 
-	checkSystemAdvisoriesWhenPatched(t, systemID, ids, nil)
+	checkSystemAdvisoriesWhenPatched(t, systemPlatform.ID, ids, nil)
 	database.CheckSystemJustEvaluated(t, "INV-11", 3, 0, 0, 0)
 
-	deleteTestingSystemAdvisories(t, systemID, ids)
+	deleteTestingSystemAdvisories(t, systemPlatform.ID, ids)
 	deleteTestingAdvisories(t, expectedAddedAdvisories)
 }
 
