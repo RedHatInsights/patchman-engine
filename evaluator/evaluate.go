@@ -230,6 +230,13 @@ func updateSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, patched, unp
 		return err
 	}
 
+	// delete items with no system related
+	err = tx.Where("rh_account_id = ? AND systems_affected = 0", rhAccountID).
+		Delete(&models.AdvisoryAccountData{}).Error
+	if err != nil {
+		return err
+	}
+
 	err = ensureSystemAdvisories(tx, systemID, unpatched)
 	if err != nil {
 		return err
