@@ -4,7 +4,6 @@ import (
 	"app/base"
 	"app/base/mqueue"
 	"app/base/utils"
-	"app/evaluator"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 )
 
@@ -12,6 +11,7 @@ var (
 	uploadTopic     string
 	eventsTopic     string
 	consumerCount   int
+	evalWriter      *mqueue.Writer
 	inventoryClient *inventory.APIClient
 )
 
@@ -20,6 +20,10 @@ func configure() {
 	eventsTopic = utils.GetenvOrFail("EVENTS_TOPIC")
 
 	consumerCount = utils.GetIntEnvOrFail("CONSUMER_COUNT")
+
+	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
+
+	evalWriter = mqueue.WriterFromEnv(evalTopic)
 
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
@@ -30,7 +34,6 @@ func configure() {
 	inventoryConfig.BasePath = inventoryAddr + base.InventoryAPIPrefix
 	inventoryClient = inventory.NewAPIClient(inventoryConfig)
 
-	evaluator.Configure() // TODO - move to evaluator component
 }
 
 func runReader(topic string, handler mqueue.EventHandler) {

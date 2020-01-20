@@ -4,8 +4,10 @@ import (
 	"app/base"
 	"app/base/database"
 	"app/base/models"
+	"app/base/mqueue"
 	"app/base/utils"
 	"context"
+	"encoding/json"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
 	"github.com/jinzhu/gorm"
@@ -20,22 +22,39 @@ const (
 )
 
 var (
+	kafkaReader *mqueue.Reader
 	vmaasClient *vmaas.APIClient
 )
 
 func Configure() {
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
+	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
+
+	kafkaReader = mqueue.ReaderFromEnv(evalTopic)
+
 	vmaasConfig := vmaas.NewConfiguration()
 	vmaasConfig.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
 	vmaasConfig.Debug = traceAPI
 	vmaasClient = vmaas.NewAPIClient(vmaasConfig)
+
 }
 
-func Evaluate(ctx context.Context, systemID, rhAccountID int, updatesReq vmaas.UpdatesV3Request,
+func Evaluate(ctx context.Context, systemName string,
 	evaluationType string) error {
 	tStart := time.Now()
 	defer evaluationDuration.WithLabelValues(evaluationType).Observe(time.Since(tStart).Seconds())
+
+	var system models.SystemPlatform
+	err := database.Db.Where("name = ?", systemName).Find(&system).Error
+	if err != nil {
+		return errors.Wrap(err, "Unable to get updates from VMaaS")
+	}
+	var updatesReq vmaas.UpdatesV3Request
+	err = json.Unmarshal([]byte(system.VmaasJSON), &updatesReq)
+	if err != nil {
+		return errors.Wrap(err, "Unable to get updates from VMaaS")
+	}
 
 	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{
 		UpdatesV3Request: optional.NewInterface(updatesReq),
@@ -48,21 +67,21 @@ func Evaluate(ctx context.Context, systemID, rhAccountID int, updatesReq vmaas.U
 	}
 
 	tx := database.Db.Begin()
-	err = processSystemAdvisories(tx, systemID, rhAccountID, vmaasData)
+	err = processSystemAdvisories(tx, system.ID, system.RhAccountID, vmaasData)
 	if err != nil {
 		tx.Rollback()
 		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
 		return errors.Wrap(err, "Unable to process system advisories")
 	}
 
-	err = tx.Exec("SELECT * FROM update_system_caches(?)", systemID).Error
+	err = tx.Exec("SELECT * FROM update_system_caches(?)", system.ID).Error
 	if err != nil {
 		tx.Rollback()
 		evaluationCnt.WithLabelValues("error-update-system-caches").Inc()
 		return errors.Wrap(err, "Unable to update system caches")
 	}
 
-	err = tx.Model(&models.SystemPlatform{}).Where("id = ?", systemID).
+	err = tx.Model(&models.SystemPlatform{}).Where("id = ?", system.ID).
 		Update("last_evaluation", time.Now()).Error
 	if err != nil {
 		tx.Rollback()
@@ -262,4 +281,15 @@ func updateSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, patched, unp
 
 	err = updateSystemAdvisoriesWhenPatched(tx, systemID, rhAccountID, unpatched, nil)
 	return err
+}
+
+func RunEvaluator() {
+	Configure()
+
+	kafkaReader.HandleEvents(func(event mqueue.PlatformEvent) {
+		err := Evaluate(context.Background(), event.ID, EvalTypeUpload)
+		if err != nil {
+			utils.Log("err", err.Error()).Error("Eval message handling")
+		}
+	})
 }

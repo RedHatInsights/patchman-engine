@@ -31,6 +31,20 @@ services:
       - 9092:9092
       - 9001:9001
 
+  manager:
+    build:
+      context: .
+      dockerfile: Dockerfile.centos
+    env_file:
+      - ./conf/common.env
+      - ./conf/manager.env
+    command: ./manager/entrypoint.sh
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+      - platform
+
   listener:
     build:
       context: .
@@ -45,16 +59,16 @@ services:
       - db
       - platform
 
-  manager:
+  evaluator:
     build:
       context: .
       dockerfile: Dockerfile.centos
     env_file:
       - ./conf/common.env
-      - ./conf/manager.env
-    command: ./manager/entrypoint.sh
+      - ./conf/evaluator.env
+    command: ./evaluator/entrypoint.sh
     ports:
-      - 8080:8080
+      - 8082:8082
     depends_on:
       - db
       - platform
