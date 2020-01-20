@@ -36,7 +36,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 		Releasever:     "7Server",
 		Basearch:       "x86_64",
 	}
-	sys, err := updateSystemPlatform(id, accountID, &req)
+	sys1, err := updateSystemPlatform(id, accountID, &req)
 	assert.Nil(t, err)
 
 	assertSystemInDb(t)
@@ -44,7 +44,11 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	sys2, err := updateSystemPlatform(id, accountID, &req)
 	assert.Nil(t, err)
 
-	assert.Equal(t, sys, sys2)
+	assert.Equal(t, sys1.ID, sys2.ID)
+	assert.Equal(t, sys1.InventoryID, sys2.InventoryID)
+	assert.Equal(t, sys1.RhAccountID, sys2.RhAccountID)
+	assert.Equal(t, sys1.JSONChecksum, sys2.JSONChecksum)
+	assert.Equal(t, sys1.OptOut, sys2.OptOut)
 
 	deleteData(t)
 }
