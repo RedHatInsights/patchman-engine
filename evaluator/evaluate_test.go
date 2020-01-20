@@ -81,8 +81,8 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemID := 1
-	rhAccountID := 0
+	systemID := 11
+	rhAccountID := 2
 	advisoryIDs := []int{2, 3, 4}
 	createSystemAdvisories(t, systemID, advisoryIDs, nil)
 	createAdvisoryAccountData(t, rhAccountID, advisoryIDs, 1)
@@ -100,8 +100,8 @@ func TestUpdateUnpatchedSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemID := 1
-	rhAccountID := 0
+	systemID := 11
+	rhAccountID := 2
 	advisoryIDs := []int{2, 3, 4}
 	createSystemAdvisories(t, systemID, advisoryIDs, &testDate)
 	createAdvisoryAccountData(t, rhAccountID, advisoryIDs, 1)
@@ -144,7 +144,7 @@ func TestAddAndUpdateAccountAdvisoriesAffectedSystems(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	rhAccountID := 2
+	rhAccountID := 3
 	existingIDs := []int{1, 2}
 	createAdvisoryAccountData(t, rhAccountID, existingIDs, 1)
 

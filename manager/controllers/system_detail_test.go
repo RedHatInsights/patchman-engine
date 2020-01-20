@@ -22,7 +22,7 @@ func TestSystemDetailDefault(t *testing.T) {
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, "INV-0", output.Data.ID)
 	assert.Equal(t, "system", output.Data.Type)
-	assert.Nil(t, output.Data.Attributes.LastEvaluation)
+	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data.Attributes.LastEvaluation.String())
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data.Attributes.LastUpload.String())
 	assert.Equal(t, 8, output.Data.Attributes.RhsaCount)
 }
