@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+var AdvisoriesSortFields = []string{"name", "description", "synopsis", "summary", "solution", "public_date"}
+
 type AdvisoriesResponse struct {
 	Data  []AdvisoryItem `json:"data"`
 	Links Links          `json:"links"`
@@ -44,7 +46,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 	}
 
 	query := buildQueryAdvisoris(account)
-	query, err = ApplySort(c, query, "public_date")
+	query, err = ApplySort(c, query, "", AdvisoriesSortFields...)
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return
