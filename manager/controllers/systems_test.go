@@ -25,7 +25,7 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, "INV-0", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
-	assert.Nil(t, output.Data[0].Attributes.LastEvaluation)
+	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastEvaluation.String())
 	assert.Equal(t, 3, output.Data[0].Attributes.RheaCount)
 	assert.Equal(t, 3, output.Data[0].Attributes.RhbaCount)
 	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
