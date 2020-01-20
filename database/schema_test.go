@@ -27,8 +27,8 @@ func setCmdAuth(cmd *exec.Cmd) {
 
 func TestSchemaCompatiblity(t *testing.T) {
 	cfg := postgres.Config{
-		DatabaseName: "patchman",
-		SchemaName:   "public",
+		DatabaseName:    "patchman",
+		SchemaName:      "public",
 		MigrationsTable: "schema_migrations",
 	}
 	database.Configure()
@@ -42,7 +42,8 @@ func TestSchemaCompatiblity(t *testing.T) {
 	driver, err = postgres.WithInstance(database.Db.DB(), &cfg)
 	assert.NoError(t, err)
 
-	m, err := migrate.NewWithDatabaseInstance("file://./database/migrations",
+	// Tests are run from local directory
+	m, err := migrate.NewWithDatabaseInstance("file://migrations",
 		utils.GetenvOrFail("DB_NAME"), driver)
 	assert.Nil(t, err)
 
@@ -57,7 +58,7 @@ func TestSchemaCompatiblity(t *testing.T) {
 	err = m.Drop()
 	assert.NoError(t, err)
 
-	rawCreate := exec.Command("/usr/bin/psql", "-f", "./database/schema/create_schema.sql")
+	rawCreate := exec.Command("/usr/bin/psql", "-f", "./schema/create_schema.sql")
 	setCmdAuth(rawCreate)
 
 	_, err = rawCreate.CombinedOutput()
@@ -68,7 +69,6 @@ func TestSchemaCompatiblity(t *testing.T) {
 
 	fromScratch, err := dumpCmd.Output()
 	assert.NoError(t, err)
-	utils.Log().Error(string(fromScratch))
 
 	migratedLines := strings.SplitAfter(string(migrated), "\n")
 	scratchLines := strings.SplitAfter(string(fromScratch), "\n")
@@ -76,5 +76,5 @@ func TestSchemaCompatiblity(t *testing.T) {
 	diff, err := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{A: migratedLines, B: scratchLines})
 	assert.NoError(t, err)
 
-	fmt.Printf(diff)
+	fmt.Print(diff)
 }

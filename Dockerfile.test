@@ -16,6 +16,7 @@ RUN go mod download && \
     | sh -s -- -b $(go env GOPATH)/bin v1.22.2
 
 ADD /base          /go/src/app/base
+ADD /database      /go/src/app/database
 ADD /manager       /go/src/app/manager
 ADD /listener      /go/src/app/listener
 ADD /evaluator     /go/src/app/evaluator
