@@ -18,28 +18,27 @@ objects:
     kind: DeploymentConfig
     metadata:
       labels: { app: patchman-engine }
-      name: patchman-engine-listener
+      name: patchman-engine-evaluator
     spec:
-      replicas: 8
+      replicas: 1
       selector:
         app: patchman-engine
-        deploymentconfig: patchman-engine-listener
+        deploymentconfig: patchman-engine-evaluator
       template:
         metadata:
           labels:
             app: patchman-engine
-            deploymentconfig: patchman-engine-listener
-          name: patchman-engine-listener
+            deploymentconfig: patchman-engine-evaluator
+          name: patchman-engine-evaluator
         spec:
           containers:
             - image: ${IMAGE_NAMESPACE}/patchman-engine-app:${IMAGE_TAG}
               imagePullPolicy: Always
-              name: patchman-engine-listener
-              command: [ ./listener/entrypoint.sh ]
+              name: patchman-engine-evaluator
+              command: [ ./evaluator/entrypoint.sh ]
               resources:
-                # We dont need limits ATM, not enough work being done to warrant CPU limits.
-                limits: { memory: 128Mi }
-                requests: { memory: 128Mi }
+                limits: { cpu: 500m,  memory: 512Mi }
+                requests: { cpu: 200m, memory: 512Mi }
               livenessProbe:
                 httpGet: { path: /metrics, port: 8081, scheme: HTTP }
               readinessProbe:
@@ -48,13 +47,10 @@ objects:
                 - { name: LOG_LEVEL, value: debug }
                 - { name: LOG_STYLE, value: plain }
                 - { name: GIN_MODE, value: release }
-                - { name: CONSUMER_COUNT, value: "8" }
-                - { name: GOMAXPROCS, value: "8" }
 
                 - { name: KAFKA_ADDRESS, value: "${KAFKA_ADDRESS}" }
                 - { name: KAFKA_GROUP, value: patchman }
-                - { name: UPLOAD_TOPIC, value: platform.upload.available }
-                - { name: EVENTS_TOPIC, value: platform.inventory.events }
+                -
                 - { name: EVAL_TOPIC, value: patchman.evaluate }
 
                 - { name: INVENTORY_ADDRESS, value: "${INVENTORY_ADDRESS}" }
@@ -64,12 +60,12 @@ objects:
                 - { name: DB_HOST, value: patchman-engine-database }
                 - { name: DB_PORT, value: "5432" }
                 - { name: DB_NAME, value: patchman }
-                - { name: DB_USER, value: listener }
+                - { name: DB_USER, value: evaluator }
                 - name: DB_PASSWD
                   valueFrom:
                     secretKeyRef:
                       name:  patchman-engine-database-passwords
-                      key: listener-database-password
+                      key: evaluator-database-password
                 - { name: CW_AWS_REGION, value: us-east-1 }
                 - { name: CW_AWS_LOG_GROUP, value: platform-dev }
                 - name: CW_AWS_ACCESS_KEY_ID
@@ -90,7 +86,7 @@ objects:
         - imageChangeParams:
             automatic: true
             containerNames:
-              - patchman-engine-listener
+              - patchman-engine-evaluator
             from:
               kind: ImageStreamTag
               name: patchman-engine-app:${IMAGE_TAG}
@@ -102,7 +98,7 @@ objects:
     metadata:
       labels:
         app: patchman-engine
-      name: patchman-engine-listener
+      name: patchman-engine-evaluator
     spec:
       type: ClusterIP
       ports:
@@ -112,5 +108,5 @@ objects:
           targetPort: 8081
       selector:
         app: patchman-engine
-        deploymentconfig: patchman-engine-listener
+        deploymentconfig: patchman-engine-evaluator
 

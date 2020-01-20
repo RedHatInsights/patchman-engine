@@ -5,7 +5,6 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
-	"app/evaluator"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -160,15 +159,18 @@ func processUpload(hostID string, account string, identity string) error {
 		SecurityOnly:   false,
 	}
 
-	systemPlatform, err := updateSystemPlatform(host.Id, accountID, &updatesReq)
+	_, err = updateSystemPlatform(host.Id, accountID, &updatesReq)
 	if err != nil {
 		return errors.Wrap(err, "saving system into the database")
 	}
 
-	// Evaluation part - TODO - move to evaluator component
-	err = evaluator.Evaluate(ctx, systemPlatform.ID, systemPlatform.RhAccountID, updatesReq, evaluator.EvalTypeUpload)
+	event := mqueue.PlatformEvent{
+		ID: hostID,
+	}
+
+	err = evalWriter.WriteEvent(ctx, event)
 	if err != nil {
-		return errors.Wrap(err, "system evaluation failed")
+		return errors.Wrap(err, "Sending kafka event failed")
 	}
 	return nil
 }

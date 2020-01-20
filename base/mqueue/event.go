@@ -3,7 +3,9 @@ package mqueue
 import (
 	"app/base/utils"
 	"encoding/json"
+	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
+	"golang.org/x/net/context"
 )
 
 type PlatformEvent struct {
@@ -33,4 +35,12 @@ func makeKafkaHandler(eventHandler EventHandler) KafkaHandler {
 
 func (t *Reader) HandleEvents(handler EventHandler) {
 	t.HandleMessages(makeKafkaHandler(handler))
+}
+
+func (t *Writer) WriteEvent(ctx context.Context, ev PlatformEvent) error {
+	data, err := json.Marshal(&ev)
+	if err != nil {
+		return errors.Wrap(err, "Serializing event")
+	}
+	return t.WriteMessages(ctx, kafka.Message{Value: data})
 }

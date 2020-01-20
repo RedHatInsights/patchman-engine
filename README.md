@@ -5,7 +5,7 @@
 System Patch Manager application for [cloud.redhat.com](cloud.redhat.com).
 
 ## Components
-The project is written as a set of communicating containers. The core components are `listener`, `manager` and `database` 
+The project is written as a set of communicating containers. The core components are `listener`, `evaluator`, `manager` and `database` 
 - Listener - Connects to kafka service, and listens for messages.
 - Manager - Contains implementation of a REST API, which serves as a primary interface for interacting with the application
 - Database - Self explanatory

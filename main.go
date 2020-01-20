@@ -2,6 +2,7 @@ package main
 
 import (
 	"app/base/core"
+	"app/evaluator"
 	"app/listener"
 	"app/manager"
 	"app/vmaas_sync"
@@ -14,11 +15,14 @@ func main() {
 
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
+		case "manager":
+			manager.RunManager()
+			return
 		case "listener":
 			listener.RunListener()
 			return
-		case "manager":
-			manager.RunManager()
+		case "evaluator":
+			evaluator.RunEvaluator()
 			return
 		case "vmaas_sync":
 			vmaas_sync.RunVmaasSync()
