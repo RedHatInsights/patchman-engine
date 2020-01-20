@@ -28,12 +28,7 @@ func Configure() {
 	vmaasClient = vmaas.NewAPIClient(vmaasConfig)
 }
 
-func Evaluate(ctx context.Context, systemPlatform *models.SystemPlatform, updatesReq vmaas.UpdatesV3Request) {
-	if systemPlatform == nil {
-		utils.Log().Error("Nil system provided to evaluation")
-		return
-	}
-
+func Evaluate(ctx context.Context, systemID, rhAccountID int, updatesReq vmaas.UpdatesV3Request) {
 	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{
 		UpdatesV3Request: optional.NewInterface(updatesReq),
 	}
@@ -45,21 +40,21 @@ func Evaluate(ctx context.Context, systemPlatform *models.SystemPlatform, update
 	}
 
 	tx := database.Db.Begin()
-	err = processSystemAdvisories(tx, systemPlatform, vmaasData)
+	err = processSystemAdvisories(tx, systemID, rhAccountID, vmaasData)
 	if err != nil {
 		tx.Rollback()
 		utils.Log("err", err.Error()).Error("Unable to process system advisories")
 		return
 	}
 
-	err = tx.Exec("SELECT * FROM update_system_caches(?)", systemPlatform.ID).Error
+	err = tx.Exec("SELECT * FROM update_system_caches(?)", systemID).Error
 	if err != nil {
 		tx.Rollback()
 		utils.Log("err", err.Error()).Error("Unable to update system caches")
 		return
 	}
 
-	err = tx.Model(&models.SystemPlatform{}).Where("id = ?", systemPlatform.ID).
+	err = tx.Model(&models.SystemPlatform{}).Where("id = ?", systemID).
 		Update("last_evaluation", time.Now()).Error
 	if err != nil {
 		tx.Rollback()
@@ -70,10 +65,9 @@ func Evaluate(ctx context.Context, systemPlatform *models.SystemPlatform, update
 	tx.Commit()
 }
 
-func processSystemAdvisories(tx *gorm.DB, systemPlatform *models.SystemPlatform,
-	vmaasData vmaas.UpdatesV2Response) error {
+func processSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, vmaasData vmaas.UpdatesV2Response) error {
 	reported := getReportedAdvisories(vmaasData)
-	stored, err := getStoredAdvisoriesMap(tx, systemPlatform.ID)
+	stored, err := getStoredAdvisoriesMap(tx, systemID)
 	if err != nil {
 		return errors.Wrap(err, "Unable to get system stored advisories")
 	}
@@ -87,7 +81,7 @@ func processSystemAdvisories(tx *gorm.DB, systemPlatform *models.SystemPlatform,
 	}
 	utils.Log("added", nAdded).Info("Added new unknown advisories into the db")
 
-	err = updateSystemAdvisories(tx, systemPlatform, patched, unpatched, *news)
+	err = updateSystemAdvisories(tx, systemID, rhAccountID, patched, unpatched, *news)
 	if err != nil {
 		return errors.Wrap(err, "Unable to update system advisories")
 	}
@@ -154,11 +148,31 @@ func getPatchedAdvisories(reported map[string]bool, stored map[string]models.Sys
 	return patchedAdvisories
 }
 
-func updateSystemAdvisoriesWhenPatched(tx *gorm.DB, systemPlatform *models.SystemPlatform, advisoryIDs []int,
+func updateSystemAdvisoriesWhenPatched(tx *gorm.DB, systemID, rhAccountID int, advisoryIDs []int,
 	whenPatched *time.Time) error {
 	err := tx.Model(models.SystemAdvisories{}).
-		Where("system_id = ? AND advisory_id IN (?)", systemPlatform.ID, advisoryIDs).
+		Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
 		Update("when_patched", whenPatched).Error
+	if err != nil {
+		return err
+	}
+
+	affectedSystemIncrement := 0
+	if whenPatched != nil {
+		affectedSystemIncrement = -1
+	} else {
+		affectedSystemIncrement = 1
+	}
+
+	err = updateAccountAdvisoriesAffectedSystems(tx, rhAccountID, advisoryIDs, affectedSystemIncrement)
+	return err
+}
+
+func updateAccountAdvisoriesAffectedSystems(tx *gorm.DB, rhAccountID int, advisoryIDs []int,
+	affectedSystemIncrement int) error {
+	err := tx.Model(models.AdvisoryAccountData{}).
+		Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
+		UpdateColumn("systems_affected", gorm.Expr("systems_affected + ?", affectedSystemIncrement)).Error
 	return err
 }
 
@@ -216,7 +230,7 @@ func createNewAdvisories(tx *gorm.DB, advisories []string, existingAdvisories []
 	return &createdAdvisoryIDs, nil
 }
 
-func addNewSystemAdvisories(tx *gorm.DB, systemID int, advisoryIDs []int) error {
+func addNewSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, advisoryIDs []int) error {
 	advisoriesObjs := models.SystemAdvisoriesSlice{}
 	for _, advisoryID := range advisoryIDs {
 		advisoriesObjs = append(advisoriesObjs,
@@ -228,22 +242,40 @@ func addNewSystemAdvisories(tx *gorm.DB, systemID int, advisoryIDs []int) error 
 	if err != nil {
 		return err
 	}
-	return nil
+
+	err = addAndUpdateAccountAdvisoriesAffectedSystems(tx, rhAccountID, advisoryIDs)
+	return err
 }
 
-func updateSystemAdvisories(tx *gorm.DB, systemPlatform *models.SystemPlatform, patched, unpatched, news []int) error {
+func addAndUpdateAccountAdvisoriesAffectedSystems(tx *gorm.DB, rhAccountID int, advisoryIDs []int) error {
+	accountData := make(models.AdvisoryAccountDataSlice, len(advisoryIDs))
+	for i, advisoryID := range advisoryIDs {
+		accountData[i] = models.AdvisoryAccountData{RhAccountID: rhAccountID, AdvisoryID: advisoryID}
+	}
+
+	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	err := database.BulkInsert(txOnConflict, accountData.ToInterfaceSlice())
+	if err != nil {
+		return err
+	}
+
+	err = updateAccountAdvisoriesAffectedSystems(tx, rhAccountID, advisoryIDs, 1)
+	return err
+}
+
+func updateSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, patched, unpatched, news []int) error {
 	whenPatched := time.Now()
-	err := updateSystemAdvisoriesWhenPatched(tx, systemPlatform, patched, &whenPatched)
+	err := updateSystemAdvisoriesWhenPatched(tx, systemID, rhAccountID, patched, &whenPatched)
 	if err != nil {
 		return err
 	}
 
-	err = updateSystemAdvisoriesWhenPatched(tx, systemPlatform, unpatched, nil)
+	err = updateSystemAdvisoriesWhenPatched(tx, systemID, rhAccountID, unpatched, nil)
 	if err != nil {
 		return err
 	}
 
-	err = addNewSystemAdvisories(tx, systemPlatform.ID, news)
+	err = addNewSystemAdvisories(tx, systemID, rhAccountID, news)
 	if err != nil {
 		return err
 	}

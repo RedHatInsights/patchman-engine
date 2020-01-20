@@ -36,3 +36,14 @@ func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug
 	assert.Equal(t, nBug, system.AdvisoryBugCountCache)
 	assert.Equal(t, nSec, system.AdvisorySecCountCache)
 }
+
+func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int, systemsAffected int) {
+	var advisoryAccountData []models.AdvisoryAccountData
+	err := Db.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
+		Find(&advisoryAccountData).Error
+	assert.Nil(t, err)
+	assert.Equal(t, len(advisoryIDs), len(advisoryAccountData))
+	for _, item := range advisoryAccountData {
+		assert.Equal(t, systemsAffected, item.SystemsAffected)
+	}
+}

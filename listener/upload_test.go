@@ -87,13 +87,15 @@ func TestUploadHandler(t *testing.T) {
 	configure()
 	deleteData(t)
 
-	getOrCreateTestAccount(t)
+	accountID := getOrCreateTestAccount(t)
 	event := createTestUploadEvent(t)
 	uploadHandler(event)
 
 	assertSystemInDb(t)
 	database.CheckSystemJustEvaluated(t, id, 3, 0, 0, 0)
-	database.CheckAdvisoriesInDb(t, []string{"ER1", "ER2", "ER3"})
+	advisoryIDs := database.CheckAdvisoriesInDb(t, []string{"ER1", "ER2", "ER3"})
+	database.CheckAdvisoriesAccountData(t, accountID, advisoryIDs, 1)
 	database.CheckSystemAdvisoriesFirstReportedGreater(t, "2020-01-01", 3)
+
 	deleteData(t)
 }

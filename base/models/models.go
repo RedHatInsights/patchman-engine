@@ -108,6 +108,16 @@ func (t SystemAdvisoriesSlice) ToInterfaceSlice() []interface{} {
 	return res
 }
 
+type AdvisoryAccountDataSlice []AdvisoryAccountData
+
+func (t AdvisoryAccountDataSlice) ToInterfaceSlice() []interface{} {
+	res := make([]interface{}, len(t))
+	for i, v := range t {
+		res[i] = v
+	}
+	return res
+}
+
 type Repo struct {
 	ID   int
 	Name string
