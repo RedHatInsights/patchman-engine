@@ -2,6 +2,7 @@ package manager
 
 import (
 	"app/base/utils"
+	"app/manager/metrics"
 	"app/manager/middlewares"
 	"app/manager/routes"
 	"github.com/gin-contrib/gzip"
@@ -32,6 +33,8 @@ func RunManager() {
 
 	api := app.Group("/api/patch/v1")
 	routes.InitAPI(api)
+
+	go metrics.RunAdvancedMetricsUpdating()
 
 	err := app.Run(":8080")
 	if err != nil {
