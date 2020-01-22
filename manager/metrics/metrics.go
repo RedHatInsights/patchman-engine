@@ -23,11 +23,18 @@ var (
 		Subsystem: "manager",
 		Name:      "advisories",
 	}, []string{"type"})
+
+	systemAdvisoriesStats = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "patchman_engine",
+		Subsystem: "manager",
+		Name:      "system_advisories_stats",
+	}, []string{"type"})
 )
 
 func init() {
 	prometheus.MustRegister(systemsCnt)
 	prometheus.MustRegister(advisoriesCnt)
+	prometheus.MustRegister(systemAdvisoriesStats)
 }
 
 func RunAdvancedMetricsUpdating() {
@@ -41,6 +48,7 @@ func RunAdvancedMetricsUpdating() {
 func update() {
 	updateSystemMetrics()
 	updateAdvisoryMetrics()
+	updateSystemAdvisoriesStats()
 }
 
 func updateSystemMetrics() {
@@ -99,4 +107,34 @@ func getAdvisoryCounts() (unknown, enh, bug, sec int, err error) {
 		return 0, 0, 0, 0, errors.Wrap(err, "unable to get advisories count - type security")
 	}
 	return unknown, enh, bug, sec, nil
+}
+
+func updateSystemAdvisoriesStats() {
+	stats, err := getSystemAdvisorieStats()
+	if err != nil {
+		utils.Log("err", err.Error()).Info()
+		stats = SystemAdvisoryStats{}
+	}
+	systemAdvisoriesStats.WithLabelValues("max_all").Set(float64(stats.MaxAll))
+	systemAdvisoriesStats.WithLabelValues("max_enh").Set(float64(stats.MaxEnh))
+	systemAdvisoriesStats.WithLabelValues("max_bug").Set(float64(stats.MaxBug))
+	systemAdvisoriesStats.WithLabelValues("max_sec").Set(float64(stats.MaxSec))
+}
+
+type SystemAdvisoryStats struct {
+	MaxAll int
+	MaxEnh int
+	MaxBug int
+	MaxSec int
+}
+
+func getSystemAdvisorieStats() (stats SystemAdvisoryStats, err error) {
+	err = database.Db.Table("system_platform").
+		Select("MAX(advisory_count_cache) as max_all, MAX(advisory_enh_count_cache) as max_enh," +
+			"MAX(advisory_bug_count_cache) as max_bug, MAX(advisory_sec_count_cache) as max_sec").
+		First(&stats).Error
+	if err != nil {
+		return stats, errors.Wrap(err, "unable to get system advisory stats from db")
+	}
+	return stats, nil
 }
