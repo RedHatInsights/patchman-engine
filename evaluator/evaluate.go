@@ -47,6 +47,7 @@ func Evaluate(ctx context.Context, systemName string,
 
 	var system models.SystemPlatform
 	err := database.Db.Where("name = ?", systemName).Find(&system).Error
+
 	if err != nil {
 		return errors.Wrap(err, "Unable to get updates from VMaaS")
 	}
