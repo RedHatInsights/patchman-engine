@@ -2,10 +2,11 @@ package listener
 
 import (
 	"app/base/database"
+	"app/base/mqueue"
 	"app/base/utils"
 )
 
-func deleteHandler(event PlatformEvent) {
+func deleteHandler(event mqueue.PlatformEvent) {
 	if event.Type == nil || *event.Type != "delete" {
 		return
 	}

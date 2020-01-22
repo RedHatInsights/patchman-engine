@@ -3,6 +3,7 @@ package listener
 import (
 	"app/base/database"
 	"app/base/models"
+	"app/base/mqueue"
 	"app/base/utils"
 	"app/evaluator"
 	"context"
@@ -15,7 +16,7 @@ import (
 	"time"
 )
 
-func uploadHandler(event PlatformEvent) {
+func uploadHandler(event mqueue.PlatformEvent) {
 	if event.B64Identity == nil {
 		utils.Log().Error("Identity not provided")
 		return
@@ -30,7 +31,7 @@ func uploadHandler(event PlatformEvent) {
 	hostUploadReceived(event.ID, identity.Identity.AccountNumber, *event.B64Identity)
 }
 
-func parseUploadMessage(event *PlatformEvent) (*utils.Identity, error) {
+func parseUploadMessage(event *mqueue.PlatformEvent) (*utils.Identity, error) {
 	// We need the b64 identity in order to call the inventory
 	if event.B64Identity == nil {
 		utils.Log().Error("No identity provided")
