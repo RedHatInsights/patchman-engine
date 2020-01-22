@@ -5,9 +5,7 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"app/evaluator"
-	"app/manager/middlewares"
 	"github.com/RedHatInsights/patchman-clients/inventory"
-	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -35,23 +33,11 @@ func configure() {
 	evaluator.Configure() // TODO - move to evaluator component
 }
 
-func runMetrics() {
-	// create web app
-	app := gin.New()
-	middlewares.Prometheus().Use(app)
-
-	err := app.Run(":8081")
-	if err != nil {
-		utils.Log("err", err.Error()).Error()
-		panic(err)
-	}
-}
-
 func RunListener() {
 	utils.Log().Info("listener starting")
 
 	// Start a web server for handling metrics so that readiness probe works
-	go runMetrics()
+	go RunMetrics()
 
 	configure()
 

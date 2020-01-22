@@ -19,16 +19,25 @@ import (
 func uploadHandler(event mqueue.PlatformEvent) {
 	if event.B64Identity == nil {
 		utils.Log().Error("Identity not provided")
+		messagesReceivedCnt.WithLabelValues("error-identity").Inc()
 		return
 	}
 
 	identity, err := parseUploadMessage(&event)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to parse upload msg")
+		messagesReceivedCnt.WithLabelValues("error-parsing").Inc()
 		return
 	}
 
-	hostUploadReceived(event.ID, identity.Identity.AccountNumber, *event.B64Identity)
+	err = processUpload(event.ID, identity.Identity.AccountNumber, *event.B64Identity)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("unable to process upload")
+		messagesReceivedCnt.WithLabelValues("error-process-upload").Inc()
+		return
+	}
+
+	messagesReceivedCnt.WithLabelValues("success").Inc()
 }
 
 func parseUploadMessage(event *mqueue.PlatformEvent) (*utils.Identity, error) {
@@ -102,7 +111,7 @@ func updateSystemPlatform(inventoryID string, accountID int, updatesReq *vmaas.U
 }
 
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
-func hostUploadReceived(hostID string, account string, identity string) {
+func processUpload(hostID string, account string, identity string) error {
 	utils.Log("hostID", hostID).Debug("Downloading system profile")
 
 	apiKey := inventory.APIKey{Prefix: "", Key: identity}
@@ -111,15 +120,13 @@ func hostUploadReceived(hostID string, account string, identity string) {
 
 	inventoryData, res, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{hostID}, nil)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Could not inventory system profile")
-		return
+		return errors.Wrap(err, "could not inventory system profile")
 	}
 
 	utils.Log("res", res).Debug("System profile download complete")
 
 	if inventoryData.Count == 0 {
-		utils.Log().Info("No system details returned, host is probably deleted")
-		return
+		return errors.Wrap(err, "no system details returned, host is probably deleted")
 	}
 
 	// We only process one host per message here
@@ -127,8 +134,7 @@ func hostUploadReceived(hostID string, account string, identity string) {
 	// Ensure we have account stored
 	accountID, err := getOrCreateAccount(account)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Saving account into the database")
-		return
+		return errors.Wrap(err, "saving account into the database")
 	}
 
 	modules := make([]vmaas.UpdatesRequestModulesList, len(host.SystemProfile.DnfModules))
@@ -153,10 +159,13 @@ func hostUploadReceived(hostID string, account string, identity string) {
 
 	systemPlatform, err := updateSystemPlatform(host.Id, accountID, &updatesReq)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Saving system into the database")
-		return
+		return errors.Wrap(err, "saving system into the database")
 	}
 
 	// Evaluation part - TODO - move to evaluator component
-	evaluator.Evaluate(ctx, systemPlatform.ID, systemPlatform.RhAccountID, updatesReq)
+	err = evaluator.Evaluate(ctx, systemPlatform.ID, systemPlatform.RhAccountID, updatesReq)
+	if err != nil {
+		return errors.Wrap(err, "system evaluation failed")
+	}
+	return nil
 }

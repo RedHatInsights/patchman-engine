@@ -28,41 +28,38 @@ func Configure() {
 	vmaasClient = vmaas.NewAPIClient(vmaasConfig)
 }
 
-func Evaluate(ctx context.Context, systemID, rhAccountID int, updatesReq vmaas.UpdatesV3Request) {
+func Evaluate(ctx context.Context, systemID, rhAccountID int, updatesReq vmaas.UpdatesV3Request) error {
 	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{
 		UpdatesV3Request: optional.NewInterface(updatesReq),
 	}
 
 	vmaasData, _, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(ctx, &vmaasCallArgs)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Unable to get updates from VMaaS")
-		return
+		return errors.Wrap(err, "Unable to get updates from VMaaS")
 	}
 
 	tx := database.Db.Begin()
 	err = processSystemAdvisories(tx, systemID, rhAccountID, vmaasData)
 	if err != nil {
 		tx.Rollback()
-		utils.Log("err", err.Error()).Error("Unable to process system advisories")
-		return
+		return errors.Wrap(err, "Unable to process system advisories")
 	}
 
 	err = tx.Exec("SELECT * FROM update_system_caches(?)", systemID).Error
 	if err != nil {
 		tx.Rollback()
-		utils.Log("err", err.Error()).Error("Unable to update system caches")
-		return
+		return errors.Wrap(err, "Unable to update system caches")
 	}
 
 	err = tx.Model(&models.SystemPlatform{}).Where("id = ?", systemID).
 		Update("last_evaluation", time.Now()).Error
 	if err != nil {
 		tx.Rollback()
-		utils.Log("err", err.Error()).Error("Unable to update last_evaluation timestamp")
-		return
+		return errors.Wrap(err, "Unable to update last_evaluation timestamp")
 	}
 
 	tx.Commit()
+	return nil
 }
 
 func processSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, vmaasData vmaas.UpdatesV2Response) error {
