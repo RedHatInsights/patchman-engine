@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestSystemsCount(t *testing.T) {
+func TestSystemsCounts(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
@@ -15,4 +15,16 @@ func TestSystemsCount(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 0, optOuted)
 	assert.Equal(t, 12, notOptOuted)
+}
+
+func TestAdvisoryCounts(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	unknown, enh, bug, sec, err := getAdvisoryCounts()
+	assert.Nil(t, err)
+	assert.Equal(t, 0, unknown)
+	assert.Equal(t, 3, enh)
+	assert.Equal(t, 3, bug)
+	assert.Equal(t, 2, sec)
 }
