@@ -12,6 +12,9 @@ import (
 type Reader struct {
 	kafka.Reader
 }
+type Writer struct {
+	kafka.Writer
+}
 
 func NewReader(topic string) *Reader {
 	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
@@ -30,6 +33,20 @@ func NewReader(topic string) *Reader {
 	}
 
 	return &Reader{*kafka.NewReader(config)}
+}
+
+func NewWriter(topic string) *Writer {
+	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
+
+	config := kafka.WriterConfig{
+		Brokers: []string{kafkaAddress},
+		Topic:   topic,
+		ErrorLogger: kafka.LoggerFunc(func(fmt string, args ...interface{}) {
+			utils.Log("type", "kafka").Errorf(fmt, args)
+		}),
+	}
+
+	return &Writer{*kafka.NewWriter(config)}
 }
 
 func (t *Reader) Shutdown() {

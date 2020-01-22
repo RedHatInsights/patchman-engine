@@ -62,4 +62,5 @@ func RunListener() {
 	defer eventsReader.Shutdown()
 	// Only respond to deletion on events topic
 	go eventsReader.HandleEvents(deleteHandler)
+	<-make(chan bool)
 }
