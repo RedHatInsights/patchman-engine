@@ -3,6 +3,7 @@ package listener
 import (
 	"app/base/database"
 	"app/base/models"
+	"app/base/mqueue"
 	"encoding/json"
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
@@ -54,32 +55,18 @@ func getOrCreateTestAccount(t *testing.T) int {
 	return accountID
 }
 
-func createTestUploadEvent(t *testing.T) PlatformEvent {
+func createTestUploadEvent(t *testing.T) mqueue.PlatformEvent {
 	msg := kafka.Message{Value: []byte(`{ "id": "TEST-00000","type": "created", "b64_identity": "eyJlbnRpdGxlbWVudHMiOnsic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1ZX19LCJpZGVudGl0eSI6eyJhY2NvdW50X251bWJlciI6IlRFU1QtMDAwMDAiLCJ0eXBlIjoiVXNlciIsIkludGVybmFsIjpudWxsfX0="}`)} //nolint:lll
-	var event PlatformEvent
+	var event mqueue.PlatformEvent
 	err := json.Unmarshal(msg.Value, &event)
 	assert.Nil(t, err)
 	return event
 }
 
-func createTestDeleteEvent(t *testing.T) PlatformEvent {
+func createTestDeleteEvent(t *testing.T) mqueue.PlatformEvent {
 	msg := kafka.Message{Value: []byte(`{ "id": "TEST-00000","type": "delete"}`)}
-	var event PlatformEvent
+	var event mqueue.PlatformEvent
 	err := json.Unmarshal(msg.Value, &event)
 	assert.Nil(t, err)
 	return event
-}
-
-func TestParseEvents(t *testing.T) {
-	msg := kafka.Message{Value: []byte(`{"id": "TEST-00000", "type": "delete"}`)}
-
-	reached := false
-
-	makeKafkaHandler(func(event PlatformEvent) {
-		assert.Equal(t, event.ID, "TEST-00000")
-		assert.Equal(t, *event.Type, "delete")
-		reached = true
-	})(msg)
-
-	assert.True(t, reached, "Event handler should have been called")
 }

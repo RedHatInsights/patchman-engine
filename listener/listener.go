@@ -2,21 +2,17 @@ package listener
 
 import (
 	"app/base"
+	"app/base/mqueue"
 	"app/base/utils"
 	"app/evaluator"
 	"app/manager/middlewares"
-	"context"
-	"encoding/json"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/gin-gonic/gin"
-	"github.com/segmentio/kafka-go"
-	"io"
-	"time"
 )
 
 var (
-	uploadReader    *kafka.Reader
-	eventsReader    *kafka.Reader
+	uploadReader    *mqueue.Reader
+	eventsReader    *mqueue.Reader
 	inventoryClient *inventory.APIClient
 )
 
@@ -24,29 +20,8 @@ func configure() {
 	uploadTopic := utils.GetenvOrFail("UPLOAD_TOPIC")
 	eventsTopic := utils.GetenvOrFail("EVENTS_TOPIC")
 
-	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
-	kafkaGroup := utils.GetenvOrFail("KAFKA_GROUP")
-
-	utils.Log("KafkaAddress", kafkaAddress).Info("Connecting to kafka")
-
-	uploadConfig := kafka.ReaderConfig{
-		Brokers:  []string{kafkaAddress},
-		Topic:    uploadTopic,
-		GroupID:  kafkaGroup,
-		MinBytes: 1,
-		MaxBytes: 10e6, // 1MB
-		MaxWait:  time.Second * 30,
-		ErrorLogger: kafka.LoggerFunc(func(fmt string, args ...interface{}) {
-			utils.Log("type", "kafka").Errorf(fmt, args)
-		}),
-	}
-
-	uploadReader = kafka.NewReader(uploadConfig)
-
-	eventsConfig := uploadConfig
-	eventsConfig.Topic = eventsTopic
-
-	eventsReader = kafka.NewReader(eventsConfig)
+	uploadReader = mqueue.NewReader(uploadTopic)
+	eventsReader = mqueue.NewReader(eventsTopic)
 
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
@@ -58,43 +33,6 @@ func configure() {
 	inventoryClient = inventory.NewAPIClient(inventoryConfig)
 
 	evaluator.Configure() // TODO - move to evaluator component
-}
-
-func shutdown(closer io.Closer) {
-	err := closer.Close()
-	if err != nil {
-		utils.Log("err", err.Error()).Error("unable to shutdown Kafka reader")
-	}
-}
-
-type KafkaHandler func(message kafka.Message)
-type EventHandler func(event PlatformEvent)
-
-func baseListener(reader *kafka.Reader, handler KafkaHandler) {
-	defer shutdown(reader)
-
-	for {
-		m, err := reader.ReadMessage(context.Background())
-		if err != nil {
-			utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
-			panic(err)
-		}
-		// Spawn handler, not blocking the receiving goroutine
-		go handler(m)
-	}
-}
-
-// Performs parsing of kafka message, and then dispatches this message into provided functions
-func makeKafkaHandler(eventHandler EventHandler) KafkaHandler {
-	return func(m kafka.Message) {
-		var event PlatformEvent
-		err := json.Unmarshal(m.Value, &event)
-		if err != nil {
-			utils.Log("err", err.Error()).Error("Could not deserialize platform event")
-			return
-		}
-		eventHandler(event)
-	}
 }
 
 func runMetrics() {
@@ -117,9 +55,11 @@ func RunListener() {
 
 	configure()
 
+	defer uploadReader.Shutdown()
 	// Only respond to creation and update msgs on upload topic
-	go baseListener(uploadReader, makeKafkaHandler(uploadHandler))
+	go uploadReader.HandleEvents(uploadHandler)
 
+	defer eventsReader.Shutdown()
 	// Only respond to deletion on events topic
-	baseListener(eventsReader, makeKafkaHandler(deleteHandler))
+	go eventsReader.HandleEvents(deleteHandler)
 }
