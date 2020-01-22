@@ -5,7 +5,6 @@ import (
 	"app/base/utils"
 	"context"
 	"github.com/segmentio/kafka-go"
-	"time"
 )
 
 // By wrapping raw value we can add new methods & ensure methods of wrapped type are callable
@@ -26,7 +25,6 @@ func ReaderFromEnv(topic string) *Reader {
 		GroupID:  kafkaGroup,
 		MinBytes: 1,
 		MaxBytes: 10e6, // 1MB
-		MaxWait:  time.Second * 30,
 		ErrorLogger: kafka.LoggerFunc(func(fmt string, args ...interface{}) {
 			utils.Log("type", "kafka").Errorf(fmt, args)
 		}),

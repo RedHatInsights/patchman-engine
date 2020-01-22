@@ -125,7 +125,7 @@ func processUpload(hostID string, account string, identity string) error {
 		return errors.Wrap(err, "could not inventory system profile")
 	}
 
-	utils.Log("res", res).Debug("System profile download complete")
+	utils.Log().Debug("System profile download complete")
 
 	if inventoryData.Count == 0 {
 		return errors.Wrap(err, "no system details returned, host is probably deleted")
@@ -168,6 +168,7 @@ func processUpload(hostID string, account string, identity string) error {
 		ID: hostID,
 	}
 
+	utils.Log().Debug("Sending evaluation kafka message")
 	err = evalWriter.WriteEvent(ctx, event)
 	if err != nil {
 		return errors.Wrap(err, "Sending kafka event failed")
