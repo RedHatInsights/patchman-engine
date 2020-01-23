@@ -75,6 +75,8 @@ func processSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, vmaasData v
 	}
 
 	patched := getPatchedAdvisories(reported, *stored)
+	updatesCnt.WithLabelValues("patched").Add(float64(len(patched)))
+
 	newsAdvisoriesNames, unpatched := getNewAndUnpatchedAdvisories(reported, *stored)
 
 	newIDs, err := ensureAdvisoriesInDb(tx, newsAdvisoriesNames)
@@ -82,6 +84,7 @@ func processSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, vmaasData v
 		return errors.Wrap(err, "Unable to ensure new system advisories in db")
 	}
 	unpatched = append(unpatched, *newIDs...)
+	updatesCnt.WithLabelValues("unpatched").Add(float64(len(unpatched)))
 
 	err = updateSystemAdvisories(tx, systemID, rhAccountID, patched, unpatched)
 	if err != nil {

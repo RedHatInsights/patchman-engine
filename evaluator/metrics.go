@@ -10,8 +10,14 @@ var (
 		Subsystem: "evaluator",
 		Name:      "evaluation",
 	}, []string{"type"})
+
+	updatesCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "patchman_engine",
+		Subsystem: "evaluator",
+		Name:      "updates",
+	}, []string{"type"})
 )
 
 func init() {
-	prometheus.MustRegister(evaluationCnt)
+	prometheus.MustRegister(evaluationCnt, updatesCnt)
 }
