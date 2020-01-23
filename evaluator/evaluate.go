@@ -35,6 +35,7 @@ func Evaluate(ctx context.Context, systemID, rhAccountID int, updatesReq vmaas.U
 
 	vmaasData, _, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(ctx, &vmaasCallArgs)
 	if err != nil {
+		evaluationCnt.WithLabelValues("error-call-vmaas-updates").Inc()
 		return errors.Wrap(err, "Unable to get updates from VMaaS")
 	}
 
@@ -42,12 +43,14 @@ func Evaluate(ctx context.Context, systemID, rhAccountID int, updatesReq vmaas.U
 	err = processSystemAdvisories(tx, systemID, rhAccountID, vmaasData)
 	if err != nil {
 		tx.Rollback()
+		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
 		return errors.Wrap(err, "Unable to process system advisories")
 	}
 
 	err = tx.Exec("SELECT * FROM update_system_caches(?)", systemID).Error
 	if err != nil {
 		tx.Rollback()
+		evaluationCnt.WithLabelValues("error-update-system-caches").Inc()
 		return errors.Wrap(err, "Unable to update system caches")
 	}
 
@@ -55,10 +58,12 @@ func Evaluate(ctx context.Context, systemID, rhAccountID int, updatesReq vmaas.U
 		Update("last_evaluation", time.Now()).Error
 	if err != nil {
 		tx.Rollback()
+		evaluationCnt.WithLabelValues("error-update-last-eval").Inc()
 		return errors.Wrap(err, "Unable to update last_evaluation timestamp")
 	}
 
 	tx.Commit()
+	evaluationCnt.WithLabelValues("success").Inc()
 	return nil
 }
 
