@@ -583,6 +583,7 @@ CREATE INDEX ON advisory_metadata (advisory_type_id);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO evaluator;
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO vmaas_sync;
+GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO listener;
 
 
 -- status table
@@ -634,6 +635,7 @@ CREATE TRIGGER system_advisories_set_first_reported
 EXECUTE PROCEDURE set_first_reported();
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO evaluator;
+GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO listener;
 -- manager needs to be able to update things like 'status' on a sysid/advisory combination, also needs to delete
 GRANT UPDATE, DELETE ON system_advisories TO manager;
 -- manager needs to be able to update opt_out column
