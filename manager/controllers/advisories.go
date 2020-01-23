@@ -34,6 +34,9 @@ type AdvisoryWithSystemsAffected struct {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
+// @Param    limit          query   int     false   "Limit for paging"
+// @Param    offset         query   int     false   "Offset for paging"
+// @Param    sort           query   string  false   "Sort field"    Enums(name,description,synopsis,summary,solution,public_date)
 // @Success 200 {object} AdvisoriesResponse
 // @Router /api/patch/v1/advisories [get]
 func AdvisoriesListHandler(c *gin.Context) {

@@ -36,7 +36,10 @@ type AdvisorySystemsMeta struct {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    advisory_id    path    string   true "Advisory ID"
+// @Param    advisory_id    path    string  true    "Advisory ID"
+// @Param    limit          query   int     false   "Limit for paging"
+// @Param    offset         query   int     false   "Offset for paging"
+// @Param    sort           query   string  false   "Sort field"    Enums(last_updated, last_evaluation)
 // @Success 200 {object} AdvisorySystemsResponse
 // @Router /api/patch/v1/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListHandler(c *gin.Context) {
