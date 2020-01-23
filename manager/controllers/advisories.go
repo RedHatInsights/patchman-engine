@@ -19,13 +19,13 @@ type AdvisoriesResponse struct {
 	Meta  AdvisoryMeta   `json:"meta"`
 }
 
-type AdvisoryWithSystemsAffected struct {
-	Name               string
-	Description        string
-	Synopsis           string
-	PublicDate         time.Time
-	AdvisoryTypeID     int
-	SystemsAffectedInt int
+type AdvisoryWithApplicableSystems struct {
+	Name              string
+	Description       string
+	Synopsis          string
+	PublicDate        time.Time
+	AdvisoryTypeID    int
+	ApplicableSystems int
 }
 
 // nolint:lll
@@ -52,7 +52,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 	query := buildQueryAdvisories(account)
 	query, err = ApplySort(c, query, AdvisoriesSortFields...)
 	if err != nil {
-		LogAndRespError(c, err, "db error")
+		LogAndRespBadRequest(c, err, "sort application failed")
 		return
 	}
 
@@ -68,7 +68,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 		return
 	}
 
-	var advisories []AdvisoryWithSystemsAffected
+	var advisories []AdvisoryWithApplicableSystems
 	err = query.Limit(limit).Offset(offset).Find(&advisories).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
@@ -89,15 +89,15 @@ func AdvisoriesListHandler(c *gin.Context) {
 
 func buildQueryAdvisories(account string) *gorm.DB {
 	query := database.Db.Table("advisory_metadata am").
-		Select("am.id AS id, am.name AS name, COALESCE(systems_affected, 0) AS systems_affected_int,"+
-			"synopsis, description, public_date, advisory_type_id").
+		Select("am.id AS id, am.name AS name, COALESCE(systems_affected, 0) AS applicable_systems,"+
+			"synopsis,description, public_date, advisory_type_id").
 		Joins("LEFT JOIN advisory_account_data aad ON am.id = aad.advisory_id").
 		Joins("LEFT JOIN rh_account ra ON aad.rh_account_id = ra.id").
 		Where("ra.name = ? OR ra.name IS NULL", account)
 	return query
 }
 
-func buildAdvisoriesData(advisories *[]AdvisoryWithSystemsAffected) *[]AdvisoryItem {
+func buildAdvisoriesData(advisories *[]AdvisoryWithApplicableSystems) *[]AdvisoryItem {
 	data := make([]AdvisoryItem, len(*advisories))
 	for i := 0; i < len(*advisories); i++ {
 		advisory := (*advisories)[i]
@@ -108,7 +108,7 @@ func buildAdvisoriesData(advisories *[]AdvisoryWithSystemsAffected) *[]AdvisoryI
 				PublicDate:        advisory.PublicDate,
 				Synopsis:          advisory.Synopsis,
 				AdvisoryType:      advisory.AdvisoryTypeID,
-				ApplicableSystems: advisory.SystemsAffectedInt},
+				ApplicableSystems: advisory.ApplicableSystems},
 			ID:   advisory.Name,
 			Type: "advisory",
 		}

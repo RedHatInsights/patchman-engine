@@ -56,7 +56,7 @@ func SystemsListHandler(c *gin.Context) {
 
 	query, err = ApplySort(c, query, SystemsSortFields...)
 	if err != nil {
-		LogAndRespError(c, err, err.Error())
+		LogAndRespBadRequest(c, err, "sort application failed")
 		return
 	}
 
