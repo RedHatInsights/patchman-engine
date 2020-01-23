@@ -59,7 +59,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 
 	query := buildQuery(account, advisoryName)
 
-	query, err = ApplySort(c, query, "sp", SystemsSortFields...)
+	query, err = ApplySort(c, query, SystemsSortFields...)
 	if err != nil {
 		LogAndRespError(c, err, err.Error())
 		return

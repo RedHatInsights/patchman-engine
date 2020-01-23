@@ -25,7 +25,7 @@ func LogAndRespNotFound(c *gin.Context, err error, respMsg string) {
 	c.JSON(http.StatusNotFound, utils.ErrorResponse{Error: respMsg})
 }
 
-func ApplySort(c *gin.Context, tx *gorm.DB, tablePrefix string, allowedFields ...string) (*gorm.DB, error) {
+func ApplySort(c *gin.Context, tx *gorm.DB, allowedFields ...string) (*gorm.DB, error) {
 	query := c.DefaultQuery("sort", "id")
 	fields := strings.Split(query, ",")
 
@@ -36,16 +36,11 @@ func ApplySort(c *gin.Context, tx *gorm.DB, tablePrefix string, allowedFields ..
 	for _, f := range allowedFields {
 		allowedFieldSet[f] = true
 	}
-
-	if tablePrefix != "" {
-		tablePrefix = fmt.Sprintf("%v.", tablePrefix)
-	}
-
 	for _, enteredField := range fields {
 		if strings.HasPrefix(enteredField, "-") && allowedFieldSet[enteredField[1:]] { //nolint:gocritic
-			tx = tx.Order(fmt.Sprintf("%v%v DESC", tablePrefix, enteredField[1:]))
+			tx = tx.Order(fmt.Sprintf("%v DESC", enteredField[1:]))
 		} else if allowedFieldSet[enteredField] {
-			tx = tx.Order(fmt.Sprintf("%v%v ASC", tablePrefix, enteredField))
+			tx = tx.Order(fmt.Sprintf("%v ASC", enteredField))
 		} else {
 			// We have not found any matches in allowed fields, return an error
 			return nil, errors.Errorf("Invalid sort field: %v", enteredField)

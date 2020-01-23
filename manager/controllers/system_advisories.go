@@ -17,13 +17,14 @@ type SystemAdvisoriesResponse struct {
 	Meta  AdvisoryMeta   `json:"meta"`
 }
 
+// nolint:lll
 // @Summary Show me advisories for a system by given inventory id
 // @Description Show me advisories for a system by given inventory id
 // @ID listSystemAdvisories
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    inventory_id   path    string  true "Inventory ID"
+// @Param    inventory_id   path    string  true    "Inventory ID"
 // @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(name,description,synopsis,summary,solution,public_date)
@@ -45,10 +46,11 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	}
 
 	query := database.SystemAdvisoriesQueryName(database.Db, inventoryID).
+		Select("am.*").
 		Joins("inner join rh_account ra on sp.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
 
-	query, err = ApplySort(c, query, "am", AdvisoriesSortFields...)
+	query, err = ApplySort(c, query, AdvisoriesSortFields...)
 	if err != nil {
 		LogAndRespError(c, err, err.Error())
 		return
@@ -66,8 +68,8 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		return
 	}
 
-	var dbItems []models.SystemAdvisories
-	err = query.Limit(limit).Offset(offset).Preload("Advisory").Find(&dbItems).Error
+	var dbItems []models.AdvisoryMetadata
+	err = query.Limit(limit).Offset(offset).Find(&dbItems).Error
 	if gorm.IsRecordNotFoundError(err) {
 		LogAndRespNotFound(c, err, "no systems found")
 		return
@@ -90,10 +92,9 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildSystemAdvisoriesData(models *[]models.SystemAdvisories) *[]AdvisoryItem {
+func buildSystemAdvisoriesData(models *[]models.AdvisoryMetadata) *[]AdvisoryItem {
 	data := make([]AdvisoryItem, len(*models))
-	for i, systemAdvisories := range *models {
-		advisory := systemAdvisories.Advisory
+	for i, advisory := range *models {
 		item := AdvisoryItem{ID: advisory.Name, Type: "advisory", Attributes: AdvisoryItemAttributes{
 			Description: advisory.Description, Severity: "", PublicDate: advisory.PublicDate, Synopsis: advisory.Synopsis,
 			AdvisoryType: advisory.AdvisoryTypeID, ApplicableSystems: 0,

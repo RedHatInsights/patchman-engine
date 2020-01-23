@@ -28,6 +28,7 @@ type AdvisoryWithSystemsAffected struct {
 	SystemsAffectedInt int
 }
 
+// nolint:lll
 // @Summary Show me all applicable advisories for all my systems
 // @Description Show me all applicable advisories for all my systems
 // @ID listAdvisories
@@ -48,8 +49,8 @@ func AdvisoriesListHandler(c *gin.Context) {
 		return
 	}
 
-	query := buildQueryAdvisoris(account)
-	query, err = ApplySort(c, query, "", AdvisoriesSortFields...)
+	query := buildQueryAdvisories(account)
+	query, err = ApplySort(c, query, AdvisoriesSortFields...)
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return
@@ -86,10 +87,10 @@ func AdvisoriesListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildQueryAdvisoris(account string) *gorm.DB {
+func buildQueryAdvisories(account string) *gorm.DB {
 	query := database.Db.Table("advisory_metadata am").
 		Select("am.id AS id, am.name AS name, COALESCE(systems_affected, 0) AS systems_affected_int,"+
-			"synopsis, description,public_date,advisory_type_id").
+			"synopsis, description, public_date, advisory_type_id").
 		Joins("LEFT JOIN advisory_account_data aad ON am.id = aad.advisory_id").
 		Joins("LEFT JOIN rh_account ra ON aad.rh_account_id = ra.id").
 		Where("ra.name = ? OR ra.name IS NULL", account)

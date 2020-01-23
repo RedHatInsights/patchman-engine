@@ -54,7 +54,7 @@ func SystemsListHandler(c *gin.Context) {
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
 
-	query, err = ApplySort(c, query, "", SystemsSortFields...)
+	query, err = ApplySort(c, query, SystemsSortFields...)
 	if err != nil {
 		LogAndRespError(c, err, err.Error())
 		return
