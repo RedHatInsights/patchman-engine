@@ -2,27 +2,9 @@ package vmaas_sync //nolint:golint,stylecheck
 
 import (
 	"app/base/utils"
-	"app/manager/middlewares"
-	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/prometheus/client_golang/prometheus"
 	"time"
 )
-
-func init() {
-	prometheus.MustRegister(messagesReceivedCnt, vmaasCallCnt, storeAdvisoriesCnt)
-}
-
-func runMetrics() {
-	// create web app
-	app := gin.New()
-	middlewares.Prometheus().Use(app)
-	err := app.Run(":8083")
-	if err != nil {
-		utils.Log("err", err.Error()).Error()
-		panic(err)
-	}
-}
 
 type Handler func(data []byte, conn *websocket.Conn) error
 
@@ -90,7 +72,7 @@ func websocketHandler(data []byte, conn *websocket.Conn) error {
 func RunVmaasSync() {
 	configure()
 
-	go runMetrics()
+	go RunMetrics()
 
 	// Continually try to reconnect
 	for {

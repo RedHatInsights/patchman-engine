@@ -1,4 +1,4 @@
-package metrics
+package vmaas_sync //nolint:golint,stylecheck
 
 import (
 	"app/base/core"
