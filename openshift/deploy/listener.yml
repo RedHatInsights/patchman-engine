@@ -20,7 +20,7 @@ objects:
       labels: { app: patchman-engine }
       name: patchman-engine-listener
     spec:
-      replicas: 1
+      replicas: 10
       selector:
         app: patchman-engine
         deploymentconfig: patchman-engine-listener
@@ -37,8 +37,9 @@ objects:
               name: patchman-engine-listener
               command: [ ./listener/entrypoint.sh ]
               resources:
-                limits: { cpu: 500m,  memory: 512Mi }
-                requests: { cpu: 200m, memory: 512Mi }
+                # We dont need limits ATM, not enough work being done to warrant CPU limits.
+                limits: { memory: 128Mi }
+                requests: { memory: 128Mi }
               livenessProbe:
                 httpGet: { path: /metrics, port: 8081, scheme: HTTP }
               readinessProbe:
