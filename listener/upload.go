@@ -19,25 +19,25 @@ import (
 func uploadHandler(event mqueue.PlatformEvent) {
 	if event.B64Identity == nil {
 		utils.Log().Error("Identity not provided")
-		messagesReceivedCnt.WithLabelValues("error-identity").Inc()
+		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
 		return
 	}
 
 	identity, err := parseUploadMessage(&event)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to parse upload msg")
-		messagesReceivedCnt.WithLabelValues("error-parsing").Inc()
+		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorParsing).Inc()
 		return
 	}
 
 	err = processUpload(event.ID, identity.Identity.AccountNumber, *event.B64Identity)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to process upload")
-		messagesReceivedCnt.WithLabelValues("error-process-upload").Inc()
+		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
 		return
 	}
 
-	messagesReceivedCnt.WithLabelValues("success").Inc()
+	messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
 }
 
 func parseUploadMessage(event *mqueue.PlatformEvent) (*utils.Identity, error) {
