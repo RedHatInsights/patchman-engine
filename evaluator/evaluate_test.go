@@ -167,7 +167,7 @@ func TestEvaluate(t *testing.T) {
 	systemID := 11
 	rhAccountID := 2
 	expectedAddedAdvisories := []string{"ER1", "ER2", "ER3"}
-	err := Evaluate(context.Background(), systemID, rhAccountID, vmaas.UpdatesV3Request{}, EvalTypeUpload)
+	err := Evaluate(context.Background(), "INV-11", EvalTypeUpload)
 	assert.Nil(t, err)
 	advisoryIDs := database.CheckAdvisoriesInDb(t, expectedAddedAdvisories)
 

@@ -112,6 +112,7 @@ func updateSystemPlatform(inventoryID string, accountID int, updatesReq *vmaas.U
 	return &systemPlatform, nil
 }
 
+// nolint: funlen
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
 func processUpload(hostID string, account string, identity string) error {
 	utils.Log("hostID", hostID).Debug("Downloading system profile")
@@ -120,7 +121,7 @@ func processUpload(hostID string, account string, identity string) error {
 	// Create new context, which has the apikey value set. This is then used as a value for `x-rh-identity`
 	ctx := context.WithValue(context.Background(), inventory.ContextAPIKey, apiKey)
 
-	inventoryData, res, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{hostID}, nil)
+	inventoryData, _, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{hostID}, nil)
 	if err != nil {
 		return errors.Wrap(err, "could not inventory system profile")
 	}
