@@ -128,3 +128,14 @@ func TestAdvisoriesPossibleSorts(t *testing.T) {
 		assert.Equal(t, 200, w.Code, "Sort field: ", sort)
 	}
 }
+
+func TestAdvisoriesWrongSort(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?sort=unknown_key", nil)
+	initRouter(AdvisoriesListHandler).ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
