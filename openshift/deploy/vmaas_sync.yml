@@ -35,8 +35,8 @@ objects:
               name: patchman-engine-vmaas-sync
               command: [ ./vmaas_sync/entrypoint.sh ]
               resources:
-                limits: { cpu: 500m,  memory: 512Mi }
-                requests: { cpu: 200m, memory: 512Mi }
+                limits: { cpu: 500m,  memory: 256Mi }
+                requests: { cpu: 200m, memory: 256Mi }
               livenessProbe:
                 httpGet: { path: /metrics, port: 8083, scheme: HTTP }
               readinessProbe:

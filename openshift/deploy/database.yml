@@ -49,8 +49,8 @@ objects:
               imagePullPolicy: Always
               name: patchman-engine-database
               resources:
-                limits: { cpu: 500m,  memory: 512Mi }
-                requests: { cpu: 200m, memory: 512Mi }
+                limits: { cpu: 500m,  memory: 1024Mi }
+                requests: { cpu: 200m, memory: 1024Mi }
               volumeMounts:
                 - mountPath: /var/lib/pgsql/data
                   name: patchman-engine-database-data
