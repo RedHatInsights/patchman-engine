@@ -16,7 +16,7 @@ type Writer struct {
 	kafka.Writer
 }
 
-func NewReader(topic string) *Reader {
+func ReaderFromEnv(topic string) *Reader {
 	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
 	kafkaGroup := utils.GetenvOrFail("KAFKA_GROUP")
 
@@ -35,7 +35,7 @@ func NewReader(topic string) *Reader {
 	return &Reader{*kafka.NewReader(config)}
 }
 
-func NewWriter(topic string) *Writer {
+func WriterFromEnv(topic string) *Writer {
 	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
 
 	config := kafka.WriterConfig{
@@ -71,7 +71,7 @@ func (t *Reader) HandleMessages(handler KafkaHandler) {
 		handler(m)
 		err = t.CommitMessages(ctx, m)
 		if err != nil {
-			utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
+			utils.Log("err", err.Error()).Error("unable to commit kafka message")
 			panic(err)
 		}
 	}
