@@ -20,8 +20,8 @@ func configure() {
 	uploadTopic := utils.GetenvOrFail("UPLOAD_TOPIC")
 	eventsTopic := utils.GetenvOrFail("EVENTS_TOPIC")
 
-	uploadReader = mqueue.NewReader(uploadTopic)
-	eventsReader = mqueue.NewReader(eventsTopic)
+	uploadReader = mqueue.ReaderFromEnv(uploadTopic)
+	eventsReader = mqueue.ReaderFromEnv(eventsTopic)
 
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
@@ -61,6 +61,5 @@ func RunListener() {
 
 	defer eventsReader.Shutdown()
 	// Only respond to deletion on events topic
-	go eventsReader.HandleEvents(deleteHandler)
-	<-make(chan bool)
+	eventsReader.HandleEvents(deleteHandler)
 }
