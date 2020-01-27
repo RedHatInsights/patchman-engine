@@ -76,3 +76,14 @@ func TestSystemAdvisoriesPossibleSorts(t *testing.T) {
 		assert.Equal(t, 200, w.Code, "Sort field: ", sort, w.Body.String())
 	}
 }
+
+func TestSystemAdvisoriesWrongSort(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/INV-0?sort=unknown_key", nil)
+	initRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}

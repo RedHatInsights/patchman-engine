@@ -98,3 +98,14 @@ func TestSystemsOffsetOverflow(t *testing.T) {
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "too big offset", errResp.Error)
 }
+
+func TestSystemsWrongSort(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?sort=unknown_key", nil)
+	initRouter(SystemsListHandler).ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
