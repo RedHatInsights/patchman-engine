@@ -30,6 +30,7 @@ func CheckSystemAdvisoriesFirstReportedGreater(t *testing.T, firstReported strin
 func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug, nSec int) {
 	var system models.SystemPlatform
 	assert.Nil(t, Db.Where("inventory_id = ?", inventoryID).First(&system).Error)
+	assert.NotNil(t, system.LastEvaluation)
 	assert.True(t, system.LastEvaluation.After(time.Now().Add(-time.Second)))
 	assert.Equal(t, nAll, system.AdvisoryCountCache)
 	assert.Equal(t, nEnh, system.AdvisoryEnhCountCache)

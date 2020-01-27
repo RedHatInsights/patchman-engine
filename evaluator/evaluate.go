@@ -37,7 +37,6 @@ func Configure() {
 	vmaasConfig.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
 	vmaasConfig.Debug = traceAPI
 	vmaasClient = vmaas.NewAPIClient(vmaasConfig)
-
 }
 
 func Evaluate(ctx context.Context, systemName string,
@@ -46,7 +45,7 @@ func Evaluate(ctx context.Context, systemName string,
 	defer evaluationDuration.WithLabelValues(evaluationType).Observe(time.Since(tStart).Seconds())
 
 	var system models.SystemPlatform
-	err := database.Db.Where("name = ?", systemName).Find(&system).Error
+	err := database.Db.Where("inventory_id = ?", systemName).Find(&system).Error
 
 	if err != nil {
 		return errors.Wrap(err, "Unable to get updates from VMaaS")

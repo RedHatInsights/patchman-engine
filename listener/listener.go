@@ -33,7 +33,6 @@ func configure() {
 	inventoryConfig.Debug = traceAPI
 	inventoryConfig.BasePath = inventoryAddr + base.InventoryAPIPrefix
 	inventoryClient = inventory.NewAPIClient(inventoryConfig)
-
 }
 
 func runReader(topic string, handler mqueue.EventHandler) {
