@@ -80,6 +80,12 @@ objects:
                       name:  patchman-engine-database-passwords
                       key: listener-database-password
 
+                - name: EVALUATOR_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name:  patchman-engine-database-passwords
+                      key: evaluator-database-password
+
                 - name: MANAGER_PASSWORD
                   valueFrom:
                     secretKeyRef:
