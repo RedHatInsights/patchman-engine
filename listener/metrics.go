@@ -7,12 +7,22 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const (
+	EventUpload             = "upload"
+	EventDelete             = "delete"
+	ReceivedSuccess         = "success"
+	ReceivedErrorIdentity   = "error-identity"
+	ReceivedErrorParsing    = "error-parsing"
+	ReceivedErrorProcessing = "error-processing"
+	ReceivedErrorOtherType  = "error-other-type"
+)
+
 var (
 	messagesReceivedCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "patchman_engine",
 		Subsystem: "listener",
 		Name:      "kafka_message_received",
-	}, []string{"type"})
+	}, []string{"event", "type"})
 )
 
 func init() {
