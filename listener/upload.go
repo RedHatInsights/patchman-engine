@@ -18,7 +18,7 @@ import (
 
 func uploadHandler(event mqueue.PlatformEvent) {
 	tStart := time.Now()
-	defer messageHandlingDuration.WithLabelValues("upload").Observe(time.Since(tStart).Seconds())
+	defer messageHandlingDuration.WithLabelValues(EventUpload).Observe(time.Since(tStart).Seconds())
 
 	if event.B64Identity == nil {
 		utils.Log().Error("Identity not provided")
@@ -166,7 +166,7 @@ func processUpload(hostID string, account string, identity string) error {
 	}
 
 	// Evaluation part - TODO - move to evaluator component
-	err = evaluator.Evaluate(ctx, systemPlatform.ID, systemPlatform.RhAccountID, updatesReq)
+	err = evaluator.Evaluate(ctx, systemPlatform.ID, systemPlatform.RhAccountID, updatesReq, evaluator.EvalTypeUpload)
 	if err != nil {
 		return errors.Wrap(err, "system evaluation failed")
 	}

@@ -9,7 +9,7 @@ import (
 
 func deleteHandler(event mqueue.PlatformEvent) {
 	tStart := time.Now()
-	defer messageHandlingDuration.WithLabelValues("delete").Observe(time.Since(tStart).Seconds())
+	defer messageHandlingDuration.WithLabelValues(EventDelete).Observe(time.Since(tStart).Seconds())
 
 	if event.Type == nil {
 		utils.Log().Warn("empty event type received")
