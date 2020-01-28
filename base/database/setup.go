@@ -45,7 +45,7 @@ func openPostgreSQL(dbConfig *PostgreSQLConfig) *gorm.DB {
 		panic(err)
 	}
 	// Nastavime limity dle configu.
-	db.DB().SetMaxIdleConns(dbConfig.MaxConnections)
+	db.DB().SetMaxOpenConns(dbConfig.MaxConnections)
 	db.DB().SetMaxIdleConns(dbConfig.MaxIdleConnections)
 	db.DB().SetConnMaxLifetime(time.Duration(dbConfig.MaxConnectionLifetime) * time.Second)
 	return db
