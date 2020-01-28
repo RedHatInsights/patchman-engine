@@ -4,9 +4,13 @@ import (
 	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
+	"time"
 )
 
 func deleteHandler(event mqueue.PlatformEvent) {
+	tStart := time.Now()
+	defer messageHandlingDuration.WithLabelValues("delete").Observe(time.Since(tStart).Seconds())
+
 	if event.Type == nil {
 		utils.Log().Warn("empty event type received")
 		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorOtherType)
