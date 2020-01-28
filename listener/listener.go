@@ -9,17 +9,17 @@ import (
 )
 
 var (
-	uploadReader    *mqueue.Reader
-	eventsReader    *mqueue.Reader
+	uploadTopic     string
+	eventsTopic     string
+	consumerCount   int
 	inventoryClient *inventory.APIClient
 )
 
 func configure() {
-	uploadTopic := utils.GetenvOrFail("UPLOAD_TOPIC")
-	eventsTopic := utils.GetenvOrFail("EVENTS_TOPIC")
+	uploadTopic = utils.GetenvOrFail("UPLOAD_TOPIC")
+	eventsTopic = utils.GetenvOrFail("EVENTS_TOPIC")
 
-	uploadReader = mqueue.ReaderFromEnv(uploadTopic)
-	eventsReader = mqueue.ReaderFromEnv(eventsTopic)
+	consumerCount = utils.GetIntEnvOrFail("CONSUMER_COUNT")
 
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
@@ -33,6 +33,12 @@ func configure() {
 	evaluator.Configure() // TODO - move to evaluator component
 }
 
+func runReader(topic string, handler mqueue.EventHandler) {
+	reader := mqueue.ReaderFromEnv(topic)
+	defer reader.Shutdown()
+	reader.HandleEvents(handler)
+}
+
 func RunListener() {
 	utils.Log().Info("listener starting")
 
@@ -41,11 +47,11 @@ func RunListener() {
 
 	configure()
 
-	defer uploadReader.Shutdown()
-	// Only respond to creation and update msgs on upload topic
-	go uploadReader.HandleEvents(uploadHandler)
-
-	defer eventsReader.Shutdown()
-	// Only respond to deletion on events topic
-	eventsReader.HandleEvents(deleteHandler)
+	// We create multiple consumers, and hope that the partition rebalancing
+	// algorithm assigns each consumer a single partition
+	for i := 0; i < consumerCount; i++ {
+		go runReader(uploadTopic, uploadHandler)
+		go runReader(eventsTopic, deleteHandler)
+	}
+	<-make(chan bool)
 }

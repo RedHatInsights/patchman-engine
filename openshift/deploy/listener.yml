@@ -20,7 +20,7 @@ objects:
       labels: { app: patchman-engine }
       name: patchman-engine-listener
     spec:
-      replicas: 10
+      replicas: 8
       selector:
         app: patchman-engine
         deploymentconfig: patchman-engine-listener
