@@ -35,7 +35,7 @@ func Configure() {
 func Evaluate(ctx context.Context, systemID, rhAccountID int, updatesReq vmaas.UpdatesV3Request,
 	evaluationType string) error {
 	tStart := time.Now()
-	defer evaluationDuration.WithLabelValues(evaluationType).Observe(time.Since(tStart).Seconds() * 1000)
+	defer evaluationDuration.WithLabelValues(evaluationType).Observe(time.Since(tStart).Seconds())
 
 	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{
 		UpdatesV3Request: optional.NewInterface(updatesReq),
