@@ -17,6 +17,9 @@ import (
 )
 
 func uploadHandler(event mqueue.PlatformEvent) {
+	tStart := time.Now()
+	defer messageHandlingDuration.WithLabelValues("upload").Observe(time.Since(tStart).Seconds())
+
 	if event.B64Identity == nil {
 		utils.Log().Error("Identity not provided")
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
