@@ -20,8 +20,7 @@ var (
 	evaluationDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "patchman_engine",
 		Subsystem: "evaluator",
-		Name:      "evaluation_duration_milliseconds",
-		Buckets:   []float64{.00001, .0001, .001, .01, .1, 1, 10, 100, 1000},
+		Name:      "evaluation_duration_seconds",
 	}, []string{"type"})
 )
 
