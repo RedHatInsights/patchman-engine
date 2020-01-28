@@ -13,7 +13,11 @@ import (
 	"time"
 )
 
-const unknown = "unknown"
+const (
+	unknown        = "unknown"
+	EvalTypeUpload = "upload"
+	EvalTypeRecalc = "recalc"
+)
 
 var (
 	vmaasClient *vmaas.APIClient
@@ -28,9 +32,10 @@ func Configure() {
 	vmaasClient = vmaas.NewAPIClient(vmaasConfig)
 }
 
-func Evaluate(ctx context.Context, systemID, rhAccountID int, updatesReq vmaas.UpdatesV3Request) error {
+func Evaluate(ctx context.Context, systemID, rhAccountID int, updatesReq vmaas.UpdatesV3Request,
+	evaluationType string) error {
 	tStart := time.Now()
-	defer evaluationDuration.Observe(time.Since(tStart).Seconds() * 1000)
+	defer evaluationDuration.WithLabelValues(evaluationType).Observe(time.Since(tStart).Seconds() * 1000)
 
 	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{
 		UpdatesV3Request: optional.NewInterface(updatesReq),
