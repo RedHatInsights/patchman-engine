@@ -93,7 +93,7 @@ func TestSystemsOffsetOverflow(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
-	assert.Equal(t, "too big offset", errResp.Error)
+	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
 func TestSystemsWrongSort(t *testing.T) {

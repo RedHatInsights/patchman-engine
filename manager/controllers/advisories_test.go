@@ -92,7 +92,7 @@ func TestAdvisoriesOffsetOverflow(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
-	assert.Equal(t, "too big offset", errResp.Error)
+	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
 func TestAdvisoriesOrder(t *testing.T) {
@@ -119,13 +119,18 @@ func TestAdvisoriesOrder(t *testing.T) {
 func TestAdvisoriesPossibleSorts(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	w := httptest.NewRecorder()
 
 	for _, sort := range AdvisoriesSortFields {
+		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", fmt.Sprintf("/?sort=%v", sort), nil)
 		initRouter(AdvisoriesListHandler).ServeHTTP(w, req)
 
-		assert.Equal(t, 200, w.Code, "Sort field: ", sort)
+		var output AdvisoriesResponse
+		ParseReponseBody(t, w.Body.Bytes(), &output)
+
+		assert.Equal(t, 200, w.Code)
+		assert.Equal(t, 1, len(output.Meta.Sort))
+		assert.Equal(t, output.Meta.Sort[0], sort)
 	}
 }
 
@@ -161,8 +166,8 @@ func TestAdvisoriesSearch(t *testing.T) { //nolint:dupl
 	assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
 
 	// links
-	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25&data_format=json", output.Links.First)
-	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25&data_format=json", output.Links.Last)
+	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25", output.Links.First)
+	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25", output.Links.Last)
 	assert.Nil(t, output.Links.Next)
 	assert.Nil(t, output.Links.Previous)
 

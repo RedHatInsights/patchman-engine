@@ -44,15 +44,16 @@ func AdvisoriesListHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)
 
 	query := buildQueryAdvisories(account)
-	
+
 	query = ApplySearch(c, query, "am.name", "synopsis", "description")
 	query, meta, links, err := ListCommon(query, c, AdvisoriesSortFields, "/api/patch/v1/advisories")
 	if err != nil {
-		LogAndRespError(c, err, err.Error())
+		// Error handling and setting of result code & content is done in ListCommon
 		return
 	}
 
 	var advisories []AdvisoryWithApplicableSystems
+
 	err = query.Find(&advisories).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")

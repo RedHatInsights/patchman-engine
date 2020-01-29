@@ -15,7 +15,7 @@ type ListMeta struct {
 	Page     int      `json:"page"`
 	PageSize int      `json:"page_size"`
 	Pages    int      `json:"pages"`
-	Sort     []string `json:"sort,omitempty"`
+	Sort     []string `json:"sort"`
 	// TODO: Implement
 	Filter     []string `json:"filter"`
 	TotalItems int      `json:"total_items"`
