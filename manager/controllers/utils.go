@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"app/base/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -25,10 +26,10 @@ func LogAndRespNotFound(c *gin.Context, err error, respMsg string) {
 	c.JSON(http.StatusNotFound, utils.ErrorResponse{Error: respMsg})
 }
 
-func ApplySort(c *gin.Context, tx *gorm.DB, allowedFields ...string) (*gorm.DB, error) {
+func ApplySort(c *gin.Context, tx *gorm.DB, allowedFields ...string) (*gorm.DB, []string, error) {
 	query := c.DefaultQuery("sort", "id")
 	fields := strings.Split(query, ",")
-
+	var appliedFields []string
 	allowedFieldSet := map[string]bool{
 		"id": true,
 	}
@@ -39,14 +40,56 @@ func ApplySort(c *gin.Context, tx *gorm.DB, allowedFields ...string) (*gorm.DB, 
 	for _, enteredField := range fields {
 		if strings.HasPrefix(enteredField, "-") && allowedFieldSet[enteredField[1:]] { //nolint:gocritic
 			tx = tx.Order(fmt.Sprintf("%v DESC", enteredField[1:]))
+			appliedFields = append(appliedFields, enteredField[1:])
 		} else if allowedFieldSet[enteredField] {
 			tx = tx.Order(fmt.Sprintf("%v ASC", enteredField))
+			appliedFields = append(appliedFields, enteredField)
 		} else {
 			// We have not found any matches in allowed fields, return an error
-			return nil, errors.Errorf("Invalid sort field: %v", enteredField)
+			return nil, nil, errors.Errorf("Invalid sort field: %v", enteredField)
 		}
 	}
-	return tx, nil
+	return tx, appliedFields, nil
+}
+
+// nolint:lll
+func ListCommon(tx *gorm.DB, c *gin.Context, allowedFields []string, path string) (*gorm.DB, *ListMeta, *Links, error) {
+	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
+	if err != nil {
+		LogAndRespBadRequest(c, err, err.Error())
+		return nil, nil, nil, err
+	}
+
+	tx, sortFields, err := ApplySort(c, tx, allowedFields...)
+	if err != nil {
+		LogAndRespBadRequest(c, err, "Invalid sort")
+		return nil, nil, nil, err
+	}
+
+	var total int
+	err = tx.Count(&total).Error
+	if err != nil {
+		LogAndRespError(c, err, "Database connection error")
+		return nil, nil, nil, err
+	}
+
+	if offset > total {
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "too big offset"})
+		return nil, nil, nil, err
+	}
+	meta := ListMeta{
+		Limit:      limit,
+		Offset:     offset,
+		Page:       offset / limit,
+		PageSize:   limit,
+		Pages:      total / limit,
+		Sort:       sortFields,
+		TotalItems: total,
+	}
+	tx = tx.Limit(limit).Offset(offset)
+	// TODO: Sort fields on other params
+	links := CreateLinks(path, offset, limit, total, "")
+	return tx, &meta, &links, nil
 }
 
 func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) *gorm.DB {

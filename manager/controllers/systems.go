@@ -1,10 +1,8 @@
 package controllers
 
 import (
-	"app/base/core"
 	"app/base/database"
 	"app/base/models"
-	"app/base/utils"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -15,19 +13,7 @@ var SystemsSortFields = []string{"last_updated", "last_evaluation"}
 type SystemsResponse struct {
 	Data  []SystemItem `json:"data"`
 	Links Links        `json:"links"`
-	Meta  SystemsMeta  `json:"meta"`
-}
-
-type SystemsMeta struct {
-	DataFormat string  `json:"data_format"`
-	Filter     *string `json:"filter"`
-	Limit      int     `json:"limit"`
-	Offset     int     `json:"offset"`
-	Page       int     `json:"page"`
-	PageSize   int     `json:"page_size"`
-	Pages      int     `json:"pages"`
-	Enabled    bool    `json:"enabled"`
-	TotalItems int     `json:"total_items"`
+	Meta  ListMeta     `json:"meta"`
 }
 
 // @Summary Show me all my systems
@@ -44,66 +30,30 @@ type SystemsMeta struct {
 func SystemsListHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)
 
-	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
-	if err != nil {
-		LogAndRespBadRequest(c, err, err.Error())
-		return
-	}
-
 	query := database.Db.Model(models.SystemPlatform{}).
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
 
-	query, err = ApplySort(c, query, SystemsSortFields...)
+	query, meta, links, err := ListCommon(query, c, SystemsSortFields, "/api/patch/v1/systems")
 	if err != nil {
-		LogAndRespBadRequest(c, err, "sort application failed")
-		return
-	}
-
-	var total int
-	err = query.Count(&total).Error
-	if err != nil {
-		LogAndRespError(c, err, "db error")
-		return
-	}
-
-	if offset > total {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "too big offset"})
+		LogAndRespError(c, err, err.Error())
 		return
 	}
 
 	var systems []models.SystemPlatform
-	err = query.Limit(limit).Offset(offset).Find(&systems).Error
+	err = query.Find(&systems).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return
 	}
 
 	data := buildData(&systems)
-	links := CreateLinks("/api/patch/v1/systems", offset, limit, total,
-		"&data_format=json")
-	meta := buildMeta(limit, offset, total)
 	var resp = SystemsResponse{
 		Data:  *data,
-		Links: links,
+		Links: *links,
 		Meta:  *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
-}
-
-func buildMeta(limit, offset, total int) *SystemsMeta {
-	meta := SystemsMeta{
-		DataFormat: "json",
-		Filter:     nil,
-		Limit:      limit,
-		Offset:     offset,
-		Page:       offset / limit,
-		PageSize:   limit,
-		Pages:      total / limit,
-		Enabled:    true,
-		TotalItems: total,
-	}
-	return &meta
 }
 
 func buildData(systems *[]models.SystemPlatform) *[]SystemItem {

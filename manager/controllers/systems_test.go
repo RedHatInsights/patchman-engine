@@ -32,8 +32,8 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, true, output.Data[0].Attributes.Enabled)
 
 	// links
-	assert.Equal(t, "/api/patch/v1/systems?offset=0&limit=25&data_format=json", output.Links.First)
-	assert.Equal(t, "/api/patch/v1/systems?offset=0&limit=25&data_format=json", output.Links.Last)
+	assert.Equal(t, "/api/patch/v1/systems?offset=0&limit=25", output.Links.First)
+	assert.Equal(t, "/api/patch/v1/systems?offset=0&limit=25", output.Links.Last)
 	assert.Nil(t, output.Links.Next)
 	assert.Nil(t, output.Links.Previous)
 
@@ -43,7 +43,6 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
 	assert.Equal(t, core.DefaultLimit, output.Meta.PageSize)
 	assert.Equal(t, 8, output.Meta.TotalItems)
-	assert.Equal(t, true, output.Meta.Enabled)
 }
 
 func TestSystemsOffsetLimit(t *testing.T) { //nolint:dupl
@@ -63,7 +62,6 @@ func TestSystemsOffsetLimit(t *testing.T) { //nolint:dupl
 	assert.Equal(t, 4, output.Meta.Limit)
 	assert.Equal(t, 4, output.Meta.PageSize)
 	assert.Equal(t, 8, output.Meta.TotalItems)
-	assert.Equal(t, true, output.Meta.Enabled)
 }
 
 func TestSystemsOffset(t *testing.T) { //nolint:dupl
@@ -83,7 +81,6 @@ func TestSystemsOffset(t *testing.T) { //nolint:dupl
 	assert.Equal(t, 4, output.Meta.Limit)
 	assert.Equal(t, 4, output.Meta.PageSize)
 	assert.Equal(t, 8, output.Meta.TotalItems)
-	assert.Equal(t, true, output.Meta.Enabled)
 }
 
 func TestSystemsOffsetOverflow(t *testing.T) {

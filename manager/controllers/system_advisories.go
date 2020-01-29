@@ -1,11 +1,11 @@
 package controllers
 
 import (
-	"app/base/core"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"net/http"
@@ -14,7 +14,7 @@ import (
 type SystemAdvisoriesResponse struct {
 	Data  []AdvisoryItem `json:"data"` // advisories items
 	Links Links          `json:"links"`
-	Meta  AdvisoryMeta   `json:"meta"`
+	Meta  ListMeta       `json:"meta"`
 }
 
 // nolint:lll
@@ -33,12 +33,6 @@ type SystemAdvisoriesResponse struct {
 func SystemAdvisoriesHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)
 
-	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
-	if err != nil {
-		LogAndRespBadRequest(c, err, err.Error())
-		return
-	}
-
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
@@ -50,26 +44,15 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		Joins("inner join rh_account ra on sp.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
 
-	query, err = ApplySort(c, query, AdvisoriesSortFields...)
+	path := fmt.Sprintf("/api/patch/v1/systems/%v/advisories", inventoryID)
+	query, meta, links, err := ListCommon(query, c, AdvisoriesSortFields, path)
 	if err != nil {
-		LogAndRespBadRequest(c, err, "sort application failed")
-		return
-	}
-
-	var total int
-	err = query.Count(&total).Error
-	if err != nil {
-		LogAndRespError(c, err, "error getting items count from db")
-		return
-	}
-
-	if offset > total {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "too big offset"})
+		LogAndRespError(c, err, err.Error())
 		return
 	}
 
 	var dbItems []models.AdvisoryMetadata
-	err = query.Limit(limit).Offset(offset).Find(&dbItems).Error
+	err = query.Find(&dbItems).Error
 	if gorm.IsRecordNotFoundError(err) {
 		LogAndRespNotFound(c, err, "no systems found")
 		return
@@ -81,12 +64,9 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	}
 
 	data := buildSystemAdvisoriesData(&dbItems)
-	meta := buildAdvisoriesMeta(limit, offset, total)
-	links := CreateLinks("/api/patch/v1/systems/$INVENTORY_ID/advisories", offset, limit, total,
-		"&data_format=json")
 	var resp = SystemAdvisoriesResponse{
 		Data:  *data,
-		Links: links,
+		Links: *links,
 		Meta:  *meta,
 	}
 	c.JSON(http.StatusOK, &resp)

@@ -31,8 +31,8 @@ func TestAdvisoriesDefault(t *testing.T) { //nolint:dupl
 	assert.Equal(t, 7, output.Data[0].Attributes.ApplicableSystems)
 
 	// links
-	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25&data_format=json", output.Links.First)
-	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25&data_format=json", output.Links.Last)
+	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25", output.Links.First)
+	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25", output.Links.Last)
 	assert.Nil(t, output.Links.Next)
 	assert.Nil(t, output.Links.Previous)
 

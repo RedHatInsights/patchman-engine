@@ -1,9 +1,7 @@
 package controllers
 
 import (
-	"app/base/core"
 	"app/base/database"
-	"app/base/utils"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -16,7 +14,7 @@ var AdvisoriesSortFields = []string{"type", "synopsis", "public_date"}
 type AdvisoriesResponse struct {
 	Data  []AdvisoryItem `json:"data"`
 	Links Links          `json:"links"`
-	Meta  AdvisoryMeta   `json:"meta"`
+	Meta  ListMeta       `json:"meta"`
 }
 
 type AdvisoryWithApplicableSystems struct {
@@ -45,46 +43,26 @@ type AdvisoryWithApplicableSystems struct {
 func AdvisoriesListHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)
 
-	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
-	if err != nil {
-		LogAndRespBadRequest(c, err, err.Error())
-		return
-	}
-
 	query := buildQueryAdvisories(account)
+	
 	query = ApplySearch(c, query, "am.name", "synopsis", "description")
-	query, err = ApplySort(c, query, AdvisoriesSortFields...)
+	query, meta, links, err := ListCommon(query, c, AdvisoriesSortFields, "/api/patch/v1/advisories")
 	if err != nil {
-		LogAndRespBadRequest(c, err, "sort application failed")
-		return
-	}
-
-	var total int
-	err = query.Count(&total).Error
-	if err != nil {
-		LogAndRespError(c, err, "db error")
-		return
-	}
-
-	if offset > total {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "too big offset"})
+		LogAndRespError(c, err, err.Error())
 		return
 	}
 
 	var advisories []AdvisoryWithApplicableSystems
-	err = query.Limit(limit).Offset(offset).Find(&advisories).Error
+	err = query.Find(&advisories).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return
 	}
 
 	data := buildAdvisoriesData(&advisories)
-	links := CreateLinks("/api/patch/v1/advisories", offset, limit, total,
-		"&data_format=json")
-	meta := buildAdvisoriesMeta(limit, offset, total)
 	var resp = AdvisoriesResponse{
 		Data:  *data,
-		Links: links,
+		Links: *links,
 		Meta:  *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
@@ -117,18 +95,4 @@ func buildAdvisoriesData(advisories *[]AdvisoryWithApplicableSystems) *[]Advisor
 		}
 	}
 	return &data
-}
-
-func buildAdvisoriesMeta(limit, offset, total int) *AdvisoryMeta {
-	meta := AdvisoryMeta{
-		DataFormat: "json",
-		Filter:     nil,
-		Limit:      limit,
-		Offset:     offset,
-		Page:       offset / limit,
-		PageSize:   limit,
-		Pages:      total / limit,
-		TotalItems: total,
-	}
-	return &meta
 }
