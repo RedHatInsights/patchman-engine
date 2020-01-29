@@ -5,9 +5,12 @@
 System Patch Manager application for [cloud.redhat.com](cloud.redhat.com).
 
 ## Components
-The project is written as a set of communicating containers. The core components are `listener`, `evaluator`, `manager` and `database` 
-- Listener - Connects to kafka service, and listens for messages.
+The project is written as a set of communicating containers. The core components are `listener`, `evaluator`, `manager`, `vmaas_sync` and `database` 
+- Listener - Connects to kafka service, and listens for messages about newly uploaded hosts.
+- Evaluator - Connects to kafka and listents for requests for evaluation, either from `listener` or `vmaas_sync
 - Manager - Contains implementation of a REST API, which serves as a primary interface for interacting with the application
+- VMaaS sync - Connects to [VMaaS](https://github.com/RedHatInsights/vmaas), and upon receiving notification about updated
+ data, syncs new advisories into the database, and requests re-evaluation for systems which could be affected by new advisories
 - Database - Self explanatory
 
 ## Deploying

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: patchman-engine-listener
+  name: patchman-engine-evaluator
 
 parameters:
   - name: IMAGE_NAMESPACE
@@ -50,7 +50,8 @@ objects:
 
                 - { name: KAFKA_ADDRESS, value: "${KAFKA_ADDRESS}" }
                 - { name: KAFKA_GROUP, value: patchman }
-                -
+                - { name: GOMAXPROCS, value: "8" }
+                - { name: CONSUMER_COUNT, value: "8" }
                 - { name: EVAL_TOPIC, value: patchman.evaluate }
 
                 - { name: INVENTORY_ADDRESS, value: "${INVENTORY_ADDRESS}" }
