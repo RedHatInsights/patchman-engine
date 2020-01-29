@@ -9,6 +9,18 @@ type Links struct {
 	Previous *string `json:"previous"`
 }
 
+type ListMeta struct {
+	Limit    int      `json:"limit"`
+	Offset   int      `json:"offset"`
+	Page     int      `json:"page"`
+	PageSize int      `json:"page_size"`
+	Pages    int      `json:"pages"`
+	Sort     []string `json:"sort,omitempty"`
+	// TODO: Implement
+	Filter     []string `json:"filter"`
+	TotalItems int      `json:"total_items"`
+}
+
 type AdvisoryItem struct {
 	Attributes AdvisoryItemAttributes `json:"attributes"`
 	ID         string                 `json:"id"`
@@ -22,22 +34,6 @@ type AdvisoryItemAttributes struct {
 	AdvisoryType      int       `json:"advisory_type"`
 	Severity          *int      `json:"severity,omitempty"`
 	ApplicableSystems int       `json:"applicable_systems"`
-}
-
-type AdvisoryMeta struct {
-	DataFormat string  `json:"data_format"`
-	Filter     *string `json:"filter"`
-	Severity   *string `json:"severity"`
-	Limit      int     `json:"limit"`
-	Offset     int     `json:"offset"`
-	Page       int     `json:"page"`
-	PageSize   int     `json:"page_size"`
-	Pages      int     `json:"pages"`
-	PublicFrom *int    `json:"public_from"`
-	PublicTo   *int    `json:"public_to"`
-	ShowAll    bool    `json:"show_all"`
-	Sort       *bool   `json:"sort"`
-	TotalItems int     `json:"total_items"`
 }
 
 type SystemItem struct {

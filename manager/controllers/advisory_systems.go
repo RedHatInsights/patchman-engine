@@ -1,33 +1,20 @@
 package controllers
 
 import (
-	"app/base/core"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"net/http"
 )
 
 type AdvisorySystemsResponse struct {
-	Data  []SystemItem        `json:"data"`
-	Links Links               `json:"links"`
-	Meta  AdvisorySystemsMeta `json:"meta"`
-}
-
-type AdvisorySystemsMeta struct {
-	DataFormat string  `json:"data_format"`
-	Filter     *string `json:"filter"`
-	Limit      int     `json:"limit"`
-	Offset     int     `json:"offset"`
-	Advisory   string  `json:"advisory"`
-	Page       int     `json:"page"`
-	PageSize   int     `json:"page_size"`
-	Pages      int     `json:"pages"`
-	Enabled    bool    `json:"enabled"`
-	TotalItems int     `json:"total_items"`
+	Data  []SystemItem `json:"data"`
+	Links Links        `json:"links"`
+	Meta  ListMeta     `json:"meta"`
 }
 
 // @Summary Show me systems on which the given advisory is applicable
@@ -45,12 +32,6 @@ type AdvisorySystemsMeta struct {
 func AdvisorySystemsListHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)
 
-	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
-	if err != nil {
-		LogAndRespBadRequest(c, err, err.Error())
-		return
-	}
-
 	advisoryName := c.Param("advisory_id")
 	if advisoryName == "" {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "advisory_id param not found"})
@@ -58,27 +39,15 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 	}
 
 	query := buildQuery(account, advisoryName)
-
-	query, err = ApplySort(c, query, SystemsSortFields...)
+	path := fmt.Sprintf("/api/patch/v1/advisories/%v/systems", advisoryName)
+	query, meta, links, err := ListCommon(query, c, SystemsSortFields, path)
 	if err != nil {
-		LogAndRespBadRequest(c, err, "sort application failed")
-		return
-	}
-
-	var total int
-	err = query.Count(&total).Error
-	if err != nil {
-		LogAndRespError(c, err, "error getting items count from db")
-		return
-	}
-
-	if offset > total {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "too big offset"})
+		LogAndRespError(c, err, err.Error())
 		return
 	}
 
 	var dbItems []models.SystemPlatform
-	err = query.Limit(limit).Offset(offset).Scan(&dbItems).Error
+	err = query.Scan(&dbItems).Error
 	if gorm.IsRecordNotFoundError(err) {
 		LogAndRespNotFound(c, err, "no systems found")
 		return
@@ -90,12 +59,9 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 	}
 
 	data := buildAdvisorySystemsData(&dbItems)
-	meta := buildAdvisorySystemsMeta(limit, offset, total, advisoryName)
-	links := CreateLinks("/api/patch/v1/advisories/$ADVISORY_ID/systems", offset, limit, total,
-		"&data_format=json")
 	var resp = AdvisorySystemsResponse{
 		Data:  *data,
-		Links: links,
+		Links: *links,
 		Meta:  *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
@@ -128,20 +94,4 @@ func buildAdvisorySystemsData(dbItems *[]models.SystemPlatform) *[]SystemItem {
 		data[i] = item
 	}
 	return &data
-}
-
-func buildAdvisorySystemsMeta(limit, offset, total int, advisoryName string) *AdvisorySystemsMeta {
-	meta := AdvisorySystemsMeta{
-		DataFormat: "json",
-		Filter:     nil,
-		Limit:      limit,
-		Offset:     offset,
-		Advisory:   advisoryName,
-		Page:       offset / limit,
-		PageSize:   limit,
-		Pages:      total / limit,
-		Enabled:    true,
-		TotalItems: total,
-	}
-	return &meta
 }
