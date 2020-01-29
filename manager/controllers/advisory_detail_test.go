@@ -28,6 +28,7 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 	assert.Equal(t, "adv-1-sol", output.Data.Attributes.Solution)
 	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", output.Data.Attributes.PublicDate.String())
 	assert.Equal(t, "2017-09-22 16:00:00 +0000 UTC", output.Data.Attributes.ModifiedDate.String())
+	assert.Nil(t, output.Data.Attributes.Severity)
 }
 
 func TestAdvisoryNoIdProvided(t *testing.T) {

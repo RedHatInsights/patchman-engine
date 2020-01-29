@@ -38,7 +38,7 @@ func TestRoundTrip(t *testing.T) {
 	msg := kafka.Message{Value: []byte("abcd")}
 	writer := WriterFromEnv("test")
 	assert.NoError(t, writer.WriteMessages(context.Background(), msg))
-	time.Sleep(5 * time.Second)
+	time.Sleep(8 * time.Second)
 	assert.NotNil(t, data)
 	assert.Equal(t, data, msg.Value)
 }

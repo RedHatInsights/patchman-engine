@@ -95,10 +95,16 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 func buildSystemAdvisoriesData(models *[]models.AdvisoryMetadata) *[]AdvisoryItem {
 	data := make([]AdvisoryItem, len(*models))
 	for i, advisory := range *models {
-		item := AdvisoryItem{ID: advisory.Name, Type: "advisory", Attributes: AdvisoryItemAttributes{
-			Description: advisory.Description, Severity: "", PublicDate: advisory.PublicDate, Synopsis: advisory.Synopsis,
-			AdvisoryType: advisory.AdvisoryTypeID, ApplicableSystems: 0,
-		}}
+		item := AdvisoryItem{ID: advisory.Name, Type: "advisory",
+			Attributes: AdvisoryItemAttributes{
+				Description:  advisory.Description,
+				Severity:     advisory.SeverityID,
+				PublicDate:   advisory.PublicDate,
+				Synopsis:     advisory.Synopsis,
+				AdvisoryType: advisory.AdvisoryTypeID,
+				// TODO: Applicable systems
+				ApplicableSystems: 0,
+			}}
 		data[i] = item
 	}
 	return &data

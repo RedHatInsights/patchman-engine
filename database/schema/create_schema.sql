@@ -561,11 +561,10 @@ CREATE TABLE advisory_severity
 );
 
 INSERT INTO advisory_severity (id, name)
-VALUES (1, 'None'),
-       (2, 'Low'),
-       (3, 'Moderate'),
-       (4, 'Important'),
-       (5, 'Critical');
+VALUES (1, 'Low'),
+       (2, 'Moderate'),
+       (3, 'Important'),
+       (4, 'Critical');
 
 -- advisory_metadata
 CREATE TABLE IF NOT EXISTS advisory_metadata
@@ -585,7 +584,7 @@ CREATE TABLE IF NOT EXISTS advisory_metadata
     public_date      TIMESTAMP WITH TIME ZONE NULL,
     modified_date    TIMESTAMP WITH TIME ZONE NULL,
     url              TEXT,
-    severity_id      INT                      NOT NULL,
+    severity_id      INT,
     UNIQUE (name),
     PRIMARY KEY (id),
     CONSTRAINT advisory_type_id

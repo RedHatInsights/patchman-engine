@@ -6,14 +6,13 @@ CREATE TABLE advisory_severity
 );
 
 INSERT INTO advisory_severity (id, name)
-VALUES (1, 'None'),
-       (2, 'Low'),
-       (3, 'Moderate'),
-       (4, 'Important'),
-       (5, 'Critical');
+VALUES (1, 'Low'),
+       (2, 'Moderate'),
+       (3, 'Important'),
+       (4, 'Critical');
 
 ALTER TABLE advisory_metadata
-    ADD COLUMN severity_id INT NOT NULL;
+    ADD COLUMN severity_id INT;
 
 ALTER TABLE advisory_metadata
     ADD CONSTRAINT advisory_severity_id

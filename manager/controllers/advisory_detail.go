@@ -27,7 +27,7 @@ type AdvisoryDetailAttributes struct {
 	Topic        string    `json:"topic"`
 	Synopsis     string    `json:"synopsis"`
 	Solution     string    `json:"solution"`
-	Severity     int       `json:"severity"`
+	Severity     *int      `json:"severity"`
 	Fixes        *string   `json:"fixes"`
 	Cves         []string  `json:"cves"`
 	References   []string  `json:"references"`
