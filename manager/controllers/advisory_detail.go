@@ -22,12 +22,12 @@ type AdvisoryDetailItem struct {
 
 type AdvisoryDetailAttributes struct {
 	Description  string    `json:"description"`
-	Severity     *string   `json:"severity"`
 	ModifiedDate time.Time `json:"modified_date"`
 	PublicDate   time.Time `json:"public_date"`
 	Topic        string    `json:"topic"`
 	Synopsis     string    `json:"synopsis"`
 	Solution     string    `json:"solution"`
+	Severity     int       `json:"severity"`
 	Fixes        *string   `json:"fixes"`
 	Cves         []string  `json:"cves"`
 	References   []string  `json:"references"`
@@ -65,12 +65,12 @@ func AdvisoryDetailHandler(c *gin.Context) {
 		Data: AdvisoryDetailItem{
 			Attributes: AdvisoryDetailAttributes{
 				Description:  advisory.Description,
-				Severity:     nil,
 				ModifiedDate: advisory.ModifiedDate,
 				PublicDate:   advisory.PublicDate,
 				Topic:        advisory.Summary,
 				Synopsis:     advisory.Synopsis,
 				Solution:     advisory.Solution,
+				Severity:     advisory.SeverityID,
 				Fixes:        nil,
 				Cves:         []string{}, // TODO joins
 				References:   []string{}, // TODO joins

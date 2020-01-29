@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (4, false);
+VALUES (5, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -553,6 +553,19 @@ VALUES (0, 'unknown'),
        (2, 'bugfix'),
        (3, 'security');
 
+CREATE TABLE advisory_severity
+(
+    id   INT  NOT NULL,
+    name TEXT NOT NULL UNIQUE CHECK ( not empty(name) ),
+    PRIMARY KEY (id)
+);
+
+INSERT INTO advisory_severity (id, name)
+VALUES (1, 'None'),
+       (2, 'Low'),
+       (3, 'Moderate'),
+       (4, 'Important'),
+       (5, 'Critical');
 
 -- advisory_metadata
 CREATE TABLE IF NOT EXISTS advisory_metadata
@@ -572,19 +585,23 @@ CREATE TABLE IF NOT EXISTS advisory_metadata
     public_date      TIMESTAMP WITH TIME ZONE NULL,
     modified_date    TIMESTAMP WITH TIME ZONE NULL,
     url              TEXT,
+    severity_id      INT                      NOT NULL,
     UNIQUE (name),
     PRIMARY KEY (id),
     CONSTRAINT advisory_type_id
         FOREIGN KEY (advisory_type_id)
-            REFERENCES advisory_type (id)
+            REFERENCES advisory_type (id),
+    CONSTRAINT advisory_severity_id
+        FOREIGN KEY (severity_id)
+            REFERENCES advisory_severity (id)
 ) TABLESPACE pg_default;
 
 CREATE INDEX ON advisory_metadata (advisory_type_id);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO evaluator;
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO vmaas_sync;
+-- TODO: Remove
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO listener;
-
 
 -- status table
 CREATE TABLE IF NOT EXISTS status
@@ -635,13 +652,12 @@ CREATE TRIGGER system_advisories_set_first_reported
 EXECUTE PROCEDURE set_first_reported();
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO evaluator;
-GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO listener;
 -- manager needs to be able to update things like 'status' on a sysid/advisory combination, also needs to delete
 GRANT UPDATE, DELETE ON system_advisories TO manager;
 -- manager needs to be able to update opt_out column
 GRANT UPDATE (opt_out) ON system_platform TO manager;
 -- listener deletes systems, TODO: temporary added evaluator permissions to listener
-GRANT DELETE, INSERT, UPDATE, DELETE ON system_advisories TO listener;
+GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO listener;
 
 -- advisory_account_data
 CREATE TABLE IF NOT EXISTS advisory_account_data
