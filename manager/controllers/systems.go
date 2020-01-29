@@ -36,7 +36,7 @@ func SystemsListHandler(c *gin.Context) {
 
 	query, meta, links, err := ListCommon(query, c, SystemsSortFields, "/api/patch/v1/systems")
 	if err != nil {
-		LogAndRespError(c, err, err.Error())
+		// Error handling and setting of result code & content is done in ListCommon
 		return
 	}
 

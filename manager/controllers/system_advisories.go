@@ -47,7 +47,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	path := fmt.Sprintf("/api/patch/v1/systems/%v/advisories", inventoryID)
 	query, meta, links, err := ListCommon(query, c, AdvisoriesSortFields, path)
 	if err != nil {
-		LogAndRespError(c, err, err.Error())
+		// Error handling and setting of result code & content is done in ListCommon
 		return
 	}
 

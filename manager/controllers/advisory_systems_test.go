@@ -65,19 +65,24 @@ func TestAdvisorySystemsOffsetOverflow(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
-	assert.Equal(t, "too big offset", errResp.Error)
+	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
 func TestAdvisorySystemsSorts(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	w := httptest.NewRecorder()
 
 	for _, sort := range SystemsSortFields {
+		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", fmt.Sprintf("/RH-1?sort=%v", sort), nil)
 		initRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
-		assert.Equal(t, 200, w.Code, "Sort field: ", sort)
+		var output AdvisorySystemsResponse
+		ParseReponseBody(t, w.Body.Bytes(), &output)
+
+		assert.Equal(t, 200, w.Code)
+		assert.Equal(t, 1, len(output.Meta.Sort))
+		assert.Equal(t, output.Meta.Sort[0], sort)
 	}
 }
 

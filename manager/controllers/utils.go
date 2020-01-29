@@ -11,21 +11,24 @@ import (
 	"strings"
 )
 
+const InvalidOffsetMsg = "Invalid offset"
+
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	utils.Log("err", err.Error()).Error(respMsg)
-	c.JSON(http.StatusInternalServerError, utils.ErrorResponse{Error: respMsg})
+	c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{Error: respMsg})
 }
 
 func LogAndRespBadRequest(c *gin.Context, err error, respMsg string) {
 	utils.Log("err", err.Error()).Warn(respMsg)
-	c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: respMsg})
+	c.AbortWithStatusJSON(http.StatusBadRequest, utils.ErrorResponse{Error: respMsg})
 }
 
 func LogAndRespNotFound(c *gin.Context, err error, respMsg string) {
 	utils.Log("err", err.Error()).Warn(respMsg)
-	c.JSON(http.StatusNotFound, utils.ErrorResponse{Error: respMsg})
+	c.AbortWithStatusJSON(http.StatusNotFound, utils.ErrorResponse{Error: respMsg})
 }
 
+// nolint: prealloc
 func ApplySort(c *gin.Context, tx *gorm.DB, allowedFields ...string) (*gorm.DB, []string, error) {
 	query := c.DefaultQuery("sort", "id")
 	fields := strings.Split(query, ",")
@@ -37,17 +40,17 @@ func ApplySort(c *gin.Context, tx *gorm.DB, allowedFields ...string) (*gorm.DB, 
 	for _, f := range allowedFields {
 		allowedFieldSet[f] = true
 	}
+
 	for _, enteredField := range fields {
 		if strings.HasPrefix(enteredField, "-") && allowedFieldSet[enteredField[1:]] { //nolint:gocritic
 			tx = tx.Order(fmt.Sprintf("%v DESC", enteredField[1:]))
-			appliedFields = append(appliedFields, enteredField[1:])
 		} else if allowedFieldSet[enteredField] {
 			tx = tx.Order(fmt.Sprintf("%v ASC", enteredField))
-			appliedFields = append(appliedFields, enteredField)
 		} else {
 			// We have not found any matches in allowed fields, return an error
 			return nil, nil, errors.Errorf("Invalid sort field: %v", enteredField)
 		}
+		appliedFields = append(appliedFields, enteredField)
 	}
 	return tx, appliedFields, nil
 }
@@ -74,9 +77,11 @@ func ListCommon(tx *gorm.DB, c *gin.Context, allowedFields []string, path string
 	}
 
 	if offset > total {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "too big offset"})
+		err = errors.New("Offset")
+		LogAndRespBadRequest(c, err, InvalidOffsetMsg)
 		return nil, nil, nil, err
 	}
+
 	meta := ListMeta{
 		Limit:      limit,
 		Offset:     offset,
@@ -86,9 +91,11 @@ func ListCommon(tx *gorm.DB, c *gin.Context, allowedFields []string, path string
 		Sort:       sortFields,
 		TotalItems: total,
 	}
-	tx = tx.Limit(limit).Offset(offset)
+
 	// TODO: Sort fields on other params
 	links := CreateLinks(path, offset, limit, total, "")
+
+	tx = tx.Limit(limit).Offset(offset)
 	return tx, &meta, &links, nil
 }
 

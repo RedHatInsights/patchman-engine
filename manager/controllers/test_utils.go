@@ -30,5 +30,5 @@ func initRouterWithAccount(handler gin.HandlerFunc, path string, account string)
 
 func ParseReponseBody(t *testing.T, bytes []byte, out interface{}) {
 	err := json.Unmarshal(bytes, out)
-	assert.Nil(t, err)
+	assert.Nil(t, err, string(bytes))
 }
