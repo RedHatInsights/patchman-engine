@@ -27,7 +27,7 @@ type SystemAdvisoriesResponse struct {
 // @Param    inventory_id   path    string  true    "Inventory ID"
 // @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field"    Enums(name,description,synopsis,summary,solution,public_date)
+// @Param    sort           query   string  false   "Sort field"    Enums(id,type,synopsis,public_date)
 // @Success 200 {object} SystemAdvisoriesResponse
 // @Router /api/patch/v1/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesHandler(c *gin.Context) {
@@ -46,7 +46,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	}
 
 	query := database.SystemAdvisoriesQueryName(database.Db, inventoryID).
-		Select("am.*").
+		Select("am.*, advisory_type_id as type").
 		Joins("inner join rh_account ra on sp.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
 

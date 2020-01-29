@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var AdvisoriesSortFields = []string{"name", "description", "synopsis", "summary", "solution", "public_date"}
+var AdvisoriesSortFields = []string{"type", "synopsis", "public_date"}
 
 type AdvisoriesResponse struct {
 	Data  []AdvisoryItem `json:"data"`
@@ -37,7 +37,7 @@ type AdvisoryWithApplicableSystems struct {
 // @Produce  json
 // @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field"    Enums(name,description,synopsis,summary,solution,public_date)
+// @Param    sort           query   string  false   "Sort field"    Enums(id,type,synopsis,public_date)
 // @Success 200 {object} AdvisoriesResponse
 // @Router /api/patch/v1/advisories [get]
 func AdvisoriesListHandler(c *gin.Context) {
@@ -90,7 +90,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 func buildQueryAdvisories(account string) *gorm.DB {
 	query := database.Db.Table("advisory_metadata am").
 		Select("am.id AS id, am.name AS name, COALESCE(systems_affected, 0) AS applicable_systems,"+
-			"synopsis,description, public_date, advisory_type_id").
+			"synopsis,description, public_date, advisory_type_id, advisory_type_id as type").
 		Joins("LEFT JOIN advisory_account_data aad ON am.id = aad.advisory_id").
 		Joins("LEFT JOIN rh_account ra ON aad.rh_account_id = ra.id").
 		Where("ra.name = ? OR ra.name IS NULL", account)
