@@ -45,8 +45,7 @@ objects:
                 - { name: LOG_LEVEL, value: debug }
                 - { name: LOG_STYLE, value: plain }
                 - { name: GIN_MODE, value: release }
-                - { name: CONSUMER_COUNT, value: 8 }
-                - { name: GOMAXPROCS, value: 8 }
+                - { name: GOMAXPROCS, value: "8" }
                 - { name: VMAAS_ADDRESS, value: "${VMAAS_ADDRESS}"}
                 - { name: VMAAS_WS_ADDRESS, value: "${VMAAS_WS_ADDRESS}"}
 

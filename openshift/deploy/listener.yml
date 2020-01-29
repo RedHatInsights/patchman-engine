@@ -48,7 +48,8 @@ objects:
                 - { name: LOG_LEVEL, value: debug }
                 - { name: LOG_STYLE, value: plain }
                 - { name: GIN_MODE, value: release }
-                - { name: GOMAXPROCS, value: 8 }
+                - { name: CONSUMER_COUNT, value: "8" }
+                - { name: GOMAXPROCS, value: "8" }
 
                 - { name: KAFKA_ADDRESS, value: "${KAFKA_ADDRESS}" }
                 - { name: KAFKA_GROUP, value: patchman }
