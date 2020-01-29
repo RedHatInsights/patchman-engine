@@ -36,6 +36,15 @@ func (SystemPlatform) TableName() string {
 	return "system_platform"
 }
 
+type AdvisorySeverity struct {
+	ID   int
+	Name string
+}
+
+func (AdvisorySeverity) TableName() string {
+	return "advisory-severity"
+}
+
 type AdvisoryType struct {
 	ID   int
 	Name string
@@ -53,6 +62,7 @@ type AdvisoryMetadata struct {
 	Summary        string
 	Solution       string
 	AdvisoryTypeID int
+	SeverityID     int
 	PublicDate     time.Time
 	ModifiedDate   time.Time
 	URL            *string

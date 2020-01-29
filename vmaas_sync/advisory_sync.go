@@ -9,6 +9,7 @@ import (
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
 	"github.com/pkg/errors"
+	"strings"
 	"time"
 )
 
@@ -27,10 +28,7 @@ func configure() {
 	vmaasClient = vmaas.NewAPIClient(cfg)
 }
 
-func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.AdvisoryMetadataSlice, error) {
-	var advisories models.AdvisoryMetadataSlice
-
-	// We use advisory types from DB
+func getAdvisoryTypes() (map[string]int, error) {
 	var advisoryTypesArr []models.AdvisoryType
 	advisoryTypes := map[string]int{}
 
@@ -40,7 +38,36 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 	}
 
 	for _, t := range advisoryTypesArr {
-		advisoryTypes[t.Name] = t.ID
+		advisoryTypes[strings.ToLower(t.Name)] = t.ID
+	}
+	return advisoryTypes, nil
+}
+
+func getAdvisorySeverities() (map[string]int, error) {
+	var severitiesArr []models.AdvisorySeverity
+	severities := map[string]int{}
+
+	err := database.Db.Find(&severitiesArr).Error
+	if err != nil {
+		return nil, errors.WithMessage(err, "Loading advisory types")
+	}
+
+	for _, t := range severitiesArr {
+		severities[strings.ToLower(t.Name)] = t.ID
+	}
+	return severities, nil
+}
+
+func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.AdvisoryMetadataSlice, error) {
+	var advisories models.AdvisoryMetadataSlice
+
+	advisoryTypes, err := getAdvisoryTypes()
+	if err != nil {
+		return nil, err
+	}
+	severities, err := getAdvisorySeverities()
+	if err != nil {
+		return nil, err
 	}
 
 	for n, v := range data {
@@ -60,14 +87,19 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 			utils.Log().Error("An advisory without description or summary")
 			continue
 		}
+		severityID := 0
+		if v.Severity != "" {
+			severityID = severities[strings.ToLower(v.Severity)]
+		}
 
 		advisory := models.AdvisoryMetadata{
 			Name:           n,
-			AdvisoryTypeID: advisoryTypes[v.Type],
+			AdvisoryTypeID: advisoryTypes[strings.ToLower(v.Type)],
 			Description:    v.Description,
 			Synopsis:       v.Synopsis,
 			Summary:        v.Summary,
 			Solution:       v.Solution,
+			SeverityID:     severityID,
 			PublicDate:     issued,
 			ModifiedDate:   modified,
 			URL:            &v.Url,

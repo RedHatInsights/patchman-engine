@@ -77,4 +77,5 @@ func TestSchemaCompatiblity(t *testing.T) {
 	assert.NoError(t, err)
 
 	fmt.Print(diff)
+	assert.Equal(t, len(diff), 0)
 }

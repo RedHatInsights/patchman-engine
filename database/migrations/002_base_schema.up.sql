@@ -92,6 +92,8 @@ CREATE INDEX ON advisory_metadata (advisory_type_id);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO evaluator;
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO vmaas_sync;
+-- TODO: Remove in later migration
+GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO listener;
 
 
 -- status table
