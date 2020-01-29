@@ -38,7 +38,7 @@ type SystemsMeta struct {
 // @Produce  json
 // @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field"    Enums(last_updated, last_evaluation)
+// @Param    sort           query   string  false   "Sort field"    Enums(id,last_updated,last_evaluation)
 // @Success 200 {object} SystemsResponse
 // @Router /api/patch/v1/systems [get]
 func SystemsListHandler(c *gin.Context) {
