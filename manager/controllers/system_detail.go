@@ -52,9 +52,9 @@ func SystemDetailHandler(c *gin.Context) {
 			Attributes: SystemItemAttributes{
 				LastEvaluation: inventory.LastEvaluation,
 				LastUpload:     inventory.LastUpload,
-				RhsaCount:      inventory.AdvisoryCountCache,
-				RhbaCount:      0,
-				RheaCount:      0,
+				RhsaCount:      inventory.AdvisorySecCountCache,
+				RhbaCount:      inventory.AdvisoryBugCountCache,
+				RheaCount:      inventory.AdvisoryEnhCountCache,
 				Enabled:        !inventory.OptOut,
 			},
 			ID:   inventory.InventoryID,

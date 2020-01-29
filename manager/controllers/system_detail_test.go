@@ -24,7 +24,9 @@ func TestSystemDetailDefault(t *testing.T) {
 	assert.Equal(t, "system", output.Data.Type)
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data.Attributes.LastEvaluation.String())
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data.Attributes.LastUpload.String())
-	assert.Equal(t, 8, output.Data.Attributes.RhsaCount)
+	assert.Equal(t, 2, output.Data.Attributes.RhsaCount)
+	assert.Equal(t, 3, output.Data.Attributes.RhbaCount)
+	assert.Equal(t, 3, output.Data.Attributes.RheaCount)
 }
 
 func TestSystemDetailNoIdProvided(t *testing.T) {
