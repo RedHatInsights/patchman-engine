@@ -87,9 +87,9 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 			utils.Log().Error("An advisory without description or summary")
 			continue
 		}
-		severityID := 0
-		if v.Severity != "" {
-			severityID = severities[strings.ToLower(v.Severity)]
+		var severityID *int
+		if id, has := severities[strings.ToLower(v.Severity)]; has {
+			severityID = &id
 		}
 
 		advisory := models.AdvisoryMetadata{

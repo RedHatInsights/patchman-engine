@@ -23,9 +23,9 @@ type AdvisoryWithApplicableSystems struct {
 	Name              string
 	Description       string
 	Synopsis          string
-	Severity          string
 	PublicDate        time.Time
 	AdvisoryTypeID    int
+	Severity          *int
 	ApplicableSystems int
 }
 
@@ -105,10 +105,10 @@ func buildAdvisoriesData(advisories *[]AdvisoryWithApplicableSystems) *[]Advisor
 		data[i] = AdvisoryItem{
 			Attributes: AdvisoryItemAttributes{
 				Description:       advisory.Description,
-				Severity:          advisory.Severity,
 				PublicDate:        advisory.PublicDate,
 				Synopsis:          advisory.Synopsis,
 				AdvisoryType:      advisory.AdvisoryTypeID,
+				Severity:          advisory.Severity,
 				ApplicableSystems: advisory.ApplicableSystems},
 			ID:   advisory.Name,
 			Type: "advisory",

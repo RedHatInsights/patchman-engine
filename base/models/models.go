@@ -42,7 +42,7 @@ type AdvisorySeverity struct {
 }
 
 func (AdvisorySeverity) TableName() string {
-	return "advisory-severity"
+	return "advisory_severity"
 }
 
 type AdvisoryType struct {
@@ -62,10 +62,10 @@ type AdvisoryMetadata struct {
 	Summary        string
 	Solution       string
 	AdvisoryTypeID int
-	SeverityID     int
 	PublicDate     time.Time
 	ModifiedDate   time.Time
 	URL            *string
+	SeverityID     *int
 }
 
 func (AdvisoryMetadata) TableName() string {

@@ -17,10 +17,10 @@ type AdvisoryItem struct {
 
 type AdvisoryItemAttributes struct {
 	Description       string    `json:"description"`
-	Severity          string    `json:"severity,omitempty"`
 	PublicDate        time.Time `json:"public_date"`
 	Synopsis          string    `json:"synopsis"`
 	AdvisoryType      int       `json:"advisory_type"`
+	Severity          *int      `json:"severity,omitempty"`
 	ApplicableSystems int       `json:"applicable_systems"`
 }
 
