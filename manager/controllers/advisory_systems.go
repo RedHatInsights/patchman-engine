@@ -118,9 +118,12 @@ func buildAdvisorySystemsData(dbItems *[]models.SystemPlatform) *[]SystemItem {
 			ID:   model.InventoryID,
 			Type: "system",
 			Attributes: SystemItemAttributes{
-				LastUpload: model.LastUpload,
-				Enabled:    !model.OptOut,
-				RhsaCount:  model.AdvisoryCountCache,
+				LastEvaluation: model.LastEvaluation,
+				LastUpload:     model.LastUpload,
+				RhsaCount:      model.AdvisorySecCountCache,
+				RhbaCount:      model.AdvisoryBugCountCache,
+				RheaCount:      model.AdvisoryEnhCountCache,
+				Enabled:        !model.OptOut,
 			}}
 		data[i] = item
 	}
