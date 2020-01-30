@@ -3,13 +3,23 @@ package controllers
 import (
 	"app/base/database"
 	"app/manager/middlewares"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"net/http"
 	"time"
 )
 
-var AdvisoriesSortFields = []string{"name", "type", "synopsis", "public_date"}
+// Fields upon which we can filter/sort
+var AdvisoriesFields = AttrMap{
+	"id":                 "advisory_metadata.id",
+	"name":               "advisory_metadata.name",
+	"type":               "advisory_metadata.advisory_type_id",
+	"synopsis":           "advisory_metadata.synopsis",
+	"description":        "advisory_metadata.description",
+	"public_date":        "advisory_metadata.public_date",
+	"applicable_systems": "COALESCE(systems_affected, 0)",
+}
 
 type AdvisoriesResponse struct {
 	Data  []AdvisoryItem `json:"data"`
@@ -46,7 +56,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 	query := buildQueryAdvisories(account)
 
 	query = ApplySearch(c, query, "am.name", "synopsis", "description")
-	query, meta, links, err := ListCommon(query, c, append(AdvisoriesSortFields, "applicable_systems"), "/api/patch/v1/advisories")
+	query, meta, links, err := ListCommon(query, c, AdvisoriesFields, "/api/patch/v1/advisories")
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return
@@ -70,9 +80,12 @@ func AdvisoriesListHandler(c *gin.Context) {
 }
 
 func buildQueryAdvisories(account string) *gorm.DB {
+	var sel string
+	for n, q := range AdvisoriesFields {
+		sel += fmt.Sprintf("%v as %v", q, n)
+	}
 	query := database.Db.Table("advisory_metadata am").
-		Select("am.id AS id, am.name AS name, COALESCE(systems_affected, 0) AS applicable_systems,"+
-			"synopsis,description, public_date, advisory_type_id, advisory_type_id as type").
+		Select(sel).
 		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id").
 		Joins("JOIN rh_account ra ON aad.rh_account_id = ra.id").
 		Where("ra.name = ?", account)

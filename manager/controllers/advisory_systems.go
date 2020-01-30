@@ -40,7 +40,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 
 	query := buildQuery(account, advisoryName)
 	path := fmt.Sprintf("/api/patch/v1/advisories/%v/systems", advisoryName)
-	query, meta, links, err := ListCommon(query, c, SystemsSortFields, path)
+	query, meta, links, err := ListCommon(query, c, SystemsFields, path)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return
