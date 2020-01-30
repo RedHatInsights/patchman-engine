@@ -45,7 +45,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		Where("ra.name = ?", account)
 
 	path := fmt.Sprintf("/api/patch/v1/systems/%v/advisories", inventoryID)
-	query, meta, links, err := ListCommon(query, c, AdvisoriesSortFields, path)
+	query, meta, links, err := ListCommon(query, c, AdvisoriesFields, path)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return

@@ -66,7 +66,7 @@ func TestSystemAdvisoriesPossibleSorts(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	for _, sort := range AdvisoriesSortFields {
+	for sort := range AdvisoriesFields {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", fmt.Sprintf("/INV-0?sort=%v", sort), nil)
 		initRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)

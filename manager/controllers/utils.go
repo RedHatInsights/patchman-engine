@@ -13,6 +13,12 @@ import (
 
 const InvalidOffsetMsg = "Invalid offset"
 
+type AttrName = string
+type AttrQuery = string
+
+// Used to store field name => sql query mapping
+type AttrMap = map[AttrName]AttrQuery
+
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	utils.Log("err", err.Error()).Error(respMsg)
 	c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{Error: respMsg})
@@ -29,7 +35,7 @@ func LogAndRespNotFound(c *gin.Context, err error, respMsg string) {
 }
 
 // nolint: prealloc
-func ApplySort(c *gin.Context, tx *gorm.DB, allowedFields ...string) (*gorm.DB, []string, error) {
+func ApplySort(c *gin.Context, tx *gorm.DB, allowedFields AttrMap) (*gorm.DB, []string, error) {
 	query := c.DefaultQuery("sort", "id")
 	fields := strings.Split(query, ",")
 	var appliedFields []string
@@ -37,7 +43,7 @@ func ApplySort(c *gin.Context, tx *gorm.DB, allowedFields ...string) (*gorm.DB, 
 		"id": true,
 	}
 
-	for _, f := range allowedFields {
+	for f := range allowedFields {
 		allowedFieldSet[f] = true
 	}
 
@@ -55,18 +61,50 @@ func ApplySort(c *gin.Context, tx *gorm.DB, allowedFields ...string) (*gorm.DB, 
 	return tx, appliedFields, nil
 }
 
-// nolint:lll
-func ListCommon(tx *gorm.DB, c *gin.Context, allowedFields []string, path string) (*gorm.DB, *ListMeta, *Links, error) {
+func ParseFilters(c *gin.Context, allowedFields AttrMap) (Filters, error) {
+	queryFilters, has := c.GetQueryMap("filter")
+	filters := Filters{}
+	if !has {
+		return []Filter{}, nil
+	}
+	for k, v := range queryFilters {
+		filter, err := ParseFilterValue(k, v)
+		if err != nil {
+			c.AbortWithStatusJSON(500, err)
+		}
+		utils.Log("filter", filter).Debug("Successfully parsed filter")
+		filters = append(filters, filter)
+	}
+	return filters.FilterFilters(allowedFields)
+}
+
+// nolint:lll, funlen
+func ListCommon(tx *gorm.DB, c *gin.Context, fields AttrMap, path string) (*gorm.DB, *ListMeta, *Links, error) {
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
 		return nil, nil, nil, err
 	}
 
-	tx, sortFields, err := ApplySort(c, tx, allowedFields...)
+	tx, sortFields, err := ApplySort(c, tx, fields)
 	if err != nil {
 		LogAndRespBadRequest(c, err, "Invalid sort")
 		return nil, nil, nil, err
+	}
+
+	filters, err := ParseFilters(c, fields)
+	if err != nil {
+		LogAndRespBadRequest(c, err, "Invalid filter")
+		return nil, nil, nil, err
+	}
+
+	for _, f := range filters {
+		query, args, err := f.ToWhere(fields)
+		if err != nil {
+			LogAndRespBadRequest(c, err, "Invalid filter")
+			return nil, nil, nil, err
+		}
+		tx = tx.Where(query, args...)
 	}
 
 	var total int
@@ -88,12 +126,17 @@ func ListCommon(tx *gorm.DB, c *gin.Context, allowedFields []string, path string
 		Page:       offset / limit,
 		PageSize:   limit,
 		Pages:      total / limit,
+		Filter:     filters.ToMetaMap(),
 		Sort:       sortFields,
 		TotalItems: total,
 	}
 
-	// TODO: Sort fields on other params
-	links := CreateLinks(path, offset, limit, total, "")
+	var sortQ string
+	if len(sortFields) > 0 {
+		sortQ = fmt.Sprintf("sort=%v", strings.Join(sortFields, ","))
+	}
+
+	links := CreateLinks(path, offset, limit, total, filters.ToQueryParams(), sortQ)
 
 	tx = tx.Limit(limit).Offset(offset)
 	return tx, &meta, &links, nil

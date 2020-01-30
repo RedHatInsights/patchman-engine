@@ -10,76 +10,65 @@ import (
 	"testing"
 )
 
-func TestAdvisoriesDefault(t *testing.T) { //nolint:dupl
+func testAdvisoriesCommon(t *testing.T, method, url string, check func(out AdvisoriesResponse)) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
+	req, _ := http.NewRequest(method, url, nil)
 	initRouter(AdvisoriesListHandler).ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	var output AdvisoriesResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	// data
-	assert.Equal(t, 8, len(output.Data))
-	assert.Equal(t, "RH-1", output.Data[0].ID)
-	assert.Equal(t, "advisory", output.Data[0].Type)
-	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
-	assert.Equal(t, "adv-1-des", output.Data[0].Attributes.Description)
-	assert.Equal(t, "adv-1-syn", output.Data[0].Attributes.Synopsis)
-	assert.Equal(t, 7, output.Data[0].Attributes.ApplicableSystems)
+	check(output)
+}
 
-	// links
-	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25", output.Links.First)
-	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25", output.Links.Last)
-	assert.Nil(t, output.Links.Next)
-	assert.Nil(t, output.Links.Previous)
+func TestAdvisoriesDefault(t *testing.T) {
+	testAdvisoriesCommon(t, "GET", "/", func(output AdvisoriesResponse) {
+		assert.Equal(t, 8, len(output.Data))
+		assert.Equal(t, "RH-1", output.Data[0].ID)
+		assert.Equal(t, "advisory", output.Data[0].Type)
+		assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
+		assert.Equal(t, "adv-1-des", output.Data[0].Attributes.Description)
+		assert.Equal(t, "adv-1-syn", output.Data[0].Attributes.Synopsis)
+		assert.Equal(t, 7, output.Data[0].Attributes.ApplicableSystems)
 
-	// meta
-	assert.Equal(t, 0, output.Meta.Offset)
-	assert.Equal(t, 0, output.Meta.Page)
-	assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
-	assert.Equal(t, core.DefaultLimit, output.Meta.PageSize)
-	assert.Equal(t, 8, output.Meta.TotalItems)
+		// links
+		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25", output.Links.First)
+		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25", output.Links.Last)
+		assert.Nil(t, output.Links.Next)
+		assert.Nil(t, output.Links.Previous)
+
+		// meta
+		assert.Equal(t, 0, output.Meta.Offset)
+		assert.Equal(t, 0, output.Meta.Page)
+		assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
+		assert.Equal(t, core.DefaultLimit, output.Meta.PageSize)
+		assert.Equal(t, 8, output.Meta.TotalItems)
+	})
 }
 
 func TestAdvisoriesOffsetLimit(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?offset=0&limit=2", nil)
-	initRouter(AdvisoriesListHandler).ServeHTTP(w, req)
-
-	assert.Equal(t, 200, w.Code)
-	var output AdvisoriesResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, 2, len(output.Data))
-	assert.Equal(t, 0, output.Meta.Offset)
-	assert.Equal(t, 0, output.Meta.Page)
-	assert.Equal(t, 2, output.Meta.Limit)
-	assert.Equal(t, 2, output.Meta.PageSize)
-	assert.Equal(t, 8, output.Meta.TotalItems)
+	testAdvisoriesCommon(t, "GET", "?offset=0&limit=2", func(output AdvisoriesResponse) {
+		assert.Equal(t, 2, len(output.Data))
+		assert.Equal(t, 0, output.Meta.Offset)
+		assert.Equal(t, 0, output.Meta.Page)
+		assert.Equal(t, 2, output.Meta.Limit)
+		assert.Equal(t, 2, output.Meta.PageSize)
+		assert.Equal(t, 8, output.Meta.TotalItems)
+	})
 }
 
 func TestAdvisoriesOffset(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?offset=1&limit=4", nil)
-	initRouter(AdvisoriesListHandler).ServeHTTP(w, req)
-
-	assert.Equal(t, 200, w.Code)
-	var output AdvisoriesResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, 4, len(output.Data))
-	assert.Equal(t, 1, output.Meta.Offset)
-	assert.Equal(t, 0, output.Meta.Page)
-	assert.Equal(t, 4, output.Meta.Limit)
-	assert.Equal(t, 4, output.Meta.PageSize)
-	assert.Equal(t, 8, output.Meta.TotalItems)
+	testAdvisoriesCommon(t, "GET", "/?offset=1&limit=4", func(output AdvisoriesResponse) {
+		assert.Equal(t, 4, len(output.Data))
+		assert.Equal(t, 1, output.Meta.Offset)
+		assert.Equal(t, 0, output.Meta.Page)
+		assert.Equal(t, 4, output.Meta.Limit)
+		assert.Equal(t, 4, output.Meta.PageSize)
+		assert.Equal(t, 8, output.Meta.TotalItems)
+	})
 }
 
 func TestAdvisoriesOffsetOverflow(t *testing.T) {
@@ -116,11 +105,27 @@ func TestAdvisoriesOrder(t *testing.T) {
 	assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
 }
 
+func TestAdvisoriesFilter(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?filter[type]=1", nil)
+	initRouter(AdvisoriesListHandler).ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output AdvisoriesResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, "RH-7", output.Data[0].ID)
+}
+
 func TestAdvisoriesPossibleSorts(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	for _, sort := range AdvisoriesSortFields {
+	for sort := range AdvisoriesFields {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", fmt.Sprintf("/?sort=%v", sort), nil)
 		initRouter(AdvisoriesListHandler).ServeHTTP(w, req)

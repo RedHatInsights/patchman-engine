@@ -8,7 +8,13 @@ import (
 	"net/http"
 )
 
-var SystemsSortFields = []string{"last_updated", "last_evaluation"}
+// Fields upon which we can filter/sort
+var SystemsFields = AttrMap{
+	"id":             "system_platform.id",
+	"first_reported": "system_platform.first_reported",
+	"last_updated":   "system_platform.last_updated",
+	"stale":          "system_platform.stale",
+}
 
 type SystemsResponse struct {
 	Data  []SystemItem `json:"data"`
@@ -34,7 +40,7 @@ func SystemsListHandler(c *gin.Context) {
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
 
-	query, meta, links, err := ListCommon(query, c, SystemsSortFields, "/api/patch/v1/systems")
+	query, meta, links, err := ListCommon(query, c, SystemsFields, "/api/patch/v1/systems")
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return

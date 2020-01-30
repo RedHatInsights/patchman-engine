@@ -1,9 +1,12 @@
 package controllers
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
-func CreateLinks(path string, offset, limit, total int, otherParams string) Links {
-	pager := pager{path, offset, limit, total, otherParams}
+func CreateLinks(path string, offset, limit, total int, otherParams ...string) Links {
+	pager := pager{path, offset, limit, total, strings.Join(otherParams, "&")}
 	links := Links{
 		First:    pager.createLink(0),
 		Last:     pager.createLastLink(),

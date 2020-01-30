@@ -1,6 +1,8 @@
 package controllers
 
-import "time"
+import (
+	"time"
+)
 
 type Links struct {
 	First    string  `json:"first"`
@@ -10,15 +12,14 @@ type Links struct {
 }
 
 type ListMeta struct {
-	Limit    int      `json:"limit"`
-	Offset   int      `json:"offset"`
-	Page     int      `json:"page"`
-	PageSize int      `json:"page_size"`
-	Pages    int      `json:"pages"`
-	Sort     []string `json:"sort"`
-	// TODO: Implement
-	Filter     []string `json:"filter"`
-	TotalItems int      `json:"total_items"`
+	Limit      int                   `json:"limit"`
+	Offset     int                   `json:"offset"`
+	Page       int                   `json:"page"`
+	PageSize   int                   `json:"page_size"`
+	Pages      int                   `json:"pages"`
+	Sort       []string              `json:"sort"`
+	Filter     map[string]FilterData `json:"filter"`
+	TotalItems int                   `json:"total_items"`
 }
 
 type SystemAdvisoryItem struct {
