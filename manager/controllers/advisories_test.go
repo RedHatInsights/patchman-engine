@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestAdvisoriesDefault(t *testing.T) {
+func TestAdvisoriesDefault(t *testing.T) { //nolint:dupl
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
@@ -138,4 +138,38 @@ func TestAdvisoriesWrongSort(t *testing.T) {
 	initRouter(AdvisoriesListHandler).ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestAdvisoriesSearch(t *testing.T) { //nolint:dupl
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?search=h-3", nil)
+	initRouter(AdvisoriesListHandler).ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output AdvisoriesResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	// data
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, "RH-3", output.Data[0].ID)
+	assert.Equal(t, "advisory", output.Data[0].Type)
+	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
+	assert.Equal(t, "adv-3-des", output.Data[0].Attributes.Description)
+	assert.Equal(t, "adv-3-syn", output.Data[0].Attributes.Synopsis)
+	assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
+
+	// links
+	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25&data_format=json", output.Links.First)
+	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25&data_format=json", output.Links.Last)
+	assert.Nil(t, output.Links.Next)
+	assert.Nil(t, output.Links.Previous)
+
+	// meta
+	assert.Equal(t, 0, output.Meta.Offset)
+	assert.Equal(t, 0, output.Meta.Page)
+	assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
+	assert.Equal(t, core.DefaultLimit, output.Meta.PageSize)
+	assert.Equal(t, 1, output.Meta.TotalItems)
 }

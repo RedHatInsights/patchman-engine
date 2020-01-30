@@ -48,3 +48,23 @@ func ApplySort(c *gin.Context, tx *gorm.DB, allowedFields ...string) (*gorm.DB, 
 	}
 	return tx, nil
 }
+
+func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) *gorm.DB {
+	search := c.Query("search")
+	if search == "" {
+		return tx
+	}
+
+	if len(searchColumns) == 0 {
+		return tx
+	}
+
+	searchExtended := "%" + search + "%"
+	txWithSearch := tx.Where("LOWER("+searchColumns[0]+") LIKE LOWER(?)", searchExtended)
+	if len(searchColumns) > 1 {
+		for _, searchColumn := range searchColumns[1:] {
+			txWithSearch = txWithSearch.Or("LOWER("+searchColumn+") LIKE LOWER(?)", searchExtended)
+		}
+	}
+	return txWithSearch
+}
