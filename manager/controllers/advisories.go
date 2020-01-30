@@ -51,6 +51,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 	}
 
 	query := buildQueryAdvisories(account)
+	query = ApplySearch(c, query, "am.name", "synopsis", "description")
 	query, err = ApplySort(c, query, AdvisoriesSortFields...)
 	if err != nil {
 		LogAndRespBadRequest(c, err, "sort application failed")
