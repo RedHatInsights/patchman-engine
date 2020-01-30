@@ -42,11 +42,9 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "name",
-                                "description",
+                                "id",
+                                "type",
                                 "synopsis",
-                                "summary",
-                                "solution",
                                 "public_date"
                             ]
                         }
@@ -144,6 +142,7 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "id",
                                 "last_updated",
                                 "last_evaluation"
                             ]
@@ -198,6 +197,7 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "id",
                                 "last_updated",
                                 "last_evaluation"
                             ]
@@ -296,11 +296,9 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "name",
-                                "description",
+                                "id",
+                                "type",
                                 "synopsis",
-                                "summary",
-                                "solution",
                                 "public_date"
                             ]
                         }
@@ -373,7 +371,7 @@
                         }
                     },
                     "severity": {
-                        "type": "string"
+                        "type": "integer"
                     },
                     "solution": {
                         "type": "string"
@@ -438,7 +436,7 @@
                         "type": "string"
                     },
                     "severity": {
-                        "type": "string"
+                        "type": "integer"
                     },
                     "synopsis": {
                         "type": "string"
