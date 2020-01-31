@@ -3,6 +3,7 @@ package listener
 import (
 	"app/base/core"
 	"app/base/utils"
+	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -35,12 +36,12 @@ func TestUpdateSystemPlatform(t *testing.T) {
 		Releasever:     "7Server",
 		Basearch:       "x86_64",
 	}
-	sys1, err := updateSystemPlatform(id, accountID, &req)
+	sys1, err := updateSystemPlatform(id, accountID, &inventory.HostOut{}, &req)
 	assert.Nil(t, err)
 
 	assertSystemInDb(t)
 
-	sys2, err := updateSystemPlatform(id, accountID, &req)
+	sys2, err := updateSystemPlatform(id, accountID, &inventory.HostOut{}, &req)
 	assert.Nil(t, err)
 
 	assert.Equal(t, sys1.ID, sys2.ID)

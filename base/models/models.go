@@ -30,6 +30,10 @@ type SystemPlatform struct {
 	AdvisoryBugCountCache int
 	AdvisorySecCountCache int
 	LastUpload            *time.Time
+
+	StaleTimestamp        *time.Time
+	StaleWarningTimestamp *time.Time
+	CulledTimestamp       *time.Time
 }
 
 func (SystemPlatform) TableName() string {
