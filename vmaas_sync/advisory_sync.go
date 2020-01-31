@@ -133,6 +133,9 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 }
 
 func syncAdvisories() error {
+	tStart := time.Now()
+	defer syncDuration.Observe(time.Since(tStart).Seconds())
+
 	ctx := context.Background()
 
 	if vmaasClient == nil {
