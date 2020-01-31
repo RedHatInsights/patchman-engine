@@ -49,11 +49,17 @@ var (
 		Subsystem: "vmaas_sync",
 		Name:      "system_advisories_stats",
 	}, []string{"type"})
+
+	syncDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Namespace: "patchman_engine",
+		Subsystem: "vmaas_sync",
+		Name:      "sync_duration_seconds",
+	})
 )
 
 func init() {
 	prometheus.MustRegister(messagesReceivedCnt, vmaasCallCnt, storeAdvisoriesCnt,
-		systemsCnt, advisoriesCnt, systemAdvisoriesStats)
+		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration)
 }
 
 func RunMetrics() {
