@@ -17,10 +17,10 @@ The project is written as a set of communicating containers. The core components
 This project can be deployed either locally or in the cloud using openshift.
 
 ### Local deployment
-Uses `docker-compose` to deploy the individual project components and supporting containers, which simulate the CMSfR platform and database respectively into local docker instance:
+Uses `podman-compose` to deploy the individual project components and supporting containers, which simulate the CMSfR platform and database respectively into local container instance:
 ~~~bash
-docker-compose up --build # Build images if needed and start containers
-docker-compose down       # Stop and remove containers
+podman-compose up --build # Build images if needed and start containers
+podman-compose down       # Stop and remove containers
 ~~~
 
 #### VMaaS 
@@ -41,13 +41,9 @@ go get -u github.com/swaggo/swag/cmd/swag # download binary to generate, do it f
 ./scripts/generate_docs.sh
 ~~~
 
-## Test API mockups
+## Test API
 Test using dev shell scripts:
 ~~~bash
-# Terminal 1
-docker-compose up --build webserver # term 1
-
-# Terminal 2
 cd dev/scripts
 ./advisories_list.sh
 ./advisory_detail.sh
@@ -60,5 +56,5 @@ Test using Swagger, open <http://localhost:8080/openapi/index.html>.
 
 ## Run tests
 ~~~bash
-docker-compose -f docker-compose.test.yml up --build test # Run testing Postgres db and tests against.
+podman-compose -f docker-compose.test.yml up --build --abort-on-container-exit
 ~~~
