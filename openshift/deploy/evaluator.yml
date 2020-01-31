@@ -52,7 +52,7 @@ objects:
                 - { name: KAFKA_GROUP, value: patchman }
                 - { name: GOMAXPROCS, value: "8" }
                 - { name: CONSUMER_COUNT, value: "8" }
-                - { name: EVAL_TOPIC, value: patchman.evaluate }
+                - { name: EVAL_TOPIC, value: patchman.evaluator.upload }
 
                 - { name: INVENTORY_ADDRESS, value: "${INVENTORY_ADDRESS}" }
                 - { name: VMAAS_ADDRESS, value: "${VMAAS_ADDRESS}" }
