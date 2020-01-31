@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
@@ -72,9 +73,19 @@ func getOrCreateAccount(account string) (int, error) {
 	return rhAccount.ID, err
 }
 
+func optParseTimestap(t *string) *time.Time {
+	if t != nil && len(*t) > 0 {
+		v, err := time.Parse(base.Rfc3339NoTz, *t)
+		if err == nil {
+			return &v
+		}
+	}
+	return nil
+}
+
 // Stores or updates base system profile, returing internal system id
-func updateSystemPlatform(inventoryID string, accountID int, updatesReq *vmaas.UpdatesV3Request) (
-	*models.SystemPlatform, error) {
+func updateSystemPlatform(inventoryID string, accountID int,
+	invData *inventory.HostOut, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
 	updatesReqJSON, err := json.Marshal(&updatesReq)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Serializing vmaas request")
@@ -99,6 +110,10 @@ func updateSystemPlatform(inventoryID string, accountID int, updatesReq *vmaas.U
 		JSONChecksum:   jsonChecksum,
 		LastEvaluation: nil,
 		LastUpload:     &now,
+
+		StaleTimestamp:        optParseTimestap(invData.StaleTimestamp),
+		StaleWarningTimestamp: optParseTimestap(invData.StaleWarningTimestamp),
+		CulledTimestamp:       optParseTimestap(invData.CulledTimestamp),
 	}
 
 	tx := database.OnConflictUpdate(database.Db, "inventory_id", "vmaas_json", "json_checksum",
@@ -121,46 +136,52 @@ func processUpload(hostID string, account string, identity string) error {
 	// Create new context, which has the apikey value set. This is then used as a value for `x-rh-identity`
 	ctx := context.WithValue(context.Background(), inventory.ContextAPIKey, apiKey)
 
-	inventoryData, _, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{hostID}, nil)
+	hostResults, _, err := inventoryClient.HostsApi.ApiHostGetHostById(ctx, []string{hostID}, nil)
+	if err != nil {
+		return errors.Wrap(err, "could not query inventory")
+	}
+
+	profileResults, _, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{hostID}, nil)
 	if err != nil {
 		return errors.Wrap(err, "could not inventory system profile")
 	}
 
 	utils.Log().Debug("System profile download complete")
 
-	if inventoryData.Count == 0 {
-		return errors.Wrap(err, "no system details returned, host is probably deleted")
+	if profileResults.Count == 0 || hostResults.Count == 0 {
+		return errors.Wrap(err, "no system details returned, systemProfile is probably deleted")
 	}
 
-	// We only process one host per message here
-	host := inventoryData.Results[0]
+	// We only process one systemProfile per message here
+	host := hostResults.Results[0]
+	systemProfile := profileResults.Results[0]
 	// Ensure we have account stored
 	accountID, err := getOrCreateAccount(account)
 	if err != nil {
 		return errors.Wrap(err, "saving account into the database")
 	}
 
-	modules := make([]vmaas.UpdatesRequestModulesList, len(host.SystemProfile.DnfModules))
-	for i, m := range host.SystemProfile.DnfModules {
+	modules := make([]vmaas.UpdatesRequestModulesList, len(systemProfile.SystemProfile.DnfModules))
+	for i, m := range systemProfile.SystemProfile.DnfModules {
 		modules[i] = vmaas.UpdatesRequestModulesList{
 			ModuleName:   m.Name,
 			ModuleStream: m.Stream,
 		}
 	}
 	repos := []string{}
-	for _, r := range host.SystemProfile.YumRepos {
+	for _, r := range systemProfile.SystemProfile.YumRepos {
 		repos = append(repos, r.Id)
 	}
 	// Prepare VMaaS request
 	updatesReq := vmaas.UpdatesV3Request{
-		PackageList:    host.SystemProfile.InstalledPackages,
-		Basearch:       host.SystemProfile.Arch,
+		PackageList:    systemProfile.SystemProfile.InstalledPackages,
+		Basearch:       systemProfile.SystemProfile.Arch,
 		ModulesList:    modules,
 		RepositoryList: repos,
 		SecurityOnly:   false,
 	}
 
-	_, err = updateSystemPlatform(host.Id, accountID, &updatesReq)
+	_, err = updateSystemPlatform(systemProfile.Id, accountID, &host, &updatesReq)
 	if err != nil {
 		return errors.Wrap(err, "saving system into the database")
 	}

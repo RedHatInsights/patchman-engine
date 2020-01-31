@@ -376,8 +376,12 @@ CREATE TABLE IF NOT EXISTS system_platform
     advisory_enh_count_cache INT                      NOT NULL DEFAULT 0,
     advisory_bug_count_cache INT                      NOT NULL DEFAULT 0,
     advisory_sec_count_cache INT                      NOT NULL DEFAULT 0,
-    PRIMARY KEY (id),
+
     last_upload              TIMESTAMP WITH TIME ZONE,
+    stale_timestamp          TIMESTAMP WITH TIME ZONE,
+    stale_warning_timestamp  TIMESTAMP WITH TIME ZONE,
+    culled_timestamp         TIMESTAMP WITH TIME ZONE,
+    PRIMARY KEY (id),
     UNIQUE (inventory_id),
     CONSTRAINT rh_account_id
         FOREIGN KEY (rh_account_id)

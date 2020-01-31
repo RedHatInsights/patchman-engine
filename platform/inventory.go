@@ -1,9 +1,11 @@
 package main
 
 import (
+	"app/base"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 )
 
 var pkgs = []string{
@@ -65,8 +67,32 @@ func systemProfileHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, makeSystemProfile(c.Param("host_id")))
 }
 
+func systemHandler(c *gin.Context) {
+	now := time.Now().Format(base.Rfc3339NoTz)
+	staleWarn := time.Now().Add(time.Hour * 24).Format(base.Rfc3339NoTz)
+	stale := time.Now().Add(time.Hour * 48).Format(base.Rfc3339NoTz)
+	culled := time.Now().Add(time.Hour * 52).Format(base.Rfc3339NoTz)
+
+	host := inventory.HostOut{
+		Id:                    c.Param("host_id"),
+		Updated:               now,
+		StaleWarningTimestamp: &staleWarn,
+		StaleTimestamp:        &stale,
+		CulledTimestamp:       &culled,
+	}
+	out := inventory.HostQueryOutput{
+		Count:   1,
+		Page:    0,
+		PerPage: 1,
+		Results: []inventory.HostOut{host},
+		Total:   1,
+	}
+	c.JSON(http.StatusOK, out)
+}
+
 // InitInventory routes.
 func InitInventory(app *gin.Engine) {
 	// Mock inventory system_profile endpoint
+	app.GET("/api/inventory/v1/hosts/:host_id", systemHandler)
 	app.GET("/api/inventory/v1/hosts/:host_id/system_profile", systemProfileHandler)
 }
