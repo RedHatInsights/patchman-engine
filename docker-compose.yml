@@ -13,8 +13,6 @@ services:
       - ./conf/database.env
     security_opt:
       - label=disable
-    volumes:
-      - patchman-engine-database-data:/var/lib/pgsql/data:Z
 
   platform:
     hostname: platform
@@ -82,12 +80,8 @@ services:
       - ./conf/vmaas_sync.env
     command: ./vmaas_sync/entrypoint.sh
     ports:
-      # Reserving 8082 for evaluator :)
       - 8083:8083
     restart: unless-stopped
     depends_on:
       - db
       - platform
-
-volumes:
-  patchman-engine-database-data:
