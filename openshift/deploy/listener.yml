@@ -55,7 +55,7 @@ objects:
                 - { name: KAFKA_GROUP, value: patchman }
                 - { name: UPLOAD_TOPIC, value: platform.upload.available }
                 - { name: EVENTS_TOPIC, value: platform.inventory.events }
-                - { name: EVAL_TOPIC, value: patchman.evaluate }
+                - { name: EVAL_TOPIC, value: patchman.evaluator.upload }
 
                 - { name: INVENTORY_ADDRESS, value: "${INVENTORY_ADDRESS}" }
                 - { name: VMAAS_ADDRESS, value: "${VMAAS_ADDRESS}" }
