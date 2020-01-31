@@ -9,7 +9,8 @@ INSERT INTO advisory_severity (id, name)
 VALUES (1, 'Low'),
        (2, 'Moderate'),
        (3, 'Important'),
-       (4, 'Critical');
+       (4, 'Critical')
+ON CONFLICT DO NOTHING;
 
 ALTER TABLE advisory_metadata
     ADD COLUMN severity_id INT;

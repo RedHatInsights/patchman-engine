@@ -1,6 +1,9 @@
 package evaluator
 
 import (
+	"app/base/utils"
+	"app/manager/middlewares"
+	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -26,4 +29,16 @@ var (
 
 func init() {
 	prometheus.MustRegister(evaluationCnt, updatesCnt, evaluationDuration)
+}
+
+func RunMetrics() {
+	// create web app
+	app := gin.New()
+	middlewares.Prometheus().Use(app)
+
+	err := app.Run(":8082")
+	if err != nil {
+		utils.Log("err", err.Error()).Error()
+		panic(err)
+	}
 }

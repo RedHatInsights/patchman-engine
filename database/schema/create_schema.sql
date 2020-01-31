@@ -551,7 +551,8 @@ INSERT INTO advisory_type (id, name)
 VALUES (0, 'unknown'),
        (1, 'enhancement'),
        (2, 'bugfix'),
-       (3, 'security');
+       (3, 'security')
+ON CONFLICT DO NOTHING;
 
 CREATE TABLE advisory_severity
 (
@@ -564,7 +565,8 @@ INSERT INTO advisory_severity (id, name)
 VALUES (1, 'Low'),
        (2, 'Moderate'),
        (3, 'Important'),
-       (4, 'Critical');
+       (4, 'Critical')
+ON CONFLICT DO NOTHING;
 
 -- advisory_metadata
 CREATE TABLE IF NOT EXISTS advisory_metadata
@@ -617,7 +619,8 @@ VALUES (0, 'Not Reviewed'),
        (2, 'On-Hold'),
        (3, 'Scheduled for Patch'),
        (4, 'Resolved'),
-       (5, 'No Action');
+       (5, 'No Action')
+ON CONFLICT DO NOTHING;
 
 
 -- system_advisories

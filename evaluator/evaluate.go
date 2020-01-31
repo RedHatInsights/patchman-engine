@@ -286,6 +286,8 @@ func updateSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, patched, unp
 func RunEvaluator() {
 	Configure()
 
+	go RunMetrics()
+
 	kafkaReader.HandleEvents(func(event mqueue.PlatformEvent) {
 		err := Evaluate(context.Background(), event.ID, EvalTypeUpload)
 		if err != nil {

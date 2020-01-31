@@ -37,12 +37,12 @@ objects:
               name: patchman-engine-evaluator
               command: [ ./evaluator/entrypoint.sh ]
               resources:
-                limits: { cpu: 500m,  memory: 512Mi }
-                requests: { cpu: 200m, memory: 512Mi }
+                limits: { memory: 128Mi }
+                requests: { memory: 128Mi }
               livenessProbe:
-                httpGet: { path: /metrics, port: 8081, scheme: HTTP }
+                httpGet: { path: /metrics, port: 8082, scheme: HTTP }
               readinessProbe:
-                httpGet: { path: /metrics, port: 8081, scheme: HTTP }
+                httpGet: { path: /metrics, port: 8082, scheme: HTTP }
               env:
                 - { name: LOG_LEVEL, value: debug }
                 - { name: LOG_STYLE, value: plain }
@@ -103,10 +103,10 @@ objects:
     spec:
       type: ClusterIP
       ports:
-        - name: 8081-tcp
-          port: 8081
+        - name: 8082-tcp
+          port: 8082
           protocol: TCP
-          targetPort: 8081
+          targetPort: 8082
       selector:
         app: patchman-engine
         deploymentconfig: patchman-engine-evaluator
