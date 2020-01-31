@@ -58,3 +58,9 @@ Test using Swagger, open <http://localhost:8080/openapi/index.html>.
 ~~~bash
 podman-compose -f docker-compose.test.yml up --build --abort-on-container-exit
 ~~~
+
+## Run vmaas_sync "sync" manually
+There is a private API accessible only from inside of `vmaas_sync` container:
+~~~
+podman exec -it patchman-engine_vmaas_sync_1 ./sync.sh
+~~~
