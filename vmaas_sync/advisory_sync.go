@@ -21,9 +21,11 @@ var (
 )
 
 func configure() {
+	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
+
 	cfg := vmaas.NewConfiguration()
 	cfg.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
-	cfg.Debug = true
+	cfg.Debug = traceAPI
 
 	vmaasClient = vmaas.NewAPIClient(cfg)
 }
@@ -121,7 +123,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 	}
 
 	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary",
-		"solution", "public_date", "modified_date", "url")
+		"solution", "public_date", "modified_date", "url", "advisory_type_id", "severity_id")
 	errs := database.BulkInsertChunk(tx, advisories, SyncBatchSize)
 
 	if len(errs) > 0 {

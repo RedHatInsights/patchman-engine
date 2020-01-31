@@ -10,11 +10,15 @@ if $PG_INITIALIZED; then
 
   # Create users if they don't exist
   psql -d ${POSTGRESQL_DATABASE} -f ${CONTAINER_SCRIPTS_PATH}/start/create_users.sql
+
+
+  echo "Initializing the database through migrations"
+  ${CONTAINER_SCRIPTS_PATH}/migrate.sh up
   # Create schema from scratch
-  psql -d ${POSTGRESQL_DATABASE} -f ${CONTAINER_SCRIPTS_PATH}/start/create_schema.sql
-#else
-  #echo "Already initialized - Migrating the database"
-  #${CONTAINER_SCRIPTS_PATH}/migrate.sh up
+  # psql -d ${POSTGRESQL_DATABASE} -f ${CONTAINER_SCRIPTS_PATH}/start/create_schema.sql
+else
+  echo "Already initialized - Migrating the database"
+  ${CONTAINER_SCRIPTS_PATH}/migrate.sh up
 fi
 
 
