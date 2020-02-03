@@ -35,7 +35,7 @@ objects:
             - image: ${IMAGE_NAMESPACE}/patchman-engine-app:${IMAGE_TAG}
               imagePullPolicy: Always
               name: patchman-engine-evaluator
-              command: [ ./evaluator/entrypoint.sh ]
+              command: [ ./scripts/entrypoint.sh evaluator ]
               resources:
                 limits: { memory: 128Mi }
                 requests: { memory: 128Mi }

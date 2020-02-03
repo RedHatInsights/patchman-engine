@@ -35,7 +35,7 @@ objects:
             - image: ${IMAGE_NAMESPACE}/patchman-engine-app:${IMAGE_TAG}
               imagePullPolicy: Always
               name: patchman-engine-listener
-              command: [ ./listener/entrypoint.sh ]
+              command: [ ./scripts/entrypoint.sh listener]
               resources:
                 # We dont need limits ATM, not enough work being done to warrant CPU limits.
                 limits: { memory: 128Mi }
