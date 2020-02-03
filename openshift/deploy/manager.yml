@@ -31,7 +31,7 @@ objects:
             - image: ${IMAGE_NAMESPACE}/patchman-engine-app:${IMAGE_TAG}
               imagePullPolicy: Always
               name: patchman-engine-manager
-              command: [ ./manager/entrypoint.sh ]
+              command: [ ./scripts/entrypoint.sh manager]
               resources:
                 limits: { cpu: 200m,  memory: 128Mi }
                 requests: { cpu: 200m, memory: 128Mi }
