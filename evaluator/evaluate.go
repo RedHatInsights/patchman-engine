@@ -17,16 +17,18 @@ import (
 )
 
 const (
-	unknown        = "unknown"
+	unknown = "unknown"
 )
 
 var (
 	kafkaReader *mqueue.Reader
 	vmaasClient *vmaas.APIClient
-	evalLabel string
+	evalLabel   string
+	port        string
 )
 
 func Configure() {
+	port = utils.GetenvOrFail("PORT")
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
 	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
@@ -290,7 +292,7 @@ func updateSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, patched, unp
 func RunEvaluator() {
 	Configure()
 
-	go RunMetrics()
+	go RunMetrics(port)
 
 	kafkaReader.HandleEvents(func(event mqueue.PlatformEvent) {
 		err := Evaluate(context.Background(), event.ID, evalLabel)
