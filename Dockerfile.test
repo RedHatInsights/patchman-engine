@@ -25,3 +25,4 @@ ADD /docs          /go/src/app/docs
 ADD /scripts       /go/src/app/scripts
 ADD main.go        /go/src/app/
 ADD .golangci.yml  /go/src/app/
+ADD /dev           /go/src/app/dev
