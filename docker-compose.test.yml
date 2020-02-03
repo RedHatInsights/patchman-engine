@@ -1,6 +1,7 @@
 version: '3'
 services:
   db:
+    container_name: db
     build:
       context: .
       dockerfile: database/Dockerfile.centos
@@ -11,7 +12,7 @@ services:
       - ./conf/database.env
 
   platform:
-    hostname: platform
+    container_name: platform
     build:
       context: .
       dockerfile: platform/Dockerfile
@@ -23,6 +24,7 @@ services:
       - 9001:9001
 
   test:
+    container_name: test
     build:
       context: .
       dockerfile: Dockerfile.test

@@ -25,7 +25,7 @@ ADD /vmaas_sync /go/src/app/vmaas_sync
 ADD /docs       /go/src/app/docs
 ADD main.go     /go/src/app/
 
-ADD /scripts/*.sh /go/src/app/
+ADD /scripts/*.sh /go/src/app/scripts
 
 RUN go build -v main.go
 
