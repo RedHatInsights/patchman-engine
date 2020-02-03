@@ -31,12 +31,12 @@ func init() {
 	prometheus.MustRegister(evaluationCnt, updatesCnt, evaluationDuration)
 }
 
-func RunMetrics() {
+func RunMetrics(port string) {
 	// create web app
 	app := gin.New()
 	middlewares.Prometheus().Use(app)
 
-	err := app.Run(":8082")
+	err := app.Run(":" + port)
 	if err != nil {
 		utils.Log("err", err.Error()).Error()
 		panic(err)
