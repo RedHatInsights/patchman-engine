@@ -48,6 +48,14 @@
                                 "public_date"
                             ]
                         }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Find matching text",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {

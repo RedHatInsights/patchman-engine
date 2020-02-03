@@ -39,6 +39,7 @@ type AdvisoryWithApplicableSystems struct {
 // @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,type,synopsis,public_date)
+// @Param    search         query   string  false   "Find matching text"
 // @Success 200 {object} AdvisoriesResponse
 // @Router /api/patch/v1/advisories [get]
 func AdvisoriesListHandler(c *gin.Context) {
