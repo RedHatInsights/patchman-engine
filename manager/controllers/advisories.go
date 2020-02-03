@@ -85,11 +85,12 @@ func buildAdvisoriesData(advisories *[]AdvisoryWithApplicableSystems) *[]Advisor
 		advisory := (*advisories)[i]
 		data[i] = AdvisoryItem{
 			Attributes: AdvisoryItemAttributes{
-				Description:       advisory.Description,
-				PublicDate:        advisory.PublicDate,
-				Synopsis:          advisory.Synopsis,
-				AdvisoryType:      advisory.AdvisoryTypeID,
-				Severity:          advisory.Severity,
+				SystemAdvisoryItemAttributes: SystemAdvisoryItemAttributes{
+					Description:  advisory.Description,
+					PublicDate:   advisory.PublicDate,
+					Synopsis:     advisory.Synopsis,
+					AdvisoryType: advisory.AdvisoryTypeID,
+					Severity:     advisory.Severity},
 				ApplicableSystems: advisory.ApplicableSystems},
 			ID:   advisory.Name,
 			Type: "advisory",

@@ -21,6 +21,20 @@ type ListMeta struct {
 	TotalItems int      `json:"total_items"`
 }
 
+type SystemAdvisoryItem struct {
+	Attributes SystemAdvisoryItemAttributes `json:"attributes"`
+	ID         string                       `json:"id"`
+	Type       string                       `json:"type"`
+}
+
+type SystemAdvisoryItemAttributes struct {
+	Description  string    `json:"description"`
+	PublicDate   time.Time `json:"public_date"`
+	Synopsis     string    `json:"synopsis"`
+	AdvisoryType int       `json:"advisory_type"`
+	Severity     *int      `json:"severity,omitempty"`
+}
+
 type AdvisoryItem struct {
 	Attributes AdvisoryItemAttributes `json:"attributes"`
 	ID         string                 `json:"id"`
@@ -28,12 +42,8 @@ type AdvisoryItem struct {
 }
 
 type AdvisoryItemAttributes struct {
-	Description       string    `json:"description"`
-	PublicDate        time.Time `json:"public_date"`
-	Synopsis          string    `json:"synopsis"`
-	AdvisoryType      int       `json:"advisory_type"`
-	Severity          *int      `json:"severity,omitempty"`
-	ApplicableSystems int       `json:"applicable_systems"`
+	SystemAdvisoryItemAttributes
+	ApplicableSystems int `json:"applicable_systems"`
 }
 
 type SystemItem struct {

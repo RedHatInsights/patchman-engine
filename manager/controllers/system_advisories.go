@@ -12,9 +12,9 @@ import (
 )
 
 type SystemAdvisoriesResponse struct {
-	Data  []AdvisoryItem `json:"data"` // advisories items
-	Links Links          `json:"links"`
-	Meta  ListMeta       `json:"meta"`
+	Data  []SystemAdvisoryItem `json:"data"` // advisories items
+	Links Links                `json:"links"`
+	Meta  ListMeta             `json:"meta"`
 }
 
 // nolint:lll
@@ -72,19 +72,20 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildSystemAdvisoriesData(models *[]models.AdvisoryMetadata) *[]AdvisoryItem {
-	data := make([]AdvisoryItem, len(*models))
+func buildSystemAdvisoriesData(models *[]models.AdvisoryMetadata) *[]SystemAdvisoryItem {
+	data := make([]SystemAdvisoryItem, len(*models))
 	for i, advisory := range *models {
-		item := AdvisoryItem{ID: advisory.Name, Type: "advisory",
-			Attributes: AdvisoryItemAttributes{
+		item := SystemAdvisoryItem{
+			ID:   advisory.Name,
+			Type: "advisory",
+			Attributes: SystemAdvisoryItemAttributes{
 				Description:  advisory.Description,
 				Severity:     advisory.SeverityID,
 				PublicDate:   advisory.PublicDate,
 				Synopsis:     advisory.Synopsis,
 				AdvisoryType: advisory.AdvisoryTypeID,
-				// TODO: Applicable systems
-				ApplicableSystems: 0,
-			}}
+			},
+		}
 		data[i] = item
 	}
 	return &data
