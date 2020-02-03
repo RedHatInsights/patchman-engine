@@ -18,19 +18,19 @@ import (
 
 const (
 	unknown        = "unknown"
-	EvalTypeUpload = "upload"
-	EvalTypeRecalc = "recalc"
 )
 
 var (
 	kafkaReader *mqueue.Reader
 	vmaasClient *vmaas.APIClient
+	evalLabel string
 )
 
 func Configure() {
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
 	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
+	evalLabel = utils.GetenvOrFail("EVAL_LABEL")
 
 	kafkaReader = mqueue.ReaderFromEnv(evalTopic)
 
@@ -293,7 +293,7 @@ func RunEvaluator() {
 	go RunMetrics()
 
 	kafkaReader.HandleEvents(func(event mqueue.PlatformEvent) {
-		err := Evaluate(context.Background(), event.ID, EvalTypeUpload)
+		err := Evaluate(context.Background(), event.ID, evalLabel)
 		if err != nil {
 			utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", EvalTypeUpload).
 				Error("Eval message handling")
