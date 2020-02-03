@@ -1,8 +1,9 @@
 version: '3'
 
 services:
-  
+
   db:
+    container_name: db
     build:
       context: .
       dockerfile: database/Dockerfile.centos
@@ -11,11 +12,9 @@ services:
     env_file:
       - ./conf/common.env
       - ./conf/database.env
-    security_opt:
-      - label=disable
 
   platform:
-    hostname: platform
+    container_name: platform
     build:
       context: .
       dockerfile: platform/Dockerfile
@@ -30,6 +29,7 @@ services:
       - 9001:9001
 
   manager:
+    container_name: manager
     build:
       context: .
       dockerfile: Dockerfile.centos
@@ -42,8 +42,13 @@ services:
     depends_on:
       - db
       - platform
+    volumes:
+      - ./:/go/src/app
+    security_opt:
+      - label=disable
 
   listener:
+    container_name: listener
     build:
       context: .
       dockerfile: Dockerfile.centos
@@ -56,8 +61,13 @@ services:
     depends_on:
       - db
       - platform
+    volumes:
+      - ./:/go/src/app
+    security_opt:
+      - label=disable
 
   evaluator_upload:
+    container_name: evaluator_upload
     build:
       context: .
       dockerfile: Dockerfile.centos
@@ -66,13 +76,20 @@ services:
       - ./conf/evaluator_common.env
       - ./conf/evaluator_upload.env
     command: ./evaluator/entrypoint.sh
+    environment:
+      - GORUN=on
     ports:
       - 8082:8082
     depends_on:
       - db
       - platform
+    volumes:
+      - ./:/go/src/app
+    security_opt:
+      - label=disable
 
   evaluator_recalc:
+    container_name: evaluator_recalc
     build:
       context: .
       dockerfile: Dockerfile.centos
@@ -86,8 +103,13 @@ services:
     depends_on:
       - db
       - platform
+    volumes:
+      - ./:/go/src/app
+    security_opt:
+      - label=disable
 
   vmaas_sync:
+    container_name: vmaas_sync
     build:
       context: .
       dockerfile: Dockerfile.centos
@@ -101,3 +123,7 @@ services:
     depends_on:
       - db
       - platform
+    volumes:
+      - ./:/go/src/app
+    security_opt:
+      - label=disable
