@@ -80,6 +80,8 @@ func RunVmaasSync() {
 
 	go runDebugAPI()
 
+	go RunSystemCulling()
+
 	// Continually try to reconnect
 	for {
 		conn, _, err := websocket.DefaultDialer.Dial(utils.GetenvOrFail("VMAAS_WS_ADDRESS"), nil)

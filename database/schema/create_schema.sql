@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (6, false);
+VALUES (7, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -85,11 +85,11 @@ BEGIN
     END IF;
 
     -- Nothing changed
-    IF OLD.opt_out = NEW.opt_out THEN
+    IF OLD.opt_out = NEW.opt_out AND OLD.stale = NEW.stale THEN
         RETURN NEW;
     END IF;
 
-    IF NEW.opt_out = TRUE THEN
+    IF NEW.opt_out = TRUE OR NEW.stale = TRUE THEN
 
         WITH to_update_advisories AS (
             SELECT ead.advisory_id, ternary(ead.status_id != sa.status_id, 1, 0) as divergent
@@ -116,7 +116,7 @@ BEGIN
         WHERE rh_account_id = NEW.rh_account_id
           AND systems_affected = 0;
 
-    ELSIF NEW.opt_out = FALSE THEN
+    ELSIF NEW.opt_out = FALSE AND OLD.stale = FALSE THEN
         -- increment affected advisory counts for system
         WITH to_update_advisories AS (
             SELECT ead.advisory_id, ternary(ead.status_id != sa.status_id, 1, 0) as divergent
@@ -151,6 +151,8 @@ BEGIN
                   AND advisory_id = sa.advisory_id
             )
         ON CONFLICT (advisory_id, rh_account_id) DO UPDATE SET systems_affected = advisory_account_data.systems_affected + EXCLUDED.systems_affected;
+    ELSE
+        RAISE EXCEPTION 'Shouldnt happen';
     END IF;
 END;
 $system_update$ LANGUAGE plpgsql;
@@ -193,6 +195,7 @@ BEGIN
                   system_platform sp ON sa.system_id = sp.id
              WHERE sp.last_evaluation IS NOT NULL
                AND sp.opt_out = FALSE
+               AND sp.stale = FALSE
                AND sa.when_patched IS NULL
                AND (sa.advisory_id = advisory_id_in OR advisory_id_in IS NULL)
                AND (sp.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
@@ -347,6 +350,43 @@ END;
 $delete_system$
     LANGUAGE 'plpgsql';
 
+
+CREATE OR REPLACE FUNCTION delete_culled_systems()
+    RETURNS INTEGER
+AS
+$fun$
+DECLARE
+    culled integer;
+BEGIN
+    select count(*)
+    from (
+             select delete_system(id)
+             from system_platform
+             where culled_timestamp > now()
+         ) t
+    INTO culled;
+    RETURN culled;
+END;
+$fun$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION mark_stale_systems()
+    RETURNS INTEGER
+AS
+$fun$
+DECLARE
+    marked integer;
+BEGIN
+    with updated as (UPDATE system_platform
+        SET stale = true
+        WHERE stale_timestamp > now()
+    )
+    select count(*)
+    from updated
+    INTO marked;
+    return marked;
+END;
+$fun$ LANGUAGE plpgsql;
+
 -- rh_account
 CREATE TABLE IF NOT EXISTS rh_account
 (
@@ -381,6 +421,7 @@ CREATE TABLE IF NOT EXISTS system_platform
     stale_timestamp          TIMESTAMP WITH TIME ZONE,
     stale_warning_timestamp  TIMESTAMP WITH TIME ZONE,
     culled_timestamp         TIMESTAMP WITH TIME ZONE,
+    stale                    BOOLEAN                  NOT NULL DEFAULT false,
     PRIMARY KEY (id),
     UNIQUE (inventory_id),
     CONSTRAINT rh_account_id
@@ -409,7 +450,7 @@ CREATE TRIGGER system_platform_check_unchanged
 EXECUTE PROCEDURE check_unchanged();
 
 CREATE TRIGGER system_platform_on_update
-    AFTER UPDATE OF opt_out
+    AFTER UPDATE OF opt_out, stale
     ON system_platform
     FOR EACH ROW
 EXECUTE PROCEDURE on_system_update();
