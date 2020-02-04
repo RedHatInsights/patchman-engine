@@ -28,4 +28,4 @@ do
 done
 
 # run upload mock
-exec ./wait-for-services.sh ./platform
+exec ./scripts/wait-for-services.sh ./platform
