@@ -1,7 +1,11 @@
 package vmaas_sync //nolint:golint,stylecheck
 
 import (
+	"app/base/database"
+	"app/base/models"
+	"app/base/mqueue"
 	"app/base/utils"
+	"context"
 	"github.com/gorilla/websocket"
 	"time"
 )
@@ -64,7 +68,36 @@ func websocketHandler(data []byte, conn *websocket.Conn) error {
 			// This probably means programming error, better to exit with nonzero error code, so the error is noticed
 			utils.Log("err", err.Error()).Fatal("Failed to sync advisories")
 		}
-		// TODO: Cause re-evaluation of systems
+
+		err = sendReevaluationMessages()
+		if err != nil {
+			utils.Log("err", err.Error()).Error("re-evaluation sending routine failed")
+		}
+	}
+	return nil
+}
+
+func sendReevaluationMessages() error {
+	var inventoryIDs []string
+	err := database.Db.Model(&models.SystemPlatform{}).
+		Pluck("inventory_id", &inventoryIDs).Error
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+
+	for _, inventoryID := range inventoryIDs {
+		utils.Log("inventoryID", inventoryID).Info("sent to evaluate (TODO)")
+		event := mqueue.PlatformEvent{
+			ID: inventoryID,
+		}
+
+		utils.Log().Debug("Sending evaluation kafka message")
+		err = evalWriter.WriteEvent(ctx, event)
+		if err != nil {
+			utils.Log("err", err.Error()).Error("inventory id sending to re-evaluate failed")
+		}
 	}
 	return nil
 }
