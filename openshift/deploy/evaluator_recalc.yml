@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: patchman-engine-evaluator
+  name: patchman-engine-evaluator-recalc
 
 parameters:
   - name: IMAGE_NAMESPACE
@@ -18,31 +18,31 @@ objects:
     kind: DeploymentConfig
     metadata:
       labels: { app: patchman-engine }
-      name: patchman-engine-evaluator
+      name: patchman-engine-evaluator-recalc
     spec:
       replicas: 1
       selector:
         app: patchman-engine
-        deploymentconfig: patchman-engine-evaluator
+        deploymentconfig: patchman-engine-evaluator-recalc
       template:
         metadata:
           labels:
             app: patchman-engine
-            deploymentconfig: patchman-engine-evaluator
-          name: patchman-engine-evaluator
+            deploymentconfig: patchman-engine-evaluator-recalc
+          name: patchman-engine-evaluator-recalc
         spec:
           containers:
             - image: ${IMAGE_NAMESPACE}/patchman-engine-app:${IMAGE_TAG}
               imagePullPolicy: Always
-              name: patchman-engine-evaluator
+              name: patchman-engine-evaluator-recalc
               command: [ ./scripts/entrypoint.sh evaluator ]
               resources:
                 limits: { memory: 128Mi }
                 requests: { memory: 128Mi }
               livenessProbe:
-                httpGet: { path: /metrics, port: 8082, scheme: HTTP }
+                httpGet: { path: /metrics, port: 8084, scheme: HTTP }
               readinessProbe:
-                httpGet: { path: /metrics, port: 8082, scheme: HTTP }
+                httpGet: { path: /metrics, port: 8084, scheme: HTTP }
               env:
                 - { name: LOG_LEVEL, value: debug }
                 - { name: LOG_STYLE, value: plain }
@@ -52,10 +52,12 @@ objects:
                 - { name: KAFKA_GROUP, value: patchman }
                 - { name: GOMAXPROCS, value: "8" }
                 - { name: CONSUMER_COUNT, value: "8" }
-                - { name: EVAL_TOPIC, value: patchman.evaluator.upload }
+                - { name: EVAL_TOPIC, value: patchman.evaluator.recalc }
 
                 - { name: INVENTORY_ADDRESS, value: "${INVENTORY_ADDRESS}" }
                 - { name: VMAAS_ADDRESS, value: "${VMAAS_ADDRESS}" }
+                - { name: PORT, value: "8084" }
+                - { name: EVAL_LABEL, value: recalc }
 
                 - { name: DB_TYPE, value: postgres }
                 - { name: DB_HOST, value: patchman-engine-database }
@@ -87,7 +89,7 @@ objects:
         - imageChangeParams:
             automatic: true
             containerNames:
-              - patchman-engine-evaluator
+              - patchman-engine-evaluator-recalc
             from:
               kind: ImageStreamTag
               name: patchman-engine-app:${IMAGE_TAG}
@@ -99,18 +101,18 @@ objects:
     metadata:
       annotations:
         prometheus.io/path: /metrics
-        prometheus.io/port: '8082'
+        prometheus.io/port: '8084'
         prometheus.io/scrape: "true"
       labels:
         app: patchman-engine
-      name: patchman-engine-evaluator
+      name: patchman-engine-evaluator-recalc
     spec:
       type: ClusterIP
       ports:
-        - name: 8082-tcp
-          port: 8082
+        - name: 8084-tcp
+          port: 8084
           protocol: TCP
-          targetPort: 8082
+          targetPort: 8084
       selector:
         app: patchman-engine
-        deploymentconfig: patchman-engine-evaluator
+        deploymentconfig: patchman-engine-evaluator-recalc
