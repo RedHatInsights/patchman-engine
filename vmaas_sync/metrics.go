@@ -63,12 +63,10 @@ var (
 	})
 )
 
-func init() {
+func RunMetrics() {
 	prometheus.MustRegister(messagesReceivedCnt, vmaasCallCnt, storeAdvisoriesCnt,
 		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration)
-}
 
-func RunMetrics() {
 	go runAdvancedMetricsUpdating()
 
 	// create web app

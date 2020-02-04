@@ -27,11 +27,9 @@ var (
 	}, []string{"type"})
 )
 
-func init() {
-	prometheus.MustRegister(evaluationCnt, updatesCnt, evaluationDuration)
-}
-
 func RunMetrics(port string) {
+	prometheus.MustRegister(evaluationCnt, updatesCnt, evaluationDuration)
+
 	// create web app
 	app := gin.New()
 	middlewares.Prometheus().Use(app)
