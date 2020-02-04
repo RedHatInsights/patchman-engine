@@ -97,15 +97,15 @@ func sendOneMessage(ctx context.Context, inventoryID string) {
 	tStart := time.Now()
 	defer messageSendDuration.Observe(time.Since(tStart).Seconds())
 
-	utils.Log("inventoryID", inventoryID).Info("sent to evaluate (TODO)")
+	utils.Log("inventoryID", inventoryID).Debug("Sending evaluation kafka message")
 	event := mqueue.PlatformEvent{
 		ID: inventoryID,
 	}
 
-	utils.Log().Debug("Sending evaluation kafka message")
 	err := evalWriter.WriteEvent(ctx, event)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("inventory id sending to re-evaluate failed")
+		utils.Log("err", err.Error(), "inventoryID", inventoryID).
+			Error("inventory id sending to re-evaluate failed")
 	}
 }
 

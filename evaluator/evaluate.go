@@ -42,13 +42,12 @@ func Configure() {
 	vmaasClient = vmaas.NewAPIClient(vmaasConfig)
 }
 
-func Evaluate(ctx context.Context, systemName string,
-	evaluationType string) error {
+func Evaluate(ctx context.Context, inventoryID string, evaluationType string) error {
 	tStart := time.Now()
 	defer evaluationDuration.WithLabelValues(evaluationType).Observe(time.Since(tStart).Seconds())
 
 	var system models.SystemPlatform
-	err := database.Db.Where("inventory_id = ?", systemName).Find(&system).Error
+	err := database.Db.Where("inventory_id = ?", inventoryID).Find(&system).Error
 	if err != nil {
 		return errors.Wrap(err, "Unable to get system data from database")
 	}
@@ -97,6 +96,8 @@ func Evaluate(ctx context.Context, systemName string,
 
 	tx.Commit()
 	evaluationCnt.WithLabelValues("success").Inc()
+	utils.Log("inventoryID", inventoryID, "evaluationType", evaluationType).
+		Debug("system evaluated successfully")
 	return nil
 }
 
@@ -109,15 +110,19 @@ func processSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, vmaasData v
 
 	patched := getPatchedAdvisories(reported, *stored)
 	updatesCnt.WithLabelValues("patched").Add(float64(len(patched)))
+	utils.Log("systemID", systemID, "patched", len(patched)).Debug("patched advisories")
 
 	newsAdvisoriesNames, unpatched := getNewAndUnpatchedAdvisories(reported, *stored)
+	utils.Log("systemID", systemID, "newAdvisories", len(newsAdvisoriesNames)).Debug("new advisories")
 
 	newIDs, err := ensureAdvisoriesInDb(tx, newsAdvisoriesNames)
 	if err != nil {
 		return errors.Wrap(err, "Unable to ensure new system advisories in db")
 	}
+
 	unpatched = append(unpatched, *newIDs...)
 	updatesCnt.WithLabelValues("unpatched").Add(float64(len(unpatched)))
+	utils.Log("systemID", systemID, "unpatched", len(unpatched)).Debug("patched advisories")
 
 	err = updateSystemAdvisories(tx, systemID, rhAccountID, patched, unpatched)
 	if err != nil {
@@ -297,10 +302,10 @@ func RunEvaluator() {
 	kafkaReader.HandleEvents(func(event mqueue.PlatformEvent) {
 		err := Evaluate(context.Background(), event.ID, evalLabel)
 		if err != nil {
-			utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", EvalTypeUpload).
+			utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
 				Error("Eval message handling")
 		}
-		utils.Log("inventoryID", event.ID, "evalLabel", EvalTypeUpload).
+		utils.Log("inventoryID", event.ID, "evalLabel", evalLabel).
 			Debug("system evaluated successfully")
 	})
 }
