@@ -13,9 +13,7 @@ TEST_DIRS=$(go list ./... | grep -v "app/database")
 go test -v app/database
 
 # fill database with testing data
-echo $DB_PASSWD | psql -h $DB_HOST -d $DB_NAME -U $DB_USER -p $DB_PORT \
-                       -v ON_ERROR_STOP=1 \
-                       -a -q -f ./dev/test_data.sql
+./scripts/feed_db.sh
 
 # run tests
 ./scripts/go_test.sh "${TEST_DIRS}"

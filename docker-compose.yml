@@ -13,6 +13,21 @@ services:
       - ./conf/common.env
       - ./conf/database.env
 
+  db_feed:
+    container_name: db_feed
+    build:
+      context: .
+      dockerfile: Dockerfile.centos
+    env_file:
+      - ./conf/test.env
+    command: ./scripts/feed_db.sh
+    depends_on:
+      - db
+    volumes:
+      - ./:/go/src/app
+    security_opt:
+      - label=disable
+
   platform:
     container_name: platform
     build:
