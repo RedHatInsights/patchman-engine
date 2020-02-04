@@ -1,8 +1,11 @@
 FROM centos:8
 
-RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial && \
-    yum module -y install go-toolset postgresql && \
-    yum -y install git diffutils
+RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+
+RUN yum module -y install go-toolset postgresql && \
+    yum -y install git
+
+RUN yum -y install diffutils
 
 ENV GOPATH=/go
 ENV GO111MODULE=on
@@ -26,3 +29,6 @@ ADD /scripts       /go/src/app/scripts
 ADD main.go        /go/src/app/
 ADD .golangci.yml  /go/src/app/
 ADD /dev           /go/src/app/dev
+
+# Add dockerfiles for checking
+ADD Dockerfile*    /go/src/app/

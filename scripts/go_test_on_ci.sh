@@ -2,6 +2,9 @@
 
 set -e
 
+# Analyse dockerfiles
+./scripts/check-dockerfiles.sh
+
 # Analyse code using lint
 /go/bin/golangci-lint run
 echo "Go code analysed successfully."
