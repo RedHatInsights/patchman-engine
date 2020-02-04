@@ -4,6 +4,7 @@ import (
 	"app/base"
 	"app/base/database"
 	"app/base/models"
+	"app/base/mqueue"
 	"app/base/utils"
 	"context"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
@@ -18,6 +19,7 @@ const SyncBatchSize = 1000
 
 var (
 	vmaasClient *vmaas.APIClient
+	evalWriter  *mqueue.Writer
 )
 
 func configure() {
@@ -28,6 +30,9 @@ func configure() {
 	cfg.Debug = traceAPI
 
 	vmaasClient = vmaas.NewAPIClient(cfg)
+
+	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
+	evalWriter = mqueue.WriterFromEnv(evalTopic)
 }
 
 func getAdvisoryTypes() (map[string]int, error) {
