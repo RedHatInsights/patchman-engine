@@ -22,10 +22,4 @@ done
 
 echo "VMaaS websocket is up"
 
-# This script is launched inside the /go/src/app working directory
-if [ -n $GORUN ]; then
-  # Running using 'go run'
-  ./scripts/wait-for-services.sh go run main.go vmaas_sync
-else
-  ./scripts/wait-for-services.sh ./main vmaas_sync
-fi
+./scripts/entrypoint.sh vmaas_sync

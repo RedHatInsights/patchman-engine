@@ -36,7 +36,7 @@ services:
     env_file:
       - ./conf/common.env
       - ./conf/manager.env
-    command: ./manager/entrypoint.sh
+    command: ./scripts/entrypoint.sh manager
     ports:
       - 8080:8080
     depends_on:
@@ -55,7 +55,7 @@ services:
     env_file:
       - ./conf/common.env
       - ./conf/listener.env
-    command: ./listener/entrypoint.sh
+    command: ./scripts/entrypoint.sh listener
     ports:
       - 8081:8081
     depends_on:
@@ -75,7 +75,7 @@ services:
       - ./conf/common.env
       - ./conf/evaluator_common.env
       - ./conf/evaluator_upload.env
-    command: ./evaluator/entrypoint.sh
+    command: ./scripts/entrypoint.sh evaluator
     environment:
       - GORUN=on
     ports:
@@ -97,7 +97,7 @@ services:
       - ./conf/common.env
       - ./conf/evaluator_common.env
       - ./conf/evaluator_recalc.env
-    command: ./evaluator/entrypoint.sh
+    command: ./scripts/entrypoint.sh evaluator
     ports:
       - 8084:8084
     depends_on:

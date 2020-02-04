@@ -21,12 +21,11 @@ RUN mkdir kafka && \
     | tar -xz --strip-components=1 -C kafka/
 
 ADD /base           /go/src/app/base
-ADD /platform/      /go/src/app/
-ADD /scripts/*.sh   /go/src/app/
+ADD /platform       /go/src/app/
+ADD /scripts        /go/src/app/scripts
 
 RUN go build -v platform.go inventory.go vmaas.go
 
 EXPOSE 9001 2181 9092
 
 CMD /go/src/app/entrypoint.sh
-
