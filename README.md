@@ -23,7 +23,17 @@ podman-compose up --build # Build images if needed and start containers
 podman-compose down       # Stop and remove containers
 ~~~
 
-#### VMaaS 
+## Test local-running app
+When podman compose is running, test app using dev shell scripts:
+~~~bash
+cd dev/scripts
+./systems_list.sh         # show systems
+./advisories_list.sh      # show advisories
+./platform_sync.sh        # trigger vmaas_sync to sync (using vmaas mock)
+./platform_upload.sh      # simulate archive upload to trigger listener and evaluator_upload
+~~~
+
+#### VMaaS
 This project uses [VMaaS](https://github.com/RedHatInsights/vmaas) for retrieving information about advisories, and resolving which advisories can be applied to whic systems.
 For local development, you need to clone VMaaS, and deploy it alongside this project.
 
@@ -39,17 +49,6 @@ ocdeployer deploy -t openshift patchman-engine-ci -s build,deploy --secrets-loca
 ~~~bash
 go get -u github.com/swaggo/swag/cmd/swag # download binary to generate, do it first time only
 ./scripts/generate_docs.sh
-~~~
-
-## Test API
-Test using dev shell scripts:
-~~~bash
-cd dev/scripts
-./advisories_list.sh
-./advisory_detail.sh
-./systems_applicable.sh 1
-./systems_list.sh
-./system_detail.sh 1
 ~~~
 
 Test using Swagger, open <http://localhost:8080/openapi/index.html>.
