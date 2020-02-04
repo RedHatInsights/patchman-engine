@@ -1,8 +1,12 @@
 FROM centos:8
 
-RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial && \
-    yum module -y install go-toolset postgresql && \
-    yum -y install git java-1.8.0-openjdk-devel
+RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+
+RUN yum module -y install go-toolset postgresql && \
+    yum -y install git
+
+RUN yum -y install git java-1.8.0-openjdk-devel
+
 ENV GOPATH=/go
 ENV GO111MODULE=on
 

@@ -1,6 +1,10 @@
 FROM registry.access.redhat.com/ubi8
 
-RUN yum module -y install go-toolset postgresql && yum -y install git
+
+
+RUN yum module -y install go-toolset postgresql && \
+    yum -y install git
+
 ENV GOPATH=/go
 ENV GO111MODULE=on
 

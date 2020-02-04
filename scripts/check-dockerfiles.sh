@@ -17,6 +17,7 @@ do
             -e "s/centos\/postgresql-10-centos7/registry.access.redhat.com\/rhscl\/postgresql-10-rhel7/" \
             -e "s/yum -y install centos-release-scl/yum-config-manager --enable rhel-server-rhscl-7-rpms/" \
             -e "s/centos:8/registry.access.redhat.com\/ubi8/" \
+            -e "s/RUN rpm --import \/etc\/pki\/rpm-gpg\/RPM-GPG-KEY-centosofficial//" \
             "$dockerfile.centos" | diff "${dockerfile}.$suffix" -
         diff_rc=$?
       if [ $diff_rc -gt 0 ]; then
