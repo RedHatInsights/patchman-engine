@@ -31,11 +31,9 @@ var (
 	}, []string{"event"})
 )
 
-func init() {
-	prometheus.MustRegister(messagesReceivedCnt, messageHandlingDuration)
-}
-
 func RunMetrics() {
+	prometheus.MustRegister(messagesReceivedCnt, messageHandlingDuration)
+
 	// create web app
 	app := gin.New()
 	middlewares.Prometheus().Use(app)
