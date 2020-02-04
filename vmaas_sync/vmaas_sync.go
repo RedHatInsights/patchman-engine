@@ -88,18 +88,25 @@ func sendReevaluationMessages() error {
 	ctx := context.Background()
 
 	for _, inventoryID := range inventoryIDs {
-		utils.Log("inventoryID", inventoryID).Info("sent to evaluate (TODO)")
-		event := mqueue.PlatformEvent{
-			ID: inventoryID,
-		}
-
-		utils.Log().Debug("Sending evaluation kafka message")
-		err = evalWriter.WriteEvent(ctx, event)
-		if err != nil {
-			utils.Log("err", err.Error()).Error("inventory id sending to re-evaluate failed")
-		}
+		sendOneMessage(ctx, inventoryID)
 	}
 	return nil
+}
+
+func sendOneMessage(ctx context.Context, inventoryID string) {
+	tStart := time.Now()
+	defer messageSendDuration.Observe(time.Since(tStart).Seconds())
+
+	utils.Log("inventoryID", inventoryID).Info("sent to evaluate (TODO)")
+	event := mqueue.PlatformEvent{
+		ID: inventoryID,
+	}
+
+	utils.Log().Debug("Sending evaluation kafka message")
+	err := evalWriter.WriteEvent(ctx, event)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("inventory id sending to re-evaluate failed")
+	}
 }
 
 func RunVmaasSync() {
