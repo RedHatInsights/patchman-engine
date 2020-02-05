@@ -175,12 +175,7 @@ BEGIN
             FOR UPDATE OF sp
     )
     UPDATE system_platform sp
-    SET advisory_count_cache     = (
-        SELECT COUNT(advisory_id)
-        FROM system_advisories sa
-        WHERE sa.system_id = sp.id
-          AND sa.when_patched IS NULL
-    ),
+    SET advisory_count_cache     = system_advisories_count(sp.id, NULL),
         advisory_enh_count_cache = system_advisories_count(sp.id, 1),
         advisory_bug_count_cache = system_advisories_count(sp.id, 2),
         advisory_sec_count_cache = system_advisories_count(sp.id, 3)
@@ -190,7 +185,7 @@ $update_system_caches$
     LANGUAGE 'plpgsql';
 
 -- count system advisories according to advisory type
-CREATE OR REPLACE FUNCTION system_advisories_count(system_id_in INT, advisory_type_id_in INT)
+CREATE OR REPLACE FUNCTION system_advisories_count(system_id_in INT, advisory_type_id_in INT DEFAULT NULL)
     RETURNS INT AS
 $system_advisories_count$
 DECLARE
@@ -199,7 +194,7 @@ BEGIN
     SELECT COUNT(advisory_id)
     FROM system_advisories sa
              JOIN advisory_metadata am ON sa.advisory_id = am.id
-    WHERE am.advisory_type_id = advisory_type_id_in
+    WHERE (am.advisory_type_id = advisory_type_id_in OR advisory_type_id_in IS NULL)
       AND sa.system_id = system_id_in
       AND sa.when_patched IS NULL
     INTO result_cnt;
@@ -223,12 +218,7 @@ BEGIN
             FOR UPDATE OF sp
     )
     UPDATE system_platform sp
-    SET advisory_count_cache     = (
-        SELECT COUNT(advisory_id)
-        FROM system_advisories sa
-        WHERE sa.system_id = sp.id
-          AND sa.when_patched IS NULL
-    ),
+    SET advisory_count_cache     = system_advisories_count(sp.id, NULL),
         advisory_enh_count_cache = system_advisories_count(sp.id, 1),
         advisory_bug_count_cache = system_advisories_count(sp.id, 2),
         advisory_sec_count_cache = system_advisories_count(sp.id, 3)
@@ -282,12 +272,7 @@ BEGIN
             FOR UPDATE OF sp
     )
     UPDATE system_platform sp
-    SET advisory_count_cache     = (
-        SELECT COUNT(advisory_id)
-        FROM system_advisories sa
-        WHERE sa.system_id = sp.id
-          AND sa.when_patched IS NULL
-    ),
+    SET advisory_count_cache     = system_advisories_count(sp.id, NULL),
         advisory_enh_count_cache = system_advisories_count(sp.id, 1),
         advisory_bug_count_cache = system_advisories_count(sp.id, 2),
         advisory_sec_count_cache = system_advisories_count(sp.id, 3)
@@ -420,12 +405,7 @@ $refresh_system_cached_counts$
 BEGIN
     -- update advisory count for system
     UPDATE system_platform sp
-    SET advisory_count_cache     = (
-        SELECT COUNT(advisory_id)
-        FROM system_advisories sa
-        WHERE sa.system_id = sp.id
-          AND sa.when_patched IS NULL
-    ),
+    SET advisory_count_cache     = system_advisories_count(sp.id, NULL),
         advisory_enh_count_cache = system_advisories_count(sp.id, 1),
         advisory_bug_count_cache = system_advisories_count(sp.id, 2),
         advisory_sec_count_cache = system_advisories_count(sp.id, 3)
