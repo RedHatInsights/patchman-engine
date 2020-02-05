@@ -291,7 +291,8 @@ func RunEvaluator() {
 	kafkaReader.HandleEvents(func(event mqueue.PlatformEvent) {
 		err := Evaluate(context.Background(), event.ID, EvalTypeUpload)
 		if err != nil {
-			utils.Log("err", err.Error()).Error("Eval message handling")
+			utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
+				Error("Eval message handling")
 		}
 	})
 }
