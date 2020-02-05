@@ -8,6 +8,7 @@ import (
 	"app/base/utils"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
 	"github.com/jinzhu/gorm"
@@ -46,14 +47,14 @@ func Evaluate(ctx context.Context, systemName string,
 
 	var system models.SystemPlatform
 	err := database.Db.Where("inventory_id = ?", systemName).Find(&system).Error
-
 	if err != nil {
-		return errors.Wrap(err, "Unable to get updates from VMaaS")
+		return errors.Wrap(err, "Unable to get system data from database")
 	}
+
 	var updatesReq vmaas.UpdatesV3Request
 	err = json.Unmarshal([]byte(system.VmaasJSON), &updatesReq)
 	if err != nil {
-		return errors.Wrap(err, "Unable to get updates from VMaaS")
+		return errors.Wrap(err, "Unable to parse system vmaas json")
 	}
 
 	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{
@@ -63,7 +64,10 @@ func Evaluate(ctx context.Context, systemName string,
 	vmaasData, _, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(ctx, &vmaasCallArgs)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-call-vmaas-updates").Inc()
-		return errors.Wrap(err, "Unable to get updates from VMaaS")
+		return errors.Wrap(err, "Unable to get updates from VMaaS "+fmt.Sprintf(
+			"(packages: %d, basearch: %s, modules: %d, releasever: %s, repolist: %d, seconly: %t)",
+			len(updatesReq.PackageList), updatesReq.Basearch, len(updatesReq.ModulesList), updatesReq.Releasever,
+			len(updatesReq.RepositoryList), updatesReq.SecurityOnly))
 	}
 
 	tx := database.Db.Begin()
@@ -291,8 +295,10 @@ func RunEvaluator() {
 	kafkaReader.HandleEvents(func(event mqueue.PlatformEvent) {
 		err := Evaluate(context.Background(), event.ID, EvalTypeUpload)
 		if err != nil {
-			utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
+			utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", EvalTypeUpload).
 				Error("Eval message handling")
 		}
+		utils.Log("inventoryID", event.ID, "evalLabel", EvalTypeUpload).
+			Debug("system evaluated successfully")
 	})
 }
