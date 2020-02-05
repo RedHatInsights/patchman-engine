@@ -1,3 +1,4 @@
+DROP FUNCTION IF EXISTS opt_out_system_update_cache CASCADE;
 -- opt_out_system_update_cache
 CREATE OR REPLACE FUNCTION opt_out_system_update_cache()
     RETURNS TRIGGER AS

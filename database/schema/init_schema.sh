@@ -13,9 +13,9 @@ if $PG_INITIALIZED; then
 
 
   #echo "Initializing the database through migrations"
-  #${CONTAINER_SCRIPTS_PATH}/migrate.sh up
+  ${CONTAINER_SCRIPTS_PATH}/migrate.sh up
   # Create schema from scratch
-  psql -d ${POSTGRESQL_DATABASE} -f ${CONTAINER_SCRIPTS_PATH}/start/create_schema.sql
+  #psql -d ${POSTGRESQL_DATABASE} -f ${CONTAINER_SCRIPTS_PATH}/start/create_schema.sql
 else
   echo "Already initialized - Migrating the database"
   ${CONTAINER_SCRIPTS_PATH}/migrate.sh up
