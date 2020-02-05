@@ -33,13 +33,12 @@ func TestSchemaCompatiblity(t *testing.T) {
 	}
 	database.Configure()
 
+	dropAll := exec.Command("/usr/bin/psql", "-f", "./schema/clear_db.sql")
+	setCmdAuth(dropAll)
+	_, err := dropAll.CombinedOutput()
+	assert.NoError(t, err)
+
 	driver, err := postgres.WithInstance(database.Db.DB(), &cfg)
-	assert.NoError(t, err)
-
-	err = driver.Drop()
-	assert.NoError(t, err)
-
-	driver, err = postgres.WithInstance(database.Db.DB(), &cfg)
 	assert.NoError(t, err)
 
 	// Tests are run from local directory

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (5, false);
+VALUES (6, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -23,13 +23,11 @@ END;
 $empty$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION ternary(cond BOOL, iftrue ANYELEMENT, iffalse ANYELEMENT)
-    returns ANYELEMENT
+    RETURNS ANYELEMENT
 AS
 $$
 SELECT CASE WHEN cond = TRUE THEN iftrue else iffalse END;
-$$
-    LANGUAGE SQL IMMUTABLE;
-
+$$ LANGUAGE SQL IMMUTABLE;
 
 -- set_first_reported
 CREATE OR REPLACE FUNCTION set_first_reported()
@@ -76,23 +74,6 @@ END;
 $check_unchanged$
     LANGUAGE 'plpgsql';
 
--- count system advisories according to advisory type
-CREATE OR REPLACE FUNCTION system_advisories_count(system_id_in INT, advisory_type_id_in INT DEFAULT NULL)
-    RETURNS INT AS
-$system_advisories_count$
-DECLARE
-    result_cnt INT;
-BEGIN
-    SELECT COUNT(advisory_id)
-    FROM system_advisories sa
-             JOIN advisory_metadata am ON sa.advisory_id = am.id
-    WHERE (am.advisory_type_id = advisory_type_id_in OR advisory_type_id_in IS NULL)
-      AND sa.system_id = system_id_in
-      AND sa.when_patched IS NULL
-    INTO result_cnt;
-    RETURN result_cnt;
-END;
-$system_advisories_count$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION on_system_update()
     RETURNS TRIGGER
@@ -173,6 +154,25 @@ BEGIN
     END IF;
 END;
 $system_update$ LANGUAGE plpgsql;
+
+-- count system advisories according to advisory type
+CREATE OR REPLACE FUNCTION system_advisories_count(system_id_in INT, advisory_type_id_in INT DEFAULT NULL)
+    RETURNS INT AS
+$system_advisories_count$
+DECLARE
+    result_cnt INT;
+BEGIN
+    SELECT COUNT(advisory_id)
+    FROM system_advisories sa
+             JOIN advisory_metadata am ON sa.advisory_id = am.id
+    WHERE (am.advisory_type_id = advisory_type_id_in OR advisory_type_id_in IS NULL)
+      AND sa.system_id = system_id_in
+      AND sa.when_patched IS NULL
+    INTO result_cnt;
+    RETURN result_cnt;
+END;
+$system_advisories_count$ LANGUAGE 'plpgsql';
+
 
 CREATE OR REPLACE FUNCTION refresh_advisory_caches(advisory_id_in INTEGER DEFAULT NULL,
                                                    rh_account_id_in INTEGER DEFAULT NULL)
@@ -404,7 +404,7 @@ CREATE TRIGGER system_platform_check_unchanged
     FOR EACH ROW
 EXECUTE PROCEDURE check_unchanged();
 
-CREATE TRIGGER system_platform_opt_out_cache
+CREATE TRIGGER system_platform_on_update
     AFTER UPDATE OF opt_out
     ON system_platform
     FOR EACH ROW
