@@ -27,7 +27,7 @@ type SystemAdvisoriesResponse struct {
 // @Param    inventory_id   path    string  true    "Inventory ID"
 // @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field"    Enums(id,type,synopsis,public_date)
+// @Param    sort           query   string  false   "Sort field"    Enums(id,name,type,synopsis,public_date)
 // @Success 200 {object} SystemAdvisoriesResponse
 // @Router /api/patch/v1/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesHandler(c *gin.Context) {
