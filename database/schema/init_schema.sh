@@ -21,7 +21,6 @@ else
   ${CONTAINER_SCRIPTS_PATH}/migrate.sh up
 fi
 
-
 echo "Setting user passwords"
 # Set specific password for each user. If the users are already created, change the password.
 # This is performed on each startup in order to ensure users have latest pasword
