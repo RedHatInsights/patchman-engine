@@ -139,7 +139,9 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 
 func syncAdvisories() error {
 	tStart := time.Now()
-	defer syncDuration.Observe(time.Since(tStart).Seconds())
+	defer utils.ObserveSecondsSince(tStart, syncDuration)
+
+	time.Sleep(time.Second)
 
 	ctx := context.Background()
 

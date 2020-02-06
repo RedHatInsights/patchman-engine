@@ -44,7 +44,7 @@ func Configure() {
 
 func Evaluate(ctx context.Context, inventoryID string, evaluationType string) error {
 	tStart := time.Now()
-	defer evaluationDuration.WithLabelValues(evaluationType).Observe(time.Since(tStart).Seconds())
+	defer utils.ObserveSecondsSince(tStart, evaluationDuration.WithLabelValues(evaluationType))
 
 	var system models.SystemPlatform
 	err := database.Db.Where("inventory_id = ?", inventoryID).Find(&system).Error

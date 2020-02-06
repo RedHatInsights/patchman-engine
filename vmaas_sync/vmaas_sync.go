@@ -95,7 +95,7 @@ func sendReevaluationMessages() error {
 
 func sendOneMessage(ctx context.Context, inventoryID string) {
 	tStart := time.Now()
-	defer messageSendDuration.Observe(time.Since(tStart).Seconds())
+	defer utils.ObserveSecondsSince(tStart, messageSendDuration)
 
 	utils.Log("inventoryID", inventoryID).Debug("Sending evaluation kafka message")
 	event := mqueue.PlatformEvent{
