@@ -12,5 +12,6 @@ func RunSystemCulling() {
 		<-ticker.C
 
 		database.Db.Exec("select culled from delete_culled_systems()")
+		database.Db.Exec("select marked from mark_stale_systems()")
 	}
 }

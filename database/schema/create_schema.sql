@@ -79,17 +79,23 @@ CREATE OR REPLACE FUNCTION on_system_update()
     RETURNS TRIGGER
 AS
 $system_update$
+DECLARE
+    was_counted  BOOLEAN;
+    should_count BOOLEAN;
 BEGIN
     IF TG_OP != 'UPDATE' OR NEW.last_evaluation IS NULL THEN
         RETURN NEW;
     END IF;
 
+    was_counted := OLD.opt_out = FALSE AND OLD.stale = FALSE;
+    should_count := NEW.opt_out = FALSE AND NEW.stale = FALSE;
+
     -- Nothing changed
-    IF OLD.opt_out = NEW.opt_out AND OLD.stale = NEW.stale THEN
+    IF was_counted = should_count THEN
         RETURN NEW;
     END IF;
 
-    IF NEW.opt_out = TRUE OR NEW.stale = TRUE THEN
+    IF was_counted = TRUE AND should_count = FALSE THEN
 
         WITH to_update_advisories AS (
             SELECT ead.advisory_id, ternary(ead.status_id != sa.status_id, 1, 0) as divergent
@@ -108,7 +114,7 @@ BEGIN
                      SET systems_affected = systems_affected - 1,
                          systems_status_divergent = systems_status_divergent - ta.divergent
                      FROM to_update_advisories ta
-                     WHERE ead.advisory_id = to_update_advisories.advisory_id AND
+                     WHERE ead.advisory_id = ta.advisory_id AND
                            ead.rh_account_id = NEW.rh_account_id
              )
         DELETE
@@ -116,7 +122,7 @@ BEGIN
         WHERE rh_account_id = NEW.rh_account_id
           AND systems_affected = 0;
 
-    ELSIF NEW.opt_out = FALSE AND OLD.stale = FALSE THEN
+    ELSIF was_counted = FALSE AND should_count = TRUE THEN
         -- increment affected advisory counts for system
         WITH to_update_advisories AS (
             SELECT ead.advisory_id, ternary(ead.status_id != sa.status_id, 1, 0) as divergent
@@ -136,7 +142,7 @@ BEGIN
                      SET systems_affected = systems_affected + 1,
                          systems_status_divergent = systems_status_divergent + ta.divergent
                      FROM to_update_advisories ta
-                     WHERE ead.advisory_id = to_update_advisories.advisory_id
+                     WHERE ead.advisory_id = ta.advisory_id
                          AND ead.rh_account_id = NEW.rh_account_id)
         INSERT
         INTO advisory_account_data (advisory_id, rh_account_id, systems_affected)
@@ -154,6 +160,7 @@ BEGIN
     ELSE
         RAISE EXCEPTION 'Shouldnt happen';
     END IF;
+    RETURN NEW;
 END;
 $system_update$ LANGUAGE plpgsql;
 
@@ -362,7 +369,7 @@ BEGIN
     from (
              select delete_system(id)
              from system_platform
-             where culled_timestamp > now()
+             where culled_timestamp < now()
          ) t
     INTO culled;
     RETURN culled;
@@ -378,7 +385,8 @@ DECLARE
 BEGIN
     with updated as (UPDATE system_platform
         SET stale = true
-        WHERE stale_timestamp > now()
+        WHERE stale_timestamp < now()
+        RETURNING id
     )
     select count(*)
     from updated
