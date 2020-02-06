@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var AdvisoriesSortFields = []string{"type", "synopsis", "public_date"}
+var AdvisoriesSortFields = []string{"name", "type", "synopsis", "public_date"}
 
 type AdvisoriesResponse struct {
 	Data  []AdvisoryItem `json:"data"`
@@ -36,7 +36,7 @@ type AdvisoryWithApplicableSystems struct {
 // @Produce  json
 // @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field"    Enums(id,type,synopsis,public_date)
+// @Param    sort           query   string  false   "Sort field"    Enums(id,name,type,synopsis,public_date,applicable_systems)
 // @Param    search         query   string  false   "Find matching text"
 // @Success 200 {object} AdvisoriesResponse
 // @Router /api/patch/v1/advisories [get]
@@ -46,7 +46,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 	query := buildQueryAdvisories(account)
 
 	query = ApplySearch(c, query, "am.name", "synopsis", "description")
-	query, meta, links, err := ListCommon(query, c, AdvisoriesSortFields, "/api/patch/v1/advisories")
+	query, meta, links, err := ListCommon(query, c, append(AdvisoriesSortFields, "applicable_systems"), "/api/patch/v1/advisories")
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return
