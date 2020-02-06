@@ -13,6 +13,7 @@ func (RhAccount) TableName() string {
 	return "rh_account"
 }
 
+// nolint: maligned
 type SystemPlatform struct {
 	ID          int
 	InventoryID string
@@ -34,6 +35,7 @@ type SystemPlatform struct {
 	StaleTimestamp        *time.Time
 	StaleWarningTimestamp *time.Time
 	CulledTimestamp       *time.Time
+	Stale                 bool
 }
 
 func (SystemPlatform) TableName() string {
