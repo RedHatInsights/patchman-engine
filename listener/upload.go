@@ -73,14 +73,16 @@ func getOrCreateAccount(account string) (int, error) {
 	return rhAccount.ID, err
 }
 
-func optParseTimestap(t *string) *time.Time {
-	if t != nil && len(*t) > 0 {
-		v, err := time.Parse(base.Rfc3339NoTz, *t)
-		if err == nil {
-			return &v
-		}
+func optParseTimestamp(t *string) *time.Time {
+	if t == nil || len(*t) > 0 {
+		return nil
 	}
-	return nil
+	v, err := time.Parse(base.Rfc3339NoTz, *t)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("Opt timestamp parse")
+		return nil
+	}
+	return &v
 }
 
 // Stores or updates base system profile, returing internal system id
@@ -111,13 +113,13 @@ func updateSystemPlatform(inventoryID string, accountID int,
 		LastEvaluation: nil,
 		LastUpload:     &now,
 
-		StaleTimestamp:        optParseTimestap(invData.StaleTimestamp),
-		StaleWarningTimestamp: optParseTimestap(invData.StaleWarningTimestamp),
-		CulledTimestamp:       optParseTimestap(invData.CulledTimestamp),
+		StaleTimestamp:        optParseTimestamp(invData.StaleTimestamp),
+		StaleWarningTimestamp: optParseTimestamp(invData.StaleWarningTimestamp),
+		CulledTimestamp:       optParseTimestamp(invData.CulledTimestamp),
 	}
 
 	tx := database.OnConflictUpdate(database.Db, "inventory_id", "vmaas_json", "json_checksum",
-		"last_evaluation", "last_upload")
+		"last_evaluation", "last_upload", "stale_timestamp", "stale_warning_timestamp", "culled_timestamp")
 	err = tx.Create(&systemPlatform).Error
 
 	if err != nil {
@@ -125,6 +127,27 @@ func updateSystemPlatform(inventoryID string, accountID int,
 		return nil, err
 	}
 	return &systemPlatform, nil
+}
+
+func getHostInfo(ctx context.Context, hostID string) (*inventory.HostOut, *inventory.HostSystemProfileOut, error) {
+	hostResults, _, err := inventoryClient.HostsApi.ApiHostGetHostById(ctx, []string{hostID}, nil)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not query inventory")
+	}
+	if hostResults.Count == 0 || len(hostResults.Results) == 0 {
+		return nil, nil, errors.Wrap(err, "no system details returned, host is probably deleted")
+	}
+
+	profileResults, _, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{hostID}, nil)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not inventory system profile")
+	}
+	if profileResults.Count == 0 || len(profileResults.Results) == 0 {
+		return nil, nil, errors.Wrap(err, "no system profiles returned, host is probably deleted")
+	}
+	utils.Log().Debug("System profile download complete")
+
+	return &hostResults.Results[0], &profileResults.Results[0], nil
 }
 
 // nolint: funlen
@@ -136,25 +159,10 @@ func processUpload(hostID string, account string, identity string) error {
 	// Create new context, which has the apikey value set. This is then used as a value for `x-rh-identity`
 	ctx := context.WithValue(context.Background(), inventory.ContextAPIKey, apiKey)
 
-	hostResults, _, err := inventoryClient.HostsApi.ApiHostGetHostById(ctx, []string{hostID}, nil)
+	host, systemProfile, err := getHostInfo(ctx, hostID)
 	if err != nil {
-		return errors.Wrap(err, "could not query inventory")
+		return errors.Wrap(err, "Could not query inventory")
 	}
-
-	profileResults, _, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{hostID}, nil)
-	if err != nil {
-		return errors.Wrap(err, "could not inventory system profile")
-	}
-
-	utils.Log().Debug("System profile download complete")
-
-	if profileResults.Count == 0 || hostResults.Count == 0 {
-		return errors.Wrap(err, "no system details returned, systemProfile is probably deleted")
-	}
-
-	// We only process one systemProfile per message here
-	host := hostResults.Results[0]
-	systemProfile := profileResults.Results[0]
 	// Ensure we have account stored
 	accountID, err := getOrCreateAccount(account)
 	if err != nil {
@@ -168,10 +176,12 @@ func processUpload(hostID string, account string, identity string) error {
 			ModuleStream: m.Stream,
 		}
 	}
-	repos := []string{}
-	for _, r := range systemProfile.SystemProfile.YumRepos {
-		repos = append(repos, r.Id)
+	repos := make([]string, len(systemProfile.SystemProfile.YumRepos))
+
+	for i, r := range systemProfile.SystemProfile.YumRepos {
+		repos[i] = r.Id
 	}
+
 	// Prepare VMaaS request
 	updatesReq := vmaas.UpdatesV3Request{
 		PackageList:    systemProfile.SystemProfile.InstalledPackages,
@@ -181,7 +191,7 @@ func processUpload(hostID string, account string, identity string) error {
 		SecurityOnly:   false,
 	}
 
-	_, err = updateSystemPlatform(systemProfile.Id, accountID, &host, &updatesReq)
+	_, err = updateSystemPlatform(systemProfile.Id, accountID, host, &updatesReq)
 	if err != nil {
 		return errors.Wrap(err, "saving system into the database")
 	}
