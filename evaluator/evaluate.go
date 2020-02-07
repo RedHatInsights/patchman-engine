@@ -58,6 +58,11 @@ func Evaluate(ctx context.Context, inventoryID string, evaluationType string) er
 		return errors.Wrap(err, "Unable to parse system vmaas json")
 	}
 
+	if len(updatesReq.PackageList) == 0 {
+		evaluationCnt.WithLabelValues("error-no-packages").Inc()
+		return errors.New("No packages found in vmaas_json")
+	}
+
 	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{
 		UpdatesV3Request: optional.NewInterface(updatesReq),
 	}
