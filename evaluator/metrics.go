@@ -25,10 +25,16 @@ var (
 		Subsystem: "evaluator",
 		Name:      "evaluation_duration_seconds",
 	}, []string{"type"})
+
+	evaluationPartDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "patchman_engine",
+		Subsystem: "evaluator",
+		Name:      "evaluation_part_duration_seconds",
+	}, []string{"part"})
 )
 
 func RunMetrics(port string) {
-	prometheus.MustRegister(evaluationCnt, updatesCnt, evaluationDuration)
+	prometheus.MustRegister(evaluationCnt, updatesCnt, evaluationDuration, evaluationPartDuration)
 
 	// create web app
 	app := gin.New()
