@@ -46,15 +46,13 @@ func Evaluate(ctx context.Context, inventoryID string, evaluationType string) er
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationDuration.WithLabelValues(evaluationType))
 
-	var system models.SystemPlatform
-	err := database.Db.Where("inventory_id = ?", inventoryID).Find(&system).Error
+	system, err := loadSystemData(inventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
 		return errors.Wrap(err, "Unable to get system data from database")
 	}
 
-	var updatesReq vmaas.UpdatesV3Request
-	err = json.Unmarshal([]byte(system.VmaasJSON), &updatesReq)
+	updatesReq, err := parseVmaasJSON(system)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-parse-vmaas-json").Inc()
 		return errors.Wrap(err, "Unable to parse system vmaas json")
@@ -65,11 +63,7 @@ func Evaluate(ctx context.Context, inventoryID string, evaluationType string) er
 		return errors.New("No packages found in vmaas_json")
 	}
 
-	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{
-		UpdatesV3Request: optional.NewInterface(updatesReq),
-	}
-
-	vmaasData, _, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(ctx, &vmaasCallArgs)
+	vmaasData, err := callVMaas(ctx, updatesReq)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-call-vmaas-updates").Inc()
 		return errors.Wrap(err, "Unable to get updates from VMaaS "+fmt.Sprintf(
@@ -79,36 +73,107 @@ func Evaluate(ctx context.Context, inventoryID string, evaluationType string) er
 	}
 
 	tx := database.Db.Begin()
-	err = processSystemAdvisories(tx, system.ID, system.RhAccountID, vmaasData)
+	err = evaluateAndStore(tx, system, vmaasData)
 	if err != nil {
-		tx.Rollback()
+		rollbackOrLogError(tx, inventoryID)
+		return errors.Wrap(err, "Unable to evaluate and store results")
+	}
+
+	commitOrLogError(tx, inventoryID)
+
+	evaluationCnt.WithLabelValues("success").Inc()
+	return nil
+}
+
+func commitOrLogError(tx *gorm.DB, inventoryID string) {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("commit-to-db"))
+
+	err := tx.Commit().Error
+	if err != nil {
+		utils.Log("err", err.Error(), "systemID", inventoryID).Error("Unable to commit tx")
+	}
+}
+
+func rollbackOrLogError(tx *gorm.DB, inventoryID string) {
+	err := tx.Rollback().Error
+	if err != nil {
+		utils.Log("err", err.Error(), "systemID", inventoryID).Error("Unable to rollback tx")
+	}
+}
+
+func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) error {
+	err := processSystemAdvisories(tx, system.ID, system.RhAccountID, vmaasData)
+	if err != nil {
 		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
 		return errors.Wrap(err, "Unable to process system advisories")
 	}
 
-	err = tx.Exec("SELECT * FROM update_system_caches(?)", system.ID).Error
+	err = updateSystemCaches(tx, system)
 	if err != nil {
-		tx.Rollback()
 		evaluationCnt.WithLabelValues("error-update-system-caches").Inc()
 		return errors.Wrap(err, "Unable to update system caches")
 	}
 
-	err = tx.Model(&models.SystemPlatform{}).Where("id = ?", system.ID).
-		Update("last_evaluation", time.Now()).Error
+	err = updateSystemLastEvaluation(tx, system)
 	if err != nil {
-		tx.Rollback()
 		evaluationCnt.WithLabelValues("error-update-last-eval").Inc()
 		return errors.Wrap(err, "Unable to update last_evaluation timestamp")
 	}
-
-	tx.Commit()
-	evaluationCnt.WithLabelValues("success").Inc()
-	utils.Log("inventoryID", inventoryID, "evaluationType", evaluationType).
-		Debug("system evaluated successfully")
 	return nil
 }
 
+func updateSystemLastEvaluation(tx *gorm.DB, system *models.SystemPlatform) error {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("last-evaluation-update"))
+
+	err := tx.Model(&models.SystemPlatform{}).Where("id = ?", system.ID).
+		Update("last_evaluation", time.Now()).Error
+	return err
+}
+
+func updateSystemCaches(tx *gorm.DB, system *models.SystemPlatform) error {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("caches-update"))
+
+	err := tx.Exec("SELECT * FROM update_system_caches(?)", system.ID).Error
+	return err
+}
+
+func callVMaas(ctx context.Context, updatesReq vmaas.UpdatesV3Request) (vmaas.UpdatesV2Response, error) {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("vmaas-updates-call"))
+
+	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{
+		UpdatesV3Request: optional.NewInterface(updatesReq),
+	}
+
+	vmaasData, _, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(ctx, &vmaasCallArgs)
+	return vmaasData, err
+}
+
+func loadSystemData(inventoryID string) (*models.SystemPlatform, error) {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("data-loading"))
+
+	var system models.SystemPlatform
+	err := database.Db.Where("inventory_id = ?", inventoryID).Find(&system).Error
+	return &system, err
+}
+
+func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, error) {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("parse-vmaas-json"))
+
+	var updatesReq vmaas.UpdatesV3Request
+	err := json.Unmarshal([]byte(system.VmaasJSON), &updatesReq)
+	return updatesReq, err
+}
+
 func processSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, vmaasData vmaas.UpdatesV2Response) error {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))
+
 	reported := getReportedAdvisories(vmaasData)
 	stored, err := getStoredAdvisoriesMap(tx, systemID)
 	if err != nil {
@@ -312,7 +377,6 @@ func RunEvaluator() {
 			utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
 				Error("Eval message handling")
 		}
-		utils.Log("inventoryID", event.ID, "evalLabel", evalLabel).
-			Debug("system evaluated successfully")
+		utils.Log("inventoryID", event.ID, "evalLabel", evalLabel).Debug("system evaluated successfully")
 	})
 }
