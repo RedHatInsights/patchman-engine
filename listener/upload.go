@@ -178,10 +178,6 @@ func processUpload(hostID string, account string, identity string) error {
 		return errors.Wrap(err, "saving account into the database")
 	}
 
-	if systemProfile == nil {
-		panic("System profile is nil")
-	}
-
 	// Prepare VMaaS request
 	updatesReq := vmaas.UpdatesV3Request{
 		PackageList:  systemProfile.InstalledPackages,
@@ -201,7 +197,9 @@ func processUpload(hostID string, account string, identity string) error {
 
 	updatesReq.RepositoryList = make([]string, len(systemProfile.YumRepos))
 	for i, r := range systemProfile.YumRepos {
-		updatesReq.RepositoryList[i] = r.Id
+		if r.Enabled {
+			updatesReq.RepositoryList[i] = r.Id
+		}
 	}
 
 	_, err = updateSystemPlatform(host.Id, accountID, host, &updatesReq)
