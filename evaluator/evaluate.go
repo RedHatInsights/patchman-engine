@@ -49,12 +49,14 @@ func Evaluate(ctx context.Context, inventoryID string, evaluationType string) er
 	var system models.SystemPlatform
 	err := database.Db.Where("inventory_id = ?", inventoryID).Find(&system).Error
 	if err != nil {
+		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
 		return errors.Wrap(err, "Unable to get system data from database")
 	}
 
 	var updatesReq vmaas.UpdatesV3Request
 	err = json.Unmarshal([]byte(system.VmaasJSON), &updatesReq)
 	if err != nil {
+		evaluationCnt.WithLabelValues("error-parse-vmaas-json").Inc()
 		return errors.Wrap(err, "Unable to parse system vmaas json")
 	}
 
