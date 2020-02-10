@@ -10,6 +10,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/pkg/errors"
@@ -21,44 +22,43 @@ func uploadHandler(event mqueue.PlatformEvent) {
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventUpload))
 
 	if event.B64Identity == nil {
-		utils.Log().Error("Identity not provided")
+		utils.Log("inventoryID", event.ID).Error("Identity not provided")
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
 		return
 	}
 
 	identity, err := parseUploadMessage(&event)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("unable to parse upload msg")
+		utils.Log("inventoryID", event.ID, "err", err.Error()).Error("unable to parse upload msg")
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorParsing).Inc()
 		return
 	}
 
 	err = processUpload(event.ID, identity.Identity.AccountNumber, *event.B64Identity)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("unable to process upload")
+		utils.Log("inventoryID", event.ID, "err", err.Error()).Error("unable to process upload")
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
 		return
 	}
 
 	messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
+	utils.Log("inventoryID", event.ID).Debug("Upload event handled successfully")
 }
 
 func parseUploadMessage(event *mqueue.PlatformEvent) (*utils.Identity, error) {
 	// We need the b64 identity in order to call the inventory
 	if event.B64Identity == nil {
-		utils.Log().Error("No identity provided")
 		return nil, errors.New("No identity provided")
 	}
 
 	identity, err := utils.ParseIdentity(*event.B64Identity)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Could not parse identity")
-		return nil, errors.New("Could not parse identity")
+		return nil, errors.Wrap(err, "Could not parse identity")
 	}
 
 	if !identity.IsSmartEntitled() {
-		utils.Log("account", identity.Identity.AccountNumber).Info("Is not smart entitled")
-		return nil, errors.New("Is not smart entitled")
+		return nil, errors.New(fmt.Sprintf("Account '%s' is not smart entitled",
+			identity.Identity.AccountNumber))
 	}
 	return identity, nil
 }
@@ -90,15 +90,13 @@ func updateSystemPlatform(inventoryID string, accountID int,
 	invData *inventory.HostOut, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
 	updatesReqJSON, err := json.Marshal(&updatesReq)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Serializing vmaas request")
-		return nil, err
+		return nil, errors.Wrap(err, "Serializing vmaas request")
 	}
 
 	hash := sha256.New()
 	_, err = hash.Write(updatesReqJSON)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Unable to hash updates json")
-		return nil, err
+		return nil, errors.Wrap(err, "Unable to hash updates json")
 	}
 
 	jsonChecksum := hex.EncodeToString(hash.Sum([]byte{}))
@@ -122,14 +120,14 @@ func updateSystemPlatform(inventoryID string, accountID int,
 		"last_evaluation", "last_upload", "stale_timestamp", "stale_warning_timestamp", "culled_timestamp")
 	retTx := tx.Create(&systemPlatform)
 	if retTx.Error != nil {
-		utils.Log("err", retTx.Error.Error()).Error("Saving host into the database")
-		return nil, err
+		return nil, errors.Wrap(retTx.Error, "Unable to save or update system in database")
 	}
 
 	if retTx.RowsAffected == 0 {
 		return nil, errors.New("System neither created nor updated")
 	}
 
+	utils.Log("inventoryID", inventoryID).Debug("System created or updated successfully")
 	return &systemPlatform, nil
 }
 
@@ -151,27 +149,25 @@ func getHostInfo(ctx context.Context, inventoryID string) (*inventory.HostOut, *
 	if profileResults.Count == 0 || len(profileResults.Results) == 0 {
 		return nil, nil, errors.New("no system profiles returned, host is probably deleted")
 	}
-	utils.Log().Debug("System profile download complete")
 
 	host := hostResults.Results[0]
 	profile := profileResults.Results[0].SystemProfile
 
+	utils.Log("inventoryID", inventoryID).Debug("System profile download complete")
 	return &host, &profile, nil
 }
 
 // nolint: funlen
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
 func processUpload(inventoryID string, account string, identity string) error {
-	utils.Log("inventoryID", inventoryID).Debug("Downloading system profile")
-
 	apiKey := inventory.APIKey{Prefix: "", Key: identity}
 	// Create new context, which has the apikey value set. This is then used as a value for `x-rh-identity`
 	ctx := context.WithValue(context.Background(), inventory.ContextAPIKey, apiKey)
-
 	host, systemProfile, err := getHostInfo(ctx, inventoryID)
 	if err != nil {
 		return errors.Wrap(err, "Could not query inventory")
 	}
+
 	// Ensure we have account stored
 	accountID, err := getOrCreateAccount(account)
 	if err != nil {
@@ -212,8 +208,6 @@ func processUpload(inventoryID string, account string, identity string) error {
 	event := mqueue.PlatformEvent{
 		ID: inventoryID,
 	}
-
-	utils.Log().Debug("Sending evaluation kafka message")
 	err = evalWriter.WriteEvent(ctx, event)
 	if err != nil {
 		return errors.Wrap(err, "Sending kafka event failed")
