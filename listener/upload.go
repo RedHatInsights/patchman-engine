@@ -172,27 +172,30 @@ func processUpload(hostID string, account string, identity string) error {
 	if err != nil {
 		return errors.Wrap(err, "saving account into the database")
 	}
-
-	modules := make([]vmaas.UpdatesRequestModulesList, len(systemProfile.SystemProfile.DnfModules))
-	for i, m := range systemProfile.SystemProfile.DnfModules {
-		modules[i] = vmaas.UpdatesRequestModulesList{
-			ModuleName:   m.Name,
-			ModuleStream: m.Stream,
-		}
-	}
-	repos := make([]string, len(systemProfile.SystemProfile.YumRepos))
-
-	for i, r := range systemProfile.SystemProfile.YumRepos {
-		repos[i] = r.Id
+	if systemProfile == nil {
+		panic("System profile is nil")
 	}
 
 	// Prepare VMaaS request
 	updatesReq := vmaas.UpdatesV3Request{
-		PackageList:    systemProfile.SystemProfile.InstalledPackages,
-		Basearch:       systemProfile.SystemProfile.Arch,
-		ModulesList:    modules,
-		RepositoryList: repos,
-		SecurityOnly:   false,
+		PackageList:  systemProfile.SystemProfile.InstalledPackages,
+		Basearch:     systemProfile.SystemProfile.Arch,
+		SecurityOnly: false,
+	}
+
+	if count := len(systemProfile.SystemProfile.DnfModules); count > 0 {
+		updatesReq.ModulesList = make([]vmaas.UpdatesRequestModulesList, count)
+		for i, m := range systemProfile.SystemProfile.DnfModules {
+			updatesReq.ModulesList[i] = vmaas.UpdatesRequestModulesList{
+				ModuleName:   m.Name,
+				ModuleStream: m.Stream,
+			}
+		}
+	}
+
+	updatesReq.RepositoryList = make([]string, len(systemProfile.SystemProfile.YumRepos))
+	for i, r := range systemProfile.SystemProfile.YumRepos {
+		updatesReq.RepositoryList[i] = r.Id
 	}
 
 	_, err = updateSystemPlatform(systemProfile.Id, accountID, host, &updatesReq)
