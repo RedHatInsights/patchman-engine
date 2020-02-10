@@ -19,6 +19,14 @@ type AttrQuery = string
 // Used to store field name => sql query mapping
 type AttrMap = map[AttrName]AttrQuery
 
+func MakeSelect(attrs AttrMap) string {
+	fields := make([]string, 0, len(attrs))
+	for n, q := range attrs {
+		fields = append(fields, fmt.Sprintf("%v as %v", q, n))
+	}
+	return strings.Join(fields, ",")
+}
+
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	utils.Log("err", err.Error()).Error(respMsg)
 	c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{Error: respMsg})
@@ -35,7 +43,7 @@ func LogAndRespNotFound(c *gin.Context, err error, respMsg string) {
 }
 
 // nolint: prealloc
-func ApplySort(c *gin.Context, tx *gorm.DB, allowedFields AttrMap) (*gorm.DB, []string, error) {
+func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs AttrMap) (*gorm.DB, []string, error) {
 	query := c.DefaultQuery("sort", "id")
 	fields := strings.Split(query, ",")
 	var appliedFields []string
@@ -43,15 +51,15 @@ func ApplySort(c *gin.Context, tx *gorm.DB, allowedFields AttrMap) (*gorm.DB, []
 		"id": true,
 	}
 
-	for f := range allowedFields {
+	for f := range fieldExprs {
 		allowedFieldSet[f] = true
 	}
-
+	// We sort by a column expression and not the column name. The column expression is retrieved from fieldExprs
 	for _, enteredField := range fields {
 		if strings.HasPrefix(enteredField, "-") && allowedFieldSet[enteredField[1:]] { //nolint:gocritic
-			tx = tx.Order(fmt.Sprintf("%v DESC", enteredField[1:]))
+			tx = tx.Order(fmt.Sprintf("%v DESC", fieldExprs[enteredField[1:]]))
 		} else if allowedFieldSet[enteredField] {
-			tx = tx.Order(fmt.Sprintf("%v ASC", enteredField))
+			tx = tx.Order(fmt.Sprintf("%v ASC", fieldExprs[enteredField]))
 		} else {
 			// We have not found any matches in allowed fields, return an error
 			return nil, nil, errors.Errorf("Invalid sort field: %v", enteredField)

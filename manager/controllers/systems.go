@@ -8,7 +8,6 @@ import (
 	"net/http"
 )
 
-// Fields upon which we can filter/sort
 var SystemsFields = AttrMap{
 	"id":             "system_platform.id",
 	"first_reported": "system_platform.first_reported",
