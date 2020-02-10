@@ -105,6 +105,10 @@ func TestAdvisoriesFilter(t *testing.T) {
 		assert.Equal(t, "RH-1", output.Data[0].ID)
 		assert.Equal(t, "RH-4", output.Data[1].ID)
 		assert.Equal(t, "RH-7", output.Data[2].ID)
+
+		assert.Equal(t, FilterData{Values: []string{"1"}, Operator: "eq"}, output.Meta.Filter["type"])
+
+		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25&filter[type]=eq:1&sort=id", output.Links.First)
 	})
 
 	testAdvisoriesOk(t, "GET", "?filter[applicable_systems]=gt:1", func(output AdvisoriesResponse) {
