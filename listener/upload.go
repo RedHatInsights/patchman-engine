@@ -120,10 +120,14 @@ func updateSystemPlatform(inventoryID string, accountID int,
 
 	tx := database.OnConflictUpdate(database.Db, "inventory_id", "vmaas_json", "json_checksum",
 		"last_evaluation", "last_upload", "stale_timestamp", "stale_warning_timestamp", "culled_timestamp")
-	err = tx.Create(&systemPlatform).Error
-	if err != nil {
+	retTx := tx.Create(&systemPlatform)
+	if retTx.Error != nil {
 		utils.Log("err", err.Error()).Error("Saving host into the database")
 		return nil, err
+	}
+
+	if retTx.RowsAffected == 0 {
+		return nil, errors.New("System neither created nor updated")
 	}
 
 	return &systemPlatform, nil
