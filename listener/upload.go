@@ -122,7 +122,7 @@ func updateSystemPlatform(inventoryID string, accountID int,
 		"last_evaluation", "last_upload", "stale_timestamp", "stale_warning_timestamp", "culled_timestamp")
 	retTx := tx.Create(&systemPlatform)
 	if retTx.Error != nil {
-		utils.Log("err", err.Error()).Error("Saving host into the database")
+		utils.Log("err", retTx.Error.Error()).Error("Saving host into the database")
 		return nil, err
 	}
 
@@ -133,7 +133,7 @@ func updateSystemPlatform(inventoryID string, accountID int,
 	return &systemPlatform, nil
 }
 
-func getHostInfo(ctx context.Context, hostID string) (*inventory.HostOut, *inventory.HostSystemProfileOut, error) {
+func getHostInfo(ctx context.Context, hostID string) (*inventory.HostOut, *inventory.SystemProfileIn, error) {
 	hostResults, _, err := inventoryClient.HostsApi.ApiHostGetHostById(ctx, []string{hostID}, nil)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "could not query inventory")
@@ -151,7 +151,10 @@ func getHostInfo(ctx context.Context, hostID string) (*inventory.HostOut, *inven
 	}
 	utils.Log().Debug("System profile download complete")
 
-	return &hostResults.Results[0], &profileResults.Results[0], nil
+	host := hostResults.Results[0]
+	profile := profileResults.Results[0].SystemProfile
+
+	return &host, &profile, nil
 }
 
 // nolint: funlen
@@ -172,20 +175,21 @@ func processUpload(hostID string, account string, identity string) error {
 	if err != nil {
 		return errors.Wrap(err, "saving account into the database")
 	}
+
 	if systemProfile == nil {
 		panic("System profile is nil")
 	}
 
 	// Prepare VMaaS request
 	updatesReq := vmaas.UpdatesV3Request{
-		PackageList:  systemProfile.SystemProfile.InstalledPackages,
-		Basearch:     systemProfile.SystemProfile.Arch,
+		PackageList:  systemProfile.InstalledPackages,
+		Basearch:     systemProfile.Arch,
 		SecurityOnly: false,
 	}
 
-	if count := len(systemProfile.SystemProfile.DnfModules); count > 0 {
+	if count := len(systemProfile.DnfModules); count > 0 {
 		updatesReq.ModulesList = make([]vmaas.UpdatesRequestModulesList, count)
-		for i, m := range systemProfile.SystemProfile.DnfModules {
+		for i, m := range systemProfile.DnfModules {
 			updatesReq.ModulesList[i] = vmaas.UpdatesRequestModulesList{
 				ModuleName:   m.Name,
 				ModuleStream: m.Stream,
@@ -193,12 +197,12 @@ func processUpload(hostID string, account string, identity string) error {
 		}
 	}
 
-	updatesReq.RepositoryList = make([]string, len(systemProfile.SystemProfile.YumRepos))
-	for i, r := range systemProfile.SystemProfile.YumRepos {
+	updatesReq.RepositoryList = make([]string, len(systemProfile.YumRepos))
+	for i, r := range systemProfile.YumRepos {
 		updatesReq.RepositoryList[i] = r.Id
 	}
 
-	_, err = updateSystemPlatform(systemProfile.Id, accountID, host, &updatesReq)
+	_, err = updateSystemPlatform(host.Id, accountID, host, &updatesReq)
 	if err != nil {
 		return errors.Wrap(err, "saving system into the database")
 	}
