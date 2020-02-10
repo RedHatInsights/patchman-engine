@@ -71,21 +71,23 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs AttrMap) (*gorm.DB, []str
 
 func ParseFilters(c *gin.Context, allowedFields AttrMap) (Filters, error) {
 	queryFilters, has := c.GetQueryMap("filter")
-	filters := Filters{}
 	if !has {
 		return []Filter{}, nil
 	}
+	filters := make(Filters, 0, len(queryFilters))
 	for k, v := range queryFilters {
-		filter, err := ParseFilterValue(k, v)
-		if err != nil {
-			c.AbortWithStatusJSON(500, err)
+		if _, has := allowedFields[k]; has {
+			filter, err := ParseFilterValue(k, v)
+			if err != nil {
+				return nil, err
+			}
+			filters = append(filters, filter)
 		}
-		filters = append(filters, filter)
 	}
-	return filters.FilterFilters(allowedFields)
+	return filters, nil
 }
 
-// nolint:lll, funlen
+// nolint: funlen
 func ListCommon(tx *gorm.DB, c *gin.Context, fields AttrMap, path string) (*gorm.DB, *ListMeta, *Links, error) {
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
@@ -105,13 +107,10 @@ func ListCommon(tx *gorm.DB, c *gin.Context, fields AttrMap, path string) (*gorm
 		return nil, nil, nil, err
 	}
 
-	for _, f := range filters {
-		query, args, err := f.ToWhere(fields)
-		if err != nil {
-			LogAndRespBadRequest(c, err, "Invalid filter")
-			return nil, nil, nil, err
-		}
-		tx = tx.Where(query, args...)
+	tx, err = filters.Apply(tx, fields)
+	if err != nil {
+		LogAndRespBadRequest(c, err, "Invalid filter")
+		return nil, nil, nil, err
 	}
 
 	var total int
