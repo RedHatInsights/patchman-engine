@@ -19,7 +19,7 @@ type readerImpl struct {
 }
 
 type Writer interface {
-	WriteEvent(ctx context.Context, ev PlatformEvent) error
+	WriteEvents(ctx context.Context, events ...PlatformEvent) error
 }
 
 type writerImpl struct {

@@ -14,8 +14,8 @@ var events []mqueue.PlatformEvent
 
 type mockKafkaWriter struct{}
 
-func (t mockKafkaWriter) WriteEvent(_ context.Context, ev mqueue.PlatformEvent) error {
-	events = append(events, ev)
+func (t mockKafkaWriter) WriteEvents(_ context.Context, ev ...mqueue.PlatformEvent) error {
+	events = append(events, ev...)
 	return nil
 }
 
