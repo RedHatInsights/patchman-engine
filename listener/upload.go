@@ -133,8 +133,8 @@ func updateSystemPlatform(inventoryID string, accountID int,
 	return &systemPlatform, nil
 }
 
-func getHostInfo(ctx context.Context, hostID string) (*inventory.HostOut, *inventory.SystemProfileIn, error) {
-	hostResults, _, err := inventoryClient.HostsApi.ApiHostGetHostById(ctx, []string{hostID}, nil)
+func getHostInfo(ctx context.Context, inventoryID string) (*inventory.HostOut, *inventory.SystemProfileIn, error) {
+	hostResults, _, err := inventoryClient.HostsApi.ApiHostGetHostById(ctx, []string{inventoryID}, nil)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "could not query inventory")
 	}
@@ -143,7 +143,7 @@ func getHostInfo(ctx context.Context, hostID string) (*inventory.HostOut, *inven
 		return nil, nil, errors.New("no system details returned, host is probably deleted")
 	}
 
-	profileResults, _, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{hostID}, nil)
+	profileResults, _, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{inventoryID}, nil)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "could not inventory system profile")
 	}
@@ -161,14 +161,14 @@ func getHostInfo(ctx context.Context, hostID string) (*inventory.HostOut, *inven
 
 // nolint: funlen
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
-func processUpload(hostID string, account string, identity string) error {
-	utils.Log("hostID", hostID).Debug("Downloading system profile")
+func processUpload(inventoryID string, account string, identity string) error {
+	utils.Log("inventoryID", inventoryID).Debug("Downloading system profile")
 
 	apiKey := inventory.APIKey{Prefix: "", Key: identity}
 	// Create new context, which has the apikey value set. This is then used as a value for `x-rh-identity`
 	ctx := context.WithValue(context.Background(), inventory.ContextAPIKey, apiKey)
 
-	host, systemProfile, err := getHostInfo(ctx, hostID)
+	host, systemProfile, err := getHostInfo(ctx, inventoryID)
 	if err != nil {
 		return errors.Wrap(err, "Could not query inventory")
 	}
@@ -210,7 +210,7 @@ func processUpload(hostID string, account string, identity string) error {
 	}
 
 	event := mqueue.PlatformEvent{
-		ID: hostID,
+		ID: inventoryID,
 	}
 
 	utils.Log().Debug("Sending evaluation kafka message")
