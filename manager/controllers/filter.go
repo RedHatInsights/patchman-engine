@@ -11,21 +11,11 @@ type FilterData struct {
 	Values   []string `json:"values"`
 }
 type Filter struct {
-	FieldName string
+	FieldName string `json:"field"`
 	FilterData
 }
 
 type Filters []Filter
-
-// Contains tells whether a contains x.
-func Contains(a []string, x string) bool {
-	for _, n := range a {
-		if x == n {
-			return true
-		}
-	}
-	return false
-}
 
 // Remove filters with field names, which are not in the arguments
 func (t Filters) FilterFilters(fields map[string]string) (Filters, error) {
@@ -57,7 +47,7 @@ func (t *Filters) ToMetaMap() map[string]FilterData {
 	return res
 }
 
-// Convert a single filter to where claues
+// Convert a single filter to where clauses
 func (t *Filter) ToWhere(attributes AttrMap) (string, []interface{}, error) {
 	// Gorm deals with interface{} but for ease of use we only use strings
 	var values = make([]interface{}, len(t.Values))

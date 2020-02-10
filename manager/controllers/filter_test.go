@@ -63,7 +63,26 @@ func TestFilterToSql(t *testing.T) {
 	for i, f := range testFilters {
 		filter, err := ParseFilterValue("test", f)
 		assert.Equal(t, nil, err)
-		query, _, err := filter.ToWhere(AttrMap{})
+		query, _, err := filter.ToWhere(AttrMap{"test": "test"})
+		assert.Equal(t, nil, err)
+		assert.Equal(t, queries[i], query)
+	}
+}
+
+func TestFilterToSqlAdvanced(t *testing.T) {
+	core.SetupTestEnvironment()
+	queries := []string{
+		"(NOT test) = ? ",
+		"(NOT test) IN (?) ",
+		"(NOT test) > ? ",
+		"(NOT test) < ? ",
+		"(NOT test) BETWEEN ? AND ? ",
+	}
+
+	for i, f := range testFilters {
+		filter, err := ParseFilterValue("test", f)
+		assert.Equal(t, nil, err)
+		query, _, err := filter.ToWhere(AttrMap{"test": "(NOT test)"})
 		assert.Equal(t, nil, err)
 		assert.Equal(t, queries[i], query)
 	}

@@ -3,22 +3,29 @@ package controllers
 import (
 	"app/base/database"
 	"app/manager/middlewares"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"net/http"
 	"time"
 )
 
-// Fields upon which we can filter/sort
+var SystemAdvisoriesFields = AttrMap{
+	"id":          "am.id",
+	"name":        "am.name",
+	"type":        "am.advisory_type_id",
+	"synopsis":    "am.synopsis",
+	"description": "am.description",
+	"public_date": "am.public_date",
+}
+
 var AdvisoriesFields = AttrMap{
-	"id":                 "advisory_metadata.id",
-	"name":               "advisory_metadata.name",
-	"type":               "advisory_metadata.advisory_type_id",
-	"synopsis":           "advisory_metadata.synopsis",
-	"description":        "advisory_metadata.description",
-	"public_date":        "advisory_metadata.public_date",
-	"applicable_systems": "COALESCE(systems_affected, 0)",
+	"id":                 "am.id",
+	"name":               "am.name",
+	"type":               "am.advisory_type_id",
+	"synopsis":           "am.synopsis",
+	"description":        "am.description",
+	"public_date":        "am.public_date",
+	"applicable_systems": "COALESCE(aad.systems_affected, 0)",
 }
 
 type AdvisoriesResponse struct {
@@ -80,12 +87,8 @@ func AdvisoriesListHandler(c *gin.Context) {
 }
 
 func buildQueryAdvisories(account string) *gorm.DB {
-	var sel string
-	for n, q := range AdvisoriesFields {
-		sel += fmt.Sprintf("%v as %v", q, n)
-	}
 	query := database.Db.Table("advisory_metadata am").
-		Select(sel).
+		Select(MakeSelect(AdvisoriesFields)).
 		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id").
 		Joins("JOIN rh_account ra ON aad.rh_account_id = ra.id").
 		Where("ra.name = ?", account)

@@ -40,12 +40,12 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	}
 
 	query := database.SystemAdvisoriesQueryName(database.Db, inventoryID).
-		Select("am.*, advisory_type_id as type").
-		Joins("inner join rh_account ra on sp.rh_account_id = ra.id").
+		Select("am.*").
+		Joins("INNER JOIN rh_account ra on sp.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
 
 	path := fmt.Sprintf("/api/patch/v1/systems/%v/advisories", inventoryID)
-	query, meta, links, err := ListCommon(query, c, AdvisoriesFields, path)
+	query, meta, links, err := ListCommon(query, c, SystemAdvisoriesFields, path)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return
