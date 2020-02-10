@@ -28,7 +28,8 @@ func TestUpdateSystemPlatform(t *testing.T) {
 
 	deleteData(t)
 
-	accountID := getOrCreateTestAccount(t)
+	accountID1 := getOrCreateTestAccount(t)
+	accountID2 := getOrCreateTestAccount(t)
 	req := vmaas.UpdatesV3Request{
 		PackageList:    []string{"package0"},
 		RepositoryList: []string{},
@@ -36,17 +37,18 @@ func TestUpdateSystemPlatform(t *testing.T) {
 		Releasever:     "7Server",
 		Basearch:       "x86_64",
 	}
-	sys1, err := updateSystemPlatform(id, accountID, &inventory.HostOut{}, &req)
+	sys1, err := updateSystemPlatform(id, accountID1, &inventory.HostOut{}, &req)
 	assert.Nil(t, err)
 
-	assertSystemInDb(t)
+	assertSystemInDb(t, id, &accountID1)
 
-	sys2, err := updateSystemPlatform(id, accountID, &inventory.HostOut{}, &req)
+	sys2, err := updateSystemPlatform(id, accountID2, &inventory.HostOut{}, &req)
 	assert.Nil(t, err)
+
+	assertSystemInDb(t, id, &accountID2)
 
 	assert.Equal(t, sys1.ID, sys2.ID)
 	assert.Equal(t, sys1.InventoryID, sys2.InventoryID)
-	assert.Equal(t, sys1.RhAccountID, sys2.RhAccountID)
 	assert.Equal(t, sys1.JSONChecksum, sys2.JSONChecksum)
 	assert.Equal(t, sys1.OptOut, sys2.OptOut)
 
@@ -91,6 +93,6 @@ func TestUploadHandler(t *testing.T) {
 	event := createTestUploadEvent(t)
 	uploadHandler(event)
 
-	assertSystemInDb(t)
+	assertSystemInDb(t, id, nil)
 	deleteData(t)
 }

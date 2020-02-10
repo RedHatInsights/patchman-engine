@@ -25,14 +25,18 @@ func deleteData(t *testing.T) {
 	assert.Nil(t, database.Db.Unscoped().Where("name = ?", id).Delete(&models.RhAccount{}).Error)
 }
 
-func assertSystemInDb(t *testing.T) {
+// nolint:unparam
+func assertSystemInDb(t *testing.T, inventoryID string, rhAccountID *int) {
 	var system models.SystemPlatform
-	assert.Nil(t, database.Db.Where("inventory_id = ?", id).Find(&system).Error)
-	assert.Equal(t, system.InventoryID, id)
+	assert.Nil(t, database.Db.Where("inventory_id = ?", inventoryID).Find(&system).Error)
+	assert.Equal(t, system.InventoryID, inventoryID)
 
 	var account models.RhAccount
 	assert.Nil(t, database.Db.Where("id = ?", system.RhAccountID).Find(&account).Error)
-	assert.Equal(t, id, account.Name)
+	assert.Equal(t, inventoryID, account.Name)
+	if rhAccountID != nil {
+		assert.Equal(t, system.RhAccountID, *rhAccountID)
+	}
 
 	now := time.Now().Add(-time.Minute)
 	assert.True(t, system.FirstReported.After(now), "First reported")
