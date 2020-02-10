@@ -177,7 +177,7 @@ func processUpload(hostID string, account string, identity string) error {
 	}
 
 	if systemProfile == nil {
-		panic("System profile is nil")
+		return errors.New("system profile is nil")
 	}
 
 	// Prepare VMaaS request
