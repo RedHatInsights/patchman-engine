@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"app/base/core"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -15,7 +14,6 @@ var testFilters = []string{
 }
 
 func TestFilterParse(t *testing.T) {
-	core.SetupTestEnvironment()
 	operators := []string{
 		"eq", "in", "gt", "lt", "between",
 	}
@@ -36,22 +34,7 @@ func TestFilterParse(t *testing.T) {
 	}
 }
 
-func TestFilterFiltering(t *testing.T) {
-	core.SetupTestEnvironment()
-	filters := Filters{}
-	for _, f := range testFilters {
-		filter, err := ParseFilterValue("test", f)
-		assert.Equal(t, nil, err)
-		filters = append(filters, filter)
-	}
-
-	filteredFilters, err := filters.FilterFilters(AttrMap{"test": "test"})
-	assert.Nil(t, err)
-	assert.Equal(t, filters, filteredFilters)
-}
-
 func TestFilterToSql(t *testing.T) {
-	core.SetupTestEnvironment()
 	queries := []string{
 		"test = ? ",
 		"test IN (?) ",
@@ -70,7 +53,6 @@ func TestFilterToSql(t *testing.T) {
 }
 
 func TestFilterToSqlAdvanced(t *testing.T) {
-	core.SetupTestEnvironment()
 	queries := []string{
 		"(NOT test) = ? ",
 		"(NOT test) IN (?) ",
