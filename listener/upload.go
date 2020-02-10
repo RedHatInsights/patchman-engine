@@ -138,16 +138,18 @@ func getHostInfo(ctx context.Context, hostID string) (*inventory.HostOut, *inven
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "could not query inventory")
 	}
+
 	if hostResults.Count == 0 || len(hostResults.Results) == 0 {
-		return nil, nil, errors.Wrap(err, "no system details returned, host is probably deleted")
+		return nil, nil, errors.New("no system details returned, host is probably deleted")
 	}
 
 	profileResults, _, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{hostID}, nil)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "could not inventory system profile")
 	}
+
 	if profileResults.Count == 0 || len(profileResults.Results) == 0 {
-		return nil, nil, errors.Wrap(err, "no system profiles returned, host is probably deleted")
+		return nil, nil, errors.New("no system profiles returned, host is probably deleted")
 	}
 	utils.Log().Debug("System profile download complete")
 
