@@ -2,11 +2,18 @@ package controllers
 
 import (
 	"fmt"
-	"strings"
 )
 
 func CreateLinks(path string, offset, limit, total int, otherParams ...string) Links {
-	pager := pager{path, offset, limit, total, strings.Join(otherParams, "&")}
+	var queryStr string
+
+	for _, param := range otherParams {
+		if len(param) > 0 {
+			queryStr = fmt.Sprintf("%v&%v", queryStr, param)
+		}
+	}
+
+	pager := pager{path, offset, limit, total, queryStr}
 	links := Links{
 		First:    pager.createLink(0),
 		Last:     pager.createLastLink(),
