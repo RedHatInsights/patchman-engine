@@ -18,7 +18,7 @@ type Filter struct {
 type Filters []Filter
 
 // Remove filters with field names, which are not in the arguments
-func (t Filters) FilterFilters(fields map[string]string) (Filters, error) {
+func (t Filters) FilterFilters(fields AttrMap) (Filters, error) {
 	res := Filters{}
 	err := error(nil)
 

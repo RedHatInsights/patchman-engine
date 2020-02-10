@@ -80,7 +80,6 @@ func ParseFilters(c *gin.Context, allowedFields AttrMap) (Filters, error) {
 		if err != nil {
 			c.AbortWithStatusJSON(500, err)
 		}
-		utils.Log("filter", filter).Debug("Successfully parsed filter")
 		filters = append(filters, filter)
 	}
 	return filters.FilterFilters(allowedFields)
