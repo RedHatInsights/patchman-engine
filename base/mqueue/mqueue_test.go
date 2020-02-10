@@ -37,7 +37,7 @@ func TestRoundTrip(t *testing.T) {
 
 	writer := WriterFromEnv("test")
 	eventIn := PlatformEvent{ID: "some-id"}
-	assert.NoError(t, writer.WriteEvent(context.Background(), eventIn))
+	assert.NoError(t, writer.WriteEvents(context.Background(), eventIn))
 	time.Sleep(8 * time.Second)
 	assert.Equal(t, eventIn, eventOut)
 }

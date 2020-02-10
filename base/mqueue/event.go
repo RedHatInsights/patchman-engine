@@ -37,10 +37,15 @@ func (t *readerImpl) HandleEvents(handler EventHandler) {
 	t.HandleMessages(makeKafkaHandler(handler))
 }
 
-func (t *writerImpl) WriteEvent(ctx context.Context, ev PlatformEvent) error {
-	data, err := json.Marshal(&ev)
-	if err != nil {
-		return errors.Wrap(err, "Serializing event")
+// nolint: scopelint
+func (t *writerImpl) WriteEvents(ctx context.Context, events ...PlatformEvent) error {
+	msgs := make([]kafka.Message, len(events))
+	for i, ev := range events {
+		data, err := json.Marshal(&ev)
+		if err != nil {
+			return errors.Wrap(err, "Serializing event")
+		}
+		msgs[i] = kafka.Message{Value: data}
 	}
-	return t.WriteMessages(ctx, kafka.Message{Value: data})
+	return t.WriteMessages(ctx, msgs...)
 }

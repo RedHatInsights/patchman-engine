@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const BatchSize = 4000
+
 func sendReevaluationMessages() error {
 	var inventoryIDs []string
 	err := database.Db.Model(&models.SystemPlatform{}).
@@ -19,24 +21,31 @@ func sendReevaluationMessages() error {
 
 	ctx := context.Background()
 
-	for _, inventoryID := range inventoryIDs {
-		sendOneMessage(ctx, inventoryID)
+	for i := 0; i < len(inventoryIDs); i += BatchSize {
+		end := i + BatchSize
+		if end > len(inventoryIDs) {
+			end = len(inventoryIDs)
+		}
+		sendMessages(ctx, inventoryIDs[i:end]...)
 	}
 	return nil
 }
 
-func sendOneMessage(ctx context.Context, inventoryID string) {
+func sendMessages(ctx context.Context, inventoryIDs ...string) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageSendDuration)
 
-	utils.Log("inventoryID", inventoryID).Debug("Sending evaluation kafka message")
-	event := mqueue.PlatformEvent{
-		ID: inventoryID,
+	events := make([]mqueue.PlatformEvent, len(inventoryIDs))
+
+	for i, id := range inventoryIDs {
+		utils.Log("inventoryID", id).Debug("Sending evaluation kafka message")
+		events[i] = mqueue.PlatformEvent{
+			ID: id,
+		}
 	}
 
-	err := evalWriter.WriteEvent(ctx, event)
+	err := evalWriter.WriteEvents(ctx, events...)
 	if err != nil {
-		utils.Log("err", err.Error(), "inventoryID", inventoryID).
-			Error("inventory id sending to re-evaluate failed")
+		utils.Log("err", err.Error()).Error("sending to re-evaluate failed")
 	}
 }

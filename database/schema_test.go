@@ -26,6 +26,7 @@ func setCmdAuth(cmd *exec.Cmd) {
 }
 
 func TestSchemaCompatiblity(t *testing.T) {
+	utils.SkipWithoutDB(t)
 	cfg := postgres.Config{
 		DatabaseName:    "patchman",
 		SchemaName:      "public",
