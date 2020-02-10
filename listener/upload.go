@@ -132,18 +132,20 @@ func updateSystemPlatform(inventoryID string, accountID int,
 }
 
 func getHostInfo(ctx context.Context, inventoryID string) (*inventory.HostOut, *inventory.SystemProfileIn, error) {
-	hostResults, _, err := inventoryClient.HostsApi.ApiHostGetHostById(ctx, []string{inventoryID}, nil)
+	hostResults, resp, err := inventoryClient.HostsApi.ApiHostGetHostById(ctx, []string{inventoryID}, nil)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "could not query inventory")
+		respDetail := utils.TryGetResponseDetails(resp)
+		return nil, nil, errors.Wrap(err, "inventory API call failed"+respDetail)
 	}
 
 	if hostResults.Count == 0 || len(hostResults.Results) == 0 {
 		return nil, nil, errors.New("no system details returned, host is probably deleted")
 	}
 
-	profileResults, _, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{inventoryID}, nil)
+	profileResults, resp, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{inventoryID}, nil)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "could not inventory system profile")
+		respDetail := utils.TryGetResponseDetails(resp)
+		return nil, nil, errors.Wrap(err, "inventory API, profile loading failed"+respDetail)
 	}
 
 	if profileResults.Count == 0 || len(profileResults.Results) == 0 {
