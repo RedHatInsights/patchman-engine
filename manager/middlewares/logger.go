@@ -19,11 +19,12 @@ func RequestResponseLogger() gin.HandlerFunc {
 
 		duration := time.Since(tStart).Nanoseconds() / 1e6
 		fields = append(fields, "durationMs", duration,
-			"status", c.Writer.Status(),
-			"userAgent", c.Request.UserAgent(),
+			"status_code", c.Writer.Status(),
+			"user_agent", c.Request.UserAgent(),
 			"method", c.Request.Method,
-			"remoteAddr", c.Request.RemoteAddr,
-			"url", c.Request.URL.String())
+			"remote_addr", c.Request.RemoteAddr,
+			"url", c.Request.URL.String(),
+			"account", c.GetString("account"))
 
 		for _, param := range c.Params {
 			fields = append(fields, "param_"+param.Key, param.Value)
