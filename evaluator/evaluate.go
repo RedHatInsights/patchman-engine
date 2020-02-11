@@ -66,44 +66,46 @@ func Evaluate(ctx context.Context, inventoryID string, evaluationType string) er
 	vmaasData, err := callVMaas(ctx, updatesReq)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-call-vmaas-updates").Inc()
-		return errors.Wrap(err, "Unable to get updates from VMaaS "+fmt.Sprintf(
-			"(packages: %d, basearch: %s, modules: %d, releasever: %s, repolist: %d, seconly: %t)",
-			len(updatesReq.PackageList), updatesReq.Basearch, len(updatesReq.ModulesList), updatesReq.Releasever,
-			len(updatesReq.RepositoryList), updatesReq.SecurityOnly))
+		return errors.New("vmaas API call failed")
 	}
 
 	tx := database.Db.Begin()
-	err = evaluateAndStore(tx, system, vmaasData)
+	err = evaluateAndStore(tx, system, *vmaasData)
 	if err != nil {
 		rollbackOrLogError(tx, inventoryID)
 		return errors.Wrap(err, "Unable to evaluate and store results")
 	}
 
-	commitOrLogError(tx, inventoryID)
+	err = commitWithObserve(tx)
+	if err != nil {
+		evaluationCnt.WithLabelValues("error-database-commit").Inc()
+		return errors.New("database commit failed")
+	}
 
 	evaluationCnt.WithLabelValues("success").Inc()
 	return nil
 }
 
-func commitOrLogError(tx *gorm.DB, inventoryID string) {
+func commitWithObserve(tx *gorm.DB) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("commit-to-db"))
 
 	err := tx.Commit().Error
 	if err != nil {
-		utils.Log("err", err.Error(), "systemID", inventoryID).Error("Unable to commit tx")
+		return err
 	}
+	return nil
 }
 
 func rollbackOrLogError(tx *gorm.DB, inventoryID string) {
 	err := tx.Rollback().Error
 	if err != nil {
-		utils.Log("err", err.Error(), "systemID", inventoryID).Error("Unable to rollback tx")
+		utils.Log("err", err.Error(), "inventoryID", inventoryID).Error("Unable to rollback tx")
 	}
 }
 
 func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) error {
-	err := processSystemAdvisories(tx, system.ID, system.RhAccountID, vmaasData)
+	err := processSystemAdvisories(tx, system.ID, system.RhAccountID, vmaasData, system.InventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
 		return errors.Wrap(err, "Unable to process system advisories")
@@ -140,7 +142,7 @@ func updateSystemCaches(tx *gorm.DB, system *models.SystemPlatform) error {
 	return err
 }
 
-func callVMaas(ctx context.Context, updatesReq vmaas.UpdatesV3Request) (vmaas.UpdatesV2Response, error) {
+func callVMaas(ctx context.Context, updatesReq vmaas.UpdatesV3Request) (*vmaas.UpdatesV2Response, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("vmaas-updates-call"))
 
@@ -148,8 +150,16 @@ func callVMaas(ctx context.Context, updatesReq vmaas.UpdatesV3Request) (vmaas.Up
 		UpdatesV3Request: optional.NewInterface(updatesReq),
 	}
 
-	vmaasData, _, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(ctx, &vmaasCallArgs)
-	return vmaasData, err
+	vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(ctx, &vmaasCallArgs)
+	if err != nil {
+		responseDetails := utils.TryGetResponseDetails(resp)
+		return nil, errors.Wrap(err, "vmaas API call failed"+responseDetails+fmt.Sprintf(
+			", (packages: %d, basearch: %s, modules: %d, releasever: %s, repolist: %d, seconly: %t)",
+			len(updatesReq.PackageList), updatesReq.Basearch, len(updatesReq.ModulesList), updatesReq.Releasever,
+			len(updatesReq.RepositoryList), updatesReq.SecurityOnly))
+	}
+
+	return &vmaasData, nil
 }
 
 func loadSystemData(inventoryID string) (*models.SystemPlatform, error) {
@@ -170,7 +180,8 @@ func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, erro
 	return updatesReq, err
 }
 
-func processSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, vmaasData vmaas.UpdatesV2Response) error {
+func processSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, vmaasData vmaas.UpdatesV2Response,
+	inventoryID string) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))
 
@@ -182,10 +193,10 @@ func processSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, vmaasData v
 
 	patched := getPatchedAdvisories(reported, *stored)
 	updatesCnt.WithLabelValues("patched").Add(float64(len(patched)))
-	utils.Log("systemID", systemID, "patched", len(patched)).Debug("patched advisories")
+	utils.Log("inventoryID", inventoryID, "patched", len(patched)).Debug("patched advisories")
 
 	newsAdvisoriesNames, unpatched := getNewAndUnpatchedAdvisories(reported, *stored)
-	utils.Log("systemID", systemID, "newAdvisories", len(newsAdvisoriesNames)).Debug("new advisories")
+	utils.Log("inventoryID", inventoryID, "newAdvisories", len(newsAdvisoriesNames)).Debug("new advisories")
 
 	newIDs, err := ensureAdvisoriesInDb(tx, newsAdvisoriesNames)
 	if err != nil {
@@ -194,7 +205,7 @@ func processSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, vmaasData v
 
 	unpatched = append(unpatched, *newIDs...)
 	updatesCnt.WithLabelValues("unpatched").Add(float64(len(unpatched)))
-	utils.Log("systemID", systemID, "unpatched", len(unpatched)).Debug("patched advisories")
+	utils.Log("inventoryID", inventoryID, "unpatched", len(unpatched)).Debug("patched advisories")
 
 	err = updateSystemAdvisories(tx, systemID, rhAccountID, patched, unpatched)
 	if err != nil {
@@ -236,7 +247,6 @@ func getNewAndUnpatchedAdvisories(reported map[string]bool, stored map[string]mo
 			if storedAdvisory.WhenPatched != nil { // this advisory was already patched and now is un-patched again
 				unpatchedAdvisories = append(unpatchedAdvisories, storedAdvisory.AdvisoryID)
 			}
-			utils.Log("advisory", storedAdvisory.Advisory.Name).Debug("still not patched")
 		} else {
 			newAdvisories = append(newAdvisories, reportedAdvisory)
 		}
