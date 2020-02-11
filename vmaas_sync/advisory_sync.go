@@ -152,7 +152,7 @@ func syncAdvisories() error {
 	pageIdx := 0
 	maxPageIdx := 1
 
-	for pageIdx < maxPageIdx {
+	for pageIdx <= maxPageIdx {
 		opts := vmaas.AppErrataHandlerPostPostOpts{
 			ErrataRequest: optional.NewInterface(vmaas.ErrataRequest{
 				Page:          float32(pageIdx),
