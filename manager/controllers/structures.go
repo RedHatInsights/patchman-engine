@@ -1,9 +1,5 @@
 package controllers
 
-import (
-	"time"
-)
-
 type Links struct {
 	First    string  `json:"first"`
 	Last     string  `json:"last"`
@@ -20,44 +16,4 @@ type ListMeta struct {
 	Sort       []string              `json:"sort"`
 	Filter     map[string]FilterData `json:"filter"`
 	TotalItems int                   `json:"total_items"`
-}
-
-type SystemAdvisoryItem struct {
-	Attributes SystemAdvisoryItemAttributes `json:"attributes"`
-	ID         string                       `json:"id"`
-	Type       string                       `json:"type"`
-}
-
-type SystemAdvisoryItemAttributes struct {
-	Description  string    `json:"description"`
-	PublicDate   time.Time `json:"public_date"`
-	Synopsis     string    `json:"synopsis"`
-	AdvisoryType int       `json:"advisory_type"`
-	Severity     *int      `json:"severity,omitempty"`
-}
-
-type AdvisoryItem struct {
-	Attributes AdvisoryItemAttributes `json:"attributes"`
-	ID         string                 `json:"id"`
-	Type       string                 `json:"type"`
-}
-
-type AdvisoryItemAttributes struct {
-	SystemAdvisoryItemAttributes
-	ApplicableSystems int `json:"applicable_systems"`
-}
-
-type SystemItem struct {
-	Attributes SystemItemAttributes `json:"attributes"`
-	ID         string               `json:"id"`
-	Type       string               `json:"type"`
-}
-
-type SystemItemAttributes struct {
-	LastEvaluation *time.Time `json:"last_evaluation"`
-	LastUpload     *time.Time `json:"last_upload"`
-	RhsaCount      int        `json:"rhsa_count"`
-	RhbaCount      int        `json:"rhba_count"`
-	RheaCount      int        `json:"rhea_count"`
-	Enabled        bool       `json:"enabled"`
 }

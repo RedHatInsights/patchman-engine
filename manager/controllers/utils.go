@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"app/base/core"
+	"app/base/database"
 	"app/base/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -12,20 +13,6 @@ import (
 )
 
 const InvalidOffsetMsg = "Invalid offset"
-
-type AttrName = string
-type AttrQuery = string
-
-// Used to store field name => sql query mapping
-type AttrMap = map[AttrName]AttrQuery
-
-func MakeSelect(attrs AttrMap) string {
-	fields := make([]string, 0, len(attrs))
-	for n, q := range attrs {
-		fields = append(fields, fmt.Sprintf("%v as %v", q, n))
-	}
-	return strings.Join(fields, ",")
-}
 
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	utils.Log("err", err.Error()).Error(respMsg)
@@ -43,7 +30,7 @@ func LogAndRespNotFound(c *gin.Context, err error, respMsg string) {
 }
 
 // nolint: prealloc
-func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs AttrMap) (*gorm.DB, []string, error) {
+func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap) (*gorm.DB, []string, error) {
 	query := c.DefaultQuery("sort", "id")
 	fields := strings.Split(query, ",")
 	var appliedFields []string
@@ -54,6 +41,7 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs AttrMap) (*gorm.DB, []str
 	for f := range fieldExprs {
 		allowedFieldSet[f] = true
 	}
+
 	// We sort by a column expression and not the column name. The column expression is retrieved from fieldExprs
 	for _, enteredField := range fields {
 		if strings.HasPrefix(enteredField, "-") && allowedFieldSet[enteredField[1:]] { //nolint:gocritic
@@ -69,7 +57,7 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs AttrMap) (*gorm.DB, []str
 	return tx, appliedFields, nil
 }
 
-func ParseFilters(c *gin.Context, allowedFields AttrMap) (Filters, error) {
+func ParseFilters(c *gin.Context, allowedFields database.AttrMap) (Filters, error) {
 	queryFilters, has := c.GetQueryMap("filter")
 	if !has {
 		return []Filter{}, nil
@@ -89,7 +77,8 @@ func ParseFilters(c *gin.Context, allowedFields AttrMap) (Filters, error) {
 }
 
 // nolint: funlen
-func ListCommon(tx *gorm.DB, c *gin.Context, fields AttrMap, path string) (*gorm.DB, *ListMeta, *Links, error) {
+func ListCommon(tx *gorm.DB, c *gin.Context, fields database.AttrMap, path string) (*gorm.DB,
+	*ListMeta, *Links, error) {
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())

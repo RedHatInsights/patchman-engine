@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"app/base/database"
-	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
 	"fmt"
@@ -46,7 +45,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	var dbItems []models.SystemPlatform
+	var dbItems []SystemDBLookup
 	err = query.Scan(&dbItems).Error
 	if gorm.IsRecordNotFoundError(err) {
 		LogAndRespNotFound(c, err, "no systems found")
@@ -58,7 +57,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	data := buildAdvisorySystemsData(&dbItems)
+	data := buildAdvisorySystemsData(dbItems)
 	var resp = AdvisorySystemsResponse{
 		Data:  *data,
 		Links: *links,
@@ -68,7 +67,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 }
 
 func buildQuery(account, advisoryName string) *gorm.DB {
-	query := database.Db.Table("advisory_metadata am").Select("system_platform.*").
+	query := database.Db.Table("advisory_metadata am").Select(SystemsSelect).
 		Joins("join system_advisories sa ON am.id=sa.advisory_id").
 		Joins("join system_platform ON sa.system_id=system_platform.id").
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
@@ -77,20 +76,14 @@ func buildQuery(account, advisoryName string) *gorm.DB {
 	return query
 }
 
-func buildAdvisorySystemsData(dbItems *[]models.SystemPlatform) *[]SystemItem {
-	data := make([]SystemItem, len(*dbItems))
-	for i, model := range *dbItems {
+func buildAdvisorySystemsData(dbItems []SystemDBLookup) *[]SystemItem {
+	data := make([]SystemItem, len(dbItems))
+	for i, model := range dbItems {
 		item := SystemItem{
-			ID:   model.InventoryID,
-			Type: "system",
-			Attributes: SystemItemAttributes{
-				LastEvaluation: model.LastEvaluation,
-				LastUpload:     model.LastUpload,
-				RhsaCount:      model.AdvisorySecCountCache,
-				RhbaCount:      model.AdvisoryBugCountCache,
-				RheaCount:      model.AdvisoryEnhCountCache,
-				Enabled:        !model.OptOut,
-			}}
+			ID:         model.ID,
+			Type:       "system",
+			Attributes: model.SystemItemAttributes,
+		}
 		data[i] = item
 	}
 	return &data

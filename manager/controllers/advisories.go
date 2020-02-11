@@ -6,36 +6,25 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"net/http"
-	"time"
 )
 
-var SystemAdvisoriesFields = AttrMap{
-	"id":            "am.id",
-	"name":          "am.name",
-	"advisory_type": "am.advisory_type_id",
-	"synopsis":      "am.synopsis",
-	"description":   "am.description",
-	"public_date":   "am.public_date",
+var AdvisoriesFields = database.MustGetQueryAttrs(&AdvisoriesDBLookup{})
+var AdvisoriesSelect = database.MustGetSelect(&AdvisoriesDBLookup{})
+
+type AdvisoriesDBLookup struct {
+	ID string `query:"am.name"`
+	AdvisoryItemAttributes
 }
 
-var AdvisoriesFields = AttrMap{
-	"id":                 "am.id",
-	"name":               "am.name",
-	"advisory_type":      "am.advisory_type_id",
-	"synopsis":           "am.synopsis",
-	"description":        "am.description",
-	"public_date":        "am.public_date",
-	"applicable_systems": "COALESCE(aad.systems_affected, 0)",
+type AdvisoryItemAttributes struct {
+	SystemAdvisoryItemAttributes
+	ApplicableSystems int `json:"applicable_systems" query:"COALESCE(aad.systems_affected, 0)"`
 }
 
-type AdvisoryWithApplicableSystems struct {
-	Name              string
-	Description       string
-	Synopsis          string
-	PublicDate        time.Time
-	AdvisoryType      int
-	Severity          *int
-	ApplicableSystems int
+type AdvisoryItem struct {
+	Attributes AdvisoryItemAttributes `json:"attributes"`
+	ID         string                 `json:"id"`
+	Type       string                 `json:"type"`
 }
 
 type AdvisoriesResponse struct {
@@ -69,7 +58,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 		return
 	}
 
-	var advisories []AdvisoryWithApplicableSystems
+	var advisories []AdvisoriesDBLookup
 
 	err = query.Find(&advisories).Error
 	if err != nil {
@@ -77,7 +66,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 		return
 	}
 
-	data := buildAdvisoriesData(&advisories)
+	data := buildAdvisoriesData(advisories)
 	var resp = AdvisoriesResponse{
 		Data:  *data,
 		Links: *links,
@@ -88,27 +77,23 @@ func AdvisoriesListHandler(c *gin.Context) {
 
 func buildQueryAdvisories(account string) *gorm.DB {
 	query := database.Db.Table("advisory_metadata am").
-		Select(MakeSelect(AdvisoriesFields)).
+		Select(AdvisoriesSelect).
 		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id").
 		Joins("JOIN rh_account ra ON aad.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
 	return query
 }
 
-func buildAdvisoriesData(advisories *[]AdvisoryWithApplicableSystems) *[]AdvisoryItem {
-	data := make([]AdvisoryItem, len(*advisories))
-	for i := 0; i < len(*advisories); i++ {
-		advisory := (*advisories)[i]
+func buildAdvisoriesData(advisories []AdvisoriesDBLookup) *[]AdvisoryItem {
+	data := make([]AdvisoryItem, len(advisories))
+	for i := 0; i < len(advisories); i++ {
+		advisory := (advisories)[i]
 		data[i] = AdvisoryItem{
 			Attributes: AdvisoryItemAttributes{
-				SystemAdvisoryItemAttributes: SystemAdvisoryItemAttributes{
-					Description:  advisory.Description,
-					PublicDate:   advisory.PublicDate,
-					Synopsis:     advisory.Synopsis,
-					AdvisoryType: advisory.AdvisoryType,
-					Severity:     advisory.Severity},
-				ApplicableSystems: advisory.ApplicableSystems},
-			ID:   advisory.Name,
+				SystemAdvisoryItemAttributes: advisory.SystemAdvisoryItemAttributes,
+				ApplicableSystems:            advisory.ApplicableSystems,
+			},
+			ID:   advisory.ID,
 			Type: "advisory",
 		}
 	}

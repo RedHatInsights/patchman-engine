@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/database"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -44,7 +45,7 @@ func ParseFilterValue(field string, val string) (Filter, error) {
 }
 
 // Convert a single filter to where clauses
-func (t *Filter) ToWhere(attributes AttrMap) (string, []interface{}, error) {
+func (t *Filter) ToWhere(attributes database.AttrMap) (string, []interface{}, error) {
 	// Gorm deals with interface{} but for ease of use we only use strings
 	var values = make([]interface{}, len(t.Values))
 	for i, v := range t.Values {
@@ -98,7 +99,7 @@ func (t *Filters) ToMetaMap() map[string]FilterData {
 	return res
 }
 
-func (t *Filters) Apply(tx *gorm.DB, fields AttrMap) (*gorm.DB, error) {
+func (t *Filters) Apply(tx *gorm.DB, fields database.AttrMap) (*gorm.DB, error) {
 	for _, f := range *t {
 		query, args, err := f.ToWhere(fields)
 		if err != nil {
