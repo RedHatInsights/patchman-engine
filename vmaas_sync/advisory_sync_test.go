@@ -140,3 +140,17 @@ func TestSaveAdvisories(t *testing.T) {
 
 	assert.Nil(t, database.Db.Unscoped().Where("url = ?", "TEST").Delete(&models.AdvisoryMetadata{}).Error)
 }
+
+func TestSyncAdvisories(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	err := syncAdvisories()
+	assert.Nil(t, err)
+
+	expected := []string{"ER1", "ER2", "ER3"}
+	database.CheckAdvisoriesInDb(t, expected)
+
+	assert.Nil(t, database.Db.Unscoped().Where("name IN (?)", expected).Delete(&models.AdvisoryMetadata{}).Error)
+}
