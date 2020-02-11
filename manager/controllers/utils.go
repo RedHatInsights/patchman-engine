@@ -76,13 +76,14 @@ func ParseFilters(c *gin.Context, allowedFields AttrMap) (Filters, error) {
 	}
 	filters := make(Filters, 0, len(queryFilters))
 	for k, v := range queryFilters {
-		if _, has := allowedFields[k]; has {
-			filter, err := ParseFilterValue(k, v)
-			if err != nil {
-				return nil, err
-			}
-			filters = append(filters, filter)
+		if _, has := allowedFields[k]; !has {
+			return nil, errors.New(fmt.Sprintf("Invalid filter field: %v", k))
 		}
+		filter, err := ParseFilterValue(k, v)
+		if err != nil {
+			return nil, err
+		}
+		filters = append(filters, filter)
 	}
 	return filters, nil
 }

@@ -71,9 +71,9 @@ func (t *Filter) ToWhere(attributes AttrMap) (string, []interface{}, error) {
 		}
 		return fmt.Sprintf("%v BETWEEN ? AND ? ", attributes[t.FieldName]), values, nil
 	case "in":
-		return fmt.Sprintf("%v IN (?) ", attributes[t.FieldName]), values, nil
+		return fmt.Sprintf("%v IN (?) ", attributes[t.FieldName]), []interface{}{values}, nil
 	case "notin":
-		return fmt.Sprintf("%v NOT IN (?) ", attributes[t.FieldName]), values, nil
+		return fmt.Sprintf("%v NOT IN (?) ", attributes[t.FieldName]), []interface{}{values}, nil
 	default:
 		return "", []interface{}{}, errors.New(fmt.Sprintf("Unknown filter : %v", t.Operator))
 	}
