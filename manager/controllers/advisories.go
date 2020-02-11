@@ -10,28 +10,22 @@ import (
 )
 
 var SystemAdvisoriesFields = AttrMap{
-	"id":          "am.id",
-	"name":        "am.name",
-	"type":        "am.advisory_type_id",
-	"synopsis":    "am.synopsis",
-	"description": "am.description",
-	"public_date": "am.public_date",
+	"id":            "am.id",
+	"name":          "am.name",
+	"advisory_type": "am.advisory_type_id",
+	"synopsis":      "am.synopsis",
+	"description":   "am.description",
+	"public_date":   "am.public_date",
 }
 
 var AdvisoriesFields = AttrMap{
 	"id":                 "am.id",
 	"name":               "am.name",
-	"type":               "am.advisory_type_id",
+	"advisory_type":      "am.advisory_type_id",
 	"synopsis":           "am.synopsis",
 	"description":        "am.description",
 	"public_date":        "am.public_date",
 	"applicable_systems": "COALESCE(aad.systems_affected, 0)",
-}
-
-type AdvisoriesResponse struct {
-	Data  []AdvisoryItem `json:"data"`
-	Links Links          `json:"links"`
-	Meta  ListMeta       `json:"meta"`
 }
 
 type AdvisoryWithApplicableSystems struct {
@@ -39,9 +33,15 @@ type AdvisoryWithApplicableSystems struct {
 	Description       string
 	Synopsis          string
 	PublicDate        time.Time
-	AdvisoryTypeID    int
+	AdvisoryType      int
 	Severity          *int
 	ApplicableSystems int
+}
+
+type AdvisoriesResponse struct {
+	Data  []AdvisoryItem `json:"data"`
+	Links Links          `json:"links"`
+	Meta  ListMeta       `json:"meta"`
 }
 
 // nolint:lll
@@ -105,7 +105,7 @@ func buildAdvisoriesData(advisories *[]AdvisoryWithApplicableSystems) *[]Advisor
 					Description:  advisory.Description,
 					PublicDate:   advisory.PublicDate,
 					Synopsis:     advisory.Synopsis,
-					AdvisoryType: advisory.AdvisoryTypeID,
+					AdvisoryType: advisory.AdvisoryType,
 					Severity:     advisory.Severity},
 				ApplicableSystems: advisory.ApplicableSystems},
 			ID:   advisory.Name,

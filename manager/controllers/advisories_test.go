@@ -100,20 +100,29 @@ func TestAdvisoriesOrder(t *testing.T) {
 }
 
 func TestAdvisoriesFilter(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "?filter[type]=1", func(output AdvisoriesResponse) {
+	testAdvisoriesOk(t, "GET", "?filter[advisory_type]=1", func(output AdvisoriesResponse) {
 		assert.Equal(t, 3, len(output.Data))
 		assert.Equal(t, "RH-1", output.Data[0].ID)
 		assert.Equal(t, "RH-4", output.Data[1].ID)
 		assert.Equal(t, "RH-7", output.Data[2].ID)
 
-		assert.Equal(t, FilterData{Values: []string{"1"}, Operator: "eq"}, output.Meta.Filter["type"])
+		assert.Equal(t, FilterData{Values: []string{"1"}, Operator: "eq"}, output.Meta.Filter["advisory_type"])
 
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25&filter[type]=eq:1&sort=id", output.Links.First)
+		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25&filter[advisory_type]=eq:1&sort=id", output.Links.First)
 	})
 
 	testAdvisoriesOk(t, "GET", "?filter[applicable_systems]=gt:1", func(output AdvisoriesResponse) {
 		assert.Equal(t, 1, len(output.Data))
 		assert.Equal(t, "RH-1", output.Data[0].ID)
+	})
+
+	testAdvisoriesOk(t, "GET", "?filter[advisory_type]=in:1,2", func(output AdvisoriesResponse) {
+		assert.Equal(t, 6, len(output.Data))
+		assert.Equal(t, "RH-1", output.Data[0].ID)
+
+		for _, a := range output.Data {
+			assert.Contains(t, []int{1, 2}, a.Attributes.AdvisoryType)
+		}
 	})
 }
 
