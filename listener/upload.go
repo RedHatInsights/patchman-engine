@@ -88,7 +88,11 @@ func optParseTimestamp(t *string) *time.Time {
 // Stores or updates base system profile, returing internal system id
 func updateSystemPlatform(inventoryID string, accountID int,
 	invData *inventory.HostOut, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
-	updatesReqJSON, err := json.Marshal(&updatesReq)
+	updatesReqJSON, err := json.Marshal(updatesReq)
+	if len(updatesReq.PackageList) == 0 {
+		utils.Log("inventoryID", inventoryID).Warn("no packages in system")
+	}
+
 	if err != nil {
 		return nil, errors.Wrap(err, "Serializing vmaas request")
 	}
@@ -127,7 +131,9 @@ func updateSystemPlatform(inventoryID string, accountID int,
 		return nil, errors.New("System neither created nor updated")
 	}
 
-	utils.Log("inventoryID", inventoryID).Debug("System created or updated successfully")
+	utils.Log("inventoryID", inventoryID, "packages", len(updatesReq.PackageList), "repos",
+		len(updatesReq.RepositoryList), "modules", len(updatesReq.ModulesList)).
+		Debug("System created or updated successfully")
 	return &systemPlatform, nil
 }
 
