@@ -2,17 +2,33 @@ package controllers
 
 import (
 	"app/base/database"
-	"app/base/models"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 )
 
-var SystemsFields = AttrMap{
-	"id":             "system_platform.id",
-	"first_reported": "system_platform.first_reported",
-	"last_updated":   "system_platform.last_updated",
-	"stale":          "system_platform.stale",
+var SystemsFields = database.MustGetQueryAttrs(&SystemDBLookup{})
+var SystemsSelect = database.MustGetSelect(&SystemDBLookup{})
+
+type SystemDBLookup struct {
+	ID string `query:"system_platform.inventory_id"`
+	SystemItemAttributes
+}
+
+type SystemItemAttributes struct {
+	LastEvaluation *time.Time `json:"last_evaluation" query:"system_platform.last_evaluation"`
+	LastUpload     *time.Time `json:"last_upload" query:"system_platform.last_upload"`
+	RhsaCount      int        `json:"rhsa_count" query:"system_platform.advisory_sec_count_cache"`
+	RhbaCount      int        `json:"rhba_count" query:"system_platform.advisory_bug_count_cache"`
+	RheaCount      int        `json:"rhea_count" query:"system_platform.advisory_enh_count_cache"`
+	Enabled        bool       `json:"enabled" query:"(NOT system_platform.opt_out)"`
+}
+
+type SystemItem struct {
+	Attributes SystemItemAttributes `json:"attributes"`
+	ID         string               `json:"id"`
+	Type       string               `json:"type"`
 }
 
 type SystemsResponse struct {
@@ -35,7 +51,7 @@ type SystemsResponse struct {
 func SystemsListHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)
 
-	query := database.Db.Model(models.SystemPlatform{}).
+	query := database.Db.Table("system_platform").Select(SystemsSelect).
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
 
@@ -45,14 +61,14 @@ func SystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	var systems []models.SystemPlatform
+	var systems []SystemDBLookup
 	err = query.Find(&systems).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return
 	}
 
-	data := buildData(&systems)
+	data := buildData(systems)
 	var resp = SystemsResponse{
 		Data:  *data,
 		Links: *links,
@@ -61,21 +77,13 @@ func SystemsListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildData(systems *[]models.SystemPlatform) *[]SystemItem {
-	data := make([]SystemItem, len(*systems))
-	for i := 0; i < len(*systems); i++ {
-		system := (*systems)[i]
+func buildData(systems []SystemDBLookup) *[]SystemItem {
+	data := make([]SystemItem, len(systems))
+	for i, system := range systems {
 		data[i] = SystemItem{
-			Attributes: SystemItemAttributes{
-				LastEvaluation: system.LastEvaluation,
-				LastUpload:     system.LastUpload,
-				RhsaCount:      system.AdvisorySecCountCache,
-				RheaCount:      system.AdvisoryEnhCountCache,
-				RhbaCount:      system.AdvisoryBugCountCache,
-				Enabled:        !system.OptOut,
-			},
-			ID:   system.InventoryID,
-			Type: "system",
+			Attributes: system.SystemItemAttributes,
+			ID:         system.ID,
+			Type:       "system",
 		}
 	}
 	return &data
