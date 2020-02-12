@@ -15,6 +15,7 @@ func Init(app *gin.Engine) {
 
 func InitAPI(group *gin.RouterGroup) {
 	group.Use(middlewares.Authenticator())
+	group.Use(middlewares.RBAC())
 	group.GET("/advisories", controllers.AdvisoriesListHandler)
 	group.GET("/advisories/:advisory_id", controllers.AdvisoryDetailHandler)
 	group.GET("/advisories/:advisory_id/systems", controllers.AdvisorySystemsListHandler)
