@@ -15,7 +15,7 @@ type AttrQuery = string
 // Used to store field name => sql query mapping
 type AttrMap = map[AttrName]AttrQuery
 
-var ColumnNameRe = regexp.MustCompile(`column:(<[\w]+)`)
+var ColumnNameRe = regexp.MustCompile(`column:([\w_]+)`)
 
 func MustGetSelect(t interface{}) string {
 	// We must get fields ordered, so we assemble them in proper order for gorm select
@@ -27,7 +27,7 @@ func MustGetSelect(t interface{}) string {
 	for _, n := range names {
 		fields = append(fields, fmt.Sprintf("%v as %v", attrs[n], n))
 	}
-	return strings.Join(fields, ",")
+	return strings.Join(fields, ", ")
 }
 
 func getQueryFromTags(v reflect.Type) (AttrMap, []AttrName, error) {
@@ -75,7 +75,7 @@ func GetQueryAttrs(s interface{}) (AttrMap, []string, error) {
 	if v.Kind() == reflect.Struct {
 		return getQueryFromTags(v.Type())
 	} else if v.Kind() == reflect.Ptr || v.Kind() == reflect.Slice {
-		return getQueryFromTags(v.Elem().Type())
+		return getQueryFromTags(v.Type().Elem())
 	}
 	return nil, nil, errors.New("Invalid type")
 }
