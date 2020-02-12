@@ -31,6 +31,12 @@ func deleteHandler(event mqueue.PlatformEvent) {
 		return
 	}
 
+	if query.RowsAffected == 0 {
+		utils.Log("inventoryID", event.ID).Warn("No rows modified on delete event")
+		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorNoRows)
+		return
+	}
+
 	utils.Log("inventoryID", event.ID, "count", query.RowsAffected).Info("Systems deleted")
 	messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedSuccess)
 }
