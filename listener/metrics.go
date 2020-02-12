@@ -15,6 +15,7 @@ const (
 	ReceivedErrorParsing    = "error-parsing"
 	ReceivedErrorProcessing = "error-processing"
 	ReceivedErrorOtherType  = "error-other-type"
+	ReceivedErrorNoRows     = "error-no-rows"
 )
 
 var (
