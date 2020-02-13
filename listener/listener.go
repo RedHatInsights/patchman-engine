@@ -35,13 +35,15 @@ func configure() {
 	inventoryClient = inventory.NewAPIClient(inventoryConfig)
 }
 
-func runReader(topic string, handler mqueue.EventHandler) {
-	reader := mqueue.ReaderFromEnv(topic)
+type ReaderBuilder func(topic string) *mqueue.Reader
+
+func runReader(topic string, readerBuilder ReaderBuilder, handler mqueue.EventHandler) {
+	reader := readerBuilder(topic)
 	defer reader.Shutdown()
 	reader.HandleEvents(handler)
 }
 
-func RunListener() {
+func runReaders(readerBuilder ReaderBuilder) {
 	utils.Log().Info("listener starting")
 
 	// Start a web server for handling metrics so that readiness probe works
@@ -52,8 +54,12 @@ func RunListener() {
 	// We create multiple consumers, and hope that the partition rebalancing
 	// algorithm assigns each consumer a single partition
 	for i := 0; i < consumerCount; i++ {
-		go runReader(uploadTopic, uploadHandler)
-		go runReader(eventsTopic, deleteHandler)
+		go runReader(uploadTopic, readerBuilder, uploadHandler)
+		go runReader(eventsTopic, readerBuilder, deleteHandler)
 	}
+}
+
+func RunListener() {
+	runReaders(mqueue.ReaderFromEnv)
 	<-make(chan bool)
 }
