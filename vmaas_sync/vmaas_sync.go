@@ -54,7 +54,7 @@ func runWebsocket(conn *websocket.Conn, handler Handler) error {
 	}
 }
 
-func websocketHandler(data []byte, conn *websocket.Conn) error {
+func websocketHandler(data []byte, _ *websocket.Conn) error {
 	text := string(data)
 	utils.Log("data", string(data)).Info("Received VMaaS websocket message")
 

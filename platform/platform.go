@@ -34,7 +34,7 @@ func platformMock() {
 	}
 }
 
-func MockSyncHandler(c *gin.Context) {
+func MockSyncHandler(_ *gin.Context) {
 	utils.Log().Info("Mocking VMaaS sync event")
 	// Force connected websocket clients to refresh
 	for _, ws := range websockets {
