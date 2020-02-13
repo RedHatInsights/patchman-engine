@@ -22,6 +22,13 @@ func TestGetOrCreateAccount(t *testing.T) {
 	deleteData(t)
 }
 
+func createTestInvHost() *inventory.HostOut {
+	correctTimestamp := "2018-09-22T12:00:00-04:00"
+	wrongTimestamp := "x018-09-22T12:00:00-04:00"
+	host := inventory.HostOut{StaleTimestamp: &correctTimestamp, StaleWarningTimestamp: &wrongTimestamp}
+	return &host
+}
+
 func TestUpdateSystemPlatform(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
@@ -37,12 +44,13 @@ func TestUpdateSystemPlatform(t *testing.T) {
 		Releasever:     "7Server",
 		Basearch:       "x86_64",
 	}
-	sys1, err := updateSystemPlatform(id, accountID1, &inventory.HostOut{}, &req)
+
+	sys1, err := updateSystemPlatform(id, accountID1, createTestInvHost(), &req)
 	assert.Nil(t, err)
 
 	assertSystemInDb(t, id, &accountID1)
 
-	sys2, err := updateSystemPlatform(id, accountID2, &inventory.HostOut{}, &req)
+	sys2, err := updateSystemPlatform(id, accountID2, createTestInvHost(), &req)
 	assert.Nil(t, err)
 
 	assertSystemInDb(t, id, &accountID2)
@@ -51,6 +59,9 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	assert.Equal(t, sys1.InventoryID, sys2.InventoryID)
 	assert.Equal(t, sys1.JSONChecksum, sys2.JSONChecksum)
 	assert.Equal(t, sys1.OptOut, sys2.OptOut)
+	assert.NotNil(t, sys1.StaleTimestamp)
+	assert.Nil(t, sys1.StaleWarningTimestamp)
+	assert.Nil(t, sys1.CulledTimestamp)
 
 	deleteData(t)
 }
