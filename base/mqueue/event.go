@@ -33,7 +33,7 @@ func makeKafkaHandler(eventHandler EventHandler) KafkaHandler {
 	}
 }
 
-func (t *Reader) HandleEvents(handler EventHandler) {
+func (t *readerImpl) HandleEvents(handler EventHandler) {
 	t.HandleMessages(makeKafkaHandler(handler))
 }
 

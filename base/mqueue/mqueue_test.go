@@ -31,7 +31,7 @@ func TestRoundTrip(t *testing.T) {
 
 	reader := ReaderFromEnv("test")
 	var eventOut PlatformEvent
-	go reader.HandleEvents(func(event PlatformEvent) {
+	go (*reader).HandleEvents(func(event PlatformEvent) {
 		eventOut = event
 	})
 
