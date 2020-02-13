@@ -37,7 +37,7 @@ func (t *Reader) HandleEvents(handler EventHandler) {
 	t.HandleMessages(makeKafkaHandler(handler))
 }
 
-func (t *Writer) WriteEvent(ctx context.Context, ev PlatformEvent) error {
+func (t *writerImpl) WriteEvent(ctx context.Context, ev PlatformEvent) error {
 	data, err := json.Marshal(&ev)
 	if err != nil {
 		return errors.Wrap(err, "Serializing event")
