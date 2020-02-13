@@ -74,7 +74,7 @@ func getOrCreateAccount(account string) (int, error) {
 }
 
 func optParseTimestamp(t *string) *time.Time {
-	if t == nil || len(*t) > 0 {
+	if t == nil || len(*t) == 0 {
 		return nil
 	}
 	v, err := time.Parse(base.Rfc3339NoTz, *t)
