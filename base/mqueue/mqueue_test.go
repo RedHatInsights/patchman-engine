@@ -30,15 +30,14 @@ func TestRoundTrip(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	reader := ReaderFromEnv("test")
-	var data []byte
-	go reader.HandleMessages(func(message kafka.Message) {
-		data = message.Value
+	var eventOut PlatformEvent
+	go reader.HandleEvents(func(event PlatformEvent) {
+		eventOut = event
 	})
 
-	msg := kafka.Message{Value: []byte("abcd")}
 	writer := WriterFromEnv("test")
-	assert.NoError(t, writer.WriteMessages(context.Background(), msg))
+	eventIn := PlatformEvent{ID: "some-id"}
+	assert.NoError(t, (*writer).WriteEvent(context.Background(), eventIn))
 	time.Sleep(8 * time.Second)
-	assert.NotNil(t, data)
-	assert.Equal(t, data, msg.Value)
+	assert.Equal(t, eventIn, eventOut)
 }

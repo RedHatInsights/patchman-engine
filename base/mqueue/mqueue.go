@@ -11,8 +11,13 @@ import (
 type Reader struct {
 	kafka.Reader
 }
-type Writer struct {
-	kafka.Writer
+
+type Writer interface {
+	WriteEvent(ctx context.Context, ev PlatformEvent) error
+}
+
+type writerImpl struct {
+	*kafka.Writer
 }
 
 func ReaderFromEnv(topic string) *Reader {
@@ -44,7 +49,8 @@ func WriterFromEnv(topic string) *Writer {
 		}),
 	}
 
-	return &Writer{*kafka.NewWriter(config)}
+	var ret Writer = &writerImpl{kafka.NewWriter(config)}
+	return &ret
 }
 
 func (t *Reader) Shutdown() {
