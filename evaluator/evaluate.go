@@ -381,7 +381,7 @@ func RunEvaluator() {
 
 	go RunMetrics(port)
 
-	kafkaReader.HandleEvents(func(event mqueue.PlatformEvent) {
+	(*kafkaReader).HandleEvents(func(event mqueue.PlatformEvent) {
 		err := Evaluate(context.Background(), event.ID, evalLabel)
 		if err != nil {
 			utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).

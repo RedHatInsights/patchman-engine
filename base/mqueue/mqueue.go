@@ -8,7 +8,12 @@ import (
 )
 
 // By wrapping raw value we can add new methods & ensure methods of wrapped type are callable
-type Reader struct {
+type Reader interface {
+	HandleEvents(handler EventHandler)
+	Shutdown()
+}
+
+type readerImpl struct {
 	kafka.Reader
 }
 
@@ -35,7 +40,8 @@ func ReaderFromEnv(topic string) *Reader {
 		}),
 	}
 
-	return &Reader{*kafka.NewReader(config)}
+	var reader Reader = &readerImpl{*kafka.NewReader(config)}
+	return &reader
 }
 
 func WriterFromEnv(topic string) *Writer {
@@ -53,7 +59,7 @@ func WriterFromEnv(topic string) *Writer {
 	return &ret
 }
 
-func (t *Reader) Shutdown() {
+func (t *readerImpl) Shutdown() {
 	err := t.Close()
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to shutdown Kafka reader")
@@ -62,7 +68,7 @@ func (t *Reader) Shutdown() {
 
 type KafkaHandler func(message kafka.Message)
 
-func (t *Reader) HandleMessages(handler KafkaHandler) {
+func (t *readerImpl) HandleMessages(handler KafkaHandler) {
 	ctx := context.Background()
 
 	for {
