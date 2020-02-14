@@ -12,7 +12,8 @@ import (
 
 var rbacClient *rbac.APIClient
 
-func init() {
+// lazily configure rbac client only when middleware is created
+func configure() {
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
 	rbacConfig := rbac.NewConfiguration()
@@ -43,6 +44,9 @@ func checkRbac(c *gin.Context) bool {
 
 
 func RBAC() gin.HandlerFunc {
+	if rbacClient == nil {
+		configure()
+	}
 	return func(c *gin.Context) {
 		if !checkRbac(c) {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "RBAC check failed"})

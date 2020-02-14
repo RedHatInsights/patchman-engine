@@ -28,7 +28,7 @@ ADD /base           /go/src/app/base
 ADD /platform       /go/src/app/
 ADD /scripts        /go/src/app/scripts
 
-RUN go build -v platform.go inventory.go vmaas.go
+RUN go build -v platform.go inventory.go vmaas.go rbac.go
 
 EXPOSE 9001 2181 9092
 
