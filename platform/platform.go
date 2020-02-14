@@ -22,6 +22,7 @@ func platformMock() {
 	app := gin.New()
 	InitInventory(app)
 	InitVMaaS(app)
+	InitRbac(app)
 
 	// Control endpoint handler
 	app.POST("/control/upload", MockUploadHandler)
