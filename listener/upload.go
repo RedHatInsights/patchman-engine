@@ -56,10 +56,6 @@ func parseUploadMessage(event *mqueue.PlatformEvent) (*utils.Identity, error) {
 		return nil, errors.Wrap(err, "Could not parse identity")
 	}
 
-	if !identity.IsSmartEntitled() {
-		return nil, errors.New(fmt.Sprintf("Account '%s' is not smart entitled",
-			identity.Identity.AccountNumber))
-	}
 	return identity, nil
 }
 
