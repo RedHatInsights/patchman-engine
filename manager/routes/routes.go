@@ -22,4 +22,5 @@ func InitAPI(group *gin.RouterGroup) {
 	group.GET("/systems", controllers.SystemsListHandler)
 	group.GET("/systems/:inventory_id", controllers.SystemDetailHandler)
 	group.GET("/systems/:inventory_id/advisories", controllers.SystemAdvisoriesHandler)
+	group.DELETE("/systems/:inventory_id", controllers.SystemDeleteHandler)
 }
