@@ -24,8 +24,7 @@ func TestSync(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
-	var mock mqueue.Writer = mockKafkaWriter{}
-	evalWriter = &mock
+	evalWriter = &mockKafkaWriter{}
 
 	err := websocketHandler([]byte("webapps-refreshed"), nil)
 	assert.Nil(t, err)

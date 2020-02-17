@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var mockReaders []*mqueue.Reader
+var mockReaders []mqueue.Reader
 
 type mockReader struct {
 	Topic            string
@@ -19,10 +19,10 @@ func (t *mockReader) HandleEvents(_ mqueue.EventHandler) {
 }
 func (t *mockReader) Shutdown() {}
 
-func createMockReader(topic string) *mqueue.Reader {
-	var reader mqueue.Reader = &mockReader{Topic: topic}
-	mockReaders = append(mockReaders, &reader)
-	return &reader
+func createMockReader(topic string) mqueue.Reader {
+	reader := &mockReader{Topic: topic}
+	mockReaders = append(mockReaders, reader)
+	return reader
 }
 
 func TestRunReaders(t *testing.T) {
