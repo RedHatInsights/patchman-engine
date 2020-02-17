@@ -209,8 +209,13 @@
                             "type": "string",
                             "enum": [
                                 "id",
+                                "last_evaluation",
                                 "last_updated",
-                                "last_evaluation"
+                                "rhsa_count",
+                                "rhba_count",
+                                "rhea_count",
+                                "enabled",
+                                "stale"
                             ]
                         }
                     },
@@ -448,6 +453,32 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "Delete system by inventory id",
+                "description": "Delete system by inventory id",
+                "operationId": "deletesystem",
+                "parameters": [
+                    {
+                        "name": "inventory_id",
+                        "in": "path",
+                        "description": "Inventory ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {}
                     }
                 },
                 "security": [
