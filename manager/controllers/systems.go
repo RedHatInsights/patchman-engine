@@ -11,6 +11,14 @@ import (
 var SystemsFields = database.MustGetQueryAttrs(&SystemDBLookup{})
 var SystemsSelect = database.MustGetSelect(&SystemDBLookup{})
 
+// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
+var systemsDefaultFilter = map[string]FilterData{
+	"stale": {
+		Operator: "eq",
+		Values:   []string{"false"},
+	},
+}
+
 type SystemDBLookup struct {
 	ID string `query:"system_platform.inventory_id"`
 	SystemItemAttributes
@@ -55,14 +63,14 @@ func SystemsListHandler(c *gin.Context) {
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
 
-	query, meta, links, err := ListCommon(query, c, SystemsFields, "/api/patch/v1/systems")
+	query, meta, links, err := ListCommon(query, c, "/api/patch/v1/systems", SystemsFields, systemsDefaultFilter)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return
 	}
 
 	var systems []SystemDBLookup
-	err = query.Find(&systems).Error
+	err = query.Debug().Find(&systems).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return
