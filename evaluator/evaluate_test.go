@@ -4,6 +4,7 @@ import (
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
+	"app/base/mqueue"
 	"app/base/utils"
 	"context"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
@@ -19,7 +20,7 @@ var testDate, _ = time.Parse(time.RFC3339, "2020-01-01T01-01-01")
 func TestVMaaSGetUpdates(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 
-	Configure()
+	configure()
 	vmaasData := getVMaaSUpdates(t)
 	assert.Equal(t, 2, len(vmaasData.UpdateList["firefox"].AvailableUpdates))
 	assert.Equal(t, 1, len(vmaasData.UpdateList["kernel"].AvailableUpdates))
@@ -28,7 +29,7 @@ func TestVMaaSGetUpdates(t *testing.T) {
 func TestGetReportedAdvisories1(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 
-	Configure()
+	configure()
 	vmaasData := getVMaaSUpdates(t)
 	advisories := getReportedAdvisories(vmaasData)
 	assert.Equal(t, 3, len(advisories))
@@ -157,23 +158,32 @@ func TestAddAndUpdateAccountAdvisoriesAffectedSystems(t *testing.T) {
 	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 }
 
-func TestEvaluate(t *testing.T) {
+type mockReader struct {
+	InvID string
+}
+
+func (t *mockReader) HandleEvents(handler mqueue.EventHandler) {
+	handler(mqueue.PlatformEvent{ID: t.InvID})
+}
+func (t *mockReader) Shutdown() {}
+
+func TestRunEvaluate(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	utils.SkipWithoutPlatform(t)
 	core.SetupTestEnvironment()
 
-	Configure()
+	configure()
+	var mock mqueue.Reader = &mockReader{InvID: "INV-11"}
+	kafkaReader = &mock
+
+	run()
 
 	systemID := 11
 	rhAccountID := 2
 	expectedAddedAdvisories := []string{"ER1", "ER2", "ER3"}
-	err := Evaluate(context.Background(), "INV-11", "upload")
-	assert.Nil(t, err)
 	advisoryIDs := database.CheckAdvisoriesInDb(t, expectedAddedAdvisories)
-
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
 	database.CheckSystemJustEvaluated(t, "INV-11", 3, 0, 0, 0)
-
 	deleteSystemAdvisories(t, systemID, advisoryIDs)
 	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 	deleteAdvisories(t, expectedAddedAdvisories)
