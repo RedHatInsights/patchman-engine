@@ -41,3 +41,9 @@ func TestRoundTrip(t *testing.T) {
 	time.Sleep(8 * time.Second)
 	assert.Equal(t, eventIn, eventOut)
 }
+
+func TestRunReader(t *testing.T) {
+	nReaders := 0
+	RunReader("", CreateCountedMockReader(&nReaders), func(event PlatformEvent) {})
+	assert.Equal(t, 1, nReaders)
+}
