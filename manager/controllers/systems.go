@@ -31,6 +31,7 @@ type SystemItemAttributes struct {
 	RhbaCount      int        `json:"rhba_count" query:"system_platform.advisory_bug_count_cache"`
 	RheaCount      int        `json:"rhea_count" query:"system_platform.advisory_enh_count_cache"`
 	Enabled        bool       `json:"enabled" query:"(NOT system_platform.opt_out)"`
+	Stale          bool       `json:"stale" query:"system_platform.stale"`
 }
 
 type SystemItem struct {
@@ -70,7 +71,7 @@ func SystemsListHandler(c *gin.Context) {
 	}
 
 	var systems []SystemDBLookup
-	err = query.Debug().Find(&systems).Error
+	err = query.Find(&systems).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return
