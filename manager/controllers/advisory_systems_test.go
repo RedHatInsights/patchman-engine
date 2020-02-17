@@ -29,7 +29,6 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
 	assert.Equal(t, 3, output.Data[0].Attributes.RhbaCount)
 	assert.Equal(t, 3, output.Data[0].Attributes.RheaCount)
-	assert.Equal(t, 0, output.Meta.Page)
 }
 
 func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
@@ -51,7 +50,6 @@ func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
 	assert.Equal(t, 0, output.Data[0].Attributes.RhsaCount)
 	assert.Equal(t, 1, output.Data[0].Attributes.RheaCount)
 	assert.Equal(t, 0, output.Data[0].Attributes.RhbaCount)
-	assert.Equal(t, 1, output.Meta.Page)
 }
 
 func TestAdvisorySystemsOffsetOverflow(t *testing.T) {

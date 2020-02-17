@@ -29,7 +29,6 @@ func TestSystemAdvisoriesDefault(t *testing.T) {
 	assert.Equal(t, 1, output.Data[0].Attributes.AdvisoryType)
 	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
 	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
-	assert.Equal(t, 0, output.Meta.Page)
 }
 
 func TestSystemAdvisoriesOffsetLimit(t *testing.T) {
@@ -45,7 +44,6 @@ func TestSystemAdvisoriesOffsetLimit(t *testing.T) {
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 3, len(output.Data))
 	assert.Equal(t, "RH-5", output.Data[0].ID)
-	assert.Equal(t, 1, output.Meta.Page)
 }
 
 func TestSystemAdvisoriesOffsetOverflow(t *testing.T) {
