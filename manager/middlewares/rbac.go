@@ -4,49 +4,42 @@ import (
 	"app/base"
 	"app/base/utils"
 	"context"
-	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/rbac"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-var rbacClient *rbac.APIClient
-
-// lazily configure rbac client only when middleware is created
-func configure() {
+// Make RBAC client on demand, with specified identity
+func makeClient(identity string) *rbac.APIClient {
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
 	rbacConfig := rbac.NewConfiguration()
 	rbacConfig.Debug = traceAPI
-
 	rbacConfig.BasePath = utils.GetenvOrFail("RBAC_ADDRESS") + base.RBACApiPrefix
+	rbacConfig.AddDefaultHeader("x-rh-identity", identity)
 
-	rbacClient = rbac.NewAPIClient(rbacConfig)
+	return rbac.NewAPIClient(rbacConfig)
 }
 
 func checkRbac(c *gin.Context) bool {
-	apiKey := rbac.APIKey{Prefix: "", Key: c.GetHeader("x-rh-identity")}
-	// Create new context, which has the apikey value set. This is then used as a value for `x-rh-identity`
-	ctx := context.WithValue(context.Background(), inventory.ContextAPIKey, apiKey)
+	client := makeClient(c.GetHeader("x-rh-identity"))
+	// Body is closed inside api method, don't know why liter is complaining
+	// nolint: bodyclose
+	access, _, err := client.AccessApi.GetPrincipalAccess(context.Background(), "patch", nil)
 
-	access, _, err := rbacClient.AccessApi.GetPrincipalAccess(ctx, "patch", nil)
 	if err != nil {
 		return false
 	}
-
 	for _, a := range access.Data {
 		if a.Permission == "patch:*:*" {
 			return true
 		}
 	}
+
 	return false
 }
 
-
 func RBAC() gin.HandlerFunc {
-	if rbacClient == nil {
-		configure()
-	}
 	return func(c *gin.Context) {
 		if !checkRbac(c) {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "RBAC check failed"})
