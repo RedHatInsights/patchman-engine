@@ -32,8 +32,8 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, true, output.Data[0].Attributes.Enabled)
 
 	// links
-	assert.Equal(t, "/api/patch/v1/systems?offset=0&limit=25&sort=id", output.Links.First)
-	assert.Equal(t, "/api/patch/v1/systems?offset=0&limit=25&sort=id", output.Links.Last)
+	assert.Equal(t, "/api/patch/v1/systems?offset=0&limit=25&sort=id&filter[stale]=eq:false", output.Links.First)
+	assert.Equal(t, "/api/patch/v1/systems?offset=0&limit=25&sort=id&filter[stale]=eq:false", output.Links.Last)
 	assert.Nil(t, output.Links.Next)
 	assert.Nil(t, output.Links.Previous)
 
