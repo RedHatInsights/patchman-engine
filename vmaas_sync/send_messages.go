@@ -34,7 +34,7 @@ func sendOneMessage(ctx context.Context, inventoryID string) {
 		ID: inventoryID,
 	}
 
-	err := (*evalWriter).WriteEvent(ctx, event)
+	err := evalWriter.WriteEvent(ctx, event)
 	if err != nil {
 		utils.Log("err", err.Error(), "inventoryID", inventoryID).
 			Error("inventory id sending to re-evaluate failed")

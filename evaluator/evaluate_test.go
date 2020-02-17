@@ -173,8 +173,7 @@ func TestRunEvaluate(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	configure()
-	var mock mqueue.Reader = &mockReader{InvID: "INV-11"}
-	kafkaReader = &mock
+	kafkaReader = &mockReader{InvID: "INV-11"}
 
 	run()
 

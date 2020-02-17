@@ -31,13 +31,13 @@ func TestRoundTrip(t *testing.T) {
 
 	reader := ReaderFromEnv("test")
 	var eventOut PlatformEvent
-	go (*reader).HandleEvents(func(event PlatformEvent) {
+	go reader.HandleEvents(func(event PlatformEvent) {
 		eventOut = event
 	})
 
 	writer := WriterFromEnv("test")
 	eventIn := PlatformEvent{ID: "some-id"}
-	assert.NoError(t, (*writer).WriteEvent(context.Background(), eventIn))
+	assert.NoError(t, writer.WriteEvent(context.Background(), eventIn))
 	time.Sleep(8 * time.Second)
 	assert.Equal(t, eventIn, eventOut)
 }

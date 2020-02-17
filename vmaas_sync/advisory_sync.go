@@ -19,7 +19,7 @@ const SyncBatchSize = 1000
 
 var (
 	vmaasClient *vmaas.APIClient
-	evalWriter  *mqueue.Writer
+	evalWriter  mqueue.Writer
 )
 
 func configure() {

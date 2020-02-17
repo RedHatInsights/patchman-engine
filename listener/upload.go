@@ -214,7 +214,7 @@ func processUpload(inventoryID string, account string, identity string) error {
 	event := mqueue.PlatformEvent{
 		ID: inventoryID,
 	}
-	err = (*evalWriter).WriteEvent(ctx, event)
+	err = evalWriter.WriteEvent(ctx, event)
 	if err != nil {
 		return errors.Wrap(err, "Sending kafka event failed")
 	}

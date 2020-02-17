@@ -25,7 +25,7 @@ type writerImpl struct {
 	*kafka.Writer
 }
 
-func ReaderFromEnv(topic string) *Reader {
+func ReaderFromEnv(topic string) Reader {
 	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
 	kafkaGroup := utils.GetenvOrFail("KAFKA_GROUP")
 
@@ -40,11 +40,11 @@ func ReaderFromEnv(topic string) *Reader {
 		}),
 	}
 
-	var reader Reader = &readerImpl{*kafka.NewReader(config)}
-	return &reader
+	reader := &readerImpl{*kafka.NewReader(config)}
+	return reader
 }
 
-func WriterFromEnv(topic string) *Writer {
+func WriterFromEnv(topic string) Writer {
 	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
 
 	config := kafka.WriterConfig{
@@ -54,9 +54,8 @@ func WriterFromEnv(topic string) *Writer {
 			utils.Log("type", "kafka").Errorf(fmt, args)
 		}),
 	}
-
-	var ret Writer = &writerImpl{kafka.NewWriter(config)}
-	return &ret
+	writer := &writerImpl{kafka.NewWriter(config)}
+	return writer
 }
 
 func (t *readerImpl) Shutdown() {
