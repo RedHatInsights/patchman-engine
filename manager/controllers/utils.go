@@ -63,6 +63,7 @@ func ParseFilters(c *gin.Context, allowedFields database.AttrMap,
 	// Apply default filters
 	for n, v := range defaultFilters {
 		filters = append(filters, Filter{
+
 			FieldName:  n,
 			FilterData: v,
 		})
