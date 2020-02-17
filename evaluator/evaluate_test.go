@@ -278,3 +278,11 @@ func deleteAdvisories(t *testing.T, advisories []string) {
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(advisoriesObjs))
 }
+
+func TestRun(t *testing.T) {
+	configure()
+	nReaders := 0
+	run(mqueue.CreateCountedMockReader(&nReaders))
+	time.Sleep(time.Millisecond * 300)
+	assert.Equal(t, 8, nReaders)
+}
