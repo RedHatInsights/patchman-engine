@@ -27,7 +27,7 @@ var (
 	port        string
 )
 
-func Configure() {
+func configure() {
 	port = utils.GetenvOrFail("PORT")
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
@@ -376,9 +376,7 @@ func updateSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, patched, unp
 	return err
 }
 
-func RunEvaluator() {
-	Configure()
-
+func run() {
 	go RunMetrics(port)
 
 	(*kafkaReader).HandleEvents(func(event mqueue.PlatformEvent) {
@@ -389,4 +387,9 @@ func RunEvaluator() {
 		}
 		utils.Log("inventoryID", event.ID, "evalLabel", evalLabel).Debug("system evaluated successfully")
 	})
+}
+
+func RunEvaluator() {
+	configure()
+	run()
 }
