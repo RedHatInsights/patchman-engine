@@ -39,9 +39,7 @@ func TestSystemsDefault(t *testing.T) {
 
 	// test meta
 	assert.Equal(t, 0, output.Meta.Offset)
-	assert.Equal(t, 0, output.Meta.Page)
 	assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
-	assert.Equal(t, core.DefaultLimit, output.Meta.PageSize)
 	assert.Equal(t, 8, output.Meta.TotalItems)
 }
 
@@ -58,9 +56,7 @@ func TestSystemsOffsetLimit(t *testing.T) { //nolint:dupl
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 4, len(output.Data))
 	assert.Equal(t, 0, output.Meta.Offset)
-	assert.Equal(t, 0, output.Meta.Page)
 	assert.Equal(t, 4, output.Meta.Limit)
-	assert.Equal(t, 4, output.Meta.PageSize)
 	assert.Equal(t, 8, output.Meta.TotalItems)
 }
 
@@ -77,9 +73,7 @@ func TestSystemsOffset(t *testing.T) { //nolint:dupl
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 4, len(output.Data))
 	assert.Equal(t, 4, output.Meta.Offset)
-	assert.Equal(t, 1, output.Meta.Page)
 	assert.Equal(t, 4, output.Meta.Limit)
-	assert.Equal(t, 4, output.Meta.PageSize)
 	assert.Equal(t, 8, output.Meta.TotalItems)
 }
 

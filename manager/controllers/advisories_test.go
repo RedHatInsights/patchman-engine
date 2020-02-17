@@ -44,9 +44,7 @@ func TestAdvisoriesDefault(t *testing.T) {
 
 		// meta
 		assert.Equal(t, 0, output.Meta.Offset)
-		assert.Equal(t, 0, output.Meta.Page)
 		assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
-		assert.Equal(t, core.DefaultLimit, output.Meta.PageSize)
 		assert.Equal(t, 8, output.Meta.TotalItems)
 	})
 }
@@ -55,9 +53,7 @@ func TestAdvisoriesOffsetLimit(t *testing.T) {
 	testAdvisoriesOk(t, "GET", "?offset=0&limit=2", func(output AdvisoriesResponse) {
 		assert.Equal(t, 2, len(output.Data))
 		assert.Equal(t, 0, output.Meta.Offset)
-		assert.Equal(t, 0, output.Meta.Page)
 		assert.Equal(t, 2, output.Meta.Limit)
-		assert.Equal(t, 2, output.Meta.PageSize)
 		assert.Equal(t, 8, output.Meta.TotalItems)
 	})
 }
@@ -66,9 +62,7 @@ func TestAdvisoriesOffset(t *testing.T) {
 	testAdvisoriesOk(t, "GET", "/?offset=1&limit=4", func(output AdvisoriesResponse) {
 		assert.Equal(t, 4, len(output.Data))
 		assert.Equal(t, 1, output.Meta.Offset)
-		assert.Equal(t, 0, output.Meta.Page)
 		assert.Equal(t, 4, output.Meta.Limit)
-		assert.Equal(t, 4, output.Meta.PageSize)
 		assert.Equal(t, 8, output.Meta.TotalItems)
 	})
 }
@@ -174,9 +168,7 @@ func TestAdvisoriesSearch(t *testing.T) {
 
 		// meta
 		assert.Equal(t, 0, output.Meta.Offset)
-		assert.Equal(t, 0, output.Meta.Page)
 		assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
-		assert.Equal(t, core.DefaultLimit, output.Meta.PageSize)
 		assert.Equal(t, 1, output.Meta.TotalItems)
 	})
 }

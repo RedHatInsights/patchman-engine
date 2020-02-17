@@ -119,9 +119,6 @@ func ListCommon(tx *gorm.DB, c *gin.Context, fields database.AttrMap, path strin
 	meta := ListMeta{
 		Limit:      limit,
 		Offset:     offset,
-		Page:       offset / limit,
-		PageSize:   limit,
-		Pages:      total / limit,
 		Filter:     filters.ToMetaMap(),
 		Sort:       sortFields,
 		TotalItems: total,
