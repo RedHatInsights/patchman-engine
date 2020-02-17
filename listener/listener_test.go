@@ -17,7 +17,7 @@ type mockReader struct {
 func (t *mockReader) HandleEvents(_ mqueue.EventHandler) {
 	t.HandleEventCalls++
 }
-func (t *mockReader) Shutdown() {}
+func (t *mockReader) Close() error { return nil }
 
 func createMockReader(topic string) mqueue.Reader {
 	reader := &mockReader{Topic: topic}

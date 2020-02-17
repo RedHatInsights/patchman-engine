@@ -5,12 +5,13 @@ import (
 	"app/base/utils"
 	"context"
 	"github.com/segmentio/kafka-go"
+	"io"
 )
 
 // By wrapping raw value we can add new methods & ensure methods of wrapped type are callable
 type Reader interface {
 	HandleEvents(handler EventHandler)
-	Shutdown()
+	io.Closer
 }
 
 type readerImpl struct {
@@ -56,13 +57,6 @@ func WriterFromEnv(topic string) Writer {
 	}
 	writer := &writerImpl{kafka.NewWriter(config)}
 	return writer
-}
-
-func (t *readerImpl) Shutdown() {
-	err := t.Close()
-	if err != nil {
-		utils.Log("err", err.Error()).Error("unable to shutdown Kafka reader")
-	}
 }
 
 type KafkaHandler func(message kafka.Message)

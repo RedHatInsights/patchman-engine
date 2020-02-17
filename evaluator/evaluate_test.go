@@ -165,7 +165,7 @@ type mockReader struct {
 func (t *mockReader) HandleEvents(handler mqueue.EventHandler) {
 	handler(mqueue.PlatformEvent{ID: t.InvID})
 }
-func (t *mockReader) Shutdown() {}
+func (t *mockReader) Close() error { return nil }
 
 func TestRunEvaluate(t *testing.T) {
 	utils.SkipWithoutDB(t)

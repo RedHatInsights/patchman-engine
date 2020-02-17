@@ -39,7 +39,7 @@ type ReaderBuilder func(topic string) mqueue.Reader
 
 func runReader(topic string, readerBuilder ReaderBuilder, handler mqueue.EventHandler) {
 	reader := readerBuilder(topic)
-	defer reader.Shutdown()
+	defer reader.Close()
 	reader.HandleEvents(handler)
 }
 
