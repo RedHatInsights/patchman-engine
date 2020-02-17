@@ -79,3 +79,11 @@ func (t *readerImpl) HandleMessages(handler KafkaHandler) {
 		}
 	}
 }
+
+type CreateReader func(topic string) Reader
+
+func RunReader(topic string, createReader CreateReader, eventHandler EventHandler) {
+	reader := createReader(topic)
+	defer reader.Close()
+	reader.HandleEvents(eventHandler)
+}

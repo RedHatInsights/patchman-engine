@@ -21,20 +21,20 @@ const (
 )
 
 var (
-	kafkaReader mqueue.Reader
-	vmaasClient *vmaas.APIClient
-	evalLabel   string
-	port        string
+	consumerCount int
+	vmaasClient   *vmaas.APIClient
+	evalTopic     string
+	evalLabel     string
+	port          string
 )
 
 func configure() {
 	port = utils.GetenvOrFail("PORT")
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
-	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
+	evalTopic = utils.GetenvOrFail("EVAL_TOPIC")
 	evalLabel = utils.GetenvOrFail("EVAL_LABEL")
-
-	kafkaReader = mqueue.ReaderFromEnv(evalTopic)
+	consumerCount = utils.GetIntEnvOrFail("CONSUMER_COUNT")
 
 	vmaasConfig := vmaas.NewConfiguration()
 	vmaasConfig.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
@@ -376,20 +376,26 @@ func updateSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, patched, unp
 	return err
 }
 
-func run() {
+func evaluateHandler(event mqueue.PlatformEvent) {
+	err := Evaluate(context.Background(), event.ID, evalLabel)
+	if err != nil {
+		utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
+			Error("Eval message handling")
+	}
+	utils.Log("inventoryID", event.ID, "evalLabel", evalLabel).Debug("system evaluated successfully")
+}
+
+func run(readerBuilder mqueue.CreateReader) {
 	go RunMetrics(port)
 
-	kafkaReader.HandleEvents(func(event mqueue.PlatformEvent) {
-		err := Evaluate(context.Background(), event.ID, evalLabel)
-		if err != nil {
-			utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
-				Error("Eval message handling")
-		}
-		utils.Log("inventoryID", event.ID, "evalLabel", evalLabel).Debug("system evaluated successfully")
-	})
+	// We create multiple consumers, and hope that the partition rebalancing
+	// algorithm assigns each consumer a single partition
+	for i := 0; i < consumerCount; i++ {
+		go mqueue.RunReader(evalTopic, readerBuilder, evaluateHandler)
+	}
 }
 
 func RunEvaluator() {
 	configure()
-	run()
+	run(mqueue.ReaderFromEnv)
 }

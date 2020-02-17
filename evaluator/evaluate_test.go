@@ -158,24 +158,14 @@ func TestAddAndUpdateAccountAdvisoriesAffectedSystems(t *testing.T) {
 	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 }
 
-type mockReader struct {
-	InvID string
-}
-
-func (t *mockReader) HandleEvents(handler mqueue.EventHandler) {
-	handler(mqueue.PlatformEvent{ID: t.InvID})
-}
-func (t *mockReader) Close() error { return nil }
-
-func TestRunEvaluate(t *testing.T) {
+func TestEvaluate(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	utils.SkipWithoutPlatform(t)
 	core.SetupTestEnvironment()
 
 	configure()
-	kafkaReader = &mockReader{InvID: "INV-11"}
 
-	run()
+	evaluateHandler(mqueue.PlatformEvent{ID: "INV-11"})
 
 	systemID := 11
 	rhAccountID := 2
