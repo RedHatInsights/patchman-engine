@@ -280,7 +280,6 @@ func deleteAdvisories(t *testing.T, advisories []string) {
 }
 
 func TestRun(t *testing.T) {
-	configure()
 	nReaders := 0
 	run(mqueue.CreateCountedMockReader(&nReaders))
 	time.Sleep(time.Millisecond * 300)

@@ -386,6 +386,9 @@ func evaluateHandler(event mqueue.PlatformEvent) {
 }
 
 func run(readerBuilder mqueue.CreateReader) {
+	utils.Log().Info("evaluator starting")
+	configure()
+
 	go RunMetrics(port)
 
 	// We create multiple consumers, and hope that the partition rebalancing
@@ -396,6 +399,6 @@ func run(readerBuilder mqueue.CreateReader) {
 }
 
 func RunEvaluator() {
-	configure()
 	run(mqueue.ReaderFromEnv)
+	<-make(chan bool)
 }
