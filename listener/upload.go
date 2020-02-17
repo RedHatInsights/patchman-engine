@@ -143,7 +143,8 @@ func getHostInfo(ctx context.Context, inventoryID string) (*inventory.HostOut, *
 		respDetail := utils.TryGetResponseDetails(resp)
 		return nil, nil, errors.Wrap(err, "inventory API call failed"+respDetail)
 	}
-
+	utils.Log("status_code", resp.StatusCode, "host_results", len(hostResults.Results)).
+		Debug("inventory API GetHost called")
 	if hostResults.Count == 0 || len(hostResults.Results) == 0 {
 		return nil, nil, errors.New("no system details returned, host is probably deleted")
 	}
@@ -153,7 +154,8 @@ func getHostInfo(ctx context.Context, inventoryID string) (*inventory.HostOut, *
 		respDetail := utils.TryGetResponseDetails(resp)
 		return nil, nil, errors.Wrap(err, "inventory API, profile loading failed"+respDetail)
 	}
-
+	utils.Log("status_code", resp.StatusCode, "profile_results", len(profileResults.Results)).
+		Debug("inventory API GetHostSystemProfile called")
 	if profileResults.Count == 0 || len(profileResults.Results) == 0 {
 		return nil, nil, errors.New("no system profiles returned, host is probably deleted")
 	}
