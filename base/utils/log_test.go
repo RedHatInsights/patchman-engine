@@ -7,24 +7,11 @@ import (
 	"testing"
 )
 
-type testHook struct {
-	LogEntries []log.Entry
-}
-
-func (t *testHook) Levels() []log.Level {
-	return []log.Level{log.InfoLevel, log.WarnLevel}
-}
-
-func (t *testHook) Fire(entry *log.Entry) error {
-	t.LogEntries = append(t.LogEntries, *entry)
-	return nil
-}
-
 func TestInitLogging(t *testing.T) {
 	assert.Nil(t, os.Setenv("LOG_STYLE", "json"))
 	ConfigureLogging()
 
-	var hook = &testHook{}
+	var hook = &TestLogHook{}
 	log.AddHook(hook)
 
 	Log("num", 1, "str", "text").Info("info log")
@@ -40,7 +27,7 @@ func TestOddArgsWarn(t *testing.T) {
 	assert.Nil(t, os.Setenv("LOG_STYLE", "json"))
 	ConfigureLogging()
 
-	var hook = &testHook{}
+	var hook = &TestLogHook{}
 	log.AddHook(hook)
 
 	Log("num", 1, 2).Info("info log")
