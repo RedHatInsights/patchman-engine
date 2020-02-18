@@ -35,7 +35,7 @@ func ReaderFromEnv(topic string) Reader {
 		Topic:    topic,
 		GroupID:  kafkaGroup,
 		MinBytes: 1,
-		MaxBytes: 10e6, // 1MB
+		MaxBytes: 1e6, // 1MB
 		ErrorLogger: kafka.LoggerFunc(func(fmt string, args ...interface{}) {
 			utils.Log("type", "kafka").Errorf(fmt, args)
 		}),
