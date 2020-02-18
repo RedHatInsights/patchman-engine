@@ -31,11 +31,16 @@ var pkgs = []string{
 	"libbonobo-2.24.2-5.el6.i686"}
 
 func makeSystemProfile(id string) inventory.SystemProfileByHostOut {
+	_pkgs := pkgs
+	if id == "TEST-NO-PKGS" {
+		_pkgs = []string{}
+	}
+
 	profile := inventory.HostSystemProfileOut{
 		Id: id,
 		SystemProfile: inventory.SystemProfileIn{
 			Arch:              "i686",
-			InstalledPackages: pkgs,
+			InstalledPackages: _pkgs,
 			YumRepos: []inventory.YumRepo{
 				{
 					Id:       "repo1",

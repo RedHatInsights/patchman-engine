@@ -5,6 +5,7 @@ import (
 	"app/base/utils"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -67,7 +68,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 }
 
 func TestParseUploadMessage(t *testing.T) {
-	event := createTestUploadEvent(t)
+	event := createTestUploadEvent(t, id)
 	identity, err := parseUploadMessage(&event)
 	assert.Nil(t, err)
 	assert.Equal(t, id, event.ID)
@@ -101,9 +102,26 @@ func TestUploadHandler(t *testing.T) {
 	deleteData(t)
 
 	_ = getOrCreateTestAccount(t)
-	event := createTestUploadEvent(t)
+	event := createTestUploadEvent(t, id)
 	uploadHandler(event)
 
 	assertSystemInDb(t, id, nil)
 	deleteData(t)
+}
+
+func TestEmptyUploadHandler(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	utils.SkipWithoutPlatform(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	logHook := utils.TestLogHook{}
+	log.AddHook(&logHook)
+
+	_ = getOrCreateTestAccount(t)
+	inventoryID := "TEST-NO-PKGS"
+	event := createTestUploadEvent(t, inventoryID)
+	uploadHandler(event)
+
+	assert.Equal(t, logHook.LogEntries[len(logHook.LogEntries)-1].Message, "skipping profile with no packages")
 }
