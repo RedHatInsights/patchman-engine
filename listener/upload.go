@@ -34,7 +34,21 @@ func uploadHandler(event mqueue.PlatformEvent) {
 		return
 	}
 
-	err = processUpload(event.ID, identity.Identity.AccountNumber, *event.B64Identity)
+	ctx := createContext(*event.B64Identity)
+	host, systemProfile, err := getHostInfo(ctx, event.ID)
+	if err != nil {
+		utils.Log("inventoryID", event.ID, "err", err.Error()).Error("inventory API call failed")
+		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorInventoryCall).Inc()
+		return
+	}
+
+	if len(systemProfile.InstalledPackages) == 0 {
+		utils.Log("inventoryID", event.ID).Warn("skipping profile with no packages")
+		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
+		return
+	}
+
+	err = processUpload(ctx, event.ID, identity.Identity.AccountNumber, host, systemProfile)
 	if err != nil {
 		utils.Log("inventoryID", event.ID, "err", err.Error()).Error("unable to process upload")
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
@@ -89,10 +103,6 @@ func optParseTimestamp(t *string) *time.Time {
 func updateSystemPlatform(inventoryID string, accountID int,
 	invData *inventory.HostOut, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
 	updatesReqJSON, err := json.Marshal(updatesReq)
-	if len(updatesReq.PackageList) == 0 {
-		utils.Log("inventoryID", inventoryID).Warn("no packages in system")
-	}
-
 	if err != nil {
 		return nil, errors.Wrap(err, "Serializing vmaas request")
 	}
@@ -169,15 +179,8 @@ func getHostInfo(ctx context.Context, inventoryID string) (*inventory.HostOut, *
 
 // nolint: funlen
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
-func processUpload(inventoryID string, account string, identity string) error {
-	apiKey := inventory.APIKey{Prefix: "", Key: identity}
-	// Create new context, which has the apikey value set. This is then used as a value for `x-rh-identity`
-	ctx := context.WithValue(context.Background(), inventory.ContextAPIKey, apiKey)
-	host, systemProfile, err := getHostInfo(ctx, inventoryID)
-	if err != nil {
-		return errors.Wrap(err, "Could not query inventory")
-	}
-
+func processUpload(ctx context.Context, inventoryID string, account string, host *inventory.HostOut,
+	systemProfile *inventory.SystemProfileIn) error {
 	// Ensure we have account stored
 	accountID, err := getOrCreateAccount(account)
 	if err != nil {
@@ -221,4 +224,11 @@ func processUpload(inventoryID string, account string, identity string) error {
 		return errors.Wrap(err, "Sending kafka event failed")
 	}
 	return nil
+}
+
+func createContext(identity string) context.Context {
+	apiKey := inventory.APIKey{Prefix: "", Key: identity}
+	// Create new context, which has the apikey value set. This is then used as a value for `x-rh-identity`
+	ctx := context.WithValue(context.Background(), inventory.ContextAPIKey, apiKey)
+	return ctx
 }

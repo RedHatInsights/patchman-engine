@@ -8,14 +8,16 @@ import (
 )
 
 const (
-	EventUpload             = "upload"
-	EventDelete             = "delete"
-	ReceivedSuccess         = "success"
-	ReceivedErrorIdentity   = "error-identity"
-	ReceivedErrorParsing    = "error-parsing"
-	ReceivedErrorProcessing = "error-processing"
-	ReceivedErrorOtherType  = "error-other-type"
-	ReceivedErrorNoRows     = "error-no-rows"
+	EventUpload                = "upload"
+	EventDelete                = "delete"
+	ReceivedSuccess            = "success"
+	ReceivedErrorIdentity      = "error-identity"
+	ReceivedErrorParsing       = "error-parsing"
+	ReceivedErrorProcessing    = "error-processing"
+	ReceivedErrorOtherType     = "error-other-type"
+	ReceivedErrorNoRows        = "error-no-rows"
+	ReceivedErrorInventoryCall = "error-inventory-call"
+	ReceivedWarnNoPackages     = "warn-no-packages"
 )
 
 var (
