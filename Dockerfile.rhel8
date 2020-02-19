@@ -1,15 +1,24 @@
 FROM registry.access.redhat.com/ubi8
 
+ADD /scripts/manifest /manifest
+# make sure (redhat|centos|fedora)-release is always included in the manifest
+RUN /manifest/rpm_list.sh | grep -v -E "^(redhat|centos|fedora)-release" > /tmp/base_rpm.txt
+
 
 
 RUN yum module -y install go-toolset postgresql && \
-    yum -y install git
+    yum -y install git && \
+    /manifest/rpm_list.sh > /tmp/final_rpm.txt
 
 ENV GOPATH=/go
 ENV GO111MODULE=on
 
 ADD go.mod  /go/src/app/
 ADD go.sum  /go/src/app/
+
+ENV MANIFEST_PREFIX="mgmt_services:VERSION:patchman-engine\/"
+RUN /manifest/generate.sh manifest.txt $MANIFEST_PREFIX /tmp/base_rpm.txt /tmp/final_rpm.txt "" /go/src/app/go.sum && \
+    echo 'MANIFEST:' && cat manifest.txt
 
 RUN adduser --gid 0 -d /go --no-create-home insights
 RUN chown -R insights:0 /go

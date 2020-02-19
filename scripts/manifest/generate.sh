@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# ./scripts/generate_manifest.sh <MANIFEST_PATH> <PREFIX> <BASE_RPM_LIST> <FINAL_RPM_LIST> <PYTHON-CMD-OPTIONAL>
+# ./generate.sh <MANIFEST_PATH> <PREFIX> <BASE_RPM_LIST> <FINAL_RPM_LIST> <PYTHON-CMD-OPTIONAL> <GO-SUM-PATH>
 # Example:
-# ./scripts/generate_manifest.sh manifest_webapp.txt my-service /tmp/base_rpm_list.txt /tmp/final_rpm_list.txt python
+# ./generate.sh manifest_webapp.txt my-service /tmp/base_rpm_list.txt /tmp/final_rpm_list.txt python /app/go.sum
 # cat manifest_webapp.txt
 
 MANIFEST_PATH=$1
@@ -10,6 +10,7 @@ PREFIX=$2
 BASE_RPM_LIST=$3
 FINAL_RPM_LIST=$4
 PYTHON=$5
+GO_SUM=$6
 
 grep -v -f ${BASE_RPM_LIST} ${FINAL_RPM_LIST} > ${MANIFEST_PATH}
 
@@ -21,6 +22,13 @@ then
     sed -i -e 's/==/-/' /tmp/pipdeps       # replace '==' with '-'
     sed -i -e 's/$/.pipfile/' /tmp/pipdeps # add '.pipfile' suffix
     cat /tmp/pipdeps >> ${MANIFEST_PATH}   # append python deps to manifest
+fi
+
+## Write go deps
+if [[ ! -z $GO_SUM ]]
+then
+    cat $GO_SUM | sed -e 's/\(\/go.mod\)\? h1:.*//' | sed 's/ /:/' | sort | uniq > /tmp/godeps
+    cat /tmp/godeps >> ${MANIFEST_PATH}   # append python deps to manifest
 fi
 
 ## Add prefix to all lines.
