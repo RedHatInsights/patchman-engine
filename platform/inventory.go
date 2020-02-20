@@ -30,35 +30,12 @@ var pkgs = []string{
 	"iproute-2.6.18-13.el5.i386",
 	"libbonobo-2.24.2-5.el6.i686"}
 
-func makeSystemProfile(id string) inventory.SystemProfileByHostOut {
-	_pkgs := pkgs
-	if id == "TEST-NO-PKGS" {
-		_pkgs = []string{}
-	}
-
+// Create system profile call result with paging
+func makeSystemProfileRes(id string) inventory.SystemProfileByHostOut {
 	profile := inventory.HostSystemProfileOut{
-		Id: id,
-		SystemProfile: inventory.SystemProfileIn{
-			Arch:              "i686",
-			InstalledPackages: _pkgs,
-			YumRepos: []inventory.YumRepo{
-				{
-					Id:       "repo1",
-					Name:     "Debug packages",
-					Baseurl:  "http://repo.com/$arch/$releasever/$product/repo",
-					Enabled:  true,
-					Gpgcheck: false,
-				},
-			},
-			DnfModules: []inventory.DnfModule{
-				{
-					Name:   "firefox",
-					Stream: "60",
-				},
-			},
-		},
+		Id:            id,
+		SystemProfile: makeSystemProfile(id),
 	}
-
 	return inventory.SystemProfileByHostOut{
 		Total:   1,
 		Count:   1,
@@ -68,8 +45,36 @@ func makeSystemProfile(id string) inventory.SystemProfileByHostOut {
 	}
 }
 
+// Create bare system profile
+func makeSystemProfile(id string) inventory.SystemProfileIn {
+	_pkgs := pkgs
+	if id == "TEST-NO-PKGS" {
+		_pkgs = []string{}
+	}
+
+	return inventory.SystemProfileIn{
+		Arch:              "i686",
+		InstalledPackages: _pkgs,
+		YumRepos: []inventory.YumRepo{
+			{
+				Id:       "repo1",
+				Name:     "Debug packages",
+				Baseurl:  "http://repo.com/$arch/$releasever/$product/repo",
+				Enabled:  true,
+				Gpgcheck: false,
+			},
+		},
+		DnfModules: []inventory.DnfModule{
+			{
+				Name:   "firefox",
+				Stream: "60",
+			},
+		},
+	}
+}
+
 func systemProfileHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, makeSystemProfile(c.Param("host_id")))
+	c.JSON(http.StatusOK, makeSystemProfileRes(c.Param("host_id")))
 }
 
 func systemHandler(c *gin.Context) {

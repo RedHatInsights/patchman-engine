@@ -3,7 +3,7 @@ package main
 import (
 	"app/base/utils"
 	"context"
-	"fmt"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/segmentio/kafka-go"
 	"net/http"
@@ -82,12 +82,20 @@ func sendMessageToTopic(topic, message string) {
 }
 func MockUploadHandler(c *gin.Context) {
 	utils.Log().Info("Mocking platform upload event")
-	identity := mockIdentity()
 
-	// We need to format this message to not depend on listener.
-	// TODO: Replace with a typed solution, once we move event code to base library
-	event := fmt.Sprintf(`{ "id": "TEST-0000", "type": "created", "b64_identity": "%v"}`, identity)
-	sendMessageToTopic("platform.upload.available", event)
+	event := map[string]interface{}{
+		"type": "created",
+		"host": map[string]interface{}{
+			"id":             "TEST-0000",
+			"account":        "TEST-0000",
+			"system_profile": makeSystemProfile("TEST-0000"),
+		},
+	}
+	msg, err := json.Marshal(event)
+	if err != nil {
+		panic(err)
+	}
+	sendMessageToTopic("platform.inventory.host-egress", string(msg))
 	c.Status(http.StatusOK)
 }
 
@@ -95,8 +103,16 @@ func MockDeleteHandler(c *gin.Context) {
 	utils.Log().Info("Mocking platform delete event")
 
 	identity := mockIdentity()
-	event := fmt.Sprintf(`{ "id": "TEST-0000", "type": "delete", "b64_identity": "%v"}`, identity)
-	sendMessageToTopic("platform.inventory.events", event)
+	event := map[string]interface{}{
+		"id":           "TEST-0000",
+		"type":         "delete",
+		"b64_identity": identity,
+	}
+	msg, err := json.Marshal(event)
+	if err != nil {
+		panic(err)
+	}
+	sendMessageToTopic("platform.inventory.events", string(msg))
 	c.Status(http.StatusOK)
 }
 

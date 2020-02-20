@@ -394,7 +394,7 @@ func run(readerBuilder mqueue.CreateReader) {
 	// We create multiple consumers, and hope that the partition rebalancing
 	// algorithm assigns each consumer a single partition
 	for i := 0; i < consumerCount; i++ {
-		go mqueue.RunReader(evalTopic, readerBuilder, evaluateHandler)
+		go mqueue.RunReader(evalTopic, readerBuilder, mqueue.MakeMessageHandler(evaluateHandler))
 	}
 }
 

@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+var DeleteMessageHandler = mqueue.MakeMessageHandler(deleteHandler)
+
 func deleteHandler(event mqueue.PlatformEvent) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventDelete))

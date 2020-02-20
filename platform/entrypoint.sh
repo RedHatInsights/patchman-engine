@@ -21,7 +21,7 @@ until ./kafka/bin/kafka-topics.sh --list --zookeeper localhost:2181 &> /dev/null
 done
 
 # create topics with multiple partitions for scaling
-for topic in "platform.upload.available" "platform.inventory.events" "patchman.evaluator.upload" \
+for topic in "platform.inventory.host-egress" "platform.inventory.events" "patchman.evaluator.upload" \
              "patchman.evaluator.recalc" "test"
 do
     ./kafka/bin/kafka-topics.sh --create --topic $topic --partitions 1 --zookeeper localhost:2181 --replication-factor 1

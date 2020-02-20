@@ -13,68 +13,80 @@ import (
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/pkg/errors"
+	"github.com/segmentio/kafka-go"
 	"time"
 )
 
-func uploadHandler(event mqueue.PlatformEvent) {
+type Host struct {
+	ID                    string                    `json:"id,omitempty"`
+	DisplayName           *string                   `json:"display_name,omitempty"`
+	AnsibleHost           *string                   `json:"ansible_host,omitempty"`
+	Account               string                    `json:"account,omitempty"`
+	InsightsID            string                    `json:"insights_id,omitempty"`
+	RhelMachineID         string                    `json:"rhel_machine_id,omitempty"`
+	SubscriptionManagerID string                    `json:"subscription_manager_id,omitempty"`
+	SatelliteID           string                    `json:"satellite_id,omitempty"`
+	FQDN                  string                    `json:"fqdn,omitempty"`
+	BiosUUID              string                    `json:"bios_uuid,omitempty"`
+	IPAddresses           []string                  `json:"ip_addresses,omitempty"`
+	MacAddresses          []string                  `json:"mac_addresses,omitempty"`
+	ExternalID            string                    `json:"external_id,omitempty"`
+	Created               string                    `json:"created,omitempty"`
+	Updated               string                    `json:"updated,omitempty"`
+	StaleTimestamp        *string                   `json:"stale_timestamp,omitempty"`
+	StaleWarningTimestamp *string                   `json:"stale_warning_timestamp,omitempty"`
+	CulledTimestamp       *string                   `json:"culled_timestamp,omitempty"`
+	Reporter              string                    `json:"reporter,omitempty"`
+	Tags                  []inventory.StructuredTag `json:"tags,omitempty"`
+	SystemProfile         inventory.SystemProfileIn `json:"system_profile,omitempty"`
+}
+
+type HostEgressEvent struct {
+	Type             string                 `json:"type"`
+	PlatformMetadata map[string]interface{} `json:"platform_metadata"`
+	Host             Host                   `json:"host"`
+}
+
+func uploadMsgHandler(msg kafka.Message) {
+	var event HostEgressEvent
+	err := json.Unmarshal(msg.Value, &event)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("unable to parse upload msg")
+		utils.Log("raw", string(msg.Value)).Trace("Raw message string")
+		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorParsing).Inc()
+		// TODO: Forcing a panic here to quickly discover whether we have correct message format
+		panic(err)
+	}
+	uploadHandler(event)
+}
+
+func uploadHandler(event HostEgressEvent) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventUpload))
 
-	if event.B64Identity == nil {
-		utils.Log("inventoryID", event.ID).Error("Identity not provided")
-		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
-		return
-	}
-
-	identity, err := parseUploadMessage(&event)
-	if err != nil {
-		utils.Log("inventoryID", event.ID, "err", err.Error()).Error("unable to parse upload msg")
-		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorParsing).Inc()
-		return
-	}
-
-	ctx := createContext(*event.B64Identity)
-	host, systemProfile, err := getHostInfo(ctx, event.ID)
-	if err != nil {
-		utils.Log("inventoryID", event.ID, "err", err.Error()).Error("inventory API call failed")
-		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorInventoryCall).Inc()
-		return
-	}
+	systemProfile := event.Host.SystemProfile
 
 	if len(systemProfile.InstalledPackages) == 0 {
-		utils.Log("inventoryID", event.ID).Warn("skipping profile with no packages")
+		utils.Log("inventoryID", event.Host.ID).Warn("skipping profile with no packages")
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
 		return
 	}
 
-	err = processUpload(ctx, event.ID, identity.Identity.AccountNumber, host, systemProfile)
+	if len(event.Host.Account) == 0 {
+		utils.Log("inventoryID", event.Host.ID).Error("No account provided in host message")
+		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity)
+		return
+	}
+
+	err := processUpload(context.Background(), event.Host.ID, event.Host.Account, &event.Host)
 	if err != nil {
-		utils.Log("inventoryID", event.ID, "err", err.Error()).Error("unable to process upload")
+		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error("unable to process upload")
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
 		return
 	}
 
 	messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
-	utils.Log("inventoryID", event.ID).Debug("Upload event handled successfully")
-}
-
-func parseUploadMessage(event *mqueue.PlatformEvent) (*utils.Identity, error) {
-	// We need the b64 identity in order to call the inventory
-	if event.B64Identity == nil {
-		return nil, errors.New("No identity provided")
-	}
-
-	identity, err := utils.ParseIdentity(*event.B64Identity)
-	if err != nil {
-		return nil, errors.Wrap(err, "Could not parse identity")
-	}
-
-	if !identity.IsSmartEntitled() {
-		utils.Log("account", identity.Identity.AccountNumber).
-			Warn("account without smart management entitlement")
-	}
-
-	return identity, nil
+	utils.Log("inventoryID", event.Host.ID).Debug("Upload event handled successfully")
 }
 
 // Stores or updates the account data, returning the account id
@@ -100,8 +112,8 @@ func optParseTimestamp(t *string) *time.Time {
 }
 
 // Stores or updates base system profile, returing internal system id
-func updateSystemPlatform(inventoryID string, accountID int,
-	invData *inventory.HostOut, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
+func updateSystemPlatform(inventoryID string, accountID int, host *Host,
+	updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
 	updatesReqJSON, err := json.Marshal(updatesReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "Serializing vmaas request")
@@ -118,20 +130,19 @@ func updateSystemPlatform(inventoryID string, accountID int,
 	now := time.Now()
 
 	systemPlatform := models.SystemPlatform{
-		InventoryID:    inventoryID,
-		RhAccountID:    accountID,
-		VmaasJSON:      string(updatesReqJSON),
-		JSONChecksum:   jsonChecksum,
-		LastEvaluation: nil,
-		LastUpload:     &now,
+		InventoryID:  inventoryID,
+		RhAccountID:  accountID,
+		VmaasJSON:    string(updatesReqJSON),
+		JSONChecksum: jsonChecksum,
+		LastUpload:   &now,
 
-		StaleTimestamp:        optParseTimestamp(invData.StaleTimestamp),
-		StaleWarningTimestamp: optParseTimestamp(invData.StaleWarningTimestamp),
-		CulledTimestamp:       optParseTimestamp(invData.CulledTimestamp),
+		StaleTimestamp:        optParseTimestamp(host.StaleTimestamp),
+		StaleWarningTimestamp: optParseTimestamp(host.StaleWarningTimestamp),
+		CulledTimestamp:       optParseTimestamp(host.CulledTimestamp),
 	}
 
 	tx := database.OnConflictUpdate(database.Db, "inventory_id", "vmaas_json", "json_checksum",
-		"last_evaluation", "last_upload", "stale_timestamp", "stale_warning_timestamp", "culled_timestamp")
+		"last_upload", "stale_timestamp", "stale_warning_timestamp", "culled_timestamp")
 	retTx := tx.Create(&systemPlatform)
 	if retTx.Error != nil {
 		return nil, errors.Wrap(retTx.Error, "Unable to save or update system in database")
@@ -144,49 +155,20 @@ func updateSystemPlatform(inventoryID string, accountID int,
 	utils.Log("inventoryID", inventoryID, "packages", len(updatesReq.PackageList), "repos",
 		len(updatesReq.RepositoryList), "modules", len(updatesReq.ModulesList)).
 		Debug("System created or updated successfully")
+
 	return &systemPlatform, nil
-}
-
-func getHostInfo(ctx context.Context, inventoryID string) (*inventory.HostOut, *inventory.SystemProfileIn, error) {
-	hostResults, resp, err := inventoryClient.HostsApi.ApiHostGetHostById(ctx, []string{inventoryID}, nil)
-	if err != nil {
-		respDetail := utils.TryGetResponseDetails(resp)
-		return nil, nil, errors.Wrap(err, "inventory API call failed"+respDetail)
-	}
-	utils.Log("status_code", resp.StatusCode, "host_results", len(hostResults.Results)).
-		Debug("inventory API GetHost called")
-	if hostResults.Count == 0 || len(hostResults.Results) == 0 {
-		return nil, nil, errors.New("no system details returned, host is probably deleted")
-	}
-
-	profileResults, resp, err := inventoryClient.HostsApi.ApiHostGetHostSystemProfileById(ctx, []string{inventoryID}, nil)
-	if err != nil {
-		respDetail := utils.TryGetResponseDetails(resp)
-		return nil, nil, errors.Wrap(err, "inventory API, profile loading failed"+respDetail)
-	}
-	utils.Log("status_code", resp.StatusCode, "profile_results", len(profileResults.Results)).
-		Debug("inventory API GetHostSystemProfile called")
-	if profileResults.Count == 0 || len(profileResults.Results) == 0 {
-		return nil, nil, errors.New("no system profiles returned, host is probably deleted")
-	}
-
-	host := hostResults.Results[0]
-	profile := profileResults.Results[0].SystemProfile
-
-	utils.Log("inventoryID", inventoryID).Debug("System profile download complete")
-	return &host, &profile, nil
 }
 
 // nolint: funlen
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
-func processUpload(ctx context.Context, inventoryID string, account string, host *inventory.HostOut,
-	systemProfile *inventory.SystemProfileIn) error {
+func processUpload(ctx context.Context, inventoryID string, account string, host *Host) error {
 	// Ensure we have account stored
 	accountID, err := getOrCreateAccount(account)
 	if err != nil {
 		return errors.Wrap(err, "saving account into the database")
 	}
 
+	systemProfile := host.SystemProfile
 	// Prepare VMaaS request
 	updatesReq := vmaas.UpdatesV3Request{
 		PackageList:  systemProfile.InstalledPackages,
@@ -211,7 +193,7 @@ func processUpload(ctx context.Context, inventoryID string, account string, host
 		}
 	}
 
-	_, err = updateSystemPlatform(host.Id, accountID, host, &updatesReq)
+	_, err = updateSystemPlatform(host.ID, accountID, host, &updatesReq)
 	if err != nil {
 		return errors.Wrap(err, "saving system into the database")
 	}
@@ -219,16 +201,9 @@ func processUpload(ctx context.Context, inventoryID string, account string, host
 	event := mqueue.PlatformEvent{
 		ID: inventoryID,
 	}
-	err = evalWriter.WriteEvents(ctx, event)
+	err = mqueue.WriteEvents(ctx, evalWriter, event)
 	if err != nil {
 		return errors.Wrap(err, "Sending kafka event failed")
 	}
 	return nil
-}
-
-func createContext(identity string) context.Context {
-	apiKey := inventory.APIKey{Prefix: "", Key: identity}
-	// Create new context, which has the apikey value set. This is then used as a value for `x-rh-identity`
-	ctx := context.WithValue(context.Background(), inventory.ContextAPIKey, apiKey)
-	return ctx
 }

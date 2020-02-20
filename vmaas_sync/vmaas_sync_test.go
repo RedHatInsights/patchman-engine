@@ -3,19 +3,19 @@ import (
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
-	"app/base/mqueue"
 	"app/base/utils"
 	"context"
+	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-var events []mqueue.PlatformEvent
+var msgs []kafka.Message
 
 type mockKafkaWriter struct{}
 
-func (t mockKafkaWriter) WriteEvents(_ context.Context, ev ...mqueue.PlatformEvent) error {
-	events = append(events, ev...)
+func (t mockKafkaWriter) WriteMessages(_ context.Context, ev ...kafka.Message) error {
+	msgs = append(msgs, ev...)
 	return nil
 }
 
@@ -33,5 +33,5 @@ func TestSync(t *testing.T) {
 	database.CheckAdvisoriesInDb(t, expected)
 	assert.Nil(t, database.Db.Unscoped().Where("name IN (?)", expected).Delete(&models.AdvisoryMetadata{}).Error)
 
-	assert.Equal(t, 12, len(events))
+	assert.Equal(t, 12, len(msgs))
 }
