@@ -27,7 +27,7 @@ then
         remote_file_sha=$(curl -H "Authorization: token $GIT_TOKEN" -X GET $API_ENDPOINT?ref=$GIT_BRANCH | python3 -c "import json,sys;a=json.load(sys.stdin);print(a.get('sha',''))")
         # insert or update file
         echo "{\"message\": \"Updating $GIT_FILE_PATH\", \"branch\": \"$GIT_BRANCH\", \"sha\": \"$remote_file_sha\", \"content\": \"$(base64 -w 0 $SOURCE_FILE_PATH)\"}" > /tmp/commit_payload.json
-        new_commit_sha=$(curl -H "Authorization: token $GIT_TOKEN" -X PUT -d "@/tmp/commit_payload.json" $API_ENDPOINT | python -c "import json,sys;a=json.load(sys.stdin);print(a.get('commit',{}).get('sha',''))")
+        new_commit_sha=$(curl -H "Authorization: token $GIT_TOKEN" -X PUT -d "@/tmp/commit_payload.json" $API_ENDPOINT | python3 -c "import json,sys;a=json.load(sys.stdin);print(a.get('commit',{}).get('sha',''))")
         # commit sha returned => success
         if [[ ! -z $new_commit_sha ]]
         then
