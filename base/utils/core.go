@@ -5,7 +5,9 @@ import (
 	"github.com/joho/godotenv"
 	"os"
 	"path"
+	"runtime/debug"
 	"strconv"
+	"strings"
 )
 
 // load environment variable or return default value
@@ -94,4 +96,21 @@ func TestLoadEnv(files ...string) {
 	if err != nil {
 		Log().Panic("Could not load env file")
 	}
+}
+
+// Catches panics, and logs them to stderr, then performs onRecover
+func LogPanics(onRecover func()) {
+	if obj := recover(); obj != nil {
+		stack := string(debug.Stack())
+		stackLine := strings.Replace(stack, "\n", "|", -1)
+		Log("err", obj, "stack", stackLine).Error("Panicked")
+		FlushLogs()
+		onRecover()
+	}
+}
+
+func LogPanicsAndExit() {
+	LogPanics(func() {
+		os.Exit(1)
+	})
 }

@@ -13,6 +13,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var hook *lc.Hook
+
 // Try to init CloudWatch logging
 func trySetupCloudWatchLogging() {
 	key := os.Getenv("CW_AWS_ACCESS_KEY_ID")
@@ -42,11 +44,17 @@ func trySetupCloudWatchLogging() {
 
 	cred := credentials.NewStaticCredentials(key, secret, "")
 	awsconf := aws.NewConfig().WithRegion(region).WithCredentials(cred)
-	hook, err := lc.NewBatchingHook(group, hostname, awsconf, 10*time.Second)
+	hook, err = lc.NewBatchingHook(group, hostname, awsconf, 10*time.Second)
 	if err != nil {
 		Log("err", err.Error()).Error("unable to setup CloudWatch logging")
 		return
 	}
 	log.AddHook(hook)
 	log.Info("CloudWatch logging configured")
+}
+
+func FlushLogs() {
+	if hook != nil {
+		_ = hook.Flush()
+	}
 }

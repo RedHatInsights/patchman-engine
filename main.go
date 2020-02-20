@@ -3,6 +3,7 @@ package main
 import (
 	"app/base"
 	"app/base/core"
+	"app/base/utils"
 	"app/database_admin"
 	"app/evaluator"
 	"app/listener"
@@ -16,6 +17,7 @@ func main() {
 	base.HandleSignals()
 	core.ConfigureApp()
 
+	defer utils.LogPanicsAndExit()
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "manager":

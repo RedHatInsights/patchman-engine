@@ -8,7 +8,6 @@ require (
 	github.com/RedHatInsights/patchman-clients/vmaas v0.0.0-20200211092138-af3af42fd699
 	github.com/antihax/optional v1.0.0
 	github.com/aws/aws-sdk-go v1.29.34
-	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/getkin/kin-openapi v0.3.0
 	github.com/gin-contrib/gzip v0.0.1
 	github.com/gin-gonic/gin v1.5.0
@@ -21,7 +20,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_golang v1.5.1
-	github.com/redhatinsights/platform-go-middlewares v0.7.0
+	github.com/redhatinsights/platform-go-middlewares v0.7.1-0.20200306140908-92eb73ca70be
 	github.com/segmentio/kafka-go v0.3.5
 	github.com/sirupsen/logrus v1.5.0
 	github.com/stretchr/testify v1.5.1

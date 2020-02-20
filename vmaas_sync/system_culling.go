@@ -8,6 +8,8 @@ import (
 )
 
 func RunSystemCulling() {
+	defer utils.LogPanicsAndExit()
+
 	ticker := time.NewTicker(time.Minute * 10)
 
 	for {
