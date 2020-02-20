@@ -44,7 +44,7 @@ func sendMessages(ctx context.Context, inventoryIDs ...string) {
 		}
 	}
 
-	err := evalWriter.WriteEvents(ctx, events...)
+	err := mqueue.WriteEvents(ctx, evalWriter, events...)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("sending to re-evaluate failed")
 	}

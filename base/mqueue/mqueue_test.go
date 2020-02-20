@@ -15,7 +15,7 @@ func TestParseEvents(t *testing.T) {
 
 	reached := false
 
-	makeKafkaHandler(func(event PlatformEvent) {
+	MakeMessageHandler(func(event PlatformEvent) {
 		assert.Equal(t, event.ID, "TEST-00000")
 		assert.Equal(t, *event.Type, "delete")
 		reached = true
@@ -30,20 +30,21 @@ func TestRoundTrip(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	reader := ReaderFromEnv("test")
+
 	var eventOut PlatformEvent
-	go reader.HandleEvents(func(event PlatformEvent) {
+	go reader.HandleMessages(MakeMessageHandler(func(event PlatformEvent) {
 		eventOut = event
-	})
+	}))
 
 	writer := WriterFromEnv("test")
 	eventIn := PlatformEvent{ID: "some-id"}
-	assert.NoError(t, writer.WriteEvents(context.Background(), eventIn))
+	assert.NoError(t, WriteEvents(context.Background(), writer, eventIn))
 	time.Sleep(8 * time.Second)
 	assert.Equal(t, eventIn, eventOut)
 }
 
 func TestRunReader(t *testing.T) {
 	nReaders := 0
-	RunReader("", CreateCountedMockReader(&nReaders), func(event PlatformEvent) {})
+	RunReader("", CreateCountedMockReader(&nReaders), MakeMessageHandler(func(event PlatformEvent) {}))
 	assert.Equal(t, 1, nReaders)
 }

@@ -12,11 +12,11 @@ func TestDeleteSystem(t *testing.T) {
 	configure()
 
 	deleteData(t)
-	uploadEvent := createTestUploadEvent(t, id)
+	uploadEvent := createTestUploadEvent(id, true)
 	uploadHandler(uploadEvent)
 	assertSystemInDb(t, id, nil)
 
-	deleteEvent := createTestDeleteEvent(t)
+	deleteEvent := createTestDeleteEvent(id)
 	deleteHandler(deleteEvent)
 	assertSystemNotInDb(t)
 }

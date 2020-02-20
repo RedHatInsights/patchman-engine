@@ -9,8 +9,7 @@ import (
 )
 
 type PlatformEvent struct {
-	ID string `json:"id"`
-
+	ID          string  `json:"id"`
 	Type        *string `json:"type"`
 	Timestamp   *string `json:"timestamp"`
 	Account     *string `json:"account"`
@@ -18,10 +17,10 @@ type PlatformEvent struct {
 	URL         *string `json:"url"`
 }
 
-type EventHandler func(event PlatformEvent)
+type EventHandler func(message PlatformEvent)
 
 // Performs parsing of kafka message, and then dispatches this message into provided functions
-func makeKafkaHandler(eventHandler EventHandler) KafkaHandler {
+func MakeMessageHandler(eventHandler EventHandler) MessageHandler {
 	return func(m kafka.Message) {
 		var event PlatformEvent
 		err := json.Unmarshal(m.Value, &event)
@@ -33,12 +32,12 @@ func makeKafkaHandler(eventHandler EventHandler) KafkaHandler {
 	}
 }
 
-func (t *readerImpl) HandleEvents(handler EventHandler) {
-	t.HandleMessages(makeKafkaHandler(handler))
+func HandleEvents(r Reader, handler EventHandler) {
+	r.HandleMessages(MakeMessageHandler(handler))
 }
 
-// nolint: scopelint
-func (t *writerImpl) WriteEvents(ctx context.Context, events ...PlatformEvent) error {
+// nolint: scopelint,
+func WriteEvents(ctx context.Context, w Writer, events ...PlatformEvent) error {
 	msgs := make([]kafka.Message, len(events))
 	for i, ev := range events {
 		data, err := json.Marshal(&ev)
@@ -47,5 +46,5 @@ func (t *writerImpl) WriteEvents(ctx context.Context, events ...PlatformEvent) e
 		}
 		msgs[i] = kafka.Message{Value: data}
 	}
-	return t.WriteMessages(ctx, msgs...)
+	return w.WriteMessages(ctx, msgs...)
 }

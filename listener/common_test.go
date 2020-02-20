@@ -4,9 +4,6 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
-	"encoding/json"
-	"fmt"
-	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -29,11 +26,11 @@ func deleteData(t *testing.T) {
 // nolint:unparam
 func assertSystemInDb(t *testing.T, inventoryID string, rhAccountID *int) {
 	var system models.SystemPlatform
-	assert.Nil(t, database.Db.Where("inventory_id = ?", inventoryID).Find(&system).Error)
+	assert.NoError(t, database.Db.Where("inventory_id = ?", inventoryID).Find(&system).Error)
 	assert.Equal(t, system.InventoryID, inventoryID)
 
 	var account models.RhAccount
-	assert.Nil(t, database.Db.Where("id = ?", system.RhAccountID).Find(&account).Error)
+	assert.NoError(t, database.Db.Where("id = ?", system.RhAccountID).Find(&account).Error)
 	assert.Equal(t, inventoryID, account.Name)
 	if rhAccountID != nil {
 		assert.Equal(t, system.RhAccountID, *rhAccountID)
@@ -60,20 +57,23 @@ func getOrCreateTestAccount(t *testing.T) int {
 	return accountID
 }
 
-func createTestUploadEvent(t *testing.T, inventoryID string) mqueue.PlatformEvent {
-	s := fmt.Sprintf(`{ "id": "%s","type": "created", "b64_identity": "eyJlbnRpdGxlbWVudHMiOnsic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1ZX19LCJpZGVudGl0eSI6eyJhY2NvdW50X251bWJlciI6IlRFU1QtMDAwMDAiLCJ0eXBlIjoiVXNlciIsIkludGVybmFsIjpudWxsfX0="}`, //nolint:lll
-		inventoryID)
-	msg := kafka.Message{Value: []byte(s)}
-	var event mqueue.PlatformEvent
-	err := json.Unmarshal(msg.Value, &event)
-	assert.Nil(t, err)
-	return event
+// nolint: lll
+func createTestUploadEvent(inventoryID string, packages bool) HostEgressEvent {
+	ev := HostEgressEvent{
+		Type:             "created",
+		PlatformMetadata: nil,
+		Host:             Host{ID: inventoryID, Account: inventoryID},
+	}
+	if packages {
+		ev.Host.SystemProfile.InstalledPackages = []string{"kernel-54321.rhel8.x86_64"}
+	}
+	return ev
 }
 
-func createTestDeleteEvent(t *testing.T) mqueue.PlatformEvent {
-	msg := kafka.Message{Value: []byte(`{ "id": "TEST-00000","type": "delete"}`)}
-	var event mqueue.PlatformEvent
-	err := json.Unmarshal(msg.Value, &event)
-	assert.Nil(t, err)
-	return event
+func createTestDeleteEvent(inventoryID string) mqueue.PlatformEvent {
+	typ := "delete"
+	return mqueue.PlatformEvent{
+		ID:   inventoryID,
+		Type: &typ,
+	}
 }

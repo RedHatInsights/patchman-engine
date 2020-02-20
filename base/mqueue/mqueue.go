@@ -10,7 +10,7 @@ import (
 
 // By wrapping raw value we can add new methods & ensure methods of wrapped type are callable
 type Reader interface {
-	HandleEvents(handler EventHandler)
+	HandleMessages(handler MessageHandler)
 	io.Closer
 }
 
@@ -19,7 +19,7 @@ type readerImpl struct {
 }
 
 type Writer interface {
-	WriteEvents(ctx context.Context, events ...PlatformEvent) error
+	WriteMessages(ctx context.Context, msgs ...kafka.Message) error
 }
 
 type writerImpl struct {
@@ -59,9 +59,9 @@ func WriterFromEnv(topic string) Writer {
 	return writer
 }
 
-type KafkaHandler func(message kafka.Message)
+type MessageHandler func(message kafka.Message)
 
-func (t *readerImpl) HandleMessages(handler KafkaHandler) {
+func (t *readerImpl) HandleMessages(handler MessageHandler) {
 	ctx := context.Background()
 
 	for {
@@ -82,8 +82,8 @@ func (t *readerImpl) HandleMessages(handler KafkaHandler) {
 
 type CreateReader func(topic string) Reader
 
-func RunReader(topic string, createReader CreateReader, eventHandler EventHandler) {
+func RunReader(topic string, createReader CreateReader, msgHandler MessageHandler) {
 	reader := createReader(topic)
 	defer reader.Close()
-	reader.HandleEvents(eventHandler)
+	reader.HandleMessages(msgHandler)
 }
