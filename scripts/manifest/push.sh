@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# GIT_TOKEN=<GIT_TOKEN> ./scripts/push_manifest.sh <GIT_REPO> <GIT_BRANCH> <SOURCE_FILE_PATH> <GIT_FILE_PATH>
+# GIT_TOKEN=<GIT_TOKEN> ./scripts/manifest/push.sh <GIT_REPO> <GIT_BRANCH> <SOURCE_FILE_PATH> <GIT_FILE_PATH>
 # Example:
-# GIT_TOKEN=mygithubtoken ./scripts/push_manifest.sh RedHatInsights/manifests master /manifest.txt vulnerability-engine/vulnerability-engine-manager.txt
+# GIT_TOKEN=mygithubtoken ./scripts/manifest/push.sh RedHatInsights/manifests master /manifest.txt patchman-engine/patchman-engine.txt
 
 GIT_REPO=$1
 GIT_BRANCH=$2
