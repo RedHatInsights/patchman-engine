@@ -2,7 +2,7 @@ package listener
 
 import (
 	"app/base/mqueue"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )

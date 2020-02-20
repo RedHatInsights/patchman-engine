@@ -109,6 +109,7 @@ func (t *readerImpl) HandleMessages(handler MessageHandler) {
 type CreateReader func(topic string) Reader
 
 func RunReader(topic string, createReader CreateReader, msgHandler MessageHandler) {
+	defer utils.LogPanicsAndExit()
 	reader := createReader(topic)
 	defer reader.Close()
 	reader.HandleMessages(msgHandler)
