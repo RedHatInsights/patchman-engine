@@ -26,7 +26,7 @@ func TestAdvisoryCounts(t *testing.T) {
 	assert.Equal(t, 0, unknown)
 	assert.Equal(t, 3, enh)
 	assert.Equal(t, 3, bug)
-	assert.Equal(t, 2, sec)
+	assert.Equal(t, 3, sec)
 }
 
 func TestSystemAdvisoriesStats(t *testing.T) {
