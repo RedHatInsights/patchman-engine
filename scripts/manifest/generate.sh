@@ -34,11 +34,10 @@ fi
 ## Add prefix to all lines.
 sed -i -e 's/^/'${PREFIX}'/' ${MANIFEST_PATH}
 
-## Write precise version only in prod builds.
-if [[ "$MANIFEST_WRITE_VERSION" == "TRUE" ]]
+## Write APP_VERSION if provided to :VERSION: placeholder
+if [[ ! -z $APP_VERSION ]]
 then
-    VERSION=$(${PYTHON} -c 'from common.constants import APP_VERSION;print(APP_VERSION)')
-    sed -i -e 's/:VERSION:/:'$VERSION':/' ${MANIFEST_PATH}
+    sed -i -e 's/:VERSION:/:'$APP_VERSION':/' ${MANIFEST_PATH}
 else
     sed -i -e 's/:VERSION:/:latest:/' ${MANIFEST_PATH}
 fi
