@@ -54,7 +54,7 @@ func TestGetStoredAdvisoriesMap(t *testing.T) {
 	systemAdvisories, err := getStoredAdvisoriesMap(database.Db, 0)
 	assert.Nil(t, err)
 	assert.NotNil(t, systemAdvisories)
-	assert.Equal(t, 8, len(*systemAdvisories))
+	assert.Equal(t, 9, len(*systemAdvisories))
 	assert.Equal(t, "RH-1", (*systemAdvisories)["RH-1"].Advisory.Name)
 	assert.Equal(t, "adv-1-des", (*systemAdvisories)["RH-1"].Advisory.Description)
 	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", (*systemAdvisories)["RH-1"].Advisory.PublicDate.String())
