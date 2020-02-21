@@ -16,6 +16,7 @@ type AdvisorySystemsResponse struct {
 	Meta  ListMeta     `json:"meta"`
 }
 
+// nolint: lll
 // @Summary Show me systems on which the given advisory is applicable
 // @Description Show me systems on which the given advisory is applicable
 // @ID listAdvisorySystems
@@ -25,7 +26,15 @@ type AdvisorySystemsResponse struct {
 // @Param    advisory_id    path    string  true    "Advisory ID"
 // @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field"    Enums(id,last_updated,last_evaluation)
+// @Param    sort    query   string  false   "Sort field" Enums(id,last_evaluation,last_updated,rhsa_count,rhba_count,rhea_count,enabled,stale)
+// @Param    filter[id]              query   string  false "Filter"
+// @Param    filter[last_evaluation] query   string  false "Filter"
+// @Param    filter[last_updated]    query   string  false "Filter"
+// @Param    filter[rhsa_count]      query   string  false "Filter"
+// @Param    filter[rhba_count]      query   string  false "Filter"
+// @Param    filter[rhea_count]      query   string  false "Filter"
+// @Param    filter[enabled]         query   string  false "Filter"
+// @Param    filter[stale]           query   string  false "Filter"
 // @Success 200 {object} AdvisorySystemsResponse
 // @Router /api/patch/v1/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListHandler(c *gin.Context) {
