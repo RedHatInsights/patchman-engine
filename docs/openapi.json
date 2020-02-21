@@ -43,9 +43,11 @@
                             "type": "string",
                             "enum": [
                                 "id",
-                                "type",
+                                "name",
+                                "advisory_type",
                                 "synopsis",
-                                "public_date"
+                                "public_date",
+                                "applicable_systems"
                             ]
                         }
                     },
@@ -53,6 +55,62 @@
                         "name": "search",
                         "in": "query",
                         "description": "Find matching text",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[id]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[description]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[public_date]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[synopsis]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[advisory_type]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[severity]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[applicable_systems]",
+                        "in": "query",
+                        "description": "Filter",
                         "schema": {
                             "type": "string"
                         }
@@ -155,6 +213,70 @@
                                 "last_evaluation"
                             ]
                         }
+                    },
+                    {
+                        "name": "filter[id]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[last_evaluation]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[last_updated]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[rhsa_count]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[rhba_count]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[rhea_count]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[enabled]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[stale]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -206,9 +328,78 @@
                             "type": "string",
                             "enum": [
                                 "id",
+                                "last_evaluation",
                                 "last_updated",
-                                "last_evaluation"
+                                "rhsa_count",
+                                "rhba_count",
+                                "rhea_count",
+                                "enabled",
+                                "stale"
                             ]
+                        }
+                    },
+                    {
+                        "name": "filter[id]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[last_evaluation]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[last_updated]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[rhsa_count]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[rhba_count]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[rhea_count]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[enabled]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[stale]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],
@@ -305,10 +496,67 @@
                             "type": "string",
                             "enum": [
                                 "id",
+                                "name",
                                 "type",
                                 "synopsis",
                                 "public_date"
                             ]
+                        }
+                    },
+                    {
+                        "name": "filter[id]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[description]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[public_date]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[synopsis]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[advisory_type]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[severity]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[applicable_systems]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],
@@ -347,7 +595,7 @@
                         "$ref": "#/components/schemas/controllers.Links"
                     },
                     "meta": {
-                        "$ref": "#/components/schemas/controllers.AdvisoryMeta"
+                        "$ref": "#/components/schemas/controllers.ListMeta"
                     }
                 }
             },
@@ -451,85 +699,6 @@
                     }
                 }
             },
-            "controllers.AdvisoryMeta": {
-                "type": "object",
-                "properties": {
-                    "data_format": {
-                        "type": "string"
-                    },
-                    "filter": {
-                        "type": "string"
-                    },
-                    "limit": {
-                        "type": "integer"
-                    },
-                    "offset": {
-                        "type": "integer"
-                    },
-                    "page": {
-                        "type": "integer"
-                    },
-                    "page_size": {
-                        "type": "integer"
-                    },
-                    "pages": {
-                        "type": "integer"
-                    },
-                    "public_from": {
-                        "type": "integer"
-                    },
-                    "public_to": {
-                        "type": "integer"
-                    },
-                    "severity": {
-                        "type": "string"
-                    },
-                    "show_all": {
-                        "type": "boolean"
-                    },
-                    "sort": {
-                        "type": "boolean"
-                    },
-                    "total_items": {
-                        "type": "integer"
-                    }
-                }
-            },
-            "controllers.AdvisorySystemsMeta": {
-                "type": "object",
-                "properties": {
-                    "advisory": {
-                        "type": "string"
-                    },
-                    "data_format": {
-                        "type": "string"
-                    },
-                    "enabled": {
-                        "type": "boolean"
-                    },
-                    "filter": {
-                        "type": "string"
-                    },
-                    "limit": {
-                        "type": "integer"
-                    },
-                    "offset": {
-                        "type": "integer"
-                    },
-                    "page": {
-                        "type": "integer"
-                    },
-                    "page_size": {
-                        "type": "integer"
-                    },
-                    "pages": {
-                        "type": "integer"
-                    },
-                    "total_items": {
-                        "type": "integer"
-                    }
-                }
-            },
             "controllers.AdvisorySystemsResponse": {
                 "type": "object",
                 "properties": {
@@ -543,7 +712,21 @@
                         "$ref": "#/components/schemas/controllers.Links"
                     },
                     "meta": {
-                        "$ref": "#/components/schemas/controllers.AdvisorySystemsMeta"
+                        "$ref": "#/components/schemas/controllers.ListMeta"
+                    }
+                }
+            },
+            "controllers.FilterData": {
+                "type": "object",
+                "properties": {
+                    "op": {
+                        "type": "string"
+                    },
+                    "values": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 }
             },
@@ -564,6 +747,32 @@
                     }
                 }
             },
+            "controllers.ListMeta": {
+                "type": "object",
+                "properties": {
+                    "filter": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/controllers.FilterData"
+                        }
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "offset": {
+                        "type": "integer"
+                    },
+                    "sort": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "total_items": {
+                        "type": "integer"
+                    }
+                }
+            },
             "controllers.SystemAdvisoriesResponse": {
                 "type": "object",
                 "properties": {
@@ -571,14 +780,48 @@
                         "type": "array",
                         "description": "advisories items",
                         "items": {
-                            "$ref": "#/components/schemas/controllers.AdvisoryItem"
+                            "$ref": "#/components/schemas/controllers.SystemAdvisoryItem"
                         }
                     },
                     "links": {
                         "$ref": "#/components/schemas/controllers.Links"
                     },
                     "meta": {
-                        "$ref": "#/components/schemas/controllers.AdvisoryMeta"
+                        "$ref": "#/components/schemas/controllers.ListMeta"
+                    }
+                }
+            },
+            "controllers.SystemAdvisoryItem": {
+                "type": "object",
+                "properties": {
+                    "attributes": {
+                        "$ref": "#/components/schemas/controllers.SystemAdvisoryItemAttributes"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "controllers.SystemAdvisoryItemAttributes": {
+                "type": "object",
+                "properties": {
+                    "advisory_type": {
+                        "type": "integer"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "public_date": {
+                        "type": "string"
+                    },
+                    "severity": {
+                        "type": "integer"
+                    },
+                    "synopsis": {
+                        "type": "string"
                     }
                 }
             },
@@ -624,38 +867,9 @@
                     },
                     "rhsa_count": {
                         "type": "integer"
-                    }
-                }
-            },
-            "controllers.SystemsMeta": {
-                "type": "object",
-                "properties": {
-                    "data_format": {
-                        "type": "string"
                     },
-                    "enabled": {
+                    "stale": {
                         "type": "boolean"
-                    },
-                    "filter": {
-                        "type": "string"
-                    },
-                    "limit": {
-                        "type": "integer"
-                    },
-                    "offset": {
-                        "type": "integer"
-                    },
-                    "page": {
-                        "type": "integer"
-                    },
-                    "page_size": {
-                        "type": "integer"
-                    },
-                    "pages": {
-                        "type": "integer"
-                    },
-                    "total_items": {
-                        "type": "integer"
                     }
                 }
             },
@@ -672,7 +886,7 @@
                         "$ref": "#/components/schemas/controllers.Links"
                     },
                     "meta": {
-                        "$ref": "#/components/schemas/controllers.SystemsMeta"
+                        "$ref": "#/components/schemas/controllers.ListMeta"
                     }
                 }
             }

@@ -46,15 +46,24 @@ type SystemsResponse struct {
 	Meta  ListMeta     `json:"meta"`
 }
 
+// nolint: lll
 // @Summary Show me all my systems
 // @Description Show me all my systems
 // @ID listSystems
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    limit          query   int     false   "Limit for paging"
-// @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field"    Enums(id,last_updated,last_evaluation)
+// @Param    limit   query   int     false   "Limit for paging"
+// @Param    offset  query   int     false   "Offset for paging"
+// @Param    sort    query   string  false   "Sort field" Enums(id,last_evaluation,last_updated,rhsa_count,rhba_count,rhea_count,enabled,stale)
+// @Param    filter[id]              query   string  false "Filter"
+// @Param    filter[last_evaluation] query   string  false "Filter"
+// @Param    filter[last_updated]    query   string  false "Filter"
+// @Param    filter[rhsa_count]      query   string  false "Filter"
+// @Param    filter[rhba_count]      query   string  false "Filter"
+// @Param    filter[rhea_count]      query   string  false "Filter"
+// @Param    filter[enabled]         query   string  false "Filter"
+// @Param    filter[stale]           query   string  false "Filter"
 // @Success 200 {object} SystemsResponse
 // @Router /api/patch/v1/systems [get]
 func SystemsListHandler(c *gin.Context) {
