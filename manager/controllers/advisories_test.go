@@ -172,3 +172,9 @@ func TestAdvisoriesSearch(t *testing.T) {
 		assert.Equal(t, 1, output.Meta.TotalItems)
 	})
 }
+
+func TestAdvisoriesSearchFilter(t *testing.T) {
+	testAdvisoriesOk(t, "GET", "?search=adv-3&filter[advisory_type]=1", func(output AdvisoriesResponse) {
+		assert.Equal(t, 0, len(output.Data))
+	})
+}
