@@ -156,11 +156,7 @@ func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) *gorm.DB 
 	}
 
 	searchExtended := "%" + search + "%"
-	txWithSearch := tx.Where("LOWER("+searchColumns[0]+") LIKE LOWER(?)", searchExtended)
-	if len(searchColumns) > 1 {
-		for _, searchColumn := range searchColumns[1:] {
-			txWithSearch = txWithSearch.Or("LOWER("+searchColumn+") LIKE LOWER(?)", searchExtended)
-		}
-	}
+	concatValue := strings.Join(searchColumns, ",' ',")
+	txWithSearch := tx.Where("LOWER(CONCAT("+concatValue+")) LIKE LOWER(?)", searchExtended)
 	return txWithSearch
 }
