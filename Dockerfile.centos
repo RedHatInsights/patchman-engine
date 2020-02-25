@@ -7,7 +7,7 @@ RUN /manifest/rpm_list.sh | grep -v -E "^(redhat|centos|fedora)-release" > /tmp/
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 
 RUN yum module -y install go-toolset postgresql && \
-    yum -y install git && \
+    yum -y install git diffutils && \
     /manifest/rpm_list.sh > /tmp/final_rpm.txt
 
 ENV GOPATH=/go
