@@ -10,7 +10,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/pkg/errors"
@@ -71,9 +70,10 @@ func parseUploadMessage(event *mqueue.PlatformEvent) (*utils.Identity, error) {
 	}
 
 	if !identity.IsSmartEntitled() {
-		return nil, errors.New(fmt.Sprintf("Account '%s' is not smart entitled",
-			identity.Identity.AccountNumber))
+		utils.Log("account", identity.Identity.AccountNumber).
+			Warn("account without smart management entitlement")
 	}
+
 	return identity, nil
 }
 
