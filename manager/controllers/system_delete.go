@@ -2,11 +2,10 @@ package controllers
 
 import (
 	"app/base/database"
-	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"errors"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	"net/http"
 )
 
@@ -27,21 +26,33 @@ func SystemDeleteHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
 		return
 	}
-
-	del := database.Db.
+	var systemInventoryID []string
+	err := database.Db.Set("gorm:query_option", "FOR UPDATE").
+		Table("system_platform").
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account).
 		Where("inventory_id = ?", inventoryID).
-		Delete(&models.SystemPlatform{})
+		Pluck("inventory_id", &systemInventoryID).Error
 
-	if gorm.IsRecordNotFoundError(del.Error) {
-		LogAndRespNotFound(c, del.Error, "inventory not found")
+	if err != nil {
+		LogAndRespError(c, err, "could not query inventory")
 		return
 	}
 
-	if del.RowsAffected > 0 {
-		c.Status(http.StatusNoContent)
+	if len(systemInventoryID) == 0 {
+		LogAndRespNotFound(c, errors.New("no rows returned"), "system not found")
+		return
+	}
+
+	query := database.Db.Exec("select deleted_inventory_id from delete_system(?)", systemInventoryID[0])
+
+	if query.Error != nil {
+		LogAndRespError(c, err, "Could not delete system")
+		return
+	}
+	if query.RowsAffected > 0 {
+		c.Status(http.StatusOK)
 	} else {
-		c.Status(http.StatusBadRequest)
+		c.Status(http.StatusNotFound)
 	}
 }

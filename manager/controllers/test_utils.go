@@ -12,20 +12,20 @@ func initRouter(handler gin.HandlerFunc) *gin.Engine {
 	return initRouterWithPath(handler, "/")
 }
 
-func initRouterWithPath(handler gin.HandlerFunc, path string) *gin.Engine {
-	router := gin.Default()
-	router.Use(middlewares.RequestResponseLogger())
-	router.Use(middlewares.MockAuthenticator("0"))
-	router.GET(path, handler)
-	return router
-}
-
-func initRouterWithAccount(handler gin.HandlerFunc, path string, account string) *gin.Engine {
+func initRouterWithParams(handler gin.HandlerFunc, account, method, path string) *gin.Engine {
 	router := gin.Default()
 	router.Use(middlewares.RequestResponseLogger())
 	router.Use(middlewares.MockAuthenticator(account))
-	router.GET(path, handler)
+	router.Handle(method, path, handler)
 	return router
+}
+
+func initRouterWithPath(handler gin.HandlerFunc, path string) *gin.Engine {
+	return initRouterWithParams(handler, "0", "GET", path)
+}
+
+func initRouterWithAccount(handler gin.HandlerFunc, path string, account string) *gin.Engine {
+	return initRouterWithParams(handler, account, "GET", path)
 }
 
 func ParseReponseBody(t *testing.T, bytes []byte, out interface{}) {

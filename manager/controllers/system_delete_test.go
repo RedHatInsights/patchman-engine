@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"app/base/core"
+	"app/base/database"
+	"app/base/models"
 	"app/base/utils"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -9,15 +11,36 @@ import (
 	"testing"
 )
 
+func TestInit(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	database.Db.Create(&models.SystemPlatform{
+		InventoryID: "DEL-1",
+		RhAccountID: 0,
+	})
+}
+
 func TestSystemDelete(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("DELETE", "/INV-0", nil)
-	initRouterWithPath(SystemDeleteHandler, "/:inventory_id").ServeHTTP(w, req)
+	req, _ := http.NewRequest("DELETE", "/DEL-1", nil)
+	initRouterWithParams(SystemDeleteHandler, "0", "DELETE", "/:inventory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
+}
+
+func TestSystemDeleteWrongAccount(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/DEL-1", nil)
+	initRouterWithParams(SystemDeleteHandler, "1", "DELETE", "/:inventory_id").ServeHTTP(w, req)
+
+	assert.Equal(t, 404, w.Code)
 }
 
 func TestSystemDeleteNotFound(t *testing.T) {
@@ -25,8 +48,8 @@ func TestSystemDeleteNotFound(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("DELETE", "/INV-0", nil)
-	initRouterWithPath(SystemDeleteHandler, "/:inventory_id").ServeHTTP(w, req)
+	req, _ := http.NewRequest("DELETE", "/DEL-1", nil)
+	initRouterWithParams(SystemDeleteHandler, "0", "DELETE", "/:inventory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 404, w.Code)
 }
