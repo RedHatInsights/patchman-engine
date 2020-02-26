@@ -16,7 +16,7 @@ DECLARE
 BEGIN
     select count(*)
     from (
-             select delete_system(id)
+             select delete_system(inventory_id)
              from system_platform
              where culled_timestamp < now()
          ) t
