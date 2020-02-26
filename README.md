@@ -24,6 +24,11 @@ This component also performs system culling.
 ### Schema
 ![](docs/md/schema.png)
 
+### Monitoring
+Each application component (except database) exposes metrics for [Prometheus](https://prometheus.io/)
+on `/metrics` endpoint (see [docker-compose.yml](docker-compose.yml) for ports). Runtime logs can be send to Amazon
+CloudWatch setting proper environment variables (see [awscloudwatch.go](base/utils/awscloudwatch.go)).
+
 ## Deploying
 This project can be deployed either locally or in the cloud using openshift.
 
