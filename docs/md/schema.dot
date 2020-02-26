@@ -1,0 +1,96 @@
+// dot schema.dot -Tpng -o schema.png -Gdpi=100
+digraph G {
+    rankdir="LR";
+    overlap=scalexy;
+    node [shape=box
+          style="rounded,filled"]
+
+   client [fillcolor="pink"
+            pos = "0,0!"]
+
+   kafka[label=<
+           <table border="0">
+            <tr><td><img src="icon_kafka.png"/></td></tr>
+            <tr><td>Kafka :9092</td></tr>
+           </table>>
+           fillcolor=white]
+
+    manager[label=<
+           <table border="0">
+            <tr><td><img src="icon_gopher.png"/></td></tr>
+            <tr><td>manager</td></tr>
+           </table>>
+           fillcolor=lightblue]
+
+    listener[label=<
+           <table border="0">
+            <tr><td><img src="icon_gopher.png"/></td></tr>
+            <tr><td>listener</td></tr>
+           </table>>
+           fillcolor=lightblue]
+
+    evaluator_recalc[label=<
+           <table border="0">
+            <tr><td><img src="icon_gopher.png"/></td></tr>
+            <tr><td>evaluator-recalc</td></tr>
+           </table>>
+           fillcolor=lightblue]
+
+    evaluator_upload[label=<
+           <table border="0">
+            <tr><td><img src="icon_gopher.png"/></td></tr>
+            <tr><td>evaluator-upload</td></tr>
+           </table>>
+           fillcolor=lightblue]
+     
+     vmaas_sync[label=<
+           <table border="0">
+            <tr><td><img src="icon_gopher.png"/></td></tr>
+            <tr><td>vmaas-sync</td></tr>
+           </table>>
+           fillcolor=lightblue]
+
+    db[label=<
+           <table border="0">
+            <tr><td><img src="icon_postgresql.png"/></td></tr>
+            <tr><td>database</td></tr>
+            <tr><td>:5432</td></tr>
+           </table>>
+           fillcolor=orange
+           shape=cylinder]
+
+    client -> manager [label="http:8080"]
+
+    vmaas[label=<
+           <table border="0">
+            <tr><td>VMaaS</td></tr>
+            <tr><td>:9001</td></tr>
+           </table>>
+          fillcolor=darkseagreen1]
+
+    {listener
+     evaluator_recalc
+     evaluator_upload
+     vmaas_sync} -> kafka
+    
+    vmaas -> {evaluator_recalc
+              evaluator_upload
+              vmaas_sync} [dir=back]
+
+    {rank=same client kafka vmaas}
+
+    subgraph cluster_os {
+        margin=25
+        label="OpenShift"
+        style="dashed,filled"
+        fillcolor=peachpuff
+        
+        {rank=same manager listener evaluator_recalc evaluator_upload vmaas_sync}
+        
+        manager -> db [label="r"]
+        listener -> db [label="rw"]
+        evaluator_recalc -> db [label="rw"]
+        evaluator_upload -> db [label="rw"]
+        vmaas_sync -> db [label="rw"]
+    }
+}

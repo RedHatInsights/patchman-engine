@@ -13,6 +13,9 @@ The project is written as a set of communicating containers. The core components
  data, syncs new advisories into the database, and requests re-evaluation for systems which could be affected by new advisories
 - Database - Self explanatory
 
+## Schema
+![](docs/md/schema.png)
+
 ## Deploying
 This project can be deployed either locally or in the cloud using openshift.
 
