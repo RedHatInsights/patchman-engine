@@ -82,7 +82,7 @@ func TestParseUploadMessage(t *testing.T) {
 
 	event.B64Identity = &ident
 	_, err = parseUploadMessage(&event)
-	assert.NotNil(t, err, "Should return not entitled error")
+	assert.Nil(t, err)
 
 	ident = "Invalid"
 	event.B64Identity = &ident
