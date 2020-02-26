@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (8, false);
+VALUES (9, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -96,66 +96,80 @@ BEGIN
     END IF;
 
     IF was_counted = TRUE AND should_count = FALSE THEN
-
+        -- Lock Rows, blocking other transactions which would want to modify affected rows in advisory_account_data
         WITH to_update_advisories AS (
-            SELECT ead.advisory_id, ternary(ead.status_id != sa.status_id, 1, 0) as divergent
-            FROM advisory_account_data ead
-                     INNER JOIN
-                 system_advisories sa ON ead.advisory_id = sa.advisory_id
-            WHERE ead.rh_account_id = NEW.rh_account_id
+            SELECT aad.advisory_id,
+                   aad.rh_account_id,
+                   aad.systems_affected - 1                                                    as systems_affected_dst,
+                   aad.systems_status_divergent - ternary(aad.status_id != sa.status_id, 1, 0) as divergent
+            FROM advisory_account_data aad
+                     INNER JOIN system_advisories sa ON aad.advisory_id = sa.advisory_id
+            WHERE aad.rh_account_id = NEW.rh_account_id
               AND sa.system_id = NEW.id
               AND sa.when_patched IS NULL
-            ORDER BY ead.advisory_id
-                FOR UPDATE OF ead
-            -- decrement systems_affected and systems_status_divergent in case status is different
+            ORDER BY aad.advisory_id
+                FOR UPDATE OF aad
         ),
+             -- Update rows where count is not 0, Does overwrite the value, relying on pevious locking to ensure
+             -- changes are consistent
              update AS (
-                 UPDATE advisory_account_data ead
-                     SET systems_affected = systems_affected - 1,
-                         systems_status_divergent = systems_status_divergent - ta.divergent
+                 UPDATE advisory_account_data aad
+                     SET systems_affected = ta.systems_affected_dst,
+                         systems_status_divergent = ta.divergent
                      FROM to_update_advisories ta
-                     WHERE ead.advisory_id = ta.advisory_id AND
-                           ead.rh_account_id = NEW.rh_account_id
+                     WHERE aad.advisory_id = ta.advisory_id
+                         AND aad.rh_account_id = NEW.rh_account_id
+                         AND ta.systems_affected_dst > 0
              )
-        DELETE
-        FROM advisory_account_data
-        WHERE rh_account_id = NEW.rh_account_id
-          AND systems_affected = 0;
+             -- Delete rows where count should be 0
+             -- This needs to be written this way, and not a straight delete, because per PostgreSQL documentation
+             -- All non-depending CTE queries are executed against same DB snapshot, and that means that
+             -- Delete stmt will not pick up changes performed by the update, leaving us with rows which have count of 0
 
+        DELETE
+        FROM advisory_account_data aad
+            USING to_update_advisories ta
+        WHERE aad.rh_account_id = NEW.rh_account_id
+          AND (aad.rh_account_id, aad.advisory_id) in (
+            SELECT ta.rh_account_id, ta.advisory_id
+            FROM to_update_advisories ta
+            WHERE ta.systems_affected_dst = 0
+        );
     ELSIF was_counted = FALSE AND should_count = TRUE THEN
-        -- increment affected advisory counts for system
+        -- increment affected advisory counts for system, performs locking
         WITH to_update_advisories AS (
-            SELECT ead.advisory_id, ternary(ead.status_id != sa.status_id, 1, 0) as divergent
-            FROM advisory_account_data ead
-                     INNER JOIN system_advisories sa
-                                ON ead.advisory_id = sa.advisory_id
-            WHERE ead.rh_account_id = NEW.rh_account_id
+            SELECT aad.advisory_id,
+                   aad.rh_account_id,
+                   aad.systems_affected + 1                                                    as systems_affected_dst,
+                   aad.systems_status_divergent + ternary(aad.status_id != sa.status_id, 1, 0) as divergent
+            FROM advisory_account_data aad
+                     INNER JOIN system_advisories sa ON aad.advisory_id = sa.advisory_id
+            WHERE aad.rh_account_id = NEW.rh_account_id
               AND sa.system_id = NEW.id
               AND sa.when_patched IS NULL
-            ORDER BY ead.advisory_id FOR
-                UPDATE OF ead
-            -- increment systems_affected and systems_status_divergent in case status is different
+            ORDER BY aad.advisory_id FOR UPDATE OF aad
         ),
              update as (
-                 -- increment only systems_affected in case status is same
+                 -- update rows with result from previous select, which locked them
                  UPDATE advisory_account_data ead
-                     SET systems_affected = systems_affected + 1,
-                         systems_status_divergent = systems_status_divergent + ta.divergent
+                     SET systems_affected = ta.systems_affected_dst,
+                         systems_status_divergent = ta.divergent
                      FROM to_update_advisories ta
                      WHERE ead.advisory_id = ta.advisory_id
                          AND ead.rh_account_id = NEW.rh_account_id)
+
+             -- We can't use `to_update_advisories` rows for insert, because they dont exist
         INSERT
         INTO advisory_account_data (advisory_id, rh_account_id, systems_affected)
         SELECT sa.advisory_id, NEW.rh_account_id, 1
         FROM system_advisories sa
         WHERE sa.system_id = NEW.id
           AND sa.when_patched IS NULL
-          AND NOT EXISTS(
-                SELECT 1
-                FROM advisory_account_data
-                WHERE rh_account_id = NEW.rh_account_id
-                  AND advisory_id = sa.advisory_id
-            )
+          -- We system_advisory pairs which don't already have rows in to_update_advisories
+          AND (NEW.rh_account_id, sa.advisory_id) NOT IN (
+            SELECT ta.rh_account_id, ta.advisory_id
+            FROM to_update_advisories ta
+        )
         ON CONFLICT (advisory_id, rh_account_id) DO UPDATE SET systems_affected = advisory_account_data.systems_affected + EXCLUDED.systems_affected;
     ELSE
         RAISE EXCEPTION 'Shouldnt happen';
