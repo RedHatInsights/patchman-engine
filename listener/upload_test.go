@@ -3,7 +3,10 @@ package listener
 import (
 	"app/base/core"
 	"app/base/utils"
+	"context"
+	"errors"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
+	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -82,19 +85,45 @@ func TestUploadHandler(t *testing.T) {
 	deleteData(t)
 }
 
-func TestEmptyUploadHandler(t *testing.T) {
-	utils.SkipWithoutDB(t)
+// error when parsing identity
+func TestUploadHandlerWarn(t *testing.T) {
+	logHook := utils.NewTestLogHook()
+	log.AddHook(logHook)
+	noPkgsEvent := createTestUploadEvent(id, false)
+	uploadHandler(noPkgsEvent)
+	assert.Equal(t, 1, len(logHook.LogEntries))
+	assert.Equal(t, WarnSkippingNoPackages, logHook.LogEntries[0].Message)
+}
+
+// error when parsing identity
+func TestUploadHandlerError1(t *testing.T) {
+	logHook := utils.NewTestLogHook()
+	log.AddHook(logHook)
+	event := createTestUploadEvent(id, true)
+	event.Host.Account = ""
+	uploadHandler(event)
+	assert.Equal(t, 1, len(logHook.LogEntries))
+	assert.Equal(t, ErrorNoAccountProvided, logHook.LogEntries[0].Message)
+}
+
+type erroringWriter struct{}
+
+func (t *erroringWriter) WriteMessages(_ context.Context, _ ...kafka.Message) error {
+	return errors.New("err")
+}
+
+// error when processing upload
+func TestUploadHandlerError2(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 	core.SetupTestEnvironment()
 	configure()
-
-	logHook := utils.TestLogHook{}
-	log.AddHook(&logHook)
-
+	deleteData(t)
+	evalWriter = &erroringWriter{}
+	logHook := utils.NewTestLogHook()
+	log.AddHook(logHook)
 	_ = getOrCreateTestAccount(t)
-	inventoryID := "TEST-NO-PKGS"
-	event := createTestUploadEvent(inventoryID, false)
+	event := createTestUploadEvent(id, true)
 	uploadHandler(event)
-
-	assert.Equal(t, logHook.LogEntries[len(logHook.LogEntries)-1].Message, "skipping profile with no packages")
+	assert.Equal(t, ErrorProcessUpload, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
+	deleteData(t)
 }
