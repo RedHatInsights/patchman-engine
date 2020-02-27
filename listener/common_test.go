@@ -57,7 +57,7 @@ func getOrCreateTestAccount(t *testing.T) int {
 	return accountID
 }
 
-// nolint: lll
+//nolint directives
 func createTestUploadEvent(inventoryID string, packages bool) HostEgressEvent {
 	ev := HostEgressEvent{
 		Type:             "created",

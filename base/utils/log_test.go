@@ -11,7 +11,7 @@ func TestInitLogging(t *testing.T) {
 	assert.Nil(t, os.Setenv("LOG_STYLE", "json"))
 	ConfigureLogging()
 
-	var hook = &TestLogHook{}
+	var hook = NewTestLogHook()
 	log.AddHook(hook)
 
 	Log("num", 1, "str", "text").Info("info log")
@@ -27,7 +27,7 @@ func TestOddArgsWarn(t *testing.T) {
 	assert.Nil(t, os.Setenv("LOG_STYLE", "json"))
 	ConfigureLogging()
 
-	var hook = &TestLogHook{}
+	var hook = NewTestLogHook()
 	log.AddHook(hook)
 
 	Log("num", 1, 2).Info("info log")

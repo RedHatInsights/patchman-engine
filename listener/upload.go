@@ -17,6 +17,13 @@ import (
 	"time"
 )
 
+const (
+	WarnSkippingNoPackages = "skipping profile with no packages"
+	ErrorNoAccountProvided = "no account provided in host message"
+	ErrorProcessUpload     = "unable to process upload"
+	UploadSuccess          = "upload event handled successfully"
+)
+
 type Host struct {
 	ID                    string                    `json:"id,omitempty"`
 	DisplayName           *string                   `json:"display_name,omitempty"`
@@ -67,26 +74,26 @@ func uploadHandler(event HostEgressEvent) {
 	systemProfile := event.Host.SystemProfile
 
 	if len(systemProfile.InstalledPackages) == 0 {
-		utils.Log("inventoryID", event.Host.ID).Warn("skipping profile with no packages")
+		utils.Log("inventoryID", event.Host.ID).Warn(WarnSkippingNoPackages)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
 		return
 	}
 
 	if len(event.Host.Account) == 0 {
-		utils.Log("inventoryID", event.Host.ID).Error("No account provided in host message")
+		utils.Log("inventoryID", event.Host.ID).Error(ErrorNoAccountProvided)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity)
 		return
 	}
 
 	err := processUpload(context.Background(), event.Host.ID, event.Host.Account, &event.Host)
 	if err != nil {
-		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error("unable to process upload")
+		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorProcessUpload)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
 		return
 	}
 
 	messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
-	utils.Log("inventoryID", event.Host.ID).Debug("Upload event handled successfully")
+	utils.Log("inventoryID", event.Host.ID).Debug(UploadSuccess)
 }
 
 // Stores or updates the account data, returning the account id

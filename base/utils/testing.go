@@ -19,14 +19,23 @@ func SkipWithoutPlatform(t *testing.T) {
 }
 
 type TestLogHook struct {
-	LogEntries []log.Entry
+	LogEntries    []log.Entry
+	LevelsToStore []log.Level
 }
 
 func (t *TestLogHook) Levels() []log.Level {
-	return []log.Level{log.InfoLevel, log.WarnLevel}
+	return t.LevelsToStore
 }
 
 func (t *TestLogHook) Fire(entry *log.Entry) error {
 	t.LogEntries = append(t.LogEntries, *entry)
 	return nil
+}
+
+func NewTestLogHook(levelsToStore ...log.Level) *TestLogHook {
+	if len(levelsToStore) == 0 {
+		levelsToStore = []log.Level{log.PanicLevel, log.FatalLevel, log.ErrorLevel, log.WarnLevel, log.InfoLevel,
+			log.DebugLevel, log.TraceLevel}
+	}
+	return &TestLogHook{LevelsToStore: levelsToStore}
 }
