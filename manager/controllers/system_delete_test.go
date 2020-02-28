@@ -15,10 +15,10 @@ func TestInit(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	database.Db.Create(&models.SystemPlatform{
+	assert.NoError(t, database.Db.Create(&models.SystemPlatform{
 		InventoryID: "DEL-1",
 		RhAccountID: 0,
-	})
+	}).Error)
 }
 
 func TestSystemDelete(t *testing.T) {
