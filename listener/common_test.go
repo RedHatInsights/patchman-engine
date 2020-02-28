@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
+	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -67,6 +68,8 @@ func createTestUploadEvent(inventoryID string, packages bool) HostEgressEvent {
 	if packages {
 		ev.Host.SystemProfile.InstalledPackages = []string{"kernel-54321.rhel8.x86_64"}
 	}
+	ev.Host.SystemProfile.DnfModules = []inventory.DnfModule{{Name: "modName", Stream: "modStream"}}
+	ev.Host.SystemProfile.YumRepos = []inventory.YumRepo{{Name: "repoName", Enabled: true}}
 	return ev
 }
 
