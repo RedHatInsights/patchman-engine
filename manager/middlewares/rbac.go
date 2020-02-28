@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/RedHatInsights/patchman-clients/rbac"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 // Make RBAC client on demand, with specified identity
@@ -30,6 +31,7 @@ func checkRbac(c *gin.Context) bool {
 		utils.Log("err", err.Error()).Error("Call to RBAC svc failed")
 		return false
 	}
+	// For now we either allow access or don't allow it
 	for _, a := range access.Data {
 		if a.Permission == "patch:*:*" {
 			return true
@@ -42,8 +44,7 @@ func checkRbac(c *gin.Context) bool {
 func RBAC() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !checkRbac(c) {
-			//c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "RBAC check failed"})
-			utils.Log().Info("Rbac check failed")
+			c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "RBAC check failed"})
 			return
 		}
 	}
