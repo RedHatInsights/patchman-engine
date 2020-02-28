@@ -27,7 +27,11 @@ func SystemDeleteHandler(c *gin.Context) {
 		return
 	}
 	var systemInventoryID []string
-	err := database.Db.Set("gorm:query_option", "FOR UPDATE").
+	tx := database.Db.Begin()
+
+	defer tx.RollbackUnlessCommitted()
+
+	err := tx.Set("gorm:query_option", "FOR UPDATE").
 		Table("system_platform").
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account).
@@ -35,7 +39,7 @@ func SystemDeleteHandler(c *gin.Context) {
 		Pluck("inventory_id", &systemInventoryID).Error
 
 	if err != nil {
-		LogAndRespError(c, err, "could not query inventory")
+		LogAndRespError(c, err, "could not query database for system")
 		return
 	}
 
@@ -44,15 +48,22 @@ func SystemDeleteHandler(c *gin.Context) {
 		return
 	}
 
-	query := database.Db.Exec("select deleted_inventory_id from delete_system(?)", systemInventoryID[0])
+	query := tx.Exec("select deleted_inventory_id from delete_system(?)", systemInventoryID[0])
 
 	if query.Error != nil {
 		LogAndRespError(c, err, "Could not delete system")
 		return
 	}
+
+	if tx.Commit().Error != nil {
+		LogAndRespError(c, err, "Could not delete system")
+		return
+	}
+
 	if query.RowsAffected > 0 {
 		c.Status(http.StatusOK)
 	} else {
-		c.Status(http.StatusNotFound)
+		LogAndRespNotFound(c, errors.New("no rows returned"), "system not found")
+		return
 	}
 }
