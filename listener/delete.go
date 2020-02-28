@@ -9,18 +9,24 @@ import (
 
 var DeleteMessageHandler = mqueue.MakeMessageHandler(deleteHandler)
 
+const (
+	WarnEmptyEventType = "empty event type received"
+	WarnNoDeleteType   = "non-delete event type received"
+	WarnNoRowsModified = "no rows modified on delete event"
+)
+
 func deleteHandler(event mqueue.PlatformEvent) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventDelete))
 
 	if event.Type == nil {
-		utils.Log("inventoryID", event.ID).Warn("empty event type received")
+		utils.Log("inventoryID", event.ID).Warn(WarnEmptyEventType)
 		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorOtherType)
 		return
 	}
 
 	if *event.Type != "delete" {
-		utils.Log("inventoryID", event.ID, "eventType", *event.Type).Warn("non-delete event type received")
+		utils.Log("inventoryID", event.ID, "eventType", *event.Type).Warn(WarnNoDeleteType)
 		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorOtherType)
 		return
 	}
@@ -34,7 +40,7 @@ func deleteHandler(event mqueue.PlatformEvent) {
 	}
 
 	if query.RowsAffected == 0 {
-		utils.Log("inventoryID", event.ID).Warn("No rows modified on delete event")
+		utils.Log("inventoryID", event.ID).Warn(WarnNoRowsModified)
 		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorNoRows)
 		return
 	}
