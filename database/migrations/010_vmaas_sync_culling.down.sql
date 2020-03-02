@@ -1,0 +1,1 @@
+REVOKE SELECT, UPDATE, DELETE ON system_platform FROM vmaas_sync;

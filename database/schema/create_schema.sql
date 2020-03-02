@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (9, false);
+VALUES (10, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -473,6 +473,9 @@ GRANT UPDATE (advisory_count_cache,
               advisory_enh_count_cache,
               advisory_bug_count_cache,
               advisory_sec_count_cache), DELETE ON system_platform TO manager;
+
+-- VMaaS sync needs to be able to perform system culling tasks
+GRANT SELECT, UPDATE, DELETE ON system_platform to vmaas_sync;
 
 -- advisory_type
 CREATE TABLE IF NOT EXISTS advisory_type
