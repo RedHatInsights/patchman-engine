@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (10, false);
+VALUES (11, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -387,7 +387,8 @@ DECLARE
 BEGIN
     with updated as (UPDATE system_platform
         SET stale = true
-        WHERE stale_timestamp < now()
+        -- Systems AFTER stale_warning timestamp
+        WHERE now() > stale_warning_timestamp
         RETURNING id
     )
     select count(*)
