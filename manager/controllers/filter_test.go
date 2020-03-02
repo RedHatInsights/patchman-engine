@@ -28,7 +28,7 @@ func TestFilterParse(t *testing.T) {
 	}
 
 	for i, f := range testFilters {
-		filter, err := ParseFilterValue("test", f)
+		filter, err := ParseFilterValue(f)
 		assert.Equal(t, nil, err)
 		assert.Equal(t, operators[i], filter.Operator)
 		assert.Equal(t, values[i], filter.Values)
@@ -45,9 +45,9 @@ func TestFilterToSql(t *testing.T) {
 	}
 
 	for i, f := range testFilters {
-		filter, err := ParseFilterValue("test", f)
+		filter, err := ParseFilterValue(f)
 		assert.Equal(t, nil, err)
-		query, _, err := filter.ToWhere(database.AttrMap{"test": "test"})
+		query, _, err := filter.ToWhere("test", database.AttrMap{"test": "test"})
 		assert.Equal(t, nil, err)
 		assert.Equal(t, queries[i], query)
 	}
@@ -63,9 +63,9 @@ func TestFilterToSqlAdvanced(t *testing.T) {
 	}
 
 	for i, f := range testFilters {
-		filter, err := ParseFilterValue("test", f)
+		filter, err := ParseFilterValue(f)
 		assert.Equal(t, nil, err)
-		query, _, err := filter.ToWhere(database.AttrMap{"test": "(NOT test)"})
+		query, _, err := filter.ToWhere("test", database.AttrMap{"test": "(NOT test)"})
 		assert.Equal(t, nil, err)
 		assert.Equal(t, queries[i], query)
 	}
