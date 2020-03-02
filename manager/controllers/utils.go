@@ -60,14 +60,12 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap) (*gorm.
 func ParseFilters(c *gin.Context, allowedFields database.AttrMap,
 	defaultFilters map[string]FilterData) (Filters, error) {
 	filters := Filters{}
+
 	// Apply default filters
 	for n, v := range defaultFilters {
-		filters = append(filters, Filter{
-
-			FieldName:  n,
-			FilterData: v,
-		})
+		filters[n] = v
 	}
+
 	// Apply query filters, if there are any
 	queryFilters, has := c.GetQueryMap("filter")
 	if !has {
@@ -77,11 +75,11 @@ func ParseFilters(c *gin.Context, allowedFields database.AttrMap,
 		if _, has := allowedFields[k]; !has {
 			return nil, errors.New(fmt.Sprintf("Invalid filter field: %v", k))
 		}
-		filter, err := ParseFilterValue(k, v)
+		filter, err := ParseFilterValue(v)
 		if err != nil {
 			return nil, err
 		}
-		filters = append(filters, filter)
+		filters[k] = filter
 	}
 	return filters, nil
 }
@@ -129,7 +127,7 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, fields database.AttrMa
 	meta := ListMeta{
 		Limit:      limit,
 		Offset:     offset,
-		Filter:     filters.ToMetaMap(),
+		Filter:     filters,
 		Sort:       sortFields,
 		TotalItems: total,
 	}
