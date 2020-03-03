@@ -5,6 +5,7 @@ import (
 	"app/base/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestGetLastRepobasedEvalTms(t *testing.T) {
@@ -25,4 +26,13 @@ func TestGetRepoBasedInventoryIDs(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(*inventoryIDs))
 	assert.Equal(t, []string{"INV-1", "INV-5", "INV-6"}, *inventoryIDs)
+}
+
+func TestGetUpdatedRepos(t *testing.T) {
+	core.SetupTestEnvironment()
+	configure()
+
+	repos, err := getUpdatedRepos(time.Now())
+	assert.Nil(t, err)
+	assert.Equal(t, 3, len(*repos))
 }
