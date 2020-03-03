@@ -107,6 +107,20 @@ func erratasHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
+func reposHandler(c *gin.Context) {
+	data := vmaas.ReposResponse{
+		Page:     0,
+		PageSize: 3,
+		Pages:    1,
+		RepositoryList: map[string][]map[string]interface{}{
+			"repo1": make([]map[string]interface{}, 0),
+			"repo2": make([]map[string]interface{}, 0),
+			"repo3": make([]map[string]interface{}, 0),
+		},
+	}
+	c.JSON(http.StatusOK, data)
+}
+
 var upgrader = websocket.Upgrader{} // use default options
 func wshandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -132,6 +146,8 @@ func InitVMaaS(app *gin.Engine) {
 	app.POST("/api/v3/updates", updatesHandler)
 	// Mock erratas endpoint for VMaaS
 	app.POST("/api/v1/errata", erratasHandler)
+	// Mock repos endpoint for VMaaS
+	app.POST("/api/v1/repos", reposHandler)
 	// Mock websocket endpoint for VMaaS
 	app.GET("/ws", func(context *gin.Context) {
 		wshandler(context.Writer, context.Request)
