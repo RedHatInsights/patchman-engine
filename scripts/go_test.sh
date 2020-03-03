@@ -2,6 +2,8 @@
 
 set -o pipefail
 
+export TEST_WD=`pwd`
+
 TEST_DIRS=${1:-./...}
 
 # Run go test and colorize output (PASS - green, FAIL - red).

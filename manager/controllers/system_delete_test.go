@@ -11,14 +11,17 @@ import (
 	"testing"
 )
 
-func TestInit(t *testing.T) {
+func TestInitDelete(t *testing.T) {
+	utils.TestLoadEnv("conf/test.env")
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
 	assert.NoError(t, database.Db.Create(&models.SystemPlatform{
 		InventoryID: "DEL-1",
-		RhAccountID: 0,
+		RhAccountID: 1,
 	}).Error)
+	utils.TestLoadEnv("conf/manager.env")
+	core.SetupTestEnvironment()
 }
 
 func TestSystemDelete(t *testing.T) {
@@ -27,7 +30,7 @@ func TestSystemDelete(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("DELETE", "/DEL-1", nil)
-	initRouterWithParams(SystemDeleteHandler, "0", "DELETE", "/:inventory_id").ServeHTTP(w, req)
+	initRouterWithParams(SystemDeleteHandler, "1", "DELETE", "/:inventory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 }
@@ -38,7 +41,7 @@ func TestSystemDeleteWrongAccount(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("DELETE", "/DEL-1", nil)
-	initRouterWithParams(SystemDeleteHandler, "1", "DELETE", "/:inventory_id").ServeHTTP(w, req)
+	initRouterWithParams(SystemDeleteHandler, "2", "DELETE", "/:inventory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 404, w.Code)
 }
@@ -49,7 +52,7 @@ func TestSystemDeleteNotFound(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("DELETE", "/DEL-1", nil)
-	initRouterWithParams(SystemDeleteHandler, "0", "DELETE", "/:inventory_id").ServeHTTP(w, req)
+	initRouterWithParams(SystemDeleteHandler, "1", "DELETE", "/:inventory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 404, w.Code)
 }

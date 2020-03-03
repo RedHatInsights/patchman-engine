@@ -31,7 +31,7 @@ func SystemDeleteHandler(c *gin.Context) {
 
 	defer tx.RollbackUnlessCommitted()
 
-	err := tx.Set("gorm:query_option", "FOR UPDATE").
+	err := tx.Set("gorm:query_option", "FOR UPDATE OF system_platform").
 		Table("system_platform").
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account).

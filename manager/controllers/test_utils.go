@@ -21,7 +21,7 @@ func initRouterWithParams(handler gin.HandlerFunc, account, method, path string)
 }
 
 func initRouterWithPath(handler gin.HandlerFunc, path string) *gin.Engine {
-	return initRouterWithParams(handler, "0", "GET", path)
+	return initRouterWithParams(handler, "1", "GET", path)
 }
 
 func initRouterWithAccount(handler gin.HandlerFunc, path string, account string) *gin.Engine {
