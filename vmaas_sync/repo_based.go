@@ -21,3 +21,17 @@ func getLastRepobasedEvalTms() (*time.Time, error) {
 	}
 	return timestamps[0], nil
 }
+
+func getRepoBasedInventoryIDs(repos []string) (*[]string, error) {
+	var intentoryIDs []string
+	err := database.Db.Table("system_repo sr").
+		Joins("JOIN repo ON repo.id = sr.repo_id").
+		Joins("JOIN system_platform sp ON sp.id = sr.system_id").
+		Where("repo.name IN (?)", repos).
+		Order("inventory_id ASC").
+		Pluck("inventory_id", &intentoryIDs).Error
+	if err != nil {
+		return nil, err
+	}
+	return &intentoryIDs, nil
+}

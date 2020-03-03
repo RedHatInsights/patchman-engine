@@ -15,3 +15,14 @@ func TestGetLastRepobasedEvalTms(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "2018-04-04 23:23:45 +0000 UTC", ts.String())
 }
+
+func TestGetRepoBasedInventoryIDs(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	repos := []string{"repo1", "repo3"}
+	inventoryIDs, err := getRepoBasedInventoryIDs(repos)
+	assert.Nil(t, err)
+	assert.Equal(t, 3, len(*inventoryIDs))
+	assert.Equal(t, []string{"INV-1", "INV-5", "INV-6"}, *inventoryIDs)
+}
