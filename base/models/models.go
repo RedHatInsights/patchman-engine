@@ -129,3 +129,12 @@ func (SystemRepo) TableName() string {
 }
 
 type SystemRepoSlice []SystemRepo
+
+type TimestampKV struct {
+	Name  string
+	Value *time.Time
+}
+
+func (TimestampKV) TableName() string {
+	return "timestamp_kv"
+}
