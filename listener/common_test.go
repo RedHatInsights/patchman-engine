@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
+	"app/base/utils"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -11,6 +12,10 @@ import (
 )
 
 const id = "TEST-00000"
+
+func TestInit(t *testing.T) {
+	utils.TestLoadEnv("conf/listener.env")
+}
 
 func deleteData(t *testing.T) {
 	// Delete test data from previous run
@@ -24,7 +29,7 @@ func deleteData(t *testing.T) {
 	assert.Nil(t, database.Db.Unscoped().Where("name = ?", id).Delete(&models.RhAccount{}).Error)
 }
 
-// nolint:unparam
+// nolint: unparam
 func assertSystemInDb(t *testing.T, inventoryID string, rhAccountID *int) {
 	var system models.SystemPlatform
 	assert.NoError(t, database.Db.Where("inventory_id = ?", inventoryID).Find(&system).Error)
@@ -58,7 +63,7 @@ func getOrCreateTestAccount(t *testing.T) int {
 	return accountID
 }
 
-//nolint directives
+// nolint: unparam
 func createTestUploadEvent(inventoryID string, packages bool) HostEgressEvent {
 	ev := HostEgressEvent{
 		Type:             "created",

@@ -10,6 +10,10 @@ import (
 	"testing"
 )
 
+func TestInit(t *testing.T) {
+	utils.TestLoadEnv("conf/manager.env")
+}
+
 // nolint: unparam
 func testAdvisoriesOk(t *testing.T, method, url string, check func(out AdvisoriesResponse)) {
 	utils.SkipWithoutDB(t)

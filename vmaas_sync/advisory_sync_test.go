@@ -13,6 +13,10 @@ import (
 	"time"
 )
 
+func TestInit(t *testing.T) {
+	utils.TestLoadEnv("conf/vmaas_sync.env")
+}
+
 //nolint:lll,misspell
 const testAdvisories = `
 {

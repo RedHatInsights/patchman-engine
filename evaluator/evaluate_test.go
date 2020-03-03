@@ -17,6 +17,10 @@ import (
 
 var testDate, _ = time.Parse(time.RFC3339, "2020-01-01T01-01-01")
 
+func TestInit(t *testing.T) {
+	utils.TestLoadEnv("conf/evaluator_common.env", "conf/evaluator_upload.env")
+}
+
 func TestVMaaSGetUpdates(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 
@@ -51,7 +55,7 @@ func TestGetStoredAdvisoriesMap(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemAdvisories, err := getStoredAdvisoriesMap(database.Db, 0)
+	systemAdvisories, err := getStoredAdvisoriesMap(database.Db, 1)
 	assert.Nil(t, err)
 	assert.NotNil(t, systemAdvisories)
 	assert.Equal(t, 9, len(*systemAdvisories))
@@ -82,8 +86,8 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemID := 11
-	rhAccountID := 2
+	systemID := 12
+	rhAccountID := 3
 	advisoryIDs := []int{2, 3, 4}
 	createSystemAdvisories(t, systemID, advisoryIDs, nil)
 	createAdvisoryAccountData(t, rhAccountID, advisoryIDs, 1)
@@ -101,8 +105,8 @@ func TestUpdateUnpatchedSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemID := 11
-	rhAccountID := 2
+	systemID := 12
+	rhAccountID := 3
 	advisoryIDs := []int{2, 3, 4}
 	createSystemAdvisories(t, systemID, advisoryIDs, &testDate)
 	createAdvisoryAccountData(t, rhAccountID, advisoryIDs, 1)
@@ -132,7 +136,7 @@ func TestEnsureSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemID := 1
+	systemID := 2
 	advisoryIDs := []int{2, 3, 4}
 	err := ensureSystemAdvisories(database.Db, systemID, advisoryIDs)
 	assert.Nil(t, err)
@@ -145,7 +149,7 @@ func TestAddAndUpdateAccountAdvisoriesAffectedSystems(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	rhAccountID := 3
+	rhAccountID := 4
 	existingIDs := []int{1, 2}
 	createAdvisoryAccountData(t, rhAccountID, existingIDs, 1)
 
@@ -165,14 +169,14 @@ func TestEvaluate(t *testing.T) {
 
 	configure()
 
-	evaluateHandler(mqueue.PlatformEvent{ID: "INV-11"})
+	evaluateHandler(mqueue.PlatformEvent{ID: "INV-12"})
 
-	systemID := 11
-	rhAccountID := 2
+	systemID := 12
+	rhAccountID := 3
 	expectedAddedAdvisories := []string{"ER1", "ER2", "ER3"}
 	advisoryIDs := database.CheckAdvisoriesInDb(t, expectedAddedAdvisories)
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
-	database.CheckSystemJustEvaluated(t, "INV-11", 3, 0, 0, 0)
+	database.CheckSystemJustEvaluated(t, "INV-12", 3, 0, 0, 0)
 	deleteSystemAdvisories(t, systemID, advisoryIDs)
 	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 	deleteAdvisories(t, expectedAddedAdvisories)

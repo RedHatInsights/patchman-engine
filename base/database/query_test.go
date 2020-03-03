@@ -8,6 +8,7 @@ import (
 type Inherited struct {
 	Bare string
 }
+
 type queryStruct struct {
 	ID int `query:"am.id"`
 	// We have to take gorm column name into account

@@ -2,7 +2,9 @@ package utils
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
 	"os"
+	"path"
 	"strconv"
 )
 
@@ -47,4 +49,19 @@ func SetenvOrFail(envname, value string) string {
 	}
 
 	return value
+}
+
+func TestLoadEnv(files ...string) {
+	// go test changes working directory to package's location, we utilize env variable to project working directory
+	dir := Getenv("TEST_WD", ".")
+	for i, f := range files {
+		files[i] = path.Join(dir, f)
+	}
+	err := godotenv.Overload(files...)
+
+	Log("files", files).Debug("Loading new env file")
+	Log("dbuser", Getenv("DB_USER", ""), "passwd", Getenv("DB_PASSWD", "")).Debug("Db auth info")
+	if err != nil {
+		Log().Panic("Could not load env file")
+	}
 }

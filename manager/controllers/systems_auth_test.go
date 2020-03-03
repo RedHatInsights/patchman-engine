@@ -25,8 +25,8 @@ func testAccountSystemCounts(t *testing.T, acc string, count int) {
 
 func TestMissingAccount(t *testing.T) {
 	testAccountSystemCounts(t, "NONE", 0)
-	testAccountSystemCounts(t, "0", 8)
-	testAccountSystemCounts(t, "1", 3)
-	testAccountSystemCounts(t, "2", 1)
-	testAccountSystemCounts(t, "3", 0)
+	testAccountSystemCounts(t, "1", 8)
+	testAccountSystemCounts(t, "2", 3)
+	testAccountSystemCounts(t, "3", 1)
+	testAccountSystemCounts(t, "4", 0)
 }
