@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (11, false);
+VALUES (12, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -600,6 +600,8 @@ GRANT UPDATE, DELETE ON system_advisories TO manager;
 GRANT UPDATE (opt_out) ON system_platform TO manager;
 -- listener deletes systems, TODO: temporary added evaluator permissions to listener
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO listener;
+-- vmaas_sync needs to delete culled systems, which cascades to system_advisories
+GRANT SELECT, DELETE ON system_advisories TO vmaas_sync;
 
 -- advisory_account_data
 CREATE TABLE IF NOT EXISTS advisory_account_data
@@ -621,15 +623,14 @@ CREATE TABLE IF NOT EXISTS advisory_account_data
     UNIQUE (advisory_id, rh_account_id)
 ) TABLESPACE pg_default;
 
--- manager needs to write into advisory_account_data table
-GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO manager;
-
 -- manager user needs to change this table for opt-out functionality
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO manager;
 -- evaluator user needs to change this table
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO evaluator;
 -- listner user needs to change this table when deleting system
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO listener;
+-- vmaas_sync needs to update stale mark, which creates and deletes advisory_account_data
+GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO vmaas_sync;
 
 -- repo
 CREATE TABLE IF NOT EXISTS repo
@@ -662,6 +663,8 @@ CREATE INDEX ON system_repo (repo_id);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_repo TO listener;
 GRANT DELETE ON system_repo TO manager;
+-- vmaas_sync needs to delete culled systems, which cascades to system_repo
+GRANT SELECT, DELETE on system_repo to vmaas_sync;
 
 
 -- timestamp_kv
