@@ -18,7 +18,7 @@ RUN go mod download && \
     curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
     | sh -s -- -b $(go env GOPATH)/bin v1.22.2
 
-ADD /conf		   /go/src/app/conf
+ADD /conf          /go/src/app/conf
 ADD /base          /go/src/app/base
 ADD /database      /go/src/app/database
 ADD /manager       /go/src/app/manager
