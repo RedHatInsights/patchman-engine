@@ -2,7 +2,7 @@
 [![Code Coverage](https://codecov.io/gh/RedHatInsights/patchman-engine/branch/master/graph/badge.svg)](https://codecov.io/gh/RedHatInsights/patchman-engine)
 
 # patchman-engine
-System Patch Manager is one of the applications for [cloud.redhat.com](cloud.redhat.com). This application allows to display and manage available patches for account systems. This repo stores sources for the backend part of the application providing REST API to the frontend.
+System Patch Manager is one of the applications for [cloud.redhat.com](cloud.redhat.com). This application allows users to display and manage available patches for their registered systems. This code repo stores sources for the backend part of the application which provides the REST API to the frontend.
 
 ## Table of content
 - [Architecture](docs/md/architecture.md)
@@ -18,15 +18,15 @@ System Patch Manager is one of the applications for [cloud.redhat.com](cloud.red
 
 ## Development environment
 
-### Local running
-Uses `podman-compose` to deploy the individual project components and supporting containers, which simulate the CMSfR platform and database respectively into local container instance:
+### Running locally
+Uses `podman-compose` to deploy the individual project components and supporting containers, which simulate the CMSfR platform and database:
 ~~~bash
 podman-compose up --build # Build images if needed and start containers
 podman-compose down       # Stop and remove containers
 ~~~
 
 ### Local app requests
-When podman compose is running, test app using dev shell scripts:
+When podman compose is running, you can test the app using dev shell scripts:
 ~~~bash
 cd dev/scripts
 ./systems_list.sh         # show systems
@@ -35,14 +35,14 @@ cd dev/scripts
 ./platform_upload.sh      # simulate archive upload to trigger listener and evaluator_upload
 ~~~
 
-### Tests running
-We cover big part of the application functionality with tests and it requires also testing database and some services mocks. It's all encapsulated into the configuration runable using podman-compose command. It also includes static code analysis, database migration tests and dockerfiles checking. It's also used when checking pull requests for the repo.
+### Running tests
+We cover a large part of the application functionality with tests; this requires also running a test database and mocked services. This is all encapsulated into the configuration runable using podman-compose command. It also includes static code analysis, database migration tests and dockerfiles checking. It's also used when checking pull requests for the repo.
 ~~~bash
 podman-compose -f docker-compose.test.yml up --build --abort-on-container-exit
 ~~~
 
 ### OpenAPI docs
-REST API is documented using OpenAPI v3. For local instance it can be accessed on <http://localhost:8080/openapi/index.html>.
+Our REST API is documented using OpenAPI v3. On a local instance it can be accessed on <http://localhost:8080/openapi/index.html>.
 
 To update/regenerate OpenAPI sources run:
 ~~~bash
@@ -51,7 +51,7 @@ go get -u github.com/swaggo/swag/cmd/swag # download binary to generate, do it f
 ~~~
 
 ## Control by private API
-There is a private API accessible only from inside of `vmaas_sync` container. It allows to run component routines manually. In local environment it can be tested like this:
+There is a private API accessible only from inside of `vmaas_sync` container. It allows running component routines manually. In local environment it can be tested like this:
 ~~~bash
 podman exec -it patchman-engine_vmaas_sync_1 ./sync.sh    # trigger advisories syncing event.
 podman exec -it patchman-engine_vmaas_sync_1 ./re-calc.sh # trigger systems recalculation event.
@@ -61,6 +61,6 @@ podman exec -it patchman-engine_vmaas_sync_1 ./re-calc.sh # trigger systems reca
 This project uses [VMaaS](https://github.com/RedHatInsights/vmaas) for retrieving information about advisories, and resolving which advisories can be applied to which systems. For local development this repo contains VMaaS service mock as a part of platform mock allowing independent running of the service using podman-compose.
 
 ## Monitoring
-Each application component (except database) exposes metrics for [Prometheus](https://prometheus.io/)
-on `/metrics` endpoint (see [docker-compose.yml](docker-compose.yml) for ports). Runtime logs can be send to Amazon
-CloudWatch setting proper environment variables (see [awscloudwatch.go](base/utils/awscloudwatch.go)).
+Each application component (except for the database) exposes metrics for [Prometheus](https://prometheus.io/)
+on `/metrics` endpoint (see [docker-compose.yml](docker-compose.yml) for ports). Runtime logs can be sent to Amazon
+CloudWatch if configuration environment variables are set (see [awscloudwatch.go](base/utils/awscloudwatch.go)).
