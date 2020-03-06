@@ -21,13 +21,13 @@ func deleteHandler(event mqueue.PlatformEvent) {
 
 	if event.Type == nil {
 		utils.Log("inventoryID", event.ID).Warn(WarnEmptyEventType)
-		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorOtherType)
+		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorOtherType).Inc()
 		return
 	}
 
 	if *event.Type != "delete" {
 		utils.Log("inventoryID", event.ID, "eventType", *event.Type).Warn(WarnNoDeleteType)
-		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorOtherType)
+		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorOtherType).Inc()
 		return
 	}
 
@@ -35,16 +35,16 @@ func deleteHandler(event mqueue.PlatformEvent) {
 	err := query.Error
 	if err != nil {
 		utils.Log("inventoryID", event.ID, "err", err.Error()).Error("Could not delete system")
-		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorProcessing)
+		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorProcessing).Inc()
 		return
 	}
 
 	if query.RowsAffected == 0 {
 		utils.Log("inventoryID", event.ID).Warn(WarnNoRowsModified)
-		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorNoRows)
+		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorNoRows).Inc()
 		return
 	}
 
 	utils.Log("inventoryID", event.ID, "count", query.RowsAffected).Info("Systems deleted")
-	messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedSuccess)
+	messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedSuccess).Inc()
 }
