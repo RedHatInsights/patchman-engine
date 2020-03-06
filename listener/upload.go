@@ -81,7 +81,7 @@ func uploadHandler(event HostEgressEvent) {
 
 	if len(event.Host.Account) == 0 {
 		utils.Log("inventoryID", event.Host.ID).Error(ErrorNoAccountProvided)
-		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity)
+		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
 		return
 	}
 
