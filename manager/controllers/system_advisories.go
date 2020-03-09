@@ -95,14 +95,14 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 
 	data := buildSystemAdvisoriesData(dbItems)
 	var resp = SystemAdvisoriesResponse{
-		Data:  *data,
+		Data:  data,
 		Links: *links,
 		Meta:  *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildSystemAdvisoriesData(models []SystemAdvisoriesDBLookup) *[]SystemAdvisoryItem {
+func buildSystemAdvisoriesData(models []SystemAdvisoriesDBLookup) []SystemAdvisoryItem {
 	data := make([]SystemAdvisoryItem, len(models))
 	for i, advisory := range models {
 		item := SystemAdvisoryItem{
@@ -112,5 +112,5 @@ func buildSystemAdvisoriesData(models []SystemAdvisoriesDBLookup) *[]SystemAdvis
 		}
 		data[i] = item
 	}
-	return &data
+	return data
 }

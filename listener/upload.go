@@ -137,19 +137,19 @@ func updateSystemPlatform(inventoryID string, accountID int, host *Host,
 	now := time.Now()
 
 	systemPlatform := models.SystemPlatform{
-		InventoryID:  inventoryID,
-		RhAccountID:  accountID,
-		VmaasJSON:    string(updatesReqJSON),
-		JSONChecksum: jsonChecksum,
-		LastUpload:   &now,
-
+		InventoryID:           inventoryID,
+		RhAccountID:           accountID,
+		VmaasJSON:             string(updatesReqJSON),
+		JSONChecksum:          jsonChecksum,
+		LastUpload:            &now,
+		Stale:                 false,
 		StaleTimestamp:        optParseTimestamp(host.StaleTimestamp),
 		StaleWarningTimestamp: optParseTimestamp(host.StaleWarningTimestamp),
 		CulledTimestamp:       optParseTimestamp(host.CulledTimestamp),
 	}
 
 	tx := database.OnConflictUpdate(database.Db, "inventory_id", "vmaas_json", "json_checksum",
-		"last_upload", "stale_timestamp", "stale_warning_timestamp", "culled_timestamp")
+		"last_upload", "stale", "stale_timestamp", "stale_warning_timestamp", "culled_timestamp")
 	retTx := tx.Create(&systemPlatform)
 	if retTx.Error != nil {
 		return nil, errors.Wrap(retTx.Error, "Unable to save or update system in database")

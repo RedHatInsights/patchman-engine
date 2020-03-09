@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/segmentio/kafka-go"
 	"io"
+	"time"
 )
 
 // By wrapping raw value we can add new methods & ensure methods of wrapped type are callable
@@ -51,6 +52,11 @@ func WriterFromEnv(topic string) Writer {
 	config := kafka.WriterConfig{
 		Brokers: []string{kafkaAddress},
 		Topic:   topic,
+		// By default the writer will wait for a second (or until the buffer is filled by different goroutines)
+		// before sending the batch of messages. Disable this, and use it in 'non-batched' mode
+		// meaning single messages are sent immediately for now. We'll maybe change this later if the
+		// sending overhead is a bottleneck
+		BatchTimeout: time.Nanosecond,
 		ErrorLogger: kafka.LoggerFunc(func(fmt string, args ...interface{}) {
 			utils.Log("type", "kafka").Errorf(fmt, args)
 		}),
