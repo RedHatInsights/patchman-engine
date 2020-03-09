@@ -1,10 +1,34 @@
 package vmaas_sync //nolint:golint,stylecheck
 
 import (
+	"app/base"
+	"app/base/mqueue"
 	"app/base/utils"
+	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/gorilla/websocket"
 	"time"
 )
+
+// Should be < 5000
+const SyncBatchSize = 1000
+
+var (
+	vmaasClient *vmaas.APIClient
+	evalWriter  mqueue.Writer
+)
+
+func configure() {
+	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
+
+	cfg := vmaas.NewConfiguration()
+	cfg.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
+	cfg.Debug = traceAPI
+
+	vmaasClient = vmaas.NewAPIClient(cfg)
+
+	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
+	evalWriter = mqueue.WriterFromEnv(evalTopic)
+}
 
 type Handler func(data []byte, conn *websocket.Conn) error
 

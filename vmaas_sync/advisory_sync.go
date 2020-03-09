@@ -4,7 +4,6 @@ import (
 	"app/base"
 	"app/base/database"
 	"app/base/models"
-	"app/base/mqueue"
 	"app/base/utils"
 	"context"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
@@ -13,27 +12,6 @@ import (
 	"strings"
 	"time"
 )
-
-// Should be < 5000
-const SyncBatchSize = 1000
-
-var (
-	vmaasClient *vmaas.APIClient
-	evalWriter  mqueue.Writer
-)
-
-func configure() {
-	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
-
-	cfg := vmaas.NewConfiguration()
-	cfg.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
-	cfg.Debug = traceAPI
-
-	vmaasClient = vmaas.NewAPIClient(cfg)
-
-	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
-	evalWriter = mqueue.WriterFromEnv(evalTopic)
-}
 
 func getAdvisoryTypes() (map[string]int, error) {
 	var advisoryTypesArr []models.AdvisoryType
