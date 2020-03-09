@@ -8,6 +8,7 @@ import (
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 var msgs []kafka.Message
@@ -34,4 +35,9 @@ func TestSync(t *testing.T) {
 	assert.Nil(t, database.Db.Unscoped().Where("name IN (?)", expected).Delete(&models.AdvisoryMetadata{}).Error)
 
 	assert.Equal(t, 4, len(msgs))
+
+	ts, err := getLastRepobasedEvalTms() // check updated timestamp
+	assert.Nil(t, err)
+	assert.Equal(t, time.Now().Year(), ts.Year())
+	resetLastEvalTimestamp(t)
 }

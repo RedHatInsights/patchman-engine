@@ -2,6 +2,7 @@ package vmaas_sync //nolint:golint,stylecheck
 import (
 	"app/base/database"
 	"app/base/models"
+	"app/base/utils"
 	"context"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
@@ -25,6 +26,9 @@ func getCurrentRepoBasedInventoryIDs() (*[]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	updateRepoBaseEvalTimestamp(time.Now())
+
 	return inventoryIDs, nil
 }
 
@@ -40,7 +44,22 @@ func getLastRepobasedEvalTms() (*time.Time, error) {
 	if len(timestamps) == 0 {
 		return nil, nil
 	}
+
 	return timestamps[0], nil
+}
+
+func updateRepoBaseEvalTimestamp(value time.Time) {
+	ts := value.Format(time.RFC3339)
+	err := updateRepoBaseEvalTimestampStr(ts)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("unable to update repo-based eval. timestamp")
+	}
+}
+
+func updateRepoBaseEvalTimestampStr(value string) error {
+	err := database.Db.Exec("INSERT INTO timestamp_kv (name, value) values (?, ?)"+
+		"ON CONFLICT (name) DO UPDATE SET value = ?", LastEvalRepoBased, value, value).Error
+	return err
 }
 
 func getRepoBasedInventoryIDs(repos *[]string) (*[]string, error) {
@@ -58,7 +77,7 @@ func getRepoBasedInventoryIDs(repos *[]string) (*[]string, error) {
 }
 
 //nolint unused
-func getUpdatedRepos(modifiedSince *time.Time) (*[]string, error){
+func getUpdatedRepos(modifiedSince *time.Time) (*[]string, error) {
 	page := float32(1)
 	var reposArr []string
 	for {
