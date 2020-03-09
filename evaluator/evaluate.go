@@ -191,11 +191,11 @@ func processSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, vmaasData v
 		return errors.Wrap(err, "Unable to get system stored advisories")
 	}
 
-	patched := getPatchedAdvisories(reported, *stored)
+	patched := getPatchedAdvisories(reported, stored)
 	updatesCnt.WithLabelValues("patched").Add(float64(len(patched)))
 	utils.Log("inventoryID", inventoryID, "patched", len(patched)).Debug("patched advisories")
 
-	newsAdvisoriesNames, unpatched := getNewAndUnpatchedAdvisories(reported, *stored)
+	newsAdvisoriesNames, unpatched := getNewAndUnpatchedAdvisories(reported, stored)
 	utils.Log("inventoryID", inventoryID, "newAdvisories", len(newsAdvisoriesNames)).Debug("new advisories")
 
 	newIDs, err := ensureAdvisoriesInDb(tx, newsAdvisoriesNames)
@@ -203,7 +203,7 @@ func processSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, vmaasData v
 		return errors.Wrap(err, "Unable to ensure new system advisories in db")
 	}
 
-	unpatched = append(unpatched, *newIDs...)
+	unpatched = append(unpatched, newIDs...)
 	updatesCnt.WithLabelValues("unpatched").Add(float64(len(unpatched)))
 	utils.Log("inventoryID", inventoryID, "unpatched", len(unpatched)).Debug("patched advisories")
 
@@ -224,7 +224,7 @@ func getReportedAdvisories(vmaasData vmaas.UpdatesV2Response) map[string]bool {
 	return advisories
 }
 
-func getStoredAdvisoriesMap(tx *gorm.DB, systemID int) (*map[string]models.SystemAdvisories, error) {
+func getStoredAdvisoriesMap(tx *gorm.DB, systemID int) (map[string]models.SystemAdvisories, error) {
 	var advisories []models.SystemAdvisories
 	err := database.SystemAdvisoriesQueryByID(tx, systemID).Preload("Advisory").Find(&advisories).Error
 	if err != nil {
@@ -235,7 +235,7 @@ func getStoredAdvisoriesMap(tx *gorm.DB, systemID int) (*map[string]models.Syste
 	for _, advisory := range advisories {
 		advisoriesMap[advisory.Advisory.Name] = advisory
 	}
-	return &advisoriesMap, nil
+	return advisoriesMap, nil
 }
 
 func getNewAndUnpatchedAdvisories(reported map[string]bool, stored map[string]models.SystemAdvisories) (
@@ -302,7 +302,7 @@ func updateAccountAdvisoriesAffectedSystems(tx *gorm.DB, rhAccountID int, adviso
 }
 
 // Return advisory IDs, created advisories count, error
-func ensureAdvisoriesInDb(tx *gorm.DB, advisories []string) (*[]int, error) {
+func ensureAdvisoriesInDb(tx *gorm.DB, advisories []string) ([]int, error) {
 	advisoryObjs := make(models.AdvisoryMetadataSlice, len(advisories))
 	for i, advisory := range advisories {
 		advisoryObjs[i] = models.AdvisoryMetadata{Name: advisory,
@@ -321,7 +321,7 @@ func ensureAdvisoriesInDb(tx *gorm.DB, advisories []string) (*[]int, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &advisoryIDs, nil
+	return advisoryIDs, nil
 }
 
 func ensureSystemAdvisories(tx *gorm.DB, systemID int, advisoryIDs []int) error {

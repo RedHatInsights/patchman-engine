@@ -88,14 +88,14 @@ func SystemsListHandler(c *gin.Context) {
 
 	data := buildData(systems)
 	var resp = SystemsResponse{
-		Data:  *data,
+		Data:  data,
 		Links: *links,
 		Meta:  *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildData(systems []SystemDBLookup) *[]SystemItem {
+func buildData(systems []SystemDBLookup) []SystemItem {
 	data := make([]SystemItem, len(systems))
 	for i, system := range systems {
 		data[i] = SystemItem{
@@ -104,5 +104,5 @@ func buildData(systems []SystemDBLookup) *[]SystemItem {
 			Type:       "system",
 		}
 	}
-	return &data
+	return data
 }

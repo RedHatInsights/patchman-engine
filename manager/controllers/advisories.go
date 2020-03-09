@@ -75,7 +75,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 
 	data := buildAdvisoriesData(advisories)
 	var resp = AdvisoriesResponse{
-		Data:  *data,
+		Data:  data,
 		Links: *links,
 		Meta:  *meta,
 	}
@@ -91,7 +91,7 @@ func buildQueryAdvisories(account string) *gorm.DB {
 	return query
 }
 
-func buildAdvisoriesData(advisories []AdvisoriesDBLookup) *[]AdvisoryItem {
+func buildAdvisoriesData(advisories []AdvisoriesDBLookup) []AdvisoryItem {
 	data := make([]AdvisoryItem, len(advisories))
 	for i := 0; i < len(advisories); i++ {
 		advisory := (advisories)[i]
@@ -104,5 +104,5 @@ func buildAdvisoriesData(advisories []AdvisoriesDBLookup) *[]AdvisoryItem {
 			Type: "advisory",
 		}
 	}
-	return &data
+	return data
 }
