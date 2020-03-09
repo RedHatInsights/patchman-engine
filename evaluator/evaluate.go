@@ -138,7 +138,7 @@ func updateSystemCaches(tx *gorm.DB, system *models.SystemPlatform) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("caches-update"))
 
-	err := tx.Exec("SELECT * FROM update_system_caches(?)", system.ID).Error
+	err := tx.Exec("SELECT * FROM refresh_system_caches(?,?)", system.ID, system.RhAccountID).Error
 	return err
 }
 

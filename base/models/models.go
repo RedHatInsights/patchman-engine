@@ -81,9 +81,8 @@ func (AdvisoryMetadata) TableName() string {
 type AdvisoryMetadataSlice []AdvisoryMetadata
 
 type SystemAdvisories struct {
-	ID            int
-	SystemID      int
-	AdvisoryID    int
+	SystemID      int `gorm:"primary_key"`
+	AdvisoryID    int `gorm:"primary_key"`
 	Advisory      AdvisoryMetadata
 	FirstReported *time.Time
 	WhenPatched   *time.Time
