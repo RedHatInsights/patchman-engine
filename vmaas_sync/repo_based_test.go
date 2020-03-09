@@ -8,6 +8,16 @@ import (
 	"time"
 )
 
+func TestGetCurrentRepoBasedInventoryIDs(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	inventoryIDs, err := getCurrentRepoBasedInventoryIDs()
+	assert.Nil(t, err)
+	assert.Equal(t, []string{"INV-1", "INV-2", "INV-5", "INV-6"}, *inventoryIDs)
+}
+
 func TestGetLastRepobasedEvalTms(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
@@ -22,7 +32,7 @@ func TestGetRepoBasedInventoryIDs(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	repos := []string{"repo1", "repo3"}
-	inventoryIDs, err := getRepoBasedInventoryIDs(repos)
+	inventoryIDs, err := getRepoBasedInventoryIDs(&repos)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(*inventoryIDs))
 	assert.Equal(t, []string{"INV-1", "INV-5", "INV-6"}, *inventoryIDs)
