@@ -16,7 +16,7 @@ func getCurrentRepoBasedInventoryIDs() (*[]string, error) {
 		return nil, err
 	}
 
-	updateRepos, err := getUpdatedRepos(*lastRepoBaseEval)
+	updateRepos, err := getUpdatedRepos(lastRepoBaseEval)
 	if err != nil {
 		return nil, err
 	}
@@ -58,14 +58,17 @@ func getRepoBasedInventoryIDs(repos *[]string) (*[]string, error) {
 }
 
 //nolint unused
-func getUpdatedRepos(modifiedSince time.Time) (*[]string, error){
+func getUpdatedRepos(modifiedSince *time.Time) (*[]string, error){
 	page := float32(1)
 	var reposArr []string
 	for {
 		reposReq := vmaas.ReposRequest{
 			Page:           page,
 			RepositoryList: []string{".*"},
-			ModifiedSince:  modifiedSince.Format(time.RFC3339),
+		}
+
+		if modifiedSince != nil {
+			reposReq.ModifiedSince = modifiedSince.Format(time.RFC3339)
 		}
 
 		vmaasCallArgs := vmaas.AppReposHandlerPostPostOpts{
