@@ -42,7 +42,8 @@ func TestGetUpdatedRepos(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
-	repos, err := getUpdatedRepos(time.Now())
+	modifiedSince := time.Now()
+	repos, err := getUpdatedRepos(&modifiedSince)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(*repos))
 }

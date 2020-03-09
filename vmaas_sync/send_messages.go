@@ -12,7 +12,14 @@ import (
 const BatchSize = 4000
 
 func sendReevaluationMessages() error {
-	inventoryIDs, err := getAllInventoryIDs()
+	var getInventorIDsFun func() (*[]string, error)
+
+	if enabledRepoBasedReeval {
+		getInventorIDsFun = getCurrentRepoBasedInventoryIDs
+	} else {
+		getInventorIDsFun = getAllInventoryIDs
+	}
+	inventoryIDs, err := getInventorIDsFun()
 	if err != nil {
 		return err
 	}

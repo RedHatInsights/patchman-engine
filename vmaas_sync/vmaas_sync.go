@@ -13,8 +13,9 @@ import (
 const SyncBatchSize = 1000
 
 var (
-	vmaasClient *vmaas.APIClient
-	evalWriter  mqueue.Writer
+	vmaasClient            *vmaas.APIClient
+	evalWriter             mqueue.Writer
+	enabledRepoBasedReeval bool
 )
 
 func configure() {
@@ -28,6 +29,7 @@ func configure() {
 
 	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
 	evalWriter = mqueue.WriterFromEnv(evalTopic)
+	enabledRepoBasedReeval = utils.GetBoolEnvOrFail("ENABLE_REPO_BASED_RE_EVALUATION")
 }
 
 type Handler func(data []byte, conn *websocket.Conn) error

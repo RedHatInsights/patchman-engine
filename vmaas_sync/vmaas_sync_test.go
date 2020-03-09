@@ -33,5 +33,5 @@ func TestSync(t *testing.T) {
 	database.CheckAdvisoriesInDb(t, expected)
 	assert.Nil(t, database.Db.Unscoped().Where("name IN (?)", expected).Delete(&models.AdvisoryMetadata{}).Error)
 
-	assert.Equal(t, 12, len(msgs))
+	assert.Equal(t, 4, len(msgs))
 }
