@@ -132,7 +132,7 @@ type SystemRepoSlice []SystemRepo
 
 type TimestampKV struct {
 	Name  string
-	Value *time.Time
+	Value time.Time
 }
 
 func (TimestampKV) TableName() string {
