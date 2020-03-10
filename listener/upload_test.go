@@ -2,6 +2,7 @@ package listener
 
 import (
 	"app/base/core"
+	"app/base/database"
 	"app/base/utils"
 	"context"
 	"errors"
@@ -125,5 +126,18 @@ func TestUploadHandlerError2(t *testing.T) {
 	event := createTestUploadEvent(id, true)
 	uploadHandler(event)
 	assert.Equal(t, ErrorProcessUpload, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
+	deleteData(t)
+}
+
+func TestEnsureReposInDb(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	repos := []string{"repo1", "repo10", "repo20"}
+	repoIDs, nAdded, err := ensureReposInDb(database.Db, repos)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(2), nAdded)
+	assert.Equal(t, 3, len(repoIDs))
+	assertReposInDb(t, repos)
 	deleteData(t)
 }
