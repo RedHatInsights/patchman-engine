@@ -127,3 +127,5 @@ type SystemRepo struct {
 func (SystemRepo) TableName() string {
 	return "system_repo"
 }
+
+type SystemRepoSlice []SystemRepo

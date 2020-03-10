@@ -5,6 +5,7 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+	"fmt"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -27,6 +28,8 @@ func deleteData(t *testing.T) {
 		Delete(&models.AdvisoryMetadata{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("inventory_id = ?", id).Delete(&models.SystemPlatform{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("name = ?", id).Delete(&models.RhAccount{}).Error)
+	assert.Nil(t, database.Db.Unscoped().Where("repo_id NOT IN (1) OR system_id NOT IN (2, 3)").
+		Delete(&models.SystemRepo{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("name NOT IN ('repo1', 'repo2', 'repo3')").
 		Delete(&models.Repo{}).Error)
 }
@@ -89,8 +92,9 @@ func createTestDeleteEvent(inventoryID string) mqueue.PlatformEvent {
 }
 
 func assertReposInDb(t *testing.T, repos []string) {
-	var cnt int
-	err := database.Db.Model(&models.Repo{}).Where("name IN (?)", repos).Count(&cnt).Error
+	var n []string
+	err := database.Db.Model(&models.Repo{}).Where("name IN (?)", repos).Pluck("name", &n).Error
+	fmt.Println(n)
 	assert.Nil(t, err)
-	assert.Equal(t, len(repos), cnt)
+	assert.Equal(t, len(repos), len(n))
 }

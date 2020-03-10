@@ -167,7 +167,7 @@ func updateSystemPlatform(inventoryID string, accountID int, host *Host,
 	return &systemPlatform, nil
 }
 
-func ensureReposInDb(tx *gorm.DB, repos []string) (added int64, err error) {
+func ensureReposInDb(tx *gorm.DB, repos []string) (repoIDs []int, added int64, err error) {
 	repoObjs := make(models.RepoSlice, len(repos))
 	for i, repo := range repos {
 		repoObjs[i] = models.Repo{Name: repo}
@@ -176,10 +176,58 @@ func ensureReposInDb(tx *gorm.DB, repos []string) (added int64, err error) {
 	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
 	err = database.BulkInsert(txOnConflict, repoObjs)
 	if err != nil {
-		return 0, errors.Wrap(err, "unable to update repos")
+		return nil, 0, errors.Wrap(err, "unable to update repos")
 	}
-	reposAddedCnt.Add(float64(txOnConflict.RowsAffected))
-	return txOnConflict.RowsAffected, nil
+	added = txOnConflict.RowsAffected
+	reposAddedCnt.Add(float64(added))
+
+	err = tx.Model(&models.Repo{}).Where("name IN (?)", repos).
+		Pluck("id", &repoIDs).Error
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "unable to load repos IDs")
+	}
+
+	return repoIDs, added, nil
+}
+
+func updateSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nAdded int64,
+	nDeleted int, err error) {
+	repoSystemObjs := make(models.SystemRepoSlice, len(repoIDs))
+	for i, repoID := range repoIDs {
+		repoSystemObjs[i] = models.SystemRepo{SystemID: systemID, RepoID: repoID}
+	}
+
+	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	err = database.BulkInsert(txOnConflict, repoSystemObjs)
+	if err != nil {
+		return 0, 0, errors.Wrap(err, "unable to update system repos")
+	}
+	nAdded = txOnConflict.RowsAffected
+
+	nDeleted, err = deleteOtherSystemRepos(tx, systemID, repoIDs)
+	if err != nil {
+		return nAdded, 0, errors.Wrap(err, "unable to delete out-of-date system repos")
+	}
+
+	return nAdded, nDeleted, nil
+}
+
+func deleteOtherSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nDeleted int, err error) {
+	type result struct{ DeletedCount int }
+	var res result
+	if len(repoIDs) > 0 {
+		err = tx.Raw("WITH deleted AS "+ // to count deleted items
+			"(DELETE FROM system_repo WHERE system_id = ? AND repo_id NOT IN (?) RETURNING repo_id) "+
+			"SELECT count(*) AS deleted_count FROM deleted", systemID, repoIDs).Scan(&res).Error
+	} else {
+		err = tx.Raw("WITH deleted AS "+
+			"(DELETE FROM system_repo WHERE system_id = ? RETURNING repo_id) "+
+			"SELECT count(*) AS deleted_count FROM deleted", systemID).Scan(&res).Error
+	}
+	if err != nil {
+		return 0, err
+	}
+	return res.DeletedCount, nil
 }
 
 // nolint: funlen

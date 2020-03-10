@@ -3,6 +3,7 @@ package listener
 import (
 	"app/base/core"
 	"app/base/database"
+	"app/base/models"
 	"app/base/utils"
 	"context"
 	"errors"
@@ -139,5 +140,43 @@ func TestEnsureReposInDb(t *testing.T) {
 	assert.Equal(t, int64(2), nAdded)
 	assert.Equal(t, 3, len(repoIDs))
 	assertReposInDb(t, repos)
+	deleteData(t)
+}
+
+func TestUpdateSystemRepos1(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	deleteData(t)
+
+	systemID := 5
+	database.Db.Create(models.SystemRepo{SystemID: systemID, RepoID: 1})
+	database.Db.Create(models.SystemRepo{SystemID: systemID, RepoID: 2})
+
+	repos := []string{"repo1", "repo10", "repo20"}
+	repoIDs, nReposAdded, err := ensureReposInDb(database.Db, repos)
+	assert.Nil(t, err)
+	assert.Equal(t, 3, len(repoIDs))
+	assert.Equal(t, int64(2), nReposAdded)
+
+	nAdded, nDeleted, err := updateSystemRepos(database.Db, systemID, repoIDs)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(2), nAdded)
+	assert.Equal(t, 1, nDeleted)
+	deleteData(t)
+}
+
+func TestUpdateSystemRepos2(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	deleteData(t)
+
+	systemID := 5
+	database.Db.Create(models.SystemRepo{SystemID: systemID, RepoID: 1})
+	database.Db.Create(models.SystemRepo{SystemID: systemID, RepoID: 2})
+
+	nAdded, nDeleted, err := updateSystemRepos(database.Db, systemID, []int{})
+	assert.Nil(t, err)
+	assert.Equal(t, int64(0), nAdded)
+	assert.Equal(t, 2, nDeleted)
 	deleteData(t)
 }
