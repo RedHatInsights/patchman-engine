@@ -12,7 +12,7 @@ import (
 const BatchSize = 4000
 
 func sendReevaluationMessages() error {
-	var getInventorIDsFun func() (*[]string, error)
+	var getInventorIDsFun func() ([]string, error)
 
 	if enabledRepoBasedReeval {
 		getInventorIDsFun = getCurrentRepoBasedInventoryIDs
@@ -25,24 +25,24 @@ func sendReevaluationMessages() error {
 	}
 
 	ctx := context.Background()
-	for i := 0; i < len(*inventoryIDs); i += BatchSize {
+	for i := 0; i < len(inventoryIDs); i += BatchSize {
 		end := i + BatchSize
-		if end > len(*inventoryIDs) {
-			end = len(*inventoryIDs)
+		if end > len(inventoryIDs) {
+			end = len(inventoryIDs)
 		}
-		sendMessages(ctx, (*inventoryIDs)[i:end]...)
+		sendMessages(ctx, inventoryIDs[i:end]...)
 	}
 	return nil
 }
 
-func getAllInventoryIDs() (*[]string, error) {
+func getAllInventoryIDs() ([]string, error) {
 	var inventoryIDs []string
 	err := database.Db.Model(&models.SystemPlatform{}).
 		Pluck("inventory_id", &inventoryIDs).Error
 	if err != nil {
 		return nil, err
 	}
-	return &inventoryIDs, nil
+	return inventoryIDs, nil
 }
 
 func sendMessages(ctx context.Context, inventoryIDs ...string) {

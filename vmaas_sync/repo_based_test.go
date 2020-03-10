@@ -15,7 +15,7 @@ func TestGetCurrentRepoBasedInventoryIDs(t *testing.T) {
 
 	inventoryIDs, err := getCurrentRepoBasedInventoryIDs()
 	assert.Nil(t, err)
-	assert.Equal(t, []string{"INV-1", "INV-2", "INV-5", "INV-6"}, *inventoryIDs)
+	assert.Equal(t, []string{"INV-1", "INV-2", "INV-5", "INV-6"}, inventoryIDs)
 	resetLastEvalTimestamp(t)
 }
 
@@ -46,10 +46,10 @@ func TestGetRepoBasedInventoryIDs(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	repos := []string{"repo1", "repo3"}
-	inventoryIDs, err := getRepoBasedInventoryIDs(&repos)
+	inventoryIDs, err := getRepoBasedInventoryIDs(repos)
 	assert.Nil(t, err)
-	assert.Equal(t, 3, len(*inventoryIDs))
-	assert.Equal(t, []string{"INV-1", "INV-5", "INV-6"}, *inventoryIDs)
+	assert.Equal(t, 3, len(inventoryIDs))
+	assert.Equal(t, []string{"INV-1", "INV-5", "INV-6"}, inventoryIDs)
 }
 
 func TestGetUpdatedRepos(t *testing.T) {
@@ -59,7 +59,7 @@ func TestGetUpdatedRepos(t *testing.T) {
 	modifiedSince := time.Now()
 	repos, err := getUpdatedRepos(&modifiedSince)
 	assert.Nil(t, err)
-	assert.Equal(t, 3, len(*repos))
+	assert.Equal(t, 3, len(repos))
 }
 
 func resetLastEvalTimestamp(t *testing.T) {
