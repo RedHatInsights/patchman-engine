@@ -117,6 +117,8 @@ func (Repo) TableName() string {
 	return "repo"
 }
 
+type RepoSlice []Repo
+
 type SystemRepo struct {
 	SystemID int
 	RepoID   int

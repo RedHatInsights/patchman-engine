@@ -31,10 +31,16 @@ var (
 		Subsystem: "listener",
 		Name:      "kafka_message_handling_duration_seconds",
 	}, []string{"event"})
+
+	reposAddedCnt = prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace: "patchman_engine",
+		Subsystem: "listener",
+		Name:      "repos_added",
+	})
 )
 
 func RunMetrics() {
-	prometheus.MustRegister(messagesReceivedCnt, messageHandlingDuration)
+	prometheus.MustRegister(messagesReceivedCnt, messageHandlingDuration, reposAddedCnt)
 
 	// create web app
 	app := gin.New()

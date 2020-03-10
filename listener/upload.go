@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
 	"time"
@@ -164,6 +165,21 @@ func updateSystemPlatform(inventoryID string, accountID int, host *Host,
 		Debug("System created or updated successfully")
 
 	return &systemPlatform, nil
+}
+
+func ensureReposInDb(tx *gorm.DB, repos []string) (added int64, err error) {
+	repoObjs := make(models.RepoSlice, len(repos))
+	for i, repo := range repos {
+		repoObjs[i] = models.Repo{Name: repo}
+	}
+
+	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	err = database.BulkInsert(txOnConflict, repoObjs)
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to update repos")
+	}
+	reposAddedCnt.Add(float64(txOnConflict.RowsAffected))
+	return txOnConflict.RowsAffected, nil
 }
 
 // nolint: funlen

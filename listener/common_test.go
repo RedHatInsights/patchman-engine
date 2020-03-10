@@ -27,6 +27,8 @@ func deleteData(t *testing.T) {
 		Delete(&models.AdvisoryMetadata{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("inventory_id = ?", id).Delete(&models.SystemPlatform{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("name = ?", id).Delete(&models.RhAccount{}).Error)
+	assert.Nil(t, database.Db.Unscoped().Where("name NOT IN ('repo1', 'repo2', 'repo3')").
+		Delete(&models.Repo{}).Error)
 }
 
 // nolint: unparam
@@ -84,4 +86,11 @@ func createTestDeleteEvent(inventoryID string) mqueue.PlatformEvent {
 		ID:   inventoryID,
 		Type: &typ,
 	}
+}
+
+func assertReposInDb(t *testing.T, repos []string) {
+	var cnt int
+	err := database.Db.Model(&models.Repo{}).Where("name IN (?)", repos).Count(&cnt).Error
+	assert.Nil(t, err)
+	assert.Equal(t, len(repos), cnt)
 }
