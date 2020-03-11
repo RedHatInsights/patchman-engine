@@ -45,7 +45,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	accountID2 := getOrCreateTestAccount(t)
 	req := vmaas.UpdatesV3Request{
 		PackageList:    []string{"package0"},
-		RepositoryList: []string{},
+		RepositoryList: []string{"repo1", "repo2", "repo3"},
 		ModulesList:    []vmaas.UpdatesRequestModulesList{},
 		Releasever:     "7Server",
 		Basearch:       "x86_64",
@@ -55,6 +55,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	assert.Nil(t, err)
 
 	assertSystemInDb(t, id, &accountID1)
+	assertReposInDb(t, req.RepositoryList)
 
 	sys2, err := updateSystemPlatform(id, accountID2, createTestInvHost(), &req)
 	assert.Nil(t, err)

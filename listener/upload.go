@@ -149,22 +149,45 @@ func updateSystemPlatform(inventoryID string, accountID int, host *Host,
 		CulledTimestamp:       optParseTimestamp(host.CulledTimestamp),
 	}
 
-	tx := database.OnConflictUpdate(database.Db, "inventory_id", "vmaas_json", "json_checksum",
+	tx := database.Db.Begin()
+	txOnConflict := database.OnConflictUpdate(tx, "inventory_id", "vmaas_json", "json_checksum",
 		"last_upload", "stale", "stale_timestamp", "stale_warning_timestamp", "culled_timestamp")
-	retTx := tx.Create(&systemPlatform)
-	if retTx.Error != nil {
-		return nil, errors.Wrap(retTx.Error, "Unable to save or update system in database")
+	err = txOnConflict.Create(&systemPlatform).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, errors.Wrap(err, "unable to save or update system in database")
 	}
 
-	if retTx.RowsAffected == 0 {
-		return nil, errors.New("System neither created nor updated")
+	addedRepos, addedSysRepos, deletedSysRepos, err := updateRepos(tx, systemPlatform.ID, updatesReq.RepositoryList)
+	if err != nil {
+		tx.Rollback()
+		return nil, errors.Wrap(err, "unable to update system repos")
+	}
+
+	err = tx.Commit().Error
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to commit (system_platform, repo, system_repo) updates")
 	}
 
 	utils.Log("inventoryID", inventoryID, "packages", len(updatesReq.PackageList), "repos",
-		len(updatesReq.RepositoryList), "modules", len(updatesReq.ModulesList)).
+		len(updatesReq.RepositoryList), "modules", len(updatesReq.ModulesList),
+		"addedRepos", addedRepos, "addedSysRepos", addedSysRepos, "deletedSysRepos", deletedSysRepos).
 		Debug("System created or updated successfully")
-
 	return &systemPlatform, nil
+}
+
+func updateRepos(tx *gorm.DB, systemID int, repos []string) (addedRepos int64, addedSysRepos int64,
+	deletedSysRepos int, err error) {
+	repoIDs, addedRepos, err := ensureReposInDb(tx, repos)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	addedSysRepos, deletedSysRepos, err = updateSystemRepos(tx, systemID, repoIDs)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	return addedRepos, addedSysRepos, deletedSysRepos, nil
 }
 
 func ensureReposInDb(tx *gorm.DB, repos []string) (repoIDs []int, added int64, err error) {
@@ -190,8 +213,7 @@ func ensureReposInDb(tx *gorm.DB, repos []string) (repoIDs []int, added int64, e
 	return repoIDs, added, nil
 }
 
-func updateSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nAdded int64,
-	nDeleted int, err error) {
+func updateSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nAdded int64, nDeleted int, err error) {
 	repoSystemObjs := make(models.SystemRepoSlice, len(repoIDs))
 	for i, repoID := range repoIDs {
 		repoSystemObjs[i] = models.SystemRepo{SystemID: systemID, RepoID: repoID}
