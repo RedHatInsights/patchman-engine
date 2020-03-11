@@ -26,12 +26,12 @@ func deleteData(t *testing.T) {
 		Delete(&models.SystemAdvisories{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("name IN ('ER1', 'ER2', 'ER3')").
 		Delete(&models.AdvisoryMetadata{}).Error)
-	assert.Nil(t, database.Db.Unscoped().Where("inventory_id = ?", id).Delete(&models.SystemPlatform{}).Error)
-	assert.Nil(t, database.Db.Unscoped().Where("name = ?", id).Delete(&models.RhAccount{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("repo_id NOT IN (1) OR system_id NOT IN (2, 3)").
 		Delete(&models.SystemRepo{}).Error)
-	assert.Nil(t, database.Db.Unscoped().Where("name NOT IN ('repo1', 'repo2', 'repo3')").
+	assert.Nil(t, database.Db.Unscoped().Where("name NOT IN ('repo1', 'repo2')").
 		Delete(&models.Repo{}).Error)
+	assert.Nil(t, database.Db.Unscoped().Where("inventory_id = ?", id).Delete(&models.SystemPlatform{}).Error)
+	assert.Nil(t, database.Db.Unscoped().Where("name = ?", id).Delete(&models.RhAccount{}).Error)
 }
 
 // nolint: unparam
@@ -79,7 +79,7 @@ func createTestUploadEvent(inventoryID string, packages bool) HostEgressEvent {
 		ev.Host.SystemProfile.InstalledPackages = []string{"kernel-54321.rhel8.x86_64"}
 	}
 	ev.Host.SystemProfile.DnfModules = []inventory.DnfModule{{Name: "modName", Stream: "modStream"}}
-	ev.Host.SystemProfile.YumRepos = []inventory.YumRepo{{Name: "repoName", Enabled: true}}
+	ev.Host.SystemProfile.YumRepos = []inventory.YumRepo{{Id: "repo1", Enabled: true}}
 	return ev
 }
 
