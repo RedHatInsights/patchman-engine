@@ -99,7 +99,6 @@ func bulkExec(db *gorm.DB, objects reflect.Value) error {
 	return nil
 }
 
-// nolint: funlen
 func scopeFromObjects(db *gorm.DB, objects reflect.Value) (*gorm.Scope, error) {
 	if objects.Len() < 1 {
 		return nil, nil
