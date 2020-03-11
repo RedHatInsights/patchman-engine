@@ -63,7 +63,7 @@ func assertSystemNotInDb(t *testing.T) {
 }
 
 func getOrCreateTestAccount(t *testing.T) int {
-	accountID, err := getOrCreateAccount(id)
+	accountID, err := getOrCreateAccount(database.Db, id)
 	assert.Nil(t, err)
 	return accountID
 }
