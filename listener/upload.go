@@ -21,7 +21,9 @@ import (
 const (
 	WarnSkippingNoPackages = "skipping profile with no packages"
 	ErrorNoAccountProvided = "no account provided in host message"
+	ErrorKafkaSend         = "unable to send evaluation message"
 	ErrorProcessUpload     = "unable to process upload"
+	UploadSuccessNoEval    = "upload event handled successfully, no eval required"
 	UploadSuccess          = "upload event handled successfully"
 )
 
@@ -86,10 +88,25 @@ func uploadHandler(event HostEgressEvent) {
 		return
 	}
 
-	err := processUpload(context.Background(), event.Host.ID, event.Host.Account, &event.Host)
+	ctx := context.Background()
+	sys, err := processUpload(event.Host.Account, &event.Host)
 	if err != nil {
 		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorProcessUpload)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
+		return
+	}
+
+	if sys.UnchangedSince != nil && sys.LastEvaluation != nil {
+		if sys.UnchangedSince.Before(*sys.LastEvaluation) {
+			messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccessNoEval).Inc()
+			utils.Log("inventoryID", event.Host.ID).Debug(UploadSuccessNoEval)
+			return
+		}
+	}
+
+	err = mqueue.WriteEvents(ctx, evalWriter, mqueue.PlatformEvent{ID: sys.InventoryID})
+	if err != nil {
+		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorKafkaSend)
 		return
 	}
 
@@ -98,12 +115,12 @@ func uploadHandler(event HostEgressEvent) {
 }
 
 // Stores or updates the account data, returning the account id
-func getOrCreateAccount(tx *gorm.DB, account string) (int, error) {
+func getOrCreateAccount(account string) (int, error) {
 	rhAccount := models.RhAccount{
 		Name: account,
 	}
 
-	err := database.OnConflictUpdate(tx, "name", "name").Create(&rhAccount).Error
+	err := database.OnConflictUpdate(database.Db, "name", "name").Create(&rhAccount).Error
 	return rhAccount.ID, err
 }
 
@@ -248,12 +265,11 @@ func deleteOtherSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nDeleted 
 
 // nolint: funlen
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
-func processUpload(ctx context.Context, inventoryID string, account string, host *Host) error {
-	tx := database.Db.Begin()
+func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 	// Ensure we have account stored
-	accountID, err := getOrCreateAccount(tx, account)
+	accountID, err := getOrCreateAccount(account)
 	if err != nil {
-		return errors.Wrap(err, "saving account into the database")
+		return nil, errors.Wrap(err, "saving account into the database")
 	}
 
 	systemProfile := host.SystemProfile
@@ -281,21 +297,9 @@ func processUpload(ctx context.Context, inventoryID string, account string, host
 		}
 	}
 
-	_, err = updateSystemPlatform(tx, host.ID, accountID, host, &updatesReq)
+	sys, err := updateSystemPlatform(host.ID, accountID, host, &updatesReq)
 	if err != nil {
-		return errors.Wrap(err, "saving system into the database")
+		return nil, errors.Wrap(err, "saving system into the database")
 	}
-
-	if err = tx.Commit().Error; err != nil {
-		return errors.Wrap(err, "Comitting changes")
-	}
-
-	event := mqueue.PlatformEvent{
-		ID: inventoryID,
-	}
-	err = mqueue.WriteEvents(ctx, evalWriter, event)
-	if err != nil {
-		return errors.Wrap(err, "Sending kafka event failed")
-	}
-	return nil
+	return sys, nil
 }
