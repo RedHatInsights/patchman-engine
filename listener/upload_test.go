@@ -3,10 +3,7 @@ package listener
 import (
 	"app/base/core"
 	"app/base/database"
-<<<<<<< HEAD
 	"app/base/models"
-=======
->>>>>>> Wrap listener code in transaction
 	"app/base/utils"
 	"context"
 	"errors"

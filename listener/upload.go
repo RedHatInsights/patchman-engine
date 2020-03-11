@@ -135,6 +135,7 @@ func optParseTimestamp(t *string) *time.Time {
 	return &v
 }
 
+// nolint: funlen
 // Stores or updates base system profile, returing internal system id
 func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *Host,
 	updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
@@ -150,6 +151,12 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	}
 
 	jsonChecksum := hex.EncodeToString(hash.Sum([]byte{}))
+	var colsToUpdate = []string{
+		"last_upload",
+		"stale",
+		"stale_timestamp",
+		"stale_warning_timestamp",
+		"culled_timestamp"}
 
 	now := time.Now()
 
@@ -164,17 +171,28 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		StaleWarningTimestamp: optParseTimestamp(host.StaleWarningTimestamp),
 		CulledTimestamp:       optParseTimestamp(host.CulledTimestamp),
 	}
-	txOnConflict := database.OnConflictUpdate(tx, "inventory_id", "vmaas_json", "json_checksum",
-		"last_upload", "stale", "stale_timestamp", "stale_warning_timestamp", "culled_timestamp")
-	err = txOnConflict.Create(&systemPlatform).Error
-	if err != nil {
-		tx.Rollback()
-		return nil, errors.Wrap(err, "unable to save or update system in database")
+
+	var sameJSONCount int
+	// Will return sameJSONCount if json_checksum HAVEN'T CHANGED
+	tx.Table("system_platform").
+		Where("inventory_id = ?", inventoryID).
+		Where("json_checksum = ?", jsonChecksum).
+		Count(&sameJSONCount)
+
+	// Skip updating vmaas_json if the checksum haven't changed. Should reduce TOAST trashing
+	if sameJSONCount == 0 {
+		colsToUpdate = append(colsToUpdate, "vmaas_json", "json_checksum")
+	}
+
+	query := database.OnConflictUpdate(tx, "inventory_id", colsToUpdate...).
+		Create(&systemPlatform)
+
+	if query.Error != nil {
+		return nil, errors.Wrap(query.Error, "Unable to save or update system in database")
 	}
 
 	addedRepos, addedSysRepos, deletedSysRepos, err := updateRepos(tx, systemPlatform.ID, updatesReq.RepositoryList)
 	if err != nil {
-		tx.Rollback()
 		return nil, errors.Wrap(err, "unable to update system repos")
 	}
 
@@ -298,6 +316,7 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 
 	sys, err := updateSystemPlatform(tx, host.ID, accountID, host, &updatesReq)
 	if err != nil {
+		tx.Rollback()
 		return nil, errors.Wrap(err, "saving system into the database")
 	}
 	err = tx.Commit().Error
