@@ -3,7 +3,10 @@ package listener
 import (
 	"app/base/core"
 	"app/base/database"
+<<<<<<< HEAD
 	"app/base/models"
+=======
+>>>>>>> Wrap listener code in transaction
 	"app/base/utils"
 	"context"
 	"errors"
@@ -51,13 +54,13 @@ func TestUpdateSystemPlatform(t *testing.T) {
 		Basearch:       "x86_64",
 	}
 
-	sys1, err := updateSystemPlatform(id, accountID1, createTestInvHost(), &req)
+	sys1, err := updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(), &req)
 	assert.Nil(t, err)
 
 	assertSystemInDb(t, id, &accountID1)
 	assertReposInDb(t, req.RepositoryList)
 
-	sys2, err := updateSystemPlatform(id, accountID2, createTestInvHost(), &req)
+	sys2, err := updateSystemPlatform(database.Db, id, accountID2, createTestInvHost(), &req)
 	assert.Nil(t, err)
 
 	assertSystemInDb(t, id, &accountID2)

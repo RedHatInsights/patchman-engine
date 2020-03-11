@@ -88,7 +88,6 @@ func uploadHandler(event HostEgressEvent) {
 		return
 	}
 
-	ctx := context.Background()
 	sys, err := processUpload(event.Host.Account, &event.Host)
 	if err != nil {
 		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorProcessUpload)
@@ -104,7 +103,7 @@ func uploadHandler(event HostEgressEvent) {
 		}
 	}
 
-	err = mqueue.WriteEvents(ctx, evalWriter, mqueue.PlatformEvent{ID: sys.InventoryID})
+	err = mqueue.WriteEvents(context.Background(), evalWriter, mqueue.PlatformEvent{ID: sys.InventoryID})
 	if err != nil {
 		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorKafkaSend)
 		return
@@ -115,12 +114,12 @@ func uploadHandler(event HostEgressEvent) {
 }
 
 // Stores or updates the account data, returning the account id
-func getOrCreateAccount(account string) (int, error) {
+func getOrCreateAccount(tx *gorm.DB, account string) (int, error) {
 	rhAccount := models.RhAccount{
 		Name: account,
 	}
 
-	err := database.OnConflictUpdate(database.Db, "name", "name").Create(&rhAccount).Error
+	err := database.OnConflictUpdate(tx, "name", "name").Create(&rhAccount).Error
 	return rhAccount.ID, err
 }
 
@@ -165,7 +164,6 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		StaleWarningTimestamp: optParseTimestamp(host.StaleWarningTimestamp),
 		CulledTimestamp:       optParseTimestamp(host.CulledTimestamp),
 	}
-
 	txOnConflict := database.OnConflictUpdate(tx, "inventory_id", "vmaas_json", "json_checksum",
 		"last_upload", "stale", "stale_timestamp", "stale_warning_timestamp", "culled_timestamp")
 	err = txOnConflict.Create(&systemPlatform).Error
@@ -266,8 +264,9 @@ func deleteOtherSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nDeleted 
 // nolint: funlen
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
 func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
+	tx := database.Db.Begin()
 	// Ensure we have account stored
-	accountID, err := getOrCreateAccount(account)
+	accountID, err := getOrCreateAccount(tx, account)
 	if err != nil {
 		return nil, errors.Wrap(err, "saving account into the database")
 	}
@@ -297,7 +296,11 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 		}
 	}
 
-	sys, err := updateSystemPlatform(host.ID, accountID, host, &updatesReq)
+	sys, err := updateSystemPlatform(tx, host.ID, accountID, host, &updatesReq)
+	if err != nil {
+		return nil, errors.Wrap(err, "saving system into the database")
+	}
+	err = tx.Commit().Error
 	if err != nil {
 		return nil, errors.Wrap(err, "saving system into the database")
 	}
