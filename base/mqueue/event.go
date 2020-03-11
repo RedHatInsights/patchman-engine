@@ -32,11 +32,7 @@ func MakeMessageHandler(eventHandler EventHandler) MessageHandler {
 	}
 }
 
-func HandleEvents(r Reader, handler EventHandler) {
-	r.HandleMessages(MakeMessageHandler(handler))
-}
-
-// nolint: scopelint,
+// nolint: scopelint
 func WriteEvents(ctx context.Context, w Writer, events ...PlatformEvent) error {
 	msgs := make([]kafka.Message, len(events))
 	for i, ev := range events {
