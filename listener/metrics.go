@@ -10,7 +10,8 @@ import (
 const (
 	EventUpload             = "upload"
 	EventDelete             = "delete"
-	ReceivedSuccess         = "success"
+	ReceivedSuccess         = "success-eval"
+	ReceivedSuccessNoEval   = "success-unchanged"
 	ReceivedErrorIdentity   = "error-identity"
 	ReceivedErrorParsing    = "error-parsing"
 	ReceivedErrorProcessing = "error-processing"
