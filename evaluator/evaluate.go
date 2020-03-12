@@ -331,9 +331,8 @@ func ensureSystemAdvisories(tx *gorm.DB, systemID int, advisoryIDs []int) error 
 			models.SystemAdvisories{SystemID: systemID, AdvisoryID: advisoryID})
 	}
 
-	interfaceSlice := advisoriesObjs
 	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
-	err := database.BulkInsert(txOnConflict, interfaceSlice)
+	err := database.BulkInsert(txOnConflict, advisoriesObjs)
 	return err
 }
 
