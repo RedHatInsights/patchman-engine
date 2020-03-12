@@ -543,6 +543,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO evaluator;
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO vmaas_sync;
 -- TODO: Remove
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO listener;
+GRANT SELECT ON advisory_metadata TO manager;
 
 -- status table
 CREATE TABLE IF NOT EXISTS status
@@ -662,7 +663,7 @@ CREATE INDEX ON system_repo (repo_id);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_repo TO listener;
 GRANT DELETE ON system_repo TO manager;
--- vmaas_sync needs to delete culled systems, which cascades to system_repo
+GRANT SELECT ON system_repo TO evaluator;
 GRANT SELECT, DELETE on system_repo to vmaas_sync;
 
 
