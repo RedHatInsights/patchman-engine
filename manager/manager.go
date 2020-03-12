@@ -12,6 +12,9 @@ import (
 // @version 1.0
 // @description Description here
 
+// @license.name GPLv3
+// @license.url https://www.gnu.org/licenses/gpl-3.0.en.html
+
 // @securityDefinitions.apikey RhIdentity
 // @in header
 // @name x-rh-identity

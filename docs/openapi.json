@@ -4,7 +4,10 @@
         "title": "Patchman-engine API",
         "description": "Description here",
         "contact": {},
-        "license": {},
+        "license": {
+            "name": "GPLv3",
+            "url": "https://www.gnu.org/licenses/gpl-3.0.en.html"
+        },
         "version": "1.0"
     },
     "servers": [
