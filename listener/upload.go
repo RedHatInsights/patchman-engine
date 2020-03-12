@@ -118,7 +118,11 @@ func getOrCreateAccount(tx *gorm.DB, account string) (int, error) {
 	rhAccount := models.RhAccount{
 		Name: account,
 	}
-
+	// Select, and only if not found attempt an insertion
+	tx.Where("name = ?", account).Find(&rhAccount)
+	if rhAccount.ID != 0 {
+		return rhAccount.ID, nil
+	}
 	err := database.OnConflictUpdate(tx, "name", "name").Create(&rhAccount).Error
 	return rhAccount.ID, err
 }

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (13, false);
+VALUES (14, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -438,7 +438,8 @@ CREATE TABLE IF NOT EXISTS system_platform
     CONSTRAINT rh_account_id
         FOREIGN KEY (rh_account_id)
             REFERENCES rh_account (id)
-) TABLESPACE pg_default;
+) WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
+  TABLESPACE pg_default;
 
 CREATE INDEX ON system_platform (rh_account_id);
 
@@ -582,9 +583,8 @@ CREATE TABLE IF NOT EXISTS system_advisories
     CONSTRAINT status_id
         FOREIGN KEY (status_id)
             REFERENCES status (id)
-) TABLESPACE pg_default;
-
-CREATE INDEX ON system_advisories (status_id);
+) WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
+  TABLESPACE pg_default;
 
 CREATE TRIGGER system_advisories_set_first_reported
     BEFORE INSERT
@@ -621,7 +621,8 @@ CREATE TABLE IF NOT EXISTS advisory_account_data
             REFERENCES status (id),
     UNIQUE (advisory_id, rh_account_id),
     PRIMARY KEY (rh_account_id, advisory_id)
-) TABLESPACE pg_default;
+) WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
+  TABLESPACE pg_default;
 
 -- manager user needs to change this table for opt-out functionality
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO manager;
