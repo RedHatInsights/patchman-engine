@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -e -o pipefail
 
 # Wait untill database is ready
 ./scripts/wait-for-services.sh

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -e -o pipefail
 
 # Analyse dockerfiles
 ./scripts/check-dockerfiles.sh
