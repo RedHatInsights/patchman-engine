@@ -10,7 +10,7 @@ set -e
 echo "Go code analysed successfully."
 
 # Run project tests
-./scripts/go_test_db.sh
+./scripts/go_test_db.sh | ./scripts/colorize.sh
 
 if [ -n "$TRAVIS" ]; then
   bash <(curl -s https://codecov.io/bash)
