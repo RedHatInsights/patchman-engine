@@ -2,13 +2,10 @@ version: '3'
 services:
   db:
     container_name: db
-    build:
-      context: .
-      dockerfile: database/Dockerfile.centos
+    image: postgres:11.5
     ports:
       - 5432:5432
     env_file:
-      - ./conf/common.env
       - ./conf/database.env
 
   platform:
@@ -30,6 +27,7 @@ services:
       dockerfile: Dockerfile.test
     env_file:
       - ./conf/test.env
+      - ./conf/database.env
     environment:
       - CI
       - TRAVIS
