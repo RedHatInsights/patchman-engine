@@ -6,6 +6,8 @@ export PGDATABASE=$DB_NAME
 export PGPORT=$DB_PORT
 export PGPASSWORD=$DB_PASSWD
 
+WAIT_FOR_EMPTY_DB=1 /go/src/app/scripts/wait-for-services.sh
+
 DB_INITIALIZED=$(psql -c "\d" | grep schema_migrations | wc -l)
 
 # we cain either create the database from scratch, or upgrade running database
