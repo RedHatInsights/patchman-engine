@@ -19,19 +19,18 @@ type SystemPlatform struct {
 	InventoryID string `sql:"unique" gorm:"unique"`
 	RhAccountID int
 	// All times need to be stored as pointers, since they are set to 0000-00-00 00:00 by gorm if not present
-	FirstReported         *time.Time
+	FirstReported         *time.Time `gorm:"default:null"`
 	VmaasJSON             string
 	JSONChecksum          string
-	LastUpdated           *time.Time
-	UnchangedSince        *time.Time
-	LastEvaluation        *time.Time
+	LastUpdated           *time.Time `gorm:"default:null"`
+	UnchangedSince        *time.Time `gorm:"default:null"`
+	LastEvaluation        *time.Time `gorm:"default:null"`
 	OptOut                bool
 	AdvisoryCountCache    int
 	AdvisoryEnhCountCache int
 	AdvisoryBugCountCache int
 	AdvisorySecCountCache int
-	LastUpload            *time.Time
-
+	LastUpload            *time.Time `gorm:"default:null"`
 	StaleTimestamp        *time.Time
 	StaleWarningTimestamp *time.Time
 	CulledTimestamp       *time.Time

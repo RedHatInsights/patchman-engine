@@ -145,10 +145,8 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	}
 
 	hash := sha256.New()
-	_, err = hash.Write(updatesReqJSON)
-	if err != nil {
-		return nil, errors.Wrap(err, "Unable to hash updates json")
-	}
+	// Never returns an error
+	hash.Write(updatesReqJSON) // nolint: errcheck
 
 	jsonChecksum := hex.EncodeToString(hash.Sum([]byte{}))
 	var colsToUpdate = []string{
@@ -185,7 +183,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	}
 
 	query := database.OnConflictUpdate(tx, "inventory_id", colsToUpdate...).
-		Create(&systemPlatform)
+		Save(&systemPlatform)
 
 	if query.Error != nil {
 		return nil, errors.Wrap(query.Error, "Unable to save or update system in database")
