@@ -16,7 +16,7 @@ services:
       dockerfile: Dockerfile.centos
     env_file:
       - ./conf/database.env
-    command: /database/migrate.sh
+    command: /database/update.sh
     depends_on:
       - db
     volumes:
