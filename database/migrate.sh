@@ -1,16 +1,15 @@
 #!/bin/bash
 
-set -u
+set -o pipefail
 
-# accept either DB_NAME or or postgresql database, allowing running from database container and locally
-DB_NAME=${DB_NAME:-${POSTGRESQL_DATABASE}}
-# By default load migrations from local directory
-MIGRATIONS_DIR=${MIGRATIONS_DIR:-database/migrations}
-# By default use local postgresql instance and connect over socket
-DB_URL=${DB_URL:-"postgres:///${DB_NAME}?host=/var/run/postgresql/"}
-# by default update to latest version
-CMD=${@:-up}
+export PGHOST=$DB_HOST
+export PGUSER=$DB_USER
+export PGDATABASE=$DB_NAME
+export PGPORT=$DB_PORT
+export PGPASSWORD=$DB_PASSWD
 
-migrate \
-  -source file://${MIGRATIONS_DIR} \
-  -database $DB_URL $CMD
+psql -a -f /database/schema/create_users.sql
+
+/migrate -source file://database/migrations -database postgres://$DB_HOST/$DB_NAME$MIGRATE_DB_URL_PARAMS up
+
+sleep infinity
