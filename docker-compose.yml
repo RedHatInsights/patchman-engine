@@ -9,14 +9,14 @@ services:
     env_file:
       - ./conf/database.env
 
-  db_setup:
-    container_name: db_setup
+  db_admin:
+    container_name: db_admin
     build:
       context: .
       dockerfile: Dockerfile.centos
     env_file:
-      - ./conf/database.env
-    command: /database/update.sh
+      - ./conf/database_admin.env
+    command: /database/db_admin_entrypoint.sh
     depends_on:
       - db
     volumes:

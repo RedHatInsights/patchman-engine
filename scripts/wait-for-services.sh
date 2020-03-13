@@ -6,7 +6,12 @@ cmd="$@"
 
 if [ ! -z "$DB_HOST" ]; then
   >&2 echo "Checking if PostgreSQL is up"
-  until PGPASSWORD="$DB_PASSWD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c '\q' -q 2>/dev/null; do
+  if [ ! -z "$WAIT_FOR_EMPTY_DB" ]; then
+    CHECK_QUERY="\q" # Wait only for empty database.
+  else
+    CHECK_QUERY="SELECT * FROM schema_migrations;" # Wait even for database schema initialization.
+  fi
+  until PGPASSWORD="$DB_PASSWD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "${CHECK_QUERY}" -q 2>/dev/null; do
     >&2 echo "PostgreSQL is unavailable - sleeping"
     sleep 1
   done
