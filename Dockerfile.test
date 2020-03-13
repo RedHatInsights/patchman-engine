@@ -2,10 +2,16 @@ FROM centos:8
 
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 
-RUN yum module -y install go-toolset postgresql && \
-    yum -y install git
+RUN yum module -y install go-toolset && \
+    yum install -y \
+    https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
+    yum module -y disable postgresql && \
+    yum install -y git postgresql11
 
 RUN yum -y install diffutils
+
+RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.8.0/migrate.linux-amd64.tar.gz \
+    | tar xz -C . && mv migrate.linux-amd64 /migrate
 
 ENV GOPATH=/go
 ENV GO111MODULE=on
@@ -18,6 +24,7 @@ RUN go mod download && \
     curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
     | sh -s -- -b $(go env GOPATH)/bin v1.22.2
 
+ADD /database      /database
 ADD /conf          /go/src/app/conf
 ADD /base          /go/src/app/base
 ADD /database      /go/src/app/database

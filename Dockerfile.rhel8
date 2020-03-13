@@ -10,6 +10,9 @@ RUN yum module -y install go-toolset postgresql && \
     yum -y install git diffutils && \
     /manifest/rpm_list.sh > /tmp/final_rpm.txt
 
+RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.8.0/migrate.linux-amd64.tar.gz \
+    | tar xz -C . && mv migrate.linux-amd64 /migrate
+
 ENV GOPATH=/go
 ENV GO111MODULE=on
 
@@ -27,6 +30,7 @@ USER insights
 WORKDIR /go/src/app
 RUN go mod download
 
+ADD /database   /database
 ADD /base       /go/src/app/base
 ADD /manager    /go/src/app/manager
 ADD /listener   /go/src/app/listener

@@ -5,6 +5,9 @@ set -e -o pipefail
 # Wait untill database is ready
 ./scripts/wait-for-services.sh
 
+# Create database
+/database/update.sh
+
 # Run database test, destroys and recreates database
 go test -v app/database
 
