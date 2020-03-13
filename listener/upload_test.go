@@ -12,6 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestGetOrCreateAccount(t *testing.T) {
@@ -85,6 +86,19 @@ func TestUploadHandler(t *testing.T) {
 	uploadHandler(event)
 
 	assertSystemInDb(t, id, nil)
+
+	var sys models.SystemPlatform
+
+	assert.NoError(t, database.Db.Where("inventory_id = ?", id).Find(&sys).Error)
+	after := time.Now().Add(time.Hour)
+	sys.LastEvaluation = &after
+	assert.NoError(t, database.Db.Save(&sys).Error)
+	// Test that second upload did not cause re-evaluation
+	logHook := utils.NewTestLogHook()
+	log.AddHook(logHook)
+	uploadHandler(event)
+	assert.Equal(t, 2, len(logHook.LogEntries))
+	assert.Equal(t, UploadSuccessNoEval, logHook.LogEntries[1].Message)
 	deleteData(t)
 }
 
