@@ -1,0 +1,16 @@
+FROM centos/postgresql-12-centos7
+#FROM centos/postgresql-10-centos7
+
+USER root
+
+RUN yum install -y openssl -y
+RUN mkdir /opt/app-root/src/certificates && cd /opt/app-root/src/certificates && \
+    openssl req -new -text -passout pass:abcd -subj /CN=localhost -out server.req -keyout privkey.pem && \
+    openssl rsa -in privkey.pem -passin pass:abcd -out server.key && \
+    openssl req -x509 -in server.req -text -key server.key -out server.crt && \
+    chmod 0600 server.key && chown postgres server.key
+
+USER postgres
+
+ADD /dev/database/custom.conf /opt/app-root/src/postgresql-cfg/
+ADD /dev/database/pg_hba.conf /opt/app-root/

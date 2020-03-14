@@ -3,10 +3,8 @@ FROM centos:8
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 
 RUN yum module -y install go-toolset && \
-    yum install -y \
-    https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
-    yum module -y disable postgresql && \
-    yum install -y git postgresql11
+    yum module -y enable postgresql:12 && \
+    yum install -y git postgresql
 
 RUN yum -y install diffutils
 

@@ -1,10 +1,11 @@
 #!/usr/bin/bash
 
 export PGHOST=$DB_HOST
-export PGUSER=$DB_USER
+export PGUSER=$DB_ADMIN_USER
+export PGPASSWORD=$DB_ADMIN_PASSWD
 export PGDATABASE=$DB_NAME
 export PGPORT=$DB_PORT
-export PGPASSWORD=$DB_PASSWD
+export PGSSLMODE=require
 
 WAIT_FOR_EMPTY_DB=1 /go/src/app/scripts/wait-for-services.sh
 
