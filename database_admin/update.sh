@@ -5,7 +5,7 @@ export PGUSER=$DB_ADMIN_USER
 export PGPASSWORD=$DB_ADMIN_PASSWD
 export PGDATABASE=$DB_NAME
 export PGPORT=$DB_PORT
-export PGSSLMODE=require
+export PGSSLMODE=$DB_SSLMODE
 
 WAIT_FOR_EMPTY_DB=1 /database_admin/wait-for-services.sh
 
