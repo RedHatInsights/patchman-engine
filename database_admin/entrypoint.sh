@@ -2,6 +2,6 @@
 
 set -e -o pipefail
 
-/database/update.sh
+/database_admin/update.sh
 
 sleep infinity

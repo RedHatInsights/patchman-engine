@@ -3,17 +3,17 @@
 set -e -o pipefail
 
 # Create database
-/database/update.sh
+/database_admin/update.sh
 
 # Wait untill database is ready
 ./scripts/wait-for-services.sh
 
 # Run database test, destroys and recreates database
-go test -v app/database
+go test -v app/database_admin
 
 # Fill database with testing data
 ./scripts/feed_db.sh
 
 # Normal test run - everything except database schema test
-TEST_DIRS=$(go list ./... | grep -v "app/database")
+TEST_DIRS=$(go list ./... | grep -v "app/database_admin")
 ./scripts/go_test.sh "${TEST_DIRS}"

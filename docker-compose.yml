@@ -5,7 +5,7 @@ services:
     container_name: db
     build:
       context: .
-      dockerfile: dev/database/Dockerfile
+      dockerfile: database/Dockerfile.centos
     ports:
       - 5432:5432
     env_file:
@@ -15,10 +15,10 @@ services:
     container_name: db_admin
     build:
       context: .
-      dockerfile: Dockerfile.centos
+      dockerfile: database_admin/Dockerfile.centos
     env_file:
       - ./conf/database_admin.env
-    command: /database/db_admin_entrypoint.sh
+    command: /database_admin/entrypoint.sh
     depends_on:
       - db
     volumes:

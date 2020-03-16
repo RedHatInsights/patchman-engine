@@ -1,0 +1,15 @@
+FROM centos:8
+
+RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+
+RUN yum module -y enable postgresql:12 && \
+    yum install -y postgresql diffutils
+
+RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.8.0/migrate.linux-amd64.tar.gz \
+    | tar xz -C . && mv migrate.linux-amd64 /migrate
+
+RUN adduser --gid 0 -d /go --no-create-home insights
+USER insights
+
+ADD /database_admin                /database_admin
+ADD /scripts/wait-for-services.sh  /database_admin
