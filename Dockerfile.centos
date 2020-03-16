@@ -7,10 +7,8 @@ RUN /manifest/rpm_list.sh | grep -v -E "^(redhat|centos|fedora)-release" > /tmp/
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 
 RUN yum module -y install go-toolset && \
-    yum install -y \
-    https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
-    yum module -y disable postgresql && \
-    yum -y install git postgresql11 diffutils && \
+    yum module -y enable postgresql:12 && \
+    yum install -y git postgresql diffutils && \
     /manifest/rpm_list.sh > /tmp/final_rpm.txt
 
 ENV GOPATH=/go
