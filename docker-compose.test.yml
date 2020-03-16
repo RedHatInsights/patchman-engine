@@ -4,7 +4,7 @@ services:
     container_name: db
     build:
       context: .
-      dockerfile: dev/database/Dockerfile
+      dockerfile: database/Dockerfile.centos
     ports:
       - 5432:5432
     env_file:

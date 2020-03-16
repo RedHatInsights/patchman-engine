@@ -22,19 +22,23 @@ RUN go mod download && \
     curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
     | sh -s -- -b $(go env GOPATH)/bin v1.22.2
 
-ADD /database      /database
-ADD /conf          /go/src/app/conf
-ADD /base          /go/src/app/base
-ADD /database      /go/src/app/database
-ADD /manager       /go/src/app/manager
-ADD /listener      /go/src/app/listener
-ADD /evaluator     /go/src/app/evaluator
-ADD /vmaas_sync    /go/src/app/vmaas_sync
-ADD /docs          /go/src/app/docs
-ADD /scripts       /go/src/app/scripts
-ADD main.go        /go/src/app/
-ADD .golangci.yml  /go/src/app/
-ADD /dev           /go/src/app/dev
+ADD /conf              /go/src/app/conf
+ADD /base              /go/src/app/base
+ADD /database          /go/src/app/database
+ADD /database_admin    /go/src/app/database_admin
+ADD /manager           /go/src/app/manager
+ADD /listener          /go/src/app/listener
+ADD /evaluator         /go/src/app/evaluator
+ADD /vmaas_sync        /go/src/app/vmaas_sync
+ADD /docs              /go/src/app/docs
+ADD /scripts           /go/src/app/scripts
+ADD main.go            /go/src/app/
+ADD .golangci.yml      /go/src/app/
+ADD /dev               /go/src/app/dev
+
+# Setup database admin environment
+ADD /database_admin  /database_admin
+ADD /scripts/wait-for-services.sh  /database_admin
 
 # Add dockerfiles for checking
-ADD Dockerfile*    /go/src/app/
+ADD Dockerfile*      /go/src/app/
