@@ -538,6 +538,14 @@
                         }
                     },
                     {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Find matching text",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[id]",
                         "in": "query",
                         "description": "Filter",
@@ -579,14 +587,6 @@
                     },
                     {
                         "name": "filter[severity]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[applicable_systems]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
