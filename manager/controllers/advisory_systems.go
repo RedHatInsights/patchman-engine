@@ -2,11 +2,13 @@ package controllers
 
 import (
 	"app/base/database"
+	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
 	"net/http"
 )
 
@@ -46,6 +48,16 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 		return
 	}
 
+	var exists int
+	err := database.Db.Model(&models.AdvisoryMetadata{}).Where("name = ? ", advisoryName).Count(&exists).Error
+	if err != nil {
+		LogAndRespError(c, err, "database error")
+	}
+	if exists == 0 {
+		LogAndRespNotFound(c, errors.New("System not found"), "System not found")
+		return
+	}
+
 	query := buildQuery(account, advisoryName)
 	path := fmt.Sprintf("/api/patch/v1/advisories/%v/systems", advisoryName)
 	query, meta, links, err := ListCommon(query, c, path, SystemsFields, systemsDefaultFilter)
@@ -55,13 +67,8 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 	}
 
 	var dbItems []SystemDBLookup
-	err = query.Scan(&dbItems).Error
-	if gorm.IsRecordNotFoundError(err) {
-		LogAndRespNotFound(c, err, "no systems found")
-		return
-	}
 
-	if err != nil {
+	if err = query.Scan(&dbItems).Error; err != nil {
 		LogAndRespError(c, err, "database error")
 		return
 	}
