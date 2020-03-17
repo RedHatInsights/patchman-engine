@@ -24,7 +24,6 @@ RUN go mod download && \
 
 ADD /conf              /go/src/app/conf
 ADD /base              /go/src/app/base
-ADD /database          /go/src/app/database
 ADD /database_admin    /go/src/app/database_admin
 ADD /manager           /go/src/app/manager
 ADD /listener          /go/src/app/listener
