@@ -21,7 +21,7 @@ func makeClient(identity string) *rbac.APIClient {
 	return rbac.NewAPIClient(rbacConfig)
 }
 
-func checkRbac(c *gin.Context) bool {
+func isAccessGranted(c *gin.Context) bool {
 	client := makeClient(c.GetHeader("x-rh-identity"))
 	// Body is closed inside api method, don't know why liter is complaining
 	// nolint: bodyclose
@@ -43,7 +43,8 @@ func checkRbac(c *gin.Context) bool {
 
 func RBAC() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if !checkRbac(c) {
+		enableRBACCHeck := utils.Getenv("ENABLE_RBAC", "yes") == "yes"
+		if enableRBACCHeck && !isAccessGranted(c) {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "RBAC check failed"})
 			return
 		}
