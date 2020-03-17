@@ -31,6 +31,17 @@ func TestSystemAdvisoriesDefault(t *testing.T) {
 	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
 }
 
+func TestSystemAdvisoriesNotFound(t *testing.T) { //nolint:dupl
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/nonexistant/advisories", nil)
+	initRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
+
 func TestSystemAdvisoriesOffsetLimit(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
