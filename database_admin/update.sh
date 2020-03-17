@@ -7,7 +7,7 @@ export PGDATABASE=$DB_NAME
 export PGPORT=$DB_PORT
 export PGSSLMODE=$DB_SSLMODE
 
-WAIT_FOR_EMPTY_DB=1 /database_admin/wait-for-services.sh
+WAIT_FOR_EMPTY_DB=1 /go/src/app/scripts/wait-for-services.sh
 
 DB_INITIALIZED=$(psql -c "\d" | grep schema_migrations | wc -l)
 

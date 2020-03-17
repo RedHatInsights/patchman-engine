@@ -15,7 +15,7 @@ services:
     container_name: db_admin
     build:
       context: .
-      dockerfile: database_admin/Dockerfile.centos
+      dockerfile: Dockerfile.centos
     env_file:
       - ./conf/database_admin.env
     command: /database_admin/entrypoint.sh
