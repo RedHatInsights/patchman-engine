@@ -13,4 +13,4 @@ ALTER TABLE system_advisories
 ALTER TABLE advisory_account_data
     SET (autovacuum_vacuum_scale_factor = 0.05);
 
-DROP INDEX system_advisories_status_id_idx;
+DROP INDEX IF EXISTS system_advisories_status_id_idx;

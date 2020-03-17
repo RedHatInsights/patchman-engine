@@ -1,5 +1,5 @@
 ALTER TABLE system_advisories
-    DROP CONSTRAINT system_advisories_system_id_advisory_id_key;
+    DROP CONSTRAINT IF EXISTS system_advisories_system_id_advisory_id_key;
 
 ALTER TABLE system_advisories
     DROP CONSTRAINT system_advisories_pkey;
