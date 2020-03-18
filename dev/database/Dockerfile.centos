@@ -1,4 +1,6 @@
-FROM centos/postgresql-12-centos7
+FROM centos/postgresql-10-centos7
+
+ADD /database/init.sh ${CONTAINER_SCRIPTS_PATH}/start/
 
 USER root
 
@@ -16,5 +18,3 @@ ADD /dev/database/custom.conf /opt/app-root/src/postgresql-cfg/
 
 # copy config to enforce SSL connections to ensure all clients use SSL
 ADD /dev/database/pg_hba.conf /opt/app-root/
-
-ADD /dev/database/init.sh ${CONTAINER_SCRIPTS_PATH}/start/

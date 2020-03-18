@@ -1,0 +1,3 @@
+FROM centos/postgresql-10-centos7
+
+ADD /database/init.sh ${CONTAINER_SCRIPTS_PATH}/start/

@@ -31,4 +31,5 @@ ADD .golangci.yml      /go/src/app/
 ADD /dev               /go/src/app/dev
 
 # Add dockerfiles for checking
-ADD Dockerfile*      /go/src/app/
+ADD Dockerfile*        /go/src/app/
+ADD /database          /go/src/app/database/
