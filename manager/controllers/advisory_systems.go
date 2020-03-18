@@ -28,10 +28,10 @@ type AdvisorySystemsResponse struct {
 // @Param    advisory_id    path    string  true    "Advisory ID"
 // @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort    query   string  false   "Sort field" Enums(id,last_evaluation,last_updated,rhsa_count,rhba_count,rhea_count,enabled,stale)
+// @Param    sort    query   string  false   "Sort field" Enums(id,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,enabled,stale)
 // @Param    filter[id]              query   string  false "Filter"
 // @Param    filter[last_evaluation] query   string  false "Filter"
-// @Param    filter[last_updated]    query   string  false "Filter"
+// @Param    filter[last_upload]    query   string  false "Filter"
 // @Param    filter[rhsa_count]      query   string  false "Filter"
 // @Param    filter[rhba_count]      query   string  false "Filter"
 // @Param    filter[rhea_count]      query   string  false "Filter"
