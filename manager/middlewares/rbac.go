@@ -44,8 +44,12 @@ func isAccessGranted(c *gin.Context) bool {
 func RBAC() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		enableRBACCHeck := utils.Getenv("ENABLE_RBAC", "yes") == "yes"
-		if enableRBACCHeck && !isAccessGranted(c) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "RBAC check failed"})
+		if !enableRBACCHeck {
+			return
+		}
+		if !isAccessGranted(c) {
+			c.AbortWithStatusJSON(http.StatusUnauthorized,
+				utils.ErrorResponse{Error: "You don't have access to this application"})
 			return
 		}
 	}
