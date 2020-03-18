@@ -11,10 +11,6 @@ RUN yum module -y install go-toolset && \
     yum install -y git postgresql diffutils && \
     /manifest/rpm_list.sh > /tmp/final_rpm.txt
 
-# Download binary tool for database migration
-RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.8.0/migrate.linux-amd64.tar.gz \
-    | tar xz -C . && mv migrate.linux-amd64 /migrate
-
 ENV GOPATH=/go
 ENV GO111MODULE=on
 
@@ -32,15 +28,14 @@ USER insights
 WORKDIR /go/src/app
 RUN go mod download
 
-ADD /base       /go/src/app/base
-ADD /manager    /go/src/app/manager
-ADD /listener   /go/src/app/listener
-ADD /evaluator  /go/src/app/evaluator
-ADD /vmaas_sync /go/src/app/vmaas_sync
-ADD /docs       /go/src/app/docs
-ADD main.go     /go/src/app/
-
-ADD /database_admin  /database_admin
+ADD /base             /go/src/app/base
+ADD /manager          /go/src/app/manager
+ADD /listener         /go/src/app/listener
+ADD /evaluator        /go/src/app/evaluator
+ADD /vmaas_sync       /go/src/app/vmaas_sync
+ADD /docs             /go/src/app/docs
+ADD main.go           /go/src/app/
+ADD /database_admin   /go/src/app/database_admin
 
 ADD /scripts    /go/src/app/scripts
 

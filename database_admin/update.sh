@@ -7,7 +7,7 @@ export PGDATABASE=$DB_NAME
 export PGPORT=$DB_PORT
 export PGSSLMODE=$DB_SSLMODE
 
-WAIT_FOR_EMPTY_DB=1 /go/src/app/scripts/wait-for-services.sh
+WAIT_FOR_EMPTY_DB=1 ./scripts/wait-for-services.sh
 
 DB_INITIALIZED=$(psql -c "\d" | grep schema_migrations | wc -l)
 
@@ -20,13 +20,13 @@ if [[ $DB_INITIALIZED == "0" ]]; then
   psql -c "ALTER USER ${DB_USER} WITH SUPERUSER"
 
   # Create users if they don't exist
-  psql -f /database_admin/schema/create_users.sql
+  psql -f ./database_admin/schema/create_users.sql
 
   echo "Initializing the database through migrations"
-  /database_admin/migrate.sh up
+  ./database_admin/migrate.sh
 else
   echo "Already initialized - Migrating the database"
-  /database_admin/migrate.sh up
+  ./database_admin/migrate.sh
 fi
 
 echo "Setting user passwords"

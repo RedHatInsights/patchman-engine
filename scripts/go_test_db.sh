@@ -3,7 +3,7 @@
 set -e -o pipefail
 
 # Create database
-/database_admin/update.sh
+./database_admin/update.sh
 
 # Wait untill database is ready
 ./scripts/wait-for-services.sh
