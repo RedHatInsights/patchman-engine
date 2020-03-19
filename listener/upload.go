@@ -311,7 +311,7 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 
 	updatesReq.RepositoryList = make([]string, len(systemProfile.YumRepos))
 	for i, r := range systemProfile.YumRepos {
-		if r.Enabled {
+		if r.Enabled && len(r.Id) > 0 {
 			updatesReq.RepositoryList[i] = r.Id
 		}
 	}
