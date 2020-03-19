@@ -195,6 +195,8 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 
 	addedRepos, addedSysRepos, deletedSysRepos, err := updateRepos(tx, systemPlatform.ID, updatesReq.RepositoryList)
 	if err != nil {
+		utils.Log("repository_list", updatesReq.RepositoryList, "inventoryID", systemPlatform.ID).
+			Error("repos failed to insert")
 		return nil, errors.Wrap(err, "unable to update system repos")
 	}
 
