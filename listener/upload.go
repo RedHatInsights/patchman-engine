@@ -114,16 +114,16 @@ func uploadHandler(event HostEgressEvent) {
 }
 
 // Stores or updates the account data, returning the account id
-func getOrCreateAccount(tx *gorm.DB, account string) (int, error) {
+func getOrCreateAccount(account string) (int, error) {
 	rhAccount := models.RhAccount{
 		Name: account,
 	}
 	// Select, and only if not found attempt an insertion
-	tx.Where("name = ?", account).Find(&rhAccount)
+	database.Db.Where("name = ?", account).Find(&rhAccount)
 	if rhAccount.ID != 0 {
 		return rhAccount.ID, nil
 	}
-	err := database.OnConflictUpdate(tx, "name", "name").Create(&rhAccount).Error
+	err := database.OnConflictUpdate(database.Db, "name", "name").Create(&rhAccount).Error
 	return rhAccount.ID, err
 }
 
@@ -155,10 +155,10 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	jsonChecksum := hex.EncodeToString(hash.Sum([]byte{}))
 	var colsToUpdate = []string{
 		"last_upload",
-		"stale",
 		"stale_timestamp",
 		"stale_warning_timestamp",
-		"culled_timestamp"}
+		"culled_timestamp",
+	}
 
 	now := time.Now()
 
@@ -168,21 +168,20 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		VmaasJSON:             string(updatesReqJSON),
 		JSONChecksum:          jsonChecksum,
 		LastUpload:            &now,
-		Stale:                 false,
 		StaleTimestamp:        optParseTimestamp(host.StaleTimestamp),
 		StaleWarningTimestamp: optParseTimestamp(host.StaleWarningTimestamp),
 		CulledTimestamp:       optParseTimestamp(host.CulledTimestamp),
 	}
 
-	var sameJSONCount int
-	// Will return sameJSONCount if json_checksum HAVEN'T CHANGED
-	tx.Table("system_platform").
+	var oldJSONChecksum []string
+	// Lock the row for update & return checksum
+	tx.Set("gorm:query_option", "FOR UPDATE OF system_platform").
+		Table("system_platform").
 		Where("inventory_id = ?", inventoryID).
-		Where("json_checksum = ?", jsonChecksum).
-		Count(&sameJSONCount)
+		Pluck("json_checksum", &oldJSONChecksum)
 
 	// Skip updating vmaas_json if the checksum haven't changed. Should reduce TOAST trashing
-	if sameJSONCount == 0 {
+	if len(oldJSONChecksum) == 0 || oldJSONChecksum[0] != jsonChecksum {
 		colsToUpdate = append(colsToUpdate, "vmaas_json", "json_checksum")
 	}
 
@@ -286,9 +285,8 @@ func deleteOtherSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nDeleted 
 // nolint: funlen
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
 func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
-	tx := database.Db.Begin()
 	// Ensure we have account stored
-	accountID, err := getOrCreateAccount(tx, account)
+	accountID, err := getOrCreateAccount(account)
 	if err != nil {
 		return nil, errors.Wrap(err, "saving account into the database")
 	}
@@ -318,6 +316,7 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 		}
 	}
 
+	tx := database.Db.Begin()
 	sys, err := updateSystemPlatform(tx, host.ID, accountID, host, &updatesReq)
 	if err != nil {
 		tx.Rollback()
