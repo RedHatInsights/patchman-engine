@@ -86,38 +86,36 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemID := 12
-	rhAccountID := 3
+	system := models.SystemPlatform{ID: 12, RhAccountID: 3}
 	advisoryIDs := []int{2, 3, 4}
-	createSystemAdvisories(t, systemID, advisoryIDs, nil)
-	createAdvisoryAccountData(t, rhAccountID, advisoryIDs, 1)
+	createSystemAdvisories(t, system.ID, advisoryIDs, nil)
+	createAdvisoryAccountData(t, system.RhAccountID, advisoryIDs, 1)
 
-	err := updateSystemAdvisoriesWhenPatched(database.Db, systemID, rhAccountID, advisoryIDs, &testDate)
+	err := updateSystemAdvisoriesWhenPatched(database.Db, &system, advisoryIDs, &testDate)
 	assert.Nil(t, err)
-	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, &testDate)
-	database.CheckAdvisoriesAccountData(t, rhAccountID, advisoryIDs, 0)
+	checkSystemAdvisoriesWhenPatched(t, system.ID, advisoryIDs, &testDate)
+	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 0)
 
-	deleteSystemAdvisories(t, systemID, advisoryIDs)
-	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
+	deleteSystemAdvisories(t, system.ID, advisoryIDs)
+	deleteAdvisoryAccountData(t, system.RhAccountID, advisoryIDs)
 }
 
 func TestUpdateUnpatchedSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemID := 12
-	rhAccountID := 3
+	system := models.SystemPlatform{ID: 12, RhAccountID: 3}
 	advisoryIDs := []int{2, 3, 4}
-	createSystemAdvisories(t, systemID, advisoryIDs, &testDate)
-	createAdvisoryAccountData(t, rhAccountID, advisoryIDs, 1)
+	createSystemAdvisories(t, system.ID, advisoryIDs, &testDate)
+	createAdvisoryAccountData(t, system.RhAccountID, advisoryIDs, 1)
 
-	err := updateSystemAdvisoriesWhenPatched(database.Db, systemID, rhAccountID, advisoryIDs, nil)
+	err := updateSystemAdvisoriesWhenPatched(database.Db, &system, advisoryIDs, nil)
 	assert.Nil(t, err)
-	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
-	database.CheckAdvisoriesAccountData(t, rhAccountID, advisoryIDs, 2)
+	checkSystemAdvisoriesWhenPatched(t, system.ID, advisoryIDs, nil)
+	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 2)
 
-	deleteSystemAdvisories(t, systemID, advisoryIDs)
-	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
+	deleteSystemAdvisories(t, system.ID, advisoryIDs)
+	deleteAdvisoryAccountData(t, system.RhAccountID, advisoryIDs)
 }
 
 func TestEnsureAdvisoriesInDb(t *testing.T) {

@@ -46,7 +46,11 @@ func Evaluate(ctx context.Context, inventoryID string, evaluationType string) er
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationDuration.WithLabelValues(evaluationType))
 
-	system, err := loadSystemData(inventoryID)
+	tx := database.Db.Begin()
+	// Don't allow TX to hang around locking the rows
+	defer tx.RollbackUnlessCommitted()
+
+	system, err := loadSystemData(tx, inventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
 		return errors.Wrap(err, "Unable to get system data from database")
@@ -69,10 +73,8 @@ func Evaluate(ctx context.Context, inventoryID string, evaluationType string) er
 		return errors.New("vmaas API call failed")
 	}
 
-	tx := database.Db.Begin()
 	err = evaluateAndStore(tx, system, *vmaasData)
 	if err != nil {
-		rollbackOrLogError(tx, inventoryID)
 		return errors.Wrap(err, "Unable to evaluate and store results")
 	}
 
@@ -97,15 +99,8 @@ func commitWithObserve(tx *gorm.DB) error {
 	return nil
 }
 
-func rollbackOrLogError(tx *gorm.DB, inventoryID string) {
-	err := tx.Rollback().Error
-	if err != nil {
-		utils.Log("err", err.Error(), "inventoryID", inventoryID).Error("Unable to rollback tx")
-	}
-}
-
 func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) error {
-	err := processSystemAdvisories(tx, system.ID, system.RhAccountID, vmaasData, system.InventoryID)
+	err := processSystemAdvisories(tx, system, vmaasData, system.InventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
 		return errors.Wrap(err, "Unable to process system advisories")
@@ -162,12 +157,13 @@ func callVMaas(ctx context.Context, updatesReq vmaas.UpdatesV3Request) (*vmaas.U
 	return &vmaasData, nil
 }
 
-func loadSystemData(inventoryID string) (*models.SystemPlatform, error) {
+func loadSystemData(tx *gorm.DB, inventoryID string) (*models.SystemPlatform, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("data-loading"))
 
 	var system models.SystemPlatform
-	err := database.Db.Where("inventory_id = ?", inventoryID).Find(&system).Error
+	err := tx.Set("gorm:query_option", "FOR UPDATE OF system_platform").
+		Where("inventory_id = ?", inventoryID).Find(&system).Error
 	return &system, err
 }
 
@@ -180,13 +176,13 @@ func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, erro
 	return updatesReq, err
 }
 
-func processSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, vmaasData vmaas.UpdatesV2Response,
+func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response,
 	inventoryID string) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))
 
 	reported := getReportedAdvisories(vmaasData)
-	stored, err := getStoredAdvisoriesMap(tx, systemID)
+	stored, err := getStoredAdvisoriesMap(tx, system.ID)
 	if err != nil {
 		return errors.Wrap(err, "Unable to get system stored advisories")
 	}
@@ -207,7 +203,7 @@ func processSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, vmaasData v
 	updatesCnt.WithLabelValues("unpatched").Add(float64(len(unpatched)))
 	utils.Log("inventoryID", inventoryID, "unpatched", len(unpatched)).Debug("patched advisories")
 
-	err = updateSystemAdvisories(tx, systemID, rhAccountID, patched, unpatched)
+	err = updateSystemAdvisories(tx, system, patched, unpatched)
 	if err != nil {
 		return errors.Wrap(err, "Unable to update system advisories")
 	}
@@ -273,23 +269,26 @@ func getPatchedAdvisories(reported map[string]bool, stored map[string]models.Sys
 	return patchedAdvisories
 }
 
-func updateSystemAdvisoriesWhenPatched(tx *gorm.DB, systemID, rhAccountID int, advisoryIDs []int,
+func updateSystemAdvisoriesWhenPatched(tx *gorm.DB, system *models.SystemPlatform, advisoryIDs []int,
 	whenPatched *time.Time) error {
 	err := tx.Model(models.SystemAdvisories{}).
-		Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
+		Where("system_id = ? AND advisory_id IN (?)", system.ID, advisoryIDs).
 		Update("when_patched", whenPatched).Error
 	if err != nil {
 		return err
 	}
 
 	affectedSystemIncrement := 0
-	if whenPatched != nil {
-		affectedSystemIncrement = -1
-	} else {
-		affectedSystemIncrement = 1
+	// If we are evaluating system that is stale already, dont affect the counts
+	if !system.Stale {
+		if whenPatched != nil {
+			affectedSystemIncrement = -1
+		} else {
+			affectedSystemIncrement = 1
+		}
 	}
 
-	err = updateAccountAdvisoriesAffectedSystems(tx, rhAccountID, advisoryIDs, affectedSystemIncrement)
+	err = updateAccountAdvisoriesAffectedSystems(tx, system.RhAccountID, advisoryIDs, affectedSystemIncrement)
 	return err
 }
 
@@ -347,31 +346,43 @@ func ensureAdvisoryAccountDataInDb(tx *gorm.DB, rhAccountID int, advisoryIDs []i
 	return err
 }
 
-func updateSystemAdvisories(tx *gorm.DB, systemID, rhAccountID int, patched, unpatched []int) error {
+func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int) error {
 	whenPatched := time.Now()
-	err := updateSystemAdvisoriesWhenPatched(tx, systemID, rhAccountID, patched, &whenPatched)
+
+	// Lock advisory-account data, so it's not changed by other concurrent queries
+	var aads []models.AdvisoryAccountData
+	err := tx.Set("gorm:query_option", "FOR UPDATE OF advisory_account_data").
+		Order("advisory_id").
+		Find(&aads, "rh_account_id = ? AND (advisory_id in (?) OR advisory_id in (?))",
+			system.RhAccountID, patched, unpatched).Error
+
+	if err != nil {
+		return err
+	}
+
+	err = updateSystemAdvisoriesWhenPatched(tx, system, patched, &whenPatched)
 	if err != nil {
 		return err
 	}
 
 	// delete items with no system related
-	err = tx.Where("rh_account_id = ? AND systems_affected = 0", rhAccountID).
+	err = tx.Where("rh_account_id = ? AND systems_affected = 0", system.RhAccountID).
 		Delete(&models.AdvisoryAccountData{}).Error
 	if err != nil {
 		return err
 	}
 
-	err = ensureSystemAdvisories(tx, systemID, unpatched)
+	err = ensureSystemAdvisories(tx, system.ID, unpatched)
 	if err != nil {
 		return err
 	}
 
-	err = ensureAdvisoryAccountDataInDb(tx, rhAccountID, unpatched)
+	err = ensureAdvisoryAccountDataInDb(tx, system.RhAccountID, unpatched)
 	if err != nil {
 		return err
 	}
 
-	err = updateSystemAdvisoriesWhenPatched(tx, systemID, rhAccountID, unpatched, nil)
+	err = updateSystemAdvisoriesWhenPatched(tx, system, unpatched, nil)
 	return err
 }
 
