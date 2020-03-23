@@ -15,7 +15,7 @@ func TestSystemsDefault(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/", nil)
-	initRouter(SystemsListHandler).ServeHTTP(w, req)
+	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	var output SystemsResponse
@@ -49,7 +49,7 @@ func TestSystemsOffsetLimit(t *testing.T) { //nolint:dupl
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/?offset=0&limit=4", nil)
-	initRouter(SystemsListHandler).ServeHTTP(w, req)
+	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	var output SystemsResponse
@@ -66,7 +66,7 @@ func TestSystemsOffset(t *testing.T) { //nolint:dupl
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/?offset=4&limit=4", nil)
-	initRouter(SystemsListHandler).ServeHTTP(w, req)
+	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	var output SystemsResponse
@@ -83,7 +83,7 @@ func TestSystemsOffsetOverflow(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/?offset=13&limit=4", nil)
-	initRouter(SystemsListHandler).ServeHTTP(w, req)
+	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
@@ -96,7 +96,7 @@ func TestSystemsWrongSort(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/?sort=unknown_key", nil)
-	initRouter(SystemsListHandler).ServeHTTP(w, req)
+	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

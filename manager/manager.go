@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"app/base/core"
 	"app/base/utils"
 	"app/manager/middlewares"
 	"app/manager/routes"
@@ -31,8 +32,7 @@ func RunManager() {
 	app.HandleMethodNotAllowed = true
 
 	// routes
-	routes.Init(app)
-
+	core.InitProbes(app)
 	api := app.Group("/api/patch/v1")
 	routes.InitAPI(api)
 
