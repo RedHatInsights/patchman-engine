@@ -134,7 +134,7 @@ func syncAdvisories() error {
 		opts := vmaas.AppErrataHandlerPostPostOpts{
 			ErrataRequest: optional.NewInterface(vmaas.ErrataRequest{
 				Page:          float32(pageIdx),
-				PageSize:      SyncBatchSize,
+				PageSize:      float32(defaultPageSize),
 				ErrataList:    []string{".*"},
 				ModifiedSince: "",
 			}),
