@@ -64,6 +64,10 @@ func updateRepoBaseEvalTimestampStr(value string) error {
 
 func getRepoBasedInventoryIDs(repos []string) ([]string, error) {
 	var intentoryIDs []string
+	if len(repos) == 0 {
+		return intentoryIDs, nil
+	}
+
 	err := database.Db.Table("system_repo sr").
 		Joins("JOIN repo ON repo.id = sr.repo_id").
 		Joins("JOIN system_platform sp ON sp.id = sr.system_id").
@@ -84,7 +88,7 @@ func getUpdatedRepos(modifiedSince *time.Time) ([]string, error) {
 		reposReq := vmaas.ReposRequest{
 			Page:           page,
 			RepositoryList: []string{".*"},
-			PageSize:       float32(defaultPageSize),
+			PageSize:       float32(1000),
 		}
 
 		if modifiedSince != nil {
@@ -99,7 +103,14 @@ func getUpdatedRepos(modifiedSince *time.Time) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
+		vmaasCallCnt.WithLabelValues("success").Inc()
 
+		if repos.Pages == 0 {
+			utils.Log().Debug("No repos returned from VMaaS")
+			break
+		}
+
+		utils.Log("count", len(repos.RepositoryList)).Debug("Downloaded repos")
 		for k, _ := range repos.RepositoryList {
 			reposArr = append(reposArr, k)
 		}
@@ -110,5 +121,6 @@ func getUpdatedRepos(modifiedSince *time.Time) ([]string, error) {
 		page++
 	}
 
+	utils.Log("count", len(reposArr)).Info("Repos downloading complete")
 	return reposArr, nil
 }
