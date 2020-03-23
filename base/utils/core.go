@@ -56,6 +56,21 @@ func GetIntEnvOrFail(envname string) int {
 	return value
 }
 
+// load int environment variable or load default
+func GetIntEnvOrDefault(envname string, defval int) int {
+	valueStr := os.Getenv(envname)
+	if valueStr == "" {
+		return defval
+	}
+
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		panic(fmt.Sprintf("Unable convert '%s' env var '%s' to int!", envname, valueStr))
+	}
+
+	return value
+}
+
 // set environment variable or fail
 func SetenvOrFail(envname, value string) string {
 	err := os.Setenv(envname, value)
