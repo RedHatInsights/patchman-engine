@@ -30,7 +30,7 @@ func TestSystemDelete(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("DELETE", "/DEL-1", nil)
-	initRouterWithParams(SystemDeleteHandler, "1", "DELETE", "/:inventory_id").ServeHTTP(w, req)
+	core.InitRouterWithParams(SystemDeleteHandler, "1", "DELETE", "/:inventory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 }
@@ -41,7 +41,7 @@ func TestSystemDeleteWrongAccount(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("DELETE", "/DEL-1", nil)
-	initRouterWithParams(SystemDeleteHandler, "2", "DELETE", "/:inventory_id").ServeHTTP(w, req)
+	core.InitRouterWithParams(SystemDeleteHandler, "2", "DELETE", "/:inventory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 404, w.Code)
 }
@@ -52,7 +52,7 @@ func TestSystemDeleteNotFound(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("DELETE", "/DEL-1", nil)
-	initRouterWithParams(SystemDeleteHandler, "1", "DELETE", "/:inventory_id").ServeHTTP(w, req)
+	core.InitRouterWithParams(SystemDeleteHandler, "1", "DELETE", "/:inventory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 404, w.Code)
 }

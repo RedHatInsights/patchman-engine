@@ -21,7 +21,7 @@ func testAdvisoriesOk(t *testing.T, method, url string, check func(out Advisorie
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(method, url, nil)
-	initRouter(AdvisoriesListHandler).ServeHTTP(w, req)
+	core.InitRouter(AdvisoriesListHandler).ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	var output AdvisoriesResponse
@@ -77,7 +77,7 @@ func TestAdvisoriesOffsetOverflow(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/?offset=13&limit=4", nil)
-	initRouter(AdvisoriesListHandler).ServeHTTP(w, req)
+	core.InitRouter(AdvisoriesListHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
@@ -131,7 +131,7 @@ func TestAdvisoriesPossibleSorts(t *testing.T) {
 	for sort := range AdvisoriesFields {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", fmt.Sprintf("/?sort=%v", sort), nil)
-		initRouter(AdvisoriesListHandler).ServeHTTP(w, req)
+		core.InitRouter(AdvisoriesListHandler).ServeHTTP(w, req)
 
 		var output AdvisoriesResponse
 		ParseReponseBody(t, w.Body.Bytes(), &output)
@@ -148,7 +148,7 @@ func TestAdvisoriesWrongSort(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/?sort=unknown_key", nil)
-	initRouter(AdvisoriesListHandler).ServeHTTP(w, req)
+	core.InitRouter(AdvisoriesListHandler).ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

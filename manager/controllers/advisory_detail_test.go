@@ -15,7 +15,7 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/RH-1", nil)
-	initRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
+	core.InitRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	var output AdvisoryDetailResponse
@@ -37,7 +37,7 @@ func TestAdvisoryNoIdProvided(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/", nil)
-	initRouter(AdvisoryDetailHandler).ServeHTTP(w, req)
+	core.InitRouter(AdvisoryDetailHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
@@ -50,7 +50,7 @@ func TestAdvisoryNotFound(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/foo", nil)
-	initRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
+	core.InitRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)

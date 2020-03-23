@@ -6,13 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Init routes.
-func Init(app *gin.Engine) {
-	// public routes
-	app.GET("/health", controllers.HealthHandler)
-	app.GET("/db_health", controllers.HealthDBHandler)
-}
-
 func InitAPI(group *gin.RouterGroup) {
 	group.Use(middlewares.Authenticator())
 	group.Use(middlewares.RBAC())

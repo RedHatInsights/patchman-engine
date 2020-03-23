@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"app/base/core"
 	"app/base/utils"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
@@ -38,6 +39,7 @@ func RunMetrics(port string) {
 
 	// create web app
 	app := gin.New()
+	core.InitProbes(app)
 	middlewares.Prometheus().Use(app)
 
 	err := app.Run(":" + port)

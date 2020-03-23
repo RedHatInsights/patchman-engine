@@ -1,6 +1,7 @@
 package vmaas_sync //nolint:golint,stylecheck
 
 import (
+	"app/base/core"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
@@ -71,6 +72,7 @@ func RunMetrics() {
 
 	// create web app
 	app := gin.New()
+	core.InitProbes(app)
 	middlewares.Prometheus().Use(app)
 	err := app.Run(":8083")
 	if err != nil {

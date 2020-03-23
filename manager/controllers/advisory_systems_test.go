@@ -16,7 +16,7 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/RH-1", nil)
-	initRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	var output AdvisorySystemsResponse
@@ -37,7 +37,7 @@ func TestAdvisorySystemsNotFound(t *testing.T) { //nolint:dupl
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/nonexistant/systems", nil)
-	initRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
@@ -48,7 +48,7 @@ func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/RH-1?offset=5&limit=3", nil)
-	initRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	var output AdvisorySystemsResponse
@@ -69,7 +69,7 @@ func TestAdvisorySystemsOffsetOverflow(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/RH-1?offset=100&limit=3", nil)
-	initRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
@@ -84,7 +84,7 @@ func TestAdvisorySystemsSorts(t *testing.T) {
 	for sort := range SystemsFields {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", fmt.Sprintf("/RH-1?sort=%v", sort), nil)
-		initRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+		core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
 		var output AdvisorySystemsResponse
 		ParseReponseBody(t, w.Body.Bytes(), &output)
@@ -101,7 +101,7 @@ func TestAdvisorySystemsWrongSort(t *testing.T) { //nolint:dupl
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/RH-1?sort=unknown_key", nil)
-	initRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
