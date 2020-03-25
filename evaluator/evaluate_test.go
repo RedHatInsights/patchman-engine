@@ -92,27 +92,17 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	createAdvisoryAccountData(t, system.RhAccountID, advisoryIDs, 1)
 
 	err := updateSystemAdvisoriesWhenPatched(database.Db, &system, advisoryIDs, &testDate)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
+	err = updateCaches(database.Db, &system, advisoryIDs)
+	assert.NoError(t, err)
 	checkSystemAdvisoriesWhenPatched(t, system.ID, advisoryIDs, &testDate)
 	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 0)
 
-	deleteSystemAdvisories(t, system.ID, advisoryIDs)
-	deleteAdvisoryAccountData(t, system.RhAccountID, advisoryIDs)
-}
-
-func TestUpdateUnpatchedSystemAdvisories(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	system := models.SystemPlatform{ID: 12, RhAccountID: 3}
-	advisoryIDs := []int{2, 3, 4}
-	createSystemAdvisories(t, system.ID, advisoryIDs, &testDate)
-	createAdvisoryAccountData(t, system.RhAccountID, advisoryIDs, 1)
-
-	err := updateSystemAdvisoriesWhenPatched(database.Db, &system, advisoryIDs, nil)
-	assert.Nil(t, err)
-	checkSystemAdvisoriesWhenPatched(t, system.ID, advisoryIDs, nil)
-	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 2)
+	err = updateSystemAdvisoriesWhenPatched(database.Db, &system, advisoryIDs, nil)
+	assert.NoError(t, err)
+	err = updateCaches(database.Db, &system, advisoryIDs)
+	assert.NoError(t, err)
+	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 1)
 
 	deleteSystemAdvisories(t, system.ID, advisoryIDs)
 	deleteAdvisoryAccountData(t, system.RhAccountID, advisoryIDs)
@@ -141,23 +131,6 @@ func TestEnsureSystemAdvisories(t *testing.T) {
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
 
 	deleteSystemAdvisories(t, systemID, advisoryIDs)
-}
-
-func TestAddAndUpdateAccountAdvisoriesAffectedSystems(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	rhAccountID := 4
-	existingIDs := []int{1, 2}
-	createAdvisoryAccountData(t, rhAccountID, existingIDs, 1)
-
-	advisoryIDs := []int{1, 2, 3, 4}
-	err := ensureAdvisoryAccountDataInDb(database.Db, rhAccountID, advisoryIDs)
-	assert.Nil(t, err)
-	database.CheckAdvisoriesAccountData(t, rhAccountID, existingIDs, 1)
-	database.CheckAdvisoriesAccountData(t, rhAccountID, []int{3, 4}, 0)
-
-	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 }
 
 func TestEvaluate(t *testing.T) {
