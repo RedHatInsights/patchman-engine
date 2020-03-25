@@ -12,6 +12,7 @@ import (
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
 	"github.com/jinzhu/gorm"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -100,13 +101,13 @@ func commitWithObserve(tx *gorm.DB) error {
 }
 
 func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) error {
-	err := processSystemAdvisories(tx, system, vmaasData, system.InventoryID)
+	advisoryIDs, err := processSystemAdvisories(tx, system, vmaasData, system.InventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
 		return errors.Wrap(err, "Unable to process system advisories")
 	}
 
-	err = updateSystemCaches(tx, system)
+	err = updateCaches(tx, system, advisoryIDs)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-update-system-caches").Inc()
 		return errors.Wrap(err, "Unable to update system caches")
@@ -129,11 +130,38 @@ func updateSystemLastEvaluation(tx *gorm.DB, system *models.SystemPlatform) erro
 	return err
 }
 
-func updateSystemCaches(tx *gorm.DB, system *models.SystemPlatform) error {
+// Attempts to lock account to which system belongs, in order
+// to prevent concurrent calculations of advisory_account_data cache
+func lockAccount(tx *gorm.DB, system *models.SystemPlatform) error {
+	var acc models.RhAccount
+	return tx.Set("gorm:query_option", "FOR UPDATE OF rh_account").
+		Find(&acc, "id = ?", system.RhAccountID).Error
+}
+
+func updateCaches(tx *gorm.DB, system *models.SystemPlatform, advisoryIDs []int) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("caches-update"))
 
 	err := tx.Exec("SELECT * FROM refresh_system_caches(?,?)", system.ID, system.RhAccountID).Error
+	if err != nil {
+		return err
+	}
+
+	err = lockAccount(tx, system)
+	if err != nil {
+		return err
+	}
+
+	idArr := make(pq.Int64Array, len(advisoryIDs))
+	for i, id := range advisoryIDs {
+		idArr[i] = int64(id)
+	}
+
+	err = tx.Exec("SELECT * FROM refresh_advisory_caches_multi(?,?)", idArr, system.RhAccountID).Error
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
@@ -176,15 +204,18 @@ func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, erro
 	return updatesReq, err
 }
 
+// Changes data stored in system_advisories, in order to match newest evaluation
+// Before this methods stores the entries into the system_advisories table, it locks
+// advisory_account_data table, so other evaluations don't interfere with this one
 func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response,
-	inventoryID string) error {
+	inventoryID string) ([]int, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))
 
 	reported := getReportedAdvisories(vmaasData)
 	stored, err := getStoredAdvisoriesMap(tx, system.ID)
 	if err != nil {
-		return errors.Wrap(err, "Unable to get system stored advisories")
+		return nil, errors.Wrap(err, "Unable to get system stored advisories")
 	}
 
 	patched := getPatchedAdvisories(reported, stored)
@@ -196,7 +227,7 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 
 	newIDs, err := ensureAdvisoriesInDb(tx, newsAdvisoriesNames)
 	if err != nil {
-		return errors.Wrap(err, "Unable to ensure new system advisories in db")
+		return nil, errors.Wrap(err, "Unable to ensure new system advisories in db")
 	}
 
 	unpatched = append(unpatched, newIDs...)
@@ -205,9 +236,9 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 
 	err = updateSystemAdvisories(tx, system, patched, unpatched)
 	if err != nil {
-		return errors.Wrap(err, "Unable to update system advisories")
+		return nil, errors.Wrap(err, "Unable to update system advisories")
 	}
-	return nil
+	return append(patched, unpatched...), nil
 }
 
 func getReportedAdvisories(vmaasData vmaas.UpdatesV2Response) map[string]bool {
@@ -277,27 +308,7 @@ func updateSystemAdvisoriesWhenPatched(tx *gorm.DB, system *models.SystemPlatfor
 	if err != nil {
 		return err
 	}
-
-	affectedSystemIncrement := 0
-	// If we are evaluating system that is stale already, dont affect the counts
-	if !system.Stale {
-		if whenPatched != nil {
-			affectedSystemIncrement = -1
-		} else {
-			affectedSystemIncrement = 1
-		}
-	}
-
-	err = updateAccountAdvisoriesAffectedSystems(tx, system.RhAccountID, advisoryIDs, affectedSystemIncrement)
-	return err
-}
-
-func updateAccountAdvisoriesAffectedSystems(tx *gorm.DB, rhAccountID int, advisoryIDs []int,
-	affectedSystemIncrement int) error {
-	err := tx.Model(models.AdvisoryAccountData{}).
-		Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
-		UpdateColumn("systems_affected", gorm.Expr("systems_affected + ?", affectedSystemIncrement)).Error
-	return err
+	return nil
 }
 
 // Return advisory IDs, created advisories count, error
@@ -335,27 +346,19 @@ func ensureSystemAdvisories(tx *gorm.DB, systemID int, advisoryIDs []int) error 
 	return err
 }
 
-func ensureAdvisoryAccountDataInDb(tx *gorm.DB, rhAccountID int, advisoryIDs []int) error {
-	accountData := make(models.AdvisoryAccountDataSlice, len(advisoryIDs))
-	for i, advisoryID := range advisoryIDs {
-		accountData[i] = models.AdvisoryAccountData{RhAccountID: rhAccountID, AdvisoryID: advisoryID}
-	}
-
-	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
-	err := database.BulkInsert(txOnConflict, accountData)
-	return err
+func lockAdvisoryData(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int) error {
+	// Lock advisory-account data, so it's not changed by other concurrent queries
+	var aads []models.AdvisoryAccountData
+	return tx.Set("gorm:query_option", "FOR UPDATE OF advisory_account_data").
+		Order("advisory_id").
+		Find(&aads, "rh_account_id = ? AND (advisory_id in (?) OR advisory_id in (?))",
+			system.RhAccountID, patched, unpatched).Error
 }
 
 func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int) error {
 	whenPatched := time.Now()
 
-	// Lock advisory-account data, so it's not changed by other concurrent queries
-	var aads []models.AdvisoryAccountData
-	err := tx.Set("gorm:query_option", "FOR UPDATE OF advisory_account_data").
-		Order("advisory_id").
-		Find(&aads, "rh_account_id = ? AND (advisory_id in (?) OR advisory_id in (?))",
-			system.RhAccountID, patched, unpatched).Error
-
+	err := lockAdvisoryData(tx, system, patched, unpatched)
 	if err != nil {
 		return err
 	}
@@ -365,19 +368,7 @@ func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, patched,
 		return err
 	}
 
-	// delete items with no system related
-	err = tx.Where("rh_account_id = ? AND systems_affected = 0", system.RhAccountID).
-		Delete(&models.AdvisoryAccountData{}).Error
-	if err != nil {
-		return err
-	}
-
 	err = ensureSystemAdvisories(tx, system.ID, unpatched)
-	if err != nil {
-		return err
-	}
-
-	err = ensureAdvisoryAccountDataInDb(tx, system.RhAccountID, unpatched)
 	if err != nil {
 		return err
 	}
