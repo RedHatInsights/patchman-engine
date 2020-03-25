@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/utils"
@@ -144,7 +145,7 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, fields database.AttrMa
 }
 
 func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) *gorm.DB {
-	search := c.Query("search")
+	search := base.RemoveInvalidChars(c.Query("search"))
 	if search == "" {
 		return tx
 	}

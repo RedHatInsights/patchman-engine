@@ -1,6 +1,7 @@
 package database
 
 import (
+	"app/base"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -41,7 +42,7 @@ func parserForType(v reflect.Type) (AttrParser, error) {
 	switch v.Kind() {
 	case reflect.String:
 		return func(s string) (i interface{}, err error) {
-			return s, nil
+			return base.RemoveInvalidChars(s), nil
 		}, nil
 	case reflect.Bool:
 		return func(s string) (i interface{}, err error) {
