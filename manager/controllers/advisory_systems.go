@@ -84,7 +84,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 
 func buildQuery(account, advisoryName string) *gorm.DB {
 	query := database.Db.Table("advisory_metadata am").Select(SystemsSelect).
-		Joins("join system_advisories sa ON am.id=sa.advisory_id").
+		Joins("join system_advisories sa ON am.id=sa.advisory_id AND sa.when_patched IS NULL").
 		Joins("join system_platform ON sa.system_id=system_platform.id").
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account).
