@@ -79,3 +79,14 @@ func TestFilterToSqlAdvanced(t *testing.T) {
 		assert.Equal(t, queries[i], query)
 	}
 }
+
+// Filter out null characters
+func TestFilterInvalidValue(t *testing.T) {
+	filter, err := ParseFilterValue("eq:aa\u0000aa")
+	assert.NoError(t, err)
+	attrMap, _, err := database.GetQueryAttrs(struct{ V string }{""})
+	assert.NoError(t, err)
+	_, value, err := filter.ToWhere("v", attrMap)
+	assert.NoError(t, err)
+	assert.Equal(t, []interface{}{"aaaa"}, value)
+}
