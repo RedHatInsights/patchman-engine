@@ -88,7 +88,7 @@ func getUpdatedRepos(modifiedSince *time.Time) ([]string, error) {
 		reposReq := vmaas.ReposRequest{
 			Page:           page,
 			RepositoryList: []string{".*"},
-			PageSize:       float32(1000),
+			PageSize:       float32(defaultPageSize),
 		}
 
 		if modifiedSince != nil {
