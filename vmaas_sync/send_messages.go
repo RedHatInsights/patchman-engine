@@ -32,6 +32,7 @@ func sendReevaluationMessages() error {
 		}
 		sendMessages(ctx, inventoryIDs[i:end]...)
 	}
+	utils.Log("count", len(inventoryIDs)).Info("systems sent to re-calc")
 	return nil
 }
 
