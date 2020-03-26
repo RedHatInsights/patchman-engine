@@ -3,8 +3,8 @@ package listener
 import (
 	"app/base/core"
 	"app/base/utils"
-	"github.com/bmizerany/assert"
 	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -15,12 +15,14 @@ func TestDeleteSystem(t *testing.T) {
 
 	deleteData(t)
 	uploadEvent := createTestUploadEvent(id, true)
-	uploadHandler(uploadEvent)
+	err := uploadHandler(uploadEvent)
 	assertSystemInDb(t, id, nil)
+	assert.NoError(t, err)
 
 	deleteEvent := createTestDeleteEvent(id)
-	deleteHandler(deleteEvent)
+	err = deleteHandler(deleteEvent)
 	assertSystemNotInDb(t)
+	assert.NoError(t, err)
 }
 
 func TestDeleteSystemWarn1(t *testing.T) {
@@ -28,8 +30,9 @@ func TestDeleteSystemWarn1(t *testing.T) {
 	log.AddHook(logHook)
 	deleteEvent := createTestDeleteEvent(id)
 	deleteEvent.Type = nil
-	deleteHandler(deleteEvent)
+	err := deleteHandler(deleteEvent)
 	assert.Equal(t, WarnEmptyEventType, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
+	assert.NoError(t, err)
 }
 
 func TestDeleteSystemWarn2(t *testing.T) {
@@ -38,8 +41,9 @@ func TestDeleteSystemWarn2(t *testing.T) {
 	deleteEvent := createTestDeleteEvent(id)
 	nonDeleteType := "no-delete"
 	deleteEvent.Type = &nonDeleteType
-	deleteHandler(deleteEvent)
+	err := deleteHandler(deleteEvent)
 	assert.Equal(t, WarnNoDeleteType, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
+	assert.NoError(t, err)
 }
 
 func TestDeleteSystemWarn3(t *testing.T) {
@@ -51,7 +55,8 @@ func TestDeleteSystemWarn3(t *testing.T) {
 	log.AddHook(logHook)
 
 	deleteEvent := createTestDeleteEvent("not-existing-id")
-	deleteHandler(deleteEvent)
+	err := deleteHandler(deleteEvent)
+	assert.NoError(t, err)
 
 	assert.Equal(t, WarnNoRowsModified, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
 }

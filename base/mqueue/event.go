@@ -3,9 +3,16 @@ package mqueue
 import (
 	"app/base/utils"
 	"encoding/json"
+	"github.com/lestrrat-go/backoff"
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
 	"golang.org/x/net/context"
+	"time"
+)
+
+var policy = backoff.NewExponential(
+	backoff.WithInterval(time.Second),
+	backoff.WithMaxRetries(5),
 )
 
 type PlatformEvent struct {
@@ -17,18 +24,19 @@ type PlatformEvent struct {
 	URL         *string `json:"url"`
 }
 
-type EventHandler func(message PlatformEvent)
+type EventHandler func(message PlatformEvent) error
 
 // Performs parsing of kafka message, and then dispatches this message into provided functions
 func MakeMessageHandler(eventHandler EventHandler) MessageHandler {
-	return func(m kafka.Message) {
+	return func(m kafka.Message) error {
 		var event PlatformEvent
 		err := json.Unmarshal(m.Value, &event)
+		// Not a fatal error, invalid data format, log and skip
 		if err != nil {
 			utils.Log("err", err.Error()).Error("Could not deserialize platform event")
-			return
+			return nil
 		}
-		eventHandler(event)
+		return eventHandler(event)
 	}
 }
 

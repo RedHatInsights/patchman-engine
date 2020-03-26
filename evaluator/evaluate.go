@@ -404,13 +404,15 @@ func updateAdvisoryAccountDatas(tx *gorm.DB, system *models.SystemPlatform, patc
 	return database.BulkInsert(txOnConflict, changes)
 }
 
-func evaluateHandler(event mqueue.PlatformEvent) {
+func evaluateHandler(event mqueue.PlatformEvent) error {
 	err := Evaluate(context.Background(), event.ID, evalLabel)
 	if err != nil {
 		utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
 			Error("Eval message handling")
+		return err
 	}
 	utils.Log("inventoryID", event.ID, "evalLabel", evalLabel).Debug("system evaluated successfully")
+	return nil
 }
 
 func run(readerBuilder mqueue.CreateReader) {

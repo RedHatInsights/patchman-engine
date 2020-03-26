@@ -15,20 +15,20 @@ const (
 	WarnNoRowsModified = "no rows modified on delete event"
 )
 
-func deleteHandler(event mqueue.PlatformEvent) {
+func deleteHandler(event mqueue.PlatformEvent) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventDelete))
 
 	if event.Type == nil {
 		utils.Log("inventoryID", event.ID).Warn(WarnEmptyEventType)
 		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorOtherType).Inc()
-		return
+		return nil
 	}
 
 	if *event.Type != "delete" {
 		utils.Log("inventoryID", event.ID, "eventType", *event.Type).Warn(WarnNoDeleteType)
 		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorOtherType).Inc()
-		return
+		return nil
 	}
 
 	query := database.Db.Exec("select deleted_inventory_id from delete_system(?)", event.ID)
@@ -36,15 +36,16 @@ func deleteHandler(event mqueue.PlatformEvent) {
 	if err != nil {
 		utils.Log("inventoryID", event.ID, "err", err.Error()).Error("Could not delete system")
 		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorProcessing).Inc()
-		return
+		return err
 	}
 
 	if query.RowsAffected == 0 {
 		utils.Log("inventoryID", event.ID).Warn(WarnNoRowsModified)
 		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorNoRows).Inc()
-		return
+		return nil
 	}
 
 	utils.Log("inventoryID", event.ID, "count", query.RowsAffected).Info("Systems deleted")
 	messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedSuccess).Inc()
+	return nil
 }

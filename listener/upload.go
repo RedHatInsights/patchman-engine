@@ -57,20 +57,19 @@ type HostEgressEvent struct {
 	Host             Host                   `json:"host"`
 }
 
-func uploadMsgHandler(msg kafka.Message) {
+func uploadMsgHandler(msg kafka.Message) error {
 	var event HostEgressEvent
 	err := json.Unmarshal(msg.Value, &event)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to parse upload msg")
 		utils.Log("raw", string(msg.Value)).Trace("Raw message string")
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorParsing).Inc()
-		// TODO: Forcing a panic here to quickly discover whether we have correct message format
-		panic(err)
+		return err
 	}
-	uploadHandler(event)
+	return uploadHandler(event)
 }
 
-func uploadHandler(event HostEgressEvent) {
+func uploadHandler(event HostEgressEvent) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventUpload))
 
@@ -79,38 +78,40 @@ func uploadHandler(event HostEgressEvent) {
 	if len(systemProfile.InstalledPackages) == 0 {
 		utils.Log("inventoryID", event.Host.ID).Warn(WarnSkippingNoPackages)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
-		return
+		return nil
 	}
 
 	if len(event.Host.Account) == 0 {
 		utils.Log("inventoryID", event.Host.ID).Error(ErrorNoAccountProvided)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
-		return
+		return nil
 	}
 
 	sys, err := processUpload(event.Host.Account, &event.Host)
 	if err != nil {
 		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorProcessUpload)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
-		return
+		return err
 	}
 
 	if sys.UnchangedSince != nil && sys.LastEvaluation != nil {
 		if sys.UnchangedSince.Before(*sys.LastEvaluation) {
 			messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccessNoEval).Inc()
 			utils.Log("inventoryID", event.Host.ID).Debug(UploadSuccessNoEval)
-			return
+			return nil
 		}
 	}
 
+	// Not sending evaluation message is a fatal error
 	err = mqueue.WriteEvents(context.Background(), evalWriter, mqueue.PlatformEvent{ID: sys.InventoryID})
 	if err != nil {
 		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorKafkaSend)
-		return
+		return err
 	}
 
 	messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
 	utils.Log("inventoryID", event.Host.ID).Debug(UploadSuccess)
+	return nil
 }
 
 // Stores or updates the account data, returning the account id
