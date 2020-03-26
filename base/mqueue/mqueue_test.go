@@ -4,24 +4,27 @@ import (
 	"app/base/core"
 	"app/base/utils"
 	"context"
+	"errors"
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
-func TestParseEvents(t *testing.T) {
-	msg := kafka.Message{Value: []byte(`{"id": "TEST-00000", "type": "delete"}`)}
+var msg = kafka.Message{Value: []byte(`{"id": "TEST-00000", "type": "delete"}`)}
 
+func TestParseEvents(t *testing.T) {
 	reached := false
 
-	MakeMessageHandler(func(event PlatformEvent) {
+	err := MakeMessageHandler(func(event PlatformEvent) error {
 		assert.Equal(t, event.ID, "TEST-00000")
 		assert.Equal(t, *event.Type, "delete")
 		reached = true
+		return nil
 	})(msg)
 
 	assert.True(t, reached, "Event handler should have been called")
+	assert.NoError(t, err)
 }
 
 func TestRoundTrip(t *testing.T) {
@@ -32,8 +35,9 @@ func TestRoundTrip(t *testing.T) {
 	reader := ReaderFromEnv("test")
 
 	var eventOut PlatformEvent
-	go reader.HandleMessages(MakeMessageHandler(func(event PlatformEvent) {
+	go reader.HandleMessages(MakeMessageHandler(func(event PlatformEvent) error {
 		eventOut = event
+		return nil
 	}))
 
 	writer := WriterFromEnv("test")
@@ -45,6 +49,23 @@ func TestRoundTrip(t *testing.T) {
 
 func TestRunReader(t *testing.T) {
 	nReaders := 0
-	RunReader("", CreateCountedMockReader(&nReaders), MakeMessageHandler(func(event PlatformEvent) {}))
+	RunReader("", CreateCountedMockReader(&nReaders), MakeMessageHandler(func(event PlatformEvent) error { return nil }))
 	assert.Equal(t, 1, nReaders)
+}
+
+func TestRetry(t *testing.T) {
+	i := 0
+	handler := func(message PlatformEvent) error {
+		i++
+		if i < 2 {
+			return errors.New("Failed")
+		}
+		return nil
+	}
+
+	// Without retry handler should fail
+	assert.Error(t, MakeMessageHandler(handler)(msg))
+
+	// With retry we handler should eventually succeed
+	assert.NoError(t, MakeRetryingHandler(MakeMessageHandler(handler))(msg))
 }

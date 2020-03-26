@@ -4,6 +4,7 @@ package mqueue
 import (
 	"app/base/utils"
 	"context"
+	"github.com/lestrrat-go/backoff"
 	"github.com/segmentio/kafka-go"
 	"io"
 	"time"
@@ -65,7 +66,25 @@ func WriterFromEnv(topic string) Writer {
 	return writer
 }
 
-type MessageHandler func(message kafka.Message)
+type MessageHandler func(message kafka.Message) error
+
+func MakeRetryingHandler(handler MessageHandler) MessageHandler {
+	return func(message kafka.Message) error {
+		var err error
+		var attempt int
+
+		backoffState, cancel := policy.Start(context.Background())
+		defer cancel()
+		for backoff.Continue(backoffState) {
+			if err = handler(message); err == nil {
+				return nil
+			}
+			utils.Log("err", err.Error(), "attempt", attempt).Error("Try failed")
+			attempt++
+		}
+		return err
+	}
+}
 
 func (t *readerImpl) HandleMessages(handler MessageHandler) {
 	ctx := context.Background()
@@ -76,8 +95,10 @@ func (t *readerImpl) HandleMessages(handler MessageHandler) {
 			utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
 			panic(err)
 		}
-		// Process synchronously, for now lower performance, but we ensure correct committing of messages
-		handler(m)
+		// At this level, all errors are fatal
+		if err = handler(m); err != nil {
+			utils.Log("err", err.Error()).Panic("Handler failed")
+		}
 		err = t.CommitMessages(ctx, m)
 		if err != nil {
 			utils.Log("err", err.Error()).Error("unable to commit kafka message")

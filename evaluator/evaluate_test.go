@@ -140,7 +140,8 @@ func TestEvaluate(t *testing.T) {
 
 	configure()
 
-	evaluateHandler(mqueue.PlatformEvent{ID: "INV-12"})
+	err := evaluateHandler(mqueue.PlatformEvent{ID: "INV-12"})
+	assert.NoError(t, err)
 
 	systemID := 12
 	rhAccountID := 3

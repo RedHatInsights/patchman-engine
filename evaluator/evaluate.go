@@ -377,13 +377,15 @@ func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, patched,
 	return err
 }
 
-func evaluateHandler(event mqueue.PlatformEvent) {
+func evaluateHandler(event mqueue.PlatformEvent) error {
 	err := Evaluate(context.Background(), event.ID, evalLabel)
 	if err != nil {
 		utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
 			Error("Eval message handling")
+		return err
 	}
 	utils.Log("inventoryID", event.ID, "evalLabel", evalLabel).Debug("system evaluated successfully")
+	return nil
 }
 
 func run(readerBuilder mqueue.CreateReader) {
