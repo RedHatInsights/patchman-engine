@@ -11,7 +11,7 @@ digraph G {
    kafka[label=<
            <table border="0">
             <tr><td><img src="icon_kafka.png"/></td></tr>
-            <tr><td>Kafka :9092</td></tr>
+            <tr><td>Kafka</td></tr>
            </table>>
            fillcolor=white]
 
@@ -50,6 +50,13 @@ digraph G {
            </table>>
            fillcolor=lightblue]
 
+     db_admin[label=<
+           <table border="0">
+            <tr><td><img src="icon_gopher.png"/></td></tr>
+            <tr><td>database-admin</td></tr>
+           </table>>
+           fillcolor=lightblue]
+
     db[label=<
            <table border="0">
             <tr><td><img src="icon_postgresql.png"/></td></tr>
@@ -64,9 +71,17 @@ digraph G {
     vmaas[label=<
            <table border="0">
             <tr><td>VMaaS</td></tr>
-            <tr><td>:9001</td></tr>
            </table>>
           fillcolor=darkseagreen1]
+
+    rbac[label=<
+           <table border="0">
+            <tr><td><img src="icon_rbac.png"/></td></tr>
+            <tr><td>RBAC</td></tr>
+           </table>>
+           fillcolor=gray85]
+
+    rbac -> manager [dir=back]
 
     {listener
      evaluator_recalc
@@ -92,5 +107,6 @@ digraph G {
         evaluator_recalc -> db [label="rw"]
         evaluator_upload -> db [label="rw"]
         vmaas_sync -> db [label="rw"]
+        db_admin -> db [label="rw"]
     }
 }
