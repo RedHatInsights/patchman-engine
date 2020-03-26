@@ -1,11 +1,7 @@
 package main
 
 import (
-	"app/base"
 	"github.com/RedHatInsights/patchman-clients/inventory"
-	"github.com/gin-gonic/gin"
-	"net/http"
-	"time"
 )
 
 var pkgs = []string{
@@ -29,21 +25,6 @@ var pkgs = []string{
 	"mysql-server-5.1.66-2.el6_3.i686",
 	"iproute-2.6.18-13.el5.i386",
 	"libbonobo-2.24.2-5.el6.i686"}
-
-// Create system profile call result with paging
-func makeSystemProfileRes(id string) inventory.SystemProfileByHostOut {
-	profile := inventory.HostSystemProfileOut{
-		Id:            id,
-		SystemProfile: makeSystemProfile(id),
-	}
-	return inventory.SystemProfileByHostOut{
-		Total:   1,
-		Count:   1,
-		Page:    0,
-		PerPage: 1,
-		Results: []inventory.HostSystemProfileOut{profile},
-	}
-}
 
 // Create bare system profile
 func makeSystemProfile(id string) inventory.SystemProfileIn {
@@ -71,38 +52,4 @@ func makeSystemProfile(id string) inventory.SystemProfileIn {
 			},
 		},
 	}
-}
-
-func systemProfileHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, makeSystemProfileRes(c.Param("host_id")))
-}
-
-func systemHandler(c *gin.Context) {
-	now := time.Now().Format(base.Rfc3339NoTz)
-	staleWarn := time.Now().Add(time.Hour * 24).Format(base.Rfc3339NoTz)
-	stale := time.Now().Add(time.Hour * 48).Format(base.Rfc3339NoTz)
-	culled := time.Now().Add(time.Hour * 52).Format(base.Rfc3339NoTz)
-
-	host := inventory.HostOut{
-		Id:                    c.Param("host_id"),
-		Updated:               now,
-		StaleWarningTimestamp: &staleWarn,
-		StaleTimestamp:        &stale,
-		CulledTimestamp:       &culled,
-	}
-	out := inventory.HostQueryOutput{
-		Count:   1,
-		Page:    0,
-		PerPage: 1,
-		Results: []inventory.HostOut{host},
-		Total:   1,
-	}
-	c.JSON(http.StatusOK, out)
-}
-
-// InitInventory routes.
-func InitInventory(app *gin.Engine) {
-	// Mock inventory system_profile endpoint
-	app.GET("/api/inventory/v1/hosts/:host_id", systemHandler)
-	app.GET("/api/inventory/v1/hosts/:host_id/system_profile", systemProfileHandler)
 }
