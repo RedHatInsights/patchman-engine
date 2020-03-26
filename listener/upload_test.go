@@ -83,7 +83,8 @@ func TestUploadHandler(t *testing.T) {
 
 	_ = getOrCreateTestAccount(t)
 	event := createTestUploadEvent(id, true)
-	uploadHandler(event)
+	err := uploadHandler(event)
+	assert.NoError(t, err)
 
 	assertSystemInDb(t, id, nil)
 
@@ -96,7 +97,8 @@ func TestUploadHandler(t *testing.T) {
 	// Test that second upload did not cause re-evaluation
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	uploadHandler(event)
+	err = uploadHandler(event)
+	assert.NoError(t, err)
 	assert.Equal(t, 2, len(logHook.LogEntries))
 	assert.Equal(t, UploadSuccessNoEval, logHook.LogEntries[1].Message)
 	deleteData(t)
@@ -107,7 +109,8 @@ func TestUploadHandlerWarn(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
 	noPkgsEvent := createTestUploadEvent(id, false)
-	uploadHandler(noPkgsEvent)
+	err := uploadHandler(noPkgsEvent)
+	assert.NoError(t, err)
 	assert.Equal(t, 1, len(logHook.LogEntries))
 	assert.Equal(t, WarnSkippingNoPackages, logHook.LogEntries[0].Message)
 }
@@ -118,7 +121,8 @@ func TestUploadHandlerError1(t *testing.T) {
 	log.AddHook(logHook)
 	event := createTestUploadEvent(id, true)
 	event.Host.Account = ""
-	uploadHandler(event)
+	err := uploadHandler(event)
+	assert.NoError(t, err)
 	assert.Equal(t, 1, len(logHook.LogEntries))
 	assert.Equal(t, ErrorNoAccountProvided, logHook.LogEntries[0].Message)
 }
@@ -140,7 +144,8 @@ func TestUploadHandlerError2(t *testing.T) {
 	log.AddHook(logHook)
 	_ = getOrCreateTestAccount(t)
 	event := createTestUploadEvent(id, true)
-	uploadHandler(event)
+	err := uploadHandler(event)
+	assert.Error(t, err)
 	assert.Equal(t, ErrorKafkaSend, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
 	deleteData(t)
 }
