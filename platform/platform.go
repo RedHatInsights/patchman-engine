@@ -20,7 +20,6 @@ func AddWebsocket() chan string {
 func platformMock() {
 	utils.Log().Info("Platform mock starting")
 	app := gin.New()
-	InitInventory(app)
 	InitVMaaS(app)
 	InitRbac(app)
 
