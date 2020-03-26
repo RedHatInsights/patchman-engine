@@ -213,7 +213,7 @@
                             "enum": [
                                 "id",
                                 "last_evaluation",
-                                "last_updated",
+                                "last_upload",
                                 "rhsa_count",
                                 "rhba_count",
                                 "rhea_count",
@@ -239,7 +239,7 @@
                         }
                     },
                     {
-                        "name": "filter[last_updated]",
+                        "name": "filter[last_upload]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -337,7 +337,7 @@
                             "enum": [
                                 "id",
                                 "last_evaluation",
-                                "last_updated",
+                                "last_upload",
                                 "rhsa_count",
                                 "rhba_count",
                                 "rhea_count",
@@ -363,7 +363,7 @@
                         }
                     },
                     {
-                        "name": "filter[last_updated]",
+                        "name": "filter[last_upload]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
