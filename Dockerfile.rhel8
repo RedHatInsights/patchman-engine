@@ -8,8 +8,9 @@ RUN /manifest/rpm_list.sh | grep -v -E "^(redhat|centos|fedora)-release" > /tmp/
 
 RUN yum module -y install go-toolset && \
     yum module -y enable postgresql:12 && \
-    yum install -y git postgresql diffutils && \
-    /manifest/rpm_list.sh > /tmp/final_rpm.txt
+    yum install -y postgresql && \
+    /manifest/rpm_list.sh > /tmp/final_rpm.txt && \
+    yum install -y git diffutils
 
 ENV GOPATH=/go
 ENV GO111MODULE=on
