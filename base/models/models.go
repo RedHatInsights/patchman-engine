@@ -18,6 +18,7 @@ type SystemPlatform struct {
 	ID          int    `gorm:"primary_key"`
 	InventoryID string `sql:"unique" gorm:"unique"`
 	RhAccountID int
+	DisplayName string
 	// All times need to be stored as pointers, since they are set to 0000-00-00 00:00 by gorm if not present
 	FirstReported         *time.Time `gorm:"default:null"`
 	VmaasJSON             string

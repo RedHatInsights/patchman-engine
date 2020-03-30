@@ -10,23 +10,23 @@ DELETE FROM rh_account;
 INSERT INTO rh_account (id, name) VALUES
 (1, '1'), (2, '2'), (3, '3'), (4, '4');
 
-INSERT INTO system_platform (id, inventory_id, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload) VALUES
-(1, 'INV-1', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
-(2, 'INV-2', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
-(3, 'INV-3', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
-(4, 'INV-4', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
-(5, 'INV-5', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
-(6, 'INV-6', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04');
+INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload) VALUES
+(1, 'INV-1', 'INV-1', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
+(2, 'INV-2', 'INV-2', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
+(3, 'INV-3', 'INV-3', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
+(4, 'INV-4', 'INV-4', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
+(5, 'INV-5', 'INV-5', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
+(6, 'INV-6', 'INV-6', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04');
 
-INSERT INTO system_platform (id, inventory_id, rh_account_id,  vmaas_json, json_checksum, first_reported, last_updated, unchanged_since, last_upload) VALUES
-(7, 'INV-7', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2017-12-31 08:22:33-04', '2018-10-04 14:13:12-04', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04');
+INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, first_reported, last_updated, unchanged_since, last_upload) VALUES
+(7, 'INV-7','INV-7', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2017-12-31 08:22:33-04', '2018-10-04 14:13:12-04', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04');
 
-INSERT INTO system_platform (id, inventory_id, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload) VALUES
-(8, 'INV-8', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
-(9, 'INV-9', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
-(10, 'INV-10', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
-(11, 'INV-11', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
-(12, 'INV-12', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04');
+INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload) VALUES
+(8, 'INV-8', 'INV-8', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
+(9, 'INV-9', 'INV-9', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
+(10, 'INV-10', 'INV-10', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
+(11, 'INV-11', 'INV-11', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04'),
+(12, 'INV-12', 'INV-12', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04');
 
 INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solution, advisory_type_id,
                                public_date, modified_date, url, severity_id) VALUES

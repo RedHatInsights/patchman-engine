@@ -19,6 +19,7 @@ func TestInitDelete(t *testing.T) {
 	assert.NoError(t, database.Db.Create(&models.SystemPlatform{
 		InventoryID: "DEL-1",
 		RhAccountID: 1,
+		DisplayName: "DEL-1",
 	}).Error)
 	utils.TestLoadEnv("conf/manager.env")
 	core.SetupTestEnvironment()

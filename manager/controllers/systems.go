@@ -25,6 +25,7 @@ type SystemDBLookup struct {
 }
 
 type SystemItemAttributes struct {
+	DisplayName    string     `json:"display_name" query:"system_platform.display_name"`
 	LastEvaluation *time.Time `json:"last_evaluation" query:"system_platform.last_evaluation"`
 	LastUpload     *time.Time `json:"last_upload" query:"system_platform.last_upload"`
 	RhsaCount      int        `json:"rhsa_count" query:"system_platform.advisory_sec_count_cache"`
@@ -55,10 +56,11 @@ type SystemsResponse struct {
 // @Produce  json
 // @Param    limit   query   int     false   "Limit for paging"
 // @Param    offset  query   int     false   "Offset for paging"
-// @Param    sort    query   string  false   "Sort field" Enums(id,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,enabled,stale)
+// @Param    sort    query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,enabled,stale)
 // @Param    filter[id]              query   string  false "Filter"
+// @Param    filter[display_name]    query   string  false "Filter"
 // @Param    filter[last_evaluation] query   string  false "Filter"
-// @Param    filter[last_upload]    query   string  false "Filter"
+// @Param    filter[last_upload]     query   string  false "Filter"
 // @Param    filter[rhsa_count]      query   string  false "Filter"
 // @Param    filter[rhba_count]      query   string  false "Filter"
 // @Param    filter[rhea_count]      query   string  false "Filter"
@@ -73,6 +75,7 @@ func SystemsListHandler(c *gin.Context) {
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
 
+	query = ApplySearch(c, query, "system_platform.display_name")
 	query, meta, links, err := ListCommon(query, c, "/api/patch/v1/systems", SystemsFields, systemsDefaultFilter)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
