@@ -98,3 +98,21 @@ func TestSystemAdvisoriesWrongSort(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
+
+func TestSystemAdvisoriesSearch(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/INV-1?search=h-3", nil)
+	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output SystemAdvisoriesResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, "RH-3", output.Data[0].ID)
+	assert.Equal(t, "advisory", output.Data[0].Type)
+	assert.Equal(t, "adv-3-des", output.Data[0].Attributes.Description)
+	assert.Equal(t, "adv-3-syn", output.Data[0].Attributes.Synopsis)
+}

@@ -86,6 +86,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		Where("ra.name = ?", account).
 		Where("when_patched IS NULL")
 
+	query = ApplySearch(c, query, "am.name", "am.synopsis", "am.description")
 	path := fmt.Sprintf("/api/patch/v1/systems/%v/advisories", inventoryID)
 	query, meta, links, err := ListCommon(query, c, path, SystemAdvisoriesFields, nil)
 	if err != nil {
