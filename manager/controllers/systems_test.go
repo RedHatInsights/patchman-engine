@@ -100,3 +100,20 @@ func TestSystemsWrongSort(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
+
+func TestSystemsSearch(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?search=V-1", nil)
+	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output SystemsResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, "INV-1", output.Data[0].ID)
+	assert.Equal(t, "system", output.Data[0].Type)
+	assert.Equal(t, "INV-1", output.Data[0].Attributes.DisplayName)
+}

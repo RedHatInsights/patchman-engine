@@ -154,6 +154,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 
 	jsonChecksum := hex.EncodeToString(hash.Sum([]byte{}))
 	var colsToUpdate = []string{
+		"display_name",
 		"last_upload",
 		"stale_timestamp",
 		"stale_warning_timestamp",
@@ -161,10 +162,15 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	}
 
 	now := time.Now()
+	displayName := inventoryID
+	if host.DisplayName != nil && len(*host.DisplayName) > 0 {
+		displayName = *host.DisplayName
+	}
 
 	systemPlatform := models.SystemPlatform{
 		InventoryID:           inventoryID,
 		RhAccountID:           accountID,
+		DisplayName:           displayName,
 		VmaasJSON:             string(updatesReqJSON),
 		JSONChecksum:          jsonChecksum,
 		LastUpload:            &now,
