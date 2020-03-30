@@ -7,9 +7,8 @@ require (
 	github.com/RedHatInsights/patchman-clients/rbac v0.0.0-20200211092138-af3af42fd699
 	github.com/RedHatInsights/patchman-clients/vmaas v0.0.0-20200211092138-af3af42fd699
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.29.33
+	github.com/aws/aws-sdk-go v1.29.34
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
-	github.com/frankban/quicktest v1.9.0 // indirect
 	github.com/getkin/kin-openapi v0.3.0
 	github.com/gin-contrib/gzip v0.0.1
 	github.com/gin-gonic/gin v1.5.0
@@ -17,12 +16,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/jinzhu/gorm v1.9.12
 	github.com/joho/godotenv v1.3.0
-
-	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/lib/pq v1.3.0
-	github.com/mailru/easyjson v0.7.0 // indirect
-	github.com/mattn/go-isatty v0.0.12 // indirect
-	github.com/pierrec/lz4 v2.3.0+incompatible // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_golang v1.5.1
