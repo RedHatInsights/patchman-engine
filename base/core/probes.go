@@ -13,7 +13,7 @@ func Liveness(c *gin.Context) {
 func Readiness(c *gin.Context) {
 	err := database.Db.DB().Ping()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		c.JSON(http.StatusServiceUnavailable, gin.H{"err": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, "ok")
