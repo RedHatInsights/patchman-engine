@@ -68,7 +68,8 @@ INSERT INTO repo (id, name) VALUES
 
 INSERT INTO system_repo (system_id, repo_id) VALUES
 (2, 1),
-(3, 1);
+(3, 1),
+(2, 2);
 
 INSERT INTO timestamp_kv (name, value) VALUES
 ('last_eval_repo_based', '2018-04-05T01:23:45+02:00');

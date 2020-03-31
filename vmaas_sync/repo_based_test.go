@@ -45,7 +45,7 @@ func TestGetRepoBasedInventoryIDs(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	repos := []string{"repo1"}
+	repos := []string{"repo1", "repo2"}
 	inventoryIDs, err := getRepoBasedInventoryIDs(repos)
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"INV-2", "INV-3"}, inventoryIDs)
