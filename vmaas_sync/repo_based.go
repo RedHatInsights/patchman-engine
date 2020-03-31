@@ -73,7 +73,7 @@ func getRepoBasedInventoryIDs(repos []string) ([]string, error) {
 		Joins("JOIN system_platform sp ON sp.id = sr.system_id").
 		Where("repo.name IN (?)", repos).
 		Order("inventory_id ASC").
-		Pluck("inventory_id", &intentoryIDs).Error
+		Pluck("distinct inventory_id", &intentoryIDs).Error
 	if err != nil {
 		return nil, err
 	}
