@@ -27,6 +27,7 @@ var (
 	evalTopic     string
 	evalLabel     string
 	port          string
+	bypass        bool
 )
 
 func configure() {
@@ -36,6 +37,7 @@ func configure() {
 	evalTopic = utils.GetenvOrFail("EVAL_TOPIC")
 	evalLabel = utils.GetenvOrFail("EVAL_LABEL")
 	consumerCount = utils.GetIntEnvOrFail("CONSUMER_COUNT")
+	bypass = utils.Getenv("BYPASS", "") == "true" // Allow consume messages without evaluation
 
 	vmaasConfig := vmaas.NewConfiguration()
 	vmaasConfig.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
@@ -46,6 +48,10 @@ func configure() {
 func Evaluate(ctx context.Context, inventoryID string, evaluationType string) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationDuration.WithLabelValues(evaluationType))
+
+	if bypass {
+		return nil
+	}
 
 	tx := database.Db.Begin()
 	// Don't allow TX to hang around locking the rows
