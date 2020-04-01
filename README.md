@@ -55,6 +55,7 @@ There is a private API accessible only from inside of `vmaas_sync` container. It
 ~~~bash
 podman exec -it patchman-engine_vmaas_sync_1 ./sync.sh    # trigger advisories syncing event.
 podman exec -it patchman-engine_vmaas_sync_1 ./re-calc.sh # trigger systems recalculation event.
+podman exec -it patchman-engine_vmaas_sync_1 ./caches-check.sh # trigger account caches checking.
 ~~~
 
 ## VMaaS
