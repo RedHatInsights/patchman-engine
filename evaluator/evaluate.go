@@ -12,7 +12,6 @@ import (
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
 	"github.com/jinzhu/gorm"
-	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -101,13 +100,13 @@ func commitWithObserve(tx *gorm.DB) error {
 }
 
 func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) error {
-	advisoryIDs, err := processSystemAdvisories(tx, system, vmaasData, system.InventoryID)
+	_, err := processSystemAdvisories(tx, system, vmaasData, system.InventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
 		return errors.Wrap(err, "Unable to process system advisories")
 	}
 
-	err = updateCaches(tx, system, advisoryIDs)
+	err = updateCaches(tx, system)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-update-system-caches").Inc()
 		return errors.Wrap(err, "Unable to update system caches")
@@ -130,24 +129,11 @@ func updateSystemLastEvaluation(tx *gorm.DB, system *models.SystemPlatform) erro
 	return err
 }
 
-func updateCaches(tx *gorm.DB, system *models.SystemPlatform, advisoryIDs []int) error {
+func updateCaches(tx *gorm.DB, system *models.SystemPlatform) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("caches-update"))
 
 	err := tx.Exec("SELECT * FROM refresh_system_caches(?,?)", system.ID, system.RhAccountID).Error
-	if err != nil {
-		return err
-	}
-
-	idArr := make(pq.Int64Array, len(advisoryIDs))
-	for i, id := range advisoryIDs {
-		idArr[i] = int64(id)
-	}
-
-	err = tx.Exec("SELECT * FROM refresh_advisory_caches_multi(?,?)", idArr, system.RhAccountID).Error
-	if err != nil {
-		return err
-	}
 
 	return err
 }
@@ -225,6 +211,12 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to update system advisories")
 	}
+
+	err = updateAdvisoryAccountDatas(tx, system, patched, unpatched)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to update advisory_account_data caches")
+	}
+
 	return append(patched, unpatched...), nil
 }
 
@@ -333,19 +325,51 @@ func ensureSystemAdvisories(tx *gorm.DB, systemID int, advisoryIDs []int) error 
 	return err
 }
 
-func lockAdvisoryData(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int) error {
+func lockAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int) error {
 	// Lock advisory-account data, so it's not changed by other concurrent queries
 	var aads []models.AdvisoryAccountData
-	return tx.Set("gorm:query_option", "FOR UPDATE OF advisory_account_data").
+	err := tx.Set("gorm:query_option", "FOR UPDATE OF advisory_account_data").
 		Order("advisory_id").
 		Find(&aads, "rh_account_id = ? AND (advisory_id in (?) OR advisory_id in (?))",
 			system.RhAccountID, patched, unpatched).Error
+
+	return err
+}
+
+func calcAdvisoryChanges(system *models.SystemPlatform, patched, unpatched []int) []models.AdvisoryAccountData {
+	aadMap := map[int]models.AdvisoryAccountData{}
+	// If system is stale, we won't change any rows  in advisory_account_data
+	if system.Stale {
+		return []models.AdvisoryAccountData{}
+	}
+
+	for _, id := range unpatched {
+		aadMap[id] = models.AdvisoryAccountData{
+			AdvisoryID:      id,
+			RhAccountID:     system.RhAccountID,
+			SystemsAffected: 1,
+		}
+	}
+
+	for _, id := range patched {
+		aadMap[id] = models.AdvisoryAccountData{
+			AdvisoryID:      id,
+			RhAccountID:     system.RhAccountID,
+			SystemsAffected: -1,
+		}
+	}
+
+	deltas := make([]models.AdvisoryAccountData, 0, len(patched)+len(unpatched))
+	for _, aad := range aadMap {
+		deltas = append(deltas, aad)
+	}
+	return deltas
 }
 
 func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int) error {
 	whenPatched := time.Now()
 
-	err := lockAdvisoryData(tx, system, patched, unpatched)
+	err := ensureSystemAdvisories(tx, system.ID, unpatched)
 	if err != nil {
 		return err
 	}
@@ -355,22 +379,31 @@ func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, patched,
 		return err
 	}
 
-	err = ensureSystemAdvisories(tx, system.ID, unpatched)
+	return updateSystemAdvisoriesWhenPatched(tx, system, unpatched, nil)
+}
+
+func updateAdvisoryAccountDatas(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int) error {
+	err := lockAdvisoryAccountData(tx, system, patched, unpatched)
 	if err != nil {
 		return err
 	}
 
-	err = updateSystemAdvisoriesWhenPatched(tx, system, unpatched, nil)
-	return err
+	changes := calcAdvisoryChanges(system, patched, unpatched)
+	txOnConflict := database.OnConflictDoUpdateExpr(tx, []string{"rh_account_id", "advisory_id"},
+		database.UpExpr{Name: "systems_affected", Expr: "advisory_account_data.systems_affected + excluded.systems_affected"})
+
+	return database.BulkInsert(txOnConflict, changes)
 }
 
 func evaluateHandler(event mqueue.PlatformEvent) {
-	err := Evaluate(context.Background(), event.ID, evalLabel)
-	if err != nil {
-		utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
-			Error("Eval message handling")
-	}
-	utils.Log("inventoryID", event.ID, "evalLabel", evalLabel).Debug("system evaluated successfully")
+	database.DebugWithCachesCheck("eval", func() {
+		err := Evaluate(context.Background(), event.ID, evalLabel)
+		if err != nil {
+			utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
+				Error("Eval message handling")
+		}
+		utils.Log("inventoryID", event.ID, "evalLabel", evalLabel).Debug("system evaluated successfully")
+	})
 }
 
 func run(readerBuilder mqueue.CreateReader) {
