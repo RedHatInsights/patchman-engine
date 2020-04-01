@@ -396,14 +396,12 @@ func updateAdvisoryAccountDatas(tx *gorm.DB, system *models.SystemPlatform, patc
 }
 
 func evaluateHandler(event mqueue.PlatformEvent) {
-	database.DebugWithCachesCheck("eval", func() {
-		err := Evaluate(context.Background(), event.ID, evalLabel)
-		if err != nil {
-			utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
-				Error("Eval message handling")
-		}
-		utils.Log("inventoryID", event.ID, "evalLabel", evalLabel).Debug("system evaluated successfully")
-	})
+	err := Evaluate(context.Background(), event.ID, evalLabel)
+	if err != nil {
+		utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
+			Error("Eval message handling")
+	}
+	utils.Log("inventoryID", event.ID, "evalLabel", evalLabel).Debug("system evaluated successfully")
 }
 
 func run(readerBuilder mqueue.CreateReader) {
