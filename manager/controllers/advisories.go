@@ -85,7 +85,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 func buildQueryAdvisories(account string) *gorm.DB {
 	query := database.Db.Table("advisory_metadata am").
 		Select(AdvisoriesSelect).
-		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id").
+		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id and aad.systems_affected > 0").
 		Joins("JOIN rh_account ra ON aad.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
 	return query

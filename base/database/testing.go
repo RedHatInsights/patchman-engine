@@ -116,12 +116,11 @@ func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int
 	err := Db.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
 		Find(&advisoryAccountData).Error
 	assert.Nil(t, err)
-	if systemsAffected > 0 {
-		assert.Equal(t, len(advisoryIDs), len(advisoryAccountData))
-		for _, item := range advisoryAccountData {
-			assert.Equal(t, systemsAffected, item.SystemsAffected)
-		}
-	} else {
-		assert.Equal(t, 0, len(advisoryAccountData))
+
+	sum := 0
+	for _, item := range advisoryAccountData {
+		sum += item.SystemsAffected
 	}
+	// covers both cases, when we have advisory_account_data stored with 0 systems_affected, and when we delete it
+	assert.Equal(t, systemsAffected*len(advisoryIDs), sum, "sum of systems_affected does not match")
 }
