@@ -130,24 +130,11 @@ func updateSystemLastEvaluation(tx *gorm.DB, system *models.SystemPlatform) erro
 	return err
 }
 
-// Attempts to lock account to which system belongs, in order
-// to prevent concurrent calculations of advisory_account_data cache
-func lockAccount(tx *gorm.DB, system *models.SystemPlatform) error {
-	var acc models.RhAccount
-	return tx.Set("gorm:query_option", "FOR UPDATE OF rh_account").
-		Find(&acc, "id = ?", system.RhAccountID).Error
-}
-
 func updateCaches(tx *gorm.DB, system *models.SystemPlatform, advisoryIDs []int) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("caches-update"))
 
 	err := tx.Exec("SELECT * FROM refresh_system_caches(?,?)", system.ID, system.RhAccountID).Error
-	if err != nil {
-		return err
-	}
-
-	err = lockAccount(tx, system)
 	if err != nil {
 		return err
 	}
