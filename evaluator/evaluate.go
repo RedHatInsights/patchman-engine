@@ -100,10 +100,16 @@ func commitWithObserve(tx *gorm.DB) error {
 }
 
 func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) error {
-	_, err := processSystemAdvisories(tx, system, vmaasData, system.InventoryID)
+	patched, unpatched, err := processSystemAdvisories(tx, system, vmaasData, system.InventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
 		return errors.Wrap(err, "Unable to process system advisories")
+	}
+
+	err = storeAdvisoryData(tx, system, patched, unpatched)
+	if err != nil {
+		evaluationCnt.WithLabelValues("error-store-advisories").Inc()
+		return errors.Wrap(err, "Unable to store advisory data")
 	}
 
 	err = updateCaches(tx, system)
@@ -181,17 +187,17 @@ func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, erro
 // Before this methods stores the entries into the system_advisories table, it locks
 // advisory_account_data table, so other evaluations don't interfere with this one
 func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response,
-	inventoryID string) ([]int, error) {
+	inventoryID string) (patched []int, unpatched []int, err error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))
 
 	reported := getReportedAdvisories(vmaasData)
 	stored, err := getStoredAdvisoriesMap(tx, system.ID)
 	if err != nil {
-		return nil, errors.Wrap(err, "Unable to get system stored advisories")
+		return nil, nil, errors.Wrap(err, "Unable to get system stored advisories")
 	}
 
-	patched := getPatchedAdvisories(reported, stored)
+	patched = getPatchedAdvisories(reported, stored)
 	updatesCnt.WithLabelValues("patched").Add(float64(len(patched)))
 	utils.Log("inventoryID", inventoryID, "patched", len(patched)).Debug("patched advisories")
 
@@ -200,24 +206,27 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 
 	newIDs, err := ensureAdvisoriesInDb(tx, newsAdvisoriesNames)
 	if err != nil {
-		return nil, errors.Wrap(err, "Unable to ensure new system advisories in db")
+		return nil, nil, errors.Wrap(err, "Unable to ensure new system advisories in db")
 	}
 
 	unpatched = append(unpatched, newIDs...)
 	updatesCnt.WithLabelValues("unpatched").Add(float64(len(unpatched)))
 	utils.Log("inventoryID", inventoryID, "unpatched", len(unpatched)).Debug("patched advisories")
+	return patched, unpatched, nil
+}
 
-	err = updateSystemAdvisories(tx, system, patched, unpatched)
+func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int) error {
+	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("advisories-store"))
+	err := updateSystemAdvisories(tx, system, patched, unpatched)
 	if err != nil {
-		return nil, errors.Wrap(err, "Unable to update system advisories")
+		return errors.Wrap(err, "Unable to update system advisories")
 	}
 
 	err = updateAdvisoryAccountDatas(tx, system, patched, unpatched)
 	if err != nil {
-		return nil, errors.Wrap(err, "Unable to update advisory_account_data caches")
+		return errors.Wrap(err, "Unable to update advisory_account_data caches")
 	}
-
-	return append(patched, unpatched...), nil
+	return nil
 }
 
 func getReportedAdvisories(vmaasData vmaas.UpdatesV2Response) map[string]bool {
