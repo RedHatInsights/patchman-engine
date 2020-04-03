@@ -97,8 +97,6 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	err = updateAdvisoryAccountDatas(database.Db, &system, advisoryIDs, []int{})
 	assert.NoError(t, err)
 
-	err = updateCaches(database.Db, &system)
-	assert.NoError(t, err)
 	checkSystemAdvisoriesWhenPatched(t, system.ID, advisoryIDs, &testDate)
 	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 0)
 
@@ -107,8 +105,7 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	// Update as-if the advisories had become unpatched
 	err = updateAdvisoryAccountDatas(database.Db, &system, []int{}, advisoryIDs)
 	assert.NoError(t, err)
-	err = updateCaches(database.Db, &system)
-	assert.NoError(t, err)
+
 	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 1)
 
 	deleteSystemAdvisories(t, system.ID, advisoryIDs)
