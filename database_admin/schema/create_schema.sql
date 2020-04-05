@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (17, false);
+VALUES (18, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -145,12 +145,9 @@ BEGIN
              DELETE
                  FROM advisory_account_data aad
                      USING to_update_advisories ta
-                     WHERE aad.rh_account_id = NEW.rh_account_id
-                         AND (aad.rh_account_id, aad.advisory_id) in (
-                             SELECT ta.rh_account_id, ta.advisory_id
-                             FROM to_update_advisories ta
-                             WHERE ta.systems_affected_dst = 0
-                         )
+                     WHERE aad.rh_account_id = ta.rh_account_id
+                         AND aad.advisory_id = ta.advisory_id
+                         AND ta.systems_affected_dst <= 0
          )
          -- If we have system affected && no exisiting advisory_account_data entry, we insert new rows
     INSERT
@@ -159,6 +156,7 @@ BEGIN
     FROM system_advisories sa
     WHERE sa.system_id = NEW.id
       AND sa.when_patched IS NULL
+      AND change > 0
       -- We system_advisory pairs which don't already have rows in to_update_advisories
       AND (NEW.rh_account_id, sa.advisory_id) NOT IN (
         SELECT ta.rh_account_id, ta.advisory_id
@@ -413,16 +411,18 @@ $fun$
 DECLARE
     marked integer;
 BEGIN
-    WITH ids AS (SELECT id
-                 FROM system_platform
-                 WHERE stale_warning_timestamp < now()
-                   AND stale = false
-                 ORDER BY id FOR UPDATE OF system_platform
+    WITH ids AS (
+        SELECT id
+        FROM system_platform
+        WHERE stale_warning_timestamp < now()
+          AND stale = false
+        ORDER BY id FOR UPDATE OF system_platform
     ),
          updated as (
              UPDATE system_platform
                  SET stale = true
                  FROM ids
+                 WHERE system_platform.id = ids.id
                  RETURNING ids.id
          )
     SELECT count(*)
