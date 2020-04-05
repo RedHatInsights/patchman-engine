@@ -1,0 +1,32 @@
+## Database admin
+Purpose of this container is to maintain the consistent state of the database for the application. It provides versioned
+database schema, and maintains the database
+
+### Migrations
+When you need to introduce changes into the database schema, please make sure to perform these steps
+1. Increment the version in database_admin/schema/create_schema.sql
+2. Increment the version in base/base.go to match
+3. Create new pair of scripts in database/admin/migrations, named {version}_{name}.up.sql and {version}_{name}.down.sql
+4. Implement your changes to database_admin/schema/create_schema.sql
+5. Implement the changes as modifications to pre-existing schema in the UP file,
+6. Implement inverse changes if possible in the DOWN file, if not include this bit of code:
+```
+DO
+$$
+    BEGIN
+        RAISE EXCEPTION 'Down migration is not supported';
+    END;
+$$ LANGUAGE plpgsql;
+```
+7. Fix-up the migration files until tests pass. the unit test suite includes tests for schema migrations
+
+### Guidelines
+When implementing database migrations, attempt to aim for maximum ability to complete, if possible use constructs like:
+- `CREATE OR REPLACE`
+- `CREATE IF NOT EXISTS`
+- `DROP IF EXISTS` and subsequent `CREATE` of a resource
+This ensures that even if there is an error while running one of the migrations, it's possible to manually reset to
+previous version and re-run the migrations without deploying new code.
+
+Attempt to create runnable DOWN migration. This makes it possible to revert to previous version, if something goes wrong
+during deployment.

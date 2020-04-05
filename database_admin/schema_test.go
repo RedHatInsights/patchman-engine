@@ -1,6 +1,7 @@
 package database_admin //nolint:golint,stylecheck
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/utils"
 	"fmt"
@@ -25,6 +26,16 @@ func setCmdAuth(cmd *exec.Cmd) {
 	cmd.Env = append(cmd.Env, fmt.Sprintf("PGPASSWORD=%v", utils.GetenvOrFail("DB_PASSWD")))
 }
 
+func TestSchemaVersion(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	database.Configure()
+
+	var vers []int
+	assert.NoError(t, database.Db.Debug().
+		Table("schema_migrations").Pluck("version", &vers).Error)
+	assert.Equal(t, base.DBVersion, vers[0], "Invalid schema version")
+}
+
 func TestSchemaCompatiblity(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	cfg := postgres.Config{
@@ -47,7 +58,7 @@ func TestSchemaCompatiblity(t *testing.T) {
 		utils.GetenvOrFail("DB_NAME"), driver)
 	assert.Nil(t, err)
 
-	err = m.Up()
+	err = m.Migrate(base.DBVersion)
 	assert.NoError(t, err)
 
 	dumpCmd := exec.Command("pg_dump", "-O")

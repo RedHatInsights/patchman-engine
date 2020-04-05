@@ -1,6 +1,7 @@
 package database_admin //nolint:golint,stylecheck
 
 import (
+	"app/base"
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // postgres database is used
@@ -14,7 +15,7 @@ func MigrateUp(sourceURL, databaseURL string) {
 	}
 
 	m.Log = logger{}
-	err = m.Up()
+	err = m.Migrate(base.DBVersion)
 	if err != nil && err.Error() == "no change" {
 		fmt.Println("no change")
 		return

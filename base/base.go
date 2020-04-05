@@ -9,6 +9,8 @@ import (
 	"syscall"
 )
 
+const DBVersion = 17
+const InventoryAPIPrefix = "/api/inventory/v1"
 const VMaaSAPIPrefix = "/api"
 const RBACApiPrefix = "/api/rbac/v1"
 
