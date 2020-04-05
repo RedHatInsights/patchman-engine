@@ -12,7 +12,7 @@ func DebugWithCachesCheck(part string, fun func()) {
 	fun()
 	validAfter, err := CheckCachesValid()
 	if err != nil {
-		utils.Log("error", err).Error("Could not check validity of caches")
+		utils.Log("error", err).Panic("Could not check validity of caches")
 	}
 
 	if !validAfter {
@@ -31,6 +31,7 @@ type advisoryCount struct {
 	Count       int
 }
 
+// nolint: lll
 func CheckCachesValid() (bool, error) {
 	valid := true
 	var aad []models.AdvisoryAccountData
@@ -43,12 +44,12 @@ func CheckCachesValid() (bool, error) {
 	}
 	var counts []advisoryCount
 
-	err = tx.Select("sp.rh_account_id, sa.advisory_id, count(system_id)").
+	err = tx.Select("sp.rh_account_id, sa.advisory_id, count(*)").
 		Table("system_advisories sa").
 		Joins("JOIN system_platform sp on sa.system_id = sp.id").
-		Where("sa.when_patched is null AND sp.stale = false AND sp.last_evaluation is not null").
-		Order("sp.rh_account_id,  sa.advisory_id").
-		Group("sp.rh_account_id,  sa.advisory_id").
+		Where("sa.when_patched is null AND sp.opt_out = false AND sp.stale = false AND sp.last_evaluation is not null").
+		Order("sp.rh_account_id, sa.advisory_id").
+		Group("sp.rh_account_id, sa.advisory_id").
 		Find(&counts).Error
 	if err != nil {
 		return false, err
