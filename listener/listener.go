@@ -34,8 +34,8 @@ func runReaders(readerBuilder mqueue.CreateReader) {
 	// We create multiple consumers, and hope that the partition rebalancing
 	// algorithm assigns each consumer a single partition
 	for i := 0; i < consumerCount; i++ {
-		go mqueue.RunReader(uploadTopic, readerBuilder, uploadMsgHandler)
-		go mqueue.RunReader(eventsTopic, readerBuilder, DeleteMessageHandler)
+		go mqueue.RunReader(uploadTopic, readerBuilder, mqueue.MakeRetryingHandler(uploadMsgHandler))
+		go mqueue.RunReader(eventsTopic, readerBuilder, mqueue.MakeRetryingHandler(DeleteMessageHandler))
 	}
 }
 
