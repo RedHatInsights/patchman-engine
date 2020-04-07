@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+	core.HandleSignals()
 	core.ConfigureApp()
 
 	if len(os.Args) > 1 {
