@@ -22,4 +22,4 @@ done
 
 echo "VMaaS websocket is up"
 
-./scripts/entrypoint.sh vmaas_sync
+exec ./scripts/entrypoint.sh vmaas_sync
