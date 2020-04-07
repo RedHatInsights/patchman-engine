@@ -53,7 +53,7 @@ func Evaluate(ctx context.Context, inventoryID string, evaluationType string) er
 	system, err := loadSystemData(tx, inventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
-		return errors.Wrap(err, "Unable to get system data from database")
+		return nil
 	}
 
 	updatesReq, err := parseVmaasJSON(system)
@@ -64,7 +64,7 @@ func Evaluate(ctx context.Context, inventoryID string, evaluationType string) er
 
 	if len(updatesReq.PackageList) == 0 {
 		evaluationCnt.WithLabelValues("error-no-packages").Inc()
-		return errors.New("No packages found in vmaas_json")
+		return nil
 	}
 
 	vmaasData, err := callVMaas(ctx, updatesReq)
