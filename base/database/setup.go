@@ -30,12 +30,10 @@ type PostgreSQLConfig struct {
 	SSLMode  string
 
 	// Additional params.
-	Timeout               string
-	ReadTimeout           string
-	WriteTimeout          string
-	MaxConnections        int
-	MaxIdleConnections    int
-	MaxConnectionLifetime int // Second
+	StatementTimeoutMs     int // https://www.postgresql.org/docs/10/runtime-config-client.html
+	MaxConnections         int
+	MaxIdleConnections     int
+	MaxConnectionLifetimeS int
 }
 
 // open database connection
@@ -48,7 +46,7 @@ func openPostgreSQL(dbConfig *PostgreSQLConfig) *gorm.DB {
 
 	db.DB().SetMaxOpenConns(dbConfig.MaxConnections)
 	db.DB().SetMaxIdleConns(dbConfig.MaxIdleConnections)
-	db.DB().SetConnMaxLifetime(time.Duration(dbConfig.MaxConnectionLifetime) * time.Second)
+	db.DB().SetConnMaxLifetime(time.Duration(dbConfig.MaxConnectionLifetimeS) * time.Second)
 	return db
 }
 
@@ -75,18 +73,17 @@ func loadEnvPostgreSQLConfig() *PostgreSQLConfig {
 		Passwd:   utils.Getenv("DB_PASSWD", "FILL"),
 		SSLMode:  utils.Getenv("DB_SSLMODE", "FILL"),
 
-		Timeout:               "60s",
-		ReadTimeout:           "60s",
-		WriteTimeout:          "60s",
-		MaxConnections:        250,
-		MaxIdleConnections:    50,
-		MaxConnectionLifetime: 60,
+		StatementTimeoutMs:     utils.GetIntEnvOrDefault("DB_STATEMENT_TIMEOUT_MS", 0),
+		MaxConnections:         utils.GetIntEnvOrDefault("DB_MAX_CONNECTIONS", 250),
+		MaxIdleConnections:     utils.GetIntEnvOrDefault("DB_MAX_IDLE_CONNECTIONS", 50),
+		MaxConnectionLifetimeS: utils.GetIntEnvOrDefault("DB_MAX_CONNECTION_LIFETIME_S", 60),
 	}
 	return &config
 }
 
 // create "data source" config string needed for database connection opening
 func dataSourceName(dbConfig *PostgreSQLConfig) string {
-	return fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=%s",
-		dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Database, dbConfig.Passwd, dbConfig.SSLMode)
+	return fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=%s statement_timeout=%d",
+		dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Database, dbConfig.Passwd, dbConfig.SSLMode,
+		dbConfig.StatementTimeoutMs)
 }
