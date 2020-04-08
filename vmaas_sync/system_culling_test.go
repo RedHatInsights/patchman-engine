@@ -29,6 +29,9 @@ func TestSingleSystemStale(t *testing.T) {
 		systems[0].StaleTimestamp = &staleDate
 		systems[0].StaleWarningTimestamp = &staleDate
 		assert.NoError(t, database.Db.Save(&systems[0]).Error)
+
+		assert.NoError(t, database.Db.Exec("select * from mark_stale_systems()").Error)
+
 		oldAffected = accountData[0].SystemsAffected
 		assert.NoError(t, database.Db.Find(&accountData, "rh_account_id = ? AND advisory_id = ?",
 			accountData[0].RhAccountID, accountData[0].AdvisoryID).Error)
@@ -131,7 +134,7 @@ func TestCullSystems(t *testing.T) {
 	database.DebugWithCachesCheck("delete-culled", func() {
 		assert.NoError(t, database.Db.Model(&models.SystemPlatform{}).Count(&cnt).Error)
 
-		assert.NoError(t, database.Db.Model(&models.SystemPlatform{}).Find(&systems).Error)
+		assert.NoError(t, database.Db.Model(&models.SystemPlatform{}).Order("id DESC").Find(&systems).Error)
 		systems[0].CulledTimestamp = &staleDate
 		assert.NoError(t, database.Db.Model(&models.SystemPlatform{}).Save(&systems[0]).Error)
 

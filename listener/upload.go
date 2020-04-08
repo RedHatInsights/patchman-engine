@@ -157,6 +157,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	var colsToUpdate = []string{
 		"display_name",
 		"last_upload",
+		"stale",
 		"stale_timestamp",
 		"stale_warning_timestamp",
 		"culled_timestamp",
@@ -168,6 +169,8 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		displayName = *host.DisplayName
 	}
 
+	staleWarning := optParseTimestamp(host.StaleWarningTimestamp)
+
 	systemPlatform := models.SystemPlatform{
 		InventoryID:           inventoryID,
 		RhAccountID:           accountID,
@@ -178,6 +181,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		StaleTimestamp:        optParseTimestamp(host.StaleTimestamp),
 		StaleWarningTimestamp: optParseTimestamp(host.StaleWarningTimestamp),
 		CulledTimestamp:       optParseTimestamp(host.CulledTimestamp),
+		Stale:                 staleWarning != nil && staleWarning.Before(time.Now()),
 	}
 
 	var oldJSONChecksum []string
