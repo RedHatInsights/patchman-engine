@@ -388,13 +388,6 @@ func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
 	patched, unpatched []int) (SystemAdvisoryMap, error) {
 	whenPatched := time.Now()
 
-	if len(patched) == 0 {
-		patched = []int{0}
-	}
-	if len(unpatched) == 0 {
-		unpatched = []int{0}
-	}
-
 	err := ensureSystemAdvisories(tx, system.ID, unpatched)
 	if err != nil {
 		return nil, err
