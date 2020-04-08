@@ -1,6 +1,7 @@
 package main
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/database_admin"
 	"app/evaluator"
@@ -12,7 +13,7 @@ import (
 )
 
 func main() {
-	core.HandleSignals()
+	base.HandleSignals()
 	core.ConfigureApp()
 
 	if len(os.Args) > 1 {

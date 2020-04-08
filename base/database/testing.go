@@ -1,6 +1,7 @@
 package database
 
 import (
+	"app/base"
 	"app/base/models"
 	"app/base/utils"
 	"github.com/stretchr/testify/assert"
@@ -36,7 +37,7 @@ func CheckCachesValid() (bool, error) {
 	valid := true
 	var aad []models.AdvisoryAccountData
 
-	tx := Db.Begin()
+	tx := Db.BeginTx(base.Context, nil)
 	err := tx.Set("gorm:query_option", "FOR SHARE OF advisory_account_data").
 		Order("rh_account_id, advisory_id").Find(&aad).Error
 	if err != nil {

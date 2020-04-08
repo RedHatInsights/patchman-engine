@@ -1,13 +1,36 @@
 package base
 
-import "strings"
+import (
+	"app/base/utils"
+	"context"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+)
 
-const InventoryAPIPrefix = "/api/inventory/v1"
 const VMaaSAPIPrefix = "/api"
 const RBACApiPrefix = "/api/rbac/v1"
 
 // Go datetime parser does not like slightly incorrect RFC 3339 which we are using (missing Z )
 const Rfc3339NoTz = "2006-01-02T15:04:05-07:00"
+
+var Context context.Context
+var CancelContext context.CancelFunc
+
+func init() {
+	Context, CancelContext = context.WithCancel(context.Background())
+}
+
+func HandleSignals() {
+	c := make(chan os.Signal)
+	signal.Notify(c, syscall.SIGTERM)
+	go func() {
+		<-c
+		CancelContext()
+		utils.Log().Info("SIGTERM handled")
+	}()
+}
 
 func remove(r rune) rune {
 	if r == 0 {

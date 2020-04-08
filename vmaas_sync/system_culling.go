@@ -1,6 +1,7 @@
 package vmaas_sync //nolint:golint,stylecheck
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/utils"
 	"time"
@@ -11,7 +12,7 @@ func RunSystemCulling() {
 
 	for {
 		<-ticker.C
-		tx := database.Db.Begin()
+		tx := database.Db.BeginTx(base.Context, nil)
 		tx.Exec("select delete_culled_systems()")
 		tx.Exec("select mark_stale_systems()")
 
