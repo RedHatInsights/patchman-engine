@@ -1,8 +1,10 @@
 package database
 
 import (
+	"app/base"
 	"app/base/utils"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
+	"time"
 
 	"testing"
 )
@@ -37,4 +39,20 @@ func TestOnConflictDoUpdate(t *testing.T) {
 	assert.Equal(t, obj.ID, read.ID)
 	assert.Equal(t, obj.Name, read.Name)
 	assert.Equal(t, obj.Email, read.Email)
+}
+
+func TestCancelContext(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	Configure()
+
+	tx := Db.BeginTx(base.Context, nil)
+
+	go func() {
+		time.Sleep(time.Millisecond * 100)
+		base.CancelContext()
+	}()
+
+	err := tx.Exec("select pg_sleep(1)").Error
+	assert.NotNil(t, err)
+	assert.Equal(t, "pq: canceling statement due to user request", err.Error())
 }
