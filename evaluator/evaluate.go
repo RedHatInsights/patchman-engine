@@ -48,7 +48,7 @@ func Evaluate(ctx context.Context, inventoryID string, evaluationType string) er
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationDuration.WithLabelValues(evaluationType))
 
-	tx := database.Db.Begin()
+	tx := database.Db.BeginTx(base.Context, nil)
 	// Don't allow TX to hang around locking the rows
 	defer tx.RollbackUnlessCommitted()
 

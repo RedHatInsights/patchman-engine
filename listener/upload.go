@@ -323,7 +323,7 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 		}
 	}
 
-	tx := database.Db.Begin()
+	tx := database.Db.BeginTx(base.Context, nil)
 	sys, err := updateSystemPlatform(tx, host.ID, accountID, host, &updatesReq)
 	if err != nil {
 		tx.Rollback()
