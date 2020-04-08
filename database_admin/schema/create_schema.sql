@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (18, false);
+VALUES (19, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -50,19 +50,6 @@ BEGIN
     IF (TG_OP = 'UPDATE') OR
        NEW.last_updated IS NULL THEN
         NEW.last_updated := CURRENT_TIMESTAMP;
-    END IF;
-    RETURN NEW;
-END;
-$set_last_updated$
-    LANGUAGE 'plpgsql';
-
--- set_last_updated
-CREATE OR REPLACE FUNCTION on_system_timestamp_update()
-    RETURNS TRIGGER AS
-$set_last_updated$
-BEGIN
-    IF (TG_OP = 'UPDATE') OR (TG_OP = 'INSERT') THEN
-        NEW.stale := COALESCE(NEW.stale_warning_timestamp < CURRENT_TIMESTAMP, FALSE);
     END IF;
     RETURN NEW;
 END;
@@ -502,12 +489,6 @@ CREATE TRIGGER system_platform_on_update
     ON system_platform
     FOR EACH ROW
 EXECUTE PROCEDURE on_system_update();
-
-CREATE TRIGGER system_platform_on_update_timestamp
-    BEFORE UPDATE OF stale_timestamp, stale_warning_timestamp, culled_timestamp
-    ON system_platform
-    FOR EACH ROW
-EXECUTE PROCEDURE on_system_timestamp_update();
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_platform TO listener;
 -- evaluator needs to update last_evaluation
