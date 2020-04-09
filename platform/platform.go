@@ -1,8 +1,8 @@
 package main
 
 import (
+	"app/base"
 	"app/base/utils"
-	"context"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/segmentio/kafka-go"
@@ -70,7 +70,7 @@ func mockIdentity() string {
 func sendMessageToTopic(topic, message string) {
 	writer := mockKafkaWriter(topic)
 
-	err := writer.WriteMessages(context.Background(), kafka.Message{
+	err := writer.WriteMessages(base.Context, kafka.Message{
 		Key:   []byte{},
 		Value: []byte(message),
 	})

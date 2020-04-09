@@ -1,6 +1,7 @@
 package vmaas_sync //nolint:golint,stylecheck
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
@@ -24,13 +25,12 @@ func sendReevaluationMessages() error {
 		return err
 	}
 
-	ctx := context.Background()
 	for i := 0; i < len(inventoryIDs); i += BatchSize {
 		end := i + BatchSize
 		if end > len(inventoryIDs) {
 			end = len(inventoryIDs)
 		}
-		sendMessages(ctx, inventoryIDs[i:end]...)
+		sendMessages(base.Context, inventoryIDs[i:end]...)
 	}
 	utils.Log("count", len(inventoryIDs)).Info("systems sent to re-calc")
 	return nil

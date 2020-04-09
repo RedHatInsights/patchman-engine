@@ -1,9 +1,9 @@
 package vmaas_sync //nolint:golint,stylecheck
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
-	"context"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
 	"time"
@@ -99,7 +99,7 @@ func getUpdatedRepos(modifiedSince *time.Time) ([]string, error) {
 			ReposRequest: optional.NewInterface(reposReq),
 		}
 
-		repos, _, err := vmaasClient.ReposApi.AppReposHandlerPostPost(context.Background(), &vmaasCallArgs)
+		repos, _, err := vmaasClient.ReposApi.AppReposHandlerPostPost(base.Context, &vmaasCallArgs)
 		if err != nil {
 			return nil, err
 		}

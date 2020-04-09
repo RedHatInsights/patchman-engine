@@ -5,7 +5,6 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
-	"context"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
 	"github.com/pkg/errors"
@@ -121,8 +120,6 @@ func syncAdvisories() error {
 
 	time.Sleep(time.Second)
 
-	ctx := context.Background()
-
 	if vmaasClient == nil {
 		panic("VMaaS client is nil")
 	}
@@ -140,7 +137,7 @@ func syncAdvisories() error {
 			}),
 		}
 
-		data, _, err := vmaasClient.ErrataApi.AppErrataHandlerPostPost(ctx, &opts)
+		data, _, err := vmaasClient.ErrataApi.AppErrataHandlerPostPost(base.Context, &opts)
 		if err != nil {
 			vmaasCallCnt.WithLabelValues("error-download-errata").Inc()
 			return errors.WithMessage(err, "Downloading erratas")

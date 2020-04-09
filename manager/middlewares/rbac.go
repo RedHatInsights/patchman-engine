@@ -3,7 +3,6 @@ package middlewares
 import (
 	"app/base"
 	"app/base/utils"
-	"context"
 	"github.com/RedHatInsights/patchman-clients/rbac"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -25,7 +24,7 @@ func isAccessGranted(c *gin.Context) bool {
 	client := makeClient(c.GetHeader("x-rh-identity"))
 	// Body is closed inside api method, don't know why liter is complaining
 	// nolint: bodyclose
-	access, _, err := client.AccessApi.GetPrincipalAccess(context.Background(), "patch", nil)
+	access, _, err := client.AccessApi.GetPrincipalAccess(base.Context, "patch", nil)
 
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Call to RBAC svc failed")
