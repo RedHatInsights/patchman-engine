@@ -6,7 +6,6 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -103,7 +102,7 @@ func uploadHandler(event HostEgressEvent) error {
 	}
 
 	// Not sending evaluation message is a fatal error
-	err = mqueue.WriteEvents(context.Background(), evalWriter, mqueue.PlatformEvent{ID: sys.InventoryID})
+	err = mqueue.WriteEvents(base.Context, evalWriter, mqueue.PlatformEvent{ID: sys.InventoryID})
 	if err != nil {
 		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorKafkaSend)
 		return err

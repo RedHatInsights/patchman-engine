@@ -2,6 +2,7 @@
 package mqueue
 
 import (
+	"app/base"
 	"app/base/utils"
 	"context"
 	"github.com/lestrrat-go/backoff"
@@ -73,7 +74,7 @@ func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 		var err error
 		var attempt int
 
-		backoffState, cancel := policy.Start(context.Background())
+		backoffState, cancel := policy.Start(base.Context)
 		defer cancel()
 		for backoff.Continue(backoffState) {
 			if err = handler(message); err == nil {
@@ -87,10 +88,8 @@ func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 }
 
 func (t *readerImpl) HandleMessages(handler MessageHandler) {
-	ctx := context.Background()
-
 	for {
-		m, err := t.FetchMessage(ctx)
+		m, err := t.FetchMessage(base.Context)
 		if err != nil {
 			utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
 			panic(err)
@@ -99,7 +98,7 @@ func (t *readerImpl) HandleMessages(handler MessageHandler) {
 		if err = handler(m); err != nil {
 			utils.Log("err", err.Error()).Panic("Handler failed")
 		}
-		err = t.CommitMessages(ctx, m)
+		err = t.CommitMessages(base.Context, m)
 		if err != nil {
 			utils.Log("err", err.Error()).Error("unable to commit kafka message")
 			panic(err)
