@@ -15,6 +15,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
+	"strings"
 	"time"
 )
 
@@ -318,7 +319,12 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 
 	updatesReq.RepositoryList = make([]string, 0, len(systemProfile.YumRepos))
 	for _, r := range systemProfile.YumRepos {
-		if r.Enabled && len(r.Id) > 0 {
+		if r.Enabled && len(strings.TrimSpace(r.Id)) == 0 {
+			utils.Log("repo", r.Id).Warn("removed repo with invalid name")
+			continue
+		}
+
+		if r.Enabled {
 			updatesReq.RepositoryList = append(updatesReq.RepositoryList, r.Id)
 		}
 	}
