@@ -124,20 +124,28 @@ func TestMarkSystemsNotStale(t *testing.T) {
 	}
 }
 
+func TestInitCullSystems(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	utils.TestLoadEnv("conf/test.env")
+	core.SetupTestEnvironment()
+
+	assert.NoError(t, database.Db.Create(&models.SystemPlatform{
+		InventoryID:     "DEL-1",
+		RhAccountID:     1,
+		DisplayName:     "DEL-1",
+		CulledTimestamp: &staleDate,
+	}).Error)
+	utils.TestLoadEnv("conf/vmaas_sync.env")
+}
+
 func TestCullSystems(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	var systems []models.SystemPlatform
 	var cnt int
 	var cntAfter int
 	database.DebugWithCachesCheck("delete-culled", func() {
 		assert.NoError(t, database.Db.Model(&models.SystemPlatform{}).Count(&cnt).Error)
-
-		assert.NoError(t, database.Db.Model(&models.SystemPlatform{}).Order("id DESC").Find(&systems).Error)
-		systems[0].CulledTimestamp = &staleDate
-		assert.NoError(t, database.Db.Model(&models.SystemPlatform{}).Save(&systems[0]).Error)
-
 		assert.NoError(t, database.Db.Exec("select * from delete_culled_systems()").Error)
 		assert.NoError(t, database.Db.Model(&models.SystemPlatform{}).Count(&cntAfter).Error)
 		assert.Equal(t, cnt-1, cntAfter)
