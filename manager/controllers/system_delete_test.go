@@ -22,7 +22,6 @@ func TestInitDelete(t *testing.T) {
 		DisplayName: "DEL-1",
 	}).Error)
 	utils.TestLoadEnv("conf/manager.env")
-	core.SetupTestEnvironment()
 }
 
 func TestSystemDelete(t *testing.T) {
