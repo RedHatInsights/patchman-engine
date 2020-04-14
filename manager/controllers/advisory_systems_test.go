@@ -56,7 +56,7 @@ func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
 	assert.Equal(t, 3, len(output.Data))
 	assert.Equal(t, "INV-6", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
-	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
+	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
 	assert.Equal(t, true, output.Data[0].Attributes.Enabled)
 	assert.Equal(t, 0, output.Data[0].Attributes.RhsaCount)
 	assert.Equal(t, 1, output.Data[0].Attributes.RheaCount)
