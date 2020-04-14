@@ -7,6 +7,7 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"time"
@@ -116,6 +117,13 @@ func getSystemCounts() (optOuted, notOptOuted int, err error) {
 		return 0, 0, errors.Wrap(err, "unable to get not opt_outed systems")
 	}
 	return optOuted, notOptOuted, nil
+}
+
+func updateSystemsQueryLastUpload(systemsQuery *gorm.DB, refTime time.Time, lastNDays int) *gorm.DB {
+	if lastNDays >= 0 {
+		return systemsQuery.Where("last_upload > ?", refTime.AddDate(0, 0, -lastNDays))
+	}
+	return systemsQuery
 }
 
 func updateAdvisoryMetrics() {
