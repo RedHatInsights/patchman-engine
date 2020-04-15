@@ -5,6 +5,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // postgres database is used
 	_ "github.com/golang-migrate/migrate/v4/source/file"       // we load migrations from local folder
+	"os"
 )
 
 func MigrateUp(sourceURL, databaseURL string) {
@@ -21,7 +22,8 @@ func MigrateUp(sourceURL, databaseURL string) {
 	}
 
 	if err != nil {
-		panic(err)
+		// Don't panic on error, Log and keep the container running so we can diagnose it
+		fmt.Fprintf(os.Stderr, "Error upgrading the database: %v", err.Error())
 	}
 }
 
