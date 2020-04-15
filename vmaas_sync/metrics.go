@@ -121,6 +121,10 @@ func getSystemCounts() (optOuted, notOptOuted int, err error) {
 	return optOuted, notOptOuted, nil
 }
 
+func updateSystemsQueryOptOut(systemsQuery *gorm.DB, optOut bool) *gorm.DB {
+	return systemsQuery.Where("opt_out = ?", optOut)
+}
+
 func updateSystemsQueryLastUpload(systemsQuery *gorm.DB, refTime time.Time, lastNDays int) *gorm.DB {
 	if lastNDays >= 0 {
 		return systemsQuery.Where("last_upload > ?", refTime.AddDate(0, 0, -lastNDays))
