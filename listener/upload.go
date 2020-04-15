@@ -91,7 +91,7 @@ func uploadHandler(event HostEgressEvent) error {
 	if err != nil {
 		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorProcessUpload)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
-		return err
+		return errors.Wrap(err, "Could not process upload")
 	}
 
 	if sys.UnchangedSince != nil && sys.LastEvaluation != nil {
@@ -106,7 +106,7 @@ func uploadHandler(event HostEgressEvent) error {
 	err = mqueue.WriteEvents(base.Context, evalWriter, mqueue.PlatformEvent{ID: sys.InventoryID})
 	if err != nil {
 		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorKafkaSend)
-		return err
+		return errors.Wrap(err, "Could send eval message")
 	}
 
 	messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
