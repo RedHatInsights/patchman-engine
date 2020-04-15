@@ -6,11 +6,21 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"time"
+)
+
+const (
+	optOutOn          = "on"
+	optOutOff         = "off"
+	lastUploadLast1D  = "last1D"
+	lastUploadLast7D  = "last7D"
+	lastUploadLast30D = "last30D"
+	lastUploadAll     = "all"
 )
 
 var (
@@ -38,7 +48,7 @@ var (
 		Namespace: "patchman_engine",
 		Subsystem: "vmaas_sync",
 		Name:      "systems",
-	}, []string{"type"})
+	}, []string{"opt_out", "last_upload"})
 
 	advisoriesCnt = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "patchman_engine",
@@ -97,32 +107,52 @@ func update() {
 }
 
 func updateSystemMetrics() {
-	optOuted, notOptOuted, err := getSystemCounts()
+	counts, err := getSystemCounts(time.Now())
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to update system metrics")
+		return
 	}
-	systemsCnt.WithLabelValues("opt_out_on").Set(float64(optOuted))
-	systemsCnt.WithLabelValues("opt_out_off").Set(float64(notOptOuted))
+
+	for labels, count := range counts {
+		systemsCnt.WithLabelValues(labels.OptOut, labels.LastUpload).Set(float64(count))
+	}
 }
 
-func getSystemCounts() (optOuted, notOptOuted int, err error) {
+type systemsCntLabels struct {
+	OptOut     string
+	LastUpload string
+}
+
+// Load stored systems counts according to "opt_out" and "last_upload" properties.
+// Result is loaded into the map {"opt_out_on:last1D": 12, "opt_out_off:last1D": 3, ...}.
+func getSystemCounts(refTime time.Time) (map[systemsCntLabels]int, error) {
 	systemsQuery := database.Db.Model(&models.SystemPlatform{})
-	err = systemsQuery.Where("opt_out = true").Count(&optOuted).Error
-	if err != nil {
-		return 0, 0, errors.Wrap(err, "unable to get metric opt_outed systems")
+	optOutKV := map[string]bool{optOutOn: true, optOutOff: false}
+	lastUploadKV := map[string]int{lastUploadLast1D: 1, lastUploadLast7D: 7, lastUploadLast30D: 30, lastUploadAll: -1}
+	counts := map[systemsCntLabels]int{}
+	for optOutK, optOutV := range optOutKV {
+		systemsQueryOptOut := updateSystemsQueryOptOut(systemsQuery, optOutV)
+		for lastUploadK, lastUploadV := range lastUploadKV {
+			systemsQueryOptOutLastUpload := updateSystemsQueryLastUpload(systemsQueryOptOut, refTime, lastUploadV)
+			var nSystems int
+			err := systemsQueryOptOutLastUpload.Count(&nSystems).Error
+			if err != nil {
+				return nil, errors.Wrap(err, "unable to load systems counts: "+
+					fmt.Sprintf("opt_out: %v, last_upload_before_days: %v", optOutV, lastUploadV))
+			}
+			counts[systemsCntLabels{optOutK, lastUploadK}] = nSystems
+		}
 	}
-
-	err = systemsQuery.Where("opt_out = false").Count(&notOptOuted).Error
-	if err != nil {
-		return 0, 0, errors.Wrap(err, "unable to get not opt_outed systems")
-	}
-	return optOuted, notOptOuted, nil
+	return counts, nil
 }
 
+// Update input systems query with "opt_out = X" constraint.
 func updateSystemsQueryOptOut(systemsQuery *gorm.DB, optOut bool) *gorm.DB {
 	return systemsQuery.Where("opt_out = ?", optOut)
 }
 
+// Update input systems query with "last_upload > T" constraint.
+// Constraint is not added if "lastNDays" argument is negative.
 func updateSystemsQueryLastUpload(systemsQuery *gorm.DB, refTime time.Time, lastNDays int) *gorm.DB {
 	if lastNDays >= 0 {
 		return systemsQuery.Where("last_upload > ?", refTime.AddDate(0, 0, -lastNDays))
