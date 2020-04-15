@@ -20,6 +20,19 @@ func TestSystemsCounts(t *testing.T) {
 	assert.Equal(t, 12, notOptOuted)
 }
 
+func TestSystemsCountsOptOut(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	systemsQuery := database.Db.Model(models.SystemPlatform{})
+	var optOuted int
+	var notOptOuted int
+	assert.Nil(t, updateSystemsQueryOptOut(systemsQuery, true).Count(&optOuted).Error)
+	assert.Nil(t, updateSystemsQueryOptOut(systemsQuery, false).Count(&notOptOuted).Error)
+	assert.Equal(t, 0, optOuted)
+	assert.Equal(t, 12, notOptOuted)
+}
+
 func TestUploadedSystemsCounts1D(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
