@@ -30,3 +30,6 @@ psql -c "ALTER USER listener WITH PASSWORD '${LISTENER_PASSWORD}'"
 psql -c "ALTER USER evaluator WITH PASSWORD '${EVALUATOR_PASSWORD}'"
 psql -c "ALTER USER manager WITH PASSWORD '${MANAGER_PASSWORD}'"
 psql -c "ALTER USER vmaas_sync WITH PASSWORD '${VMAAS_SYNC_PASSWORD}'"
+
+echo "Setting database config"
+psql -f './database_admin/config.sql'
