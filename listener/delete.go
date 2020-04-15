@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -36,7 +37,7 @@ func deleteHandler(event mqueue.PlatformEvent) error {
 	if err != nil {
 		utils.Log("inventoryID", event.ID, "err", err.Error()).Error("Could not delete system")
 		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorProcessing).Inc()
-		return err
+		return errors.Wrap(err, "Could not delete system")
 	}
 
 	if query.RowsAffected == 0 {
