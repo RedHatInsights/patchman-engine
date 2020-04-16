@@ -3,6 +3,7 @@ package listener
 import (
 	"app/base/mqueue"
 	"app/base/utils"
+	"sync"
 )
 
 var (
@@ -23,7 +24,7 @@ func configure() {
 	evalWriter = mqueue.WriterFromEnv(evalTopic)
 }
 
-func runReaders(readerBuilder mqueue.CreateReader) {
+func runReaders(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 	utils.Log().Info("listener starting")
 
 	// Start a web server for handling metrics so that readiness probe works
@@ -34,12 +35,14 @@ func runReaders(readerBuilder mqueue.CreateReader) {
 	// We create multiple consumers, and hope that the partition rebalancing
 	// algorithm assigns each consumer a single partition
 	for i := 0; i < consumerCount; i++ {
-		go mqueue.RunReader(uploadTopic, readerBuilder, mqueue.MakeRetryingHandler(uploadMsgHandler))
-		go mqueue.RunReader(eventsTopic, readerBuilder, mqueue.MakeRetryingHandler(DeleteMessageHandler))
+		mqueue.RunReader(wg, uploadTopic, readerBuilder, mqueue.MakeRetryingHandler(uploadMsgHandler))
+		mqueue.RunReader(wg, eventsTopic, readerBuilder, mqueue.MakeRetryingHandler(DeleteMessageHandler))
 	}
 }
 
 func RunListener() {
-	runReaders(mqueue.ReaderFromEnv)
-	<-make(chan bool)
+	var wg sync.WaitGroup
+	runReaders(&wg, mqueue.ReaderFromEnv)
+	wg.Wait()
+	utils.Log().Info("listener completed")
 }

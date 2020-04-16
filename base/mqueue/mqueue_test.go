@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
+	"sync"
 	"testing"
 	"time"
 )
@@ -49,7 +50,10 @@ func TestRoundTrip(t *testing.T) {
 
 func TestRunReader(t *testing.T) {
 	nReaders := 0
-	RunReader("", CreateCountedMockReader(&nReaders), MakeMessageHandler(func(event PlatformEvent) error { return nil }))
+	wg := sync.WaitGroup{}
+	RunReader(&wg, "", CreateCountedMockReader(&nReaders),
+		MakeMessageHandler(func(event PlatformEvent) error { return nil }))
+	wg.Wait()
 	assert.Equal(t, 1, nReaders)
 }
 

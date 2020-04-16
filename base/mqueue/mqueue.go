@@ -8,8 +8,11 @@ import (
 	"github.com/lestrrat-go/backoff"
 	"github.com/segmentio/kafka-go"
 	"io"
+	"sync"
 	"time"
 )
+
+const errContextCanceled = "context canceled"
 
 // By wrapping raw value we can add new methods & ensure methods of wrapped type are callable
 type Reader interface {
@@ -91,6 +94,9 @@ func (t *readerImpl) HandleMessages(handler MessageHandler) {
 	for {
 		m, err := t.FetchMessage(base.Context)
 		if err != nil {
+			if err.Error() == errContextCanceled {
+				break
+			}
 			utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
 			panic(err)
 		}
@@ -100,6 +106,9 @@ func (t *readerImpl) HandleMessages(handler MessageHandler) {
 		}
 		err = t.CommitMessages(base.Context, m)
 		if err != nil {
+			if err.Error() == errContextCanceled {
+				break
+			}
 			utils.Log("err", err.Error()).Error("unable to commit kafka message")
 			panic(err)
 		}
@@ -108,9 +117,13 @@ func (t *readerImpl) HandleMessages(handler MessageHandler) {
 
 type CreateReader func(topic string) Reader
 
-func RunReader(topic string, createReader CreateReader, msgHandler MessageHandler) {
-	defer utils.LogPanicsAndExit()
-	reader := createReader(topic)
-	defer reader.Close()
-	reader.HandleMessages(msgHandler)
+func RunReader(wg *sync.WaitGroup, topic string, createReader CreateReader, msgHandler MessageHandler) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer utils.LogPanicsAndExit()
+		reader := createReader(topic)
+		defer reader.Close()
+		reader.HandleMessages(msgHandler)
+	}()
 }

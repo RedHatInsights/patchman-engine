@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
@@ -261,7 +262,9 @@ func deleteAdvisories(t *testing.T, advisories []string) {
 
 func TestRun(t *testing.T) {
 	nReaders := 0
-	run(mqueue.CreateCountedMockReader(&nReaders))
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	run(&wg, mqueue.CreateCountedMockReader(&nReaders))
 	time.Sleep(time.Millisecond * 300)
 	assert.Equal(t, 8, nReaders)
 }
