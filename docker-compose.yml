@@ -105,8 +105,6 @@ services:
       - ./conf/evaluator_common.env
       - ./conf/evaluator_upload.env
     command: ./scripts/entrypoint.sh evaluator
-    environment:
-      - GORUN=on
     ports:
       - 8082:8082
     depends_on:
