@@ -24,11 +24,11 @@ func init() {
 
 func HandleSignals() {
 	c := make(chan os.Signal)
-	signal.Notify(c, syscall.SIGTERM)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-c
 		CancelContext()
-		utils.Log().Info("SIGTERM handled")
+		utils.Log().Info("SIGTERM/SIGINT handled")
 	}()
 }
 
