@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/RedHatInsights/patchman-clients/inventory"
+	"math/rand"
 )
 
 var pkgs = []string{
@@ -27,10 +28,13 @@ var pkgs = []string{
 	"libbonobo-2.24.2-5.el6.i686"}
 
 // Create bare system profile
-func makeSystemProfile(id string) inventory.SystemProfileIn {
+func makeSystemProfile(id string, randomPkgs bool) inventory.SystemProfileIn {
 	_pkgs := pkgs
 	if id == "TEST-NO-PKGS" {
 		_pkgs = []string{}
+	} else if randomPkgs {
+		nPkgs := rand.Intn(len(pkgs))
+		_pkgs = pkgs[0:nPkgs]
 	}
 
 	return inventory.SystemProfileIn{
