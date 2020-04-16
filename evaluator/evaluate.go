@@ -13,6 +13,7 @@ import (
 	"github.com/antihax/optional"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"sync"
 	"time"
 )
 
@@ -442,7 +443,7 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 	return nil
 }
 
-func run(readerBuilder mqueue.CreateReader) {
+func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 	utils.Log().Info("evaluator starting")
 	configure()
 
@@ -452,11 +453,13 @@ func run(readerBuilder mqueue.CreateReader) {
 	// We create multiple consumers, and hope that the partition rebalancing
 	// algorithm assigns each consumer a single partition
 	for i := 0; i < consumerCount; i++ {
-		go mqueue.RunReader(evalTopic, readerBuilder, handler)
+		mqueue.RunReader(wg, evalTopic, readerBuilder, handler)
 	}
 }
 
 func RunEvaluator() {
-	run(mqueue.ReaderFromEnv)
-	<-make(chan bool)
+	var wg sync.WaitGroup
+	run(&wg, mqueue.ReaderFromEnv)
+	wg.Wait()
+	utils.Log().Info("evaluator completed")
 }
