@@ -6,6 +6,7 @@ import (
 	"app/base/utils"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/gorilla/websocket"
+	"os"
 	"time"
 )
 
@@ -102,7 +103,21 @@ func websocketHandler(data []byte, _ *websocket.Conn) error {
 	return nil
 }
 
+func handleContextCancel(fn func()) {
+	go func() {
+		<-base.Context.Done()
+		utils.Log().Info("stopping vmaas_sync")
+		fn()
+	}()
+}
+
+func waitAndExit() {
+	time.Sleep(time.Second) // give some time to close eventual db connections
+	os.Exit(0)
+}
+
 func RunVmaasSync() {
+	handleContextCancel(waitAndExit)
 	configure()
 
 	go RunMetrics()
@@ -113,7 +128,8 @@ func RunVmaasSync() {
 
 	// Continually try to reconnect
 	for {
-		conn, _, err := websocket.DefaultDialer.Dial(utils.GetenvOrFail("VMAAS_WS_ADDRESS"), nil)
+		conn, _, err := websocket.DefaultDialer.DialContext(base.Context,
+			utils.GetenvOrFail("VMAAS_WS_ADDRESS"), nil)
 		if err != nil {
 			utils.Log("err", err.Error()).Fatal("Failed to connect to VMaaS")
 		}
