@@ -453,7 +453,7 @@ func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 	// We create multiple consumers, and hope that the partition rebalancing
 	// algorithm assigns each consumer a single partition
 	for i := 0; i < consumerCount; i++ {
-		mqueue.RunReader(wg, evalTopic, readerBuilder, handler)
+		mqueue.SpawnReader(wg, evalTopic, readerBuilder, handler)
 	}
 }
 

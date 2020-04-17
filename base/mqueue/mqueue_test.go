@@ -48,10 +48,10 @@ func TestRoundTrip(t *testing.T) {
 	assert.Equal(t, eventIn, eventOut)
 }
 
-func TestRunReader(t *testing.T) {
+func TestSpawnReader(t *testing.T) {
 	nReaders := 0
 	wg := sync.WaitGroup{}
-	RunReader(&wg, "", CreateCountedMockReader(&nReaders),
+	SpawnReader(&wg, "", CreateCountedMockReader(&nReaders),
 		MakeMessageHandler(func(event PlatformEvent) error { return nil }))
 	wg.Wait()
 	assert.Equal(t, 1, nReaders)

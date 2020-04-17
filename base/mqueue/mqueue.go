@@ -117,13 +117,15 @@ func (t *readerImpl) HandleMessages(handler MessageHandler) {
 
 type CreateReader func(topic string) Reader
 
-func RunReader(wg *sync.WaitGroup, topic string, createReader CreateReader, msgHandler MessageHandler) {
+func runReader(wg *sync.WaitGroup, topic string, createReader CreateReader, msgHandler MessageHandler) {
+	defer wg.Done()
+	defer utils.LogPanicsAndExit()
+	reader := createReader(topic)
+	defer reader.Close()
+	reader.HandleMessages(msgHandler)
+}
+
+func SpawnReader(wg *sync.WaitGroup, topic string, createReader CreateReader, msgHandler MessageHandler) {
 	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer utils.LogPanicsAndExit()
-		reader := createReader(topic)
-		defer reader.Close()
-		reader.HandleMessages(msgHandler)
-	}()
+	go runReader(wg, topic, createReader, msgHandler)
 }
