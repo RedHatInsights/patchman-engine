@@ -25,6 +25,8 @@ const (
 	ErrorProcessUpload     = "unable to process upload"
 	UploadSuccessNoEval    = "upload event handled successfully, no eval required"
 	UploadSuccess          = "upload event handled successfully"
+
+	DeletionThreshold = 4 * time.Hour
 )
 
 type Host struct {
@@ -92,6 +94,12 @@ func uploadHandler(event HostEgressEvent) error {
 		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorProcessUpload)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
 		return errors.Wrap(err, "Could not process upload")
+	}
+
+	// Deleted system, return nil
+	if sys == nil {
+		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedDeleted).Inc()
+		return nil
 	}
 
 	if sys.UnchangedSince != nil && sys.LastEvaluation != nil {
@@ -333,14 +341,27 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 	}
 
 	tx := database.Db.BeginTx(base.Context, nil)
+	defer tx.RollbackUnlessCommitted()
+
+	var deleted models.DeletedSystem
+	if err := tx.Find(&deleted, "inventory_id = ?", host.ID).Error; err != nil &&
+		!gorm.IsRecordNotFoundError(err) {
+		return nil, errors.Wrap(err, "Checking deleted systems")
+	}
+
+	// If the system was deleted in last hour, don't register this upload
+	if deleted.InventoryID != "" && deleted.WhenDeleted.After(time.Now().Add(-DeletionThreshold)) {
+		utils.Log("inventoryID", host.ID).Info("Received recently deleted system")
+		return nil, nil
+	}
+
 	sys, err := updateSystemPlatform(tx, host.ID, accountID, host, &updatesReq)
 	if err != nil {
-		tx.Rollback()
 		return nil, errors.Wrap(err, "saving system into the database")
 	}
 	err = tx.Commit().Error
 	if err != nil {
-		return nil, errors.Wrap(err, "saving system into the database")
+		return nil, errors.Wrap(err, "Committing changes")
 	}
 	return sys, nil
 }

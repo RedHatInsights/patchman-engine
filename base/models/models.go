@@ -42,6 +42,15 @@ func (SystemPlatform) TableName() string {
 	return "system_platform"
 }
 
+type DeletedSystem struct {
+	InventoryID string
+	WhenDeleted time.Time
+}
+
+func (DeletedSystem) TableName() string {
+	return "deleted_system"
+}
+
 type AdvisorySeverity struct {
 	ID   int
 	Name string

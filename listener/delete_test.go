@@ -2,6 +2,8 @@ package listener
 
 import (
 	"app/base/core"
+	"app/base/database"
+	"app/base/models"
 	"app/base/utils"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -59,4 +61,23 @@ func TestDeleteSystemWarn3(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, WarnNoRowsModified, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
+}
+
+func TestUploadAfterDelete(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	uploadEvent := createTestUploadEvent(id, true)
+	err := uploadHandler(uploadEvent)
+	assert.NoError(t, err)
+	assertSystemNotInDb(t)
+}
+
+func TestDeleteCleanup(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	assert.NoError(t, database.Db.Delete(&models.DeletedSystem{}).Error)
 }

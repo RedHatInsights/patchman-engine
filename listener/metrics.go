@@ -14,6 +14,7 @@ const (
 	EventDelete             = "delete"
 	ReceivedSuccess         = "success-eval"
 	ReceivedSuccessNoEval   = "success-unchanged"
+	ReceivedDeleted         = "success-deleted"
 	ReceivedErrorIdentity   = "error-identity"
 	ReceivedErrorParsing    = "error-parsing"
 	ReceivedErrorProcessing = "error-processing"
