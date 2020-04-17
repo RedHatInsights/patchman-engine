@@ -1,12 +1,16 @@
 package vmaas_sync //nolint:golint,stylecheck
+
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"context"
 	"github.com/segmentio/kafka-go"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 	"time"
 )
@@ -40,4 +44,17 @@ func TestSync(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, time.Now().Year(), ts.Year())
 	resetLastEvalTimestamp(t)
+}
+
+func TestHandleContextCancel(t *testing.T) {
+	assert.Nil(t, os.Setenv("LOG_STYLE", "json"))
+	utils.ConfigureLogging()
+
+	var hook = utils.NewTestLogHook()
+	log.AddHook(hook)
+
+	handleContextCancel(func() {})
+	base.CancelContext()
+	time.Sleep(time.Millisecond)
+	assert.Equal(t, "stopping vmaas_sync", hook.LogEntries[0].Message)
 }
