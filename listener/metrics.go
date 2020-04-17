@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/utils"
 	"app/manager/middlewares"
@@ -49,7 +50,7 @@ func RunMetrics() {
 	core.InitProbes(app)
 	middlewares.Prometheus().Use(app)
 
-	err := app.Run(":8081")
+	err := utils.RunServer(base.Context, app, ":8081")
 	if err != nil {
 		utils.Log("err", err.Error()).Error()
 		panic(err)
