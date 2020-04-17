@@ -1,6 +1,7 @@
 package vmaas_sync //nolint:golint,stylecheck
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/utils"
 	"github.com/gin-gonic/gin"
@@ -13,7 +14,7 @@ func runDebugAPI() {
 	app.GET("/re-calc", recalc)
 	app.GET("/check-caches", checkCaches)
 
-	err := app.Run(":9999")
+	err := utils.RunServer(base.Context, app, ":9999")
 	if err != nil {
 		utils.Log("err", err.Error()).Error()
 		panic(err)

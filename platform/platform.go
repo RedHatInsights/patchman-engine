@@ -28,7 +28,7 @@ func platformMock() {
 	app.POST("/control/delete", MockDeleteHandler)
 	app.POST("/control/sync", MockSyncHandler)
 
-	err := app.Run(":9001")
+	err := utils.RunServer(base.Context, app, ":9001")
 	if err != nil {
 		panic(err)
 	}

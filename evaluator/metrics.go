@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/utils"
 	"app/manager/middlewares"
@@ -42,7 +43,7 @@ func RunMetrics(port string) {
 	core.InitProbes(app)
 	middlewares.Prometheus().Use(app)
 
-	err := app.Run(":" + port)
+	err := utils.RunServer(base.Context, app, ":"+port)
 	if err != nil {
 		utils.Log("err", err.Error()).Error()
 		panic(err)
