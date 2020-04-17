@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"net/http"
 	"strconv"
 )
 
@@ -49,4 +51,23 @@ func LoadLimitOffset(c *gin.Context, defaultLimit int) (int, int, error) {
 
 type ErrorResponse struct {
 	Error string `json:"error"`
+}
+
+func RunServer(ctx context.Context, handler http.Handler, addr string) error {
+	srv := http.Server{Addr: addr, Handler: handler}
+	go func() {
+		<-ctx.Done()
+		err := srv.Shutdown(context.Background())
+		if err != nil {
+			Log("err", err.Error()).Error("server shutting down failed")
+			return
+		}
+		Log().Info("server closed successfully")
+	}()
+
+	err := srv.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		return errors.Wrap(err, "server listening failed")
+	}
+	return nil
 }

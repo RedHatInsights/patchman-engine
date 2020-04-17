@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/utils"
 	"app/manager/middlewares"
@@ -36,9 +37,10 @@ func RunManager() {
 	api := app.Group("/api/patch/v1")
 	routes.InitAPI(api)
 
-	err := app.Run(":8080")
+	err := utils.RunServer(base.Context, app, ":8080")
 	if err != nil {
-		utils.Log("err", err.Error()).Error()
+		utils.Log("err", err.Error()).Fatal("server listening failed")
 		panic(err)
 	}
+	utils.Log().Info("manager completed")
 }
