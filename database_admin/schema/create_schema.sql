@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (19, false);
+VALUES (20, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -501,6 +501,20 @@ GRANT UPDATE (advisory_count_cache,
 
 -- VMaaS sync needs to be able to perform system culling tasks
 GRANT SELECT, UPDATE, DELETE ON system_platform to vmaas_sync;
+
+
+CREATE TABLE IF NOT EXISTS deleted_system
+(
+    inventory_id TEXT                     NOT NULL,
+    CHECK (NOT empty(inventory_id)),
+    when_deleted TIMESTAMP WITH TIME ZONE NOT NULL,
+    UNIQUE (inventory_id)
+) TABLESPACE pg_default;
+
+CREATE INDEX ON deleted_system (when_deleted);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON deleted_system TO listener;
+
 
 -- advisory_type
 CREATE TABLE IF NOT EXISTS advisory_type

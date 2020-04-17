@@ -1,6 +1,7 @@
 DELETE FROM system_advisories;
 DELETE FROM system_repo;
 DELETE FROM system_platform;
+DELETE FROM deleted_system;
 DELETE FROM repo;
 DELETE FROM timestamp_kv;
 DELETE FROM advisory_account_data;
