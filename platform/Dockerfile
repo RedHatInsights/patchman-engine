@@ -21,7 +21,7 @@ WORKDIR /go/src/app
 RUN go mod download
 
 RUN mkdir kafka && \
-    curl https://downloads.apache.org/kafka/2.2.0/kafka_2.12-2.2.0.tgz \
+    curl https://downloads.apache.org/kafka/2.2.2/kafka_2.12-2.2.2.tgz \
     | tar -xz --strip-components=1 -C kafka/
 
 ADD /base           /go/src/app/base
