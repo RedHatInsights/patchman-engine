@@ -6,6 +6,7 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/segmentio/kafka-go"
@@ -83,7 +84,10 @@ func TestUploadHandler(t *testing.T) {
 
 	_ = getOrCreateTestAccount(t)
 	event := createTestUploadEvent(id, true)
-	err := uploadHandler(event)
+	data, err := json.Marshal(event)
+	assert.NoError(t, err)
+
+	err = uploadMsgHandler(kafka.Message{Topic: "_", Value: data})
 	assert.NoError(t, err)
 
 	assertSystemInDb(t, id, nil)

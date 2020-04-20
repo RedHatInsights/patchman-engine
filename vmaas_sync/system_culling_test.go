@@ -13,6 +13,13 @@ import (
 
 var staleDate, _ = time.Parse(base.Rfc3339NoTz, "2006-01-02T15:04:05-07:00")
 
+func TestExecSystemCulling(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	assert.NoError(t, performCulling())
+}
+
 func TestSingleSystemStale(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()

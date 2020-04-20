@@ -16,6 +16,29 @@ var defaultValues = TestTableSlice{
 	{Name: "M", Email: "N"},
 }
 
+// Bulk insert should only accept slices not raw values
+func TestBatchInsertTypes(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	Configure()
+	values := []interface{}{0, "", &defaultValues[0]}
+
+	for _, v := range values {
+		assert.Error(t, BulkInsert(Db, v))
+	}
+
+	for _, v := range values {
+		assert.Error(t, BulkInsertChunk(Db, v, 10)[0])
+	}
+
+	arr := []TestTable{}
+	assert.Error(t, BulkInsert(Db, &arr))
+	assert.Error(t, BulkInsertChunk(Db, &arr, 10)[0])
+
+	wrongTypeArr := []int{0}
+	assert.Error(t, BulkInsert(Db, &wrongTypeArr))
+	assert.Error(t, BulkInsertChunk(Db, &wrongTypeArr, 10)[0])
+}
+
 func TestBatchInsert(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
