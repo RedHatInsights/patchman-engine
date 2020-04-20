@@ -72,8 +72,10 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 			continue
 		}
 		var severityID *int
-		if id, has := severities[strings.ToLower(v.Severity)]; has {
-			severityID = &id
+		if v.Severity != nil {
+			if id, has := severities[strings.ToLower(*v.Severity)]; has {
+				severityID = &id
+			}
 		}
 
 		advisory := models.AdvisoryMetadata{
