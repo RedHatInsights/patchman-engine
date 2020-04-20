@@ -212,6 +212,7 @@
                             "type": "string",
                             "enum": [
                                 "id",
+                                "display_name",
                                 "last_evaluation",
                                 "last_upload",
                                 "rhsa_count",
@@ -224,6 +225,14 @@
                     },
                     {
                         "name": "filter[id]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[display_name]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -336,6 +345,7 @@
                             "type": "string",
                             "enum": [
                                 "id",
+                                "display_name",
                                 "last_evaluation",
                                 "last_upload",
                                 "rhsa_count",
@@ -348,6 +358,14 @@
                     },
                     {
                         "name": "filter[id]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[display_name]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -884,6 +902,9 @@
             "controllers.SystemItemAttributes": {
                 "type": "object",
                 "properties": {
+                    "display_name": {
+                        "type": "string"
+                    },
                     "enabled": {
                         "type": "boolean"
                     },

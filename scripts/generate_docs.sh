@@ -5,7 +5,7 @@ DOCS_TMP_DIR=/tmp
 CONVERT_URL="https://converter.swagger.io/api/convert"
 
 # Create temporary swagger 2.0 definition
-swag init -o $DOCS_TMP_DIR -g manager.go -d manager
+swag init --output $DOCS_TMP_DIR --generalInfo manager.go --dir manager
 
 # We can run the converter container ourelves if we want to
 #PID=$(docker run -d -p 28080:8080 --name swagger-converter swaggerapi/swagger-converter:v1.0.2)
