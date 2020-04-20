@@ -10,13 +10,16 @@ import (
 
 var SystemsFields = database.MustGetQueryAttrs(&SystemDBLookup{})
 var SystemsSelect = database.MustGetSelect(&SystemDBLookup{})
-
-// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
-var systemsDefaultFilter = map[string]FilterData{
-	"stale": {
-		Operator: "eq",
-		Values:   []string{"false"},
+var SystemOpts = ListOpts{
+	Fields: SystemsFields,
+	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
+	DefaultFilters: map[string]FilterData{
+		"stale": {
+			Operator: "eq",
+			Values:   []string{"false"},
+		},
 	},
+	DefaultSort: "-last_upload",
 }
 
 type SystemDBLookup struct {
@@ -76,7 +79,7 @@ func SystemsListHandler(c *gin.Context) {
 		Where("ra.name = ?", account)
 
 	query = ApplySearch(c, query, "system_platform.display_name")
-	query, meta, links, err := ListCommon(query, c, "/api/patch/v1/systems", SystemsFields, systemsDefaultFilter)
+	query, meta, links, err := ListCommon(query, c, "/api/patch/v1/systems", SystemOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return

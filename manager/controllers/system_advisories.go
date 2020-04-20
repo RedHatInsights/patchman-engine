@@ -14,6 +14,11 @@ import (
 
 var SystemAdvisoriesFields = database.MustGetQueryAttrs(&SystemAdvisoriesDBLookup{})
 var SystemAdvisoriesSelect = database.MustGetSelect(&SystemAdvisoriesDBLookup{})
+var SystemAdvisoriesOpts = ListOpts{
+	Fields:         SystemAdvisoriesFields,
+	DefaultFilters: nil,
+	DefaultSort:    "id",
+}
 
 type SystemAdvisoriesDBLookup struct {
 	ID string `query:"am.name"`
@@ -88,7 +93,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 
 	query = ApplySearch(c, query, "am.name", "am.synopsis", "am.description")
 	path := fmt.Sprintf("/api/patch/v1/systems/%v/advisories", inventoryID)
-	query, meta, links, err := ListCommon(query, c, path, SystemAdvisoriesFields, nil)
+	query, meta, links, err := ListCommon(query, c, path, SystemAdvisoriesOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return

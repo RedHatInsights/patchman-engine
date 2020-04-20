@@ -31,8 +31,9 @@ func LogAndRespNotFound(c *gin.Context, err error, respMsg string) {
 }
 
 // nolint: prealloc
-func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap) (*gorm.DB, []string, error) {
-	query := c.DefaultQuery("sort", "id")
+func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
+	defaultSort string) (*gorm.DB, []string, error) {
+	query := c.DefaultQuery("sort", defaultSort)
 	fields := strings.Split(query, ",")
 	var appliedFields []string
 	allowedFieldSet := map[string]bool{
@@ -85,28 +86,33 @@ func ParseFilters(c *gin.Context, allowedFields database.AttrMap,
 	return filters, nil
 }
 
+type ListOpts struct {
+	Fields         database.AttrMap
+	DefaultFilters map[string]FilterData
+	DefaultSort    string
+}
+
 // nolint: funlen
-func ListCommon(tx *gorm.DB, c *gin.Context, path string, fields database.AttrMap,
-	defaultFilters map[string]FilterData) (*gorm.DB, *ListMeta, *Links, error) {
+func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts) (*gorm.DB, *ListMeta, *Links, error) {
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
 		return nil, nil, nil, err
 	}
 
-	tx, sortFields, err := ApplySort(c, tx, fields)
+	tx, sortFields, err := ApplySort(c, tx, opts.Fields, opts.DefaultSort)
 	if err != nil {
 		LogAndRespBadRequest(c, err, "Invalid sort")
 		return nil, nil, nil, err
 	}
 
-	filters, err := ParseFilters(c, fields, defaultFilters)
+	filters, err := ParseFilters(c, opts.Fields, opts.DefaultFilters)
 	if err != nil {
 		LogAndRespBadRequest(c, err, "Invalid filter")
 		return nil, nil, nil, err
 	}
 
-	tx, err = filters.Apply(tx, fields)
+	tx, err = filters.Apply(tx, opts.Fields)
 	if err != nil {
 		LogAndRespBadRequest(c, err, "Invalid filter")
 		return nil, nil, nil, err

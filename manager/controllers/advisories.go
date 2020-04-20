@@ -10,6 +10,11 @@ import (
 
 var AdvisoriesFields = database.MustGetQueryAttrs(&AdvisoriesDBLookup{})
 var AdvisoriesSelect = database.MustGetSelect(&AdvisoriesDBLookup{})
+var AdvisoriesOpts = ListOpts{
+	Fields:         AdvisoriesFields,
+	DefaultFilters: nil,
+	DefaultSort:    "id",
+}
 
 type AdvisoriesDBLookup struct {
 	ID string `query:"am.name"`
@@ -59,7 +64,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 	query := buildQueryAdvisories(account)
 
 	query = ApplySearch(c, query, "am.name", "synopsis", "description")
-	query, meta, links, err := ListCommon(query, c, "/api/patch/v1/advisories", AdvisoriesFields, nil)
+	query, meta, links, err := ListCommon(query, c, "/api/patch/v1/advisories", AdvisoriesOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return
