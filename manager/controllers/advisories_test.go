@@ -54,7 +54,7 @@ func TestAdvisoriesDefault(t *testing.T) {
 }
 
 func TestAdvisoriesOffsetLimit(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "?offset=0&limit=2", func(output AdvisoriesResponse) {
+	testAdvisoriesOk(t, "GET", "/?offset=0&limit=2", func(output AdvisoriesResponse) {
 		assert.Equal(t, 2, len(output.Data))
 		assert.Equal(t, 0, output.Meta.Offset)
 		assert.Equal(t, 2, output.Meta.Limit)
@@ -85,7 +85,7 @@ func TestAdvisoriesOffsetOverflow(t *testing.T) {
 }
 
 func TestAdvisoriesOrder(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "?sort=-public_date", func(output AdvisoriesResponse) {
+	testAdvisoriesOk(t, "GET", "/?sort=-public_date", func(output AdvisoriesResponse) {
 		// Advisory RH-7 has latest public date
 		assert.Equal(t, 8, len(output.Data))
 		assert.Equal(t, "RH-7", output.Data[0].ID)
@@ -98,7 +98,7 @@ func TestAdvisoriesOrder(t *testing.T) {
 }
 
 func TestAdvisoriesFilter(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "?filter[advisory_type]=1", func(output AdvisoriesResponse) {
+	testAdvisoriesOk(t, "GET", "/?filter[advisory_type]=1", func(output AdvisoriesResponse) {
 		assert.Equal(t, 3, len(output.Data))
 		assert.Equal(t, "RH-1", output.Data[0].ID)
 		assert.Equal(t, "RH-4", output.Data[1].ID)
@@ -109,12 +109,12 @@ func TestAdvisoriesFilter(t *testing.T) {
 		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25&filter[advisory_type]=eq:1&sort=id", output.Links.First)
 	})
 
-	testAdvisoriesOk(t, "GET", "?filter[applicable_systems]=gt:1", func(output AdvisoriesResponse) {
+	testAdvisoriesOk(t, "GET", "/?filter[applicable_systems]=gt:1", func(output AdvisoriesResponse) {
 		assert.Equal(t, 1, len(output.Data))
 		assert.Equal(t, "RH-1", output.Data[0].ID)
 	})
 
-	testAdvisoriesOk(t, "GET", "?filter[advisory_type]=in:1,2", func(output AdvisoriesResponse) {
+	testAdvisoriesOk(t, "GET", "/?filter[advisory_type]=in:1,2", func(output AdvisoriesResponse) {
 		assert.Equal(t, 6, len(output.Data))
 		assert.Equal(t, "RH-1", output.Data[0].ID)
 
@@ -155,7 +155,7 @@ func TestAdvisoriesWrongSort(t *testing.T) {
 
 //nolint:dupl
 func TestAdvisoriesSearch(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "?search=h-3", func(output AdvisoriesResponse) {
+	testAdvisoriesOk(t, "GET", "/?search=h-3", func(output AdvisoriesResponse) {
 		assert.Equal(t, 1, len(output.Data))
 		assert.Equal(t, "RH-3", output.Data[0].ID)
 		assert.Equal(t, "advisory", output.Data[0].Type)
@@ -178,7 +178,7 @@ func TestAdvisoriesSearch(t *testing.T) {
 }
 
 func TestAdvisoriesSearchFilter(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "?search=adv-3&filter[advisory_type]=1", func(output AdvisoriesResponse) {
+	testAdvisoriesOk(t, "GET", "/?search=adv-3&filter[advisory_type]=1", func(output AdvisoriesResponse) {
 		assert.Equal(t, 0, len(output.Data))
 	})
 }
