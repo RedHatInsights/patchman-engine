@@ -58,7 +58,7 @@ func erratasHandler(c *gin.Context) {
 		ErrataList: map[string]vmaas.ErrataResponseErrataList{
 			"ER1": {
 				Updated:       "2006-01-02T15:04:05+07:00",
-				Severity:      "",
+				Severity:      nil,
 				ReferenceList: []string{},
 				Issued:        "2006-01-02T15:04:05+07:00",
 				Description:   "Simple Errata",
@@ -73,7 +73,7 @@ func erratasHandler(c *gin.Context) {
 			},
 			"ER2": {
 				Updated:       "2006-01-02T15:04:05+07:00",
-				Severity:      "",
+				Severity:      nil,
 				ReferenceList: []string{},
 				Issued:        "2006-01-02T15:04:05+07:00",
 				Description:   "Simple Errata",
@@ -88,7 +88,7 @@ func erratasHandler(c *gin.Context) {
 			},
 			"ER3": {
 				Updated:       "2006-01-02T15:04:05+07:00",
-				Severity:      "",
+				Severity:      nil,
 				ReferenceList: []string{},
 				Issued:        "2006-01-02T15:04:05+07:00",
 				Description:   "Simple Errata",
