@@ -25,9 +25,9 @@ const (
 	ErrorProcessUpload     = "unable to process upload"
 	UploadSuccessNoEval    = "upload event handled successfully, no eval required"
 	UploadSuccess          = "upload event handled successfully"
-
-	DeletionThreshold = 4 * time.Hour
 )
+
+var DeletionThreshold = time.Hour * time.Duration(utils.GetIntEnvOrDefault("SYSTEM_DELETE_HRS", 4))
 
 type Host struct {
 	ID                    string                    `json:"id,omitempty"`
