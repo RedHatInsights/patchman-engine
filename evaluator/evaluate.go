@@ -73,7 +73,7 @@ func Evaluate(ctx context.Context, inventoryID string, evaluationType string) er
 	vmaasData, err := callVMaas(ctx, updatesReq)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-call-vmaas-updates").Inc()
-		return errors.New("vmaas API call failed")
+		return errors.Wrap(err, "vmaas API call failed")
 	}
 
 	err = evaluateAndStore(tx, system, *vmaasData)
