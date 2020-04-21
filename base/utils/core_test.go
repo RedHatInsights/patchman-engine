@@ -13,10 +13,7 @@ func TestRecoverAndLogPanics(t *testing.T) {
 	log.AddHook(logHook)
 
 	func() {
-		defer LogPanics(func() {
-
-		})
-
+		defer LogPanics(false)
 		panic("We crashed")
 	}()
 
