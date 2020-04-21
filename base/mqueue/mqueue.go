@@ -119,7 +119,7 @@ type CreateReader func(topic string) Reader
 
 func runReader(wg *sync.WaitGroup, topic string, createReader CreateReader, msgHandler MessageHandler) {
 	defer wg.Done()
-	defer utils.LogPanicsAndExit()
+	defer utils.LogPanics(true)
 	reader := createReader(topic)
 	defer reader.Close()
 	reader.HandleMessages(msgHandler)

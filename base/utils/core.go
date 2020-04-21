@@ -98,19 +98,15 @@ func TestLoadEnv(files ...string) {
 	}
 }
 
-// Catches panics, and logs them to stderr, then performs onRecover
-func LogPanics(onRecover func()) {
+// Catches panics, and logs them to stderr, then exit conditionally
+func LogPanics(exitAfterLogging bool) {
 	if obj := recover(); obj != nil {
 		stack := string(debug.Stack())
 		stackLine := strings.Replace(stack, "\n", "|", -1)
 		Log("err", obj, "stack", stackLine).Error("Panicked")
 		FlushLogs()
-		onRecover()
+		if exitAfterLogging {
+			os.Exit(1)
+		}
 	}
-}
-
-func LogPanicsAndExit() {
-	LogPanics(func() {
-		os.Exit(1)
-	})
 }

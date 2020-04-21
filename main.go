@@ -17,7 +17,7 @@ func main() {
 	base.HandleSignals()
 	core.ConfigureApp()
 
-	defer utils.LogPanicsAndExit()
+	defer utils.LogPanics(true)
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "manager":

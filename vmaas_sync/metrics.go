@@ -94,7 +94,7 @@ func RunMetrics() {
 }
 
 func runAdvancedMetricsUpdating() {
-	defer utils.LogPanicsAndExit()
+	defer utils.LogPanics(true)
 
 	utils.Log().Info("started advanced metrics updating")
 	for {

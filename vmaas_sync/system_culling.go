@@ -20,7 +20,7 @@ func withTx(do func(db *gorm.DB) error) error {
 }
 
 func RunSystemCulling() {
-	defer utils.LogPanicsAndExit()
+	defer utils.LogPanics(true)
 
 	ticker := time.NewTicker(time.Minute * 10)
 
