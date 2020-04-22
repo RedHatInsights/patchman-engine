@@ -50,6 +50,16 @@ func updatesHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
+func patchesHandler(c *gin.Context) {
+	data := vmaas.PatchesResponse{
+		ErrataList: []string{
+			"ER1", "ER2", "ER3",
+		},
+	}
+
+	c.JSON(http.StatusOK, data)
+}
+
 func erratasHandler(c *gin.Context) {
 	data := vmaas.ErrataResponse{
 		Page:     0,
@@ -144,6 +154,8 @@ func initVMaaS(app *gin.Engine) {
 	// Mock updates endpoint for VMaaS
 	app.GET("/api/v3/updates", updatesHandler)
 	app.POST("/api/v3/updates", updatesHandler)
+	app.GET("/api/v1/patches", patchesHandler)
+	app.POST("/api/v1/patches", patchesHandler)
 	// Mock erratas endpoint for VMaaS
 	app.POST("/api/v1/errata", erratasHandler)
 	// Mock repos endpoint for VMaaS

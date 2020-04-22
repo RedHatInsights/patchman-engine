@@ -27,8 +27,7 @@ func TestVMaaSGetUpdates(t *testing.T) {
 
 	configure()
 	vmaasData := getVMaaSUpdates(t)
-	assert.Equal(t, 2, len(vmaasData.UpdateList["firefox"].AvailableUpdates))
-	assert.Equal(t, 1, len(vmaasData.UpdateList["kernel"].AvailableUpdates))
+	assert.Equal(t, 3, len(vmaasData.ErrataList))
 }
 
 func TestGetReportedAdvisories1(t *testing.T) {
@@ -41,11 +40,9 @@ func TestGetReportedAdvisories1(t *testing.T) {
 }
 
 func TestGetReportedAdvisories2(t *testing.T) {
-	vmaasData := vmaas.UpdatesV2Response{
-		UpdateList: map[string]vmaas.UpdatesV2ResponseUpdateList{
-			"pkg-a": {AvailableUpdates: []vmaas.UpdatesResponseAvailableUpdates{{Erratum: "ER1"}, {Erratum: "ER2"}}},
-			"pkg-b": {AvailableUpdates: []vmaas.UpdatesResponseAvailableUpdates{{Erratum: "ER2"}, {Erratum: "ER3"}}},
-			"pkg-c": {AvailableUpdates: []vmaas.UpdatesResponseAvailableUpdates{{Erratum: "ER3"}, {Erratum: "ER4"}}},
+	vmaasData := vmaas.PatchesResponse{
+		ErrataList: []string{
+			"ER1", "ER2", "ER3", "ER4",
 		},
 	}
 	advisories := getReportedAdvisories(vmaasData)
@@ -159,9 +156,9 @@ func TestEvaluate(t *testing.T) {
 	deleteAdvisories(t, expectedAddedAdvisories)
 }
 
-func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {
-	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{}
-	vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(context.Background(), &vmaasCallArgs)
+func getVMaaSUpdates(t *testing.T) vmaas.PatchesResponse {
+	vmaasCallArgs := vmaas.AppPatchesHandlerPostPostOpts{}
+	vmaasData, resp, err := vmaasClient.PatchesApi.AppPatchesHandlerPostPost(context.Background(), &vmaasCallArgs)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Nil(t, resp.Body.Close())
