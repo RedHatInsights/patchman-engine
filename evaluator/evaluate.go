@@ -104,7 +104,7 @@ func commitWithObserve(tx *gorm.DB) error {
 	return nil
 }
 
-func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) error {
+func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.PatchesResponse) error {
 	oldSystemAdvisories, patched, unpatched, err := processSystemAdvisories(tx, system, vmaasData, system.InventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
@@ -155,21 +155,21 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform, old, new S
 	return tx.Model(system).Update(data).Error
 }
 
-func callVMaas(ctx context.Context, updatesReq vmaas.UpdatesV3Request) (*vmaas.UpdatesV2Response, error) {
+func callVMaas(ctx context.Context, request vmaas.PatchesRequest) (*vmaas.PatchesResponse, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("vmaas-updates-call"))
 
-	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{
-		UpdatesV3Request: optional.NewInterface(updatesReq),
+	vmaasCallArgs := vmaas.AppPatchesHandlerPostPostOpts{
+		PatchesRequest: optional.NewInterface(request),
 	}
 
-	vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(ctx, &vmaasCallArgs)
+	vmaasData, resp, err := vmaasClient.PatchesApi.AppPatchesHandlerPostPost(ctx, &vmaasCallArgs)
 	if err != nil {
 		responseDetails := utils.TryGetResponseDetails(resp)
 		return nil, errors.Wrap(err, "vmaas API call failed"+responseDetails+fmt.Sprintf(
-			", (packages: %d, basearch: %s, modules: %d, releasever: %s, repolist: %d, seconly: %t)",
-			len(updatesReq.PackageList), updatesReq.Basearch, len(updatesReq.ModulesList), updatesReq.Releasever,
-			len(updatesReq.RepositoryList), updatesReq.SecurityOnly))
+			", (packages: %d, basearch: %s, modules: %d, releasever: %s, repolist: %d)",
+			len(request.PackageList), request.Basearch, len(request.ModulesList), request.Releasever,
+			len(request.RepositoryList)))
 	}
 
 	return &vmaasData, nil
@@ -185,11 +185,11 @@ func loadSystemData(tx *gorm.DB, inventoryID string) (*models.SystemPlatform, er
 	return &system, err
 }
 
-func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, error) {
+func parseVmaasJSON(system *models.SystemPlatform) (vmaas.PatchesRequest, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("parse-vmaas-json"))
 
-	var updatesReq vmaas.UpdatesV3Request
+	var updatesReq vmaas.PatchesRequest
 	err := json.Unmarshal([]byte(system.VmaasJSON), &updatesReq)
 	return updatesReq, err
 }
@@ -197,7 +197,7 @@ func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, erro
 // Changes data stored in system_advisories, in order to match newest evaluation
 // Before this methods stores the entries into the system_advisories table, it locks
 // advisory_account_data table, so other evaluations don't interfere with this one
-func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response,
+func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.PatchesResponse,
 	inventoryID string) (oldSystemAdvisories SystemAdvisoryMap, patched []int, unpatched []int, err error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))
@@ -241,12 +241,10 @@ func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform,
 	return newSystemAdvisories, nil
 }
 
-func getReportedAdvisories(vmaasData vmaas.UpdatesV2Response) map[string]bool {
+func getReportedAdvisories(vmaasData vmaas.PatchesResponse) map[string]bool {
 	advisories := map[string]bool{}
-	for _, updates := range vmaasData.UpdateList {
-		for _, update := range updates.AvailableUpdates {
-			advisories[update.Erratum] = true
-		}
+	for _, advisory := range vmaasData.ErrataList {
+		advisories[advisory] = true
 	}
 	return advisories
 }
