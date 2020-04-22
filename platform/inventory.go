@@ -1,4 +1,4 @@
-package main
+package platform
 
 import (
 	"github.com/RedHatInsights/patchman-clients/inventory"

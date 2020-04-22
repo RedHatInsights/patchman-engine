@@ -1,4 +1,4 @@
-package main
+package platform
 
 import (
 	"app/base"
@@ -14,7 +14,7 @@ import (
 var websockets []chan string
 var runUploadLoop = false
 
-func AddWebsocket() chan string {
+func addWebsocket() chan string {
 	ws := make(chan string, 100)
 	websockets = append(websockets, ws)
 	return ws
@@ -23,14 +23,14 @@ func AddWebsocket() chan string {
 func platformMock() {
 	utils.Log().Info("Platform mock starting")
 	app := gin.New()
-	InitVMaaS(app)
-	InitRbac(app)
+	initVMaaS(app)
+	initRbac(app)
 
 	// Control endpoint handler
-	app.POST("/control/upload", MockUploadHandler)
-	app.POST("/control/delete", MockDeleteHandler)
-	app.POST("/control/sync", MockSyncHandler)
-	app.POST("/control/toggle_upload", MockToggleUpload)
+	app.POST("/control/upload", mockUploadHandler)
+	app.POST("/control/delete", mockDeleteHandler)
+	app.POST("/control/sync", mockSyncHandler)
+	app.POST("/control/toggle_upload", mockToggleUpload)
 
 	err := utils.RunServer(base.Context, app, ":9001")
 	if err != nil {
@@ -38,7 +38,7 @@ func platformMock() {
 	}
 }
 
-func MockSyncHandler(_ *gin.Context) {
+func mockSyncHandler(_ *gin.Context) {
 	utils.Log().Info("Mocking VMaaS sync event")
 	// Force connected websocket clients to refresh
 	for _, ws := range websockets {
@@ -47,8 +47,9 @@ func MockSyncHandler(_ *gin.Context) {
 }
 
 func mockKafkaWriter(topic string) *kafka.Writer {
+	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
 	return kafka.NewWriter(kafka.WriterConfig{
-		Brokers:  []string{"localhost:9092"},
+		Brokers:  []string{kafkaAddress},
 		Topic:    topic,
 		Balancer: &kafka.LeastBytes{},
 	})
@@ -100,13 +101,13 @@ func sendMessageToTopic(topic, message string) {
 	}
 }
 
-func MockUploadHandler(c *gin.Context) {
+func mockUploadHandler(c *gin.Context) {
 	utils.Log().Info("Mocking platform upload event")
 	upload(false)
 	c.Status(http.StatusOK)
 }
 
-func MockDeleteHandler(c *gin.Context) {
+func mockDeleteHandler(c *gin.Context) {
 	utils.Log().Info("Mocking platform delete event")
 
 	identity := mockIdentity()
@@ -123,7 +124,7 @@ func MockDeleteHandler(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func MockToggleUpload(c *gin.Context) {
+func mockToggleUpload(c *gin.Context) {
 	runUploadLoop = !runUploadLoop
 	c.JSON(http.StatusOK, fmt.Sprintf("%v", runUploadLoop))
 }
@@ -143,7 +144,7 @@ func uploader() {
 	}
 }
 
-func main() {
+func RunPlatformMock() {
 	go uploader()
 	platformMock()
 }
