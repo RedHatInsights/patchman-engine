@@ -35,6 +35,7 @@ ADD /listener         /go/src/app/listener
 ADD /evaluator        /go/src/app/evaluator
 ADD /vmaas_sync       /go/src/app/vmaas_sync
 ADD /docs             /go/src/app/docs
+ADD /platform         /go/src/app/platform
 ADD main.go           /go/src/app/
 ADD /database_admin   /go/src/app/database_admin
 

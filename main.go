@@ -8,6 +8,7 @@ import (
 	"app/evaluator"
 	"app/listener"
 	"app/manager"
+	"app/platform"
 	"app/vmaas_sync"
 	"log"
 	"os"
@@ -34,6 +35,9 @@ func main() {
 			return
 		case "migrate":
 			database_admin.MigrateUp(os.Args[2], os.Args[3])
+			return
+		case "platform":
+			platform.RunPlatformMock()
 			return
 		}
 	}

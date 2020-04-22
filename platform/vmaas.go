@@ -1,4 +1,4 @@
-package main
+package platform
 
 import (
 	"app/base/utils"
@@ -128,7 +128,7 @@ func wshandler(w http.ResponseWriter, r *http.Request) {
 		utils.Log("err", err.Error()).Error("Failed to set websocket upgrade")
 		return
 	}
-	ws := AddWebsocket()
+	ws := addWebsocket()
 	for {
 		// Wait for someone to call /control/sync
 		<-ws
@@ -140,7 +140,7 @@ func wshandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func InitVMaaS(app *gin.Engine) {
+func initVMaaS(app *gin.Engine) {
 	// Mock updates endpoint for VMaaS
 	app.GET("/api/v3/updates", updatesHandler)
 	app.POST("/api/v3/updates", updatesHandler)

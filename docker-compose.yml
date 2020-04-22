@@ -42,19 +42,39 @@ services:
     security_opt:
       - label=disable
 
+  zookeeper:
+    image: confluentinc/cp-zookeeper:5.4.0
+    container_name: zookeeper
+    env_file:
+      - ./conf/zookeeper.env
+    ports:
+      - 2181:2181
+
+  kafka:
+    image: confluentinc/cp-enterprise-kafka:5.4.0
+    container_name: kafka
+    env_file:
+      - ./conf/kafka.env
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+      - 9092:9092
+
   platform:
     container_name: platform
     build:
       context: .
-      dockerfile: platform/Dockerfile
+      dockerfile: Dockerfile.centos
     env_file:
       - ./conf/common.env
       - ./conf/platform.env
+    command: ./scripts/entrypoint.sh platform
     restart: unless-stopped
     depends_on:
       - db
+      - kafka
     ports:
-      - 9092:9092
       - 9001:9001
 
   manager:
