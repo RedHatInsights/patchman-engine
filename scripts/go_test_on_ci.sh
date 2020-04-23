@@ -6,7 +6,7 @@ set -e -o pipefail
 ./scripts/check-dockerfiles.sh
 
 # Analyse code using lint
-/go/bin/golangci-lint run
+/go/bin/golangci-lint run --timeout 5m
 echo "Go code analysed successfully."
 
 # Run project tests

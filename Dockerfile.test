@@ -15,7 +15,7 @@ ADD go.sum  /go/src/app/
 WORKDIR /go/src/app
 RUN go mod download && \
     curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
-    | sh -s -- -b $(go env GOPATH)/bin v1.22.2
+    | sh -s -- -b $(go env GOPATH)/bin latest
 
 ADD /conf              /go/src/app/conf
 ADD /base              /go/src/app/base
