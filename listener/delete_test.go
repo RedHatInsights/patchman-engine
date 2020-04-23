@@ -16,13 +16,14 @@ func TestDeleteSystem(t *testing.T) {
 	configure()
 
 	deleteData(t)
-	uploadEvent := createTestUploadEvent(id, true)
-	err := uploadHandler(uploadEvent)
-	assertSystemInDb(t, id, nil)
-	assert.NoError(t, err)
+	assert.NoError(t, database.Db.Create(&models.SystemPlatform{
+		InventoryID: id,
+		RhAccountID: 1,
+		DisplayName: id,
+	}).Error)
 
 	deleteEvent := createTestDeleteEvent(id)
-	err = deleteHandler(deleteEvent)
+	err := deleteHandler(deleteEvent)
 	assertSystemNotInDb(t)
 	assert.NoError(t, err)
 }

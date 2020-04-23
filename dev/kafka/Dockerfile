@@ -1,3 +1,6 @@
 FROM confluentinc/cp-enterprise-kafka:5.4.0
 
-ADD /dev/kafka/kafka_init.sh /kafka_init.sh
+ADD /dev/kafka/entrypoint.sh /entrypoint.sh
+ADD /dev/kafka/setup.sh      /setup.sh
+
+CMD ["/entrypoint.sh"]
