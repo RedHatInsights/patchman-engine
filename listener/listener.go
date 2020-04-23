@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"app/base/core"
 	"app/base/mqueue"
 	"app/base/utils"
 	"sync"
@@ -14,6 +15,8 @@ var (
 )
 
 func configure() {
+	core.ConfigureApp()
+
 	uploadTopic = utils.GetenvOrFail("UPLOAD_TOPIC")
 	eventsTopic = utils.GetenvOrFail("EVENTS_TOPIC")
 

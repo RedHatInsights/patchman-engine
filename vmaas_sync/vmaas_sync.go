@@ -2,6 +2,7 @@ package vmaas_sync //nolint:golint,stylecheck
 
 import (
 	"app/base"
+	"app/base/core"
 	"app/base/mqueue"
 	"app/base/utils"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
@@ -21,6 +22,7 @@ var (
 )
 
 func configure() {
+	core.ConfigureApp()
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
 	cfg := vmaas.NewConfiguration()

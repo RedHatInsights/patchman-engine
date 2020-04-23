@@ -37,7 +37,6 @@ services:
       context: .
       dockerfile: Dockerfile.centos
     env_file:
-      - ./conf/common.env
       - ./conf/platform.env
     command: ./scripts/entrypoint.sh platform
     restart: unless-stopped

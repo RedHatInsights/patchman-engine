@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"app/base"
+	"app/base/core"
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
@@ -32,6 +33,7 @@ var (
 )
 
 func configure() {
+	core.ConfigureApp()
 	port = utils.GetenvOrFail("PORT")
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 

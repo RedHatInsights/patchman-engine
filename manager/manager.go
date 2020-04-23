@@ -21,6 +21,8 @@ import (
 // @in header
 // @name x-rh-identity
 func RunManager() {
+	core.ConfigureApp()
+
 	utils.Log().Info("Manager starting")
 	// create web app
 	app := gin.New()
