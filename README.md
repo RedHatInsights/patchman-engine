@@ -35,6 +35,14 @@ cd dev/scripts
 ./platform_upload.sh      # simulate archive upload to trigger listener and evaluator_upload
 ~~~
 
+### Running in host OS
+Run single component in host OS, rest in podman-compose:
+~~~bash
+podman-compose stop evaluator_upload # stop single component running using podman-compose
+export $(xargs < conf/local.env)
+./scripts/entrypoint.sh evaluator # run component in host OS
+~~~
+
 ### Running tests
 We cover a large part of the application functionality with tests; this requires also running a test database and mocked services. This is all encapsulated into the configuration runable using podman-compose command. It also includes static code analysis, database migration tests and dockerfiles checking. It's also used when checking pull requests for the repo.
 ~~~bash
@@ -65,3 +73,16 @@ This project uses [VMaaS](https://github.com/RedHatInsights/vmaas) for retrievin
 Each application component (except for the database) exposes metrics for [Prometheus](https://prometheus.io/)
 on `/metrics` endpoint (see [docker-compose.yml](docker-compose.yml) for ports). Runtime logs can be sent to Amazon
 CloudWatch if configuration environment variables are set (see [awscloudwatch.go](base/utils/awscloudwatch.go)).
+
+## Kafka control
+Your can control and inspect def Kafka instance using:
+~~~bash
+docker-compose exec kafka bash # enter kafka component and run inside:
+/usr/bin/kafka-topics --list --bootstrap-server=kafka:9092 # show created topics
+
+# list all messages send to a topic
+/usr/bin/kafka-console-consumer --bootstrap-server=kafka:9092 --topic platform.inventory.host-egress --from-beginnin
+
+# send debugging message to a topic
+echo '{"id":"INV-2"}' | /usr/bin/kafka-console-producer --broker-list kafka:9092 --topic patchman.evaluator.upload
+~~~
