@@ -25,6 +25,7 @@ ADD /evaluator         /go/src/app/evaluator
 ADD /vmaas_sync        /go/src/app/vmaas_sync
 ADD /database_admin    /go/src/app/database_admin
 ADD /docs              /go/src/app/docs
+ADD /platform          /go/src/app/platform
 ADD /scripts           /go/src/app/scripts
 ADD main.go            /go/src/app/
 ADD .golangci.yml      /go/src/app/
