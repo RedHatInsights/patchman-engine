@@ -2,7 +2,6 @@ package main
 
 import (
 	"app/base"
-	"app/base/core"
 	"app/base/utils"
 	"app/database_admin"
 	"app/evaluator"
@@ -16,7 +15,6 @@ import (
 
 func main() {
 	base.HandleSignals()
-	core.ConfigureApp()
 
 	defer utils.LogPanics(true)
 	if len(os.Args) > 1 {
