@@ -1,7 +1,6 @@
 package mqueue
 
 import (
-	"app/base/core"
 	"app/base/utils"
 	"context"
 	"errors"
@@ -29,10 +28,7 @@ func TestParseEvents(t *testing.T) {
 }
 
 func TestRoundTrip(t *testing.T) {
-	utils.SkipWithoutDB(t)
 	utils.SkipWithoutPlatform(t)
-	core.SetupTestEnvironment()
-
 	reader := ReaderFromEnv("test")
 
 	var eventOut PlatformEvent

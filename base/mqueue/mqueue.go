@@ -37,14 +37,12 @@ func ReaderFromEnv(topic string) Reader {
 	kafkaGroup := utils.GetenvOrFail("KAFKA_GROUP")
 
 	config := kafka.ReaderConfig{
-		Brokers:  []string{kafkaAddress},
-		Topic:    topic,
-		GroupID:  kafkaGroup,
-		MinBytes: 1,
-		MaxBytes: 1e6, // 1MB
-		ErrorLogger: kafka.LoggerFunc(func(fmt string, args ...interface{}) {
-			utils.Log("type", "kafka").Errorf(fmt, args...)
-		}),
+		Brokers:     []string{kafkaAddress},
+		Topic:       topic,
+		GroupID:     kafkaGroup,
+		MinBytes:    1,
+		MaxBytes:    1e6, // 1MB
+		ErrorLogger: kafka.LoggerFunc(createLoggerFunc(kafkaErrorReadCnt)),
 	}
 
 	reader := &readerImpl{*kafka.NewReader(config)}
@@ -62,12 +60,22 @@ func WriterFromEnv(topic string) Writer {
 		// meaning single messages are sent immediately for now. We'll maybe change this later if the
 		// sending overhead is a bottleneck
 		BatchTimeout: time.Nanosecond,
-		ErrorLogger: kafka.LoggerFunc(func(fmt string, args ...interface{}) {
-			utils.Log("type", "kafka").Errorf(fmt, args)
-		}),
+		ErrorLogger:  kafka.LoggerFunc(createLoggerFunc(kafkaErrorWriteCnt)),
 	}
 	writer := &writerImpl{kafka.NewWriter(config)}
 	return writer
+}
+
+func createLoggerFunc(counter Counter) func(fmt string, args ...interface{}) {
+	if counter == nil {
+		panic("kafka error counter nil")
+	}
+
+	fn := func(fmt string, args ...interface{}) {
+		counter.Inc()
+		utils.Log("type", "kafka").Errorf(fmt, args...)
+	}
+	return fn
 }
 
 type MessageHandler func(message kafka.Message) error
