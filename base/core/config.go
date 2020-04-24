@@ -2,6 +2,7 @@ package core
 
 import (
 	"app/base/database"
+	"app/base/metrics"
 	"app/base/utils"
 )
 
@@ -12,6 +13,7 @@ var (
 func ConfigureApp() {
 	utils.ConfigureLogging()
 	database.Configure()
+	metrics.Configure()
 }
 
 func SetupTestEnvironment() {
