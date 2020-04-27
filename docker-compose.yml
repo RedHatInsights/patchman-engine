@@ -6,6 +6,7 @@ services:
     build:
       context: .
       dockerfile: dev/database/Dockerfile.centos
+    command: 'run-postgresql -c logging_collector=off'
     ports:
       - 5432:5432
     env_file:
