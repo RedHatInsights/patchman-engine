@@ -18,7 +18,7 @@ func TestRunServer(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
-		time.Sleep(time.Millisecond * 10)
+		time.Sleep(time.Millisecond * 100)
 		cancel()
 	}()
 	err := RunServer(ctx, gin.Default(), ":8080")

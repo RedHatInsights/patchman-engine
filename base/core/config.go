@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	DefaultLimit = 25
+	DefaultLimit = 20
 )
 
 func ConfigureApp() {
