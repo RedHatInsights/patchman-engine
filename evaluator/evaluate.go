@@ -18,10 +18,6 @@ import (
 	"time"
 )
 
-const (
-	unknown = "unknown"
-)
-
 type SystemAdvisoryMap map[string]models.SystemAdvisories
 
 var (
@@ -215,7 +211,7 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 	newsAdvisoriesNames, unpatched := getNewAndUnpatchedAdvisories(reported, oldSystemAdvisories)
 	utils.Log("inventoryID", inventoryID, "newAdvisories", len(newsAdvisoriesNames)).Debug("new advisories")
 
-	newIDs, err := ensureAdvisoriesInDb(tx, newsAdvisoriesNames)
+	newIDs, err := getAdvisoriesFromDb(tx, newsAdvisoriesNames)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Unable to ensure new system advisories in db")
 	}
@@ -310,21 +306,9 @@ func updateSystemAdvisoriesWhenPatched(tx *gorm.DB, system *models.SystemPlatfor
 }
 
 // Return advisory IDs, created advisories count, error
-func ensureAdvisoriesInDb(tx *gorm.DB, advisories []string) ([]int, error) {
-	advisoryObjs := make(models.AdvisoryMetadataSlice, len(advisories))
-	for i, advisory := range advisories {
-		advisoryObjs[i] = models.AdvisoryMetadata{Name: advisory,
-			Description: unknown, Synopsis: unknown, Summary: unknown, Solution: unknown}
-	}
-
-	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
-	err := database.BulkInsert(txOnConflict, advisoryObjs)
-	if err != nil {
-		return nil, err
-	}
-
+func getAdvisoriesFromDb(tx *gorm.DB, advisories []string) ([]int, error) {
 	var advisoryIDs []int
-	err = tx.Model(&models.AdvisoryMetadata{}).Where("name IN (?)", advisories).
+	err := tx.Model(&models.AdvisoryMetadata{}).Where("name IN (?)", advisories).
 		Pluck("id", &advisoryIDs).Error
 	if err != nil {
 		return nil, err
