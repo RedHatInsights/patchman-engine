@@ -34,7 +34,7 @@ func TestSync(t *testing.T) {
 	err := websocketHandler([]byte("webapps-refreshed"), nil)
 	assert.Nil(t, err)
 
-	expected := []string{"ER1", "ER2", "ER3"}
+	expected := []string{"RH-100"}
 	database.CheckAdvisoriesInDb(t, expected)
 	assert.Nil(t, database.Db.Unscoped().Where("name IN (?)", expected).Delete(&models.AdvisoryMetadata{}).Error)
 
