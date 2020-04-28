@@ -41,8 +41,8 @@ func TestAdvisoriesDefault(t *testing.T) {
 		assert.Equal(t, 7, output.Data[0].Attributes.ApplicableSystems)
 
 		// links
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25&sort=id", output.Links.First)
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25&sort=id", output.Links.Last)
+		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=id", output.Links.First)
+		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=id", output.Links.Last)
 		assert.Nil(t, output.Links.Next)
 		assert.Nil(t, output.Links.Previous)
 
@@ -106,7 +106,7 @@ func TestAdvisoriesFilter(t *testing.T) {
 
 		assert.Equal(t, FilterData{Values: []string{"1"}, Operator: "eq"}, output.Meta.Filter["advisory_type"])
 
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25&filter[advisory_type]=eq:1&sort=id", output.Links.First)
+		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&filter[advisory_type]=eq:1&sort=id", output.Links.First)
 	})
 
 	testAdvisoriesOk(t, "GET", "/?filter[applicable_systems]=gt:1", func(output AdvisoriesResponse) {
@@ -165,8 +165,8 @@ func TestAdvisoriesSearch(t *testing.T) {
 		assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
 
 		// links
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25&sort=id", output.Links.First)
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=25&sort=id", output.Links.Last)
+		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=id", output.Links.First)
+		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=id", output.Links.Last)
 		assert.Nil(t, output.Links.Next)
 		assert.Nil(t, output.Links.Previous)
 
