@@ -215,6 +215,11 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Unable to ensure new system advisories in db")
 	}
+	nUnknown := len(newsAdvisoriesNames) - len(newIDs)
+	if nUnknown > 0 {
+		utils.Log("inventoryID", inventoryID, "unknown", nUnknown).Debug("unknown advisories - ignored")
+		updatesCnt.WithLabelValues("unknown").Add(float64(nUnknown))
+	}
 
 	unpatched = append(unpatched, newIDs...)
 	updatesCnt.WithLabelValues("unpatched").Add(float64(len(unpatched)))
