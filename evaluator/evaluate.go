@@ -13,7 +13,9 @@ import (
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
 	"github.com/jinzhu/gorm"
+	"github.com/lestrrat-go/backoff"
 	"github.com/pkg/errors"
+	"net/http"
 	"sync"
 	"time"
 )
@@ -151,24 +153,38 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform, old, new S
 	return tx.Model(system).Update(data).Error
 }
 
+// nolint: bodyclose
 func callVMaas(ctx context.Context, request vmaas.PatchesRequest) (*vmaas.PatchesResponse, error) {
+	var policy = backoff.NewExponential(
+		backoff.WithInterval(time.Second),
+		backoff.WithMaxRetries(8),
+	)
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("vmaas-updates-call"))
 
 	vmaasCallArgs := vmaas.AppPatchesHandlerPostPostOpts{
 		PatchesRequest: optional.NewInterface(request),
 	}
+	backoffState, cancel := policy.Start(base.Context)
+	defer cancel()
+	for backoff.Continue(backoffState) {
+		vmaasData, resp, err := vmaasClient.PatchesApi.AppPatchesHandlerPostPost(ctx, &vmaasCallArgs)
 
-	vmaasData, resp, err := vmaasClient.PatchesApi.AppPatchesHandlerPostPost(ctx, &vmaasCallArgs)
-	if err != nil {
-		responseDetails := utils.TryGetResponseDetails(resp)
-		return nil, errors.Wrap(err, "vmaas API call failed"+responseDetails+fmt.Sprintf(
-			", (packages: %d, basearch: %s, modules: %d, releasever: %s, repolist: %d)",
-			len(request.PackageList), request.Basearch, len(request.ModulesList), request.Releasever,
-			len(request.RepositoryList)))
+		// VMaaS is probably refreshing caches, continue waiting
+		if resp != nil && resp.StatusCode == http.StatusServiceUnavailable {
+			continue
+		}
+
+		if err != nil {
+			responseDetails := utils.TryGetResponseDetails(resp)
+			return nil, errors.Wrap(err, "vmaas API call failed"+responseDetails+fmt.Sprintf(
+				", (packages: %d, basearch: %s, modules: %d, releasever: %s, repolist: %d)",
+				len(request.PackageList), request.Basearch, len(request.ModulesList), request.Releasever,
+				len(request.RepositoryList)))
+		}
+		return &vmaasData, nil
 	}
-
-	return &vmaasData, nil
+	return nil, errors.New("VMaaS is unavailable")
 }
 
 func loadSystemData(tx *gorm.DB, inventoryID string) (*models.SystemPlatform, error) {
