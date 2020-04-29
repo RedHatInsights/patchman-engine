@@ -465,6 +465,7 @@ CREATE TABLE IF NOT EXISTS system_platform
   TABLESPACE pg_default;
 
 CREATE INDEX ON system_platform (rh_account_id);
+CREATE INDEX ON system_platform (last_upload DESC NULLS LAST);
 
 CREATE TRIGGER system_platform_set_first_reported
     BEFORE INSERT
