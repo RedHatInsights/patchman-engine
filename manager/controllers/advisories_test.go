@@ -33,16 +33,16 @@ func testAdvisoriesOk(t *testing.T, method, url string, check func(out Advisorie
 func TestAdvisoriesDefault(t *testing.T) {
 	testAdvisoriesOk(t, "GET", "/", func(output AdvisoriesResponse) {
 		assert.Equal(t, 8, len(output.Data))
-		assert.Equal(t, "RH-1", output.Data[0].ID, output.Data[0])
+		assert.Equal(t, "RH-7", output.Data[0].ID, output.Data[0])
 		assert.Equal(t, "advisory", output.Data[0].Type)
-		assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
-		assert.Equal(t, "adv-1-des", output.Data[0].Attributes.Description)
-		assert.Equal(t, "adv-1-syn", output.Data[0].Attributes.Synopsis)
-		assert.Equal(t, 7, output.Data[0].Attributes.ApplicableSystems)
+		assert.Equal(t, "2017-09-22 19:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
+		assert.Equal(t, "adv-7-des", output.Data[0].Attributes.Description)
+		assert.Equal(t, "adv-7-syn", output.Data[0].Attributes.Synopsis)
+		assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
 
 		// links
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=id", output.Links.First)
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=id", output.Links.Last)
+		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date", output.Links.First)
+		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date", output.Links.Last)
 		assert.Nil(t, output.Links.Next)
 		assert.Nil(t, output.Links.Previous)
 
@@ -100,13 +100,15 @@ func TestAdvisoriesOrder(t *testing.T) {
 func TestAdvisoriesFilter(t *testing.T) {
 	testAdvisoriesOk(t, "GET", "/?filter[advisory_type]=1", func(output AdvisoriesResponse) {
 		assert.Equal(t, 3, len(output.Data))
-		assert.Equal(t, "RH-1", output.Data[0].ID)
-		assert.Equal(t, "RH-4", output.Data[1].ID)
-		assert.Equal(t, "RH-7", output.Data[2].ID)
+		assert.Equal(t, "RH-7", output.Data[0].ID)
+		assert.Equal(t, "RH-1", output.Data[1].ID)
+		assert.Equal(t, "RH-4", output.Data[2].ID)
 
 		assert.Equal(t, FilterData{Values: []string{"1"}, Operator: "eq"}, output.Meta.Filter["advisory_type"])
 
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&filter[advisory_type]=eq:1&sort=id", output.Links.First)
+		assert.Equal(t,
+			"/api/patch/v1/advisories?offset=0&limit=20&filter[advisory_type]=eq:1&sort=-public_date",
+			output.Links.First)
 	})
 
 	testAdvisoriesOk(t, "GET", "/?filter[applicable_systems]=gt:1", func(output AdvisoriesResponse) {
@@ -116,7 +118,7 @@ func TestAdvisoriesFilter(t *testing.T) {
 
 	testAdvisoriesOk(t, "GET", "/?filter[advisory_type]=in:1,2", func(output AdvisoriesResponse) {
 		assert.Equal(t, 6, len(output.Data))
-		assert.Equal(t, "RH-1", output.Data[0].ID)
+		assert.Equal(t, "RH-7", output.Data[0].ID)
 
 		for _, a := range output.Data {
 			assert.Contains(t, []int{1, 2}, a.Attributes.AdvisoryType)
@@ -165,8 +167,8 @@ func TestAdvisoriesSearch(t *testing.T) {
 		assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
 
 		// links
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=id", output.Links.First)
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=id", output.Links.Last)
+		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date", output.Links.First)
+		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date", output.Links.Last)
 		assert.Nil(t, output.Links.Next)
 		assert.Nil(t, output.Links.Previous)
 
