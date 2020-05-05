@@ -17,7 +17,7 @@ var SystemAdvisoriesSelect = database.MustGetSelect(&SystemAdvisoriesDBLookup{})
 var SystemAdvisoriesOpts = ListOpts{
 	Fields:         SystemAdvisoriesFields,
 	DefaultFilters: nil,
-	DefaultSort:    "id",
+	DefaultSort:    "-public_date",
 }
 
 type SystemAdvisoriesDBLookup struct {
