@@ -39,7 +39,7 @@ func runReaders(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 	// algorithm assigns each consumer a single partition
 	for i := 0; i < consumerCount; i++ {
 		mqueue.SpawnReader(wg, uploadTopic, readerBuilder, mqueue.MakeRetryingHandler(uploadMsgHandler))
-		mqueue.SpawnReader(wg, eventsTopic, readerBuilder, mqueue.MakeRetryingHandler(DeleteMessageHandler))
+		mqueue.SpawnReader(wg, eventsTopic, readerBuilder, mqueue.MakeRetryingHandler(EventsMessageHandler))
 	}
 }
 

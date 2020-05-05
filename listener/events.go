@@ -5,35 +5,71 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+	"encoding/json"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"github.com/segmentio/kafka-go"
 	"time"
 )
 
-var DeleteMessageHandler = mqueue.MakeMessageHandler(deleteHandler)
-
 const (
 	WarnEmptyEventType = "empty event type received"
-	WarnNoDeleteType   = "non-delete event type received"
+	WarnUnknownType    = "unknown event type received"
 	WarnNoRowsModified = "no rows modified on delete event"
 )
 
-func deleteHandler(event mqueue.PlatformEvent) error {
+func EventsMessageHandler(m kafka.Message) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventDelete))
 
-	if event.Type == nil {
-		utils.Log("inventoryID", event.ID).Warn(WarnEmptyEventType)
+	var msgData map[string]interface{}
+	if err := json.Unmarshal(m.Value, &msgData); err != nil {
+		utils.Log("msg", string(m.Value)).Error("message is not a valid JSON")
+	}
+	if msgData["type"] == nil {
+		utils.Log("inventoryID", msgData["id"]).Warn(WarnEmptyEventType)
 		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorOtherType).Inc()
 		return nil
 	}
 
-	if *event.Type != "delete" {
-		utils.Log("inventoryID", event.ID, "eventType", *event.Type).Warn(WarnNoDeleteType)
-		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorOtherType).Inc()
+	switch msgData["type"] {
+	case "delete":
+		var event mqueue.PlatformEvent
+		if err := json.Unmarshal(m.Value, &event); err != nil {
+			utils.Log("inventoryID", msgData["id"], "msg", string(m.Value)).
+				Error("Invalid 'delete' message format")
+		}
+		return HandleDelete(event)
+	case "updated":
+		var event HostEgressEvent
+		if err := json.Unmarshal(m.Value, &event); err != nil {
+			utils.Log("inventoryID", msgData["id"], "msg", string(m.Value)).
+				Error("Invalid 'updated' message format")
+		}
+		return HandleUpdate(event)
+	default:
+		utils.Log("msg", string(m.Value)).Error(WarnUnknownType)
 		return nil
 	}
+}
 
+func HandleUpdate(event HostEgressEvent) error {
+	var system models.SystemPlatform
+	if err := database.Db.Find(&system, "inventory_id = ?", event.Host.ID).Error; err != nil {
+		return err
+	}
+	if event.Host.DisplayName != nil {
+		system.DisplayName = *event.Host.DisplayName
+	}
+	q := database.OnConflictUpdate(database.Db, "inventory_id", "display_name")
+	if err := q.Create(&system).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func HandleDelete(event mqueue.PlatformEvent) error {
 	// TODO: Do we need locking here ?
 	err := database.OnConflictUpdate(database.Db, "inventory_id", "when_deleted").
 		Save(models.DeletedSystem{

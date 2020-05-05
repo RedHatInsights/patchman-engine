@@ -5,12 +5,14 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"encoding/json"
+	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestDeleteSystem(t *testing.T) {
+func TestUpdateSystem(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	configure()
@@ -22,8 +24,27 @@ func TestDeleteSystem(t *testing.T) {
 		DisplayName: id,
 	}).Error)
 
+	ev := createTestUploadEvent(id, false)
+	name := "TEST_NAME"
+	ev.Host.DisplayName = &name
+	assert.NoError(t, HandleUpdate(ev))
+
+	var system models.SystemPlatform
+	assert.NoError(t, database.Db.Find(&system, "inventory_id = ?", id).Error)
+
+	assert.Equal(t, name, system.DisplayName)
+}
+
+func TestDeleteSystem(t *testing.T) {
+	deleteData(t)
+	assert.NoError(t, database.Db.Create(&models.SystemPlatform{
+		InventoryID: id,
+		RhAccountID: 1,
+		DisplayName: id,
+	}).Error)
+
 	deleteEvent := createTestDeleteEvent(id)
-	err := deleteHandler(deleteEvent)
+	err := HandleDelete(deleteEvent)
 	assertSystemNotInDb(t)
 	assert.NoError(t, err)
 }
@@ -33,8 +54,13 @@ func TestDeleteSystemWarn1(t *testing.T) {
 	log.AddHook(logHook)
 	deleteEvent := createTestDeleteEvent(id)
 	deleteEvent.Type = nil
-	err := deleteHandler(deleteEvent)
+
+	data, err := json.Marshal(deleteEvent)
+	assert.NoError(t, err)
+
+	err = EventsMessageHandler(kafka.Message{Value: data})
 	assert.Equal(t, WarnEmptyEventType, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
+
 	assert.NoError(t, err)
 }
 
@@ -44,8 +70,13 @@ func TestDeleteSystemWarn2(t *testing.T) {
 	deleteEvent := createTestDeleteEvent(id)
 	nonDeleteType := "no-delete"
 	deleteEvent.Type = &nonDeleteType
-	err := deleteHandler(deleteEvent)
-	assert.Equal(t, WarnNoDeleteType, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
+
+	data, err := json.Marshal(deleteEvent)
+	assert.NoError(t, err)
+
+	err = EventsMessageHandler(kafka.Message{Value: data})
+	assert.Equal(t, WarnUnknownType, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
+
 	assert.NoError(t, err)
 }
 
@@ -58,7 +89,7 @@ func TestDeleteSystemWarn3(t *testing.T) {
 	log.AddHook(logHook)
 
 	deleteEvent := createTestDeleteEvent("not-existing-id")
-	err := deleteHandler(deleteEvent)
+	err := HandleDelete(deleteEvent)
 	assert.NoError(t, err)
 
 	assert.Equal(t, WarnNoRowsModified, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
