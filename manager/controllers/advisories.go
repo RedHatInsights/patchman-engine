@@ -13,7 +13,7 @@ var AdvisoriesSelect = database.MustGetSelect(&AdvisoriesDBLookup{})
 var AdvisoriesOpts = ListOpts{
 	Fields:         AdvisoriesFields,
 	DefaultFilters: nil,
-	DefaultSort:    "id",
+	DefaultSort:    "-public_date",
 }
 
 type AdvisoriesDBLookup struct {
