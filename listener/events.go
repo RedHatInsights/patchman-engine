@@ -30,7 +30,7 @@ func EventsMessageHandler(m kafka.Message) error {
 	}
 	if msgData["type"] == nil {
 		utils.Log("inventoryID", msgData["id"]).Warn(WarnEmptyEventType)
-		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorOtherType).Inc()
+		messagesReceivedCnt.WithLabelValues("", ReceivedErrorOtherType).Inc()
 		return nil
 	}
 
