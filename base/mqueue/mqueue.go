@@ -35,16 +35,17 @@ type writerImpl struct {
 func ReaderFromEnv(topic string) Reader {
 	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
 	kafkaGroup := utils.GetenvOrFail("KAFKA_GROUP")
+	minBytes := utils.GetIntEnvOrDefault("KAFKA_READER_MIN_BYTES", 1)
+	maxBytes := utils.GetIntEnvOrDefault("KAFKA_READER_MAX_BYTES", 1e6)
 
 	config := kafka.ReaderConfig{
 		Brokers:     []string{kafkaAddress},
 		Topic:       topic,
 		GroupID:     kafkaGroup,
-		MinBytes:    1,
-		MaxBytes:    1e6, // 1MB
+		MinBytes:    minBytes,
+		MaxBytes:    maxBytes,
 		ErrorLogger: kafka.LoggerFunc(createLoggerFunc(kafkaErrorReadCnt)),
 	}
-
 	reader := &readerImpl{*kafka.NewReader(config)}
 	return reader
 }
