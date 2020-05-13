@@ -2,15 +2,24 @@ package middlewares
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
 	ginprometheus "github.com/zsais/go-gin-prometheus"
 	"strings"
 )
 
+var serviceErrorCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Namespace: "patchman_engine",
+	Subsystem: "manager",
+	Name:      "dependency_call",
+}, []string{"name", "status"})
+
 // Create and configure Prometheus middleware to expose metrics
 func Prometheus() *ginprometheus.Prometheus {
-	prometheus := ginprometheus.NewPrometheus("patchman_engine")
-	unifyParametrizedUrlsCounters(prometheus)
-	return prometheus
+	prometheus.MustRegister(serviceErrorCnt)
+
+	p := ginprometheus.NewPrometheus("patchman_engine")
+	unifyParametrizedUrlsCounters(p)
+	return p
 }
 
 func unifyParametrizedUrlsCounters(p *ginprometheus.Prometheus) {

@@ -6,6 +6,7 @@ import (
 	"github.com/RedHatInsights/patchman-clients/rbac"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 // Make RBAC client on demand, with specified identity
@@ -24,10 +25,18 @@ func isAccessGranted(c *gin.Context) bool {
 	client := makeClient(c.GetHeader("x-rh-identity"))
 	// Body is closed inside api method, don't know why liter is complaining
 	// nolint: bodyclose
-	access, _, err := client.AccessApi.GetPrincipalAccess(base.Context, "patch", nil)
+	access, res, err := client.AccessApi.GetPrincipalAccess(base.Context, "patch", nil)
+	if res != nil && res.Body != nil {
+		defer res.Body.Close()
+	}
 
 	if err != nil {
 		utils.Log("err", err.Error()).Error("Call to RBAC svc failed")
+		status := http.StatusInternalServerError
+		if res != nil {
+			status = res.StatusCode
+		}
+		serviceErrorCnt.WithLabelValues("rbac", strconv.Itoa(status)).Inc()
 		return false
 	}
 	// For now we either allow access or don't allow it
