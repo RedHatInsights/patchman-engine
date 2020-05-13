@@ -60,7 +60,7 @@ func HandleUpdate(event HostEgressEvent) error {
 	err := database.Db.Find(&system, "inventory_id = ?", event.Host.ID).Error
 	if err != nil && gorm.IsRecordNotFoundError(err) {
 		utils.Log("inventoryID", event.Host.ID).Info("System not found when handling update")
-		messagesReceivedCnt.WithLabelValues(EventUpdate, ReceivedErrorNoRows).Inc()
+		messagesReceivedCnt.WithLabelValues(EventUpdate, ReceivedWarnNoRows).Inc()
 		return nil
 	} else if err != nil {
 		messagesReceivedCnt.WithLabelValues(EventUpdate, ReceivedErrorOtherType).Inc()
@@ -103,7 +103,7 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 
 	if query.RowsAffected == 0 {
 		utils.Log("inventoryID", event.ID).Warn(WarnNoRowsModified)
-		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorNoRows).Inc()
+		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedWarnNoRows).Inc()
 		return nil
 	}
 
