@@ -45,7 +45,7 @@ type AdvisoriesResponse struct {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    limit          query   int     false   "Limit for paging"
+// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,name,advisory_type,synopsis,public_date,applicable_systems)
 // @Param    search         query   string  false   "Find matching text"

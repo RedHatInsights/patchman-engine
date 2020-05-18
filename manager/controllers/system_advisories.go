@@ -53,7 +53,7 @@ type SystemAdvisoriesResponse struct {
 // @Accept   json
 // @Produce  json
 // @Param    inventory_id   path    string  true    "Inventory ID"
-// @Param    limit          query   int     false   "Limit for paging"
+// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,name,type,synopsis,public_date)
 // @Param    search         query   string  false   "Find matching text"
