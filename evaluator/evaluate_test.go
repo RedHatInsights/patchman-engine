@@ -110,12 +110,12 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	deleteAdvisoryAccountData(t, system.RhAccountID, advisoryIDs)
 }
 
-func TestGetAdvisoriesFromDb(t *testing.T) {
+func TestGetAdvisoriesFromDB(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
 	advisories := []string{"ER-1", "RH-1", "ER-2", "RH-2"}
-	advisoryIDs, err := getAdvisoriesFromDb(database.Db, advisories)
+	advisoryIDs, err := getAdvisoriesFromDB(database.Db, advisories)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(advisoryIDs))
 }
@@ -146,7 +146,7 @@ func TestEvaluate(t *testing.T) {
 	systemID := 12
 	rhAccountID := 3
 	expectedAddedAdvisories := []string{"RH-1", "RH-2"}
-	advisoryIDs := database.CheckAdvisoriesInDb(t, expectedAddedAdvisories)
+	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
 	database.CheckSystemJustEvaluated(t, "INV-12", 2, 1, 1, 0)
 	deleteSystemAdvisories(t, systemID, advisoryIDs)

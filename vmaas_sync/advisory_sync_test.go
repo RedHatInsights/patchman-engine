@@ -154,7 +154,7 @@ func TestSyncAdvisories(t *testing.T) {
 	assert.Nil(t, err)
 
 	expected := []string{"RH-100"}
-	database.CheckAdvisoriesInDb(t, expected)
+	database.CheckAdvisoriesInDB(t, expected)
 
 	assert.Nil(t, database.Db.Unscoped().Where("name IN (?)", expected).Delete(&models.AdvisoryMetadata{}).Error)
 }

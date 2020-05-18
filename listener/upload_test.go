@@ -55,13 +55,13 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	sys1, err := updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(), &req)
 	assert.Nil(t, err)
 
-	assertSystemInDb(t, id, &accountID1)
-	assertReposInDb(t, req.RepositoryList)
+	assertSystemInDB(t, id, &accountID1)
+	assertReposInDB(t, req.RepositoryList)
 
 	sys2, err := updateSystemPlatform(database.Db, id, accountID2, createTestInvHost(), &req)
 	assert.Nil(t, err)
 
-	assertSystemInDb(t, id, &accountID2)
+	assertSystemInDB(t, id, &accountID2)
 
 	assert.Equal(t, sys1.ID, sys2.ID)
 	assert.Equal(t, sys1.InventoryID, sys2.InventoryID)
@@ -86,7 +86,7 @@ func TestUploadHandler(t *testing.T) {
 	err := uploadHandler(event)
 	assert.NoError(t, err)
 
-	assertSystemInDb(t, id, nil)
+	assertSystemInDB(t, id, nil)
 
 	var sys models.SystemPlatform
 
@@ -150,16 +150,16 @@ func TestUploadHandlerError2(t *testing.T) {
 	deleteData(t)
 }
 
-func TestEnsureReposInDb(t *testing.T) {
+func TestEnsureReposInDB(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
 	repos := []string{"repo1", "repo10", "repo20"}
-	repoIDs, nAdded, err := ensureReposInDb(database.Db, repos)
+	repoIDs, nAdded, err := ensureReposInDB(database.Db, repos)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(2), nAdded)
 	assert.Equal(t, 3, len(repoIDs))
-	assertReposInDb(t, repos)
+	assertReposInDB(t, repos)
 	deleteData(t)
 }
 
@@ -173,7 +173,7 @@ func TestUpdateSystemRepos1(t *testing.T) {
 	database.Db.Create(models.SystemRepo{SystemID: systemID, RepoID: 2})
 
 	repos := []string{"repo1", "repo10", "repo20"}
-	repoIDs, nReposAdded, err := ensureReposInDb(database.Db, repos)
+	repoIDs, nReposAdded, err := ensureReposInDB(database.Db, repos)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(repoIDs))
 	assert.Equal(t, int64(2), nReposAdded)

@@ -227,7 +227,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 
 func updateRepos(tx *gorm.DB, systemID int, repos []string) (addedRepos int64, addedSysRepos int64,
 	deletedSysRepos int, err error) {
-	repoIDs, addedRepos, err := ensureReposInDb(tx, repos)
+	repoIDs, addedRepos, err := ensureReposInDB(tx, repos)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -239,7 +239,7 @@ func updateRepos(tx *gorm.DB, systemID int, repos []string) (addedRepos int64, a
 	return addedRepos, addedSysRepos, deletedSysRepos, nil
 }
 
-func ensureReposInDb(tx *gorm.DB, repos []string) (repoIDs []int, added int64, err error) {
+func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int, added int64, err error) {
 	repoObjs := make(models.RepoSlice, len(repos))
 	for i, repo := range repos {
 		repoObjs[i] = models.Repo{Name: repo}

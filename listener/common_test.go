@@ -35,7 +35,7 @@ func deleteData(t *testing.T) {
 }
 
 // nolint: unparam
-func assertSystemInDb(t *testing.T, inventoryID string, rhAccountID *int) {
+func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int) {
 	var system models.SystemPlatform
 	assert.NoError(t, database.Db.Where("inventory_id = ?", inventoryID).Find(&system).Error)
 	assert.Equal(t, system.InventoryID, inventoryID)
@@ -54,7 +54,7 @@ func assertSystemInDb(t *testing.T, inventoryID string, rhAccountID *int) {
 	assert.True(t, system.LastUpload.After(now), "Last upload")
 }
 
-func assertSystemNotInDb(t *testing.T) {
+func assertSystemNotInDB(t *testing.T) {
 	var systemCount int
 	assert.Nil(t, database.Db.Model(models.SystemPlatform{}).
 		Where("inventory_id = ?", id).Count(&systemCount).Error)
@@ -91,7 +91,7 @@ func createTestDeleteEvent(inventoryID string) mqueue.PlatformEvent {
 	}
 }
 
-func assertReposInDb(t *testing.T, repos []string) {
+func assertReposInDB(t *testing.T, repos []string) {
 	var n []string
 	err := database.Db.Model(&models.Repo{}).Where("name IN (?)", repos).Pluck("name", &n).Error
 	fmt.Println(n)
