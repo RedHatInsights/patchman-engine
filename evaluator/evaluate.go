@@ -227,7 +227,7 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 	newsAdvisoriesNames, unpatched := getNewAndUnpatchedAdvisories(reported, oldSystemAdvisories)
 	utils.Log("inventoryID", inventoryID, "newAdvisories", len(newsAdvisoriesNames)).Debug("new advisories")
 
-	newIDs, err := getAdvisoriesFromDb(tx, newsAdvisoriesNames)
+	newIDs, err := getAdvisoriesFromDB(tx, newsAdvisoriesNames)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Unable to ensure new system advisories in db")
 	}
@@ -327,7 +327,7 @@ func updateSystemAdvisoriesWhenPatched(tx *gorm.DB, system *models.SystemPlatfor
 }
 
 // Return advisory IDs, created advisories count, error
-func getAdvisoriesFromDb(tx *gorm.DB, advisories []string) ([]int, error) {
+func getAdvisoriesFromDB(tx *gorm.DB, advisories []string) ([]int, error) {
 	var advisoryIDs []int
 	err := tx.Model(&models.AdvisoryMetadata{}).Where("name IN (?)", advisories).
 		Pluck("id", &advisoryIDs).Error

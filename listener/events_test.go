@@ -45,7 +45,7 @@ func TestDeleteSystem(t *testing.T) {
 
 	deleteEvent := createTestDeleteEvent(id)
 	err := HandleDelete(deleteEvent)
-	assertSystemNotInDb(t)
+	assertSystemNotInDB(t)
 	assert.NoError(t, err)
 }
 
@@ -103,7 +103,7 @@ func TestUploadAfterDelete(t *testing.T) {
 	uploadEvent := createTestUploadEvent(id, true)
 	err := uploadHandler(uploadEvent)
 	assert.NoError(t, err)
-	assertSystemNotInDb(t)
+	assertSystemNotInDB(t)
 }
 
 func TestDeleteCleanup(t *testing.T) {

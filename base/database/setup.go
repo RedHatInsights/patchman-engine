@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	Db *gorm.DB
+	Db *gorm.DB //nolint:stylecheck
 )
 
 // configure database, PostgreSQL or SQLite connection

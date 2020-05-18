@@ -90,7 +90,7 @@ func CheckCachesValid() (bool, error) {
 	return valid, nil
 }
 
-func CheckAdvisoriesInDb(t *testing.T, advisories []string) []int {
+func CheckAdvisoriesInDB(t *testing.T, advisories []string) []int {
 	var advisoriesObjs []models.AdvisoryMetadata
 	err := Db.Where("name IN (?)", advisories).Find(&advisoriesObjs).Error
 	assert.Nil(t, err)

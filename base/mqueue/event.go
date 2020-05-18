@@ -44,7 +44,7 @@ func MakeMessageHandler(eventHandler EventHandler) MessageHandler {
 func WriteEvents(ctx context.Context, w Writer, events ...PlatformEvent) error {
 	msgs := make([]kafka.Message, len(events))
 	for i, ev := range events {
-		data, err := json.Marshal(&ev)
+		data, err := json.Marshal(&ev) //nolint:gosec
 		if err != nil {
 			return errors.Wrap(err, "Serializing event")
 		}
