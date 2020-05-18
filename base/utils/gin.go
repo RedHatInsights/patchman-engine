@@ -42,8 +42,8 @@ func LoadLimitOffset(c *gin.Context, defaultLimit int) (int, int, error) {
 		return 0, 0, err
 	}
 
-	if limit < 1 {
-		return 0, 0, errors.New("limit must not be less than 1")
+	if limit < 1 && limit != -1 {
+		return 0, 0, errors.New("limit must not be less than 1, or should be -1 to return all items")
 	}
 
 	return limit, offset, nil
