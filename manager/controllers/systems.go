@@ -57,7 +57,7 @@ type SystemsResponse struct {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    limit   query   int     false   "Limit for paging"
+// @Param    limit   query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset  query   int     false   "Offset for paging"
 // @Param    sort    query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,enabled,stale)
 // @Param    filter[id]              query   string  false "Filter"
