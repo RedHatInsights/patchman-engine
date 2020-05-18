@@ -92,29 +92,36 @@ type ListOpts struct {
 	DefaultSort    string
 }
 
-// nolint: funlen
-func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts) (*gorm.DB, *ListMeta, *Links, error) {
-	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
+func checkBadRequest(tx *gorm.DB, c *gin.Context, opts ListOpts) (txx *gorm.DB, limit int, offset int,
+	sortFields []string, filters Filters, err error) {
+	limit, offset, err = utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
-		LogAndRespBadRequest(c, err, err.Error())
-		return nil, nil, nil, err
+		return nil, 0, 0, nil, nil, errors.
+			Wrap(err, "unable to parse limit, offset params")
 	}
 
-	tx, sortFields, err := ApplySort(c, tx, opts.Fields, opts.DefaultSort)
+	tx, sortFields, err = ApplySort(c, tx, opts.Fields, opts.DefaultSort)
 	if err != nil {
-		LogAndRespBadRequest(c, err, "Invalid sort")
-		return nil, nil, nil, err
+		return nil, 0, 0, nil, nil, errors.Wrap(err, "invalid sort")
 	}
 
-	filters, err := ParseFilters(c, opts.Fields, opts.DefaultFilters)
+	filters, err = ParseFilters(c, opts.Fields, opts.DefaultFilters)
 	if err != nil {
-		LogAndRespBadRequest(c, err, "Invalid filter")
-		return nil, nil, nil, err
+		return nil, 0, 0, nil, nil, errors.Wrap(err, "filters parsing failed")
 	}
 
 	tx, err = filters.Apply(tx, opts.Fields)
 	if err != nil {
-		LogAndRespBadRequest(c, err, "Invalid filter")
+		return nil, 0, 0, nil, nil, errors.Wrap(err, "filters applying failed")
+	}
+
+	return tx, limit, offset, sortFields, filters, nil
+}
+
+func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts) (*gorm.DB, *ListMeta, *Links, error) {
+	tx, limit, offset, sortFields, filters, err := checkBadRequest(tx, c, opts)
+	if err != nil {
+		LogAndRespBadRequest(c, err, err.Error())
 		return nil, nil, nil, err
 	}
 
@@ -146,7 +153,10 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts) (*gorm.
 
 	links := CreateLinks(path, offset, limit, total, filters.ToQueryParams(), sortQ)
 
-	tx = tx.Limit(limit).Offset(offset)
+	if limit != -1 {
+		tx = tx.Limit(limit)
+	}
+	tx = tx.Offset(offset)
 	return tx, &meta, &links, nil
 }
 
