@@ -62,6 +62,14 @@ func TestAdvisoriesOffsetLimit(t *testing.T) {
 	})
 }
 
+func TestAdvisoriesUnlimited(t *testing.T) {
+	testAdvisoriesOk(t, "GET", "/?offset=0&limit=-1", func(output AdvisoriesResponse) {
+		assert.Equal(t, 8, len(output.Data))
+		assert.Equal(t, -1, output.Meta.Limit)
+		assert.Equal(t, 8, output.Meta.TotalItems)
+	})
+}
+
 func TestAdvisoriesOffset(t *testing.T) {
 	testAdvisoriesOk(t, "GET", "/?offset=1&limit=4", func(output AdvisoriesResponse) {
 		assert.Equal(t, 4, len(output.Data))
