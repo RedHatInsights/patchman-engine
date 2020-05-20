@@ -120,6 +120,7 @@ func SystemsExportHandler(c *gin.Context) {
 
 	var systems []SystemDBLookup
 
+	query = query.Order("id")
 	err := query.Find(&systems).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
@@ -149,6 +150,7 @@ func querySystems(account string) *gorm.DB {
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
 }
+
 func buildData(systems []SystemDBLookup) []SystemItem {
 	data := make([]SystemItem, len(systems))
 	for i, system := range systems {
