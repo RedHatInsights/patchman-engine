@@ -4,7 +4,9 @@ import (
 	"app/base/database"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -72,6 +74,30 @@ type SystemsResponse struct {
 // @Success 200 {object} SystemsResponse
 // @Router /api/patch/v1/systems [get]
 func SystemsListHandler(c *gin.Context) {
+	resp := ListSystems(c)
+	if resp != nil {
+		c.JSON(http.StatusOK, &resp)
+	}
+}
+
+// nolint: gocritic
+func SystemsExportHandler(c *gin.Context) {
+	res := ListSystems(c)
+
+	accept := c.GetHeader("Accept")
+
+	if strings.Contains(accept, "application/json") {
+		c.JSON(http.StatusOK, res.Data)
+	} else if strings.Contains(accept, "text/csv") {
+		Csv(c, 200, res.Data)
+	} else {
+		LogAndRespStatusError(c, http.StatusUnsupportedMediaType, errors.New("Invalid content type"),
+			"This endpoint provides only application/json and text/csv")
+		return
+	}
+}
+
+func ListSystems(c *gin.Context) *SystemsResponse {
 	account := c.GetString(middlewares.KeyAccount)
 
 	query := database.Db.Table("system_platform").Select(SystemsSelect).
@@ -82,23 +108,22 @@ func SystemsListHandler(c *gin.Context) {
 	query, meta, links, err := ListCommon(query, c, "/api/patch/v1/systems", SystemOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
-		return
+		return nil
 	}
 
 	var systems []SystemDBLookup
 	err = query.Find(&systems).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
-		return
+		return nil
 	}
 
 	data := buildData(systems)
-	var resp = SystemsResponse{
+	return &SystemsResponse{
 		Data:  data,
 		Links: *links,
 		Meta:  *meta,
 	}
-	c.JSON(http.StatusOK, &resp)
 }
 
 func buildData(systems []SystemDBLookup) []SystemItem {

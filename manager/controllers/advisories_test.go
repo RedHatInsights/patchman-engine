@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -191,4 +192,33 @@ func TestAdvisoriesSearchFilter(t *testing.T) {
 	testAdvisoriesOk(t, "GET", "/?search=adv-3&filter[advisory_type]=1", func(output AdvisoriesResponse) {
 		assert.Equal(t, 0, len(output.Data))
 	})
+}
+
+func TestAdvisoriesExportJSON(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/", nil)
+	req.Header.Add("Accept", "application/json")
+	core.InitRouter(AdvisoriesExportHandler).ServeHTTP(w, req)
+	assert.Equal(t, 200, w.Code)
+	var output []AdvisoryInlineItem
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Equal(t, 8, len(output))
+	assert.Equal(t, output[0].Description, "adv-1-des")
+}
+
+func TestAdvisoriesExportCSV(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/", nil)
+	req.Header.Add("Accept", "text/csv")
+	core.InitRouter(AdvisoriesExportHandler).ServeHTTP(w, req)
+	assert.Equal(t, 200, w.Code)
+	body := w.Body.String()
+	lines := strings.Split(body, "\n")
+	assert.Equal(t, lines[1], "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,,7")
 }
