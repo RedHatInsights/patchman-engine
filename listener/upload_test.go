@@ -200,3 +200,16 @@ func TestUpdateSystemRepos2(t *testing.T) {
 	assert.Equal(t, 2, nDeleted)
 	deleteData(t)
 }
+
+// Skip invalid message
+func TestUploadMsgHandlerInvalidMsg(t *testing.T) {
+	utils.ConfigureLogging()
+	var hook = utils.NewTestLogHook()
+	log.AddHook(hook)
+
+	msg := kafka.Message{Value: []byte(`{"key":"val"`)}
+	err := uploadMsgHandler(msg)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(hook.LogEntries))
+	assert.Equal(t, log.ErrorLevel, hook.LogEntries[0].Level)
+}
