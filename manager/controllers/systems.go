@@ -105,15 +105,15 @@ func SystemsListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-// nolint: gocritic, lll
-// @Summary Export applicable advisories for all my systems
-// @Description  Export applicable advisories for all my systems
-// @ID exportAdvisories
+// nolint: gocritic
+// @Summary Export systems for my account
+// @Description  Export systems for my account
+// @ID exportSystems
 // @Security RhIdentity
 // @Accept   json
-// @Produce  json, text/csv
-// @Success 200 {array} AdvisoryInlineItem
-// @Router /api/patch/v1/export/advisories [get]
+// @Produce  json,text/csv
+// @Success 200 {array} SystemInlineItem
+// @Router /api/patch/v1/export/systems [get]
 func SystemsExportHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)
 	query := querySystems(account)
