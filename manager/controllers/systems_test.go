@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -116,4 +117,41 @@ func TestSystemsSearch(t *testing.T) {
 	assert.Equal(t, "INV-1", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "INV-1", output.Data[0].Attributes.DisplayName)
+}
+
+func TestSystemsExportJSON(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/", nil)
+	req.Header.Add("Accept", "application/json")
+	core.InitRouterWithPath(SystemsExportHandler, "/").ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output []SystemInlineItem
+
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Equal(t, 8, len(output))
+	assert.Equal(t, output[0].ID, "INV-1")
+}
+
+func TestSystemsExportCSV(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/", nil)
+	req.Header.Add("Accept", "text/csv")
+	core.InitRouter(SystemsExportHandler).ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	body := w.Body.String()
+	lines := strings.Split(body, "\n")
+
+	assert.Equal(t,
+		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,enabled,stale",
+		lines[0])
+
+	assert.Equal(t, "INV-1,INV-1,2018-09-22T16:00:00Z,2018-09-22T16:00:00Z,2,3,3,true,false", lines[1])
 }
