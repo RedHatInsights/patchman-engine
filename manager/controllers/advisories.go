@@ -93,7 +93,15 @@ func AdvisoriesListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-// nolint: gocritic
+// nolint: gocritic, lll
+// @Summary Export applicable advisories for all my systems
+// @Description  Export applicable advisories for all my systems
+// @ID exportAdvisories
+// @Security RhIdentity
+// @Accept   json
+// @Produce  json, text/csv
+// @Success 200 {array} AdvisoryInlineItem
+// @Router /api/patch/v1/export/advisories [get]
 func AdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)
 	query := buildQueryAdvisories(account)
