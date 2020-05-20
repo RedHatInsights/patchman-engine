@@ -149,6 +149,7 @@ func TestSystemsExportCSV(t *testing.T) {
 	body := w.Body.String()
 	lines := strings.Split(body, "\n")
 
+	assert.Equal(t, 10, len(lines))
 	assert.Equal(t,
 		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,enabled,stale",
 		lines[0])

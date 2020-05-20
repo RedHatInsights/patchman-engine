@@ -315,6 +315,76 @@
                 ]
             }
         },
+        "/api/patch/v1/export/advisories": {
+            "get": {
+                "summary": "Export applicable advisories for all my systems",
+                "description": "Export applicable advisories for all my systems",
+                "operationId": "exportAdvisories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/controllers.AdvisoryInlineItem"
+                                    }
+                                }
+                            },
+                            "text/csv": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/controllers.AdvisoryInlineItem"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
+        "/api/patch/v1/export/systems": {
+            "get": {
+                "summary": "Export systems for my account",
+                "description": "Export systems for my account",
+                "operationId": "exportSystems",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/controllers.SystemInlineItem"
+                                    }
+                                }
+                            },
+                            "text/csv": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/controllers.SystemInlineItem"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
         "/api/patch/v1/systems": {
             "get": {
                 "summary": "Show me all my systems",
@@ -714,6 +784,32 @@
                     }
                 }
             },
+            "controllers.AdvisoryInlineItem": {
+                "type": "object",
+                "properties": {
+                    "advisory_type": {
+                        "type": "integer"
+                    },
+                    "applicable_systems": {
+                        "type": "integer"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "public_date": {
+                        "type": "string"
+                    },
+                    "severity": {
+                        "type": "integer"
+                    },
+                    "synopsis": {
+                        "type": "string"
+                    }
+                }
+            },
             "controllers.AdvisoryItem": {
                 "type": "object",
                 "properties": {
@@ -882,6 +978,38 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/controllers.SystemItem"
+                    }
+                }
+            },
+            "controllers.SystemInlineItem": {
+                "type": "object",
+                "properties": {
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "last_evaluation": {
+                        "type": "string"
+                    },
+                    "last_upload": {
+                        "type": "string"
+                    },
+                    "rhba_count": {
+                        "type": "integer"
+                    },
+                    "rhea_count": {
+                        "type": "integer"
+                    },
+                    "rhsa_count": {
+                        "type": "integer"
+                    },
+                    "stale": {
+                        "type": "boolean"
                     }
                 }
             },

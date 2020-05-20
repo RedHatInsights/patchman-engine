@@ -220,5 +220,7 @@ func TestAdvisoriesExportCSV(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 	body := w.Body.String()
 	lines := strings.Split(body, "\n")
+
+	assert.Equal(t, 10, len(lines))
 	assert.Equal(t, lines[1], "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,,7")
 }
