@@ -66,7 +66,7 @@ func uploadMsgHandler(msg kafka.Message) error {
 		utils.Log("err", err.Error()).Error("unable to parse upload msg")
 		utils.Log("raw", string(msg.Value)).Trace("Raw message string")
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorParsing).Inc()
-		return err
+		return nil
 	}
 	return uploadHandler(event)
 }
