@@ -5,7 +5,9 @@ import (
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
 	"net/http"
+	"strings"
 )
 
 var AdvisoriesFields = database.MustGetQueryAttrs(&AdvisoriesDBLookup{})
@@ -23,13 +25,18 @@ type AdvisoriesDBLookup struct {
 
 type AdvisoryItemAttributes struct {
 	SystemAdvisoryItemAttributes
-	ApplicableSystems int `json:"applicable_systems" query:"COALESCE(aad.systems_affected, 0)"`
+	ApplicableSystems int `json:"applicable_systems" query:"COALESCE(aad.systems_affected, 0)" csv:"applicable_systems"`
 }
 
 type AdvisoryItem struct {
 	Attributes AdvisoryItemAttributes `json:"attributes"`
 	ID         string                 `json:"id"`
 	Type       string                 `json:"type"`
+}
+
+type AdvisoryInlineItem struct {
+	ID string `json:"id" csv:"id"`
+	AdvisoryItemAttributes
 }
 
 type AdvisoriesResponse struct {
@@ -75,7 +82,6 @@ func AdvisoriesListHandler(c *gin.Context) {
 	err = query.Find(&advisories).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
-		return
 	}
 
 	data := buildAdvisoriesData(advisories)
@@ -85,6 +91,36 @@ func AdvisoriesListHandler(c *gin.Context) {
 		Meta:  *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
+}
+
+// nolint: gocritic
+func AdvisoriesExportHandler(c *gin.Context) {
+	account := c.GetString(middlewares.KeyAccount)
+	query := buildQueryAdvisories(account)
+
+	var advisories []AdvisoriesDBLookup
+
+	err := query.Find(&advisories).Error
+	if err != nil {
+		LogAndRespError(c, err, "db error")
+		return
+	}
+
+	data := make([]AdvisoryInlineItem, len(advisories))
+
+	for i, v := range advisories {
+		data[i] = AdvisoryInlineItem(v)
+	}
+	accept := c.GetHeader("Accept")
+	if strings.Contains(accept, "application/json") {
+		c.JSON(http.StatusOK, data)
+	} else if strings.Contains(accept, "text/csv") {
+		Csv(c, 200, data)
+	} else {
+		LogAndRespStatusError(c, http.StatusUnsupportedMediaType, errors.New("Invalid content type"),
+			"This endpoint provides only application/json and text/csv")
+		return
+	}
 }
 
 func buildQueryAdvisories(account string) *gorm.DB {

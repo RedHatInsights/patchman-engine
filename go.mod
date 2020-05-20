@@ -12,6 +12,7 @@ require (
 	github.com/getkin/kin-openapi v0.3.0
 	github.com/gin-contrib/gzip v0.0.1
 	github.com/gin-gonic/gin v1.6.2
+	github.com/gocarina/gocsv v0.0.0-20200330101823-46266ca37bd3
 	github.com/golang-migrate/migrate/v4 v4.10.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/jinzhu/gorm v1.9.12

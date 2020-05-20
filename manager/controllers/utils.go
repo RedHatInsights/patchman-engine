@@ -7,6 +7,7 @@ import (
 	"app/base/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/gocarina/gocsv"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"net/http"
@@ -18,6 +19,11 @@ const InvalidOffsetMsg = "Invalid offset"
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	utils.Log("err", err.Error()).Error(respMsg)
 	c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{Error: respMsg})
+}
+
+func LogAndRespStatusError(c *gin.Context, code int, err error, msg string) {
+	utils.Log("err", err.Error()).Error(msg)
+	c.AbortWithStatusJSON(code, utils.ErrorResponse{Error: msg})
 }
 
 func LogAndRespBadRequest(c *gin.Context, err error, respMsg string) {
@@ -174,4 +180,13 @@ func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) *gorm.DB 
 	concatValue := strings.Join(searchColumns, ",' ',")
 	txWithSearch := tx.Where("LOWER(CONCAT("+concatValue+")) LIKE LOWER(?)", searchExtended)
 	return txWithSearch
+}
+
+func Csv(ctx *gin.Context, code int, res interface{}) {
+	ctx.Status(http.StatusOK)
+	ctx.Header("Content-Type", "text/csv")
+	err := gocsv.Marshal(res, ctx.Writer)
+	if err != nil {
+		panic(err)
+	}
 }
