@@ -121,7 +121,13 @@ func SystemsExportHandler(c *gin.Context) {
 	var systems []SystemDBLookup
 
 	query = query.Order("id")
-	err := query.Find(&systems).Error
+	query, err := ExportListCommon(query, c, AdvisoriesOpts)
+	if err != nil {
+		// Error handling and setting of result code & content is done in ListCommon
+		return
+	}
+
+	err = query.Find(&systems).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return

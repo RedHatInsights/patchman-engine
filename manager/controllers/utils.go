@@ -124,6 +124,21 @@ func checkBadRequest(tx *gorm.DB, c *gin.Context, opts ListOpts) (txx *gorm.DB, 
 	return tx, limit, offset, sortFields, filters, nil
 }
 
+func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, error) {
+	filters, err := ParseFilters(c, opts.Fields, opts.DefaultFilters)
+	if err != nil {
+		LogAndRespBadRequest(c, err, "Failed to parse filters")
+		return nil, errors.Wrap(err, "filters parsing failed")
+	}
+
+	tx, err = filters.Apply(tx, opts.Fields)
+	if err != nil {
+		LogAndRespBadRequest(c, err, "Failed to apply filters")
+		return nil, errors.Wrap(err, "filters applying failed")
+	}
+	return tx, nil
+}
+
 func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts) (*gorm.DB, *ListMeta, *Links, error) {
 	tx, limit, offset, sortFields, filters, err := checkBadRequest(tx, c, opts)
 	if err != nil {
