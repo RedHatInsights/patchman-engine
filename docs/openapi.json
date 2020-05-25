@@ -320,6 +320,72 @@
                 "summary": "Export applicable advisories for all my systems",
                 "description": "Export applicable advisories for all my systems",
                 "operationId": "exportAdvisories",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Find matching text",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[id]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[description]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[public_date]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[synopsis]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[advisory_type]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[severity]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[applicable_systems]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -355,6 +421,80 @@
                 "summary": "Export systems for my account",
                 "description": "Export systems for my account",
                 "operationId": "exportSystems",
+                "parameters": [
+                    {
+                        "name": "filter[id]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[display_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[last_evaluation]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[last_upload]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[rhsa_count]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[rhba_count]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[rhea_count]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[enabled]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[stale]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

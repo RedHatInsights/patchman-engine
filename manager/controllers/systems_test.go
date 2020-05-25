@@ -156,3 +156,23 @@ func TestSystemsExportCSV(t *testing.T) {
 
 	assert.Equal(t, "INV-1,INV-1,2018-09-22T16:00:00Z,2018-09-22T16:00:00Z,2,3,3,true,false", lines[1])
 }
+
+func TestSystemsExportCSVFilter(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?filter[display_name]=nonexistant", nil)
+	req.Header.Add("Accept", "text/csv")
+	core.InitRouter(SystemsExportHandler).ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	body := w.Body.String()
+	lines := strings.Split(body, "\n")
+
+	assert.Equal(t, 2, len(lines))
+	assert.Equal(t,
+		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,enabled,stale",
+		lines[0])
+	assert.Equal(t, "", lines[1])
+}
