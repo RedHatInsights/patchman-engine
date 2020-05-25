@@ -100,6 +100,14 @@ func AdvisoriesListHandler(c *gin.Context) {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json,text/csv
+// @Param    search         query   string  false   "Find matching text"
+// @Param    filter[id]              query   string  false "Filter"
+// @Param    filter[description]     query   string  false "Filter"
+// @Param    filter[public_date]     query   string  false "Filter"
+// @Param    filter[synopsis]        query   string  false "Filter"
+// @Param    filter[advisory_type]   query   string  false "Filter"
+// @Param    filter[severity]        query   string  false "Filter"
+// @Param    filter[applicable_systems] query   string  false "Filter"
 // @Success 200 {array} AdvisoryInlineItem
 // @Router /api/patch/v1/export/advisories [get]
 func AdvisoriesExportHandler(c *gin.Context) {
@@ -109,7 +117,8 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	var advisories []AdvisoriesDBLookup
 
 	query = query.Order("id")
-	query, err := ExportListCommon(query, c, SystemOpts)
+	query = ApplySearch(c, query, "am.name", "synopsis", "description")
+	query, err := ExportListCommon(query, c, AdvisoriesOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return

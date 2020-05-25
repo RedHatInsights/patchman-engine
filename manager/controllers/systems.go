@@ -112,6 +112,15 @@ func SystemsListHandler(c *gin.Context) {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json,text/csv
+// @Param    filter[id]              query   string  false "Filter"
+// @Param    filter[display_name]    query   string  false "Filter"
+// @Param    filter[last_evaluation] query   string  false "Filter"
+// @Param    filter[last_upload]     query   string  false "Filter"
+// @Param    filter[rhsa_count]      query   string  false "Filter"
+// @Param    filter[rhba_count]      query   string  false "Filter"
+// @Param    filter[rhea_count]      query   string  false "Filter"
+// @Param    filter[enabled]         query   string  false "Filter"
+// @Param    filter[stale]           query   string  false "Filter"
 // @Success 200 {array} SystemInlineItem
 // @Router /api/patch/v1/export/systems [get]
 func SystemsExportHandler(c *gin.Context) {
@@ -121,7 +130,7 @@ func SystemsExportHandler(c *gin.Context) {
 	var systems []SystemDBLookup
 
 	query = query.Order("id")
-	query, err := ExportListCommon(query, c, AdvisoriesOpts)
+	query, err := ExportListCommon(query, c, SystemOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return
