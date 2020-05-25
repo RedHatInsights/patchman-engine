@@ -109,7 +109,13 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	var advisories []AdvisoriesDBLookup
 
 	query = query.Order("id")
-	err := query.Find(&advisories).Error
+	query, err := ExportListCommon(query, c, SystemOpts)
+	if err != nil {
+		// Error handling and setting of result code & content is done in ListCommon
+		return
+	}
+
+	err = query.Find(&advisories).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return
