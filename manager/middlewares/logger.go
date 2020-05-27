@@ -24,6 +24,7 @@ func RequestResponseLogger() gin.HandlerFunc {
 			"method", c.Request.Method,
 			"remote_addr", c.Request.RemoteAddr,
 			"url", c.Request.URL.String(),
+			"content_encoding", c.Writer.Header().Get("Content-Encoding"),
 			"account", c.GetString("account"))
 
 		for _, param := range c.Params {
