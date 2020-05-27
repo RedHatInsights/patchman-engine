@@ -43,6 +43,21 @@ func GetBoolEnvOrFail(envname string) bool {
 	return parsedBool
 }
 
+// parse bool value from env variable
+func GetBoolEnvOrDefault(envname string, defval bool) bool {
+	value := os.Getenv(envname)
+	if value == "" {
+		return defval
+	}
+
+	parsedBool, err := strconv.ParseBool(value)
+	if err != nil {
+		panic(err)
+	}
+
+	return parsedBool
+}
+
 // load int environment variable or fail
 func GetIntEnvOrFail(envname string) int {
 	valueStr := os.Getenv(envname)
