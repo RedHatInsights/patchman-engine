@@ -42,6 +42,10 @@ func configure() {
 	vmaasConfig := vmaas.NewConfiguration()
 	vmaasConfig.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
 	vmaasConfig.Debug = traceAPI
+	disableCompression := !utils.GetBoolEnvOrDefault("ENABLE_VMAAS_CALL_COMPRESSION", true)
+	vmaasConfig.HTTPClient = &http.Client{Transport: &http.Transport{
+		DisableCompression: disableCompression,
+	}}
 	vmaasClient = vmaas.NewAPIClient(vmaasConfig)
 }
 
