@@ -3,8 +3,10 @@ package platform
 import (
 	"app/base"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"encoding/json"
 	"fmt"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/segmentio/kafka-go"
 	"net/http"
@@ -23,6 +25,8 @@ func addWebsocket() chan string {
 func platformMock() {
 	utils.Log().Info("Platform mock starting")
 	app := gin.New()
+	app.Use(middlewares.RequestResponseLogger())
+	app.Use(gzip.Gzip(gzip.DefaultCompression))
 	initVMaaS(app)
 	initRbac(app)
 
