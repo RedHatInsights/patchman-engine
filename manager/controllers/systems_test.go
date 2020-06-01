@@ -30,7 +30,6 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, 3, output.Data[0].Attributes.RheaCount)
 	assert.Equal(t, 3, output.Data[0].Attributes.RhbaCount)
 	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
-	assert.Equal(t, true, output.Data[0].Attributes.Enabled)
 
 	// links
 	assert.Equal(t, "/api/patch/v1/systems?offset=0&limit=20&filter[stale]=eq:false&sort=-last_upload", output.Links.First)
@@ -151,10 +150,10 @@ func TestSystemsExportCSV(t *testing.T) {
 
 	assert.Equal(t, 10, len(lines))
 	assert.Equal(t,
-		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,enabled,stale",
+		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale",
 		lines[0])
 
-	assert.Equal(t, "INV-1,INV-1,2018-09-22T16:00:00Z,2018-09-22T16:00:00Z,2,3,3,true,false", lines[1])
+	assert.Equal(t, "INV-1,INV-1,2018-09-22T16:00:00Z,2018-09-22T16:00:00Z,2,3,3,false", lines[1])
 }
 
 func TestSystemsExportCSVFilter(t *testing.T) {
@@ -172,7 +171,7 @@ func TestSystemsExportCSVFilter(t *testing.T) {
 
 	assert.Equal(t, 2, len(lines))
 	assert.Equal(t,
-		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,enabled,stale",
+		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale",
 		lines[0])
 	assert.Equal(t, "", lines[1])
 }

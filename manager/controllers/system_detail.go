@@ -55,7 +55,6 @@ func SystemDetailHandler(c *gin.Context) {
 				RhsaCount:      inventory.AdvisorySecCountCache,
 				RhbaCount:      inventory.AdvisoryBugCountCache,
 				RheaCount:      inventory.AdvisoryEnhCountCache,
-				Enabled:        !inventory.OptOut,
 			},
 			ID:   inventory.InventoryID,
 			Type: "system",

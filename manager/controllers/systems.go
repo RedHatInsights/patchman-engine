@@ -37,8 +37,9 @@ type SystemItemAttributes struct {
 	RhsaCount      int        `json:"rhsa_count" csv:"rhsa_count" query:"system_platform.advisory_sec_count_cache"`
 	RhbaCount      int        `json:"rhba_count" csv:"rhba_count" query:"system_platform.advisory_bug_count_cache"`
 	RheaCount      int        `json:"rhea_count" csv:"rhea_count" query:"system_platform.advisory_enh_count_cache"`
-	Enabled        bool       `json:"enabled" csv:"enabled" query:"(NOT system_platform.opt_out)"`
-	Stale          bool       `json:"stale" csv:"stale" query:"system_platform.stale"`
+	// Not used
+	//Enabled        bool       `json:"enabled" csv:"enabled" query:"(NOT system_platform.opt_out)"`
+	Stale bool `json:"stale" csv:"stale" query:"system_platform.stale"`
 }
 
 type SystemItem struct {
@@ -67,7 +68,7 @@ type SystemsResponse struct {
 // @Produce  json
 // @Param    limit   query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset  query   int     false   "Offset for paging"
-// @Param    sort    query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,enabled,stale)
+// @Param    sort    query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale)
 // @Param    filter[id]              query   string  false "Filter"
 // @Param    filter[display_name]    query   string  false "Filter"
 // @Param    filter[last_evaluation] query   string  false "Filter"
@@ -75,7 +76,6 @@ type SystemsResponse struct {
 // @Param    filter[rhsa_count]      query   string  false "Filter"
 // @Param    filter[rhba_count]      query   string  false "Filter"
 // @Param    filter[rhea_count]      query   string  false "Filter"
-// @Param    filter[enabled]         query   string  false "Filter"
 // @Param    filter[stale]           query   string  false "Filter"
 // @Success 200 {object} SystemsResponse
 // @Router /api/patch/v1/systems [get]
