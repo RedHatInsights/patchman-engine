@@ -218,7 +218,6 @@
                                 "rhsa_count",
                                 "rhba_count",
                                 "rhea_count",
-                                "enabled",
                                 "stale"
                             ]
                         }
@@ -273,14 +272,6 @@
                     },
                     {
                         "name": "filter[rhea_count]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[enabled]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -561,7 +552,6 @@
                                 "rhsa_count",
                                 "rhba_count",
                                 "rhea_count",
-                                "enabled",
                                 "stale"
                             ]
                         }
@@ -616,14 +606,6 @@
                     },
                     {
                         "name": "filter[rhea_count]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[enabled]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -1127,9 +1109,6 @@
                     "display_name": {
                         "type": "string"
                     },
-                    "enabled": {
-                        "type": "boolean"
-                    },
                     "id": {
                         "type": "string"
                     },
@@ -1149,7 +1128,8 @@
                         "type": "integer"
                     },
                     "stale": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "description": "Not used\nEnabled        bool       `json:\"enabled\" csv:\"enabled\" query:\"(NOT system_platform.opt_out)\"`"
                     }
                 }
             },
@@ -1173,9 +1153,6 @@
                     "display_name": {
                         "type": "string"
                     },
-                    "enabled": {
-                        "type": "boolean"
-                    },
                     "last_evaluation": {
                         "type": "string"
                     },
@@ -1192,7 +1169,8 @@
                         "type": "integer"
                     },
                     "stale": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "description": "Not used\nEnabled        bool       `json:\"enabled\" csv:\"enabled\" query:\"(NOT system_platform.opt_out)\"`"
                     }
                 }
             },
