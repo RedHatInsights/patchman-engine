@@ -11,32 +11,32 @@ import (
 func updatesHandler(c *gin.Context) {
 	data := vmaas.UpdatesV2Response{
 		UpdateList: map[string]vmaas.UpdatesV2ResponseUpdateList{
-			"firefox": {
+			"firefox:0-76.0.1-1.fc31.x86_64": {
 				AvailableUpdates: []vmaas.UpdatesResponseAvailableUpdates{
 					{
 						Repository: "repo1",
 						Releasever: "ser1",
 						Basearch:   "i686",
 						Erratum:    "RH-1",
-						Package:    "firefox-2",
+						Package:    "firefox:0-77.0.1-1.fc31.x86_64",
 					},
 					{
 						Repository: "repo1",
 						Releasever: "ser1",
 						Basearch:   "i686",
 						Erratum:    "RH-2",
-						Package:    "firefox-3",
+						Package:    "firefox:1-76.0.1-1.fc31.x86_64",
 					},
 				},
 			},
-			"kernel": {
+			"kernel-5.6.13-200.fc31.x86_64": {
 				AvailableUpdates: []vmaas.UpdatesResponseAvailableUpdates{
 					{
 						Repository: "repo1",
 						Releasever: "ser1",
 						Basearch:   "i686",
 						Erratum:    "RH-100",
-						Package:    "kernel-2",
+						Package:    "kernel-5.10.13-200.fc31.x86_64",
 					},
 				},
 			},

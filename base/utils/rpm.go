@@ -7,12 +7,18 @@ import (
 )
 
 var (
-	nevraRegex *regexp.Regexp
+	nevraRegex = regexp.MustCompile(
+		`((?P<e1>[0-9]+):)?(?P<pn>[^:]+)-((?P<e2>[0-9]+):)?(?P<ver>[^-:]+)-(?P<rel>[^-:]+)\.(?P<arch>[a-z0-9_]+)`)
+	nevraRegexIndices map[string]int
 )
 
 func init() {
-	nevraRegex = regexp.MustCompile(
-		`((?P<e1>[0-9]+):)?(?P<pn>[^:]+)-((?P<e2>[0-9]+):)?(?P<ver>[^-:]+)-(?P<rel>[^-:]+)\.(?P<arch>[a-z0-9_]+)`)
+	nevraRegexIndices = make(map[string]int)
+	for i, name := range nevraRegex.SubexpNames() {
+		if i != 0 && name != "" {
+			nevraRegexIndices[name] = i
+		}
+	}
 }
 
 type Nevra struct {
@@ -27,6 +33,7 @@ type Nevra struct {
 // TODO: Fix parsing epoch
 func ParseNevra(nevra string) (*Nevra, error) {
 	parsed := nevraRegex.FindStringSubmatch(nevra)
+
 	if len(parsed) != 9 {
 		return nil, errors.New("unable to parse nevra")
 	}
