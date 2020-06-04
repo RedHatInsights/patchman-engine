@@ -147,7 +147,7 @@ func calcPackageData(system *models.SystemPlatform, data vmaas.UpdatesV2Response
 		for _, up := range updates.AvailableUpdates {
 			upNevra, err := utils.ParseNevra(up.Package)
 			if err != nil {
-				return nil, errors.Wrapf(err, "Unable to parse nevra: %s", nevra)
+				return nil, errors.Wrapf(err, "Unable to parse nevra: %s", up.Package)
 			}
 			it.Updates = append(it.Updates, models.SystemPackageDataUpdate{
 				Version:  upNevra.EVRAString(),

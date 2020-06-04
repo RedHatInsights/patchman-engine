@@ -822,6 +822,41 @@
                     }
                 ]
             }
+        },
+        "/api/patch/v1/systems/{inventory_id}/packages": {
+            "get": {
+                "summary": "Show me details about a system packages by given inventory id",
+                "description": "Show me details about a system packages by given inventory id",
+                "operationId": "systemPackages",
+                "parameters": [
+                    {
+                        "name": "inventory_id",
+                        "in": "path",
+                        "description": "Inventory ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/models.SystemPackageData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -1188,6 +1223,37 @@
                     },
                     "meta": {
                         "$ref": "#/components/schemas/controllers.ListMeta"
+                    }
+                }
+            },
+            "models.SystemPackageData": {
+                "type": "object",
+                "additionalProperties": {
+                    "$ref": "#/components/schemas/models.SystemPackageDataItem"
+                }
+            },
+            "models.SystemPackageDataItem": {
+                "type": "object",
+                "properties": {
+                    "updates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/models.SystemPackageDataUpdate"
+                        }
+                    },
+                    "version": {
+                        "type": "string"
+                    }
+                }
+            },
+            "models.SystemPackageDataUpdate": {
+                "type": "object",
+                "properties": {
+                    "advisory": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "string"
                     }
                 }
             }
