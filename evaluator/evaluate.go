@@ -133,6 +133,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 	return nil
 }
 
+// nolint: unparam
 func calcPackageData(system *models.SystemPlatform, data vmaas.UpdatesV2Response) (models.SystemPackageData, error) {
 	res := make(models.SystemPackageData)
 
@@ -152,12 +153,12 @@ func calcPackageData(system *models.SystemPlatform, data vmaas.UpdatesV2Response
 				Version:  upNevra.EVRAString(),
 				Advisory: up.Erratum,
 			})
-
 		}
 	}
 	return res, nil
 }
 
+// nolint: lll
 func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform, pkgData models.SystemPackageData, old, new SystemAdvisoryMap) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("system-update"))
