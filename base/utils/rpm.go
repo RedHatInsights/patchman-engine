@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"github.com/pkg/errors"
 	"regexp"
 )
@@ -23,6 +24,7 @@ type Nevra struct {
 }
 
 // parse package components
+// TODO: Fix parsing epoch
 func ParseNevra(nevra string) (*Nevra, error) {
 	parsed := nevraRegex.FindStringSubmatch(nevra)
 	if len(parsed) != 9 {
@@ -36,4 +38,12 @@ func ParseNevra(nevra string) (*Nevra, error) {
 		Arch:    parsed[8],
 	}
 	return &res, nil
+}
+
+func (n Nevra) String() string {
+	return fmt.Sprintf("%s:%s-%s-%s-%s", n.Name, n.Epoch, n.Version, n.Release, n.Arch)
+}
+
+func (n Nevra) EVRAString() string {
+	return fmt.Sprintf(":%s-%s-%s-%s", n.Epoch, n.Version, n.Release, n.Arch)
 }

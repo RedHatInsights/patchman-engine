@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/jinzhu/gorm/dialects/postgres"
 	"time"
 )
 
@@ -18,11 +19,11 @@ type SystemPlatform struct {
 	ID          int    `gorm:"primary_key"`
 	InventoryID string `sql:"unique" gorm:"unique"`
 	RhAccountID int
-	DisplayName string
 	// All times need to be stored as pointers, since they are set to 0000-00-00 00:00 by gorm if not present
-	FirstReported         *time.Time `gorm:"default:null"`
-	VmaasJSON             string
-	JSONChecksum          string
+	FirstReported *time.Time `gorm:"default:null"`
+	VmaasJSON     string
+	JSONChecksum  string
+
 	LastUpdated           *time.Time `gorm:"default:null"`
 	UnchangedSince        *time.Time `gorm:"default:null"`
 	LastEvaluation        *time.Time `gorm:"default:null"`
@@ -36,10 +37,23 @@ type SystemPlatform struct {
 	StaleWarningTimestamp *time.Time
 	CulledTimestamp       *time.Time
 	Stale                 bool
+	DisplayName           string
+
+	PackageData *postgres.Jsonb
 }
 
 func (SystemPlatform) TableName() string {
 	return "system_platform"
+}
+
+type SystemPackageData map[string]SystemPackageDataItem
+type SystemPackageDataUpdate struct {
+	Version  string
+	Advisory string
+}
+type SystemPackageDataItem struct {
+	Version string
+	Updates []SystemPackageDataUpdate
 }
 
 type DeletedSystem struct {
