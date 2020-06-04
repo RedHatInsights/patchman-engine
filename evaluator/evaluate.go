@@ -13,6 +13,7 @@ import (
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
 	"github.com/jinzhu/gorm"
+	"github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/lestrrat-go/backoff"
 	"github.com/pkg/errors"
 	"net/http"
@@ -106,7 +107,7 @@ func commitWithObserve(tx *gorm.DB) error {
 	return nil
 }
 
-func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.PatchesResponse) error {
+func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) error {
 	oldSystemAdvisories, patched, unpatched, err := processSystemAdvisories(tx, system, vmaasData, system.InventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
@@ -118,8 +119,12 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 		evaluationCnt.WithLabelValues("error-store-advisories").Inc()
 		return errors.Wrap(err, "Unable to store advisory data")
 	}
-
-	err = updateSystemPlatform(tx, system, oldSystemAdvisories, newSystemAdvisories)
+	packageData, err := calcPackageData(system, vmaasData)
+	if err != nil {
+		evaluationCnt.WithLabelValues("error-pkg-data").Inc()
+		return errors.Wrap(err, "Unable to calculate package data")
+	}
+	err = updateSystemPlatform(tx, system, packageData, oldSystemAdvisories, newSystemAdvisories)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-update-system").Inc()
 		return errors.Wrap(err, "Unable to update system")
@@ -128,7 +133,32 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 	return nil
 }
 
-func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform, old, new SystemAdvisoryMap) error {
+func calcPackageData(system *models.SystemPlatform, data vmaas.UpdatesV2Response) (models.SystemPackageData, error) {
+	res := make(models.SystemPackageData)
+
+	for nevra, updates := range data.UpdateList {
+		pkg, err := utils.ParseNevra(nevra)
+		if err != nil {
+			return nil, errors.Wrapf(err, "Unable to parse nevra: %s", nevra)
+		}
+		it := res[pkg.Name]
+		it.Version = pkg.EVRAString()
+		for _, up := range updates.AvailableUpdates {
+			upNevra, err := utils.ParseNevra(up.Package)
+			if err != nil {
+				return nil, errors.Wrapf(err, "Unable to parse nevra: %s", nevra)
+			}
+			it.Updates = append(it.Updates, models.SystemPackageDataUpdate{
+				Version:  upNevra.EVRAString(),
+				Advisory: up.Erratum,
+			})
+
+		}
+	}
+	return res, nil
+}
+
+func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform, pkgData models.SystemPackageData, old, new SystemAdvisoryMap) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("system-update"))
 	if old == nil || new == nil {
@@ -147,18 +177,23 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform, old, new S
 		}
 		counts[0]++
 	}
+	pkgDataStr, err := json.Marshal(&pkgData)
+	if err != nil {
+		return err
+	}
 	data := map[string]interface{}{}
 	data["advisory_count_cache"] = counts[0]
 	data["advisory_enh_count_cache"] = counts[1]
 	data["advisory_bug_count_cache"] = counts[2]
 	data["advisory_sec_count_cache"] = counts[3]
 	data["last_evaluation"] = time.Now()
+	data["package_data"] = postgres.Jsonb{RawMessage: pkgDataStr}
 
 	return tx.Model(system).Update(data).Error
 }
 
 // nolint: bodyclose
-func callVMaas(ctx context.Context, request vmaas.PatchesRequest) (*vmaas.PatchesResponse, error) {
+func callVMaas(ctx context.Context, request vmaas.UpdatesV3Request) (*vmaas.UpdatesV2Response, error) {
 	var policy = backoff.NewExponential(
 		backoff.WithInterval(time.Second),
 		backoff.WithMaxRetries(8),
@@ -166,13 +201,13 @@ func callVMaas(ctx context.Context, request vmaas.PatchesRequest) (*vmaas.Patche
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("vmaas-updates-call"))
 
-	vmaasCallArgs := vmaas.AppPatchesHandlerPostPostOpts{
-		PatchesRequest: optional.NewInterface(request),
+	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{
+		UpdatesV3Request: optional.NewInterface(request),
 	}
 	backoffState, cancel := policy.Start(base.Context)
 	defer cancel()
 	for backoff.Continue(backoffState) {
-		vmaasData, resp, err := vmaasClient.PatchesApi.AppPatchesHandlerPostPost(ctx, &vmaasCallArgs)
+		vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(ctx, &vmaasCallArgs)
 
 		// VMaaS is probably refreshing caches, continue waiting
 		if resp != nil && resp.StatusCode == http.StatusServiceUnavailable {
@@ -201,11 +236,11 @@ func loadSystemData(tx *gorm.DB, inventoryID string) (*models.SystemPlatform, er
 	return &system, err
 }
 
-func parseVmaasJSON(system *models.SystemPlatform) (vmaas.PatchesRequest, error) {
+func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("parse-vmaas-json"))
 
-	var updatesReq vmaas.PatchesRequest
+	var updatesReq vmaas.UpdatesV3Request
 	err := json.Unmarshal([]byte(system.VmaasJSON), &updatesReq)
 	return updatesReq, err
 }
@@ -213,7 +248,7 @@ func parseVmaasJSON(system *models.SystemPlatform) (vmaas.PatchesRequest, error)
 // Changes data stored in system_advisories, in order to match newest evaluation
 // Before this methods stores the entries into the system_advisories table, it locks
 // advisory_account_data table, so other evaluations don't interfere with this one
-func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.PatchesResponse,
+func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response,
 	inventoryID string) (oldSystemAdvisories SystemAdvisoryMap, patched []int, unpatched []int, err error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))
@@ -262,10 +297,12 @@ func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform,
 	return newSystemAdvisories, nil
 }
 
-func getReportedAdvisories(vmaasData vmaas.PatchesResponse) map[string]bool {
+func getReportedAdvisories(vmaasData vmaas.UpdatesV2Response) map[string]bool {
 	advisories := map[string]bool{}
-	for _, advisory := range vmaasData.ErrataList {
-		advisories[advisory] = true
+	for _, updates := range vmaasData.UpdateList {
+		for _, u := range updates.AvailableUpdates {
+			advisories[u.Erratum] = true
+		}
 	}
 	return advisories
 }
