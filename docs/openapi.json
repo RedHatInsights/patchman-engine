@@ -516,6 +516,41 @@
                 ]
             }
         },
+        "/api/patch/v1/packages/{package_name}/systems": {
+            "get": {
+                "summary": "Show me all my systems which have a package installed",
+                "description": "Show me all my systems which have a package installed",
+                "operationId": "packageSystems",
+                "parameters": [
+                    {
+                        "name": "package_name",
+                        "in": "path",
+                        "description": "Package name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.PackageSystems"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
         "/api/patch/v1/systems": {
             "get": {
                 "summary": "Show me all my systems",
@@ -1076,6 +1111,12 @@
                     "total_items": {
                         "type": "integer"
                     }
+                }
+            },
+            "controllers.PackageSystems": {
+                "type": "array",
+                "items": {
+                    "type": "integer"
                 }
             },
             "controllers.SystemAdvisoriesResponse": {
