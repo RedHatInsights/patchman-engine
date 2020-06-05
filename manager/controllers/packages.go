@@ -35,7 +35,7 @@ func SystemPackagesHandler(c *gin.Context) {
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account).
 		Where("inventory_id = ?", inventoryID).
-		Select("id, invetory_id, package_data").
+		Select("id, inventory_id, package_data").
 		First(&inventory).Error
 	if gorm.IsRecordNotFoundError(err) {
 		LogAndRespNotFound(c, err, "inventory not found")
