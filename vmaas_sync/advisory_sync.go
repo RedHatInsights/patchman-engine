@@ -5,8 +5,10 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"encoding/json"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
+	"github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/pkg/errors"
 	"strings"
 	"time"
@@ -77,6 +79,19 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 				severityID = &id
 			}
 		}
+		packages := make(models.AdvisoryPackageData)
+
+		for _, p := range v.PackageList {
+			nevra, err := utils.ParseNevra(p)
+			if err != nil {
+				return nil, errors.Wrapf(err, "Could not parse nevra %s", p)
+			}
+			packages[nevra.Name] = nevra.EVRAString()
+		}
+		packageData, err := json.Marshal(packages)
+		if err != nil {
+			return nil, errors.Wrap(err, "Could not serialize package data")
+		}
 
 		advisory := models.AdvisoryMetadata{
 			Name:           n,
@@ -89,6 +104,7 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 			PublicDate:     issued,
 			ModifiedDate:   modified,
 			URL:            &v.Url,
+			PackageData:    &postgres.Jsonb{RawMessage: packageData},
 		}
 
 		advisories = append(advisories, advisory)
@@ -107,7 +123,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 	}
 
 	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary",
-		"solution", "public_date", "modified_date", "url", "advisory_type_id", "severity_id")
+		"solution", "public_date", "modified_date", "url", "advisory_type_id", "severity_id", "package_data")
 	errs := database.BulkInsertChunk(tx, advisories, SyncBatchSize)
 
 	if len(errs) > 0 {
@@ -119,8 +135,6 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 func syncAdvisories() error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, syncDuration)
-
-	time.Sleep(time.Second)
 
 	if vmaasClient == nil {
 		panic("VMaaS client is nil")

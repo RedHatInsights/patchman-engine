@@ -475,7 +475,7 @@ CREATE INDEX ON system_platform (advisory_sec_count_cache DESC NULLS LAST);
 
 CREATE INDEX IF NOT EXISTS
     system_platform_pkgdata_idx ON system_platform
-    USING GIN((package_data));
+    USING GIN ((system_platform.package_data));
 
 CREATE TRIGGER system_platform_set_first_reported
     BEFORE INSERT
@@ -576,6 +576,7 @@ CREATE TABLE IF NOT EXISTS advisory_metadata
     modified_date    TIMESTAMP WITH TIME ZONE NULL,
     url              TEXT,
     severity_id      INT,
+    package_data     JSONB,
     UNIQUE (name),
     PRIMARY KEY (id),
     CONSTRAINT advisory_type_id
@@ -587,6 +588,10 @@ CREATE TABLE IF NOT EXISTS advisory_metadata
 ) TABLESPACE pg_default;
 
 CREATE INDEX ON advisory_metadata (advisory_type_id);
+
+CREATE INDEX IF NOT EXISTS
+    advisory_metadata_pkgdata_idx ON advisory_metadata
+    USING GIN((advisory_metadata.package_data));
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO evaluator;
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO vmaas_sync;

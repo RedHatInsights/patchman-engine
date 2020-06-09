@@ -83,6 +83,9 @@ func (AdvisoryType) TableName() string {
 	return "advisory_type"
 }
 
+type AdvisoryPackageData map[string]string
+
+
 type AdvisoryMetadata struct {
 	ID             int
 	Name           string
@@ -95,6 +98,8 @@ type AdvisoryMetadata struct {
 	ModifiedDate   time.Time
 	URL            *string
 	SeverityID     *int
+
+	PackageData *postgres.Jsonb
 }
 
 func (AdvisoryMetadata) TableName() string {
