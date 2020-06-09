@@ -40,7 +40,7 @@ Run single component in host OS, rest in podman-compose:
 ~~~bash
 podman-compose stop evaluator_upload # stop single component running using podman-compose
 export $(xargs < conf/local.env)
-./scripts/entrypoint.sh evaluator # (or listener) run component in host OS
+./scripts/entrypoint.sh evaluator # (or listener, or manager) run component in host OS
 ~~~
 
 ### Running tests
