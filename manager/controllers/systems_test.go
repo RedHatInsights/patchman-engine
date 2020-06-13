@@ -25,7 +25,7 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, 8, len(output.Data))
 	assert.Equal(t, "INV-1", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
-	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
+	assert.Equal(t, "2020-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastEvaluation.String())
 	assert.Equal(t, 3, output.Data[0].Attributes.RheaCount)
 	assert.Equal(t, 3, output.Data[0].Attributes.RhbaCount)
@@ -153,7 +153,7 @@ func TestSystemsExportCSV(t *testing.T) {
 		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale",
 		lines[0])
 
-	assert.Equal(t, "INV-1,INV-1,2018-09-22T16:00:00Z,2018-09-22T16:00:00Z,2,3,3,false", lines[1])
+	assert.Equal(t, "INV-1,INV-1,2018-09-22T16:00:00Z,2020-09-22T16:00:00Z,2,3,3,false", lines[1])
 }
 
 func TestSystemsExportCSVFilter(t *testing.T) {

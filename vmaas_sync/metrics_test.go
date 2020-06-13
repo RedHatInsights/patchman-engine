@@ -80,7 +80,7 @@ func TestUploadedSystemsCountsNoSystems(t *testing.T) {
 	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime, 30)
 	var nSystems int
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, 0, nSystems)
+	assert.Equal(t, 1, nSystems)
 }
 
 func TestUploadedSystemsCountsAllSystems(t *testing.T) {
