@@ -33,7 +33,6 @@ var (
 
 func configure() {
 	core.ConfigureApp()
-	port = utils.GetenvOrFail("PORT")
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
 	evalTopic = utils.GetenvOrFail("EVAL_TOPIC")
@@ -154,6 +153,7 @@ func calcPackageData(system *models.SystemPlatform, data vmaas.UpdatesV2Response
 				Advisory: up.Erratum,
 			})
 		}
+		res[pkg.Name] = it
 	}
 	return res, nil
 }

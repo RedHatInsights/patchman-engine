@@ -32,11 +32,13 @@ func SystemPackagesHandler(c *gin.Context) {
 
 	var inventory models.SystemPlatform
 	err := database.Db.
+		Table("system_platform").
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account).
 		Where("inventory_id = ?", inventoryID).
-		Select("id, inventory_id, package_data").
+		Select("system_platform.id, inventory_id, package_data").
 		First(&inventory).Error
+
 	if gorm.IsRecordNotFoundError(err) {
 		LogAndRespNotFound(c, err, "inventory not found")
 		return

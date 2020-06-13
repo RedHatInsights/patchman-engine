@@ -48,12 +48,12 @@ func (SystemPlatform) TableName() string {
 
 type SystemPackageData map[string]SystemPackageDataItem
 type SystemPackageDataUpdate struct {
-	Version  string
-	Advisory string
+	Version  string `json:"version"`
+	Advisory string `json:"advisory"`
 }
 type SystemPackageDataItem struct {
-	Version string
-	Updates []SystemPackageDataUpdate
+	Version string                    `json:"version"`
+	Updates []SystemPackageDataUpdate `json:"updates"`
 }
 
 type DeletedSystem struct {

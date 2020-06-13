@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"app/base/database"
-	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
@@ -28,13 +27,14 @@ func PackageSystemsListHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "package_name param not found"})
 		return
 	}
-
-	var systemIds models.SystemPlatform
+	// TODO: This API returns only system ids for now. Investigate required responses
+	var systemIds []string
 	err := database.Db.
+		Table("system_platform").
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account).
-		// TODO: We can't use '?' here, find another way to query for containing this key
-		Where("system_platform.package_data ? ?", packageName).
+		// TODO: this seems to not be accelerated by the gin index, investigate
+		Where("jsonb_exists(system_platform.package_data, ?)", packageName).
 		Pluck("inventory_id", &systemIds).Error
 
 	if err != nil {
