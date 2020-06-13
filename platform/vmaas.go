@@ -11,21 +11,21 @@ import (
 func updatesHandler(c *gin.Context) {
 	data := vmaas.UpdatesV2Response{
 		UpdateList: map[string]vmaas.UpdatesV2ResponseUpdateList{
-			"firefox:0-76.0.1-1.fc31.x86_64": {
+			"firefox-0:76.0.1-1.fc31.x86_64": {
 				AvailableUpdates: []vmaas.UpdatesResponseAvailableUpdates{
 					{
 						Repository: "repo1",
 						Releasever: "ser1",
 						Basearch:   "i686",
 						Erratum:    "RH-1",
-						Package:    "firefox:0-77.0.1-1.fc31.x86_64",
+						Package:    "firefox-0:77.0.1-1.fc31.x86_64",
 					},
 					{
 						Repository: "repo1",
 						Releasever: "ser1",
 						Basearch:   "i686",
 						Erratum:    "RH-2",
-						Package:    "firefox:1-76.0.1-1.fc31.x86_64",
+						Package:    "firefox-1:76.0.1-1.fc31.x86_64",
 					},
 				},
 			},
@@ -78,7 +78,7 @@ func erratasHandler(c *gin.Context) {
 				Synopsis:      "adv-1-syn",
 				CveList:       []string{},
 				BugzillaList:  []string{},
-				PackageList:   []string{"firefox:0-77.0.1-1.fc31.x86_64"},
+				PackageList:   []string{"firefox-0:77.0.1-1.fc31.x86_64"},
 				Type:          "enhancement",
 			},
 			"RH-2": {
@@ -93,7 +93,7 @@ func erratasHandler(c *gin.Context) {
 				Synopsis:      "adv-2-syn",
 				CveList:       []string{},
 				BugzillaList:  []string{},
-				PackageList:   []string{"firefox:1-76.0.1-1.fc31.x86_64"},
+				PackageList:   []string{"firefox-1:76.0.1-1.fc31.x86_64"},
 				Type:          "bugfix",
 			},
 			"RH-100": {
