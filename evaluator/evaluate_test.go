@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -27,7 +28,13 @@ func TestVMaaSGetUpdates(t *testing.T) {
 
 	configure()
 	vmaasData := getVMaaSUpdates(t)
-	assert.Equal(t, 3, len(vmaasData.UpdateList))
+	for k, v := range vmaasData.UpdateList {
+		if strings.HasPrefix(k, "firefox") {
+			assert.Equal(t, 2, len(v.AvailableUpdates))
+		} else if strings.HasPrefix(k, "kernel") {
+			assert.Equal(t, 1, len(v.AvailableUpdates))
+		}
+	}
 }
 
 func TestGetReportedAdvisories1(t *testing.T) {

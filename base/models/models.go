@@ -85,7 +85,6 @@ func (AdvisoryType) TableName() string {
 
 type AdvisoryPackageData map[string]string
 
-
 type AdvisoryMetadata struct {
 	ID             int
 	Name           string

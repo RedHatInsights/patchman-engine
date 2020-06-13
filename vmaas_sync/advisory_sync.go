@@ -44,6 +44,7 @@ func getAdvisorySeverities() (map[string]int, error) {
 	return severities, nil
 }
 
+// nolint: funlen
 func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.AdvisoryMetadataSlice, error) {
 	var advisories models.AdvisoryMetadataSlice
 

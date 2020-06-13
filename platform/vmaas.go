@@ -78,7 +78,7 @@ func erratasHandler(c *gin.Context) {
 				Synopsis:      "adv-1-syn",
 				CveList:       []string{},
 				BugzillaList:  []string{},
-				PackageList:   []string{"firefox-2.ser1.i686"},
+				PackageList:   []string{"firefox:0-77.0.1-1.fc31.x86_64"},
 				Type:          "enhancement",
 			},
 			"RH-2": {
@@ -93,7 +93,7 @@ func erratasHandler(c *gin.Context) {
 				Synopsis:      "adv-2-syn",
 				CveList:       []string{},
 				BugzillaList:  []string{},
-				PackageList:   []string{"firefox-3.ser1.i686"},
+				PackageList:   []string{"firefox:1-76.0.1-1.fc31.x86_64"},
 				Type:          "bugfix",
 			},
 			"RH-100": {
@@ -108,7 +108,7 @@ func erratasHandler(c *gin.Context) {
 				Synopsis:      "adv-100-syn",
 				CveList:       []string{},
 				BugzillaList:  []string{},
-				PackageList:   []string{"kernel-2.ser1.i686"},
+				PackageList:   []string{"kernel-5.10.13-200.fc31.x86_64"},
 				Type:          "enhancement",
 			},
 		},
