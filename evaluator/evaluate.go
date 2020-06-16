@@ -33,6 +33,7 @@ var (
 
 func configure() {
 	core.ConfigureApp()
+	port = utils.GetenvOrFail("PORT")
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
 	evalTopic = utils.GetenvOrFail("EVAL_TOPIC")
