@@ -118,7 +118,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 		evaluationCnt.WithLabelValues("error-store-advisories").Inc()
 		return errors.Wrap(err, "Unable to store advisory data")
 	}
-	packageData, err := calcPackageData(system, vmaasData)
+	packageData, err := calcPackageData(vmaasData)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-pkg-data").Inc()
 		return errors.Wrap(err, "Unable to calculate package data")
@@ -132,8 +132,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 	return nil
 }
 
-// nolint: unparam
-func calcPackageData(system *models.SystemPlatform, data vmaas.UpdatesV2Response) (models.SystemPackageData, error) {
+func calcPackageData(data vmaas.UpdatesV2Response) (models.SystemPackageData, error) {
 	res := make(models.SystemPackageData)
 
 	for nevra, updates := range data.UpdateList {
@@ -158,8 +157,8 @@ func calcPackageData(system *models.SystemPlatform, data vmaas.UpdatesV2Response
 	return res, nil
 }
 
-// nolint: lll
-func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform, pkgData models.SystemPackageData, old, new SystemAdvisoryMap) error {
+func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform, pkgData models.SystemPackageData,
+	old, new SystemAdvisoryMap) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("system-update"))
 	if old == nil || new == nil {

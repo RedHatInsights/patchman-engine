@@ -19,8 +19,9 @@ func TestPackageSystems(t *testing.T) {
 		ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	var output []string
+	var output PackageSystems
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 1, len(output))
-	assert.Equal(t, "INV-12", output[0])
+	assert.Equal(t, "INV-12", output[0].InventoryID)
+	assert.Equal(t, "5.6.13-200.fc31-x86_64", output[0].Version)
 }
