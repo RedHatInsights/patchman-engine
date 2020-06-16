@@ -97,8 +97,8 @@ type AdvisoryMetadata struct {
 	ModifiedDate   time.Time
 	URL            *string
 	SeverityID     *int
-
-	PackageData *postgres.Jsonb
+	PackageData    *postgres.Jsonb
+	CveList        *string
 }
 
 func (AdvisoryMetadata) TableName() string {
