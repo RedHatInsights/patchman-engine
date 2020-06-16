@@ -8,7 +8,10 @@ import (
 	"net/http"
 )
 
-type PackageSystems []int
+type PackageSystems []struct {
+	InventoryID string `json:"id"`
+	Version     string `json:"version"`
+}
 
 // @Summary Show me all my systems which have a package installed
 // @Description  Show me all my systems which have a package installed
@@ -27,20 +30,23 @@ func PackageSystemsListHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "package_name param not found"})
 		return
 	}
-	// TODO: This API returns only system ids for now. Investigate required responses
-	var systemIds []string
+	// Weird ->> 0 bit taken from
+	// https://stackoverflow.com/questions/27215216/postgres-how-to-convert-a-json-string-to-text
+	// It's required to get the textual value of JSONB query
+	var systems PackageSystems
 	err := database.Db.
 		Table("system_platform").
+		Select("system_platform.inventory_id, package_data -> ? -> 'version' ->> 0 as version", packageName).
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
 		Where("ra.name = ?", account).
 		// TODO: this seems to not be accelerated by the gin index, investigate
 		Where("jsonb_exists(system_platform.package_data, ?)", packageName).
-		Pluck("inventory_id", &systemIds).Error
+		Scan(&systems).Error
 
 	if err != nil {
 		LogAndRespError(c, err, "database error")
 		return
 	}
 
-	c.JSON(200, systemIds)
+	c.JSON(200, systems)
 }

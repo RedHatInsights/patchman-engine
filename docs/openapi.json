@@ -1116,7 +1116,15 @@
             "controllers.PackageSystems": {
                 "type": "array",
                 "items": {
-                    "type": "integer"
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "string"
+                        }
+                    }
                 }
             },
             "controllers.SystemAdvisoriesResponse": {

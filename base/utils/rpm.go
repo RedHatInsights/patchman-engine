@@ -48,9 +48,15 @@ func ParseNevra(nevra string) (*Nevra, error) {
 }
 
 func (n Nevra) String() string {
-	return fmt.Sprintf("%s:%s-%s-%s-%s", n.Name, n.Epoch, n.Version, n.Release, n.Arch)
+	if n.Epoch != "" && n.Epoch != "0" {
+		return fmt.Sprintf("%s-%s:%s-%s-%s", n.Name, n.Epoch, n.Version, n.Release, n.Arch)
+	}
+	return fmt.Sprintf("%s-%s-%s-%s", n.Name, n.Version, n.Release, n.Arch)
 }
 
 func (n Nevra) EVRAString() string {
-	return fmt.Sprintf(":%s-%s-%s-%s", n.Epoch, n.Version, n.Release, n.Arch)
+	if n.Epoch != "" && n.Epoch != "0" {
+		return fmt.Sprintf("%s:%s-%s-%s", n.Epoch, n.Version, n.Release, n.Arch)
+	}
+	return fmt.Sprintf("%s-%s-%s", n.Version, n.Release, n.Arch)
 }

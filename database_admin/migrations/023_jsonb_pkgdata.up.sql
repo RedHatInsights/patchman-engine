@@ -5,8 +5,8 @@ ALTER TABLE system_platform
 CREATE INDEX IF NOT EXISTS
     system_platform_pkgdata_idx ON system_platform
     USING GIN ((system_platform.package_data));
--- The gin index should speed up WHERE package_data ? 'pkgname' queries
--- WHERE package_data ?& array ['kernel', 'firefox'] are not yet sped up
+-- The gin index should speed up "WHERE package_data ? 'pkgname'" queries
+-- Queries containing "WHERE package_data ?& array ['kernel', 'firefox']" are not yet sped up
 -- TODO: Investigate
 
 
