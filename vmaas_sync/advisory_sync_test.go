@@ -100,6 +100,7 @@ func TestParseAdvisories(t *testing.T) {
 			Url:         "URL",
 			Synopsis:    "SYN",
 			Type:        "bugfix",
+			CveList:     []string{"CVE-1", "CVE-2", "CVE-3"},
 		},
 	}
 
@@ -118,6 +119,7 @@ func TestParseAdvisories(t *testing.T) {
 	assert.Equal(t, *adv.URL, "URL")
 	assert.Equal(t, adv.Synopsis, "SYN")
 	assert.Equal(t, adv.AdvisoryTypeID, 2)
+	assert.Equal(t, *adv.CveList, "CVE-1,CVE-2,CVE-3")
 }
 
 func TestSaveAdvisories(t *testing.T) {
