@@ -94,6 +94,12 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 			return nil, errors.Wrap(err, "Could not serialize package data")
 		}
 
+		var cveList *string
+		if len(v.CveList) > 0 {
+			s := strings.Join(v.CveList, ",")
+			cveList = &s
+		}
+
 		advisory := models.AdvisoryMetadata{
 			Name:           n,
 			AdvisoryTypeID: advisoryTypes[strings.ToLower(v.Type)],
@@ -102,6 +108,7 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 			Summary:        v.Summary,
 			Solution:       v.Solution,
 			SeverityID:     severityID,
+			CveList:        cveList,
 			PublicDate:     issued,
 			ModifiedDate:   modified,
 			URL:            &v.Url,
@@ -123,8 +130,8 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 		return nil
 	}
 
-	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary",
-		"solution", "public_date", "modified_date", "url", "advisory_type_id", "severity_id", "package_data")
+	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary", "solution",
+		"public_date", "modified_date", "url", "advisory_type_id", "severity_id", "cve_list", "package_data")
 	errs := database.BulkInsertChunk(tx, advisories, SyncBatchSize)
 
 	if len(errs) > 0 {
