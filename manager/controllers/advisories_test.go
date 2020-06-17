@@ -188,6 +188,14 @@ func TestAdvisoriesSearch(t *testing.T) {
 	})
 }
 
+func TestAdvisoriesSearchCVE(t *testing.T) {
+	testAdvisoriesOk(t, "GET", "/?search=CVE-2", func(output AdvisoriesResponse) {
+		assert.Equal(t, 2, len(output.Data))
+		assert.Equal(t, "RH-6", output.Data[0].ID)
+		assert.Equal(t, "RH-3", output.Data[1].ID)
+	})
+}
+
 func TestAdvisoriesSearchFilter(t *testing.T) {
 	testAdvisoriesOk(t, "GET", "/?search=adv-3&filter[advisory_type]=1", func(output AdvisoriesResponse) {
 		assert.Equal(t, 0, len(output.Data))
