@@ -577,7 +577,7 @@ CREATE TABLE IF NOT EXISTS advisory_metadata
     url              TEXT,
     severity_id      INT,
     package_data     JSONB,
-    cve_list         TEXT,
+    cve_list         JSONB,
     UNIQUE (name),
     PRIMARY KEY (id),
     CONSTRAINT advisory_type_id
