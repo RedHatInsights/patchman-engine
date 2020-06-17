@@ -5,6 +5,7 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"net/http"
@@ -47,6 +48,10 @@ func SystemPackagesHandler(c *gin.Context) {
 	if err != nil {
 		LogAndRespError(c, err, "database error")
 		return
+	}
+	if inventory.PackageData == nil {
+		LogAndRespStatusError(c, http.StatusNoContent,
+			errors.New("no package data available"), "Missing package data")
 	}
 
 	c.Data(200, "application/json", inventory.PackageData.RawMessage)
