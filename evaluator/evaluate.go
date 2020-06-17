@@ -91,6 +91,11 @@ func Evaluate(ctx context.Context, inventoryID string, evaluationType string) er
 		evaluationCnt.WithLabelValues("error-database-commit").Inc()
 		return errors.New("database commit failed")
 	}
+	err = publishRemediationsState(system.InventoryID, *vmaasData)
+	if err != nil {
+		evaluationCnt.WithLabelValues("error-remediations-publish").Inc()
+		return errors.New("remediations publish failed")
+	}
 
 	evaluationCnt.WithLabelValues("success").Inc()
 	return nil
