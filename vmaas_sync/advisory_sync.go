@@ -94,10 +94,9 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 			return nil, errors.Wrap(err, "Could not serialize package data")
 		}
 
-		var cveList *string
-		if len(v.CveList) > 0 {
-			s := strings.Join(v.CveList, ",")
-			cveList = &s
+		cvesData, err := json.Marshal(v.CveList)
+		if err != nil {
+			return nil, errors.Wrap(err, "Could not serialize CVEs data")
 		}
 
 		advisory := models.AdvisoryMetadata{
@@ -108,7 +107,7 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 			Summary:        v.Summary,
 			Solution:       v.Solution,
 			SeverityID:     severityID,
-			CveList:        cveList,
+			CveList:        &postgres.Jsonb{RawMessage: cvesData},
 			PublicDate:     issued,
 			ModifiedDate:   modified,
 			URL:            &v.Url,

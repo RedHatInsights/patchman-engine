@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
+	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -26,7 +27,6 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 	assert.Equal(t, "adv-1-syn", output.Data.Attributes.Synopsis)
 	assert.Equal(t, "adv-1-des", output.Data.Attributes.Description)
 	assert.Equal(t, "adv-1-sol", output.Data.Attributes.Solution)
-	assert.Equal(t, 0, len(output.Data.Attributes.Cves))
 	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", output.Data.Attributes.PublicDate.String())
 	assert.Equal(t, "2017-09-22 16:00:00 +0000 UTC", output.Data.Attributes.ModifiedDate.String())
 	assert.Nil(t, output.Data.Attributes.Severity)
@@ -43,10 +43,8 @@ func TestAdvisoryDetailCVE(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 	var output AdvisoryDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	// data
-	assert.Equal(t, 2, len(output.Data.Attributes.Cves))
-	assert.Equal(t, "CVE-1", output.Data.Attributes.Cves[0])
-	assert.Equal(t, "CVE-2", output.Data.Attributes.Cves[1])
+	cves, _ := json.Marshal(output.Data.Attributes.Cves)
+	assert.Equal(t, `["CVE-1","CVE-2"]`, string(cves))
 }
 
 func TestAdvisoryNoIdProvided(t *testing.T) {

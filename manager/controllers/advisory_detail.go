@@ -6,8 +6,8 @@ import (
 	"app/base/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"github.com/jinzhu/gorm/dialects/postgres"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -22,16 +22,16 @@ type AdvisoryDetailItem struct {
 }
 
 type AdvisoryDetailAttributes struct {
-	Description  string    `json:"description"`
-	ModifiedDate time.Time `json:"modified_date"`
-	PublicDate   time.Time `json:"public_date"`
-	Topic        string    `json:"topic"`
-	Synopsis     string    `json:"synopsis"`
-	Solution     string    `json:"solution"`
-	Severity     *int      `json:"severity"`
-	Fixes        *string   `json:"fixes"`
-	Cves         []string  `json:"cves"`
-	References   []string  `json:"references"`
+	Description  string          `json:"description"`
+	ModifiedDate time.Time       `json:"modified_date"`
+	PublicDate   time.Time       `json:"public_date"`
+	Topic        string          `json:"topic"`
+	Synopsis     string          `json:"synopsis"`
+	Solution     string          `json:"solution"`
+	Severity     *int            `json:"severity"`
+	Fixes        *string         `json:"fixes"`
+	Cves         *postgres.Jsonb `json:"cves"`
+	References   []string        `json:"references"`
 }
 
 // @Summary Show me details an advisory by given advisory name
@@ -73,18 +73,11 @@ func AdvisoryDetailHandler(c *gin.Context) {
 				Solution:     advisory.Solution,
 				Severity:     advisory.SeverityID,
 				Fixes:        nil,
-				Cves:         parseCVEs(advisory.CveList),
+				Cves:         advisory.CveList,
 				References:   []string{}, // TODO joins
 			},
 			ID:   advisory.Name,
 			Type: "advisory",
 		}}
 	c.JSON(http.StatusOK, &resp)
-}
-
-func parseCVEs(cveListStr *string) []string {
-	if cveListStr == nil {
-		return []string{}
-	}
-	return strings.Split(*cveListStr, ",")
 }
