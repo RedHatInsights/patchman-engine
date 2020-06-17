@@ -111,15 +111,16 @@ func TestParseAdvisories(t *testing.T) {
 
 	time, err := time.Parse(base.Rfc3339NoTz, "2004-09-02T00:00:00+00:00")
 	assert.Nil(t, err)
-	assert.Equal(t, adv.PublicDate, time)
-	assert.Equal(t, adv.ModifiedDate, time)
-	assert.Equal(t, adv.Description, "DESC")
-	assert.Equal(t, adv.Solution, "SOL")
-	assert.Equal(t, adv.Summary, "SUM")
-	assert.Equal(t, *adv.URL, "URL")
-	assert.Equal(t, adv.Synopsis, "SYN")
-	assert.Equal(t, adv.AdvisoryTypeID, 2)
-	// TODO adv.CveList
+	assert.Equal(t, time, adv.PublicDate)
+	assert.Equal(t, time, adv.ModifiedDate)
+	assert.Equal(t, "DESC", adv.Description)
+	assert.Equal(t, "SOL", adv.Solution)
+	assert.Equal(t, "SUM", adv.Summary)
+	assert.Equal(t, "URL", *adv.URL)
+	assert.Equal(t, "SYN", adv.Synopsis)
+	assert.Equal(t, 2, adv.AdvisoryTypeID)
+	cves, _ := json.Marshal(adv.CveList)
+	assert.Equal(t, string(cves), `["CVE-1","CVE-2","CVE-3"]`)
 }
 
 func TestSaveAdvisories(t *testing.T) {
