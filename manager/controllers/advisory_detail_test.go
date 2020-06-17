@@ -26,9 +26,27 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 	assert.Equal(t, "adv-1-syn", output.Data.Attributes.Synopsis)
 	assert.Equal(t, "adv-1-des", output.Data.Attributes.Description)
 	assert.Equal(t, "adv-1-sol", output.Data.Attributes.Solution)
+	assert.Equal(t, 0, len(output.Data.Attributes.Cves))
 	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", output.Data.Attributes.PublicDate.String())
 	assert.Equal(t, "2017-09-22 16:00:00 +0000 UTC", output.Data.Attributes.ModifiedDate.String())
 	assert.Nil(t, output.Data.Attributes.Severity)
+}
+
+func TestAdvisoryDetailCVE(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/RH-3", nil)
+	core.InitRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output AdvisoryDetailResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	// data
+	assert.Equal(t, 2, len(output.Data.Attributes.Cves))
+	assert.Equal(t, "CVE-1", output.Data.Attributes.Cves[0])
+	assert.Equal(t, "CVE-2", output.Data.Attributes.Cves[1])
 }
 
 func TestAdvisoryNoIdProvided(t *testing.T) {

@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -72,11 +73,18 @@ func AdvisoryDetailHandler(c *gin.Context) {
 				Solution:     advisory.Solution,
 				Severity:     advisory.SeverityID,
 				Fixes:        nil,
-				Cves:         []string{}, // TODO joins
+				Cves:         parseCVEs(advisory.CveList),
 				References:   []string{}, // TODO joins
 			},
 			ID:   advisory.Name,
 			Type: "advisory",
 		}}
 	c.JSON(http.StatusOK, &resp)
+}
+
+func parseCVEs(cveListStr *string) []string {
+	if cveListStr == nil {
+		return []string{}
+	}
+	return strings.Split(*cveListStr, ",")
 }
