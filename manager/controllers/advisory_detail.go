@@ -31,6 +31,7 @@ type AdvisoryDetailAttributes struct {
 	Severity     *int            `json:"severity"`
 	Fixes        *string         `json:"fixes"`
 	Cves         *postgres.Jsonb `json:"cves"`
+	Packages     *postgres.Jsonb `json:"packages"`
 	References   []string        `json:"references"`
 }
 
@@ -74,6 +75,7 @@ func AdvisoryDetailHandler(c *gin.Context) {
 				Severity:     advisory.SeverityID,
 				Fixes:        nil,
 				Cves:         advisory.CveList,
+				Packages:     advisory.PackageData,
 				References:   []string{}, // TODO joins
 			},
 			ID:   advisory.Name,
