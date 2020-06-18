@@ -931,6 +931,10 @@
                     "modified_date": {
                         "type": "string"
                     },
+                    "packages": {
+                        "type": "object",
+                        "properties": {}
+                    },
                     "public_date": {
                         "type": "string"
                     },
