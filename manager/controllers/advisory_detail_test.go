@@ -15,7 +15,7 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1", nil)
+	req, _ := http.NewRequest("GET", "/RH-9", nil)
 	core.InitRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -23,12 +23,14 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	// data
 	assert.Equal(t, "advisory", output.Data.Type)
-	assert.Equal(t, "RH-1", output.Data.ID)
-	assert.Equal(t, "adv-1-syn", output.Data.Attributes.Synopsis)
-	assert.Equal(t, "adv-1-des", output.Data.Attributes.Description)
-	assert.Equal(t, "adv-1-sol", output.Data.Attributes.Solution)
-	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", output.Data.Attributes.PublicDate.String())
-	assert.Equal(t, "2017-09-22 16:00:00 +0000 UTC", output.Data.Attributes.ModifiedDate.String())
+	assert.Equal(t, "RH-9", output.Data.ID)
+	assert.Equal(t, "adv-9-syn", output.Data.Attributes.Synopsis)
+	assert.Equal(t, "adv-9-des", output.Data.Attributes.Description)
+	assert.Equal(t, "adv-9-sol", output.Data.Attributes.Solution)
+	assert.Equal(t, "2016-09-22 20:00:00 +0000 UTC", output.Data.Attributes.PublicDate.String())
+	assert.Equal(t, "2018-09-22 20:00:00 +0000 UTC", output.Data.Attributes.ModifiedDate.String())
+	packages, _ := json.Marshal(output.Data.Attributes.Packages)
+	assert.Equal(t, `{"firefox":"77.0.1-1.fc31-x86_64"}`, string(packages))
 	assert.Nil(t, output.Data.Attributes.Severity)
 }
 
