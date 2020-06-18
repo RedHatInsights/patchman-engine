@@ -50,6 +50,8 @@ INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solutio
 (8, 'RH-8', 'adv-8-des', 'adv-8-syn', 'adv-8-sum', 'adv-8-sol', 2, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url8', NULL, NULL),
 (9, 'RH-9', 'adv-9-des', 'adv-9-syn', 'adv-9-sum', 'adv-9-sol', 3, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url9', NULL, '["CVE-4"]');
 
+UPDATE advisory_metadata SET package_data = '{"firefox": "77.0.1-1.fc31-x86_64"}' WHERE name = 'RH-9';
+
 INSERT INTO system_advisories (system_id, advisory_id, first_reported, when_patched, status_id) VALUES
 (1, 1, '2016-09-22 12:00:00-04', NULL, 0),
 (1, 2, '2016-09-22 12:00:00-04', NULL, 1),
