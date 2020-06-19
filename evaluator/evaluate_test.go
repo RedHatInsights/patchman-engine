@@ -148,6 +148,8 @@ func TestEvaluate(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	configure()
+	mockWriter := utils.MockKafkaWriter{}
+	remediationsPublisher = &mockWriter
 
 	err := evaluateHandler(mqueue.PlatformEvent{ID: "INV-12"})
 	assert.NoError(t, err)
@@ -160,6 +162,8 @@ func TestEvaluate(t *testing.T) {
 	database.CheckSystemJustEvaluated(t, "INV-12", 2, 1, 1, 0)
 	deleteSystemAdvisories(t, systemID, advisoryIDs)
 	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
+
+	assert.Equal(t, 1, len(mockWriter.Messages))
 }
 
 func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {
