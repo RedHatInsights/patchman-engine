@@ -49,9 +49,10 @@ func SystemPackagesHandler(c *gin.Context) {
 		LogAndRespError(c, err, "database error")
 		return
 	}
-	if inventory.PackageData == nil {
+	if inventory.PackageData == nil || inventory.PackageData.RawMessage == nil {
 		LogAndRespStatusError(c, http.StatusNoContent,
 			errors.New("no package data available"), "Missing package data")
+		return
 	}
 
 	c.Data(200, "application/json", inventory.PackageData.RawMessage)
