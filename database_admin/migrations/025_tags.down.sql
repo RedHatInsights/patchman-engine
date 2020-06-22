@@ -1,0 +1,2 @@
+DROP TABLE system_tag CASCADE;
+DROP TABLE tag CASCADE;
