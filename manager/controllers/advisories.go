@@ -3,9 +3,9 @@ package controllers
 import (
 	"app/base/database"
 	"app/manager/middlewares"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
-	"github.com/pkg/errors"
 	"net/http"
 	"strings"
 )
@@ -139,11 +139,10 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	if strings.Contains(accept, "application/json") {
 		c.JSON(http.StatusOK, data)
 	} else if strings.Contains(accept, "text/csv") {
-		Csv(c, 200, data)
+		Csv(c, http.StatusOK, data)
 	} else {
-		LogAndRespStatusError(c, http.StatusUnsupportedMediaType, errors.New("Invalid content type"),
-			"This endpoint provides only application/json and text/csv")
-		return
+		LogWarnAndResp(c, http.StatusUnsupportedMediaType,
+			fmt.Sprintf("Invalid content type '%s', use 'application/json' or 'text/csv'", accept))
 	}
 }
 
