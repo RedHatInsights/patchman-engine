@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"github.com/jinzhu/gorm/dialects/postgres"
@@ -22,17 +23,17 @@ type AdvisoryDetailItem struct {
 }
 
 type AdvisoryDetailAttributes struct {
-	Description  string          `json:"description"`
-	ModifiedDate time.Time       `json:"modified_date"`
-	PublicDate   time.Time       `json:"public_date"`
-	Topic        string          `json:"topic"`
-	Synopsis     string          `json:"synopsis"`
-	Solution     string          `json:"solution"`
-	Severity     *int            `json:"severity"`
-	Fixes        *string         `json:"fixes"`
-	Cves         *postgres.Jsonb `json:"cves"`
-	Packages     *postgres.Jsonb `json:"packages"`
-	References   []string        `json:"references"`
+	Description  string            `json:"description"`
+	ModifiedDate time.Time         `json:"modified_date"`
+	PublicDate   time.Time         `json:"public_date"`
+	Topic        string            `json:"topic"`
+	Synopsis     string            `json:"synopsis"`
+	Solution     string            `json:"solution"`
+	Severity     *int              `json:"severity"`
+	Fixes        *string           `json:"fixes"`
+	Cves         []string          `json:"cves"`
+	Packages     map[string]string `json:"packages"`
+	References   []string          `json:"references"`
 }
 
 // @Summary Show me details an advisory by given advisory name
@@ -63,6 +64,18 @@ func AdvisoryDetailHandler(c *gin.Context) {
 		return
 	}
 
+	cves, err := parseCVEs(advisory.CveList)
+	if err != nil {
+		LogAndRespError(c, err, "CVEs parsing error")
+		return
+	}
+
+	packages, err := parsePackages(advisory.PackageData)
+	if err != nil {
+		LogAndRespError(c, err, "packages parsing error")
+		return
+	}
+
 	var resp = AdvisoryDetailResponse{
 		Data: AdvisoryDetailItem{
 			Attributes: AdvisoryDetailAttributes{
@@ -74,12 +87,48 @@ func AdvisoryDetailHandler(c *gin.Context) {
 				Solution:     advisory.Solution,
 				Severity:     advisory.SeverityID,
 				Fixes:        nil,
-				Cves:         advisory.CveList,
-				Packages:     advisory.PackageData,
+				Cves:         cves,
+				Packages:     packages,
 				References:   []string{}, // TODO joins
 			},
 			ID:   advisory.Name,
 			Type: "advisory",
 		}}
 	c.JSON(http.StatusOK, &resp)
+}
+
+func parseCVEs(jsonb *postgres.Jsonb) ([]string, error) {
+	if jsonb == nil {
+		return []string{}, nil
+	}
+
+	b, err := json.Marshal(jsonb)
+	if err != nil {
+		return nil, err
+	}
+
+	var cves []string
+	err = json.Unmarshal(b, &cves)
+	if err != nil {
+		return nil, err
+	}
+	return cves, nil
+}
+
+func parsePackages(jsonb *postgres.Jsonb) (map[string]string, error) {
+	if jsonb == nil {
+		return map[string]string{}, nil
+	}
+
+	b, err := json.Marshal(jsonb)
+	if err != nil {
+		return nil, err
+	}
+
+	var packages map[string]string
+	err = json.Unmarshal(b, &packages)
+	if err != nil {
+		return nil, err
+	}
+	return packages, nil
 }

@@ -3,7 +3,6 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
-	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -29,8 +28,8 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 	assert.Equal(t, "adv-9-sol", output.Data.Attributes.Solution)
 	assert.Equal(t, "2016-09-22 20:00:00 +0000 UTC", output.Data.Attributes.PublicDate.String())
 	assert.Equal(t, "2018-09-22 20:00:00 +0000 UTC", output.Data.Attributes.ModifiedDate.String())
-	packages, _ := json.Marshal(output.Data.Attributes.Packages)
-	assert.Equal(t, `{"firefox":"77.0.1-1.fc31-x86_64"}`, string(packages))
+	assert.Equal(t, 1, len(output.Data.Attributes.Packages))
+	assert.Equal(t, "77.0.1-1.fc31-x86_64", output.Data.Attributes.Packages["firefox"])
 	assert.Nil(t, output.Data.Attributes.Severity)
 }
 
@@ -45,8 +44,9 @@ func TestAdvisoryDetailCVE(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 	var output AdvisoryDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	cves, _ := json.Marshal(output.Data.Attributes.Cves)
-	assert.Equal(t, `["CVE-1","CVE-2"]`, string(cves))
+	assert.Equal(t, 2, len(output.Data.Attributes.Cves))
+	assert.Equal(t, "CVE-1", output.Data.Attributes.Cves[0])
+	assert.Equal(t, "CVE-2", output.Data.Attributes.Cves[1])
 }
 
 func TestAdvisoryNoIdProvided(t *testing.T) {
