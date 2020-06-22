@@ -27,3 +27,15 @@ func TestPackages(t *testing.T) {
 	assert.Len(t, output["kernel"].Updates, 1)
 	assert.Len(t, output["firefox"].Updates, 2)
 }
+
+func TestNoPackages(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/INV-1/packages", nil)
+	core.InitRouterWithParams(SystemPackagesHandler, "1", "GET", "/:inventory_id/packages").
+		ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNoContent, w.Code)
+}
