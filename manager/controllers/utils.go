@@ -21,6 +21,11 @@ func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{Error: respMsg})
 }
 
+func LogWarnAndResp(c *gin.Context, code int, respMsg string) {
+	utils.Log().Warn(respMsg)
+	c.AbortWithStatusJSON(code, utils.ErrorResponse{Error: respMsg})
+}
+
 func LogAndRespStatusError(c *gin.Context, code int, err error, msg string) {
 	utils.Log("err", err.Error()).Error(msg)
 	c.AbortWithStatusJSON(code, utils.ErrorResponse{Error: msg})
