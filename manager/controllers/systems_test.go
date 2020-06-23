@@ -156,6 +156,21 @@ func TestSystemsExportCSV(t *testing.T) {
 	assert.Equal(t, "INV-1,INV-1,2018-09-22T16:00:00Z,2020-09-22T16:00:00Z,2,3,3,false", lines[1])
 }
 
+func TestSystemsExportWrongFormat(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/", nil)
+	req.Header.Add("Accept", "test-format")
+	core.InitRouter(SystemsExportHandler).ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusUnsupportedMediaType, w.Code)
+	body := w.Body.String()
+	exp := `{"error":"Invalid content type 'test-format', use 'application/json' or 'text/csv'"}`
+	assert.Equal(t, exp, body)
+}
+
 func TestSystemsExportCSVFilter(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
