@@ -12,8 +12,8 @@ import (
 var remediationsPublisher mqueue.Writer
 
 func init() {
-	if _, has := os.LookupEnv("REMEDIATIONS_UPDATE_TOPIC"); has {
-		remediationsPublisher = mqueue.WriterFromEnv("REMEDIATIONS_UPDATE_TOPIC")
+	if topic, has := os.LookupEnv("REMEDIATIONS_UPDATE_TOPIC"); has {
+		remediationsPublisher = mqueue.WriterFromEnv(topic)
 	}
 }
 
