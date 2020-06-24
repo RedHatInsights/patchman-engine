@@ -4,6 +4,7 @@ import (
 	"app/base"
 	"app/base/mqueue"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
+	"github.com/pkg/errors"
 	"os"
 )
 
@@ -33,7 +34,7 @@ func publishRemediationsState(id string, response vmaas.UpdatesV2Response) error
 	}
 	msg, err := mqueue.MessageFromJSON(id, state)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Formatting message")
 	}
 	return remediationsPublisher.WriteMessages(base.Context, msg)
 }
