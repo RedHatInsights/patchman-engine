@@ -3,6 +3,7 @@ package evaluator
 import (
 	"app/base"
 	"app/base/mqueue"
+	"fmt"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/pkg/errors"
 	"os"
@@ -30,7 +31,7 @@ func publishRemediationsState(id string, response vmaas.UpdatesV2Response) error
 	state.HostID = id
 	state.Issues = make([]string, 0, len(advisories))
 	for a := range advisories {
-		state.Issues = append(state.Issues, a)
+		state.Issues = append(state.Issues, fmt.Sprintf("patch:%s", a))
 	}
 	msg, err := mqueue.MessageFromJSON(id, state)
 	if err != nil {
