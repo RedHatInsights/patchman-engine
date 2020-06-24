@@ -70,10 +70,26 @@ func getOrCreateTestAccount(t *testing.T) int {
 
 // nolint: unparam
 func createTestUploadEvent(inventoryID string, packages bool) HostEgressEvent {
+	ns := "insights"
+	v1 := "prod"
 	ev := HostEgressEvent{
 		Type:             "created",
 		PlatformMetadata: nil,
-		Host:             Host{ID: inventoryID, Account: inventoryID},
+		Host: Host{
+			ID:      inventoryID,
+			Account: inventoryID,
+			Tags: []inventory.StructuredTag{
+				{
+					Key:       "env",
+					Namespace: &ns,
+					Value:     &v1,
+				}, {
+					Key:       "release",
+					Namespace: &ns,
+					Value:     &v1,
+				},
+			},
+		},
 	}
 	if packages {
 		ev.Host.SystemProfile.InstalledPackages = []string{"kernel-54321.rhel8.x86_64"}

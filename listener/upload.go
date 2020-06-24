@@ -354,8 +354,11 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 		utils.Log("inventoryID", host.ID).Info("Received recently deleted system")
 		return nil, nil
 	}
-
 	sys, err := updateSystemPlatform(tx, host.ID, accountID, host, &updatesReq)
+	if err != nil {
+		return nil, errors.Wrap(err, "saving system into the database")
+	}
+	err = updateTags(tx, sys.ID, host)
 	if err != nil {
 		return nil, errors.Wrap(err, "saving system into the database")
 	}
@@ -364,4 +367,32 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 		return nil, errors.Wrap(err, "Committing changes")
 	}
 	return sys, nil
+}
+
+func updateTags(tx *gorm.DB, systemID int, host *Host) error {
+	var tags []string
+	for _, t := range host.Tags {
+		if t.Value != nil {
+			tags = append(tags, models.FormatTag(t.Namespace, t.Key, t.Value))
+		}
+	}
+	err := tx.
+		Where("system_id = ?", systemID).
+		Where("tag not in (?)", tags).
+		Delete(&models.SystemTag{}).Error
+
+	if err != nil {
+		return err
+	}
+
+	systemTags := make([]models.SystemTag, len(tags))
+	for i, t := range tags {
+		systemTags[i] = models.SystemTag{
+			Tag:      t,
+			SystemID: systemID,
+		}
+	}
+
+	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	return database.BulkInsert(txOnConflict, systemTags)
 }

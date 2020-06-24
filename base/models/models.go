@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"github.com/jinzhu/gorm/dialects/postgres"
 	"time"
 )
@@ -63,6 +64,22 @@ type DeletedSystem struct {
 
 func (DeletedSystem) TableName() string {
 	return "deleted_system"
+}
+func FormatTag(namespace *string, name string, value *string) string {
+	tmp := ""
+	if namespace == nil {
+		namespace = &tmp
+	}
+
+	if value == nil {
+		value = &tmp
+	}
+	return fmt.Sprintf("%s:%s:%s", *namespace, name, *value)
+}
+
+type SystemTag struct {
+	Tag      string
+	SystemID int
 }
 
 type AdvisorySeverity struct {

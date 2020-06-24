@@ -202,6 +202,16 @@ func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) *gorm.DB 
 	return txWithSearch
 }
 
+func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, tagJoinExpr string) (*gorm.DB, bool) {
+	tags := c.QueryArray("tags")
+	if len(tags) == 0 {
+		return tx, false
+	}
+	return tx.
+		Joins(fmt.Sprintf("system_tags st on %s = st.system_id", tagJoinExpr)).
+		Where("st.tag in (?)", tags), true
+}
+
 func Csv(ctx *gin.Context, code int, res interface{}) {
 	ctx.Status(http.StatusOK)
 	ctx.Header("Content-Type", "text/csv")

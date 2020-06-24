@@ -80,8 +80,19 @@ func upload(randomPkgs bool) {
 	event := map[string]interface{}{
 		"type": "created",
 		"host": map[string]interface{}{
-			"id":             "TEST-0000",
-			"account":        "TEST-0000",
+			"id":      "TEST-0000",
+			"account": "TEST-0000",
+			"tags": []map[string]string{
+				{
+					"key":   "env",
+					"value": "prod",
+				},
+				{
+					"namespace": "satellite",
+					"key":       "organization",
+					"value":     "rh",
+				},
+			},
 			"system_profile": makeSystemProfile("TEST-0000", randomPkgs),
 		},
 	}
