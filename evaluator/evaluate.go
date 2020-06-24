@@ -95,7 +95,7 @@ func Evaluate(ctx context.Context, inventoryID string, evaluationType string) er
 	err = publishRemediationsState(system.InventoryID, *vmaasData)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-remediations-publish").Inc()
-		return errors.New("remediations publish failed")
+		return errors.Wrap(err, "remediations publish failed")
 	}
 
 	evaluationCnt.WithLabelValues("success").Inc()
