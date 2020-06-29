@@ -22,7 +22,7 @@ type RemediationsState struct {
 	Issues []string `json:"issues"`
 }
 
-func publishRemediationsState(id string, response vmaas.UpdatesV2Response) error {
+func publishRemediationsState(id string, response vmaas.UpdatesResponse) error {
 	if remediationsPublisher == nil {
 		return nil
 	}

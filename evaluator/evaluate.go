@@ -113,7 +113,7 @@ func commitWithObserve(tx *gorm.DB) error {
 	return nil
 }
 
-func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) error {
+func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesResponse) error {
 	oldSystemAdvisories, patched, unpatched, err := processSystemAdvisories(tx, system, vmaasData, system.InventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
@@ -125,12 +125,14 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 		evaluationCnt.WithLabelValues("error-store-advisories").Inc()
 		return errors.Wrap(err, "Unable to store advisory data")
 	}
-	packageData, err := calcPackageData(vmaasData)
+	pkgByName, updateByName, err := updatePackages(tx, vmaasData)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-pkg-data").Inc()
-		return errors.Wrap(err, "Unable to calculate package data")
+		return errors.Wrap(err, "Unable to store package data")
 	}
-	err = updateSystemPlatform(tx, system, packageData, oldSystemAdvisories, newSystemAdvisories)
+	err = updateSystemPackages(tx, system, pkgByName, updateByName)
+
+	err = updateSystemPlatform(tx, system, oldSystemAdvisories, newSystemAdvisories)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-update-system").Inc()
 		return errors.Wrap(err, "Unable to update system")
@@ -139,35 +141,114 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 	return nil
 }
 
-func calcPackageData(data vmaas.UpdatesV2Response) (models.SystemPackageData, error) {
-	res := make(models.SystemPackageData)
+type PackageUpdateData struct {
+	EVRA       string
+	UdpateData vmaas.UpdatesResponseUpdateList
+}
 
-	for nevra, updates := range data.UpdateList {
+func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
+	packages map[string]models.Package,
+	updates map[string]PackageUpdateData) error {
+	var pkgIds []int
+	for _, pkg := range packages {
+		pkgIds = append(pkgIds, pkg.ID)
+	}
+	err := tx.Table("system_package").
+		Where("system_id = ?", system.ID).
+		Where("package_id not in (?)", pkgIds).Error
+
+	if err != nil {
+		return errors.Wrap(err, "Deleting outrdated system packages")
+	}
+
+	var toStore []models.SystemPackage
+	for name, updateData := range updates {
+		var pkgUpdates models.PackageUpdates
+
+		for _, upData := range updateData.UdpateData.AvailableUpdates {
+			pkgUpdates = append(pkgUpdates, models.PackageUpdate{
+				// TODO: Need to parse here and use just EVRA
+				Version:  upData.Package,
+				Advisory: upData.Erratum,
+			})
+		}
+		var pkgJson []byte
+		if len(pkgUpdates) > 0 {
+			pkgJson, err = json.Marshal(pkgUpdates)
+			if err != nil {
+				return errors.Wrap(err, "Serializing pkg json")
+			}
+		}
+		toStore = append(toStore, models.SystemPackage{
+			SystemID:         system.ID,
+			PackageID:        packages[name].ID,
+			VersionInstalled: updateData.EVRA,
+			UpdateData:       postgres.Jsonb{pkgJson},
+		})
+	}
+	return errors.Wrap(
+		database.OnConflictUpdateMulti(tx, []string{"system_id", "package_id"},
+			"version_installed", "update_data").Error, "Saving system_pkg data")
+
+}
+
+func updatePackages(tx *gorm.DB, data vmaas.UpdatesResponse) (
+	map[string]models.Package,
+	map[string]PackageUpdateData, error) {
+
+	updatesByName := make(map[string]PackageUpdateData)
+
+	var pkgNames []string
+	for nevra, data := range data.UpdateList {
 		pkg, err := utils.ParseNevra(nevra)
 		if err != nil {
-			// Skipping invalid nevras
+			// Skipping invalid pkgNames
 			utils.Log("err", err.Error(), "nevra", nevra).Error("Unable to parse nevra")
 			continue
 		}
-		it := res[pkg.Name]
-		it.Version = pkg.EVRAString()
-		for _, up := range updates.AvailableUpdates {
-			upNevra, err := utils.ParseNevra(up.Package)
-			if err != nil {
-				return nil, errors.Wrapf(err, "Unable to parse nevra: %s", up.Package)
-			}
-			it.Updates = append(it.Updates, models.SystemPackageDataUpdate{
-				Version:  upNevra.EVRAString(),
-				Advisory: up.Erratum,
+		pkgNames = append(pkgNames, pkg.Name)
+		updatesByName[pkg.Name] = PackageUpdateData{
+			EVRA:       pkg.EVRAString(),
+			UdpateData: data,
+		}
+	}
+	var packages []models.Package
+	err := tx.Set("gorm:query_option", "FOR UPDATE OF package").
+		Where("name in (?)", pkgNames).Find(&packages).Error
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "loading packages ")
+	}
+	pkgByName := map[string]models.Package{}
+	for _, p := range packages {
+		pkgByName[p.Name] = p
+	}
+
+	var newPkgs []models.Package
+	for name, updateData := range updatesByName {
+		// Update if not found, or data is outdated
+		if oldPkg, has := pkgByName[name]; !has ||
+			oldPkg.Description != updateData.UdpateData.Description ||
+			oldPkg.Summary != updateData.UdpateData.Summary {
+			newPkgs = append(newPkgs, models.Package{
+				Name:        name,
+				Description: updateData.UdpateData.Description,
+				Summary:     updateData.UdpateData.Summary,
 			})
 		}
-		res[pkg.Name] = it
 	}
-	return res, nil
+
+	err = database.BulkInsert(tx, newPkgs)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "Saving packages")
+	}
+	for _, n := range newPkgs {
+		pkgByName[n.Name] = n
+	}
+
+	return pkgByName, updatesByName, nil
 }
 
-func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform, pkgData models.SystemPackageData,
-	old, new SystemAdvisoryMap) error {
+func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform, old, new SystemAdvisoryMap) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("system-update"))
 	if old == nil || new == nil {
@@ -186,23 +267,18 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform, pkgData mo
 		}
 		counts[0]++
 	}
-	pkgDataStr, err := json.Marshal(&pkgData)
-	if err != nil {
-		return err
-	}
 	data := map[string]interface{}{}
 	data["advisory_count_cache"] = counts[0]
 	data["advisory_enh_count_cache"] = counts[1]
 	data["advisory_bug_count_cache"] = counts[2]
 	data["advisory_sec_count_cache"] = counts[3]
 	data["last_evaluation"] = time.Now()
-	data["package_data"] = postgres.Jsonb{RawMessage: pkgDataStr}
 
 	return tx.Model(system).Update(data).Error
 }
 
 // nolint: bodyclose
-func callVMaas(ctx context.Context, request vmaas.UpdatesV3Request) (*vmaas.UpdatesV2Response, error) {
+func callVMaas(ctx context.Context, request vmaas.UpdatesRequest) (*vmaas.UpdatesResponse, error) {
 	var policy = backoff.NewExponential(
 		backoff.WithInterval(time.Second),
 		backoff.WithMaxRetries(8),
@@ -210,13 +286,13 @@ func callVMaas(ctx context.Context, request vmaas.UpdatesV3Request) (*vmaas.Upda
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("vmaas-updates-call"))
 
-	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{
-		UpdatesV3Request: optional.NewInterface(request),
+	vmaasCallArgs := vmaas.AppUpdatesHandlerPostPostOpts{
+		UpdatesRequest: optional.NewInterface(request),
 	}
 	backoffState, cancel := policy.Start(base.Context)
 	defer cancel()
 	for backoff.Continue(backoffState) {
-		vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(ctx, &vmaasCallArgs)
+		vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerPostPost(ctx, &vmaasCallArgs)
 
 		// VMaaS is probably refreshing caches, continue waiting
 		if resp != nil && resp.StatusCode == http.StatusServiceUnavailable {
@@ -245,11 +321,11 @@ func loadSystemData(tx *gorm.DB, inventoryID string) (*models.SystemPlatform, er
 	return &system, err
 }
 
-func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, error) {
+func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesRequest, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("parse-vmaas-json"))
 
-	var updatesReq vmaas.UpdatesV3Request
+	var updatesReq vmaas.UpdatesRequest
 	err := json.Unmarshal([]byte(system.VmaasJSON), &updatesReq)
 	return updatesReq, err
 }
@@ -257,7 +333,7 @@ func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, erro
 // Changes data stored in system_advisories, in order to match newest evaluation
 // Before this methods stores the entries into the system_advisories table, it locks
 // advisory_account_data table, so other evaluations don't interfere with this one
-func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response,
+func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesResponse,
 	inventoryID string) (oldSystemAdvisories SystemAdvisoryMap, patched []int, unpatched []int, err error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))
@@ -306,7 +382,7 @@ func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform,
 	return newSystemAdvisories, nil
 }
 
-func getReportedAdvisories(vmaasData vmaas.UpdatesV2Response) map[string]bool {
+func getReportedAdvisories(vmaasData vmaas.UpdatesResponse) map[string]bool {
 	advisories := map[string]bool{}
 	for _, updates := range vmaasData.UpdateList {
 		for _, u := range updates.AvailableUpdates {

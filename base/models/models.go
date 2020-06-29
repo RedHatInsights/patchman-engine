@@ -46,14 +46,28 @@ func (SystemPlatform) TableName() string {
 	return "system_platform"
 }
 
-type SystemPackageData map[string]SystemPackageDataItem
-type SystemPackageDataUpdate struct {
+type Package struct {
+	ID          int
+	Name        string
+	Description string
+	Summary     string
+}
+
+func (Package) TableName() string {
+	return "package"
+}
+
+type SystemPackage struct {
+	SystemID         int
+	PackageID        int
+	VersionInstalled string
+	UpdateData       postgres.Jsonb
+}
+
+type PackageUpdates []PackageUpdate
+type PackageUpdate struct {
 	Version  string `json:"version"`
 	Advisory string `json:"advisory"`
-}
-type SystemPackageDataItem struct {
-	Version string                    `json:"version"`
-	Updates []SystemPackageDataUpdate `json:"updates"`
 }
 
 type DeletedSystem struct {
