@@ -64,6 +64,7 @@ func SystemPackagesHandler(c *gin.Context) {
 
 	var loaded []SystemPackageDBLoad
 	q := systemPackageQuery(account, inventoryID).Select(PackagesSelect)
+	q = ApplySearch(c, q, "spkg.name", "spkg.summary", "spkg.description")
 	err := q.Find(&loaded).Error
 	if gorm.IsRecordNotFoundError(err) {
 		LogAndRespNotFound(c, err, "loaded not found")
