@@ -9,9 +9,11 @@ import (
 )
 
 func updatesHandler(c *gin.Context) {
-	data := vmaas.UpdatesV2Response{
-		UpdateList: map[string]vmaas.UpdatesV2ResponseUpdateList{
+	data := vmaas.UpdatesResponse{
+		UpdateList: map[string]vmaas.UpdatesResponseUpdateList{
 			"firefox-0:76.0.1-1.fc31.x86_64": {
+				Summary:     "firefox",
+				Description: "firefox",
 				AvailableUpdates: []vmaas.UpdatesResponseAvailableUpdates{
 					{
 						Repository: "repo1",
@@ -30,6 +32,8 @@ func updatesHandler(c *gin.Context) {
 				},
 			},
 			"kernel-5.6.13-200.fc31.x86_64": {
+				Summary:     "kernel",
+				Description: "kernel",
 				AvailableUpdates: []vmaas.UpdatesResponseAvailableUpdates{
 					{
 						Repository: "repo1",
@@ -154,6 +158,8 @@ func initVMaaS(app *gin.Engine) {
 	// Mock updates endpoint for VMaaS
 	app.GET("/api/v3/updates", updatesHandler)
 	app.POST("/api/v3/updates", updatesHandler)
+	app.GET("/api/v1/updates", updatesHandler)
+	app.POST("/api/v1/updates", updatesHandler)
 	app.GET("/api/v1/patches", patchesHandler)
 	app.POST("/api/v1/patches", patchesHandler)
 	// Mock erratas endpoint for VMaaS

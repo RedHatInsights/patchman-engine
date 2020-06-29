@@ -238,7 +238,8 @@ func updatePackages(tx *gorm.DB, data vmaas.UpdatesResponse) (
 			})
 		}
 	}
-
+	// TODO: Do we want to save description here ?
+	tx = database.OnConflictUpdate(tx, "id", "description", "summary")
 	err = database.BulkInsert(tx, newPkgs)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Saving packages")

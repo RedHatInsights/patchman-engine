@@ -45,7 +45,7 @@ func (SystemPlatform) TableName() string {
 }
 
 type Package struct {
-	ID          int
+	ID          int `gorm:"primary_key"`
 	Name        string
 	Description string
 	Summary     string
@@ -56,10 +56,14 @@ func (Package) TableName() string {
 }
 
 type SystemPackage struct {
-	SystemID         int
-	PackageID        int
+	SystemID         int `gorm:"primary_key"`
+	PackageID        int `gorm:"primary_key"`
 	VersionInstalled string
 	UpdateData       postgres.Jsonb
+}
+
+func (SystemPackage) TableName() string {
+	return "system_package"
 }
 
 type PackageUpdates []PackageUpdate

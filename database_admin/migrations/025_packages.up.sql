@@ -8,13 +8,14 @@ CREATE TABLE IF NOT EXISTS package
 );
 
 
-GRANT SELECT ON TABLE package TO evaluator;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE package TO evaluator;
 GRANT SELECT ON TABLE package TO listener;
 GRANT SELECT ON TABLE package TO manager;
 GRANT SELECT ON TABLE package TO vmaas_sync;
-GRANT SELECT,USAGE ON SEQUENCE package_id_seq TO evaluator;
-GRANT SELECT,USAGE ON SEQUENCE package_id_seq TO listener;
-GRANT SELECT,USAGE ON SEQUENCE package_id_seq TO vmaas_sync;
+
+GRANT SELECT, USAGE ON SEQUENCE package_id_seq TO evaluator;
+GRANT SELECT, USAGE ON SEQUENCE package_id_seq TO listener;
+GRANT SELECT, USAGE ON SEQUENCE package_id_seq TO vmaas_sync;
 
 
 CREATE TABLE IF NOT EXISTS system_package
@@ -27,7 +28,7 @@ CREATE TABLE IF NOT EXISTS system_package
     PRIMARY KEY (system_id, package_id)
 );
 
-GRANT SELECT ON TABLE system_package TO evaluator;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE system_package TO evaluator;
 GRANT SELECT ON TABLE system_package TO listener;
 GRANT SELECT ON TABLE system_package TO manager;
 GRANT SELECT ON TABLE system_package TO vmaas_sync;

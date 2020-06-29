@@ -530,6 +530,8 @@ CREATE TABLE IF NOT EXISTS package
     summary     TEXT                                 NOT NULL CHECK ( NOT empty(summary))
 );
 
+GRANT SELECT, INSERT, UPDATE, DELETE ON package TO evaluator;
+
 CREATE TABLE IF NOT EXISTS system_package
 (
     system_id         INT  NOT NULL REFERENCES system_platform,
@@ -539,6 +541,8 @@ CREATE TABLE IF NOT EXISTS system_package
     update_data       JSONB DEFAULT NULL,
     PRIMARY KEY (system_id, package_id)
 );
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON system_package TO evaluator;
 
 -- advisory_type
 CREATE TABLE IF NOT EXISTS advisory_type
