@@ -34,9 +34,13 @@ INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vma
 (14, 'INV-14', 'INV-14', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', true);
 
 
-UPDATE system_platform
-SET package_data = '{"kernel": {"updates": [{"version": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}], "version": "5.6.13-200.fc31-x86_64"}, "firefox": {"updates": [{"version": "77.0.1-1.fc31-x86_64", "advisory": "RH-1"}, {"version": "76.0.1-1.fc31-x86_64", "advisory": "RH-2"}], "version": "76.0.1-1.fc31-x86_64"}}'
-WHERE inventory_id = 'INV-12';
+INSERT INTO package (id, name, description, summary) VALUES
+(1, 'kernel', 'The thing that makes computer compute', 'kernel'),
+(2, 'firefox', 'The thing that shows cat pictures', 'firefox');
+
+INSERT INTO system_package (system_id, package_id, version_installed, update_data) VALUES
+(12, 1, '5.6.13-200.fc31-x86_64', '[{"version": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}]'),
+(12, 2, '76.0.1-1.fc31-x86_64', '[{"version": "77.0.1-1.fc31-x86_64", "advisory": "RH-1"}, {"version": "76.0.1-1.fc31-x86_64", "advisory": "RH-2"}]');
 
 INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solution, advisory_type_id,
                                public_date, modified_date, url, severity_id, cve_list) VALUES

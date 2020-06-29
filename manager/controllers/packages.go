@@ -5,13 +5,44 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
-	"errors"
+	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"github.com/jinzhu/gorm/dialects/postgres"
 	"net/http"
 )
 
-type SystemPackageResponse models.SystemPackageData
+type SystemPackagesAttrs struct {
+	Name             string `json:"name" query:"p.name"`
+	VersionInstalled string `json:"version_installed" query:"spkg.version_installed"`
+	Summary          string `json:"summary" query:"p.summary"`
+	Description      string `json:"description" query:"p.description"`
+}
+
+type SystemPackageData struct {
+	SystemPackagesAttrs
+	Updates models.PackageUpdates `json:"updates"`
+}
+type SystemPackageResponse []SystemPackageData
+
+var PackagesSelect = fmt.Sprintf("%s,spkg.update_data as updates", database.MustGetSelect(&SystemPackagesAttrs{}))
+
+//var PackagesAttrs = database.MustGetQueryAttrs(&SystemPackageData{})
+
+type SystemPackageDBLoad struct {
+	SystemPackagesAttrs
+	Updates postgres.Jsonb `json:"updates" query:"spkg.update_data"`
+}
+
+func systemPackageQuery(account string, inventoryID string) *gorm.DB {
+	return database.Db.
+		Table("system_package spkg").
+		Joins("inner join system_platform sp on sp.id = spkg.system_id").
+		Joins("inner join rh_account ra on sp.rh_account_id = ra.id").
+		Joins("inner join package p on p.id = spkg.package_id").
+		Where("ra.name = ? and sp.inventory_id = ?", account, inventoryID)
+}
 
 // @Summary Show me details about a system packages by given inventory id
 // @Description Show me details about a system packages by given inventory id
@@ -20,7 +51,7 @@ type SystemPackageResponse models.SystemPackageData
 // @Accept   json
 // @Produce  json
 // @Param    inventory_id    path    string   true "Inventory ID"
-// @Success 200 {object} models.SystemPackageData
+// @Success 200 {object} SystemPackageResponse
 // @Router /api/patch/v1/systems/{inventory_id}/packages [get]
 func SystemPackagesHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)
@@ -31,17 +62,11 @@ func SystemPackagesHandler(c *gin.Context) {
 		return
 	}
 
-	var inventory models.SystemPlatform
-	err := database.Db.
-		Table("system_platform").
-		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
-		Where("ra.name = ?", account).
-		Where("inventory_id = ?", inventoryID).
-		Select("package_data").
-		First(&inventory).Error
-
+	var loaded []SystemPackageDBLoad
+	q := systemPackageQuery(account, inventoryID).Select(PackagesSelect)
+	err := q.Find(&loaded).Error
 	if gorm.IsRecordNotFoundError(err) {
-		LogAndRespNotFound(c, err, "inventory not found")
+		LogAndRespNotFound(c, err, "loaded not found")
 		return
 	}
 
@@ -49,11 +74,16 @@ func SystemPackagesHandler(c *gin.Context) {
 		LogAndRespError(c, err, "database error")
 		return
 	}
-	if inventory.PackageData == nil || inventory.PackageData.RawMessage == nil {
-		LogAndRespStatusError(c, http.StatusNoContent,
-			errors.New("no package data available"), "Missing package data")
-		return
+	resp := make(SystemPackageResponse, len(loaded))
+	for i, sp := range loaded {
+		resp[i].SystemPackagesAttrs = sp.SystemPackagesAttrs
+		if sp.Updates.RawMessage == nil {
+			continue
+		}
+		if err := json.Unmarshal(sp.Updates.RawMessage, &resp[i].Updates); err != nil {
+			panic(err)
+		}
 	}
 
-	c.Data(200, "application/json", inventory.PackageData.RawMessage)
+	c.JSON(200, loaded)
 }

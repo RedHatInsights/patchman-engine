@@ -47,8 +47,8 @@ func TestGetReportedAdvisories1(t *testing.T) {
 }
 
 func TestGetReportedAdvisories2(t *testing.T) {
-	vmaasData := vmaas.UpdatesV2Response{
-		UpdateList: map[string]vmaas.UpdatesV2ResponseUpdateList{
+	vmaasData := vmaas.UpdatesResponse{
+		UpdateList: map[string]vmaas.UpdatesResponseUpdateList{
 			"pkg-a": {AvailableUpdates: []vmaas.UpdatesResponseAvailableUpdates{{Erratum: "ER1"}, {Erratum: "ER2"}}},
 			"pkg-b": {AvailableUpdates: []vmaas.UpdatesResponseAvailableUpdates{{Erratum: "ER2"}, {Erratum: "ER3"}}},
 			"pkg-c": {AvailableUpdates: []vmaas.UpdatesResponseAvailableUpdates{{Erratum: "ER3"}, {Erratum: "ER4"}}},
@@ -166,9 +166,9 @@ func TestEvaluate(t *testing.T) {
 	assert.Equal(t, 1, len(mockWriter.Messages))
 }
 
-func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {
-	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{}
-	vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(context.Background(), &vmaasCallArgs)
+func getVMaaSUpdates(t *testing.T) vmaas.UpdatesResponse {
+	vmaasCallArgs := vmaas.AppUpdatesHandlerPostPostOpts{}
+	vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerPostPost(context.Background(), &vmaasCallArgs)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Nil(t, resp.Body.Close())

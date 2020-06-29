@@ -131,7 +131,10 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 		return errors.Wrap(err, "Unable to store package data")
 	}
 	err = updateSystemPackages(tx, system, pkgByName, updateByName)
-
+	if err != nil {
+		evaluationCnt.WithLabelValues("error-system-pkgs").Inc()
+		return errors.Wrap(err, "Unable to update system packages")
+	}
 	err = updateSystemPlatform(tx, system, oldSystemAdvisories, newSystemAdvisories)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-update-system").Inc()
@@ -146,10 +149,11 @@ type PackageUpdateData struct {
 	UdpateData vmaas.UpdatesResponseUpdateList
 }
 
+// nolint: prealloc
 func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 	packages map[string]models.Package,
 	updates map[string]PackageUpdateData) error {
-	var pkgIds []int
+	pkgIds := make([]int, 0, len(packages))
 	for _, pkg := range packages {
 		pkgIds = append(pkgIds, pkg.ID)
 	}
@@ -172,9 +176,9 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 				Advisory: upData.Erratum,
 			})
 		}
-		var pkgJson []byte
+		var pkgJSON []byte
 		if len(pkgUpdates) > 0 {
-			pkgJson, err = json.Marshal(pkgUpdates)
+			pkgJSON, err = json.Marshal(pkgUpdates)
 			if err != nil {
 				return errors.Wrap(err, "Serializing pkg json")
 			}
@@ -183,22 +187,20 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 			SystemID:         system.ID,
 			PackageID:        packages[name].ID,
 			VersionInstalled: updateData.EVRA,
-			UpdateData:       postgres.Jsonb{pkgJson},
+			UpdateData:       postgres.Jsonb{RawMessage: pkgJSON},
 		})
 	}
-	return errors.Wrap(
-		database.OnConflictUpdateMulti(tx, []string{"system_id", "package_id"},
-			"version_installed", "update_data").Error, "Saving system_pkg data")
-
+	tx = database.OnConflictUpdateMulti(tx, []string{"system_id", "package_id"},
+		"version_installed", "update_data")
+	return errors.Wrap(database.BulkInsert(tx, toStore), "Storing system packages")
 }
 
 func updatePackages(tx *gorm.DB, data vmaas.UpdatesResponse) (
 	map[string]models.Package,
 	map[string]PackageUpdateData, error) {
-
 	updatesByName := make(map[string]PackageUpdateData)
 
-	var pkgNames []string
+	pkgNames := make([]string, 0, len(data.UpdateList))
 	for nevra, data := range data.UpdateList {
 		pkg, err := utils.ParseNevra(nevra)
 		if err != nil {

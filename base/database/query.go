@@ -70,6 +70,7 @@ func parserForType(v reflect.Type) (AttrParser, error) {
 	}
 }
 
+// nolint: gocognit
 func getQueryFromTags(v reflect.Type) (AttrMap, []AttrName, error) {
 	if v.Kind() != reflect.Struct {
 		return nil, nil, errors.New("Only struct kind is supported")
@@ -96,23 +97,21 @@ func getQueryFromTags(v reflect.Type) (AttrMap, []AttrName, error) {
 					columnName = match[1]
 				}
 			}
-
+			expr, hasExpr := field.Tag.Lookup("query")
+			if expr == "-" {
+				continue
+			}
+			if !hasExpr {
+				expr = columnName
+			}
 			parser, err := parserForType(field.Type)
 			if err != nil {
 				return nil, nil, err
 			}
 
-			if expr, has := field.Tag.Lookup("query"); has {
-				res[columnName] = AttrInfo{
-					Query:  expr,
-					Parser: parser,
-				}
-			} else {
-				// If we dont have expr, we just use raw column name
-				res[columnName] = AttrInfo{
-					Query:  columnName,
-					Parser: parser,
-				}
+			res[columnName] = AttrInfo{
+				Query:  expr,
+				Parser: parser,
 			}
 			// Result HAS to contain all columns, because gorm loads by index, not by name
 			resNames = append(resNames, columnName)
