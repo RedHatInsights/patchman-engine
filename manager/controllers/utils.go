@@ -202,14 +202,23 @@ func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) *gorm.DB 
 	return txWithSearch
 }
 
-func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, tagJoinExpr string) (*gorm.DB, bool) {
+// Filter systems by tags,
+// TODO: Implement implicit namespaces
+// TODO: we currently use same encoding inside the DB, as is used in query strings
+// the namespace/name=value encoding. Ensure this is correct by parsing and re-formatting the values
+func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
 	tags := c.QueryArray("tags")
 	if len(tags) == 0 {
 		return tx, false
 	}
-	return tx.
-		Joins(fmt.Sprintf("system_tags st on %s = st.system_id", tagJoinExpr)).
-		Where("st.tag in (?)", tags), true
+
+	subq := database.Db.
+		Table("system_tags st").
+		Select("DISTINCT st.system_id").
+		Where("st.tag in (?)", tags).
+		SubQuery()
+
+	return tx.Where(fmt.Sprintf("%s in (?)", systemIDExpr), subq), true
 }
 
 func Csv(ctx *gin.Context, code int, res interface{}) {

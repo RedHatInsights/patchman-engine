@@ -37,6 +37,7 @@ type AdvisorySystemsResponse struct {
 // @Param    filter[rhba_count]      query   string  false "Filter"
 // @Param    filter[rhea_count]      query   string  false "Filter"
 // @Param    filter[stale]           query   string  false "Filter"
+// @Param    tags                    query   string  false "Tag filter"
 // @Success 200 {object} AdvisorySystemsResponse
 // @Router /api/patch/v1/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListHandler(c *gin.Context) {
@@ -49,7 +50,8 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 	}
 
 	var exists int
-	err := database.Db.Model(&models.AdvisoryMetadata{}).Where("name = ? ", advisoryName).Count(&exists).Error
+	err := database.Db.Model(&models.AdvisoryMetadata{}).
+		Where("name = ? ", advisoryName).Count(&exists).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")
 	}
@@ -60,6 +62,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 
 	query := buildQuery(account, advisoryName)
 	query = ApplySearch(c, query, "system_platform.display_name")
+	query, _ = ApplyTagsFilter(c, query, "system_platform.id")
 	path := fmt.Sprintf("/api/patch/v1/advisories/%v/systems", advisoryName)
 	query, meta, links, err := ListCommon(query, c, path, SystemOpts)
 	if err != nil {

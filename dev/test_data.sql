@@ -38,6 +38,11 @@ UPDATE system_platform
 SET package_data = '{"kernel": {"updates": [{"version": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}], "version": "5.6.13-200.fc31-x86_64"}, "firefox": {"updates": [{"version": "77.0.1-1.fc31-x86_64", "advisory": "RH-1"}, {"version": "76.0.1-1.fc31-x86_64", "advisory": "RH-2"}], "version": "76.0.1-1.fc31-x86_64"}}'
 WHERE inventory_id = 'INV-12';
 
+insert into system_tags (tag, system_id) VALUES
+('satellite/organization=rh', 1),
+('satellite/organization=rh', 2),
+('satellite/organization=ibm', 1);
+
 INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solution, advisory_type_id,
                                public_date, modified_date, url, severity_id, cve_list) VALUES
 (1, 'RH-1', 'adv-1-des', 'adv-1-syn', 'adv-1-sum', 'adv-1-sol', 1, '2016-09-22 12:00:00-04', '2017-09-22 12:00:00-04', 'url1', NULL, NULL),

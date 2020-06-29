@@ -77,12 +77,14 @@ type SystemsResponse struct {
 // @Param    filter[rhba_count]      query   string  false "Filter"
 // @Param    filter[rhea_count]      query   string  false "Filter"
 // @Param    filter[stale]           query   string  false "Filter"
+// @Param    tags                    query   string  false "Tag filter"
 // @Success 200 {object} SystemsResponse
 // @Router /api/patch/v1/systems [get]
 func SystemsListHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)
 	query := querySystems(account)
 	query = ApplySearch(c, query, "system_platform.display_name")
+	query, _ = ApplyTagsFilter(c, query, "system_platform.id")
 	query, meta, links, err := ListCommon(query, c, "/api/patch/v1/systems", SystemOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon

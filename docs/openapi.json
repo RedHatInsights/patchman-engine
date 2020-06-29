@@ -285,6 +285,14 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Tag filter",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -654,6 +662,14 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Tag filter",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -917,10 +933,7 @@
                 "type": "object",
                 "properties": {
                     "cves": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
+                        "type": "string"
                     },
                     "description": {
                         "type": "string"

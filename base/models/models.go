@@ -74,7 +74,7 @@ func FormatTag(namespace *string, name string, value *string) string {
 	if value == nil {
 		value = &tmp
 	}
-	return fmt.Sprintf("%s:%s:%s", *namespace, name, *value)
+	return fmt.Sprintf("%s/%s=%s", *namespace, name, *value)
 }
 
 type SystemTag struct {

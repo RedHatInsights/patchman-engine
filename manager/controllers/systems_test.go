@@ -118,6 +118,21 @@ func TestSystemsSearch(t *testing.T) {
 	assert.Equal(t, "INV-1", output.Data[0].Attributes.DisplayName)
 }
 
+func TestSystemsTags(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?tags=satellite/organization=rh", nil)
+	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output SystemsResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, "INV-1", output.Data[0].ID)
+}
+
 func TestSystemsExportJSON(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()

@@ -103,3 +103,33 @@ func TestAdvisorySystemsWrongSort(t *testing.T) { //nolint:dupl
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
+
+func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/RH-1?tags=satellite/organization=rh", nil)
+	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+
+	var output AdvisorySystemsResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+
+	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, 2, len(output.Data))
+}
+
+func TestAdvisorySystemsTags2(t *testing.T) { //nolint:dupl
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/RH-1?tags=satellite/organization=rh&tags=satellite/organization=ibm", nil)
+	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+
+	var output AdvisorySystemsResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+
+	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, 2, len(output.Data))
+}
