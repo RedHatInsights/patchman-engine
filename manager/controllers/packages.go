@@ -14,21 +14,29 @@ import (
 )
 
 type SystemPackagesAttrs struct {
-	Name             string `json:"name" query:"p.name"`
-	VersionInstalled string `json:"version_installed" query:"spkg.version_installed"`
-	Summary          string `json:"summary" query:"p.summary"`
-	Description      string `json:"description" query:"p.description"`
+	Name        string `json:"name" query:"p.name"`
+	Version     string `json:"version" query:"spkg.version_installed"`
+	Summary     string `json:"summary" query:"p.summary"`
+	Description string `json:"description" query:"p.description"`
 }
 
 type SystemPackageData struct {
 	SystemPackagesAttrs
 	Updates models.PackageUpdates `json:"updates"`
 }
-type SystemPackageResponse []SystemPackageData
+type SystemPackageResponse struct {
+	Data  []SystemPackageData `json:"data"`
+	Meta  ListMeta            `json:"meta"`
+	Links Links               `json:"links"`
+}
 
 var PackagesSelect = fmt.Sprintf("%s,spkg.update_data as updates", database.MustGetSelect(&SystemPackagesAttrs{}))
-
-//var PackagesAttrs = database.MustGetQueryAttrs(&SystemPackageData{})
+var PackagesAttrs = database.MustGetQueryAttrs(&SystemPackagesAttrs{})
+var PackageOpts = ListOpts{
+	Fields:         PackagesAttrs,
+	DefaultFilters: nil,
+	DefaultSort:    "name",
+}
 
 type SystemPackageDBLoad struct {
 	SystemPackagesAttrs
@@ -51,6 +59,11 @@ func systemPackageQuery(account string, inventoryID string) *gorm.DB {
 // @Accept   json
 // @Produce  json
 // @Param    inventory_id    path    string   true "Inventory ID"
+// @Param    search          query   string  false   "Find matching text"
+// @Param    filter[name]            query   string  false "Filter"
+// @Param    filter[description]     query   string  false "Filter"
+// @Param    filter[version]     query   string  false "Filter"
+// @Param    filter[summary]         query   string  false "Filter"
 // @Success 200 {object} SystemPackageResponse
 // @Router /api/patch/v1/systems/{inventory_id}/packages [get]
 func SystemPackagesHandler(c *gin.Context) {
@@ -63,11 +76,15 @@ func SystemPackagesHandler(c *gin.Context) {
 	}
 
 	var loaded []SystemPackageDBLoad
-	q := systemPackageQuery(account, inventoryID).Select(PackagesSelect)
-	q = ApplySearch(c, q, "spkg.name", "spkg.summary", "spkg.description")
-	err := q.Find(&loaded).Error
+	q := systemPackageQuery(account, inventoryID).Debug().Select(PackagesSelect)
+	q = ApplySearch(c, q, "p.name", "p.summary", "p.description")
+	q, meta, links, err := ListCommon(q, c, fmt.Sprintf("/systems/%s/packages", inventoryID), PackageOpts)
+	if err != nil {
+		return
+	}
+	err = q.Find(&loaded).Error
 	if gorm.IsRecordNotFoundError(err) {
-		LogAndRespNotFound(c, err, "loaded not found")
+		LogAndRespNotFound(c, err, "inventory_id not found")
 		return
 	}
 
@@ -75,16 +92,20 @@ func SystemPackagesHandler(c *gin.Context) {
 		LogAndRespError(c, err, "database error")
 		return
 	}
-	resp := make(SystemPackageResponse, len(loaded))
+	response := SystemPackageResponse{
+		Data:  make([]SystemPackageData, len(loaded)),
+		Meta:  *meta,
+		Links: *links,
+	}
 	for i, sp := range loaded {
-		resp[i].SystemPackagesAttrs = sp.SystemPackagesAttrs
+		response.Data[i].SystemPackagesAttrs = sp.SystemPackagesAttrs
 		if sp.Updates.RawMessage == nil {
 			continue
 		}
-		if err := json.Unmarshal(sp.Updates.RawMessage, &resp[i].Updates); err != nil {
+		if err := json.Unmarshal(sp.Updates.RawMessage, &response.Data[i].Updates); err != nil {
 			panic(err)
 		}
 	}
 
-	c.JSON(200, loaded)
+	c.JSON(200, response)
 }
