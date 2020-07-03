@@ -370,7 +370,7 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 }
 
 func updateTags(tx *gorm.DB, systemID int, host *Host) error {
-	var tags []string
+	tags := make([]string, 0, len(host.Tags))
 	for _, t := range host.Tags {
 		if t.Value != nil {
 			tags = append(tags, models.FormatTag(t.Namespace, t.Key, t.Value))
