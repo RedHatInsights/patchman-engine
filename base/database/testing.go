@@ -102,6 +102,14 @@ func CheckAdvisoriesInDB(t *testing.T, advisories []string) []int {
 	return ids
 }
 
+func CheckPackagesNamesInDB(t *testing.T) {
+	var names []models.PackageName
+	assert.NoError(t, Db.Order("name").Find(&names).Error)
+	assert.Len(t, names, 2)
+	assert.Equal(t, names[0].Name, "firefox")
+	assert.Equal(t, names[1].Name, "kernel")
+}
+
 func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug, nSec int) {
 	var system models.SystemPlatform
 	assert.Nil(t, Db.Where("inventory_id = ?", inventoryID).First(&system).Error)
