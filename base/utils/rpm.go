@@ -54,6 +54,13 @@ func (n Nevra) String() string {
 	return fmt.Sprintf("%s-%s-%s-%s", n.Name, n.Version, n.Release, n.Arch)
 }
 
+func (n Nevra) EVRString() string {
+	if n.Epoch != "" && n.Epoch != "0" {
+		return fmt.Sprintf("%s:%s-%s", n.Epoch, n.Version, n.Release)
+	}
+	return fmt.Sprintf("%s-%s", n.Version, n.Release)
+}
+
 func (n Nevra) EVRAString() string {
 	if n.Epoch != "" && n.Epoch != "0" {
 		return fmt.Sprintf("%s:%s-%s-%s", n.Epoch, n.Version, n.Release, n.Arch)

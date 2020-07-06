@@ -81,7 +81,6 @@ type PackageUpdate struct {
 	Advisory string `json:"advisory"`
 }
 
-// TODO: to remove
 type SystemPackageData map[string]SystemPackageDataItem
 type SystemPackageDataUpdate struct {
 	Version  string `json:"version"`
