@@ -33,15 +33,22 @@ INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vma
 (13, 'INV-13', 'INV-13', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', true),
 (14, 'INV-14', 'INV-14', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', true);
 
-
-UPDATE system_platform
-SET package_data = '{"kernel": {"updates": [{"version": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}], "version": "5.6.13-200.fc31-x86_64"}, "firefox": {"updates": [{"version": "77.0.1-1.fc31-x86_64", "advisory": "RH-1"}, {"version": "76.0.1-1.fc31-x86_64", "advisory": "RH-2"}], "version": "76.0.1-1.fc31-x86_64"}}'
-WHERE inventory_id = 'INV-12';
-
 insert into system_tags (tag, system_id) VALUES
 ('satellite/organization=rh', 1),
 ('satellite/organization=rh', 2),
 ('satellite/organization=ibm', 1);
+
+INSERT INTO package_name(id,name) VALUES
+(1, 'kernel'),
+(2, 'firefox');
+
+INSERT INTO package(id, name_id, version, description, summary) VALUES
+(1, 1, '5.6.13-200.fc31-x86_64', 'kernel 1', 'kernel 1'),
+(2, 2, '76.0.1-1.fc31-x86_64', 'firefox 1', 'firefox 2');
+
+INSERT INTO system_package (system_id, package_id, update_data) VALUES
+(12, 1, '[{"version": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}]'),
+(12, 2, '[{"version": "77.0.1-1.fc31-x86_64", "advisory": "RH-1"}, {"version": "76.0.1-1.fc31-x86_64", "advisory": "RH-2"}]');
 
 INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solution, advisory_type_id,
                                public_date, modified_date, url, severity_id, cve_list) VALUES

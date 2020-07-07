@@ -79,6 +79,7 @@ func (SystemPackage) TableName() string {
 	return "system_package"
 }
 
+type PackageUpdates []PackageUpdate
 type PackageUpdate struct {
 	Version  string `json:"version"`
 	Advisory string `json:"advisory"`
