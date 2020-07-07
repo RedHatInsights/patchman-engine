@@ -69,7 +69,7 @@ type SystemPackage struct {
 	SystemID  int `gorm:"primary_key"`
 	PackageID int `gorm:"primary_key"`
 
-	PackageData postgres.Jsonb
+	UpdateData postgres.Jsonb
 }
 
 func (SystemPackage) TableName() string {
