@@ -38,14 +38,50 @@ type SystemPlatform struct {
 	CulledTimestamp       *time.Time
 	Stale                 bool
 	DisplayName           string
-
-	PackageData *postgres.Jsonb
 }
 
 func (SystemPlatform) TableName() string {
 	return "system_platform"
 }
 
+type PackageName struct {
+	ID   int `json:"id" gorm:"primary_key"`
+	Name string
+}
+
+func (PackageName) TableName() string {
+	return "package_name"
+}
+
+type Package struct {
+	ID          int `json:"id" gorm:"primary_key"`
+	NameID      int
+	Version     string
+	Description string
+	Summary     string
+}
+
+func (Package) TableName() string {
+	return "package"
+}
+
+type SystemPackage struct {
+	SystemID  int `gorm:"primary_key"`
+	PackageID int `gorm:"primary_key"`
+
+	PackageData postgres.Jsonb
+}
+
+func (SystemPackage) TableName() string {
+	return "system_package"
+}
+
+type PackageUpdate struct {
+	Version  string `json:"version"`
+	Advisory string `json:"advisory"`
+}
+
+// TODO: to remove
 type SystemPackageData map[string]SystemPackageDataItem
 type SystemPackageDataUpdate struct {
 	Version  string `json:"version"`
