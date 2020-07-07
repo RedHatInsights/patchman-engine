@@ -19,6 +19,11 @@ func TestPackages(t *testing.T) {
 		ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
+	var output SystemPackageResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Len(t, output.Data, 2)
+	assert.Equal(t, output.Data[0].Name, "firefox")
+	assert.Equal(t, output.Data[1].Name, "kernel")
 }
 
 func TestNoPackages(t *testing.T) {
@@ -29,6 +34,5 @@ func TestNoPackages(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/INV-1/packages", nil)
 	core.InitRouterWithParams(SystemPackagesHandler, "1", "GET", "/:inventory_id/packages").
 		ServeHTTP(w, req)
-
 	assert.Equal(t, 200, w.Code)
 }
