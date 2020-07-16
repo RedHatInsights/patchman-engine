@@ -39,7 +39,9 @@ type SystemItemAttributes struct {
 	RheaCount      int        `json:"rhea_count" csv:"rhea_count" query:"system_platform.advisory_enh_count_cache"`
 	// Not used
 	//Enabled        bool       `json:"enabled" csv:"enabled" query:"(NOT system_platform.opt_out)"`
-	Stale bool `json:"stale" csv:"stale" query:"system_platform.stale"`
+	Stale     bool `json:"stale" csv:"stale" query:"system_platform.stale"`
+	Installed int  `json:"packages_installed" csv:"packages_installed" query:"system_platform.packages_installed"`
+	Updatable int  `json:"packages_updatable" csv:"packages_updatable" query:"system_platform.packages_updatable"`
 }
 
 type SystemItem struct {

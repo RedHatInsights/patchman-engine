@@ -27,6 +27,7 @@ var pkgs = []string{
 	"iproute-2.6.18-13.el5.i386",
 	"libbonobo-2.24.2-5.el6.i686"}
 
+// nolint: gosec
 // Create bare system profile
 func makeSystemProfile(id string, randomPkgs bool) inventory.SystemProfileIn {
 	_pkgs := pkgs

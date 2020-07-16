@@ -28,4 +28,5 @@ require (
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/zsais/go-gin-prometheus v0.1.0
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
+	modernc.org/mathutil v1.0.0
 )
