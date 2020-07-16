@@ -13,7 +13,6 @@ import (
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-	"github.com/segmentio/kafka-go"
 	"strings"
 	"time"
 )
@@ -53,25 +52,13 @@ type Host struct {
 	SystemProfile         inventory.SystemProfileIn `json:"system_profile,omitempty"`
 }
 
-type HostEgressEvent struct {
+type HostEvent struct {
 	Type             string                 `json:"type"`
 	PlatformMetadata map[string]interface{} `json:"platform_metadata"`
 	Host             Host                   `json:"host"`
 }
 
-func uploadMsgHandler(msg kafka.Message) error {
-	var event HostEgressEvent
-	err := json.Unmarshal(msg.Value, &event)
-	if err != nil {
-		utils.Log("err", err.Error()).Error("unable to parse upload msg")
-		utils.Log("raw", string(msg.Value)).Trace("Raw message string")
-		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorParsing).Inc()
-		return nil
-	}
-	return uploadHandler(event)
-}
-
-func uploadHandler(event HostEgressEvent) error {
+func HandleUpload(event HostEvent) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventUpload))
 

@@ -100,7 +100,7 @@ func upload(randomPkgs bool) {
 	if err != nil {
 		panic(err)
 	}
-	sendMessageToTopic("platform.inventory.host-egress", string(msg))
+	sendMessageToTopic("platform.inventory.events", string(msg))
 }
 
 func sendMessageToTopic(topic, message string) {

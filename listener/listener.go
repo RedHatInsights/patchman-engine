@@ -8,7 +8,6 @@ import (
 )
 
 var (
-	uploadTopic   string
 	eventsTopic   string
 	consumerCount int
 	evalWriter    mqueue.Writer
@@ -16,8 +15,6 @@ var (
 
 func configure() {
 	core.ConfigureApp()
-
-	uploadTopic = utils.GetenvOrFail("UPLOAD_TOPIC")
 	eventsTopic = utils.GetenvOrFail("EVENTS_TOPIC")
 
 	consumerCount = utils.GetIntEnvOrFail("CONSUMER_COUNT")
@@ -38,7 +35,6 @@ func runReaders(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 	// We create multiple consumers, and hope that the partition rebalancing
 	// algorithm assigns each consumer a single partition
 	for i := 0; i < consumerCount; i++ {
-		mqueue.SpawnReader(wg, uploadTopic, readerBuilder, mqueue.MakeRetryingHandler(uploadMsgHandler))
 		mqueue.SpawnReader(wg, eventsTopic, readerBuilder, mqueue.MakeRetryingHandler(EventsMessageHandler))
 	}
 }
