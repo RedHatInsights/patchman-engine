@@ -43,19 +43,26 @@ func EventsMessageHandler(m kafka.Message) error {
 		}
 		return HandleDelete(event)
 	case "updated":
-		var event HostEgressEvent
+		var event HostEvent
 		if err := json.Unmarshal(m.Value, &event); err != nil {
 			utils.Log("inventoryID", msgData["id"], "msg", string(m.Value)).
 				Error("Invalid 'updated' message format")
 		}
 		return HandleUpdate(event)
+	case "created":
+		var event HostEvent
+		if err := json.Unmarshal(m.Value, &event); err != nil {
+			utils.Log("inventoryID", msgData["id"], "msg", string(m.Value)).
+				Error("Invalid 'updated' message format")
+		}
+		return HandleUpload(event)
 	default:
 		utils.Log("msg", string(m.Value)).Error(WarnUnknownType)
 		return nil
 	}
 }
 
-func HandleUpdate(event HostEgressEvent) error {
+func HandleUpdate(event HostEvent) error {
 	var system models.SystemPlatform
 	err := database.Db.Find(&system, "inventory_id = ?", event.Host.ID).Error
 	if err != nil && gorm.IsRecordNotFoundError(err) {

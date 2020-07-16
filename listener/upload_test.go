@@ -83,7 +83,7 @@ func TestUploadHandler(t *testing.T) {
 
 	_ = getOrCreateTestAccount(t)
 	event := createTestUploadEvent(id, true)
-	err := uploadHandler(event)
+	err := HandleUpload(event)
 	assert.NoError(t, err)
 
 	assertSystemInDB(t, id, nil)
@@ -97,7 +97,7 @@ func TestUploadHandler(t *testing.T) {
 	// Test that second upload did not cause re-evaluation
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	err = uploadHandler(event)
+	err = HandleUpload(event)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(logHook.LogEntries))
 	assert.Equal(t, UploadSuccessNoEval, logHook.LogEntries[1].Message)
@@ -109,7 +109,7 @@ func TestUploadHandlerWarn(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
 	noPkgsEvent := createTestUploadEvent(id, false)
-	err := uploadHandler(noPkgsEvent)
+	err := HandleUpload(noPkgsEvent)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(logHook.LogEntries))
 	assert.Equal(t, WarnSkippingNoPackages, logHook.LogEntries[0].Message)
@@ -121,7 +121,7 @@ func TestUploadHandlerError1(t *testing.T) {
 	log.AddHook(logHook)
 	event := createTestUploadEvent(id, true)
 	event.Host.Account = ""
-	err := uploadHandler(event)
+	err := HandleUpload(event)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(logHook.LogEntries))
 	assert.Equal(t, ErrorNoAccountProvided, logHook.LogEntries[0].Message)
@@ -144,7 +144,7 @@ func TestUploadHandlerError2(t *testing.T) {
 	log.AddHook(logHook)
 	_ = getOrCreateTestAccount(t)
 	event := createTestUploadEvent(id, true)
-	err := uploadHandler(event)
+	err := HandleUpload(event)
 	assert.Error(t, err)
 	assert.Equal(t, ErrorKafkaSend, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
 	deleteData(t)
@@ -199,17 +199,4 @@ func TestUpdateSystemRepos2(t *testing.T) {
 	assert.Equal(t, int64(0), nAdded)
 	assert.Equal(t, 2, nDeleted)
 	deleteData(t)
-}
-
-// Skip invalid message
-func TestUploadMsgHandlerInvalidMsg(t *testing.T) {
-	utils.ConfigureLogging()
-	var hook = utils.NewTestLogHook()
-	log.AddHook(hook)
-
-	msg := kafka.Message{Value: []byte(`{"key":"val"`)}
-	err := uploadMsgHandler(msg)
-	assert.Nil(t, err)
-	assert.Equal(t, 1, len(hook.LogEntries))
-	assert.Equal(t, log.ErrorLevel, hook.LogEntries[0].Level)
 }

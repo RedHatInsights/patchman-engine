@@ -69,10 +69,10 @@ func getOrCreateTestAccount(t *testing.T) int {
 }
 
 // nolint: unparam
-func createTestUploadEvent(inventoryID string, packages bool) HostEgressEvent {
+func createTestUploadEvent(inventoryID string, packages bool) HostEvent {
 	ns := "insights"
 	v1 := "prod"
-	ev := HostEgressEvent{
+	ev := HostEvent{
 		Type:             "created",
 		PlatformMetadata: nil,
 		Host: Host{

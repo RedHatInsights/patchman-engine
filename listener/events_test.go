@@ -101,7 +101,7 @@ func TestUploadAfterDelete(t *testing.T) {
 	configure()
 
 	uploadEvent := createTestUploadEvent(id, true)
-	err := uploadHandler(uploadEvent)
+	err := HandleUpload(uploadEvent)
 	assert.NoError(t, err)
 	assertSystemNotInDB(t)
 }

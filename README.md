@@ -81,7 +81,7 @@ docker-compose exec kafka bash # enter kafka component and run inside:
 /usr/bin/kafka-topics --list --bootstrap-server=kafka:9092 # show created topics
 
 # list all messages send to a topic
-/usr/bin/kafka-console-consumer --bootstrap-server=kafka:9092 --topic platform.inventory.host-egress --from-beginning
+/usr/bin/kafka-console-consumer --bootstrap-server=kafka:9092 --topic platform.inventory.events --from-beginning
 
 # send debugging message to a topic
 echo '{"id":"INV-2"}' | /usr/bin/kafka-console-producer --broker-list kafka:9092 --topic patchman.evaluator.upload
