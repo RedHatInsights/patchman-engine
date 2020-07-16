@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (28, false);
+VALUES (29, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -463,6 +463,8 @@ CREATE TABLE IF NOT EXISTS system_platform
     culled_timestamp         TIMESTAMP WITH TIME ZONE,
     stale                    BOOLEAN                  NOT NULL DEFAULT false,
     display_name             TEXT                     NOT NULL CHECK (NOT empty(display_name)),
+    packages_installed       INT                      NOT NULL DEFAULT 0,
+    packages_updatable       INT                      NOT NULL DEFAULT 0,
     PRIMARY KEY (id),
     UNIQUE (inventory_id),
     CONSTRAINT rh_account_id

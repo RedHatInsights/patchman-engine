@@ -135,7 +135,8 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 		evaluationCnt.WithLabelValues("error-system-pkgs").Inc()
 		return errors.Wrap(err, "Unable to update system packages")
 	}
-	err = updateSystemPlatform(tx, system, oldSystemAdvisories, newSystemAdvisories)
+	installed, updatable := getPackageCounts(vmaasData)
+	err = updateSystemPlatform(tx, system, oldSystemAdvisories, newSystemAdvisories, installed, updatable)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-update-system").Inc()
 		return errors.Wrap(err, "Unable to update system")
@@ -251,7 +252,20 @@ func loadPackages(tx *gorm.DB, data vmaas.UpdatesV2Response) (map[utils.Nevra]mo
 	return pkgByNevra, nil
 }
 
-func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform, old, new SystemAdvisoryMap) error {
+func getPackageCounts(data vmaas.UpdatesV2Response) (int, int) {
+	installed := len(data.UpdateList)
+	updatable := 0
+	for _, up := range data.UpdateList {
+		if len(up.AvailableUpdates) > 0 {
+			updatable++
+		}
+	}
+	return installed, updatable
+}
+
+func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
+	old, new SystemAdvisoryMap,
+	installed, updatable int) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("system-update"))
 	if old == nil || new == nil {
@@ -276,6 +290,8 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform, old, new S
 	data["advisory_bug_count_cache"] = counts[2]
 	data["advisory_sec_count_cache"] = counts[3]
 	data["last_evaluation"] = time.Now()
+	data["packages_installed"] = installed
+	data["packages_updatable"] = updatable
 	return tx.Model(system).Update(data).Error
 }
 

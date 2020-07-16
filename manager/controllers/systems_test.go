@@ -30,6 +30,8 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, 3, output.Data[0].Attributes.RheaCount)
 	assert.Equal(t, 3, output.Data[0].Attributes.RhbaCount)
 	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
+	assert.Equal(t, 0, output.Data[0].Attributes.Installed)
+	assert.Equal(t, 0, output.Data[0].Attributes.Updatable)
 
 	// links
 	assert.Equal(t, "/api/patch/v1/systems?offset=0&limit=20&filter[stale]=eq:false&sort=-last_upload", output.Links.First)
@@ -133,6 +135,25 @@ func TestSystemsTags(t *testing.T) {
 	assert.Equal(t, "INV-1", output.Data[0].ID)
 }
 
+func TestSystemsPackagesCount(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?sort=packages_installed", nil)
+	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output SystemsResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, "INV-12", output.Data[0].ID)
+	assert.Equal(t, "system", output.Data[0].Type)
+	assert.Equal(t, "INV-12", output.Data[0].Attributes.DisplayName)
+	assert.Equal(t, 2, output.Data[0].Attributes.Installed)
+	assert.Equal(t, 2, output.Data[0].Attributes.Updatable)
+}
+
 func TestSystemsExportJSON(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
@@ -165,10 +186,11 @@ func TestSystemsExportCSV(t *testing.T) {
 
 	assert.Equal(t, 10, len(lines))
 	assert.Equal(t,
-		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale",
+		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale,"+
+			"packages_installed,packages_updatable",
 		lines[0])
 
-	assert.Equal(t, "INV-1,INV-1,2018-09-22T16:00:00Z,2020-09-22T16:00:00Z,2,3,3,false", lines[1])
+	assert.Equal(t, "INV-1,INV-1,2018-09-22T16:00:00Z,2020-09-22T16:00:00Z,2,3,3,false,0,0", lines[1])
 }
 
 func TestSystemsExportWrongFormat(t *testing.T) {
@@ -201,7 +223,8 @@ func TestSystemsExportCSVFilter(t *testing.T) {
 
 	assert.Equal(t, 2, len(lines))
 	assert.Equal(t,
-		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale",
+		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale,"+
+			"packages_installed,packages_updatable",
 		lines[0])
 	assert.Equal(t, "", lines[1])
 }
