@@ -169,7 +169,7 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 
 		for _, upData := range updateData.UpdateData.AvailableUpdates {
 			pkgUpdates = append(pkgUpdates, models.PackageUpdate{
-				Version:  upData.Package,
+				EVRA:     upData.Package,
 				Advisory: upData.Erratum,
 			})
 		}
@@ -220,7 +220,7 @@ func getPackages(tx *gorm.DB, data vmaas.UpdatesV2Response) (
 	err := tx.Table("package").
 		Select("pn.name, package.*").
 		Joins("join package_name pn on package.name_id = pn.id").
-		Where("concat(pn.name, '-', package.version) in (?)", pkgNevras).Find(&packages).Error
+		Where("concat(pn.name, '-', package.evra) in (?)", pkgNevras).Find(&packages).Error
 
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "loading packages")
