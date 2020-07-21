@@ -15,7 +15,7 @@ import (
 
 type SystemPackagesAttrs struct {
 	Name        string `json:"name" query:"pn.name"`
-	Version     string `json:"version" query:"p.version"`
+	EVRA        string `json:"evra" query:"p.evra"`
 	Summary     string `json:"summary" query:"p.summary"`
 	Description string `json:"description" query:"p.description"`
 }

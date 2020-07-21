@@ -546,7 +546,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.PackageSystems"
+                                    "$ref": "#/components/schemas/controllers.PackageSystemsResponse"
                                 }
                             }
                         }
@@ -888,6 +888,46 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Find matching text",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[description]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[version]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[summary]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -896,7 +936,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/models.SystemPackageData"
+                                    "$ref": "#/components/schemas/controllers.SystemPackageResponse"
                                 }
                             }
                         }
@@ -933,7 +973,10 @@
                 "type": "object",
                 "properties": {
                     "cves": {
-                        "type": "string"
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     },
                     "description": {
                         "type": "string"
@@ -946,7 +989,9 @@
                     },
                     "packages": {
                         "type": "object",
-                        "properties": {}
+                        "additionalProperties": {
+                            "type": "string"
+                        }
                     },
                     "public_date": {
                         "type": "string"
@@ -1130,17 +1175,31 @@
                     }
                 }
             },
-            "controllers.PackageSystems": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "id": {
-                            "type": "string"
-                        },
-                        "version": {
-                            "type": "string"
+            "controllers.PackageSystemItem": {
+                "type": "object",
+                "properties": {
+                    "evra": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    }
+                }
+            },
+            "controllers.PackageSystemsResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.PackageSystemItem"
                         }
+                    },
+                    "links": {
+                        "$ref": "#/components/schemas/controllers.Links"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/controllers.ListMeta"
                     }
                 }
             },
@@ -1275,6 +1334,43 @@
                     }
                 }
             },
+            "controllers.SystemPackageData": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "evra": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "summary": {
+                        "type": "string"
+                    },
+                    "updates": {
+                        "$ref": "#/components/schemas/models.PackageUpdates"
+                    }
+                }
+            },
+            "controllers.SystemPackageResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemPackageData"
+                        }
+                    },
+                    "links": {
+                        "$ref": "#/components/schemas/controllers.Links"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/controllers.ListMeta"
+                    }
+                }
+            },
             "controllers.SystemsResponse": {
                 "type": "object",
                 "properties": {
@@ -1292,35 +1388,21 @@
                     }
                 }
             },
-            "models.SystemPackageData": {
-                "type": "object",
-                "additionalProperties": {
-                    "$ref": "#/components/schemas/models.SystemPackageDataItem"
-                }
-            },
-            "models.SystemPackageDataItem": {
-                "type": "object",
-                "properties": {
-                    "updates": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/models.SystemPackageDataUpdate"
-                        }
-                    },
-                    "version": {
-                        "type": "string"
-                    }
-                }
-            },
-            "models.SystemPackageDataUpdate": {
+            "models.PackageUpdate": {
                 "type": "object",
                 "properties": {
                     "advisory": {
                         "type": "string"
                     },
-                    "version": {
+                    "evra": {
                         "type": "string"
                     }
+                }
+            },
+            "models.PackageUpdates": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/models.PackageUpdate"
                 }
             }
         },

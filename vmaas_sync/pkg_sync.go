@@ -84,7 +84,7 @@ func storePackageDetails(tx *gorm.DB, nameIDs map[string]int,
 	for nevra, data := range data {
 		toStore = append(toStore, models.Package{
 			NameID:      nameIDs[nevra.Name],
-			Version:     nevra.EVRAString(),
+			EVRA:        nevra.EVRAString(),
 			Description: data.Description,
 			Summary:     data.Summary,
 		})
