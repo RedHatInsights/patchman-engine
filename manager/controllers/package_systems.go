@@ -12,7 +12,7 @@ import (
 
 type PackageSystemItem struct {
 	InventoryID string `json:"id"`
-	Version     string `json:"version"`
+	EVRA        string `json:"evra"`
 }
 
 type PackageSystemsResponse struct {
@@ -33,7 +33,7 @@ func packageSystemsQuery(acc string, pkgName string) *gorm.DB {
 		Joins("inner join package_name pn on pn.id = p.name_id").
 		Where("ra.name = ?", acc).
 		Where("pn.name = ?", pkgName).
-		Select("system_platform.inventory_id, p.version as version")
+		Select("system_platform.inventory_id, p.evra as evra")
 }
 
 // @Summary Show me all my systems which have a package installed
@@ -43,7 +43,7 @@ func packageSystemsQuery(acc string, pkgName string) *gorm.DB {
 // @Accept   json
 // @Produce  json
 // @Param    package_name    path    string   true "Package name"
-// @Success 200 {object} PackageSystems
+// @Success 200 {object} PackageSystemsResponse
 // @Router /api/patch/v1/packages/{package_name}/systems [get]
 func PackageSystemsListHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)

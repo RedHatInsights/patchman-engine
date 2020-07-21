@@ -24,5 +24,5 @@ func TestPackageSystems(t *testing.T) {
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "INV-12", output.Data[0].InventoryID)
-	assert.Equal(t, "5.6.13-200.fc31-x86_64", output.Data[0].Version)
+	assert.Equal(t, "5.6.13-200.fc31-x86_64", output.Data[0].EVRA)
 }

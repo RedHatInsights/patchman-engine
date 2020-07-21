@@ -57,7 +57,7 @@ func (PackageName) TableName() string {
 type Package struct {
 	ID          int `json:"id" gorm:"primary_key"`
 	NameID      int
-	Version     string
+	EVRA        string
 	Description string
 	Summary     string
 }
@@ -79,18 +79,8 @@ func (SystemPackage) TableName() string {
 
 type PackageUpdates []PackageUpdate
 type PackageUpdate struct {
-	Version  string `json:"version"`
+	EVRA     string `json:"evra"`
 	Advisory string `json:"advisory"`
-}
-
-type SystemPackageData map[string]SystemPackageDataItem
-type SystemPackageDataUpdate struct {
-	Version  string `json:"version"`
-	Advisory string `json:"advisory"`
-}
-type SystemPackageDataItem struct {
-	Version string                    `json:"version"`
-	Updates []SystemPackageDataUpdate `json:"updates"`
 }
 
 type DeletedSystem struct {
