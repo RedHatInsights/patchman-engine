@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (25, false);
+VALUES (26, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -763,3 +763,21 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO manager;
 -- user for VMaaS sync component
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO vmaas_sync;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO vmaas_sync;
+
+
+CREATE SCHEMA IF NOT EXISTS inventory;
+
+-- The admin ROLE that allows the inventory schema to be managed
+CREATE ROLE cyndi_admin;
+GRANT ALL PRIVILEGES ON SCHEMA inventory TO cyndi_admin;
+
+-- The reader ROLE that provides SELECT access to the inventory.hosts view
+CREATE ROLE cyndi_reader;
+GRANT USAGE ON SCHEMA inventory TO cyndi_reader;
+
+-- The application user is granted the reader role only to eliminate any interference with Cyndi
+GRANT cyndi_reader to listener;
+GRANT cyndi_reader to evaluator;
+GRANT cyndi_reader to manager;
+
+GRANT cyndi_admin to cyndi;
