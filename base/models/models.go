@@ -39,8 +39,6 @@ type SystemPlatform struct {
 	CulledTimestamp       *time.Time
 	Stale                 bool
 	DisplayName           string
-
-	PackageData *postgres.Jsonb
 }
 
 func (SystemPlatform) TableName() string {

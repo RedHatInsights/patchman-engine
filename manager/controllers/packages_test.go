@@ -34,6 +34,5 @@ func TestNoPackages(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/INV-1/packages", nil)
 	core.InitRouterWithParams(SystemPackagesHandler, "1", "GET", "/:inventory_id/packages").
 		ServeHTTP(w, req)
-	assert.Equal(t, http.StatusNoContent, w.Code)
 	assert.Equal(t, 200, w.Code)
 }
