@@ -43,6 +43,12 @@ var (
 		Name:      "store_advisories",
 	}, []string{"type"})
 
+	storePackagesCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "patchman_engine",
+		Subsystem: "vmaas_sync",
+		Name:      "store_packages",
+	}, []string{"type"})
+
 	updateInterval = time.Second * 20
 
 	systemsCnt = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -83,7 +89,7 @@ var (
 )
 
 func RunMetrics() {
-	prometheus.MustRegister(messagesReceivedCnt, vmaasCallCnt, storeAdvisoriesCnt,
+	prometheus.MustRegister(messagesReceivedCnt, vmaasCallCnt, storeAdvisoriesCnt, storePackagesCnt,
 		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration, processesCount)
 
 	go runAdvancedMetricsUpdating()

@@ -178,10 +178,12 @@ func syncAdvisories() error {
 			return errors.WithMessage(err, "Storing advisories")
 		}
 		for _, erratum := range data.ErrataList {
-			err = SyncPackages(database.Db, erratum.PackageList)
+			err = syncPackages(database.Db, erratum.PackageList)
 			if err != nil {
+				storePackagesCnt.WithLabelValues("error").Add(float64(len(erratum.PackageList)))
 				return errors.WithMessage(err, "Storing packages")
 			}
+			storePackagesCnt.WithLabelValues("success").Add(float64(len(erratum.PackageList)))
 		}
 		storeAdvisoriesCnt.WithLabelValues("success").Add(float64(len(data.ErrataList)))
 	}

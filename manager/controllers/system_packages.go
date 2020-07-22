@@ -63,7 +63,7 @@ func systemPackageQuery(account string, inventoryID string) *gorm.DB {
 // @Param    search          query   string  false   "Find matching text"
 // @Param    filter[name]            query   string  false "Filter"
 // @Param    filter[description]     query   string  false "Filter"
-// @Param    filter[version]     query   string  false "Filter"
+// @Param    filter[evra]            query   string  false "Filter"
 // @Param    filter[summary]         query   string  false "Filter"
 // @Success 200 {object} SystemPackageResponse
 // @Router /api/patch/v1/systems/{inventory_id}/packages [get]
