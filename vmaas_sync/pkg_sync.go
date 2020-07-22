@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func SyncPackages(tx *gorm.DB, pkgs []string) error {
+func syncPackages(tx *gorm.DB, pkgs []string) error {
 	query := vmaas.PackagesRequest{
 		PackageList: pkgs,
 	}

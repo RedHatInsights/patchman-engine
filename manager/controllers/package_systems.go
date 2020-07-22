@@ -22,9 +22,6 @@ type PackageSystemsResponse struct {
 }
 
 func packageSystemsQuery(acc string, pkgName string) *gorm.DB {
-	// Weird ->> 0 bit taken from
-	// https://stackoverflow.com/questions/27215216/postgres-how-to-convert-a-json-string-to-text
-	// It's required to get the textual value of JSONB query
 	return database.Db.
 		Table("system_platform").
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
