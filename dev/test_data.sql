@@ -42,9 +42,13 @@ INSERT INTO package_name(id,name) VALUES
 (1, 'kernel'),
 (2, 'firefox');
 
-INSERT INTO package(id, name_id, evra, description, summary) VALUES
-(1, 1, '5.6.13-200.fc31-x86_64', 'kernel 1', 'kernel 1'),
-(2, 2, '76.0.1-1.fc31-x86_64', 'firefox 1', 'firefox 2');
+INSERT INTO strings(id, value) VALUES
+('1', 'kernel'),
+('2', 'firefox');
+
+INSERT INTO package(id, name_id, evra, description_hash, summary_hash) VALUES
+(1, 1, '5.6.13-200.fc31-x86_64', '1', '1'),
+(2, 2, '76.0.1-1.fc31-x86_64', '2', '2');
 
 INSERT INTO system_package (system_id, package_id, update_data) VALUES
 (12, 1, '[{"evra": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}]'),
