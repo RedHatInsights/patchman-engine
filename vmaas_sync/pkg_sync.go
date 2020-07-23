@@ -5,6 +5,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"crypto/sha256"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
 	"github.com/jinzhu/gorm"
@@ -28,6 +29,11 @@ func syncPackages(tx *gorm.DB, pkgs []string) error {
 	idByName, dataByNevra, err := storePackageNames(tx, data.PackageList)
 	if err != nil {
 		return errors.Wrap(err, "Pkg names")
+	}
+
+	err = storePackageStrings(tx, dataByNevra)
+	if err != nil {
+		return errors.Wrap(err, "Pkg strings")
 	}
 	return storePackageDetails(tx, idByName, dataByNevra)
 }
@@ -71,16 +77,31 @@ func storePackageNames(tx *gorm.DB, pkgs map[string]vmaas.PackagesResponsePackag
 	return idByName, byNevra, nil
 }
 
+func storePackageStrings(tx *gorm.DB, data map[utils.Nevra]vmaas.PackagesResponsePackageList) error {
+	stringMap := map[[32]byte]string{}
+	for _, r := range data {
+		stringMap[sha256.Sum256([]byte(r.Description))] = r.Description
+		stringMap[sha256.Sum256([]byte(r.Summary))] = r.Summary
+	}
+	strings := make([]models.String, 0, len(stringMap))
+	for key, v := range stringMap {
+		strings = append(strings, models.String{ID: key, Value: v})
+	}
+
+	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	return database.BulkInsert(tx, strings)
+}
+
 func storePackageDetails(tx *gorm.DB, nameIDs map[string]int,
 	data map[utils.Nevra]vmaas.PackagesResponsePackageList) error {
 	toStore := make([]models.Package, 0, len(data))
 
 	for nevra, data := range data {
 		toStore = append(toStore, models.Package{
-			NameID:      nameIDs[nevra.Name],
-			EVRA:        nevra.EVRAString(),
-			Description: data.Description,
-			Summary:     data.Summary,
+			NameID:          nameIDs[nevra.Name],
+			EVRA:            nevra.EVRAString(),
+			DescriptionHash: sha256.Sum256([]byte(data.Description)),
+			SummaryHash:     sha256.Sum256([]byte(data.Summary)),
 		})
 	}
 

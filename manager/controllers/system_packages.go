@@ -16,8 +16,8 @@ import (
 type SystemPackagesAttrs struct {
 	Name        string `json:"name" query:"pn.name"`
 	EVRA        string `json:"evra" query:"p.evra"`
-	Summary     string `json:"summary" query:"p.summary"`
-	Description string `json:"description" query:"p.description"`
+	Summary     string `json:"summary" query:"sum.value"`
+	Description string `json:"description" query:"desc.value"`
 }
 
 type SystemPackageData struct {
@@ -50,6 +50,8 @@ func systemPackageQuery(account string, inventoryID string) *gorm.DB {
 		Joins("inner join rh_account ra on sp.rh_account_id = ra.id").
 		Joins("inner join package p on p.id = spkg.package_id").
 		Joins("inner join package_name pn on pn.id = p.name_id").
+		Joins("inner join strings sum on sum.key = p.summary_hash").
+		Joins("inner join strings desc on desc.key = p.description_hash").
 		Where("ra.name = ? and sp.inventory_id = ?", account, inventoryID)
 }
 

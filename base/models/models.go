@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql/driver"
 	"fmt"
 	"github.com/jinzhu/gorm/dialects/postgres"
 	"time"
@@ -45,6 +46,20 @@ func (SystemPlatform) TableName() string {
 	return "system_platform"
 }
 
+type Hash [32]byte
+
+func (data *Hash) Value() (driver.Value, error) {
+	return []byte(*data), nil
+}
+func (data *Hash) Scan(value interface{}) error {
+
+}
+
+type String struct {
+	ID    [32]byte
+	Value string
+}
+
 type PackageName struct {
 	ID   int `json:"id" gorm:"primary_key"`
 	Name string
@@ -55,11 +70,11 @@ func (PackageName) TableName() string {
 }
 
 type Package struct {
-	ID          int `json:"id" gorm:"primary_key"`
-	NameID      int
-	EVRA        string
-	Description string
-	Summary     string
+	ID              int `json:"id" gorm:"primary_key"`
+	NameID          int
+	EVRA            string
+	DescriptionHash [32]byte
+	SummaryHash     [32]byte
 }
 
 func (Package) TableName() string {
