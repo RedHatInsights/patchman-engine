@@ -83,9 +83,14 @@ func storePackageStrings(tx *gorm.DB, data map[utils.Nevra]vmaas.PackagesRespons
 		stringMap[sha256.Sum256([]byte(r.Description))] = r.Description
 		stringMap[sha256.Sum256([]byte(r.Summary))] = r.Summary
 	}
+
 	strings := make([]models.String, 0, len(stringMap))
 	for key, v := range stringMap {
-		strings = append(strings, models.String{ID: key, Value: v})
+		// need to allocate here, otherwise the slice references will point to stack space occupied by last element from
+		// iteration.
+		keySlice := make([]byte, 32)
+		copy(keySlice, key[:])
+		strings = append(strings, models.String{ID: keySlice, Value: v})
 	}
 
 	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
@@ -97,11 +102,14 @@ func storePackageDetails(tx *gorm.DB, nameIDs map[string]int,
 	toStore := make([]models.Package, 0, len(data))
 
 	for nevra, data := range data {
+		desc := sha256.Sum256([]byte(data.Description))
+		sum := sha256.Sum256([]byte(data.Summary))
+
 		toStore = append(toStore, models.Package{
 			NameID:          nameIDs[nevra.Name],
 			EVRA:            nevra.EVRAString(),
-			DescriptionHash: sha256.Sum256([]byte(data.Description)),
-			SummaryHash:     sha256.Sum256([]byte(data.Summary)),
+			DescriptionHash: desc[:],
+			SummaryHash:     sum[:],
 		})
 	}
 
