@@ -12,7 +12,7 @@ import (
 
 type PackageSystemItem struct {
 	InventoryID string `json:"id"`
-	Version     string `json:"version"`
+	EVRA        string `json:"evra"`
 }
 
 type PackageSystemsResponse struct {
@@ -22,16 +22,15 @@ type PackageSystemsResponse struct {
 }
 
 func packageSystemsQuery(acc string, pkgName string) *gorm.DB {
-	// Weird ->> 0 bit taken from
-	// https://stackoverflow.com/questions/27215216/postgres-how-to-convert-a-json-string-to-text
-	// It's required to get the textual value of JSONB query
 	return database.Db.
 		Table("system_platform").
-		Select("system_platform.inventory_id, package_data -> ? -> 'version' ->> 0 as version", pkgName).
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
+		Joins("inner join system_package spkg on spkg.system_id = system_platform.id").
+		Joins("inner join package p on p.id = spkg.package_id").
+		Joins("inner join package_name pn on pn.id = p.name_id").
 		Where("ra.name = ?", acc).
-		// TODO: this seems to not be accelerated by the gin index, investigate
-		Where("jsonb_exists(system_platform.package_data, ?)", pkgName)
+		Where("pn.name = ?", pkgName).
+		Select("system_platform.inventory_id, p.evra as evra")
 }
 
 // @Summary Show me all my systems which have a package installed
@@ -41,7 +40,7 @@ func packageSystemsQuery(acc string, pkgName string) *gorm.DB {
 // @Accept   json
 // @Produce  json
 // @Param    package_name    path    string   true "Package name"
-// @Success 200 {object} PackageSystems
+// @Success 200 {object} PackageSystemsResponse
 // @Router /api/patch/v1/packages/{package_name}/systems [get]
 func PackageSystemsListHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)

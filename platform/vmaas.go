@@ -131,6 +131,16 @@ func reposHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
+func packageShandler(c *gin.Context) {
+	data := vmaas.PackagesResponse{PackageList: map[string]vmaas.PackagesResponsePackageList{
+		"firefox-0:77.0.1-1.fc31.x86_64": {Summary: "Firefox", Description: "Firefox"},
+		"firefox-1:76.0.1-1.fc31.x86_64": {Summary: "Firefox", Description: "Firefox 2"},
+		"kernel-5.6.13-200.fc31.x86_64":  {Summary: "Kernel", Description: "Kernel"},
+		"kernel-5.10.13-200.fc31.x86_64": {Summary: "Kernel", Description: "Kernel 2"},
+	}}
+	c.JSON(http.StatusOK, data)
+}
+
 var upgrader = websocket.Upgrader{} // use default options
 func wshandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -160,6 +170,7 @@ func initVMaaS(app *gin.Engine) {
 	app.POST("/api/v1/errata", erratasHandler)
 	// Mock repos endpoint for VMaaS
 	app.POST("/api/v1/repos", reposHandler)
+	app.POST("/api/v1/packages", packageShandler)
 	// Mock websocket endpoint for VMaaS
 	app.GET("/ws", func(context *gin.Context) {
 		wshandler(context.Writer, context.Request)

@@ -131,12 +131,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 
 	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary", "solution",
 		"public_date", "modified_date", "url", "advisory_type_id", "severity_id", "cve_list", "package_data")
-	errs := database.BulkInsertChunk(tx, advisories, SyncBatchSize)
-
-	if len(errs) > 0 {
-		return errs[0]
-	}
-	return nil
+	return database.BulkInsertChunk(tx, advisories, SyncBatchSize)
 }
 
 func syncAdvisories() error {
@@ -178,6 +173,21 @@ func syncAdvisories() error {
 			return errors.WithMessage(err, "Storing advisories")
 		}
 		storeAdvisoriesCnt.WithLabelValues("success").Add(float64(len(data.ErrataList)))
+
+		packages := []string{}
+		for _, erratum := range data.ErrataList {
+			if len(erratum.PackageList) == 0 {
+				continue
+			}
+			packages = append(packages, erratum.PackageList...)
+		}
+
+		err = syncPackages(database.Db, packages)
+		if err != nil {
+			storePackagesCnt.WithLabelValues("error").Add(float64(len(packages)))
+			return errors.WithMessage(err, "Storing packages")
+		}
+		storePackagesCnt.WithLabelValues("success").Add(float64(len(packages)))
 	}
 	return nil
 }

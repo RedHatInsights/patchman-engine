@@ -39,22 +39,53 @@ type SystemPlatform struct {
 	CulledTimestamp       *time.Time
 	Stale                 bool
 	DisplayName           string
-
-	PackageData *postgres.Jsonb
 }
 
 func (SystemPlatform) TableName() string {
 	return "system_platform"
 }
 
-type SystemPackageData map[string]SystemPackageDataItem
-type SystemPackageDataUpdate struct {
-	Version  string `json:"version"`
-	Advisory string `json:"advisory"`
+type String struct {
+	ID    []byte `gorm:"primary_key"`
+	Value string
 }
-type SystemPackageDataItem struct {
-	Version string                    `json:"version"`
-	Updates []SystemPackageDataUpdate `json:"updates"`
+
+type PackageName struct {
+	ID   int `json:"id" gorm:"primary_key"`
+	Name string
+}
+
+func (PackageName) TableName() string {
+	return "package_name"
+}
+
+type Package struct {
+	ID              int `json:"id" gorm:"primary_key"`
+	NameID          int
+	EVRA            string
+	DescriptionHash []byte
+	SummaryHash     []byte
+}
+
+func (Package) TableName() string {
+	return "package"
+}
+
+type SystemPackage struct {
+	SystemID  int `gorm:"primary_key"`
+	PackageID int `gorm:"primary_key"`
+	// Will contain json in form of [{ "evra": "...", "advisory": "..."}]
+	UpdateData postgres.Jsonb
+}
+
+func (SystemPackage) TableName() string {
+	return "system_package"
+}
+
+type PackageUpdates []PackageUpdate
+type PackageUpdate struct {
+	EVRA     string `json:"evra"`
+	Advisory string `json:"advisory"`
 }
 
 type DeletedSystem struct {
