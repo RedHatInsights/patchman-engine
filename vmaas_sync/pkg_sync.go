@@ -11,6 +11,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const saveChunkSize = 10 * 1024
+
 func syncPackages(tx *gorm.DB, pkgs []string) error {
 	query := vmaas.PackagesRequest{
 		PackageList: pkgs,
@@ -46,33 +48,25 @@ func storePackageNames(tx *gorm.DB, pkgs map[string]vmaas.PackagesResponsePackag
 		byNevra[*nevra] = detail
 	}
 	nameArr := make([]string, 0, len(nameMap))
+	pkgNames := make([]models.PackageName, 0, len(nameMap))
 	for n := range nameMap {
 		nameArr = append(nameArr, n)
+		pkgNames = append(pkgNames, models.PackageName{Name: n})
 	}
-
-	var pkgNames []models.PackageName
-	err := tx.Set("gorm:query_option", "FOR UPDATE OF package_name").
-		Where("name in (?)", nameArr).Find(&pkgNames).Error
+	// Insert missing
+	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	errs := database.BulkInsertChunk(tx, pkgNames, saveChunkSize)
+	if len(errs) > 0 {
+		return nil, nil, errs[0]
+	}
+	// Load all to get IDs
+	err := tx.Where("name in (?)", nameArr).Find(&pkgNames).Error
 	if err != nil {
 		return nil, nil, err
 	}
 	idByName := map[string]int{}
 	for _, p := range pkgNames {
 		idByName[p.Name] = p.ID
-	}
-
-	var newNames []models.PackageName
-	for n := range nameMap {
-		if _, has := idByName[n]; !has {
-			newNames = append(newNames, models.PackageName{Name: n})
-		}
-	}
-	err = database.BulkInsert(tx, newNames)
-	if err != nil {
-		return nil, nil, err
-	}
-	for _, n := range newNames {
-		idByName[n.Name] = n.ID
 	}
 	return idByName, byNevra, nil
 }
