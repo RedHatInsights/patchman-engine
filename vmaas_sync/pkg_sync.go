@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const saveChunkSize = 10 * 1024
+const chunkSize = 10 * 1024
 
 func syncPackages(tx *gorm.DB, pkgs []string) error {
 	query := vmaas.PackagesRequest{
@@ -61,12 +61,12 @@ func storePackageNames(tx *gorm.DB, pkgs map[string]vmaas.PackagesResponsePackag
 	}
 	// Insert missing
 	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
-	errs := database.BulkInsertChunk(tx, pkgNames, saveChunkSize)
-	if len(errs) > 0 {
-		return nil, nil, errs[0]
+	err := database.BulkInsertChunk(tx, pkgNames, chunkSize)
+	if err != nil {
+		return nil, nil, err
 	}
 	// Load all to get IDs
-	err := tx.Where("name in (?)", nameArr).Find(&pkgNames).Error
+	err = tx.Where("name in (?)", nameArr).Find(&pkgNames).Error
 	if err != nil {
 		return nil, nil, err
 	}
@@ -94,7 +94,7 @@ func storePackageStrings(tx *gorm.DB, data map[utils.Nevra]vmaas.PackagesRespons
 	}
 
 	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
-	return database.BulkInsert(tx, strings)
+	return database.BulkInsertChunk(tx, strings, chunkSize)
 }
 
 func storePackageDetails(tx *gorm.DB, nameIDs map[string]int,
@@ -114,5 +114,5 @@ func storePackageDetails(tx *gorm.DB, nameIDs map[string]int,
 	}
 
 	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
-	return database.BulkInsert(tx, toStore)
+	return database.BulkInsertChunk(tx, toStore, chunkSize)
 }
