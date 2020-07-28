@@ -179,18 +179,9 @@ func syncAdvisories() error {
 			if len(erratum.PackageList) == 0 {
 				continue
 			}
-			err = syncPackages(database.Db, erratum.PackageList)
-			if err != nil {
-				storePackagesCnt.WithLabelValues("error").Add(float64(len(erratum.PackageList)))
-				return errors.WithMessage(err, "Storing packages")
-			}
-			storePackagesCnt.WithLabelValues("success").Add(float64(len(erratum.PackageList)))
-
-			if len(erratum.PackageList) == 0 {
-				continue
-			}
 			packages = append(packages, erratum.PackageList...)
 		}
+
 		err = syncPackages(database.Db, packages)
 		if err != nil {
 			storePackagesCnt.WithLabelValues("error").Add(float64(len(packages)))
