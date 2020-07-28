@@ -149,7 +149,7 @@ func syncAdvisories() error {
 		opts := vmaas.AppErrataHandlerPostPostOpts{
 			ErrataRequest: optional.NewInterface(vmaas.ErrataRequest{
 				Page:          float32(pageIdx),
-				PageSize:      float32(defaultPageSize),
+				PageSize:      float32(advisoryPageSize),
 				ErrataList:    []string{".*"},
 				ModifiedSince: "",
 			}),
@@ -182,12 +182,16 @@ func syncAdvisories() error {
 			packages = append(packages, erratum.PackageList...)
 		}
 
-		err = syncPackages(database.Db, packages)
-		if err != nil {
-			storePackagesCnt.WithLabelValues("error").Add(float64(len(packages)))
-			return errors.WithMessage(err, "Storing packages")
+		page := packages[0:packagesPageSize]
+		packages = packages[packagesPageSize:]
+		if len(page) > 0 {
+			err = syncPackages(database.Db, page)
+			if err != nil {
+				storePackagesCnt.WithLabelValues("error").Add(float64(len(page)))
+				return errors.WithMessage(err, "Storing packages")
+			}
+			storePackagesCnt.WithLabelValues("success").Add(float64(len(page)))
 		}
-		storePackagesCnt.WithLabelValues("success").Add(float64(len(packages)))
 	}
 	return nil
 }
