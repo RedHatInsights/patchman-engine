@@ -10,6 +10,7 @@ import (
 	"github.com/antihax/optional"
 	"github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/pkg/errors"
+	"modernc.org/mathutil"
 	"strings"
 	"time"
 )
@@ -134,6 +135,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 	return database.BulkInsertChunk(tx, advisories, SyncBatchSize)
 }
 
+// nolint: funlen
 func syncAdvisories() error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, syncDuration)
@@ -173,7 +175,6 @@ func syncAdvisories() error {
 			return errors.WithMessage(err, "Storing advisories")
 		}
 		storeAdvisoriesCnt.WithLabelValues("success").Add(float64(len(data.ErrataList)))
-
 		packages := []string{}
 		for _, erratum := range data.ErrataList {
 			if len(erratum.PackageList) == 0 {
@@ -182,15 +183,16 @@ func syncAdvisories() error {
 			packages = append(packages, erratum.PackageList...)
 		}
 
-		page := packages[0:packagesPageSize]
-		packages = packages[packagesPageSize:]
-		if len(page) > 0 {
+		for len(packages) > 0 {
+			currentPageSize := mathutil.Min(packagesPageSize, len(packages))
+			page := packages[0:currentPageSize]
 			err = syncPackages(database.Db, page)
 			if err != nil {
 				storePackagesCnt.WithLabelValues("error").Add(float64(len(page)))
 				return errors.WithMessage(err, "Storing packages")
 			}
 			storePackagesCnt.WithLabelValues("success").Add(float64(len(page)))
+			packages = packages[currentPageSize:]
 		}
 	}
 	return nil
