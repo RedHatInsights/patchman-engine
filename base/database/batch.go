@@ -31,11 +31,11 @@ func BulkInsert(db *gorm.DB, objects interface{}) error {
 
 // BulkInsertChunk will split the objects passed into the passed chunk size. A
 // slice of errors will be returned (if any).
-func BulkInsertChunk(db *gorm.DB, objects interface{}, chunkSize int) []error {
+func BulkInsertChunk(db *gorm.DB, objects interface{}, chunkSize int) error {
 	var allErrors []error
 
 	if reflect.TypeOf(objects).Kind() != reflect.Slice {
-		return []error{errors.New("This method only works on slices")}
+		return errors.New("This method only works on slices")
 	}
 
 	// Reflect the objects array into generic value
@@ -63,7 +63,7 @@ func BulkInsertChunk(db *gorm.DB, objects interface{}, chunkSize int) []error {
 	}
 
 	if len(allErrors) > 0 {
-		return allErrors
+		return allErrors[0]
 	}
 
 	return nil
