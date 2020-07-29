@@ -30,8 +30,7 @@ type Nevra struct {
 	Arch    string
 }
 
-// parse package components
-// TODO: Fix parsing epoch
+
 func ParseNevra(nevra string) (*Nevra, error) {
 	parsed := nevraRegex.FindStringSubmatch(nevra)
 
@@ -42,6 +41,11 @@ func ParseNevra(nevra string) (*Nevra, error) {
 	epoch := 0
 	if parsed[2] != "" {
 		epoch, err = strconv.Atoi(parsed[2])
+		if err != nil {
+			return nil, err
+		}
+	} else if parsed[5] != "" {
+		epoch, err = strconv.Atoi(parsed[5])
 		if err != nil {
 			return nil, err
 		}
