@@ -214,7 +214,13 @@ type namedPackage struct {
 func getPackages(tx *gorm.DB, data vmaas.UpdatesV2Response) (map[utils.Nevra]models.Package, error) {
 	pkgNevras := make([]string, 0, len(data.UpdateList))
 	for nevra := range data.UpdateList {
-		pkgNevras = append(pkgNevras, nevra)
+		// Parse and reformat nevras to avoid issues with 0 epoch
+		parsed, err := utils.ParseNevra(nevra)
+		if err != nil {
+			utils.Log("err", err.Error(), "nevra", nevra).Warn("Unable to parse nevra")
+			continue
+		}
+		pkgNevras = append(pkgNevras, parsed.String())
 	}
 
 	var packages []namedPackage
