@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (27, false);
+VALUES (28, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -338,6 +338,7 @@ END;
 $refresh_system_cached_counts$
     LANGUAGE 'plpgsql';
 
+
 CREATE OR REPLACE FUNCTION delete_system(inventory_id_in varchar)
     RETURNS TABLE
             (
@@ -356,18 +357,24 @@ BEGIN
     UPDATE system_platform
     SET opt_out = true
     WHERE inventory_id = inventory_id_in;
+
     DELETE
     FROM system_advisories
     WHERE system_id = (SELECT id from system_platform WHERE inventory_id = inventory_id_in);
+
     DELETE
     FROM system_repo
     WHERE system_id = (SELECT id from system_platform WHERE inventory_id = inventory_id_in);
+
+    DELETE
+    FROM system_package
+    WHERE system_id = (SELECT id from system_platform WHERE inventory_id = inventory_id_in);
+
     RETURN QUERY DELETE FROM system_platform
         WHERE inventory_id = inventory_id_in
         RETURNING inventory_id;
 END;
-$delete_system$
-    LANGUAGE 'plpgsql';
+$delete_system$ LANGUAGE 'plpgsql';
 
 
 CREATE OR REPLACE FUNCTION delete_culled_systems()
@@ -570,6 +577,9 @@ CREATE TABLE IF NOT EXISTS system_package
 );
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_package TO evaluator;
+GRANT SELECT, UPDATE, DELETE ON system_package TO listener;
+GRANT SELECT, UPDATE, DELETE ON system_package TO manager;
+GRANT SELECT, UPDATE, DELETE ON system_package TO vmaas_sync;
 
 -- advisory_type
 CREATE TABLE IF NOT EXISTS advisory_type

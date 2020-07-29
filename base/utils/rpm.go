@@ -30,7 +30,6 @@ type Nevra struct {
 	Arch    string
 }
 
-
 func ParseNevra(nevra string) (*Nevra, error) {
 	parsed := nevraRegex.FindStringSubmatch(nevra)
 
