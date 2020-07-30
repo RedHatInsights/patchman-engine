@@ -125,7 +125,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 		evaluationCnt.WithLabelValues("error-store-advisories").Inc()
 		return errors.Wrap(err, "Unable to store advisory data")
 	}
-	pkgByName, err := getPackages(tx, vmaasData)
+	pkgByName, err := loadPackages(tx, vmaasData)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-pkg-data").Inc()
 		return errors.Wrap(err, "Unable to load package data")
@@ -146,6 +146,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 	packagesByNEVRA map[utils.Nevra]models.Package,
 	updates map[string]vmaas.UpdatesV2ResponseUpdateList) error {
+	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-store"))
 	pkgIds := make([]int, 0, len(packagesByNEVRA))
 	for _, pkg := range packagesByNEVRA {
 		pkgIds = append(pkgIds, pkg.ID)
@@ -211,8 +212,10 @@ type namedPackage struct {
 }
 
 // Find relevant package data based on vmaas results
-func getPackages(tx *gorm.DB, data vmaas.UpdatesV2Response) (map[utils.Nevra]models.Package, error) {
-	pkgNevras := make([]string, 0, len(data.UpdateList))
+func loadPackages(tx *gorm.DB, data vmaas.UpdatesV2Response) (map[utils.Nevra]models.Package, error) {
+	names := make([]string, 0, len(data.UpdateList))
+	evras := make([]string, 0, len(data.UpdateList))
+	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-load"))
 	for nevra := range data.UpdateList {
 		// Parse and reformat nevras to avoid issues with 0 epoch
 		parsed, err := utils.ParseNevra(nevra)
@@ -220,14 +223,17 @@ func getPackages(tx *gorm.DB, data vmaas.UpdatesV2Response) (map[utils.Nevra]mod
 			utils.Log("err", err.Error(), "nevra", nevra).Warn("Unable to parse nevra")
 			continue
 		}
-		pkgNevras = append(pkgNevras, parsed.String())
+		names = append(names, parsed.Name)
+		evras = append(evras, parsed.EVRAString())
 	}
-
+	// Might return more data than we need (one EVRA being applicable to more packages
+	// But it was only way to get somewhat fast query plan which only uses index scans
 	var packages []namedPackage
 	err := tx.Table("package").
 		Select("concat(pn.name, '-', package.evra) nevra, package.*").
 		Joins("join package_name pn on package.name_id = pn.id").
-		Where("concat(pn.name, '-', package.evra) in (?)", pkgNevras).Find(&packages).Error
+		Where("pn.name in (?)", names).
+		Where("package.evra in (?)", evras).Find(&packages).Error
 
 	if err != nil {
 		return nil, errors.Wrap(err, "loading packages")
