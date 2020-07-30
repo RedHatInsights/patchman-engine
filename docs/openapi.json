@@ -914,7 +914,7 @@
                         }
                     },
                     {
-                        "name": "filter[version]",
+                        "name": "filter[evra]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
