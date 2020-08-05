@@ -27,8 +27,8 @@ func TestSystemDetailDefault(t *testing.T) {
 	assert.Equal(t, 2, output.Data.Attributes.RhsaCount)
 	assert.Equal(t, 3, output.Data.Attributes.RhbaCount)
 	assert.Equal(t, 3, output.Data.Attributes.RheaCount)
-	assert.Equal(t, 0, output.Data.Attributes.Installed)
-	assert.Equal(t, 0, output.Data.Attributes.Updatable)
+	assert.Equal(t, 0, output.Data.Attributes.PackagesInstalled)
+	assert.Equal(t, 0, output.Data.Attributes.PackagesUpdatable)
 }
 
 func TestSystemDetailNoIdProvided(t *testing.T) {

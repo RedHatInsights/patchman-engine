@@ -39,9 +39,9 @@ type SystemItemAttributes struct {
 	RheaCount      int        `json:"rhea_count" csv:"rhea_count" query:"system_platform.advisory_enh_count_cache"`
 	// Not used
 	//Enabled        bool       `json:"enabled" csv:"enabled" query:"(NOT system_platform.opt_out)"`
-	Stale     bool `json:"stale" csv:"stale" query:"system_platform.stale"`
-	Installed int  `json:"packages_installed" csv:"packages_installed" query:"system_platform.packages_installed"`
-	Updatable int  `json:"packages_updatable" csv:"packages_updatable" query:"system_platform.packages_updatable"`
+	Stale             bool `json:"stale" csv:"stale" query:"system_platform.stale"`
+	PackagesInstalled int  `json:"packages_installed" csv:"packages_installed" query:"system_platform.packages_installed"`
+	PackagesUpdatable int  `json:"packages_updatable" csv:"packages_updatable" query:"system_platform.packages_updatable"`
 }
 
 type SystemItem struct {
@@ -70,7 +70,7 @@ type SystemsResponse struct {
 // @Produce  json
 // @Param    limit   query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset  query   int     false   "Offset for paging"
-// @Param    sort    query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale)
+// @Param    sort    query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale, packages_installed, packages_updatable)
 // @Param    filter[id]              query   string  false "Filter"
 // @Param    filter[display_name]    query   string  false "Filter"
 // @Param    filter[last_evaluation] query   string  false "Filter"
@@ -79,6 +79,8 @@ type SystemsResponse struct {
 // @Param    filter[rhba_count]      query   string  false "Filter"
 // @Param    filter[rhea_count]      query   string  false "Filter"
 // @Param    filter[stale]           query   string  false "Filter"
+// @Param    filter[packages_installed] query string false "Filter"
+// @Param    filter[packages_updatable] query string false "Filter"
 // @Param    tags                    query   string  false "Tag filter"
 // @Success 200 {object} SystemsResponse
 // @Router /api/patch/v1/systems [get]

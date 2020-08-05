@@ -30,8 +30,8 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, 3, output.Data[0].Attributes.RheaCount)
 	assert.Equal(t, 3, output.Data[0].Attributes.RhbaCount)
 	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
-	assert.Equal(t, 0, output.Data[0].Attributes.Installed)
-	assert.Equal(t, 0, output.Data[0].Attributes.Updatable)
+	assert.Equal(t, 0, output.Data[0].Attributes.PackagesInstalled)
+	assert.Equal(t, 0, output.Data[0].Attributes.PackagesUpdatable)
 
 	// links
 	assert.Equal(t, "/api/patch/v1/systems?offset=0&limit=20&filter[stale]=eq:false&sort=-last_upload", output.Links.First)
@@ -140,18 +140,18 @@ func TestSystemsPackagesCount(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?sort=packages_installed", nil)
-	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
+	req, _ := http.NewRequest("GET", "/?sort=-packages_installed,id", nil)
+	core.InitRouterWithAccount(SystemsListHandler, "/", "3").ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, 3, len(output.Data))
 	assert.Equal(t, "INV-12", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "INV-12", output.Data[0].Attributes.DisplayName)
-	assert.Equal(t, 2, output.Data[0].Attributes.Installed)
-	assert.Equal(t, 2, output.Data[0].Attributes.Updatable)
+	assert.Equal(t, 2, output.Data[0].Attributes.PackagesInstalled)
+	assert.Equal(t, 2, output.Data[0].Attributes.PackagesUpdatable)
 }
 
 func TestSystemsExportJSON(t *testing.T) {

@@ -22,7 +22,7 @@ func TestPackageSystems(t *testing.T) {
 	var output PackageSystemsResponse
 	assert.Greater(t, len(w.Body.Bytes()), 0)
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, 1, len(output.Data))
-	assert.Equal(t, "INV-12", output.Data[0].InventoryID)
-	assert.Equal(t, "5.6.13-200.fc31-x86_64", output.Data[0].EVRA)
+	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, "INV-12", output.Data[1].InventoryID)
+	assert.Equal(t, "5.6.13-200.fc31-x86_64", output.Data[1].EVRA)
 }
