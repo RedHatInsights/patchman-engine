@@ -1,12 +1,16 @@
 DELETE FROM system_advisories;
 DELETE FROM system_repo;
+DELETE FROM system_package;
 DELETE FROM system_platform;
 DELETE FROM deleted_system;
 DELETE FROM repo;
 DELETE FROM timestamp_kv;
 DELETE FROM advisory_account_data;
 DELETE FROM advisory_metadata;
+DELETE FROM package;
+DELETE FROM package_name;
 DELETE FROM rh_account;
+DELETE FROM strings;
 
 INSERT INTO rh_account (id, name) VALUES
 (1, '1'), (2, '2'), (3, '3'), (4, '4');
@@ -30,7 +34,7 @@ INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vma
 (12, 'INV-12', 'INV-12', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',2,2);
 
 INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload, opt_out, packages_installed, packages_updatable) VALUES
-(13, 'INV-13', 'INV-13', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', true,0,0),
+(13, 'INV-13', 'INV-13', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', true,1,0),
 (14, 'INV-14', 'INV-14', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', true,0,0);
 
 insert into system_tags (tag, system_id) VALUES
