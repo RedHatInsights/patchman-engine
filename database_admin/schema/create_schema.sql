@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (29, false);
+VALUES (30, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -517,16 +517,6 @@ GRANT UPDATE (advisory_count_cache,
 
 -- VMaaS sync needs to be able to perform system culling tasks
 GRANT SELECT, UPDATE, DELETE ON system_platform to vmaas_sync;
-
-CREATE TABLE system_tags
-(
-    tag       TEXT NOT NULL CHECK ( NOT EMPTY(tag)),
-    system_id INT  NOT NULL REFERENCES system_platform ON DELETE CASCADE,
-    PRIMARY KEY (system_id, tag)
-);
-
-CREATE INDEX system_tags_idx on system_tags (tag);
-GRANT SELECT, INSERT, UPDATE, DELETE ON system_tags to listener;
 
 CREATE TABLE IF NOT EXISTS deleted_system
 (

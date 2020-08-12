@@ -14,13 +14,13 @@ func TestSystemDetailDefault(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/INV-1", nil)
+	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001", nil)
 	core.InitRouterWithPath(SystemDetailHandler, "/:inventory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	var output SystemDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, "INV-1", output.Data.ID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data.ID)
 	assert.Equal(t, "system", output.Data.Type)
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data.Attributes.LastEvaluation.String())
 	assert.Equal(t, "2020-09-22 16:00:00 +0000 UTC", output.Data.Attributes.LastUpload.String())

@@ -14,7 +14,7 @@ func TestPackages(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/INV-12/packages", nil)
+	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000012/packages", nil)
 	core.InitRouterWithParams(SystemPackagesHandler, "3", "GET", "/:inventory_id/packages").
 		ServeHTTP(w, req)
 
@@ -47,7 +47,7 @@ func TestNoPackages(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/INV-1/packages", nil)
+	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001/packages", nil)
 	core.InitRouterWithParams(SystemPackagesHandler, "1", "GET", "/:inventory_id/packages").
 		ServeHTTP(w, req)
 	assert.Equal(t, 200, w.Code)

@@ -11,10 +11,13 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"net/http"
+	"regexp"
 	"strings"
 )
 
 const InvalidOffsetMsg = "Invalid offset"
+
+var tagRegex = regexp.MustCompile(`(\w+)/(\w+)=(\w+)`)
 
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	utils.Log("err", err.Error()).Error(respMsg)
@@ -203,9 +206,6 @@ func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) *gorm.DB 
 }
 
 // Filter systems by tags,
-// TODO: Implement implicit namespaces
-// TODO: we currently use same encoding inside the DB, as is used in query strings
-// the namespace/name=value encoding. Ensure this is correct by parsing and re-formatting the values
 func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
 	tags := c.QueryArray("tags")
 	if len(tags) == 0 {
@@ -213,12 +213,16 @@ func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB
 	}
 
 	subq := database.Db.
-		Table("system_tags st").
-		Select("DISTINCT st.system_id").
-		Where("st.tag in (?)", tags).
-		SubQuery()
+		Table("inventory.hosts h").
+		Select("h.id::text")
 
-	return tx.Where(fmt.Sprintf("%s in (?)", systemIDExpr), subq), true
+	for _, t := range tags {
+		matches := tagRegex.FindStringSubmatch(t)
+		tagJSON := fmt.Sprintf(`[{"namespace":"%s", "key": "%s", "value": "%s"}]`, matches[1], matches[2], matches[3])
+		subq = subq.Where(" h.tags @> ?::jsonb", tagJSON)
+	}
+
+	return tx.Where(fmt.Sprintf("%s in (?)", systemIDExpr), subq.SubQuery()), true
 }
 
 func Csv(ctx *gin.Context, code int, res interface{}) {

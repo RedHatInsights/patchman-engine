@@ -63,7 +63,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 
 	query := buildQuery(account, advisoryName)
 	query = ApplySearch(c, query, "system_platform.display_name")
-	query, _ = ApplyTagsFilter(c, query, "system_platform.id")
+	query, _ = ApplyTagsFilter(c, query, "system_platform.inventory_id")
 	path := fmt.Sprintf("/api/patch/v1/advisories/%v/systems", advisoryName)
 	query, meta, links, err := ListCommon(query, c, path, SystemOpts)
 	if err != nil {
