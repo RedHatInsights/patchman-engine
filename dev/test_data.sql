@@ -113,3 +113,69 @@ ALTER TABLE advisory_metadata ALTER COLUMN id RESTART WITH 100;
 ALTER TABLE system_platform ALTER COLUMN id RESTART WITH 100;
 ALTER TABLE rh_account ALTER COLUMN id RESTART WITH 100;
 ALTER TABLE repo ALTER COLUMN id RESTART WITH 100;
+
+-- Create "inventory.hosts" for testing purposes. In deployment it's created by remote Cyndi service.
+
+CREATE TABLE inventory.hosts_v1_0 (
+    id uuid NOT NULL,
+    account character varying(10) NOT NULL,
+    display_name character varying(200) NOT NULL,
+    tags jsonb NOT NULL,
+    updated timestamp with time zone NOT NULL,
+    created timestamp with time zone NOT NULL,
+    stale_timestamp timestamp with time zone NOT NULL,
+    system_profile jsonb NOT NULL
+);
+
+ALTER TABLE ONLY inventory.hosts_v1_0 ADD CONSTRAINT hosts_v1_0_pkey PRIMARY KEY (id);
+
+CREATE INDEX hosts_v1_0_account_index ON inventory.hosts_v1_0 USING btree (account);
+CREATE INDEX hosts_v1_0_display_name_index ON inventory.hosts_v1_0 USING btree (display_name);
+CREATE INDEX hosts_v1_0_stale_timestamp_index ON inventory.hosts_v1_0 USING btree (stale_timestamp);
+CREATE INDEX hosts_v1_0_system_profile_index ON inventory.hosts_v1_0 USING gin (system_profile jsonb_path_ops);
+CREATE INDEX hosts_v1_0_tags_index ON inventory.hosts_v1_0 USING gin (tags jsonb_path_ops);
+
+CREATE VIEW inventory.hosts AS
+ SELECT hosts_v1_0.id,
+    hosts_v1_0.account,
+    hosts_v1_0.display_name,
+    hosts_v1_0.created,
+    hosts_v1_0.updated,
+    hosts_v1_0.stale_timestamp,
+    (hosts_v1_0.stale_timestamp + ('1 day'::interval day * '7'::double precision)) AS stale_warning_timestamp,
+    (hosts_v1_0.stale_timestamp + ('1 day'::interval day * '14'::double precision)) AS culled_timestamp,
+    hosts_v1_0.tags,
+    hosts_v1_0.system_profile
+ FROM inventory.hosts_v1_0;
+
+GRANT SELECT ON TABLE inventory.hosts TO cyndi_reader;
+
+INSERT INTO inventory.hosts_v1_0 (id, account, display_name, tags, updated, created, stale_timestamp, system_profile) VALUES
+('00000000000000000000000000000001', '1', 'INV-1', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+'2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
+('00000000000000000000000000000002', '1', 'INV-2', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
+('00000000000000000000000000000003', '1', 'INV-3', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
+('00000000000000000000000000000004', '1', 'INV-4', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
+('00000000000000000000000000000005', '1', 'INV-5', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
+('00000000000000000000000000000006', '1', 'INV-6', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
+('00000000000000000000000000000007', '1', 'INV-7', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
+('00000000000000000000000000000008', '1', 'INV-8', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
+('00000000000000000000000000000009', '2', 'INV-9', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
+('00000000000000000000000000000010', '2', 'INV-10', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
+('00000000000000000000000000000011', '2', 'INV-11', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
+('00000000000000000000000000000012', '3', 'INV-12', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
+('00000000000000000000000000000013', '3', 'INV-13', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
+('00000000000000000000000000000014', '3', 'INV-14', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}');
