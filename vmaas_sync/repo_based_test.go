@@ -15,7 +15,7 @@ func TestGetCurrentRepoBasedInventoryIDs(t *testing.T) {
 
 	inventoryIDs, err := getCurrentRepoBasedInventoryIDs()
 	assert.Nil(t, err)
-	assert.Equal(t, []string{"INV-2", "INV-3"}, inventoryIDs)
+	assert.Equal(t, []string{"00000000-0000-0000-0000-000000000002", "00000000-0000-0000-0000-000000000003"}, inventoryIDs)
 	resetLastEvalTimestamp(t)
 }
 
@@ -48,7 +48,7 @@ func TestGetRepoBasedInventoryIDs(t *testing.T) {
 	repos := []string{"repo1", "repo2"}
 	inventoryIDs, err := getRepoBasedInventoryIDs(repos)
 	assert.Nil(t, err)
-	assert.Equal(t, []string{"INV-2", "INV-3"}, inventoryIDs)
+	assert.Equal(t, []string{"00000000-0000-0000-0000-000000000002", "00000000-0000-0000-0000-000000000003"}, inventoryIDs)
 }
 
 func TestGetRepoBasedInventoryIDsEmpty(t *testing.T) {

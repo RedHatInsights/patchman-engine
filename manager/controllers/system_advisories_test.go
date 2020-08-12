@@ -15,7 +15,7 @@ func TestSystemAdvisoriesDefault(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/INV-1", nil)
+	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001", nil)
 	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -47,7 +47,7 @@ func TestSystemAdvisoriesOffsetLimit(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/INV-1?offset=4&limit=3", nil)
+	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001?offset=4&limit=3", nil)
 	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -62,7 +62,7 @@ func TestSystemAdvisoriesOffsetOverflow(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/INV-1?offset=100&limit=3", nil)
+	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001?offset=100&limit=3", nil)
 	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -77,7 +77,7 @@ func TestSystemAdvisoriesPossibleSorts(t *testing.T) {
 
 	for sort := range SystemAdvisoriesFields {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", fmt.Sprintf("/INV-1?sort=%v", sort), nil)
+		req, _ := http.NewRequest("GET", fmt.Sprintf("/00000000-0000-0000-0000-000000000001?sort=%v", sort), nil)
 		core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
 
 		var output SystemAdvisoriesResponse
@@ -93,7 +93,7 @@ func TestSystemAdvisoriesWrongSort(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/INV-1?sort=unknown_key", nil)
+	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001?sort=unknown_key", nil)
 	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -104,7 +104,7 @@ func TestSystemAdvisoriesSearch(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/INV-1?search=h-3", nil)
+	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001?search=h-3", nil)
 	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)

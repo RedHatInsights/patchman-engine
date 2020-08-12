@@ -16,31 +16,26 @@ INSERT INTO rh_account (id, name) VALUES
 (1, '1'), (2, '2'), (3, '3'), (4, '4');
 
 INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_updatable) VALUES
-(1, 'INV-1', 'INV-1', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2020-09-22 12:00:00-04',0,0),
-(2, 'INV-2', 'INV-2', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04',0,0),
-(3, 'INV-3', 'INV-3', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0),
-(4, 'INV-4', 'INV-4', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0),
-(5, 'INV-5', 'INV-5', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0),
-(6, 'INV-6', 'INV-6', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04',0,0);
+(1, '00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2020-09-22 12:00:00-04',0,0),
+(2, '00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000002', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04',0,0),
+(3, '00000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000003', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0),
+(4, '00000000-0000-0000-0000-000000000004','00000000-0000-0000-0000-000000000004', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0),
+(5, '00000000-0000-0000-0000-000000000005','00000000-0000-0000-0000-000000000005', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0),
+(6, '00000000-0000-0000-0000-000000000006','00000000-0000-0000-0000-000000000006', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04',0,0);
 
 INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, first_reported, last_updated, unchanged_since, last_upload, packages_installed, packages_updatable) VALUES
-(7, 'INV-7','INV-7', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2017-12-31 08:22:33-04', '2018-10-04 14:13:12-04', '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04',0,0);
+(7, '00000000-0000-0000-0000-000000000007','00000000-0000-0000-0000-000000000007', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2017-12-31 08:22:33-04', '2018-10-04 14:13:12-04', '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04',0,0);
 
 INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_updatable) VALUES
-(8, 'INV-8', 'INV-8', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04',0,0),
-(9, 'INV-9', 'INV-9', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',0,0),
-(10, 'INV-10', 'INV-10', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',0,0),
-(11, 'INV-11', 'INV-11', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',0,0),
-(12, 'INV-12', 'INV-12', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',2,2);
+(8, '00000000-0000-0000-0000-000000000008','00000000-0000-0000-0000-000000000008', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04',0,0),
+(9, '00000000-0000-0000-0000-000000000009','00000000-0000-0000-0000-000000000009', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',0,0),
+(10, '00000000-0000-0000-0000-000000000010','00000000-0000-0000-0000-000000000010', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',0,0),
+(11, '00000000-0000-0000-0000-000000000011','00000000-0000-0000-0000-000000000011', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',0,0),
+(12, '00000000-0000-0000-0000-000000000012','00000000-0000-0000-0000-000000000012', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',2,2);
 
 INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload, opt_out, packages_installed, packages_updatable) VALUES
-(13, 'INV-13', 'INV-13', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', true,1,0),
-(14, 'INV-14', 'INV-14', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', true,0,0);
-
-insert into system_tags (tag, system_id) VALUES
-('satellite/organization=rh', 1),
-('satellite/organization=rh', 2),
-('satellite/organization=ibm', 1);
+(13, '00000000-0000-0000-0000-000000000013','00000000-0000-0000-0000-000000000013', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', true,1,0),
+(14, '00000000-0000-0000-0000-000000000014','00000000-0000-0000-0000-000000000014', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', true,0,0);
 
 INSERT INTO package_name(id,name) VALUES
 (1, 'kernel'),
@@ -116,7 +111,7 @@ ALTER TABLE repo ALTER COLUMN id RESTART WITH 100;
 
 -- Create "inventory.hosts" for testing purposes. In deployment it's created by remote Cyndi service.
 
-CREATE TABLE inventory.hosts_v1_0 (
+CREATE TABLE IF NOT EXISTS inventory.hosts_v1_0 (
     id uuid NOT NULL,
     account character varying(10) NOT NULL,
     display_name character varying(200) NOT NULL,
@@ -124,18 +119,19 @@ CREATE TABLE inventory.hosts_v1_0 (
     updated timestamp with time zone NOT NULL,
     created timestamp with time zone NOT NULL,
     stale_timestamp timestamp with time zone NOT NULL,
-    system_profile jsonb NOT NULL
+    system_profile jsonb NOT NULL,
+    PRIMARY KEY (id)
 );
 
-ALTER TABLE ONLY inventory.hosts_v1_0 ADD CONSTRAINT hosts_v1_0_pkey PRIMARY KEY (id);
+DELETE FROM inventory.hosts_v1_0;
 
-CREATE INDEX hosts_v1_0_account_index ON inventory.hosts_v1_0 USING btree (account);
-CREATE INDEX hosts_v1_0_display_name_index ON inventory.hosts_v1_0 USING btree (display_name);
-CREATE INDEX hosts_v1_0_stale_timestamp_index ON inventory.hosts_v1_0 USING btree (stale_timestamp);
-CREATE INDEX hosts_v1_0_system_profile_index ON inventory.hosts_v1_0 USING gin (system_profile jsonb_path_ops);
-CREATE INDEX hosts_v1_0_tags_index ON inventory.hosts_v1_0 USING gin (tags jsonb_path_ops);
+CREATE INDEX IF NOT EXISTS hosts_v1_0_account_index ON inventory.hosts_v1_0 USING btree (account);
+CREATE INDEX IF NOT EXISTS hosts_v1_0_display_name_index ON inventory.hosts_v1_0 USING btree (display_name);
+CREATE INDEX IF NOT EXISTS hosts_v1_0_stale_timestamp_index ON inventory.hosts_v1_0 USING btree (stale_timestamp);
+CREATE INDEX IF NOT EXISTS hosts_v1_0_system_profile_index ON inventory.hosts_v1_0 USING gin (system_profile jsonb_path_ops);
+CREATE INDEX IF NOT EXISTS hosts_v1_0_tags_index ON inventory.hosts_v1_0 USING gin (tags jsonb_path_ops);
 
-CREATE VIEW inventory.hosts AS
+CREATE OR REPLACE VIEW inventory.hosts AS
  SELECT hosts_v1_0.id,
     hosts_v1_0.account,
     hosts_v1_0.display_name,
@@ -151,31 +147,31 @@ CREATE VIEW inventory.hosts AS
 GRANT SELECT ON TABLE inventory.hosts TO cyndi_reader;
 
 INSERT INTO inventory.hosts_v1_0 (id, account, display_name, tags, updated, created, stale_timestamp, system_profile) VALUES
-('00000000000000000000000000000001', '1', 'INV-1', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+('00000000000000000000000000000001', '1', '00000000-0000-0000-0000-000000000001', '[{"key": "k1", "value": "val1", "namespace": "ns1"},{"key": "k2", "value": "val2", "namespace": "ns1"}]',
 '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
-('00000000000000000000000000000002', '1', 'INV-2', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+('00000000000000000000000000000002', '1', '00000000-0000-0000-0000-000000000002', '[{"key": "k1", "value": "val1", "namespace": "ns1"}, {"key": "k2", "value": "val2", "namespace": "ns1"}]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
-('00000000000000000000000000000003', '1', 'INV-3', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+('00000000000000000000000000000003', '1', '00000000-0000-0000-0000-000000000003', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
-('00000000000000000000000000000004', '1', 'INV-4', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+('00000000000000000000000000000004', '1', '00000000-0000-0000-0000-000000000004', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
-('00000000000000000000000000000005', '1', 'INV-5', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+('00000000000000000000000000000005', '1', '00000000-0000-0000-0000-000000000005', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
-('00000000000000000000000000000006', '1', 'INV-6', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+('00000000000000000000000000000006', '1', '00000000-0000-0000-0000-000000000006', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
-('00000000000000000000000000000007', '1', 'INV-7', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+('00000000000000000000000000000007', '1', '00000000-0000-0000-0000-000000000007', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
-('00000000000000000000000000000008', '1', 'INV-8', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+('00000000000000000000000000000008', '1', '00000000-0000-0000-0000-000000000008', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
-('00000000000000000000000000000009', '2', 'INV-9', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+('00000000000000000000000000000009', '2', '00000000-0000-0000-0000-000000000009', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
-('00000000000000000000000000000010', '2', 'INV-10', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+('00000000000000000000000000000010', '2', '00000000-0000-0000-0000-000000000010', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
-('00000000000000000000000000000011', '2', 'INV-11', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+('00000000000000000000000000000011', '2', '00000000-0000-0000-0000-000000000011', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
-('00000000000000000000000000000012', '3', 'INV-12', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+('00000000000000000000000000000012', '3', '00000000-0000-0000-0000-000000000012', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
-('00000000000000000000000000000013', '3', 'INV-13', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+('00000000000000000000000000000013', '3', '00000000-0000-0000-0000-000000000013', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}'),
-('00000000000000000000000000000014', '3', 'INV-14', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
+('00000000000000000000000000000014', '3', '00000000-0000-0000-0000-000000000014', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true}');

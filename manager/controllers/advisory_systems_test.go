@@ -22,7 +22,7 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 8, len(output.Data))
-	assert.Equal(t, "INV-1", output.Data[0].ID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2020-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
 	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
@@ -53,7 +53,7 @@ func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 3, len(output.Data))
-	assert.Equal(t, "INV-6", output.Data[0].ID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000006", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
 	assert.Equal(t, 0, output.Data[0].Attributes.RhsaCount)
@@ -109,14 +109,14 @@ func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1?tags=satellite/organization=rh", nil)
+	req, _ := http.NewRequest("GET", "/RH-1?tags=ns1/k1=val1", nil)
 	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 
 	assert.Equal(t, 200, w.Code)
-	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, 8, len(output.Data))
 }
 
 func TestAdvisorySystemsTags2(t *testing.T) { //nolint:dupl
@@ -124,7 +124,7 @@ func TestAdvisorySystemsTags2(t *testing.T) { //nolint:dupl
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1?tags=satellite/organization=rh&tags=satellite/organization=ibm", nil)
+	req, _ := http.NewRequest("GET", "/RH-1?tags=ns1/k2=val2", nil)
 	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
 	var output AdvisorySystemsResponse

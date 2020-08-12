@@ -10,6 +10,7 @@ import (
 	"testing"
 )
 
+// nolint: lll
 func TestSystemsDefault(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
@@ -23,7 +24,7 @@ func TestSystemsDefault(t *testing.T) {
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	// data
 	assert.Equal(t, 8, len(output.Data))
-	assert.Equal(t, "INV-1", output.Data[0].ID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2020-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastEvaluation.String())
@@ -108,16 +109,16 @@ func TestSystemsSearch(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?search=V-1", nil)
+	req, _ := http.NewRequest("GET", "/?search=001", nil)
 	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 1, len(output.Data))
-	assert.Equal(t, "INV-1", output.Data[0].ID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
-	assert.Equal(t, "INV-1", output.Data[0].Attributes.DisplayName)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].Attributes.DisplayName)
 }
 
 func TestSystemsTags(t *testing.T) {
@@ -125,14 +126,14 @@ func TestSystemsTags(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?tags=satellite/organization=rh", nil)
+	req, _ := http.NewRequest("GET", "/?tags=ns1/k1=val1", nil)
 	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, 2, len(output.Data))
-	assert.Equal(t, "INV-1", output.Data[0].ID)
+	assert.Equal(t, 8, len(output.Data))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 }
 
 func TestSystemsPackagesCount(t *testing.T) {
@@ -147,9 +148,9 @@ func TestSystemsPackagesCount(t *testing.T) {
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 3, len(output.Data))
-	assert.Equal(t, "INV-12", output.Data[0].ID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
-	assert.Equal(t, "INV-12", output.Data[0].Attributes.DisplayName)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output.Data[0].Attributes.DisplayName)
 	assert.Equal(t, 2, output.Data[0].Attributes.PackagesInstalled)
 	assert.Equal(t, 2, output.Data[0].Attributes.PackagesUpdatable)
 }
@@ -168,9 +169,10 @@ func TestSystemsExportJSON(t *testing.T) {
 
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 8, len(output))
-	assert.Equal(t, output[0].ID, "INV-1")
+	assert.Equal(t, output[0].ID, "00000000-0000-0000-0000-000000000001")
 }
 
+// nolint: lll
 func TestSystemsExportCSV(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
@@ -190,7 +192,7 @@ func TestSystemsExportCSV(t *testing.T) {
 			"packages_installed,packages_updatable",
 		lines[0])
 
-	assert.Equal(t, "INV-1,INV-1,2018-09-22T16:00:00Z,2020-09-22T16:00:00Z,2,3,3,false,0,0", lines[1])
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,2018-09-22T16:00:00Z,2020-09-22T16:00:00Z,2,3,3,false,0,0", lines[1])
 }
 
 func TestSystemsExportWrongFormat(t *testing.T) {

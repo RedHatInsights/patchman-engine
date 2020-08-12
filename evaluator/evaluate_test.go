@@ -151,7 +151,7 @@ func TestEvaluate(t *testing.T) {
 	mockWriter := utils.MockKafkaWriter{}
 	remediationsPublisher = &mockWriter
 
-	err := evaluateHandler(mqueue.PlatformEvent{ID: "INV-12"})
+	err := evaluateHandler(mqueue.PlatformEvent{ID: "00000000-0000-0000-0000-000000000012"})
 	assert.NoError(t, err)
 
 	systemID := 12
@@ -159,7 +159,7 @@ func TestEvaluate(t *testing.T) {
 	expectedAddedAdvisories := []string{"RH-1", "RH-2"}
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
-	database.CheckSystemJustEvaluated(t, "INV-12", 2, 1, 1, 0)
+	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 2, 1, 1, 0)
 	deleteSystemAdvisories(t, systemID, advisoryIDs)
 	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 
