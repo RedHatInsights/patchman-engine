@@ -80,7 +80,7 @@ func SystemPackagesHandler(c *gin.Context) {
 
 	var loaded []SystemPackageDBLoad
 	q := systemPackageQuery(account, inventoryID).Select(PackagesSelect)
-	q = ApplySearch(c, q, "p.name", "p.summary", "p.description")
+	q = ApplySearch(c, q, "pn.name", "sum.value", "descr.value")
 	q, meta, links, err := ListCommon(q, c, fmt.Sprintf("/systems/%s/packages", inventoryID), PackageOpts)
 	if err != nil {
 		return
