@@ -17,7 +17,7 @@ import (
 // @Accept   json
 // @Produce  json
 // @Param    inventory_id    path    string   true "Inventory ID"
-// @Success 200
+// @Success 200 "Ok"
 // @Router /api/patch/v1/systems/{inventory_id} [delete]
 func SystemDeleteHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)
