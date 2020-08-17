@@ -24,4 +24,6 @@ func InitAPI(group *gin.RouterGroup) {
 
 	group.GET("/export/advisories", controllers.AdvisoriesExportHandler)
 	group.GET("/export/systems", controllers.SystemsExportHandler)
+
+	group.GET("/status", controllers.Status)
 }
