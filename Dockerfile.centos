@@ -19,7 +19,7 @@ ENV GOPROXY=https://proxy.golang.org
 ADD go.mod  /go/src/app/
 ADD go.sum  /go/src/app/
 
-ENV MANIFEST_PREFIX="mgmt_services\/patch\/patchman-engine\/"
+ENV MANIFEST_PREFIX="mgmt_services\/patchman-engine\/"
 RUN /manifest/generate.sh manifest.txt $MANIFEST_PREFIX /tmp/base_rpm.txt /tmp/final_rpm.txt "" /go/src/app/go.sum && \
     echo 'MANIFEST:' && cat manifest.txt
 
