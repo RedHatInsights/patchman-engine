@@ -595,7 +595,9 @@
                                 "rhsa_count",
                                 "rhba_count",
                                 "rhea_count",
-                                "stale"
+                                "stale",
+                                "packages_installed",
+                                "packages_updatable"
                             ]
                         }
                     },
@@ -657,6 +659,22 @@
                     },
                     {
                         "name": "filter[stale]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[packages_installed]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[packages_updatable]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -742,6 +760,7 @@
                 ],
                 "responses": {
                     "200": {
+                        "description": "Ok",
                         "content": {}
                     }
                 },
@@ -1278,6 +1297,12 @@
                     "last_upload": {
                         "type": "string"
                     },
+                    "packages_installed": {
+                        "type": "integer"
+                    },
+                    "packages_updatable": {
+                        "type": "integer"
+                    },
                     "rhba_count": {
                         "type": "integer"
                     },
@@ -1318,6 +1343,12 @@
                     },
                     "last_upload": {
                         "type": "string"
+                    },
+                    "packages_installed": {
+                        "type": "integer"
+                    },
+                    "packages_updatable": {
+                        "type": "integer"
                     },
                     "rhba_count": {
                         "type": "integer"
