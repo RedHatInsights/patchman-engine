@@ -31,7 +31,8 @@ func TestPackagesSearch(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/INV-12/packages?search=kernel", nil)
+	req, _ := http.NewRequest("GET",
+		"/00000000-0000-0000-0000-000000000012/packages?search=kernel", nil)
 	core.InitRouterWithParams(SystemPackagesHandler, "3", "GET", "/:inventory_id/packages").
 		ServeHTTP(w, req)
 
