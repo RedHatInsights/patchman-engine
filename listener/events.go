@@ -57,7 +57,7 @@ func EventsMessageHandler(m kafka.Message) error {
 		}
 		return HandleUpload(event)
 	default:
-		utils.Log("msg", string(m.Value)).Error(WarnUnknownType)
+		utils.Log("msg", string(m.Value)).Warn(WarnUnknownType)
 		return nil
 	}
 }
