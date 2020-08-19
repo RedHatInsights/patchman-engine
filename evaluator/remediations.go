@@ -22,10 +22,7 @@ type RemediationsState struct {
 	Issues []string `json:"issues"`
 }
 
-func publishRemediationsState(id string, response vmaas.UpdatesV2Response) error {
-	if remediationsPublisher == nil {
-		return nil
-	}
+func createRemediationsStateMsg(id string, response vmaas.UpdatesV2Response) *RemediationsState {
 	advisories := getReportedAdvisories(response)
 	var state RemediationsState
 	state.HostID = id
@@ -33,6 +30,14 @@ func publishRemediationsState(id string, response vmaas.UpdatesV2Response) error
 	for a := range advisories {
 		state.Issues = append(state.Issues, fmt.Sprintf("patch:%s", a))
 	}
+	return &state
+}
+
+func publishRemediationsState(id string, response vmaas.UpdatesV2Response) error {
+	if remediationsPublisher == nil {
+		return nil
+	}
+	state := createRemediationsStateMsg(id, response)
 	msg, err := mqueue.MessageFromJSON(id, state)
 	if err != nil {
 		return errors.Wrap(err, "Formatting message")
