@@ -34,5 +34,7 @@ func TestCreateRemediationsState(t *testing.T) {
 	state := createRemediationsStateMsg(id, testVmaasResponse)
 	assert.NotNil(t, state)
 	assert.Equal(t, state.HostID, id)
-	assert.Equal(t, state.Issues, []string{"patch:RH-1", "patch:RH-2", "patch:RH-100"})
+	assert.Equal(t, state.Issues, []string{"patch:RH-1", "patch:RH-100", "patch:RH-2",
+		"patch:firefox-0:77.0.1-1.fc31.x86_64", "patch:firefox-1:76.0.1-1.fc31.x86_64",
+		"patch:kernel-5.10.13-200.fc31.x86_64"})
 }
