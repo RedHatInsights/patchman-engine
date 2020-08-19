@@ -7,6 +7,7 @@ import (
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/pkg/errors"
 	"os"
+	"sort"
 )
 
 var remediationsPublisher mqueue.Writer
@@ -24,12 +25,17 @@ type RemediationsState struct {
 
 func createRemediationsStateMsg(id string, response vmaas.UpdatesV2Response) *RemediationsState {
 	advisories := getReportedAdvisories(response)
+	packages := getReportedPackageUpdates(response)
 	var state RemediationsState
 	state.HostID = id
-	state.Issues = make([]string, 0, len(advisories))
+	state.Issues = make([]string, 0, len(advisories)+len(packages))
 	for a := range advisories {
 		state.Issues = append(state.Issues, fmt.Sprintf("patch:%s", a))
 	}
+	for p := range packages {
+		state.Issues = append(state.Issues, fmt.Sprintf("patch:%s", p))
+	}
+	sort.Strings(state.Issues)
 	return &state
 }
 

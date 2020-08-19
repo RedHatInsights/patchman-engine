@@ -410,6 +410,16 @@ func getReportedAdvisories(vmaasData vmaas.UpdatesV2Response) map[string]bool {
 	return advisories
 }
 
+func getReportedPackageUpdates(vmaasData vmaas.UpdatesV2Response) map[string]bool {
+	packages := map[string]bool{}
+	for _, updates := range vmaasData.UpdateList {
+		for _, u := range updates.AvailableUpdates {
+			packages[u.Package] = true
+		}
+	}
+	return packages
+}
+
 func getStoredAdvisoriesMap(tx *gorm.DB, systemID int) (map[string]models.SystemAdvisories, error) {
 	var advisories []models.SystemAdvisories
 	err := database.SystemAdvisoriesQueryByID(tx, systemID).Preload("Advisory").Find(&advisories).Error
