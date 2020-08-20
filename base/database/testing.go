@@ -110,7 +110,7 @@ func CheckPackagesNamesInDB(t *testing.T) {
 	assert.Equal(t, names[1].Name, "kernel")
 }
 
-func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug, nSec int) {
+func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug, nSec, nInstall, nUpdate int) {
 	var system models.SystemPlatform
 	assert.Nil(t, Db.Where("inventory_id = ?", inventoryID).First(&system).Error)
 	assert.NotNil(t, system.LastEvaluation)
@@ -119,6 +119,8 @@ func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug
 	assert.Equal(t, nEnh, system.AdvisoryEnhCountCache)
 	assert.Equal(t, nBug, system.AdvisoryBugCountCache)
 	assert.Equal(t, nSec, system.AdvisorySecCountCache)
+	assert.Equal(t, nInstall, system.PackagesInstalled)
+	assert.Equal(t, nUpdate, system.PackagesUpdatable)
 }
 
 func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int, systemsAffected int) {

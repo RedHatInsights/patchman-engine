@@ -159,7 +159,8 @@ func TestEvaluate(t *testing.T) {
 	expectedAddedAdvisories := []string{"RH-1", "RH-2"}
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
-	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 2, 1, 1, 0)
+	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 2, 1, 1,
+		0, 2, 2)
 	deleteSystemAdvisories(t, systemID, advisoryIDs)
 	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 
