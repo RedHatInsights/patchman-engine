@@ -39,6 +39,8 @@ type SystemPlatform struct {
 	CulledTimestamp       *time.Time
 	Stale                 bool
 	DisplayName           string
+	PackagesInstalled     int
+	PackagesUpdatable     int
 }
 
 func (SystemPlatform) TableName() string {
