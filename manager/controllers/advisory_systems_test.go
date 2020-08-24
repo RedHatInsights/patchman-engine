@@ -116,7 +116,7 @@ func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 
 	assert.Equal(t, 200, w.Code)
-	assert.Equal(t, 8, len(output.Data))
+	assert.Equal(t, 2, len(output.Data))
 }
 
 func TestAdvisorySystemsTags2(t *testing.T) { //nolint:dupl
@@ -131,5 +131,5 @@ func TestAdvisorySystemsTags2(t *testing.T) { //nolint:dupl
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 
 	assert.Equal(t, 200, w.Code)
-	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, 1, len(output.Data))
 }

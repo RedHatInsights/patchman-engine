@@ -11,13 +11,10 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"net/http"
-	"regexp"
 	"strings"
 )
 
 const InvalidOffsetMsg = "Invalid offset"
-
-var tagRegex = regexp.MustCompile(`(\w+)/(\w+)=(\w+)`)
 
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	utils.Log("err", err.Error()).Error(respMsg)
@@ -205,24 +202,22 @@ func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) *gorm.DB 
 	return txWithSearch
 }
 
-// Filter systems by tags,
 func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
 	tags := c.QueryArray("tags")
 	if len(tags) == 0 {
 		return tx, false
 	}
 
-	subq := database.Db.
-		Table("inventory.hosts h").
-		Select("h.id::text")
-
 	for _, t := range tags {
-		matches := tagRegex.FindStringSubmatch(t)
-		tagJSON := fmt.Sprintf(`[{"namespace":"%s", "key": "%s", "value": "%s"}]`, matches[1], matches[2], matches[3])
-		subq = subq.Where(" h.tags @> ?::jsonb", tagJSON)
+		subq := database.Db.Debug().
+			Table("system_tags st").
+			Select("st.system_id").
+			Where(fmt.Sprintf("st.system_id = %s", systemIDExpr)).
+			Where("st.tag = ?", t)
+		tx = tx.Debug().Where("exists (?)", subq.SubQuery())
 	}
 
-	return tx.Where(fmt.Sprintf("%s in (?)", systemIDExpr), subq.SubQuery()), true
+	return tx, true
 }
 
 func Csv(ctx *gin.Context, code int, res interface{}) {

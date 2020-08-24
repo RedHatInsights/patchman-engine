@@ -37,6 +37,11 @@ INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vma
 (13, '00000000-0000-0000-0000-000000000013','00000000-0000-0000-0000-000000000013', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', true,1,0),
 (14, '00000000-0000-0000-0000-000000000014','00000000-0000-0000-0000-000000000014', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', true,0,0);
 
+INSERT INTO system_tags (tag, system_id) VALUES
+('ns1/k1=val1', 1),
+('ns1/k1=val1', 2),
+('ns1/k2=val2', 1);
+
 INSERT INTO package_name(id,name) VALUES
 (1, 'kernel'),
 (2, 'firefox');

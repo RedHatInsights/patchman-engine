@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (30, false);
+VALUES (31, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -529,6 +529,17 @@ CREATE TABLE IF NOT EXISTS deleted_system
 CREATE INDEX ON deleted_system (when_deleted);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON deleted_system TO listener;
+
+
+CREATE TABLE system_tags
+(
+    tag       TEXT NOT NULL CHECK ( NOT EMPTY(tag)),
+    system_id INT  NOT NULL REFERENCES system_platform ON DELETE CASCADE,
+    PRIMARY KEY (system_id, tag)
+);
+
+CREATE INDEX system_tags_idx on system_tags (tag);
+GRANT SELECT, INSERT, UPDATE, DELETE ON system_tags to listener;
 
 CREATE TABLE IF NOT EXISTS package_name
 (
