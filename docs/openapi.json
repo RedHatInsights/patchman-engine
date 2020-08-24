@@ -532,6 +532,30 @@
                 ]
             }
         },
+        "/api/patch/v1/packages/": {
+            "get": {
+                "summary": "Show me all installed packages across my systems",
+                "description": "Show me all installed packages across my systems",
+                "operationId": "packages",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.PackageSystemsResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
         "/api/patch/v1/packages/{package_name}/systems": {
             "get": {
                 "summary": "Show me all my systems which have a package installed",
