@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestPackages(t *testing.T) {
+func TestSystemPackages(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 

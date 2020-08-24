@@ -30,10 +30,10 @@ type SystemPackageResponse struct {
 	Links Links               `json:"links"`
 }
 
-var PackagesSelect = fmt.Sprintf("%s,spkg.update_data as updates", database.MustGetSelect(&SystemPackagesAttrs{}))
-var PackagesAttrs = database.MustGetQueryAttrs(&SystemPackagesAttrs{})
-var PackageOpts = ListOpts{
-	Fields:         PackagesAttrs,
+var SystemPackagesSelect = fmt.Sprintf("%s,spkg.update_data as updates", database.MustGetSelect(&SystemPackagesAttrs{}))
+var SystemPackagesFields = database.MustGetQueryAttrs(&SystemPackagesAttrs{})
+var SystemPackagesOpts = ListOpts{
+	Fields:         SystemPackagesFields,
 	DefaultFilters: nil,
 	DefaultSort:    "name",
 }
@@ -79,9 +79,9 @@ func SystemPackagesHandler(c *gin.Context) {
 	}
 
 	var loaded []SystemPackageDBLoad
-	q := systemPackageQuery(account, inventoryID).Select(PackagesSelect)
+	q := systemPackageQuery(account, inventoryID).Select(SystemPackagesSelect)
 	q = ApplySearch(c, q, "pn.name", "sum.value", "descr.value")
-	q, meta, links, err := ListCommon(q, c, fmt.Sprintf("/systems/%s/packages", inventoryID), PackageOpts)
+	q, meta, links, err := ListCommon(q, c, fmt.Sprintf("/systems/%s/packages", inventoryID), SystemPackagesOpts)
 	if err != nil {
 		return
 	}
