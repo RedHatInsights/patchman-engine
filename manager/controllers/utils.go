@@ -18,6 +18,7 @@ import (
 const InvalidOffsetMsg = "Invalid offset"
 
 var tagRegex = regexp.MustCompile(`(\w+)/(\w+)=(\w+)`)
+var enableCyndiTags = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_TAGS", false)
 
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	utils.Log("err", err.Error()).Error(respMsg)
@@ -207,6 +208,9 @@ func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) *gorm.DB 
 
 // Filter systems by tags,
 func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
+	if !enableCyndiTags {
+		return tx, false
+	}
 	tags := c.QueryArray("tags")
 	if len(tags) == 0 {
 		return tx, false

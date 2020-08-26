@@ -50,7 +50,7 @@ func isAccessGranted(c *gin.Context) bool {
 }
 
 func RBAC() gin.HandlerFunc {
-	enableRBACCHeck := utils.Getenv("ENABLE_RBAC", "yes") == "yes"
+	enableRBACCHeck := utils.GetBoolEnvOrDefault("ENABLE_RBAC", true)
 	if !enableRBACCHeck {
 		return func(c *gin.Context) {}
 	}
