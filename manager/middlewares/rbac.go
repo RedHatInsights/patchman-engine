@@ -44,6 +44,10 @@ func isAccessGranted(c *gin.Context) bool {
 		if a.Permission == "patch:*:*" {
 			return true
 		}
+
+		if a.Permission == "patch:all:all" { // to support custom roles
+			return true
+		}
 	}
 	utils.Log().Trace("Access denied by RBAC")
 	return false
