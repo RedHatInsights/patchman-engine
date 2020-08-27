@@ -105,9 +105,9 @@ func CheckAdvisoriesInDB(t *testing.T, advisories []string) []int {
 func CheckPackagesNamesInDB(t *testing.T) {
 	var names []models.PackageName
 	assert.NoError(t, Db.Order("name").Find(&names).Error)
-	assert.Len(t, names, 2)
-	assert.Equal(t, names[0].Name, "firefox")
-	assert.Equal(t, names[1].Name, "kernel")
+	assert.Len(t, names, 10)
+	assert.Equal(t, names[0].Name, "bash")
+	assert.Equal(t, names[1].Name, "curl")
 }
 
 func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug, nSec, nInstall, nUpdate int) {

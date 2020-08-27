@@ -39,15 +39,39 @@ INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vma
 
 INSERT INTO package_name(id,name) VALUES
 (1, 'kernel'),
-(2, 'firefox');
+(2, 'firefox'),
+(3, 'bash'),
+(4, 'curl'),
+(5, 'tar'),
+(6, 'systemd'),
+(7, 'sed'),
+(8, 'grep'),
+(9, 'which'),
+(10, 'passwd');
 
 INSERT INTO strings(id, value) VALUES
 ('1', 'kernel'),
-('2', 'firefox');
+('2', 'firefox'),
+('3', 'bash'),
+('4', 'curl'),
+('5', 'tar'),
+('6', 'systemd'),
+('7', 'sed'),
+('8', 'grep'),
+('9', 'which'),
+('10', 'passwd');
 
 INSERT INTO package(id, name_id, evra, description_hash, summary_hash) VALUES
-(1, 1, '5.6.13-200.fc31-x86_64', '1', '1'),
-(2, 2, '76.0.1-1.fc31-x86_64', '2', '2');
+(1, 1, '5.6.13-200.fc31-x86_64', '1', '1'), -- kernel
+(2, 2, '76.0.1-1.fc31-x86_64', '2', '2'), -- firefox
+(3, 3, '4.4.19-8.el8_0.x86_64', '3', '3'), -- bas
+(4, 4, '7.61.1-8.el8.x86_64', '4', '4'), -- curl
+(5, 5, '1.30-4.el8.x86_64', '5', '5'), -- tar
+(6, 6, '239-13.el8_0.5.x86_64', '6', '6'), -- systemd
+(7, 7, '4.5-1.el8.x86_64', '7', '7'), -- sed
+(8, 8, '3.1-6.el8.x86_64', '8', '8'), -- grep
+(9, 9, '2.21-10.el8.x86_64', '9', '9'), -- which
+(10, 10, '0.80-2.el8.x86_64', '10', '10'); -- passwd
 
 INSERT INTO system_package (system_id, package_id, update_data) VALUES
 (12, 1, '[{"evra": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}]'),
