@@ -21,9 +21,11 @@ func TestSystemPackages(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 	var output SystemPackageResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Len(t, output.Data, 2)
-	assert.Equal(t, output.Data[0].Name, "firefox")
-	assert.Equal(t, output.Data[1].Name, "kernel")
+	assert.Len(t, output.Data, 4)
+	assert.Equal(t, output.Data[0].Name, "bash")
+	assert.Equal(t, output.Data[1].Name, "curl")
+	assert.Equal(t, output.Data[2].Name, "firefox")
+	assert.Equal(t, output.Data[3].Name, "kernel")
 }
 
 func TestPackagesSearch(t *testing.T) {
