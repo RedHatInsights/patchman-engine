@@ -36,7 +36,10 @@ func TestSync(t *testing.T) {
 
 	expected := []string{"RH-100"}
 	database.CheckAdvisoriesInDB(t, expected)
-	assert.Nil(t, database.Db.Unscoped().Where("name IN (?)", expected).Delete(&models.AdvisoryMetadata{}).Error)
+
+	evras := []string{"5.10.13-200.fc31.x86_64"}
+	assert.NoError(t, database.Db.Unscoped().Where("evra in (?)", evras).Delete(&models.Package{}).Error)
+	assert.NoError(t, database.Db.Unscoped().Where("name IN (?)", expected).Delete(&models.AdvisoryMetadata{}).Error)
 
 	assert.Equal(t, 2, len(msgs))
 

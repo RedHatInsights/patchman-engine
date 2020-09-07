@@ -120,19 +120,29 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 	return advisories, nil
 }
 
-func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
+func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) (map[string]int, error) {
 	advisories, err := parseAdvisories(data)
 	if err != nil {
-		return errors.WithMessage(err, "Parsing advisories")
+		return nil, errors.WithMessage(err, "Parsing advisories")
 	}
 
 	if advisories == nil || len(advisories) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary", "solution",
 		"public_date", "modified_date", "url", "advisory_type_id", "severity_id", "cve_list", "package_data")
-	return database.BulkInsertChunk(tx, advisories, SyncBatchSize)
+
+	err = database.BulkInsertChunk(tx, advisories, SyncBatchSize)
+	if err != nil {
+		return nil, errors.WithMessage(err, "Storing advisories")
+	}
+
+	advisoryIDs := make(map[string]int)
+	for _, a := range advisories {
+		advisoryIDs[a.Name] = a.ID
+	}
+	return advisoryIDs, nil
 }
 
 // nolint: funlen
@@ -169,24 +179,35 @@ func syncAdvisories() error {
 
 		utils.Log("count", len(data.ErrataList)).Debug("Downloaded advisories")
 
-		err = storeAdvisories(data.ErrataList)
+		advisoryIDs, err := storeAdvisories(data.ErrataList)
 		if err != nil {
 			storeAdvisoriesCnt.WithLabelValues("error").Add(float64(len(data.ErrataList)))
 			return errors.WithMessage(err, "Storing advisories")
 		}
 		storeAdvisoriesCnt.WithLabelValues("success").Add(float64(len(data.ErrataList)))
+
 		packages := []string{}
-		for _, erratum := range data.ErrataList {
+		// Map from package to AdvisoryID
+		packageAdvisories := map[utils.Nevra]int{}
+		for name, erratum := range data.ErrataList {
 			if len(erratum.PackageList) == 0 {
 				continue
 			}
-			packages = append(packages, erratum.PackageList...)
+			for _, p := range erratum.PackageList {
+				nevra, err := utils.ParseNevra(p)
+				if err != nil {
+					continue
+				}
+
+				packages = append(packages, p)
+				packageAdvisories[*nevra] = advisoryIDs[name]
+			}
 		}
 
 		for len(packages) > 0 {
 			currentPageSize := mathutil.Min(packagesPageSize, len(packages))
 			page := packages[0:currentPageSize]
-			err = syncPackages(database.Db, page)
+			err = syncPackages(database.Db, packageAdvisories, page)
 			if err != nil {
 				storePackagesCnt.WithLabelValues("error").Add(float64(len(page)))
 				return errors.WithMessage(err, "Storing packages")

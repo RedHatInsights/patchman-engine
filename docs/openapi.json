@@ -1361,8 +1361,7 @@
                         "type": "integer"
                     },
                     "stale": {
-                        "type": "boolean",
-                        "description": "Not used\nEnabled        bool       `json:\"enabled\" csv:\"enabled\" query:\"(NOT system_platform.opt_out)\"`"
+                        "type": "boolean"
                     }
                 }
             },
@@ -1408,8 +1407,7 @@
                         "type": "integer"
                     },
                     "stale": {
-                        "type": "boolean",
-                        "description": "Not used\nEnabled        bool       `json:\"enabled\" csv:\"enabled\" query:\"(NOT system_platform.opt_out)\"`"
+                        "type": "boolean"
                     }
                 }
             },

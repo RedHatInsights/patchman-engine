@@ -67,6 +67,7 @@ type Package struct {
 	EVRA            string
 	DescriptionHash []byte
 	SummaryHash     []byte
+	AdvisoryID      int
 }
 
 func (Package) TableName() string {

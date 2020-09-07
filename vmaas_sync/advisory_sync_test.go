@@ -137,7 +137,8 @@ func TestSaveAdvisories(t *testing.T) {
 
 	// Repeatedly storing erratas should just overwrite them
 	for i := 0; i < 2; i++ {
-		assert.Nil(t, storeAdvisories(data.ErrataList))
+		_, err := storeAdvisories(data.ErrataList)
+		assert.NoError(t, err)
 		var count int
 
 		assert.Nil(t, database.Db.Model(&models.AdvisoryMetadata{}).Where("url = ?", "TEST").Count(&count).Error)
@@ -160,5 +161,7 @@ func TestSyncAdvisories(t *testing.T) {
 	database.CheckAdvisoriesInDB(t, expected)
 	database.CheckPackagesNamesInDB(t)
 
-	assert.Nil(t, database.Db.Unscoped().Where("name IN (?)", expected).Delete(&models.AdvisoryMetadata{}).Error)
+	evras := []string{"5.10.13-200.fc31.x86_64"}
+	assert.NoError(t, database.Db.Unscoped().Where("evra in (?)", evras).Delete(&models.Package{}).Error)
+	assert.NoError(t, database.Db.Unscoped().Where("name IN (?)", expected).Delete(&models.AdvisoryMetadata{}).Error)
 }
