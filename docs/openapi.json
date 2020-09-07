@@ -987,6 +987,14 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "filter[updatable]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "boolean"
+                        }
                     }
                 ],
                 "responses": {
@@ -1419,6 +1427,9 @@
                     },
                     "summary": {
                         "type": "string"
+                    },
+                    "updatable": {
+                        "type": "boolean"
                     },
                     "updates": {
                         "$ref": "#/components/schemas/models.PackageUpdates"
