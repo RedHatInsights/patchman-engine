@@ -22,8 +22,8 @@ func TestPackages(t *testing.T) {
 	var output PackagesResponse
 	assert.Greater(t, len(w.Body.Bytes()), 0)
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, 2, len(output.Data))
-	assert.Equal(t, "kernel", output.Data[1].Name)
-	assert.Equal(t, 2, output.Data[1].SystemsInstalled)
-	assert.Equal(t, 1, output.Data[1].SystemsUpdatable)
+	assert.Equal(t, 4, len(output.Data))
+	assert.Equal(t, "kernel", output.Data[3].Name)
+	assert.Equal(t, 2, output.Data[3].SystemsInstalled)
+	assert.Equal(t, 1, output.Data[3].SystemsUpdatable)
 }

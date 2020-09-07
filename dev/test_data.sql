@@ -76,6 +76,8 @@ INSERT INTO package(id, name_id, evra, description_hash, summary_hash) VALUES
 INSERT INTO system_package (system_id, package_id, update_data) VALUES
 (12, 1, '[{"evra": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}]'),
 (12, 2, '[{"evra": "77.0.1-1.fc31-x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31-x86_64", "advisory": "RH-2"}]'),
+(12, 3, null),
+(12, 4, null),
 (13, 1, null);
 
 INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solution, advisory_type_id,
