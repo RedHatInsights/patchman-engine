@@ -18,6 +18,7 @@ type SystemPackagesAttrs struct {
 	EVRA        string `json:"evra" query:"p.evra"`
 	Summary     string `json:"summary" query:"sum.value"`
 	Description string `json:"description" query:"descr.value"`
+	Updatable   bool   `json:"updatable" query:"(json_array_length(spkg.update_data::json) > 0)"`
 }
 
 type SystemPackageData struct {
@@ -67,6 +68,7 @@ func systemPackageQuery(account string, inventoryID string) *gorm.DB {
 // @Param    filter[description]     query   string  false "Filter"
 // @Param    filter[evra]            query   string  false "Filter"
 // @Param    filter[summary]         query   string  false "Filter"
+// @Param    filter[updatable]       query   bool    false "Filter"
 // @Success 200 {object} SystemPackageResponse
 // @Router /api/patch/v1/systems/{inventory_id}/packages [get]
 func SystemPackagesHandler(c *gin.Context) {
@@ -81,6 +83,7 @@ func SystemPackagesHandler(c *gin.Context) {
 	var loaded []SystemPackageDBLoad
 	q := systemPackageQuery(account, inventoryID).Select(SystemPackagesSelect)
 	q = ApplySearch(c, q, "pn.name", "sum.value", "descr.value")
+
 	q, meta, links, err := ListCommon(q, c, fmt.Sprintf("/systems/%s/packages", inventoryID), SystemPackagesOpts)
 	if err != nil {
 		return

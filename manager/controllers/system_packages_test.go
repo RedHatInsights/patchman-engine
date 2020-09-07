@@ -55,3 +55,21 @@ func TestNoPackages(t *testing.T) {
 		ServeHTTP(w, req)
 	assert.Equal(t, 200, w.Code)
 }
+
+func TestSystemPackagesUpdatableOnly(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET",
+		"/00000000-0000-0000-0000-000000000012/packages?filter[updatable]=true", nil)
+	core.InitRouterWithParams(SystemPackagesHandler, "3", "GET", "/:inventory_id/packages").
+		ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output SystemPackageResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Len(t, output.Data, 2)
+	assert.Equal(t, output.Data[0].Name, "firefox")
+	assert.Equal(t, output.Data[1].Name, "kernel")
+}
