@@ -1,0 +1,1 @@
+ALTER TABLE package DROP COLUMN IF EXISTS advisory_id;

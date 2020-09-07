@@ -30,7 +30,7 @@ type PackagesResponse struct {
 }
 
 func packagesQuery(acc string) *gorm.DB {
-	return database.Db.Debug().
+	return database.Db.
 		Select(PackagesSelect).
 		Table("system_platform sp").
 		Joins("inner join rh_account ra on sp.rh_account_id = ra.id").

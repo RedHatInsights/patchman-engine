@@ -14,7 +14,7 @@ import (
 
 const chunkSize = 10 * 1024
 
-func syncPackages(tx *gorm.DB, pkgs []string) error {
+func syncPackages(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, pkgs []string) error {
 	query := vmaas.PackagesRequest{
 		PackageList: pkgs,
 	}
@@ -35,7 +35,7 @@ func syncPackages(tx *gorm.DB, pkgs []string) error {
 	if err != nil {
 		return errors.Wrap(err, "Pkg strings")
 	}
-	return storePackageDetails(tx, idByName, dataByNevra)
+	return storePackageDetails(tx, advisoryIDs, idByName, dataByNevra)
 }
 
 func storePackageNames(tx *gorm.DB, pkgs map[string]vmaas.PackagesResponsePackageList) (map[string]int,
@@ -97,7 +97,7 @@ func storePackageStrings(tx *gorm.DB, data map[utils.Nevra]vmaas.PackagesRespons
 	return database.BulkInsertChunk(tx, strings, chunkSize)
 }
 
-func storePackageDetails(tx *gorm.DB, nameIDs map[string]int,
+func storePackageDetails(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, nameIDs map[string]int,
 	data map[utils.Nevra]vmaas.PackagesResponsePackageList) error {
 	toStore := make([]models.Package, 0, len(data))
 
@@ -105,11 +105,16 @@ func storePackageDetails(tx *gorm.DB, nameIDs map[string]int,
 		desc := sha256.Sum256([]byte(data.Description))
 		sum := sha256.Sum256([]byte(data.Summary))
 
+		if _, has := advisoryIDs[nevra]; !has {
+			utils.Log("nevra", nevra.String()).Warn("Did not find matching advisories for nevra")
+			continue
+		}
 		toStore = append(toStore, models.Package{
 			NameID:          nameIDs[nevra.Name],
 			EVRA:            nevra.EVRAString(),
 			DescriptionHash: desc[:],
 			SummaryHash:     sum[:],
+			AdvisoryID:      advisoryIDs[nevra],
 		})
 	}
 
