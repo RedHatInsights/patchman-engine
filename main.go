@@ -39,5 +39,5 @@ func main() {
 			return
 		}
 	}
-	log.Fatal("You need to provide a command")
+	log.Panic("You need to provide a command")
 }
