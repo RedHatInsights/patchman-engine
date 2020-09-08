@@ -52,6 +52,8 @@ func PackageSystemsListHandler(c *gin.Context) {
 	}
 	query := packageSystemsQuery(account, packageName)
 	query, meta, links, err := ListCommon(query, c, fmt.Sprintf("/packages/%s/systems", packageName), SystemOpts)
+	query = ApplySearch(c, query, "system_platform.display_name")
+	query, _ = ApplyTagsFilter(c, query, "system_platform.inventory_id")
 
 	if err != nil {
 		LogAndRespError(c, err, "database error")
