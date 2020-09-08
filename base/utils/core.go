@@ -117,7 +117,7 @@ func TestLoadEnv(files ...string) {
 func LogPanics(exitAfterLogging bool) {
 	if obj := recover(); obj != nil {
 		stack := string(debug.Stack())
-		stackLine := strings.Replace(stack, "\n", "|", -1)
+		stackLine := strings.ReplaceAll(stack, "\n", "|")
 		Log("err", obj, "stack", stackLine).Error("Panicked")
 		FlushLogs()
 		if exitAfterLogging {

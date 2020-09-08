@@ -38,7 +38,7 @@ type SystemItemAttributes struct {
 	RhbaCount      int        `json:"rhba_count" csv:"rhba_count" query:"system_platform.advisory_bug_count_cache"`
 	RheaCount      int        `json:"rhea_count" csv:"rhea_count" query:"system_platform.advisory_enh_count_cache"`
 	// Not used
-	//Enabled        bool       `json:"enabled" csv:"enabled" query:"(NOT system_platform.opt_out)"`
+	// Enabled        bool       `json:"enabled" csv:"enabled" query:"(NOT system_platform.opt_out)"`
 	Stale             bool `json:"stale" csv:"stale" query:"system_platform.stale"`
 	PackagesInstalled int  `json:"packages_installed" csv:"packages_installed" query:"system_platform.packages_installed"`
 	PackagesUpdatable int  `json:"packages_updatable" csv:"packages_updatable" query:"system_platform.packages_updatable"`

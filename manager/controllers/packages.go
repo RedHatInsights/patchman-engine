@@ -20,7 +20,7 @@ type PackageItem struct {
 	Name             string `json:"name" query:"pn.name"`
 	SystemsInstalled int    `json:"systems_installed" query:"count(sp.id)"`
 	SystemsUpdatable int    `json:"systems_updatable" query:"count(sp.id) filter (where spkg.update_data is not null)"`
-	//Description      string `json:"description"`
+	// Description      string `json:"description"`
 }
 
 type PackagesResponse struct {
