@@ -202,6 +202,13 @@ func TestAdvisoriesSearchFilter(t *testing.T) {
 	})
 }
 
+func TestAdvisoriesTags(t *testing.T) {
+	testAdvisoriesOk(t, "GET", "/?sort=id&tags=ns1/k2=val2", func(output AdvisoriesResponse) {
+		assert.Equal(t, 8, len(output.Data))
+		assert.Equal(t, 2, output.Data[0].Attributes.ApplicableSystems)
+	})
+}
+
 func TestAdvisoriesExportJSON(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
