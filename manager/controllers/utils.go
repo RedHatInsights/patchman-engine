@@ -206,6 +206,16 @@ func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) *gorm.DB 
 	return txWithSearch
 }
 
+func HasTags(c *gin.Context) bool {
+	if !enableCyndiTags {
+		return false
+	}
+	if len(c.QueryArray("tags")) == 0 {
+		return false
+	}
+	return true
+}
+
 // Filter systems by tags,
 func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
 	if !enableCyndiTags {

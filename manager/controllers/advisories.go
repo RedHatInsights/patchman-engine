@@ -67,8 +67,13 @@ type AdvisoriesResponse struct {
 // @Router /api/patch/v1/advisories [get]
 func AdvisoriesListHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)
+	var query *gorm.DB
 
-	query := buildQueryAdvisories(account)
+	if HasTags(c) {
+		query = buildQueryAdvisoriesTagged(c, account)
+	} else {
+		query = buildQueryAdvisories(account)
+	}
 
 	query = ApplySearch(c, query, "am.name", "am.cve_list", "synopsis", "description")
 	query, meta, links, err := ListCommon(query, c, "/api/patch/v1/advisories", AdvisoriesOpts)
@@ -112,7 +117,12 @@ func AdvisoriesListHandler(c *gin.Context) {
 // @Router /api/patch/v1/export/advisories [get]
 func AdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)
-	query := buildQueryAdvisories(account)
+	var query *gorm.DB
+	if HasTags(c) {
+		query = buildQueryAdvisoriesTagged(c, account)
+	} else {
+		query = buildQueryAdvisories(account)
+	}
 
 	var advisories []AdvisoriesDBLookup
 
@@ -152,6 +162,31 @@ func buildQueryAdvisories(account string) *gorm.DB {
 		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id and aad.systems_affected > 0").
 		Joins("JOIN rh_account ra ON aad.rh_account_id = ra.id").
 		Where("ra.name = ?", account)
+	return query
+}
+
+// nolint: lll
+func buildAdvisoryAccountDataQuery(account string) *gorm.DB {
+	query := database.Db.Table("system_advisories sa").
+		Select("sa.advisory_id, ra.id as rh_account_id, 0 as status_id, count(sp.id) as systems_affected, 0 as systems_status_divergent").
+		Joins("join system_platform sp on sp.id = sa.system_id").
+		Joins("join rh_account ra on ra.id = sp.rh_account_id").
+		Where("sa.when_patched is null").
+		Where("sp.stale = false").
+		Where("ra.name = ?", account).
+		Group("ra.id, sa.advisory_id")
+
+	return query
+}
+
+func buildQueryAdvisoriesTagged(c *gin.Context, account string) *gorm.DB {
+	subq := buildAdvisoryAccountDataQuery(account)
+	subq, _ = ApplyTagsFilter(c, subq, "sp.inventory_id")
+
+	query := database.Db.Table("advisory_metadata am").
+		Select(AdvisoriesSelect).
+		Joins("JOIN (?) aad ON am.id = aad.advisory_id and aad.systems_affected > 0", subq.SubQuery())
+
 	return query
 }
 
