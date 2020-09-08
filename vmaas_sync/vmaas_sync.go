@@ -36,8 +36,8 @@ func configure() {
 	evalWriter = mqueue.WriterFromEnv(evalTopic)
 	enabledRepoBasedReeval = utils.GetBoolEnvOrFail("ENABLE_REPO_BASED_RE_EVALUATION")
 
-	advisoryPageSize = utils.GetIntEnvOrDefault("DEFAULT_PAGE_SIZE", 500)
-	packagesPageSize = utils.GetIntEnvOrDefault("PACKAGES_PAGE_SIZE", 10000)
+	advisoryPageSize = utils.GetIntEnvOrDefault("ERRATA_PAGE_SIZE", 500)
+	packagesPageSize = utils.GetIntEnvOrDefault("PACKAGES_PAGE_SIZE", 5000)
 }
 
 type Handler func(data []byte, conn *websocket.Conn) error
