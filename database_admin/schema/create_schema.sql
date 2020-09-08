@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (35, false);
+VALUES (36, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -855,5 +855,6 @@ GRANT USAGE ON SCHEMA inventory TO cyndi_reader;
 GRANT cyndi_reader to listener;
 GRANT cyndi_reader to evaluator;
 GRANT cyndi_reader to manager;
+GRANT cyndi_reader TO vmaas_sync;
 
 GRANT cyndi_admin to cyndi;

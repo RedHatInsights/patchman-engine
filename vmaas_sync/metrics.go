@@ -89,12 +89,14 @@ var (
 		Subsystem: "vmaas_sync",
 		Name:      "message_send_duration_seconds",
 	})
+
+	enableCyndiMetrics = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_METRICS", true)
 )
 
 func RunMetrics() {
 	prometheus.MustRegister(messagesReceivedCnt, vmaasCallCnt, storeAdvisoriesCnt, storePackagesCnt,
 		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration,
-		databaseSizeBytesGaugeVec, databaseProcessesGaugeVec)
+		databaseSizeBytesGaugeVec, databaseProcessesGaugeVec, cyndiSystemsCnt, cyndiTagsCnt)
 
 	go runAdvancedMetricsUpdating()
 
@@ -124,6 +126,11 @@ func update() {
 	updateAdvisoryMetrics()
 	updateSystemAdvisoriesStats()
 	updateDBMetrics()
+
+	if enableCyndiMetrics {
+		updateCyndiData()
+		updateCyndiSystemMetrics()
+	}
 }
 
 func updateSystemMetrics() {
