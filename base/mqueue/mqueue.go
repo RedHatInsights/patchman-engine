@@ -8,6 +8,7 @@ import (
 	"github.com/lestrrat-go/backoff"
 	"github.com/segmentio/kafka-go"
 	"io"
+	"strings"
 	"sync"
 	"time"
 )
@@ -75,6 +76,9 @@ func createLoggerFunc(counter Counter) func(fmt string, args ...interface{}) {
 	fn := func(fmt string, args ...interface{}) {
 		counter.Inc()
 		utils.Log("type", "kafka").Errorf(fmt, args...)
+		if strings.Contains(fmt, "Group Load In Progress") {
+			utils.Log().Panic("Kafka client stuck detected!!!")
+		}
 	}
 	return fn
 }
