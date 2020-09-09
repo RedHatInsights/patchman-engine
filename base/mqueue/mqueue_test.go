@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
-	"sync"
 	"testing"
 	"time"
 )
@@ -30,26 +29,23 @@ func TestRoundTrip(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 	reader := ReaderFromEnv("test")
 
-	var eventOut PlatformEvent
+	resChan := make(chan PlatformEvent)
 	go reader.HandleMessages(MakeMessageHandler(func(event PlatformEvent) error {
-		eventOut = event
+		resChan <- event
 		return nil
 	}))
+	time.Sleep(time.Second)
 
 	writer := WriterFromEnv("test")
 	eventIn := PlatformEvent{ID: "some-id"}
 	assert.NoError(t, WriteEvents(context.Background(), writer, eventIn))
-	time.Sleep(8 * time.Second)
-	assert.Equal(t, eventIn, eventOut)
-}
 
-func TestSpawnReader(t *testing.T) {
-	nReaders := 0
-	wg := sync.WaitGroup{}
-	SpawnReader(&wg, "", CreateCountedMockReader(&nReaders),
-		MakeMessageHandler(func(event PlatformEvent) error { return nil }))
-	wg.Wait()
-	assert.Equal(t, 1, nReaders)
+	select {
+	case <-time.NewTimer(time.Second * 20).C:
+		assert.Fail(t, "Round trip test timed out")
+	case res := <-resChan:
+		assert.Equal(t, eventIn, res)
+	}
 }
 
 func TestRetry(t *testing.T) {

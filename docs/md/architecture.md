@@ -27,7 +27,7 @@ See [component environment variables](../../conf/listener.env)
 requests from the `listener` component. For each received Kafka message it evaluates system with ID contained in the
 message. As a evaluation result it updates several database tables (`system_advisories`, `system_platform`,
 `advisory_account_data`). Evaluation is scaled on two levels, firstly with multiple replicas (more pods) and secondary
-with multiple goroutines within single pod (set by `CONSUMER_COUNT` environment variable).
+with multiple goroutines within single pod (governed by number of assigned partitions by kafka).
 See [component environment variables](../../conf/evaluator_upload.env)
 
 - **evaluator-recalc** - same as the `-upload` instance but receives Kafka messages from `vmaas-sync` component
