@@ -4,11 +4,11 @@ import (
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
+	"app/base/mqueue"
 	"app/base/utils"
 	"context"
 	"errors"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -136,7 +136,7 @@ func TestUploadHandlerError1(t *testing.T) {
 
 type erroringWriter struct{}
 
-func (t *erroringWriter) WriteMessages(_ context.Context, _ ...kafka.Message) error {
+func (t *erroringWriter) WriteMessages(_ context.Context, _ ...mqueue.Message) error {
 	return errors.New("err")
 }
 

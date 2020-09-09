@@ -6,12 +6,10 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
-	"sync"
 )
 
 var (
 	eventsTopic    string
-	consumerCount  int
 	evalWriter     mqueue.Writer
 	validReporters map[string]int
 )
@@ -19,9 +17,6 @@ var (
 func configure() {
 	core.ConfigureApp()
 	eventsTopic = utils.GetenvOrFail("EVENTS_TOPIC")
-
-	consumerCount = utils.GetIntEnvOrFail("CONSUMER_COUNT")
-
 	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
 
 	evalWriter = mqueue.WriterFromEnv(evalTopic)
@@ -39,7 +34,7 @@ func loadValidReporters() map[string]int {
 	return reportersMap
 }
 
-func runReaders(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
+func runReaders(readerBuilder mqueue.CreateReader) {
 	utils.Log().Info("listener starting")
 
 	// Start a web server for handling metrics so that readiness probe works
@@ -47,16 +42,10 @@ func runReaders(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 
 	configure()
 
-	// We create multiple consumers, and hope that the partition rebalancing
-	// algorithm assigns each consumer a single partition
-	for i := 0; i < consumerCount; i++ {
-		mqueue.SpawnReader(wg, eventsTopic, readerBuilder, mqueue.MakeRetryingHandler(EventsMessageHandler))
-	}
+	mqueue.RunReader(eventsTopic, readerBuilder, mqueue.MakeRetryingHandler(EventsMessageHandler))
 }
 
 func RunListener() {
-	var wg sync.WaitGroup
-	runReaders(&wg, mqueue.ReaderFromEnv)
-	wg.Wait()
+	runReaders(mqueue.ReaderFromEnv)
 	utils.Log().Info("listener completed")
 }

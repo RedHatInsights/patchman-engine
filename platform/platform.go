@@ -6,9 +6,9 @@ import (
 	"app/manager/middlewares"
 	"encoding/json"
 	"fmt"
+	"github.com/Shopify/sarama"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
-	"github.com/segmentio/kafka-go"
 	"net/http"
 	"time"
 )
@@ -50,13 +50,13 @@ func mockSyncHandler(_ *gin.Context) {
 	}
 }
 
-func mockKafkaWriter(topic string) *kafka.Writer {
+func mockKafkaWriter(_ string) sarama.SyncProducer {
 	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
-	return kafka.NewWriter(kafka.WriterConfig{
-		Brokers:  []string{kafkaAddress},
-		Topic:    topic,
-		Balancer: &kafka.LeastBytes{},
-	})
+	producer, err := sarama.NewSyncProducer([]string{kafkaAddress}, sarama.NewConfig())
+	if err != nil {
+		panic(err)
+	}
+	return producer
 }
 
 func mockIdentity() string {
@@ -107,9 +107,10 @@ func upload(randomPkgs bool) {
 func sendMessageToTopic(topic, message string) {
 	writer := mockKafkaWriter(topic)
 
-	err := writer.WriteMessages(base.Context, kafka.Message{
-		Key:   []byte{},
-		Value: []byte(message),
+	_, _, err := writer.SendMessage(&sarama.ProducerMessage{
+		Key:   sarama.ByteEncoder([]byte{}),
+		Value: sarama.StringEncoder(message),
+		Topic: topic,
 	})
 
 	if err != nil {

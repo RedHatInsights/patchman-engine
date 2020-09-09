@@ -8,8 +8,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/lestrrat-go/backoff"
 	"io"
-	"strings"
-	"sync"
+	"time"
 )
 
 type MessageHandler func(message Message) error
@@ -34,7 +33,7 @@ type writerImpl struct {
 	topic string
 }
 
-func (w writerImpl) WriteMessages(ctx context.Context, msgs ...Message) error {
+func (w writerImpl) WriteMessages(_ context.Context, msgs ...Message) error {
 	for _, m := range msgs {
 		msg := sarama.ProducerMessage{
 			Topic: w.topic,
@@ -55,9 +54,13 @@ func ReaderFromEnv(topic string) Reader {
 	maxBytes := utils.GetIntEnvOrDefault("KAFKA_READER_MAX_BYTES", 1e6)
 
 	config := sarama.NewConfig()
+	config.Version = sarama.V1_1_0_0
 
+	config.Consumer.Offsets.Initial = sarama.OffsetOldest
+	config.Consumer.MaxProcessingTime = 3 * time.Second
 	config.Consumer.Fetch.Min = int32(minBytes)
 	config.Consumer.Fetch.Max = int32(maxBytes)
+
 	consumer, err := sarama.NewConsumerGroup(addresses, kafkaGroup, config)
 	if err != nil {
 		panic(err)
@@ -70,7 +73,14 @@ func WriterFromEnv(topic string) Writer {
 	addresses := []string{utils.GetenvOrFail("KAFKA_ADDRESS")}
 
 	config := sarama.NewConfig()
+	config.Version = sarama.V1_1_0_0
 	config.Producer.Flush.Messages = 1
+	config.Producer.Flush.Frequency = time.Millisecond
+
+	// Must be set for sync producer
+	config.Producer.Return.Successes = true
+	config.Producer.Return.Errors = true
+
 	producer, err := sarama.NewSyncProducer(addresses, config)
 	if err != nil {
 		panic(err)
@@ -78,21 +88,6 @@ func WriterFromEnv(topic string) Writer {
 
 	writer := &writerImpl{producer, topic}
 	return writer
-}
-
-func createLoggerFunc(counter Counter) func(fmt string, args ...interface{}) {
-	if counter == nil {
-		panic("kafka error counter nil")
-	}
-
-	fn := func(fmt string, args ...interface{}) {
-		counter.Inc()
-		utils.Log("type", "kafka").Errorf(fmt, args...)
-		if strings.Contains(fmt, "Group Load In Progress") {
-			utils.Log().Panic("Kafka client stuck detected!!!")
-		}
-	}
-	return fn
 }
 
 func MakeRetryingHandler(handler MessageHandler) MessageHandler {
@@ -125,7 +120,8 @@ func (consumer *messageConsumer) Cleanup(sarama.ConsumerGroupSession) error {
 	return nil
 }
 
-func (consumer *messageConsumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+func (consumer *messageConsumer) ConsumeClaim(session sarama.ConsumerGroupSession,
+	claim sarama.ConsumerGroupClaim) error {
 	for m := range claim.Messages() {
 		msg := Message{
 			Key:   m.Key,
@@ -143,22 +139,16 @@ func (t *readerImpl) HandleMessages(handler MessageHandler) {
 	for {
 		consumer := messageConsumer{handler}
 		if err := t.ConsumerGroup.Consume(base.Context, []string{t.topic}, &consumer); err != nil {
-			utils.Log().Panic("Consumer error")
+			utils.Log("err", err).Panic("Consumer error")
 		}
 	}
 }
 
 type CreateReader func(topic string) Reader
 
-func runReader(wg *sync.WaitGroup, topic string, createReader CreateReader, msgHandler MessageHandler) {
-	defer wg.Done()
+func RunReader(topic string, createReader CreateReader, msgHandler MessageHandler) {
 	defer utils.LogPanics(true)
 	reader := createReader(topic)
 	defer reader.Close()
 	reader.HandleMessages(msgHandler)
-}
-
-func SpawnReader(wg *sync.WaitGroup, topic string, createReader CreateReader, msgHandler MessageHandler) {
-	wg.Add(1)
-	go runReader(wg, topic, createReader, msgHandler)
 }
