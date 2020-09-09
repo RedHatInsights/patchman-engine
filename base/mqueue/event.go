@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/lestrrat-go/backoff"
 	"github.com/pkg/errors"
-	"github.com/segmentio/kafka-go"
 	"golang.org/x/net/context"
 	"time"
 )
@@ -28,7 +27,7 @@ type EventHandler func(message PlatformEvent) error
 
 // Performs parsing of kafka message, and then dispatches this message into provided functions
 func MakeMessageHandler(eventHandler EventHandler) MessageHandler {
-	return func(m kafka.Message) error {
+	return func(m Message) error {
 		var event PlatformEvent
 		err := json.Unmarshal(m.Value, &event)
 		// Not a fatal error, invalid data format, log and skip
@@ -42,13 +41,13 @@ func MakeMessageHandler(eventHandler EventHandler) MessageHandler {
 
 // nolint: scopelint
 func WriteEvents(ctx context.Context, w Writer, events ...PlatformEvent) error {
-	msgs := make([]kafka.Message, len(events))
+	msgs := make([]Message, len(events))
 	for i, ev := range events {
 		data, err := json.Marshal(&ev) //nolint:gosec
 		if err != nil {
 			return errors.Wrap(err, "Serializing event")
 		}
-		msgs[i] = kafka.Message{Value: data}
+		msgs[i] = Message{Value: data}
 	}
 	return w.WriteMessages(ctx, msgs...)
 }

@@ -6,8 +6,10 @@ require (
 	github.com/RedHatInsights/patchman-clients/inventory v0.7.0
 	github.com/RedHatInsights/patchman-clients/rbac v0.7.0
 	github.com/RedHatInsights/patchman-clients/vmaas v0.7.0
+	github.com/Shopify/sarama v1.27.0
 	github.com/antihax/optional v1.0.0
 	github.com/aws/aws-sdk-go v1.30.9
+	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/getkin/kin-openapi v0.9.0
 	github.com/gin-contrib/gzip v0.0.1
 	github.com/gin-gonic/gin v1.6.3

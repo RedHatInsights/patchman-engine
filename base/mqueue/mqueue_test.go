@@ -4,14 +4,13 @@ import (
 	"app/base/utils"
 	"context"
 	"errors"
-	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
 	"time"
 )
 
-var msg = kafka.Message{Value: []byte(`{"id": "TEST-00000", "type": "delete"}`)}
+var msg = Message{Value: []byte(`{"id": "TEST-00000", "type": "delete"}`)}
 
 func TestParseEvents(t *testing.T) {
 	reached := false

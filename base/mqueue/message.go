@@ -2,11 +2,15 @@ package mqueue
 
 import (
 	"encoding/json"
-	"github.com/segmentio/kafka-go"
 )
 
-func MessageFromJSON(k string, v interface{}) (kafka.Message, error) {
-	var m kafka.Message
+type Message struct {
+	Key   []byte
+	Value []byte
+}
+
+func MessageFromJSON(k string, v interface{}) (Message, error) {
+	var m Message
 	var err error
 
 	m.Key = []byte(k)
