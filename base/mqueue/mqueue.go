@@ -5,15 +5,14 @@ import (
 	"app/base"
 	"app/base/utils"
 	"context"
+	"github.com/Shopify/sarama"
 	"github.com/lestrrat-go/backoff"
-	"github.com/segmentio/kafka-go"
 	"io"
 	"strings"
 	"sync"
-	"time"
 )
 
-const errContextCanceled = "context canceled"
+type MessageHandler func(message Message) error
 
 // By wrapping raw value we can add new methods & ensure methods of wrapped type are callable
 type Reader interface {
@@ -22,49 +21,62 @@ type Reader interface {
 }
 
 type readerImpl struct {
-	kafka.Reader
+	sarama.ConsumerGroup
+	topic string
 }
 
 type Writer interface {
-	WriteMessages(ctx context.Context, msgs ...kafka.Message) error
+	WriteMessages(ctx context.Context, msgs ...Message) error
 }
 
 type writerImpl struct {
-	*kafka.Writer
+	sarama.SyncProducer
+	topic string
+}
+
+func (w writerImpl) WriteMessages(ctx context.Context, msgs ...Message) error {
+	for _, m := range msgs {
+		msg := sarama.ProducerMessage{
+			Topic: w.topic,
+			Key:   sarama.ByteEncoder(m.Key),
+			Value: sarama.ByteEncoder(m.Value),
+		}
+		if _, _, err := w.SendMessage(&msg); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func ReaderFromEnv(topic string) Reader {
-	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
+	addresses := []string{utils.GetenvOrFail("KAFKA_ADDRESS")}
 	kafkaGroup := utils.GetenvOrFail("KAFKA_GROUP")
 	minBytes := utils.GetIntEnvOrDefault("KAFKA_READER_MIN_BYTES", 1)
 	maxBytes := utils.GetIntEnvOrDefault("KAFKA_READER_MAX_BYTES", 1e6)
 
-	config := kafka.ReaderConfig{
-		Brokers:     []string{kafkaAddress},
-		Topic:       topic,
-		GroupID:     kafkaGroup,
-		MinBytes:    minBytes,
-		MaxBytes:    maxBytes,
-		ErrorLogger: kafka.LoggerFunc(createLoggerFunc(kafkaErrorReadCnt)),
+	config := sarama.NewConfig()
+
+	config.Consumer.Fetch.Min = int32(minBytes)
+	config.Consumer.Fetch.Max = int32(maxBytes)
+	consumer, err := sarama.NewConsumerGroup(addresses, kafkaGroup, config)
+	if err != nil {
+		panic(err)
 	}
-	reader := &readerImpl{*kafka.NewReader(config)}
+	reader := &readerImpl{consumer, topic}
 	return reader
 }
 
 func WriterFromEnv(topic string) Writer {
-	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
+	addresses := []string{utils.GetenvOrFail("KAFKA_ADDRESS")}
 
-	config := kafka.WriterConfig{
-		Brokers: []string{kafkaAddress},
-		Topic:   topic,
-		// By default the writer will wait for a second (or until the buffer is filled by different goroutines)
-		// before sending the batch of messages. Disable this, and use it in 'non-batched' mode
-		// meaning single messages are sent immediately for now. We'll maybe change this later if the
-		// sending overhead is a bottleneck
-		BatchTimeout: time.Nanosecond,
-		ErrorLogger:  kafka.LoggerFunc(createLoggerFunc(kafkaErrorWriteCnt)),
+	config := sarama.NewConfig()
+	config.Producer.Flush.Messages = 1
+	producer, err := sarama.NewSyncProducer(addresses, config)
+	if err != nil {
+		panic(err)
 	}
-	writer := &writerImpl{kafka.NewWriter(config)}
+
+	writer := &writerImpl{producer, topic}
 	return writer
 }
 
@@ -83,10 +95,8 @@ func createLoggerFunc(counter Counter) func(fmt string, args ...interface{}) {
 	return fn
 }
 
-type MessageHandler func(message kafka.Message) error
-
 func MakeRetryingHandler(handler MessageHandler) MessageHandler {
-	return func(message kafka.Message) error {
+	return func(message Message) error {
 		var err error
 		var attempt int
 
@@ -103,27 +113,37 @@ func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 	}
 }
 
-func (t *readerImpl) HandleMessages(handler MessageHandler) {
-	for {
-		m, err := t.FetchMessage(base.Context)
-		if err != nil {
-			if err.Error() == errContextCanceled {
-				break
-			}
-			utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
-			panic(err)
+type messageConsumer struct {
+	MessageHandler
+}
+
+func (consumer *messageConsumer) Setup(sarama.ConsumerGroupSession) error {
+	return nil
+}
+
+func (consumer *messageConsumer) Cleanup(sarama.ConsumerGroupSession) error {
+	return nil
+}
+
+func (consumer *messageConsumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+	for m := range claim.Messages() {
+		msg := Message{
+			Key:   m.Key,
+			Value: m.Value,
 		}
-		// At this level, all errors are fatal
-		if err = handler(m); err != nil {
+		if err := consumer.MessageHandler(msg); err != nil {
 			utils.Log("err", err.Error()).Panic("Handler failed")
 		}
-		err = t.CommitMessages(base.Context, m)
-		if err != nil {
-			if err.Error() == errContextCanceled {
-				break
-			}
-			utils.Log("err", err.Error()).Error("unable to commit kafka message")
-			panic(err)
+		session.MarkMessage(m, "")
+	}
+	return nil
+}
+
+func (t *readerImpl) HandleMessages(handler MessageHandler) {
+	for {
+		consumer := messageConsumer{handler}
+		if err := t.ConsumerGroup.Consume(base.Context, []string{t.topic}, &consumer); err != nil {
+			utils.Log().Panic("Consumer error")
 		}
 	}
 }
