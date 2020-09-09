@@ -100,6 +100,7 @@ func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 }
 
 func (t *readerImpl) HandleMessages(handler MessageHandler) {
+
 	for {
 		m, err := t.FetchMessage(base.Context)
 		if err != nil {
@@ -137,4 +138,44 @@ func runReader(wg *sync.WaitGroup, topic string, createReader CreateReader, msgH
 func SpawnReader(wg *sync.WaitGroup, topic string, createReader CreateReader, msgHandler MessageHandler) {
 	wg.Add(1)
 	go runReader(wg, topic, createReader, msgHandler)
+}
+
+// Spawn a reader group with internal timeout for message processing directed by
+// KAFKA_READER_TIMEOUT_SECONDS env variable
+func SpawnTimedReaderGroup(wg *sync.WaitGroup, count int, topic string, createReader CreateReader,
+	msgHandler MessageHandler) {
+	timeout := utils.GetIntEnvOrDefault("KAFKA_READER_TIMEOUT_SECONDS", 300)
+	lastProcessed := time.Now()
+
+	doneChan := make(chan bool)
+
+	for i := 0; i < count; i++ {
+		SpawnReader(wg, topic, createReader, func(message kafka.Message) error {
+			// Timestamp shared for group of readers
+			lastProcessed = time.Now()
+			return msgHandler(message)
+		})
+	}
+
+	go func() {
+		for {
+			time.Sleep(time.Millisecond * 500)
+			minTime := time.Now().Add(-time.Second * time.Duration(timeout))
+			if lastProcessed.Before(minTime) {
+				// Fatal timeout
+				doneChan <- true
+			}
+		}
+	}()
+
+	go func() {
+		wg.Wait()
+		// Not a timeout, normal exit
+		doneChan <- false
+	}()
+
+	res := <-doneChan
+	if res {
+		utils.Log().Panic("Reader group stuck, restarting")
+	}
 }

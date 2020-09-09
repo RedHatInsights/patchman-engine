@@ -13,3 +13,14 @@ func CreateCountedMockReader(cnt *int) CreateReader {
 		return reader
 	}
 }
+
+type infiniteReader struct{}
+
+func (t *infiniteReader) HandleMessages(_ MessageHandler) {
+	select {}
+}
+func (t *infiniteReader) Close() error { return nil }
+
+func CreateBlockingReader(_ string) Reader {
+	return &infiniteReader{}
+}

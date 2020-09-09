@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -68,4 +69,17 @@ func TestRetry(t *testing.T) {
 
 	// With retry we handler should eventually succeed
 	assert.NoError(t, MakeRetryingHandler(MakeMessageHandler(handler))(msg))
+}
+
+func TestTimeout(t *testing.T) {
+	wg := sync.WaitGroup{}
+
+	handler := func(message kafka.Message) error {
+		return nil
+	}
+	assert.NoError(t, os.Setenv("KAFKA_READER_TIMEOUT_SECONDS", "1"))
+	assert.Panics(t, func() {
+		SpawnTimedReaderGroup(&wg, 1, "", CreateBlockingReader, handler)
+		time.Sleep(time.Second * 5)
+	})
 }

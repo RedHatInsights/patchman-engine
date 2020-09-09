@@ -609,11 +609,7 @@ func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 	go RunMetrics(port)
 
 	var handler = mqueue.MakeRetryingHandler(mqueue.MakeMessageHandler(evaluateHandler))
-	// We create multiple consumers, and hope that the partition rebalancing
-	// algorithm assigns each consumer a single partition
-	for i := 0; i < consumerCount; i++ {
-		mqueue.SpawnReader(wg, evalTopic, readerBuilder, handler)
-	}
+	mqueue.SpawnTimedReaderGroup(wg, consumerCount, evalLabel, readerBuilder, handler)
 }
 
 func RunEvaluator() {
