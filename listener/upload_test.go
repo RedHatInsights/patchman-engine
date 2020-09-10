@@ -181,7 +181,7 @@ func TestUpdateSystemRepos1(t *testing.T) {
 	nAdded, nDeleted, err := updateSystemRepos(database.Db, systemID, repoIDs)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(2), nAdded)
-	assert.Equal(t, 1, nDeleted)
+	assert.Equal(t, int64(1), nDeleted)
 	deleteData(t)
 }
 
@@ -197,6 +197,6 @@ func TestUpdateSystemRepos2(t *testing.T) {
 	nAdded, nDeleted, err := updateSystemRepos(database.Db, systemID, []int{})
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), nAdded)
-	assert.Equal(t, 2, nDeleted)
+	assert.Equal(t, int64(2), nDeleted)
 	deleteData(t)
 }
