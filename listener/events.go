@@ -43,12 +43,7 @@ func EventsMessageHandler(m kafka.Message) error {
 		}
 		return HandleDelete(event)
 	case "updated":
-		var event HostEvent
-		if err := json.Unmarshal(m.Value, &event); err != nil {
-			utils.Log("inventoryID", msgData["id"], "msg", string(m.Value)).
-				Error("Invalid 'updated' message format")
-		}
-		return HandleUpdate(event)
+		fallthrough
 	case "created":
 		var event HostEvent
 		if err := json.Unmarshal(m.Value, &event); err != nil {
@@ -60,30 +55,6 @@ func EventsMessageHandler(m kafka.Message) error {
 		utils.Log("msg", string(m.Value)).Warn(WarnUnknownType)
 		return nil
 	}
-}
-
-func HandleUpdate(event HostEvent) error {
-	var system models.SystemPlatform
-	err := database.Db.Find(&system, "inventory_id = ?", event.Host.ID).Error
-	if err != nil && gorm.IsRecordNotFoundError(err) {
-		utils.Log("inventoryID", event.Host.ID).Info("System not found when handling update")
-		messagesReceivedCnt.WithLabelValues(EventUpdate, ReceivedWarnNoRows).Inc()
-		return nil
-	} else if err != nil {
-		messagesReceivedCnt.WithLabelValues(EventUpdate, ReceivedErrorOtherType).Inc()
-		return errors.Wrap(err, "Loading system to update")
-	}
-	if event.Host.DisplayName != nil {
-		system.DisplayName = *event.Host.DisplayName
-	}
-	q := database.OnConflictUpdate(database.Db, "inventory_id", "display_name")
-	if err := q.Create(&system).Error; err != nil {
-		messagesReceivedCnt.WithLabelValues(EventUpdate, ReceivedErrorOtherType).Inc()
-		return errors.Wrap(err, "Saving updated system")
-	}
-	messagesReceivedCnt.WithLabelValues(EventUpdate, RecievedSuccessUpdated).Inc()
-
-	return nil
 }
 
 func HandleDelete(event mqueue.PlatformEvent) error {

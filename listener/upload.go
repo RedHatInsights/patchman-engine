@@ -62,21 +62,20 @@ func HandleUpload(event HostEvent) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventUpload))
 
-	systemProfile := event.Host.SystemProfile
-
-	if len(systemProfile.InstalledPackages) == 0 {
-		utils.Log("inventoryID", event.Host.ID).Warn(WarnSkippingNoPackages)
-		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
-		return nil
-	}
-
 	if len(event.Host.Account) == 0 {
 		utils.Log("inventoryID", event.Host.ID).Error(ErrorNoAccountProvided)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
 		return nil
 	}
 
+	if len(event.Host.SystemProfile.InstalledPackages) == 0 {
+		utils.Log("inventoryID", event.Host.ID).Warn(WarnSkippingNoPackages)
+		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
+		return nil
+	}
+
 	sys, err := processUpload(event.Host.Account, &event.Host)
+
 	if err != nil {
 		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorProcessUpload)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
@@ -186,23 +185,28 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		Where("inventory_id = ?", inventoryID).
 		Pluck("json_checksum", &oldJSONChecksum)
 
+	shouldUpdateRepos := false
+	var addedRepos, addedSysRepos, deletedSysRepos int64
+
 	// Skip updating vmaas_json if the checksum haven't changed. Should reduce TOAST trashing
 	if len(oldJSONChecksum) == 0 || oldJSONChecksum[0] != jsonChecksum {
 		colsToUpdate = append(colsToUpdate, "vmaas_json", "json_checksum")
+		shouldUpdateRepos = true
 	}
 
-	query := database.OnConflictUpdate(tx, "inventory_id", colsToUpdate...).
-		Save(&systemPlatform)
-
-	if query.Error != nil {
-		return nil, errors.Wrap(query.Error, "Unable to save or update system in database")
+	if err := database.OnConflictUpdate(tx, "inventory_id", colsToUpdate...).
+		Save(&systemPlatform).Error; err != nil {
+		return nil, errors.Wrap(err, "Unable to save or update system in database")
 	}
 
-	addedRepos, addedSysRepos, deletedSysRepos, err := updateRepos(tx, systemPlatform.ID, updatesReq.RepositoryList)
-	if err != nil {
-		utils.Log("repository_list", updatesReq.RepositoryList, "inventoryID", systemPlatform.ID).
-			Error("repos failed to insert")
-		return nil, errors.Wrap(err, "unable to update system repos")
+	if shouldUpdateRepos {
+		// We also don't need to update repos if vmaas_json haven't changed
+		addedRepos, addedSysRepos, deletedSysRepos, err = updateRepos(tx, systemPlatform.ID, updatesReq.RepositoryList)
+		if err != nil {
+			utils.Log("repository_list", updatesReq.RepositoryList, "inventoryID", systemPlatform.ID).
+				Error("repos failed to insert")
+			return nil, errors.Wrap(err, "unable to update system repos")
+		}
 	}
 
 	utils.Log("inventoryID", inventoryID, "packages", len(updatesReq.PackageList), "repos",
@@ -213,7 +217,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 }
 
 func updateRepos(tx *gorm.DB, systemID int, repos []string) (addedRepos int64, addedSysRepos int64,
-	deletedSysRepos int, err error) {
+	deletedSysRepos int64, err error) {
 	repoIDs, addedRepos, err := ensureReposInDB(tx, repos)
 	if err != nil {
 		return 0, 0, 0, err
@@ -249,7 +253,7 @@ func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int, added int64, e
 	return repoIDs, added, nil
 }
 
-func updateSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nAdded int64, nDeleted int, err error) {
+func updateSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nAdded int64, nDeleted int64, err error) {
 	repoSystemObjs := make(models.SystemRepoSlice, len(repoIDs))
 	for i, repoID := range repoIDs {
 		repoSystemObjs[i] = models.SystemRepo{SystemID: systemID, RepoID: repoID}
@@ -270,8 +274,8 @@ func updateSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nAdded int64, 
 	return nAdded, nDeleted, nil
 }
 
-func deleteOtherSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nDeleted int, err error) {
-	type result struct{ DeletedCount int }
+func deleteOtherSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nDeleted int64, err error) {
+	type result struct{ DeletedCount int64 }
 	var res result
 	if len(repoIDs) > 0 {
 		err = tx.Raw("WITH deleted AS "+ // to count deleted items
@@ -288,7 +292,35 @@ func deleteOtherSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nDeleted 
 	return res.DeletedCount, nil
 }
 
-// nolint: funlen
+func processRepos(systemProfile *inventory.SystemProfileIn) []string {
+	repos := make([]string, 0, len(systemProfile.YumRepos))
+	for _, r := range systemProfile.YumRepos {
+		if len(strings.TrimSpace(r.Id)) == 0 {
+			utils.Log("repo", r.Id).Warn("removed repo with invalid name")
+			continue
+		}
+
+		if r.Enabled {
+			repos = append(repos, r.Id)
+		}
+	}
+	return repos
+}
+
+func processModules(systemProfile *inventory.SystemProfileIn) []vmaas.UpdatesRequestModulesList {
+	var modules []vmaas.UpdatesRequestModulesList
+	if count := len(systemProfile.DnfModules); count > 0 {
+		modules = make([]vmaas.UpdatesRequestModulesList, count)
+		for i, m := range systemProfile.DnfModules {
+			modules[i] = vmaas.UpdatesRequestModulesList{
+				ModuleName:   m.Name,
+				ModuleStream: m.Stream,
+			}
+		}
+	}
+	return modules
+}
+
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
 func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 	// Ensure we have account stored
@@ -300,31 +332,11 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 	systemProfile := host.SystemProfile
 	// Prepare VMaaS request
 	updatesReq := vmaas.UpdatesV3Request{
-		PackageList:  systemProfile.InstalledPackages,
-		Basearch:     systemProfile.Arch,
-		SecurityOnly: false,
-	}
-
-	if count := len(systemProfile.DnfModules); count > 0 {
-		updatesReq.ModulesList = make([]vmaas.UpdatesRequestModulesList, count)
-		for i, m := range systemProfile.DnfModules {
-			updatesReq.ModulesList[i] = vmaas.UpdatesRequestModulesList{
-				ModuleName:   m.Name,
-				ModuleStream: m.Stream,
-			}
-		}
-	}
-
-	updatesReq.RepositoryList = make([]string, 0, len(systemProfile.YumRepos))
-	for _, r := range systemProfile.YumRepos {
-		if r.Enabled && len(strings.TrimSpace(r.Id)) == 0 {
-			utils.Log("repo", r.Id).Warn("removed repo with invalid name")
-			continue
-		}
-
-		if r.Enabled {
-			updatesReq.RepositoryList = append(updatesReq.RepositoryList, r.Id)
-		}
+		PackageList:    systemProfile.InstalledPackages,
+		RepositoryList: processRepos(&systemProfile),
+		ModulesList:    processModules(&systemProfile),
+		Basearch:       systemProfile.Arch,
+		SecurityOnly:   false,
 	}
 
 	tx := database.Db.BeginTx(base.Context, nil)

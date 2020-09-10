@@ -27,7 +27,8 @@ func TestUpdateSystem(t *testing.T) {
 	ev := createTestUploadEvent(id, false)
 	name := "TEST_NAME"
 	ev.Host.DisplayName = &name
-	assert.NoError(t, HandleUpdate(ev))
+	ev.Host.SystemProfile.InstalledPackages = []string{"kernel"}
+	assert.NoError(t, HandleUpload(ev))
 
 	var system models.SystemPlatform
 	assert.NoError(t, database.Db.Find(&system, "inventory_id = ?", id).Error)
