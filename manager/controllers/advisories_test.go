@@ -107,16 +107,16 @@ func TestAdvisoriesOrder(t *testing.T) {
 }
 
 func TestAdvisoriesFilter(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "/?filter[advisory_type]=1", func(output AdvisoriesResponse) {
+	testAdvisoriesOk(t, "GET", "/?sort=id&filter[advisory_type]=1", func(output AdvisoriesResponse) {
 		assert.Equal(t, 3, len(output.Data))
-		assert.Equal(t, "RH-7", output.Data[0].ID)
-		assert.Equal(t, "RH-1", output.Data[1].ID)
-		assert.Equal(t, "RH-4", output.Data[2].ID)
+		assert.Equal(t, "RH-1", output.Data[0].ID)
+		assert.Equal(t, "RH-4", output.Data[1].ID)
+		assert.Equal(t, "RH-7", output.Data[2].ID)
 
 		assert.Equal(t, FilterData{Values: []string{"1"}, Operator: "eq"}, output.Meta.Filter["advisory_type"])
 
 		assert.Equal(t,
-			"/api/patch/v1/advisories?offset=0&limit=20&filter[advisory_type]=eq:1&sort=-public_date",
+			"/api/patch/v1/advisories?offset=0&limit=20&filter[advisory_type]=eq:1&sort=id",
 			output.Links.First)
 	})
 
