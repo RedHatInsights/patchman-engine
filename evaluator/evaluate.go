@@ -130,12 +130,11 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 		evaluationCnt.WithLabelValues("error-pkg-data").Inc()
 		return errors.Wrap(err, "Unable to load package data")
 	}
-	err = updateSystemPackages(tx, system, pkgByName, vmaasData.UpdateList)
+	installed, updatable, err := updateSystemPackages(tx, system, pkgByName, vmaasData.UpdateList)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-system-pkgs").Inc()
 		return errors.Wrap(err, "Unable to update system packages")
 	}
-	installed, updatable := getPackageCounts(vmaasData)
 	err = updateSystemPlatform(tx, system, oldSystemAdvisories, newSystemAdvisories, installed, updatable)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-update-system").Inc()
@@ -144,20 +143,26 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 	return nil
 }
 
-func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
-	packagesByNEVRA map[utils.Nevra]models.Package,
-	updates map[string]vmaas.UpdatesV2ResponseUpdateList) error {
-	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-store"))
+func deleteOldSystemPackages(tx *gorm.DB, systemID int, packagesByNEVRA map[utils.Nevra]models.Package) error {
 	pkgIds := make([]int, 0, len(packagesByNEVRA))
 	for _, pkg := range packagesByNEVRA {
 		pkgIds = append(pkgIds, pkg.ID)
 	}
-	err := tx.Table("system_package").
-		Where("system_id = ?", system.ID).
-		Where("package_id not in (?)", pkgIds).Error
 
-	if err != nil {
-		return errors.Wrap(err, "Deleting outdated system packages")
+	return errors.Wrap(tx.
+		Where("system_id = ?", systemID).
+		Where("package_id not in (?)", pkgIds).
+		Delete(&models.SystemPackage{}).Error, "Deleting outdated system packages")
+}
+
+func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
+	packagesByNEVRA map[utils.Nevra]models.Package,
+	updates map[string]vmaas.UpdatesV2ResponseUpdateList) (int, int, error) {
+	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-store"))
+	var installed, updatable int
+
+	if err := deleteOldSystemPackages(tx, system.ID, packagesByNEVRA); err != nil {
+		return 0, 0, err
 	}
 
 	toStore := make([]models.SystemPackage, 0, len(updates))
@@ -174,7 +179,10 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 			utils.Log("nevra", nevraStr).Warn("Unknown package")
 			continue
 		}
-		//
+		installed++
+		if len(updateData.AvailableUpdates) > 0 {
+			updatable++
+		}
 		for _, upData := range updateData.AvailableUpdates {
 			// Skip invalid nevras in updates list
 			upNevra, err := utils.ParseNevra(upData.Package)
@@ -193,7 +201,7 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 		if len(pkgUpdates) > 0 {
 			pkgJSON, err = json.Marshal(pkgUpdates)
 			if err != nil {
-				return errors.Wrap(err, "Serializing pkg json")
+				return 0, 0, errors.Wrap(err, "Serializing pkg json")
 			}
 		}
 		// Create row to update
@@ -204,7 +212,7 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 		})
 	}
 	tx = database.OnConflictUpdateMulti(tx, []string{"system_id", "package_id"}, "update_data")
-	return errors.Wrap(database.BulkInsert(tx, toStore), "Storing system packages")
+	return installed, updatable, errors.Wrap(database.BulkInsert(tx, toStore), "Storing system packages")
 }
 
 type namedPackage struct {
@@ -217,6 +225,7 @@ func loadPackages(tx *gorm.DB, data vmaas.UpdatesV2Response) (map[utils.Nevra]mo
 	names := make([]string, 0, len(data.UpdateList))
 	evras := make([]string, 0, len(data.UpdateList))
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-load"))
+
 	for nevra := range data.UpdateList {
 		// Parse and reformat nevras to avoid issues with 0 epoch
 		parsed, err := utils.ParseNevra(nevra)
@@ -250,17 +259,6 @@ func loadPackages(tx *gorm.DB, data vmaas.UpdatesV2Response) (map[utils.Nevra]mo
 	}
 
 	return pkgByNevra, nil
-}
-
-func getPackageCounts(data vmaas.UpdatesV2Response) (int, int) {
-	installed := len(data.UpdateList)
-	updatable := 0
-	for _, up := range data.UpdateList {
-		if len(up.AvailableUpdates) > 0 {
-			updatable++
-		}
-	}
-	return installed, updatable
 }
 
 func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,

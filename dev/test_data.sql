@@ -6,9 +6,9 @@ DELETE FROM deleted_system;
 DELETE FROM repo;
 DELETE FROM timestamp_kv;
 DELETE FROM advisory_account_data;
-DELETE FROM advisory_metadata;
 DELETE FROM package;
 DELETE FROM package_name;
+DELETE FROM advisory_metadata;
 DELETE FROM rh_account;
 DELETE FROM strings;
 
@@ -62,8 +62,8 @@ INSERT INTO strings(id, value) VALUES
 ('10', 'passwd');
 
 INSERT INTO package(id, name_id, evra, description_hash, summary_hash) VALUES
-(1, 1, '5.6.13-200.fc31-x86_64', '1', '1'), -- kernel
-(2, 2, '76.0.1-1.fc31-x86_64', '2', '2'), -- firefox
+(1, 1, '5.6.13-200.fc31.x86_64', '1', '1'), -- kernel
+(2, 2, '76.0.1-1.fc31.x86_64', '2', '2'), -- firefox
 (3, 3, '4.4.19-8.el8_0.x86_64', '3', '3'), -- bas
 (4, 4, '7.61.1-8.el8.x86_64', '4', '4'), -- curl
 (5, 5, '1.30-4.el8.x86_64', '5', '5'), -- tar
@@ -76,8 +76,8 @@ INSERT INTO package(id, name_id, evra, description_hash, summary_hash) VALUES
 INSERT INTO system_package (system_id, package_id, update_data) VALUES
 (12, 1, '[{"evra": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}]'),
 (12, 2, '[{"evra": "77.0.1-1.fc31-x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31-x86_64", "advisory": "RH-2"}]'),
-(12, 3, null),
-(12, 4, null),
+(13, 3, null),
+(13, 4, null),
 (13, 1, null);
 
 INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solution, advisory_type_id,
