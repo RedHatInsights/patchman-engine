@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS package_evra_idx;
