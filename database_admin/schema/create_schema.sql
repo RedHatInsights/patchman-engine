@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (32, false);
+VALUES (33, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -746,11 +746,12 @@ CREATE TABLE IF NOT EXISTS package
     evra             TEXT                                 NOT NULL CHECK (NOT empty(evra)),
     description_hash BYTEA                                NOT NULL REFERENCES strings (id),
     summary_hash     BYTEA                                NOT NULL REFERENCES strings (id),
-    advisory_id      INT                                  REFERENCES advisory_metadata(id),
+    advisory_id      INT REFERENCES advisory_metadata (id),
     UNIQUE (name_id, evra)
-);
+) WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
+  TABLESPACE pg_default;
 
-CREATE UNIQUE INDEX IF NOT EXISTS package_evra_idx on package(evra, name_id);
+CREATE UNIQUE INDEX IF NOT EXISTS package_evra_idx on package (evra, name_id);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE package TO vmaas_sync;
 
@@ -761,7 +762,8 @@ CREATE TABLE IF NOT EXISTS system_package
     -- Use null to represent up-to-date packages
     update_data JSONB DEFAULT NULL,
     PRIMARY KEY (system_id, package_id)
-);
+) WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
+  TABLESPACE pg_default;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_package TO evaluator;
 GRANT SELECT, UPDATE, DELETE ON system_package TO listener;
