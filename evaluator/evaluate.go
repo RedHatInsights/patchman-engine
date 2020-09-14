@@ -125,7 +125,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 		evaluationCnt.WithLabelValues("error-store-advisories").Inc()
 		return errors.Wrap(err, "Unable to store advisory data")
 	}
-	pkgByName, err := loadPackages(tx, vmaasData)
+	pkgByName, err := loadPackages(tx, system.ID, vmaasData)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-pkg-data").Inc()
 		return errors.Wrap(err, "Unable to load package data")
@@ -143,20 +143,20 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 	return nil
 }
 
-func deleteOldSystemPackages(tx *gorm.DB, systemID int, packagesByNEVRA map[utils.Nevra]models.Package) error {
+func deleteOldSystemPackages(tx *gorm.DB, systemID int, packagesByNEVRA map[utils.Nevra]namedPackage) error {
 	pkgIds := make([]int, 0, len(packagesByNEVRA))
 	for _, pkg := range packagesByNEVRA {
 		pkgIds = append(pkgIds, pkg.ID)
 	}
-
 	return errors.Wrap(tx.
 		Where("system_id = ?", systemID).
 		Where("package_id not in (?)", pkgIds).
 		Delete(&models.SystemPackage{}).Error, "Deleting outdated system packages")
 }
 
+// nolint: funlen
 func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
-	packagesByNEVRA map[utils.Nevra]models.Package,
+	packagesByNEVRA map[utils.Nevra]namedPackage,
 	updates map[string]vmaas.UpdatesV2ResponseUpdateList) (int, int, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-store"))
 	var installed, updatable int
@@ -174,18 +174,28 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 			utils.Log("nevra", nevraStr).Warn("Invalid nevra")
 			continue
 		}
+		currentNamedPackage := packagesByNEVRA[*nevra]
 		// Check whether we have that NEVRA in DB
-		if packagesByNEVRA[*nevra].ID == 0 {
-			utils.Log("nevra", nevraStr).Warn("Unknown package")
+		if currentNamedPackage.ID == 0 {
+			utils.Log("nevra", nevraStr).Trace("Unknown package")
 			continue
 		}
 		installed++
 		if len(updateData.AvailableUpdates) > 0 {
 			updatable++
 		}
+
+		hasUpdates := len(updateData.AvailableUpdates) > 0
+		hadUpdates := currentNamedPackage.SystemPackage.UpdateData.RawMessage != nil
+		wasStored := currentNamedPackage.SystemPackage.SystemID != 0
+		// If the package previously didn't have any updates, and doesn't have any now, skip updating the row
+		if wasStored && !hasUpdates && hasUpdates == hadUpdates {
+			continue
+		}
+
 		for _, upData := range updateData.AvailableUpdates {
-			// Skip invalid nevras in updates list
 			upNevra, err := utils.ParseNevra(upData.Package)
+			// Skip invalid nevras in updates list
 			if err != nil {
 				utils.Log("nevra", upData.Package).Warn("Invalid nevra")
 				continue
@@ -218,12 +228,14 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 type namedPackage struct {
 	NEVRA string
 	models.Package
+	models.SystemPackage
 }
 
 // Find relevant package data based on vmaas results
-func loadPackages(tx *gorm.DB, data vmaas.UpdatesV2Response) (map[utils.Nevra]models.Package, error) {
+func loadPackages(tx *gorm.DB, systemID int, data vmaas.UpdatesV2Response) (map[utils.Nevra]namedPackage, error) {
 	names := make([]string, 0, len(data.UpdateList))
 	evras := make([]string, 0, len(data.UpdateList))
+
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-load"))
 
 	for nevra := range data.UpdateList {
@@ -236,26 +248,28 @@ func loadPackages(tx *gorm.DB, data vmaas.UpdatesV2Response) (map[utils.Nevra]mo
 		names = append(names, parsed.Name)
 		evras = append(evras, parsed.EVRAString())
 	}
+
 	// Might return more data than we need (one EVRA being applicable to more packages
 	// But it was only way to get somewhat fast query plan which only uses index scans
 	var packages []namedPackage
 	err := tx.Table("package").
-		Select("concat(pn.name, '-', package.evra) nevra, package.*").
+		Select("concat(pn.name, '-', package.evra) nevra, package.*, sp.*").
 		Joins("join package_name pn on package.name_id = pn.id").
+		Joins("left join system_package sp on sp.system_id = ? and sp.package_id = package.id", systemID).
 		Where("pn.name in (?)", names).
 		Where("package.evra in (?)", evras).Find(&packages).Error
 
 	if err != nil {
 		return nil, errors.Wrap(err, "loading packages")
 	}
-	pkgByNevra := map[utils.Nevra]models.Package{}
+	pkgByNevra := map[utils.Nevra]namedPackage{}
 	for _, p := range packages {
 		nevra, err := utils.ParseNevra(p.NEVRA)
 		if err != nil {
 			utils.Log("err", err.Error(), "nevra", p.NEVRA).Warn("Unable to parse nevra")
 			continue
 		}
-		pkgByNevra[*nevra] = p.Package
+		pkgByNevra[*nevra] = p
 	}
 
 	return pkgByNevra, nil
