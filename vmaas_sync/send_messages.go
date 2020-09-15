@@ -58,7 +58,6 @@ func sendMessages(ctx context.Context, inventoryIDs ...string) {
 	events := make([]mqueue.PlatformEvent, len(inventoryIDs))
 
 	for i, id := range inventoryIDs {
-		utils.Log("inventoryID", id).Debug("Sending evaluation kafka message")
 		events[i] = mqueue.PlatformEvent{
 			ID: id,
 		}
