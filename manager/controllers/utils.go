@@ -74,7 +74,7 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 	return tx, appliedFields, nil
 }
 
-func ParseFilters(c *gin.Context, allowedFields database.AttrMap,
+func ParseFilters(q QueryMap, allowedFields database.AttrMap,
 	defaultFilters map[string]FilterData) (Filters, error) {
 	filters := Filters{}
 
@@ -83,22 +83,26 @@ func ParseFilters(c *gin.Context, allowedFields database.AttrMap,
 		filters[n] = v
 	}
 
-	// Apply query filters, if there are any
-	queryFilters, has := c.GetQueryMap("filter")
-	if !has {
-		return filters, nil
-	}
-	for k, v := range queryFilters {
-		if _, has := allowedFields[k]; !has {
-			return nil, errors.New(fmt.Sprintf("Invalid filter field: %v", k))
+	var err error
+	// nolint: scopelint
+	for f := range allowedFields {
+		if elem := q.Path(f); elem != nil {
+			elem.Visit(func(path []string, val string) {
+				// If we encountered error in previous element, skip processing others
+				if err != nil {
+					return
+				}
+
+				// the filter[a][eq]=b syntax was not yet implemented
+				if len(path) > 0 {
+					panic("Nested operators not yet implemented for standard filters")
+				}
+				filters[f], err = ParseFilterValue(val)
+			})
 		}
-		filter, err := ParseFilterValue(v)
-		if err != nil {
-			return nil, err
-		}
-		filters[k] = filter
 	}
-	return filters, nil
+
+	return filters, err
 }
 
 type ListOpts struct {
@@ -120,7 +124,9 @@ func checkBadRequest(tx *gorm.DB, c *gin.Context, opts ListOpts) (txx *gorm.DB, 
 		return nil, 0, 0, nil, nil, errors.Wrap(err, "invalid sort")
 	}
 
-	filters, err = ParseFilters(c, opts.Fields, opts.DefaultFilters)
+	query := NestedQueryMap(c, "filter")
+
+	filters, err = ParseFilters(query, opts.Fields, opts.DefaultFilters)
 	if err != nil {
 		return nil, 0, 0, nil, nil, errors.Wrap(err, "filters parsing failed")
 	}
@@ -134,7 +140,8 @@ func checkBadRequest(tx *gorm.DB, c *gin.Context, opts ListOpts) (txx *gorm.DB, 
 }
 
 func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, error) {
-	filters, err := ParseFilters(c, opts.Fields, opts.DefaultFilters)
+	query := NestedQueryMap(c, "filter")
+	filters, err := ParseFilters(query, opts.Fields, opts.DefaultFilters)
 	if err != nil {
 		LogAndRespBadRequest(c, err, "Failed to parse filters")
 		return nil, errors.Wrap(err, "filters parsing failed")
@@ -237,6 +244,105 @@ func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB
 	}
 
 	return tx.Where(fmt.Sprintf("%s in (?)", systemIDExpr), subq.SubQuery()), true
+}
+
+type QueryItem interface {
+	IsQuery()
+	Visit(visitor func(path []string, val string), pathPrefix ...string)
+}
+type QueryArr []string
+
+func (QueryArr) IsQuery() {}
+
+func (q QueryArr) Visit(visitor func(path []string, val string), pathPrefix ...string) {
+	for _, item := range q {
+		visitor(pathPrefix, item)
+	}
+}
+
+type QueryMap map[string]QueryItem
+
+func (QueryMap) IsQuery() {}
+
+func (q QueryMap) Visit(visitor func(path []string, val string), pathPrefix ...string) {
+	for k, v := range q {
+		var newPath []string
+		copy(newPath, pathPrefix)
+		newPath = append(newPath, k)
+		switch val := v.(type) {
+		case QueryMap:
+			val.Visit(visitor, newPath...)
+		case QueryArr:
+			// Inlined code here to avoid calling interface method in struct receiver (low perf)
+			for _, item := range val {
+				visitor(newPath, item)
+			}
+		}
+	}
+}
+
+func (q QueryMap) GetPath(keys ...string) (QueryItem, bool) {
+	var item QueryItem
+	item, has := q, true
+
+	for has && item != nil && len(keys) > 0 {
+		switch itemMap := item.(type) {
+		case QueryMap:
+			item, has = itemMap[keys[0]]
+			keys = keys[1:]
+
+		default:
+			break
+		}
+	}
+	return item, has
+}
+
+func (q QueryMap) Path(keys ...string) QueryItem {
+	v, _ := q.GetPath(keys...)
+	return v
+}
+
+func NestedQueryMap(c *gin.Context, key string) QueryMap {
+	return nestedQueryImpl(c.Request.URL.Query(), key)
+}
+
+func (q *QueryMap) appendValue(steps []string, value []string) {
+	res := *q
+	for i, v := range steps {
+		if i == len(steps)-1 {
+			res[v] = QueryArr(value)
+		} else {
+			if _, has := res[v]; !has {
+				res[v] = QueryMap{}
+			}
+			res = res[v].(QueryMap)
+		}
+	}
+}
+
+func nestedQueryImpl(values map[string][]string, key string) QueryMap {
+	root := QueryMap{}
+
+	for name, value := range values {
+		var steps []string
+		var i int
+		var j int
+		for len(name) > 0 && i >= 0 && j >= 0 {
+			if i = strings.IndexByte(name, '['); i >= 0 && (name[0:i] == key || len(steps) > 0) {
+				// if j is 0 here, that means we received []as a part of query param name, should indicate an array
+				if j = strings.IndexByte(name[i+1:], ']'); j >= 0 {
+					// Skip [] in param names
+					if len(name[i+1:][:j]) > 0 {
+						steps = append(steps, name[i+1:][:j])
+					}
+					name = name[i+j+2:]
+				}
+			}
+		}
+		root.appendValue(steps, value)
+	}
+	return root
 }
 
 func Csv(ctx *gin.Context, code int, res interface{}) {

@@ -14,7 +14,7 @@ func TestPackages(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
+	req, _ := http.NewRequest("GET", "/?filter[system_profile][is_sap][eq]=true", nil)
 	core.InitRouterWithParams(PackagesListHandler, "3", "GET", "/").
 		ServeHTTP(w, req)
 
