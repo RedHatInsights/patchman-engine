@@ -35,7 +35,7 @@ func deleteData(t *testing.T) {
 }
 
 // nolint: unparam
-func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int) {
+func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int, reporterID *int) {
 	var system models.SystemPlatform
 	assert.NoError(t, database.Db.Where("inventory_id = ?", inventoryID).Find(&system).Error)
 	assert.Equal(t, system.InventoryID, inventoryID)
@@ -46,6 +46,7 @@ func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int) {
 	if rhAccountID != nil {
 		assert.Equal(t, system.RhAccountID, *rhAccountID)
 	}
+	assert.Equal(t, system.ReporterID, reporterID)
 
 	now := time.Now().Add(-time.Minute)
 	assert.True(t, system.FirstReported.After(now), "First reported")
@@ -78,7 +79,7 @@ func createTestUploadEvent(inventoryID string, packages bool) HostEvent {
 		Host: Host{
 			ID:       inventoryID,
 			Account:  inventoryID,
-			Reporter: "puptoo",
+			Reporter: "yupana",
 			Tags: []inventory.StructuredTag{
 				{
 					Key:       "env",

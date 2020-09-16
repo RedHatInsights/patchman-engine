@@ -2,9 +2,10 @@ package listener
 
 import (
 	"app/base/core"
+	"app/base/database"
+	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
-	"strings"
 	"sync"
 )
 
@@ -12,7 +13,7 @@ var (
 	eventsTopic    string
 	consumerCount  int
 	evalWriter     mqueue.Writer
-	validReporters map[string]bool
+	validReporters map[string]int
 )
 
 func configure() {
@@ -25,15 +26,17 @@ func configure() {
 
 	evalWriter = mqueue.WriterFromEnv(evalTopic)
 
-	parseValidReporters()
+	validReporters = loadValidReporters()
 }
 
-func parseValidReporters() {
-	arr := strings.Split(utils.Getenv("VALID_REPORTERS", "puptoo;rhsm-conduit;yupana"), ";")
-	validReporters = map[string]bool{}
-	for _, reporter := range arr {
-		validReporters[reporter] = true
+func loadValidReporters() map[string]int {
+	var reporters []models.Reporter
+	database.Db.Find(&reporters)
+	reportersMap := map[string]int{}
+	for _, reporter := range reporters {
+		reportersMap[reporter.Name] = reporter.ID
 	}
+	return reportersMap
 }
 
 func runReaders(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {

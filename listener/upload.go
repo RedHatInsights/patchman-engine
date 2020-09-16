@@ -186,6 +186,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		StaleWarningTimestamp: optParseTimestamp(host.StaleWarningTimestamp),
 		CulledTimestamp:       optParseTimestamp(host.CulledTimestamp),
 		Stale:                 staleWarning != nil && staleWarning.Before(time.Now()),
+		ReporterID:            getReporterID(host.Reporter),
 	}
 
 	var oldJSONChecksum []string
@@ -200,7 +201,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 
 	// Skip updating vmaas_json if the checksum haven't changed. Should reduce TOAST trashing
 	if len(oldJSONChecksum) == 0 || oldJSONChecksum[0] != jsonChecksum {
-		colsToUpdate = append(colsToUpdate, "vmaas_json", "json_checksum")
+		colsToUpdate = append(colsToUpdate, "vmaas_json", "json_checksum", "reporter_id")
 		shouldUpdateRepos = true
 	}
 
@@ -224,6 +225,13 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		"addedRepos", addedRepos, "addedSysRepos", addedSysRepos, "deletedSysRepos", deletedSysRepos).
 		Debug("System created or updated successfully")
 	return &systemPlatform, nil
+}
+
+func getReporterID(reporter string) *int {
+	if id, ok := validReporters[reporter]; ok {
+		return &id
+	}
+	return nil
 }
 
 func updateRepos(tx *gorm.DB, systemID int, repos []string) (addedRepos int64, addedSysRepos int64,
