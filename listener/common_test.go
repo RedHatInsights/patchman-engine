@@ -76,8 +76,9 @@ func createTestUploadEvent(inventoryID string, packages bool) HostEvent {
 		Type:             "created",
 		PlatformMetadata: nil,
 		Host: Host{
-			ID:      inventoryID,
-			Account: inventoryID,
+			ID:       inventoryID,
+			Account:  inventoryID,
+			Reporter: "puptoo",
 			Tags: []inventory.StructuredTag{
 				{
 					Key:       "env",

@@ -12,13 +12,10 @@ import (
 const (
 	EventUpload             = "upload"
 	EventDelete             = "delete"
-	EventUpdate             = "update"
 	ReceivedSuccess         = "success-eval"
 	ReceivedSuccessNoEval   = "success-unchanged"
 	ReceivedDeleted         = "success-deleted"
-	RecievedSuccessUpdated  = "success-updated"
 	ReceivedErrorIdentity   = "error-identity"
-	ReceivedErrorParsing    = "error-parsing"
 	ReceivedErrorProcessing = "error-processing"
 	ReceivedErrorOtherType  = "error-other-type"
 	ReceivedWarnNoRows      = "warn-no-rows"
@@ -43,10 +40,16 @@ var (
 		Subsystem: "listener",
 		Name:      "repos_added",
 	})
+
+	receivedFromReporter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "patchman_engine",
+		Subsystem: "listener",
+		Name:      "received_from_reporter",
+	}, []string{"reporter"})
 )
 
 func RunMetrics() {
-	prometheus.MustRegister(messagesReceivedCnt, messageHandlingDuration, reposAddedCnt)
+	prometheus.MustRegister(messagesReceivedCnt, messageHandlingDuration, reposAddedCnt, receivedFromReporter)
 
 	// create web app
 	app := gin.New()

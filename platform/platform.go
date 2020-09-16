@@ -80,8 +80,9 @@ func upload(randomPkgs bool) {
 	event := map[string]interface{}{
 		"type": "created",
 		"host": map[string]interface{}{
-			"id":      "TEST-0000",
-			"account": "TEST-0000",
+			"id":       "TEST-0000",
+			"account":  "TEST-0000",
+			"reporter": "puptoo",
 			"tags": []map[string]string{
 				{
 					"key":   "env",

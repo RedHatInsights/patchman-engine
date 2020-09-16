@@ -4,13 +4,15 @@ import (
 	"app/base/core"
 	"app/base/mqueue"
 	"app/base/utils"
+	"strings"
 	"sync"
 )
 
 var (
-	eventsTopic   string
-	consumerCount int
-	evalWriter    mqueue.Writer
+	eventsTopic    string
+	consumerCount  int
+	evalWriter     mqueue.Writer
+	validReporters map[string]bool
 )
 
 func configure() {
@@ -22,6 +24,16 @@ func configure() {
 	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
 
 	evalWriter = mqueue.WriterFromEnv(evalTopic)
+
+	parseValidReporters()
+}
+
+func parseValidReporters() {
+	arr := strings.Split(utils.Getenv("VALID_REPORTERS", "puptoo;rhsm-conduit;yupana"), ";")
+	validReporters = map[string]bool{}
+	for _, reporter := range arr {
+		validReporters[reporter] = true
+	}
 }
 
 func runReaders(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
