@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (33, false);
+VALUES (34, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -438,6 +438,19 @@ CREATE TABLE IF NOT EXISTS rh_account
 GRANT SELECT, INSERT, UPDATE, DELETE ON rh_account TO listener;
 GRANT SELECT, UPDATE ON rh_account TO evaluator;
 
+CREATE TABLE reporter
+(
+    id   INT  NOT NULL,
+    name TEXT NOT NULL UNIQUE CHECK ( not empty(name) ),
+    PRIMARY KEY (id)
+);
+
+INSERT INTO reporter (id, name)
+VALUES (1, 'puptoo'),
+       (2, 'rhsm-conduit'),
+       (3, 'yupana')
+ON CONFLICT DO NOTHING;
+
 -- system_platform
 CREATE TABLE IF NOT EXISTS system_platform
 (
@@ -465,11 +478,15 @@ CREATE TABLE IF NOT EXISTS system_platform
     display_name             TEXT                     NOT NULL CHECK (NOT empty(display_name)),
     packages_installed       INT                      NOT NULL DEFAULT 0,
     packages_updatable       INT                      NOT NULL DEFAULT 0,
+    reporter_id              INT,
     PRIMARY KEY (id),
     UNIQUE (inventory_id),
     CONSTRAINT rh_account_id
         FOREIGN KEY (rh_account_id)
-            REFERENCES rh_account (id)
+            REFERENCES rh_account (id),
+    CONSTRAINT reporter_id
+        FOREIGN KEY (reporter_id)
+            REFERENCES reporter (id)
 ) WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
   TABLESPACE pg_default;
 
