@@ -32,13 +32,15 @@ func createTestInvHost() *Host {
 	correctTimestamp := "2018-09-22T12:00:00-04:00"
 	wrongTimestamp := "x018-09-22T12:00:00-04:00"
 
-	host := Host{StaleTimestamp: &correctTimestamp, StaleWarningTimestamp: &wrongTimestamp}
+	host := Host{StaleTimestamp: &correctTimestamp, StaleWarningTimestamp: &wrongTimestamp,
+		Reporter: "puptoo"}
 	return &host
 }
 
 func TestUpdateSystemPlatform(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
+	configure()
 
 	deleteData(t)
 
@@ -55,17 +57,21 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	sys1, err := updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(), &req)
 	assert.Nil(t, err)
 
-	assertSystemInDB(t, id, &accountID1)
+	reporterID1 := 1
+	assertSystemInDB(t, id, &accountID1, &reporterID1)
 	assertReposInDB(t, req.RepositoryList)
 
-	sys2, err := updateSystemPlatform(database.Db, id, accountID2, createTestInvHost(), &req)
+	host2 := createTestInvHost()
+	host2.Reporter = "yupana"
+	req.PackageList = []string{"package0", "package1"}
+	sys2, err := updateSystemPlatform(database.Db, id, accountID2, host2, &req)
 	assert.Nil(t, err)
 
-	assertSystemInDB(t, id, &accountID2)
+	reporterID2 := 3
+	assertSystemInDB(t, id, &accountID2, &reporterID2)
 
 	assert.Equal(t, sys1.ID, sys2.ID)
 	assert.Equal(t, sys1.InventoryID, sys2.InventoryID)
-	assert.Equal(t, sys1.JSONChecksum, sys2.JSONChecksum)
 	assert.Equal(t, sys1.OptOut, sys2.OptOut)
 	assert.NotNil(t, sys1.StaleTimestamp)
 	assert.Nil(t, sys1.StaleWarningTimestamp)
@@ -86,7 +92,8 @@ func TestUploadHandler(t *testing.T) {
 	err := HandleUpload(event)
 	assert.NoError(t, err)
 
-	assertSystemInDB(t, id, nil)
+	reporterID := 3
+	assertSystemInDB(t, id, nil, &reporterID)
 
 	var sys models.SystemPlatform
 

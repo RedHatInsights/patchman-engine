@@ -15,6 +15,15 @@ func (RhAccount) TableName() string {
 	return "rh_account"
 }
 
+type Reporter struct {
+	ID   int
+	Name string
+}
+
+func (Reporter) TableName() string {
+	return "reporter"
+}
+
 // nolint: maligned
 type SystemPlatform struct {
 	ID          int    `gorm:"primary_key"`
@@ -41,6 +50,7 @@ type SystemPlatform struct {
 	DisplayName           string
 	PackagesInstalled     int
 	PackagesUpdatable     int
+	ReporterID            *int
 }
 
 func (SystemPlatform) TableName() string {
