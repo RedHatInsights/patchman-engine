@@ -62,6 +62,8 @@ func HandleUpload(event HostEvent) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventUpload))
 
+	updateReporterCounter(event.Host.Reporter)
+
 	if len(event.Host.Account) == 0 {
 		utils.Log("inventoryID", event.Host.ID).Error(ErrorNoAccountProvided)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
@@ -106,6 +108,14 @@ func HandleUpload(event HostEvent) error {
 	messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
 	utils.Log("inventoryID", event.Host.ID).Debug(UploadSuccess)
 	return nil
+}
+
+func updateReporterCounter(reporter string) {
+	if _, ok := validReporters[reporter]; ok {
+		receivedFromReporter.WithLabelValues(reporter).Inc()
+	} else {
+		utils.Log("reporter", reporter).Warn("unknown reporter")
+	}
 }
 
 // Stores or updates the account data, returning the account id
