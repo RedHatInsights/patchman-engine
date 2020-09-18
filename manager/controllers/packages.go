@@ -54,7 +54,7 @@ func PackagesListHandler(c *gin.Context) {
 
 	query := packagesQuery(account)
 	query, meta, links, err := ListCommon(query, c, "/packages", PackagesOpts)
-	query, _ = ApplyTagsFilter(c, query, "sp.inventory_id")
+	query, _ = ApplySystemProfileFilter(c, query, "sp.inventory_id")
 
 	if err != nil {
 		LogAndRespError(c, err, "database error")

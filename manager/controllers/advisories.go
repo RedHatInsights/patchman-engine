@@ -181,7 +181,7 @@ func buildAdvisoryAccountDataQuery(account string) *gorm.DB {
 
 func buildQueryAdvisoriesTagged(c *gin.Context, account string) *gorm.DB {
 	subq := buildAdvisoryAccountDataQuery(account)
-	subq, _ = ApplyTagsFilter(c, subq, "sp.inventory_id")
+	subq, _ = ApplySystemProfileFilter(c, subq, "sp.inventory_id")
 
 	query := database.Db.Table("advisory_metadata am").
 		Select(AdvisoriesSelect).

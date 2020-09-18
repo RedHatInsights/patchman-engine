@@ -88,6 +88,9 @@ func ParseFilters(c *gin.Context, allowedFields database.AttrMap,
 	if !has {
 		return filters, nil
 	}
+	// TODO: Remove once workload filtering is stabilized
+	delete(queryFilters, "system_profile")
+
 	for k, v := range queryFilters {
 		if _, has := allowedFields[k]; !has {
 			return nil, errors.New(fmt.Sprintf("Invalid filter field: %v", k))
@@ -210,33 +213,52 @@ func HasTags(c *gin.Context) bool {
 	if !enableCyndiTags {
 		return false
 	}
-	if len(c.QueryArray("tags")) == 0 {
+	if len(c.QueryArray("tags")) == 0 || len(c.Query("workload")) > 0 {
 		return false
 	}
 	return true
 }
 
 // Filter systems by tags,
-func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
+func ApplySystemProfileFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
 	if !enableCyndiTags {
 		return tx, false
 	}
-	tags := c.QueryArray("tags")
-	if len(tags) == 0 {
-		return tx, false
+
+	applied := false
+	if tags := c.QueryArray("tags"); len(tags) > 0 {
+		subq := database.Db.
+			Table("inventory.hosts h").
+			Select("h.id::text")
+
+		for _, t := range tags {
+			matches := tagRegex.FindStringSubmatch(t)
+			tagJSON := fmt.Sprintf(`[{"namespace":"%s", "key": "%s", "value": "%s"}]`,
+				matches[1], matches[2], matches[3])
+			subq = subq.Where(" h.tags @> ?::jsonb", tagJSON)
+		}
+
+		tx, applied = tx.Where(fmt.Sprintf("%s in (?)", systemIDExpr), subq.SubQuery()), true
 	}
 
-	subq := database.Db.
-		Table("inventory.hosts h").
-		Select("h.id::text")
+	if sapCheck, hasSapCheck := c.GetQuery("filter[system_profile][sap_system]"); sapCheck == "true" && hasSapCheck {
+		args, hasArgs := c.GetQueryArray("filter[system_profile][sap_sids][in][]")
 
-	for _, t := range tags {
-		matches := tagRegex.FindStringSubmatch(t)
-		tagJSON := fmt.Sprintf(`[{"namespace":"%s", "key": "%s", "value": "%s"}]`, matches[1], matches[2], matches[3])
-		subq = subq.Where(" h.tags @> ?::jsonb", tagJSON)
+		subq := database.Db.
+			Table("inventory.hosts h").
+			Select("h.id::text").
+			Where("(h.system_profile ->> 'sap_system')::boolean = true")
+
+		if hasArgs {
+			for _, arg := range args {
+				quoted := fmt.Sprintf(`"%s"`, arg)
+				subq = subq.
+					Where("(h.system_profile ->> 'sap_sids')::jsonb @> ?::jsonb", quoted)
+			}
+		}
+		tx, applied = tx.Debug().Where(fmt.Sprintf("%s in (?)", systemIDExpr), subq.SubQuery()), true
 	}
-
-	return tx.Where(fmt.Sprintf("%s in (?)", systemIDExpr), subq.SubQuery()), true
+	return tx, applied
 }
 
 func Csv(ctx *gin.Context, code int, res interface{}) {
