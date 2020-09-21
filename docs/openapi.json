@@ -556,6 +556,41 @@
                 ]
             }
         },
+        "/api/patch/v1/packages/{package_name}": {
+            "get": {
+                "summary": "Show me metadata of selected package",
+                "description": "Show me metadata of selected package",
+                "operationId": "LatestPackage",
+                "parameters": [
+                    {
+                        "name": "package_name",
+                        "in": "path",
+                        "description": "package_name - latest, nevra - exact version",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.PackageDetailResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
         "/api/patch/v1/packages/{package_name}/systems": {
             "get": {
                 "summary": "Show me all my systems which have a package installed",
@@ -1239,6 +1274,48 @@
                     },
                     "total_items": {
                         "type": "integer"
+                    }
+                }
+            },
+            "controllers.PackageDetailAttributes": {
+                "type": "object",
+                "properties": {
+                    "advisory_id": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "summary": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "string"
+                    }
+                }
+            },
+            "controllers.PackageDetailItem": {
+                "type": "object",
+                "properties": {
+                    "attributes": {
+                        "$ref": "#/components/schemas/controllers.PackageDetailAttributes"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "controllers.PackageDetailResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/controllers.PackageDetailItem"
                     }
                 }
             },
