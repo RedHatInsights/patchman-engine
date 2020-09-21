@@ -71,7 +71,8 @@ INSERT INTO package(id, name_id, evra, description_hash, summary_hash) VALUES
 (7, 7, '4.5-1.el8.x86_64', '7', '7'), -- sed
 (8, 8, '3.1-6.el8.x86_64', '8', '8'), -- grep
 (9, 9, '2.21-10.el8.x86_64', '9', '9'), -- which
-(10, 10, '0.80-2.el8.x86_64', '10', '10'); -- passwd
+(10, 10, '0.80-2.el8.x86_64', '10', '10'), -- passwd
+(11, 1, '5.6.13-201.fc31.x86_64', '1', '1'); -- kernel
 
 INSERT INTO system_package (system_id, package_id, update_data) VALUES
 (12, 1, '[{"evra": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}]'),
@@ -93,6 +94,9 @@ INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solutio
 (9, 'RH-9', 'adv-9-des', 'adv-9-syn', 'adv-9-sum', 'adv-9-sol', 3, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url9', NULL, '["CVE-4"]');
 
 UPDATE advisory_metadata SET package_data = '{"firefox": "77.0.1-1.fc31-x86_64"}' WHERE name = 'RH-9';
+
+UPDATE package SET advisory_id = 1 WHERE id = 1;
+UPDATE package SET advisory_id = 7 WHERE id = 11;
 
 INSERT INTO system_advisories (system_id, advisory_id, first_reported, when_patched, status_id) VALUES
 (1, 1, '2016-09-22 12:00:00-04', NULL, 0),

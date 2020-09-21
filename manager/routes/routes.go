@@ -22,6 +22,7 @@ func InitAPI(group *gin.RouterGroup) {
 
 	group.GET("/packages/:package_name/systems", controllers.PackageSystemsListHandler)
 	group.GET("/packages", controllers.PackagesListHandler)
+	group.GET("/packages/:package_name", controllers.PackageDetailHandler)
 
 	group.GET("/export/advisories", controllers.AdvisoriesExportHandler)
 	group.GET("/export/systems", controllers.SystemsExportHandler)
