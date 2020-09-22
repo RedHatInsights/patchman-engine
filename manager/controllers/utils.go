@@ -17,7 +17,7 @@ import (
 
 const InvalidOffsetMsg = "Invalid offset"
 
-var tagRegex = regexp.MustCompile(`(\w+)/(\w+)=(\w+)`)
+var tagRegex = regexp.MustCompile(`([^/=]+)/([^/=]+)=([^/=]+)`)
 var enableCyndiTags = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_TAGS", false)
 
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
