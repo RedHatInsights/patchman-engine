@@ -346,6 +346,7 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 		ModulesList:    processModules(&systemProfile),
 		Basearch:       systemProfile.Arch,
 		SecurityOnly:   false,
+		LatestOnly:     true,
 	}
 
 	tx := database.Db.BeginTx(base.Context, nil)
