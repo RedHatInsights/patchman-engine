@@ -90,7 +90,8 @@ var (
 
 func RunMetrics() {
 	prometheus.MustRegister(messagesReceivedCnt, vmaasCallCnt, storeAdvisoriesCnt, storePackagesCnt,
-		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration, processesCount)
+		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration, processesCount,
+		dbTableSizeBytes)
 
 	go runAdvancedMetricsUpdating()
 
@@ -120,6 +121,7 @@ func update() {
 	updateAdvisoryMetrics()
 	updateSystemAdvisoriesStats()
 	updateProcessesMetrics()
+	updateDBMetrics()
 }
 
 func updateSystemMetrics() {
