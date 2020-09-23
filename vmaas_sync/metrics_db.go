@@ -9,36 +9,49 @@ import (
 )
 
 var (
-	dbTableSizeBytes = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	databaseSizeBytesGaugeVec = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "patchman_engine",
 		Subsystem: "vmaas_sync",
-		Name:      "db_table_size_bytes",
-		Help:      "Show current size of particular tables in bytes",
+		Name:      "database_size_bytes",
+		Help:      "Current database size and tables sizes in bytes",
 	}, []string{"table"})
+
+	databaseProcessesGaugeVec = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "patchman_engine",
+		Subsystem: "vmaas_sync",
+		Name:      "database_processes",
+		Help:      "Database processes per particular use",
+	}, []string{"usename", "state"})
 )
 
 func updateDBMetrics() {
-	updateTableSizes()
-	updateDatabaseSize()
+	updateMetrics(getTableSizes(), databaseSizeBytesGaugeVec)
+	updateMetrics(getDatabaseSize(), databaseSizeBytesGaugeVec)
+	updateMetricsWithState(getDatabaseProcesses(), databaseProcessesGaugeVec)
 }
 
-func updateTableSizes() {
-	tableSizes := getTableSizes()
-	for _, tableSize := range tableSizes {
-		dbTableSizeBytes.WithLabelValues(tableSize.Name).Set(tableSize.Size)
+// generic structure to load data from database
+type keyValue struct {
+	Key   string
+	Value float64
+	State string // used for processes data only
+}
+
+func updateMetrics(items []keyValue, metrics *prometheus.GaugeVec) {
+	for _, item := range items {
+		metrics.WithLabelValues(item.Key).Set(item.Value)
 	}
 }
 
-func updateDatabaseSize() {
-	dbSizes := getDatabaseSize()
-	for _, dbSize := range dbSizes {
-		dbTableSizeBytes.WithLabelValues(dbSize.Name).Set(dbSize.Size)
+func updateMetricsWithState(items []keyValue, metrics *prometheus.GaugeVec) {
+	for _, item := range items {
+		metrics.WithLabelValues(item.Key, item.State).Set(item.Value)
 	}
 }
 
-func getTableSizes() []ItemSize {
-	var tableSizes []ItemSize
-	err := database.Db.Raw(`select tablename as name, pg_total_relation_size(quote_ident(tablename)) as size
+func getTableSizes() []keyValue {
+	var tableSizes []keyValue
+	err := database.Db.Raw(`select tablename as key, pg_total_relation_size(quote_ident(tablename)) as value
         from (select * from pg_catalog.pg_tables where schemaname = 'public') t;`).
 		Find(&tableSizes).Error
 	if err != nil {
@@ -47,20 +60,28 @@ func getTableSizes() []ItemSize {
 	return tableSizes
 }
 
-type ItemSize struct {
-	Name string
-	Size float64 // table size in bytes
-}
-
-func getDatabaseSize() []ItemSize {
+func getDatabaseSize() []keyValue {
 	dbName := os.Getenv("DB_NAME")
-	var dbSize []ItemSize
+	var dbSize []keyValue
 	err := database.Db.Raw(
-		fmt.Sprintf(`SELECT 'database' as name, pg_database_size('%s') as size;`, dbName)).
+		fmt.Sprintf(`SELECT 'database' as key, pg_database_size('%s') as value;`, dbName)).
 		Find(&dbSize).Error
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to get database total size")
 	}
 
 	return dbSize
+}
+
+func getDatabaseProcesses() []keyValue {
+	var usenameCounts []keyValue
+	err := database.Db.Raw(
+		`SELECT COALESCE(usename, '-') as key, COALESCE(state, '-') state, COUNT(*) as value
+        FROM pg_stat_activity GROUP BY key, state;`).
+		Find(&usenameCounts).Error
+	if err != nil {
+		utils.Log("err", err.Error()).Error("unable to get processes counts")
+	}
+
+	return usenameCounts
 }

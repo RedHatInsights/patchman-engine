@@ -12,17 +12,34 @@ func TestTableSizes(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	tableSizes := getTableSizes()
-
+	uniqueTables := map[string]bool{}
+	for _, item := range tableSizes {
+		uniqueTables[item.Key] = true
+	}
 	assert.Equal(t, 19, len(tableSizes))
+	assert.Equal(t, 19, len(uniqueTables))
+	assert.True(t, uniqueTables["system_platform"]) // check whether table names were loaded
+	assert.True(t, uniqueTables["package"])
+	assert.True(t, uniqueTables["repo"])
 }
 
 func TestDatabaseSize(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	itemSize := getDatabaseSize()
+	databaseSize := getDatabaseSize()
 
-	assert.Equal(t, 1, len(itemSize))
-	assert.Equal(t, "database", itemSize[0].Name)
-	assert.Greater(t, itemSize[0].Size, 0.0)
+	assert.Equal(t, 1, len(databaseSize))
+	assert.Equal(t, "database", databaseSize[0].Key)
+	assert.Greater(t, databaseSize[0].Value, 0.0)
+}
+
+func TestDatabaseProcCounts(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	processesInfo := getDatabaseProcesses()
+
+	assert.Less(t, 0, len(processesInfo))
+	assert.Equal(t, "-", processesInfo[0].Key)
 }
