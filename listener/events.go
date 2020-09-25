@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"github.com/segmentio/kafka-go"
 	"time"
 )
 
@@ -17,7 +18,7 @@ const (
 	WarnNoRowsModified = "no rows modified on delete event"
 )
 
-func EventsMessageHandler(m mqueue.Message) error {
+func EventsMessageHandler(m kafka.Message) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventDelete))
 

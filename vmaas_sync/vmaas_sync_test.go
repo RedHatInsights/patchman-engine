@@ -5,9 +5,9 @@ import (
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
-	"app/base/mqueue"
 	"app/base/utils"
 	"context"
+	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"os"
@@ -15,11 +15,11 @@ import (
 	"time"
 )
 
-var msgs []mqueue.Message
+var msgs []kafka.Message
 
 type mockKafkaWriter struct{}
 
-func (t mockKafkaWriter) WriteMessages(_ context.Context, ev ...mqueue.Message) error {
+func (t mockKafkaWriter) WriteMessages(_ context.Context, ev ...kafka.Message) error {
 	msgs = append(msgs, ev...)
 	return nil
 }

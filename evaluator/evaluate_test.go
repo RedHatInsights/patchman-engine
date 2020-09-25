@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -147,7 +148,7 @@ func TestEvaluate(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	configure()
-	mockWriter := mqueue.MockKafkaWriter{}
+	mockWriter := utils.MockKafkaWriter{}
 	remediationsPublisher = &mockWriter
 
 	err := evaluateHandler(mqueue.PlatformEvent{ID: "00000000-0000-0000-0000-000000000012"})
@@ -257,7 +258,9 @@ func deleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int)
 
 func TestRun(t *testing.T) {
 	nReaders := 0
-	run(mqueue.CreateCountedMockReader(&nReaders))
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	run(&wg, mqueue.CreateCountedMockReader(&nReaders))
 	time.Sleep(time.Millisecond * 300)
-	assert.Equal(t, 1, nReaders)
+	assert.Equal(t, 8, nReaders)
 }

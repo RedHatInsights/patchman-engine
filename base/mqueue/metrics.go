@@ -4,7 +4,6 @@ type Counter interface {
 	Inc()
 }
 
-// nolint: unused
 var (
 	kafkaErrorReadCnt  Counter = &emptyCnt{}
 	kafkaErrorWriteCnt Counter = &emptyCnt{}
