@@ -17,16 +17,18 @@ import (
 	"github.com/lestrrat-go/backoff"
 	"github.com/pkg/errors"
 	"net/http"
+	"sync"
 	"time"
 )
 
 type SystemAdvisoryMap map[string]models.SystemAdvisories
 
 var (
-	vmaasClient *vmaas.APIClient
-	evalTopic   string
-	evalLabel   string
-	port        string
+	consumerCount int
+	vmaasClient   *vmaas.APIClient
+	evalTopic     string
+	evalLabel     string
+	port          string
 )
 
 func configure() {
@@ -36,6 +38,7 @@ func configure() {
 
 	evalTopic = utils.GetenvOrFail("EVAL_TOPIC")
 	evalLabel = utils.GetenvOrFail("EVAL_LABEL")
+	consumerCount = utils.GetIntEnvOrFail("CONSUMER_COUNT")
 
 	vmaasConfig := vmaas.NewConfiguration()
 	vmaasConfig.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
@@ -611,17 +614,23 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 	return nil
 }
 
-func run(readerBuilder mqueue.CreateReader) {
+func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 	utils.Log().Info("evaluator starting")
 	configure()
 
 	go RunMetrics(port)
 
 	var handler = mqueue.MakeRetryingHandler(mqueue.MakeMessageHandler(evaluateHandler))
-	mqueue.RunReader(evalTopic, readerBuilder, handler)
+	// We create multiple consumers, and hope that the partition rebalancing
+	// algorithm assigns each consumer a single partition
+	for i := 0; i < consumerCount; i++ {
+		mqueue.SpawnReader(wg, evalTopic, readerBuilder, handler)
+	}
 }
 
 func RunEvaluator() {
-	run(mqueue.ReaderFromEnv)
+	var wg sync.WaitGroup
+	run(&wg, mqueue.ReaderFromEnv)
+	wg.Wait()
 	utils.Log().Info("evaluator completed")
 }

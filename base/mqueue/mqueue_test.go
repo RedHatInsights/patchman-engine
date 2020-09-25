@@ -4,12 +4,14 @@ import (
 	"app/base/utils"
 	"context"
 	"errors"
+	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
+	"sync"
 	"testing"
 	"time"
 )
 
-var msg = Message{Value: []byte(`{"id": "TEST-00000", "type": "delete"}`)}
+var msg = kafka.Message{Value: []byte(`{"id": "TEST-00000", "type": "delete"}`)}
 
 func TestParseEvents(t *testing.T) {
 	reached := false
@@ -29,23 +31,26 @@ func TestRoundTrip(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 	reader := ReaderFromEnv("test")
 
-	resChan := make(chan PlatformEvent)
+	var eventOut PlatformEvent
 	go reader.HandleMessages(MakeMessageHandler(func(event PlatformEvent) error {
-		resChan <- event
+		eventOut = event
 		return nil
 	}))
-	time.Sleep(time.Second)
 
 	writer := WriterFromEnv("test")
 	eventIn := PlatformEvent{ID: "some-id"}
 	assert.NoError(t, WriteEvents(context.Background(), writer, eventIn))
+	time.Sleep(8 * time.Second)
+	assert.Equal(t, eventIn, eventOut)
+}
 
-	select {
-	case <-time.NewTimer(time.Second * 20).C:
-		assert.Fail(t, "Round trip test timed out")
-	case res := <-resChan:
-		assert.Equal(t, eventIn, res)
-	}
+func TestSpawnReader(t *testing.T) {
+	nReaders := 0
+	wg := sync.WaitGroup{}
+	SpawnReader(&wg, "", CreateCountedMockReader(&nReaders),
+		MakeMessageHandler(func(event PlatformEvent) error { return nil }))
+	wg.Wait()
+	assert.Equal(t, 1, nReaders)
 }
 
 func TestRetry(t *testing.T) {

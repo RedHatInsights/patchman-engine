@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"context"
+	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"testing"
@@ -38,4 +40,13 @@ func NewTestLogHook(levelsToStore ...log.Level) *TestLogHook {
 			log.DebugLevel, log.TraceLevel}
 	}
 	return &TestLogHook{LevelsToStore: levelsToStore}
+}
+
+type MockKafkaWriter struct {
+	Messages []kafka.Message
+}
+
+func (t *MockKafkaWriter) WriteMessages(_ context.Context, ev ...kafka.Message) error {
+	t.Messages = append(t.Messages, ev...)
+	return nil
 }

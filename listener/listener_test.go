@@ -4,15 +4,19 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"github.com/stretchr/testify/assert"
+	"sync"
 	"testing"
 	"time"
 )
 
 func TestRunReaders(t *testing.T) {
 	nReaders := 0
-	runReaders(mqueue.CreateCountedMockReader(&nReaders))
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	runReaders(&wg, mqueue.CreateCountedMockReader(&nReaders))
 	time.Sleep(time.Millisecond * 300)
-	assert.Equal(t, 1, nReaders)
+	// it will create CONSUMER_COUNT (8) readers
+	assert.Equal(t, 8, nReaders)
 }
 
 func TestLoadValidReporters(t *testing.T) {
