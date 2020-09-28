@@ -14,7 +14,7 @@ func TestPackageSystems(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/kernel/systems", nil)
+	req, _ := http.NewRequest("GET", "/kernel/systems?sort=id", nil)
 	core.InitRouterWithParams(PackageSystemsListHandler, 3, "GET", "/:package_name/systems").
 		ServeHTTP(w, req)
 
