@@ -15,7 +15,7 @@ func TestSystemPackages(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000012/packages", nil)
-	core.InitRouterWithParams(SystemPackagesHandler, "3", "GET", "/:inventory_id/packages").
+	core.InitRouterWithParams(SystemPackagesHandler, 3, "GET", "/:inventory_id/packages").
 		ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -33,7 +33,7 @@ func TestPackagesSearch(t *testing.T) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET",
 		"/00000000-0000-0000-0000-000000000012/packages?search=kernel", nil)
-	core.InitRouterWithParams(SystemPackagesHandler, "3", "GET", "/:inventory_id/packages").
+	core.InitRouterWithParams(SystemPackagesHandler, 3, "GET", "/:inventory_id/packages").
 		ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -49,7 +49,7 @@ func TestNoPackages(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001/packages", nil)
-	core.InitRouterWithParams(SystemPackagesHandler, "1", "GET", "/:inventory_id/packages").
+	core.InitRouterWithParams(SystemPackagesHandler, 1, "GET", "/:inventory_id/packages").
 		ServeHTTP(w, req)
 	assert.Equal(t, 200, w.Code)
 }
@@ -61,7 +61,7 @@ func TestSystemPackagesUpdatableOnly(t *testing.T) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET",
 		"/00000000-0000-0000-0000-000000000012/packages?filter[updatable]=true", nil)
-	core.InitRouterWithParams(SystemPackagesHandler, "3", "GET", "/:inventory_id/packages").
+	core.InitRouterWithParams(SystemPackagesHandler, 3, "GET", "/:inventory_id/packages").
 		ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)

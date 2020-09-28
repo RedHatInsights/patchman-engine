@@ -30,15 +30,15 @@ type PackagesResponse struct {
 	Meta  ListMeta      `json:"meta"`
 }
 
-func packagesQuery(acc string) *gorm.DB {
+func packagesQuery(acc int) *gorm.DB {
 	return database.Db.
 		Select(PackagesSelect).
 		Table("system_platform sp").
 		Joins("inner join rh_account ra on sp.rh_account_id = ra.id").
-		Joins("inner join system_package spkg on spkg.rh_account_id = ra.id AND spkg.system_id = sp.id").
+		Joins("inner join system_package spkg on spkg.system_id = sp.id").
 		Joins("inner join package p on p.id = spkg.package_id").
 		Joins("inner join package_name pn on pn.id = p.name_id").
-		Where("ra.name = ?", acc).
+		Where("spkg.rh_account_id = ?", acc).
 		Group("ra.id, pn.id, pn.name")
 }
 
@@ -59,7 +59,7 @@ func packagesQuery(acc string) *gorm.DB {
 // @Success 200 {object} PackagesResponse
 // @Router /api/patch/v1/packages/ [get]
 func PackagesListHandler(c *gin.Context) {
-	account := c.GetString(middlewares.KeyAccount)
+	account := c.GetInt(middlewares.KeyAccount)
 
 	query := packagesQuery(account)
 	query, meta, links, err := ListCommon(query, c, "/packages", PackagesOpts)

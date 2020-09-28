@@ -24,7 +24,7 @@ type SystemDetailResponse struct {
 // @Success 200 {object} SystemDetailResponse
 // @Router /api/patch/v1/systems/{inventory_id} [get]
 func SystemDetailHandler(c *gin.Context) {
-	account := c.GetString(middlewares.KeyAccount)
+	account := c.GetInt(middlewares.KeyAccount)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {

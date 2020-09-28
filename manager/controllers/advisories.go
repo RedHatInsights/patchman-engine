@@ -66,7 +66,7 @@ type AdvisoriesResponse struct {
 // @Success 200 {object} AdvisoriesResponse
 // @Router /api/patch/v1/advisories [get]
 func AdvisoriesListHandler(c *gin.Context) {
-	account := c.GetString(middlewares.KeyAccount)
+	account := c.GetInt(middlewares.KeyAccount)
 	var query *gorm.DB
 
 	if HasTags(c) {
@@ -116,7 +116,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 // @Success 200 {array} AdvisoryInlineItem
 // @Router /api/patch/v1/export/advisories [get]
 func AdvisoriesExportHandler(c *gin.Context) {
-	account := c.GetString(middlewares.KeyAccount)
+	account := c.GetInt(middlewares.KeyAccount)
 	var query *gorm.DB
 	if HasTags(c) {
 		query = buildQueryAdvisoriesTagged(c, account)
@@ -156,30 +156,28 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	}
 }
 
-func buildQueryAdvisories(account string) *gorm.DB {
+func buildQueryAdvisories(account int) *gorm.DB {
 	query := database.Db.Table("advisory_metadata am").
 		Select(AdvisoriesSelect).
 		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id and aad.systems_affected > 0").
-		Joins("JOIN rh_account ra ON aad.rh_account_id = ra.id").
-		Where("ra.name = ?", account)
+		Where("aad.rh_account_id = ?", account)
 	return query
 }
 
 // nolint: lll
-func buildAdvisoryAccountDataQuery(account string) *gorm.DB {
+func buildAdvisoryAccountDataQuery(account int) *gorm.DB {
 	query := database.Db.Table("system_advisories sa").
-		Select("sa.advisory_id, ra.id as rh_account_id, 0 as status_id, count(sp.id) as systems_affected, 0 as systems_status_divergent").
+		Select("sa.advisory_id, sp.rh_account_id as rh_account_id, 0 as status_id, count(sp.id) as systems_affected, 0 as systems_status_divergent").
 		Joins("join system_platform sp on sp.id = sa.system_id").
-		Joins("join rh_account ra on ra.id = sp.rh_account_id").
 		Where("sa.when_patched is null").
 		Where("sp.stale = false").
-		Where("ra.name = ?", account).
-		Group("ra.id, sa.advisory_id")
+		Where("sp.rh_account_id = ? ", account).
+		Group("sp.rh_account_id, sa.advisory_id")
 
 	return query
 }
 
-func buildQueryAdvisoriesTagged(c *gin.Context, account string) *gorm.DB {
+func buildQueryAdvisoriesTagged(c *gin.Context, account int) *gorm.DB {
 	subq := buildAdvisoryAccountDataQuery(account)
 	subq, _ = ApplyTagsFilter(c, subq, "sp.inventory_id")
 

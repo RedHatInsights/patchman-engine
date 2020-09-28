@@ -66,7 +66,7 @@ type SystemAdvisoriesResponse struct {
 // @Success 200 {object} SystemAdvisoriesResponse
 // @Router /api/patch/v1/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesHandler(c *gin.Context) {
-	account := c.GetString(middlewares.KeyAccount)
+	account := c.GetInt(middlewares.KeyAccount)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {

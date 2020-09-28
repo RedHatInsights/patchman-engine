@@ -85,7 +85,7 @@ type SystemsResponse struct {
 // @Success 200 {object} SystemsResponse
 // @Router /api/patch/v1/systems [get]
 func SystemsListHandler(c *gin.Context) {
-	account := c.GetString(middlewares.KeyAccount)
+	account := c.GetInt(middlewares.KeyAccount)
 	query := querySystems(account)
 	query = ApplySearch(c, query, "system_platform.display_name")
 	query, _ = ApplyTagsFilter(c, query, "system_platform.inventory_id")
@@ -130,7 +130,7 @@ func SystemsListHandler(c *gin.Context) {
 // @Success 200 {array} SystemInlineItem
 // @Router /api/patch/v1/export/systems [get]
 func SystemsExportHandler(c *gin.Context) {
-	account := c.GetString(middlewares.KeyAccount)
+	account := c.GetInt(middlewares.KeyAccount)
 	query := querySystems(account)
 
 	var systems []SystemDBLookup
@@ -165,10 +165,9 @@ func SystemsExportHandler(c *gin.Context) {
 	}
 }
 
-func querySystems(account string) *gorm.DB {
+func querySystems(account int) *gorm.DB {
 	return database.Db.Table("system_platform").Select(SystemsSelect).
-		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
-		Where("ra.name = ?", account)
+		Where("system_platform.rh_account_id = ?", account)
 }
 
 func buildData(systems []SystemDBLookup) []SystemItem {

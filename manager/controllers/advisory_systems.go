@@ -42,7 +42,7 @@ type AdvisorySystemsResponse struct {
 // @Success 200 {object} AdvisorySystemsResponse
 // @Router /api/patch/v1/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListHandler(c *gin.Context) {
-	account := c.GetString(middlewares.KeyAccount)
+	account := c.GetInt(middlewares.KeyAccount)
 
 	advisoryName := c.Param("advisory_id")
 	if advisoryName == "" {
@@ -87,12 +87,11 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildQuery(account, advisoryName string) *gorm.DB {
+func buildQuery(account int, advisoryName string) *gorm.DB {
 	query := database.Db.Table("advisory_metadata am").Select(SystemsSelect).
 		Joins("join system_advisories sa ON am.id=sa.advisory_id AND sa.when_patched IS NULL").
 		Joins("join system_platform ON sa.system_id=system_platform.id").
-		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
-		Where("ra.name = ?", account).
+		Where("system_platform.rh_account_id = ?", account).
 		Where("am.name = ?", advisoryName)
 	return query
 }
