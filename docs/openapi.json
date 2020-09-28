@@ -1397,6 +1397,9 @@
                     "name": {
                         "type": "string"
                     },
+                    "summary": {
+                        "type": "string"
+                    },
                     "systems_installed": {
                         "type": "integer"
                     },
