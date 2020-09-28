@@ -43,11 +43,19 @@ func packagesQuery(acc string) *gorm.DB {
 
 // @Summary Show me all installed packages across my systems
 // @Description Show me all installed packages across my systems
-// @ID packages
+// @ID listPackages
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Success 200 {object} PackageSystemsResponse
+// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    offset         query   int     false   "Offset for paging"
+// @Param    sort           query   string  false   "Sort field"    Enums(id,name,systems_installed,systems_updatable)
+// @Param    search         query   string  false   "Find matching text"
+// @Param    filter[name]    query   string  false "Filter"
+// @Param    filter[systems_installed] query   string  false "Filter"
+// @Param    filter[systems_updatable] query   string  false "Filter"
+// @Param    tags                    query   string  false "Tag filter"
+// @Success 200 {object} PackagesResponse
 // @Router /api/patch/v1/packages/ [get]
 func PackagesListHandler(c *gin.Context) {
 	account := c.GetString(middlewares.KeyAccount)
