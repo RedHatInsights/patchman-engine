@@ -536,14 +536,86 @@
             "get": {
                 "summary": "Show me all installed packages across my systems",
                 "description": "Show me all installed packages across my systems",
-                "operationId": "packages",
+                "operationId": "listPackages",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit for paging, set -1 to return all",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Offset for paging",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort field",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "id",
+                                "name",
+                                "systems_installed",
+                                "systems_updatable"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Find matching text",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[systems_installed]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[systems_updatable]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Tag filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.PackageSystemsResponse"
+                                    "$ref": "#/components/schemas/controllers.PackagesResponse"
                                 }
                             }
                         }
@@ -1319,6 +1391,20 @@
                     }
                 }
             },
+            "controllers.PackageItem": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "systems_installed": {
+                        "type": "integer"
+                    },
+                    "systems_updatable": {
+                        "type": "integer"
+                    }
+                }
+            },
             "controllers.PackageSystemItem": {
                 "type": "object",
                 "properties": {
@@ -1337,6 +1423,23 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/controllers.PackageSystemItem"
+                        }
+                    },
+                    "links": {
+                        "$ref": "#/components/schemas/controllers.Links"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/controllers.ListMeta"
+                    }
+                }
+            },
+            "controllers.PackagesResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.PackageItem"
                         }
                     },
                     "links": {
