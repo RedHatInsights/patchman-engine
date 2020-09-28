@@ -217,10 +217,19 @@ func HasTags(c *gin.Context) bool {
 	if !enableCyndiTags {
 		return false
 	}
-	if len(c.QueryArray("tags")) == 0 {
-		return false
+	hasTags := false
+	if len(c.QueryArray("tags")) > 0 {
+		hasTags = true
 	}
-	return true
+
+	// If we have the `system_profile` filter item, then we have tags
+	spQuery := NestedQueryMap(c, "filter").Path("system_profile")
+	if spQuery != nil {
+		spQuery.Visit(func(path []string, val string) {
+			hasTags = true
+		})
+	}
+	return hasTags
 }
 
 // Filter systems by tags,
@@ -228,19 +237,32 @@ func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB
 	if !enableCyndiTags {
 		return tx, false
 	}
-	tags := c.QueryArray("tags")
-	if len(tags) == 0 {
-		return tx, false
-	}
 
 	subq := database.Db.
 		Table("inventory.hosts h").
 		Select("h.id::text")
 
-	for _, t := range tags {
-		matches := tagRegex.FindStringSubmatch(t)
-		tagJSON := fmt.Sprintf(`[{"namespace":"%s", "key": "%s", "value": "%s"}]`, matches[1], matches[2], matches[3])
-		subq = subq.Where(" h.tags @> ?::jsonb", tagJSON)
+	tags := c.QueryArray("tags")
+	if len(tags) > 0 {
+		for _, t := range tags {
+			matches := tagRegex.FindStringSubmatch(t)
+			tagJSON := fmt.Sprintf(`[{"namespace":"%s", "key": "%s", "value": "%s"}]`, matches[1], matches[2], matches[3])
+			subq = subq.Where(" h.tags @> ?::jsonb", tagJSON)
+		}
+	}
+
+	// Additional filters
+	filter := NestedQueryMap(c, "filter").Path("system_profile")
+	if filter != nil {
+		filter.Visit(func(path []string, val string) {
+			if len(path) == 1 && path[0] == "sap_system" {
+				subq = subq.Where("(h.system_profile ->> 'sap_system')::text = ?", val)
+			}
+			if len(path) == 2 && path[0] == "sap_sids" {
+				val = fmt.Sprintf(`"%s"`, val)
+				subq = subq.Where("(h.system_profile ->> 'sap_sids')::jsonb @> ?::jsonb", val)
+			}
+		})
 	}
 
 	return tx.Where(fmt.Sprintf("%s in (?)", systemIDExpr), subq.SubQuery()), true
@@ -266,7 +288,7 @@ func (QueryMap) IsQuery() {}
 
 func (q QueryMap) Visit(visitor func(path []string, val string), pathPrefix ...string) {
 	for k, v := range q {
-		var newPath []string
+		newPath := make([]string, len(pathPrefix))
 		copy(newPath, pathPrefix)
 		newPath = append(newPath, k)
 		switch val := v.(type) {
