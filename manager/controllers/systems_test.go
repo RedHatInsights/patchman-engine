@@ -142,7 +142,7 @@ func TestSystemsPackagesCount(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/?sort=-packages_installed,id", nil)
-	core.InitRouterWithAccount(SystemsListHandler, "/", "3").ServeHTTP(w, req)
+	core.InitRouterWithAccount(SystemsListHandler, "/", 3).ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
 	var output SystemsResponse

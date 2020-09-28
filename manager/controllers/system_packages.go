@@ -44,16 +44,15 @@ type SystemPackageDBLoad struct {
 	Updates postgres.Jsonb `json:"updates" query:"spkg.update_data"`
 }
 
-func systemPackageQuery(account string, inventoryID string) *gorm.DB {
+func systemPackageQuery(account int, inventoryID string) *gorm.DB {
 	return database.Db.
 		Table("system_package spkg").
 		Joins("inner join system_platform sp on sp.id = spkg.system_id").
-		Joins("inner join rh_account ra on spkg.rh_account_id = ra.id AND sp.rh_account_id = ra.id").
 		Joins("inner join package p on p.id = spkg.package_id").
 		Joins("inner join package_name pn on pn.id = p.name_id").
 		Joins("inner join strings sum on sum.id = p.summary_hash").
 		Joins("inner join strings descr on descr.id = p.description_hash").
-		Where("ra.name = ? and sp.inventory_id = ?", account, inventoryID)
+		Where("spkg.rh_account_id = ? and sp.inventory_id = ?", account, inventoryID)
 }
 
 // @Summary Show me details about a system packages by given inventory id
@@ -72,7 +71,7 @@ func systemPackageQuery(account string, inventoryID string) *gorm.DB {
 // @Success 200 {object} SystemPackageResponse
 // @Router /api/patch/v1/systems/{inventory_id}/packages [get]
 func SystemPackagesHandler(c *gin.Context) {
-	account := c.GetString(middlewares.KeyAccount)
+	account := c.GetInt(middlewares.KeyAccount)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {

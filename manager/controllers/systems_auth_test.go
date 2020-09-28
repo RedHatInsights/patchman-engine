@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func testAccountSystemCounts(t *testing.T, acc string, count int) {
+func testAccountSystemCounts(t *testing.T, acc int, count int) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	var output SystemsResponse
@@ -24,9 +24,9 @@ func testAccountSystemCounts(t *testing.T, acc string, count int) {
 }
 
 func TestMissingAccount(t *testing.T) {
-	testAccountSystemCounts(t, "NONE", 0)
-	testAccountSystemCounts(t, "1", 8)
-	testAccountSystemCounts(t, "2", 3)
-	testAccountSystemCounts(t, "3", 3)
-	testAccountSystemCounts(t, "4", 0)
+	testAccountSystemCounts(t, 0, 0)
+	testAccountSystemCounts(t, 1, 8)
+	testAccountSystemCounts(t, 2, 3)
+	testAccountSystemCounts(t, 3, 3)
+	testAccountSystemCounts(t, 4, 0)
 }

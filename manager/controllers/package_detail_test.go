@@ -16,7 +16,7 @@ func TestLatestPackage(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/packages/kernel", nil)
-	core.InitRouterWithParams(PackageDetailHandler, "3", "GET", "/packages/:package_name").
+	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
 		ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageDetailResponse
@@ -37,7 +37,7 @@ func TestEvraPackage(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/packages/kernel-5.6.13-200.fc31.x86_64", nil)
-	core.InitRouterWithParams(PackageDetailHandler, "3", "GET", "/packages/:package_name").
+	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
 		ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageDetailResponse
@@ -57,7 +57,7 @@ func TestNonExitentPackage(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/packages/python", nil)
-	core.InitRouterWithParams(PackageDetailHandler, "3", "GET", "/packages/:package_name").
+	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
 		ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
@@ -71,7 +71,7 @@ func TestNonExitentEvra(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/packages/kernel-5.6.13-202.fc31.x86_64", nil)
-	core.InitRouterWithParams(PackageDetailHandler, "3", "GET", "/packages/:package_name").
+	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
 		ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	var errResp utils.ErrorResponse
