@@ -16,11 +16,12 @@ var PackagesOpts = ListOpts{
 	DefaultSort:    "name",
 }
 
+// nolint: lll
 type PackageItem struct {
 	Name             string `json:"name" query:"pn.name"`
 	SystemsInstalled int    `json:"systems_installed" query:"count(sp.id)"`
 	SystemsUpdatable int    `json:"systems_updatable" query:"count(sp.id) filter (where spkg.update_data is not null)"`
-	// Description      string `json:"description"`
+	Summary          string `json:"summary" query:"(select s.value from package p inner join strings s on p.summary_hash = s.id inner join advisory_metadata am on p.advisory_id = am.id where p.name_id = pn.id order by am.public_date limit 1)"`
 }
 
 type PackagesResponse struct {
@@ -38,7 +39,7 @@ func packagesQuery(acc string) *gorm.DB {
 		Joins("inner join package p on p.id = spkg.package_id").
 		Joins("inner join package_name pn on pn.id = p.name_id").
 		Where("ra.name = ?", acc).
-		Group("ra.id, pn.name")
+		Group("ra.id, pn.id, pn.name")
 }
 
 // @Summary Show me all installed packages across my systems
