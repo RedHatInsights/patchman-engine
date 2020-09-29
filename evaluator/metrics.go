@@ -33,10 +33,19 @@ var (
 		Subsystem: "evaluator",
 		Name:      "evaluation_part_duration_seconds",
 	}, []string{"part"})
+
+	uploadEvaluationDelay = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Help:      "How long it takes from upload to evaluation",
+		Namespace: "patchman_engine",
+		Subsystem: "evaluator",
+		Name:      "upload_evaluation_delay_seconds",
+		Buckets:   []float64{1, 5, 15, 30, 60, 300},
+	})
 )
 
 func RunMetrics(port string) {
-	prometheus.MustRegister(evaluationCnt, updatesCnt, evaluationDuration, evaluationPartDuration)
+	prometheus.MustRegister(evaluationCnt, updatesCnt, evaluationDuration, evaluationPartDuration,
+		uploadEvaluationDelay)
 
 	// create web app
 	app := gin.New()
