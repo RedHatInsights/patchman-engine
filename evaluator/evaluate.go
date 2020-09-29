@@ -125,7 +125,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 		evaluationCnt.WithLabelValues("error-store-advisories").Inc()
 		return errors.Wrap(err, "Unable to store advisory data")
 	}
-	pkgByName, err := loadPackages(tx, system.ID, vmaasData)
+	pkgByName, err := loadPackages(tx, system.RhAccountID, system.ID, vmaasData)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-pkg-data").Inc()
 		return errors.Wrap(err, "Unable to load package data")
@@ -216,12 +216,13 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 		}
 		// Create row to update
 		toStore = append(toStore, models.SystemPackage{
+			RhAccountID: system.RhAccountID,
 			SystemID:   system.ID,
 			PackageID:  packagesByNEVRA[*nevra].ID,
 			UpdateData: postgres.Jsonb{RawMessage: pkgJSON},
 		})
 	}
-	tx = database.OnConflictUpdateMulti(tx, []string{"system_id", "package_id"}, "update_data")
+	tx = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "system_id", "package_id"}, "update_data")
 	return installed, updatable, errors.Wrap(database.BulkInsert(tx, toStore), "Storing system packages")
 }
 
@@ -232,7 +233,7 @@ type namedPackage struct {
 }
 
 // Find relevant package data based on vmaas results
-func loadPackages(tx *gorm.DB, systemID int, data vmaas.UpdatesV2Response) (map[utils.Nevra]namedPackage, error) {
+func loadPackages(tx *gorm.DB, accountID, systemID int, data vmaas.UpdatesV2Response) (map[utils.Nevra]namedPackage, error) {
 	names := make([]string, 0, len(data.UpdateList))
 	evras := make([]string, 0, len(data.UpdateList))
 
@@ -255,7 +256,7 @@ func loadPackages(tx *gorm.DB, systemID int, data vmaas.UpdatesV2Response) (map[
 	err := tx.Table("package").
 		Select("concat(pn.name, '-', package.evra) nevra, package.*, sp.*").
 		Joins("join package_name pn on package.name_id = pn.id").
-		Joins("left join system_package sp on sp.system_id = ? and sp.package_id = package.id", systemID).
+		Joins("left join system_package sp on sp.rh_account_id = ? AND  sp.system_id = ? AND sp.package_id = package.id", accountID, systemID).
 		Where("pn.name in (?)", names).
 		Where("package.evra in (?)", evras).Find(&packages).Error
 

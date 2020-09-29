@@ -25,7 +25,7 @@ func packageSystemsQuery(acc string, pkgName string) *gorm.DB {
 	return database.Db.
 		Table("system_platform").
 		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
-		Joins("inner join system_package spkg on spkg.system_id = system_platform.id").
+		Joins("inner join system_package spkg on  on spkg.rh_account_id = ra.id AND spkg.system_id = system_platform.id").
 		Joins("inner join package p on p.id = spkg.package_id").
 		Joins("inner join package_name pn on pn.id = p.name_id").
 		Where("ra.name = ?", acc).
