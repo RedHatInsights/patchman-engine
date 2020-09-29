@@ -217,9 +217,9 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 		// Create row to update
 		toStore = append(toStore, models.SystemPackage{
 			RhAccountID: system.RhAccountID,
-			SystemID:   system.ID,
-			PackageID:  packagesByNEVRA[*nevra].ID,
-			UpdateData: postgres.Jsonb{RawMessage: pkgJSON},
+			SystemID:    system.ID,
+			PackageID:   packagesByNEVRA[*nevra].ID,
+			UpdateData:  postgres.Jsonb{RawMessage: pkgJSON},
 		})
 	}
 	tx = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "system_id", "package_id"}, "update_data")
@@ -233,7 +233,8 @@ type namedPackage struct {
 }
 
 // Find relevant package data based on vmaas results
-func loadPackages(tx *gorm.DB, accountID, systemID int, data vmaas.UpdatesV2Response) (map[utils.Nevra]namedPackage, error) {
+func loadPackages(tx *gorm.DB, accountID, systemID int,
+	data vmaas.UpdatesV2Response) (map[utils.Nevra]namedPackage, error) {
 	names := make([]string, 0, len(data.UpdateList))
 	evras := make([]string, 0, len(data.UpdateList))
 
@@ -256,7 +257,8 @@ func loadPackages(tx *gorm.DB, accountID, systemID int, data vmaas.UpdatesV2Resp
 	err := tx.Table("package").
 		Select("concat(pn.name, '-', package.evra) nevra, package.*, sp.*").
 		Joins("join package_name pn on package.name_id = pn.id").
-		Joins("left join system_package sp on sp.rh_account_id = ? AND  sp.system_id = ? AND sp.package_id = package.id", accountID, systemID).
+		Joins(`left join system_package sp on sp.package_id = package.id`).
+		Where("sp.rh_account_id = ? AND sp.system_id = ?", accountID, systemID).
 		Where("pn.name in (?)", names).
 		Where("package.evra in (?)", evras).Find(&packages).Error
 
