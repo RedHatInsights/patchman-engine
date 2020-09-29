@@ -86,8 +86,8 @@ func (Package) TableName() string {
 
 type SystemPackage struct {
 	RhAccountID int `gorm:"primary_key"`
-	SystemID  int `gorm:"primary_key"`
-	PackageID int `gorm:"primary_key"`
+	SystemID    int `gorm:"primary_key"`
+	PackageID   int `gorm:"primary_key"`
 	// Will contain json in form of [{ "evra": "...", "advisory": "..."}]
 	UpdateData postgres.Jsonb
 }

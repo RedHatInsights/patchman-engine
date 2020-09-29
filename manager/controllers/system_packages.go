@@ -48,7 +48,7 @@ func systemPackageQuery(account string, inventoryID string) *gorm.DB {
 	return database.Db.
 		Table("system_package spkg").
 		Joins("inner join system_platform sp on sp.id = spkg.system_id").
-		Joins("inner join rh_account ra on spkg.system_id = ra.id AND sp.rh_account_id = ra.id").
+		Joins("inner join rh_account ra on spkg.rh_account_id = ra.id AND sp.rh_account_id = ra.id").
 		Joins("inner join package p on p.id = spkg.package_id").
 		Joins("inner join package_name pn on pn.id = p.name_id").
 		Joins("inner join strings sum on sum.id = p.summary_hash").
