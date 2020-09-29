@@ -280,6 +280,7 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 	installed, updatable int) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("system-update"))
+	defer utils.ObserveSecondsSince(*system.LastUpload, uploadEvaluationDelay)
 	if old == nil || new == nil {
 		return errors.New("Invalid args")
 	}
