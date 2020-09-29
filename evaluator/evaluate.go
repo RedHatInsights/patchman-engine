@@ -291,9 +291,7 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 	}
 
 	counts := make([]int, 4)
-
 	for _, sa := range old {
-		// TODO: Add dedicated counter to unknown advisories
 		if sa.WhenPatched == nil && sa.Advisory.AdvisoryTypeID > 0 {
 			counts[sa.Advisory.AdvisoryTypeID]++
 		}
