@@ -75,10 +75,9 @@ func getDatabaseSize() []keyValue {
 
 func getDatabaseProcesses() []keyValue {
 	var usenameCounts []keyValue
-	err := database.Db.Raw(
-		`SELECT COALESCE(usename, '-') as key, COALESCE(state, '-') state, COUNT(*) as value
-        FROM pg_stat_activity GROUP BY key, state;`).
-		Find(&usenameCounts).Error
+	err := database.Db.Table("pg_stat_activity").
+		Select("COALESCE(usename, '-') as key, COUNT(*) as value, COALESCE(state, '-') state").
+		Group("key, state").Find(&usenameCounts).Error
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to get processes counts")
 	}
