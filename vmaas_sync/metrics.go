@@ -89,17 +89,11 @@ var (
 		Subsystem: "vmaas_sync",
 		Name:      "message_send_duration_seconds",
 	})
-
-	processesCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
-		Name:      "backend_processes",
-	}, []string{"state"})
 )
 
 func RunMetrics() {
 	prometheus.MustRegister(messagesReceivedCnt, vmaasCallCnt, storeAdvisoriesCnt, storePackagesCnt,
-		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration, processesCount,
+		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration,
 		databaseSizeBytesGaugeVec, databaseProcessesGaugeVec)
 
 	go runAdvancedMetricsUpdating()
@@ -129,7 +123,6 @@ func update() {
 	updateSystemMetrics()
 	updateAdvisoryMetrics()
 	updateSystemAdvisoriesStats()
-	updateProcessesMetrics()
 	updateDBMetrics()
 }
 
@@ -250,21 +243,4 @@ func getSystemAdvisorieStats() (stats SystemAdvisoryStats, err error) {
 		return stats, errors.Wrap(err, "unable to get system advisory stats from db")
 	}
 	return stats, nil
-}
-
-func updateProcessesMetrics() {
-	var counts []struct {
-		State string
-		Count int
-	}
-
-	if err := database.Db.Table("pg_stat_activity").
-		Select("state, count(*)").
-		Group("state").Find(&counts).Error; err != nil {
-		utils.Log("err", err.Error()).Error("Could not update process state metrics")
-		return
-	}
-	for _, c := range counts {
-		processesCount.WithLabelValues(c.State).Set(float64(c.Count))
-	}
 }
