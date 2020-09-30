@@ -24,24 +24,28 @@ const (
 
 var (
 	messagesReceivedCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help:      "How many messages received by listener, which event type, which process result",
 		Namespace: "patchman_engine",
 		Subsystem: "listener",
 		Name:      "kafka_message_received",
 	}, []string{"event", "type"})
 
 	messageHandlingDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Help:      "How long it took to process the message",
 		Namespace: "patchman_engine",
 		Subsystem: "listener",
 		Name:      "kafka_message_handling_duration_seconds",
 	}, []string{"event"})
 
 	reposAddedCnt = prometheus.NewCounter(prometheus.CounterOpts{
+		Help:      "How many repositories were added",
 		Namespace: "patchman_engine",
 		Subsystem: "listener",
 		Name:      "repos_added",
 	})
 
 	receivedFromReporter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help:      "How many messages were received from which reporter",
 		Namespace: "patchman_engine",
 		Subsystem: "listener",
 		Name:      "received_from_reporter",

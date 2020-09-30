@@ -10,17 +10,17 @@ import (
 
 var (
 	databaseSizeBytesGaugeVec = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Help:      "Current database size and tables sizes in bytes",
 		Namespace: "patchman_engine",
 		Subsystem: "vmaas_sync",
 		Name:      "database_size_bytes",
-		Help:      "Current database size and tables sizes in bytes",
 	}, []string{"table"})
 
 	databaseProcessesGaugeVec = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Help:      "Database processes per particular use",
 		Namespace: "patchman_engine",
 		Subsystem: "vmaas_sync",
 		Name:      "database_processes",
-		Help:      "Database processes per particular use",
 	}, []string{"usename", "state"})
 )
 

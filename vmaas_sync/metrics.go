@@ -26,24 +26,28 @@ const (
 
 var (
 	messagesReceivedCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help:      "How many websocket messages were received of which type",
 		Namespace: "patchman_engine",
 		Subsystem: "vmaas_sync",
 		Name:      "websocket_msgs",
 	}, []string{"type"})
 
 	vmaasCallCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help:      "How many times vmaas was called with which result",
 		Namespace: "patchman_engine",
 		Subsystem: "vmaas_sync",
 		Name:      "vmaas_call",
 	}, []string{"type"})
 
 	storeAdvisoriesCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help:      "How many advisories were loaded with which result",
 		Namespace: "patchman_engine",
 		Subsystem: "vmaas_sync",
 		Name:      "store_advisories",
 	}, []string{"type"})
 
 	storePackagesCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help:      "How many packages were loaded with which result",
 		Namespace: "patchman_engine",
 		Subsystem: "vmaas_sync",
 		Name:      "store_packages",
@@ -52,30 +56,35 @@ var (
 	updateInterval = time.Second * 20
 
 	systemsCnt = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Help:      "How many systems are stored and how up-to-date they are",
 		Namespace: "patchman_engine",
 		Subsystem: "vmaas_sync",
 		Name:      "systems",
 	}, []string{"opt_out", "last_upload"})
 
 	advisoriesCnt = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Help:      "How many advisories are stored of which type",
 		Namespace: "patchman_engine",
 		Subsystem: "vmaas_sync",
 		Name:      "advisories",
 	}, []string{"type"})
 
 	systemAdvisoriesStats = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Help:      "Max advisories per system found of which type",
 		Namespace: "patchman_engine",
 		Subsystem: "vmaas_sync",
 		Name:      "system_advisories_stats",
 	}, []string{"type"})
 
 	syncDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Help:      "How long it took to sync from vmaas service",
 		Namespace: "patchman_engine",
 		Subsystem: "vmaas_sync",
 		Name:      "sync_duration_seconds",
 	})
 
 	messageSendDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Help:      "How long it took to send message",
 		Namespace: "patchman_engine",
 		Subsystem: "vmaas_sync",
 		Name:      "message_send_duration_seconds",
