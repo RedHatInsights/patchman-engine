@@ -52,8 +52,10 @@ services:
       - 2181:2181
 
   kafka:
-    image: confluentinc/cp-enterprise-kafka:5.4.0
     container_name: kafka
+    build:
+      context: .
+      dockerfile: ./dev/kafka/Dockerfile
     env_file:
       - ./conf/kafka.env
     depends_on:
