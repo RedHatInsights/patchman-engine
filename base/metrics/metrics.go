@@ -8,10 +8,10 @@ import (
 
 var (
 	KafkaConnectionErrorCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help:      "Counter vector measuring Kafka connection issues when trying to read or write a message",
 		Namespace: "patchman_engine",
 		Subsystem: "core",
 		Name:      "kafka_connection_errors",
-		Help:      "Counter vector measuring Kafka connection issues when trying to read or write a message",
 	}, []string{"type"})
 )
 

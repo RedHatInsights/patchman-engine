@@ -11,24 +11,28 @@ import (
 
 var (
 	evaluationCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help:      "How many systems were evaluated with which result",
 		Namespace: "patchman_engine",
 		Subsystem: "evaluator",
 		Name:      "evaluation",
 	}, []string{"type"})
 
 	updatesCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help:      "How many updates were found of which type",
 		Namespace: "patchman_engine",
 		Subsystem: "evaluator",
 		Name:      "updates",
 	}, []string{"type"})
 
 	evaluationDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Help:      "How long it took system evaluation of which type (upload, recalc)",
 		Namespace: "patchman_engine",
 		Subsystem: "evaluator",
 		Name:      "evaluation_duration_seconds",
 	}, []string{"type"})
 
 	evaluationPartDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Help:      "How long it took particular evaluation part",
 		Namespace: "patchman_engine",
 		Subsystem: "evaluator",
 		Name:      "evaluation_part_duration_seconds",
