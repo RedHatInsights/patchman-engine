@@ -37,7 +37,7 @@ func Authenticator() gin.HandlerFunc {
 			c.Set(KeyAccount, id)
 		} else {
 			var acc models.RhAccount
-			if err := database.Db.Where("name = ?", identity.Identity.AccountNumber).Find(acc).Error; err != nil {
+			if err := database.Db.Where("name = ?", identity.Identity.AccountNumber).Find(&acc).Error; err != nil {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Could not find rh_account"})
 			}
 			AccountIDCache.Values[acc.Name] = acc.ID
