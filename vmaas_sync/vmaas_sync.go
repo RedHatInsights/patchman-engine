@@ -15,11 +15,12 @@ import (
 const SyncBatchSize = 1000
 
 var (
-	vmaasClient            *vmaas.APIClient
-	evalWriter             mqueue.Writer
-	enabledRepoBasedReeval bool
-	advisoryPageSize       int
-	packagesPageSize       int
+	vmaasClient              *vmaas.APIClient
+	evalWriter               mqueue.Writer
+	enabledRepoBasedReeval   bool
+	advisoryPageSize         int
+	packagesPageSize         int
+	enableRecalcMessagesSend bool
 )
 
 func configure() {
@@ -35,6 +36,7 @@ func configure() {
 	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
 	evalWriter = mqueue.WriterFromEnv(evalTopic)
 	enabledRepoBasedReeval = utils.GetBoolEnvOrFail("ENABLE_REPO_BASED_RE_EVALUATION")
+	enableRecalcMessagesSend = utils.GetBoolEnvOrDefault("ENABLE_RECALC_MESSAGES_SEND", true)
 
 	advisoryPageSize = utils.GetIntEnvOrDefault("ERRATA_PAGE_SIZE", 500)
 	packagesPageSize = utils.GetIntEnvOrDefault("PACKAGES_PAGE_SIZE", 5000)

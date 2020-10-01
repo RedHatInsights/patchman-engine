@@ -13,6 +13,11 @@ import (
 const BatchSize = 4000
 
 func sendReevaluationMessages() error {
+	if !enableRecalcMessagesSend {
+		utils.Log().Info("Recalc messages sending disabled, skipping...")
+		return nil
+	}
+
 	var inventoryIDs []string
 	var err error
 
