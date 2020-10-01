@@ -31,6 +31,7 @@ var (
 	port                   string
 	enableAdvisoryAnalysis bool
 	enablePackageAnalysis  bool
+	enableBypass           bool
 )
 
 func configure() {
@@ -48,6 +49,7 @@ func configure() {
 	disableCompression := !utils.GetBoolEnvOrDefault("ENABLE_VMAAS_CALL_COMPRESSION", true)
 	enableAdvisoryAnalysis = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_ANALYSIS", true)
 	enablePackageAnalysis = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_ANALYSIS", true)
+	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
 	vmaasConfig.HTTPClient = &http.Client{Transport: &http.Transport{
 		DisableCompression: disableCompression,
 	}}
@@ -57,6 +59,11 @@ func configure() {
 func Evaluate(ctx context.Context, inventoryID string, evaluationType string) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationDuration.WithLabelValues(evaluationType))
+	if enableBypass {
+		evaluationCnt.WithLabelValues("bypassed").Inc()
+		utils.Log("inventoryID", inventoryID).Info("Evaluation bypassed")
+		return nil
+	}
 
 	tx := database.Db.BeginTx(base.Context, nil)
 	// Don't allow TX to hang around locking the rows
