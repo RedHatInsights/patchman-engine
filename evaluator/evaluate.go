@@ -24,11 +24,13 @@ import (
 type SystemAdvisoryMap map[string]models.SystemAdvisories
 
 var (
-	consumerCount int
-	vmaasClient   *vmaas.APIClient
-	evalTopic     string
-	evalLabel     string
-	port          string
+	consumerCount          int
+	vmaasClient            *vmaas.APIClient
+	evalTopic              string
+	evalLabel              string
+	port                   string
+	enableAdvisoryAnalysis bool
+	enablePackageAnalysis  bool
 )
 
 func configure() {
@@ -44,6 +46,8 @@ func configure() {
 	vmaasConfig.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
 	vmaasConfig.Debug = traceAPI
 	disableCompression := !utils.GetBoolEnvOrDefault("ENABLE_VMAAS_CALL_COMPRESSION", true)
+	enableAdvisoryAnalysis = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_ANALYSIS", true)
+	enablePackageAnalysis = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_ANALYSIS", true)
 	vmaasConfig.HTTPClient = &http.Client{Transport: &http.Transport{
 		DisableCompression: disableCompression,
 	}}
@@ -114,33 +118,63 @@ func commitWithObserve(tx *gorm.DB) error {
 }
 
 func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) error {
-	oldSystemAdvisories, patched, unpatched, err := processSystemAdvisories(tx, system, vmaasData, system.InventoryID)
+	oldSystemAdvisories, newSystemAdvisories, err := analyzeAdvisories(tx, system, vmaasData)
 	if err != nil {
-		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
-		return errors.Wrap(err, "Unable to process system advisories")
+		return errors.Wrap(err, "Advisory analysis failed")
 	}
 
-	newSystemAdvisories, err := storeAdvisoryData(tx, system, patched, unpatched)
+	installed, updatable, err := analyzePackages(tx, system, vmaasData)
 	if err != nil {
-		evaluationCnt.WithLabelValues("error-store-advisories").Inc()
-		return errors.Wrap(err, "Unable to store advisory data")
+		return errors.Wrap(err, "Package analysis failed")
 	}
-	pkgByName, err := loadPackages(tx, system.RhAccountID, system.ID, vmaasData)
-	if err != nil {
-		evaluationCnt.WithLabelValues("error-pkg-data").Inc()
-		return errors.Wrap(err, "Unable to load package data")
-	}
-	installed, updatable, err := updateSystemPackages(tx, system, pkgByName, vmaasData.UpdateList)
-	if err != nil {
-		evaluationCnt.WithLabelValues("error-system-pkgs").Inc()
-		return errors.Wrap(err, "Unable to update system packages")
-	}
+
 	err = updateSystemPlatform(tx, system, oldSystemAdvisories, newSystemAdvisories, installed, updatable)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-update-system").Inc()
 		return errors.Wrap(err, "Unable to update system")
 	}
 	return nil
+}
+
+func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) (
+	SystemAdvisoryMap, SystemAdvisoryMap, error) {
+	if !enableAdvisoryAnalysis {
+		utils.Log().Debug("advisory analysis disabled, skipping")
+		return nil, nil, nil
+	}
+
+	oldSystemAdvisories, patched, unpatched, err := processSystemAdvisories(tx, system, vmaasData, system.InventoryID)
+	if err != nil {
+		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
+		return nil, nil, errors.Wrap(err, "Unable to process system advisories")
+	}
+
+	newSystemAdvisories, err := storeAdvisoryData(tx, system, patched, unpatched)
+	if err != nil {
+		evaluationCnt.WithLabelValues("error-store-advisories").Inc()
+		return nil, nil, errors.Wrap(err, "Unable to store advisory data")
+	}
+	return oldSystemAdvisories, newSystemAdvisories, nil
+}
+
+func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) (
+	installed int, updatable int, err error) {
+	if !enablePackageAnalysis {
+		utils.Log().Debug("pkg analysis disabled, skipping")
+		return 0, 0, nil
+	}
+
+	pkgByName, err := loadPackages(tx, system.RhAccountID, system.ID, vmaasData)
+	if err != nil {
+		evaluationCnt.WithLabelValues("error-pkg-data").Inc()
+		return 0, 0, errors.Wrap(err, "Unable to load package data")
+	}
+	installed, updatable, err = updateSystemPackages(tx, system, pkgByName, vmaasData.UpdateList)
+	if err != nil {
+		evaluationCnt.WithLabelValues("error-system-pkgs").Inc()
+		return 0, 0, errors.Wrap(err, "Unable to update system packages")
+	}
+	return installed, updatable, nil
 }
 
 func deleteOldSystemPackages(tx *gorm.DB, accountID, systemID int, packagesByNEVRA map[utils.Nevra]namedPackage) error {
@@ -281,33 +315,38 @@ func loadPackages(tx *gorm.DB, accountID, systemID int,
 }
 
 func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
-	old, new SystemAdvisoryMap,
-	installed, updatable int) error {
+	old, new SystemAdvisoryMap, installed, updatable int) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("system-update"))
 	defer utils.ObserveSecondsSince(*system.LastUpload, uploadEvaluationDelay)
-	if old == nil || new == nil {
-		return errors.New("Invalid args")
-	}
-	for name, newSysAdvisory := range new {
-		old[name] = newSysAdvisory
+
+	data := map[string]interface{}{}
+	data["last_evaluation"] = time.Now()
+
+	if enableAdvisoryAnalysis {
+		if old == nil || new == nil {
+			return errors.New("Invalid args")
+		}
+		for name, newSysAdvisory := range new {
+			old[name] = newSysAdvisory
+		}
+		counts := make([]int, 4)
+		for _, sa := range old {
+			if sa.WhenPatched == nil && sa.Advisory.AdvisoryTypeID > 0 {
+				counts[sa.Advisory.AdvisoryTypeID]++
+			}
+			counts[0]++
+		}
+		data["advisory_count_cache"] = counts[0]
+		data["advisory_enh_count_cache"] = counts[1]
+		data["advisory_bug_count_cache"] = counts[2]
+		data["advisory_sec_count_cache"] = counts[3]
 	}
 
-	counts := make([]int, 4)
-	for _, sa := range old {
-		if sa.WhenPatched == nil && sa.Advisory.AdvisoryTypeID > 0 {
-			counts[sa.Advisory.AdvisoryTypeID]++
-		}
-		counts[0]++
+	if enablePackageAnalysis {
+		data["packages_installed"] = installed
+		data["packages_updatable"] = updatable
 	}
-	data := map[string]interface{}{}
-	data["advisory_count_cache"] = counts[0]
-	data["advisory_enh_count_cache"] = counts[1]
-	data["advisory_bug_count_cache"] = counts[2]
-	data["advisory_sec_count_cache"] = counts[3]
-	data["last_evaluation"] = time.Now()
-	data["packages_installed"] = installed
-	data["packages_updatable"] = updatable
 	return tx.Model(system).Update(data).Error
 }
 
