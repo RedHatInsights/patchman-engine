@@ -18,6 +18,7 @@ const (
 	ReceivedErrorIdentity   = "error-identity"
 	ReceivedErrorProcessing = "error-processing"
 	ReceivedErrorOtherType  = "error-other-type"
+	ReceivedBypassed        = "bypassed"
 	ReceivedWarnNoRows      = "warn-no-rows"
 	ReceivedWarnNoPackages  = "warn-no-packages"
 )

@@ -34,6 +34,12 @@ func EventsMessageHandler(m kafka.Message) error {
 		return nil
 	}
 
+	if enableBypass {
+		utils.Log("inventoryID", msgData["id"]).Info("Processing bypassed")
+		messagesReceivedCnt.WithLabelValues(msgData["type"].(string), ReceivedBypassed).Inc()
+		return nil
+	}
+
 	switch msgData["type"] {
 	case "delete":
 		var event mqueue.PlatformEvent
