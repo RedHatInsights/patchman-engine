@@ -143,12 +143,13 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 	return nil
 }
 
-func deleteOldSystemPackages(tx *gorm.DB, systemID int, packagesByNEVRA map[utils.Nevra]namedPackage) error {
+func deleteOldSystemPackages(tx *gorm.DB, accountID, systemID int, packagesByNEVRA map[utils.Nevra]namedPackage) error {
 	pkgIds := make([]int, 0, len(packagesByNEVRA))
 	for _, pkg := range packagesByNEVRA {
 		pkgIds = append(pkgIds, pkg.ID)
 	}
 	return errors.Wrap(tx.
+		Where("rh_account_id = ? ", accountID).
 		Where("system_id = ?", systemID).
 		Where("package_id not in (?)", pkgIds).
 		Delete(&models.SystemPackage{}).Error, "Deleting outdated system packages")
@@ -161,7 +162,7 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-store"))
 	var installed, updatable int
 
-	if err := deleteOldSystemPackages(tx, system.ID, packagesByNEVRA); err != nil {
+	if err := deleteOldSystemPackages(tx, system.RhAccountID, system.ID, packagesByNEVRA); err != nil {
 		return 0, 0, err
 	}
 
@@ -257,8 +258,9 @@ func loadPackages(tx *gorm.DB, accountID, systemID int,
 	err := tx.Table("package").
 		Select("concat(pn.name, '-', package.evra) nevra, package.*, sp.*").
 		Joins("join package_name pn on package.name_id = pn.id").
-		Joins(`left join system_package sp on sp.package_id = package.id`).
-		Where("sp.rh_account_id = ? AND sp.system_id = ?", accountID, systemID).
+		// We need to perform left join, so thats why the parameters are here
+		// nolint: lll
+		Joins(`left join system_package sp on sp.package_id = package.id AND sp.rh_account_id = ? AND sp.system_id = ?`, accountID, systemID).
 		Where("pn.name in (?)", names).
 		Where("package.evra in (?)", evras).Find(&packages).Error
 

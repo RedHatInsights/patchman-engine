@@ -151,16 +151,25 @@ func TestEvaluate(t *testing.T) {
 	mockWriter := utils.MockKafkaWriter{}
 	remediationsPublisher = &mockWriter
 
-	err := evaluateHandler(mqueue.PlatformEvent{ID: "00000000-0000-0000-0000-000000000012"})
-	assert.NoError(t, err)
-
 	systemID := 12
 	rhAccountID := 3
 	expectedAddedAdvisories := []string{"RH-1", "RH-2"}
+	expectedAdvisoryIDs := []int{1, 2}
+	expectedPackageIDs := []int{1, 2}
+
+	deleteSystemAdvisories(t, systemID, expectedAdvisoryIDs)
+	deleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
+	deleteSystemPackages(t, systemID, expectedPackageIDs)
+
+	err := evaluateHandler(mqueue.PlatformEvent{ID: "00000000-0000-0000-0000-000000000012"})
+	assert.NoError(t, err)
+
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
+	checkSystemPackages(t, systemID, expectedPackageIDs)
 	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 2, 1, 1,
 		0, 2, 2)
+
 	deleteSystemAdvisories(t, systemID, advisoryIDs)
 	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 
@@ -231,6 +240,14 @@ func checkSystemAdvisoriesWhenPatched(t *testing.T, systemID int, advisoryIDs []
 	}
 }
 
+func checkSystemPackages(t *testing.T, systemID int, packageIDs []int) {
+	var systemPackages []models.SystemPackage
+	err := database.Db.Where("system_id = ? AND package_id IN (?)", systemID, packageIDs).
+		Find(&systemPackages).Error
+	assert.Nil(t, err)
+	assert.Equal(t, len(packageIDs), len(systemPackages))
+}
+
 func deleteSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int) {
 	err := database.Db.Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
 		Delete(&models.SystemAdvisories{}).Error
@@ -254,6 +271,12 @@ func deleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int)
 		Find(&advisoryAccountData).Error
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(advisoryAccountData))
+}
+
+func deleteSystemPackages(t *testing.T, systemID int, pkgIDs []int) {
+	err := database.Db.Where("system_id = ? and package_id in(?)", systemID, pkgIDs).
+		Delete(&models.SystemPackage{}).Error
+	assert.Nil(t, err)
 }
 
 func TestRun(t *testing.T) {
