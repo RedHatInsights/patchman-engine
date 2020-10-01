@@ -77,6 +77,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	var exists int
 	err := database.Db.Model(&models.SystemPlatform{}).Where("inventory_id = ? ", inventoryID).
 		Count(&exists).Error
+
 	if err != nil {
 		LogAndRespError(c, err, "database error")
 	}
@@ -87,8 +88,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 
 	query := database.SystemAdvisoriesQueryName(database.Db, inventoryID).
 		Select(SystemAdvisoriesSelect).
-		Joins("INNER JOIN rh_account ra on sp.rh_account_id = ra.id").
-		Where("ra.name = ?", account).
+		Where("sp.rh_account_id = ?", account).
 		Where("when_patched IS NULL")
 
 	query = ApplySearch(c, query, "am.name", "am.synopsis", "am.description")
