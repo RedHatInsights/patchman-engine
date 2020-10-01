@@ -14,6 +14,7 @@ var (
 	consumerCount  int
 	evalWriter     mqueue.Writer
 	validReporters map[string]int
+	enableBypass   bool
 )
 
 func configure() {
@@ -27,6 +28,8 @@ func configure() {
 	evalWriter = mqueue.WriterFromEnv(evalTopic)
 
 	validReporters = loadValidReporters()
+
+	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
 }
 
 func loadValidReporters() map[string]int {
