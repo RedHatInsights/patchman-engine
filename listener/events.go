@@ -19,9 +19,6 @@ const (
 )
 
 func EventsMessageHandler(m kafka.Message) error {
-	tStart := time.Now()
-	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventDelete))
-
 	var msgData map[string]interface{}
 	if err := json.Unmarshal(m.Value, &msgData); err != nil {
 		utils.Log("msg", string(m.Value)).Error("message is not a valid JSON")
@@ -64,6 +61,8 @@ func EventsMessageHandler(m kafka.Message) error {
 }
 
 func HandleDelete(event mqueue.PlatformEvent) error {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventDelete))
 	// TODO: Do we need locking here ?
 	err := database.OnConflictUpdate(database.Db, "inventory_id", "when_deleted").
 		Save(models.DeletedSystem{
