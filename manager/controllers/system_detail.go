@@ -34,8 +34,7 @@ func SystemDetailHandler(c *gin.Context) {
 
 	var inventory models.SystemPlatform
 	err := database.Db.
-		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
-		Where("ra.name = ?", account).
+		Where("system_platform.rh_account_id = ?", account).
 		Where("inventory_id = ?", inventoryID).First(&inventory).Error
 	if gorm.IsRecordNotFoundError(err) {
 		LogAndRespNotFound(c, err, "inventory not found")
