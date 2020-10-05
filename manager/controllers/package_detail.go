@@ -21,16 +21,13 @@ func singlePackageQuery(pkgName string) *gorm.DB {
 
 func packageNameIsValid(packageName string) bool {
 	var packageNames []models.PackageName
-	err := database.Db.Table("package_name").Take(&packageNames).Error
+	err := database.Db.Table("package_name").
+		Where("name = ?", packageName).
+		Find(&packageNames).Error
 	if err != nil {
 		return false
 	}
-	for _, pkg := range packageNames {
-		if pkg.Name == packageName {
-			return true
-		}
-	}
-	return false
+	return len(packageNames) > 0
 }
 
 type PackageDetailResponse struct {

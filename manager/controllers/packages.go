@@ -55,7 +55,7 @@ func packagesQuery(acc int) *gorm.DB {
 // @Param    filter[name]    query   string  false "Filter"
 // @Param    filter[systems_installed] query   string  false "Filter"
 // @Param    filter[systems_updatable] query   string  false "Filter"
-// @Param    tags                    query   string  false "Tag filter"
+// @Param    tags                    query   []string  false "Tag filter"
 // @Success 200 {object} PackagesResponse
 // @Router /api/patch/v1/packages/ [get]
 func PackagesListHandler(c *gin.Context) {
