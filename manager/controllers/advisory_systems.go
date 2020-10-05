@@ -37,8 +37,7 @@ type AdvisorySystemsResponse struct {
 // @Param    filter[rhsa_count]      query   string  false "Filter"
 // @Param    filter[rhba_count]      query   string  false "Filter"
 // @Param    filter[rhea_count]      query   string  false "Filter"
-// @Param    filter[stale]           query   string  false "Filter"
-// @Param    tags                    query   string  false "Tag filter"
+// @Param    filter[stale]           query   string    false "Filter"
 // @Success 200 {object} AdvisorySystemsResponse
 // @Router /api/patch/v1/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListHandler(c *gin.Context) {

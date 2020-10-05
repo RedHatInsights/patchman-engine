@@ -38,7 +38,8 @@ func packageSystemsQuery(acc int, pkgName string) *gorm.DB {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    package_name    path    string   true "Package name"
+// @Param    package_name    path    string    true  "Package name"
+// @Param    tags            query   []string  false "Tag filter"
 // @Success 200 {object} PackageSystemsResponse
 // @Router /api/patch/v1/packages/{package_name}/systems [get]
 func PackageSystemsListHandler(c *gin.Context) {

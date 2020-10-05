@@ -81,7 +81,7 @@ type SystemsResponse struct {
 // @Param    filter[stale]           query   string  false "Filter"
 // @Param    filter[packages_installed] query string false "Filter"
 // @Param    filter[packages_updatable] query string false "Filter"
-// @Param    tags                    query   string  false "Tag filter"
+// @Param    tags                    query   []string  false "Tag filter"
 // @Success 200 {object} SystemsResponse
 // @Router /api/patch/v1/systems [get]
 func SystemsListHandler(c *gin.Context) {
