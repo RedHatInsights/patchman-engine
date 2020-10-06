@@ -7,6 +7,7 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -187,7 +188,7 @@ func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas
 func deleteOldSystemPackages(tx *gorm.DB, accountID, systemID int, packagesByNEVRA map[utils.Nevra]namedPackage) error {
 	pkgIds := make([]int, 0, len(packagesByNEVRA))
 	for _, pkg := range packagesByNEVRA {
-		pkgIds = append(pkgIds, pkg.ID)
+		pkgIds = append(pkgIds, pkg.PackageID)
 	}
 	return errors.Wrap(tx.
 		Where("rh_account_id = ? ", accountID).
@@ -218,21 +219,13 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 		}
 		currentNamedPackage := packagesByNEVRA[*nevra]
 		// Check whether we have that NEVRA in DB
-		if currentNamedPackage.ID == 0 {
+		if currentNamedPackage.PackageID == 0 {
 			utils.Log("nevra", nevraStr).Trace("Unknown package")
 			continue
 		}
 		installed++
 		if len(updateData.AvailableUpdates) > 0 {
 			updatable++
-		}
-
-		hasUpdates := len(updateData.AvailableUpdates) > 0
-		hadUpdates := currentNamedPackage.SystemPackage.UpdateData.RawMessage != nil
-		wasStored := currentNamedPackage.SystemPackage.SystemID != 0
-		// If the package previously didn't have any updates, and doesn't have any now, skip updating the row
-		if wasStored && !hasUpdates && hasUpdates == hadUpdates {
-			continue
 		}
 
 		for _, upData := range updateData.AvailableUpdates {
@@ -248,20 +241,24 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 				Advisory: upData.Erratum,
 			})
 		}
-		// Format to json
-		var pkgJSON []byte
+		var updateDataJSON []byte
 		if len(pkgUpdates) > 0 {
-			pkgJSON, err = json.Marshal(pkgUpdates)
+			updateDataJSON, err = json.Marshal(pkgUpdates)
 			if err != nil {
 				return 0, 0, errors.Wrap(err, "Serializing pkg json")
 			}
+		}
+
+		// Skip overwriting entries which have the same data as before
+		if bytes.Equal(updateDataJSON, currentNamedPackage.UpdateData.RawMessage) {
+			continue
 		}
 		// Create row to update
 		toStore = append(toStore, models.SystemPackage{
 			RhAccountID: system.RhAccountID,
 			SystemID:    system.ID,
-			PackageID:   packagesByNEVRA[*nevra].ID,
-			UpdateData:  postgres.Jsonb{RawMessage: pkgJSON},
+			PackageID:   packagesByNEVRA[*nevra].PackageID,
+			UpdateData:  postgres.Jsonb{RawMessage: updateDataJSON},
 		})
 	}
 	tx = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "system_id", "package_id"}, "update_data")
@@ -269,9 +266,10 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 }
 
 type namedPackage struct {
-	NEVRA string
-	models.Package
-	models.SystemPackage
+	Name       string
+	PackageID  int
+	EVRA       string
+	UpdateData postgres.Jsonb
 }
 
 // Find relevant package data based on vmaas results
@@ -297,7 +295,7 @@ func loadPackages(tx *gorm.DB, accountID, systemID int,
 	// But it was only way to get somewhat fast query plan which only uses index scans
 	var packages []namedPackage
 	err := tx.Table("package").
-		Select("concat(pn.name, '-', package.evra) nevra, package.*, sp.*").
+		Select("pn.name, package.id as package_id, package.evra, sp.update_data").
 		Joins("join package_name pn on package.name_id = pn.id").
 		// We need to perform left join, so thats why the parameters are here
 		// nolint: lll
@@ -308,11 +306,12 @@ func loadPackages(tx *gorm.DB, accountID, systemID int,
 	if err != nil {
 		return nil, errors.Wrap(err, "loading packages")
 	}
+
 	pkgByNevra := map[utils.Nevra]namedPackage{}
 	for _, p := range packages {
-		nevra, err := utils.ParseNevra(p.NEVRA)
+		nevra, err := utils.ParseNameEVRA(p.Name, p.EVRA)
 		if err != nil {
-			utils.Log("err", err.Error(), "nevra", p.NEVRA).Warn("Unable to parse nevra")
+			utils.Log("err", err.Error(), "name", p.Name, "evra", p.EVRA).Warn("Unable to parse nevra")
 			continue
 		}
 		pkgByNevra[*nevra] = p
