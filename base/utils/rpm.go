@@ -59,6 +59,10 @@ func ParseNevra(nevra string) (*Nevra, error) {
 	return &res, nil
 }
 
+func ParseNameEVRA(name, evra string) (*Nevra, error) {
+	return ParseNevra(fmt.Sprintf("%s-%s", name, evra))
+}
+
 func (n Nevra) String() string {
 	if n.Epoch != 0 {
 		return fmt.Sprintf("%s-%d:%s-%s.%s", n.Name, n.Epoch, n.Version, n.Release, n.Arch)
