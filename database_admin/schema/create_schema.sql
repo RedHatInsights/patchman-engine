@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (36, false);
+VALUES (37, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -338,7 +338,6 @@ END;
 $refresh_system_cached_counts$
     LANGUAGE 'plpgsql';
 
-
 CREATE OR REPLACE FUNCTION delete_system(inventory_id_in varchar)
     RETURNS TABLE
             (
@@ -346,36 +345,46 @@ CREATE OR REPLACE FUNCTION delete_system(inventory_id_in varchar)
             )
 AS
 $delete_system$
+DECLARE
+    v_system_id  INT;
+    v_account_id INT;
 BEGIN
     -- opt out to refresh cache and then delete
-    WITH locked_row AS (
-        SELECT id
-        FROM system_platform
-        WHERE inventory_id = inventory_id_in
-            FOR UPDATE
-    )
+    SELECT id, rh_account_id
+    FROM system_platform
+    WHERE inventory_id = inventory_id_in
+        FOR UPDATE OF system_platform
+    INTO v_system_id, v_account_id;
+
+    IF v_system_id IS NULL OR v_account_id IS NULL THEN
+        RAISE NOTICE 'Not found';
+        RETURN;
+    END IF;
+
     UPDATE system_platform
     SET opt_out = true
-    WHERE inventory_id = inventory_id_in;
+    WHERE rh_account_id = v_account_id
+      AND id = v_system_id;
 
     DELETE
     FROM system_advisories
-    WHERE system_id = (SELECT id from system_platform WHERE inventory_id = inventory_id_in);
+    WHERE system_id = v_system_id;
 
     DELETE
     FROM system_repo
-    WHERE system_id = (SELECT id from system_platform WHERE inventory_id = inventory_id_in);
+    WHERE system_id = v_system_id;
 
     DELETE
     FROM system_package
-    WHERE system_id = (SELECT id from system_platform WHERE inventory_id = inventory_id_in);
+    WHERE rh_account_id = v_account_id
+      AND system_id = v_system_id;
 
     RETURN QUERY DELETE FROM system_platform
-        WHERE inventory_id = inventory_id_in
+        WHERE rh_account_id = v_account_id AND
+              id = v_system_id
         RETURNING inventory_id;
 END;
 $delete_system$ LANGUAGE 'plpgsql';
-
 
 CREATE OR REPLACE FUNCTION delete_culled_systems()
     RETURNS INTEGER
@@ -792,7 +801,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE package TO vmaas_sync;
 CREATE TABLE IF NOT EXISTS system_package
 (
     rh_account_id INT NOT NULL REFERENCES rh_account,
-    system_id     INT NOT NULL REFERENCES system_platform,
+    -- Missing foreign key fixes performance issues when deleting systems
+    -- We manually ensure consistency by deleting entries in the `delete_system`
+    -- stored function. We should check whether constraint referencing  + cascade fixes it
+    system_id     INT NOT NULL,
     package_id    INT NOT NULL REFERENCES package,
     -- Use null to represent up-to-date packages
     update_data   JSONB DEFAULT NULL,
@@ -804,7 +816,7 @@ GRANT SELECT, UPDATE, DELETE ON system_package TO listener;
 GRANT SELECT, UPDATE, DELETE ON system_package TO manager;
 GRANT SELECT, UPDATE, DELETE ON system_package TO vmaas_sync;
 
-SELECT create_table_partitions('system_package',  16,
+SELECT create_table_partitions('system_package', 16,
                                $$WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')$$);
 
 -- timestamp_kv
