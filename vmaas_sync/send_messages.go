@@ -57,9 +57,12 @@ func sendMessages(ctx context.Context, inventoryIDs ...string) {
 
 	events := make([]mqueue.PlatformEvent, len(inventoryIDs))
 
+	now := base.Rfc3339Timestamp(time.Now())
+
 	for i, id := range inventoryIDs {
 		events[i] = mqueue.PlatformEvent{
-			ID: id,
+			Timestamp: &now,
+			ID:        id,
 		}
 	}
 

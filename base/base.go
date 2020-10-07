@@ -3,10 +3,12 @@ package base
 import (
 	"app/base/utils"
 	"context"
+	"encoding/json"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 )
 
 const VMaaSAPIPrefix = "/api"
@@ -43,4 +45,28 @@ func remove(r rune) rune {
 // in parameter values
 func RemoveInvalidChars(s string) string {
 	return strings.Map(remove, s)
+}
+
+type Rfc3339Timestamp time.Time
+
+func (d Rfc3339Timestamp) MarshalJSON() ([]byte, error) {
+	return json.Marshal(d.Time().Format(Rfc3339NoTz))
+}
+
+func (d *Rfc3339Timestamp) UnmarshalJSON(data []byte) error {
+	var jd string
+	var err error
+	if err := json.Unmarshal(data, &jd); err != nil {
+		return err
+	}
+	t, err := time.Parse(Rfc3339NoTz, jd)
+	*d = Rfc3339Timestamp(t)
+	return err
+}
+
+func (d *Rfc3339Timestamp) Time() *time.Time {
+	if d == nil {
+		return nil
+	}
+	return (*time.Time)(d)
 }

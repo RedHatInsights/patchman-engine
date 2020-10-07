@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
@@ -28,12 +29,14 @@ func TestGetOrCreateAccount(t *testing.T) {
 	deleteData(t)
 }
 
-func createTestInvHost() *Host {
-	correctTimestamp := "2018-09-22T12:00:00-04:00"
-	wrongTimestamp := "x018-09-22T12:00:00-04:00"
+func createTestInvHost(t *testing.T) *Host {
+	correctTimestamp, err := time.Parse(base.Rfc3339NoTz, "2018-09-22T12:00:00-04:00")
+	correctTime := base.Rfc3339Timestamp(correctTimestamp)
+	assert.NoError(t, err)
 
-	host := Host{StaleTimestamp: &correctTimestamp, StaleWarningTimestamp: &wrongTimestamp,
-		Reporter: "puptoo"}
+	host := Host{
+		StaleTimestamp: &correctTime,
+		Reporter:       "puptoo"}
 	return &host
 }
 
@@ -54,14 +57,14 @@ func TestUpdateSystemPlatform(t *testing.T) {
 		Basearch:       "x86_64",
 	}
 
-	sys1, err := updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(), &req)
+	sys1, err := updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(t), &req)
 	assert.Nil(t, err)
 
 	reporterID1 := 1
 	assertSystemInDB(t, id, &accountID1, &reporterID1)
 	assertReposInDB(t, req.RepositoryList)
 
-	host2 := createTestInvHost()
+	host2 := createTestInvHost(t)
 	host2.Reporter = "yupana"
 	req.PackageList = []string{"package0", "package1"}
 	sys2, err := updateSystemPlatform(database.Db, id, accountID2, host2, &req)

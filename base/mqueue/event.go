@@ -1,6 +1,7 @@
 package mqueue
 
 import (
+	"app/base"
 	"app/base/utils"
 	"encoding/json"
 	"github.com/lestrrat-go/backoff"
@@ -16,12 +17,12 @@ var policy = backoff.NewExponential(
 )
 
 type PlatformEvent struct {
-	ID          string  `json:"id"`
-	Type        *string `json:"type"`
-	Timestamp   *string `json:"timestamp"`
-	Account     *string `json:"account"`
-	B64Identity *string `json:"b64_identity"`
-	URL         *string `json:"url"`
+	ID          string                 `json:"id"`
+	Type        *string                `json:"type"`
+	Timestamp   *base.Rfc3339Timestamp `json:"timestamp"`
+	Account     *string                `json:"account"`
+	B64Identity *string                `json:"b64_identity"`
+	URL         *string                `json:"url"`
 }
 
 type EventHandler func(message PlatformEvent) error

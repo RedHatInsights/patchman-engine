@@ -44,9 +44,9 @@ type Host struct {
 	ExternalID            string                    `json:"external_id,omitempty"`
 	Created               string                    `json:"created,omitempty"`
 	Updated               string                    `json:"updated,omitempty"`
-	StaleTimestamp        *string                   `json:"stale_timestamp,omitempty"`
-	StaleWarningTimestamp *string                   `json:"stale_warning_timestamp,omitempty"`
-	CulledTimestamp       *string                   `json:"culled_timestamp,omitempty"`
+	StaleTimestamp        *base.Rfc3339Timestamp    `json:"stale_timestamp,omitempty"`
+	StaleWarningTimestamp *base.Rfc3339Timestamp    `json:"stale_warning_timestamp,omitempty"`
+	CulledTimestamp       *base.Rfc3339Timestamp    `json:"culled_timestamp,omitempty"`
 	Reporter              string                    `json:"reporter,omitempty"`
 	Tags                  []inventory.StructuredTag `json:"tags,omitempty"`
 	SystemProfile         inventory.SystemProfileIn `json:"system_profile,omitempty"`
@@ -97,9 +97,10 @@ func HandleUpload(event HostEvent) error {
 			return nil
 		}
 	}
-
+	t := base.Rfc3339Timestamp(time.Now())
+	ev := mqueue.PlatformEvent{ID: sys.InventoryID, Timestamp: &t}
 	// Not sending evaluation message is a fatal error
-	err = mqueue.WriteEvents(base.Context, evalWriter, mqueue.PlatformEvent{ID: sys.InventoryID})
+	err = mqueue.WriteEvents(base.Context, evalWriter, ev)
 	if err != nil {
 		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorKafkaSend)
 		return errors.Wrap(err, "Could send eval message")
@@ -132,18 +133,6 @@ func getOrCreateAccount(account string) (int, error) {
 	return rhAccount.ID, err
 }
 
-func optParseTimestamp(t *string) *time.Time {
-	if t == nil || len(*t) == 0 {
-		return nil
-	}
-	v, err := time.Parse(base.Rfc3339NoTz, *t)
-	if err != nil {
-		utils.Log("err", err.Error()).Error("Opt timestamp parse")
-		return nil
-	}
-	return &v
-}
-
 // nolint: funlen
 // Stores or updates base system profile, returing internal system id
 func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *Host,
@@ -173,7 +162,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		displayName = *host.DisplayName
 	}
 
-	staleWarning := optParseTimestamp(host.StaleWarningTimestamp)
+	staleWarning := host.StaleWarningTimestamp.Time()
 
 	systemPlatform := models.SystemPlatform{
 		InventoryID:           inventoryID,
@@ -182,9 +171,9 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		VmaasJSON:             string(updatesReqJSON),
 		JSONChecksum:          jsonChecksum,
 		LastUpload:            &now,
-		StaleTimestamp:        optParseTimestamp(host.StaleTimestamp),
-		StaleWarningTimestamp: optParseTimestamp(host.StaleWarningTimestamp),
-		CulledTimestamp:       optParseTimestamp(host.CulledTimestamp),
+		StaleTimestamp:        host.StaleTimestamp.Time(),
+		StaleWarningTimestamp: host.StaleWarningTimestamp.Time(),
+		CulledTimestamp:       host.CulledTimestamp.Time(),
 		Stale:                 staleWarning != nil && staleWarning.Before(time.Now()),
 		ReporterID:            getReporterID(host.Reporter),
 	}
