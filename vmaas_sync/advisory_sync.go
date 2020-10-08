@@ -216,5 +216,6 @@ func syncAdvisories() error {
 			packages = packages[currentPageSize:]
 		}
 	}
+	utils.Log().Info("Advisories synced successfully")
 	return nil
 }

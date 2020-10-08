@@ -15,6 +15,7 @@ import (
 const chunkSize = 10 * 1024
 
 func syncPackages(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, pkgs []string) error {
+	utils.Log("count", len(pkgs)).Debug("Downloading packages...")
 	query := vmaas.PackagesRequest{
 		PackageList: pkgs,
 	}
@@ -26,6 +27,7 @@ func syncPackages(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, pkgs []string) e
 		return errors.Wrap(err, "Get packages")
 	}
 
+	utils.Log("count", len(pkgs)).Debug("Storing packages...")
 	idByName, dataByNevra, err := storePackageNames(tx, data.PackageList)
 	if err != nil {
 		return errors.Wrap(err, "Pkg names")
