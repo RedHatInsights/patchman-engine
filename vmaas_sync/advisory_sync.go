@@ -72,7 +72,7 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 		}
 
 		if v.Description == "" || v.Summary == "" {
-			utils.Log().Error("An advisory without description or summary")
+			utils.Log("name", n).Error("An advisory without description or summary")
 			continue
 		}
 		var severityID *int
