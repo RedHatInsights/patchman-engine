@@ -1,5 +1,33 @@
 #!/usr/bin/bash
 
+# Usage:
+# ./generate_docs.sh --increment
+#         Reads curent X.Y.Z version (last git tag) and increments Z part
+# ./generate_docs.sh --keep
+#         Keeps current version untouched
+# ./generate_docs.sh --release "A.B.C"
+#         Sets version exactly to "A.B.C"
+#
+
+RELEASE=""
+case "$1" in
+  -i|--increment)
+        CURRENT_RELEASE=$(git tag | tail -n1)
+        RELEASE="${CURRENT_RELEASE%.*}.$((${CURRENT_RELEASE##*.}+1))"
+        ;;
+  -k|--keep) # don't change anything, just keep current release
+        ;;
+  -r|--release) RELEASE=$2
+        ;;
+  *) >&2 echo "Usage: $0 [ [-k|--keep] | [-i|--increment] | [-r|--release] <release> ]"
+        exit 1
+        ;;
+esac
+
+if [ -n "$RELEASE" ] ; then
+  # Substitute version
+  sed -i "s|\(// @version \).*$|\1 $RELEASE|;" manager/manager.go
+fi
 
 DOCS_TMP_DIR=/tmp
 CONVERT_URL="https://converter.swagger.io/api/convert"
