@@ -16,6 +16,24 @@ var AccountIDCache = struct {
 	Lock   sync.Mutex
 }{Values: map[string]int{}, Lock: sync.Mutex{}}
 
+func findAccount(c *gin.Context, identity *utils.Identity) bool {
+	AccountIDCache.Lock.Lock()
+	defer AccountIDCache.Lock.Unlock()
+
+	if id, has := AccountIDCache.Values[identity.Identity.AccountNumber]; has {
+		c.Set(KeyAccount, id)
+	} else {
+		var acc models.RhAccount
+		if err := database.Db.Where("name = ?", identity.Identity.AccountNumber).Find(&acc).Error; err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Could not find rh_account"})
+			return false
+		}
+		AccountIDCache.Values[acc.Name] = acc.ID
+		c.Set(KeyAccount, acc.ID)
+	}
+	return true
+}
+
 func Authenticator() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		identStr := c.GetHeader("x-rh-identity")
@@ -30,20 +48,9 @@ func Authenticator() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Invalid x-rh-identity header"})
 			return
 		}
-		AccountIDCache.Lock.Lock()
-		defer AccountIDCache.Lock.Unlock()
-
-		if id, has := AccountIDCache.Values[identity.Identity.AccountNumber]; has {
-			c.Set(KeyAccount, id)
-		} else {
-			var acc models.RhAccount
-			if err := database.Db.Where("name = ?", identity.Identity.AccountNumber).Find(&acc).Error; err != nil {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Could not find rh_account"})
-			}
-			AccountIDCache.Values[acc.Name] = acc.ID
-			c.Set(KeyAccount, acc.ID)
+		if findAccount(c, identity) {
+			c.Next()
 		}
-		c.Next()
 	}
 }
 
