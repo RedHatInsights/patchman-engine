@@ -7,7 +7,7 @@ import (
 )
 
 func InitAPI(group *gin.RouterGroup) {
-	group.Use(middlewares.Authenticator())
+	group.Use(middlewares.PublicAuthenticator())
 	group.Use(middlewares.RBAC())
 
 	group.GET("/advisories", controllers.AdvisoriesListHandler)
@@ -28,4 +28,9 @@ func InitAPI(group *gin.RouterGroup) {
 	group.GET("/export/systems", controllers.SystemsExportHandler)
 
 	group.GET("/status", controllers.Status)
+	initAdmin(group.Group("/admin"))
+}
+
+func initAdmin(group *gin.RouterGroup) {
+
 }
