@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"github.com/segmentio/kafka-go"
+	"modernc.org/strutil"
 	"net/http"
 	"time"
 )
@@ -60,20 +62,15 @@ func mockKafkaWriter(topic string) *kafka.Writer {
 }
 
 func mockIdentity() string {
-	identity, err := utils.Identity{
-		Entitlements: map[string]utils.Entitlement{
-			"smart_management": {Entitled: true},
-		},
-		Identity: utils.IdentityDetail{
-			AccountNumber: "0",
-			Type:          "User",
-		},
-	}.Encode()
-
+	ident := identity.Identity{
+		Type:          "User",
+		AccountNumber: "0",
+	}
+	js, err := json.Marshal(&ident)
 	if err != nil {
 		panic(err)
 	}
-	return identity
+	return string(strutil.Base64Encode(js))
 }
 
 func upload(randomPkgs bool) {
