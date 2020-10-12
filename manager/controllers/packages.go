@@ -48,14 +48,16 @@ func packagesQuery(acc int) *gorm.DB {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
-// @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field"    Enums(id,name,systems_installed,systems_updatable)
-// @Param    search         query   string  false   "Find matching text"
-// @Param    filter[name]    query   string  false "Filter"
+// @Param    limit          query      int     false   "Limit for paging, set -1 to return all"
+// @Param    offset         query      int     false   "Offset for paging"
+// @Param    sort           query      string  false   "Sort field" Enums(id,name,systems_installed,systems_updatable)
+// @Param    search         query      string  false   "Find matching text"
+// @Param    filter[name]    query     string  false "Filter"
 // @Param    filter[systems_installed] query   string  false "Filter"
 // @Param    filter[systems_updatable] query   string  false "Filter"
-// @Param    tags                    query   []string  false "Tag filter"
+// @Param    tags                      query   []string  false "Tag filter"
+// @Param    filter[system_profile][sap_system]   query string   false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_sids][in] query []string false "Filter systems by their SAP SIDs"
 // @Success 200 {object} PackagesResponse
 // @Router /api/patch/v1/packages/ [get]
 func PackagesListHandler(c *gin.Context) {

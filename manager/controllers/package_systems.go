@@ -40,6 +40,8 @@ func packageSystemsQuery(acc int, pkgName string) *gorm.DB {
 // @Produce  json
 // @Param    package_name    path    string    true  "Package name"
 // @Param    tags            query   []string  false "Tag filter"
+// @Param    filter[system_profile][sap_system]   query  string  false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_sids][in] query []string  false "Filter systems by their SAP SIDs"
 // @Success 200 {object} PackageSystemsResponse
 // @Router /api/patch/v1/packages/{package_name}/systems [get]
 func PackageSystemsListHandler(c *gin.Context) {

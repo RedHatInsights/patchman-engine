@@ -258,7 +258,7 @@ func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB
 			if len(path) == 1 && path[0] == "sap_system" {
 				subq = subq.Where("(h.system_profile ->> 'sap_system')::text = ?", val)
 			}
-			if len(path) == 2 && path[0] == "sap_sids" {
+			if len(path) >= 2 && path[0] == "sap_sids" {
 				val = fmt.Sprintf(`"%s"`, val)
 				subq = subq.Where("(h.system_profile ->> 'sap_sids')::jsonb @> ?::jsonb", val)
 			}

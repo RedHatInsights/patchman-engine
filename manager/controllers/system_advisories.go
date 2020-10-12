@@ -63,7 +63,6 @@ type SystemAdvisoriesResponse struct {
 // @Param    filter[synopsis]        query   string  false "Filter"
 // @Param    filter[advisory_type]   query   string  false "Filter"
 // @Param    filter[severity]        query   string  false "Filter"
-// @Param    tags                    query   []string  false "Tag filter"
 // @Success 200 {object} SystemAdvisoriesResponse
 // @Router /api/patch/v1/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesHandler(c *gin.Context) {
