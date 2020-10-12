@@ -24,7 +24,8 @@ type PackageSystemsResponse struct {
 func packageSystemsQuery(acc int, pkgName string) *gorm.DB {
 	return database.Db.
 		Table("system_platform").
-		Joins("inner join system_package spkg on spkg.system_id = system_platform.id").
+		// nolint: lll
+		Joins("inner join system_package spkg on spkg.system_id = system_platform.id and system_platform.stale = false").
 		Joins("inner join package p on p.id = spkg.package_id").
 		Joins("inner join package_name pn on pn.id = p.name_id").
 		Where("spkg.rh_account_id = ?", acc).
