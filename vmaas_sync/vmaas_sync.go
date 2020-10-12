@@ -90,21 +90,25 @@ func runWebsocket(conn *websocket.Conn, handler Handler) error {
 	}
 }
 
+func onRefreshed() {
+	err := syncAdvisories()
+	if err != nil {
+		// This probably means programming error, better to exit with nonzero error code, so the error is noticed
+		utils.Log("err", err.Error()).Fatal("Failed to sync advisories")
+	}
+
+	err = sendReevaluationMessages()
+	if err != nil {
+		utils.Log("err", err.Error()).Error("re-evaluation sending routine failed")
+	}
+}
+
 func websocketHandler(data []byte, _ *websocket.Conn) error {
 	text := string(data)
 	utils.Log("data", string(data)).Info("Received VMaaS websocket message")
 
 	if text == "webapps-refreshed" {
-		err := syncAdvisories()
-		if err != nil {
-			// This probably means programming error, better to exit with nonzero error code, so the error is noticed
-			utils.Log("err", err.Error()).Fatal("Failed to sync advisories")
-		}
-
-		err = sendReevaluationMessages()
-		if err != nil {
-			utils.Log("err", err.Error()).Error("re-evaluation sending routine failed")
-		}
+		go onRefreshed()
 	}
 	return nil
 }
