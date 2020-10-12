@@ -64,6 +64,8 @@ type AdvisoriesResponse struct {
 // @Param    filter[severity]        query   string  false "Filter"
 // @Param    filter[applicable_systems] query  string  false "Filter"
 // @Param    tags                    query   []string  false "Tag filter"
+// @Param    filter[system_profile][sap_system] query  string  false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_sids][in] query []string  false "Filter systems by their SAP SIDs"
 // @Success 200 {object} AdvisoriesResponse
 // @Router /api/patch/v1/advisories [get]
 func AdvisoriesListHandler(c *gin.Context) {

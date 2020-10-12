@@ -68,7 +68,6 @@ func systemPackageQuery(account int, inventoryID string) *gorm.DB {
 // @Param    filter[evra]            query   string  false "Filter"
 // @Param    filter[summary]         query   string  false "Filter"
 // @Param    filter[updatable]       query   bool    false "Filter"
-// @Param    tags                    query   []string  false "Tag filter"
 // @Success 200 {object} SystemPackageResponse
 // @Router /api/patch/v1/systems/{inventory_id}/packages [get]
 func SystemPackagesHandler(c *gin.Context) {
