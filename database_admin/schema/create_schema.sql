@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (42, false);
+VALUES (45, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -187,8 +187,8 @@ BEGIN
     WITH current_counts AS (
         SELECT sa.advisory_id, sp.rh_account_id, count(sa.system_id) as systems_affected
         FROM system_advisories sa
-                 INNER JOIN
-             system_platform sp ON sa.system_id = sp.id
+        INNER JOIN system_platform sp
+           ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id
         WHERE sp.last_evaluation IS NOT NULL
           AND sp.opt_out = FALSE
           AND sp.stale = FALSE
@@ -233,7 +233,7 @@ DECLARE
     COUNT INTEGER;
 BEGIN
     WITH to_update AS (
-        SELECT sp.id
+        SELECT sp.rh_account_id, sp.id
         FROM system_platform sp
         WHERE (sp.id = system_id_in OR system_id_in IS NULL)
           AND (sp.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
@@ -247,7 +247,7 @@ BEGIN
                      advisory_bug_count_cache = system_advisories_count(sp.id, 2),
                      advisory_sec_count_cache = system_advisories_count(sp.id, 3)
                  FROM to_update to_up
-                 WHERE sp.id = to_up.id
+                 WHERE sp.rh_account_id = to_up.rh_account_id AND sp.id = to_up.id
                  RETURNING sp.id)
     SELECT count(*)
     FROM updated
@@ -351,10 +351,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION delete_system(inventory_id_in varchar)
+CREATE OR REPLACE FUNCTION delete_system(inventory_id_in uuid)
     RETURNS TABLE
             (
-                deleted_inventory_id TEXT
+                deleted_inventory_id uuid
             )
 AS
 $delete_system$
@@ -381,11 +381,13 @@ BEGIN
 
     DELETE
     FROM system_advisories
-    WHERE system_id = v_system_id;
+    WHERE rh_account_id = v_account_id
+      AND system_id = v_system_id;
 
     DELETE
     FROM system_repo
-    WHERE system_id = v_system_id;
+    WHERE rh_account_id = v_account_id
+      AND system_id = v_system_id;
 
     DELETE
     FROM system_package
@@ -428,17 +430,18 @@ DECLARE
     marked integer;
 BEGIN
     WITH ids AS (
-        SELECT id
+        SELECT rh_account_id, id
         FROM system_platform
         WHERE stale_warning_timestamp < now()
           AND stale = false
-        ORDER BY id FOR UPDATE OF system_platform
+        ORDER BY rh_account_id, id FOR UPDATE OF system_platform
     ),
          updated as (
              UPDATE system_platform
                  SET stale = true
                  FROM ids
-                 WHERE system_platform.id = ids.id
+                 WHERE system_platform.rh_account_id = ids.rh_account_id
+                   AND system_platform.id = ids.id
                  RETURNING ids.id
          )
     SELECT count(*)
@@ -462,6 +465,66 @@ BEGIN
                     rest || ';';
             I = I + 1;
         END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION create_table_partition_triggers(name text, trig_type text, tbl regclass, trig_text text)
+    RETURNS VOID AS
+$$
+DECLARE
+    r record;
+BEGIN
+    FOR r IN SELECT child.relname
+               FROM pg_inherits
+               JOIN pg_class parent
+                 ON pg_inherits.inhparent = parent.oid
+               JOIN pg_class child
+                 ON pg_inherits.inhrelid   = child.oid
+              WHERE parent.relname = text(tbl)
+    LOOP
+        EXECUTE 'CREATE TRIGGER ' || name || substr(r.relname, length(text(tbl)) +1 ) ||
+                ' ' || trig_type || ' ON ' || r.relname || ' ' || trig_text || ';';
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION rename_table_with_partitions(tbl regclass, oldtext text, newtext text)
+    RETURNS VOID AS
+$$
+DECLARE
+    r record;
+BEGIN
+    FOR r IN SELECT child.relname
+               FROM pg_inherits
+               JOIN pg_class parent
+                 ON pg_inherits.inhparent = parent.oid
+               JOIN pg_class child
+                 ON pg_inherits.inhrelid   = child.oid
+              WHERE parent.relname = text(tbl)
+    LOOP
+        EXECUTE 'ALTER TABLE ' || r.relname || ' RENAME TO ' || replace(r.relname, oldtext, newtext);
+    END LOOP;
+    EXECUTE 'ALTER TABLE ' || text(tbl) || ' RENAME TO ' || replace(text(tbl), oldtext, newtext);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION rename_index_with_partitions(idx regclass, oldtext text, newtext text)
+    RETURNS VOID AS
+$$
+DECLARE
+    r record;
+BEGIN
+    FOR r IN SELECT child.relname
+               FROM pg_inherits
+               JOIN pg_class parent
+                 ON pg_inherits.inhparent = parent.oid
+               JOIN pg_class child
+                 ON pg_inherits.inhrelid   = child.oid
+              WHERE parent.relname = text(idx)
+    LOOP
+        EXECUTE 'ALTER INDEX ' || r.relname || ' RENAME TO ' || replace(r.relname, oldtext, newtext);
+    END LOOP;
+    EXECUTE 'ALTER INDEX ' || text(idx) || ' RENAME TO ' || replace(text(idx), oldtext, newtext);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -517,49 +580,39 @@ CREATE TABLE IF NOT EXISTS system_platform
     packages_installed       INT                      NOT NULL DEFAULT 0,
     packages_updatable       INT                      NOT NULL DEFAULT 0,
     reporter_id              INT,
-    PRIMARY KEY (id),
-    UNIQUE (inventory_id),
+    PRIMARY KEY (rh_account_id, id),
+    UNIQUE (rh_account_id, inventory_id),
     CONSTRAINT rh_account_id
         FOREIGN KEY (rh_account_id)
             REFERENCES rh_account (id),
     CONSTRAINT reporter_id
         FOREIGN KEY (reporter_id)
             REFERENCES reporter (id)
-) WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
-  TABLESPACE pg_default;
+) PARTITION BY HASH (rh_account_id);
 
-CREATE INDEX ON system_platform (rh_account_id);
-CREATE INDEX ON system_platform (last_upload DESC NULLS LAST);
-CREATE INDEX ON system_platform (advisory_count_cache DESC NULLS LAST);
-CREATE INDEX ON system_platform (advisory_enh_count_cache DESC NULLS LAST);
-CREATE INDEX ON system_platform (advisory_bug_count_cache DESC NULLS LAST);
-CREATE INDEX ON system_platform (advisory_sec_count_cache DESC NULLS LAST);
+SELECT create_table_partitions('system_platform', 16,
+                               $$WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
+                                 TABLESPACE pg_default$$);
 
+SELECT create_table_partition_triggers('system_platform_set_first_reported',
+                                       $$BEFORE INSERT$$,
+                                       'system_platform',
+                                       $$FOR EACH ROW EXECUTE PROCEDURE set_first_reported()$$);
 
+SELECT create_table_partition_triggers('system_platform_set_last_updated',
+                                       $$BEFORE INSERT OR UPDATE$$,
+                                       'system_platform',
+                                       $$FOR EACH ROW EXECUTE PROCEDURE set_last_updated()$$);
 
-CREATE TRIGGER system_platform_set_first_reported
-    BEFORE INSERT
-    ON system_platform
-    FOR EACH ROW
-EXECUTE PROCEDURE set_first_reported();
+SELECT create_table_partition_triggers('system_platform_check_unchanged',
+                                       $$BEFORE INSERT OR UPDATE$$,
+                                       'system_platform',
+                                       $$FOR EACH ROW EXECUTE PROCEDURE check_unchanged()$$);
 
-CREATE TRIGGER system_platform_set_last_updated
-    BEFORE INSERT OR UPDATE
-    ON system_platform
-    FOR EACH ROW
-EXECUTE PROCEDURE set_last_updated();
-
-CREATE TRIGGER system_platform_check_unchanged
-    BEFORE INSERT OR UPDATE
-    ON system_platform
-    FOR EACH ROW
-EXECUTE PROCEDURE check_unchanged();
-
-CREATE TRIGGER system_platform_on_update
-    AFTER UPDATE OF opt_out, stale
-    ON system_platform
-    FOR EACH ROW
-EXECUTE PROCEDURE on_system_update();
+SELECT create_table_partition_triggers('system_platform_on_update',
+                                       $$AFTER UPDATE$$,
+                                       'system_platform',
+                                       $$FOR EACH ROW EXECUTE PROCEDURE on_system_update()$$);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_platform TO listener;
 -- evaluator needs to update last_evaluation
@@ -679,29 +732,31 @@ ON CONFLICT DO NOTHING;
 -- system_advisories
 CREATE TABLE IF NOT EXISTS system_advisories
 (
+    rh_account_id  INT                      NOT NULL,
     system_id      INT                      NOT NULL,
     advisory_id    INT                      NOT NULL,
     first_reported TIMESTAMP WITH TIME ZONE NOT NULL,
     when_patched   TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     status_id      INT                      DEFAULT 0,
-    PRIMARY KEY (system_id, advisory_id),
+    PRIMARY KEY (rh_account_id, system_id, advisory_id),
     CONSTRAINT system_platform_id
-        FOREIGN KEY (system_id)
-            REFERENCES system_platform (id),
+        FOREIGN KEY (rh_account_id, system_id)
+            REFERENCES system_platform (rh_account_id, id),
     CONSTRAINT advisory_metadata_id
         FOREIGN KEY (advisory_id)
             REFERENCES advisory_metadata (id),
     CONSTRAINT status_id
         FOREIGN KEY (status_id)
             REFERENCES status (id)
-) WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
-  TABLESPACE pg_default;
+) PARTITION BY HASH (rh_account_id);
 
-CREATE TRIGGER system_advisories_set_first_reported
-    BEFORE INSERT
-    ON system_advisories
-    FOR EACH ROW
-EXECUTE PROCEDURE set_first_reported();
+SELECT create_table_partitions('system_advisories', 32,
+                               $$WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')$$);
+
+SELECT create_table_partition_triggers('system_advisories_set_first_reported',
+                                       $$BEFORE INSERT$$,
+                                       'system_advisories',
+                                       $$FOR EACH ROW EXECUTE PROCEDURE set_first_reported()$$);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO evaluator;
 -- manager needs to be able to update things like 'status' on a sysid/advisory combination, also needs to delete
@@ -759,18 +814,18 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON repo TO listener;
 -- system_repo
 CREATE TABLE IF NOT EXISTS system_repo
 (
-    system_id INT NOT NULL,
-    repo_id   INT NOT NULL,
-    UNIQUE (system_id, repo_id),
+    system_id     INT NOT NULL,
+    repo_id       INT NOT NULL,
+    rh_account_id INT NOT NULL,
+    UNIQUE (rh_account_id, system_id, repo_id),
     CONSTRAINT system_platform_id
-        FOREIGN KEY (system_id)
-            REFERENCES system_platform (id),
+        FOREIGN KEY (rh_account_id, system_id)
+            REFERENCES system_platform (rh_account_id, id),
     CONSTRAINT repo_id
         FOREIGN KEY (repo_id)
             REFERENCES repo (id)
 ) TABLESPACE pg_default;
 
-CREATE INDEX ON system_repo (system_id);
 CREATE INDEX ON system_repo (repo_id);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_repo TO listener;
