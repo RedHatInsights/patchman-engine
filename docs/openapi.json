@@ -490,6 +490,14 @@
                 "operationId": "exportSystems",
                 "parameters": [
                     {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Find matching text",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[id]",
                         "in": "query",
                         "description": "Filter",
@@ -559,6 +567,35 @@
                         "description": "Filter",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[packages_installed]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[packages_updatable]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Tag filter",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
                         }
                     }
                 ],
@@ -934,6 +971,14 @@
                     },
                     {
                         "name": "filter[stale]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[enabled]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {

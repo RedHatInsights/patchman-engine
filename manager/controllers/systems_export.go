@@ -15,6 +15,7 @@ import (
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json,text/csv
+// @Param    search         query   string  false   "Find matching text"
 // @Param    filter[id]              query   string  false "Filter"
 // @Param    filter[display_name]    query   string  false "Filter"
 // @Param    filter[last_evaluation] query   string  false "Filter"
@@ -24,6 +25,9 @@ import (
 // @Param    filter[rhea_count]      query   string  false "Filter"
 // @Param    filter[enabled]         query   string  false "Filter"
 // @Param    filter[stale]           query   string  false "Filter"
+// @Param    filter[packages_installed] query string false "Filter"
+// @Param    filter[packages_updatable] query string false "Filter"
+// @Param    tags                    query   []string  false "Tag filter"
 // @Success 200 {array} SystemInlineItem
 // @Router /api/patch/v1/export/systems [get]
 func SystemsExportHandler(c *gin.Context) {
