@@ -155,7 +155,7 @@ func TestSyncAdvisories(t *testing.T) {
 	configure()
 
 	err := syncAdvisories()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	expected := []string{"RH-100"}
 	database.CheckAdvisoriesInDB(t, expected)
