@@ -220,7 +220,7 @@ func TestSystemsExportJSON(t *testing.T) {
 
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 8, len(output))
-	assert.Equal(t, output[0].ID, "00000000-0000-0000-0000-000000000001")
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 }
 
 // nolint: lll
@@ -280,4 +280,39 @@ func TestSystemsExportCSVFilter(t *testing.T) {
 			"packages_installed,packages_updatable",
 		lines[0])
 	assert.Equal(t, "", lines[1])
+}
+
+func TestExportSystemsTags(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?tags=ns1/k1=val1", nil)
+	req.Header.Add("Accept", "application/json")
+	core.InitRouterWithPath(SystemsExportHandler, "/").ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output []SystemInlineItem
+
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Equal(t, 8, len(output))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
+}
+
+func TestSystemsExportWorkloads(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET",
+		"/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][in][]=ABC", nil)
+	req.Header.Add("Accept", "application/json")
+	core.InitRouterWithPath(SystemsExportHandler, "/").ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output []SystemInlineItem
+
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Equal(t, 2, len(output))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 }
