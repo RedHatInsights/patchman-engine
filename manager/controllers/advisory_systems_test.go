@@ -116,20 +116,36 @@ func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 
 	assert.Equal(t, 200, w.Code)
-	assert.Equal(t, 8, len(output.Data))
+	assert.Equal(t, 7, len(output.Data))
 }
 
-func TestAdvisorySystemsTags2(t *testing.T) { //nolint:dupl
+func TestAdvisorySystemsTagsMultiple(t *testing.T) { //nolint:dupl
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1?tags=ns1/k2=val2", nil)
+	req, _ := http.NewRequest("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1", nil)
 	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 
 	assert.Equal(t, 200, w.Code)
-	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data[0].ID)
+}
+
+func TestAdvisorySystemsTagsUnknown(t *testing.T) { //nolint:dupl
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=unk", nil)
+	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+
+	var output AdvisorySystemsResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+
+	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, 0, len(output.Data))
 }
