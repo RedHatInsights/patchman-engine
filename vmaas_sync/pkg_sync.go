@@ -105,9 +105,42 @@ func storePackageStrings(tx *gorm.DB, data map[utils.Nevra]vmaas.PackagesRespons
 	return database.BulkInsertChunk(tx, strings, chunkSize)
 }
 
+type packageID struct {
+	NameID int
+	EVRA   string
+}
+
+//nolint: funlen
 func storePackageDetails(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, nameIDs map[string]int,
 	data map[utils.Nevra]vmaas.PackagesResponsePackageList) error {
-	toStore := make([]models.Package, 0, len(data))
+	inserts := make([]models.Package, 0, len(data))
+	updates := make([]models.Package, 0, len(data))
+
+	names := make([]string, 0, len(data))
+	evras := make([]string, 0, len(data))
+	for nevra := range data {
+		names = append(names, nevra.Name)
+		evras = append(evras, nevra.EVRAString())
+	}
+
+	var oldPackages []models.Package
+
+	err := database.Db.
+		Table("package p").
+		Select("pn.name, p.*").
+		Joins("JOIN package_name pn ON pn.id = p.name_id").
+		Where("p.evra in (?)", evras).
+		Where("pn.name in (?)", names).
+		Find(&oldPackages).Error
+
+	if err != nil {
+		return errors.Wrap(err, "Loading old packages")
+	}
+	oldPackagesMap := map[packageID]models.Package{}
+
+	for _, o := range oldPackages {
+		oldPackagesMap[packageID{o.NameID, o.EVRA}] = o
+	}
 
 	for nevra, data := range data {
 		desc := sha256.Sum256([]byte(data.Description))
@@ -117,15 +150,27 @@ func storePackageDetails(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, nameIDs m
 			utils.Log("nevra", nevra.String()).Warn("Did not find matching advisories for nevra")
 			continue
 		}
-		toStore = append(toStore, models.Package{
+
+		next := models.Package{
 			NameID:          nameIDs[nevra.Name],
 			EVRA:            nevra.EVRAString(),
 			DescriptionHash: desc[:],
 			SummaryHash:     sum[:],
 			AdvisoryID:      advisoryIDs[nevra],
-		})
+		}
+
+		if old, has := oldPackagesMap[packageID{next.NameID, next.EVRA}]; has {
+			next.ID = old.ID
+			updates = append(updates, next)
+		} else {
+			inserts = append(inserts, next)
+		}
+	}
+
+	if err := database.Db.Update(&updates).Error; err != nil {
+		return errors.Wrap(err, "")
 	}
 
 	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
-	return database.BulkInsertChunk(tx, toStore, chunkSize)
+	return database.BulkInsertChunk(tx, inserts, chunkSize)
 }
