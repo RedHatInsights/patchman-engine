@@ -244,13 +244,11 @@ func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB
 		Select("h.id")
 
 	tags := c.QueryArray("tags")
-	if len(tags) > 0 {
-		for _, t := range tags {
-			matches := tagRegex.FindStringSubmatch(t)
-			tagJSON := fmt.Sprintf(`[{"namespace":"%s", "key": "%s", "value": "%s"}]`, matches[1], matches[2], matches[3])
-			subq = subq.Where(" h.tags @> ?::jsonb", tagJSON)
-			applied = true
-		}
+	for _, t := range tags {
+		matches := tagRegex.FindStringSubmatch(t)
+		tagJSON := fmt.Sprintf(`[{"namespace":"%s", "key": "%s", "value": "%s"}]`, matches[1], matches[2], matches[3])
+		subq = subq.Where(" h.tags @> ?::jsonb", tagJSON)
+		applied = true
 	}
 
 	// Additional filters

@@ -818,7 +818,7 @@ SELECT DISTINCT ON (p.name_id) p.name_id, p.id as package_id, sum.value as summa
 FROM package p
          INNER JOIN strings sum on p.summary_hash = sum.id
          LEFT JOIN advisory_metadata am on p.advisory_id = am.id
-ORDER BY p.name_id, am.public_date;
+ORDER BY p.name_id, am.public_date DESC;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE package_latest_cache TO vmaas_sync;
 

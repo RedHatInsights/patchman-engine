@@ -37,12 +37,13 @@ func syncPackages(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, pkgs []string) e
 	if err != nil {
 		return errors.Wrap(err, "Pkg strings")
 	}
-	err = storePackageDetails(tx, advisoryIDs, idByName, dataByNevra)
-	if err != nil {
-		return errors.Wrap(err, "Pkg details")
+	if err = storePackageDetails(tx, advisoryIDs, idByName, dataByNevra); err != nil {
+		return errors.Wrap(err, "Package details store failed")
 	}
-	return errors.Wrap(tx.Exec("SELECT refresh_latest_packages_view()").Error,
-		"Refreshing latest packages cache")
+	if err = tx.Exec("SELECT refresh_latest_packages_view()").Error; err != nil {
+		return errors.Wrap(err, "Refreshing latest packages cache")
+	}
+	return nil
 }
 
 func storePackageNames(tx *gorm.DB, pkgs map[string]vmaas.PackagesResponsePackageList) (map[string]int,
