@@ -10,9 +10,20 @@ import (
 	"net/http"
 )
 
+var PackageSystemFields = database.MustGetQueryAttrs(&PackageSystemItem{})
+var PackageSystemsSelect = database.MustGetSelect(&PackageSystemItem{})
+var PackageSystemsOpts = ListOpts{
+	Fields: PackageSystemFields,
+	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
+	DefaultFilters: map[string]FilterData{},
+	DefaultSort:    "id",
+}
+
 type PackageSystemItem struct {
-	InventoryID string `json:"id"`
-	EVRA        string `json:"evra"`
+	ID            string `json:"id" query:"sp.inventory_id"`
+	InstalledEVRA string `json:"installed_evra" query:"p.evra"`
+	AvailableEVRA string `json:"available_evra" query:"(spkg.update_data ->> -1)::jsonb ->> 'evra'"`
+	Updatable     bool   `json:"updatable" query:"(json_array_length(spkg.update_data::json) > 0)"`
 }
 
 type PackageSystemsResponse struct {
@@ -23,14 +34,14 @@ type PackageSystemsResponse struct {
 
 func packageSystemsQuery(acc int, pkgName string) *gorm.DB {
 	return database.Db.
+		Select(PackageSystemsSelect).
 		Table("system_platform sp").
 		// nolint: lll
-		Joins("inner join system_package spkg on spkg.system_id = sp.id and sp.rh_account_id = ?", acc).
+		Joins("inner join system_package spkg on spkg.system_id = sp.id and sp.stale = false and sp.rh_account_id = ?", acc).
 		Joins("inner join package p on p.id = spkg.package_id").
 		Joins("inner join package_name pn on pn.id = p.name_id").
 		Where("spkg.rh_account_id = ?", acc).
-		Where("pn.name = ?", pkgName).
-		Select("sp.inventory_id, p.evra as evra")
+		Where("pn.name = ?", pkgName)
 }
 
 // @Summary Show me all my systems which have a package installed
@@ -53,8 +64,9 @@ func PackageSystemsListHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "package_name param not found"})
 		return
 	}
+
 	query := packageSystemsQuery(account, packageName)
-	query, meta, links, err := ListCommon(query, c, fmt.Sprintf("/packages/%s/systems", packageName), SystemOpts)
+	query, meta, links, err := ListCommon(query, c, fmt.Sprintf("/packages/%s/systems", packageName), PackageSystemsOpts)
 	query = ApplySearch(c, query, "sp.display_name")
 	query, _ = ApplyTagsFilter(c, query, "sp.inventory_id")
 
