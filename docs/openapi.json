@@ -554,14 +554,6 @@
                         }
                     },
                     {
-                        "name": "filter[enabled]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "filter[stale]",
                         "in": "query",
                         "description": "Filter",
@@ -971,14 +963,6 @@
                     },
                     {
                         "name": "filter[stale]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[enabled]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
