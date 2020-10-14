@@ -77,7 +77,6 @@ type SystemsResponse struct {
 // @Param    filter[rhba_count]      query   string  false "Filter"
 // @Param    filter[rhea_count]      query   string  false "Filter"
 // @Param    filter[stale]           query   string  false "Filter"
-// @Param    filter[enabled]         query   string  false "Filter"
 // @Param    filter[packages_installed] query string false "Filter"
 // @Param    filter[packages_updatable] query string false "Filter"
 // @Param    tags                    query   []string  false "Tag filter"
