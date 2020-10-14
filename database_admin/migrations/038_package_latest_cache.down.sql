@@ -1,0 +1,1 @@
+DROP MATERIALIZED VIEW IF EXISTS package_latest_cache;
