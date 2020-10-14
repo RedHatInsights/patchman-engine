@@ -2128,6 +2128,161 @@ data:
           }
         },
         {
+          "cards": {
+            "cardPadding": null,
+            "cardRound": null
+          },
+          "color": {
+            "cardColor": "#b4ff00",
+            "colorScale": "sqrt",
+            "colorScheme": "interpolateSpectral",
+            "exponent": 0.5,
+            "mode": "spectrum"
+          },
+          "dataFormat": "tsbuckets",
+          "datasource": "$datasource",
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 47
+          },
+          "heatmap": {},
+          "hideZeroBuckets": false,
+          "highlightCards": true,
+          "id": 72,
+          "legend": {
+            "show": true
+          },
+          "links": [],
+          "options": {},
+          "reverseYBuckets": false,
+          "targets": [
+            {
+              "expr": "sum(increase(patchman_engine_evaluator_upload_evaluation_delay_seconds_bucket{job=~\"patchman-engine-evaluator-upload\"}[$interval])) by (le)",
+              "format": "heatmap",
+              "intervalFactor": 10,
+              "legendFormat": "{{le}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Upload - evaluation delay",
+          "tooltip": {
+            "show": true,
+            "showHistogram": false
+          },
+          "type": "heatmap",
+          "xAxis": {
+            "show": true
+          },
+          "xBucketNumber": null,
+          "xBucketSize": null,
+          "yAxis": {
+            "decimals": null,
+            "format": "s",
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true,
+            "splitFactor": null
+          },
+          "yBucketBound": "auto",
+          "yBucketNumber": null,
+          "yBucketSize": null
+        },
+        {
+          "aliasColors": {
+            "unpatched": "#e24d42"
+          },
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 47
+          },
+          "hiddenSeries": false,
+          "id": 39,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "sum(rate(patchman_engine_evaluator_updates{pod=~\"patchman-engine-evaluator-$evaluator\"}[$interval])) by (type)",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "{{type}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "System evaluations - patched/unpatched",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "none",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
@@ -2139,7 +2294,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 47
+            "y": 53
           },
           "hiddenSeries": false,
           "id": 47,
@@ -2250,105 +2405,13 @@ data:
           }
         },
         {
-          "aliasColors": {
-            "unpatched": "#e24d42"
-          },
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "$datasource",
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 6,
-            "w": 12,
-            "x": 12,
-            "y": 47
-          },
-          "hiddenSeries": false,
-          "id": 39,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "dataLinks": []
-          },
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "sum(rate(patchman_engine_evaluator_updates{pod=~\"patchman-engine-evaluator-$evaluator\"}[$interval])) by (type)",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "System evaluations - patched/unpatched",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "none",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
           "collapsed": false,
           "datasource": null,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 53
+            "y": 59
           },
           "id": 67,
           "panels": [],
@@ -2373,7 +2436,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 54
+            "y": 60
           },
           "heatmap": {},
           "hideZeroBuckets": false,
@@ -2430,7 +2493,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 54
+            "y": 60
           },
           "hiddenSeries": false,
           "id": 40,
@@ -2522,7 +2585,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 60
+            "y": 66
           },
           "id": 69,
           "panels": [],
@@ -2547,7 +2610,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 61
+            "y": 67
           },
           "hiddenSeries": false,
           "id": 51,
@@ -2577,25 +2640,19 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(patchman_engine_vmaas_sync_systems{last_upload=~\"last.*\"}) by (last_upload)",
+              "expr": "sum(patchman_engine_vmaas_sync_systems{last_upload=~\"last.*|all\"}) by (last_upload)",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "last_upload: {{last_upload}}",
+              "legendFormat": "{{last_upload}}",
               "refId": "A"
             },
             {
-              "expr": "sum(patchman_engine_vmaas_sync_systems{opt_out=\"on\"})",
+              "expr": "sum(patchman_engine_vmaas_sync_systems{last_upload=~\"last.*|all\"}) by (last_upload) - sum(label_replace(patchman_engine_vmaas_sync_cyndi_systems{type=~\"last.*|all\"}, \"last_upload\", \"$1\", \"type\", \"(.*)\")) by (last_upload)",
               "format": "time_series",
+              "hide": false,
               "intervalFactor": 1,
-              "legendFormat": "opt outed",
+              "legendFormat": "{{last_upload}} - delta (patch - inv): ",
               "refId": "B"
-            },
-            {
-              "expr": "sum(patchman_engine_vmaas_sync_systems{last_upload=\"all\"})",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "all",
-              "refId": "C"
             }
           ],
           "thresholds": [],
@@ -2657,7 +2714,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 61
+            "y": 67
           },
           "hiddenSeries": false,
           "id": 42,
@@ -2745,6 +2802,198 @@ data:
         {
           "aliasColors": {
             "all": "#ba43a9",
+            "last_upload: all": "#ba43a9",
+            "last_upload: last1D": "#7eb26d",
+            "last_upload: last30D": "#967302",
+            "last_upload: last7D": "#cca300"
+          },
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 73
+          },
+          "hiddenSeries": false,
+          "id": 73,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "sum(patchman_engine_vmaas_sync_cyndi_tags_count) by (type)",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "{{type}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Database items - Cyndi data",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "none",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {
+            "all": "#ba43a9",
+            "bugfix": "#ef843c",
+            "enhancement": "#9ac48a",
+            "security": "#e24d42",
+            "unknown": "#fce2de"
+          },
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 73
+          },
+          "hiddenSeries": false,
+          "id": 59,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "sum(patchman_engine_vmaas_sync_database_processes{}) by (usename)",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "{{usename}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Database processes",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "none",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {
+            "all": "#ba43a9",
             "bugfix": "#ef843c",
             "enhancement": "#9ac48a",
             "security": "#e24d42",
@@ -2760,7 +3009,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 67
+            "y": 79
           },
           "hiddenSeries": false,
           "id": 58,
@@ -2846,109 +3095,13 @@ data:
           }
         },
         {
-          "aliasColors": {
-            "all": "#ba43a9",
-            "bugfix": "#ef843c",
-            "enhancement": "#9ac48a",
-            "security": "#e24d42",
-            "unknown": "#fce2de"
-          },
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "$datasource",
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 6,
-            "w": 12,
-            "x": 12,
-            "y": 67
-          },
-          "hiddenSeries": false,
-          "id": 59,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "dataLinks": []
-          },
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "sum(patchman_engine_vmaas_sync_database_processes{}) by (usename)",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{usename}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "Database processes",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "none",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
           "collapsed": false,
           "datasource": null,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 73
+            "y": 85
           },
           "id": 71,
           "panels": [],
@@ -2974,7 +3127,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 74
+            "y": 86
           },
           "hiddenSeries": false,
           "id": 53,
@@ -3071,7 +3224,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 74
+            "y": 86
           },
           "hiddenSeries": false,
           "id": 52,
@@ -3176,7 +3329,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 80
+            "y": 92
           },
           "hiddenSeries": false,
           "id": 54,
@@ -3294,7 +3447,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 80
+            "y": 92
           },
           "hiddenSeries": false,
           "id": 55,
@@ -3398,7 +3551,7 @@ data:
             "auto_count": 30,
             "auto_min": "10s",
             "current": {
-              "selected": true,
+              "selected": false,
               "text": "5m",
               "value": "5m"
             },
@@ -3535,7 +3688,6 @@ data:
           },
           {
             "current": {
-              "selected": true,
               "text": "crcp01ue1-prometheus",
               "value": "crcp01ue1-prometheus"
             },
@@ -3553,7 +3705,6 @@ data:
           },
           {
             "current": {
-              "selected": true,
               "text": "app-sre-prod-01-prometheus",
               "value": "app-sre-prod-01-prometheus"
             },
