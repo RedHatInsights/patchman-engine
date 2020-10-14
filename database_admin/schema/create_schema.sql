@@ -338,6 +338,18 @@ END;
 $refresh_system_cached_counts$
     LANGUAGE 'plpgsql';
 
+
+CREATE OR REPLACE FUNCTION refresh_latest_packages_view()
+    RETURNS void
+    SECURITY DEFINER
+AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW package_latest_cache WITH DATA;
+    RETURN;
+END;
+$$ LANGUAGE plpgsql;
+
+
 CREATE OR REPLACE FUNCTION delete_system(inventory_id_in varchar)
     RETURNS TABLE
             (
@@ -809,6 +821,8 @@ FROM package p
 ORDER BY p.name_id, am.public_date;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE package_latest_cache TO vmaas_sync;
+
+CREATE UNIQUE INDEX IF NOT EXISTS package_latest_cache_pkey ON package_latest_cache (name_id);
 
 CREATE TABLE IF NOT EXISTS system_package
 (

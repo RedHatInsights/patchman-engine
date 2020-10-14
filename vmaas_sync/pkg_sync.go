@@ -41,7 +41,8 @@ func syncPackages(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, pkgs []string) e
 	if err != nil {
 		return errors.Wrap(err, "Pkg details")
 	}
-	return errors.Wrap(refreshPackageCache(tx), "Refreshing latest packages cache")
+	return errors.Wrap(tx.Exec("SELECT refresh_latest_packages_view()").Error,
+		"Refreshing latest packages cache")
 }
 
 func storePackageNames(tx *gorm.DB, pkgs map[string]vmaas.PackagesResponsePackageList) (map[string]int,
@@ -126,8 +127,4 @@ func storePackageDetails(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, nameIDs m
 
 	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
 	return database.BulkInsertChunk(tx, toStore, chunkSize)
-}
-
-func refreshPackageCache(tx *gorm.DB) error {
-	return tx.Exec("REFRESH MATERIALIZED VIEW package_latest_cache").Error
 }

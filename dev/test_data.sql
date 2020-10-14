@@ -37,50 +37,6 @@ INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vma
 (13, '00000000-0000-0000-0000-000000000013','00000000-0000-0000-0000-000000000013', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', true,1,0),
 (14, '00000000-0000-0000-0000-000000000014','00000000-0000-0000-0000-000000000014', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', true,0,0);
 
-INSERT INTO package_name(id,name) VALUES
-(1, 'kernel'),
-(2, 'firefox'),
-(3, 'bash'),
-(4, 'curl'),
-(5, 'tar'),
-(6, 'systemd'),
-(7, 'sed'),
-(8, 'grep'),
-(9, 'which'),
-(10, 'passwd');
-
-INSERT INTO strings(id, value) VALUES
-('1', 'kernel'),
-('2', 'firefox'),
-('3', 'bash'),
-('4', 'curl'),
-('5', 'tar'),
-('6', 'systemd'),
-('7', 'sed'),
-('8', 'grep'),
-('9', 'which'),
-('10', 'passwd');
-
-INSERT INTO package(id, name_id, evra, description_hash, summary_hash) VALUES
-(1, 1, '5.6.13-200.fc31.x86_64', '1', '1'), -- kernel
-(2, 2, '76.0.1-1.fc31.x86_64', '2', '2'), -- firefox
-(3, 3, '4.4.19-8.el8_0.x86_64', '3', '3'), -- bas
-(4, 4, '7.61.1-8.el8.x86_64', '4', '4'), -- curl
-(5, 5, '1.30-4.el8.x86_64', '5', '5'), -- tar
-(6, 6, '239-13.el8_0.5.x86_64', '6', '6'), -- systemd
-(7, 7, '4.5-1.el8.x86_64', '7', '7'), -- sed
-(8, 8, '3.1-6.el8.x86_64', '8', '8'), -- grep
-(9, 9, '2.21-10.el8.x86_64', '9', '9'), -- which
-(10, 10, '0.80-2.el8.x86_64', '10', '10'), -- passwd
-(11, 1, '5.6.13-201.fc31.x86_64', '1', '1'); -- kernel
-
-INSERT INTO system_package (rh_account_id, system_id, package_id, update_data) VALUES
-(3, 12, 1, '[{"evra": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}]'),
-(3, 12, 2, '[{"evra": "77.0.1-1.fc31-x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31-x86_64", "advisory": "RH-2"}]'),
-(3, 13, 3, null),
-(3, 13, 4, null),
-(3, 13, 1, null);
-
 INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solution, advisory_type_id,
                                public_date, modified_date, url, severity_id, cve_list) VALUES
 (1, 'RH-1', 'adv-1-des', 'adv-1-syn', 'adv-1-sum', 'adv-1-sol', 1, '2016-09-22 12:00:00-04', '2017-09-22 12:00:00-04', 'url1', NULL, NULL),
@@ -94,9 +50,6 @@ INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solutio
 (9, 'RH-9', 'adv-9-des', 'adv-9-syn', 'adv-9-sum', 'adv-9-sol', 3, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url9', NULL, '["CVE-4"]');
 
 UPDATE advisory_metadata SET package_data = '{"firefox": "77.0.1-1.fc31-x86_64"}' WHERE name = 'RH-9';
-
-UPDATE package SET advisory_id = 1 WHERE id = 1;
-UPDATE package SET advisory_id = 7 WHERE id = 11;
 
 INSERT INTO system_advisories (system_id, advisory_id, first_reported, when_patched, status_id) VALUES
 (1, 1, '2016-09-22 12:00:00-04', NULL, 0),
@@ -129,10 +82,56 @@ INSERT INTO system_repo (system_id, repo_id) VALUES
 (3, 1),
 (2, 2);
 
+
+INSERT INTO package_name(id,name) VALUES
+(1, 'kernel'),
+(2, 'firefox'),
+(3, 'bash'),
+(4, 'curl'),
+(5, 'tar'),
+(6, 'systemd'),
+(7, 'sed'),
+(8, 'grep'),
+(9, 'which'),
+(10, 'passwd');
+
+INSERT INTO strings(id, value) VALUES
+('1', 'kernel'),
+('2', 'firefox'),
+('3', 'bash'),
+('4', 'curl'),
+('5', 'tar'),
+('6', 'systemd'),
+('7', 'sed'),
+('8', 'grep'),
+('9', 'which'),
+('10', 'passwd');
+
+INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_id) VALUES
+(1, 1, '5.6.13-200.fc31.x86_64', '1', '1', 1), -- kernel
+(2, 2, '76.0.1-1.fc31.x86_64', '2', '2', 1), -- firefox
+(3, 3, '4.4.19-8.el8_0.x86_64', '3', '3', 3), -- bas
+(4, 4, '7.61.1-8.el8.x86_64', '4', '4', 4), -- curl
+(5, 5, '1.30-4.el8.x86_64', '5', '5', 5), -- tar
+(6, 6, '239-13.el8_0.5.x86_64', '6', '6', 6), -- systemd
+(7, 7, '4.5-1.el8.x86_64', '7', '7', 7), -- sed
+(8, 8, '3.1-6.el8.x86_64', '8', '8', 8), -- grep
+(9, 9, '2.21-10.el8.x86_64', '9', '9', 9), -- which
+(10, 10, '0.80-2.el8.x86_64', '10', '10', 9), -- passwd
+(11, 1, '5.6.13-201.fc31.x86_64', '1', '1', 7); -- kernel
+
+INSERT INTO system_package (rh_account_id, system_id, package_id, update_data) VALUES
+(3, 12, 1, '[{"evra": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}]'),
+(3, 12, 2, '[{"evra": "77.0.1-1.fc31-x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31-x86_64", "advisory": "RH-2"}]'),
+(3, 13, 3, null),
+(3, 13, 4, null),
+(3, 13, 1, null);
+
 INSERT INTO timestamp_kv (name, value) VALUES
 ('last_eval_repo_based', '2018-04-05T01:23:45+02:00');
 
 SELECT refresh_all_cached_counts();
+SELECT refresh_latest_packages_view();
 
 ALTER TABLE advisory_metadata ALTER COLUMN id RESTART WITH 100;
 ALTER TABLE system_platform ALTER COLUMN id RESTART WITH 100;
@@ -209,4 +208,4 @@ INSERT INTO inventory.hosts_v1_0 (id, account, display_name, tags, updated, crea
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": false}'),
 ('00000000000000000000000000000016', '3', '00000000-0000-0000-0000-000000000016', '[]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": false}');
- 
+
