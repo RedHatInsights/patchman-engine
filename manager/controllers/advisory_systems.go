@@ -64,8 +64,8 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 	}
 
 	query := buildQuery(account, advisoryName)
-	query = ApplySearch(c, query, "system_platform.display_name")
-	query, _ = ApplyTagsFilter(c, query, "system_platform.inventory_id")
+	query = ApplySearch(c, query, "sp.display_name")
+	query, _ = ApplyTagsFilter(c, query, "sp.inventory_id")
 	path := fmt.Sprintf("/api/patch/v1/advisories/%v/systems", advisoryName)
 	query, meta, links, err := ListCommon(query, c, path, SystemOpts)
 	if err != nil {
@@ -91,9 +91,9 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 
 func buildQuery(account int, advisoryName string) *gorm.DB {
 	query := database.Db.Table("advisory_metadata am").Select(SystemsSelect).
-		Joins("join system_advisories sa ON am.id=sa.advisory_id AND sa.when_patched IS NULL").
-		Joins("join system_platform ON sa.system_id=system_platform.id").
-		Where("system_platform.rh_account_id = ?", account).
+		Joins("join system_advisories sa ON am.id = sa.advisory_id AND sa.when_patched IS NULL").
+		Joins("join system_platform sp ON sa.system_id = sp.id").
+		Where("sp.rh_account_id = ?", account).
 		Where("am.name = ?", advisoryName)
 	return query
 }

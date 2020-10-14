@@ -26,21 +26,21 @@ var SystemOpts = ListOpts{
 }
 
 type SystemDBLookup struct {
-	ID string `query:"system_platform.inventory_id"`
+	ID string `query:"sp.inventory_id"`
 	SystemItemAttributes
 }
 
 type SystemItemAttributes struct {
-	DisplayName    string     `json:"display_name" csv:"display_name" query:"system_platform.display_name"`
-	LastEvaluation *time.Time `json:"last_evaluation" csv:"last_evaluation" query:"system_platform.last_evaluation"`
-	LastUpload     *time.Time `json:"last_upload" csv:"last_upload" query:"system_platform.last_upload"`
-	RhsaCount      int        `json:"rhsa_count" csv:"rhsa_count" query:"system_platform.advisory_sec_count_cache"`
-	RhbaCount      int        `json:"rhba_count" csv:"rhba_count" query:"system_platform.advisory_bug_count_cache"`
-	RheaCount      int        `json:"rhea_count" csv:"rhea_count" query:"system_platform.advisory_enh_count_cache"`
-	Stale          bool       `json:"stale" csv:"stale" query:"system_platform.stale"`
+	DisplayName    string     `json:"display_name" csv:"display_name" query:"sp.display_name"`
+	LastEvaluation *time.Time `json:"last_evaluation" csv:"last_evaluation" query:"sp.last_evaluation"`
+	LastUpload     *time.Time `json:"last_upload" csv:"last_upload" query:"sp.last_upload"`
+	RhsaCount      int        `json:"rhsa_count" csv:"rhsa_count" query:"sp.advisory_sec_count_cache"`
+	RhbaCount      int        `json:"rhba_count" csv:"rhba_count" query:"sp.advisory_bug_count_cache"`
+	RheaCount      int        `json:"rhea_count" csv:"rhea_count" query:"sp.advisory_enh_count_cache"`
+	Stale          bool       `json:"stale" csv:"stale" query:"sp.stale"`
 
-	PackagesInstalled int `json:"packages_installed" csv:"packages_installed" query:"system_platform.packages_installed"`
-	PackagesUpdatable int `json:"packages_updatable" csv:"packages_updatable" query:"system_platform.packages_updatable"`
+	PackagesInstalled int `json:"packages_installed" csv:"packages_installed" query:"sp.packages_installed"`
+	PackagesUpdatable int `json:"packages_updatable" csv:"packages_updatable" query:"sp.packages_updatable"`
 }
 
 type SystemItem struct {
@@ -90,8 +90,8 @@ type SystemsResponse struct {
 func SystemsListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	query := querySystems(account)
-	query = ApplySearch(c, query, "system_platform.display_name")
-	query, _ = ApplyTagsFilter(c, query, "system_platform.inventory_id")
+	query = ApplySearch(c, query, "sp.display_name")
+	query, _ = ApplyTagsFilter(c, query, "sp.inventory_id")
 	query, meta, links, err := ListCommon(query, c, "/api/patch/v1/systems", SystemOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
@@ -169,8 +169,8 @@ func SystemsExportHandler(c *gin.Context) {
 }
 
 func querySystems(account int) *gorm.DB {
-	return database.Db.Table("system_platform").Select(SystemsSelect).
-		Where("system_platform.rh_account_id = ?", account)
+	return database.Db.Table("system_platform sp").Select(SystemsSelect).
+		Where("sp.rh_account_id = ?", account)
 }
 
 func buildData(systems []SystemDBLookup) []SystemItem {
