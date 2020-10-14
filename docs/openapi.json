@@ -1578,11 +1578,17 @@
             "controllers.PackageSystemItem": {
                 "type": "object",
                 "properties": {
-                    "evra": {
+                    "available_evra": {
                         "type": "string"
                     },
                     "id": {
                         "type": "string"
+                    },
+                    "installed_evra": {
+                        "type": "string"
+                    },
+                    "updatable": {
+                        "type": "boolean"
                     }
                 }
             },

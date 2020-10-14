@@ -297,7 +297,7 @@ func loadPackages(tx *gorm.DB, accountID, systemID int,
 		evras = append(evras, parsed.EVRAString())
 	}
 
-	// Might return more data than we need (one EVRA being applicable to more packages
+	// Might return more data than we need (one InstallledEVRA being applicable to more packages
 	// But it was only way to get somewhat fast query plan which only uses index scans
 	var packages []namedPackage
 	err := tx.Table("package").
