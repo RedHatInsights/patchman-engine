@@ -12,4 +12,17 @@ GRANT SELECT ON TABLE public.package_latest_cache TO evaluator;
 GRANT SELECT ON TABLE public.package_latest_cache TO listener;
 GRANT SELECT ON TABLE public.package_latest_cache TO manager;
 
+CREATE UNIQUE INDEX IF NOT EXISTS package_latest_cache_pkey ON package_latest_cache (name_id);
+
 REFRESH MATERIALIZED VIEW package_latest_cache;
+
+
+CREATE OR REPLACE FUNCTION refresh_latest_packages_view()
+    RETURNS void
+    SECURITY DEFINER
+AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW package_latest_cache WITH DATA;
+    RETURN;
+END;
+$$ LANGUAGE plpgsql;

@@ -258,6 +258,7 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 		if bytes.Equal(updateDataJSON, currentNamedPackage.UpdateData.RawMessage) {
 			continue
 		}
+
 		// Create row to update
 		toStore = append(toStore, models.SystemPackage{
 			RhAccountID: system.RhAccountID,

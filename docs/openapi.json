@@ -661,6 +661,14 @@
                         }
                     },
                     {
+                        "name": "filter[summary]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "tags",
                         "in": "query",
                         "description": "Tag filter",
