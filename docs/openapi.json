@@ -970,19 +970,6 @@
                         }
                     },
                     {
-                        "name": "tags",
-                        "in": "query",
-                        "description": "Tag filter",
-                        "style": "form",
-                        "explode": true,
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
