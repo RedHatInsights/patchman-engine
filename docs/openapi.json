@@ -1773,7 +1773,10 @@
                         "type": "boolean"
                     },
                     "updates": {
-                        "$ref": "#/components/schemas/models.PackageUpdates"
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/models.PackageUpdate"
+                        }
                     }
                 }
             },
@@ -1820,12 +1823,6 @@
                     "evra": {
                         "type": "string"
                     }
-                }
-            },
-            "models.PackageUpdates": {
-                "type": "array",
-                "items": {
-                    "$ref": "#/components/schemas/models.PackageUpdate"
                 }
             }
         },

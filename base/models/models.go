@@ -95,7 +95,6 @@ func (SystemPackage) TableName() string {
 	return "system_package"
 }
 
-type PackageUpdates []PackageUpdate
 type PackageUpdate struct {
 	EVRA     string `json:"evra"`
 	Advisory string `json:"advisory"`

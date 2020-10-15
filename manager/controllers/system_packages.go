@@ -23,7 +23,7 @@ type SystemPackagesAttrs struct {
 
 type SystemPackageData struct {
 	SystemPackagesAttrs
-	Updates models.PackageUpdates `json:"updates"`
+	Updates []models.PackageUpdate `json:"updates"`
 }
 type SystemPackageResponse struct {
 	Data  []SystemPackageData `json:"data"`
