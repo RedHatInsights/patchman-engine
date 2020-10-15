@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (38, false);
+VALUES (39, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -342,7 +342,8 @@ $refresh_system_cached_counts$
 CREATE OR REPLACE FUNCTION refresh_latest_packages_view()
     RETURNS void
     SECURITY DEFINER
-AS $$
+AS
+$$
 BEGIN
     REFRESH MATERIALIZED VIEW package_latest_cache WITH DATA;
     RETURN;
@@ -834,7 +835,8 @@ CREATE TABLE IF NOT EXISTS system_package
     package_id    INT NOT NULL REFERENCES package,
     -- Use null to represent up-to-date packages
     update_data   JSONB DEFAULT NULL,
-    PRIMARY KEY (rh_account_id, system_id, package_id)
+    updatable     BOOL GENERATED ALWAYS AS ( update_data is not null ) STORED,
+    PRIMARY KEY (rh_account_id, system_id, package_id) INCLUDE (updatable)
 ) PARTITION BY HASH (rh_account_id);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_package TO evaluator;
@@ -842,8 +844,9 @@ GRANT SELECT, UPDATE, DELETE ON system_package TO listener;
 GRANT SELECT, UPDATE, DELETE ON system_package TO manager;
 GRANT SELECT, UPDATE, DELETE ON system_package TO vmaas_sync;
 
-SELECT create_table_partitions('system_package', 16,
-                               $$WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')$$);
+SELECT create_table_partitions(
+               'system_package', 16,
+               $$WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')$$);
 
 -- timestamp_kv
 CREATE TABLE IF NOT EXISTS timestamp_kv
