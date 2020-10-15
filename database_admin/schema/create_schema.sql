@@ -582,9 +582,6 @@ CREATE TABLE IF NOT EXISTS system_platform
     reporter_id              INT,
     PRIMARY KEY (rh_account_id, id),
     UNIQUE (rh_account_id, inventory_id),
-    CONSTRAINT rh_account_id
-        FOREIGN KEY (rh_account_id)
-            REFERENCES rh_account (id),
     CONSTRAINT reporter_id
         FOREIGN KEY (reporter_id)
             REFERENCES reporter (id)
@@ -741,13 +738,7 @@ CREATE TABLE IF NOT EXISTS system_advisories
     PRIMARY KEY (rh_account_id, system_id, advisory_id),
     CONSTRAINT system_platform_id
         FOREIGN KEY (rh_account_id, system_id)
-            REFERENCES system_platform (rh_account_id, id),
-    CONSTRAINT advisory_metadata_id
-        FOREIGN KEY (advisory_id)
-            REFERENCES advisory_metadata (id),
-    CONSTRAINT status_id
-        FOREIGN KEY (status_id)
-            REFERENCES status (id)
+            REFERENCES system_platform (rh_account_id, id)
 ) PARTITION BY HASH (rh_account_id);
 
 SELECT create_table_partitions('system_advisories', 32,
@@ -798,6 +789,20 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO evaluator;
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO listener;
 -- vmaas_sync needs to update stale mark, which creates and deletes advisory_account_data
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO vmaas_sync;
+
+-- the following constraints are enabled here not directly in the table definitions
+-- to make new schema equal to the migrated schema
+ALTER TABLE system_advisories
+    ADD CONSTRAINT advisory_metadata_id
+        FOREIGN KEY (advisory_id)
+            REFERENCES advisory_metadata (id),
+    ADD CONSTRAINT status_id
+        FOREIGN KEY (status_id)
+            REFERENCES status (id);
+ALTER TABLE system_platform
+    ADD CONSTRAINT rh_account_id
+        FOREIGN KEY (rh_account_id)
+            REFERENCES rh_account (id);
 
 -- repo
 CREATE TABLE IF NOT EXISTS repo
