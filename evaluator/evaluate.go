@@ -256,7 +256,12 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 
 		// Skip overwriting entries which have the same data as before
 		if bytes.Equal(updateDataJSON, currentNamedPackage.UpdateData.RawMessage) {
-			continue
+			// If the update_data we want to store is null, we skip only only if there was a row for this specific
+			// system_package already stored.
+			// If its not null, then the previous check ensured that the old update data matches new one
+			if (updateDataJSON == nil && currentNamedPackage.WasStored) || updateDataJSON != nil {
+				continue
+			}
 		}
 
 		// Create row to update
@@ -275,9 +280,11 @@ type namedPackage struct {
 	Name       string
 	PackageID  int
 	EVRA       string
+	WasStored  bool
 	UpdateData postgres.Jsonb
 }
 
+// nolint: lll
 // Find relevant package data based on vmaas results
 func loadPackages(tx *gorm.DB, accountID, systemID int,
 	data vmaas.UpdatesV2Response) (map[utils.Nevra]namedPackage, error) {
@@ -297,14 +304,14 @@ func loadPackages(tx *gorm.DB, accountID, systemID int,
 		evras = append(evras, parsed.EVRAString())
 	}
 
-	// Might return more data than we need (one InstallledEVRA being applicable to more packages
+	// Might return more data than we need (one EVRA being applicable to more packages)
 	// But it was only way to get somewhat fast query plan which only uses index scans
 	var packages []namedPackage
 	err := tx.Table("package").
-		Select("pn.name, package.id as package_id, package.evra, sp.update_data").
+		// We need to have data about the package, and what data we had stored in relation to this system.
+		Select("pn.name, package.id as package_id, package.evra, (sp.system_id IS NOT NULL) as was_stored, sp.update_data").
 		Joins("join package_name pn on package.name_id = pn.id").
 		// We need to perform left join, so thats why the parameters are here
-		// nolint: lll
 		Joins(`left join system_package sp on sp.package_id = package.id AND sp.rh_account_id = ? AND sp.system_id = ?`, accountID, systemID).
 		Where("pn.name in (?)", names).
 		Where("package.evra in (?)", evras).Find(&packages).Error
