@@ -33,18 +33,19 @@ type PackagesResponse struct {
 type queryItem struct {
 	NameID           int    `query:"p.name_id"`
 	Name             string `json:"name" query:"pn.name"`
-	SystemsInstalled int    `json:"systems_installed" query:"count(sp.id)"`
-	SystemsUpdatable int    `json:"systems_updatable" query:"count(sp.id) filter (where spkg.update_data is not null)"`
+	SystemsInstalled int    `json:"systems_installed" query:"count(spkg.system_id)"`
+	SystemsUpdatable int    `json:"systems_updatable" query:"count(spkg.system_id) filter (where spkg.updatable)"`
 }
 
 var queryItemSelect = database.MustGetSelect(&queryItem{})
 
+// nolint: lll
 func packagesQuery(c *gin.Context, acc int) *gorm.DB {
 	subQ := database.Db.
 		Select(queryItemSelect).
-		Table("system_platform sp").
-		// nolint: lll
-		Joins("inner join system_package spkg on spkg.system_id = sp.id and sp.stale = false and sp.rh_account_id = ?", acc).
+		Table("system_package spkg").
+		Joins("inner join system_platform sp on sp.id = spkg.system_id and sp.rh_account_id = ?", acc).
+		Where("sp.stale = false").
 		Joins("inner join package p on p.id = spkg.package_id").
 		Joins("inner join package_name pn on pn.id = p.name_id").
 		Where("spkg.rh_account_id = ?", acc).
