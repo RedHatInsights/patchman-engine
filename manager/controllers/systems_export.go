@@ -32,8 +32,8 @@ import (
 func SystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	query := querySystems(account)
-	query = ApplySearch(c, query, "system_platform.display_name")
-	query, _ = ApplyTagsFilter(c, query, "system_platform.inventory_id")
+	query = ApplySearch(c, query, "sp.display_name")
+	query, _ = ApplyTagsFilter(c, query, "sp.inventory_id")
 
 	var systems []SystemDBLookup
 

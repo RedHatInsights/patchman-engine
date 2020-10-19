@@ -91,7 +91,7 @@ func TestExportSystemsTags(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?tags=ns1/k1=val1", nil)
+	req, _ := http.NewRequest("GET", "/?tags=ns1/k2=val2", nil)
 	req.Header.Add("Accept", "application/json")
 	core.InitRouterWithPath(SystemsExportHandler, "/").ServeHTTP(w, req)
 
@@ -99,7 +99,7 @@ func TestExportSystemsTags(t *testing.T) {
 	var output []SystemInlineItem
 
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, 8, len(output))
+	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 }
 
