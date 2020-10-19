@@ -80,17 +80,8 @@ func TestSystemsOffset(t *testing.T) { //nolint:dupl
 	assert.Equal(t, 8, output.Meta.TotalItems)
 }
 
-func TestSystemsOffsetOverflow(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?offset=13&limit=4", nil)
-	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
-	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
+func TestSystemsWrongOffset(t *testing.T) {
+	doTestWrongOffset(t, "/", "/?offset=13&limit=4", SystemsListHandler)
 }
 
 func TestSystemsWrongSort(t *testing.T) {

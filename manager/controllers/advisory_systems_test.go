@@ -149,3 +149,7 @@ func TestAdvisorySystemsTagsUnknown(t *testing.T) { //nolint:dupl
 	assert.Equal(t, 200, w.Code)
 	assert.Equal(t, 0, len(output.Data))
 }
+
+func TestAdvisorySystemsWrongOffset(t *testing.T) {
+	doTestWrongOffset(t, "/:advisory_id", "/RH-1?offset=1000", AdvisorySystemsListHandler)
+}
