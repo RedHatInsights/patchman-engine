@@ -71,3 +71,8 @@ func TestSystemPackagesUpdatableOnly(t *testing.T) {
 	assert.Equal(t, output.Data[0].Name, "firefox")
 	assert.Equal(t, output.Data[1].Name, "kernel")
 }
+
+func TestSystemPackagesWrongOffset(t *testing.T) {
+	doTestWrongOffset(t, "/:inventory_id/packages",
+		"/00000000-0000-0000-0000-000000000001/packages?offset=1000", SystemPackagesHandler)
+}

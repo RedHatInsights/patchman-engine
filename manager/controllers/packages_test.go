@@ -53,3 +53,7 @@ func TestSearchPackages(t *testing.T) {
 		assert.Equal(t, "firefox", output.Data[0].Name)
 	})
 }
+
+func TestPackagesWrongOffset(t *testing.T) {
+	doTestWrongOffset(t, "/", "/?offset=1000", PackagesListHandler)
+}

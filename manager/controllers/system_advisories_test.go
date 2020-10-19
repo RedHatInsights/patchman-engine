@@ -116,3 +116,8 @@ func TestSystemAdvisoriesSearch(t *testing.T) {
 	assert.Equal(t, "adv-3-des", output.Data[0].Attributes.Description)
 	assert.Equal(t, "adv-3-syn", output.Data[0].Attributes.Synopsis)
 }
+
+func TestSystemAdvisoriesWrongOffset(t *testing.T) {
+	doTestWrongOffset(t, "/:inventory_id", "/00000000-0000-0000-0000-000000000001?offset=1000",
+		SystemAdvisoriesHandler)
+}

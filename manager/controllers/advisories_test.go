@@ -4,6 +4,7 @@ import (
 	"app/base/core"
 	"app/base/utils"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -206,4 +207,24 @@ func TestAdvisoriesTags(t *testing.T) {
 		assert.Equal(t, 8, len(output.Data))
 		assert.Equal(t, 2, output.Data[0].Attributes.ApplicableSystems)
 	})
+}
+
+func doTestWrongOffset(t *testing.T, path, q string, handler gin.HandlerFunc) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+
+	req, _ := http.NewRequest("GET", q, nil)
+	core.InitRouterWithParams(handler, 3, "GET", path).
+		ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var errResp utils.ErrorResponse
+	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
+}
+
+func TestAdvisoriesWrongOffset(t *testing.T) {
+	doTestWrongOffset(t, "/", "/?offset=1000", AdvisoriesListHandler)
 }

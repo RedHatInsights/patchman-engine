@@ -28,3 +28,7 @@ func TestPackageSystems(t *testing.T) {
 	assert.Equal(t, "5.6.13-200.fc31.x86_64", output.Data[0].InstalledEVRA)
 	assert.Equal(t, "5.10.13-200.fc31.x86_64", output.Data[0].AvailableEVRA)
 }
+
+func TestPackageSystemsWrongOffset(t *testing.T) {
+	doTestWrongOffset(t, "/:package_name/systems", "/kernel/systems?offset=1000", PackageSystemsListHandler)
+}
