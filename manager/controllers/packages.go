@@ -83,13 +83,13 @@ func PackagesListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 
 	query := packagesQuery(c, account)
-	query, meta, links, err := ListCommon(query, c, "/packages", PackagesOpts)
 	query = ApplySearch(c, query, "res.name", "latest.summary")
-
+	query, meta, links, err := ListCommon(query, c, "/packages", PackagesOpts)
 	if err != nil {
-		LogAndRespError(c, err, "database error")
+		// Error handling and setting of result code & content is done in ListCommon
 		return
 	}
+
 	var systems []PackageItem
 	err = query.Scan(&systems).Error
 	if err != nil {

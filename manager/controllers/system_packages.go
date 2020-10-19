@@ -82,11 +82,11 @@ func SystemPackagesHandler(c *gin.Context) {
 	var loaded []SystemPackageDBLoad
 	q := systemPackageQuery(account, inventoryID).Select(SystemPackagesSelect)
 	q = ApplySearch(c, q, "pn.name", "sum.value", "descr.value")
-
 	q, meta, links, err := ListCommon(q, c, fmt.Sprintf("/systems/%s/packages", inventoryID), SystemPackagesOpts)
 	if err != nil {
 		return
 	}
+
 	err = q.Find(&loaded).Error
 	if gorm.IsRecordNotFoundError(err) {
 		LogAndRespNotFound(c, err, "inventory_id not found")
