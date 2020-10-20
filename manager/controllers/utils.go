@@ -155,7 +155,17 @@ func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, err
 	return tx, nil
 }
 
-func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts) (*gorm.DB, *ListMeta, *Links, error) {
+func extractTagsQueryString(c *gin.Context) string {
+	var tagQ string
+	var tags = c.QueryArray("tags")
+	for _, t := range tags {
+		tagQ = fmt.Sprintf("tags=%s&%s", t, tagQ)
+	}
+	return strings.TrimSuffix(tagQ, "&")
+}
+
+//nolint: lll
+func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params ...string) (*gorm.DB, *ListMeta, *Links, error) {
 	tx, limit, offset, sortFields, filters, err := checkBadRequest(tx, c, opts)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
@@ -183,12 +193,14 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts) (*gorm.
 		TotalItems: total,
 	}
 
+	tagQ := extractTagsQueryString(c)
+
 	var sortQ string
 	if len(sortFields) > 0 {
 		sortQ = fmt.Sprintf("sort=%v", strings.Join(sortFields, ","))
 	}
-
-	links := CreateLinks(path, offset, limit, total, filters.ToQueryParams(), sortQ)
+	params = append(params, filters.ToQueryParams(), sortQ, tagQ)
+	links := CreateLinks(path, offset, limit, total, params...)
 
 	if limit != -1 {
 		tx = tx.Limit(limit)

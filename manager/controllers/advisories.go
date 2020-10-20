@@ -84,7 +84,6 @@ func AdvisoriesListHandler(c *gin.Context) {
 	}
 
 	var advisories []AdvisoriesDBLookup
-
 	err = query.Find(&advisories).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
