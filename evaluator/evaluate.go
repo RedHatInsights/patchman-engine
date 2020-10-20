@@ -33,6 +33,7 @@ var (
 	enableAdvisoryAnalysis bool
 	enablePackageAnalysis  bool
 	enableBypass           bool
+	enableStaleSysEval     bool
 )
 
 func configure() {
@@ -50,6 +51,7 @@ func configure() {
 	disableCompression := !utils.GetBoolEnvOrDefault("ENABLE_VMAAS_CALL_COMPRESSION", true)
 	enableAdvisoryAnalysis = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_ANALYSIS", true)
 	enablePackageAnalysis = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_ANALYSIS", true)
+	enableStaleSysEval = utils.GetBoolEnvOrDefault("ENABLE_STALE_SYSTEM_EVALUATION", true)
 	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
 	vmaasConfig.HTTPClient = &http.Client{Transport: &http.Transport{
 		DisableCompression: disableCompression,
@@ -57,6 +59,7 @@ func configure() {
 	vmaasClient = vmaas.NewAPIClient(vmaasConfig)
 }
 
+// nolint: funlen
 func Evaluate(ctx context.Context, inventoryID string, requested *base.Rfc3339Timestamp, evaluationType string) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationDuration.WithLabelValues(evaluationType))
@@ -73,6 +76,11 @@ func Evaluate(ctx context.Context, inventoryID string, requested *base.Rfc3339Ti
 	system, err := loadSystemData(tx, inventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
+		return nil
+	}
+
+	if system.Stale && !enableStaleSysEval {
+		evaluationCnt.WithLabelValues("skipping-stale").Inc()
 		return nil
 	}
 
