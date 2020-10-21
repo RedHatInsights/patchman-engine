@@ -29,12 +29,13 @@ type PackagesResponse struct {
 	Meta  ListMeta      `json:"meta"`
 }
 
+// nolint: lll
 // Used as a for subquery performing the actual calculation which is joined with latest summaries
 type queryItem struct {
 	NameID           int    `query:"p.name_id"`
 	Name             string `json:"name" query:"pn.name"`
 	SystemsInstalled int    `json:"systems_installed" query:"count(spkg.system_id)"`
-	SystemsUpdatable int    `json:"systems_updatable" query:"count(spkg.system_id) filter (where spkg.updatable)"`
+	SystemsUpdatable int    `json:"systems_updatable" query:"count(spkg.system_id) filter (where spkg.latest_evra IS NOT NULL)"`
 }
 
 var queryItemSelect = database.MustGetSelect(&queryItem{})
