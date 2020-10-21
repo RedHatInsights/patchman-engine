@@ -52,7 +52,7 @@ func systemPackageQuery(account int, inventoryID string) *gorm.DB {
 		Joins("inner join package_name pn on pn.id = p.name_id").
 		Joins("inner join strings sum on sum.id = p.summary_hash").
 		Joins("inner join strings descr on descr.id = p.description_hash").
-		Where("spkg.rh_account_id = ? and sp.inventory_id = ?", account, inventoryID)
+		Where("spkg.rh_account_id = ? and sp.inventory_id::text = ?", account, inventoryID)
 }
 
 // @Summary Show me details about a system packages by given inventory id

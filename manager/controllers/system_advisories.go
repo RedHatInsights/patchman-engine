@@ -75,7 +75,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	}
 
 	var exists int
-	err := database.Db.Model(&models.SystemPlatform{}).Where("inventory_id = ? ", inventoryID).
+	err := database.Db.Model(&models.SystemPlatform{}).Where("inventory_id::text = ? ", inventoryID).
 		Count(&exists).Error
 
 	if err != nil {

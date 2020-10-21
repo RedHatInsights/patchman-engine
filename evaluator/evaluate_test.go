@@ -95,7 +95,7 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 
 	system := models.SystemPlatform{ID: 12, RhAccountID: 3}
 	advisoryIDs := []int{2, 3, 4}
-	createSystemAdvisories(t, system.ID, advisoryIDs, nil)
+	createSystemAdvisories(t, system.RhAccountID, system.ID, advisoryIDs, nil)
 	createAdvisoryAccountData(t, system.RhAccountID, advisoryIDs, 1)
 
 	err := updateSystemAdvisoriesWhenPatched(database.Db, &system, advisoryIDs, &testDate)
@@ -133,9 +133,10 @@ func TestEnsureSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
+	rhAccountID := 1
 	systemID := 2
 	advisoryIDs := []int{2, 3, 4}
-	err := ensureSystemAdvisories(database.Db, systemID, advisoryIDs)
+	err := ensureSystemAdvisories(database.Db, rhAccountID, systemID, advisoryIDs)
 	assert.Nil(t, err)
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
 
@@ -203,11 +204,11 @@ func createStoredAdvisories(advisoryPatched map[int]*time.Time) map[string]model
 	return systemAdvisoriesMap
 }
 
-func createSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int,
+func createSystemAdvisories(t *testing.T, rhAccountID int, systemID int, advisoryIDs []int,
 	whenPatched *time.Time) {
 	for _, advisoryID := range advisoryIDs {
 		err := database.Db.Create(&models.SystemAdvisories{
-			SystemID: systemID, AdvisoryID: advisoryID, WhenPatched: whenPatched}).Error
+			RhAccountID: rhAccountID, SystemID: systemID, AdvisoryID: advisoryID, WhenPatched: whenPatched}).Error
 		assert.Nil(t, err)
 	}
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, whenPatched)

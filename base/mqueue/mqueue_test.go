@@ -11,13 +11,16 @@ import (
 	"time"
 )
 
-var msg = kafka.Message{Value: []byte(`{"id": "TEST-00000", "type": "delete"}`)}
+const id = "99c0ffee-0000-0000-0000-0000c0ffee99"
+const someid = "99c0ffee-0000-0000-0000-0000000050de"
+
+var msg = kafka.Message{Value: []byte(`{"id": "` + id + `", "type": "delete"}`)}
 
 func TestParseEvents(t *testing.T) {
 	reached := false
 
 	err := MakeMessageHandler(func(event PlatformEvent) error {
-		assert.Equal(t, event.ID, "TEST-00000")
+		assert.Equal(t, event.ID, id)
 		assert.Equal(t, *event.Type, "delete")
 		reached = true
 		return nil
@@ -38,7 +41,7 @@ func TestRoundTrip(t *testing.T) {
 	}))
 
 	writer := WriterFromEnv("test")
-	eventIn := PlatformEvent{ID: "some-id"}
+	eventIn := PlatformEvent{ID: someid}
 	assert.NoError(t, WriteEvents(context.Background(), writer, eventIn))
 	time.Sleep(8 * time.Second)
 	assert.Equal(t, eventIn, eventOut)

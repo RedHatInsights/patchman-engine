@@ -152,6 +152,7 @@ func (AdvisoryMetadata) TableName() string {
 type AdvisoryMetadataSlice []AdvisoryMetadata
 
 type SystemAdvisories struct {
+	RhAccountID   int `gorm:"primary_key"`
 	SystemID      int `gorm:"primary_key"`
 	AdvisoryID    int `gorm:"primary_key"`
 	Advisory      AdvisoryMetadata
@@ -191,8 +192,9 @@ func (Repo) TableName() string {
 type RepoSlice []Repo
 
 type SystemRepo struct {
-	SystemID int
-	RepoID   int
+	RhAccountID int
+	SystemID    int
+	RepoID      int
 }
 
 func (SystemRepo) TableName() string {
