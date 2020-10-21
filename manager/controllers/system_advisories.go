@@ -76,7 +76,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	}
 
 	var exists int
-	err := database.Db.Model(&models.SystemPlatform{}).Where("inventory_id = ? ", inventoryID).
+	err := database.Db.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid ", inventoryID).
 		Count(&exists).Error
 
 	if err != nil {
@@ -93,7 +93,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		Where("when_patched IS NULL")
 
 	if applyInventoryHosts {
-		query = query.Joins("JOIN inventory.hosts ih ON ih.id::text = sp.inventory_id")
+		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
 	}
 
 	path := fmt.Sprintf("/api/patch/v1/systems/%v/advisories", inventoryID)

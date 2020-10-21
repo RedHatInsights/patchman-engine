@@ -98,7 +98,7 @@ func buildQuery(account int, advisoryName string) *gorm.DB {
 		Where("am.name = ?", advisoryName)
 
 	if applyInventoryHosts {
-		query = query.Joins("JOIN inventory.hosts ih ON ih.id::text = sp.inventory_id")
+		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
 	}
 
 	return query

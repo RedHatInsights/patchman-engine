@@ -35,10 +35,10 @@ func SystemDetailHandler(c *gin.Context) {
 	var inventory models.SystemPlatform
 	query := database.Db.
 		Where("system_platform.rh_account_id = ?", account).
-		Where("inventory_id = ?", inventoryID)
+		Where("inventory_id = ?::uuid", inventoryID)
 
 	if applyInventoryHosts {
-		query = query.Joins("JOIN inventory.hosts ih ON ih.id::text = system_platform.inventory_id")
+		query = query.Joins("JOIN inventory.hosts ih ON ih.id = system_platform.inventory_id")
 	}
 
 	err := query.First(&inventory).Error

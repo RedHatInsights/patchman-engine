@@ -76,7 +76,7 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 		return errors.Wrap(err, "Could not delete system")
 	}
 
-	query := database.Db.Exec("select deleted_inventory_id from delete_system(?)", event.ID)
+	query := database.Db.Exec("select deleted_inventory_id from delete_system(?::uuid)", event.ID)
 	err = query.Error
 	if err != nil {
 		utils.Log("inventoryID", event.ID, "err", err.Error()).Error("Could not delete system")

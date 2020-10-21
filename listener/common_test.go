@@ -30,14 +30,14 @@ func deleteData(t *testing.T) {
 		Delete(&models.SystemRepo{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("name NOT IN ('repo1', 'repo2')").
 		Delete(&models.Repo{}).Error)
-	assert.Nil(t, database.Db.Unscoped().Where("inventory_id = ?", id).Delete(&models.SystemPlatform{}).Error)
+	assert.Nil(t, database.Db.Unscoped().Where("inventory_id = ?::uuid", id).Delete(&models.SystemPlatform{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("name = ?", id).Delete(&models.RhAccount{}).Error)
 }
 
 // nolint: unparam
 func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int, reporterID *int) {
 	var system models.SystemPlatform
-	assert.NoError(t, database.Db.Where("inventory_id = ?", inventoryID).Find(&system).Error)
+	assert.NoError(t, database.Db.Where("inventory_id = ?::uuid", inventoryID).Find(&system).Error)
 	assert.Equal(t, system.InventoryID, inventoryID)
 
 	var account models.RhAccount
@@ -58,7 +58,7 @@ func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int, report
 func assertSystemNotInDB(t *testing.T) {
 	var systemCount int
 	assert.Nil(t, database.Db.Model(models.SystemPlatform{}).
-		Where("inventory_id = ?", id).Count(&systemCount).Error)
+		Where("inventory_id = ?::uuid", id).Count(&systemCount).Error)
 
 	assert.Equal(t, systemCount, 0)
 }
