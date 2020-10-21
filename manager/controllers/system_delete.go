@@ -35,7 +35,7 @@ func SystemDeleteHandler(c *gin.Context) {
 	err := tx.Set("gorm:query_option", "FOR UPDATE OF system_platform").
 		Table("system_platform").
 		Where("rh_account_id = ?", account).
-		Where("inventory_id = ?", inventoryID).
+		Where("inventory_id::text = ?", inventoryID).
 		Pluck("inventory_id", &systemInventoryID).Error
 
 	if err != nil {
@@ -48,7 +48,7 @@ func SystemDeleteHandler(c *gin.Context) {
 		return
 	}
 
-	query := tx.Exec("select deleted_inventory_id from delete_system(?)", systemInventoryID[0])
+	query := tx.Exec("select deleted_inventory_id from delete_system(?::uuid)", systemInventoryID[0])
 
 	if query.Error != nil {
 		LogAndRespError(c, err, "Could not delete system")

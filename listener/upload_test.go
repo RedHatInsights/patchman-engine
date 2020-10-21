@@ -91,7 +91,7 @@ func TestUploadHandler(t *testing.T) {
 	deleteData(t)
 
 	_ = getOrCreateTestAccount(t)
-	event := createTestUploadEvent(id, true)
+	event := createTestUploadEvent(id, id, true)
 	err := HandleUpload(event)
 	assert.NoError(t, err)
 
@@ -100,7 +100,7 @@ func TestUploadHandler(t *testing.T) {
 
 	var sys models.SystemPlatform
 
-	assert.NoError(t, database.Db.Where("inventory_id = ?", id).Find(&sys).Error)
+	assert.NoError(t, database.Db.Where("inventory_id::text = ?", id).Find(&sys).Error)
 	after := time.Now().Add(time.Hour)
 	sys.LastEvaluation = &after
 	assert.NoError(t, database.Db.Save(&sys).Error)
@@ -118,7 +118,7 @@ func TestUploadHandler(t *testing.T) {
 func TestUploadHandlerWarn(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	noPkgsEvent := createTestUploadEvent(id, false)
+	noPkgsEvent := createTestUploadEvent("1", id, false)
 	err := HandleUpload(noPkgsEvent)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(logHook.LogEntries))
@@ -129,7 +129,7 @@ func TestUploadHandlerWarn(t *testing.T) {
 func TestUploadHandlerError1(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	event := createTestUploadEvent(id, true)
+	event := createTestUploadEvent("1", id, true)
 	event.Host.Account = ""
 	err := HandleUpload(event)
 	assert.NoError(t, err)
@@ -153,7 +153,7 @@ func TestUploadHandlerError2(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
 	_ = getOrCreateTestAccount(t)
-	event := createTestUploadEvent(id, true)
+	event := createTestUploadEvent("1", id, true)
 	err := HandleUpload(event)
 	assert.Error(t, err)
 	assert.Equal(t, ErrorKafkaSend, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
@@ -179,8 +179,9 @@ func TestUpdateSystemRepos1(t *testing.T) {
 	deleteData(t)
 
 	systemID := 5
-	database.Db.Create(models.SystemRepo{SystemID: systemID, RepoID: 1})
-	database.Db.Create(models.SystemRepo{SystemID: systemID, RepoID: 2})
+	rhAccountID := 1
+	database.Db.Create(models.SystemRepo{RhAccountID: rhAccountID, SystemID: systemID, RepoID: 1})
+	database.Db.Create(models.SystemRepo{RhAccountID: rhAccountID, SystemID: systemID, RepoID: 2})
 
 	repos := []string{"repo1", "repo10", "repo20"}
 	repoIDs, nReposAdded, err := ensureReposInDB(database.Db, repos)
@@ -188,7 +189,7 @@ func TestUpdateSystemRepos1(t *testing.T) {
 	assert.Equal(t, 3, len(repoIDs))
 	assert.Equal(t, int64(2), nReposAdded)
 
-	nAdded, nDeleted, err := updateSystemRepos(database.Db, systemID, repoIDs)
+	nAdded, nDeleted, err := updateSystemRepos(database.Db, rhAccountID, systemID, repoIDs)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(2), nAdded)
 	assert.Equal(t, int64(1), nDeleted)
@@ -201,10 +202,11 @@ func TestUpdateSystemRepos2(t *testing.T) {
 	deleteData(t)
 
 	systemID := 5
-	database.Db.Create(models.SystemRepo{SystemID: systemID, RepoID: 1})
-	database.Db.Create(models.SystemRepo{SystemID: systemID, RepoID: 2})
+	rhAccountID := 1
+	database.Db.Create(models.SystemRepo{RhAccountID: rhAccountID, SystemID: systemID, RepoID: 1})
+	database.Db.Create(models.SystemRepo{RhAccountID: rhAccountID, SystemID: systemID, RepoID: 2})
 
-	nAdded, nDeleted, err := updateSystemRepos(database.Db, systemID, []int{})
+	nAdded, nDeleted, err := updateSystemRepos(database.Db, rhAccountID, systemID, []int{})
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), nAdded)
 	assert.Equal(t, int64(2), nDeleted)

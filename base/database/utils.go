@@ -3,7 +3,7 @@ package database
 import "github.com/jinzhu/gorm"
 
 func SystemAdvisoriesQueryName(tx *gorm.DB, inventoryID string) *gorm.DB {
-	query := systemAdvisoriesQuery(tx).Where("sp.inventory_id = ?", inventoryID)
+	query := systemAdvisoriesQuery(tx).Where("sp.inventory_id::text = ?", inventoryID)
 	return query
 }
 
