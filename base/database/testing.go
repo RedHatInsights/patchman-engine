@@ -47,7 +47,7 @@ func CheckCachesValid() (bool, error) {
 
 	err = tx.Select("sp.rh_account_id, sa.advisory_id, count(*)").
 		Table("system_advisories sa").
-		Joins("JOIN system_platform sp on sa.system_id = sp.id").
+		Joins("JOIN system_platform sp ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id").
 		Where("sa.when_patched IS NULL AND sp.opt_out = false AND sp.stale = false AND sp.last_evaluation IS NOT NULL").
 		Order("sp.rh_account_id, sa.advisory_id").
 		Group("sp.rh_account_id, sa.advisory_id").
@@ -112,7 +112,7 @@ func CheckPackagesNamesInDB(t *testing.T) {
 
 func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug, nSec, nInstall, nUpdate int) {
 	var system models.SystemPlatform
-	assert.Nil(t, Db.Where("inventory_id = ?", inventoryID).First(&system).Error)
+	assert.Nil(t, Db.Where("inventory_id = ?::uuid", inventoryID).First(&system).Error)
 	assert.NotNil(t, system.LastEvaluation)
 	assert.True(t, system.LastEvaluation.After(time.Now().Add(-time.Second)))
 	assert.Equal(t, nAll, system.AdvisoryCountCache)

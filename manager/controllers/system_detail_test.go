@@ -65,7 +65,7 @@ func TestSystemDetailNotFound(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/foo", nil)
+	req, _ := http.NewRequest("GET", "/ffffffff-ffff-ffff-ffff-ffffffffffff", nil)
 	core.InitRouterWithPath(SystemDetailHandler, "/:inventory_id").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	var errResp utils.ErrorResponse

@@ -25,7 +25,8 @@ func TestSingleSystemStale(t *testing.T) {
 	database.DebugWithCachesCheck("stale-trigger", func() {
 		assert.NotNil(t, staleDate)
 		assert.NoError(t, database.Db.Find(&accountData, "systems_affected > 1 ").Order("systems_affected DESC").Error)
-		assert.NoError(t, database.Db.Find(&systems, "rh_account_id = ?", accountData[0].RhAccountID).Error)
+		assert.NoError(t, database.Db.Find(&systems, "rh_account_id = ? AND stale = false",
+			accountData[0].RhAccountID).Order("id").Error)
 
 		systems[0].StaleTimestamp = &staleDate
 		systems[0].StaleWarningTimestamp = &staleDate

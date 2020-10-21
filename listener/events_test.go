@@ -33,7 +33,7 @@ func TestUpdateSystem(t *testing.T) {
 	assert.NoError(t, HandleUpload(ev))
 
 	var system models.SystemPlatform
-	assert.NoError(t, database.Db.Find(&system, "inventory_id = ?", id).Error)
+	assert.NoError(t, database.Db.Find(&system, "inventory_id = ?::uuid", id).Error)
 
 	assert.Equal(t, name, system.DisplayName)
 }

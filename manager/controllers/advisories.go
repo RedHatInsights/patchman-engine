@@ -121,7 +121,7 @@ func buildAdvisoryAccountDataQuery(account int) *gorm.DB {
 		Group("sp.rh_account_id, sa.advisory_id")
 
 	if applyInventoryHosts {
-		query = query.Joins("JOIN inventory.hosts ih ON ih.id::text = sp.inventory_id")
+		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
 	}
 
 	return query

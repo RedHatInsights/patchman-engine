@@ -37,12 +37,12 @@ func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryNa
 		Joins("join system_platform sp on sp.rh_account_id = ? and sp.id = sa.system_id", acc).
 		Joins("join advisory_metadata am on am.id = sa.advisory_id").
 		Where("sp.rh_account_id = ?", acc).
-		Where("sp.inventory_id in (?)", systems).
+		Where("sp.inventory_id in (?::uuid)", systems).
 		Where("am.name in (?)", advisories).
 		Order("sp.inventory_id, am.id")
 
 	if applyInventoryHosts {
-		query = query.Joins("JOIN inventory.hosts ih ON ih.id::text = sp.inventory_id")
+		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
 	}
 	return query
 }

@@ -118,7 +118,7 @@ func querySystems(account int) *gorm.DB {
 		Where("sp.rh_account_id = ?", account)
 
 	if applyInventoryHosts {
-		query = query.Joins("JOIN inventory.hosts ih ON ih.id::text = sp.inventory_id")
+		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
 	}
 
 	return query

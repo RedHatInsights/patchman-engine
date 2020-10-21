@@ -53,10 +53,10 @@ func systemPackageQuery(account int, inventoryID string) *gorm.DB {
 		Joins("inner join package_name pn on pn.id = p.name_id").
 		Joins("inner join strings sum on sum.id = p.summary_hash").
 		Joins("inner join strings descr on descr.id = p.description_hash").
-		Where("spkg.rh_account_id = ? and sp.inventory_id = ?", account, inventoryID)
+		Where("spkg.rh_account_id = ? and sp.inventory_id = ?::uuid", account, inventoryID)
 
 	if applyInventoryHosts {
-		query = query.Joins("JOIN inventory.hosts ih ON ih.id::text = sp.inventory_id")
+		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
 	}
 
 	return query

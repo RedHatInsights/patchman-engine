@@ -190,7 +190,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	// Lock the row for update & return checksum
 	tx.Set("gorm:query_option", "FOR UPDATE OF system_platform").
 		Table("system_platform").
-		Where("inventory_id = ?", inventoryID).
+		Where("inventory_id = ?::uuid", inventoryID).
 		Pluck("json_checksum", &oldJSONChecksum)
 
 	shouldUpdateRepos := false
@@ -202,14 +202,15 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		shouldUpdateRepos = true
 	}
 
-	if err := database.OnConflictUpdate(tx, "inventory_id", colsToUpdate...).
+	if err := database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
 		Save(&systemPlatform).Error; err != nil {
 		return nil, errors.Wrap(err, "Unable to save or update system in database")
 	}
 
 	if shouldUpdateRepos {
 		// We also don't need to update repos if vmaas_json haven't changed
-		addedRepos, addedSysRepos, deletedSysRepos, err = updateRepos(tx, systemPlatform.ID, updatesReq.RepositoryList)
+		addedRepos, addedSysRepos, deletedSysRepos, err = updateRepos(tx, accountID,
+			systemPlatform.ID, updatesReq.RepositoryList)
 		if err != nil {
 			utils.Log("repository_list", updatesReq.RepositoryList, "inventoryID", systemPlatform.ID).
 				Error("repos failed to insert")
@@ -232,14 +233,14 @@ func getReporterID(reporter string) *int {
 	return nil
 }
 
-func updateRepos(tx *gorm.DB, systemID int, repos []string) (addedRepos int64, addedSysRepos int64,
+func updateRepos(tx *gorm.DB, rhAccountID int, systemID int, repos []string) (addedRepos int64, addedSysRepos int64,
 	deletedSysRepos int64, err error) {
 	repoIDs, addedRepos, err := ensureReposInDB(tx, repos)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	addedSysRepos, deletedSysRepos, err = updateSystemRepos(tx, systemID, repoIDs)
+	addedSysRepos, deletedSysRepos, err = updateSystemRepos(tx, rhAccountID, systemID, repoIDs)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -269,10 +270,11 @@ func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int, added int64, e
 	return repoIDs, added, nil
 }
 
-func updateSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nAdded int64, nDeleted int64, err error) {
+func updateSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs []int) (
+	nAdded int64, nDeleted int64, err error) {
 	repoSystemObjs := make(models.SystemRepoSlice, len(repoIDs))
 	for i, repoID := range repoIDs {
-		repoSystemObjs[i] = models.SystemRepo{SystemID: systemID, RepoID: repoID}
+		repoSystemObjs[i] = models.SystemRepo{RhAccountID: rhAccountID, SystemID: systemID, RepoID: repoID}
 	}
 
 	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
@@ -282,7 +284,7 @@ func updateSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nAdded int64, 
 	}
 	nAdded = txOnConflict.RowsAffected
 
-	nDeleted, err = deleteOtherSystemRepos(tx, systemID, repoIDs)
+	nDeleted, err = deleteOtherSystemRepos(tx, rhAccountID, systemID, repoIDs)
 	if err != nil {
 		return nAdded, 0, errors.Wrap(err, "unable to delete out-of-date system repos")
 	}
@@ -290,17 +292,17 @@ func updateSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nAdded int64, 
 	return nAdded, nDeleted, nil
 }
 
-func deleteOtherSystemRepos(tx *gorm.DB, systemID int, repoIDs []int) (nDeleted int64, err error) {
+func deleteOtherSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs []int) (nDeleted int64, err error) {
 	type result struct{ DeletedCount int64 }
 	var res result
 	if len(repoIDs) > 0 {
 		err = tx.Raw("WITH deleted AS "+ // to count deleted items
-			"(DELETE FROM system_repo WHERE system_id = ? AND repo_id NOT IN (?) RETURNING repo_id) "+
-			"SELECT count(*) AS deleted_count FROM deleted", systemID, repoIDs).Scan(&res).Error
+			"(DELETE FROM system_repo WHERE rh_account_id = ? AND system_id = ? AND repo_id NOT IN (?) RETURNING repo_id) "+
+			"SELECT count(*) AS deleted_count FROM deleted", rhAccountID, systemID, repoIDs).Scan(&res).Error
 	} else {
 		err = tx.Raw("WITH deleted AS "+
-			"(DELETE FROM system_repo WHERE system_id = ? RETURNING repo_id) "+
-			"SELECT count(*) AS deleted_count FROM deleted", systemID).Scan(&res).Error
+			"(DELETE FROM system_repo WHERE rh_account_id = ? AND system_id = ? RETURNING repo_id) "+
+			"SELECT count(*) AS deleted_count FROM deleted", rhAccountID, systemID).Scan(&res).Error
 	}
 	if err != nil {
 		return 0, err

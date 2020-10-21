@@ -420,7 +420,7 @@ func loadSystemData(tx *gorm.DB, inventoryID string) (*models.SystemPlatform, er
 
 	var system models.SystemPlatform
 	err := tx.Set("gorm:query_option", "FOR UPDATE OF system_platform").
-		Where("inventory_id = ?", inventoryID).Find(&system).Error
+		Where("inventory_id = ?::uuid", inventoryID).Find(&system).Error
 	return &system, err
 }
 
@@ -576,11 +576,11 @@ func getAdvisoriesFromDB(tx *gorm.DB, advisories []string) ([]int, error) {
 	return advisoryIDs, nil
 }
 
-func ensureSystemAdvisories(tx *gorm.DB, systemID int, advisoryIDs []int) error {
+func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int, advisoryIDs []int) error {
 	advisoriesObjs := models.SystemAdvisoriesSlice{}
 	for _, advisoryID := range advisoryIDs {
 		advisoriesObjs = append(advisoriesObjs,
-			models.SystemAdvisories{SystemID: systemID, AdvisoryID: advisoryID})
+			models.SystemAdvisories{RhAccountID: rhAccountID, SystemID: systemID, AdvisoryID: advisoryID})
 	}
 
 	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
@@ -633,7 +633,7 @@ func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
 	patched, unpatched []int) (SystemAdvisoryMap, error) {
 	whenPatched := time.Now()
 
-	err := ensureSystemAdvisories(tx, system.ID, unpatched)
+	err := ensureSystemAdvisories(tx, system.RhAccountID, system.ID, unpatched)
 	if err != nil {
 		return nil, err
 	}
