@@ -22,8 +22,8 @@ var PackageSystemsOpts = ListOpts{
 type PackageSystemItem struct {
 	ID            string `json:"id" query:"sp.inventory_id"`
 	InstalledEVRA string `json:"installed_evra" query:"p.evra"`
-	AvailableEVRA string `json:"available_evra" query:"(spkg.update_data ->> -1)::jsonb ->> 'evra'"`
-	Updatable     bool   `json:"updatable" query:"(json_array_length(spkg.update_data::json) > 0)"`
+	AvailableEVRA string `json:"available_evra" query:"spkg.latest_evra"`
+	Updatable     bool   `json:"updatable" query:"spkg.latest_evra IS NOT NULL"`
 }
 
 type PackageSystemsResponse struct {
