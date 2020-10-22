@@ -32,16 +32,22 @@ type PackageSystemsResponse struct {
 	Meta  ListMeta            `json:"meta"`
 }
 
-func packageSystemsQuery(acc int, pkgName string) *gorm.DB {
+func packagesByNameQuery(pkgName string) *gorm.DB {
+	return database.Db.Table("package p").
+		Joins("INNER JOIN package_name pn ON p.name_id = pn.id").
+		Where("pn.name = ?", pkgName)
+}
+
+func packageSystemsQuery(acc int, nameIDs []int) *gorm.DB {
 	return database.Db.
 		Select(PackageSystemsSelect).
 		Table("system_platform sp").
-		// nolint: lll
-		Joins("inner join system_package spkg on spkg.system_id = sp.id and sp.stale = false and sp.rh_account_id = ?", acc).
+		Joins("inner join system_package spkg on spkg.system_id = sp.id").
 		Joins("inner join package p on p.id = spkg.package_id").
-		Joins("inner join package_name pn on pn.id = p.name_id").
+		Where("sp.stale = false").
+		Where("sp.rh_account_id = ?", acc).
 		Where("spkg.rh_account_id = ?", acc).
-		Where("pn.name = ?", pkgName)
+		Where("p.id in (?)", nameIDs)
 }
 
 // @Summary Show me all my systems which have a package installed
@@ -65,7 +71,13 @@ func PackageSystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	query := packageSystemsQuery(account, packageName)
+	var nameIDs []int
+	if err := packagesByNameQuery(packageName).Pluck("p.id", &nameIDs).Error; err != nil {
+		LogAndRespError(c, err, "database error")
+		return
+	}
+
+	query := packageSystemsQuery(account, nameIDs)
 	query = ApplySearch(c, query, "sp.display_name")
 	query, _ = ApplyTagsFilter(c, query, "sp.inventory_id")
 	query, meta, links, err := ListCommon(query, c, fmt.Sprintf("/packages/%s/systems", packageName), PackageSystemsOpts)
