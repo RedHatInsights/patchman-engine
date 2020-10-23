@@ -38,7 +38,6 @@ $$
     END
 $$ LANGUAGE plpgsql;
 
-
 DO
 $$
     DECLARE
