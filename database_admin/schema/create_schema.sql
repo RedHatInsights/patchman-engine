@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (41, false);
+VALUES (42, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -825,7 +825,6 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE package_latest_cache TO vmaas_sync
 
 CREATE UNIQUE INDEX IF NOT EXISTS package_latest_cache_pkey ON package_latest_cache (name_id);
 
-
 CREATE TABLE IF NOT EXISTS system_package
 (
     rh_account_id INT NOT NULL REFERENCES rh_account,
@@ -842,26 +841,7 @@ GRANT SELECT, UPDATE, DELETE ON system_package TO listener;
 GRANT SELECT, UPDATE, DELETE ON system_package TO manager;
 GRANT SELECT, UPDATE, DELETE ON system_package TO vmaas_sync;
 
-SELECT create_table_partitions('system_package', 16,
-                               $$WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')$$);
-
-CREATE TABLE IF NOT EXISTS system_package_v1
-(
-    rh_account_id INT NOT NULL REFERENCES rh_account,
-    system_id     INT NOT NULL,
-    package_id    INT NOT NULL REFERENCES package,
-    -- Use null to represent up-to-date packages
-    update_data   JSONB DEFAULT NULL,
-    latest_evra   TEXT GENERATED ALWAYS AS ( ((update_data ->> -1)::jsonb ->> 'evra')::text) STORED,
-    PRIMARY KEY (rh_account_id, system_id, package_id) INCLUDE (latest_evra)
-) PARTITION BY HASH (rh_account_id);
-
-GRANT SELECT, INSERT, UPDATE, DELETE ON system_package_v1 TO evaluator;
-GRANT SELECT, UPDATE, DELETE ON system_package_v1 TO listener;
-GRANT SELECT, UPDATE, DELETE ON system_package_v1 TO manager;
-GRANT SELECT, UPDATE, DELETE ON system_package_v1 TO vmaas_sync;
-
-SELECT create_table_partitions('system_package_v1', 128,
+SELECT create_table_partitions('system_package', 128,
                                $$WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')$$);
 
 -- timestamp_kv
