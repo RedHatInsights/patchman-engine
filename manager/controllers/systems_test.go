@@ -155,7 +155,7 @@ func TestSystemsTagsUnknown(t *testing.T) {
 	assert.Equal(t, 0, len(output.Data))
 }
 
-func TestSystemsWorkloads(t *testing.T) {
+func TestSystemsWorkloads1(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
@@ -172,6 +172,22 @@ func TestSystemsWorkloads(t *testing.T) {
 }
 
 func TestSystemsWorkloads2(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET",
+		"/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][]=ABC", nil)
+	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output SystemsResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
+}
+
+func TestSystemsWorkloads3(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
