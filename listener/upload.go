@@ -115,6 +115,7 @@ func updateReporterCounter(reporter string) {
 	if _, ok := validReporters[reporter]; ok {
 		receivedFromReporter.WithLabelValues(reporter).Inc()
 	} else {
+		receivedFromReporter.WithLabelValues("unknown").Inc()
 		utils.Log("reporter", reporter).Warn("unknown reporter")
 	}
 }
@@ -220,6 +221,7 @@ func getReporterID(reporter string) *int {
 	if id, ok := validReporters[reporter]; ok {
 		return &id
 	}
+	utils.Log("reporter", reporter).Warn("no reporter id found, returning nil")
 	return nil
 }
 
