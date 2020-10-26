@@ -15,6 +15,18 @@ func MigrateUp(sourceURL, databaseURL string) {
 	}
 
 	m.Log = logger{}
+
+	ver, dirty, err := m.Version()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error upgrading the database: %v", err)
+	}
+
+	if ver == 41 && dirty {
+		if err := m.Force(40); err != nil {
+			fmt.Fprintf(os.Stderr, "Error upgrading the database: %v", err)
+		}
+	}
+
 	err = m.Up()
 	if err != nil && err.Error() == "no change" {
 		fmt.Println("no change")
