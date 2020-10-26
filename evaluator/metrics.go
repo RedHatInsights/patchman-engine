@@ -45,6 +45,14 @@ var (
 		Name:      "upload_evaluation_delay_seconds",
 		Buckets:   []float64{1, 5, 15, 30, 60, 300},
 	})
+
+	twoEvaluationsInterval = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Help:      "How long it takes between two evaluations",
+		Namespace: "patchman_engine",
+		Subsystem: "evaluator",
+		Name:      "two_evaluations_interval_hours",
+		Buckets:   []float64{1, 2, 6, 24, 72, 168},
+	})
 )
 
 func RunMetrics(port string) {

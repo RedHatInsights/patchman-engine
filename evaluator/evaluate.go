@@ -346,6 +346,9 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("system-update"))
 	defer utils.ObserveSecondsSince(*system.LastUpload, uploadEvaluationDelay)
+	if system.LastEvaluation != nil {
+		defer utils.ObserveHoursSince(*system.LastEvaluation, twoEvaluationsInterval)
+	}
 
 	data := map[string]interface{}{}
 	data["last_evaluation"] = time.Now()
