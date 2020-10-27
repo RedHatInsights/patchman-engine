@@ -117,19 +117,15 @@ BEGIN
           AND (sp.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
         ORDER BY sp.rh_account_id, sp.id
             FOR UPDATE OF sp
-    ),
-         updated as (
-             UPDATE system_platform sp
-                 SET advisory_count_cache = system_advisories_count(sp.id, NULL),
-                     advisory_enh_count_cache = system_advisories_count(sp.id, 1),
-                     advisory_bug_count_cache = system_advisories_count(sp.id, 2),
-                     advisory_sec_count_cache = system_advisories_count(sp.id, 3)
-                 FROM to_update to_up
-                 WHERE sp.rh_account_id = to_up.rh_account_id AND sp.id = to_up.id
-                 RETURNING sp.id)
-    SELECT count(*)
-    FROM updated
-    INTO COUNT;
+        )
+        UPDATE system_platform sp
+           SET advisory_count_cache = system_advisories_count(sp.id, NULL),
+               advisory_enh_count_cache = system_advisories_count(sp.id, 1),
+               advisory_bug_count_cache = system_advisories_count(sp.id, 2),
+               advisory_sec_count_cache = system_advisories_count(sp.id, 3)
+          FROM to_update to_up
+         WHERE sp.rh_account_id = to_up.rh_account_id AND sp.id = to_up.id;
+    GET DIAGNOSTICS COUNT = ROW_COUNT;
     RETURN COUNT;
 END;
 $refresh_system$ LANGUAGE plpgsql;
@@ -198,18 +194,32 @@ BEGIN
         WHERE stale_warning_timestamp < now()
           AND stale = false
         ORDER BY rh_account_id, id FOR UPDATE OF system_platform
-    ),
-         updated as (
-             UPDATE system_platform
-                 SET stale = true
-                 FROM ids
-                 WHERE system_platform.rh_account_id = ids.rh_account_id
-                   AND system_platform.id = ids.id
-                 RETURNING ids.id
-         )
-    SELECT count(*)
-    FROM updated
-    INTO marked;
+        )
+        UPDATE system_platform sp
+           SET stale = true
+          FROM ids
+         WHERE sp.rh_account_id = ids.rh_account_id
+           AND sp.id = ids.id;
+    GET DIAGNOSTICS marked = ROW_COUNT;
     RETURN marked;
+END;
+$fun$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION delete_culled_systems()
+    RETURNS INTEGER
+AS
+$fun$
+DECLARE
+    culled integer;
+    _uuid uuid;
+BEGIN
+    WITH ids AS (SELECT inventory_id
+                 FROM system_platform
+                 WHERE culled_timestamp < now()
+                 ORDER BY id FOR UPDATE OF system_platform
+        )
+        SELECT delete_system(inventory_id) into _uuid from ids;
+    GET DIAGNOSTICS culled = ROW_COUNT;
+    RETURN culled;
 END;
 $fun$ LANGUAGE plpgsql;
