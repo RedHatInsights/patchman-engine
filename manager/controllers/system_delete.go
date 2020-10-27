@@ -34,8 +34,7 @@ func SystemDeleteHandler(c *gin.Context) {
 
 	err := tx.Set("gorm:query_option", "FOR UPDATE OF system_platform").
 		Table("system_platform").
-		Joins("inner join rh_account ra on system_platform.rh_account_id = ra.id").
-		Where("ra.name = ?", account).
+		Where("rh_account_id = ?", account).
 		Where("inventory_id = ?", inventoryID).
 		Pluck("inventory_id", &systemInventoryID).Error
 
