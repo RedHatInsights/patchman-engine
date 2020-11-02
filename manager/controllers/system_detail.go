@@ -49,11 +49,15 @@ func SystemDetailHandler(c *gin.Context) {
 	var resp = SystemDetailResponse{
 		Data: SystemItem{
 			Attributes: SystemItemAttributes{
-				LastEvaluation: inventory.LastEvaluation,
-				LastUpload:     inventory.LastUpload,
-				RhsaCount:      inventory.AdvisorySecCountCache,
-				RhbaCount:      inventory.AdvisoryBugCountCache,
-				RheaCount:      inventory.AdvisoryEnhCountCache,
+				DisplayName:       inventory.DisplayName,
+				LastEvaluation:    inventory.LastEvaluation,
+				LastUpload:        inventory.LastUpload,
+				RhsaCount:         inventory.AdvisorySecCountCache,
+				RhbaCount:         inventory.AdvisoryBugCountCache,
+				RheaCount:         inventory.AdvisoryEnhCountCache,
+				Stale:             inventory.Stale,
+				PackagesInstalled: inventory.PackagesInstalled,
+				PackagesUpdatable: inventory.PackagesUpdatable,
 			},
 			ID:   inventory.InventoryID,
 			Type: "system",

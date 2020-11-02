@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestSystemDetailDefault(t *testing.T) {
+func TestSystemDetailDefault1(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
@@ -21,14 +21,30 @@ func TestSystemDetailDefault(t *testing.T) {
 	var output SystemDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data.ID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data.Attributes.DisplayName)
 	assert.Equal(t, "system", output.Data.Type)
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data.Attributes.LastEvaluation.String())
 	assert.Equal(t, "2020-09-22 16:00:00 +0000 UTC", output.Data.Attributes.LastUpload.String())
+	assert.False(t, output.Data.Attributes.Stale)
 	assert.Equal(t, 2, output.Data.Attributes.RhsaCount)
 	assert.Equal(t, 3, output.Data.Attributes.RhbaCount)
 	assert.Equal(t, 3, output.Data.Attributes.RheaCount)
-	assert.Equal(t, 0, output.Data.Attributes.PackagesInstalled)
-	assert.Equal(t, 0, output.Data.Attributes.PackagesUpdatable)
+}
+
+func TestSystemDetailDefault2(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	// get system with some installable/updatable packages
+	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000012", nil)
+	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 3).ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output SystemDetailResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Equal(t, 2, output.Data.Attributes.PackagesInstalled)
+	assert.Equal(t, 2, output.Data.Attributes.PackagesUpdatable)
 }
 
 func TestSystemDetailNoIdProvided(t *testing.T) {
