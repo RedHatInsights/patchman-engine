@@ -22,7 +22,7 @@ func syncPackages(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, pkgs []string) e
 	opts := vmaas.AppPackagesHandlerPostPostOpts{
 		PackagesRequest: optional.NewInterface(query),
 	}
-	data, _, err := vmaasClient.PackagesApi.AppPackagesHandlerPostPost(base.Context, &opts)
+	data, _, err := vmaasClient.DefaultApi.AppPackagesHandlerPostPost(base.Context, &opts)
 	if err != nil {
 		return errors.Wrap(err, "Get packages")
 	}
