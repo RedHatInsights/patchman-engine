@@ -71,7 +71,11 @@ func AdvisoriesListHandler(c *gin.Context) {
 	var query *gorm.DB
 
 	if HasTags(c) {
-		query = buildQueryAdvisoriesTagged(c, account)
+		var err error
+		query, err = buildQueryAdvisoriesTagged(c, account)
+		if err != nil {
+			return
+		} // Error handled in method itself
 	} else {
 		query = buildQueryAdvisories(account)
 	}
@@ -119,15 +123,18 @@ func buildAdvisoryAccountDataQuery(account int) *gorm.DB {
 	return query
 }
 
-func buildQueryAdvisoriesTagged(c *gin.Context, account int) *gorm.DB {
+func buildQueryAdvisoriesTagged(c *gin.Context, account int) (*gorm.DB, error) {
 	subq := buildAdvisoryAccountDataQuery(account)
-	subq, _ = ApplyTagsFilter(c, subq, "sp.inventory_id")
+	subq, _, err := ApplyTagsFilter(c, subq, "sp.inventory_id")
+	if err != nil {
+		return nil, err
+	}
 
 	query := database.Db.Table("advisory_metadata am").
 		Select(AdvisoriesSelect).
 		Joins("JOIN (?) aad ON am.id = aad.advisory_id and aad.systems_affected > 0", subq.SubQuery())
 
-	return query
+	return query, nil
 }
 
 func buildAdvisoriesData(advisories []AdvisoriesDBLookup) []AdvisoryItem {

@@ -41,7 +41,7 @@ type queryItem struct {
 var queryItemSelect = database.MustGetSelect(&queryItem{})
 
 // nolint: lll
-func packagesQuery(c *gin.Context, acc int) *gorm.DB {
+func packagesQuery(c *gin.Context, acc int) (*gorm.DB, error) {
 	subQ := database.Db.
 		Select(queryItemSelect).
 		Table("system_package spkg").
@@ -53,12 +53,15 @@ func packagesQuery(c *gin.Context, acc int) *gorm.DB {
 		Group("p.name_id, pn.name")
 
 	// We need to apply tag filtering on subquery
-	subQ, _ = ApplyTagsFilter(c, subQ, "sp.inventory_id")
+	subQ, _, err := ApplyTagsFilter(c, subQ, "sp.inventory_id")
+	if err != nil {
+		return nil, err
+	}
 
 	return database.Db.
 		Select(PackagesSelect).
 		Table("package_latest_cache latest").
-		Joins("INNER JOIN ? res ON res.name_id = latest.name_id", subQ.SubQuery())
+		Joins("INNER JOIN ? res ON res.name_id = latest.name_id", subQ.SubQuery()), nil
 }
 
 // @Summary Show me all installed packages across my systems
@@ -83,13 +86,15 @@ func packagesQuery(c *gin.Context, acc int) *gorm.DB {
 func PackagesListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 
-	query := packagesQuery(c, account)
+	query, err := packagesQuery(c, account)
+	if err != nil {
+		return
+	} // Error handled in method itself
 	query = ApplySearch(c, query, "res.name", "latest.summary")
 	query, meta, links, err := ListCommon(query, c, "/packages", PackagesOpts)
 	if err != nil {
-		// Error handling and setting of result code & content is done in ListCommon
 		return
-	}
+	} // Error handled in method itself
 
 	var systems []PackageItem
 	err = query.Scan(&systems).Error
