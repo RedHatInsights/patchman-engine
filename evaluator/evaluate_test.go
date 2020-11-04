@@ -178,7 +178,7 @@ func TestEvaluate(t *testing.T) {
 
 func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {
 	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{}
-	vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(context.Background(), &vmaasCallArgs)
+	vmaasData, resp, err := vmaasClient.DefaultApi.AppUpdatesHandlerV3PostPost(context.Background(), &vmaasCallArgs)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Nil(t, resp.Body.Close())
