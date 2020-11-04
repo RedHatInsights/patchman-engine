@@ -135,6 +135,20 @@ func TestAdvisorySystemsTagsMultiple(t *testing.T) { //nolint:dupl
 	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data[0].ID)
 }
 
+func TestAdvisorySystemsTagsInvalid(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/RH-1?tags=ns1/k3=val4&tags=invalidTag", nil)
+	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var errResp utils.ErrorResponse
+	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
+}
+
 func TestAdvisorySystemsTagsUnknown(t *testing.T) { //nolint:dupl
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()

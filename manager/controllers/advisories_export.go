@@ -30,7 +30,11 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	var query *gorm.DB
 	if HasTags(c) {
-		query = buildQueryAdvisoriesTagged(c, account)
+		var err error
+		query, err = buildQueryAdvisoriesTagged(c, account)
+		if err != nil {
+			return
+		} // Error handled in method itself
 	} else {
 		query = buildQueryAdvisories(account)
 	}
