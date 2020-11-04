@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -71,4 +72,18 @@ func TestAdvisoriesExportCSVFilter(t *testing.T) {
 	assert.Equal(t, 3, len(lines))
 	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,,7", lines[1])
 	assert.Equal(t, "", lines[2])
+}
+
+func TestAdvisoriesExportTagsInvalid(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil)
+	core.InitRouterWithPath(AdvisoriesExportHandler, "/").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var errResp utils.ErrorResponse
+	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }

@@ -210,6 +210,20 @@ func TestAdvisoriesTags(t *testing.T) {
 	})
 }
 
+func TestListAdvisoriesTagsInvalid(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil)
+	core.InitRouterWithPath(AdvisoriesListHandler, "/").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var errResp utils.ErrorResponse
+	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
+}
+
 func doTestWrongOffset(t *testing.T, path, q string, handler gin.HandlerFunc) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
