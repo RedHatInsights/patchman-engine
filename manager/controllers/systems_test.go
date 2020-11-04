@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -153,6 +154,20 @@ func TestSystemsTagsUnknown(t *testing.T) {
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 0, len(output.Data))
+}
+
+func TestSystemsTagsInvalid(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil)
+	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var errResp utils.ErrorResponse
+	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
 func TestSystemsWorkloads1(t *testing.T) {

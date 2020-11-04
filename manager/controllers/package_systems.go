@@ -79,12 +79,14 @@ func PackageSystemsListHandler(c *gin.Context) {
 
 	query := packageSystemsQuery(account, nameIDs)
 	query = ApplySearch(c, query, "sp.display_name")
-	query, _ = ApplyTagsFilter(c, query, "sp.inventory_id")
+	query, _, err := ApplyTagsFilter(c, query, "sp.inventory_id")
+	if err != nil {
+		return
+	} // Error handled in method itself
 	query, meta, links, err := ListCommon(query, c, fmt.Sprintf("/packages/%s/systems", packageName), PackageSystemsOpts)
 	if err != nil {
-		// Error handling and setting of result code & content is done in ListCommon
 		return
-	}
+	} // Error handled in method itself
 
 	var systems []PackageSystemItem
 	err = query.Find(&systems).Error

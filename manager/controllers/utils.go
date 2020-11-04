@@ -16,6 +16,7 @@ import (
 )
 
 const InvalidOffsetMsg = "Invalid offset"
+const InvalidTagMsg = "Invalid tag '%s'. Use 'namespace/key=val format'"
 
 var tagRegex = regexp.MustCompile(`([^/=]+)/([^/=]+)=([^/=]+)`)
 var enableCyndiTags = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_TAGS", false)
@@ -245,9 +246,9 @@ func HasTags(c *gin.Context) bool {
 }
 
 // Filter systems by tags,
-func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
+func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool, error) {
 	if !enableCyndiTags {
-		return tx, false
+		return tx, false, nil
 	}
 	var applied bool
 
@@ -262,6 +263,11 @@ func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB
 			tagJSON := fmt.Sprintf(`[{"namespace":"%s", "key": "%s", "value": "%s"}]`, matches[1], matches[2], matches[3])
 			subq = subq.Where(" h.tags @> ?::jsonb", tagJSON)
 			applied = true
+		} else {
+			// invalid tag
+			err := errors.Errorf(InvalidTagMsg, t)
+			LogAndRespBadRequest(c, err, err.Error())
+			return tx, false, err
 		}
 	}
 
@@ -283,9 +289,9 @@ func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB
 
 	// Don't add the subquery if we don't have to
 	if !applied {
-		return tx, false
+		return tx, false, nil
 	}
-	return tx.Where(fmt.Sprintf("%s::uuid in (?)", systemIDExpr), subq.SubQuery()), true
+	return tx.Where(fmt.Sprintf("%s::uuid in (?)", systemIDExpr), subq.SubQuery()), true, nil
 }
 
 type QueryItem interface {

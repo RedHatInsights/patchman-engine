@@ -65,13 +65,15 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 
 	query := buildQuery(account, advisoryName)
 	query = ApplySearch(c, query, "sp.display_name")
-	query, _ = ApplyTagsFilter(c, query, "sp.inventory_id")
+	query, _, err = ApplyTagsFilter(c, query, "sp.inventory_id")
+	if err != nil {
+		return
+	} // Error handled in method itself
 	path := fmt.Sprintf("/api/patch/v1/advisories/%v/systems", advisoryName)
 	query, meta, links, err := ListCommon(query, c, path, SystemOpts)
 	if err != nil {
-		// Error handling and setting of result code & content is done in ListCommon
 		return
-	}
+	} // Error handled in method itself
 
 	var dbItems []SystemDBLookup
 

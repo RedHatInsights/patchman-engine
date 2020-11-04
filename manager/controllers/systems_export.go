@@ -33,16 +33,18 @@ func SystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	query := querySystems(account)
 	query = ApplySearch(c, query, "sp.display_name")
-	query, _ = ApplyTagsFilter(c, query, "sp.inventory_id")
+	query, _, err := ApplyTagsFilter(c, query, "sp.inventory_id")
+	if err != nil {
+		return
+	} // Error handled in method itself
 
 	var systems []SystemDBLookup
 
 	query = query.Order("id")
-	query, err := ExportListCommon(query, c, SystemOpts)
+	query, err = ExportListCommon(query, c, SystemOpts)
 	if err != nil {
-		// Error handling and setting of result code & content is done in ListCommon
 		return
-	}
+	} // Error handled in method itself
 
 	err = query.Find(&systems).Error
 	if err != nil {
