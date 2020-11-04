@@ -99,7 +99,7 @@ func getUpdatedRepos(modifiedSince *time.Time) ([]string, error) {
 			ReposRequest: optional.NewInterface(reposReq),
 		}
 
-		repos, _, err := vmaasClient.ReposApi.AppReposHandlerPostPost(base.Context, &vmaasCallArgs)
+		repos, _, err := vmaasClient.DefaultApi.AppReposHandlerPostPost(base.Context, &vmaasCallArgs)
 		if err != nil {
 			return nil, err
 		}

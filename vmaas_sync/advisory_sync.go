@@ -167,7 +167,7 @@ func syncAdvisories() error {
 			}),
 		}
 
-		data, _, err := vmaasClient.ErrataApi.AppErrataHandlerPostPost(base.Context, &opts)
+		data, _, err := vmaasClient.DefaultApi.AppErrataHandlerPostPost(base.Context, &opts)
 		if err != nil {
 			vmaasCallCnt.WithLabelValues("error-download-errata").Inc()
 			return errors.WithMessage(err, "Downloading erratas")
