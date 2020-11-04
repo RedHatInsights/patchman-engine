@@ -395,7 +395,7 @@ func callVMaas(ctx context.Context, request vmaas.UpdatesV3Request) (*vmaas.Upda
 	backoffState, cancel := policy.Start(base.Context)
 	defer cancel()
 	for backoff.Continue(backoffState) {
-		vmaasData, resp, err := vmaasClient.UpdatesApi.AppUpdatesHandlerV3PostPost(ctx, &vmaasCallArgs)
+		vmaasData, resp, err := vmaasClient.DefaultApi.AppUpdatesHandlerV3PostPost(ctx, &vmaasCallArgs)
 
 		// VMaaS is probably refreshing caches, continue waiting
 		if resp != nil && resp.StatusCode == http.StatusServiceUnavailable {
