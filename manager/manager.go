@@ -11,6 +11,7 @@ import (
 )
 
 // @title Patchman-engine API
+// DO NOT EDIT version MANUALLY - this variable is modified by generate_docs.sh
 // @version  v1.4.1
 // @description Description here
 
