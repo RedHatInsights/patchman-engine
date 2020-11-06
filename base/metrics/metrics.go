@@ -21,6 +21,7 @@ var (
 		Name:      "info",
 	}, []string{"version"})
 
+	// ENGINEVERSION - DO NOT EDIT this variable MANUALLY - it is modified by generate_docs.sh
 	ENGINEVERSION = "v1.4.1"
 )
 
