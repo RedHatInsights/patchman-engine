@@ -9,25 +9,38 @@
 #         Sets version exactly to "A.B.C"
 #
 
+CURRENT_RELEASE=$(git tag | tail -n1)
 RELEASE=""
+
+MANAGER_FILE=manager/manager.go
+METRICS_FILE=base/metrics/metrics.go
+
 case "$1" in
   -i|--increment)
-        CURRENT_RELEASE=$(git tag | tail -n1)
         RELEASE="${CURRENT_RELEASE%.*}.$((${CURRENT_RELEASE##*.}+1))"
         ;;
   -k|--keep) # don't change anything, just keep current release
         ;;
   -r|--release) RELEASE=$2
         ;;
-  *) >&2 echo "Usage: $0 [ [-k|--keep] | [-i|--increment] | [-r|--release] <release> ]"
+  -g|--get|--get-version)
+        DOC_RELEASE=$(awk '/^\/\/ @version/ {print $3}' $MANAGER_FILE)
+        METRICS_RELEASE=$(awk -F\" '/ENGINEVERSION = / {print $2}' $METRICS_FILE)
+        echo "Current release in"
+        echo " git:     $CURRENT_RELEASE"
+        echo " doc:     $DOC_RELEASE"
+        echo " metrics: $METRICS_RELEASE"
+        exit 0
+        ;;
+  *) >&2 echo "Usage: $0 [ [-k|--keep] | [-i|--increment] | [-r|--release] <release> | [-g|--get-version]]"
         exit 1
         ;;
 esac
 
 if [ -n "$RELEASE" ] ; then
   # Substitute version
-  sed -i "s|\(// @version \).*$|\1 $RELEASE|;" manager/manager.go
-  sed -i 's|^\(var ENGINEVERSION = "\)[^"]*\("\)$|'"\1$RELEASE\2|;" base/metrics/metrics.go
+  sed -i "s|\(// @version \).*$|\1 $RELEASE|;" $MANAGER_FILE
+  sed -i 's|\(ENGINEVERSION = "\)[^"]*\("\)$|'"\1$RELEASE\2|;" $METRICS_FILE
 fi
 
 DOCS_TMP_DIR=/tmp
