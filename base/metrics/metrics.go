@@ -13,12 +13,23 @@ var (
 		Subsystem: "core",
 		Name:      "kafka_connection_errors",
 	}, []string{"type"})
+
+	EngineVersion = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Help:      "Patchman project deployment information",
+		Namespace: "patchman_engine",
+		Subsystem: "core",
+		Name:      "info",
+	}, []string{"version"})
+
+	ENGINEVERSION = "v1.4.1"
 )
 
 func init() {
 	if os.Getenv("KAFKA_ADDRESS") != "" {
 		prometheus.MustRegister(KafkaConnectionErrorCnt)
 	}
+	prometheus.MustRegister(EngineVersion)
+	EngineVersion.WithLabelValues(ENGINEVERSION).Set(1)
 }
 
 func Configure() {
