@@ -27,6 +27,7 @@ esac
 if [ -n "$RELEASE" ] ; then
   # Substitute version
   sed -i "s|\(// @version \).*$|\1 $RELEASE|;" manager/manager.go
+  sed -i 's|^\(var ENGINEVERSION = "\)[^"]*\("\)$|'"\1$RELEASE\2|;" base/metrics/metrics.go
 fi
 
 DOCS_TMP_DIR=/tmp
