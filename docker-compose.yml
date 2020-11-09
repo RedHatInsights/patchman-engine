@@ -7,6 +7,8 @@ services:
       context: .
       dockerfile: dev/database/Dockerfile.centos
     command: 'run-postgresql -c logging_collector=off'
+    volumes:
+      - db-data:/var/lib/pgsql/data
     ports:
       - 5432:5432
     env_file:
@@ -176,3 +178,6 @@ services:
       - ./:/go/src/app
     security_opt:
       - label=disable
+
+volumes:
+  db-data:
