@@ -39,7 +39,7 @@ func packagesByNameQuery(pkgName string) *gorm.DB {
 }
 
 func packageSystemsQuery(acc int, nameIDs []int) *gorm.DB {
-	return database.Db.
+	query := database.Db.
 		Select(PackageSystemsSelect).
 		Table("system_platform sp").
 		Joins("inner join system_package spkg on spkg.system_id = sp.id").
@@ -48,6 +48,12 @@ func packageSystemsQuery(acc int, nameIDs []int) *gorm.DB {
 		Where("sp.rh_account_id = ?", acc).
 		Where("spkg.rh_account_id = ?", acc).
 		Where("p.id in (?)", nameIDs)
+
+	if applyInventoryHosts {
+		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
+	}
+
+	return query
 }
 
 // @Summary Show me all my systems which have a package installed

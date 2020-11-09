@@ -20,6 +20,7 @@ const InvalidTagMsg = "Invalid tag '%s'. Use 'namespace/key=val format'"
 
 var tagRegex = regexp.MustCompile(`([^/=]+)/([^/=]+)=([^/=]+)`)
 var enableCyndiTags = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_TAGS", false)
+var applyInventoryHosts = utils.GetBoolEnvOrDefault("APPLY_INVENTORY_HOSTS", true)
 
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	utils.Log("err", err.Error()).Error(respMsg)

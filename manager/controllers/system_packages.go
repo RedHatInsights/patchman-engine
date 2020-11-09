@@ -45,7 +45,7 @@ type SystemPackageDBLoad struct {
 }
 
 func systemPackageQuery(account int, inventoryID string) *gorm.DB {
-	return database.Db.
+	query := database.Db.
 		Table("system_package spkg").
 		Joins("inner join system_platform sp on sp.id = spkg.system_id").
 		Joins("inner join package p on p.id = spkg.package_id").
@@ -53,6 +53,12 @@ func systemPackageQuery(account int, inventoryID string) *gorm.DB {
 		Joins("inner join strings sum on sum.id = p.summary_hash").
 		Joins("inner join strings descr on descr.id = p.description_hash").
 		Where("spkg.rh_account_id = ? and sp.inventory_id::text = ?", account, inventoryID)
+
+	if applyInventoryHosts {
+		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
+	}
+
+	return query
 }
 
 // @Summary Show me details about a system packages by given inventory id
