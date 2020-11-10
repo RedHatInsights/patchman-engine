@@ -58,6 +58,8 @@ DO
 $$
     DECLARE
         rhacid NUMERIC;
+        old NUMERIC;
+        new NUMERIC;
     BEGIN
         FOR rhacid IN SELECT id from rh_account
         LOOP
@@ -111,9 +113,11 @@ $$
                     packages_updatable,
                     reporter_id
                 FROM system_platform
-                WHERE rh_account_id = rhacid;
-            COMMIT;
+               WHERE rh_account_id = rhacid;
         END LOOP;
+        SELECT count(*) from system_platform into old;
+        SELECT count(*) from system_platform_v2 into new;
+        RAISE NOTICE 'system_platform row count - old: %, new: %', old, new;
     END;
 $$ LANGUAGE plpgsql;
 
@@ -121,6 +125,8 @@ DO
 $$
     DECLARE
         rhacid NUMERIC;
+        old NUMERIC;
+        new NUMERIC;
     BEGIN
         FOR rhacid IN SELECT id from rh_account
         LOOP
@@ -143,8 +149,10 @@ $$
                 JOIN system_platform sp
                   ON sp.id = sa.system_id
                WHERE sp.rh_account_id = rhacid;
-            COMMIT;
         END LOOP;
+        SELECT count(*) from system_advisories into old;
+        SELECT count(*) from system_advisories_v2 into new;
+        RAISE NOTICE 'system_platform row count - old: %, new: %', old, new;
     END;
 $$ LANGUAGE plpgsql;
 
