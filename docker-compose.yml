@@ -1,12 +1,24 @@
 version: '3'
 
 services:
+  db_volumefix:
+    container_name: db_volumefix
+    build:
+      context: .
+      dockerfile: dev/database/Dockerfile.centos
+    user: root
+    command: 'chown -R postgres /var/lib/pgsql/data'
+    volumes:
+      - db-data:/var/lib/pgsql/data
+
   db:
     container_name: db
     build:
       context: .
       dockerfile: dev/database/Dockerfile.centos
     command: 'run-postgresql -c logging_collector=off'
+    depends_on:
+      - db_volumefix
     volumes:
       - db-data:/var/lib/pgsql/data
     ports:
