@@ -57,7 +57,7 @@ var (
 
 func RunMetrics(port string) {
 	prometheus.MustRegister(evaluationCnt, updatesCnt, evaluationDuration, evaluationPartDuration,
-		uploadEvaluationDelay)
+		uploadEvaluationDelay, twoEvaluationsInterval)
 
 	// create web app
 	app := gin.New()
