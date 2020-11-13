@@ -19,6 +19,7 @@ import (
 
 const (
 	WarnSkippingNoPackages = "skipping profile with no packages"
+	WarnSkippingReporter   = "skipping excluded reporter"
 	ErrorNoAccountProvided = "no account provided in host message"
 	ErrorKafkaSend         = "unable to send evaluation message"
 	ErrorProcessUpload     = "unable to process upload"
@@ -63,6 +64,12 @@ func HandleUpload(event HostEvent) error {
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventUpload))
 
 	updateReporterCounter(event.Host.Reporter)
+
+	if _, ok := excludedReporters[event.Host.Reporter]; ok {
+		utils.Log("inventoryID", event.Host.ID, "reporter", event.Host.Reporter).Warn(WarnSkippingReporter)
+		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedReporter)
+		return nil
+	}
 
 	if len(event.Host.Account) == 0 {
 		utils.Log("inventoryID", event.Host.ID).Error(ErrorNoAccountProvided)

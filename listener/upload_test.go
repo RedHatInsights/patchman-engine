@@ -91,11 +91,11 @@ func TestUploadHandler(t *testing.T) {
 	deleteData(t)
 
 	_ = getOrCreateTestAccount(t)
-	event := createTestUploadEvent(id, id, true)
+	event := createTestUploadEvent(id, id, "puptoo", true)
 	err := HandleUpload(event)
 	assert.NoError(t, err)
 
-	reporterID := 3
+	reporterID := 1
 	assertSystemInDB(t, id, nil, &reporterID)
 
 	var sys models.SystemPlatform
@@ -114,22 +114,37 @@ func TestUploadHandler(t *testing.T) {
 	deleteData(t)
 }
 
-// error when parsing identity
 func TestUploadHandlerWarn(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	noPkgsEvent := createTestUploadEvent("1", id, false)
+	noPkgsEvent := createTestUploadEvent("1", id, "puptoo", false)
 	err := HandleUpload(noPkgsEvent)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(logHook.LogEntries))
 	assert.Equal(t, WarnSkippingNoPackages, logHook.LogEntries[0].Message)
 }
 
-// error when parsing identity
-func TestUploadHandlerError1(t *testing.T) {
+func TestUploadHandlerWarnSkipReporter(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	event := createTestUploadEvent("1", id, true)
+	noPkgsEvent := createTestUploadEvent("1", id, "yupana", false)
+	err := HandleUpload(noPkgsEvent)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(logHook.LogEntries))
+	assert.Equal(t, WarnSkippingReporter, logHook.LogEntries[0].Message)
+}
+
+// error when parsing identity
+func TestUploadHandlerError1(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	configure()
+	logHook := utils.NewTestLogHook()
+	log.AddHook(logHook)
+	event := createTestUploadEvent("1", id, "puptoo", true)
 	event.Host.Account = ""
 	err := HandleUpload(event)
 	assert.NoError(t, err)
@@ -153,7 +168,7 @@ func TestUploadHandlerError2(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
 	_ = getOrCreateTestAccount(t)
-	event := createTestUploadEvent("1", id, true)
+	event := createTestUploadEvent("1", id, "puptoo", true)
 	err := HandleUpload(event)
 	assert.Error(t, err)
 	assert.Equal(t, ErrorKafkaSend, logHook.LogEntries[len(logHook.LogEntries)-1].Message)

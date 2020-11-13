@@ -70,7 +70,7 @@ func getOrCreateTestAccount(t *testing.T) int {
 }
 
 // nolint: unparam
-func createTestUploadEvent(rhAccountID string, inventoryID string, packages bool) HostEvent {
+func createTestUploadEvent(rhAccountID, inventoryID, reporter string, packages bool) HostEvent {
 	ns := "insights"
 	v1 := "prod"
 	ev := HostEvent{
@@ -79,7 +79,7 @@ func createTestUploadEvent(rhAccountID string, inventoryID string, packages bool
 		Host: Host{
 			ID:       inventoryID,
 			Account:  rhAccountID,
-			Reporter: "yupana",
+			Reporter: reporter,
 			Tags: []inventory.StructuredTag{
 				{
 					Key:       "env",
