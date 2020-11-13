@@ -6,15 +6,18 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+	"os"
+	"strings"
 	"sync"
 )
 
 var (
-	eventsTopic    string
-	consumerCount  int
-	evalWriter     mqueue.Writer
-	validReporters map[string]int
-	enableBypass   bool
+	eventsTopic       string
+	consumerCount     int
+	evalWriter        mqueue.Writer
+	validReporters    map[string]int
+	excludedReporters map[string]bool
+	enableBypass      bool
 )
 
 func configure() {
@@ -28,8 +31,19 @@ func configure() {
 	evalWriter = mqueue.WriterFromEnv(evalTopic)
 
 	validReporters = loadValidReporters()
+	excludedReporters = loadExcludedReporters()
 
 	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
+}
+
+func loadExcludedReporters() map[string]bool {
+	excludeReportersStr := os.Getenv("EXCLUDED_REPORTERS")
+	arr := strings.Split(excludeReportersStr, ",")
+	excludedReporters := map[string]bool{}
+	for _, m := range arr {
+		excludedReporters[m] = true
+	}
+	return excludedReporters
 }
 
 func loadValidReporters() map[string]int {
