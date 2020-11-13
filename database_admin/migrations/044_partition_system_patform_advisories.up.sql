@@ -12,9 +12,9 @@ BEGIN
                  ON pg_inherits.inhrelid   = child.oid
               WHERE parent.relname = text(tbl)
     LOOP
-        EXECUTE 'ALTER TABLE ' || r.relname || ' RENAME TO ' || replace(r.relname, oldtext, newtext);
+        EXECUTE 'ALTER TABLE IF EXISTS ' || r.relname || ' RENAME TO ' || replace(r.relname, oldtext, newtext);
     END LOOP;
-    EXECUTE 'ALTER TABLE ' || text(tbl) || ' RENAME TO ' || replace(text(tbl), oldtext, newtext);
+    EXECUTE 'ALTER TABLE IF EXISTS ' || text(tbl) || ' RENAME TO ' || replace(text(tbl), oldtext, newtext);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -32,9 +32,9 @@ BEGIN
                  ON pg_inherits.inhrelid   = child.oid
               WHERE parent.relname = text(idx)
     LOOP
-        EXECUTE 'ALTER INDEX ' || r.relname || ' RENAME TO ' || replace(r.relname, oldtext, newtext);
+        EXECUTE 'ALTER INDEX IF EXISTS ' || r.relname || ' RENAME TO ' || replace(r.relname, oldtext, newtext);
     END LOOP;
-    EXECUTE 'ALTER INDEX ' || text(idx) || ' RENAME TO ' || replace(text(idx), oldtext, newtext);
+    EXECUTE 'ALTER INDEX IF EXISTS ' || text(idx) || ' RENAME TO ' || replace(text(idx), oldtext, newtext);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -42,20 +42,20 @@ $$ LANGUAGE plpgsql;
 -- switch partitioned tables
 
 -- rename old tables
-ALTER TABLE system_platform RENAME TO system_platform_v1;
-ALTER TABLE system_platform_v1
+ALTER TABLE IF EXISTS system_platform RENAME TO system_platform_v1;
+ALTER TABLE IF EXISTS system_platform_v1
     RENAME CONSTRAINT system_platform_display_name_check TO system_platform_display_name_check_v1;
-ALTER SEQUENCE system_platform_id_seq RENAME TO system_platform_id_seq_v1;
-ALTER INDEX system_platform_pkey RENAME TO system_platform_pkey_v1;
+ALTER SEQUENCE IF EXISTS system_platform_id_seq RENAME TO system_platform_id_seq_v1;
+ALTER INDEX IF EXISTS system_platform_pkey RENAME TO system_platform_pkey_v1;
 
-ALTER TABLE system_advisories RENAME TO system_advisories_v1;
-ALTER INDEX system_advisories_pkey RENAME TO system_advisories_pkey_v1;
+ALTER TABLE IF EXISTS system_advisories RENAME TO system_advisories_v1;
+ALTER INDEX IF EXISTS system_advisories_pkey RENAME TO system_advisories_pkey_v1;
 
 -- move new table
 SELECT rename_table_with_partitions('system_platform_v2', '_v2', '');
-ALTER TABLE system_platform
+ALTER TABLE IF EXISTS system_platform
     RENAME CONSTRAINT system_platform_v2_display_name_check TO system_platform_display_name_check;
-ALTER SEQUENCE system_platform_v2_id_seq RENAME TO system_platform_id_seq;
+ALTER SEQUENCE IF EXISTS system_platform_v2_id_seq RENAME TO system_platform_id_seq;
 SELECT rename_index_with_partitions('system_platform_v2_pkey', '_v2', '');
 SELECT rename_index_with_partitions('system_platform_v2_rh_account_id_inventory_id_key', '_v2', '');
 

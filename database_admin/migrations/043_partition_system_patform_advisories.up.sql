@@ -1,3 +1,19 @@
+CREATE OR REPLACE FUNCTION create_table_partitions(tbl regclass, parts INTEGER, rest text)
+    RETURNS VOID AS
+$$
+DECLARE
+    I INTEGER;
+BEGIN
+    I := 0;
+    WHILE I < parts
+        LOOP
+            EXECUTE 'CREATE TABLE IF NOT EXISTS ' || text(tbl) || '_' || text(I) || ' PARTITION OF ' || text(tbl) ||
+                    ' FOR VALUES WITH ' || ' ( MODULUS ' || text(parts) || ', REMAINDER ' || text(I) || ')' ||
+                    rest || ';';
+            I = I + 1;
+        END LOOP;
+END;
+$$ LANGUAGE plpgsql;
 
 -- create partitioned tables
 -- skip constraints to make initial import faster
@@ -49,11 +65,12 @@ SELECT create_table_partitions('system_advisories_v2', 32,
 
 -- system_repo
 ALTER TABLE system_repo
-    ADD COLUMN rh_account_id INT,
-    DROP CONSTRAINT system_platform_id;
+    ADD COLUMN IF NOT EXISTS rh_account_id INT,
+    DROP CONSTRAINT IF EXISTS system_platform_id;
 
 
 -- data migration
+TRUNCATE TABLE system_platform_v2;
 DO
 $$
     DECLARE
@@ -121,6 +138,7 @@ $$
     END;
 $$ LANGUAGE plpgsql;
 
+TRUNCATE TABLE system_advisories_v2;
 DO
 $$
     DECLARE
@@ -165,6 +183,7 @@ CREATE OR REPLACE FUNCTION create_table_partition_triggers(name text, trig_type 
 $$
 DECLARE
     r record;
+    trig_name text;
 BEGIN
     FOR r IN SELECT child.relname
                FROM pg_inherits
@@ -174,7 +193,9 @@ BEGIN
                  ON pg_inherits.inhrelid   = child.oid
               WHERE parent.relname = text(tbl)
     LOOP
-        EXECUTE 'CREATE TRIGGER ' || name || substr(r.relname, length(text(tbl)) +1 ) ||
+        trig_name := name || substr(r.relname, length(text(tbl)) +1 );
+        EXECUTE 'DROP TRIGGER IF EXISTS ' || trig_name || ' ON ' || r.relname;
+        EXECUTE 'CREATE TRIGGER ' || trig_name ||
                 ' ' || trig_type || ' ON ' || r.relname || ' ' || trig_text || ';';
     END LOOP;
 END;
@@ -183,11 +204,15 @@ $$ LANGUAGE plpgsql;
 
 -- enable constraints on new tables
 ALTER TABLE system_platform_v2
+    DROP CONSTRAINT IF EXISTS system_platform_v2_pkey,
     ADD PRIMARY KEY (rh_account_id, id),
+    DROP CONSTRAINT IF EXISTS system_platform_v2_rh_account_id_inventory_id_key,
     ADD UNIQUE (rh_account_id, inventory_id),
+    DROP CONSTRAINT IF EXISTS rh_account_id,
     ADD CONSTRAINT rh_account_id
         FOREIGN KEY (rh_account_id)
             REFERENCES rh_account (id),
+    DROP CONSTRAINT IF EXISTS reporter_id,
     ADD CONSTRAINT reporter_id
         FOREIGN KEY (reporter_id)
             REFERENCES reporter (id);
@@ -228,13 +253,17 @@ GRANT SELECT, UPDATE, DELETE ON system_platform_v2 to vmaas_sync;
 
 
 ALTER TABLE system_advisories_v2
+    DROP CONSTRAINT IF EXISTS  system_advisories_v2_pkey,
     ADD PRIMARY KEY (rh_account_id, system_id, advisory_id),
+    DROP CONSTRAINT IF EXISTS system_platform_id,
     ADD CONSTRAINT system_platform_id
         FOREIGN KEY (rh_account_id, system_id)
             REFERENCES system_platform_v2 (rh_account_id, id),
+    DROP CONSTRAINT IF EXISTS advisory_metadata_id,
     ADD CONSTRAINT advisory_metadata_id
         FOREIGN KEY (advisory_id)
             REFERENCES advisory_metadata (id),
+    DROP CONSTRAINT IF EXISTS status_id,
     ADD CONSTRAINT status_id
         FOREIGN KEY (status_id)
             REFERENCES status (id);
@@ -257,12 +286,14 @@ GRANT SELECT, DELETE ON system_advisories_v2 TO vmaas_sync;
 -- system_repo
 ALTER TABLE system_repo
     ALTER COLUMN rh_account_id SET NOT NULL,
+    DROP CONSTRAINT IF EXISTS system_repo_rh_account_id_system_id_repo_id_key,
     ADD UNIQUE (rh_account_id, system_id, repo_id),
-    DROP CONSTRAINT system_repo_system_id_repo_id_key,
+    DROP CONSTRAINT IF EXISTS system_repo_system_id_repo_id_key,
+    DROP CONSTRAINT IF EXISTS system_platform_id,
     ADD CONSTRAINT system_platform_id
         FOREIGN KEY (rh_account_id, system_id)
             REFERENCES system_platform_v2 (rh_account_id, id);
-DROP INDEX system_repo_system_id_idx;
+DROP INDEX IF EXISTS system_repo_system_id_idx;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_repo TO listener;
 GRANT DELETE ON system_repo TO manager;
