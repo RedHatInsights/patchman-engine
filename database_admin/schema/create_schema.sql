@@ -450,7 +450,7 @@ BEGIN
     I := 0;
     WHILE I < parts
         LOOP
-            EXECUTE 'CREATE TABLE ' || text(tbl) || '_' || text(I) || ' PARTITION OF ' || text(tbl) ||
+            EXECUTE 'CREATE TABLE IF NOT EXISTS ' || text(tbl) || '_' || text(I) || ' PARTITION OF ' || text(tbl) ||
                     ' FOR VALUES WITH ' || ' ( MODULUS ' || text(parts) || ', REMAINDER ' || text(I) || ')' ||
                     rest || ';';
             I = I + 1;
@@ -463,6 +463,7 @@ CREATE OR REPLACE FUNCTION create_table_partition_triggers(name text, trig_type 
 $$
 DECLARE
     r record;
+    trig_name text;
 BEGIN
     FOR r IN SELECT child.relname
                FROM pg_inherits
@@ -472,7 +473,9 @@ BEGIN
                  ON pg_inherits.inhrelid   = child.oid
               WHERE parent.relname = text(tbl)
     LOOP
-        EXECUTE 'CREATE TRIGGER ' || name || substr(r.relname, length(text(tbl)) +1 ) ||
+        trig_name := name || substr(r.relname, length(text(tbl)) +1 );
+        EXECUTE 'DROP TRIGGER IF EXISTS ' || trig_name || ' ON ' || r.relname;
+        EXECUTE 'CREATE TRIGGER ' || trig_name ||
                 ' ' || trig_type || ' ON ' || r.relname || ' ' || trig_text || ';';
     END LOOP;
 END;
@@ -492,9 +495,9 @@ BEGIN
                  ON pg_inherits.inhrelid   = child.oid
               WHERE parent.relname = text(tbl)
     LOOP
-        EXECUTE 'ALTER TABLE ' || r.relname || ' RENAME TO ' || replace(r.relname, oldtext, newtext);
+        EXECUTE 'ALTER TABLE IF EXISTS ' || r.relname || ' RENAME TO ' || replace(r.relname, oldtext, newtext);
     END LOOP;
-    EXECUTE 'ALTER TABLE ' || text(tbl) || ' RENAME TO ' || replace(text(tbl), oldtext, newtext);
+    EXECUTE 'ALTER TABLE IF EXISTS ' || text(tbl) || ' RENAME TO ' || replace(text(tbl), oldtext, newtext);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -512,9 +515,9 @@ BEGIN
                  ON pg_inherits.inhrelid   = child.oid
               WHERE parent.relname = text(idx)
     LOOP
-        EXECUTE 'ALTER INDEX ' || r.relname || ' RENAME TO ' || replace(r.relname, oldtext, newtext);
+        EXECUTE 'ALTER INDEX IF EXISTS ' || r.relname || ' RENAME TO ' || replace(r.relname, oldtext, newtext);
     END LOOP;
-    EXECUTE 'ALTER INDEX ' || text(idx) || ' RENAME TO ' || replace(text(idx), oldtext, newtext);
+    EXECUTE 'ALTER INDEX IF EXISTS ' || text(idx) || ' RENAME TO ' || replace(text(idx), oldtext, newtext);
 END;
 $$ LANGUAGE plpgsql;
 
