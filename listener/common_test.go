@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const id = "TEST-00000"
+const id = "99c0ffee-0000-0000-0000-0000c0ffee99"
 
 func TestInit(t *testing.T) {
 	utils.TestLoadEnv("conf/listener.env")
@@ -70,7 +70,7 @@ func getOrCreateTestAccount(t *testing.T) int {
 }
 
 // nolint: unparam
-func createTestUploadEvent(inventoryID string, packages bool) HostEvent {
+func createTestUploadEvent(rhAccountID, inventoryID, reporter string, packages bool) HostEvent {
 	ns := "insights"
 	v1 := "prod"
 	ev := HostEvent{
@@ -78,8 +78,8 @@ func createTestUploadEvent(inventoryID string, packages bool) HostEvent {
 		PlatformMetadata: nil,
 		Host: Host{
 			ID:       inventoryID,
-			Account:  inventoryID,
-			Reporter: "yupana",
+			Account:  rhAccountID,
+			Reporter: reporter,
 			Tags: []inventory.StructuredTag{
 				{
 					Key:       "env",
