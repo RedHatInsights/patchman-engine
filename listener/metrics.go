@@ -10,17 +10,18 @@ import (
 )
 
 const (
-	EventUpload             = "upload"
-	EventDelete             = "delete"
-	ReceivedSuccess         = "success-eval"
-	ReceivedSuccessNoEval   = "success-unchanged"
-	ReceivedDeleted         = "success-deleted"
-	ReceivedErrorIdentity   = "error-identity"
-	ReceivedErrorProcessing = "error-processing"
-	ReceivedErrorOtherType  = "error-other-type"
-	ReceivedBypassed        = "bypassed"
-	ReceivedWarnNoRows      = "warn-no-rows"
-	ReceivedWarnNoPackages  = "warn-no-packages"
+	EventUpload                  = "upload"
+	EventDelete                  = "delete"
+	ReceivedSuccess              = "success-eval"
+	ReceivedSuccessNoEval        = "success-unchanged"
+	ReceivedDeleted              = "success-deleted"
+	ReceivedErrorIdentity        = "error-identity"
+	ReceivedErrorProcessing      = "error-processing"
+	ReceivedErrorOtherType       = "error-other-type"
+	ReceivedBypassed             = "bypassed"
+	ReceivedWarnNoRows           = "warn-no-rows"
+	ReceivedWarnNoPackages       = "warn-no-packages"
+	ReceivedWarnExcludedReporter = "warn-excluded-reporter"
 )
 
 var (

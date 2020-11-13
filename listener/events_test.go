@@ -12,6 +12,8 @@ import (
 	"testing"
 )
 
+const notexistid = "99c0ffee-0000-0000-0000-999999999999"
+
 func TestUpdateSystem(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
@@ -24,7 +26,7 @@ func TestUpdateSystem(t *testing.T) {
 		DisplayName: id,
 	}).Error)
 
-	ev := createTestUploadEvent(id, false)
+	ev := createTestUploadEvent("1", id, "puptoo", false)
 	name := "TEST_NAME"
 	ev.Host.DisplayName = &name
 	ev.Host.SystemProfile.InstalledPackages = []string{"kernel"}
@@ -89,7 +91,7 @@ func TestDeleteSystemWarn3(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
 
-	deleteEvent := createTestDeleteEvent("not-existing-id")
+	deleteEvent := createTestDeleteEvent(notexistid)
 	err := HandleDelete(deleteEvent)
 	assert.NoError(t, err)
 
@@ -101,7 +103,7 @@ func TestUploadAfterDelete(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
-	uploadEvent := createTestUploadEvent(id, true)
+	uploadEvent := createTestUploadEvent("1", id, "puptoo", true)
 	err := HandleUpload(uploadEvent)
 	assert.NoError(t, err)
 	assertSystemNotInDB(t)
