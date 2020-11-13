@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cp docs/openapi.json docs/openapi1.json
-./scripts/generate_docs.sh
+./scripts/generate_docs.sh --keep
 diff docs/openapi.json docs/openapi1.json
 rc=$?
 if [ $rc -gt 0 ]; then
