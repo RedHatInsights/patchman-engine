@@ -3046,11 +3046,25 @@ data:
               "refId": "A"
             },
             {
+              "expr": "sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_advisories_.*\"})",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "system_advisories_sum",
+              "refId": "B"
+            },
+            {
               "expr": "sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_package_.*\"})",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "system_package_sum",
-              "refId": "B"
+              "refId": "C"
+            },
+            {
+              "expr": "sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_platform_.*\"})",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "system_platform_sum",
+              "refId": "D"
             }
           ],
           "thresholds": [],
