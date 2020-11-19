@@ -176,8 +176,10 @@ func TestAdvisoriesSearch(t *testing.T) {
 		assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
 
 		// links
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date", output.Links.First)
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date", output.Links.Last)
+		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date&search=h-3",
+			output.Links.First)
+		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date&search=h-3",
+			output.Links.Last)
 		assert.Nil(t, output.Links.Next)
 		assert.Nil(t, output.Links.Previous)
 

@@ -37,6 +37,7 @@ var SystemPackagesOpts = ListOpts{
 	Fields:         SystemPackagesFields,
 	DefaultFilters: nil,
 	DefaultSort:    "name",
+	SearchFields:   []string{"pn.name", "sum.value", "descr.value"},
 }
 
 type SystemPackageDBLoad struct {
@@ -87,7 +88,6 @@ func SystemPackagesHandler(c *gin.Context) {
 
 	var loaded []SystemPackageDBLoad
 	q := systemPackageQuery(account, inventoryID).Select(SystemPackagesSelect)
-	q = ApplySearch(c, q, "pn.name", "sum.value", "descr.value")
 	q, meta, links, err := ListCommon(q, c, fmt.Sprintf("/systems/%s/packages", inventoryID), SystemPackagesOpts)
 	if err != nil {
 		return

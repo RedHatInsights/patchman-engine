@@ -64,7 +64,6 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 	}
 
 	query := buildQuery(account, advisoryName)
-	query = ApplySearch(c, query, "sp.display_name")
 	query, _, err = ApplyTagsFilter(c, query, "sp.inventory_id")
 	if err != nil {
 		return
