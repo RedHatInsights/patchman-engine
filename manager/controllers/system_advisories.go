@@ -18,6 +18,7 @@ var SystemAdvisoriesOpts = ListOpts{
 	Fields:         SystemAdvisoriesFields,
 	DefaultFilters: nil,
 	DefaultSort:    "-public_date",
+	SearchFields:   []string{"am.name", "am.synopsis", "am.description"},
 }
 
 type SystemAdvisoriesDBLookup struct {
@@ -95,7 +96,6 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
 	}
 
-	query = ApplySearch(c, query, "am.name", "am.synopsis", "am.description")
 	path := fmt.Sprintf("/api/patch/v1/systems/%v/advisories", inventoryID)
 	query, meta, links, err := ListCommon(query, c, path, SystemAdvisoriesOpts)
 	if err != nil {

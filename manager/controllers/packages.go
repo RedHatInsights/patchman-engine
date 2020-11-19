@@ -14,6 +14,7 @@ var PackagesOpts = ListOpts{
 	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
 	DefaultFilters: map[string]FilterData{},
 	DefaultSort:    "name",
+	SearchFields:   []string{"res.name", "latest.summary"},
 }
 
 type PackageItem struct {
@@ -94,7 +95,6 @@ func PackagesListHandler(c *gin.Context) {
 	if err != nil {
 		return
 	} // Error handled in method itself
-	query = ApplySearch(c, query, "res.name", "latest.summary")
 	query, meta, links, err := ListCommon(query, c, "/packages", PackagesOpts)
 	if err != nil {
 		return
