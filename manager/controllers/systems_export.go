@@ -32,7 +32,6 @@ import (
 func SystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	query := querySystems(account)
-	query = ApplySearch(c, query, "sp.display_name")
 	query, _, err := ApplyTagsFilter(c, query, "sp.inventory_id")
 	if err != nil {
 		return

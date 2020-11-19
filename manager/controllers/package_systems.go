@@ -17,6 +17,7 @@ var PackageSystemsOpts = ListOpts{
 	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
 	DefaultFilters: map[string]FilterData{},
 	DefaultSort:    "id",
+	SearchFields:   []string{"sp.display_name"},
 }
 
 type PackageSystemItem struct {
@@ -84,7 +85,6 @@ func PackageSystemsListHandler(c *gin.Context) {
 	}
 
 	query := packageSystemsQuery(account, nameIDs)
-	query = ApplySearch(c, query, "sp.display_name")
 	query, _, err := ApplyTagsFilter(c, query, "sp.inventory_id")
 	if err != nil {
 		return
