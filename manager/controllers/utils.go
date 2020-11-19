@@ -111,34 +111,7 @@ type ListOpts struct {
 	Fields         database.AttrMap
 	DefaultFilters map[string]FilterData
 	DefaultSort    string
-}
-
-func checkBadRequest(tx *gorm.DB, c *gin.Context, opts ListOpts) (txx *gorm.DB, limit int, offset int,
-	sortFields []string, filters Filters, err error) {
-	limit, offset, err = utils.LoadLimitOffset(c, core.DefaultLimit)
-	if err != nil {
-		return nil, 0, 0, nil, nil, errors.
-			Wrap(err, "unable to parse limit, offset params")
-	}
-
-	tx, sortFields, err = ApplySort(c, tx, opts.Fields, opts.DefaultSort)
-	if err != nil {
-		return nil, 0, 0, nil, nil, errors.Wrap(err, "invalid sort")
-	}
-
-	query := NestedQueryMap(c, "filter")
-
-	filters, err = ParseFilters(query, opts.Fields, opts.DefaultFilters)
-	if err != nil {
-		return nil, 0, 0, nil, nil, errors.Wrap(err, "filters parsing failed")
-	}
-
-	tx, err = filters.Apply(tx, opts.Fields)
-	if err != nil {
-		return nil, 0, 0, nil, nil, errors.Wrap(err, "filters applying failed")
-	}
-
-	return tx, limit, offset, sortFields, filters, nil
+	SearchFields   []string
 }
 
 func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, error) {
@@ -148,6 +121,7 @@ func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, err
 		LogAndRespBadRequest(c, err, "Failed to parse filters")
 		return nil, errors.Wrap(err, "filters parsing failed")
 	}
+	tx, _ = ApplySearch(c, tx, opts.SearchFields...)
 
 	tx, err = filters.Apply(tx, opts.Fields)
 	if err != nil {
@@ -166,12 +140,38 @@ func extractTagsQueryString(c *gin.Context) string {
 	return strings.TrimSuffix(tagQ, "&")
 }
 
-//nolint: lll
-func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params ...string) (*gorm.DB, *ListMeta, *Links, error) {
-	tx, limit, offset, sortFields, filters, err := checkBadRequest(tx, c, opts)
+//nolint: funlen
+func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params ...string) (
+	*gorm.DB, *ListMeta, *Links, error) {
+	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
-		return nil, nil, nil, err
+		return nil, nil, nil, errors.Wrap(err, "unable to parse limit, offset params")
+	}
+	tx, searchQ := ApplySearch(c, tx, opts.SearchFields...)
+
+	tx, sortFields, err := ApplySort(c, tx, opts.Fields, opts.DefaultSort)
+	if err != nil {
+		LogAndRespBadRequest(c, err, err.Error())
+		return nil, nil, nil, errors.Wrap(err, "invalid sort")
+	}
+	var sortQ string
+	if len(sortFields) > 0 {
+		sortQ = fmt.Sprintf("sort=%v", strings.Join(sortFields, ","))
+	}
+
+	query := NestedQueryMap(c, "filter")
+
+	filters, err := ParseFilters(query, opts.Fields, opts.DefaultFilters)
+	if err != nil {
+		LogAndRespBadRequest(c, err, err.Error())
+		return nil, nil, nil, errors.Wrap(err, "filters parsing failed")
+	}
+
+	tx, err = filters.Apply(tx, opts.Fields)
+	if err != nil {
+		LogAndRespBadRequest(c, err, err.Error())
+		return nil, nil, nil, errors.Wrap(err, "filters applying failed")
 	}
 
 	var total int
@@ -197,11 +197,7 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params 
 
 	tagQ := extractTagsQueryString(c)
 
-	var sortQ string
-	if len(sortFields) > 0 {
-		sortQ = fmt.Sprintf("sort=%v", strings.Join(sortFields, ","))
-	}
-	params = append(params, filters.ToQueryParams(), sortQ, tagQ)
+	params = append(params, filters.ToQueryParams(), sortQ, tagQ, searchQ)
 	links := CreateLinks(path, offset, limit, total, params...)
 
 	if limit != -1 {
@@ -211,20 +207,20 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params 
 	return tx, &meta, &links, nil
 }
 
-func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) *gorm.DB {
+func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) (*gorm.DB, string) {
 	search := base.RemoveInvalidChars(c.Query("search"))
 	if search == "" {
-		return tx
+		return tx, ""
 	}
 
 	if len(searchColumns) == 0 {
-		return tx
+		return tx, ""
 	}
 
 	searchExtended := "%" + search + "%"
 	concatValue := strings.Join(searchColumns, ",' ',")
 	txWithSearch := tx.Where("LOWER(CONCAT("+concatValue+")) LIKE LOWER(?)", searchExtended)
-	return txWithSearch
+	return txWithSearch, fmt.Sprintf("search=%s", search)
 }
 
 func HasTags(c *gin.Context) bool {

@@ -42,7 +42,6 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	var advisories []AdvisoriesDBLookup
 
 	query = query.Order("id")
-	query = ApplySearch(c, query, "am.name", "synopsis", "description")
 	query, err := ExportListCommon(query, c, AdvisoriesOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
