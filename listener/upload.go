@@ -67,7 +67,7 @@ func HandleUpload(event HostEvent) error {
 
 	if _, ok := excludedReporters[event.Host.Reporter]; ok {
 		utils.Log("inventoryID", event.Host.ID, "reporter", event.Host.Reporter).Warn(WarnSkippingReporter)
-		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedReporter)
+		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedReporter).Inc()
 		return nil
 	}
 
