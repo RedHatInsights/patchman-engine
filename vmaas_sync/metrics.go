@@ -97,12 +97,20 @@ var (
 		Name:      "deleted_culled_systems",
 	})
 
+	staleSystemsMarkedCnt = prometheus.NewCounter(prometheus.CounterOpts{
+		Help:      "How many systems were marked as stale",
+		Namespace: "patchman_engine",
+		Subsystem: "vmaas_sync",
+		Name:      "stale_systems_marked",
+	})
+
 	enableCyndiMetrics = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_METRICS", true)
 )
 
 func RunMetrics() {
 	prometheus.MustRegister(messagesReceivedCnt, vmaasCallCnt, storeAdvisoriesCnt, storePackagesCnt,
-		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration, deletedCulledSystemsCnt,
+		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration,
+		deletedCulledSystemsCnt, staleSystemsMarkedCnt,
 		databaseSizeBytesGaugeVec, databaseProcessesGaugeVec, cyndiSystemsCnt, cyndiTagsCnt)
 
 	go runAdvancedMetricsUpdating()
