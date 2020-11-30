@@ -32,7 +32,9 @@ func TestSingleSystemStale(t *testing.T) {
 		systems[0].StaleWarningTimestamp = &staleDate
 		assert.NoError(t, database.Db.Save(&systems[0]).Error)
 
-		assert.NoError(t, database.Db.Exec("select * from mark_stale_systems()").Error)
+		nMarked, err := markSystemsStale(database.Db)
+		assert.Nil(t, err)
+		assert.Equal(t, 1, nMarked)
 
 		oldAffected = accountData[0].SystemsAffected
 		assert.NoError(t, database.Db.Find(&accountData, "rh_account_id = ? AND advisory_id = ?",
@@ -80,7 +82,9 @@ func TestMarkSystemsStale(t *testing.T) {
 	for i := range systems {
 		assert.NoError(t, database.Db.Save(&systems[i]).Error)
 	}
-	assert.NoError(t, database.Db.Exec("select * from mark_stale_systems()").Error)
+	nMarked, err := markSystemsStale(database.Db)
+	assert.Nil(t, err)
+	assert.Equal(t, 14, nMarked)
 
 	assert.NoError(t, database.Db.Find(&systems).Error)
 	for i, s := range systems {
