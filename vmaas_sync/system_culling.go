@@ -28,9 +28,13 @@ func RunSystemCulling() {
 		<-ticker.C
 
 		err := withTx(func(tx *gorm.DB) error {
-			if err := tx.Exec("select delete_culled_systems()").Error; err != nil {
+			nDeleted, err := deleteCulledSystems(tx, deleteCulledSystemsLimit)
+			if err != nil {
 				return errors.Wrap(err, "Delete culled")
 			}
+			utils.Log("nDeleted", nDeleted).Info("Culled systems deleted")
+
+			deletedCulledSystemsCnt.Add(float64(nDeleted))
 			if err := tx.Exec("select mark_stale_systems()").Error; err != nil {
 				return errors.Wrap(err, "Mark stale")
 			}
@@ -43,4 +47,15 @@ func RunSystemCulling() {
 			utils.Log().Info("System culling tasks performed successfully")
 		}
 	}
+}
+
+func deleteCulledSystems(tx *gorm.DB, limitDeleted int) (nDeleted int, err error) {
+	var nDeletedArr []int
+	err = tx.Raw("select delete_culled_systems(?)", limitDeleted).
+		Pluck("delete_culled_systems", &nDeletedArr).Error
+	if len(nDeletedArr) > 0 {
+		nDeleted = nDeletedArr[0]
+	}
+
+	return nDeleted, err
 }
