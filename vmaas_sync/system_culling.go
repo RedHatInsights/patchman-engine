@@ -33,11 +33,16 @@ func RunSystemCulling() {
 				return errors.Wrap(err, "Delete culled")
 			}
 			utils.Log("nDeleted", nDeleted).Info("Culled systems deleted")
-
 			deletedCulledSystemsCnt.Add(float64(nDeleted))
-			if err := tx.Exec("select mark_stale_systems()").Error; err != nil {
+
+			// marking systems as "stale"
+			nMarked, err := markSystemsStale(tx)
+			if err != nil {
 				return errors.Wrap(err, "Mark stale")
 			}
+			utils.Log("nMarked", nMarked).Info("Stale systems marked")
+			staleSystemsMarkedCnt.Add(float64(nMarked))
+
 			return nil
 		})
 
@@ -58,4 +63,15 @@ func deleteCulledSystems(tx *gorm.DB, limitDeleted int) (nDeleted int, err error
 	}
 
 	return nDeleted, err
+}
+
+func markSystemsStale(tx *gorm.DB) (nMarked int, err error) {
+	var nMarkedArr []int
+	err = tx.Raw("select mark_stale_systems()").
+		Pluck("mark_stale_systems", &nMarkedArr).Error
+	if len(nMarkedArr) > 0 {
+		nMarked = nMarkedArr[0]
+	}
+
+	return nMarked, err
 }
