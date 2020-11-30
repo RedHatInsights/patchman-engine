@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (43, false);
+VALUES (44, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
