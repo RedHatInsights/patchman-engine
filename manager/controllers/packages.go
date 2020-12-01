@@ -18,10 +18,10 @@ var PackagesOpts = ListOpts{
 }
 
 type PackageItem struct {
-	Name             string `json:"name" query:"res.name"`
-	SystemsInstalled int    `json:"systems_installed" query:"res.systems_installed"`
-	SystemsUpdatable int    `json:"systems_updatable" query:"res.systems_updatable"`
-	Summary          string `json:"summary" query:"latest.summary"`
+	Name             string `json:"name" csv:"name" query:"res.name"`
+	SystemsInstalled int    `json:"systems_installed" csv:"systems_installed" query:"res.systems_installed"`
+	SystemsUpdatable int    `json:"systems_updatable" csv:"systems_updatable" query:"res.systems_updatable"`
+	Summary          string `json:"summary" csv:"summary" query:"latest.summary"`
 }
 
 type PackagesResponse struct {
@@ -100,15 +100,15 @@ func PackagesListHandler(c *gin.Context) {
 		return
 	} // Error handled in method itself
 
-	var systems []PackageItem
-	err = query.Scan(&systems).Error
+	var packages []PackageItem
+	err = query.Scan(&packages).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")
 		return
 	}
 
 	c.JSON(200, PackagesResponse{
-		Data:  systems,
+		Data:  packages,
 		Links: *links,
 		Meta:  *meta,
 	})
