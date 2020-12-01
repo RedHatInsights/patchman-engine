@@ -155,7 +155,7 @@ func RunVmaasSync() {
 
 	go RunMetrics()
 
-	go runDebugAPI()
+	go runAdminAPI()
 
 	go RunSystemCulling()
 
