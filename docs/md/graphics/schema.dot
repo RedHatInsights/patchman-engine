@@ -1,112 +1,118 @@
 // dot schema.dot -Tpng -o schema.png -Gdpi=100
 digraph G {
-    rankdir="LR";
-    overlap=scalexy;
-    node [shape=box
-          style="rounded,filled"]
+  node[shape="Mrecord"
+       style="filled"]
 
-   client [fillcolor="pink"
-            pos = "0,0!"]
+    rbac -> manager [label="http:8080", style="dashed"]    
+    db -> manager [label="psql:5432"]
+    manager -> client [label="http:8080", style="dashed"]
+    manager -> remediations  [label="http:8080", style="dashed"]
 
-   kafka[label=<
-           <table border="0">
-            <tr><td><img src="icon_kafka.png"/></td></tr>
-            <tr><td>Kafka</td></tr>
-           </table>>
-           fillcolor=white]
+    inventory -> listener [label="kafka:9092", style="dotted,bold"]
+    listener -> db [label="psql:5432"]
+    listener -> evaluator_upload [label="kafka:9092", style="dotted,bold"]
 
-    manager[label=<
+    vmaas -> evaluator_upload [label="http:8080", style="dashed"]
+    evaluator_upload -> db [label="psql:5432", dir="both"]
+    evaluator_upload -> remediations [label="kafka:9092", style="dotted,bold"]
+
+    vmaas -> evaluator_recalc [label="http:8080", style="dashed"]
+    evaluator_recalc -> db [label="psql:5432", dir="both"]
+    evaluator_recalc -> remediations [label="kafka:9092", style="dotted,bold"]
+
+    vmaas -> vmaas_sync [label="http:8080", style="dashed"]
+    vmaas -> vmaas_sync [label="ws:8082", style="dashed"]
+    vmaas_sync -> db [label="psql:5432", dir="both"]
+    vmaas_sync -> evaluator_recalc [label="kafka:9092", style="dotted,bold"]
+
+    db_admin -> db [label="psql:5432"]
+
+
+  subgraph cluster_app {
+    label="App patchman-engine"
+    fillcolor="peachpuff"
+    style="filled,rounded"
+    labeljust="r"
+    labelloc="b"
+
+    manager [label=<
            <table border="0">
             <tr><td><img src="icon_gopher.png"/></td></tr>
             <tr><td>manager</td></tr>
            </table>>
-           fillcolor=lightblue]
+           fillcolor="lightblue"]
 
-    listener[label=<
+    listener [label=<
            <table border="0">
             <tr><td><img src="icon_gopher.png"/></td></tr>
             <tr><td>listener</td></tr>
            </table>>
-           fillcolor=lightblue]
+           fillcolor="lightblue"]
 
-    evaluator_recalc[label=<
+    evaluator_recalc [label=<
            <table border="0">
             <tr><td><img src="icon_gopher.png"/></td></tr>
             <tr><td>evaluator-recalc</td></tr>
            </table>>
-           fillcolor=lightblue]
+           fillcolor="lightblue"]
 
-    evaluator_upload[label=<
+    evaluator_upload [label=<
            <table border="0">
             <tr><td><img src="icon_gopher.png"/></td></tr>
             <tr><td>evaluator-upload</td></tr>
            </table>>
-           fillcolor=lightblue]
+           fillcolor="lightblue"]
      
-     vmaas_sync[label=<
+     vmaas_sync [label=<
            <table border="0">
             <tr><td><img src="icon_gopher.png"/></td></tr>
             <tr><td>vmaas-sync</td></tr>
            </table>>
-           fillcolor=lightblue]
+           fillcolor="lightblue"]
 
-     db_admin[label=<
+     db_admin [label=<
            <table border="0">
             <tr><td><img src="icon_gopher.png"/></td></tr>
             <tr><td>database-admin</td></tr>
            </table>>
-           fillcolor=lightblue]
+           fillcolor="lightblue"]
 
-    db[label=<
+    db [label=<
            <table border="0">
             <tr><td><img src="icon_postgresql.png"/></td></tr>
-            <tr><td>database</td></tr>
-            <tr><td>:5432</td></tr>
+            <tr><td>DB (PostgreSQL)</td></tr>
            </table>>
-           fillcolor=orange
-           shape=cylinder]
+           fillcolor="deepskyblue2"
+           shape="cylinder"]
+    }
 
-    client -> manager [label="http:8080"]
-
-    vmaas[label=<
+    vmaas [label=<
            <table border="0">
+            <tr><td><img src="icon_python.png"/></td></tr>
             <tr><td>VMaaS</td></tr>
            </table>>
-          fillcolor=darkseagreen1]
+          fillcolor="gray92"]
+    
+    inventory [label=<
+           <table border="0">
+            <tr><td><img src="icon_python.png"/></td></tr>
+            <tr><td>Inventory</td></tr>
+           </table>>
+          fillcolor="gray92"]
 
     rbac[label=<
            <table border="0">
-            <tr><td><img src="icon_rbac.png"/></td></tr>
+            <tr><td><img src="icon_python.png"/></td></tr>
             <tr><td>RBAC</td></tr>
            </table>>
-           fillcolor=gray85]
+           fillcolor="gray92"]
 
-    rbac -> manager [dir=back]
-
-    {listener
-     evaluator_recalc
-     evaluator_upload
-     vmaas_sync} -> kafka
+    remediations [label=<
+           <table border="0">
+            <tr><td><img src="icon_typescript.png"/></td></tr>
+            <tr><td>Remediations</td></tr>
+           </table>>
+          fillcolor="gray92"]
     
-    vmaas -> {evaluator_recalc
-              evaluator_upload
-              vmaas_sync} [dir=back]
-
-    {rank=same client kafka vmaas}
-
-    subgraph cluster_os {
-        margin=25
-        label="OpenShift"
-        style="dashed,filled"
-        fillcolor=peachpuff
-        
-        {rank=same manager listener evaluator_recalc evaluator_upload vmaas_sync}
-        
-        manager -> db [label="r"]
-        listener -> db [label="rw"]
-        evaluator_recalc -> db [label="rw"]
-        evaluator_upload -> db [label="rw"]
-        vmaas_sync -> db [label="rw"]
-        db_admin -> db [label="rw"]
-    }
+    client [label="HTTP Client", fillcolor="gray92"]
 }
