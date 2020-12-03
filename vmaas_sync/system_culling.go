@@ -47,9 +47,9 @@ func RunSystemCulling() {
 		})
 
 		if err != nil {
-			utils.Log("err", err.Error()).Error("System culling")
+			utils.Log("err", err.Error()).Error("Systems culling")
 		} else {
-			utils.Log().Info("System culling tasks performed successfully")
+			utils.Log().Info("Systems culling tasks performed successfully")
 		}
 	}
 }

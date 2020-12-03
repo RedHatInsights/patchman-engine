@@ -20,6 +20,8 @@ func InitAPI(group *gin.RouterGroup) {
 	group.GET("/systems/:inventory_id/packages", controllers.SystemPackagesHandler)
 	group.DELETE("/systems/:inventory_id", controllers.SystemDeleteHandler)
 
+	group.POST("/views/systems/advisories", controllers.PostSystemsAdvisories)
+
 	group.GET("/packages/:package_name/systems", controllers.PackageSystemsListHandler)
 	group.GET("/packages", controllers.PackagesListHandler)
 	group.GET("/packages/:package_name", controllers.PackageDetailHandler)
