@@ -220,7 +220,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	utils.Log("inventoryID", inventoryID, "packages", len(updatesReq.PackageList), "repos",
 		len(updatesReq.RepositoryList), "modules", len(updatesReq.ModulesList),
 		"addedRepos", addedRepos, "addedSysRepos", addedSysRepos, "deletedSysRepos", deletedSysRepos).
-		Debug("System created or updated successfully")
+		Debug("Systems created or updated successfully")
 	return &systemPlatform, nil
 }
 

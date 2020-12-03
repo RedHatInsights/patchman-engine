@@ -59,7 +59,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 		LogAndRespError(c, err, "database error")
 	}
 	if exists == 0 {
-		LogAndRespNotFound(c, errors.New("System not found"), "System not found")
+		LogAndRespNotFound(c, errors.New("Systems not found"), "Systems not found")
 		return
 	}
 

@@ -874,6 +874,28 @@
                         "RhIdentity": []
                     }
                 ]
+            },
+            "post": {
+                "summary": "View system-advisory pairs for selected systems and advisories",
+                "description": "View system-advisory pairs for selected systems and advisories",
+                "operationId": "viewSystemsAdvisories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.PackagesResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
             }
         },
         "/api/patch/v1/packages/{package_name}": {
