@@ -30,7 +30,7 @@ func systemsAdvisoriesQuery(acc int, systems, advisories []string) *gorm.DB {
 		Select(systemsAdvisoriesSelect).
 		Joins("join system_platform sp on sp.rh_account_id = ? and sp.id = sa.system_id", acc).
 		Joins("join advisory_metadata am on am.id = sa.advisory_id").
-		Where("sa.rh_account_id = ?", acc).
+		Where("sp.rh_account_id = ?", acc).
 		Where("sp.inventory_id in (?)", systems).
 		Where("am.name in (?)", advisories).
 		Order("sp.inventory_id, am.id")
@@ -42,7 +42,8 @@ func systemsAdvisoriesQuery(acc int, systems, advisories []string) *gorm.DB {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Success 200 {object} PackagesResponse
+// @Param    body    body    SystemsAdvisoriesRequest true "Request body"
+// @Success 200 {object} SystemsAdvisoriesResponse
 // @Router /api/patch/v1/packages/ [post]
 func PostSystemsAdvisories(c *gin.Context) {
 	var req SystemsAdvisoriesRequest

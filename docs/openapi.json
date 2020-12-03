@@ -879,13 +879,24 @@
                 "summary": "View system-advisory pairs for selected systems and advisories",
                 "description": "View system-advisory pairs for selected systems and advisories",
                 "operationId": "viewSystemsAdvisories",
+                "requestBody": {
+                    "description": "Request body",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controllers.SystemsAdvisoriesRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
                 "responses": {
                     "200": {
                         "description": "OK",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.PackagesResponse"
+                                    "$ref": "#/components/schemas/controllers.SystemsAdvisoriesResponse"
                                 }
                             }
                         }
@@ -895,7 +906,8 @@
                     {
                         "RhIdentity": []
                     }
-                ]
+                ],
+                "x-codegen-request-body-name": "body"
             }
         },
         "/api/patch/v1/packages/{package_name}": {
@@ -2005,6 +2017,37 @@
                     },
                     "meta": {
                         "$ref": "#/components/schemas/controllers.ListMeta"
+                    }
+                }
+            },
+            "controllers.SystemsAdvisoriesRequest": {
+                "type": "object",
+                "properties": {
+                    "advisories": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "systems": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "controllers.SystemsAdvisoriesResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
                     }
                 }
             },
