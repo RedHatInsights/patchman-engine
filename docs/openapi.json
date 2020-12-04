@@ -918,6 +918,22 @@
                 "operationId": "packageSystems",
                 "parameters": [
                     {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit for paging, set -1 to return all",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Offset for paging",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
                         "name": "package_name",
                         "in": "path",
                         "description": "Package name",

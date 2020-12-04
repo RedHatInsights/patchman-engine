@@ -63,6 +63,8 @@ func packageSystemsQuery(acc int, nameIDs []int) *gorm.DB {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
+// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    offset         query   int     false   "Offset for paging"
 // @Param    package_name    path    string    true  "Package name"
 // @Param    tags            query   []string  false "Tag filter"
 // @Param    filter[system_profile][sap_system]   query  string  false "Filter only SAP systems"
