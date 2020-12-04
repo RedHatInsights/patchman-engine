@@ -10,7 +10,8 @@ type Links struct {
 type ListMeta struct {
 	Limit      int                   `json:"limit"`
 	Offset     int                   `json:"offset"`
-	Sort       []string              `json:"sort"`
+	Sort       []string              `json:"sort,omitempty"`
+	Search     string                `json:"search,omitempty"`
 	Filter     map[string]FilterData `json:"filter"`
 	TotalItems int                   `json:"total_items"`
 }

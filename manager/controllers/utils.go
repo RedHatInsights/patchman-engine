@@ -192,6 +192,7 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params 
 		Offset:     offset,
 		Filter:     filters,
 		Sort:       sortFields,
+		Search:     base.RemoveInvalidChars(c.Query("search")),
 		TotalItems: total,
 	}
 
