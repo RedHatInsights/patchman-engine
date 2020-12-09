@@ -1,0 +1,32 @@
+name: OpenAPIv3
+
+on:
+  push:
+  pull_request:
+    types: [ "opened", "synchronize", "reopened" ]
+
+jobs:
+  spec_validation:
+    name: Spec validation
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Spec validation with OpenAPIv3 (docs/openapi.json)
+      run: podman run --rm -v ${PWD}/docs:/docs:Z openapitools/openapi-generator-cli validate -i /docs/openapi.json
+
+  gen_client:
+    name: Generate Python Client
+    runs-on: ubuntu-latest
+    env:
+      working-directory: ./docs
+    needs: [spec_validation]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Generate Python client with OpenAPIv3 (docs/openapi.json)
+      run: podman run --rm -v ${PWD}/docs:/local:Z openapitools/openapi-generator-cli generate -i /local/openapi.json -g python -o /local/client
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Python-Client
+        path: ${{env.working-directory}}/client
