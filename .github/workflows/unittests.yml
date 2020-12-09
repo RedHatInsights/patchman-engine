@@ -1,14 +1,17 @@
 
-name: unit_tests
+name: 🕵️ Test suite
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+    types: [ "opened", "synchronize", "reopened" ]
 
 jobs:
-  build:
-
+  unit_tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Run unit tests
       run: docker-compose -f docker-compose.test.yml up --build --exit-code-from test
