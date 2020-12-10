@@ -52,6 +52,10 @@ func packagesQuery(c *gin.Context, acc int) (*gorm.DB, error) {
 		Where("spkg.rh_account_id = ?", acc).
 		Group("p.name_id, pn.name")
 
+	if applyInventoryHosts {
+		subQ = subQ.Joins("JOIN inventory.hosts ih ON ih.id::text = sp.inventory_id")
+	}
+
 	// We need to apply tag filtering on subquery
 	subQ, _, err := ApplyTagsFilter(c, subQ, "sp.inventory_id")
 	if err != nil {

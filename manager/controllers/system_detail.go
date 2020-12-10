@@ -33,9 +33,15 @@ func SystemDetailHandler(c *gin.Context) {
 	}
 
 	var inventory models.SystemPlatform
-	err := database.Db.
+	query := database.Db.
 		Where("system_platform.rh_account_id = ?", account).
-		Where("inventory_id = ?", inventoryID).First(&inventory).Error
+		Where("inventory_id = ?", inventoryID)
+
+	if applyInventoryHosts {
+		query = query.Joins("JOIN inventory.hosts ih ON ih.id::text = system_platform.inventory_id")
+	}
+
+	err := query.First(&inventory).Error
 	if gorm.IsRecordNotFoundError(err) {
 		LogAndRespNotFound(c, err, "inventory not found")
 		return

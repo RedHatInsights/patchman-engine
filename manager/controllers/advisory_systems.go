@@ -97,6 +97,11 @@ func buildQuery(account int, advisoryName string) *gorm.DB {
 		Joins("join system_platform sp ON sa.system_id = sp.id").
 		Where("sp.rh_account_id = ?", account).
 		Where("am.name = ?", advisoryName)
+
+	if applyInventoryHosts {
+		query = query.Joins("JOIN inventory.hosts ih ON ih.id::text = sp.inventory_id")
+	}
+
 	return query
 }
 
