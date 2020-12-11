@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (42, false);
+VALUES (43, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -399,23 +399,20 @@ BEGIN
 END;
 $delete_system$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION delete_culled_systems()
+CREATE OR REPLACE FUNCTION delete_culled_systems(delete_limit INTEGER)
     RETURNS INTEGER
 AS
 $fun$
 DECLARE
-    culled integer;
+    n_deleted INTEGER;
 BEGIN
-    WITH ids AS (SELECT inventory_id
-                 FROM system_platform
-                 WHERE culled_timestamp < now()
-                 ORDER BY id FOR UPDATE OF system_platform
-    ),
-         deleted AS (SELECT delete_system(inventory_id) from ids)
-    SELECT count(*)
-    FROM deleted
-    INTO culled;
-    RETURN culled;
+    SELECT count(*) INTO n_deleted FROM (
+        SELECT delete_system(inventory_id)
+        FROM system_platform sp
+        WHERE culled_timestamp < now()
+        ORDER BY id
+        LIMIT delete_limit) x;
+    RETURN n_deleted;
 END;
 $fun$ LANGUAGE plpgsql;
 
