@@ -1,6 +1,7 @@
 package database_admin //nolint:golint,stylecheck
 
 import (
+	"app/base/utils"
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // postgres database is used
@@ -15,7 +16,14 @@ func MigrateUp(sourceURL, databaseURL string) {
 	}
 
 	m.Log = logger{}
-	err = m.Up()
+
+	schemaMigration := utils.GetIntEnvOrDefault("SCHEMA_MIGRATION", -1)
+	if schemaMigration < 0 {
+		err = m.Up()
+	} else {
+		err = m.Migrate(uint(schemaMigration))
+	}
+
 	if err != nil && err.Error() == "no change" {
 		fmt.Println("no change")
 		return
