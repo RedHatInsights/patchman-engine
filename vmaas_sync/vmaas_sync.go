@@ -21,6 +21,8 @@ var (
 	advisoryPageSize         int
 	packagesPageSize         int
 	enableRecalcMessagesSend bool
+	enableSyncOnStart        bool
+	enableRecalcOnStart      bool
 )
 
 func configure() {
@@ -37,6 +39,8 @@ func configure() {
 	evalWriter = mqueue.WriterFromEnv(evalTopic)
 	enabledRepoBasedReeval = utils.GetBoolEnvOrFail("ENABLE_REPO_BASED_RE_EVALUATION")
 	enableRecalcMessagesSend = utils.GetBoolEnvOrDefault("ENABLE_RECALC_MESSAGES_SEND", true)
+	enableSyncOnStart = utils.GetBoolEnvOrDefault("ENABLE_SYNC_ON_START", false)
+	enableRecalcOnStart = utils.GetBoolEnvOrDefault("ENABLE_RECALC_ON_START", false)
 
 	advisoryPageSize = utils.GetIntEnvOrDefault("ERRATA_PAGE_SIZE", 500)
 	packagesPageSize = utils.GetIntEnvOrDefault("PACKAGES_PAGE_SIZE", 5000)
@@ -122,6 +126,22 @@ func waitAndExit() {
 	os.Exit(0)
 }
 
+func syncAndRecalcOnStartIfSet() {
+	if enableSyncOnStart {
+		err := syncAdvisories()
+		if err != nil {
+			utils.Log("err", err.Error()).Error("unable to sync advisories on start")
+		}
+	}
+
+	if enableRecalcOnStart {
+		err := sendReevaluationMessages()
+		if err != nil {
+			utils.Log("err", err.Error()).Error("unable to send reevaluation msgs on start")
+		}
+	}
+}
+
 func RunVmaasSync() {
 	handleContextCancel(waitAndExit)
 	configure()
@@ -131,6 +151,8 @@ func RunVmaasSync() {
 	go runDebugAPI()
 
 	go RunSystemCulling()
+
+	syncAndRecalcOnStartIfSet() // sync advisories and re-calc on start if configured
 
 	// Continually try to reconnect
 	for {
