@@ -17,6 +17,7 @@ require (
 	github.com/jinzhu/gorm v1.9.12
 	github.com/joho/godotenv v1.3.0
 	github.com/lestrrat-go/backoff v1.0.0
+	github.com/lib/pq v1.9.0
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_golang v1.6.0
