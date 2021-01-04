@@ -2,15 +2,44 @@ package database_admin //nolint:golint,stylecheck
 
 import (
 	"app/base/utils"
+	"database/sql"
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres" // postgres database is used
-	_ "github.com/golang-migrate/migrate/v4/source/file"       // we load migrations from local folder
+	"github.com/golang-migrate/migrate/v4/database"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file" // we load migrations from local folder
+	"github.com/lib/pq"
 	"os"
 )
 
+func NewConn(databaseURL string) (database.Driver, error) {
+	baseConn, err := pq.NewConnector(databaseURL)
+	if err != nil {
+		return nil, err
+	}
+
+	loggingConn := pq.ConnectorWithNoticeHandler(baseConn, func(e *pq.Error) {
+		fmt.Printf("Notice: %v\n", e)
+	})
+
+	db := sql.OpenDB(loggingConn)
+	if _, err = db.Exec("SET client_min_messages TO NOTICE"); err != nil {
+		return nil, err
+	}
+	var driver database.Driver
+	if driver, err = postgres.WithInstance(db, &postgres.Config{}); err != nil {
+		return nil, err
+	}
+	return driver, nil
+}
+
 func MigrateUp(sourceURL, databaseURL string) {
-	m, err := migrate.New(sourceURL, databaseURL)
+	conn, err := NewConn(databaseURL)
+	if err != nil {
+		panic(err)
+	}
+
+	m, err := migrate.NewWithDatabaseInstance(sourceURL, utils.GetenvOrFail("DB_NAME"), conn)
 	if err != nil {
 		panic(err)
 	}
