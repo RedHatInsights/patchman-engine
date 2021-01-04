@@ -18,7 +18,7 @@ import (
 const InvalidOffsetMsg = "Invalid offset"
 const InvalidTagMsg = "Invalid tag '%s'. Use 'namespace/key=val format'"
 
-var tagRegex = regexp.MustCompile(`([^/=]+)/([^/=]+)=([^/=]+)`)
+var tagRegex = regexp.MustCompile(`([^/=]+)/([^/=]+)(=([^/=]+))?`)
 var enableCyndiTags = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_TAGS", false)
 var applyInventoryHosts = utils.GetBoolEnvOrDefault("APPLY_INVENTORY_HOSTS", true)
 
@@ -257,16 +257,22 @@ func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB
 	tags := c.QueryArray("tags")
 	for _, t := range tags {
 		matches := tagRegex.FindStringSubmatch(t)
-		if len(matches) == 4 {
-			tagJSON := fmt.Sprintf(`[{"namespace":"%s", "key": "%s", "value": "%s"}]`, matches[1], matches[2], matches[3])
-			subq = subq.Where(" h.tags @> ?::jsonb", tagJSON)
-			applied = true
-		} else {
-			// invalid tag
+		if len(matches) < 5 {
+			// We received an invalid tag
 			err := errors.Errorf(InvalidTagMsg, t)
 			LogAndRespBadRequest(c, err, err.Error())
 			return tx, false, err
 		}
+		var tagJSON string
+		if matches[4] != "" {
+			// Checking for ns/key=value
+			tagJSON = fmt.Sprintf(`[{"namespace":"%s", "key": "%s", "value": "%s"}]`, matches[1], matches[2], matches[4])
+		} else {
+			// Checking for ns/key
+			tagJSON = fmt.Sprintf(`[{"namespace":"%s", "key": "%s"}]`, matches[1], matches[2])
+		}
+		subq = subq.Where(" h.tags @> ?::jsonb", tagJSON)
+		applied = true
 	}
 
 	// Additional filters

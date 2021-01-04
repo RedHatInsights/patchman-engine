@@ -156,6 +156,21 @@ func TestSystemsTagsUnknown(t *testing.T) {
 	assert.Equal(t, 0, len(output.Data))
 }
 
+func TestSystemsTagsNoVal(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=ns1/k1", nil)
+	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output SystemsResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data[0].ID)
+}
+
 func TestSystemsTagsInvalid(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
