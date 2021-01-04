@@ -9,9 +9,6 @@ export PGSSLMODE=$DB_SSLMODE
 
 WAIT_FOR_EMPTY_DB=1 ./scripts/wait-for-services.sh
 
-# TODO: where is used this DB_INITIALIZED check result?
-DB_INITIALIZED=$(psql -c "\d" | grep schema_migrations | wc -l)
-
 if [[ $RESET_SCHEMA == "true" ]]; then
   psql -c "DROP SCHEMA IF EXISTS public CASCADE"
   psql -c "CREATE SCHEMA IF NOT EXISTS public"
