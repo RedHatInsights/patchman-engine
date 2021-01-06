@@ -3,8 +3,8 @@ $$
     DECLARE
         stmt TEXT;
     BEGIN
-        FOR stmt IN (SELECT 'DROP FUNCTION ' || ns.nspname || '.' || proname
-                                || '(' || oidvectortypes(proargtypes) || ') CASCADE;'
+        FOR stmt IN (SELECT 'DROP ' || case when prokind = 'f' then 'FUNCTION ' else 'PROCEDURE ' end
+                            || ns.nspname || '.' || proname || '(' || oidvectortypes(proargtypes) || ') CASCADE;'
                      FROM pg_proc
                               INNER JOIN pg_namespace ns ON (pg_proc.pronamespace = ns.oid)
                      WHERE ns.nspname = 'public'
