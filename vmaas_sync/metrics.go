@@ -90,12 +90,19 @@ var (
 		Name:      "message_send_duration_seconds",
 	})
 
+	deletedCulledSystemsCnt = prometheus.NewCounter(prometheus.CounterOpts{
+		Help:      "How many culled systems were deleted",
+		Namespace: "patchman_engine",
+		Subsystem: "vmaas_sync",
+		Name:      "deleted_culled_systems",
+	})
+
 	enableCyndiMetrics = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_METRICS", true)
 )
 
 func RunMetrics() {
 	prometheus.MustRegister(messagesReceivedCnt, vmaasCallCnt, storeAdvisoriesCnt, storePackagesCnt,
-		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration,
+		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration, deletedCulledSystemsCnt,
 		databaseSizeBytesGaugeVec, databaseProcessesGaugeVec, cyndiSystemsCnt, cyndiTagsCnt)
 
 	go runAdvancedMetricsUpdating()

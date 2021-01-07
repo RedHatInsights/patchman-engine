@@ -6,6 +6,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -124,30 +125,38 @@ func TestMarkSystemsNotStale(t *testing.T) {
 	}
 }
 
-func TestInitCullSystems(t *testing.T) {
+func TestCullSystems(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	utils.TestLoadEnv("conf/test.env")
 	core.SetupTestEnvironment()
-
-	assert.NoError(t, database.Db.Create(&models.SystemPlatform{
-		InventoryID:     "DEL-1",
-		RhAccountID:     1,
-		DisplayName:     "DEL-1",
-		CulledTimestamp: &staleDate,
-	}).Error)
 	utils.TestLoadEnv("conf/vmaas_sync.env")
-}
 
-func TestCullSystems(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	nToDelete := 4
+	for i := 0; i < nToDelete; i++ {
+		invID := fmt.Sprintf("00000000-0000-0000-0000-000000000de%d", i+1)
+		assert.NoError(t, database.Db.Create(&models.SystemPlatform{
+			InventoryID:     invID,
+			RhAccountID:     1,
+			DisplayName:     invID,
+			CulledTimestamp: &staleDate,
+		}).Error)
+	}
 
 	var cnt int
 	var cntAfter int
 	database.DebugWithCachesCheck("delete-culled", func() {
 		assert.NoError(t, database.Db.Model(&models.SystemPlatform{}).Count(&cnt).Error)
-		assert.NoError(t, database.Db.Exec("select * from delete_culled_systems()").Error)
+		// first batch
+		nDeleted, err := deleteCulledSystems(database.Db, 3)
+		assert.Nil(t, err)
+		assert.Equal(t, 3, nDeleted)
+
+		// second batch
+		nDeleted, err = deleteCulledSystems(database.Db, 3)
+		assert.Nil(t, err)
+		assert.Equal(t, 1, nDeleted)
+
 		assert.NoError(t, database.Db.Model(&models.SystemPlatform{}).Count(&cntAfter).Error)
-		assert.Equal(t, cnt-1, cntAfter)
+		assert.Equal(t, cnt-nToDelete, cntAfter)
 	})
 }
