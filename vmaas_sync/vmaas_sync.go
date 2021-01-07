@@ -21,6 +21,7 @@ var (
 	advisoryPageSize         int
 	packagesPageSize         int
 	enableRecalcMessagesSend bool
+	deleteCulledSystemsLimit int
 	enableSyncOnStart        bool
 	enableRecalcOnStart      bool
 )
@@ -44,6 +45,8 @@ func configure() {
 
 	advisoryPageSize = utils.GetIntEnvOrDefault("ERRATA_PAGE_SIZE", 500)
 	packagesPageSize = utils.GetIntEnvOrDefault("PACKAGES_PAGE_SIZE", 5000)
+
+	deleteCulledSystemsLimit = utils.GetIntEnvOrDefault("DELETE_CULLED_SYSTEMS_LIMIT", 1000)
 }
 
 type Handler func(data []byte, conn *websocket.Conn) error
