@@ -876,8 +876,8 @@
                 ]
             },
             "post": {
-                "summary": "View system-advisory pairs for selected systems and advisories",
-                "description": "View system-advisory pairs for selected systems and advisories",
+                "summary": "View advisory-system pairs for selected systems and advisories",
+                "description": "View advisory-system pairs for selected systems and advisories",
                 "operationId": "viewSystemsAdvisories",
                 "requestBody": {
                     "description": "Request body",
@@ -896,7 +896,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.SystemsAdvisoriesResponse"
+                                    "$ref": "#/components/schemas/controllers.AdvisoriesSystemsResponse"
                                 }
                             }
                         }
@@ -1514,6 +1514,20 @@
                     },
                     "meta": {
                         "$ref": "#/components/schemas/controllers.ListMeta"
+                    }
+                }
+            },
+            "controllers.AdvisoriesSystemsResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
                     }
                 }
             },

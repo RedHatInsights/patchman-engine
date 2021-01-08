@@ -6,32 +6,38 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitAPI(group *gin.RouterGroup) {
-	group.Use(middlewares.PublicAuthenticator())
-	group.Use(middlewares.RBAC())
+func InitAPI(api *gin.RouterGroup) {
+	api.Use(middlewares.PublicAuthenticator())
+	api.Use(middlewares.RBAC())
 
-	group.GET("/advisories", controllers.AdvisoriesListHandler)
-	group.GET("/advisories/:advisory_id", controllers.AdvisoryDetailHandler)
-	group.GET("/advisories/:advisory_id/systems", controllers.AdvisorySystemsListHandler)
+	advisories := api.Group("/advisories")
+	advisories.GET("/", controllers.AdvisoriesListHandler)
+	advisories.GET("/:advisory_id", controllers.AdvisoryDetailHandler)
+	advisories.GET("/:advisory_id/systems", controllers.AdvisorySystemsListHandler)
 
-	group.GET("/systems", controllers.SystemsListHandler)
-	group.GET("/systems/:inventory_id", controllers.SystemDetailHandler)
-	group.GET("/systems/:inventory_id/advisories", controllers.SystemAdvisoriesHandler)
-	group.GET("/systems/:inventory_id/packages", controllers.SystemPackagesHandler)
-	group.DELETE("/systems/:inventory_id", controllers.SystemDeleteHandler)
+	systems := api.Group("/systems")
+	systems.GET("/", controllers.SystemsListHandler)
+	systems.GET("/:inventory_id", controllers.SystemDetailHandler)
+	systems.GET("/:inventory_id/advisories", controllers.SystemAdvisoriesHandler)
+	systems.GET("/:inventory_id/packages", controllers.SystemPackagesHandler)
+	systems.DELETE("/:inventory_id", controllers.SystemDeleteHandler)
 
-	group.POST("/views/systems/advisories", controllers.PostSystemsAdvisories)
+	packages := api.Group("/packages")
+	packages.GET("/", controllers.PackagesListHandler)
+	packages.GET("/:package_name/systems", controllers.PackageSystemsListHandler)
+	packages.GET("/:package_name", controllers.PackageDetailHandler)
 
-	group.GET("/packages/:package_name/systems", controllers.PackageSystemsListHandler)
-	group.GET("/packages", controllers.PackagesListHandler)
-	group.GET("/packages/:package_name", controllers.PackageDetailHandler)
+	export := api.Group("export")
+	export.GET("/advisories", controllers.AdvisoriesExportHandler)
+	export.GET("/systems", controllers.SystemsExportHandler)
+	export.GET("/packages", controllers.PackagesExportHandler)
 
-	group.GET("/export/advisories", controllers.AdvisoriesExportHandler)
-	group.GET("/export/systems", controllers.SystemsExportHandler)
-	group.GET("/export/packages", controllers.PackagesExportHandler)
+	views := api.Group("/views")
+	views.POST("/systems/advisories", controllers.PostSystemsAdvisories)
+	views.POST("/advisories/systems", controllers.PostAdvisoriesSystems)
 
-	group.GET("/status", controllers.Status)
-	initAdmin(group.Group("/admin"))
+	api.GET("/status", controllers.Status)
+	initAdmin(api.Group("/admin"))
 }
 
 func initAdmin(group *gin.RouterGroup) {
