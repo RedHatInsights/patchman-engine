@@ -1525,7 +1525,7 @@
                         "additionalProperties": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "$ref": "#/components/schemas/controllers.SystemID"
                             }
                         }
                     }
@@ -2059,7 +2059,7 @@
                         "additionalProperties": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "$ref": "#/components/schemas/controllers.AdvisoryName"
                             }
                         }
                     }
