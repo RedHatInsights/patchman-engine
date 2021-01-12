@@ -28,20 +28,24 @@ func RunSystemCulling() {
 		<-ticker.C
 
 		err := withTx(func(tx *gorm.DB) error {
-			nDeleted, err := deleteCulledSystems(tx, deleteCulledSystemsLimit)
-			if err != nil {
-				return errors.Wrap(err, "Delete culled")
+			if enableCulledSystemDelete {
+				nDeleted, err := deleteCulledSystems(tx, deleteCulledSystemsLimit)
+				if err != nil {
+					return errors.Wrap(err, "Delete culled")
+				}
+				utils.Log("nDeleted", nDeleted).Info("Culled systems deleted")
+				deletedCulledSystemsCnt.Add(float64(nDeleted))
 			}
-			utils.Log("nDeleted", nDeleted).Info("Culled systems deleted")
-			deletedCulledSystemsCnt.Add(float64(nDeleted))
 
-			// marking systems as "stale"
-			nMarked, err := markSystemsStale(tx)
-			if err != nil {
-				return errors.Wrap(err, "Mark stale")
+			if enableSystemStaling {
+				// marking systems as "stale"
+				nMarked, err := markSystemsStale(tx)
+				if err != nil {
+					return errors.Wrap(err, "Mark stale")
+				}
+				utils.Log("nMarked", nMarked).Info("Stale systems marked")
+				staleSystemsMarkedCnt.Add(float64(nMarked))
 			}
-			utils.Log("nMarked", nMarked).Info("Stale systems marked")
-			staleSystemsMarkedCnt.Add(float64(nMarked))
 
 			return nil
 		})
