@@ -9,7 +9,7 @@ $$
                 ids := ARRAY(SELECT id
                              FROM system_platform
                              WHERE reporter_id = (select id from reporter where name = 'yupana')
-                             LIMIT 5000
+                             LIMIT 1000
                     );
                 deleted := delete_systems(ids);
                 RAISE NOTICE 'Deleted yupana systems: %', text(deleted);
