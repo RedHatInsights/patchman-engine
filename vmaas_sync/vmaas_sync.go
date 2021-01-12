@@ -24,6 +24,8 @@ var (
 	deleteCulledSystemsLimit int
 	enableSyncOnStart        bool
 	enableRecalcOnStart      bool
+	enableCulledSystemDelete bool
+	enableSystemStaling      bool
 )
 
 func configure() {
@@ -42,6 +44,8 @@ func configure() {
 	enableRecalcMessagesSend = utils.GetBoolEnvOrDefault("ENABLE_RECALC_MESSAGES_SEND", true)
 	enableSyncOnStart = utils.GetBoolEnvOrDefault("ENABLE_SYNC_ON_START", false)
 	enableRecalcOnStart = utils.GetBoolEnvOrDefault("ENABLE_RECALC_ON_START", false)
+	enableCulledSystemDelete = utils.GetBoolEnvOrDefault("ENABLE_CULLED_SYSTEM_DELETE", true)
+	enableSystemStaling = utils.GetBoolEnvOrDefault("ENABLE_SYSTEM_STALING", true)
 
 	advisoryPageSize = utils.GetIntEnvOrDefault("ERRATA_PAGE_SIZE", 500)
 	packagesPageSize = utils.GetIntEnvOrDefault("PACKAGES_PAGE_SIZE", 5000)
