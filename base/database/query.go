@@ -3,7 +3,6 @@ package database
 import (
 	"app/base"
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"reflect"
 	"regexp"
@@ -78,6 +77,7 @@ func getQueryFromTags(v reflect.Type) (AttrMap, []AttrName, error) {
 	var resNames []AttrName
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
+		// utils.Log().Info(field)
 		// Parse from nested struct fields
 		if field.Type.Kind() == reflect.Struct && field.Name == field.Type.Name() {
 			nested, names, err := getQueryFromTags(field.Type)
@@ -89,7 +89,9 @@ func getQueryFromTags(v reflect.Type) (AttrMap, []AttrName, error) {
 				res[k] = v
 			}
 		} else {
-			columnName := gorm.ToColumnName(field.Name)
+			// columnName := Db.NamingStrategy.ColumnName(Db.Statement.Table, field.Name)
+			// utils.Log().Info(field.Tag.Lookup("gorm"))
+			columnName := field.Name
 			if expr, has := field.Tag.Lookup("gorm"); has {
 				match := ColumnNameRe.FindStringSubmatch(expr)
 				if len(match) > 0 {
@@ -101,7 +103,7 @@ func getQueryFromTags(v reflect.Type) (AttrMap, []AttrName, error) {
 			if err != nil {
 				return nil, nil, err
 			}
-
+			// utils.Log().Info(field.Tag.Lookup("query"))
 			if expr, has := field.Tag.Lookup("query"); has {
 				res[columnName] = AttrInfo{
 					Query:  expr,
@@ -118,6 +120,8 @@ func getQueryFromTags(v reflect.Type) (AttrMap, []AttrName, error) {
 			resNames = append(resNames, columnName)
 		}
 	}
+	// utils.Log().Info(res)
+	// utils.Log().Info(resNames)
 	return res, resNames, nil
 }
 

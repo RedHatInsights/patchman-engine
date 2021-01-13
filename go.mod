@@ -14,7 +14,6 @@ require (
 	github.com/gocarina/gocsv v0.0.0-20200330101823-46266ca37bd3
 	github.com/golang-migrate/migrate/v4 v4.10.0
 	github.com/gorilla/websocket v1.4.2
-	github.com/jinzhu/gorm v1.9.12
 	github.com/joho/godotenv v1.3.0
 	github.com/lestrrat-go/backoff v1.0.0
 	github.com/lib/pq v1.9.0
@@ -29,6 +28,9 @@ require (
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/zsais/go-gin-prometheus v0.1.0
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
+	gorm.io/datatypes v1.0.0
+	gorm.io/driver/postgres v1.0.5
+	gorm.io/gorm v1.20.5
 	modernc.org/mathutil v1.0.0
 	modernc.org/strutil v1.1.0
 )

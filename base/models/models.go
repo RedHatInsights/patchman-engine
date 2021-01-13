@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/jinzhu/gorm/dialects/postgres"
 	"time"
 )
 
@@ -88,7 +87,7 @@ type SystemPackage struct {
 	SystemID    int `gorm:"primary_key"`
 	PackageID   int `gorm:"primary_key"`
 	// Will contain json in form of [{ "evra": "...", "advisory": "..."}]
-	UpdateData postgres.Jsonb
+	UpdateData []byte
 }
 
 func (SystemPackage) TableName() string {
@@ -141,8 +140,8 @@ type AdvisoryMetadata struct {
 	ModifiedDate   time.Time
 	URL            *string
 	SeverityID     *int
-	PackageData    *postgres.Jsonb
-	CveList        *postgres.Jsonb
+	PackageData    []byte
+	CveList        []byte
 }
 
 func (AdvisoryMetadata) TableName() string {

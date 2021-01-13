@@ -3,7 +3,9 @@ package database
 import (
 	"app/base"
 	"app/base/utils"
+	// "context"
 	"github.com/stretchr/testify/assert"
+	// "gorm.io/gorm"
 	"os"
 	"testing"
 	"time"
@@ -13,8 +15,8 @@ func TestOnConflictDoUpdate(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
 
-	Db.AutoMigrate(&TestTable{})
-	Db.Unscoped().Delete(&TestTable{})
+	_ = Db.AutoMigrate(&TestTable{})
+	Db.Unscoped().Exec("DELETE FROM test_tables")
 
 	obj := TestTable{
 		Name:  "Bla",
@@ -45,16 +47,15 @@ func TestCancelContext(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
 
-	tx := Db.BeginTx(base.Context, nil)
-
+	tx := Db.WithContext(base.Context)
 	go func() {
 		time.Sleep(time.Millisecond * 100)
 		base.CancelContext()
 	}()
-
+	base.CancelContext()
 	err := tx.Exec("select pg_sleep(1)").Error
 	assert.NotNil(t, err)
-	assert.Equal(t, "pq: canceling statement due to user request", err.Error())
+	assert.Equal(t, "context canceled", err.Error())
 }
 
 func TestStatementTimeout(t *testing.T) {
@@ -64,5 +65,5 @@ func TestStatementTimeout(t *testing.T) {
 
 	err := Db.Exec("select pg_sleep(10)").Error
 	assert.NotNil(t, err)
-	assert.Equal(t, "pq: canceling statement due to statement timeout", err.Error())
+	assert.Equal(t, "ERROR: canceling statement due to statement timeout (SQLSTATE 57014)", err.Error())
 }

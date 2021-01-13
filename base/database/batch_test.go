@@ -20,8 +20,10 @@ func TestBatchInsert(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
 
-	Db.AutoMigrate(&TestTable{})
-	Db.Unscoped().Delete(&TestTable{})
+	_ = Db.AutoMigrate(&TestTable{})
+	// If you perform a batch delete without any conditions, GORM WON’T run it, and will return ErrMissingWhereClause
+	// https://gorm.io/docs/delete.html#batch_delete
+	Db.Unscoped().Exec("DELETE FROM test_tables")
 
 	// Bulk insert should create new rows
 	err := BulkInsert(Db, defaultValues)
@@ -43,8 +45,8 @@ func TestBatchInsertChunked(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
 
-	Db.AutoMigrate(&TestTable{})
-	Db.Unscoped().Delete(&TestTable{})
+	_ = Db.AutoMigrate(&TestTable{})
+	Db.Unscoped().Exec("DELETE FROM test_tables")
 
 	err := BulkInsertChunk(Db, defaultValues, 2)
 	assert.Nil(t, err)
@@ -66,8 +68,8 @@ func TestBatchInsertOnConflictUpdate(t *testing.T) {
 	Configure()
 	db := Db
 
-	db.AutoMigrate(&TestTable{})
-	db.Unscoped().Delete(&TestTable{}, "true")
+	_ = db.AutoMigrate(&TestTable{})
+	Db.Unscoped().Exec("DELETE FROM test_tables")
 
 	// Perform first insert
 	err := BulkInsert(db, defaultValues)

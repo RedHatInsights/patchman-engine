@@ -32,14 +32,14 @@ func testQueryAttrsOk(t *testing.T, v interface{}) {
 	attrs, _, err := GetQueryAttrs(v)
 	assert.NoError(t, err)
 
-	assert.NotNil(t, attrs["id"].Parser)
-	assert.Equal(t, "am.id", attrs["id"].Query)
+	assert.NotNil(t, attrs["ID"].Parser)
+	assert.Equal(t, "am.id", attrs["ID"].Query)
 
 	assert.NotNil(t, attrs["note_str"].Parser)
 	assert.Equal(t, "COALESCE(am.text_note, '')", attrs["note_str"].Query)
 
-	assert.NotNil(t, attrs["bare"].Parser)
-	assert.Equal(t, "bare", attrs["bare"].Query)
+	assert.NotNil(t, attrs["Bare"].Parser)
+	assert.Equal(t, "Bare", attrs["Bare"].Query)
 }
 
 func TestGetAttrs(t *testing.T) {
@@ -71,7 +71,7 @@ func TestGetAttrs(t *testing.T) {
 func TestSelect(t *testing.T) {
 	sel := MustGetSelect(queryStruct{})
 
-	assert.Contains(t, sel, "am.id as id")
+	assert.Contains(t, sel, "am.id as ID")
 	assert.Contains(t, sel, "COALESCE(am.text_note, '') as note_str")
-	assert.Contains(t, sel, "bare as bare")
+	assert.Contains(t, sel, "Bare as Bare")
 }

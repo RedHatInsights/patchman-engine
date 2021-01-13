@@ -3,8 +3,9 @@ package database
 import (
 	"app/base/utils"
 	"fmt"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres" // postgres used under gorm
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"strconv"
 	"time"
 )
@@ -39,20 +40,30 @@ type PostgreSQLConfig struct {
 // open database connection
 func openPostgreSQL(dbConfig *PostgreSQLConfig) *gorm.DB {
 	connectString := dataSourceName(dbConfig)
-	db, err := gorm.Open("postgres", connectString)
+	db, err := gorm.Open(postgres.Open(connectString), &gorm.Config{Logger: logger.Default})
 	if err != nil {
 		panic(err)
 	}
 
-	db.DB().SetMaxOpenConns(dbConfig.MaxConnections)
-	db.DB().SetMaxIdleConns(dbConfig.MaxIdleConnections)
-	db.DB().SetConnMaxLifetime(time.Duration(dbConfig.MaxConnectionLifetimeS) * time.Second)
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic(err)
+	}
+
+	sqlDB.SetMaxOpenConns(dbConfig.MaxConnections)
+	sqlDB.SetMaxIdleConns(dbConfig.MaxIdleConnections)
+	sqlDB.SetConnMaxLifetime(time.Duration(dbConfig.MaxConnectionLifetimeS) * time.Second)
 	return db
 }
 
 // chcek if database connection works
 func check(db *gorm.DB) {
-	err := db.DB().Ping()
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic(err)
+	}
+
+	err = sqlDB.Ping()
 	if err != nil {
 		panic(err)
 	}

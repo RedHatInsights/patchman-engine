@@ -1,6 +1,6 @@
 package database
 
-import "github.com/jinzhu/gorm"
+import "gorm.io/gorm"
 
 func SystemAdvisoriesQueryName(tx *gorm.DB, inventoryID string) *gorm.DB {
 	query := systemAdvisoriesQuery(tx).Where("sp.inventory_id = ?::uuid", inventoryID)
