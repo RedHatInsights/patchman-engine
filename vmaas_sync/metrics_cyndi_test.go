@@ -25,7 +25,7 @@ func TestUploadedCyndiSystemsCounts1D(t *testing.T) {
 
 	systemsQuery := database.Db.Table("inventory.hosts")
 	systemsQuery = updateCyndiQueryLastUpload(systemsQuery, refTime(), 1)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
 	assert.Equal(t, 16, nSystems)
 }
@@ -36,7 +36,7 @@ func TestUploadedCyndiSystemsCounts7D(t *testing.T) {
 
 	systemsQuery := database.Db.Table("inventory.hosts")
 	systemsQuery = updateCyndiQueryLastUpload(systemsQuery, refTime(), 7)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
 	assert.Equal(t, 16, nSystems)
 }
@@ -47,7 +47,7 @@ func TestUploadedCyndiSystemsCounts30D(t *testing.T) {
 
 	systemsQuery := database.Db.Table("inventory.hosts")
 	systemsQuery = updateCyndiQueryLastUpload(systemsQuery, refTime(), 30)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
 	assert.Equal(t, 16, nSystems)
 }
@@ -59,7 +59,7 @@ func TestUploadedCyndiSystemsCountsNoSystems(t *testing.T) {
 	systemsQuery := database.Db.Table("inventory.hosts")
 	refTime := time.Date(2020, 9, 23, 10, 0, 0, 0, time.UTC)
 	systemsQuery = updateCyndiQueryLastUpload(systemsQuery, refTime, 30)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
 	assert.Equal(t, 0, nSystems)
 }
@@ -70,7 +70,7 @@ func TestUploadedCyndiSystemsCountsAllSystems(t *testing.T) {
 
 	systemsQuery := database.Db.Table("inventory.hosts")
 	systemsQuery = updateCyndiQueryLastUpload(systemsQuery, refTime(), -1)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
 	assert.Equal(t, 16, nSystems)
 }

@@ -13,10 +13,10 @@ import (
 	"fmt"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
-	"github.com/jinzhu/gorm"
-	"github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/lestrrat-go/backoff"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"net/http"
 	"sync"
 	"time"
@@ -69,9 +69,9 @@ func Evaluate(ctx context.Context, inventoryID string, requested *base.Rfc3339Ti
 		return nil
 	}
 
-	tx := database.Db.BeginTx(base.Context, nil)
+	tx := database.Db.WithContext(base.Context).Begin()
 	// Don'requested allow TX to hang around locking the rows
-	defer tx.RollbackUnlessCommitted()
+	defer tx.Rollback()
 
 	system, err := loadSystemData(tx, inventoryID)
 	if err != nil {
@@ -263,7 +263,7 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 		}
 
 		// Skip overwriting entries which have the same data as before
-		if bytes.Equal(updateDataJSON, currentNamedPackage.UpdateData.RawMessage) {
+		if bytes.Equal(updateDataJSON, currentNamedPackage.UpdateData) {
 			// If the update_data we want to store is null, we skip only only if there was a row for this specific
 			// system_package already stored.
 			// If its not null, then the previous check ensured that the old update data matches new one
@@ -277,7 +277,7 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 			RhAccountID: system.RhAccountID,
 			SystemID:    system.ID,
 			PackageID:   packagesByNEVRA[*nevra].PackageID,
-			UpdateData:  postgres.Jsonb{RawMessage: updateDataJSON},
+			UpdateData:  updateDataJSON,
 		})
 	}
 	tx = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "system_id", "package_id"}, "update_data")
@@ -289,7 +289,7 @@ type namedPackage struct {
 	PackageID  int
 	EVRA       string
 	WasStored  bool
-	UpdateData postgres.Jsonb
+	UpdateData []byte
 }
 
 // nolint: lll
@@ -377,7 +377,7 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 		data["packages_installed"] = installed
 		data["packages_updatable"] = updatable
 	}
-	return tx.Model(system).Update(data).Error
+	return tx.Model(system).Updates(data).Error
 }
 
 // nolint: bodyclose
@@ -583,7 +583,9 @@ func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int, advisory
 			models.SystemAdvisories{RhAccountID: rhAccountID, SystemID: systemID, AdvisoryID: advisoryID})
 	}
 
-	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	txOnConflict := tx.Clauses(clause.OnConflict{
+		DoNothing: true,
+	})
 	err := database.BulkInsert(txOnConflict, advisoriesObjs)
 	return err
 }

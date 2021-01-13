@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gocarina/gocsv"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 	"net/http"
 	"regexp"
 	"strings"
@@ -174,14 +174,14 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params 
 		return nil, nil, nil, errors.Wrap(err, "filters applying failed")
 	}
 
-	var total int
+	var total int64
 	err = tx.Count(&total).Error
 	if err != nil {
 		LogAndRespError(c, err, "Database connection error")
 		return nil, nil, nil, err
 	}
 
-	if offset > total {
+	if offset > int(total) {
 		err = errors.New("Offset")
 		LogAndRespBadRequest(c, err, InvalidOffsetMsg)
 		return nil, nil, nil, err
@@ -193,13 +193,13 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params 
 		Filter:     filters,
 		Sort:       sortFields,
 		Search:     base.RemoveInvalidChars(c.Query("search")),
-		TotalItems: total,
+		TotalItems: int(total),
 	}
 
 	tagQ := extractTagsQueryString(c)
 
 	params = append(params, filters.ToQueryParams(), sortQ, tagQ, searchQ)
-	links := CreateLinks(path, offset, limit, total, params...)
+	links := CreateLinks(path, offset, limit, int(total), params...)
 
 	if limit != -1 {
 		tx = tx.Limit(limit)
@@ -295,7 +295,7 @@ func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB
 	if !applied {
 		return tx, false, nil
 	}
-	return tx.Where(fmt.Sprintf("%s::uuid in (?)", systemIDExpr), subq.SubQuery()), true, nil
+	return tx.Where(fmt.Sprintf("%s::uuid in (?)", systemIDExpr), subq), true, nil
 }
 
 type QueryItem interface {

@@ -11,7 +11,12 @@ func Liveness(c *gin.Context) {
 }
 
 func Readiness(c *gin.Context) {
-	err := database.Db.DB().Ping()
+	sqlDB, err := database.Db.DB()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"err": err.Error()})
+		return
+	}
+	err = sqlDB.Ping()
 	if err != nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"err": err.Error()})
 		return

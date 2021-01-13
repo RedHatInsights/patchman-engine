@@ -4,15 +4,15 @@ import (
 	"app/base"
 	"app/base/database"
 	"app/base/utils"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 	"time"
 )
 
 // Need to run code within a function, because defer can't be used in loops
 func withTx(do func(db *gorm.DB) error) error {
-	tx := database.Db.BeginTx(base.Context, nil)
-	defer tx.RollbackUnlessCommitted()
+	tx := database.Db.WithContext(base.Context).Begin()
+	defer tx.Rollback()
 	if err := do(tx); err != nil {
 		return err
 	}

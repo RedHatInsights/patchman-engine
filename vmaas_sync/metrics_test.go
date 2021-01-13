@@ -30,8 +30,8 @@ func TestSystemsCountsOptOut(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	systemsQuery := database.Db.Model(models.SystemPlatform{})
-	var optOuted int
-	var notOptOuted int
+	var optOuted int64
+	var notOptOuted int64
 	assert.Nil(t, updateSystemsQueryOptOut(systemsQuery, true).Count(&optOuted).Error)
 	assert.Nil(t, updateSystemsQueryOptOut(systemsQuery, false).Count(&notOptOuted).Error)
 	assert.Equal(t, 2, optOuted)
@@ -44,7 +44,7 @@ func TestUploadedSystemsCounts1D(t *testing.T) {
 
 	systemsQuery := database.Db.Model(models.SystemPlatform{})
 	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime(), 1)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
 	assert.Equal(t, 2, nSystems)
 }
@@ -55,7 +55,7 @@ func TestUploadedSystemsCounts7D(t *testing.T) {
 
 	systemsQuery := database.Db.Model(models.SystemPlatform{})
 	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime(), 7)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
 	assert.Equal(t, 5, nSystems)
 }
@@ -66,7 +66,7 @@ func TestUploadedSystemsCounts30D(t *testing.T) {
 
 	systemsQuery := database.Db.Model(models.SystemPlatform{})
 	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime(), 30)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
 	assert.Equal(t, 8, nSystems)
 }
@@ -78,7 +78,7 @@ func TestUploadedSystemsCountsNoSystems(t *testing.T) {
 	systemsQuery := database.Db.Model(models.SystemPlatform{})
 	refTime := time.Date(2020, 9, 23, 10, 0, 0, 0, time.UTC)
 	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime, 30)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
 	assert.Equal(t, 1, nSystems)
 }
@@ -89,7 +89,7 @@ func TestUploadedSystemsCountsAllSystems(t *testing.T) {
 
 	systemsQuery := database.Db.Model(models.SystemPlatform{})
 	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime(), -1)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
 	assert.Equal(t, 14, nSystems)
 }

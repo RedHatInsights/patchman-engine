@@ -4,9 +4,9 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -34,10 +34,10 @@ var (
 )
 
 type InventoryHostsStats struct {
-	SystemsCount    int
-	UniqueTags      int
-	SapCount        int
-	SystemsWithTags int
+	SystemsCount    int64
+	UniqueTags      int64
+	SapCount        int64
+	SystemsWithTags int64
 }
 
 func updateCyndiData() {
@@ -101,13 +101,13 @@ func getCyndiCounts(refTime time.Time) (map[string]int, error) {
 	counts := map[string]int{}
 	for lastUploadK, lastUploadV := range lastUploadKV {
 		systemsQueryOptOutLastUpload := updateCyndiQueryLastUpload(systemsQuery, refTime, lastUploadV)
-		var nSystems int
+		var nSystems int64
 		err := systemsQueryOptOutLastUpload.Count(&nSystems).Error
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to load systems counts: "+
 				fmt.Sprintf("last_upload_before_days: %v", lastUploadV))
 		}
-		counts[lastUploadK] = nSystems
+		counts[lastUploadK] = int(nSystems)
 	}
 	return counts, nil
 }

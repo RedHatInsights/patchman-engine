@@ -5,9 +5,9 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"encoding/json"
+	"errors"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
-	"github.com/jinzhu/gorm/dialects/postgres"
+	"gorm.io/gorm"
 	"net/http"
 	"time"
 )
@@ -54,7 +54,7 @@ func AdvisoryDetailHandler(c *gin.Context) {
 
 	var advisory models.AdvisoryMetadata
 	err := database.Db.Where("name = ?", advisoryName).First(&advisory).Error
-	if gorm.IsRecordNotFoundError(err) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		LogAndRespNotFound(c, err, "advisory not found")
 		return
 	}
@@ -97,7 +97,7 @@ func AdvisoryDetailHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func parseCVEs(jsonb *postgres.Jsonb) ([]string, error) {
+func parseCVEs(jsonb []byte) ([]string, error) {
 	if jsonb == nil {
 		return []string{}, nil
 	}
@@ -115,7 +115,7 @@ func parseCVEs(jsonb *postgres.Jsonb) ([]string, error) {
 	return cves, nil
 }
 
-func parsePackages(jsonb *postgres.Jsonb) (map[string]string, error) {
+func parsePackages(jsonb []byte) (map[string]string, error) {
 	if jsonb == nil {
 		return map[string]string{}, nil
 	}

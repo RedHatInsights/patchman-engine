@@ -139,7 +139,7 @@ func TestSaveAdvisories(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		_, err := storeAdvisories(data.ErrataList)
 		assert.NoError(t, err)
-		var count int
+		var count int64
 
 		assert.Nil(t, database.Db.Model(&models.AdvisoryMetadata{}).Where("url = ?", "TEST").Count(&count).Error)
 

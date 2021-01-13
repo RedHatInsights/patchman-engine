@@ -6,9 +6,9 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"encoding/json"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -95,7 +95,7 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 
 	err = database.Db.
 		Delete(&models.DeletedSystem{}, "when_deleted < ?", time.Now().Add(-DeletionThreshold)).Error
-	if err != nil && !gorm.IsRecordNotFoundError(err) {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		utils.Log("inventoryID", event.ID).Warn(WarnNoRowsModified)
 		return nil
 	}

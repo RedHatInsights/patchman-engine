@@ -28,9 +28,9 @@ func SystemDeleteHandler(c *gin.Context) {
 		return
 	}
 	var systemInventoryID []string
-	tx := database.Db.BeginTx(base.Context, nil)
+	tx := database.Db.WithContext(base.Context).Begin()
 
-	defer tx.RollbackUnlessCommitted()
+	defer tx.Rollback()
 
 	err := tx.Set("gorm:query_option", "FOR UPDATE OF system_platform").
 		Table("system_platform").

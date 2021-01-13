@@ -4,7 +4,7 @@ import (
 	"app/base/database"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"net/http"
 )
 

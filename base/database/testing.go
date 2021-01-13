@@ -37,7 +37,8 @@ func CheckCachesValid() (bool, error) {
 	valid := true
 	var aad []models.AdvisoryAccountData
 
-	tx := Db.BeginTx(base.Context, nil)
+	tx := Db.WithContext(base.Context).Begin()
+	defer tx.Rollback()
 	err := tx.Set("gorm:query_option", "FOR SHARE OF advisory_account_data").
 		Order("rh_account_id, advisory_id").Find(&aad).Error
 	if err != nil {
@@ -86,7 +87,6 @@ func CheckCachesValid() (bool, error) {
 		}
 	}
 	tx.Commit()
-	tx.RollbackUnlessCommitted()
 	return valid, nil
 }
 

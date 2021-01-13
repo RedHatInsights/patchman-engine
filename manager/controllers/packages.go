@@ -4,7 +4,7 @@ import (
 	"app/base/database"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 var PackagesFields = database.MustGetQueryAttrs(&PackageItem{})
@@ -66,7 +66,7 @@ func packagesQuery(c *gin.Context, acc int) (*gorm.DB, error) {
 	return database.Db.
 		Select(PackagesSelect).
 		Table("package_latest_cache latest").
-		Joins("INNER JOIN ? res ON res.name_id = latest.name_id", subQ.SubQuery()), nil
+		Joins("INNER JOIN ? res ON res.name_id = latest.name_id", subQ), nil
 }
 
 // @Summary Show me all installed packages across my systems

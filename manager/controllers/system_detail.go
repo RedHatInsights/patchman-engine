@@ -5,8 +5,9 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"errors"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -42,7 +43,7 @@ func SystemDetailHandler(c *gin.Context) {
 	}
 
 	err := query.First(&inventory).Error
-	if gorm.IsRecordNotFoundError(err) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		LogAndRespNotFound(c, err, "inventory not found")
 		return
 	}

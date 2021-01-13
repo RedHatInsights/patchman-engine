@@ -9,9 +9,9 @@ import (
 	"app/manager/middlewares"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -176,13 +176,13 @@ func getSystemCounts(refTime time.Time) (map[systemsCntLabels]int, error) {
 		systemsQueryOptOut := updateSystemsQueryOptOut(systemsQuery, optOutV)
 		for lastUploadK, lastUploadV := range lastUploadKV {
 			systemsQueryOptOutLastUpload := updateSystemsQueryLastUpload(systemsQueryOptOut, refTime, lastUploadV)
-			var nSystems int
+			var nSystems int64
 			err := systemsQueryOptOutLastUpload.Count(&nSystems).Error
 			if err != nil {
 				return nil, errors.Wrap(err, "unable to load systems counts: "+
 					fmt.Sprintf("opt_out: %v, last_upload_before_days: %v", optOutV, lastUploadV))
 			}
-			counts[systemsCntLabels{optOutK, lastUploadK}] = nSystems
+			counts[systemsCntLabels{optOutK, lastUploadK}] = int(nSystems)
 		}
 	}
 	return counts, nil
@@ -213,7 +213,7 @@ func updateAdvisoryMetrics() {
 	advisoriesCnt.WithLabelValues("security").Set(float64(sec))
 }
 
-func getAdvisoryCounts() (unknown, enh, bug, sec int, err error) {
+func getAdvisoryCounts() (unknown, enh, bug, sec int64, err error) {
 	advisoryQuery := database.Db.Model(&models.AdvisoryMetadata{})
 	err = advisoryQuery.Where("advisory_type_id = 0").Count(&unknown).Error
 	if err != nil {

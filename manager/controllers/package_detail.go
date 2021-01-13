@@ -5,7 +5,7 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"net/http"
 )
 

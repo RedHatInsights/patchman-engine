@@ -6,7 +6,7 @@ import (
 	"app/manager/middlewares"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"net/http"
 )
 

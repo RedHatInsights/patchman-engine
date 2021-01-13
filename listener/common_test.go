@@ -56,7 +56,7 @@ func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int, report
 }
 
 func assertSystemNotInDB(t *testing.T) {
-	var systemCount int
+	var systemCount int64
 	assert.Nil(t, database.Db.Model(models.SystemPlatform{}).
 		Where("inventory_id = ?::uuid", id).Count(&systemCount).Error)
 

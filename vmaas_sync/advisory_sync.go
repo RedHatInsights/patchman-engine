@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
-	"github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/pkg/errors"
 	"modernc.org/mathutil"
 	"strings"
@@ -108,11 +107,11 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 			Summary:        v.Summary,
 			Solution:       v.Solution,
 			SeverityID:     severityID,
-			CveList:        &postgres.Jsonb{RawMessage: cvesData},
+			CveList:        cvesData,
 			PublicDate:     issued,
 			ModifiedDate:   modified,
 			URL:            &v.Url,
-			PackageData:    &postgres.Jsonb{RawMessage: packageData},
+			PackageData:    packageData,
 		}
 
 		advisories = append(advisories, advisory)

@@ -7,7 +7,8 @@ import (
 )
 
 func Status(c *gin.Context) {
-	if err := database.Db.DB().Ping(); err != nil {
+	sqlDB, _ := database.Db.DB()
+	if err := sqlDB.Ping(); err != nil {
 		LogAndRespStatusError(c, http.StatusServiceUnavailable, err, "Database not connected")
 	} else {
 		c.Status(http.StatusOK)

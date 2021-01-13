@@ -4,7 +4,7 @@ import (
 	"app/base/database"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -136,7 +136,7 @@ func buildQueryAdvisoriesTagged(c *gin.Context, account int) (*gorm.DB, error) {
 
 	query := database.Db.Table("advisory_metadata am").
 		Select(AdvisoriesSelect).
-		Joins("JOIN (?) aad ON am.id = aad.advisory_id and aad.systems_affected > 0", subq.SubQuery())
+		Joins("JOIN (?) aad ON am.id = aad.advisory_id and aad.systems_affected > 0", subq)
 
 	return query, nil
 }

@@ -31,7 +31,8 @@ func TestReadinessFail(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	SetupTestEnvironment()
 
-	assert.Nil(t, database.Db.DB().Close())
+	sqlDB, _ := database.Db.DB()
+	assert.Nil(t, sqlDB.Close())
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/", nil)
 	InitRouter(Readiness).ServeHTTP(w, req)

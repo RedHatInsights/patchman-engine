@@ -8,8 +8,9 @@ import (
 	"crypto/sha256"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/antihax/optional"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const chunkSize = 10 * 1024
@@ -68,7 +69,9 @@ func storePackageNames(tx *gorm.DB, pkgs map[string]vmaas.PackagesResponsePackag
 		pkgNames = append(pkgNames, models.PackageName{Name: n})
 	}
 	// Insert missing
-	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	tx = tx.Clauses(clause.OnConflict{
+		DoNothing: true,
+	})
 	err := database.BulkInsertChunk(tx, pkgNames, chunkSize)
 	if err != nil {
 		return nil, nil, err
@@ -101,7 +104,9 @@ func storePackageStrings(tx *gorm.DB, data map[utils.Nevra]vmaas.PackagesRespons
 		strings = append(strings, models.String{ID: keySlice, Value: v})
 	}
 
-	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	tx = tx.Clauses(clause.OnConflict{
+		DoNothing: true,
+	})
 	return database.BulkInsertChunk(tx, strings, chunkSize)
 }
 
@@ -167,10 +172,12 @@ func storePackageDetails(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, nameIDs m
 		}
 	}
 
-	if err := database.Db.Update(&updates).Error; err != nil {
+	if err := database.Db.Updates(&updates).Error; err != nil {
 		return errors.Wrap(err, "")
 	}
 
-	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	tx = tx.Clauses(clause.OnConflict{
+		DoNothing: true,
+	})
 	return database.BulkInsertChunk(tx, inserts, chunkSize)
 }
