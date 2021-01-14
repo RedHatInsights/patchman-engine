@@ -114,5 +114,6 @@ func TestDeleteCleanup(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
-	assert.NoError(t, database.Db.Delete(&models.DeletedSystem{}).Error)
+	err := database.Db.Unscoped().Exec("DELETE FROM deleted_system").Error
+	assert.NoError(t, err)
 }

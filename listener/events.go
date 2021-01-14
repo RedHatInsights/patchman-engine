@@ -65,7 +65,7 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventDelete))
 	// TODO: Do we need locking here ?
 	err := database.OnConflictUpdate(database.Db, "inventory_id", "when_deleted").
-		Save(models.DeletedSystem{
+		Create(models.DeletedSystem{
 			InventoryID: event.ID,
 			WhenDeleted: time.Now(),
 		}).Error

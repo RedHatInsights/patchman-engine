@@ -60,7 +60,7 @@ func assertSystemNotInDB(t *testing.T) {
 	assert.Nil(t, database.Db.Model(models.SystemPlatform{}).
 		Where("inventory_id = ?::uuid", id).Count(&systemCount).Error)
 
-	assert.Equal(t, systemCount, 0)
+	assert.Equal(t, int(systemCount), 0)
 }
 
 func getOrCreateTestAccount(t *testing.T) int {

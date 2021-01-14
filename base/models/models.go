@@ -191,9 +191,8 @@ func (Repo) TableName() string {
 type RepoSlice []Repo
 
 type SystemRepo struct {
-	RhAccountID int
-	SystemID    int
-	RepoID      int
+	SystemID int
+	RepoID   int
 }
 
 func (SystemRepo) TableName() string {
