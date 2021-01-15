@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"app/base/database"
-	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
@@ -32,16 +31,14 @@ func SystemDetailHandler(c *gin.Context) {
 		return
 	}
 
-	var inventory models.SystemPlatform
-	query := database.Db.
-		Where("system_platform.rh_account_id = ?", account).
-		Where("inventory_id = ?::uuid", inventoryID)
+	var systemItemAttributes SystemItemAttributes
+	query := database.Db.Table("system_platform sp").
+		Select(database.MustGetSelect(&systemItemAttributes)).
+		Where("inventory_id = ?::uuid", inventoryID).
+		Where("sp.rh_account_id = ?", account).
+		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
 
-	if applyInventoryHosts {
-		query = query.Joins("JOIN inventory.hosts ih ON ih.id = system_platform.inventory_id")
-	}
-
-	err := query.First(&inventory).Error
+	err := query.First(&systemItemAttributes).Error
 	if gorm.IsRecordNotFoundError(err) {
 		LogAndRespNotFound(c, err, "inventory not found")
 		return
@@ -54,19 +51,9 @@ func SystemDetailHandler(c *gin.Context) {
 
 	var resp = SystemDetailResponse{
 		Data: SystemItem{
-			Attributes: SystemItemAttributes{
-				DisplayName:       inventory.DisplayName,
-				LastEvaluation:    inventory.LastEvaluation,
-				LastUpload:        inventory.LastUpload,
-				RhsaCount:         inventory.AdvisorySecCountCache,
-				RhbaCount:         inventory.AdvisoryBugCountCache,
-				RheaCount:         inventory.AdvisoryEnhCountCache,
-				Stale:             inventory.Stale,
-				PackagesInstalled: inventory.PackagesInstalled,
-				PackagesUpdatable: inventory.PackagesUpdatable,
-			},
-			ID:   inventory.InventoryID,
-			Type: "system",
+			Attributes: systemItemAttributes,
+			ID:         inventoryID,
+			Type:       "system",
 		}}
 	c.JSON(http.StatusOK, &resp)
 }

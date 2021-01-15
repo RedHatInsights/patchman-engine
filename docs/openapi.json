@@ -1925,6 +1925,15 @@
                     "last_upload": {
                         "type": "string"
                     },
+                    "os_major": {
+                        "type": "string"
+                    },
+                    "os_minor": {
+                        "type": "string"
+                    },
+                    "os_name": {
+                        "type": "string"
+                    },
                     "packages_installed": {
                         "type": "integer"
                     },
@@ -1969,6 +1978,15 @@
                         "type": "string"
                     },
                     "last_upload": {
+                        "type": "string"
+                    },
+                    "os_major": {
+                        "type": "string"
+                    },
+                    "os_minor": {
+                        "type": "string"
+                    },
+                    "os_name": {
                         "type": "string"
                     },
                     "packages_installed": {
