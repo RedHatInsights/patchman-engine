@@ -18,6 +18,7 @@ import (
 	"github.com/lestrrat-go/backoff"
 	"github.com/pkg/errors"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
@@ -224,6 +225,10 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 
 	toStore := make([]models.SystemPackage, 0, len(updates))
 	for nevraStr, updateData := range updates {
+		if strings.HasPrefix(nevraStr, "gpg-pubkey") { // skip "phantom" package
+			continue
+		}
+
 		var pkgUpdates []models.PackageUpdate
 		// Parse each NEVRA in the input
 		nevra, err := utils.ParseNevra(nevraStr)
