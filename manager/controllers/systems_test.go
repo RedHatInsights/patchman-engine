@@ -33,6 +33,9 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
 	assert.Equal(t, 0, output.Data[0].Attributes.PackagesInstalled)
 	assert.Equal(t, 0, output.Data[0].Attributes.PackagesUpdatable)
+	assert.Equal(t, "RHEL", output.Data[0].Attributes.OSName)
+	assert.Equal(t, "8", output.Data[0].Attributes.OSMajor)
+	assert.Equal(t, "1", output.Data[0].Attributes.OSMinor)
 
 	// links
 	assert.Equal(t, "/api/patch/v1/systems?offset=0&limit=20&filter[stale]=eq:false&sort=-last_upload", output.Links.First)

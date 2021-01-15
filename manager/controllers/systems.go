@@ -40,6 +40,10 @@ type SystemItemAttributes struct {
 
 	PackagesInstalled int `json:"packages_installed" csv:"packages_installed" query:"sp.packages_installed"`
 	PackagesUpdatable int `json:"packages_updatable" csv:"packages_updatable" query:"sp.packages_updatable"`
+
+	OSName  string `json:"os_name" csv:"os_name" query:"ih.system_profile->'operating_system'->>'name'"`
+	OSMajor string `json:"os_major" csv:"os_major" query:"ih.system_profile->'operating_system'->>'major'"`
+	OSMinor string `json:"os_minor" csv:"os_minor" query:"ih.system_profile->'operating_system'->>'minor'"`
 }
 
 type SystemItem struct {
@@ -115,11 +119,8 @@ func SystemsListHandler(c *gin.Context) {
 
 func querySystems(account int) *gorm.DB {
 	query := database.Db.Table("system_platform sp").Select(SystemsSelect).
-		Where("sp.rh_account_id = ?", account)
-
-	if applyInventoryHosts {
-		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
-	}
+		Where("sp.rh_account_id = ?", account).
+		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
 
 	return query
 }

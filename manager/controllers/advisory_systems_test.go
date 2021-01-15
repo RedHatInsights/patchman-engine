@@ -28,6 +28,9 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
 	assert.Equal(t, 3, output.Data[0].Attributes.RhbaCount)
 	assert.Equal(t, 3, output.Data[0].Attributes.RheaCount)
+	assert.Equal(t, "RHEL", output.Data[0].Attributes.OSName)
+	assert.Equal(t, "8", output.Data[0].Attributes.OSMajor)
+	assert.Equal(t, "1", output.Data[0].Attributes.OSMinor)
 }
 
 func TestAdvisorySystemsNotFound(t *testing.T) { //nolint:dupl
