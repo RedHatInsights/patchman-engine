@@ -89,6 +89,7 @@ type SystemPackage struct {
 	PackageID   int `gorm:"primary_key"`
 	// Will contain json in form of [{ "evra": "...", "advisory": "..."}]
 	UpdateData postgres.Jsonb
+	NameID     int `gorm:"primary_key"`
 }
 
 func (SystemPackage) TableName() string {

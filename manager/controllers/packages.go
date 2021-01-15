@@ -14,11 +14,11 @@ var PackagesOpts = ListOpts{
 	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
 	DefaultFilters: map[string]FilterData{},
 	DefaultSort:    "name",
-	SearchFields:   []string{"res.name", "latest.summary"},
+	SearchFields:   []string{"pn.name", "latest.summary"},
 }
 
 type PackageItem struct {
-	Name             string `json:"name" csv:"name" query:"res.name"`
+	Name             string `json:"name" csv:"name" query:"pn.name"`
 	SystemsInstalled int    `json:"systems_installed" csv:"systems_installed" query:"res.systems_installed"`
 	SystemsUpdatable int    `json:"systems_updatable" csv:"systems_updatable" query:"res.systems_updatable"`
 	Summary          string `json:"summary" csv:"summary" query:"latest.summary"`
@@ -33,10 +33,9 @@ type PackagesResponse struct {
 // nolint: lll
 // Used as a for subquery performing the actual calculation which is joined with latest summaries
 type queryItem struct {
-	NameID           int    `query:"p.name_id"`
-	Name             string `json:"name" query:"pn.name"`
-	SystemsInstalled int    `json:"systems_installed" query:"count(spkg.system_id)"`
-	SystemsUpdatable int    `json:"systems_updatable" query:"count(spkg.system_id) filter (where spkg.latest_evra IS NOT NULL)"`
+	NameID           int `query:"spkg.name_id"`
+	SystemsInstalled int `json:"systems_installed" query:"count(spkg.system_id)"`
+	SystemsUpdatable int `json:"systems_updatable" query:"count(spkg.system_id) filter (where spkg.latest_evra IS NOT NULL)"`
 }
 
 var queryItemSelect = database.MustGetSelect(&queryItem{})
@@ -46,7 +45,7 @@ func packagesQuery(c *gin.Context, acc int) (*gorm.DB, error) {
 	subQ := database.SystemPackages(database.Db, acc).
 		Select(queryItemSelect).
 		Where("sp.stale = false").
-		Group("p.name_id, pn.name")
+		Group("spkg.name_id")
 
 	// We need to apply tag filtering on subquery
 	subQ, _, err := ApplyTagsFilter(c, subQ, "sp.inventory_id")
@@ -57,7 +56,8 @@ func packagesQuery(c *gin.Context, acc int) (*gorm.DB, error) {
 	return database.Db.
 		Select(PackagesSelect).
 		Table("package_latest_cache latest").
-		Joins("INNER JOIN ? res ON res.name_id = latest.name_id", subQ.SubQuery()), nil
+		Joins("INNER JOIN ? res ON res.name_id = latest.name_id", subQ.SubQuery()).
+		Joins("INNER JOIN package_name pn on pn.id = res.name_id"), nil
 }
 
 // @Summary Show me all installed packages across my systems

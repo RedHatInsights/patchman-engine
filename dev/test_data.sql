@@ -120,12 +120,12 @@ INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_
 (10, 10, '0.80-2.el8.x86_64', '10', '10', 9), -- passwd
 (11, 1, '5.6.13-201.fc31.x86_64', '1', '1', 7); -- kernel
 
-INSERT INTO system_package (rh_account_id, system_id, package_id, update_data) VALUES
-(3, 12, 1, '[{"evra": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}]'),
-(3, 12, 2, '[{"evra": "77.0.1-1.fc31-x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31-x86_64", "advisory": "RH-2"}]'),
-(3, 13, 3, null),
-(3, 13, 4, null),
-(3, 13, 1, null);
+INSERT INTO system_package (rh_account_id, system_id, package_id, name_id, update_data) VALUES
+(3, 12, 1, 1, '[{"evra": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}]'),
+(3, 12, 2, 2,'[{"evra": "77.0.1-1.fc31-x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31-x86_64", "advisory": "RH-2"}]'),
+(3, 13, 3, 3, null),
+(3, 13, 4, 4, null),
+(3, 13, 1, 1, null);
 
 INSERT INTO timestamp_kv (name, value) VALUES
 ('last_eval_repo_based', '2018-04-05T01:23:45+02:00');

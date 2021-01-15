@@ -284,6 +284,7 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 			SystemID:    system.ID,
 			PackageID:   packagesByNEVRA[*nevra].PackageID,
 			UpdateData:  postgres.Jsonb{RawMessage: updateDataJSON},
+			NameID:      currentNamedPackage.NameID,
 		})
 	}
 	tx = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "system_id", "package_id"}, "update_data")
@@ -291,6 +292,7 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 }
 
 type namedPackage struct {
+	NameID     int
 	Name       string
 	PackageID  int
 	EVRA       string
@@ -323,7 +325,7 @@ func loadPackages(tx *gorm.DB, accountID, systemID int,
 	var packages []namedPackage
 	err := tx.Table("package").
 		// We need to have data about the package, and what data we had stored in relation to this system.
-		Select("pn.name, package.id as package_id, package.evra, (sp.system_id IS NOT NULL) as was_stored, sp.update_data").
+		Select("pn.id as name_id, pn.name, package.id as package_id, package.evra, (sp.system_id IS NOT NULL) as was_stored, sp.update_data").
 		Joins("join package_name pn on package.name_id = pn.id").
 		// We need to perform left join, so thats why the parameters are here
 		Joins(`left join system_package sp on sp.package_id = package.id AND sp.rh_account_id = ? AND sp.system_id = ?`, accountID, systemID).
