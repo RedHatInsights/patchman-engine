@@ -25,6 +25,7 @@ podman-compose up --build # Build images if needed and start containers
 podman-compose down       # Stop and remove containers
 ~~~
 
+
 ### Local app requests
 When podman compose is running, you can test the app using dev shell scripts:
 ~~~bash
