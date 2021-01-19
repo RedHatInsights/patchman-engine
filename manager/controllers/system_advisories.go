@@ -87,10 +87,10 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		return
 	}
 
-	query := database.SystemAdvisoriesQueryName(database.Db, inventoryID).
+	query := database.SystemAdvisoriesQueryName(database.Db, account, inventoryID).
 		Select(SystemAdvisoriesSelect).
 		Where("sp.rh_account_id = ?", account).
-		Where("when_patched IS NULL")
+		Where("sa.when_patched IS NULL")
 
 	if applyInventoryHosts {
 		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")

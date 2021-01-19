@@ -442,7 +442,7 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))
 
 	reported := getReportedAdvisories(vmaasData)
-	oldSystemAdvisories, err = getStoredAdvisoriesMap(tx, system.ID)
+	oldSystemAdvisories, err = getStoredAdvisoriesMap(tx, system.RhAccountID, system.ID)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Unable to get system stored advisories")
 	}
@@ -505,9 +505,9 @@ func getReportedPackageUpdates(vmaasData vmaas.UpdatesV2Response) map[string]boo
 	return packages
 }
 
-func getStoredAdvisoriesMap(tx *gorm.DB, systemID int) (map[string]models.SystemAdvisories, error) {
+func getStoredAdvisoriesMap(tx *gorm.DB, accountID, systemID int) (map[string]models.SystemAdvisories, error) {
 	var advisories []models.SystemAdvisories
-	err := database.SystemAdvisoriesQueryByID(tx, systemID).Preload("Advisory").Find(&advisories).Error
+	err := database.SystemAdvisoriesQueryByID(tx, accountID, systemID).Preload("Advisory").Find(&advisories).Error
 	if err != nil {
 		return nil, err
 	}
