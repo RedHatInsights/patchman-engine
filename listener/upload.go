@@ -105,7 +105,7 @@ func HandleUpload(event HostEvent) error {
 		}
 	}
 	t := base.Rfc3339Timestamp(time.Now())
-	ev := mqueue.PlatformEvent{ID: sys.InventoryID, Timestamp: &t}
+	ev := mqueue.PlatformEvent{ID: sys.InventoryID, AccountID: sys.RhAccountID, Timestamp: &t}
 	// Not sending evaluation message is a fatal error
 	err = mqueue.WriteEvents(base.Context, evalWriter, ev)
 	if err != nil {
@@ -191,6 +191,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	tx.Set("gorm:query_option", "FOR UPDATE OF system_platform").
 		Table("system_platform").
 		Where("inventory_id = ?::uuid", inventoryID).
+		Where("rh_account_id = ?", accountID).
 		Pluck("json_checksum", &oldJSONChecksum)
 
 	shouldUpdateRepos := false
