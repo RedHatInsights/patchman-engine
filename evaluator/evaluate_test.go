@@ -162,7 +162,8 @@ func TestEvaluate(t *testing.T) {
 	deleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
 	deleteSystemPackages(t, systemID, expectedPackageIDs)
 
-	err := evaluateHandler(mqueue.PlatformEvent{ID: "00000000-0000-0000-0000-000000000012"})
+	err := evaluateHandler(mqueue.PlatformEvent{ID: "00000000-0000-0000-0000-000000000012",
+		AccountID: rhAccountID})
 	assert.NoError(t, err)
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)

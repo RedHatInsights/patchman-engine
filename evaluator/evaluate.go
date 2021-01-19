@@ -60,7 +60,8 @@ func configure() {
 }
 
 // nolint: funlen
-func Evaluate(ctx context.Context, inventoryID string, requested *base.Rfc3339Timestamp, evaluationType string) error {
+func Evaluate(ctx context.Context, accountID int, inventoryID string, requested *base.Rfc3339Timestamp,
+	evaluationType string) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationDuration.WithLabelValues(evaluationType))
 	if enableBypass {
@@ -73,7 +74,7 @@ func Evaluate(ctx context.Context, inventoryID string, requested *base.Rfc3339Ti
 	// Don'requested allow TX to hang around locking the rows
 	defer tx.RollbackUnlessCommitted()
 
-	system, err := loadSystemData(tx, inventoryID)
+	system, err := loadSystemData(tx, accountID, inventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
 		return nil
@@ -414,12 +415,13 @@ func callVMaas(ctx context.Context, request vmaas.UpdatesV3Request) (*vmaas.Upda
 	return nil, errors.New("VMaaS is unavailable")
 }
 
-func loadSystemData(tx *gorm.DB, inventoryID string) (*models.SystemPlatform, error) {
+func loadSystemData(tx *gorm.DB, accountID int, inventoryID string) (*models.SystemPlatform, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("data-loading"))
 
 	var system models.SystemPlatform
 	err := tx.Set("gorm:query_option", "FOR UPDATE OF system_platform").
+		Where("rh_account_id = ?", accountID).
 		Where("inventory_id = ?::uuid", inventoryID).Find(&system).Error
 	return &system, err
 }
@@ -677,7 +679,7 @@ func updateAdvisoryAccountDatas(tx *gorm.DB, system *models.SystemPlatform, patc
 }
 
 func evaluateHandler(event mqueue.PlatformEvent) error {
-	err := Evaluate(base.Context, event.ID, event.Timestamp, evalLabel)
+	err := Evaluate(base.Context, event.AccountID, event.ID, event.Timestamp, evalLabel)
 	if err != nil {
 		utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
 			Error("Eval message handling")

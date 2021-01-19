@@ -21,6 +21,7 @@ type PlatformEvent struct {
 	Type        *string                `json:"type"`
 	Timestamp   *base.Rfc3339Timestamp `json:"timestamp"`
 	Account     *string                `json:"account"`
+	AccountID   int                    `json:"account_id"`
 	B64Identity *string                `json:"b64_identity"`
 	URL         *string                `json:"url"`
 }
