@@ -260,7 +260,7 @@ func getSystemAdvisorieStats() (stats SystemAdvisoryStats, err error) {
 	err = database.Db.Table("system_platform").
 		Select("MAX(advisory_count_cache) as max_all, MAX(advisory_enh_count_cache) as max_enh," +
 			"MAX(advisory_bug_count_cache) as max_bug, MAX(advisory_sec_count_cache) as max_sec").
-		First(&stats).Error
+		Order("MAX(advisory_count_cache)").First(&stats).Error
 	if err != nil {
 		return stats, errors.Wrap(err, "unable to get system advisory stats from db")
 	}

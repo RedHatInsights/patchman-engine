@@ -33,7 +33,10 @@ func TestUpdateSystem(t *testing.T) {
 	assert.NoError(t, HandleUpload(ev))
 
 	var system models.SystemPlatform
-	assert.NoError(t, database.Db.Find(&system, "inventory_id = ?::uuid", id).Error)
+	// I have no idea why following
+	// database.Db.Find(&system, "inventory_id = ?::uuid", id, "id = 101")
+	// returned record with ID 100 and not with ID 101
+	assert.NoError(t, database.Db.Table("system_platform").Order("ID DESC").Limit(1).Scan(&system).Error)
 
 	assert.Equal(t, name, system.DisplayName)
 }

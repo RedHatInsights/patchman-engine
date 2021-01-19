@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"app/base/database"
+	// "app/base/utils"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -18,13 +19,14 @@ var AdvisoriesOpts = ListOpts{
 }
 
 type AdvisoriesDBLookup struct {
-	ID string `query:"am.name"`
+	ID string `query:"am.name" gorm:"column:id"`
 	AdvisoryItemAttributes
 }
 
+// nolint: lll
 type AdvisoryItemAttributes struct {
 	SystemAdvisoryItemAttributes
-	ApplicableSystems int `json:"applicable_systems" query:"COALESCE(aad.systems_affected, 0)" csv:"applicable_systems"`
+	ApplicableSystems int `json:"applicable_systems" query:"COALESCE(aad.systems_affected, 0)" csv:"applicable_systems" gorm:"column:applicable_systems"`
 }
 
 type AdvisoryItem struct {
@@ -88,7 +90,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 	}
 
 	var advisories []AdvisoriesDBLookup
-	err = query.Find(&advisories).Error
+	err = query.Debug().Find(&advisories).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 	}

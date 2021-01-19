@@ -143,7 +143,7 @@ func TestSaveAdvisories(t *testing.T) {
 
 		assert.Nil(t, database.Db.Model(&models.AdvisoryMetadata{}).Where("url = ?", "TEST").Count(&count).Error)
 
-		assert.Equal(t, count, len(data.ErrataList))
+		assert.Equal(t, count, int64(len(data.ErrataList)))
 	}
 
 	assert.Nil(t, database.Db.Unscoped().Where("url = ?", "TEST").Delete(&models.AdvisoryMetadata{}).Error)

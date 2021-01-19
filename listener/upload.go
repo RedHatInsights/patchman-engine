@@ -189,7 +189,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 
 	var oldJSONChecksum []string
 	// Lock the row for update & return checksum
-	tx.Set("gorm:query_option", "FOR UPDATE OF system_platform").
+	tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 		Table("system_platform").
 		Where("inventory_id = ?::uuid", inventoryID).
 		Pluck("json_checksum", &oldJSONChecksum)
