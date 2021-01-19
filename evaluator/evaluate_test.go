@@ -62,7 +62,7 @@ func TestGetStoredAdvisoriesMap(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemAdvisories, err := getStoredAdvisoriesMap(database.Db, 1)
+	systemAdvisories, err := getStoredAdvisoriesMap(database.Db, 1, 1)
 	assert.Nil(t, err)
 	assert.NotNil(t, systemAdvisories)
 	assert.Equal(t, 9, len(systemAdvisories))
