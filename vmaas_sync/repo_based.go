@@ -62,6 +62,29 @@ func updateRepoBaseEvalTimestampStr(value string) error {
 	return err
 }
 
+type idAcc struct {
+	InventoryID string
+	RhAccountID int
+}
+
+func getRepoBasedInventoryIDs2(repos []string) ([]idAcc, error) {
+	var ids []idAcc
+	if len(repos) == 0 {
+		return ids, nil
+	}
+
+	err := database.Db.Table("system_repo sr").
+		Joins("JOIN repo ON repo.id = sr.repo_id").
+		Joins("JOIN system_platform sp ON sp.id = sr.system_id").
+		Where("repo.name IN (?)", repos).
+		Order("inventory_id ASC").
+		Pluck("distinct inventory_id, rh_account_id", &ids).Error
+	if err != nil {
+		return nil, err
+	}
+	return ids, nil
+}
+
 func getRepoBasedInventoryIDs(repos []string) ([]string, error) {
 	var intentoryIDs []string
 	if len(repos) == 0 {
