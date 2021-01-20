@@ -112,12 +112,10 @@ func buildQueryAdvisories(account int) *gorm.DB {
 
 // nolint: lll
 func buildAdvisoryAccountDataQuery(account int) *gorm.DB {
-	query := database.Db.Table("system_advisories sa").
+	query := database.SystemAdvisories(database.Db, account).
 		Select("sa.advisory_id, sp.rh_account_id as rh_account_id, 0 as status_id, count(sp.id) as systems_affected, 0 as systems_status_divergent").
-		Joins("join system_platform sp on sp.id = sa.system_id and sp.stale = false").
-		Where("sa.when_patched is null").
 		Where("sp.stale = false").
-		Where("sp.rh_account_id = ? ", account).
+		Where("sa.when_patched IS NULL").
 		Group("sp.rh_account_id, sa.advisory_id")
 
 	if applyInventoryHosts {

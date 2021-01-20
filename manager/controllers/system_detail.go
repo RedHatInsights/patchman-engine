@@ -32,11 +32,13 @@ func SystemDetailHandler(c *gin.Context) {
 	}
 
 	var systemItemAttributes SystemItemAttributes
-	query := database.Db.Table("system_platform sp").
+	query := database.Systems(database.Db, account).
 		Select(database.MustGetSelect(&systemItemAttributes)).
-		Where("inventory_id = ?::uuid", inventoryID).
-		Where("sp.rh_account_id = ?", account).
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
+		Where("sp.inventory_id = ?::uuid", inventoryID)
+
+	if applyInventoryHosts {
+		query = query.Joins("JOIN inventory.hosts ih ON ih.id = inventory_id")
+	}
 
 	err := query.First(&systemItemAttributes).Error
 	if gorm.IsRecordNotFoundError(err) {

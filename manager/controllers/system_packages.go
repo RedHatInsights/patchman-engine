@@ -46,14 +46,11 @@ type SystemPackageDBLoad struct {
 }
 
 func systemPackageQuery(account int, inventoryID string) *gorm.DB {
-	query := database.Db.
-		Table("system_package spkg").
-		Joins("inner join system_platform sp on sp.id = spkg.system_id").
-		Joins("inner join package p on p.id = spkg.package_id").
-		Joins("inner join package_name pn on pn.id = p.name_id").
-		Joins("inner join strings sum on sum.id = p.summary_hash").
-		Joins("inner join strings descr on descr.id = p.description_hash").
-		Where("spkg.rh_account_id = ? and sp.inventory_id = ?::uuid", account, inventoryID)
+	query := database.SystemPackages(database.Db, account).
+		Joins("JOIN (SELECT id, value FROM strings) descr ON p.description_hash = descr.id").
+		Joins("JOIN (SELECT id, value from strings) sum ON p.summary_hash = sum.id").
+		Select(SystemPackagesSelect).
+		Where("sp.inventory_id = ?::uuid", inventoryID)
 
 	if applyInventoryHosts {
 		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
@@ -89,7 +86,7 @@ func SystemPackagesHandler(c *gin.Context) {
 	}
 
 	var loaded []SystemPackageDBLoad
-	q := systemPackageQuery(account, inventoryID).Select(SystemPackagesSelect)
+	q := systemPackageQuery(account, inventoryID)
 	q, meta, links, err := ListCommon(q, c, fmt.Sprintf("/systems/%s/packages", inventoryID), SystemPackagesOpts)
 	if err != nil {
 		return

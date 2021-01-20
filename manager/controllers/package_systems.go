@@ -40,14 +40,9 @@ func packagesByNameQuery(pkgName string) *gorm.DB {
 }
 
 func packageSystemsQuery(acc int, nameIDs []int) *gorm.DB {
-	query := database.Db.
+	query := database.SystemPackages(database.Db, acc).
 		Select(PackageSystemsSelect).
-		Table("system_platform sp").
-		Joins("inner join system_package spkg on spkg.system_id = sp.id").
-		Joins("inner join package p on p.id = spkg.package_id").
 		Where("sp.stale = false").
-		Where("sp.rh_account_id = ?", acc).
-		Where("spkg.rh_account_id = ?", acc).
 		Where("p.id in (?)", nameIDs)
 
 	if applyInventoryHosts {

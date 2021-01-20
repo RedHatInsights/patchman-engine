@@ -91,12 +91,12 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 }
 
 func buildQuery(account int, advisoryName string) *gorm.DB {
-	query := database.Db.Table("advisory_metadata am").Select(SystemsSelect).
-		Joins("join system_advisories sa ON am.id = sa.advisory_id AND sa.when_patched IS NULL").
-		Joins("join system_platform sp ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id").
-		Where("sa.rh_account_id = ? AND sp.rh_account_id = ?", account, account).
-		Where("am.name = ?", advisoryName).
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
+	query := database.SystemAdvisories(database.Db, account).
+		Select(SystemsSelect).
+		Joins("JOIN advisory_metadata am ON am.id = sa.advisory_id").
+		// Inventory_hosts is not optional, since we're reading data from that table for the SystemItem
+		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
+		Where("am.name = ?", advisoryName)
 
 	return query
 }

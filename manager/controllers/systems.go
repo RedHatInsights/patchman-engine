@@ -118,11 +118,9 @@ func SystemsListHandler(c *gin.Context) {
 }
 
 func querySystems(account int) *gorm.DB {
-	query := database.Db.Table("system_platform sp").Select(SystemsSelect).
-		Where("sp.rh_account_id = ?", account).
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
-
-	return query
+	return database.Systems(database.Db, account).
+		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
+		Select(SystemsSelect)
 }
 
 func buildData(systems []SystemDBLookup) []SystemItem {
