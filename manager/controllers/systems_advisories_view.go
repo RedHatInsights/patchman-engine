@@ -31,12 +31,9 @@ type systemsAdvisoriesDBLoad struct {
 var systemsAdvisoriesSelect = database.MustGetSelect(&systemsAdvisoriesDBLoad{})
 
 func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryName) *gorm.DB {
-	query := database.Db.
-		Table("system_advisories sa").
+	query := database.SystemAdvisories(database.Db, acc).
 		Select(systemsAdvisoriesSelect).
-		Joins("join system_platform sp on sp.rh_account_id = ? and sp.id = sa.system_id", acc).
 		Joins("join advisory_metadata am on am.id = sa.advisory_id").
-		Where("sp.rh_account_id = ?", acc).
 		Where("sp.inventory_id in (?::uuid)", systems).
 		Where("am.name in (?)", advisories).
 		Order("sp.inventory_id, am.id")

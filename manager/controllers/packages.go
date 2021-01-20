@@ -43,14 +43,9 @@ var queryItemSelect = database.MustGetSelect(&queryItem{})
 
 // nolint: lll
 func packagesQuery(c *gin.Context, acc int) (*gorm.DB, error) {
-	subQ := database.Db.
+	subQ := database.SystemPackages(database.Db, acc).
 		Select(queryItemSelect).
-		Table("system_package spkg").
-		Joins("inner join system_platform sp on sp.id = spkg.system_id and sp.rh_account_id = ?", acc).
 		Where("sp.stale = false").
-		Joins("inner join package p on p.id = spkg.package_id").
-		Joins("inner join package_name pn on pn.id = p.name_id").
-		Where("spkg.rh_account_id = ?", acc).
 		Group("p.name_id, pn.name")
 
 	if applyInventoryHosts {

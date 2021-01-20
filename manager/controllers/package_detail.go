@@ -5,19 +5,8 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	"net/http"
 )
-
-func singlePackageQuery(pkgName string) *gorm.DB {
-	return database.Db.Table("package pkg").Select("*").
-		Joins("JOIN package_name pn ON pkg.name_id = pn.id").
-		Joins("JOIN (SELECT id, name as adv_id, public_date FROM advisory_metadata) as adv ON pkg.advisory_id = adv.id").
-		Joins("JOIN (SELECT id, value as description FROM strings) as "+
-			"string_descr ON pkg.description_hash = string_descr.id").
-		Joins("JOIN (SELECT id, value as summary FROM strings) as string_sum ON pkg.summary_hash = string_sum.id").
-		Where("pn.name = ?", pkgName)
-}
 
 func packageNameIsValid(packageName string) bool {
 	var packageNames []models.PackageName
@@ -41,12 +30,14 @@ type PackageDetailItem struct {
 }
 
 type PackageDetailAttributes struct {
-	Description string `json:"description"`
-	Summary     string `json:"summary"`
-	Name        string `json:"name"`
-	EVRA        string `json:"version"`
-	AdvID       string `json:"advisory_id"`
+	Description string `json:"description" query:"descr.value"`
+	Summary     string `json:"summary" query:"sum.value"`
+	Name        string `json:"name" query:"pn.name"`
+	EVRA        string `json:"version" query:"p.evra"`
+	AdvID       string `json:"advisory_id" query:"am.name"`
 }
+
+var PackageSelect = database.MustGetSelect(&PackageDetailAttributes{})
 
 func packageLatestHandler(c *gin.Context, packageName string) {
 	if !packageNameIsValid(packageName) {
@@ -54,9 +45,9 @@ func packageLatestHandler(c *gin.Context, packageName string) {
 		return
 	}
 
-	query := singlePackageQuery(packageName)
+	query := database.PackageByName(database.Db, packageName)
 	var pkg PackageDetailAttributes
-	err := query.Order("adv.public_date DESC").Limit(1).Find(&pkg).Error
+	err := query.Select(PackageSelect).Order("am.public_date DESC").Limit(1).Find(&pkg).Error
 	if err != nil {
 		LogAndRespNotFound(c, err, "package not found")
 		return
@@ -79,9 +70,9 @@ func packageEvraHandler(c *gin.Context, nevra *utils.Nevra) {
 		return
 	}
 
-	query := singlePackageQuery(nevra.Name)
+	query := database.PackageByName(database.Db, nevra.Name)
 	var pkg PackageDetailAttributes
-	err := query.Where("pkg.evra = ?", nevra.EVRAString()).Find(&pkg).Error
+	err := query.Select(PackageSelect).Where("p.evra = ?", nevra.EVRAString()).Find(&pkg).Error
 	if err != nil {
 		LogAndRespNotFound(c, err, "package not found")
 		return
