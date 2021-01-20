@@ -18,51 +18,53 @@ func sendReevaluationMessages() error {
 		return nil
 	}
 
-	var inventoryIDs []string
+	var inventoryAIDs []inventoryAID
 	var err error
 
 	if enabledRepoBasedReeval {
-		inventoryIDs, err = getCurrentRepoBasedInventoryIDs()
+		inventoryAIDs, err = getCurrentRepoBasedInventoryIDs()
 	} else {
-		inventoryIDs, err = getAllInventoryIDs()
+		inventoryAIDs, err = getAllInventoryIDs()
 	}
 	if err != nil {
 		return err
 	}
 
-	for i := 0; i < len(inventoryIDs); i += BatchSize {
+	for i := 0; i < len(inventoryAIDs); i += BatchSize {
 		end := i + BatchSize
-		if end > len(inventoryIDs) {
-			end = len(inventoryIDs)
+		if end > len(inventoryAIDs) {
+			end = len(inventoryAIDs)
 		}
-		sendMessages(base.Context, inventoryIDs[i:end]...)
+		sendMessages(base.Context, inventoryAIDs[i:end]...)
 	}
-	utils.Log("count", len(inventoryIDs)).Info("systems sent to re-calc")
+	utils.Log("count", len(inventoryAIDs)).Info("systems sent to re-calc")
 	return nil
 }
 
-func getAllInventoryIDs() ([]string, error) {
-	var inventoryIDs []string
+func getAllInventoryIDs() ([]inventoryAID, error) {
+	var inventoryAIDs []inventoryAID
 	err := database.Db.Model(&models.SystemPlatform{}).
-		Pluck("inventory_id", &inventoryIDs).Error
+		Select("inventory_id, rh_account_id").
+		Scan(&inventoryAIDs).Error
 	if err != nil {
 		return nil, err
 	}
-	return inventoryIDs, nil
+	return inventoryAIDs, nil
 }
 
-func sendMessages(ctx context.Context, inventoryIDs ...string) {
+func sendMessages(ctx context.Context, inventoryAIDs ...inventoryAID) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageSendDuration)
 
-	events := make([]mqueue.PlatformEvent, len(inventoryIDs))
+	events := make([]mqueue.PlatformEvent, len(inventoryAIDs))
 
 	now := base.Rfc3339Timestamp(time.Now())
 
-	for i, id := range inventoryIDs {
+	for i, aid := range inventoryAIDs {
 		events[i] = mqueue.PlatformEvent{
 			Timestamp: &now,
-			ID:        id,
+			ID:        aid.InventoryID,
+			AccountID: aid.RhAccountID,
 		}
 	}
 

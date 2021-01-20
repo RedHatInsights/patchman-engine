@@ -11,7 +11,7 @@ import (
 
 const LastEvalRepoBased = "last_eval_repo_based"
 
-func getCurrentRepoBasedInventoryIDs() ([]string, error) {
+func getCurrentRepoBasedInventoryIDs() ([]inventoryAID, error) {
 	lastRepoBaseEval, err := getLastRepobasedEvalTms()
 	if err != nil {
 		return nil, err
@@ -22,14 +22,14 @@ func getCurrentRepoBasedInventoryIDs() ([]string, error) {
 		return nil, err
 	}
 
-	inventoryIDs, err := getRepoBasedInventoryIDs(updateRepos)
+	inventoryAIDs, err := getRepoBasedInventoryIDs(updateRepos)
 	if err != nil {
 		return nil, err
 	}
 
 	updateRepoBaseEvalTimestamp(time.Now())
 
-	return inventoryIDs, nil
+	return inventoryAIDs, nil
 }
 
 func getLastRepobasedEvalTms() (*time.Time, error) {
@@ -62,22 +62,28 @@ func updateRepoBaseEvalTimestampStr(value string) error {
 	return err
 }
 
-func getRepoBasedInventoryIDs(repos []string) ([]string, error) {
-	var intentoryIDs []string
+type inventoryAID struct {
+	InventoryID string
+	RhAccountID int
+}
+
+func getRepoBasedInventoryIDs(repos []string) ([]inventoryAID, error) {
+	var ids []inventoryAID
 	if len(repos) == 0 {
-		return intentoryIDs, nil
+		return ids, nil
 	}
 
 	err := database.Db.Table("system_repo sr").
 		Joins("JOIN repo ON repo.id = sr.repo_id").
-		Joins("JOIN system_platform sp ON sp.id = sr.system_id").
+		Joins("JOIN system_platform sp ON  sp.rh_account_id = sr.rh_account_id AND sp.id = sr.system_id").
 		Where("repo.name IN (?)", repos).
 		Order("inventory_id ASC").
-		Pluck("distinct inventory_id", &intentoryIDs).Error
+		Select("distinct sp.inventory_id, sp.rh_account_id").
+		Scan(&ids).Error
 	if err != nil {
 		return nil, err
 	}
-	return intentoryIDs, nil
+	return ids, nil
 }
 
 //nolint unused
