@@ -559,7 +559,8 @@ func getPatchedAdvisories(reported map[string]bool, stored map[string]models.Sys
 func updateSystemAdvisoriesWhenPatched(tx *gorm.DB, system *models.SystemPlatform, advisoryIDs []int,
 	whenPatched *time.Time) error {
 	err := tx.Model(models.SystemAdvisories{}).
-		Where("system_id = ? AND advisory_id IN (?)", system.ID, advisoryIDs).
+		Where("system_id = ? AND rh_account_id = ? AND advisory_id IN (?)",
+			system.ID, system.RhAccountID, advisoryIDs).
 		Update("when_patched", whenPatched).Error
 	if err != nil {
 		return err
@@ -652,8 +653,9 @@ func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
 
 	newSystemAdvisories := SystemAdvisoryMap{}
 	var data []models.SystemAdvisories
-	err = tx.Preload("Advisory").Find(&data, "system_id = ? AND (advisory_id IN (?) OR advisory_id in (?))",
-		system.ID, unpatched, patched).Error
+	err = tx.Preload("Advisory").
+		Find(&data, "system_id = ? AND rh_account_id = ? AND (advisory_id IN (?) OR advisory_id in (?))",
+			system.ID, system.RhAccountID, unpatched, patched).Error
 
 	if err != nil {
 		return nil, err
