@@ -32,7 +32,11 @@ func TestSingleSystemStale(t *testing.T) {
 		systems[0].StaleWarningTimestamp = &staleDate
 		assert.NoError(t, database.Db.Save(&systems[0]).Error)
 
-		nMarked, err := markSystemsStale(database.Db)
+		nMarked, err := markSystemsStale(database.Db, 0)
+		assert.Nil(t, err)
+		assert.Equal(t, 0, nMarked)
+
+		nMarked, err = markSystemsStale(database.Db, 1)
 		assert.Nil(t, err)
 		assert.Equal(t, 1, nMarked)
 
@@ -82,7 +86,7 @@ func TestMarkSystemsStale(t *testing.T) {
 	for i := range systems {
 		assert.NoError(t, database.Db.Save(&systems[i]).Error)
 	}
-	nMarked, err := markSystemsStale(database.Db)
+	nMarked, err := markSystemsStale(database.Db, 500)
 	assert.Nil(t, err)
 	assert.Equal(t, 14, nMarked)
 

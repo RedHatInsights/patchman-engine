@@ -39,7 +39,7 @@ func RunSystemCulling() {
 
 			if enableSystemStaling {
 				// marking systems as "stale"
-				nMarked, err := markSystemsStale(tx)
+				nMarked, err := markSystemsStale(tx, deleteCulledSystemsLimit)
 				if err != nil {
 					return errors.Wrap(err, "Mark stale")
 				}
@@ -69,9 +69,9 @@ func deleteCulledSystems(tx *gorm.DB, limitDeleted int) (nDeleted int, err error
 	return nDeleted, err
 }
 
-func markSystemsStale(tx *gorm.DB) (nMarked int, err error) {
+func markSystemsStale(tx *gorm.DB, markedLimit int) (nMarked int, err error) {
 	var nMarkedArr []int
-	err = tx.Raw("select mark_stale_systems()").
+	err = tx.Raw("select mark_stale_systems(?)", markedLimit).
 		Pluck("mark_stale_systems", &nMarkedArr).Error
 	if len(nMarkedArr) > 0 {
 		nMarked = nMarkedArr[0]
