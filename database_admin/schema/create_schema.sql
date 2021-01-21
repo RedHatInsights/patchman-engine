@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (57, false);
+VALUES (58, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -398,60 +398,48 @@ BEGIN
 END;
 $delete_system$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION delete_systems(ids INT[])
+CREATE OR REPLACE FUNCTION delete_systems(inventory_ids UUID[])
     RETURNS INTEGER
 AS
 $$
 DECLARE
-    system_ids INT[];
-    tmp_cnt    INTEGER;
+    tmp_cnt INTEGER;
 BEGIN
-    system_ids := ARRAY(
-            SELECT id
-            FROM system_platform
-            WHERE id = ANY (ids)
-                FOR UPDATE OF system_platform
-        );
 
-    UPDATE system_platform sp
-    SET opt_out = true
-    WHERE id = ANY (ids);
-
-    GET DIAGNOSTICS tmp_cnt = row_count;
-    RAISE NOTICE 'Marked systems %', text(tmp_cnt);
-
-
-    DELETE
-    FROM system_advisories
-    WHERE system_id = ANY (system_ids);
-
-    GET DIAGNOSTICS tmp_cnt = row_count;
-    RAISE NOTICE 'Deleted system_advisories %', text(tmp_cnt);
-
-
-    DELETE
-    FROM system_repo
-    WHERE system_id = ANY (system_ids);
-
-    GET DIAGNOSTICS tmp_cnt = row_count;
-    RAISE NOTICE 'Deleted system_repos %', text(tmp_cnt);
-
-
-    DELETE
-    FROM system_package
-    WHERE system_id = ANY (system_ids);
-
-    GET DIAGNOSTICS tmp_cnt = row_count;
-    RAISE NOTICE 'Deleted system_packages %', text(tmp_cnt);
-
-
-    DELETE
-    FROM system_platform
-    WHERE id = ANY (system_ids);
-
-    GET DIAGNOSTICS tmp_cnt = row_count;
-    RAISE NOTICE 'Deleted system_platform %', text(tmp_cnt);
-
+    WITH systems as (
+        SELECT rh_account_id, id
+        FROM system_platform
+        WHERE inventory_id = ANY (inventory_ids)
+        ORDER BY rh_account_id, id FOR UPDATE OF system_platform),
+         marked as (
+             UPDATE system_platform sp
+                 SET opt_out = true
+                 WHERE (rh_account_id, id) in (select rh_account_id, id from systems)
+         ),
+         advisories as (
+             DELETE
+                 FROM system_advisories
+                     WHERE (rh_account_id, system_id) in (select rh_account_id, id from systems)
+         ),
+         repos as (
+             DELETE
+                 FROM system_repo
+                     WHERE (rh_account_id, system_id) in (select rh_account_id, id from systems)
+         ),
+         packages as (
+             DELETE
+                 FROM system_package
+                     WHERE (rh_account_id, system_id) in (select rh_account_id, id from systems)
+         ),
+         deleted as (
+             DELETE
+                 FROM system_platform
+                     WHERE (rh_account_id, id) in (select rh_account_id, id from systems)
+                     RETURNING id
+         )
+    SELECT count(*)
+    FROM deleted
+    INTO tmp_cnt;
 
     RETURN tmp_cnt;
 END
@@ -462,10 +450,10 @@ CREATE OR REPLACE FUNCTION delete_culled_systems(delete_limit INTEGER)
 AS
 $fun$
 DECLARE
-    ids INTEGER[];
+    ids UUID[];
 BEGIN
     ids := ARRAY(
-            SELECT id
+            SELECT inventory_id
             FROM system_platform
             WHERE culled_timestamp < now()
             ORDER BY id
@@ -475,7 +463,7 @@ BEGIN
 END;
 $fun$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION mark_stale_systems()
+CREATE OR REPLACE FUNCTION mark_stale_systems(mark_limit integer)
     RETURNS INTEGER
 AS
 $fun$
@@ -488,12 +476,13 @@ BEGIN
         WHERE stale_warning_timestamp < now()
           AND stale = false
         ORDER BY rh_account_id, id FOR UPDATE OF system_platform
-        )
-        UPDATE system_platform sp
-           SET stale = true
-          FROM ids
-         WHERE sp.rh_account_id = ids.rh_account_id
-           AND sp.id = ids.id;
+        LIMIT mark_limit
+    )
+    UPDATE system_platform sp
+    SET stale = true
+    FROM ids
+    WHERE sp.rh_account_id = ids.rh_account_id
+      AND sp.id = ids.id;
     GET DIAGNOSTICS marked = ROW_COUNT;
     RETURN marked;
 END;
@@ -664,7 +653,6 @@ SELECT create_table_partition_triggers('system_platform_on_update',
 
 CREATE INDEX IF NOT EXISTS system_platform_inventory_id_idx
     ON system_platform (inventory_id);
-
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_platform TO listener;
 -- evaluator needs to update last_evaluation
