@@ -25,21 +25,22 @@ var SystemOpts = ListOpts{
 }
 
 type SystemDBLookup struct {
-	ID string `query:"sp.inventory_id"`
+	ID string `query:"sp.inventory_id" gorm:"column:inventory_id"`
 	SystemItemAttributes
 }
 
+//nolint: lll
 type SystemItemAttributes struct {
-	DisplayName    string     `json:"display_name" csv:"display_name" query:"sp.display_name"`
-	LastEvaluation *time.Time `json:"last_evaluation" csv:"last_evaluation" query:"sp.last_evaluation"`
-	LastUpload     *time.Time `json:"last_upload" csv:"last_upload" query:"sp.last_upload"`
-	RhsaCount      int        `json:"rhsa_count" csv:"rhsa_count" query:"sp.advisory_sec_count_cache"`
-	RhbaCount      int        `json:"rhba_count" csv:"rhba_count" query:"sp.advisory_bug_count_cache"`
-	RheaCount      int        `json:"rhea_count" csv:"rhea_count" query:"sp.advisory_enh_count_cache"`
-	Stale          bool       `json:"stale" csv:"stale" query:"sp.stale"`
+	DisplayName    string     `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name"`
+	LastEvaluation *time.Time `json:"last_evaluation" csv:"last_evaluation" query:"sp.last_evaluation" gorm:"column:last_evaluation"`
+	LastUpload     *time.Time `json:"last_upload" csv:"last_upload" query:"sp.last_upload" gorm:"column:last_upload"`
+	RhsaCount      int        `json:"rhsa_count" csv:"rhsa_count" query:"sp.advisory_sec_count_cache" gorm:"column:advisory_sec_count_cache"`
+	RhbaCount      int        `json:"rhba_count" csv:"rhba_count" query:"sp.advisory_bug_count_cache" gorm:"column:advisory_bug_count_cache"`
+	RheaCount      int        `json:"rhea_count" csv:"rhea_count" query:"sp.advisory_enh_count_cache" gorm:"column:advisory_enh_count_cache"`
+	Stale          bool       `json:"stale" csv:"stale" query:"sp.stale" gorm:"column:stale"`
 
-	PackagesInstalled int `json:"packages_installed" csv:"packages_installed" query:"sp.packages_installed"`
-	PackagesUpdatable int `json:"packages_updatable" csv:"packages_updatable" query:"sp.packages_updatable"`
+	PackagesInstalled int `json:"packages_installed" csv:"packages_installed" query:"sp.packages_installed" gorm:"column:packages_installed"`
+	PackagesUpdatable int `json:"packages_updatable" csv:"packages_updatable" query:"sp.packages_updatable" gorm:"column:packages_updatable"`
 }
 
 type SystemItem struct {

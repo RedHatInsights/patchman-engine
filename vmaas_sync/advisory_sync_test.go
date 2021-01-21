@@ -119,7 +119,8 @@ func TestParseAdvisories(t *testing.T) {
 	assert.Equal(t, "URL", *adv.URL)
 	assert.Equal(t, "SYN", adv.Synopsis)
 	assert.Equal(t, 2, adv.AdvisoryTypeID)
-	cves, _ := json.Marshal(adv.CveList)
+	js := json.RawMessage(string(adv.CveList))
+	cves, _ := json.Marshal(js)
 	assert.Equal(t, string(cves), `["CVE-1","CVE-2","CVE-3"]`)
 }
 

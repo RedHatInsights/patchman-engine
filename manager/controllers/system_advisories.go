@@ -28,11 +28,11 @@ type SystemAdvisoriesDBLookup struct {
 
 // nolint: lll
 type SystemAdvisoryItemAttributes struct {
-	Description  string    `json:"description" csv:"description" query:"am.description"`
+	Description  string    `json:"description" csv:"description" query:"am.description" gorm:"column:description"`
 	PublicDate   time.Time `json:"public_date" csv:"public_date" query:"am.public_date" gorm:"column:public_date"`
-	Synopsis     string    `json:"synopsis" csv:"synopsis" query:"am.synopsis"`
+	Synopsis     string    `json:"synopsis" csv:"synopsis" query:"am.synopsis" gorm:"column:synopsis"`
 	AdvisoryType int       `json:"advisory_type" csv:"advisory_type" query:"am.advisory_type_id" gorm:"column:advisory_type"`
-	Severity     *int      `json:"severity,omitempty" csv:"severity" query:"am.severity_id"`
+	Severity     *int      `json:"severity,omitempty" csv:"severity" query:"am.severity_id" gorm:"column:severity"`
 }
 
 type SystemAdvisoryItem struct {

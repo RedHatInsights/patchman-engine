@@ -102,7 +102,8 @@ func parseCVEs(jsonb []byte) ([]string, error) {
 		return []string{}, nil
 	}
 
-	b, err := json.Marshal(jsonb)
+	js := json.RawMessage(string(jsonb))
+	b, err := json.Marshal(js)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +121,8 @@ func parsePackages(jsonb []byte) (map[string]string, error) {
 		return map[string]string{}, nil
 	}
 
-	b, err := json.Marshal(jsonb)
+	js := json.RawMessage(string(jsonb))
+	b, err := json.Marshal(js)
 	if err != nil {
 		return nil, err
 	}
