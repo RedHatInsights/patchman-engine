@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (54, false);
+VALUES (55, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -660,6 +660,10 @@ SELECT create_table_partition_triggers('system_platform_on_update',
                                        $$AFTER UPDATE$$,
                                        'system_platform',
                                        $$FOR EACH ROW EXECUTE PROCEDURE on_system_update()$$);
+
+CREATE INDEX IF NOT EXISTS system_platform_inventory_id_idx
+    ON system_platform (inventory_id);
+
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_platform TO listener;
 -- evaluator needs to update last_evaluation
