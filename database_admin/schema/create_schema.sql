@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (55, false);
+VALUES (56, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -362,6 +362,7 @@ BEGIN
     SELECT id, rh_account_id
     FROM system_platform
     WHERE inventory_id = inventory_id_in
+    LIMIT 1
         FOR UPDATE OF system_platform
     INTO v_system_id, v_account_id;
 
