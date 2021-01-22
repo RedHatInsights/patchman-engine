@@ -174,8 +174,11 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params 
 		return nil, nil, nil, errors.Wrap(err, "filters applying failed")
 	}
 
+	// Following line needs to be Debug and Unscoped,
+	// if not, the final query fails with missing FROM-clause entry for table
+	// SELECT "advisory_metadata am"."id","advisory_metadata am"."description" ...
 	var total int64
-	err = tx.Unscoped().Select("COUNT(*)").Error
+	err = tx.Debug().Unscoped().Select("COUNT (*)").Find(&total).Error
 	if err != nil {
 		LogAndRespError(c, err, "Database connection error")
 		return nil, nil, nil, err
