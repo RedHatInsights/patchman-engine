@@ -874,40 +874,6 @@
                         "RhIdentity": []
                     }
                 ]
-            },
-            "post": {
-                "summary": "View advisory-system pairs for selected systems and advisories",
-                "description": "View advisory-system pairs for selected systems and advisories",
-                "operationId": "viewSystemsAdvisories",
-                "requestBody": {
-                    "description": "Request body",
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/controllers.SystemsAdvisoriesRequest"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/controllers.AdvisoriesSystemsResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "RhIdentity": []
-                    }
-                ],
-                "x-codegen-request-body-name": "body"
             }
         },
         "/api/patch/v1/packages/{package_name}": {
@@ -1495,6 +1461,78 @@
                         "RhIdentity": []
                     }
                 ]
+            }
+        },
+        "/api/patch/v1/views/advisories/systems": {
+            "post": {
+                "summary": "View advisory-system pairs for selected systems and advisories",
+                "description": "View advisory-system pairs for selected systems and advisories",
+                "operationId": "viewAdvisoriesSystems",
+                "requestBody": {
+                    "description": "Request body",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controllers.SystemsAdvisoriesRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.AdvisoriesSystemsResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ],
+                "x-codegen-request-body-name": "body"
+            }
+        },
+        "/api/patch/v1/views/systems/advisories": {
+            "post": {
+                "summary": "View system-advisory pairs for selected systems and advisories",
+                "description": "View system-advisory pairs for selected systems and advisories",
+                "operationId": "viewSystemsAdvisories",
+                "requestBody": {
+                    "description": "Request body",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controllers.SystemsAdvisoriesRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.SystemsAdvisoriesResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ],
+                "x-codegen-request-body-name": "body"
             }
         }
     },
