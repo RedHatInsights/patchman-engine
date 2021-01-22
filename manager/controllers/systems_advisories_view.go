@@ -55,7 +55,7 @@ func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryNa
 // @Produce  json
 // @Param    body    body    SystemsAdvisoriesRequest true "Request body"
 // @Success 200 {object} SystemsAdvisoriesResponse
-// @Router /api/patch/v1/packages/ [post]
+// @Router /api/patch/v1/views/systems/advisories [post]
 func PostSystemsAdvisories(c *gin.Context) {
 	var req SystemsAdvisoriesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -80,13 +80,13 @@ func PostSystemsAdvisories(c *gin.Context) {
 
 // @Summary View advisory-system pairs for selected systems and advisories
 // @Description View advisory-system pairs for selected systems and advisories
-// @ID viewSystemsAdvisories
+// @ID viewAdvisoriesSystems
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
 // @Param    body    body    SystemsAdvisoriesRequest true "Request body"
 // @Success 200 {object} AdvisoriesSystemsResponse
-// @Router /api/patch/v1/packages/ [post]
+// @Router /api/patch/v1/views/advisories/systems [post]
 func PostAdvisoriesSystems(c *gin.Context) {
 	var req SystemsAdvisoriesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
