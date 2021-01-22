@@ -81,9 +81,9 @@ func packageEvraHandler(c *gin.Context, nevra *utils.Nevra) {
 
 	query := singlePackageQuery(nevra.Name)
 	var pkg PackageDetailAttributes
-	err := query.Where("pkg.evra = ?", nevra.EVRAString()).Find(&pkg).Error
-	if err != nil {
-		LogAndRespNotFound(c, err, "package not found")
+	rowsReturned := query.Where("pkg.evra = ?", nevra.EVRAString()).Find(&pkg).RowsAffected
+	if rowsReturned == 0 {
+		LogAndRespNotFound(c, gorm.ErrRecordNotFound, "package not found")
 		return
 	}
 
