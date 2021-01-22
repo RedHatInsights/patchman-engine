@@ -18,8 +18,8 @@ data:
       "editable": true,
       "gnetId": null,
       "graphTooltip": 0,
-      "id": 96,
-      "iteration": 1602516051723,
+      "id": 149,
+      "iteration": 1611306072846,
       "links": [],
       "panels": [
         {
@@ -46,6 +46,12 @@ data:
             "#299c46"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -77,7 +83,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -129,6 +134,12 @@ data:
           ],
           "datasource": "$datasource",
           "decimals": 2,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "percentunit",
           "gauge": {
             "maxValue": 100,
@@ -160,7 +171,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -210,6 +220,12 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -241,7 +257,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -291,6 +306,12 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -322,7 +343,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -372,6 +392,12 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -403,7 +429,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -453,6 +478,12 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -484,7 +515,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -534,6 +564,12 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -565,7 +601,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -607,6 +642,94 @@ data:
         },
         {
           "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": false,
+          "colors": [
+            "#299c46",
+            "rgba(237, 129, 40, 0.89)",
+            "#d44a3a"
+          ],
+          "datasource": "$datasource",
+          "description": "Messages processed using Listener",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
+          "format": "none",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 3,
+            "x": 21,
+            "y": 1
+          },
+          "id": 50,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "sum(patchman_engine_listener_kafka_message_received{event=~\"$event\"})",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": "0.1,3",
+          "title": "Listener messages",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "delta"
+        },
+        {
+          "cacheTimeout": null,
           "colorBackground": true,
           "colorValue": false,
           "colors": [
@@ -616,6 +739,12 @@ data:
           ],
           "datasource": "$datasource",
           "decimals": 2,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "percentunit",
           "gauge": {
             "maxValue": 100,
@@ -647,7 +776,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -698,6 +826,12 @@ data:
           ],
           "datasource": "$datasource",
           "decimals": 2,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "percentunit",
           "gauge": {
             "maxValue": 100,
@@ -729,7 +863,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -771,7 +904,7 @@ data:
         },
         {
           "cacheTimeout": null,
-          "colorBackground": false,
+          "colorBackground": true,
           "colorValue": false,
           "colors": [
             "#299c46",
@@ -781,6 +914,12 @@ data:
           "datasource": "$datasource",
           "decimals": 2,
           "description": "Build version running in this environment.",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "percentunit",
           "gauge": {
             "maxValue": 100,
@@ -795,7 +934,7 @@ data:
             "x": 6,
             "y": 4
           },
-          "id": 70,
+          "id": 74,
           "interval": null,
           "links": [],
           "mappingType": 1,
@@ -834,6 +973,7 @@ data:
             {
               "expr": "sum(patchman_engine_core_info{namespace=~\"patchman-engine$namespace\"}) by (version)",
               "format": "table",
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "",
               "refId": "A"
@@ -862,7 +1002,14 @@ data:
             "#d44a3a"
           ],
           "datasource": "$datasource",
+          "decimals": 2,
           "description": "This is to ensure that all components are running in the same version.",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -877,7 +1024,7 @@ data:
             "x": 9,
             "y": 4
           },
-          "id": 71,
+          "id": 75,
           "interval": null,
           "links": [],
           "mappingType": 1,
@@ -911,11 +1058,12 @@ data:
             "lineColor": "rgb(31, 120, 193)",
             "show": false
           },
-          "tableColumn": "Value",
+          "tableColumn": "",
           "targets": [
             {
               "expr": "count(sum(patchman_engine_core_info{namespace=~\"patchman-engine$namespace\"}) by (version))",
               "format": "table",
+              "interval": "",
               "intervalFactor": 1,
               "legendFormat": "",
               "refId": "A"
@@ -932,7 +1080,7 @@ data:
               "value": "null"
             }
           ],
-          "valueName": "delta"
+          "valueName": "current"
         },
         {
           "cacheTimeout": null,
@@ -945,6 +1093,12 @@ data:
           ],
           "datasource": "$datasource",
           "description": "Systems evaluated using component \"patchman-engine-evaluator-upload\".",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -976,7 +1130,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -1027,6 +1180,12 @@ data:
           ],
           "datasource": "$datasource",
           "description": "Systems evaluated using component \"patchman-engine-evaluator-recalc\".",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -1058,7 +1217,6 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
-          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -1100,89 +1258,6 @@ data:
           "valueName": "delta"
         },
         {
-          "cacheTimeout": null,
-          "colorBackground": false,
-          "colorValue": false,
-          "colors": [
-            "#299c46",
-            "rgba(237, 129, 40, 0.89)",
-            "#d44a3a"
-          ],
-          "datasource": "$datasource",
-          "description": "Messages processed using Listener",
-          "format": "none",
-          "gauge": {
-            "maxValue": 100,
-            "minValue": 0,
-            "show": false,
-            "thresholdLabels": false,
-            "thresholdMarkers": true
-          },
-          "gridPos": {
-            "h": 3,
-            "w": 3,
-            "x": 21,
-            "y": 4
-          },
-          "id": 50,
-          "interval": null,
-          "links": [],
-          "mappingType": 1,
-          "mappingTypes": [
-            {
-              "name": "value to text",
-              "value": 1
-            },
-            {
-              "name": "range to text",
-              "value": 2
-            }
-          ],
-          "maxDataPoints": 100,
-          "nullPointMode": "connected",
-          "nullText": null,
-          "options": {},
-          "postfix": "",
-          "postfixFontSize": "50%",
-          "prefix": "",
-          "prefixFontSize": "50%",
-          "rangeMaps": [
-            {
-              "from": "null",
-              "text": "N/A",
-              "to": "null"
-            }
-          ],
-          "sparkline": {
-            "fillColor": "rgba(31, 118, 189, 0.18)",
-            "full": false,
-            "lineColor": "rgb(31, 120, 193)",
-            "show": false
-          },
-          "tableColumn": "",
-          "targets": [
-            {
-              "expr": "sum(patchman_engine_listener_kafka_message_received{event=~\"$event\"})",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ],
-          "thresholds": "0.1,3",
-          "title": "Listener messages",
-          "type": "singlestat",
-          "valueFontSize": "80%",
-          "valueMaps": [
-            {
-              "op": "=",
-              "text": "N/A",
-              "value": "null"
-            }
-          ],
-          "valueName": "delta"
-        },
-        {
           "collapsed": false,
           "datasource": null,
           "gridPos": {
@@ -1208,6 +1283,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1232,9 +1314,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1298,6 +1381,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1322,9 +1412,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1388,6 +1479,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1412,9 +1510,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1479,6 +1578,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1503,9 +1609,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1584,6 +1691,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1608,9 +1722,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1675,6 +1790,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1699,9 +1821,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1787,6 +1910,12 @@ data:
           },
           "dataFormat": "tsbuckets",
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "gridPos": {
             "h": 6,
             "w": 12,
@@ -1801,7 +1930,6 @@ data:
             "show": true
           },
           "links": [],
-          "options": {},
           "reverseYBuckets": false,
           "targets": [
             {
@@ -1847,6 +1975,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1871,9 +2006,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1942,6 +2078,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -1966,9 +2109,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2037,6 +2181,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -2061,9 +2212,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2149,6 +2301,12 @@ data:
           },
           "dataFormat": "tsbuckets",
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "gridPos": {
             "h": 6,
             "w": 12,
@@ -2163,7 +2321,6 @@ data:
             "show": true
           },
           "links": [],
-          "options": {},
           "reverseYBuckets": false,
           "targets": [
             {
@@ -2211,6 +2368,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -2235,9 +2399,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2309,6 +2474,12 @@ data:
           },
           "dataFormat": "tsbuckets",
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "gridPos": {
             "h": 6,
             "w": 12,
@@ -2323,7 +2494,6 @@ data:
             "show": true
           },
           "links": [],
-          "options": {},
           "reverseYBuckets": false,
           "targets": [
             {
@@ -2366,6 +2536,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -2390,9 +2567,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2456,6 +2634,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -2480,9 +2665,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2600,6 +2786,12 @@ data:
           },
           "dataFormat": "tsbuckets",
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
           "gridPos": {
             "h": 6,
             "w": 12,
@@ -2614,7 +2806,6 @@ data:
             "show": true
           },
           "links": [],
-          "options": {},
           "reverseYBuckets": false,
           "targets": [
             {
@@ -2655,6 +2846,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -2679,9 +2877,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2772,6 +2971,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -2796,9 +3002,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2876,6 +3083,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -2900,9 +3114,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -2979,6 +3194,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -3003,9 +3225,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -3075,6 +3298,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -3099,9 +3329,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -3171,6 +3402,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -3195,9 +3433,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -3214,11 +3453,27 @@ data:
               "refId": "A"
             },
             {
+              "expr": "sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_advisories_.*\"})",
+              "format": "time_series",
+              "interval": "",
+              "intervalFactor": 1,
+              "legendFormat": "system_advisories_sum",
+              "refId": "B"
+            },
+            {
               "expr": "sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_package_.*\"})",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "system_package_sum",
-              "refId": "B"
+              "refId": "C"
+            },
+            {
+              "expr": "sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_platform_.*\"})",
+              "format": "time_series",
+              "interval": "",
+              "intervalFactor": 1,
+              "legendFormat": "system_platform_sum",
+              "refId": "D"
             }
           ],
           "thresholds": [],
@@ -3289,6 +3544,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$rds_datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -3313,9 +3575,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -3386,6 +3649,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$rds_datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -3410,9 +3680,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -3491,6 +3762,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$rds_datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -3515,9 +3793,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -3609,6 +3888,13 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": "$rds_datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -3633,9 +3919,10 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "dataLinks": []
+            "alertThreshold": true
           },
           "percentage": false,
+          "pluginVersion": "7.2.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -3709,7 +3996,7 @@ data:
         }
       ],
       "refresh": false,
-      "schemaVersion": 22,
+      "schemaVersion": 26,
       "style": "dark",
       "tags": [],
       "templating": {
@@ -3719,7 +4006,7 @@ data:
             "auto_count": 30,
             "auto_min": "10s",
             "current": {
-              "selected": true,
+              "selected": false,
               "text": "5m",
               "value": "5m"
             },
@@ -3792,7 +4079,6 @@ data:
             "allValue": null,
             "current": {
               "selected": true,
-              "tags": [],
               "text": ".*",
               "value": ".*"
             },
@@ -3857,6 +4143,7 @@ data:
           },
           {
             "current": {
+              "selected": false,
               "text": "crcp01ue1-prometheus",
               "value": "crcp01ue1-prometheus"
             },
@@ -3874,6 +4161,7 @@ data:
           },
           {
             "current": {
+              "selected": false,
               "text": "app-sre-prod-01-prometheus",
               "value": "app-sre-prod-01-prometheus"
             },
@@ -3962,7 +4250,7 @@ data:
       "timezone": "",
       "title": "patchman-engine",
       "uid": "patch",
-      "version": 1
+      "version": 5
     }
 kind: ConfigMap
 metadata:
