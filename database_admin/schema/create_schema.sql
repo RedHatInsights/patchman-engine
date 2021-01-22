@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (56, false);
+VALUES (57, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -114,7 +114,7 @@ BEGIN
                  INNER JOIN system_advisories sa ON aad.advisory_id = sa.advisory_id
              -- Filter advisory_account_data only for advisories affectign this system & belonging to system account
         WHERE aad.rh_account_id = NEW.rh_account_id
-          AND sa.system_id = NEW.id
+          AND sa.system_id = NEW.id AND sa.rh_account_id = NEW.rh_account_id
           AND sa.when_patched IS NULL
         ORDER BY aad.advisory_id FOR UPDATE OF aad),
          -- Where count > 0, update existing rows
@@ -141,7 +141,7 @@ BEGIN
     INTO advisory_account_data (advisory_id, rh_account_id, systems_affected)
     SELECT sa.advisory_id, NEW.rh_account_id, 1
     FROM system_advisories sa
-    WHERE sa.system_id = NEW.id
+    WHERE sa.system_id = NEW.id AND sa.rh_account_id = NEW.rh_account_id
       AND sa.when_patched IS NULL
       AND change > 0
       -- We system_advisory pairs which don't already have rows in to_update_advisories
