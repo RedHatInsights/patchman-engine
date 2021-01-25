@@ -140,9 +140,22 @@ func extractTagsQueryString(c *gin.Context) string {
 	return strings.TrimSuffix(tagQ, "&")
 }
 
-//nolint: funlen
+//nolint: funlen, gofmt
 func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params ...string) (
 	*gorm.DB, *ListMeta, *Links, error) {
+	// Following line needs to be Debug and Unscoped,
+	// if not, the final query fails with missing FROM-clause entry for table
+	// SELECT "advisory_metadata am"."id","advisory_metadata am"."description" ...
+	var total int64
+	err := tx.Session(&gorm.Session{
+		WithConditions: true,
+		}).Unscoped().Select("COUNT (*)").Find(&total).Error
+	utils.Log().Info(total)
+	if err != nil {
+		LogAndRespError(c, err, "Database connection error")
+		return nil, nil, nil, err
+	}
+
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
@@ -172,16 +185,6 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params 
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
 		return nil, nil, nil, errors.Wrap(err, "filters applying failed")
-	}
-
-	// Following line needs to be Debug and Unscoped,
-	// if not, the final query fails with missing FROM-clause entry for table
-	// SELECT "advisory_metadata am"."id","advisory_metadata am"."description" ...
-	var total int64
-	err = tx.Debug().Unscoped().Select("COUNT (*)").Find(&total).Error
-	if err != nil {
-		LogAndRespError(c, err, "Database connection error")
-		return nil, nil, nil, err
 	}
 
 	if int64(offset) > total {
