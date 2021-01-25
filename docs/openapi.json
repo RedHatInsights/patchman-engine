@@ -1609,6 +1609,9 @@
                     "applicable_systems": {
                         "type": "integer"
                     },
+                    "cve_count": {
+                        "type": "integer"
+                    },
                     "description": {
                         "type": "string"
                     },
@@ -1647,6 +1650,9 @@
                         "type": "integer"
                     },
                     "applicable_systems": {
+                        "type": "integer"
+                    },
+                    "cve_count": {
                         "type": "integer"
                     },
                     "description": {
@@ -1886,6 +1892,9 @@
                 "type": "object",
                 "properties": {
                     "advisory_type": {
+                        "type": "integer"
+                    },
+                    "cve_count": {
                         "type": "integer"
                     },
                     "description": {

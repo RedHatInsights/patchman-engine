@@ -26,12 +26,14 @@ type SystemAdvisoriesDBLookup struct {
 	SystemAdvisoryItemAttributes
 }
 
+// nolint:lll
 type SystemAdvisoryItemAttributes struct {
 	Description  string    `json:"description" csv:"description" query:"am.description"`
 	PublicDate   time.Time `json:"public_date" csv:"public_date" query:"am.public_date"`
 	Synopsis     string    `json:"synopsis" csv:"synopsis" query:"am.synopsis"`
 	AdvisoryType int       `json:"advisory_type" csv:"advisory_type" query:"am.advisory_type_id"`
 	Severity     *int      `json:"severity,omitempty" csv:"severity" query:"am.severity_id"`
+	CveCount     int       `json:"cve_count" csv:"cve_count" query:"CASE WHEN jsonb_typeof(am.cve_list) = 'array' THEN jsonb_array_length(am.cve_list) ELSE 0 END"`
 }
 
 type SystemAdvisoryItem struct {

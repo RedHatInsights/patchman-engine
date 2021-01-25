@@ -39,7 +39,7 @@ func TestAdvisoriesExportCSV(t *testing.T) {
 	lines := strings.Split(body, "\n")
 
 	assert.Equal(t, 10, len(lines))
-	assert.Equal(t, lines[1], "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,,7")
+	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,,0,7", lines[1])
 }
 
 func TestAdvisoriesExportWrongFormat(t *testing.T) {
@@ -70,7 +70,7 @@ func TestAdvisoriesExportCSVFilter(t *testing.T) {
 	lines := strings.Split(body, "\n")
 
 	assert.Equal(t, 3, len(lines))
-	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,,7", lines[1])
+	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,,0,7", lines[1])
 	assert.Equal(t, "", lines[2])
 }
 

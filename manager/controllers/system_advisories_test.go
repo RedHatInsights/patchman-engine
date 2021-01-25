@@ -29,6 +29,7 @@ func TestSystemAdvisoriesDefault(t *testing.T) {
 	assert.Equal(t, 1, output.Data[0].Attributes.AdvisoryType)
 	assert.Equal(t, "2017-09-22 19:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
 	assert.Equal(t, "2017-09-22 19:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
+	assert.Equal(t, 0, output.Data[0].Attributes.CveCount)
 }
 
 func TestSystemAdvisoriesNotFound(t *testing.T) { //nolint:dupl
@@ -115,6 +116,7 @@ func TestSystemAdvisoriesSearch(t *testing.T) {
 	assert.Equal(t, "advisory", output.Data[0].Type)
 	assert.Equal(t, "adv-3-des", output.Data[0].Attributes.Description)
 	assert.Equal(t, "adv-3-syn", output.Data[0].Attributes.Synopsis)
+	assert.Equal(t, 2, output.Data[0].Attributes.CveCount)
 }
 
 func TestSystemAdvisoriesWrongOffset(t *testing.T) {
