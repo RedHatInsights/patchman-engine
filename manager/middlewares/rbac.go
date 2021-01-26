@@ -21,7 +21,12 @@ func makeClient(identity string) *rbac.APIClient {
 	return rbac.NewAPIClient(rbacConfig)
 }
 
-func isAccessGranted(c *gin.Context) bool {
+type rbacPerms struct {
+	Read  bool
+	Write bool
+}
+
+func isAccessGranted(c *gin.Context) rbacPerms {
 	client := makeClient(c.GetHeader("x-rh-identity"))
 	// Body is closed inside api method, don't know why liter is complaining
 	// nolint: bodyclose
@@ -37,16 +42,22 @@ func isAccessGranted(c *gin.Context) bool {
 			status = res.StatusCode
 		}
 		serviceErrorCnt.WithLabelValues("rbac", strconv.Itoa(status)).Inc()
-		return false
+		return rbacPerms{Read: false, Write: false}
 	}
-	// For now we either allow access or don't allow it
+
 	for _, a := range access.Data {
-		if a.Permission == "patch:*:*" {
-			return true
+		switch a.Permission {
+		case "patch:*:*":
+			return rbacPerms{Read: true, Write: true}
+		case "patch:*:read":
+			return rbacPerms{Read: true, Write: false}
+		case "patch:*:write":
+			return rbacPerms{Read: false, Write: true}
+		default:
 		}
 	}
 	utils.Log().Trace("Access denied by RBAC")
-	return false
+	return rbacPerms{Read: false, Write: false}
 }
 
 func RBAC() gin.HandlerFunc {
@@ -56,9 +67,19 @@ func RBAC() gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
-		if !isAccessGranted(c) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized,
-				utils.ErrorResponse{Error: "You don't have access to this application"})
+		grantedPerms := isAccessGranted(c)
+
+		switch c.Request.Method {
+		case "GET", "POST":
+			if grantedPerms.Read {
+				return
+			}
+		case "DELETE":
+			if grantedPerms.Write {
+				return
+			}
 		}
+		c.AbortWithStatusJSON(http.StatusUnauthorized,
+			utils.ErrorResponse{Error: "You don't have access to this application"})
 	}
 }
