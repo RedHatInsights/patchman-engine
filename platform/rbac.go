@@ -9,7 +9,7 @@ import (
 func rbacHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, rbac.OneOfAccessPagination{
 		Data: []rbac.Access{
-			{Permission: "patch:*:*"},
+			{Permission: "patch:*:read"},
 		},
 	})
 }
