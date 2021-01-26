@@ -59,8 +59,9 @@ func getCyndiData() (stats InventoryHostsStats, err error) {
 		return stats, err
 	}
 
-	err = database.Db.Table("(SELECT DISTINCT jsonb_array_elements(tags) FROM inventory.hosts) as t").
-		Count(&stats.UniqueTags).Error
+	err = database.Db.Table("(SELECT jsonb_array_elements(tags) as tag FROM inventory.hosts" +
+		" where jsonb_array_length(tags) > 0) as t").
+		Select("count(DISTINCT tag)").Count(&stats.UniqueTags).Error
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to update cyndi metrics")
 		return stats, err
