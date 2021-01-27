@@ -12,7 +12,7 @@ import (
 
 // @title Patchman-engine API
 // DO NOT EDIT version MANUALLY - this variable is modified by generate_docs.sh
-// @version  v1.6.0
+// @version  v1.6.2
 // @description Description here
 
 // @license.name GPLv3
