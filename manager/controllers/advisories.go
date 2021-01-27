@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"app/base/database"
-	// "app/base/utils"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -90,7 +89,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 	}
 
 	var advisories []AdvisoriesDBLookup
-	err = query.Find(&advisories).Error
+	err = query.Debug().Find(&advisories).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 	}

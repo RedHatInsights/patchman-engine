@@ -24,8 +24,8 @@ type AdvisoriesSystemsResponse struct {
 }
 
 type systemsAdvisoriesDBLoad struct {
-	SystemID   SystemID     `query:"sp.inventory_id"`
-	AdvisoryID AdvisoryName `query:"am.name"`
+	SystemID   SystemID     `query:"sp.inventory_id" gorm:"column:system_id"`
+	AdvisoryID AdvisoryName `query:"am.name" gorm:"column:advisory_id"`
 }
 
 var systemsAdvisoriesSelect = database.MustGetSelect(&systemsAdvisoriesDBLoad{})

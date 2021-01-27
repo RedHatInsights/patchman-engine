@@ -13,12 +13,13 @@ import (
 	"net/http"
 )
 
+//nolint: lll
 type SystemPackagesAttrs struct {
-	Name        string `json:"name" query:"pn.name"`
-	EVRA        string `json:"evra" query:"p.evra"`
-	Summary     string `json:"summary" query:"sum.value"`
-	Description string `json:"description" query:"descr.value"`
-	Updatable   bool   `json:"updatable" query:"(json_array_length(spkg.update_data::json) > 0)"`
+	Name        string `json:"name" query:"pn.name" gorm:"column:name"`
+	EVRA        string `json:"evra" query:"p.evra" gorm:"column:evra"`
+	Summary     string `json:"summary" query:"sum.value" gorm:"column:summary"`
+	Description string `json:"description" query:"descr.value" gorm:"column:description"`
+	Updatable   bool   `json:"updatable" query:"(json_array_length(spkg.update_data::json) > 0)" gorm:"column:updatable"`
 }
 
 type SystemPackageData struct {
@@ -42,7 +43,7 @@ var SystemPackagesOpts = ListOpts{
 
 type SystemPackageDBLoad struct {
 	SystemPackagesAttrs
-	Updates []byte `json:"updates" query:"spkg.update_data"`
+	Updates []byte `json:"updates" query:"spkg.update_data" gorm:"column:updates"`
 }
 
 func systemPackageQuery(account int, inventoryID string) *gorm.DB {
@@ -95,7 +96,7 @@ func SystemPackagesHandler(c *gin.Context) {
 		return
 	}
 
-	err = q.Find(&loaded).Error
+	err = q.Debug().Find(&loaded).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		LogAndRespNotFound(c, err, "inventory_id not found")
 		return
