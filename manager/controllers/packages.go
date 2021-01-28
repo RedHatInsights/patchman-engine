@@ -42,7 +42,7 @@ var queryItemSelect = database.MustGetSelect(&queryItem{})
 
 // nolint: lll
 func packagesQuery(c *gin.Context, acc int) (*gorm.DB, error) {
-	subQ := database.SystemPackages(database.Db, acc).
+	subQ := database.SystemPackagesShort(database.Db, acc).
 		Select(queryItemSelect).
 		Where("sp.stale = false").
 		Group("spkg.name_id")
