@@ -52,10 +52,6 @@ func systemPackageQuery(account int, inventoryID string) *gorm.DB {
 		Select(SystemPackagesSelect).
 		Where("sp.inventory_id = ?::uuid", inventoryID)
 
-	if applyInventoryHosts {
-		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
-	}
-
 	return query
 }
 

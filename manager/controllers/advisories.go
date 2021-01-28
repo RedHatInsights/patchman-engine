@@ -118,10 +118,6 @@ func buildAdvisoryAccountDataQuery(account int) *gorm.DB {
 		Where("sa.when_patched IS NULL").
 		Group("sp.rh_account_id, sa.advisory_id")
 
-	if applyInventoryHosts {
-		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
-	}
-
 	return query
 }
 

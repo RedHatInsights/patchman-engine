@@ -45,10 +45,6 @@ func packageSystemsQuery(acc int, nameIDs []int) *gorm.DB {
 		Where("sp.stale = false").
 		Where("p.id in (?)", nameIDs)
 
-	if applyInventoryHosts {
-		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
-	}
-
 	return query
 }
 
