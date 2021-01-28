@@ -38,9 +38,6 @@ func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryNa
 		Where("am.name in (?)", advisories).
 		Order("sp.inventory_id, am.id")
 
-	if applyInventoryHosts {
-		query = query.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
-	}
 	return query
 }
 
