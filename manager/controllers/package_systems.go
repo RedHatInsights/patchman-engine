@@ -43,7 +43,7 @@ func packageSystemsQuery(acc int, nameIDs []int) *gorm.DB {
 	query := database.SystemPackages(database.Db, acc).
 		Select(PackageSystemsSelect).
 		Where("sp.stale = false").
-		Where("p.id in (?)", nameIDs)
+		Where("spkg.name_id in (?)", nameIDs)
 
 	return query
 }

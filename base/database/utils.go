@@ -11,6 +11,12 @@ func SystemAdvisories(tx *gorm.DB, accountID int) *gorm.DB {
 		Joins("JOIN system_advisories sa on sa.system_id = sp.id AND sa.rh_account_id = ?", accountID)
 }
 
+func SystemPackagesShort(tx *gorm.DB, accountID int) *gorm.DB {
+	return Systems(tx, accountID).
+		Joins("JOIN system_package spkg on spkg.system_id = sp.id AND spkg.rh_account_id = ?", accountID).
+		Joins("JOIN package_name pn on pn.id = spkg.name_id")
+}
+
 func SystemPackages(tx *gorm.DB, accountID int) *gorm.DB {
 	return Systems(tx, accountID).
 		Joins("JOIN system_package spkg on spkg.system_id = sp.id AND spkg.rh_account_id = ?", accountID).
