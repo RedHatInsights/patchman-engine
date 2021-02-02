@@ -45,19 +45,20 @@ func isAccessGranted(c *gin.Context) rbacPerms {
 		return rbacPerms{Read: false, Write: false}
 	}
 
+	perms := rbacPerms{Read: false, Write: false}
 	for _, a := range access.Data {
 		switch a.Permission {
-		case "patch:*:*":
-			return rbacPerms{Read: true, Write: true}
-		case "patch:*:read":
-			return rbacPerms{Read: true, Write: false}
-		case "patch:*:write":
-			return rbacPerms{Read: false, Write: true}
+		case "patch:*:*", "patch:system:*":
+			perms.Read = true
+			perms.Write = true
+		case "patch:*:read", "patch:system:read":
+			perms.Read = true
+		case "patch:*:write", "patch:system:write":
+			perms.Write = true
 		default:
 		}
 	}
-	utils.Log().Trace("Access denied by RBAC")
-	return rbacPerms{Read: false, Write: false}
+	return perms
 }
 
 func RBAC() gin.HandlerFunc {
