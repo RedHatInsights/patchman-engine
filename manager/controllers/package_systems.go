@@ -39,11 +39,11 @@ func packagesByNameQuery(pkgName string) *gorm.DB {
 		Where("pn.name = ?", pkgName)
 }
 
-func packageSystemsQuery(acc int, nameIDs []int) *gorm.DB {
+func packageSystemsQuery(acc int, packageIDs []int) *gorm.DB {
 	query := database.SystemPackages(database.Db, acc).
 		Select(PackageSystemsSelect).
 		Where("sp.stale = false").
-		Where("spkg.name_id in (?)", nameIDs)
+		Where("spkg.package_id in (?)", packageIDs)
 
 	return query
 }
@@ -71,13 +71,13 @@ func PackageSystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	var nameIDs []int
-	if err := packagesByNameQuery(packageName).Pluck("p.id", &nameIDs).Error; err != nil {
+	var packageIDs []int
+	if err := packagesByNameQuery(packageName).Pluck("p.id", &packageIDs).Error; err != nil {
 		LogAndRespError(c, err, "database error")
 		return
 	}
 
-	query := packageSystemsQuery(account, nameIDs)
+	query := packageSystemsQuery(account, packageIDs)
 	query, _, err := ApplyTagsFilter(c, query, "sp.inventory_id")
 	if err != nil {
 		return

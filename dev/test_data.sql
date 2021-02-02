@@ -84,16 +84,16 @@ INSERT INTO system_repo (rh_account_id, system_id, repo_id) VALUES
 
 
 INSERT INTO package_name(id,name) VALUES
-(1, 'kernel'),
-(2, 'firefox'),
-(3, 'bash'),
-(4, 'curl'),
-(5, 'tar'),
-(6, 'systemd'),
-(7, 'sed'),
-(8, 'grep'),
-(9, 'which'),
-(10, 'passwd');
+(101, 'kernel'),
+(102, 'firefox'),
+(103, 'bash'),
+(104, 'curl'),
+(105, 'tar'),
+(106, 'systemd'),
+(107, 'sed'),
+(108, 'grep'),
+(109, 'which'),
+(110, 'passwd');
 
 INSERT INTO strings(id, value) VALUES
 ('1', 'kernel'),
@@ -108,24 +108,24 @@ INSERT INTO strings(id, value) VALUES
 ('10', 'passwd');
 
 INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_id) VALUES
-(1, 1, '5.6.13-200.fc31.x86_64', '1', '1', 1), -- kernel
-(2, 2, '76.0.1-1.fc31.x86_64', '2', '2', 1), -- firefox
-(3, 3, '4.4.19-8.el8_0.x86_64', '3', '3', 3), -- bas
-(4, 4, '7.61.1-8.el8.x86_64', '4', '4', 4), -- curl
-(5, 5, '1.30-4.el8.x86_64', '5', '5', 5), -- tar
-(6, 6, '239-13.el8_0.5.x86_64', '6', '6', 6), -- systemd
-(7, 7, '4.5-1.el8.x86_64', '7', '7', 7), -- sed
-(8, 8, '3.1-6.el8.x86_64', '8', '8', 8), -- grep
-(9, 9, '2.21-10.el8.x86_64', '9', '9', 9), -- which
-(10, 10, '0.80-2.el8.x86_64', '10', '10', 9), -- passwd
-(11, 1, '5.6.13-201.fc31.x86_64', '1', '1', 7); -- kernel
+(1, 101, '5.6.13-200.fc31.x86_64', '1', '1', 1), -- kernel
+(2, 102, '76.0.1-1.fc31.x86_64', '2', '2', 1), -- firefox
+(3, 103, '4.4.19-8.el8_0.x86_64', '3', '3', 3), -- bas
+(4, 104, '7.61.1-8.el8.x86_64', '4', '4', 4), -- curl
+(5, 105, '1.30-4.el8.x86_64', '5', '5', 5), -- tar
+(6, 106, '239-13.el8_0.5.x86_64', '6', '6', 6), -- systemd
+(7, 107, '4.5-1.el8.x86_64', '7', '7', 7), -- sed
+(8, 108, '3.1-6.el8.x86_64', '8', '8', 8), -- grep
+(9, 109, '2.21-10.el8.x86_64', '9', '9', 9), -- which
+(10, 110, '0.80-2.el8.x86_64', '10', '10', 9), -- passwd
+(11, 101, '5.6.13-201.fc31.x86_64', '1', '1', 7); -- kernel
 
 INSERT INTO system_package (rh_account_id, system_id, package_id, name_id, update_data) VALUES
-(3, 12, 1, 1, '[{"evra": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}]'),
-(3, 12, 2, 2,'[{"evra": "77.0.1-1.fc31-x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31-x86_64", "advisory": "RH-2"}]'),
-(3, 13, 3, 3, null),
-(3, 13, 4, 4, null),
-(3, 13, 1, 1, null);
+(3, 12, 1, 101, '[{"evra": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}]'),
+(3, 12, 2, 102,'[{"evra": "77.0.1-1.fc31-x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31-x86_64", "advisory": "RH-2"}]'),
+(3, 13, 3, 103, null),
+(3, 13, 4, 104, null),
+(3, 13, 1, 101, null);
 
 INSERT INTO timestamp_kv (name, value) VALUES
 ('last_eval_repo_based', '2018-04-05T01:23:45+02:00');
