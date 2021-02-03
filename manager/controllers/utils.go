@@ -223,6 +223,12 @@ func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) (*gorm.DB
 	return txWithSearch, fmt.Sprintf("search=%s", search)
 }
 
+type Tag struct {
+	Namespace *string
+	Key       string
+	Value     *string
+}
+
 func HasTags(c *gin.Context) bool {
 	if !enableCyndiTags {
 		return false
@@ -242,6 +248,45 @@ func HasTags(c *gin.Context) bool {
 	return hasTags
 }
 
+func ParseTag(tag string) (*Tag, error) {
+	matches := tagRegex.FindStringSubmatch(tag)
+	if len(matches) < 5 {
+		// We received an invalid tag
+		err := errors.Errorf(InvalidTagMsg, tag)
+		return nil, err
+	}
+	var res Tag
+	// Inventory performs similar check
+	if strings.ToLower(matches[1]) == "null" {
+		res.Namespace = nil
+	} else {
+		res.Namespace = &matches[1]
+	}
+	res.Key = matches[2]
+
+	if matches[4] == "" {
+		res.Value = nil
+	} else {
+		res.Value = &matches[4]
+	}
+	return &res, nil
+}
+
+func (t *Tag) ApplyTag(tx *gorm.DB) *gorm.DB {
+	ns := ""
+	if t.Namespace != nil {
+		ns = fmt.Sprintf(`"namespace": "%s",`, *t.Namespace)
+	}
+
+	v := ""
+	if t.Value != nil {
+		v = fmt.Sprintf(`, "value":"%s"`, *t.Value)
+	}
+
+	query := fmt.Sprintf(`[{%s "key": "%s" %s}]`, ns, t.Key, v)
+	return tx.Where("h.tags @> ?::jsonb", query)
+}
+
 // Filter systems by tags,
 func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool, error) {
 	if !enableCyndiTags {
@@ -255,22 +300,12 @@ func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB
 
 	tags := c.QueryArray("tags")
 	for _, t := range tags {
-		matches := tagRegex.FindStringSubmatch(t)
-		if len(matches) < 5 {
-			// We received an invalid tag
-			err := errors.Errorf(InvalidTagMsg, t)
+		tag, err := ParseTag(t)
+		if err != nil {
 			LogAndRespBadRequest(c, err, err.Error())
 			return tx, false, err
 		}
-		var tagJSON string
-		if matches[4] != "" {
-			// Checking for ns/key=value
-			tagJSON = fmt.Sprintf(`[{"namespace":"%s", "key": "%s", "value": "%s"}]`, matches[1], matches[2], matches[4])
-		} else {
-			// Checking for ns/key
-			tagJSON = fmt.Sprintf(`[{"namespace":"%s", "key": "%s"}]`, matches[1], matches[2])
-		}
-		subq = subq.Where(" h.tags @> ?::jsonb", tagJSON)
+		subq = tag.ApplyTag(subq)
 		applied = true
 	}
 
