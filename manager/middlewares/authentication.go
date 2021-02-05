@@ -37,6 +37,15 @@ func findAccount(c *gin.Context, identity *identity.Identity) bool {
 }
 
 func PublicAuthenticator() gin.HandlerFunc {
+	devModeEnabled := utils.GetBoolEnvOrDefault("ENABLE_DEV_MODE", false)
+	if devModeEnabled {
+		accountID := utils.GetIntEnvOrDefault("DEV_ACCOUNT_ID", 1)
+		return MockAuthenticator(accountID)
+	}
+	return headerAuthenticator()
+}
+
+func headerAuthenticator() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		identStr := c.GetHeader("x-rh-identity")
 		if identStr == "" {
@@ -75,6 +84,7 @@ func TurnpikeAuthenticator() gin.HandlerFunc {
 
 func MockAuthenticator(account int) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		utils.Log("account_id", account).Warn("using mocking account id")
 		c.Set(KeyAccount, account)
 		c.Next()
 	}
