@@ -45,6 +45,7 @@ func getAllInventoryIDs() ([]inventoryAID, error) {
 	var inventoryAIDs []inventoryAID
 	err := database.Db.Model(&models.SystemPlatform{}).
 		Select("inventory_id, rh_account_id").
+		Order("rh_account_id").
 		Scan(&inventoryAIDs).Error
 	if err != nil {
 		return nil, err

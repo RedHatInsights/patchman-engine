@@ -77,7 +77,7 @@ func getRepoBasedInventoryIDs(repos []string) ([]inventoryAID, error) {
 		Joins("JOIN repo ON repo.id = sr.repo_id").
 		Joins("JOIN system_platform sp ON  sp.rh_account_id = sr.rh_account_id AND sp.id = sr.system_id").
 		Where("repo.name IN (?)", repos).
-		Order("inventory_id ASC").
+		Order("sp.rh_account_id").
 		Select("distinct sp.inventory_id, sp.rh_account_id").
 		Scan(&ids).Error
 	if err != nil {
