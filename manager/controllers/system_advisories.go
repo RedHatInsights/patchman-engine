@@ -91,8 +91,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 
 	query := database.SystemAdvisoriesByInventoryID(database.Db, account, inventoryID).
 		Joins("JOIN advisory_metadata am on am.id = sa.advisory_id").
-		Select(SystemAdvisoriesSelect).
-		Where("sa.when_patched IS NULL")
+		Select(SystemAdvisoriesSelect)
 
 	path := fmt.Sprintf("/api/patch/v1/systems/%v/advisories", inventoryID)
 	query, meta, links, err := ListCommon(query, c, path, SystemAdvisoriesOpts)
