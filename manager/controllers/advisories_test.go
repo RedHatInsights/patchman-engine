@@ -106,6 +106,15 @@ func TestAdvisoriesOrder(t *testing.T) {
 	})
 }
 
+// Ensure patched systems (ids: {7,8}) are not counted
+func TestAdvisoriesPatchedMissing(t *testing.T) {
+	testAdvisoriesOk(t, "GET", "/?sort=id", func(output AdvisoriesResponse) {
+		assert.Equal(t, 8, len(output.Data))
+		assert.Equal(t, "RH-1", output.Data[0].ID)
+		assert.Equal(t, 6, output.Data[0].Attributes.ApplicableSystems) //
+	})
+}
+
 func TestAdvisoriesFilter(t *testing.T) {
 	testAdvisoriesOk(t, "GET", "/?sort=id&filter[advisory_type]=1", func(output AdvisoriesResponse) {
 		assert.Equal(t, 3, len(output.Data))
