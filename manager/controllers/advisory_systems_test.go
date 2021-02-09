@@ -21,7 +21,7 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	assert.Equal(t, 200, w.Code)
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, 8, len(output.Data))
+	assert.Equal(t, 6, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2020-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
@@ -55,7 +55,7 @@ func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
 	assert.Equal(t, 200, w.Code)
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, 3, len(output.Data))
+	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000006", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
@@ -119,7 +119,7 @@ func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 
 	assert.Equal(t, 200, w.Code)
-	assert.Equal(t, 7, len(output.Data))
+	assert.Equal(t, 5, len(output.Data))
 }
 
 func TestAdvisorySystemsTagsMultiple(t *testing.T) { //nolint:dupl
