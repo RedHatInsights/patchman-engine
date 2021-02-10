@@ -1742,16 +1742,20 @@
                 "type": "object",
                 "properties": {
                     "first": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "last": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "next": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "previous": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     }
                 }
             },
