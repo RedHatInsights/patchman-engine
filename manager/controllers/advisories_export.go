@@ -29,7 +29,7 @@ import (
 func AdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	var query *gorm.DB
-	if HasTags(c) {
+	if disableCachedCounts || HasTags(c) {
 		var err error
 		query, err = buildQueryAdvisoriesTagged(c, account)
 		if err != nil {
