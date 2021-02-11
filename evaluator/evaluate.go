@@ -205,11 +205,13 @@ func deleteOldSystemPackages(tx *gorm.DB, accountID, systemID int, packagesByNEV
 	for _, pkg := range packagesByNEVRA {
 		pkgIds = append(pkgIds, pkg.PackageID)
 	}
-	return errors.Wrap(tx.
-		Where("rh_account_id = ? ", accountID).
+
+	err := tx.Where("rh_account_id = ? ", accountID).
 		Where("system_id = ?", systemID).
 		Where("package_id not in (?)", pkgIds).
-		Delete(&models.SystemPackage{}).Error, "Deleting outdated system packages")
+		Delete(&models.SystemPackage{}).Error
+
+	return errors.Wrap(err, "Deleting outdated system packages")
 }
 
 // nolint: funlen
@@ -563,18 +565,6 @@ func getPatchedAdvisories(reported map[string]bool, stored map[string]models.Sys
 	return patchedAdvisories
 }
 
-func updateSystemAdvisoriesWhenPatched(tx *gorm.DB, system *models.SystemPlatform, advisoryIDs []int,
-	whenPatched *time.Time) error {
-	err := tx.Model(models.SystemAdvisories{}).
-		Where("system_id = ? AND rh_account_id = ? AND advisory_id IN (?)",
-			system.ID, system.RhAccountID, advisoryIDs).
-		Update("when_patched", whenPatched).Error
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // Return advisory IDs, created advisories count, error
 func getAdvisoriesFromDB(tx *gorm.DB, advisories []string) ([]int, error) {
 	var advisoryIDs []int
@@ -639,21 +629,23 @@ func calcAdvisoryChanges(system *models.SystemPlatform, patched, unpatched []int
 	return deltas
 }
 
+func deleteOldSystemAdvisories(tx *gorm.DB, accountID, systemID int, unpatchedAdvisoryIDs []int) error {
+	err := tx.Where("rh_account_id = ? ", accountID).
+		Where("system_id = ?", systemID).
+		Where("when_patched IS NOT NULL or advisory_id not in (?)", unpatchedAdvisoryIDs).
+		Delete(&models.SystemAdvisories{}).Error
+	return err
+}
+
 func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
 	patched, unpatched []int) (SystemAdvisoryMap, error) {
-	whenPatched := time.Now()
-
-	err := ensureSystemAdvisories(tx, system.RhAccountID, system.ID, unpatched)
+	// this will remove many many old items from our "system_advisories" table
+	err := deleteOldSystemAdvisories(tx, system.RhAccountID, system.ID, unpatched)
 	if err != nil {
 		return nil, err
 	}
 
-	err = updateSystemAdvisoriesWhenPatched(tx, system, patched, &whenPatched)
-	if err != nil {
-		return nil, err
-	}
-
-	err = updateSystemAdvisoriesWhenPatched(tx, system, unpatched, nil)
+	err = ensureSystemAdvisories(tx, system.RhAccountID, system.ID, unpatched)
 	if err != nil {
 		return nil, err
 	}

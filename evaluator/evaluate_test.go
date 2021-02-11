@@ -89,6 +89,18 @@ func TestGetPatchedAdvisories(t *testing.T) {
 	assert.Equal(t, 2, patched[0])
 }
 
+func updateSystemAdvisoriesWhenPatched(systemID, accountID int, advisoryIDs []int, whenPatched *time.Time) error {
+	err := database.Db.Model(models.SystemAdvisories{}).
+		Where("system_id = ?", systemID).
+		Where("rh_account_id = ?", accountID).
+		Where("advisory_id IN (?)", advisoryIDs).
+		Update("when_patched", whenPatched).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
@@ -98,7 +110,7 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	createSystemAdvisories(t, system.RhAccountID, system.ID, advisoryIDs, nil)
 	createAdvisoryAccountData(t, system.RhAccountID, advisoryIDs, 1)
 
-	err := updateSystemAdvisoriesWhenPatched(database.Db, &system, advisoryIDs, &testDate)
+	err := updateSystemAdvisoriesWhenPatched(system.ID, system.RhAccountID, advisoryIDs, &testDate)
 	assert.NoError(t, err)
 	// Update as-if the advisories had become patched
 	err = updateAdvisoryAccountDatas(database.Db, &system, advisoryIDs, []int{})
@@ -107,7 +119,7 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	checkSystemAdvisoriesWhenPatched(t, system.ID, advisoryIDs, &testDate)
 	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 0)
 
-	err = updateSystemAdvisoriesWhenPatched(database.Db, &system, advisoryIDs, nil)
+	err = updateSystemAdvisoriesWhenPatched(system.ID, system.RhAccountID, advisoryIDs, nil)
 	assert.NoError(t, err)
 	// Update as-if the advisories had become unpatched
 	err = updateAdvisoryAccountDatas(database.Db, &system, []int{}, advisoryIDs)
