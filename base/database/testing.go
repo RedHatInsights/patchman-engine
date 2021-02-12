@@ -116,7 +116,8 @@ func CheckPackagesNamesInDB(t *testing.T) {
 	assert.Equal(t, names[1].Name, "curl")
 }
 
-func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug, nSec, nInstall, nUpdate int) {
+func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug, nSec, nInstall, nUpdate int,
+	thirdParty bool) {
 	var system models.SystemPlatform
 	assert.Nil(t, Db.Where("inventory_id = ?::uuid", inventoryID).First(&system).Error)
 	assert.NotNil(t, system.LastEvaluation)
@@ -127,6 +128,7 @@ func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug
 	assert.Equal(t, nSec, system.AdvisorySecCountCache)
 	assert.Equal(t, nInstall, system.PackagesInstalled)
 	assert.Equal(t, nUpdate, system.PackagesUpdatable)
+	assert.Equal(t, thirdParty, system.ThirdParty)
 }
 
 func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int, systemsAffected int) {
