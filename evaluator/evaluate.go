@@ -312,6 +312,10 @@ func loadPackages(tx *gorm.DB, accountID, systemID int,
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-load"))
 
 	for nevra := range data.UpdateList {
+		if strings.HasPrefix(nevra, "gpg-pubkey") { // skip "phantom" package
+			continue
+		}
+
 		// Parse and reformat nevras to avoid issues with 0 epoch
 		parsed, err := utils.ParseNevra(nevra)
 		if err != nil {
