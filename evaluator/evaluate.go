@@ -33,6 +33,7 @@ var (
 	port                   string
 	enableAdvisoryAnalysis bool
 	enablePackageAnalysis  bool
+	enableRepoAnalysis     bool
 	enableBypass           bool
 	enableStaleSysEval     bool
 )
@@ -52,6 +53,7 @@ func configure() {
 	disableCompression := !utils.GetBoolEnvOrDefault("ENABLE_VMAAS_CALL_COMPRESSION", true)
 	enableAdvisoryAnalysis = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_ANALYSIS", true)
 	enablePackageAnalysis = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_ANALYSIS", true)
+	enableRepoAnalysis = utils.GetBoolEnvOrDefault("ENABLE_REPO_ANALYSIS", true)
 	enableStaleSysEval = utils.GetBoolEnvOrDefault("ENABLE_STALE_SYSTEM_EVALUATION", true)
 	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
 	vmaasConfig.HTTPClient = &http.Client{Transport: &http.Transport{
@@ -151,7 +153,12 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 		return errors.Wrap(err, "Package analysis failed")
 	}
 
-	err = updateSystemPlatform(tx, system, newSystemAdvisories, installed, updatable)
+	thirdParty, err := analyzeRepos(tx, system, vmaasData)
+	if err != nil {
+		return errors.Wrap(err, "Repo analysis failed")
+	}
+
+	err = updateSystemPlatform(tx, system, newSystemAdvisories, installed, updatable, thirdParty)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-update-system").Inc()
 		return errors.Wrap(err, "Unable to update system")
@@ -198,6 +205,23 @@ func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas
 		return 0, 0, errors.Wrap(err, "Unable to update system packages")
 	}
 	return installed, updatable, nil
+}
+
+func analyzeRepos(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) (
+	thirdParty bool, err error) {
+	if !enableRepoAnalysis {
+		utils.Log().Debug("repo analysis disabled, skipping")
+		return false, nil
+	}
+
+	// if system has associated more repos then there are in vmaasData
+	// one of them has to be thirdparty
+	repoCount, err := countRepos(tx, system.RhAccountID, system.ID)
+	if err != nil {
+		return false, errors.Wrap(err, "Unable to load repo data")
+	}
+	thirdParty = len(vmaasData.RepositoryList) < repoCount
+	return thirdParty, nil
 }
 
 func deleteOldSystemPackages(tx *gorm.DB, accountID, systemID int, packagesByNEVRA map[utils.Nevra]namedPackage) error {
@@ -355,8 +379,21 @@ func loadPackages(tx *gorm.DB, accountID, systemID int,
 	return pkgByNevra, nil
 }
 
+func countRepos(tx *gorm.DB, accountID, systemID int) (int, error) {
+	var count int
+	err := tx.Table("system_repo").
+		Where("rh_account_id = ?", accountID).
+		Where("system_id = ?", systemID).
+		Count(&count).Error
+	if err != nil {
+		utils.Log("err", err.Error(), "accountID", accountID, "systemID", systemID).Warn("counting repos")
+		return 0, err
+	}
+	return count, err
+}
+
 func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
-	new SystemAdvisoryMap, installed, updatable int) error {
+	new SystemAdvisoryMap, installed, updatable int, thirdParty bool) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("system-update"))
 	defer utils.ObserveSecondsSince(*system.LastUpload, uploadEvaluationDelay)
@@ -388,6 +425,11 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 		data["packages_installed"] = installed
 		data["packages_updatable"] = updatable
 	}
+
+	if enableRepoAnalysis {
+		data["third_party"] = thirdParty
+	}
+
 	return tx.Model(system).Update(data).Error
 }
 
