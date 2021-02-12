@@ -171,14 +171,17 @@ func TestEvaluate(t *testing.T) {
 	oldSystemAdvisoryIDs := []int{1, 3, 4}   // old advisories paired with the system
 	patchingSystemAdvisoryIDs := []int{3, 4} // these advisories should be patched for the system
 	expectedPackageIDs := []int{1, 2}
+	systemRepoIDs := []int{1, 2}
 
 	deleteSystemAdvisories(t, systemID, expectedAdvisoryIDs)
 	deleteSystemAdvisories(t, systemID, patchingSystemAdvisoryIDs)
 	deleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
 	deleteAdvisoryAccountData(t, rhAccountID, patchingSystemAdvisoryIDs)
 	deleteSystemPackages(t, systemID, expectedPackageIDs)
+	deleteSystemRepos(t, rhAccountID, systemID, systemRepoIDs)
 	createSystemAdvisories(t, rhAccountID, systemID, oldSystemAdvisoryIDs, nil)
 	createAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
+	createSystemRepos(t, rhAccountID, systemID, systemRepoIDs)
 	database.CheckCachesValid(t)
 
 	// do evaluate the system
@@ -190,12 +193,13 @@ func TestEvaluate(t *testing.T) {
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
 	checkSystemPackages(t, systemID, expectedPackageIDs)
 	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 2, 1, 1,
-		0, 2, 2)
+		0, 2, 2, true)
 	database.CheckCachesValid(t)
 
 	deleteSystemAdvisories(t, systemID, advisoryIDs)
 	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 	deleteAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs)
+	deleteSystemRepos(t, rhAccountID, systemID, systemRepoIDs)
 
 	assert.Equal(t, 1, len(mockWriter.Messages))
 }
@@ -247,6 +251,15 @@ func createAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int,
 	database.CheckAdvisoriesAccountData(t, rhAccountID, advisoryIDs, systemsAffected)
 }
 
+func createSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
+	for _, repoID := range repoIDs {
+		err := database.Db.Create(&models.SystemRepo{
+			RhAccountID: rhAccountID, SystemID: systemID, RepoID: repoID}).Error
+		assert.Nil(t, err)
+	}
+	checkSystemRepos(t, rhAccountID, systemID, repoIDs)
+}
+
 func checkSystemAdvisoriesWhenPatched(t *testing.T, systemID int, advisoryIDs []int,
 	whenPatched *time.Time) {
 	var systemAdvisories []models.SystemAdvisories
@@ -270,6 +283,15 @@ func checkSystemPackages(t *testing.T, systemID int, packageIDs []int) {
 		Find(&systemPackages).Error
 	assert.Nil(t, err)
 	assert.Equal(t, len(packageIDs), len(systemPackages))
+}
+
+func checkSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
+	var systemRepos []models.SystemRepo
+	err := database.Db.Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)",
+		rhAccountID, systemID, repoIDs).
+		Find(&systemRepos).Error
+	assert.Nil(t, err)
+	assert.Equal(t, len(repoIDs), len(systemRepos))
 }
 
 func deleteSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int) {
@@ -300,6 +322,13 @@ func deleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int)
 func deleteSystemPackages(t *testing.T, systemID int, pkgIDs []int) {
 	err := database.Db.Where("system_id = ? and package_id in(?)", systemID, pkgIDs).
 		Delete(&models.SystemPackage{}).Error
+	assert.Nil(t, err)
+}
+
+func deleteSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
+	err := database.Db.Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)",
+		rhAccountID, systemID, repoIDs).
+		Delete(&models.SystemRepo{}).Error
 	assert.Nil(t, err)
 }
 
