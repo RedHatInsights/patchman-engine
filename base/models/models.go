@@ -49,6 +49,7 @@ type SystemPlatform struct {
 	DisplayName           string
 	PackagesInstalled     int
 	PackagesUpdatable     int
+	ThirdParty            bool
 	ReporterID            *int
 }
 
