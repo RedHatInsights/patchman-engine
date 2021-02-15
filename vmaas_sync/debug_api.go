@@ -46,7 +46,7 @@ func recalc(c *gin.Context) {
 }
 
 func checkCaches(c *gin.Context) {
-	valid, err := database.CheckCachesValid()
+	valid, err := database.CheckCachesValidRet()
 	if err != nil {
 		utils.Log("error", err).Error("Could not check validity of caches")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
