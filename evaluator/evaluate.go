@@ -141,7 +141,7 @@ func commitWithObserve(tx *gorm.DB) error {
 }
 
 func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) error {
-	oldSystemAdvisories, newSystemAdvisories, err := analyzeAdvisories(tx, system, vmaasData)
+	newSystemAdvisories, err := analyzeAdvisories(tx, system, vmaasData)
 	if err != nil {
 		return errors.Wrap(err, "Advisory analysis failed")
 	}
@@ -151,7 +151,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 		return errors.Wrap(err, "Package analysis failed")
 	}
 
-	err = updateSystemPlatform(tx, system, oldSystemAdvisories, newSystemAdvisories, installed, updatable)
+	err = updateSystemPlatform(tx, system, newSystemAdvisories, installed, updatable)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-update-system").Inc()
 		return errors.Wrap(err, "Unable to update system")
@@ -160,24 +160,24 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 }
 
 func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) (
-	SystemAdvisoryMap, SystemAdvisoryMap, error) {
+	SystemAdvisoryMap, error) {
 	if !enableAdvisoryAnalysis {
 		utils.Log().Debug("advisory analysis disabled, skipping")
-		return nil, nil, nil
+		return nil, nil
 	}
 
-	oldSystemAdvisories, patched, unpatched, err := processSystemAdvisories(tx, system, vmaasData, system.InventoryID)
+	patched, unpatched, err := processSystemAdvisories(tx, system, vmaasData, system.InventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
-		return nil, nil, errors.Wrap(err, "Unable to process system advisories")
+		return nil, errors.Wrap(err, "Unable to process system advisories")
 	}
 
 	newSystemAdvisories, err := storeAdvisoryData(tx, system, patched, unpatched)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-store-advisories").Inc()
-		return nil, nil, errors.Wrap(err, "Unable to store advisory data")
+		return nil, errors.Wrap(err, "Unable to store advisory data")
 	}
-	return oldSystemAdvisories, newSystemAdvisories, nil
+	return newSystemAdvisories, nil
 }
 
 func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) (
@@ -356,7 +356,7 @@ func loadPackages(tx *gorm.DB, accountID, systemID int,
 }
 
 func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
-	old, new SystemAdvisoryMap, installed, updatable int) error {
+	new SystemAdvisoryMap, installed, updatable int) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("system-update"))
 	defer utils.ObserveSecondsSince(*system.LastUpload, uploadEvaluationDelay)
@@ -368,15 +368,12 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 	data["last_evaluation"] = time.Now()
 
 	if enableAdvisoryAnalysis {
-		if old == nil || new == nil {
+		if new == nil {
 			return errors.New("Invalid args")
 		}
-		for name, newSysAdvisory := range new {
-			old[name] = newSysAdvisory
-		}
 		counts := make([]int, 4)
-		for _, sa := range old {
-			if sa.WhenPatched == nil && sa.Advisory.AdvisoryTypeID > 0 {
+		for _, sa := range new {
+			if sa.Advisory.AdvisoryTypeID > 0 {
 				counts[sa.Advisory.AdvisoryTypeID]++
 			}
 			counts[0]++
@@ -452,14 +449,14 @@ func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, erro
 // Before this methods stores the entries into the system_advisories table, it locks
 // advisory_account_data table, so other evaluations don't interfere with this one
 func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response,
-	inventoryID string) (oldSystemAdvisories SystemAdvisoryMap, patched []int, unpatched []int, err error) {
+	inventoryID string) (patched []int, unpatched []int, err error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))
 
 	reported := getReportedAdvisories(vmaasData)
-	oldSystemAdvisories, err = getStoredAdvisoriesMap(tx, system.RhAccountID, system.ID)
+	oldSystemAdvisories, err := getStoredAdvisoriesMap(tx, system.RhAccountID, system.ID)
 	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "Unable to get system stored advisories")
+		return nil, nil, errors.Wrap(err, "Unable to get system stored advisories")
 	}
 
 	patched = getPatchedAdvisories(reported, oldSystemAdvisories)
@@ -471,7 +468,7 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 
 	newIDs, err := getAdvisoriesFromDB(tx, newsAdvisoriesNames)
 	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "Unable to ensure new system advisories in db")
+		return nil, nil, errors.Wrap(err, "Unable to ensure new system advisories in db")
 	}
 	nUnknown := len(newsAdvisoriesNames) - len(newIDs)
 	if nUnknown > 0 {
@@ -482,7 +479,7 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 	unpatched = append(unpatched, newIDs...)
 	updatesCnt.WithLabelValues("unpatched").Add(float64(len(unpatched)))
 	utils.Log("inventoryID", inventoryID, "unpatched", len(unpatched)).Debug("patched advisories")
-	return oldSystemAdvisories, patched, unpatched, nil
+	return patched, unpatched, nil
 }
 
 func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform,
@@ -633,10 +630,10 @@ func calcAdvisoryChanges(system *models.SystemPlatform, patched, unpatched []int
 	return deltas
 }
 
-func deleteOldSystemAdvisories(tx *gorm.DB, accountID, systemID int, unpatchedAdvisoryIDs []int) error {
+func deleteOldSystemAdvisories(tx *gorm.DB, accountID, systemID int, patched []int) error {
 	err := tx.Where("rh_account_id = ? ", accountID).
 		Where("system_id = ?", systemID).
-		Where("when_patched IS NOT NULL or advisory_id not in (?)", unpatchedAdvisoryIDs).
+		Where("when_patched IS NOT NULL or advisory_id in (?)", patched).
 		Delete(&models.SystemAdvisories{}).Error
 	return err
 }
@@ -644,7 +641,7 @@ func deleteOldSystemAdvisories(tx *gorm.DB, accountID, systemID int, unpatchedAd
 func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
 	patched, unpatched []int) (SystemAdvisoryMap, error) {
 	// this will remove many many old items from our "system_advisories" table
-	err := deleteOldSystemAdvisories(tx, system.RhAccountID, system.ID, unpatched)
+	err := deleteOldSystemAdvisories(tx, system.RhAccountID, system.ID, patched)
 	if err != nil {
 		return nil, err
 	}
@@ -657,8 +654,7 @@ func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
 	newSystemAdvisories := SystemAdvisoryMap{}
 	var data []models.SystemAdvisories
 	err = tx.Preload("Advisory").
-		Find(&data, "system_id = ? AND rh_account_id = ? AND (advisory_id IN (?) OR advisory_id in (?))",
-			system.ID, system.RhAccountID, unpatched, patched).Error
+		Find(&data, "system_id = ? AND rh_account_id = ?", system.ID, system.RhAccountID).Error
 
 	if err != nil {
 		return nil, err
