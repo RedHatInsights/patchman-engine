@@ -11,7 +11,7 @@ import (
 
 func DebugWithCachesCheck(part string, fun func()) {
 	fun()
-	validAfter, err := CheckCachesValid()
+	validAfter, err := CheckCachesValidRet()
 	if err != nil {
 		utils.Log("error", err).Panic("Could not check validity of caches")
 	}
@@ -33,7 +33,7 @@ type advisoryCount struct {
 }
 
 // nolint: lll
-func CheckCachesValid() (bool, error) {
+func CheckCachesValidRet() (bool, error) {
 	valid := true
 	var aad []models.AdvisoryAccountData
 
@@ -88,6 +88,12 @@ func CheckCachesValid() (bool, error) {
 	tx.Commit()
 	tx.RollbackUnlessCommitted()
 	return valid, nil
+}
+
+func CheckCachesValid(t *testing.T) {
+	valid, err := CheckCachesValidRet()
+	assert.Nil(t, err)
+	assert.True(t, valid)
 }
 
 func CheckAdvisoriesInDB(t *testing.T, advisories []string) []int {

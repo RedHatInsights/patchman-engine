@@ -167,13 +167,21 @@ func TestEvaluate(t *testing.T) {
 	systemID := 12
 	rhAccountID := 3
 	expectedAddedAdvisories := []string{"RH-1", "RH-2"}
-	expectedAdvisoryIDs := []int{1, 2}
+	expectedAdvisoryIDs := []int{1, 2}       // advisories expected to be paired to the system after evaluation
+	oldSystemAdvisoryIDs := []int{1, 3, 4}   // old advisories paired with the system
+	patchingSystemAdvisoryIDs := []int{3, 4} // these advisories should be patched for the system
 	expectedPackageIDs := []int{1, 2}
 
 	deleteSystemAdvisories(t, systemID, expectedAdvisoryIDs)
+	deleteSystemAdvisories(t, systemID, patchingSystemAdvisoryIDs)
 	deleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
+	deleteAdvisoryAccountData(t, rhAccountID, patchingSystemAdvisoryIDs)
 	deleteSystemPackages(t, systemID, expectedPackageIDs)
+	createSystemAdvisories(t, rhAccountID, systemID, oldSystemAdvisoryIDs, nil)
+	createAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
+	database.CheckCachesValid(t)
 
+	// do evaluate the system
 	err := evaluateHandler(mqueue.PlatformEvent{ID: "00000000-0000-0000-0000-000000000012",
 		AccountID: rhAccountID})
 	assert.NoError(t, err)
@@ -183,9 +191,11 @@ func TestEvaluate(t *testing.T) {
 	checkSystemPackages(t, systemID, expectedPackageIDs)
 	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 2, 1, 1,
 		0, 2, 2)
+	database.CheckCachesValid(t)
 
 	deleteSystemAdvisories(t, systemID, advisoryIDs)
 	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
+	deleteAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs)
 
 	assert.Equal(t, 1, len(mockWriter.Messages))
 }
