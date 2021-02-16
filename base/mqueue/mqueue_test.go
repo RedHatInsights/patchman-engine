@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
-	"time"
 )
 
 const id = "99c0ffee-0000-0000-0000-0000c0ffee99"
@@ -43,8 +42,9 @@ func TestRoundTrip(t *testing.T) {
 	writer := WriterFromEnv("test")
 	eventIn := PlatformEvent{ID: someid}
 	assert.NoError(t, WriteEvents(context.Background(), writer, eventIn))
-	time.Sleep(8 * time.Second)
-	assert.Equal(t, eventIn, eventOut)
+	utils.AssertWait(t, 8, func() bool {
+		return eventIn == eventOut
+	})
 }
 
 func TestSpawnReader(t *testing.T) {

@@ -22,7 +22,9 @@ func TestRunServer(t *testing.T) {
 		cancel()
 	}()
 	err := RunServer(ctx, gin.Default(), ":8888")
-	time.Sleep(time.Millisecond * 100)
 	assert.Nil(t, err)
+	AssertWait(t, 1, func() bool {
+		return len(hook.LogEntries) > 0
+	})
 	assert.Equal(t, "server closed successfully", hook.LogEntries[0].Message)
 }
