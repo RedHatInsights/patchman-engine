@@ -4,8 +4,10 @@ import (
 	"context"
 	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+	"time"
 )
 
 func SkipWithoutDB(t *testing.T) {
@@ -49,4 +51,14 @@ type MockKafkaWriter struct {
 func (t *MockKafkaWriter) WriteMessages(_ context.Context, ev ...kafka.Message) error {
 	t.Messages = append(t.Messages, ev...)
 	return nil
+}
+
+func AssertWait(t *testing.T, timeoutSeconds int, funToAssert func() bool) {
+	for i := 0; i < timeoutSeconds*10; i++ {
+		time.Sleep(time.Millisecond * 100)
+		if funToAssert() {
+			break
+		}
+	}
+	assert.True(t, funToAssert())
 }

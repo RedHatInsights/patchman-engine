@@ -58,6 +58,8 @@ func TestHandleContextCancel(t *testing.T) {
 
 	handleContextCancel(func() {})
 	base.CancelContext()
-	time.Sleep(time.Millisecond)
+	utils.AssertWait(t, 1, func() bool {
+		return len(hook.LogEntries) > 0
+	})
 	assert.Equal(t, "stopping vmaas_sync", hook.LogEntries[0].Message)
 }
