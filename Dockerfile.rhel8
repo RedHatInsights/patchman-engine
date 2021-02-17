@@ -12,6 +12,10 @@ RUN yum module -y install go-toolset && \
     /manifest/rpm_list.sh > /tmp/final_rpm.txt && \
     yum install -y git diffutils
 
+RUN curl -L -o /usr/bin/haberdasher \
+    https://github.com/RedHatInsights/haberdasher/releases/latest/download/haberdasher_linux_amd64 && \
+    chmod 755 /usr/bin/haberdasher
+
 ENV GOPATH=/go
 ENV GO111MODULE=on
 ENV GOPROXY=https://proxy.golang.org
