@@ -308,7 +308,7 @@ func TestRun(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	run(&wg, mqueue.CreateCountedMockReader(&nReaders))
-	utils.AssertWait(t, 1, func() bool {
+	utils.AssertWait(t, 10, func() bool {
 		return nReaders == 8
 	})
 }
