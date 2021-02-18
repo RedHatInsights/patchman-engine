@@ -879,7 +879,7 @@ CREATE INDEX ON system_repo (repo_id);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_repo TO listener;
 GRANT DELETE ON system_repo TO manager;
-GRANT SELECT ON system_repo TO evaluator;
+GRANT SELECT, INSERT, UPDATE, DELETE ON system_repo TO evaluator;
 GRANT SELECT, DELETE on system_repo to vmaas_sync;
 
 CREATE TABLE IF NOT EXISTS package_name
