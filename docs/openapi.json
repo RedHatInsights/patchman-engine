@@ -1998,6 +1998,9 @@
                     },
                     "stale": {
                         "type": "boolean"
+                    },
+                    "third_party": {
+                        "type": "boolean"
                     }
                 }
             },
@@ -2052,6 +2055,9 @@
                         "type": "integer"
                     },
                     "stale": {
+                        "type": "boolean"
+                    },
+                    "third_party": {
                         "type": "boolean"
                     }
                 }
