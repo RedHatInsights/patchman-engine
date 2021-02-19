@@ -46,7 +46,9 @@ func ReaderFromEnv(topic string) Reader {
 		MinBytes:    minBytes,
 		MaxBytes:    maxBytes,
 		ErrorLogger: kafka.LoggerFunc(createLoggerFunc(kafkaErrorReadCnt)),
+		Dialer:      tryCreateSecuredDialerFromEnv(),
 	}
+
 	reader := &readerImpl{*kafka.NewReader(config)}
 	return reader
 }
@@ -63,6 +65,7 @@ func WriterFromEnv(topic string) Writer {
 		// sending overhead is a bottleneck
 		BatchTimeout: time.Nanosecond,
 		ErrorLogger:  kafka.LoggerFunc(createLoggerFunc(kafkaErrorWriteCnt)),
+		Dialer:       tryCreateSecuredDialerFromEnv(),
 	}
 	writer := &writerImpl{kafka.NewWriter(config)}
 	return writer
