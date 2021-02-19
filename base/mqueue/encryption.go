@@ -16,6 +16,21 @@ func tryCreateSecuredDialerFromEnv() *kafka.Dialer {
 		return nil
 	}
 
+	kafkaSslSkipVerify := utils.GetBoolEnvOrDefault("KAFKA_SSL_SKIP_VERIFY", false)
+	tlsConfig := &tls.Config{InsecureSkipVerify: true} // nolint:gosec
+	if !kafkaSslSkipVerify {
+		tlsConfig = caCertTLSConfigFromEnv()
+	}
+
+	dialer := &kafka.Dialer{
+		Timeout:   10 * time.Second,
+		DualStack: true,
+		TLS:       tlsConfig,
+	}
+	return dialer
+}
+
+func caCertTLSConfigFromEnv() *tls.Config {
 	caCertPath := utils.GetenvOrFail("KAFKA_SSL_CERT")
 	caCert, err := ioutil.ReadFile(caCertPath)
 	if err != nil {
@@ -26,10 +41,5 @@ func tryCreateSecuredDialerFromEnv() *kafka.Dialer {
 	caCertPool.AppendCertsFromPEM(caCert)
 
 	tlsConfig := tls.Config{RootCAs: caCertPool} // nolint:gosec
-	dialer := &kafka.Dialer{
-		Timeout:   10 * time.Second,
-		DualStack: true,
-		TLS:       &tlsConfig,
-	}
-	return dialer
+	return &tlsConfig
 }
