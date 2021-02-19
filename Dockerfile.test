@@ -20,6 +20,8 @@ RUN go mod download && \
     curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
     | sh -s -- -b $(go env GOPATH)/bin latest
 
+ADD /dev/kafka/secrets/ca.crt   /opt/
+
 ADD /conf              /go/src/app/conf
 ADD /base              /go/src/app/base
 ADD /manager           /go/src/app/manager
