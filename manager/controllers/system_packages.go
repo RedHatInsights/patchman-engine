@@ -18,7 +18,7 @@ type SystemPackagesAttrs struct {
 	EVRA        string `json:"evra" query:"p.evra"`
 	Summary     string `json:"summary" query:"sum.value"`
 	Description string `json:"description" query:"descr.value"`
-	Updatable   bool   `json:"updatable" query:"(json_array_length(spkg.update_data::json) > 0)"`
+	Updatable   bool   `json:"updatable" query:"(COALESCE(json_array_length(spkg.update_data::json),0) > 0)"`
 }
 
 type SystemPackageData struct {
