@@ -37,8 +37,8 @@ func TestPackages(t *testing.T) {
 	doTestPackages(t, "/?filter[summary]=firefox", func(output PackagesResponse) {
 		assert.Equal(t, 1, len(output.Data))
 		assert.Equal(t, "firefox", output.Data[0].Name)
-		assert.Equal(t, 1, output.Data[0].SystemsInstalled)
-		assert.Equal(t, 1, output.Data[0].SystemsUpdatable)
+		assert.Equal(t, 2, output.Data[0].SystemsInstalled)
+		assert.Equal(t, 2, output.Data[0].SystemsUpdatable)
 	})
 	doTestPackages(t, "/?filter[system_profile][is_sap][eq]=true", func(output PackagesResponse) {
 		assert.Equal(t, 4, len(output.Data))
