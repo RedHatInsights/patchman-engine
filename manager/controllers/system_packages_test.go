@@ -77,6 +77,25 @@ func TestSystemPackagesUpdatableOnly(t *testing.T) {
 	assert.Equal(t, output.Data[0].Name, "firefox")
 }
 
+func TestSystemPackagesNonUpdatableOnly(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET",
+		"/00000000-0000-0000-0000-000000000013/packages?filter[updatable]=false", nil)
+	core.InitRouterWithParams(SystemPackagesHandler, 3, "GET", "/:inventory_id/packages").
+		ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output SystemPackageResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Len(t, output.Data, 3)
+	assert.Equal(t, output.Data[0].Name, "bash")
+	assert.Equal(t, output.Data[1].Name, "curl")
+	assert.Equal(t, output.Data[2].Name, "kernel")
+}
+
 func TestSystemPackagesWrongOffset(t *testing.T) {
 	doTestWrongOffset(t, "/:inventory_id/packages",
 		"/00000000-0000-0000-0000-000000000001/packages?offset=1000", SystemPackagesHandler)
