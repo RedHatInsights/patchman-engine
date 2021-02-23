@@ -33,6 +33,7 @@ func TestSystemDetailDefault1(t *testing.T) {
 	assert.Equal(t, "RHEL", output.Data.Attributes.OSName)
 	assert.Equal(t, "8", output.Data.Attributes.OSMajor)
 	assert.Equal(t, "1", output.Data.Attributes.OSMinor)
+	assert.Equal(t, "8.1", output.Data.Attributes.RhsmVersion)
 }
 
 func TestSystemDetailDefault2(t *testing.T) {
@@ -75,4 +76,20 @@ func TestSystemDetailNotFound(t *testing.T) {
 	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "inventory not found", errResp.Error)
+}
+
+func TestSystemsNoRHSM(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000014", nil)
+	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 3).ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output SystemDetailResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000014", output.Data.ID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000014", output.Data.Attributes.DisplayName)
+	assert.Equal(t, "", output.Data.Attributes.RhsmVersion)
 }
