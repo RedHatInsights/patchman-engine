@@ -51,11 +51,11 @@ func TestSystemsExportCSV(t *testing.T) {
 	assert.Equal(t, 10, len(lines))
 	assert.Equal(t,
 		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale,"+
-			"packages_installed,packages_updatable,os_name,os_major,os_minor",
+			"third_party,packages_installed,packages_updatable,os_name,os_major,os_minor",
 		lines[0])
 
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,"+
-		"2018-09-22T16:00:00Z,2020-09-22T16:00:00Z,2,3,3,false,0,0,RHEL,8,1", lines[1])
+		"2018-09-22T16:00:00Z,2020-09-22T16:00:00Z,2,3,3,false,true,0,0,RHEL,8,1", lines[1])
 }
 
 func TestSystemsExportWrongFormat(t *testing.T) {
@@ -89,7 +89,7 @@ func TestSystemsExportCSVFilter(t *testing.T) {
 	assert.Equal(t, 2, len(lines))
 	assert.Equal(t,
 		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale,"+
-			"packages_installed,packages_updatable,os_name,os_major,os_minor",
+			"third_party,packages_installed,packages_updatable,os_name,os_major,os_minor",
 		lines[0])
 	assert.Equal(t, "", lines[1])
 }
