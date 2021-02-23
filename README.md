@@ -96,3 +96,11 @@ docker-compose exec kafka bash # enter kafka component and run inside:
 # send debugging message to a topic
 echo '{"id":"00000000-0000-0000-0000-000000000002"}' | /usr/bin/kafka-console-producer --broker-list kafka:9092 --topic patchman.evaluator.upload
 ~~~
+
+## Run SonarQube code analysis
+~~~bash
+export SONAR_HOST_URL=https://sonar-server
+export SONAR_LOGIN=paste-your-generated-token
+export SONAR_CERT_URL=https://secret-url-to/ca.crt # optional
+podman-compose -f dev/sonar/docker-compose.yml up --build
+~~~
