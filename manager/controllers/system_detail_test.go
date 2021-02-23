@@ -26,6 +26,7 @@ func TestSystemDetailDefault1(t *testing.T) {
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data.Attributes.LastEvaluation.String())
 	assert.Equal(t, "2020-09-22 16:00:00 +0000 UTC", output.Data.Attributes.LastUpload.String())
 	assert.False(t, output.Data.Attributes.Stale)
+	assert.True(t, output.Data.Attributes.ThirdParty)
 	assert.Equal(t, 2, output.Data.Attributes.RhsaCount)
 	assert.Equal(t, 3, output.Data.Attributes.RhbaCount)
 	assert.Equal(t, 3, output.Data.Attributes.RheaCount)
