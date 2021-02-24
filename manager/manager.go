@@ -10,10 +10,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// nolint: lll
 // @title Patchman-engine API
 // DO NOT EDIT version MANUALLY - this variable is modified by generate_docs.sh
 // @version  v1.7.5
-// @description Description here
+// @description API of the Patch application on [cloud.redhat.com](cloud.redhat.com)
+// @description
+// @description Syntax of the `filter[name]` query parameters is described in  [Filters documentation](https://github.com/RedHatInsights/patchman-engine/wiki/API-custom-filters)
 
 // @license.name GPLv3
 // @license.url https://www.gnu.org/licenses/gpl-3.0.en.html
