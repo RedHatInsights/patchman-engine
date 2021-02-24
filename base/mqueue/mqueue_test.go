@@ -43,7 +43,7 @@ func TestRoundTrip(t *testing.T) {
 	eventIn := PlatformEvent{ID: someid}
 	assert.NoError(t, WriteEvents(context.Background(), writer, eventIn))
 	utils.AssertWait(t, 8, func() bool {
-		return eventIn == eventOut
+		return eventIn.ID == eventOut.ID
 	})
 }
 

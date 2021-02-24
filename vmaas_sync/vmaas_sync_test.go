@@ -41,7 +41,8 @@ func TestSync(t *testing.T) {
 	assert.NoError(t, database.Db.Unscoped().Where("evra in (?)", evras).Delete(&models.Package{}).Error)
 	assert.NoError(t, database.Db.Unscoped().Where("name IN (?)", expected).Delete(&models.AdvisoryMetadata{}).Error)
 
-	assert.Equal(t, 2, len(msgs))
+	// For one account we expect a bulk message
+	assert.Equal(t, 1, len(msgs))
 
 	ts, err := getLastRepobasedEvalTms() // check updated timestamp
 	assert.Nil(t, err)
