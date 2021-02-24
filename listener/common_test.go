@@ -49,7 +49,6 @@ func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int, report
 	assert.Equal(t, system.ReporterID, reporterID)
 
 	now := time.Now().Add(-time.Minute)
-	assert.True(t, system.FirstReported.After(now), "First reported")
 	assert.True(t, system.LastUpdated.After(now), "Last updated")
 	assert.True(t, system.UnchangedSince.After(now), "Unchanged since")
 	assert.True(t, system.LastUpload.After(now), "Last upload")
