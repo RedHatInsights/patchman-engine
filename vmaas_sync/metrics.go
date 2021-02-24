@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	optOutOn          = "on"
-	optOutOff         = "off"
+	staleOn           = "on"
+	staleOff          = "off"
 	lastUploadLast1D  = "last1D"
 	lastUploadLast7D  = "last7D"
 	lastUploadLast30D = "last30D"
@@ -156,12 +156,12 @@ func updateSystemMetrics() {
 	}
 
 	for labels, count := range counts {
-		systemsCnt.WithLabelValues(labels.OptOut, labels.LastUpload).Set(float64(count))
+		systemsCnt.WithLabelValues(labels.Stale, labels.LastUpload).Set(float64(count))
 	}
 }
 
 type systemsCntLabels struct {
-	OptOut     string
+	Stale      string
 	LastUpload string
 }
 
@@ -169,28 +169,28 @@ type systemsCntLabels struct {
 // Result is loaded into the map {"opt_out_on:last1D": 12, "opt_out_off:last1D": 3, ...}.
 func getSystemCounts(refTime time.Time) (map[systemsCntLabels]int, error) {
 	systemsQuery := database.Db.Model(&models.SystemPlatform{})
-	optOutKV := map[string]bool{optOutOn: true, optOutOff: false}
+	StaleKV := map[string]bool{staleOn: true, staleOff: false}
 	lastUploadKV := map[string]int{lastUploadLast1D: 1, lastUploadLast7D: 7, lastUploadLast30D: 30, lastUploadAll: -1}
 	counts := map[systemsCntLabels]int{}
-	for optOutK, optOutV := range optOutKV {
-		systemsQueryOptOut := updateSystemsQueryOptOut(systemsQuery, optOutV)
+	for StaleK, StaleV := range StaleKV {
+		systemsQueryStale := updateSystemsQueryStale(systemsQuery, StaleV)
 		for lastUploadK, lastUploadV := range lastUploadKV {
-			systemsQueryOptOutLastUpload := updateSystemsQueryLastUpload(systemsQueryOptOut, refTime, lastUploadV)
+			systemsQueryStaleLastUpload := updateSystemsQueryLastUpload(systemsQueryStale, refTime, lastUploadV)
 			var nSystems int
-			err := systemsQueryOptOutLastUpload.Count(&nSystems).Error
+			err := systemsQueryStaleLastUpload.Count(&nSystems).Error
 			if err != nil {
 				return nil, errors.Wrap(err, "unable to load systems counts: "+
-					fmt.Sprintf("opt_out: %v, last_upload_before_days: %v", optOutV, lastUploadV))
+					fmt.Sprintf("opt_out: %v, last_upload_before_days: %v", StaleV, lastUploadV))
 			}
-			counts[systemsCntLabels{optOutK, lastUploadK}] = nSystems
+			counts[systemsCntLabels{StaleK, lastUploadK}] = nSystems
 		}
 	}
 	return counts, nil
 }
 
 // Update input systems query with "opt_out = X" constraint.
-func updateSystemsQueryOptOut(systemsQuery *gorm.DB, optOut bool) *gorm.DB {
-	return systemsQuery.Where("opt_out = ?", optOut)
+func updateSystemsQueryStale(systemsQuery *gorm.DB, stale bool) *gorm.DB {
+	return systemsQuery.Where("stale = ?", stale)
 }
 
 // Update input systems query with "last_upload > T" constraint.

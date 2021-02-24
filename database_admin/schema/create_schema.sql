@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (60, false);
+VALUES (61, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -89,8 +89,8 @@ BEGIN
         RETURN NEW;
     END IF;
 
-    was_counted := OLD.opt_out = FALSE AND OLD.stale = FALSE;
-    should_count := NEW.opt_out = FALSE AND NEW.stale = FALSE;
+    was_counted := OLD.stale = FALSE;
+    should_count := NEW.stale = FALSE;
 
     -- Determine what change we are performing
     IF was_counted and NOT should_count THEN
@@ -190,7 +190,6 @@ BEGIN
         INNER JOIN system_platform sp
            ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id
         WHERE sp.last_evaluation IS NOT NULL
-          AND sp.opt_out = FALSE
           AND sp.stale = FALSE
           AND sa.when_patched IS NULL
           AND (sa.advisory_id = ANY (advisory_ids_in) OR advisory_ids_in IS NULL)
@@ -372,7 +371,7 @@ BEGIN
     END IF;
 
     UPDATE system_platform
-    SET opt_out = true
+    SET stale = true
     WHERE rh_account_id = v_account_id
       AND id = v_system_id;
 
@@ -413,7 +412,7 @@ BEGIN
         ORDER BY rh_account_id, id FOR UPDATE OF system_platform),
          marked as (
              UPDATE system_platform sp
-                 SET opt_out = true
+                 SET stale = true
                  WHERE (rh_account_id, id) in (select rh_account_id, id from systems)
          ),
          advisories as (
@@ -605,7 +604,6 @@ CREATE TABLE IF NOT EXISTS system_platform
     last_updated             TIMESTAMP WITH TIME ZONE NOT NULL,
     unchanged_since          TIMESTAMP WITH TIME ZONE NOT NULL,
     last_evaluation          TIMESTAMP WITH TIME ZONE,
-    opt_out                  BOOLEAN                  NOT NULL DEFAULT FALSE,
     advisory_count_cache     INT                      NOT NULL DEFAULT 0,
     advisory_enh_count_cache INT                      NOT NULL DEFAULT 0,
     advisory_bug_count_cache INT                      NOT NULL DEFAULT 0,
@@ -797,7 +795,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO evaluator;
 -- manager needs to be able to update things like 'status' on a sysid/advisory combination, also needs to delete
 GRANT UPDATE, DELETE ON system_advisories TO manager;
 -- manager needs to be able to update opt_out column
-GRANT UPDATE (opt_out) ON system_platform TO manager;
+GRANT UPDATE (stale) ON system_platform TO manager;
 -- listener deletes systems, TODO: temporary added evaluator permissions to listener
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO listener;
 -- vmaas_sync needs to delete culled systems, which cascades to system_advisories
