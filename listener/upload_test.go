@@ -75,7 +75,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 
 	assert.Equal(t, sys1.ID, sys2.ID)
 	assert.Equal(t, sys1.InventoryID, sys2.InventoryID)
-	assert.Equal(t, sys1.OptOut, sys2.OptOut)
+	assert.Equal(t, sys1.Stale, sys2.Stale)
 	assert.NotNil(t, sys1.StaleTimestamp)
 	assert.Nil(t, sys1.StaleWarningTimestamp)
 	assert.Nil(t, sys1.CulledTimestamp)

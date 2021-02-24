@@ -48,7 +48,7 @@ func CheckCachesValidRet() (bool, error) {
 	err = tx.Select("sp.rh_account_id, sa.advisory_id, count(*)").
 		Table("system_advisories sa").
 		Joins("JOIN system_platform sp ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id").
-		Where("sa.when_patched IS NULL AND sp.opt_out = false AND sp.stale = false AND sp.last_evaluation IS NOT NULL").
+		Where("sa.when_patched IS NULL AND sp.stale = false AND sp.last_evaluation IS NOT NULL").
 		Order("sp.rh_account_id, sa.advisory_id").
 		Group("sp.rh_account_id, sa.advisory_id").
 		Find(&counts).Error

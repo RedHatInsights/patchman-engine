@@ -20,22 +20,22 @@ func TestSystemsCounts(t *testing.T) {
 
 	counts, err := getSystemCounts(refTime())
 	assert.Nil(t, err)
-	assert.Equal(t, 2, counts[systemsCntLabels{optOutOff, lastUploadLast1D}])
-	assert.Equal(t, 12, counts[systemsCntLabels{optOutOff, lastUploadAll}])
-	assert.Equal(t, 2, counts[systemsCntLabels{optOutOn, lastUploadAll}])
+	assert.Equal(t, 2, counts[systemsCntLabels{staleOff, lastUploadLast1D}])
+	assert.Equal(t, 14, counts[systemsCntLabels{staleOff, lastUploadAll}])
+	assert.Equal(t, 0, counts[systemsCntLabels{staleOn, lastUploadAll}])
 }
 
-func TestSystemsCountsOptOut(t *testing.T) {
+func TestSystemsCountsStale(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
 	systemsQuery := database.Db.Model(models.SystemPlatform{})
-	var optOuted int
-	var notOptOuted int
-	assert.Nil(t, updateSystemsQueryOptOut(systemsQuery, true).Count(&optOuted).Error)
-	assert.Nil(t, updateSystemsQueryOptOut(systemsQuery, false).Count(&notOptOuted).Error)
-	assert.Equal(t, 2, optOuted)
-	assert.Equal(t, 12, notOptOuted)
+	var stale int
+	var notStale int
+	assert.Nil(t, updateSystemsQueryStale(systemsQuery, true).Count(&stale).Error)
+	assert.Nil(t, updateSystemsQueryStale(systemsQuery, false).Count(&notStale).Error)
+	assert.Equal(t, 0, stale)
+	assert.Equal(t, 14, notStale)
 }
 
 func TestUploadedSystemsCounts1D(t *testing.T) {

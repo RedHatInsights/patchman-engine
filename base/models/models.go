@@ -36,7 +36,6 @@ type SystemPlatform struct {
 	LastUpdated           *time.Time `gorm:"default:null"`
 	UnchangedSince        *time.Time `gorm:"default:null"`
 	LastEvaluation        *time.Time `gorm:"default:null"`
-	OptOut                bool
 	AdvisoryCountCache    int
 	AdvisoryEnhCountCache int
 	AdvisoryBugCountCache int
