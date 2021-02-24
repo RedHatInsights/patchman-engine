@@ -24,6 +24,7 @@ type PlatformEvent struct {
 	AccountID   int                    `json:"account_id"`
 	B64Identity *string                `json:"b64_identity"`
 	URL         *string                `json:"url"`
+	SystemIDs   []string               `json:"system_ids,omitempty"`
 }
 
 type EventHandler func(message PlatformEvent) error

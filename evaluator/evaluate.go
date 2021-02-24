@@ -722,7 +722,20 @@ func updateAdvisoryAccountDatas(tx *gorm.DB, system *models.SystemPlatform, patc
 }
 
 func evaluateHandler(event mqueue.PlatformEvent) error {
-	err := Evaluate(base.Context, event.AccountID, event.ID, event.Timestamp, evalLabel)
+	var err error
+
+	if event.SystemIDs != nil {
+		// Evaluate in bulk
+		for _, id := range event.SystemIDs {
+			err = Evaluate(base.Context, event.AccountID, id, event.Timestamp, evalLabel)
+			if err != nil {
+				continue
+			}
+		}
+	} else {
+		err = Evaluate(base.Context, event.AccountID, event.ID, event.Timestamp, evalLabel)
+	}
+
 	if err != nil {
 		utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
 			Error("Eval message handling")

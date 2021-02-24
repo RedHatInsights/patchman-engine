@@ -57,16 +57,19 @@ func sendMessages(ctx context.Context, inventoryAIDs ...inventoryAID) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageSendDuration)
 
-	events := make([]mqueue.PlatformEvent, len(inventoryAIDs))
-
 	now := base.Rfc3339Timestamp(time.Now())
+	grouped := map[int][]string{}
+	for _, aid := range inventoryAIDs {
+		grouped[aid.RhAccountID] = append(grouped[aid.RhAccountID], aid.InventoryID)
+	}
 
-	for i, aid := range inventoryAIDs {
-		events[i] = mqueue.PlatformEvent{
+	events := make([]mqueue.PlatformEvent, 0, len(inventoryAIDs))
+	for acc, ev := range grouped {
+		events = append(events, mqueue.PlatformEvent{
 			Timestamp: &now,
-			ID:        aid.InventoryID,
-			AccountID: aid.RhAccountID,
-		}
+			AccountID: acc,
+			SystemIDs: ev,
+		})
 	}
 
 	err := mqueue.WriteEvents(ctx, evalWriter, events...)

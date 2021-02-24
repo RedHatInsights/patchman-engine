@@ -185,7 +185,8 @@ func TestEvaluate(t *testing.T) {
 	database.CheckCachesValid(t)
 
 	// do evaluate the system
-	err := evaluateHandler(mqueue.PlatformEvent{ID: "00000000-0000-0000-0000-000000000012",
+	err := evaluateHandler(mqueue.PlatformEvent{
+		SystemIDs: []string{"00000000-0000-0000-0000-000000000012", "00000000-0000-0000-0000-000000000011"},
 		AccountID: rhAccountID})
 	assert.NoError(t, err)
 
