@@ -4,12 +4,16 @@ import (
 	"app/base"
 	"app/base/database"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 func runAdminAPI() {
 	app := gin.New()
+
+	app.Use(middlewares.TurnpikeAuthenticator())
+
 	app.GET("/sync", sync)
 	app.GET("/re-calc", recalc)
 	app.GET("/check-caches", checkCaches)
