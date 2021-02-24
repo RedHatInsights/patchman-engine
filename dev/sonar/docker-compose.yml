@@ -13,6 +13,6 @@ services:
       - SONAR_LOGIN
     command: /run.sh
     volumes:
-      - ./:/usr/src
+      - ../../:/usr/src
     security_opt:
       - label=disable
