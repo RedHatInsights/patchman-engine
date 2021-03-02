@@ -65,11 +65,17 @@ func sendMessages(ctx context.Context, inventoryAIDs ...inventoryAID) {
 
 	events := make([]mqueue.PlatformEvent, 0, len(inventoryAIDs))
 	for acc, ev := range grouped {
-		events = append(events, mqueue.PlatformEvent{
-			Timestamp: &now,
-			AccountID: acc,
-			SystemIDs: ev,
-		})
+		for start := 0; start < len(ev); start += BatchSize {
+			end := start + BatchSize
+			if end > len(ev) {
+				end = len(ev)
+			}
+			events = append(events, mqueue.PlatformEvent{
+				Timestamp: &now,
+				AccountID: acc,
+				SystemIDs: ev[start:end],
+			})
+		}
 	}
 
 	err := mqueue.WriteEvents(ctx, evalWriter, events...)
