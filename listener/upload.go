@@ -359,6 +359,12 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 		LatestOnly:     true,
 	}
 
+	// use rhsm version if set
+	releasever := systemProfile.Rhsm.Version
+	if len(releasever) > 0 {
+		updatesReq.Releasever = releasever
+	}
+
 	tx := database.Db.BeginTx(base.Context, nil)
 	defer tx.RollbackUnlessCommitted()
 
