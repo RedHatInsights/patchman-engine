@@ -15,3 +15,6 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run unit tests
       run: docker-compose -f docker-compose.test.yml up --build --exit-code-from test
+    - name: Run codecov
+      run: |
+        cat coverage.txt
