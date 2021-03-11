@@ -21,21 +21,3 @@ RUN go mod download && \
     | sh -s -- -b $(go env GOPATH)/bin latest
 
 ADD /dev/kafka/secrets/ca.crt   /opt/
-
-ADD /conf              /go/src/app/conf
-ADD /base              /go/src/app/base
-ADD /manager           /go/src/app/manager
-ADD /listener          /go/src/app/listener
-ADD /evaluator         /go/src/app/evaluator
-ADD /vmaas_sync        /go/src/app/vmaas_sync
-ADD /database_admin    /go/src/app/database_admin
-ADD /docs              /go/src/app/docs
-ADD /platform          /go/src/app/platform
-ADD /scripts           /go/src/app/scripts
-ADD main.go            /go/src/app/
-ADD .golangci.yml      /go/src/app/
-ADD /dev               /go/src/app/dev
-
-# Add dockerfiles for checking
-ADD Dockerfile*        /go/src/app/
-ADD /database          /go/src/app/database/
