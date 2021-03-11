@@ -50,7 +50,7 @@ type Host struct {
 	CulledTimestamp       *base.Rfc3339Timestamp    `json:"culled_timestamp,omitempty"`
 	Reporter              string                    `json:"reporter,omitempty"`
 	Tags                  []inventory.StructuredTag `json:"tags,omitempty"`
-	SystemProfile         inventory.SystemProfileIn `json:"system_profile,omitempty"`
+	SystemProfile         inventory.SystemProfileSpecYamlSystemProfile `json:"system_profile,omitempty"`
 }
 
 type HostEvent struct {
@@ -311,7 +311,7 @@ func deleteOtherSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs 
 	return res.DeletedCount, nil
 }
 
-func processRepos(systemProfile *inventory.SystemProfileIn) []string {
+func processRepos(systemProfile *inventory.SystemProfileSpecYamlSystemProfile) []string {
 	repos := make([]string, 0, len(systemProfile.YumRepos))
 	for _, r := range systemProfile.YumRepos {
 		if len(strings.TrimSpace(r.Id)) == 0 {
@@ -326,7 +326,7 @@ func processRepos(systemProfile *inventory.SystemProfileIn) []string {
 	return repos
 }
 
-func processModules(systemProfile *inventory.SystemProfileIn) []vmaas.UpdatesRequestModulesList {
+func processModules(systemProfile *inventory.SystemProfileSpecYamlSystemProfile) []vmaas.UpdatesRequestModulesList {
 	var modules []vmaas.UpdatesRequestModulesList
 	if count := len(systemProfile.DnfModules); count > 0 {
 		modules = make([]vmaas.UpdatesRequestModulesList, count)
