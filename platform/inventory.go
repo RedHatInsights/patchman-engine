@@ -29,7 +29,7 @@ var pkgs = []string{
 
 // nolint: gosec
 // Create bare system profile
-func makeSystemProfile(id string, randomPkgs bool) inventory.SystemProfileIn {
+func makeSystemProfile(id string, randomPkgs bool) inventory.SystemProfileSpecYamlSystemProfile {
 	_pkgs := pkgs
 	if id == "TEST-NO-PKGS" {
 		_pkgs = []string{}
@@ -38,19 +38,19 @@ func makeSystemProfile(id string, randomPkgs bool) inventory.SystemProfileIn {
 		_pkgs = pkgs[0:nPkgs]
 	}
 
-	return inventory.SystemProfileIn{
+	return inventory.SystemProfileSpecYamlSystemProfile{
 		Arch:              "i686",
 		InstalledPackages: _pkgs,
-		YumRepos: []inventory.YumRepo{
+		YumRepos: []inventory.SystemProfileSpecYamlYumRepo{
 			{
 				Id:       "repo1",
 				Name:     "Debug packages",
-				Baseurl:  "http://repo.com/$arch/$releasever/$product/repo",
+				BaseUrl:  "http://repo.com/$arch/$releasever/$product/repo",
 				Enabled:  true,
 				Gpgcheck: false,
 			},
 		},
-		DnfModules: []inventory.DnfModule{
+		DnfModules: []inventory.SystemProfileSpecYamlDnfModule{
 			{
 				Name:   "firefox",
 				Stream: "60",

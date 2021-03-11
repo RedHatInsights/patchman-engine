@@ -95,8 +95,8 @@ func createTestUploadEvent(rhAccountID, inventoryID, reporter string, packages b
 	if packages {
 		ev.Host.SystemProfile.InstalledPackages = []string{"kernel-54321.rhel8.x86_64"}
 	}
-	ev.Host.SystemProfile.DnfModules = []inventory.DnfModule{{Name: "modName", Stream: "modStream"}}
-	ev.Host.SystemProfile.YumRepos = []inventory.YumRepo{{Id: "repo1", Enabled: true}}
+	ev.Host.SystemProfile.DnfModules = []inventory.SystemProfileSpecYamlDnfModule{{Name: "modName", Stream: "modStream"}}
+	ev.Host.SystemProfile.YumRepos = []inventory.SystemProfileSpecYamlYumRepo{{Id: "repo1", Enabled: true}}
 	return ev
 }
 
