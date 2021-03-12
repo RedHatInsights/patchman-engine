@@ -21,9 +21,9 @@ func TestLatestPackage(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, "kernel", output.Data.Attributes.Description)
-	assert.Equal(t, "kernel", output.Data.Attributes.Summary)
 	assert.Equal(t, "kernel", output.Data.Attributes.Name)
+	assert.Equal(t, "The Linux kernel", output.Data.Attributes.Summary)
+	assert.Equal(t, "The kernel meta package", output.Data.Attributes.Description)
 	assert.Equal(t, "5.6.13-201.fc31.x86_64", output.Data.Attributes.EVRA)
 	assert.Equal(t, "RH-7", output.Data.Attributes.AdvID)
 	assert.Equal(t, "kernel-5.6.13-201.fc31.x86_64", output.Data.ID)
@@ -42,9 +42,9 @@ func TestEvraPackage(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, "kernel", output.Data.Attributes.Description)
-	assert.Equal(t, "kernel", output.Data.Attributes.Summary)
 	assert.Equal(t, "kernel", output.Data.Attributes.Name)
+	assert.Equal(t, "The Linux kernel", output.Data.Attributes.Summary)
+	assert.Equal(t, "The kernel meta package", output.Data.Attributes.Description)
 	assert.Equal(t, "5.6.13-200.fc31.x86_64", output.Data.Attributes.EVRA)
 	assert.Equal(t, "RH-1", output.Data.Attributes.AdvID)
 	assert.Equal(t, "kernel-5.6.13-200.fc31.x86_64", output.Data.ID)

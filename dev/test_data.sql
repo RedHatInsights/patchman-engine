@@ -96,29 +96,39 @@ INSERT INTO package_name(id,name) VALUES
 (110, 'passwd');
 
 INSERT INTO strings(id, value) VALUES
-('1', 'kernel'),
-('2', 'firefox'),
-('3', 'bash'),
-('4', 'curl'),
-('5', 'tar'),
-('6', 'systemd'),
-('7', 'sed'),
-('8', 'grep'),
-('9', 'which'),
-('10', 'passwd');
+('1', 'The Linux kernel'), -- kernel summary
+('11', 'The kernel meta package'), -- kernel description
+('2', 'Mozilla Firefox Web browser'), -- firefox summary
+('22', 'Mozilla Firefox is an open-source web browser...'), -- firefox description
+('3', 'The GNU Bourne Again shell'), -- bash summary
+('33', 'The GNU Bourne Again shell (Bash) is a shell...'), -- bash description
+('4', 'A utility for getting files from remote servers...'), -- curl summary
+('44', 'curl is a command line tool for transferring data...'), -- curl description
+('5', 'A GNU file archiving program'), -- tar summary
+('55', 'The GNU tar program saves many files together in one archive...'), -- tar description
+('6', 'System and Service Manager'), -- systemd summary
+('66', 'systemd is a system and service manager that runs as PID 1...'), -- systemd description
+('7', 'A GNU stream text editor'), -- sed summary
+('77', 'The sed (Stream EDitor) editor is a stream or batch...'), -- sed description
+('8', 'Pattern matching utilities'), -- grep summary
+('88', 'The GNU versions of commonly used grep utilities...'), -- grep description
+('9', 'Displays where a particular program in your path is located'), -- which summary
+('99', 'The which command shows the full pathname of a specific program...'), -- which description
+('10', 'An utility for setting or changing passwords using PAM'), -- passwd summary
+('1010', 'This package contains a system utility (passwd) which sets...'); -- passwd description
 
 INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_id) VALUES
-(1, 101, '5.6.13-200.fc31.x86_64', '1', '1', 1), -- kernel
-(2, 102, '76.0.1-1.fc31.x86_64', '2', '2', 1), -- firefox
-(3, 103, '4.4.19-8.el8_0.x86_64', '3', '3', 3), -- bas
-(4, 104, '7.61.1-8.el8.x86_64', '4', '4', 4), -- curl
-(5, 105, '1.30-4.el8.x86_64', '5', '5', 5), -- tar
-(6, 106, '239-13.el8_0.5.x86_64', '6', '6', 6), -- systemd
-(7, 107, '4.5-1.el8.x86_64', '7', '7', 7), -- sed
-(8, 108, '3.1-6.el8.x86_64', '8', '8', 8), -- grep
-(9, 109, '2.21-10.el8.x86_64', '9', '9', 9), -- which
-(10, 110, '0.80-2.el8.x86_64', '10', '10', 9), -- passwd
-(11, 101, '5.6.13-201.fc31.x86_64', '1', '1', 7); -- kernel
+(1, 101, '5.6.13-200.fc31.x86_64', '11', '1', 1), -- kernel
+(2, 102, '76.0.1-1.fc31.x86_64', '22', '2', 1), -- firefox
+(3, 103, '4.4.19-8.el8_0.x86_64', '33', '3', 3), -- bas
+(4, 104, '7.61.1-8.el8.x86_64', '44', '4', 4), -- curl
+(5, 105, '1.30-4.el8.x86_64', '55', '5', 5), -- tar
+(6, 106, '239-13.el8_0.5.x86_64', '66', '6', 6), -- systemd
+(7, 107, '4.5-1.el8.x86_64', '77', '7', 7), -- sed
+(8, 108, '3.1-6.el8.x86_64', '88', '8', 8), -- grep
+(9, 109, '2.21-10.el8.x86_64', '99', '9', 9), -- which
+(10, 110, '0.80-2.el8.x86_64', '1010', '10', 9), -- passwd
+(11, 101, '5.6.13-201.fc31.x86_64', '11', '1', 7); -- kernel
 
 INSERT INTO system_package (rh_account_id, system_id, package_id, name_id, update_data) VALUES
 (3, 12, 1, 101, '[{"evra": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}]'),

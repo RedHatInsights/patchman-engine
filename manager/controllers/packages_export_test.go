@@ -44,5 +44,5 @@ func TestPackageExportCSV(t *testing.T) {
 	assert.Equal(t, 6, len(lines))
 	assert.Equal(t, "name,systems_installed,systems_updatable,summary", lines[0])
 
-	assert.Equal(t, "kernel,2,1,kernel", lines[1])
+	assert.Equal(t, "kernel,2,1,The Linux kernel", lines[1])
 }
