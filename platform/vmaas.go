@@ -131,7 +131,7 @@ func reposHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
-func packageShandler(c *gin.Context) {
+func packagesHandler(c *gin.Context) {
 	data := vmaas.PackagesResponse{PackageList: map[string]vmaas.PackagesResponsePackageList{
 		"firefox-0:77.0.1-1.fc31.x86_64": {Summary: "Mozilla Firefox Web browser",
 			Description: "Mozilla Firefox is an open-source web browser..."},
@@ -172,7 +172,7 @@ func initVMaaS(app *gin.Engine) {
 	app.POST("/api/v1/errata", erratasHandler)
 	// Mock repos endpoint for VMaaS
 	app.POST("/api/v1/repos", reposHandler)
-	app.POST("/api/v1/packages", packageShandler)
+	app.POST("/api/v1/packages", packagesHandler)
 	// Mock websocket endpoint for VMaaS
 	app.GET("/ws", func(context *gin.Context) {
 		wshandler(context.Writer, context.Request)
