@@ -37,7 +37,7 @@ var SystemPackagesOpts = ListOpts{
 	Fields:         SystemPackagesFields,
 	DefaultFilters: nil,
 	DefaultSort:    "name",
-	SearchFields:   []string{"pn.name", "sum.value", "descr.value"},
+	SearchFields:   []string{"pn.name", "sum.value"},
 }
 
 type SystemPackageDBLoad struct {
