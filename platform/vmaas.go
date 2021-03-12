@@ -133,10 +133,12 @@ func reposHandler(c *gin.Context) {
 
 func packageShandler(c *gin.Context) {
 	data := vmaas.PackagesResponse{PackageList: map[string]vmaas.PackagesResponsePackageList{
-		"firefox-0:77.0.1-1.fc31.x86_64": {Summary: "firefox", Description: "firefox"},
-		"firefox-1:76.0.1-1.fc31.x86_64": {Summary: "firefox", Description: "firefox 2"},
-		"kernel-5.6.13-200.fc31.x86_64":  {Summary: "kernel", Description: "kernel"},
-		"kernel-5.10.13-200.fc31.x86_64": {Summary: "kernel", Description: "kernel 2"},
+		"firefox-0:77.0.1-1.fc31.x86_64": {Summary: "Mozilla Firefox Web browser",
+			Description: "Mozilla Firefox is an open-source web browser..."},
+		"firefox-1:76.0.1-1.fc31.x86_64": {Summary: "Mozilla Firefox Web browser",
+			Description: "Mozilla Firefox is an open-source web browser... 2"},
+		"kernel-5.6.13-200.fc31.x86_64":  {Summary: "The Linux kernel", Description: "The kernel meta package"},
+		"kernel-5.10.13-200.fc31.x86_64": {Summary: "The Linux kernel", Description: "The kernel meta package"},
 	}}
 	c.JSON(http.StatusOK, data)
 }

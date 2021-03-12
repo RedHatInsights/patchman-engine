@@ -27,19 +27,28 @@ func doTestPackages(t *testing.T, q string, check func(output PackagesResponse))
 	check(output)
 }
 
-func TestPackages(t *testing.T) {
+func TestPackagesFilterInstalled(t *testing.T) {
 	doTestPackages(t, "/?filter[systems_installed]=44", func(output PackagesResponse) {
 		assert.Equal(t, 0, len(output.Data))
 	})
+}
+
+func TestPackagesFilterUpdatable(t *testing.T) {
 	doTestPackages(t, "/?filter[systems_updatable]=4", func(output PackagesResponse) {
 		assert.Equal(t, 0, len(output.Data))
 	})
-	doTestPackages(t, "/?filter[summary]=firefox", func(output PackagesResponse) {
+}
+
+func TestPackagesFilterSummary(t *testing.T) {
+	doTestPackages(t, `/?filter[summary]=Mozilla Firefox Web browser`, func(output PackagesResponse) {
 		assert.Equal(t, 1, len(output.Data))
 		assert.Equal(t, "firefox", output.Data[0].Name)
 		assert.Equal(t, 2, output.Data[0].SystemsInstalled)
 		assert.Equal(t, 2, output.Data[0].SystemsUpdatable)
 	})
+}
+
+func TestPackagesFilterSAP(t *testing.T) {
 	doTestPackages(t, "/?filter[system_profile][is_sap][eq]=true", func(output PackagesResponse) {
 		assert.Equal(t, 4, len(output.Data))
 		assert.Equal(t, "kernel", output.Data[3].Name)
