@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/RedHatInsights/patchman-engine.svg?branch=master)](https://travis-ci.org/RedHatInsights/patchman-engine)
+[![Tests Status](https://github.com/RedHatInsights/patchman-engine/actions/workflows/unittests.yml/badge.svg)](https://github.com/RedHatInsights/patchman-engine/actions/workflows/unittests.yml)
+[![OpenAPI Status](https://github.com/RedHatInsights/patchman-engine/actions/workflows/open_api_spec.yml/badge.svg)](https://github.com/RedHatInsights/patchman-engine/actions/workflows/open_api_spec.yml)
 [![Code Coverage](https://codecov.io/gh/RedHatInsights/patchman-engine/branch/master/graph/badge.svg)](https://codecov.io/gh/RedHatInsights/patchman-engine)
 
 # patchman-engine
