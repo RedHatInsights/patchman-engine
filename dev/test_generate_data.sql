@@ -139,6 +139,7 @@ do $$
   declare
     cnt int := 0;
     wanted int;
+    adv_per_system int;
     systems int;
     advs int;
     stat int;
@@ -149,28 +150,35 @@ do $$
     rnd_date2 timestamp with time zone;
     sysid int;
     accid int;
+    row record;
   begin
-    select (select val from _const where key = 'systems') * (select val from _const where key = 'adv_per_system')
-      into wanted;
+    select val into adv_per_system from _const where key = 'adv_per_system';
+    select val * adv_per_system into wanted from _const where key = 'systems';
     select count(*) into systems from system_platform;
     select count(*) into advs from advisory_metadata;
     select count(*) into stat from status;
-    while cnt < wanted loop
-        rnd := random();
-        rnd2 := random();
-        rnd_date1 := now() - make_interval(days => (rnd*365)::int);
-        rnd_date2 := rnd_date1 + make_interval(days => (rnd*100)::int);
-        select rh_account_id, id into accid, sysid from system_platform where id = trunc(systems*rnd)+1;
-        insert into system_advisories
-            (rh_account_id, system_id, advisory_id, first_reported, when_patched, status_id)
-        values
-            (accid, sysid, trunc(advs*rnd2)+1, rnd_date1, case when random() < patched_pct then rnd_date2 else NULL end, trunc(stat*rnd))
-        on conflict do nothing;
-        if mod(cnt, (wanted/10)::int) = 0 then
-            raise notice 'created % system_advisories', cnt;
-        end if;
-        cnt := cnt + 1;
-    end loop;
+    <<systems>>
+    for row in select rh_account_id, id from system_platform
+    loop
+      -- assign random 0-2*adv_per_system advisories to system
+      rnd := random() * 2 * adv_per_system;
+      --while cnt < wanted loop
+      for i in 0..rnd loop
+          rnd2 := random();
+          rnd_date1 := now() - make_interval(days => (rnd*365)::int);
+          rnd_date2 := rnd_date1 + make_interval(days => (rnd*100)::int);
+          insert into system_advisories
+              (rh_account_id, system_id, advisory_id, first_reported, when_patched, status_id)
+          values
+              (row.rh_account_id, row.id, trunc(advs*rnd2)+1, rnd_date1, case when random() < patched_pct then rnd_date2 else NULL end, trunc(stat*rnd2))
+          on conflict do nothing;
+          if mod(cnt, (wanted/10)::int) = 0 then
+              raise notice 'created % system_advisories', cnt;
+          end if;
+          cnt := cnt + 1;
+          exit systems when cnt > wanted;
+      end loop;
+    end loop;  -- <<systems>>
     raise notice 'created % system_advisories', wanted;
   end;
 $$
