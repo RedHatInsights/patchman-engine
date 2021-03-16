@@ -50,6 +50,7 @@ do $$
         values (id, 'RHACCOUNT-' || id );
         cnt := cnt + 1;
     end loop;
+    raise notice 'created % rh_accounts', wanted;
   end;
 $$
 ;
@@ -87,8 +88,12 @@ do $$
         values
             (gen_uuid, gen_uuid, trunc(rnd*rh_accounts)+1, json_data[trunc(rnd*3)], json_hash[trunc(rnd*3)], rnd_date1, rnd_date2, rnd_date1, rnd_date2, trunc(rnd*1000), trunc(rnd*50))
         on conflict do nothing;
+        if mod(cnt, (wanted/10)::int) = 0 then
+            raise notice 'created % system_platforms', cnt;
+        end if;
         cnt := cnt + 1;
     end loop;
+    raise notice 'created % system_platforms', wanted;
   end;
 $$
 ;
@@ -123,6 +128,7 @@ do $$
                 rnd_date1, rnd_date2, 'http://errata.example.com/errata/' || id, trunc(rnd*sev)+1, NULL);
         cnt := cnt + 1;
     end loop;
+    raise notice 'created % advisory_metadata', wanted;
   end;
 $$
 ;
@@ -160,8 +166,12 @@ do $$
         values
             (accid, sysid, trunc(advs*rnd2)+1, rnd_date1, case when random() < patched_pct then rnd_date2 else NULL end, trunc(stat*rnd))
         on conflict do nothing;
+        if mod(cnt, (wanted/10)::int) = 0 then
+            raise notice 'created % system_advisories', cnt;
+        end if;
         cnt := cnt + 1;
     end loop;
+    raise notice 'created % system_advisories', wanted;
   end;
 $$
 ;
