@@ -28,6 +28,10 @@ insert into _json values
 update _json set hash = encode(sha256(data::bytea), 'hex');
 
 
+-- !!! BIG WARNING !!!
+--  this script will remove existing data from (nearly) all tables
+truncate table rh_account cascade;
+truncate table advisory_metadata cascade;
 
 -- generate rh_accounts
 -- duration: 250ms / 5000 accounts (on RDS)
@@ -137,6 +141,8 @@ do $$
     rnd2 float;
     rnd_date1 timestamp with time zone;
     rnd_date2 timestamp with time zone;
+    sysid int;
+    accid int;
   begin
     select (select val from _const where key = 'systems') * (select val from _const where key = 'adv_per_system')
       into wanted;
@@ -148,10 +154,11 @@ do $$
         rnd2 := random();
         rnd_date1 := now() - make_interval(days => (rnd*365)::int);
         rnd_date2 := rnd_date1 + make_interval(days => (rnd*100)::int);
+        select rh_account_id, id into accid, sysid from system_platform where id = trunc(systems*rnd)+1;
         insert into system_advisories
-            (system_id, advisory_id, first_reported, when_patched, status_id)
+            (rh_account_id, system_id, advisory_id, first_reported, when_patched, status_id)
         values
-            (trunc(systems*rnd)+1, trunc(advs*rnd2)+1, rnd_date1, case when random() < patched_pct then rnd_date2 else NULL end, trunc(stat*rnd))
+            (accid, sysid, trunc(advs*rnd2)+1, rnd_date1, case when random() < patched_pct then rnd_date2 else NULL end, trunc(stat*rnd))
         on conflict do nothing;
         cnt := cnt + 1;
     end loop;
