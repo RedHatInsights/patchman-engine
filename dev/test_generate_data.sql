@@ -10,8 +10,9 @@ insert into _const values
     ('accounts',   50),     -- 5000     -- number of rh_accounts
     ('systems',    7500),   -- 750000   -- number of systems(_platform)
     ('advisories', 320),    -- 32000    -- number of advisory_metadata
-    ('adv_per_system', 10)  -- ??       -- should be system_advisories/systems
+    ('adv_per_system', 10),  -- ??       -- should be system_advisories/systems
                             -- ^ counts in prod
+    ('progress_pct', 10)    -- print progress message on every X% reached
     on conflict do nothing;
 
 -- prepare some pseudorandom vmaas jsons
@@ -64,6 +65,7 @@ do $$
   declare
     cnt int := 0;
     wanted int;
+    progress int;
     gen_uuid uuid;
     rh_accounts int;
     rnd float;
@@ -75,6 +77,7 @@ do $$
   begin
     --select count(*) into cnt from system_platform;
     select val into wanted from _const where key = 'systems';
+    select val into progress from _const where key = 'progress_pct';
     select count(*) into rh_accounts from rh_account;
     json_data := array(select data from _json order by id);
     json_hash := array(select hash from _json order by id);
@@ -88,7 +91,7 @@ do $$
         values
             (gen_uuid, gen_uuid, trunc(rnd*rh_accounts)+1, json_data[trunc(rnd*3)], json_hash[trunc(rnd*3)], rnd_date1, rnd_date2, rnd_date1, rnd_date2, trunc(rnd*1000), trunc(rnd*50))
         on conflict do nothing;
-        if mod(cnt, (wanted/10)::int) = 0 then
+        if mod(cnt, (wanted*progress/100)::int) = 0 then
             raise notice 'created % system_platforms', cnt;
         end if;
         cnt := cnt + 1;
@@ -140,6 +143,7 @@ do $$
     cnt int := 0;
     wanted int;
     adv_per_system int;
+    progress int;
     systems int;
     advs int;
     stat int;
@@ -154,6 +158,7 @@ do $$
   begin
     select val into adv_per_system from _const where key = 'adv_per_system';
     select val * adv_per_system into wanted from _const where key = 'systems';
+    select val into progress from _const where key = 'progress_pct';
     select count(*) into systems from system_platform;
     select count(*) into advs from advisory_metadata;
     select count(*) into stat from status;
@@ -172,7 +177,7 @@ do $$
           values
               (row.rh_account_id, row.id, trunc(advs*rnd2)+1, rnd_date1, case when random() < patched_pct then rnd_date2 else NULL end, trunc(stat*rnd2))
           on conflict do nothing;
-          if mod(cnt, (wanted/10)::int) = 0 then
+          if mod(cnt, (wanted*progress/100)::int) = 0 then
               raise notice 'created % system_advisories', cnt;
           end if;
           cnt := cnt + 1;
