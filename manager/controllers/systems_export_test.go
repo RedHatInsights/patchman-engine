@@ -32,7 +32,7 @@ func TestSystemsExportJSON(t *testing.T) {
 	assert.Equal(t, "RHEL", output[0].SystemItemAttributes.OSName)
 	assert.Equal(t, "8", output[0].SystemItemAttributes.OSMajor)
 	assert.Equal(t, "1", output[0].SystemItemAttributes.OSMinor)
-	assert.Equal(t, "8.1", output[0].SystemItemAttributes.RhsmVersion)
+	assert.Equal(t, "8.1", output[0].SystemItemAttributes.Rhsm)
 }
 
 // nolint: lll
@@ -52,7 +52,7 @@ func TestSystemsExportCSV(t *testing.T) {
 	assert.Equal(t, 10, len(lines))
 	assert.Equal(t,
 		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale,"+
-			"third_party,packages_installed,packages_updatable,os_name,os_major,os_minor,rhsm_version",
+			"third_party,packages_installed,packages_updatable,os_name,os_major,os_minor,rhsm",
 		lines[0])
 
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,"+
@@ -90,7 +90,7 @@ func TestSystemsExportCSVFilter(t *testing.T) {
 	assert.Equal(t, 2, len(lines))
 	assert.Equal(t,
 		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale,"+
-			"third_party,packages_installed,packages_updatable,os_name,os_major,os_minor,rhsm_version",
+			"third_party,packages_installed,packages_updatable,os_name,os_major,os_minor,rhsm",
 		lines[0])
 	assert.Equal(t, "", lines[1])
 }

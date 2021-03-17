@@ -46,6 +46,7 @@ github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/RedHatInsights/patchman-clients/inventory v0.7.0 h1:jxK7XeS+ibQYbwGgP+3g0mYDPrPJYeSrPxUhmswy8rk=
 github.com/RedHatInsights/patchman-clients/inventory v0.7.0/go.mod h1:00+VkYcgPXXXcmPp6p2+u2YjpAKKdz9D/7gbm4Nests=
+github.com/RedHatInsights/patchman-clients/inventory v0.9.0 h1:j/cmmgdIjB8sNNt15x6MWlKrNERl9D8yu7JQ1JisCoY=
 github.com/RedHatInsights/patchman-clients/inventory v0.9.0/go.mod h1:Dexksp0JpaW4qEfjKsTpIQ1HMgva7sOW+qGwsaQIscE=
 github.com/RedHatInsights/patchman-clients/rbac v0.7.0 h1:0vNXRTLvuyMm4/50aBP+UQIiuvAguNtAoFXt5gzCnfM=
 github.com/RedHatInsights/patchman-clients/rbac v0.7.0/go.mod h1:fv7Pw9xqXNwdQBD8DLlQAmHofI+xAi8wsXUJftq0tTU=
