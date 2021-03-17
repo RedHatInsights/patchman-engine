@@ -179,8 +179,9 @@ func (AdvisoryAccountData) TableName() string {
 
 type AdvisoryAccountDataSlice []AdvisoryAccountData
 type Repo struct {
-	ID   int
-	Name string
+	ID         int
+	Name       string
+	ThirdParty bool
 }
 
 func (Repo) TableName() string {
