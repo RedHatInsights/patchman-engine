@@ -72,10 +72,10 @@ INSERT INTO system_advisories (rh_account_id, system_id, advisory_id, first_repo
 (2, 10, 1, '2016-09-22 12:00:00-04', NULL, 1),
 (2, 11, 1, '2016-09-22 12:00:00-04', NULL, 0);
 
-INSERT INTO repo (id, name) VALUES
-(1, 'repo1'),
-(2, 'repo2'),
-(3, 'repo3');
+INSERT INTO repo (id, name, third_party) VALUES
+(1, 'repo1', false),
+(2, 'repo2', false),
+(3, 'repo3', true);
 
 INSERT INTO system_repo (rh_account_id, system_id, repo_id) VALUES
 (1, 2, 1),
