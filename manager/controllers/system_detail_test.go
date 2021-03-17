@@ -33,7 +33,7 @@ func TestSystemDetailDefault1(t *testing.T) {
 	assert.Equal(t, "RHEL", output.Data.Attributes.OSName)
 	assert.Equal(t, "8", output.Data.Attributes.OSMajor)
 	assert.Equal(t, "1", output.Data.Attributes.OSMinor)
-	assert.Equal(t, "8.1", output.Data.Attributes.RhsmVersion)
+	assert.Equal(t, "8.1", output.Data.Attributes.Rhsm)
 }
 
 func TestSystemDetailDefault2(t *testing.T) {
@@ -91,7 +91,7 @@ func TestSystemsNoRHSM(t *testing.T) {
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000014", output.Data.ID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000014", output.Data.Attributes.DisplayName)
-	assert.Equal(t, "", output.Data.Attributes.RhsmVersion)
+	assert.Equal(t, "", output.Data.Attributes.Rhsm)
 }
 
 func TestRHSMLessThanOS(t *testing.T) {
@@ -106,7 +106,7 @@ func TestRHSMLessThanOS(t *testing.T) {
 	var output SystemDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data.ID)
-	assert.Equal(t, "8.0", output.Data.Attributes.RhsmVersion)
+	assert.Equal(t, "8.0", output.Data.Attributes.Rhsm)
 	assert.Equal(t, "8", output.Data.Attributes.OSMajor)
 	assert.Equal(t, "1", output.Data.Attributes.OSMinor)
 }
@@ -123,7 +123,7 @@ func TestRHSMGreaterThanOS(t *testing.T) {
 	var output SystemDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000004", output.Data.ID)
-	assert.Equal(t, "8.3", output.Data.Attributes.RhsmVersion)
+	assert.Equal(t, "8.3", output.Data.Attributes.Rhsm)
 	assert.Equal(t, "8", output.Data.Attributes.OSMajor)
 	assert.Equal(t, "2", output.Data.Attributes.OSMinor)
 }

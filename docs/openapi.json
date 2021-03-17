@@ -1996,7 +1996,7 @@
                     "rhsa_count": {
                         "type": "integer"
                     },
-                    "rhsm_version": {
+                    "rhsm": {
                         "type": "string"
                     },
                     "stale": {
@@ -2057,7 +2057,7 @@
                     "rhsa_count": {
                         "type": "integer"
                     },
-                    "rhsm_version": {
+                    "rhsm": {
                         "type": "string"
                     },
                     "stale": {
