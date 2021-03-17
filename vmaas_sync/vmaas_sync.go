@@ -112,6 +112,11 @@ func websocketHandler(data []byte, _ *websocket.Conn) error {
 			utils.Log("err", err.Error()).Fatal("Failed to sync advisories")
 		}
 
+		err = syncRepos()
+		if err != nil {
+			utils.Log("err", err.Error()).Fatal("Failed to sync repos")
+		}
+
 		err = sendReevaluationMessages()
 		if err != nil {
 			utils.Log("err", err.Error()).Error("re-evaluation sending routine failed")
