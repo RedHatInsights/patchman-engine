@@ -155,6 +155,7 @@ func TestEnsureSystemAdvisories(t *testing.T) {
 	deleteSystemAdvisories(t, systemID, advisoryIDs)
 }
 
+// nolint: funlen
 func TestEvaluate(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	utils.SkipWithoutPlatform(t)
@@ -194,15 +195,26 @@ func TestEvaluate(t *testing.T) {
 	checkSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
 	checkSystemPackages(t, systemID, expectedPackageIDs)
 	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 2, 1, 1,
-		0, 2, 2, true)
+		0, 2, 2, false)
 	database.CheckCachesValid(t)
+
+	// test evaluation with third party repos
+	thirdPartySystemRepoIDs := []int{1, 2, 3}
+	deleteSystemRepos(t, rhAccountID, systemID, systemRepoIDs)
+	createSystemRepos(t, rhAccountID, systemID, thirdPartySystemRepoIDs)
+	err = evaluateHandler(mqueue.PlatformEvent{
+		SystemIDs: []string{"00000000-0000-0000-0000-000000000012"},
+		AccountID: rhAccountID})
+	assert.NoError(t, err)
+	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 2, 1, 1,
+		0, 2, 2, true)
 
 	deleteSystemAdvisories(t, systemID, advisoryIDs)
 	deleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 	deleteAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs)
-	deleteSystemRepos(t, rhAccountID, systemID, systemRepoIDs)
+	deleteSystemRepos(t, rhAccountID, systemID, thirdPartySystemRepoIDs)
 
-	assert.Equal(t, 1, len(mockWriter.Messages))
+	assert.Equal(t, 2, len(mockWriter.Messages))
 }
 
 func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {
