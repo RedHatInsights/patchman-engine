@@ -153,7 +153,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaa
 		return errors.Wrap(err, "Package analysis failed")
 	}
 
-	thirdParty, err := analyzeRepos(tx, system, vmaasData)
+	thirdParty, err := analyzeRepos(tx, system)
 	if err != nil {
 		return errors.Wrap(err, "Repo analysis failed")
 	}
@@ -207,21 +207,29 @@ func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas
 	return installed, updatable, nil
 }
 
-func analyzeRepos(tx *gorm.DB, system *models.SystemPlatform, vmaasData vmaas.UpdatesV2Response) (
+func analyzeRepos(tx *gorm.DB, system *models.SystemPlatform) (
 	thirdParty bool, err error) {
 	if !enableRepoAnalysis {
 		utils.Log().Debug("repo analysis disabled, skipping")
 		return false, nil
 	}
 
-	// if system has associated more repos then there are in vmaasData
-	// one of them has to be thirdparty
-	repoCount, err := countRepos(tx, system.RhAccountID, system.ID)
+	// if system has associated at least one third party repo
+	// it's marked as third party system
+	var thirdPartyCount int
+	err = tx.Table("system_repo sr").
+		Joins("join repo r on r.id = sr.repo_id").
+		Where("sr.rh_account_id = ?", system.RhAccountID).
+		Where("sr.system_id = ?", system.ID).
+		Where("r.third_party = true").
+		Count(&thirdPartyCount).Error
 	if err != nil {
-		return false, errors.Wrap(err, "Unable to load repo data")
+		utils.Log("err", err.Error(), "accountID", system.RhAccountID, "systemID", system.ID).
+			Warn("counting third party repos")
+		return false, err
 	}
-	thirdParty = len(vmaasData.RepositoryList) < repoCount
-	return thirdParty, nil
+
+	return (thirdPartyCount > 0), nil
 }
 
 func deleteOldSystemPackages(tx *gorm.DB, accountID, systemID int, packagesByNEVRA map[utils.Nevra]namedPackage) error {
@@ -377,19 +385,6 @@ func loadPackages(tx *gorm.DB, accountID, systemID int,
 	}
 
 	return pkgByNevra, nil
-}
-
-func countRepos(tx *gorm.DB, accountID, systemID int) (int, error) {
-	var count int
-	err := tx.Table("system_repo").
-		Where("rh_account_id = ?", accountID).
-		Where("system_id = ?", systemID).
-		Count(&count).Error
-	if err != nil {
-		utils.Log("err", err.Error(), "accountID", accountID, "systemID", systemID).Warn("counting repos")
-		return 0, err
-	}
-	return count, err
 }
 
 func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
