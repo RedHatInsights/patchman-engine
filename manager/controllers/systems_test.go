@@ -37,6 +37,10 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, "8", output.Data[0].Attributes.OSMajor)
 	assert.Equal(t, "1", output.Data[0].Attributes.OSMinor)
 	assert.Equal(t, "8.1", output.Data[0].Attributes.Rhsm)
+	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.StaleTimestamp.String())
+	assert.Equal(t, "2018-09-02 16:00:00 +0000 UTC", output.Data[0].Attributes.StaleWarningTimestamp.String())
+	assert.Equal(t, "2018-09-09 16:00:00 +0000 UTC", output.Data[0].Attributes.CulledTimestamp.String())
+	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.Created.String())
 
 	// links
 	assert.Equal(t, "/api/patch/v1/systems?offset=0&limit=20&filter[stale]=eq:false&sort=-last_upload", output.Links.First)

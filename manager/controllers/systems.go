@@ -29,6 +29,7 @@ type SystemDBLookup struct {
 	SystemItemAttributes
 }
 
+// nolint: lll
 type SystemItemAttributes struct {
 	DisplayName    string     `json:"display_name" csv:"display_name" query:"sp.display_name"`
 	LastEvaluation *time.Time `json:"last_evaluation" csv:"last_evaluation" query:"sp.last_evaluation"`
@@ -46,6 +47,11 @@ type SystemItemAttributes struct {
 	OSMajor string `json:"os_major" csv:"os_major" query:"ih.system_profile->'operating_system'->>'major'"`
 	OSMinor string `json:"os_minor" csv:"os_minor" query:"ih.system_profile->'operating_system'->>'minor'"`
 	Rhsm    string `json:"rhsm" csv:"rhsm" query:"ih.system_profile->'rhsm'->>'version'"`
+
+	StaleTimestamp        *time.Time `json:"stale_timestamp" csv:"stale_timestamp" query:"ih.stale_timestamp"`
+	StaleWarningTimestamp *time.Time `json:"stale_warning_timestamp" csv:"stale_warning_timestamp" query:"ih.stale_warning_timestamp"`
+	CulledTimestamp       *time.Time `json:"culled_timestamp" csv:"culled_timestamp" query:"ih.culled_timestamp"`
+	Created               *time.Time `json:"created" csv:"created" query:"ih.created"`
 }
 
 type SystemItem struct {
@@ -86,6 +92,10 @@ type SystemsResponse struct {
 // @Param    filter[stale]           query   string  false "Filter"
 // @Param    filter[packages_installed] query string false "Filter"
 // @Param    filter[packages_updatable] query string false "Filter"
+// @Param    filter[stale_timestamp] query string false "Filter"
+// @Param    filter[stale_warning_timestamp] query string false "Filter"
+// @Param    filter[culled_timestamp] query string false "Filter"
+// @Param    filter[created] query string false "Filter"
 // @Param    tags                    query   []string  false "Tag filter"
 // @Param    filter[system_profile][sap_system]   query string   false "Filter only SAP systems"
 // @Param    filter[system_profile][sap_sids][in] query []string false "Filter systems by their SAP SIDs"

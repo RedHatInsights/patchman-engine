@@ -329,6 +329,38 @@
                         }
                     },
                     {
+                        "name": "filter[stale_timestamp]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[stale_warning_timestamp]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[culled_timestamp]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[created]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "tags",
                         "in": "query",
                         "description": "Tag filter",
@@ -1120,6 +1152,38 @@
                     },
                     {
                         "name": "filter[packages_updatable]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[stale_timestamp]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[stale_warning_timestamp]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[culled_timestamp]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[created]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -1960,6 +2024,12 @@
             "controllers.SystemInlineItem": {
                 "type": "object",
                 "properties": {
+                    "created": {
+                        "type": "string"
+                    },
+                    "culled_timestamp": {
+                        "type": "string"
+                    },
                     "display_name": {
                         "type": "string"
                     },
@@ -2001,6 +2071,12 @@
                     },
                     "stale": {
                         "type": "boolean"
+                    },
+                    "stale_timestamp": {
+                        "type": "string"
+                    },
+                    "stale_warning_timestamp": {
+                        "type": "string"
                     },
                     "third_party": {
                         "type": "boolean"
@@ -2024,6 +2100,12 @@
             "controllers.SystemItemAttributes": {
                 "type": "object",
                 "properties": {
+                    "created": {
+                        "type": "string"
+                    },
+                    "culled_timestamp": {
+                        "type": "string"
+                    },
                     "display_name": {
                         "type": "string"
                     },
@@ -2062,6 +2144,12 @@
                     },
                     "stale": {
                         "type": "boolean"
+                    },
+                    "stale_timestamp": {
+                        "type": "string"
+                    },
+                    "stale_warning_timestamp": {
+                        "type": "string"
                     },
                     "third_party": {
                         "type": "boolean"
