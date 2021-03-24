@@ -199,7 +199,7 @@ func TestEvaluate(t *testing.T) {
 	database.CheckCachesValid(t)
 
 	// test evaluation with third party repos
-	thirdPartySystemRepoIDs := []int{1, 2, 3}
+	thirdPartySystemRepoIDs := []int{1, 2, 4}
 	deleteSystemRepos(t, rhAccountID, systemID, systemRepoIDs)
 	createSystemRepos(t, rhAccountID, systemID, thirdPartySystemRepoIDs)
 	err = evaluateHandler(mqueue.PlatformEvent{
