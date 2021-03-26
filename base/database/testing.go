@@ -4,6 +4,7 @@ import (
 	"app/base"
 	"app/base/models"
 	"app/base/utils"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -106,6 +107,17 @@ func CheckAdvisoriesInDB(t *testing.T, advisories []string) []int {
 		ids = append(ids, advisoryObj.ID)
 	}
 	return ids
+}
+
+func CheckThirdPartyRepos(t *testing.T, repoNames []string, thirdParty bool) {
+	var reposObjs []models.Repo
+	err := Db.Where("name IN (?)", repoNames).Find(&reposObjs).Error
+	assert.Nil(t, err)
+	assert.Equal(t, len(reposObjs), len(repoNames), "loaded repos count match")
+	for _, reposObj := range reposObjs {
+		assert.Equal(t, thirdParty, reposObj.ThirdParty,
+			fmt.Sprintf("thirdParty flag for '%s'", reposObj.Name))
+	}
 }
 
 func CheckPackagesNamesInDB(t *testing.T) {
