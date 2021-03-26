@@ -28,7 +28,7 @@ func deleteData(t *testing.T) {
 		Delete(&models.AdvisoryMetadata{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("repo_id NOT IN (1) OR system_id NOT IN (2, 3)").
 		Delete(&models.SystemRepo{}).Error)
-	assert.Nil(t, database.Db.Unscoped().Where("name NOT IN ('repo1', 'repo2')").
+	assert.Nil(t, database.Db.Unscoped().Where("name NOT IN ('repo1', 'repo2', 'repo3', 'repo4')").
 		Delete(&models.Repo{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("inventory_id = ?::uuid", id).Delete(&models.SystemPlatform{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("name = ?", id).Delete(&models.RhAccount{}).Error)
