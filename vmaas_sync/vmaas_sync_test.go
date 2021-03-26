@@ -29,6 +29,18 @@ func TestSync(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
+	// set all repos as thirdparty
+	// this tests syncRepos() function
+	var expectedRepos = []models.Repo{
+		{ID: 1, Name: "repo1", ThirdParty: false},
+		{ID: 2, Name: "repo2", ThirdParty: false},
+		{ID: 3, Name: "repo3", ThirdParty: false},
+		{ID: 4, Name: "repo4", ThirdParty: true},
+	}
+	// assert.NoError(t, database.Db.Set("gorm:query_option", "ON CONFLICT DO NOTHING").Create(&expectedRepos).Error)
+	assert.NoError(t, database.Db.Create(&expectedRepos).Error)
+	assert.NoError(t, database.Db.Table("repo").Update("third_party", true).Error)
+
 	evalWriter = &mockKafkaWriter{}
 
 	err := websocketHandler([]byte("webapps-refreshed"), nil)
@@ -40,6 +52,15 @@ func TestSync(t *testing.T) {
 	evras := []string{"5.10.13-200.fc31.x86_64"}
 	assert.NoError(t, database.Db.Unscoped().Where("evra in (?)", evras).Delete(&models.Package{}).Error)
 	assert.NoError(t, database.Db.Unscoped().Where("name IN (?)", expected).Delete(&models.AdvisoryMetadata{}).Error)
+
+	var repos []models.Repo
+	assert.NoError(t, database.Db.Model(&repos).Error)
+	assert.Equal(t, expectedRepos, repos)
+	//	assert.NoError(t, database.Db.Table("repo").Select("id").Where("third_party = false").Scan(&repos).Error)
+	//	assert.Equal(t, redhatRepos, repos)
+	//	thirdPartyRepos := []int{4}
+	//	assert.NoError(t, database.Db.Table("repo").Select("id").Where("third_party = true").Scan(&repos).Error)
+	//	assert.Equal(t, thirdPartyRepos, repos)
 
 	// For one account we expect a bulk message
 	assert.Equal(t, 1, len(msgs))
