@@ -154,8 +154,6 @@ do $$
     rnd2 float;
     rnd_date1 timestamp with time zone;
     rnd_date2 timestamp with time zone;
-    sysid int;
-    accid int;
     row record;
   begin
     select val into adv_per_system from _const where key = 'adv_per_system';
