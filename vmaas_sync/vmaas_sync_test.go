@@ -29,17 +29,10 @@ func TestSync(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
-	// set all repos as thirdparty
-	// this tests syncRepos() function
-	var expectedRepos = []models.Repo{
-		{ID: 1, Name: "repo1", ThirdParty: false},
-		{ID: 2, Name: "repo2", ThirdParty: false},
-		{ID: 3, Name: "repo3", ThirdParty: false},
-		{ID: 4, Name: "repo4", ThirdParty: true},
-	}
-	// assert.NoError(t, database.Db.Set("gorm:query_option", "ON CONFLICT DO NOTHING").Create(&expectedRepos).Error)
-	assert.NoError(t, database.Db.Create(&expectedRepos).Error)
-	assert.NoError(t, database.Db.Table("repo").Update("third_party", true).Error)
+	// ensure all repos to be marked "third_party" = true
+	assert.NoError(t, database.Db.Table("repo").Where("name IN (?)", []string{"repo1", "repo2", "repo3"}).
+		Update("third_party", true).Error)
+	database.CheckThirdPartyRepos(t, []string{"repo1", "repo2", "repo3", "repo4"}, true) // ensure testing set
 
 	evalWriter = &mockKafkaWriter{}
 
@@ -55,12 +48,9 @@ func TestSync(t *testing.T) {
 
 	var repos []models.Repo
 	assert.NoError(t, database.Db.Model(&repos).Error)
-	assert.Equal(t, expectedRepos, repos)
-	//	assert.NoError(t, database.Db.Table("repo").Select("id").Where("third_party = false").Scan(&repos).Error)
-	//	assert.Equal(t, redhatRepos, repos)
-	//	thirdPartyRepos := []int{4}
-	//	assert.NoError(t, database.Db.Table("repo").Select("id").Where("third_party = true").Scan(&repos).Error)
-	//	assert.Equal(t, thirdPartyRepos, repos)
+
+	database.CheckThirdPartyRepos(t, []string{"repo1", "repo2", "repo3"}, false) // sync updated the flag
+	database.CheckThirdPartyRepos(t, []string{"repo4"}, true)                    // third party repo4 has correct flag
 
 	// For one account we expect a bulk message
 	assert.Equal(t, 1, len(msgs))
