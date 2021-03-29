@@ -10,7 +10,9 @@ insert into _const values
     ('accounts',   50),     -- 5000     -- number of rh_accounts
     ('systems',    7500),   -- 750000   -- number of systems(_platform)
     ('advisories', 320),    -- 32000    -- number of advisory_metadata
+    ('repos',      350),    -- 35000    -- number of repos
     ('adv_per_system', 10),  -- ??       -- should be system_advisories/systems
+    ('repo_per_system', 10),  -- ??       -- should be system_repo/systems
                             -- ^ counts in prod
     ('progress_pct', 10)    -- print progress message on every X% reached
     on conflict do nothing;
@@ -185,6 +187,71 @@ do $$
       end loop;
     end loop;  -- <<systems>>
     raise notice 'created % system_advisories', wanted;
+  end;
+$$
+;
+
+-- generate repos
+-- duration: 2s / 35k advisories (on RDS)
+alter sequence repo_id_seq restart with 1;
+do $$
+  declare
+    cnt int :=0;
+    wanted int;
+    id int;
+  begin
+    select val into wanted from _const where key = 'repos';
+    while cnt < wanted loop
+        id := nextval('repo_id_seq');
+        insert into repo (id, name)
+               values (id, 'REPO-' || id )
+               on conflict do nothing;
+        cnt := cnt + 1;
+    end loop;
+    raise notice 'created % repos', wanted;
+  end;
+$$
+;
+
+-- generate system_repo
+-- duration: 325s (05:25) / 7.5M system_repo (a.k.a. 750k systems with 10 repo in avg) (on RDS) 
+do $$
+  declare
+    cnt int := 0;
+    wanted int;
+    repo_per_system int;
+    progress int;
+    systems int;
+    repos int;
+    rnd float;
+    rnd2 float;
+    row record;
+  begin
+    select val into repo_per_system from _const where key = 'repo_per_system';
+    select val * repo_per_system into wanted from _const where key = 'systems';
+    select val into progress from _const where key = 'progress_pct';
+    select count(*) into systems from system_platform;
+    select count(*) into repos from repo;
+    <<systems>>
+    for row in select rh_account_id, id from system_platform
+    loop
+      -- assign random 0-2*repo_per_system repos per system
+      rnd := random() * 2 * repo_per_system;
+      for i in 0..rnd loop
+          rnd2 := random();
+          insert into system_repo
+              (rh_account_id, system_id, repo_id)
+          values
+              (row.rh_account_id, row.id, trunc(repos*rnd2)+1)
+          on conflict do nothing;
+          if mod(cnt, (wanted*progress/100)::int) = 0 then
+              raise notice 'created % system_repos', cnt;
+          end if;
+          cnt := cnt + 1;
+          exit systems when cnt > wanted;
+      end loop;
+    end loop;  -- <<systems>>
+    raise notice 'created % system_repos', wanted;
   end;
 $$
 ;
