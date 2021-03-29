@@ -89,9 +89,9 @@ do $$
         rnd_date1 := now() - make_interval(days => (rnd*30)::int);
         rnd_date2 := rnd_date1 + make_interval(days => (rnd*10)::int);
         insert into system_platform
-            (inventory_id, display_name, rh_account_id, vmaas_json, json_checksum, first_reported, last_updated, unchanged_since, last_upload, packages_installed, packages_updatable)
+            (inventory_id, display_name, rh_account_id, vmaas_json, json_checksum, last_updated, unchanged_since, last_upload, packages_installed, packages_updatable)
         values
-            (gen_uuid, gen_uuid, trunc(rnd*rh_accounts)+1, json_data[trunc(rnd*3)], json_hash[trunc(rnd*3)], rnd_date1, rnd_date2, rnd_date1, rnd_date2, trunc(rnd*1000), trunc(rnd*50))
+            (gen_uuid, gen_uuid, trunc(rnd*rh_accounts)+1, json_data[trunc(rnd*3)], json_hash[trunc(rnd*3)], rnd_date2, rnd_date1, rnd_date2, trunc(rnd*1000), trunc(rnd*50))
         on conflict do nothing;
         if mod(cnt, (wanted*progress/100)::int) = 0 then
             raise notice 'created % system_platforms', cnt;
