@@ -53,12 +53,14 @@ func (t *MockKafkaWriter) WriteMessages(_ context.Context, ev ...kafka.Message) 
 	return nil
 }
 
-func AssertWait(t *testing.T, timeoutSeconds int, funToAssert func() bool) {
+func AssertEqualWait(t *testing.T, timeoutSeconds int, values func() (exp, act interface{})) {
+	var exp, act interface{}
 	for i := 0; i < timeoutSeconds*10; i++ {
 		time.Sleep(time.Millisecond * 100)
-		if funToAssert() {
+		exp, act = values()
+		if exp == act {
 			break
 		}
 	}
-	assert.True(t, funToAssert())
+	assert.Equal(t, exp, act)
 }

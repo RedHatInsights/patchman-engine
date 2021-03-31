@@ -14,8 +14,8 @@ func TestRunReaders(t *testing.T) {
 	wg.Add(1)
 	runReaders(&wg, mqueue.CreateCountedMockReader(&nReaders))
 	nReadersExpected := 8
-	utils.AssertWait(t, 10, func() bool {
-		return nReadersExpected == nReaders
+	utils.AssertEqualWait(t, 10, func() (exp, act interface{}) {
+		return nReadersExpected, nReaders
 	})
 }
 
