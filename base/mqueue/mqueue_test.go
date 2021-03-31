@@ -42,8 +42,8 @@ func TestRoundTrip(t *testing.T) {
 	writer := WriterFromEnv("test")
 	eventIn := PlatformEvent{ID: someid}
 	assert.NoError(t, WriteEvents(context.Background(), writer, eventIn))
-	utils.AssertWait(t, 8, func() bool {
-		return eventIn.ID == eventOut.ID
+	utils.AssertEqualWait(t, 8, func() (exp, act interface{}) {
+		return eventIn.ID, eventOut.ID
 	})
 }
 
