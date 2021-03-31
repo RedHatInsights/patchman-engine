@@ -26,6 +26,7 @@ var (
 	enableRecalcOnStart      bool
 	enableCulledSystemDelete bool
 	enableSystemStaling      bool
+	enableTurnpikeAuth       bool
 )
 
 func configure() {
@@ -46,6 +47,7 @@ func configure() {
 	enableRecalcOnStart = utils.GetBoolEnvOrDefault("ENABLE_RECALC_ON_START", false)
 	enableCulledSystemDelete = utils.GetBoolEnvOrDefault("ENABLE_CULLED_SYSTEM_DELETE", true)
 	enableSystemStaling = utils.GetBoolEnvOrDefault("ENABLE_SYSTEM_STALING", true)
+	enableTurnpikeAuth = utils.GetBoolEnvOrDefault("ENABLE_TURNPIKE_AUTH", false)
 
 	advisoryPageSize = utils.GetIntEnvOrDefault("ERRATA_PAGE_SIZE", 500)
 	packagesPageSize = utils.GetIntEnvOrDefault("PACKAGES_PAGE_SIZE", 5000)
