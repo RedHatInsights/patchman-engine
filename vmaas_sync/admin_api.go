@@ -12,7 +12,9 @@ import (
 func runAdminAPI() {
 	app := gin.New()
 
-	app.Use(middlewares.TurnpikeAuthenticator())
+	if enableTurnpikeAuth {
+		app.Use(middlewares.TurnpikeAuthenticator())
+	}
 
 	app.GET("/sync", sync)
 	app.GET("/re-calc", recalc)
