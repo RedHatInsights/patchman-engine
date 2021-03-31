@@ -7,6 +7,7 @@ import (
 	"app/base/utils"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
 	"os"
 	"time"
 )
@@ -106,21 +107,29 @@ func websocketHandler(data []byte, _ *websocket.Conn) error {
 	utils.Log("data", string(data)).Info("Received VMaaS websocket message")
 
 	if text == "webapps-refreshed" {
-		err := syncAdvisories()
+		err := syncData()
 		if err != nil {
 			// This probably means programming error, better to exit with nonzero error code, so the error is noticed
-			utils.Log("err", err.Error()).Fatal("Failed to sync advisories")
-		}
-
-		err = syncRepos()
-		if err != nil {
-			utils.Log("err", err.Error()).Fatal("Failed to sync repos")
+			utils.Log("err", err.Error()).Fatal("vmaas data sync failed")
 		}
 
 		err = sendReevaluationMessages()
 		if err != nil {
 			utils.Log("err", err.Error()).Error("re-evaluation sending routine failed")
 		}
+	}
+	return nil
+}
+
+func syncData() error {
+	err := syncAdvisories()
+	if err != nil {
+		return errors.Wrap(err, "Failed to sync advisories")
+	}
+
+	err = syncRepos()
+	if err != nil {
+		return errors.Wrap(err, "Failed to sync repos")
 	}
 	return nil
 }
