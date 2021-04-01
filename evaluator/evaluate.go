@@ -216,18 +216,19 @@ func analyzeRepos(tx *gorm.DB, system *models.SystemPlatform) (
 
 	// if system has associated at least one third party repo
 	// it's marked as third party system
+	var thirdPartyCount int
 	err = tx.Table("system_repo sr").
 		Joins("join repo r on r.id = sr.repo_id").
 		Where("sr.rh_account_id = ?", system.RhAccountID).
 		Where("sr.system_id = ?", system.ID).
 		Where("r.third_party = true").
-		Count(&thirdParty).Error
+		Count(&thirdPartyCount).Error
 	if err != nil {
 		utils.Log("err", err.Error(), "accountID", system.RhAccountID, "systemID", system.ID).
 			Warn("counting third party repos")
 		return false, err
 	}
-
+	thirdParty = thirdPartyCount > 0
 	return thirdParty, nil
 }
 
