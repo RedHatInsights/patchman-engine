@@ -6,6 +6,7 @@ import (
 	"app/base/utils"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -155,4 +156,133 @@ func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int
 	}
 	// covers both cases, when we have advisory_account_data stored with 0 systems_affected, and when we delete it
 	assert.Equal(t, systemsAffected*len(advisoryIDs), sum, "sum of systems_affected does not match")
+}
+
+func CreateReportedAdvisories(reportedAdvisories ...string) map[string]bool {
+	reportedAdvisoriesMap := map[string]bool{}
+	for _, adv := range reportedAdvisories {
+		reportedAdvisoriesMap[adv] = true
+	}
+	return reportedAdvisoriesMap
+}
+
+func CreateStoredAdvisories(advisoryPatched map[int]*time.Time) map[string]models.SystemAdvisories {
+	systemAdvisoriesMap := map[string]models.SystemAdvisories{}
+	for advisoryID, patched := range advisoryPatched {
+		systemAdvisoriesMap["ER-"+strconv.Itoa(advisoryID)] = models.SystemAdvisories{
+			WhenPatched: patched,
+			AdvisoryID:  advisoryID}
+	}
+	return systemAdvisoriesMap
+}
+
+func CreateSystemAdvisories(t *testing.T, rhAccountID int, systemID int, advisoryIDs []int,
+	whenPatched *time.Time) {
+	for _, advisoryID := range advisoryIDs {
+		err := Db.Create(&models.SystemAdvisories{
+			RhAccountID: rhAccountID, SystemID: systemID, AdvisoryID: advisoryID, WhenPatched: whenPatched}).Error
+		assert.Nil(t, err)
+	}
+	CheckSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, whenPatched)
+}
+
+func CreateAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int,
+	systemsAffected int) {
+	for _, advisoryID := range advisoryIDs {
+		err := Db.Create(&models.AdvisoryAccountData{
+			AdvisoryID: advisoryID, RhAccountID: rhAccountID, SystemsAffected: systemsAffected}).Error
+		assert.Nil(t, err)
+	}
+	CheckAdvisoriesAccountData(t, rhAccountID, advisoryIDs, systemsAffected)
+}
+
+func CreateSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
+	for _, repoID := range repoIDs {
+		err := Db.Create(&models.SystemRepo{
+			RhAccountID: rhAccountID, SystemID: systemID, RepoID: repoID}).Error
+		assert.Nil(t, err)
+	}
+	CheckSystemRepos(t, rhAccountID, systemID, repoIDs)
+}
+
+func CheckSystemAdvisoriesWhenPatched(t *testing.T, systemID int, advisoryIDs []int,
+	whenPatched *time.Time) {
+	var systemAdvisories []models.SystemAdvisories
+	err := Db.Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
+		Find(&systemAdvisories).Error
+	assert.Nil(t, err)
+	assert.Equal(t, len(advisoryIDs), len(systemAdvisories))
+	for _, systemAdvisory := range systemAdvisories {
+		assert.NotNil(t, systemAdvisory.FirstReported)
+		if whenPatched == nil {
+			assert.Nil(t, systemAdvisory.WhenPatched)
+		} else {
+			assert.Equal(t, systemAdvisory.WhenPatched.String(), whenPatched.String())
+		}
+	}
+}
+
+func CheckSystemPackages(t *testing.T, systemID int, packageIDs []int) {
+	var systemPackages []models.SystemPackage
+	err := Db.Where("system_id = ? AND package_id IN (?)", systemID, packageIDs).
+		Find(&systemPackages).Error
+	assert.Nil(t, err)
+	assert.Equal(t, len(packageIDs), len(systemPackages))
+}
+
+func CheckSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
+	var systemRepos []models.SystemRepo
+	err := Db.Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)",
+		rhAccountID, systemID, repoIDs).
+		Find(&systemRepos).Error
+	assert.Nil(t, err)
+	assert.Equal(t, len(repoIDs), len(systemRepos))
+}
+
+func DeleteSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int) {
+	err := Db.Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
+		Delete(&models.SystemAdvisories{}).Error
+	assert.Nil(t, err)
+
+	var systemAdvisories []models.SystemAdvisories
+	err = Db.Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
+		Find(&systemAdvisories).Error
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(systemAdvisories))
+	assert.Nil(t, Db.Exec("SELECT * FROM update_system_caches(?)", systemID).Error)
+}
+
+func DeleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int) {
+	err := Db.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
+		Delete(&models.AdvisoryAccountData{}).Error
+	assert.Nil(t, err)
+
+	var advisoryAccountData []models.AdvisoryAccountData
+	err = Db.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
+		Find(&advisoryAccountData).Error
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(advisoryAccountData))
+}
+
+func DeleteSystemPackages(t *testing.T, systemID int, pkgIDs []int) {
+	err := Db.Where("system_id = ? and package_id in(?)", systemID, pkgIDs).
+		Delete(&models.SystemPackage{}).Error
+	assert.Nil(t, err)
+}
+
+func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
+	err := Db.Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)",
+		rhAccountID, systemID, repoIDs).
+		Delete(&models.SystemRepo{}).Error
+	assert.Nil(t, err)
+}
+
+func UpdateSystemAdvisoriesWhenPatched(t *testing.T, systemID, accountID int, advisoryIDs []int,
+	whenPatched *time.Time) {
+	err := Db.Model(models.SystemAdvisories{}).
+		Where("system_id = ?", systemID).
+		Where("rh_account_id = ?", accountID).
+		Where("advisory_id IN (?)", advisoryIDs).
+		Update("when_patched", whenPatched).Error
+	assert.Nil(t, err)
 }

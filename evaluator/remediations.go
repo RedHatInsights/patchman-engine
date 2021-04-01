@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"app/base"
+	"app/base/models"
 	"app/base/mqueue"
 	"fmt"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
@@ -23,7 +24,7 @@ type RemediationsState struct {
 	Issues []string `json:"issues"`
 }
 
-func createRemediationsStateMsg(id string, response vmaas.UpdatesV2Response) *RemediationsState {
+func createRemediationsStateMsg(id string, response *vmaas.UpdatesV2Response) *RemediationsState {
 	advisories := getReportedAdvisories(response)
 	packages := getReportedPackageUpdates(response)
 	var state RemediationsState
@@ -39,12 +40,41 @@ func createRemediationsStateMsg(id string, response vmaas.UpdatesV2Response) *Re
 	return &state
 }
 
-func publishRemediationsState(id string, response vmaas.UpdatesV2Response) error {
+func getReportedAdvisories(vmaasData *vmaas.UpdatesV2Response) map[string]bool {
+	advisories := map[string]bool{}
+	for _, updates := range vmaasData.UpdateList {
+		for _, u := range updates.AvailableUpdates {
+			advisories[u.Erratum] = true
+		}
+	}
+	return advisories
+}
+
+func getReportedPackageUpdates(vmaasData *vmaas.UpdatesV2Response) map[string]bool {
+	packages := map[string]bool{}
+	for _, updates := range vmaasData.UpdateList {
+		for _, u := range updates.AvailableUpdates {
+			packages[u.Package] = true
+		}
+	}
+	return packages
+}
+
+func publishRemediationsState(system *models.SystemPlatform, response *vmaas.UpdatesV2Response) error {
 	if remediationsPublisher == nil {
 		return nil
 	}
-	state := createRemediationsStateMsg(id, response)
-	msg, err := mqueue.MessageFromJSON(id, state)
+
+	if response == nil {
+		return nil
+	}
+
+	if system == nil {
+		return nil
+	}
+
+	state := createRemediationsStateMsg(system.InventoryID, response)
+	msg, err := mqueue.MessageFromJSON(system.InventoryID, state)
 	if err != nil {
 		return errors.Wrap(err, "Formatting message")
 	}
