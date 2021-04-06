@@ -92,15 +92,15 @@ func TestParseAdvisories(t *testing.T) {
 
 	data := map[string]vmaas.ErrataResponseErrataList{
 		"ER1": {
-			Updated:     "2004-09-02T00:00:00+00:00",
-			Issued:      "2004-09-02T00:00:00+00:00",
-			Description: "DESC",
-			Solution:    "SOL",
-			Summary:     "SUM",
-			Url:         "URL",
-			Synopsis:    "SYN",
-			Type:        "bugfix",
-			CveList:     []string{"CVE-1", "CVE-2", "CVE-3"},
+			Updated:     vmaas.PtrString("2004-09-02T00:00:00+00:00"),
+			Issued:      utils.PtrTimeParse("2004-09-02T00:00:00+00:00"),
+			Description: vmaas.PtrString("DESC"),
+			Solution:    vmaas.PtrString("SOL"),
+			Summary:     vmaas.PtrString("SUM"),
+			Url:         vmaas.PtrString("URL"),
+			Synopsis:    vmaas.PtrString("SYN"),
+			Type:        vmaas.PtrString("bugfix"),
+			CveList:     utils.PtrSliceString([]string{"CVE-1", "CVE-2", "CVE-3"}),
 		},
 	}
 
@@ -130,20 +130,21 @@ func TestSaveAdvisories(t *testing.T) {
 	var data vmaas.ErrataResponse
 
 	assert.Nil(t, json.Unmarshal([]byte(testAdvisories), &data))
-	for i, v := range data.ErrataList {
-		v.Url = "TEST"
-		data.ErrataList[i] = v
+	errataList := data.GetErrataList()
+	for i, v := range errataList {
+		v.SetUrl("TEST")
+		errataList[i] = v
 	}
 
 	// Repeatedly storing erratas should just overwrite them
 	for i := 0; i < 2; i++ {
-		_, err := storeAdvisories(data.ErrataList)
+		_, err := storeAdvisories(data.GetErrataList())
 		assert.NoError(t, err)
 		var count int
 
 		assert.Nil(t, database.Db.Model(&models.AdvisoryMetadata{}).Where("url = ?", "TEST").Count(&count).Error)
 
-		assert.Equal(t, count, len(data.ErrataList))
+		assert.Equal(t, count, len(data.GetErrataList()))
 	}
 
 	assert.Nil(t, database.Db.Unscoped().Where("url = ?", "TEST").Delete(&models.AdvisoryMetadata{}).Error)

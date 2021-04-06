@@ -19,11 +19,11 @@ func TestVMaaSGetUpdates(t *testing.T) {
 
 	configure()
 	vmaasData := getVMaaSUpdates(t)
-	for k, v := range vmaasData.UpdateList {
+	for k, v := range vmaasData.GetUpdateList() {
 		if strings.HasPrefix(k, "firefox") {
-			assert.Equal(t, 2, len(v.AvailableUpdates))
+			assert.Equal(t, 2, len(v.GetAvailableUpdates()))
 		} else if strings.HasPrefix(k, "kernel") {
-			assert.Equal(t, 1, len(v.AvailableUpdates))
+			assert.Equal(t, 1, len(v.GetAvailableUpdates()))
 		}
 	}
 }
@@ -38,13 +38,18 @@ func TestGetReportedAdvisories1(t *testing.T) {
 }
 
 func TestGetReportedAdvisories2(t *testing.T) {
-	vmaasData := vmaas.UpdatesV2Response{
-		UpdateList: map[string]vmaas.UpdatesV2ResponseUpdateList{
-			"pkg-a": {AvailableUpdates: []vmaas.UpdatesResponseAvailableUpdates{{Erratum: "ER1"}, {Erratum: "ER2"}}},
-			"pkg-b": {AvailableUpdates: []vmaas.UpdatesResponseAvailableUpdates{{Erratum: "ER2"}, {Erratum: "ER3"}}},
-			"pkg-c": {AvailableUpdates: []vmaas.UpdatesResponseAvailableUpdates{{Erratum: "ER3"}, {Erratum: "ER4"}}},
-		},
+	aUpdates := []vmaas.UpdatesV2ResponseAvailableUpdates{
+		{Erratum: vmaas.PtrString("ER1")}, {Erratum: vmaas.PtrString("ER2")}}
+	bUpdates := []vmaas.UpdatesV2ResponseAvailableUpdates{
+		{Erratum: vmaas.PtrString("ER2")}, {Erratum: vmaas.PtrString("ER3")}}
+	cUpdates := []vmaas.UpdatesV2ResponseAvailableUpdates{
+		{Erratum: vmaas.PtrString("ER3")}, {Erratum: vmaas.PtrString("ER4")}}
+	updateList := map[string]vmaas.UpdatesV2ResponseUpdateList{
+		"pkg-a": {AvailableUpdates: &aUpdates},
+		"pkg-b": {AvailableUpdates: &bUpdates},
+		"pkg-c": {AvailableUpdates: &cUpdates},
 	}
+	vmaasData := vmaas.UpdatesV2Response{UpdateList: &updateList}
 	advisories := getReportedAdvisories(&vmaasData)
 	assert.Equal(t, 4, len(advisories))
 }
@@ -130,8 +135,7 @@ func TestEnsureSystemAdvisories(t *testing.T) {
 }
 
 func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {
-	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{}
-	vmaasData, resp, err := vmaasClient.DefaultApi.AppUpdatesHandlerV3PostPost(context.Background(), &vmaasCallArgs)
+	vmaasData, resp, err := vmaasClient.DefaultApi.AppUpdatesHandlerV3PostPost(context.Background()).Execute()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Nil(t, resp.Body.Close())
