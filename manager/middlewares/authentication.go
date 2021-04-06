@@ -27,7 +27,7 @@ func findAccount(c *gin.Context, identity *identity.Identity) bool {
 	} else {
 		var acc models.RhAccount
 		if err := database.Db.Where("name = ?", identity.AccountNumber).Find(&acc).Error; err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Could not find rh_account"})
+			c.AbortWithStatus(http.StatusNoContent)
 			return false
 		}
 		AccountIDCache.Values[acc.Name] = acc.ID
