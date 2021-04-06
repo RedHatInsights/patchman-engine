@@ -49,12 +49,13 @@ func TestUpdateSystemPlatform(t *testing.T) {
 
 	accountID1 := getOrCreateTestAccount(t)
 	accountID2 := getOrCreateTestAccount(t)
+	modulesList := []vmaas.UpdatesV3RequestModulesList{}
 	req := vmaas.UpdatesV3Request{
 		PackageList:    []string{"package0"},
-		RepositoryList: []string{"repo1", "repo2", "repo3"},
-		ModulesList:    []vmaas.UpdatesRequestModulesList{},
-		Releasever:     "7Server",
-		Basearch:       "x86_64",
+		RepositoryList: utils.PtrSliceString([]string{"repo1", "repo2", "repo3"}),
+		ModulesList:    &modulesList,
+		Releasever:     vmaas.PtrString("7Server"),
+		Basearch:       vmaas.PtrString("x86_64"),
 	}
 
 	sys1, err := updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(t), &req)
@@ -62,7 +63,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 
 	reporterID1 := 1
 	assertSystemInDB(t, id, &accountID1, &reporterID1)
-	assertReposInDB(t, req.RepositoryList)
+	assertReposInDB(t, req.GetRepositoryList())
 
 	host2 := createTestInvHost(t)
 	host2.Reporter = "yupana"
