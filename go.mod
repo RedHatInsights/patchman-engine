@@ -5,7 +5,7 @@ go 1.12
 require (
 	github.com/RedHatInsights/patchman-clients/inventory v0.9.0
 	github.com/RedHatInsights/patchman-clients/rbac v0.7.0
-	github.com/RedHatInsights/patchman-clients/vmaas v0.8.0
+	github.com/RedHatInsights/patchman-clients/vmaas v0.10.0
 	github.com/antihax/optional v1.0.0
 	github.com/aws/aws-sdk-go v1.30.9
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
@@ -15,6 +15,7 @@ require (
 	github.com/gin-gonic/gin v1.6.3
 	github.com/gocarina/gocsv v0.0.0-20200330101823-46266ca37bd3
 	github.com/golang-migrate/migrate/v4 v4.14.1
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -34,7 +35,9 @@ require (
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/zsais/go-gin-prometheus v0.1.0
-	golang.org/x/net v0.0.0-20201029221708-28c70e62bb1d
+	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
+	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602 // indirect
+	google.golang.org/appengine v1.6.7 // indirect
 	modernc.org/mathutil v1.0.0
 	modernc.org/strutil v1.1.0
 )
