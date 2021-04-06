@@ -72,7 +72,7 @@ func TestGetUpdatedRepos(t *testing.T) {
 	configure()
 
 	modifiedSince := time.Now()
-	repos, err := getUpdatedRepos(&modifiedSince)
+	repos, err := getUpdatedRepos(&modifiedSince, true)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(repos))
 }
