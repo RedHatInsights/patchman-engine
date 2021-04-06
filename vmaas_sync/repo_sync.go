@@ -5,8 +5,8 @@ import (
 )
 
 func syncRepos() error {
-	// mark all repos known to vmaas as our (i.e. not thirdparty)
-	updateRepos, err := getUpdatedRepos(nil)
+	// mark non-thirdparty repos known to vmaas
+	updateRepos, err := getUpdatedRepos(nil, false)
 	if err != nil {
 		return err
 	}

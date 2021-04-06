@@ -17,7 +17,7 @@ func getCurrentRepoBasedInventoryIDs() ([]inventoryAID, error) {
 		return nil, err
 	}
 
-	updateRepos, err := getUpdatedRepos(lastRepoBaseEval)
+	updateRepos, err := getUpdatedRepos(lastRepoBaseEval, true)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func getRepoBasedInventoryIDs(repos []string) ([]inventoryAID, error) {
 }
 
 //nolint unused
-func getUpdatedRepos(modifiedSince *time.Time) ([]string, error) {
+func getUpdatedRepos(modifiedSince *time.Time, thirdParty bool) ([]string, error) {
 	page := float32(1)
 	var reposArr []string
 	for {
@@ -95,6 +95,7 @@ func getUpdatedRepos(modifiedSince *time.Time) ([]string, error) {
 			Page:           page,
 			RepositoryList: []string{".*"},
 			PageSize:       float32(advisoryPageSize),
+			ThirdParty:		thirdParty,
 		}
 
 		if modifiedSince != nil {
