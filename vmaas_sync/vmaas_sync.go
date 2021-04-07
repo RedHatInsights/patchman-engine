@@ -35,7 +35,7 @@ func configure() {
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
 	cfg := vmaas.NewConfiguration()
-	cfg.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
+	cfg.Servers[0].URL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
 	cfg.Debug = traceAPI
 
 	vmaasClient = vmaas.NewAPIClient(cfg)

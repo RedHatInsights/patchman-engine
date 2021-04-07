@@ -42,9 +42,9 @@ func createRemediationsStateMsg(id string, response *vmaas.UpdatesV2Response) *R
 
 func getReportedAdvisories(vmaasData *vmaas.UpdatesV2Response) map[string]bool {
 	advisories := map[string]bool{}
-	for _, updates := range vmaasData.UpdateList {
-		for _, u := range updates.AvailableUpdates {
-			advisories[u.Erratum] = true
+	for _, updates := range vmaasData.GetUpdateList() {
+		for _, u := range updates.GetAvailableUpdates() {
+			advisories[u.GetErratum()] = true
 		}
 	}
 	return advisories
@@ -52,9 +52,9 @@ func getReportedAdvisories(vmaasData *vmaas.UpdatesV2Response) map[string]bool {
 
 func getReportedPackageUpdates(vmaasData *vmaas.UpdatesV2Response) map[string]bool {
 	packages := map[string]bool{}
-	for _, updates := range vmaasData.UpdateList {
-		for _, u := range updates.AvailableUpdates {
-			packages[u.Package] = true
+	for _, updates := range vmaasData.GetUpdateList() {
+		for _, u := range updates.GetAvailableUpdates() {
+			packages[u.GetPackage()] = true
 		}
 	}
 	return packages

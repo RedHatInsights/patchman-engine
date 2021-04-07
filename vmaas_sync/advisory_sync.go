@@ -7,7 +7,6 @@ import (
 	"app/base/utils"
 	"encoding/json"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/antihax/optional"
 	"github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/pkg/errors"
 	"modernc.org/mathutil"
@@ -60,30 +59,29 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 
 	for n, v := range data {
 		// TODO: Should we skip or report invalid erratas ?
-		issued, err := time.Parse(base.Rfc3339NoTz, v.Issued)
-		if err != nil {
-			utils.Log("err", err.Error(), "erratum", n).Error("Invalid errata issued date")
-			continue
-		}
-		modified, err := time.Parse(base.Rfc3339NoTz, v.Updated)
+		issued := v.GetIssued()
+		modified, err := time.Parse(base.Rfc3339NoTz, v.GetUpdated())
 		if err != nil {
 			utils.Log("err", err.Error(), "erratum", n).Error("Invalid errata modified date")
 			continue
 		}
 
-		if v.Description == "" || v.Summary == "" {
+		_, descriptionOk := v.GetDescriptionOk()
+		_, summaryOk := v.GetSummaryOk()
+		if !descriptionOk || !summaryOk {
 			utils.Log("name", n).Error("An advisory without description or summary")
 			continue
 		}
 		var severityID *int
-		if v.Severity != nil {
-			if id, has := severities[strings.ToLower(*v.Severity)]; has {
+		severity, severityOk := v.GetSeverityOk()
+		if severityOk {
+			if id, has := severities[strings.ToLower(*severity)]; has {
 				severityID = &id
 			}
 		}
 		packages := make(models.AdvisoryPackageData)
 
-		for _, p := range v.PackageList {
+		for _, p := range v.GetPackageList() {
 			nevra, err := utils.ParseNevra(p)
 			if err != nil {
 				return nil, errors.Wrapf(err, "Could not parse nevra %s", p)
@@ -102,16 +100,16 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 
 		advisory := models.AdvisoryMetadata{
 			Name:           n,
-			AdvisoryTypeID: advisoryTypes[strings.ToLower(v.Type)],
-			Description:    v.Description,
-			Synopsis:       v.Synopsis,
-			Summary:        v.Summary,
-			Solution:       v.Solution,
+			AdvisoryTypeID: advisoryTypes[strings.ToLower(v.GetType())],
+			Description:    v.GetDescription(),
+			Synopsis:       v.GetSynopsis(),
+			Summary:        v.GetSummary(),
+			Solution:       v.GetSolution(),
 			SeverityID:     severityID,
 			CveList:        &postgres.Jsonb{RawMessage: cvesData},
 			PublicDate:     issued,
 			ModifiedDate:   modified,
-			URL:            &v.Url,
+			URL:            v.Url,
 			PackageData:    &postgres.Jsonb{RawMessage: packageData},
 		}
 
@@ -156,44 +154,43 @@ func syncAdvisories() error {
 
 	pageIdx := 0
 	maxPageIdx := 1
+	modifiedSince := time.Time{}
 
 	for pageIdx <= maxPageIdx {
-		opts := vmaas.AppErrataHandlerPostPostOpts{
-			ErrataRequest: optional.NewInterface(vmaas.ErrataRequest{
-				Page:          float32(pageIdx),
-				PageSize:      float32(advisoryPageSize),
-				ErrataList:    []string{".*"},
-				ModifiedSince: "",
-			}),
+		errataRequest := vmaas.ErrataRequest{
+			Page:          vmaas.PtrFloat32(float32(pageIdx)),
+			PageSize:      vmaas.PtrFloat32(float32(advisoryPageSize)),
+			ErrataList:    []string{".*"},
+			ModifiedSince: &modifiedSince,
 		}
 
-		data, _, err := vmaasClient.DefaultApi.AppErrataHandlerPostPost(base.Context, &opts)
+		data, _, err := vmaasClient.DefaultApi.AppErrataHandlerPostPost(base.Context).ErrataRequest(errataRequest).Execute()
 		if err != nil {
 			vmaasCallCnt.WithLabelValues("error-download-errata").Inc()
 			return errors.WithMessage(err, "Downloading erratas")
 		}
 		vmaasCallCnt.WithLabelValues("success").Inc()
 
-		maxPageIdx = int(data.Pages)
+		maxPageIdx = int(data.GetPages())
 		pageIdx++
 
-		utils.Log("count", len(data.ErrataList)).Debug("Downloaded advisories")
+		utils.Log("count", len(data.GetErrataList())).Debug("Downloaded advisories")
 
-		advisoryIDs, err := storeAdvisories(data.ErrataList)
+		advisoryIDs, err := storeAdvisories(data.GetErrataList())
 		if err != nil {
-			storeAdvisoriesCnt.WithLabelValues("error").Add(float64(len(data.ErrataList)))
+			storeAdvisoriesCnt.WithLabelValues("error").Add(float64(len(data.GetErrataList())))
 			return errors.WithMessage(err, "Storing advisories")
 		}
-		storeAdvisoriesCnt.WithLabelValues("success").Add(float64(len(data.ErrataList)))
+		storeAdvisoriesCnt.WithLabelValues("success").Add(float64(len(data.GetErrataList())))
 
 		packages := []string{}
 		// Map from package to AdvisoryID
 		packageAdvisories := map[utils.Nevra]int{}
-		for name, erratum := range data.ErrataList {
-			if len(erratum.PackageList) == 0 {
+		for name, erratum := range data.GetErrataList() {
+			if len(erratum.GetPackageList()) == 0 {
 				continue
 			}
-			for _, p := range erratum.PackageList {
+			for _, p := range erratum.GetPackageList() {
 				nevra, err := utils.ParseNevra(p)
 				if err != nil {
 					continue

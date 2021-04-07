@@ -211,7 +211,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	if shouldUpdateRepos {
 		// We also don't need to update repos if vmaas_json haven't changed
 		addedRepos, addedSysRepos, deletedSysRepos, err = updateRepos(tx, accountID,
-			systemPlatform.ID, updatesReq.RepositoryList)
+			systemPlatform.ID, updatesReq.GetRepositoryList())
 		if err != nil {
 			utils.Log("repository_list", updatesReq.RepositoryList, "inventoryID", systemPlatform.ID).
 				Error("repos failed to insert")
@@ -220,7 +220,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	}
 
 	utils.Log("inventoryID", inventoryID, "packages", len(updatesReq.PackageList), "repos",
-		len(updatesReq.RepositoryList), "modules", len(updatesReq.ModulesList),
+		len(updatesReq.GetRepositoryList()), "modules", len(updatesReq.GetModulesList()),
 		"addedRepos", addedRepos, "addedSysRepos", addedSysRepos, "deletedSysRepos", deletedSysRepos).
 		Debug("System created or updated successfully")
 	return &systemPlatform, nil
@@ -311,7 +311,7 @@ func deleteOtherSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs 
 	return res.DeletedCount, nil
 }
 
-func processRepos(systemProfile *inventory.SystemProfileSpecYamlSystemProfile) []string {
+func processRepos(systemProfile *inventory.SystemProfileSpecYamlSystemProfile) *[]string {
 	repos := make([]string, 0, len(systemProfile.YumRepos))
 	for _, r := range systemProfile.YumRepos {
 		if len(strings.TrimSpace(r.Id)) == 0 {
@@ -323,21 +323,21 @@ func processRepos(systemProfile *inventory.SystemProfileSpecYamlSystemProfile) [
 			repos = append(repos, r.Id)
 		}
 	}
-	return repos
+	return &repos
 }
 
-func processModules(systemProfile *inventory.SystemProfileSpecYamlSystemProfile) []vmaas.UpdatesRequestModulesList {
-	var modules []vmaas.UpdatesRequestModulesList
+func processModules(systemProfile *inventory.SystemProfileSpecYamlSystemProfile) *[]vmaas.UpdatesV3RequestModulesList {
+	var modules []vmaas.UpdatesV3RequestModulesList
 	if count := len(systemProfile.DnfModules); count > 0 {
-		modules = make([]vmaas.UpdatesRequestModulesList, count)
+		modules = make([]vmaas.UpdatesV3RequestModulesList, count)
 		for i, m := range systemProfile.DnfModules {
-			modules[i] = vmaas.UpdatesRequestModulesList{
+			modules[i] = vmaas.UpdatesV3RequestModulesList{
 				ModuleName:   m.Name,
 				ModuleStream: m.Stream,
 			}
 		}
 	}
-	return modules
+	return &modules
 }
 
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
@@ -354,15 +354,15 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 		PackageList:    systemProfile.InstalledPackages,
 		RepositoryList: processRepos(&systemProfile),
 		ModulesList:    processModules(&systemProfile),
-		Basearch:       systemProfile.Arch,
-		SecurityOnly:   false,
-		LatestOnly:     true,
+		Basearch:       &systemProfile.Arch,
+		SecurityOnly:   vmaas.PtrBool(false),
+		LatestOnly:     vmaas.PtrBool(true),
 	}
 
 	// use rhsm version if set
 	releasever := systemProfile.Rhsm.Version
 	if len(releasever) > 0 {
-		updatesReq.Releasever = releasever
+		updatesReq.SetReleasever(releasever)
 	}
 
 	tx := database.Db.BeginTx(base.Context, nil)
