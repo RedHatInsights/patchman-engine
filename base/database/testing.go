@@ -222,6 +222,13 @@ func CheckSystemAdvisoriesWhenPatched(t *testing.T, systemID int, advisoryIDs []
 	}
 }
 
+func CheckEVRAsInDB(t *testing.T, evras []string, nExpected int) {
+	var packages []models.Package
+	err := Db.Where("evra IN (?)", evras).Find(&packages).Error
+	assert.Nil(t, err)
+	assert.Equal(t, nExpected, len(packages))
+}
+
 func CheckSystemPackages(t *testing.T, systemID int, packageIDs []int) {
 	var systemPackages []models.SystemPackage
 	err := Db.Where("system_id = ? AND package_id IN (?)", systemID, packageIDs).
@@ -275,6 +282,18 @@ func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []in
 		rhAccountID, systemID, repoIDs).
 		Delete(&models.SystemRepo{}).Error
 	assert.Nil(t, err)
+}
+
+func DeletePackagesWithEvras(t *testing.T, evras []string) {
+	for _, evra := range evras {
+		err := Db.Where("evra = ? ", evra).
+			Delete(&models.Package{}).Error
+		assert.Nil(t, err)
+	}
+	var cnt int
+	err := Db.Model(models.Package{}).Where("evra IN (?)", evras).Count(&cnt).Error
+	assert.Nil(t, err)
+	assert.Equal(t, 0, cnt)
 }
 
 func UpdateSystemAdvisoriesWhenPatched(t *testing.T, systemID, accountID int, advisoryIDs []int,

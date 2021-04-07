@@ -1,0 +1,4 @@
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE package TO evaluator;
+
+ALTER TABLE package ALTER COLUMN summary_hash DROP NOT NULL;
+ALTER TABLE package ALTER COLUMN description_hash DROP NOT NULL;

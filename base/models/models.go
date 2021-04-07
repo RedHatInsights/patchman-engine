@@ -71,14 +71,16 @@ type Package struct {
 	ID              int `json:"id" gorm:"primary_key"`
 	NameID          int
 	EVRA            string
-	DescriptionHash []byte
-	SummaryHash     []byte
-	AdvisoryID      int
+	DescriptionHash *[]byte
+	SummaryHash     *[]byte
+	AdvisoryID      *int
 }
 
 func (Package) TableName() string {
 	return "package"
 }
+
+type PackageSlice []Package
 
 type SystemPackage struct {
 	RhAccountID int `gorm:"primary_key"`
