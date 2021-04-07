@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/antihax/optional"
 	"github.com/jinzhu/gorm"
 	"github.com/lestrrat-go/backoff"
 	"github.com/pkg/errors"
@@ -46,7 +45,7 @@ func configure() {
 	consumerCount = utils.GetIntEnvOrFail("CONSUMER_COUNT")
 
 	vmaasConfig := vmaas.NewConfiguration()
-	vmaasConfig.BasePath = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
+	vmaasConfig.Servers[0].URL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
 	vmaasConfig.Debug = traceAPI
 	disableCompression := !utils.GetBoolEnvOrDefault("ENABLE_VMAAS_CALL_COMPRESSION", true)
 	enableAdvisoryAnalysis = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_ANALYSIS", true)
@@ -279,13 +278,10 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("vmaas-updates-call"))
 
-	vmaasCallArgs := vmaas.AppUpdatesHandlerV3PostPostOpts{
-		UpdatesV3Request: optional.NewInterface(*request),
-	}
 	backoffState, cancel := policy.Start(base.Context)
 	defer cancel()
 	for backoff.Continue(backoffState) {
-		vmaasData, resp, err := vmaasClient.DefaultApi.AppUpdatesHandlerV3PostPost(ctx, &vmaasCallArgs)
+		vmaasData, resp, err := vmaasClient.DefaultApi.AppUpdatesHandlerV3PostPost(ctx).UpdatesV3Request(*request).Execute()
 
 		// VMaaS is probably refreshing caches, continue waiting
 		if resp != nil && resp.StatusCode == http.StatusServiceUnavailable {
@@ -296,8 +292,8 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 			responseDetails := utils.TryGetResponseDetails(resp)
 			return nil, errors.Wrap(err, "vmaas API call failed"+responseDetails+fmt.Sprintf(
 				", (packages: %d, basearch: %s, modules: %d, releasever: %s, repolist: %d)",
-				len(request.PackageList), request.Basearch, len(request.ModulesList), request.Releasever,
-				len(request.RepositoryList)))
+				len(request.PackageList), request.GetBasearch(), len(request.GetModulesList()),
+				request.GetReleasever(), len(request.GetRepositoryList())))
 		}
 		return &vmaasData, nil
 	}

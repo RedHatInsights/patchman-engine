@@ -33,12 +33,12 @@ func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaa
 		return 0, 0, errors.Wrap(err, "Unable to load package data")
 	}
 
-	updatable, err = updateSystemPackages(tx, system, pkgByName, vmaasData.UpdateList)
+	updatable, err = updateSystemPackages(tx, system, pkgByName, vmaasData.GetUpdateList())
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-system-pkgs").Inc()
 		return 0, 0, errors.Wrap(err, "Unable to update system packages")
 	}
-	installed = len(vmaasData.UpdateList)
+	installed = len(vmaasData.GetUpdateList())
 	return installed, updatable, nil
 }
 
@@ -139,9 +139,9 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform, names []
 }
 
 func getNamesAndNevrasLists(vmaasData *vmaas.UpdatesV2Response) (names, evras []string) {
-	names = make([]string, 0, len(vmaasData.UpdateList))
-	evras = make([]string, 0, len(vmaasData.UpdateList))
-	for nevra := range vmaasData.UpdateList {
+	names = make([]string, 0, len(vmaasData.GetUpdateList()))
+	evras = make([]string, 0, len(vmaasData.GetUpdateList()))
+	for nevra := range vmaasData.GetUpdateList() {
 		if strings.HasPrefix(nevra, "gpg-pubkey") { // skip "phantom" package
 			continue
 		}
@@ -202,7 +202,7 @@ func createSystemPackage(nevraStr string,
 	}
 
 	isUpdatable := false
-	if len(updateData.AvailableUpdates) > 0 {
+	if len(updateData.GetAvailableUpdates()) > 0 {
 		isUpdatable = true
 	}
 
@@ -256,9 +256,9 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 }
 
 func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList) (*[]byte, error) {
-	pkgUpdates := make([]models.PackageUpdate, 0, len(updateData.AvailableUpdates))
-	for _, upData := range updateData.AvailableUpdates {
-		upNevra, err := utils.ParseNevra(upData.Package)
+	pkgUpdates := make([]models.PackageUpdate, 0, len(updateData.GetAvailableUpdates()))
+	for _, upData := range updateData.GetAvailableUpdates() {
+		upNevra, err := utils.ParseNevra(upData.GetPackage())
 		// Skip invalid nevras in updates list
 		if err != nil {
 			utils.Log("nevra", upData.Package).Warn("Invalid nevra")
@@ -267,7 +267,7 @@ func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList)
 		// Create correct entry for each update in the list
 		pkgUpdates = append(pkgUpdates, models.PackageUpdate{
 			EVRA:     upNevra.EVRAString(),
-			Advisory: upData.Erratum,
+			Advisory: upData.GetErratum(),
 		})
 	}
 

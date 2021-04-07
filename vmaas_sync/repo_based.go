@@ -5,7 +5,6 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/antihax/optional"
 	"time"
 )
 
@@ -92,37 +91,33 @@ func getUpdatedRepos(modifiedSince *time.Time, thirdParty bool) ([]string, error
 	var reposArr []string
 	for {
 		reposReq := vmaas.ReposRequest{
-			Page:           page,
+			Page:           vmaas.PtrFloat32(page),
 			RepositoryList: []string{".*"},
-			PageSize:       float32(advisoryPageSize),
-			ThirdParty:		thirdParty,
+			PageSize:       vmaas.PtrFloat32(float32(advisoryPageSize)),
+			ThirdParty:	    vmaas.PtrBool(thirdParty),
 		}
 
 		if modifiedSince != nil {
-			reposReq.ModifiedSince = modifiedSince.Format(time.RFC3339)
+			reposReq.SetModifiedSince(*modifiedSince)
 		}
 
-		vmaasCallArgs := vmaas.AppReposHandlerPostPostOpts{
-			ReposRequest: optional.NewInterface(reposReq),
-		}
-
-		repos, _, err := vmaasClient.DefaultApi.AppReposHandlerPostPost(base.Context, &vmaasCallArgs)
+		repos, _, err := vmaasClient.DefaultApi.AppReposHandlerPostPost(base.Context).ReposRequest(reposReq).Execute()
 		if err != nil {
 			return nil, err
 		}
 		vmaasCallCnt.WithLabelValues("success").Inc()
 
-		if repos.Pages == 0 {
+		if repos.GetPages() < 1 {
 			utils.Log().Debug("No repos returned from VMaaS")
 			break
 		}
 
-		utils.Log("count", len(repos.RepositoryList)).Debug("Downloaded repos")
-		for k, _ := range repos.RepositoryList {
+		utils.Log("count", len(repos.GetRepositoryList())).Debug("Downloaded repos")
+		for k, _ := range repos.GetRepositoryList() {
 			reposArr = append(reposArr, k)
 		}
 
-		if page == repos.Pages {
+		if page == repos.GetPages() {
 			break
 		}
 		page++

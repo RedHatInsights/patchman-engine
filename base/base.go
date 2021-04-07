@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const VMaaSAPIPrefix = "/api"
+const VMaaSAPIPrefix = "/api/v3"
 const RBACApiPrefix = "/api/rbac/v1"
 
 // Go datetime parser does not like slightly incorrect RFC 3339 which we are using (missing Z )

@@ -7,7 +7,6 @@ import (
 	"app/base/utils"
 	"crypto/sha256"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/antihax/optional"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
@@ -19,16 +18,14 @@ func syncPackages(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, pkgs []string) e
 	query := vmaas.PackagesRequest{
 		PackageList: pkgs,
 	}
-	opts := vmaas.AppPackagesHandlerPostPostOpts{
-		PackagesRequest: optional.NewInterface(query),
-	}
-	data, _, err := vmaasClient.DefaultApi.AppPackagesHandlerPostPost(base.Context, &opts)
+	data, _, err := vmaasClient.DefaultApi.AppPackagesHandlerPostPost(base.Context).PackagesRequest(query).Execute()
+
 	if err != nil {
 		return errors.Wrap(err, "Get packages")
 	}
 
 	utils.Log("count", len(pkgs)).Debug("Storing packages...")
-	idByName, dataByNevra, err := storePackageNames(tx, data.PackageList)
+	idByName, dataByNevra, err := storePackageNames(tx, data.GetPackageList())
 	if err != nil {
 		return errors.Wrap(err, "Pkg names")
 	}
@@ -88,8 +85,8 @@ func storePackageNames(tx *gorm.DB, pkgs map[string]vmaas.PackagesResponsePackag
 func storePackageStrings(tx *gorm.DB, data map[utils.Nevra]vmaas.PackagesResponsePackageList) error {
 	stringMap := map[[32]byte]string{}
 	for _, r := range data {
-		stringMap[sha256.Sum256([]byte(r.Description))] = r.Description
-		stringMap[sha256.Sum256([]byte(r.Summary))] = r.Summary
+		stringMap[sha256.Sum256([]byte(r.GetDescription()))] = r.GetDescription()
+		stringMap[sha256.Sum256([]byte(r.GetSummary()))] = r.GetSummary()
 	}
 
 	strings := make([]models.String, 0, len(stringMap))
@@ -143,8 +140,8 @@ func storePackageDetails(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, nameIDs m
 	}
 
 	for nevra, data := range data {
-		desc := sha256.Sum256([]byte(data.Description))
-		sum := sha256.Sum256([]byte(data.Summary))
+		desc := sha256.Sum256([]byte(data.GetDescription()))
+		sum := sha256.Sum256([]byte(data.GetSummary()))
 
 		if _, has := advisoryIDs[nevra]; !has {
 			utils.Log("nevra", nevra.String()).Warn("Did not find matching advisories for nevra")
