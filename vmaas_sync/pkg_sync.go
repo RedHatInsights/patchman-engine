@@ -151,12 +151,15 @@ func storePackageDetails(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, nameIDs m
 			continue
 		}
 
+		descriptionHash := desc[:]
+		summaryHash := sum[:]
+		advisoryID := advisoryIDs[nevra]
 		next := models.Package{
 			NameID:          nameIDs[nevra.Name],
 			EVRA:            nevra.EVRAString(),
-			DescriptionHash: desc[:],
-			SummaryHash:     sum[:],
-			AdvisoryID:      advisoryIDs[nevra],
+			DescriptionHash: &descriptionHash,
+			SummaryHash:     &summaryHash,
+			AdvisoryID:      &advisoryID,
 		}
 
 		if old, has := oldPackagesMap[packageID{next.NameID, next.EVRA}]; has {

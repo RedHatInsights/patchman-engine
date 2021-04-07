@@ -150,6 +150,7 @@ ALTER TABLE advisory_metadata ALTER COLUMN id RESTART WITH 100;
 ALTER TABLE system_platform ALTER COLUMN id RESTART WITH 100;
 ALTER TABLE rh_account ALTER COLUMN id RESTART WITH 100;
 ALTER TABLE repo ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE package ALTER COLUMN id RESTART WITH 100;
 
 -- Create "inventory.hosts" for testing purposes. In deployment it's created by remote Cyndi service.
 

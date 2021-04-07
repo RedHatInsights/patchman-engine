@@ -17,11 +17,17 @@ import (
 func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) (
 	installed, updatable int, err error) {
 	if !enablePackageAnalysis {
-		utils.Log().Debug("pkg analysis disabled, skipping")
 		return 0, 0, nil
 	}
 
-	pkgByName, err := loadPackages(tx, system, vmaasData)
+	names, evras := getNamesAndNevrasLists(vmaasData)
+	err = lazySavePackages(tx, names, evras)
+	if err != nil {
+		evaluationCnt.WithLabelValues("error-lazy-pkg-save").Inc()
+		return 0, 0, errors.Wrap(err, "lazy package save failed")
+	}
+
+	pkgByName, err := loadPackages(tx, system, names, evras)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-pkg-data").Inc()
 		return 0, 0, errors.Wrap(err, "Unable to load package data")
@@ -36,12 +42,61 @@ func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaa
 	return installed, updatable, nil
 }
 
+// Add unknown EVRAs into the db if needed
+func lazySavePackages(tx *gorm.DB, names, evras []string) error {
+	if !enableLazyPackageSave {
+		return nil
+	}
+	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("lazy-package-save"))
+
+	name2ID, err := loadPkgName2IDMap(tx, names)
+	if err != nil {
+		return errors.Wrap(err, "package map loading failed")
+	}
+
+	toEnsure := getPacakgesToEnsureInDB(names, evras, name2ID)
+	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	err = database.BulkInsert(txOnConflict, toEnsure)
+	if err != nil {
+		return errors.Wrap(err, "packages bulk insert failed")
+	}
+	return nil
+}
+
+// Get packages list with known name ID
+func getPacakgesToEnsureInDB(names, evras []string, name2ID map[string]int) models.PackageSlice {
+	packages := make(models.PackageSlice, 0, len(names))
+	for i, name := range names {
+		if nameID, ok := name2ID[name]; ok {
+			pkg := models.Package{
+				NameID: nameID,
+				EVRA:   evras[i],
+			}
+			packages = append(packages, pkg)
+		}
+	}
+	return packages
+}
+
+func loadPkgName2IDMap(tx *gorm.DB, names []string) (map[string]int, error) {
+	var packageNames []models.PackageName
+	err := tx.Model(models.PackageName{}).Where("name in (?)", names).
+		Find(&packageNames).Error
+	if err != nil {
+		return nil, errors.Wrap(err, "package_name items fetching failed")
+	}
+
+	name2ID := map[string]int{}
+	for _, packageName := range packageNames {
+		name2ID[packageName.Name] = packageName.ID
+	}
+	return name2ID, nil
+}
+
 // Find relevant package data based on vmaas results
 func loadPackages(tx *gorm.DB, system *models.SystemPlatform,
-	vmaasData *vmaas.UpdatesV2Response) (*map[utils.Nevra]namedPackage, error) {
+	names, evras []string) (*map[utils.Nevra]namedPackage, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-load"))
-
-	names, evras := getNamesAndNevrasLists(vmaasData)
 
 	packages, err := loadSystemNEVRAsFromDB(tx, system, names, evras)
 	if err != nil {
@@ -83,7 +138,7 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform, names []
 	return packages, err
 }
 
-func getNamesAndNevrasLists(vmaasData *vmaas.UpdatesV2Response) (names []string, evras []string) {
+func getNamesAndNevrasLists(vmaasData *vmaas.UpdatesV2Response) (names, evras []string) {
 	names = make([]string, 0, len(vmaasData.UpdateList))
 	evras = make([]string, 0, len(vmaasData.UpdateList))
 	for nevra := range vmaasData.UpdateList {

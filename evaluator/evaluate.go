@@ -33,6 +33,7 @@ var (
 	enableRepoAnalysis     bool
 	enableBypass           bool
 	enableStaleSysEval     bool
+	enableLazyPackageSave  bool
 )
 
 func configure() {
@@ -52,6 +53,7 @@ func configure() {
 	enablePackageAnalysis = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_ANALYSIS", true)
 	enableRepoAnalysis = utils.GetBoolEnvOrDefault("ENABLE_REPO_ANALYSIS", true)
 	enableStaleSysEval = utils.GetBoolEnvOrDefault("ENABLE_STALE_SYSTEM_EVALUATION", true)
+	enableLazyPackageSave = utils.GetBoolEnvOrDefault("ENABLE_LAZY_PACKAGE_SAVE", true)
 	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
 	vmaasConfig.HTTPClient = &http.Client{Transport: &http.Transport{
 		DisableCompression: disableCompression,
