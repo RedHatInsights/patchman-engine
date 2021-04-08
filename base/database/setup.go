@@ -28,6 +28,7 @@ type PostgreSQLConfig struct {
 	Database string
 	Passwd   string
 	SSLMode  string
+	Debug    bool
 
 	// Additional params.
 	StatementTimeoutMs     int // https://www.postgresql.org/docs/10/runtime-config-client.html
@@ -47,6 +48,9 @@ func openPostgreSQL(dbConfig *PostgreSQLConfig) *gorm.DB {
 	db.DB().SetMaxOpenConns(dbConfig.MaxConnections)
 	db.DB().SetMaxIdleConns(dbConfig.MaxIdleConnections)
 	db.DB().SetConnMaxLifetime(time.Duration(dbConfig.MaxConnectionLifetimeS) * time.Second)
+	if dbConfig.Debug {
+		db = db.Debug()
+	}
 	return db
 }
 
@@ -72,6 +76,7 @@ func loadEnvPostgreSQLConfig() *PostgreSQLConfig {
 		Database: utils.Getenv("DB_NAME", "FILL"),
 		Passwd:   utils.Getenv("DB_PASSWD", "FILL"),
 		SSLMode:  utils.Getenv("DB_SSLMODE", "FILL"),
+		Debug:    utils.GetBoolEnvOrDefault("DB_DEBUG", false),
 
 		StatementTimeoutMs:     utils.GetIntEnvOrDefault("DB_STATEMENT_TIMEOUT_MS", 0),
 		MaxConnections:         utils.GetIntEnvOrDefault("DB_MAX_CONNECTIONS", 250),
