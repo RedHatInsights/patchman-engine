@@ -14,7 +14,9 @@ insert into _const values
     ('adv_per_system', 10),  -- ??       -- should be system_advisories/systems
     ('repo_per_system', 10),  -- ??       -- should be system_repo/systems
                             -- ^ counts in prod
-    ('progress_pct', 10)    -- print progress message on every X% reached
+    ('package_names', 300), -- 40000    -- number of package_name
+    ('packages', 4500),     -- 700000   -- number of package
+    ('progress_pct', 10)   -- print progress message on every X% reached
     on conflict do nothing;
 
 -- prepare some pseudorandom vmaas jsons
@@ -250,6 +252,62 @@ do $$
       end loop;
     end loop;  -- <<systems>>
     raise notice 'created % system_repos', wanted;
+  end;
+$$
+;
+
+-- generate package_name
+alter sequence package_name_id_seq restart with 1;
+do $$
+  declare
+    cnt int :=0;
+    wanted int; id int; progress int;
+  begin
+    select val into wanted from _const where key = 'package_names';
+    select val into progress from _const where key = 'progress_pct';
+    while cnt < wanted loop
+        id := nextval('package_name_id_seq');
+        insert into package_name(id, name)
+               values (id, 'package' || id )
+               on conflict do nothing;
+        cnt := cnt + 1;
+        if mod(cnt, (wanted*progress/100)::int) = 0 then
+            raise notice 'created % packages', cnt;
+        end if;
+    end loop;
+    raise notice 'created package names %', wanted;
+  end;
+$$
+;
+
+-- add fake strings item to use as summary and description in packages
+insert into strings(id, value) values ('0', 'testing string value')
+on conflict do nothing;
+
+-- generate package
+alter sequence package_id_seq restart with 1;
+do $$
+  declare
+    cnt int := 0;
+    wanted int; n_names int; n_advisories int; id int; name_id int; advisory_id int; progress int;
+  begin
+    select val into wanted from _const where key = 'packages';
+    select val into progress from _const where key = 'progress_pct';
+    select count(*) into n_names from package_name;
+    select count(*) into n_advisories from advisory_metadata;
+    while cnt < wanted loop
+        id := nextval('package_id_seq');
+        name_id := id % n_names + 1;
+        advisory_id := id % n_advisories + 1;
+        insert into package(id, name_id, evra, description_hash, summary_hash, advisory_id)
+               values (id, name_id, id || '.' || id || '-1.el8.x86_64', '0', '0', advisory_id)
+               on conflict do nothing;
+        cnt := cnt + 1;
+        if mod(cnt, (wanted*progress/100)::int) = 0 then
+            raise notice 'created % packages', cnt;
+        end if;
+    end loop;
+    raise notice 'created packages %', wanted;
   end;
 $$
 ;
