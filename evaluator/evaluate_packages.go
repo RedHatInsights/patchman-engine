@@ -49,12 +49,12 @@ func lazySavePackages(tx *gorm.DB, names, evras []string) error {
 	}
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("lazy-package-save"))
 
-	name2ID, err := loadPkgName2IDMap(tx, names)
+	packagesMetadata, err := getPackagesMetadata(tx)
 	if err != nil {
 		return errors.Wrap(err, "package map loading failed")
 	}
 
-	toEnsure := getPacakgesToEnsureInDB(names, evras, name2ID)
+	toEnsure := getPacakgesToEnsureInDB(names, evras, packagesMetadata)
 	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
 	err = database.BulkInsert(txOnConflict, toEnsure)
 	if err != nil {
@@ -63,34 +63,61 @@ func lazySavePackages(tx *gorm.DB, names, evras []string) error {
 	return nil
 }
 
+type packageMetadata struct {
+	NameID          int
+	Name            string
+	SummaryHash     []byte
+	DescriptionHash []byte
+}
+
+var name2PackageMetadataCache map[string]packageMetadata
+
+func getPackagesMetadata(tx *gorm.DB) (map[string]packageMetadata, error) {
+	if name2PackageMetadataCache != nil {
+		return name2PackageMetadataCache, nil
+	}
+
+	var hashes []packageMetadata
+	err := tx.Table("package").
+		Select("distinct on (name_id) name_id, name, summary_hash, description_hash").
+		Joins("JOIN package_name pn ON pn.id = name_id").
+		Where("summary_hash is not null").
+		Where("description_hash is not null").Find(&hashes).Error
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to load package name ID hashes")
+	}
+
+	name2PackageMetadataCache = map[string]packageMetadata{}
+	for _, hash := range hashes {
+		name2PackageMetadataCache[hash.Name] = hash
+	}
+
+	return name2PackageMetadataCache, nil
+}
+
+func getPackageMetadata(name string, name2PkgMetadata map[string]packageMetadata) (*packageMetadata, bool) {
+	if pkgMetadata, ok := name2PkgMetadata[name]; ok {
+		return &pkgMetadata, true
+	}
+	return nil, false
+}
+
 // Get packages list with known name ID
-func getPacakgesToEnsureInDB(names, evras []string, name2ID map[string]int) models.PackageSlice {
+func getPacakgesToEnsureInDB(names, evras []string, name2PkgMetadata map[string]packageMetadata) models.PackageSlice {
 	packages := make(models.PackageSlice, 0, len(names))
 	for i, name := range names {
-		if nameID, ok := name2ID[name]; ok {
+		pkgMetadata, found := getPackageMetadata(name, name2PkgMetadata)
+		if found {
 			pkg := models.Package{
-				NameID: nameID,
-				EVRA:   evras[i],
+				NameID:          pkgMetadata.NameID,
+				EVRA:            evras[i],
+				SummaryHash:     &pkgMetadata.SummaryHash,
+				DescriptionHash: &pkgMetadata.DescriptionHash,
 			}
 			packages = append(packages, pkg)
 		}
 	}
 	return packages
-}
-
-func loadPkgName2IDMap(tx *gorm.DB, names []string) (map[string]int, error) {
-	var packageNames []models.PackageName
-	err := tx.Model(models.PackageName{}).Where("name in (?)", names).
-		Find(&packageNames).Error
-	if err != nil {
-		return nil, errors.Wrap(err, "package_name items fetching failed")
-	}
-
-	name2ID := map[string]int{}
-	for _, packageName := range packageNames {
-		name2ID[packageName.Name] = packageName.ID
-	}
-	return name2ID, nil
 }
 
 // Find relevant package data based on vmaas results
