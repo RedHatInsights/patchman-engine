@@ -63,39 +63,51 @@ func lazySavePackages(tx *gorm.DB, names, evras []string) error {
 	return nil
 }
 
-type packageMetadata struct {
+type PackageMetadata struct {
 	NameID          int
-	Name            string
 	SummaryHash     []byte
 	DescriptionHash []byte
 }
 
-var name2PackageMetadataCache map[string]packageMetadata
+type packageMetadataModel struct {
+	Name string
+	PackageMetadata
+}
 
-func getPackagesMetadata(tx *gorm.DB) (map[string]packageMetadata, error) {
+var name2PackageMetadataCache map[string]PackageMetadata
+
+func getPackagesMetadata(tx *gorm.DB) (map[string]PackageMetadata, error) {
 	if name2PackageMetadataCache != nil {
 		return name2PackageMetadataCache, nil
 	}
 
-	var hashes []packageMetadata
-	err := tx.Table("package").
+	rows, err := tx.Table("package").
 		Select("distinct on (name_id) name_id, name, summary_hash, description_hash").
 		Joins("JOIN package_name pn ON pn.id = name_id").
 		Where("summary_hash is not null").
-		Where("description_hash is not null").Find(&hashes).Error
+		Where("description_hash is not null").Rows()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to load package name ID hashes")
 	}
 
-	name2PackageMetadataCache = map[string]packageMetadata{}
-	for _, hash := range hashes {
-		name2PackageMetadataCache[hash.Name] = hash
+	name2PackageMetadataCache = map[string]PackageMetadata{}
+	var model packageMetadataModel
+	for rows.Next() {
+		err = tx.ScanRows(rows, &model)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to load package metadata row")
+		}
+		name2PackageMetadataCache[model.Name] = PackageMetadata{
+			NameID:          model.NameID,
+			DescriptionHash: model.DescriptionHash,
+			SummaryHash:     model.SummaryHash,
+		}
 	}
 
 	return name2PackageMetadataCache, nil
 }
 
-func getPackageMetadata(name string, name2PkgMetadata map[string]packageMetadata) (*packageMetadata, bool) {
+func getPackageMetadata(name string, name2PkgMetadata map[string]PackageMetadata) (*PackageMetadata, bool) {
 	if pkgMetadata, ok := name2PkgMetadata[name]; ok {
 		return &pkgMetadata, true
 	}
@@ -103,7 +115,7 @@ func getPackageMetadata(name string, name2PkgMetadata map[string]packageMetadata
 }
 
 // Get packages list with known name ID
-func getPacakgesToEnsureInDB(names, evras []string, name2PkgMetadata map[string]packageMetadata) models.PackageSlice {
+func getPacakgesToEnsureInDB(names, evras []string, name2PkgMetadata map[string]PackageMetadata) models.PackageSlice {
 	packages := make(models.PackageSlice, 0, len(names))
 	for i, name := range names {
 		pkgMetadata, found := getPackageMetadata(name, name2PkgMetadata)

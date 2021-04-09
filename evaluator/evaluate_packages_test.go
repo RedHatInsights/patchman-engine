@@ -32,4 +32,9 @@ func TestGetNameIDHashesMapCache(t *testing.T) {
 	cache, err := getPackagesMetadata(database.Db)
 	assert.Nil(t, err)
 	assert.Equal(t, 10, len(cache))
+	val, ok := cache["kernel"]
+	assert.True(t, ok)
+	assert.Equal(t, 101, val.NameID)
+	assert.Equal(t, "1", string(val.SummaryHash))
+	assert.Equal(t, "11", string(val.DescriptionHash))
 }
