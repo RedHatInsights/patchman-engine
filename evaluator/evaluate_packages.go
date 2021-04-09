@@ -249,7 +249,9 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 			updatable++
 		}
 
-		toStore = append(toStore, *systemPackage)
+		if systemPackage != nil {
+			toStore = append(toStore, *systemPackage)
+		}
 	}
 	tx = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "system_id", "package_id"}, "update_data")
 	return updatable, errors.Wrap(database.BulkInsert(tx, toStore), "Storing system packages")
