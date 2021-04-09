@@ -82,10 +82,11 @@ func getPackagesMetadata(tx *gorm.DB) (map[string]PackageMetadata, error) {
 	}
 
 	rows, err := tx.Table("package").
-		Select("distinct on (name_id) name_id, name, summary_hash, description_hash").
+		Select("DISTINCT ON (name_id) name_id, name, summary_hash, description_hash").
 		Joins("JOIN package_name pn ON pn.id = name_id").
-		Where("summary_hash is not null").
-		Where("description_hash is not null").Rows()
+		Where("summary_hash IS NOT NULL").
+		Where("description_hash IS NOT NULL").
+		Order("name_id, evra DESC").Rows()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to load package name ID hashes")
 	}
