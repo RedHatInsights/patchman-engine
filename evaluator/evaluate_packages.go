@@ -124,8 +124,8 @@ func getPacakgesToEnsureInDB(names, evras []string, name2PkgMetadata map[string]
 			pkg := models.Package{
 				NameID:          pkgMetadata.NameID,
 				EVRA:            evras[i],
-				SummaryHash:     &pkgMetadata.SummaryHash,
-				DescriptionHash: &pkgMetadata.DescriptionHash,
+				SummaryHash:     pkgMetadata.SummaryHash,
+				DescriptionHash: pkgMetadata.DescriptionHash,
 			}
 			packages = append(packages, pkg)
 		}

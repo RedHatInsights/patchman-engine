@@ -71,8 +71,8 @@ type Package struct {
 	ID              int `json:"id" gorm:"primary_key"`
 	NameID          int
 	EVRA            string
-	DescriptionHash *[]byte
-	SummaryHash     *[]byte
+	DescriptionHash []byte
+	SummaryHash     []byte
 	AdvisoryID      *int
 }
 

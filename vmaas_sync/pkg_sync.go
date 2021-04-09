@@ -140,22 +140,20 @@ func storePackageDetails(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, nameIDs m
 	}
 
 	for nevra, data := range data {
-		desc := sha256.Sum256([]byte(data.GetDescription()))
-		sum := sha256.Sum256([]byte(data.GetSummary()))
+		descriptionHash := sha256.Sum256([]byte(data.GetDescription()))
+		summaryHash := sha256.Sum256([]byte(data.GetSummary()))
 
 		if _, has := advisoryIDs[nevra]; !has {
 			utils.Log("nevra", nevra.String()).Warn("Did not find matching advisories for nevra")
 			continue
 		}
 
-		descriptionHash := desc[:]
-		summaryHash := sum[:]
 		advisoryID := advisoryIDs[nevra]
 		next := models.Package{
 			NameID:          nameIDs[nevra.Name],
 			EVRA:            nevra.EVRAString(),
-			DescriptionHash: &descriptionHash,
-			SummaryHash:     &summaryHash,
+			DescriptionHash: descriptionHash[:],
+			SummaryHash:     summaryHash[:],
 			AdvisoryID:      &advisoryID,
 		}
 
