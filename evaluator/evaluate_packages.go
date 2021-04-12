@@ -219,12 +219,16 @@ func isValidNevra(nevraStr string, packagesByNEVRA *map[utils.Nevra]namedPackage
 	return nevra, true
 }
 
-func updateDataChanged(currentNamedPackage *namedPackage, updateDataJSON *[]byte) bool {
-	if bytes.Equal(*updateDataJSON, currentNamedPackage.UpdateData.RawMessage) {
-		// If the update_data we want to store is null, we skip only only if there was a row for this specific
+func updateDataChanged(currentNamedPackage *namedPackage, updateDataJSON []byte) bool {
+	if bytes.Equal(updateDataJSON, currentNamedPackage.UpdateData.RawMessage) {
+		// If the update_data we want to store is null, we skip only if there was a row for this specific
 		// system_package already stored.
+		if updateDataJSON == nil && currentNamedPackage.WasStored {
+			return false
+		}
+
 		// If its not null, then the previous check ensured that the old update data matches new one
-		if (updateDataJSON == nil && currentNamedPackage.WasStored) || updateDataJSON != nil {
+		if updateDataJSON != nil {
 			return false
 		}
 	}
@@ -251,7 +255,7 @@ func createSystemPackage(nevra *utils.Nevra,
 		RhAccountID: system.RhAccountID,
 		SystemID:    system.ID,
 		PackageID:   currentNamedPackage.PackageID,
-		UpdateData:  postgres.Jsonb{RawMessage: *updateDataJSON},
+		UpdateData:  postgres.Jsonb{RawMessage: updateDataJSON},
 		NameID:      currentNamedPackage.NameID,
 	}
 	return &systemPackage, true
@@ -286,7 +290,7 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 	return installed, updatable, errors.Wrap(database.BulkInsert(tx, toStore), "Storing system packages")
 }
 
-func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList) (*[]byte, error) {
+func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList) ([]byte, error) {
 	pkgUpdates := make([]models.PackageUpdate, 0, len(updateData.GetAvailableUpdates()))
 	for _, upData := range updateData.GetAvailableUpdates() {
 		upNevra, err := utils.ParseNevra(upData.GetPackage())
@@ -310,7 +314,7 @@ func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList)
 			return nil, errors.Wrap(err, "Serializing pkg json")
 		}
 	}
-	return &updateDataJSON, nil
+	return updateDataJSON, nil
 }
 
 func deleteOldSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
