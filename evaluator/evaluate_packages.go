@@ -33,12 +33,11 @@ func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaa
 		return 0, 0, errors.Wrap(err, "Unable to load package data")
 	}
 
-	updatable, err = updateSystemPackages(tx, system, pkgByName, vmaasData.GetUpdateList())
+	installed, updatable, err = updateSystemPackages(tx, system, pkgByName, vmaasData.GetUpdateList())
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-system-pkgs").Inc()
 		return 0, 0, errors.Wrap(err, "Unable to update system packages")
 	}
-	installed = len(vmaasData.GetUpdateList())
 	return installed, updatable, nil
 }
 
@@ -198,26 +197,26 @@ func getNamesAndNevrasLists(vmaasData *vmaas.UpdatesV2Response) (names, evras []
 	return names, evras
 }
 
-func isValidNevra(nevraStr string, packagesByNEVRA *map[utils.Nevra]namedPackage) (bool, *utils.Nevra) {
+func isValidNevra(nevraStr string, packagesByNEVRA *map[utils.Nevra]namedPackage) (*utils.Nevra, bool) {
 	// skip "phantom" package
 	if strings.HasPrefix(nevraStr, "gpg-pubkey") {
-		return false, nil
+		return nil, false
 	}
 
 	// Parse each NEVRA in the input
 	nevra, err := utils.ParseNevra(nevraStr)
 	if err != nil {
 		utils.Log("nevra", nevraStr).Warn("Invalid nevra")
-		return false, nil
+		return nil, false
 	}
 
 	// Check whether we have that NEVRA in DB
 	currentNamedPackage := (*packagesByNEVRA)[*nevra]
 	if currentNamedPackage.PackageID == 0 {
 		utils.Log("nevra", nevraStr).Trace("Unknown package")
-		return false, nil
+		return nil, false
 	}
-	return true, nevra
+	return nevra, true
 }
 
 func updateDataChanged(currentNamedPackage *namedPackage, updateDataJSON *[]byte) bool {
@@ -232,29 +231,20 @@ func updateDataChanged(currentNamedPackage *namedPackage, updateDataJSON *[]byte
 	return true
 }
 
-func createSystemPackage(nevraStr string,
+func createSystemPackage(nevra *utils.Nevra,
 	updateData vmaas.UpdatesV2ResponseUpdateList,
 	system *models.SystemPlatform,
-	packagesByNEVRA *map[utils.Nevra]namedPackage) (*models.SystemPackage, bool, error) {
-	validNevra, nevra := isValidNevra(nevraStr, packagesByNEVRA)
-	if !validNevra {
-		return nil, false, nil
-	}
-
-	isUpdatable := false
-	if len(updateData.GetAvailableUpdates()) > 0 {
-		isUpdatable = true
-	}
-
+	packagesByNEVRA *map[utils.Nevra]namedPackage) (systemPackagePtr *models.SystemPackage, updatesChanged bool) {
 	updateDataJSON, err := vmaasResponse2UpdateDataJSON(&updateData)
 	if err != nil {
-		return nil, isUpdatable, errors.Wrap(err, "VMaaS response parsing failed")
+		utils.Log("nevra", nevra.String()).Error("VMaaS updates response parsing failed")
+		return nil, false
 	}
 
 	// Skip overwriting entries which have the same data as before
 	currentNamedPackage := (*packagesByNEVRA)[*nevra]
 	if !updateDataChanged(&currentNamedPackage, updateDataJSON) {
-		return nil, isUpdatable, nil
+		return nil, false
 	}
 
 	systemPackage := models.SystemPackage{
@@ -264,37 +254,36 @@ func createSystemPackage(nevraStr string,
 		UpdateData:  postgres.Jsonb{RawMessage: *updateDataJSON},
 		NameID:      currentNamedPackage.NameID,
 	}
-	return &systemPackage, isUpdatable, nil
+	return &systemPackage, true
 }
 
 func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 	packagesByNEVRA *map[utils.Nevra]namedPackage,
-	updates map[string]vmaas.UpdatesV2ResponseUpdateList) (updatable int, err error) {
+	updates map[string]vmaas.UpdatesV2ResponseUpdateList) (installed, updatable int, err error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-store"))
 
 	if err := deleteOldSystemPackages(tx, system, packagesByNEVRA); err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
 	toStore := make([]models.SystemPackage, 0, len(updates))
 	for nevraStr, updateData := range updates {
-		systemPackage, isUpdatable, err := createSystemPackage(nevraStr, updateData,
-			system, packagesByNEVRA)
-
-		if err != nil {
-			return 0, errors.Wrap(err, "system-package item creating failed")
+		nevra, isValid := isValidNevra(nevraStr, packagesByNEVRA)
+		if !isValid {
+			continue
 		}
-
-		if isUpdatable {
+		installed++
+		if len(updateData.GetAvailableUpdates()) > 0 {
 			updatable++
 		}
 
-		if systemPackage != nil {
-			toStore = append(toStore, *systemPackage)
+		systemPackagePtr, updatesChanged := createSystemPackage(nevra, updateData, system, packagesByNEVRA)
+		if updatesChanged {
+			toStore = append(toStore, *systemPackagePtr)
 		}
 	}
 	tx = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "system_id", "package_id"}, "update_data")
-	return updatable, errors.Wrap(database.BulkInsert(tx, toStore), "Storing system packages")
+	return installed, updatable, errors.Wrap(database.BulkInsert(tx, toStore), "Storing system packages")
 }
 
 func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList) (*[]byte, error) {
