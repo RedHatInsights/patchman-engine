@@ -94,7 +94,7 @@ func getUpdatedRepos(modifiedSince *time.Time, thirdParty bool) ([]string, error
 			Page:           vmaas.PtrFloat32(page),
 			RepositoryList: []string{".*"},
 			PageSize:       vmaas.PtrFloat32(float32(advisoryPageSize)),
-			ThirdParty:	    vmaas.PtrBool(thirdParty),
+			ThirdParty:     vmaas.PtrBool(thirdParty),
 		}
 
 		if modifiedSince != nil {
