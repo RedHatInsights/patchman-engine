@@ -8,14 +8,14 @@ import (
 )
 
 var testFfUpdates = []vmaas.UpdatesV2ResponseAvailableUpdates{
-	{Repository: vmaas.PtrString("repo1"), Releasever: vmaas.PtrString("ser1"), Basearch: vmaas.PtrString("i686"),
-		Erratum: vmaas.PtrString("RH-1"), Package: vmaas.PtrString("firefox-0:77.0.1-1.fc31.x86_64")},
-	{Repository: vmaas.PtrString("repo1"), Releasever: vmaas.PtrString("ser1"), Basearch: vmaas.PtrString("i686"),
-		Erratum: vmaas.PtrString("RH-2"), Package: vmaas.PtrString("firefox-1:76.0.1-1.fc31.x86_64")},
+	{Repository: utils.PtrString("repo1"), Releasever: utils.PtrString("ser1"), Basearch: utils.PtrString("i686"),
+		Erratum: utils.PtrString("RH-1"), Package: utils.PtrString("firefox-0:77.0.1-1.fc31.x86_64")},
+	{Repository: utils.PtrString("repo1"), Releasever: utils.PtrString("ser1"), Basearch: utils.PtrString("i686"),
+		Erratum: utils.PtrString("RH-2"), Package: utils.PtrString("firefox-1:76.0.1-1.fc31.x86_64")},
 }
 var testKUpdates = []vmaas.UpdatesV2ResponseAvailableUpdates{
-	{Repository: vmaas.PtrString("repo1"), Releasever: vmaas.PtrString("ser1"), Basearch: vmaas.PtrString("i686"),
-		Erratum: vmaas.PtrString("RH-100"), Package: vmaas.PtrString("kernel-5.10.13-200.fc31.x86_64")},
+	{Repository: utils.PtrString("repo1"), Releasever: utils.PtrString("ser1"), Basearch: utils.PtrString("i686"),
+		Erratum: utils.PtrString("RH-100"), Package: utils.PtrString("kernel-5.10.13-200.fc31.x86_64")},
 }
 var testUpdateList = map[string]vmaas.UpdatesV2ResponseUpdateList{
 	"firefox-0:76.0.1-1.fc31.x86_64": {
@@ -30,8 +30,8 @@ var testVmaasResponse = vmaas.UpdatesV2Response{
 	UpdateList:     &testUpdateList,
 	RepositoryList: utils.PtrSliceString([]string{"repo1"}),
 	ModulesList:    &testModuleList,
-	Releasever:     vmaas.PtrString("ser1"),
-	Basearch:       vmaas.PtrString("i686"),
+	Releasever:     utils.PtrString("ser1"),
+	Basearch:       utils.PtrString("i686"),
 }
 
 func TestCreateRemediationsState(t *testing.T) {

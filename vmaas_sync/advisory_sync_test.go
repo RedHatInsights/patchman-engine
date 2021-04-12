@@ -92,14 +92,14 @@ func TestParseAdvisories(t *testing.T) {
 
 	data := map[string]vmaas.ErrataResponseErrataList{
 		"ER1": {
-			Updated:     vmaas.PtrString("2004-09-02T00:00:00+00:00"),
+			Updated:     utils.PtrString("2004-09-02T00:00:00+00:00"),
 			Issued:      utils.PtrTimeParse("2004-09-02T00:00:00+00:00"),
-			Description: vmaas.PtrString("DESC"),
-			Solution:    vmaas.PtrString("SOL"),
-			Summary:     vmaas.PtrString("SUM"),
-			Url:         vmaas.PtrString("URL"),
-			Synopsis:    vmaas.PtrString("SYN"),
-			Type:        vmaas.PtrString("bugfix"),
+			Description: utils.PtrString("DESC"),
+			Solution:    utils.PtrString("SOL"),
+			Summary:     utils.PtrString("SUM"),
+			Url:         utils.PtrString("URL"),
+			Synopsis:    utils.PtrString("SYN"),
+			Type:        utils.PtrString("bugfix"),
 			CveList:     utils.PtrSliceString([]string{"CVE-1", "CVE-2", "CVE-3"}),
 		},
 	}
