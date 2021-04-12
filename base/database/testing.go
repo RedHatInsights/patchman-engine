@@ -222,19 +222,23 @@ func CheckSystemAdvisoriesWhenPatched(t *testing.T, systemID int, advisoryIDs []
 	}
 }
 
-func CheckEVRAsInDB(t *testing.T, evras []string, nExpected int) {
+func CheckEVRAsInDB(t *testing.T, nExpected int, evras ...string) {
 	var packages []models.Package
 	err := Db.Where("evra IN (?)", evras).Find(&packages).Error
 	assert.Nil(t, err)
 	assert.Equal(t, nExpected, len(packages))
 }
 
-func CheckSystemPackages(t *testing.T, systemID int, packageIDs []int) {
+func CheckSystemPackages(t *testing.T, systemID int, nExpected int, packageIDs ...int) {
 	var systemPackages []models.SystemPackage
-	err := Db.Where("system_id = ? AND package_id IN (?)", systemID, packageIDs).
-		Find(&systemPackages).Error
+	query := Db.Where("system_id = ?", systemID)
+	if len(packageIDs) > 0 {
+		query = query.Where("package_id IN (?)", packageIDs)
+	}
+	err := query.Find(&systemPackages).Error
+
 	assert.Nil(t, err)
-	assert.Equal(t, len(packageIDs), len(systemPackages))
+	assert.Equal(t, nExpected, len(systemPackages))
 }
 
 func CheckSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
@@ -271,10 +275,18 @@ func DeleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int)
 	assert.Equal(t, 0, len(advisoryAccountData))
 }
 
-func DeleteSystemPackages(t *testing.T, systemID int, pkgIDs []int) {
-	err := Db.Where("system_id = ? and package_id in(?)", systemID, pkgIDs).
-		Delete(&models.SystemPackage{}).Error
+func DeleteSystemPackages(t *testing.T, systemID int, pkgIDs ...int) {
+	query := Db.Model(&models.SystemPackage{}).Where("system_id = ?", systemID)
+	if len(pkgIDs) > 0 {
+		query = query.Where("package_id in (?)", pkgIDs)
+	}
+	err := query.Delete(&models.SystemPackage{}).Error
 	assert.Nil(t, err)
+
+	var count int // ensure deleted
+	err = query.Count(&count).Error
+	assert.Nil(t, err)
+	assert.Equal(t, 0, count)
 }
 
 func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
@@ -284,15 +296,11 @@ func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []in
 	assert.Nil(t, err)
 }
 
-func DeletePackagesWithEvras(t *testing.T, evras []string) {
-	for _, evra := range evras {
-		err := Db.Where("evra = ? ", evra).
-			Delete(&models.Package{}).Error
-		assert.Nil(t, err)
-	}
+func DeleteNewlyAddedPackages(t *testing.T) {
+	query := Db.Model(models.Package{}).Where("id > 100")
+	assert.Nil(t, query.Delete(models.Package{}).Error)
 	var cnt int
-	err := Db.Model(models.Package{}).Where("evra IN (?)", evras).Count(&cnt).Error
-	assert.Nil(t, err)
+	assert.Nil(t, query.Count(&cnt).Error)
 	assert.Equal(t, 0, cnt)
 }
 
