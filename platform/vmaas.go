@@ -12,27 +12,27 @@ import (
 func updatesHandler(c *gin.Context) {
 	ffUpdates := []vmaas.UpdatesV2ResponseAvailableUpdates{
 		{
-			Repository: vmaas.PtrString("repo1"),
-			Releasever: vmaas.PtrString("ser1"),
-			Basearch:   vmaas.PtrString("i686"),
-			Erratum:    vmaas.PtrString("RH-1"),
-			Package:    vmaas.PtrString("firefox-0:77.0.1-1.fc31.x86_64"),
+			Repository: utils.PtrString("repo1"),
+			Releasever: utils.PtrString("ser1"),
+			Basearch:   utils.PtrString("i686"),
+			Erratum:    utils.PtrString("RH-1"),
+			Package:    utils.PtrString("firefox-0:77.0.1-1.fc31.x86_64"),
 		},
 		{
-			Repository: vmaas.PtrString("repo1"),
-			Releasever: vmaas.PtrString("ser1"),
-			Basearch:   vmaas.PtrString("i686"),
-			Erratum:    vmaas.PtrString("RH-2"),
-			Package:    vmaas.PtrString("firefox-1:76.0.1-1.fc31.x86_64"),
+			Repository: utils.PtrString("repo1"),
+			Releasever: utils.PtrString("ser1"),
+			Basearch:   utils.PtrString("i686"),
+			Erratum:    utils.PtrString("RH-2"),
+			Package:    utils.PtrString("firefox-1:76.0.1-1.fc31.x86_64"),
 		},
 	}
 	kUpdates := []vmaas.UpdatesV2ResponseAvailableUpdates{
 		{
-			Repository: vmaas.PtrString("repo1"),
-			Releasever: vmaas.PtrString("ser1"),
-			Basearch:   vmaas.PtrString("i686"),
-			Erratum:    vmaas.PtrString("RH-100"),
-			Package:    vmaas.PtrString("kernel-5.10.13-200.fc31.x86_64"),
+			Repository: utils.PtrString("repo1"),
+			Releasever: utils.PtrString("ser1"),
+			Basearch:   utils.PtrString("i686"),
+			Erratum:    utils.PtrString("RH-100"),
+			Package:    utils.PtrString("kernel-5.10.13-200.fc31.x86_64"),
 		},
 	}
 	updatesList := map[string]vmaas.UpdatesV2ResponseUpdateList{
@@ -44,8 +44,8 @@ func updatesHandler(c *gin.Context) {
 		UpdateList:     &updatesList,
 		RepositoryList: utils.PtrSliceString([]string{"repo1"}),
 		ModulesList:    &moduleList,
-		Releasever:     vmaas.PtrString("ser1"),
-		Basearch:       vmaas.PtrString("i686"),
+		Releasever:     utils.PtrString("ser1"),
+		Basearch:       utils.PtrString("i686"),
 	}
 
 	c.JSON(http.StatusOK, data)
@@ -64,56 +64,56 @@ func patchesHandler(c *gin.Context) {
 func erratasHandler(c *gin.Context) {
 	errataList := map[string]vmaas.ErrataResponseErrataList{
 		"RH-1": {
-			Updated:       vmaas.PtrString("2016-09-22T12:00:00+04:00"),
+			Updated:       utils.PtrString("2016-09-22T12:00:00+04:00"),
 			Severity:      vmaas.NullableString{},
 			ReferenceList: utils.PtrSliceString([]string{}),
 			Issued:        utils.PtrTimeParse("2016-09-22T12:00:00+04:00"),
-			Description:   vmaas.PtrString("adv-1-des"),
-			Solution:      vmaas.PtrString("adv-1-sol"),
-			Summary:       vmaas.PtrString("adv-1-sum"),
-			Url:           vmaas.PtrString("url1"),
-			Synopsis:      vmaas.PtrString("adv-1-syn"),
+			Description:   utils.PtrString("adv-1-des"),
+			Solution:      utils.PtrString("adv-1-sol"),
+			Summary:       utils.PtrString("adv-1-sum"),
+			Url:           utils.PtrString("url1"),
+			Synopsis:      utils.PtrString("adv-1-syn"),
 			CveList:       utils.PtrSliceString([]string{}),
 			BugzillaList:  utils.PtrSliceString([]string{}),
 			PackageList:   utils.PtrSliceString([]string{"firefox-0:77.0.1-1.fc31.x86_64"}),
-			Type:          vmaas.PtrString("enhancement"),
+			Type:          utils.PtrString("enhancement"),
 		},
 		"RH-2": {
-			Updated:       vmaas.PtrString("2016-09-22T12:00:00+04:00"),
+			Updated:       utils.PtrString("2016-09-22T12:00:00+04:00"),
 			Severity:      vmaas.NullableString{},
 			ReferenceList: utils.PtrSliceString([]string{}),
 			Issued:        utils.PtrTimeParse("2016-09-22T12:00:00+04:00"),
-			Description:   vmaas.PtrString("adv-2-des"),
-			Solution:      vmaas.PtrString("adv-2-sol"),
-			Summary:       vmaas.PtrString("adv-2-sum"),
-			Url:           vmaas.PtrString("url2"),
-			Synopsis:      vmaas.PtrString("adv-2-syn"),
+			Description:   utils.PtrString("adv-2-des"),
+			Solution:      utils.PtrString("adv-2-sol"),
+			Summary:       utils.PtrString("adv-2-sum"),
+			Url:           utils.PtrString("url2"),
+			Synopsis:      utils.PtrString("adv-2-syn"),
 			CveList:       utils.PtrSliceString([]string{}),
 			BugzillaList:  utils.PtrSliceString([]string{}),
 			PackageList:   utils.PtrSliceString([]string{"firefox-1:76.0.1-1.fc31.x86_64"}),
-			Type:          vmaas.PtrString("bugfix"),
+			Type:          utils.PtrString("bugfix"),
 		},
 		"RH-100": {
-			Updated:       vmaas.PtrString("2020-01-02T15:04:05+07:00"),
+			Updated:       utils.PtrString("2020-01-02T15:04:05+07:00"),
 			Severity:      vmaas.NullableString{},
 			ReferenceList: utils.PtrSliceString([]string{}),
 			Issued:        utils.PtrTimeParse("2020-01-02T15:04:05+07:00"),
-			Description:   vmaas.PtrString("adv-100-des"),
-			Solution:      vmaas.PtrString("adv-100-sol"),
-			Summary:       vmaas.PtrString("adv-100-sum"),
-			Url:           vmaas.PtrString("url100"),
-			Synopsis:      vmaas.PtrString("adv-100-syn"),
+			Description:   utils.PtrString("adv-100-des"),
+			Solution:      utils.PtrString("adv-100-sol"),
+			Summary:       utils.PtrString("adv-100-sum"),
+			Url:           utils.PtrString("url100"),
+			Synopsis:      utils.PtrString("adv-100-syn"),
 			CveList:       utils.PtrSliceString([]string{"CVE-1001", "CVE-1002"}),
 			BugzillaList:  utils.PtrSliceString([]string{}),
 			PackageList:   utils.PtrSliceString([]string{"kernel-5.10.13-200.fc31.x86_64"}),
-			Type:          vmaas.PtrString("security"),
+			Type:          utils.PtrString("security"),
 		},
 	}
 	modifiedSince := time.Time{}
 	data := vmaas.ErrataResponse{
-		Page:          vmaas.PtrFloat32(0),
-		PageSize:      vmaas.PtrFloat32(10),
-		Pages:         vmaas.PtrFloat32(1),
+		Page:          utils.PtrFloat32(0),
+		PageSize:      utils.PtrFloat32(10),
+		Pages:         utils.PtrFloat32(1),
 		ErrataList:    &errataList,
 		ModifiedSince: &modifiedSince,
 	}
@@ -127,9 +127,9 @@ func reposHandler(c *gin.Context) {
 		"repo3": make([]map[string]interface{}, 0),
 	}
 	data := vmaas.ReposResponse{
-		Page:           vmaas.PtrFloat32(0),
-		PageSize:       vmaas.PtrFloat32(3),
-		Pages:          vmaas.PtrFloat32(1),
+		Page:           utils.PtrFloat32(0),
+		PageSize:       utils.PtrFloat32(3),
+		Pages:          utils.PtrFloat32(1),
 		RepositoryList: &repoList,
 	}
 	c.JSON(http.StatusOK, data)
@@ -138,17 +138,17 @@ func reposHandler(c *gin.Context) {
 func packagesHandler(c *gin.Context) {
 	packageList := map[string]vmaas.PackagesResponsePackageList{
 		"firefox-0:77.0.1-1.fc31.x86_64": {
-			Summary:     vmaas.PtrString("Mozilla Firefox Web browser"),
-			Description: vmaas.PtrString("Mozilla Firefox is an open-source web browser...")},
+			Summary:     utils.PtrString("Mozilla Firefox Web browser"),
+			Description: utils.PtrString("Mozilla Firefox is an open-source web browser...")},
 		"firefox-1:76.0.1-1.fc31.x86_64": {
-			Summary:     vmaas.PtrString("Mozilla Firefox Web browser"),
-			Description: vmaas.PtrString("Mozilla Firefox is an open-source web browser... 2")},
+			Summary:     utils.PtrString("Mozilla Firefox Web browser"),
+			Description: utils.PtrString("Mozilla Firefox is an open-source web browser... 2")},
 		"kernel-5.6.13-200.fc31.x86_64": {
-			Summary:     vmaas.PtrString("The Linux kernel"),
-			Description: vmaas.PtrString("The kernel meta package")},
+			Summary:     utils.PtrString("The Linux kernel"),
+			Description: utils.PtrString("The kernel meta package")},
 		"kernel-5.10.13-200.fc31.x86_64": {
-			Summary:     vmaas.PtrString("The Linux kernel"),
-			Description: vmaas.PtrString("The kernel meta package")},
+			Summary:     utils.PtrString("The Linux kernel"),
+			Description: utils.PtrString("The kernel meta package")},
 	}
 	data := vmaas.PackagesResponse{PackageList: &packageList}
 	c.JSON(http.StatusOK, data)

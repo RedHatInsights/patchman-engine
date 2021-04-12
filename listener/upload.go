@@ -355,8 +355,8 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 		RepositoryList: processRepos(&systemProfile),
 		ModulesList:    processModules(&systemProfile),
 		Basearch:       &systemProfile.Arch,
-		SecurityOnly:   vmaas.PtrBool(false),
-		LatestOnly:     vmaas.PtrBool(true),
+		SecurityOnly:   utils.PtrBool(false),
+		LatestOnly:     utils.PtrBool(true),
 	}
 
 	// use rhsm version if set

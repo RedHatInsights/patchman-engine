@@ -54,8 +54,8 @@ func TestUpdateSystemPlatform(t *testing.T) {
 		PackageList:    []string{"package0"},
 		RepositoryList: utils.PtrSliceString([]string{"repo1", "repo2", "repo3"}),
 		ModulesList:    &modulesList,
-		Releasever:     vmaas.PtrString("7Server"),
-		Basearch:       vmaas.PtrString("x86_64"),
+		Releasever:     utils.PtrString("7Server"),
+		Basearch:       utils.PtrString("x86_64"),
 	}
 
 	sys1, err := updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(t), &req)

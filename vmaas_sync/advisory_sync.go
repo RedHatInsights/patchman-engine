@@ -156,8 +156,8 @@ func syncAdvisories() error {
 
 	for pageIdx <= maxPageIdx {
 		errataRequest := vmaas.ErrataRequest{
-			Page:          vmaas.PtrFloat32(float32(pageIdx)),
-			PageSize:      vmaas.PtrFloat32(float32(advisoryPageSize)),
+			Page:          utils.PtrFloat32(float32(pageIdx)),
+			PageSize:      utils.PtrFloat32(float32(advisoryPageSize)),
 			ErrataList:    []string{".*"},
 			ModifiedSince: &modifiedSince,
 		}

@@ -39,11 +39,11 @@ func TestGetReportedAdvisories1(t *testing.T) {
 
 func TestGetReportedAdvisories2(t *testing.T) {
 	aUpdates := []vmaas.UpdatesV2ResponseAvailableUpdates{
-		{Erratum: vmaas.PtrString("ER1")}, {Erratum: vmaas.PtrString("ER2")}}
+		{Erratum: utils.PtrString("ER1")}, {Erratum: utils.PtrString("ER2")}}
 	bUpdates := []vmaas.UpdatesV2ResponseAvailableUpdates{
-		{Erratum: vmaas.PtrString("ER2")}, {Erratum: vmaas.PtrString("ER3")}}
+		{Erratum: utils.PtrString("ER2")}, {Erratum: utils.PtrString("ER3")}}
 	cUpdates := []vmaas.UpdatesV2ResponseAvailableUpdates{
-		{Erratum: vmaas.PtrString("ER3")}, {Erratum: vmaas.PtrString("ER4")}}
+		{Erratum: utils.PtrString("ER3")}, {Erratum: utils.PtrString("ER4")}}
 	updateList := map[string]vmaas.UpdatesV2ResponseUpdateList{
 		"pkg-a": {AvailableUpdates: &aUpdates},
 		"pkg-b": {AvailableUpdates: &bUpdates},
