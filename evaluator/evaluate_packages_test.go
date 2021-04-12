@@ -21,7 +21,7 @@ func TestAnalyzePackages(t *testing.T) {
 	vmaasData := vmaas.UpdatesV2Response{UpdateList: &map[string]vmaas.UpdatesV2ResponseUpdateList{
 		"kernel-5.6.13-200.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV2ResponseAvailableUpdates{}},
 		"firefox-12.0.1-1.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV2ResponseAvailableUpdates{{
-			Package: utils.PtrString("firefox-77.0.1-1.fc31.x86_64"),
+			Package: vmaas.PtrString("firefox-77.0.1-1.fc31.x86_64"),
 		}}},
 		// this custom-package will be ignored
 		"custom-package-1.2.3-1.fc33.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV2ResponseAvailableUpdates{{}}}}}
