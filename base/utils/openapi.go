@@ -12,3 +12,7 @@ func PtrTimeParse(ts string) *time.Time {
 	t, _ := time.Parse(time.RFC3339, ts)
 	return &t
 }
+
+func PtrString(v string) *string {
+	return &v
+}

@@ -40,7 +40,7 @@ func TestEvaluate(t *testing.T) {
 	database.DeleteSystemAdvisories(t, systemID, patchingSystemAdvisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, patchingSystemAdvisoryIDs)
-	database.DeleteSystemPackages(t, systemID, expectedPackageIDs)
+	database.DeleteSystemPackages(t, systemID, expectedPackageIDs...)
 	database.DeleteSystemRepos(t, rhAccountID, systemID, systemRepoIDs)
 	database.CreateSystemAdvisories(t, rhAccountID, systemID, oldSystemAdvisoryIDs, nil)
 	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
@@ -55,7 +55,7 @@ func TestEvaluate(t *testing.T) {
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
 	database.CheckSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
-	database.CheckSystemPackages(t, systemID, expectedPackageIDs)
+	database.CheckSystemPackages(t, systemID, len(expectedPackageIDs), expectedPackageIDs...)
 	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 2, 1, 1,
 		0, 2, 2, false)
 	database.CheckCachesValid(t)
