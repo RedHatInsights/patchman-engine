@@ -42,10 +42,6 @@ func TestSync(t *testing.T) {
 	expected := []string{"RH-100"}
 	database.CheckAdvisoriesInDB(t, expected)
 
-	evras := []string{"5.10.13-200.fc31.x86_64"}
-	assert.NoError(t, database.Db.Unscoped().Where("evra in (?)", evras).Delete(&models.Package{}).Error)
-	assert.NoError(t, database.Db.Unscoped().Where("name IN (?)", expected).Delete(&models.AdvisoryMetadata{}).Error)
-
 	var repos []models.Repo
 	assert.NoError(t, database.Db.Model(&repos).Error)
 
@@ -59,6 +55,8 @@ func TestSync(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, time.Now().Year(), ts.Year())
 	resetLastEvalTimestamp(t)
+	database.DeleteNewlyAddedPackages(t)
+	database.DeleteNewlyAddedAdvisories(t)
 }
 
 func TestHandleContextCancel(t *testing.T) {

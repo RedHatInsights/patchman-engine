@@ -162,7 +162,6 @@ func TestSyncAdvisories(t *testing.T) {
 	database.CheckAdvisoriesInDB(t, expected)
 	database.CheckPackagesNamesInDB(t)
 
-	evras := []string{"5.10.13-200.fc31.x86_64"}
-	assert.NoError(t, database.Db.Unscoped().Where("evra in (?)", evras).Delete(&models.Package{}).Error)
-	assert.NoError(t, database.Db.Unscoped().Where("name IN (?)", expected).Delete(&models.AdvisoryMetadata{}).Error)
+	database.DeleteNewlyAddedPackages(t)
+	database.DeleteNewlyAddedAdvisories(t)
 }

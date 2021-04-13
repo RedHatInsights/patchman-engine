@@ -106,6 +106,24 @@ func TestAdvisoryCounts(t *testing.T) {
 	assert.Equal(t, 3, sec)
 }
 
+func TestPackageCounts(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	count, err := getPackageCounts()
+	assert.Nil(t, err)
+	assert.Equal(t, 11, count)
+}
+
+func TestPackageNameCounts(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	count, err := getPackageNameCounts()
+	assert.Nil(t, err)
+	assert.Equal(t, 10, count)
+}
+
 func TestSystemAdvisoriesStats(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
