@@ -304,6 +304,14 @@ func DeleteNewlyAddedPackages(t *testing.T) {
 	assert.Equal(t, 0, cnt)
 }
 
+func DeleteNewlyAddedAdvisories(t *testing.T) {
+	query := Db.Model(models.AdvisoryMetadata{}).Where("id > 100")
+	assert.Nil(t, query.Delete(models.AdvisoryMetadata{}).Error)
+	var cnt int
+	assert.Nil(t, query.Count(&cnt).Error)
+	assert.Equal(t, 0, cnt)
+}
+
 func UpdateSystemAdvisoriesWhenPatched(t *testing.T, systemID, accountID int, advisoryIDs []int,
 	whenPatched *time.Time) {
 	err := Db.Model(models.SystemAdvisories{}).

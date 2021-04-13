@@ -69,6 +69,20 @@ var (
 		Name:      "advisories",
 	}, []string{"type"})
 
+	packageCnt = prometheus.NewGauge(prometheus.GaugeOpts{
+		Help:      "How many packages are stored",
+		Namespace: "patchman_engine",
+		Subsystem: "vmaas_sync",
+		Name:      "packages",
+	})
+
+	packageNameCnt = prometheus.NewGauge(prometheus.GaugeOpts{
+		Help:      "How many package names are stored",
+		Namespace: "patchman_engine",
+		Subsystem: "vmaas_sync",
+		Name:      "package_names",
+	})
+
 	systemAdvisoriesStats = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Help:      "Max advisories per system found of which type",
 		Namespace: "patchman_engine",
@@ -110,7 +124,7 @@ var (
 func RunMetrics() {
 	prometheus.MustRegister(messagesReceivedCnt, vmaasCallCnt, storeAdvisoriesCnt, storePackagesCnt,
 		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration,
-		deletedCulledSystemsCnt, staleSystemsMarkedCnt,
+		deletedCulledSystemsCnt, staleSystemsMarkedCnt, packageCnt, packageNameCnt,
 		databaseSizeBytesGaugeVec, databaseProcessesGaugeVec, cyndiSystemsCnt, cyndiTagsCnt)
 
 	go runAdvancedMetricsUpdating()
@@ -139,6 +153,7 @@ func runAdvancedMetricsUpdating() {
 func update() {
 	updateSystemMetrics()
 	updateAdvisoryMetrics()
+	updatePackageMetrics()
 	updateSystemAdvisoriesStats()
 	updateDBMetrics()
 
@@ -213,6 +228,20 @@ func updateAdvisoryMetrics() {
 	advisoriesCnt.WithLabelValues("security").Set(float64(sec))
 }
 
+func updatePackageMetrics() {
+	nPackages, err := getPackageCounts()
+	if err != nil {
+		utils.Log("err", err.Error()).Error("unable to update package metrics")
+	}
+	packageCnt.Set(float64(nPackages))
+
+	nPackageNames, err := getPackageNameCounts()
+	if err != nil {
+		utils.Log("err", err.Error()).Error("unable to update package_name metrics")
+	}
+	packageNameCnt.Set(float64(nPackageNames))
+}
+
 func getAdvisoryCounts() (unknown, enh, bug, sec int, err error) {
 	advisoryQuery := database.Db.Model(&models.AdvisoryMetadata{})
 	err = advisoryQuery.Where("advisory_type_id = 0").Count(&unknown).Error
@@ -235,6 +264,22 @@ func getAdvisoryCounts() (unknown, enh, bug, sec int, err error) {
 		return 0, 0, 0, 0, errors.Wrap(err, "unable to get advisories count - type security")
 	}
 	return unknown, enh, bug, sec, nil
+}
+
+func getPackageCounts() (count int, err error) {
+	err = database.Db.Model(&models.Package{}).Count(&count).Error
+	if err != nil {
+		return 0, errors.Wrap(err, "Unable to get package table items count")
+	}
+	return count, nil
+}
+
+func getPackageNameCounts() (count int, err error) {
+	err = database.Db.Model(&models.PackageName{}).Count(&count).Error
+	if err != nil {
+		return 0, errors.Wrap(err, "Unable to get package_name table items count")
+	}
+	return count, nil
 }
 
 func updateSystemAdvisoriesStats() {
