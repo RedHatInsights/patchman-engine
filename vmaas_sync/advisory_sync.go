@@ -66,16 +66,14 @@ func parseAdvisories(data map[string]vmaas.ErrataResponseErrataList) (models.Adv
 			continue
 		}
 
-		_, descriptionOk := v.GetDescriptionOk()
-		_, summaryOk := v.GetSummaryOk()
-		if !descriptionOk || !summaryOk {
+		if v.GetDescription() == "" || v.GetSummary() == "" {
 			utils.Log("name", n).Error("An advisory without description or summary")
 			continue
 		}
 		var severityID *int
-		severity, severityOk := v.GetSeverityOk()
-		if severityOk {
-			if id, has := severities[strings.ToLower(*severity)]; has {
+		severity := v.GetSeverity()
+		if severity != "" {
+			if id, has := severities[strings.ToLower(severity)]; has {
 				severityID = &id
 			}
 		}
