@@ -18,8 +18,8 @@ data:
       "editable": true,
       "gnetId": null,
       "graphTooltip": 0,
-      "id": 149,
-      "iteration": 1611306072846,
+      "id": 66,
+      "iteration": 1618390508198,
       "links": [],
       "panels": [
         {
@@ -2715,7 +2715,7 @@ data:
           "gridPos": {
             "h": 6,
             "w": 12,
-            "x": 0,
+            "x": 12,
             "y": 53
           },
           "hiddenSeries": false,
@@ -3122,13 +3122,124 @@ data:
           }
         },
         {
+          "aliasColors": {
+            "all": "#ba43a9",
+            "bugfix": "#ef843c",
+            "enhancement": "#9ac48a",
+            "security": "#e24d42",
+            "unknown": "#fce2de"
+          },
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "links": []
+            },
+            "overrides": []
+          },
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 66
+          },
+          "hiddenSeries": false,
+          "id": 42,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "7.2.1",
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "sum(patchman_engine_vmaas_sync_advisories{}) by (type)",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "{{type}}",
+              "refId": "A"
+            },
+            {
+              "expr": "sum(patchman_engine_vmaas_sync_advisories{})",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "all",
+              "refId": "B"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Database items - advisories",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "none",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
           "collapsed": false,
           "datasource": null,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 66
+            "y": 72
           },
           "id": 69,
           "panels": [],
@@ -3160,7 +3271,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 67
+            "y": 73
           },
           "hiddenSeries": false,
           "id": 51,
@@ -3272,10 +3383,10 @@ data:
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 67
+            "y": 73
           },
           "hiddenSeries": false,
-          "id": 42,
+          "id": 78,
           "legend": {
             "avg": false,
             "current": false,
@@ -3303,17 +3414,19 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(patchman_engine_vmaas_sync_advisories{}) by (type)",
+              "expr": "sum(patchman_engine_vmaas_sync_packages{})",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "{{type}}",
+              "legendFormat": "packages",
               "refId": "A"
             },
             {
-              "expr": "sum(patchman_engine_vmaas_sync_advisories{})",
+              "expr": "sum(patchman_engine_vmaas_sync_package_names{})",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "all",
+              "legendFormat": "package_names",
               "refId": "B"
             }
           ],
@@ -3321,7 +3434,7 @@ data:
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Database items - advisories",
+          "title": "Database items - packages",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -3383,7 +3496,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 73
+            "y": 79
           },
           "hiddenSeries": false,
           "id": 73,
@@ -3487,7 +3600,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 73
+            "y": 79
           },
           "hiddenSeries": false,
           "id": 59,
@@ -3591,7 +3704,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 79
+            "y": 85
           },
           "hiddenSeries": false,
           "id": 58,
@@ -3700,7 +3813,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 85
+            "y": 91
           },
           "id": 71,
           "panels": [],
@@ -3733,7 +3846,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 86
+            "y": 92
           },
           "hiddenSeries": false,
           "id": 53,
@@ -3838,7 +3951,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 86
+            "y": 92
           },
           "hiddenSeries": false,
           "id": 52,
@@ -3951,7 +4064,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 92
+            "y": 98
           },
           "hiddenSeries": false,
           "id": 54,
@@ -4077,7 +4190,7 @@ data:
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 92
+            "y": 98
           },
           "hiddenSeries": false,
           "id": 55,
@@ -4426,7 +4539,7 @@ data:
       "timezone": "",
       "title": "patchman-engine",
       "uid": "patch",
-      "version": 5
+      "version": 1
     }
 kind: ConfigMap
 metadata:
