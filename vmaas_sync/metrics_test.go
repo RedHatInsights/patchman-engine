@@ -109,6 +109,7 @@ func TestAdvisoryCounts(t *testing.T) {
 func TestPackageCounts(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
+	database.DeleteNewlyAddedPackages(t)
 
 	count, err := getPackageCounts()
 	assert.Nil(t, err)
