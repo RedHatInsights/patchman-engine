@@ -29,7 +29,7 @@ func TestUpdateSystem(t *testing.T) {
 	ev := createTestUploadEvent("1", id, "puptoo", false)
 	name := "TEST_NAME"
 	ev.Host.DisplayName = &name
-	ev.Host.SystemProfile.InstalledPackages = []string{"kernel"}
+	ev.Host.SystemProfile.SetInstalledPackages([]string{"kernel"})
 	assert.NoError(t, HandleUpload(ev))
 
 	var system models.SystemPlatform
