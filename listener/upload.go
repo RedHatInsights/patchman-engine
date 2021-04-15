@@ -77,7 +77,7 @@ func HandleUpload(event HostEvent) error {
 		return nil
 	}
 
-	if len(event.Host.SystemProfile.InstalledPackages) == 0 {
+	if len(event.Host.SystemProfile.GetInstalledPackages()) == 0 {
 		utils.Log("inventoryID", event.Host.ID).Warn(WarnSkippingNoPackages)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
 		return nil
@@ -312,15 +312,16 @@ func deleteOtherSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs 
 }
 
 func processRepos(systemProfile *inventory.SystemProfileSpecYamlSystemProfile) *[]string {
-	repos := make([]string, 0, len(systemProfile.YumRepos))
-	for _, r := range systemProfile.YumRepos {
-		if len(strings.TrimSpace(r.Id)) == 0 {
-			utils.Log("repo", r.Id).Warn("removed repo with invalid name")
+	repos := make([]string, 0, len(systemProfile.GetYumRepos()))
+	for _, r := range systemProfile.GetYumRepos() {
+		rID := r.GetId()
+		if len(strings.TrimSpace(rID)) == 0 {
+			utils.Log("repo", rID).Warn("removed repo with invalid name")
 			continue
 		}
 
-		if r.Enabled {
-			repos = append(repos, r.Id)
+		if r.GetEnabled() {
+			repos = append(repos, rID)
 		}
 	}
 	return &repos
@@ -328,12 +329,12 @@ func processRepos(systemProfile *inventory.SystemProfileSpecYamlSystemProfile) *
 
 func processModules(systemProfile *inventory.SystemProfileSpecYamlSystemProfile) *[]vmaas.UpdatesV3RequestModulesList {
 	var modules []vmaas.UpdatesV3RequestModulesList
-	if count := len(systemProfile.DnfModules); count > 0 {
+	if count := len(systemProfile.GetDnfModules()); count > 0 {
 		modules = make([]vmaas.UpdatesV3RequestModulesList, count)
-		for i, m := range systemProfile.DnfModules {
+		for i, m := range systemProfile.GetDnfModules() {
 			modules[i] = vmaas.UpdatesV3RequestModulesList{
-				ModuleName:   m.Name,
-				ModuleStream: m.Stream,
+				ModuleName:   m.GetName(),
+				ModuleStream: m.GetStream(),
 			}
 		}
 	}
@@ -351,16 +352,16 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 	systemProfile := host.SystemProfile
 	// Prepare VMaaS request
 	updatesReq := vmaas.UpdatesV3Request{
-		PackageList:    systemProfile.InstalledPackages,
+		PackageList:    systemProfile.GetInstalledPackages(),
 		RepositoryList: processRepos(&systemProfile),
 		ModulesList:    processModules(&systemProfile),
-		Basearch:       &systemProfile.Arch,
+		Basearch:       systemProfile.Arch,
 		SecurityOnly:   utils.PtrBool(false),
 		LatestOnly:     utils.PtrBool(true),
 	}
 
 	// use rhsm version if set
-	releasever := systemProfile.Rhsm.Version
+	releasever := systemProfile.Rhsm.GetVersion()
 	if len(releasever) > 0 {
 		updatesReq.SetReleasever(releasever)
 	}
