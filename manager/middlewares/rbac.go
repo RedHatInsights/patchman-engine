@@ -15,7 +15,7 @@ func makeClient(identity string) *rbac.APIClient {
 
 	rbacConfig := rbac.NewConfiguration()
 	rbacConfig.Debug = traceAPI
-	rbacConfig.BasePath = utils.GetenvOrFail("RBAC_ADDRESS") + base.RBACApiPrefix
+	rbacConfig.Servers[0].URL = utils.GetenvOrFail("RBAC_ADDRESS") + base.RBACApiPrefix
 	rbacConfig.AddDefaultHeader("x-rh-identity", identity)
 
 	return rbac.NewAPIClient(rbacConfig)
@@ -30,7 +30,7 @@ func isAccessGranted(c *gin.Context) rbacPerms {
 	client := makeClient(c.GetHeader("x-rh-identity"))
 	// Body is closed inside api method, don't know why liter is complaining
 	// nolint: bodyclose
-	access, res, err := client.AccessApi.GetPrincipalAccess(base.Context, "patch", nil)
+	access, res, err := client.AccessApi.GetPrincipalAccess(base.Context).Application("patch").Execute()
 	if res != nil && res.Body != nil {
 		defer res.Body.Close()
 	}

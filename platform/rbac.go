@@ -7,7 +7,7 @@ import (
 )
 
 func rbacHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, rbac.OneOfAccessPagination{
+	c.JSON(http.StatusOK, rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:read"},
 		},
