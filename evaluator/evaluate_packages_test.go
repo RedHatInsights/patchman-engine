@@ -53,17 +53,3 @@ func TestLazySavePackages(t *testing.T) {
 	database.CheckEVRAsInDB(t, 0, evras[2:]...) // EVRA for unknown package was not added
 	database.DeleteNewlyAddedPackages(t)        // delete testing added package items
 }
-
-func TestGetNameIDHashesMapCache(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	cache, err := getPackagesMetadata(database.Db)
-	assert.Nil(t, err)
-	assert.Equal(t, 10, len(cache))
-	val, ok := cache["kernel"]
-	assert.True(t, ok)
-	assert.Equal(t, 101, val.NameID)
-	assert.Equal(t, "1", string(val.SummaryHash))
-	assert.Equal(t, "11", string(val.DescriptionHash))
-}
