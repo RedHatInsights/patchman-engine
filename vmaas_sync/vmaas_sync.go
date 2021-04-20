@@ -151,7 +151,7 @@ func waitAndExit() {
 
 func syncAndRecalcOnStartIfSet() {
 	if enableSyncOnStart {
-		err := syncAdvisories()
+		err := syncData()
 		if err != nil {
 			utils.Log("err", err.Error()).Error("unable to sync advisories on start")
 		}
