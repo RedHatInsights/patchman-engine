@@ -234,6 +234,7 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 }
 
 func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList) ([]byte, error) {
+	uniqUpdates := make(map[models.PackageUpdate]bool)
 	pkgUpdates := make([]models.PackageUpdate, 0, len(updateData.GetAvailableUpdates()))
 	for _, upData := range updateData.GetAvailableUpdates() {
 		upNevra, err := utils.ParseNevra(upData.GetPackage())
@@ -242,11 +243,14 @@ func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList)
 			utils.Log("nevra", upData.Package).Warn("Invalid nevra")
 			continue
 		}
-		// Create correct entry for each update in the list
-		pkgUpdates = append(pkgUpdates, models.PackageUpdate{
-			EVRA:     upNevra.EVRAString(),
-			Advisory: upData.GetErratum(),
-		})
+		// Keep only unique entries for each update in the list
+		pkgUpdate := models.PackageUpdate{
+			EVRA: upNevra.EVRAString(), Advisory: upData.GetErratum(),
+		}
+		if !uniqUpdates[pkgUpdate] {
+			pkgUpdates = append(pkgUpdates, pkgUpdate)
+			uniqUpdates[pkgUpdate] = true
+		}
 	}
 
 	var updateDataJSON []byte
