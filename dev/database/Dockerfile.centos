@@ -1,10 +1,10 @@
-FROM centos/postgresql-12-centos7
+FROM centos/postgresql-12-centos8
 
 ADD /database/init.sh ${CONTAINER_SCRIPTS_PATH}/start/
 
 USER root
 
-RUN yum install -y openssl -y && \
+RUN dnf update -y openssl -y && \
     mkdir /opt/app-root/src/certificates && cd /opt/app-root/src/certificates && \
     openssl req -new -text -passout pass:abcd -subj /CN=localhost -out server.req -keyout privkey.pem && \
     openssl rsa -in privkey.pem -passin pass:abcd -out server.key && \
