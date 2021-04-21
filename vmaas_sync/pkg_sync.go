@@ -14,30 +14,48 @@ import (
 const chunkSize = 10 * 1024
 
 func syncPackages(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, pkgs []string) error {
+	vmaasData, err := vmaasRequestPackages(pkgs)
+	if err != nil {
+		return errors.Wrap(err, "Packages sync failed on vmaas request.")
+	}
+
+	err = storePackageData(tx, advisoryIDs, vmaasData.GetPackageList())
+	if err != nil {
+		return errors.Wrap(err, "Packages sync failed on vmaas request")
+	}
+	return nil
+}
+
+func vmaasRequestPackages(pkgs []string) (*vmaas.PackagesResponse, error) {
 	utils.Log("count", len(pkgs)).Debug("Downloading packages...")
 	query := vmaas.PackagesRequest{
 		PackageList: pkgs,
 	}
-	data, _, err := vmaasClient.DefaultApi.AppPackagesHandlerPostPost(base.Context).PackagesRequest(query).Execute()
-
+	vmaasData, _, err := vmaasClient.DefaultApi.AppPackagesHandlerPostPost(base.Context).
+		PackagesRequest(query).Execute()
 	if err != nil {
-		return errors.Wrap(err, "Get packages")
+		return nil, errors.Wrap(err, "Vmaas packages request failed")
+	}
+	return &vmaasData, nil
+}
+
+func storePackageData(tx *gorm.DB, advisoryIDs map[utils.Nevra]int,
+	vmaasData map[string]vmaas.PackagesResponsePackageList) error {
+	utils.Log("count", len(vmaasData)).Debug("Storing packages...")
+	idByName, dataByNevra, err := storePackageNames(tx, vmaasData)
+	if err != nil {
+		return errors.Wrap(err, "Packages names storing failed")
 	}
 
-	utils.Log("count", len(pkgs)).Debug("Storing packages...")
-	idByName, dataByNevra, err := storePackageNames(tx, data.GetPackageList())
-	if err != nil {
-		return errors.Wrap(err, "Pkg names")
+	if err := storePackageStrings(tx, dataByNevra); err != nil {
+		return errors.Wrap(err, "Package strings storing failed")
 	}
 
-	err = storePackageStrings(tx, dataByNevra)
-	if err != nil {
-		return errors.Wrap(err, "Pkg strings")
-	}
-	if err = storePackageDetails(tx, advisoryIDs, idByName, dataByNevra); err != nil {
+	if err := storePackageDetails(tx, advisoryIDs, idByName, dataByNevra); err != nil {
 		return errors.Wrap(err, "Package details store failed")
 	}
-	if err = tx.Exec("SELECT refresh_latest_packages_view()").Error; err != nil {
+
+	if err := tx.Exec("SELECT refresh_latest_packages_view()").Error; err != nil {
 		return errors.Wrap(err, "Refreshing latest packages cache")
 	}
 	return nil
@@ -45,10 +63,50 @@ func syncPackages(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, pkgs []string) e
 
 func storePackageNames(tx *gorm.DB, pkgs map[string]vmaas.PackagesResponsePackageList) (map[string]int,
 	map[utils.Nevra]vmaas.PackagesResponsePackageList, error) {
-	// We use map to deduplicate package names for DB insertion
-	nameMap := make(map[string]bool)
-	byNevra := map[utils.Nevra]vmaas.PackagesResponsePackageList{}
+	nameMap, byNevra := getPackageMaps(pkgs)
+	nameArr, pkgNames := getPackageArrays(nameMap)
+	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING") // Insert missing
+	err := database.BulkInsertChunk(tx, pkgNames, chunkSize)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "Bulk insert of package names failed")
+	}
 
+	idByName, err := getPackageNameMap(tx, nameArr)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "Unable to get package name map")
+	}
+	return idByName, byNevra, nil
+}
+
+func getPackageNameMap(tx *gorm.DB, nameArr []string) (map[string]int, error) {
+	// Load all to get IDs
+	var pkgNamesLoaded []models.PackageName
+	err := tx.Where("name in (?)", nameArr).Find(&pkgNamesLoaded).Error
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to load package names data")
+	}
+	idByName := map[string]int{}
+	for _, p := range pkgNamesLoaded {
+		idByName[p.Name] = p.ID
+	}
+	return idByName, nil
+}
+
+func getPackageArrays(nameMap map[string]bool) ([]string, []models.PackageName) {
+	nameArr := make([]string, 0, len(nameMap))
+	pkgNames := make([]models.PackageName, 0, len(nameMap))
+	for n := range nameMap {
+		nameArr = append(nameArr, n)
+		pkgNames = append(pkgNames, models.PackageName{Name: n})
+	}
+	return nameArr, pkgNames
+}
+
+func getPackageMaps(pkgs map[string]vmaas.PackagesResponsePackageList) (
+	map[string]bool, map[utils.Nevra]vmaas.PackagesResponsePackageList) {
+	// We use map to deduplicate package names for DB insertion
+	nameMap := map[string]bool{}
+	byNevra := map[utils.Nevra]vmaas.PackagesResponsePackageList{}
 	for pkg, detail := range pkgs {
 		nevra, err := utils.ParseNevra(pkg)
 		if err != nil {
@@ -58,28 +116,7 @@ func storePackageNames(tx *gorm.DB, pkgs map[string]vmaas.PackagesResponsePackag
 		nameMap[nevra.Name] = true
 		byNevra[*nevra] = detail
 	}
-	nameArr := make([]string, 0, len(nameMap))
-	pkgNames := make([]models.PackageName, 0, len(nameMap))
-	for n := range nameMap {
-		nameArr = append(nameArr, n)
-		pkgNames = append(pkgNames, models.PackageName{Name: n})
-	}
-	// Insert missing
-	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
-	err := database.BulkInsertChunk(tx, pkgNames, chunkSize)
-	if err != nil {
-		return nil, nil, err
-	}
-	// Load all to get IDs
-	err = tx.Where("name in (?)", nameArr).Find(&pkgNames).Error
-	if err != nil {
-		return nil, nil, err
-	}
-	idByName := map[string]int{}
-	for _, p := range pkgNames {
-		idByName[p.Name] = p.ID
-	}
-	return idByName, byNevra, nil
+	return nameMap, byNevra
 }
 
 func storePackageStrings(tx *gorm.DB, data map[utils.Nevra]vmaas.PackagesResponsePackageList) error {
@@ -107,21 +144,76 @@ type packageID struct {
 	EVRA   string
 }
 
-//nolint: funlen
 func storePackageDetails(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, nameIDs map[string]int,
-	data map[utils.Nevra]vmaas.PackagesResponsePackageList) error {
-	inserts := make([]models.Package, 0, len(data))
-	updates := make([]models.Package, 0, len(data))
-
-	names := make([]string, 0, len(data))
-	evras := make([]string, 0, len(data))
-	for nevra := range data {
-		names = append(names, nevra.Name)
-		evras = append(evras, nevra.EVRAString())
+	vmaasNevraMap map[utils.Nevra]vmaas.PackagesResponsePackageList) error {
+	names, evras := getNamesEvrasArrays(vmaasNevraMap)
+	oldPackagesMap, err := getOldPackagesMap(evras, names)
+	if err != nil {
+		return errors.Wrap(err, "Unable to get old packages map")
 	}
 
-	var oldPackages []models.Package
+	inserts, updates := getInsertUpdatePackages(vmaasNevraMap, advisoryIDs, nameIDs, oldPackagesMap)
+	if err = database.Db.Update(&updates).Error; err != nil {
+		return errors.Wrap(err, "")
+	}
 
+	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	if err = database.BulkInsertChunk(tx, inserts, chunkSize); err != nil {
+		return errors.Wrap(err, "Packages bulk insert failed")
+	}
+	return nil
+}
+
+func getInsertUpdatePackages(vmaasNevraMap map[utils.Nevra]vmaas.PackagesResponsePackageList,
+	advisoryIDs map[utils.Nevra]int, nameIDs map[string]int, oldPackagesMap map[packageID]models.Package) (
+	[]models.Package, []models.Package) {
+	inserts := make([]models.Package, 0, len(vmaasNevraMap))
+	updates := make([]models.Package, 0, len(vmaasNevraMap))
+	for nevra, packageList := range vmaasNevraMap {
+		nextPackage := getPackage(advisoryIDs, nevra, packageList, nameIDs)
+		if nextPackage == nil {
+			continue
+		}
+
+		if old, has := oldPackagesMap[packageID{nextPackage.NameID, nextPackage.EVRA}]; has {
+			nextPackage.ID = old.ID
+			updates = append(updates, *nextPackage)
+		} else {
+			inserts = append(inserts, *nextPackage)
+		}
+	}
+	return inserts, updates
+}
+
+func getPackage(advisoryIDs map[utils.Nevra]int, nevra utils.Nevra, packageList vmaas.PackagesResponsePackageList,
+	nameIDs map[string]int) *models.Package {
+	if _, has := advisoryIDs[nevra]; !has {
+		utils.Log("nevra", nevra.String()).Warn("Did not find matching advisories for nevra")
+		return nil
+	}
+
+	description, summary := getDescriptionAndSummaryHashes(packageList)
+	advisoryID := advisoryIDs[nevra]
+	pkg := models.Package{
+		NameID:          nameIDs[nevra.Name],
+		EVRA:            nevra.EVRAString(),
+		DescriptionHash: description,
+		SummaryHash:     summary,
+		AdvisoryID:      &advisoryID,
+	}
+	return &pkg
+}
+
+func getDescriptionAndSummaryHashes(packageList vmaas.PackagesResponsePackageList) (description, summary *[]byte) {
+	descriptionBytes32 := sha256.Sum256([]byte(packageList.GetDescription()))
+	summaryBytes32 := sha256.Sum256([]byte(packageList.GetSummary()))
+	descriptionBytes := descriptionBytes32[:]
+	summaryBytes := summaryBytes32[:]
+	return &descriptionBytes, &summaryBytes
+}
+
+func getOldPackagesMap(evras []string, names []string) (map[packageID]models.Package, error) {
+	var oldPackages []models.Package
 	err := database.Db.
 		Table("package p").
 		Select("pn.name, p.*").
@@ -129,48 +221,23 @@ func storePackageDetails(tx *gorm.DB, advisoryIDs map[utils.Nevra]int, nameIDs m
 		Where("p.evra in (?)", evras).
 		Where("pn.name in (?)", names).
 		Find(&oldPackages).Error
-
 	if err != nil {
-		return errors.Wrap(err, "Loading old packages")
+		return nil, errors.Wrap(err, "Loading old packages")
 	}
-	oldPackagesMap := map[packageID]models.Package{}
 
+	oldPackagesMap := map[packageID]models.Package{}
 	for _, o := range oldPackages {
 		oldPackagesMap[packageID{o.NameID, o.EVRA}] = o
 	}
+	return oldPackagesMap, nil
+}
 
-	for nevra, data := range data {
-		desc := sha256.Sum256([]byte(data.GetDescription()))
-		sum := sha256.Sum256([]byte(data.GetSummary()))
-
-		if _, has := advisoryIDs[nevra]; !has {
-			utils.Log("nevra", nevra.String()).Warn("Did not find matching advisories for nevra")
-			continue
-		}
-
-		descriptionHash := desc[:]
-		summaryHash := sum[:]
-		advisoryID := advisoryIDs[nevra]
-		next := models.Package{
-			NameID:          nameIDs[nevra.Name],
-			EVRA:            nevra.EVRAString(),
-			DescriptionHash: &descriptionHash,
-			SummaryHash:     &summaryHash,
-			AdvisoryID:      &advisoryID,
-		}
-
-		if old, has := oldPackagesMap[packageID{next.NameID, next.EVRA}]; has {
-			next.ID = old.ID
-			updates = append(updates, next)
-		} else {
-			inserts = append(inserts, next)
-		}
+func getNamesEvrasArrays(data map[utils.Nevra]vmaas.PackagesResponsePackageList) (names []string, evras []string) {
+	names = make([]string, 0, len(data))
+	evras = make([]string, 0, len(data))
+	for nevra := range data {
+		names = append(names, nevra.Name)
+		evras = append(evras, nevra.EVRAString())
 	}
-
-	if err := database.Db.Update(&updates).Error; err != nil {
-		return errors.Wrap(err, "")
-	}
-
-	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
-	return database.BulkInsertChunk(tx, inserts, chunkSize)
+	return names, evras
 }
