@@ -297,7 +297,7 @@ func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []in
 }
 
 func DeleteNewlyAddedPackages(t *testing.T) {
-	query := Db.Model(models.Package{}).Where("id > 100")
+	query := Db.Model(models.Package{}).Where("id >= 100")
 	assert.Nil(t, query.Delete(models.Package{}).Error)
 	var cnt int
 	assert.Nil(t, query.Count(&cnt).Error)
@@ -305,7 +305,7 @@ func DeleteNewlyAddedPackages(t *testing.T) {
 }
 
 func DeleteNewlyAddedAdvisories(t *testing.T) {
-	query := Db.Model(models.AdvisoryMetadata{}).Where("id > 100")
+	query := Db.Model(models.AdvisoryMetadata{}).Where("id >= 100")
 	assert.Nil(t, query.Delete(models.AdvisoryMetadata{}).Error)
 	var cnt int
 	assert.Nil(t, query.Count(&cnt).Error)
