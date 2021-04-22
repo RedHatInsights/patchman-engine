@@ -138,7 +138,7 @@ func TestSaveAdvisories(t *testing.T) {
 
 	// Repeatedly storing erratas should just overwrite them
 	for i := 0; i < 2; i++ {
-		_, err := storeAdvisories(data.GetErrataList())
+		err := storeAdvisories(data.GetErrataList())
 		assert.NoError(t, err)
 		var count int
 
