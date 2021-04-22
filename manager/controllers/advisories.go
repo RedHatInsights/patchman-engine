@@ -14,7 +14,7 @@ var AdvisoriesOpts = ListOpts{
 	Fields:         AdvisoriesFields,
 	DefaultFilters: nil,
 	DefaultSort:    "-public_date",
-	SearchFields:   []string{"am.name", "am.cve_list", "synopsis", "description"},
+	SearchFields:   []string{"am.name", "am.cve_list", "synopsis"},
 }
 
 type AdvisoriesDBLookup struct {

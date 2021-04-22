@@ -18,7 +18,7 @@ var SystemAdvisoriesOpts = ListOpts{
 	Fields:         SystemAdvisoriesFields,
 	DefaultFilters: nil,
 	DefaultSort:    "-public_date",
-	SearchFields:   []string{"am.name", "am.synopsis", "am.description"},
+	SearchFields:   []string{"am.name", "am.synopsis"},
 }
 
 type SystemAdvisoriesDBLookup struct {
