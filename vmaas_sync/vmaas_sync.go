@@ -12,22 +12,22 @@ import (
 	"time"
 )
 
-// Should be < 5000
-const SyncBatchSize = 1000
-
 var (
 	vmaasClient              *vmaas.APIClient
 	evalWriter               mqueue.Writer
-	enabledRepoBasedReeval   bool
 	advisoryPageSize         int
 	packagesPageSize         int
-	enableRecalcMessagesSend bool
 	deleteCulledSystemsLimit int
+	enabledRepoBasedReeval   bool
+	enableRecalcMessagesSend bool
 	enableSyncOnStart        bool
 	enableRecalcOnStart      bool
 	enableCulledSystemDelete bool
 	enableSystemStaling      bool
 	enableTurnpikeAuth       bool
+	enableAdvisoriesSync     bool
+	enablePackagesSync       bool
+	enableReposSync          bool
 )
 
 func configure() {
@@ -42,18 +42,22 @@ func configure() {
 
 	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
 	evalWriter = mqueue.WriterFromEnv(evalTopic)
-	enabledRepoBasedReeval = utils.GetBoolEnvOrFail("ENABLE_REPO_BASED_RE_EVALUATION")
+	enabledRepoBasedReeval = utils.GetBoolEnvOrDefault("ENABLE_REPO_BASED_RE_EVALUATION", true)
 	enableRecalcMessagesSend = utils.GetBoolEnvOrDefault("ENABLE_RECALC_MESSAGES_SEND", true)
 	enableSyncOnStart = utils.GetBoolEnvOrDefault("ENABLE_SYNC_ON_START", false)
 	enableRecalcOnStart = utils.GetBoolEnvOrDefault("ENABLE_RECALC_ON_START", false)
-	enableCulledSystemDelete = utils.GetBoolEnvOrDefault("ENABLE_CULLED_SYSTEM_DELETE", true)
-	enableSystemStaling = utils.GetBoolEnvOrDefault("ENABLE_SYSTEM_STALING", true)
 	enableTurnpikeAuth = utils.GetBoolEnvOrDefault("ENABLE_TURNPIKE_AUTH", false)
 
+	enableAdvisoriesSync = utils.GetBoolEnvOrDefault("ENABLE_ADVISORIES_SYNC", true)
+	enablePackagesSync = utils.GetBoolEnvOrDefault("ENABLE_PACKAGES_SYNC", true)
+	enableReposSync = utils.GetBoolEnvOrDefault("ENABLE_REPOS_SYNC", true)
+
 	advisoryPageSize = utils.GetIntEnvOrDefault("ERRATA_PAGE_SIZE", 500)
-	packagesPageSize = utils.GetIntEnvOrDefault("PACKAGES_PAGE_SIZE", 5000)
+	packagesPageSize = utils.GetIntEnvOrDefault("PACKAGES_PAGE_SIZE", 5)
 
 	deleteCulledSystemsLimit = utils.GetIntEnvOrDefault("DELETE_CULLED_SYSTEMS_LIMIT", 1000)
+	enableCulledSystemDelete = utils.GetBoolEnvOrDefault("ENABLE_CULLED_SYSTEM_DELETE", true)
+	enableSystemStaling = utils.GetBoolEnvOrDefault("ENABLE_SYSTEM_STALING", true)
 }
 
 type Handler func(data []byte, conn *websocket.Conn) error
@@ -124,14 +128,25 @@ func websocketHandler(data []byte, _ *websocket.Conn) error {
 }
 
 func syncData() error {
-	err := syncAdvisories()
-	if err != nil {
-		return errors.Wrap(err, "Failed to sync advisories")
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, syncDuration)
+
+	if enableAdvisoriesSync {
+		if err := syncAdvisories(); err != nil {
+			return errors.Wrap(err, "Failed to sync advisories")
+		}
 	}
 
-	err = syncRepos()
-	if err != nil {
-		return errors.Wrap(err, "Failed to sync repos")
+	if enablePackagesSync {
+		if err := syncPackages(); err != nil {
+			return errors.Wrap(err, "Failed to sync packages")
+		}
+	}
+
+	if enableReposSync {
+		if err := syncRepos(); err != nil {
+			return errors.Wrap(err, "Failed to sync repos")
+		}
 	}
 	return nil
 }

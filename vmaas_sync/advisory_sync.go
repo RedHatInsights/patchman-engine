@@ -9,15 +9,13 @@ import (
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/pkg/errors"
-	"modernc.org/mathutil"
 	"strings"
 	"time"
 )
 
-func syncAdvisories() error {
-	tStart := time.Now()
-	defer utils.ObserveSecondsSince(tStart, syncDuration)
+const SyncBatchSize = 1000 // Should be < 5000
 
+func syncAdvisories() error {
 	if vmaasClient == nil {
 		panic("VMaaS client is nil")
 	}
@@ -186,14 +184,14 @@ func getIDMaps() (advisoryTypes, severities map[string]int, err error) {
 	return advisoryTypes, severities, nil
 }
 
-func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) (map[string]int, error) {
+func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 	advisories, err := parseAdvisories(data)
 	if err != nil {
-		return nil, errors.WithMessage(err, "Parsing advisories")
+		return errors.WithMessage(err, "Parsing advisories")
 	}
 
 	if advisories == nil || len(advisories) == 0 {
-		return nil, nil
+		return nil
 	}
 
 	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary", "solution",
@@ -201,15 +199,11 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) (map[string
 
 	err = database.BulkInsertChunk(tx, advisories, SyncBatchSize)
 	if err != nil {
-		return nil, errors.WithMessage(err, "Storing advisories")
+		return errors.WithMessage(err, "Storing advisories")
 	}
 
-	advisoryIDs := make(map[string]int)
-	for _, a := range advisories {
-		advisoryIDs[a.Name] = a.ID
-	}
 	storeAdvisoriesCnt.WithLabelValues("success").Add(float64(len(data)))
-	return advisoryIDs, nil
+	return nil
 }
 
 func downloadAndProcessErratasPage(iPage int) (*vmaas.ErrataResponse, error) {
@@ -218,55 +212,11 @@ func downloadAndProcessErratasPage(iPage int) (*vmaas.ErrataResponse, error) {
 		return nil, errors.Wrap(err, "Advisories sync failed on vmaas request")
 	}
 
-	advisoryIDs, err := storeAdvisories(errataResponse.GetErrataList())
-	if err != nil {
+	if err = storeAdvisories(errataResponse.GetErrataList()); err != nil {
 		storeAdvisoriesCnt.WithLabelValues("error").Add(float64(len(errataResponse.GetErrataList())))
 		return nil, errors.WithMessage(err, "Storing advisories")
 	}
-
-	packages, packageAdvisories := preparePackagesData(errataResponse, advisoryIDs)
-	err = syncPackagesPages(packages, packageAdvisories, packagesPageSize)
-	if err != nil {
-		return nil, errors.Wrap(err, "Advisories sync failed on packages sync")
-	}
 	return errataResponse, nil
-}
-
-func syncPackagesPages(packages []string, packageAdvisories map[utils.Nevra]int, pageSize int) error {
-	for len(packages) > 0 {
-		currentPageSize := mathutil.Min(pageSize, len(packages))
-		page := packages[0:currentPageSize]
-		err := syncPackages(database.Db, packageAdvisories, page)
-		if err != nil {
-			storePackagesCnt.WithLabelValues("error").Add(float64(len(page)))
-			return errors.Wrap(err, "Storing packages")
-		}
-		storePackagesCnt.WithLabelValues("success").Add(float64(len(page)))
-		packages = packages[currentPageSize:]
-	}
-	return nil
-}
-
-func preparePackagesData(errataResponse *vmaas.ErrataResponse, advisoryIDs map[string]int) (
-	[]string, map[utils.Nevra]int) {
-	packages := []string{}
-	// Map from package to AdvisoryID
-	packageAdvisories := map[utils.Nevra]int{}
-	for name, erratum := range errataResponse.GetErrataList() {
-		if len(erratum.GetPackageList()) == 0 {
-			continue
-		}
-		for _, p := range erratum.GetPackageList() {
-			nevra, err := utils.ParseNevra(p)
-			if err != nil {
-				continue
-			}
-
-			packages = append(packages, p)
-			packageAdvisories[*nevra] = advisoryIDs[name]
-		}
-	}
-	return packages, packageAdvisories
 }
 
 func vmaasErrataRequest(iPage int) (*vmaas.ErrataResponse, error) {
@@ -275,7 +225,7 @@ func vmaasErrataRequest(iPage int) (*vmaas.ErrataResponse, error) {
 		Page:          utils.PtrFloat32(float32(iPage)),
 		PageSize:      utils.PtrFloat32(float32(advisoryPageSize)),
 		ErrataList:    []string{".*"},
-		ModifiedSince: &modifiedSince,
+		ModifiedSince: &modifiedSince, // TODO: use incremental update
 	}
 
 	resp, _, err := vmaasClient.DefaultApi.AppErrataHandlerPostPost(base.Context).ErrataRequest(errataRequest).Execute()
