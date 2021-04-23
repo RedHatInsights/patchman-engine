@@ -63,7 +63,7 @@ func WriteEvents(ctx context.Context, w Writer, events ...PlatformEvent) error {
 	return w.WriteMessages(ctx, msgs...)
 }
 
-func SendMessages(ctx context.Context, w Writer, inventoryAIDs ...InventoryAID) {
+func SendMessages(ctx context.Context, w Writer, inventoryAIDs ...InventoryAID) error {
 	// group systems by account
 	grouped := map[int][]string{}
 	for _, aid := range inventoryAIDs {
@@ -95,7 +95,5 @@ func SendMessages(ctx context.Context, w Writer, inventoryAIDs ...InventoryAID) 
 
 	// write events to queue
 	err := WriteEvents(ctx, w, events...)
-	if err != nil {
-		utils.Log("err", err.Error()).Error("sending to re-evaluate failed")
-	}
+	return err
 }

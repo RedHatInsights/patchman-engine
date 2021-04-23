@@ -105,18 +105,34 @@ func HandleUpload(event HostEvent) error {
 			return nil
 		}
 	}
-	t := base.Rfc3339Timestamp(time.Now())
-	ev := mqueue.PlatformEvent{ID: sys.InventoryID, AccountID: sys.RhAccountID, Timestamp: &t}
-	// Not sending evaluation message is a fatal error
-	err = mqueue.WriteEvents(base.Context, evalWriter, ev)
-	if err != nil {
-		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorKafkaSend)
-		return errors.Wrap(err, "Could send eval message")
-	}
+
+	bufferEvalEvents(sys.InventoryID, sys.RhAccountID)
 
 	messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
 	utils.Log("inventoryID", event.Host.ID).Debug(UploadSuccess)
 	return nil
+}
+
+// accumulate events and create group PlatformEvents to save some resources
+const evalBufferSize = 5 * mqueue.BatchSize
+var evalBuffer = make([]mqueue.InventoryAID, 0, evalBufferSize+1)
+
+// send events after full buffer or timeout
+func bufferEvalEvents(inventoryID string, rhAccountID int) {
+	inventoryAID := mqueue.InventoryAID{InventoryID: inventoryID, RhAccountID: rhAccountID}
+	evalBuffer = append(evalBuffer, inventoryAID)
+	if len(evalBuffer) >= evalBufferSize {
+		flushEvalEvents()
+	}
+}
+
+func flushEvalEvents() {
+	err := mqueue.SendMessages(base.Context, evalWriter, evalBuffer...)
+	if err != nil {
+		utils.Log("err", err.Error()).Error(ErrorKafkaSend)
+	}
+	// empty buffer
+	evalBuffer = evalBuffer[:0]
 }
 
 func updateReporterCounter(reporter string) {
