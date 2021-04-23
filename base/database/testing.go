@@ -151,6 +151,16 @@ func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int
 	assert.Equal(t, systemsAffected*len(advisoryIDs), sum, "sum of systems_affected does not match")
 }
 
+func CheckSystemUpdatesCount(t *testing.T, accountID, systemID int) []int {
+	var cnt []int
+	assert.NoError(t, Db.Table("system_package spkg").
+		Select("json_array_length(spkg.update_data::json) as len").
+		Where("spkg.update_data is not null").
+		Where("spkg.system_id = ? AND spkg.rh_account_id = ? ", systemID, accountID).
+		Pluck("len", &cnt).Error)
+	return cnt
+}
+
 func CreateReportedAdvisories(reportedAdvisories ...string) map[string]bool {
 	reportedAdvisoriesMap := map[string]bool{}
 	for _, adv := range reportedAdvisories {

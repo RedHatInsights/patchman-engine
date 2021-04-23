@@ -6,12 +6,15 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"sync"
 	"testing"
 	"time"
 )
 
 var testDate, _ = time.Parse(time.RFC3339, "2020-01-01T01-01-01")
+var systemID = 12
+var rhAccountID = 3
 
 func TestInit(t *testing.T) {
 	utils.TestLoadEnv("conf/evaluator_common.env", "conf/evaluator_upload.env")
@@ -27,8 +30,6 @@ func TestEvaluate(t *testing.T) {
 	mockWriter := mqueue.MockKafkaWriter{}
 	remediationsPublisher = &mockWriter
 
-	systemID := 12
-	rhAccountID := 3
 	expectedAddedAdvisories := []string{"RH-1", "RH-2"}
 	expectedAdvisoryIDs := []int{1, 2}       // advisories expected to be paired to the system after evaluation
 	oldSystemAdvisoryIDs := []int{1, 3, 4}   // old advisories paired with the system
@@ -77,6 +78,29 @@ func TestEvaluate(t *testing.T) {
 	database.DeleteSystemRepos(t, rhAccountID, systemID, thirdPartySystemRepoIDs)
 
 	assert.Equal(t, 2, len(mockWriter.Messages))
+}
+
+func TestEvaluatePruneUpdates(t *testing.T) {
+	assert.NoError(t, os.Setenv("PRUNE_UPDATES_LATEST_ONLY", "true"))
+	defer os.Setenv("PRUNE_UPDATES_LATEST_ONLY", "false")
+
+	TestEvaluate(t)
+	count := database.CheckSystemUpdatesCount(t, systemID, rhAccountID)
+	for _, c := range count {
+		assert.LessOrEqual(t, c, 1, "All packages should only have single update stored")
+	}
+}
+
+func TestEvaluateDontPruneUpdates(t *testing.T) {
+	assert.NoError(t, os.Setenv("PRUNE_UPDATES_LATEST_ONLY", "false"))
+	TestEvaluate(t)
+	count := database.CheckSystemUpdatesCount(t, rhAccountID, systemID)
+	oneGreater := false
+	for _, c := range count {
+		oneGreater = oneGreater || (c > 1)
+	}
+	assert.True(t, oneGreater,
+		"At least one package should have multiple updates (OR we have package pruning enabled)")
 }
 
 func TestRun(t *testing.T) {

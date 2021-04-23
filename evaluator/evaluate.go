@@ -32,6 +32,7 @@ var (
 	enableBypass           bool
 	enableStaleSysEval     bool
 	enableLazyPackageSave  bool
+	prunePackageLatestOnly bool
 )
 
 func configure() {
@@ -49,6 +50,7 @@ func configure() {
 	enableRepoAnalysis = utils.GetBoolEnvOrDefault("ENABLE_REPO_ANALYSIS", true)
 	enableStaleSysEval = utils.GetBoolEnvOrDefault("ENABLE_STALE_SYSTEM_EVALUATION", true)
 	enableLazyPackageSave = utils.GetBoolEnvOrDefault("ENABLE_LAZY_PACKAGE_SAVE", true)
+	prunePackageLatestOnly = utils.GetBoolEnvOrDefault("PRUNE_UPDATES_LATEST_ONLY", false)
 	if enableLazyPackageSave {
 		ConfigurePackageNameCache()
 	}
