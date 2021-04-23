@@ -160,7 +160,6 @@ func TestSyncAdvisories(t *testing.T) {
 
 	expected := []string{"RH-100"}
 	database.CheckAdvisoriesInDB(t, expected)
-	database.CheckPackagesNamesInDB(t)
 
 	database.DeleteNewlyAddedPackages(t)
 	database.DeleteNewlyAddedAdvisories(t)

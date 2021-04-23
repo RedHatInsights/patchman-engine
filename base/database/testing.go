@@ -121,12 +121,11 @@ func CheckThirdPartyRepos(t *testing.T, repoNames []string, thirdParty bool) {
 	}
 }
 
-func CheckPackagesNamesInDB(t *testing.T) {
-	var names []models.PackageName
-	assert.NoError(t, Db.Order("name").Find(&names).Error)
-	assert.Len(t, names, 10)
-	assert.Equal(t, names[0].Name, "bash")
-	assert.Equal(t, names[1].Name, "curl")
+func CheckPackagesNamesInDB(t *testing.T, packageNames ...string) {
+	var count int
+	err := Db.Model(&models.PackageName{}).Where("name in (?)", packageNames).Count(&count).Error
+	assert.Nil(t, err)
+	assert.Equal(t, len(packageNames), count)
 }
 
 func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug, nSec, nInstall, nUpdate int,

@@ -120,6 +120,43 @@ func erratasHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
+func pkgTreeHandler(c *gin.Context) {
+	data := `{
+    "page": 0,
+    "page_size": 3,
+    "pages": 1,
+    "package_name_list": {
+        "firefox": [{
+                "nevra": "firefox-0:76.0.1-1.fc31.x86_64",
+                "summary": "Mozilla Firefox Web browser",
+                "description": "Mozilla Firefox is an open-source web browser..."
+            },{
+                "nevra": "firefox-0:77.0.1-1.fc31.x86_64",
+                "summary": "Mozilla Firefox Web browser",
+                "description": "Mozilla Firefox is an open-source web browser..."
+            },{
+                "nevra": "firefox-0:77.0.1-1.fc31.src",
+                "summary": null,
+                "description": null}
+        ],
+        "kernel": [{
+                "nevra": "kernel-5.6.13-200.fc31.x86_64",
+                "summary": "The Linux kernel",
+                "description": "The kernel meta package"
+            },{
+                "nevra": "kernel-5.7.13-200.fc31.x86_64",
+                "summary": "The Linux kernel",
+                "description": "The kernel meta package"
+            },{
+                "nevra": "kernel-5.7.13-200.fc31.src",
+                "summary": null,
+                "description": null
+            }
+        ]},
+    "last_change": "2021-04-09T04:52:06.999732+00:00"}`
+	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
+}
+
 func reposHandler(c *gin.Context) {
 	repoList := map[string][]map[string]interface{}{
 		"repo1": make([]map[string]interface{}, 0),
@@ -132,25 +169,6 @@ func reposHandler(c *gin.Context) {
 		Pages:          utils.PtrFloat32(1),
 		RepositoryList: &repoList,
 	}
-	c.JSON(http.StatusOK, data)
-}
-
-func packagesHandler(c *gin.Context) {
-	packageList := map[string]vmaas.PackagesResponsePackageList{
-		"firefox-0:77.0.1-1.fc31.x86_64": {
-			Summary:     utils.PtrString("Mozilla Firefox Web browser"),
-			Description: utils.PtrString("Mozilla Firefox is an open-source web browser...")},
-		"firefox-1:76.0.1-1.fc31.x86_64": {
-			Summary:     utils.PtrString("Mozilla Firefox Web browser"),
-			Description: utils.PtrString("Mozilla Firefox is an open-source web browser... 2")},
-		"kernel-5.6.13-200.fc31.x86_64": {
-			Summary:     utils.PtrString("The Linux kernel"),
-			Description: utils.PtrString("The kernel meta package")},
-		"kernel-5.10.13-200.fc31.x86_64": {
-			Summary:     utils.PtrString("The Linux kernel"),
-			Description: utils.PtrString("The kernel meta package")},
-	}
-	data := vmaas.PackagesResponse{PackageList: &packageList}
 	c.JSON(http.StatusOK, data)
 }
 
@@ -175,15 +193,11 @@ func wshandler(w http.ResponseWriter, r *http.Request) {
 
 func initVMaaS(app *gin.Engine) {
 	// Mock updates endpoint for VMaaS
-	app.GET("/api/v3/updates", updatesHandler)
 	app.POST("/api/v3/updates", updatesHandler)
-	app.GET("/api/v3/patches", patchesHandler)
 	app.POST("/api/v3/patches", patchesHandler)
-	// Mock erratas endpoint for VMaaS
 	app.POST("/api/v3/errata", erratasHandler)
-	// Mock repos endpoint for VMaaS
 	app.POST("/api/v3/repos", reposHandler)
-	app.POST("/api/v3/packages", packagesHandler)
+	app.POST("/api/v3/pkgtree", pkgTreeHandler)
 	// Mock websocket endpoint for VMaaS
 	app.GET("/ws", func(context *gin.Context) {
 		wshandler(context.Writer, context.Request)
