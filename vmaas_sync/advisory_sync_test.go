@@ -155,7 +155,7 @@ func TestSyncAdvisories(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
-	err := syncAdvisories()
+	err := syncAdvisories(nil)
 	assert.NoError(t, err)
 
 	expected := []string{"RH-100"}

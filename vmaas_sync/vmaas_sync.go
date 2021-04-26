@@ -3,6 +3,7 @@ package vmaas_sync //nolint:golint,stylecheck
 import (
 	"app/base"
 	"app/base/core"
+	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
@@ -28,6 +29,7 @@ var (
 	enableAdvisoriesSync     bool
 	enablePackagesSync       bool
 	enableReposSync          bool
+	enableModifiedSinceSync  bool
 )
 
 func configure() {
@@ -51,6 +53,7 @@ func configure() {
 	enableAdvisoriesSync = utils.GetBoolEnvOrDefault("ENABLE_ADVISORIES_SYNC", true)
 	enablePackagesSync = utils.GetBoolEnvOrDefault("ENABLE_PACKAGES_SYNC", true)
 	enableReposSync = utils.GetBoolEnvOrDefault("ENABLE_REPOS_SYNC", true)
+	enableModifiedSinceSync = utils.GetBoolEnvOrDefault("ENABLE_MODIFIED_SINCE_SYNC", true)
 
 	advisoryPageSize = utils.GetIntEnvOrDefault("ERRATA_PAGE_SIZE", 500)
 	packagesPageSize = utils.GetIntEnvOrDefault("PACKAGES_PAGE_SIZE", 5)
@@ -127,27 +130,44 @@ func websocketHandler(data []byte, _ *websocket.Conn) error {
 	return nil
 }
 
+func getLastSyncIfNeeded() *time.Time {
+	if !enableModifiedSinceSync {
+		return nil
+	}
+
+	lastSync, err := database.GetTimestampKVValue(LastSync)
+	if err != nil {
+		utils.Log("err", err).Error("Unable to load last sync timestamp")
+		return nil
+	}
+	return lastSync
+}
+
 func syncData() error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, syncDuration)
+	currentSyncTS := time.Now()
+	lastSyncTS := getLastSyncIfNeeded()
 
 	if enableAdvisoriesSync {
-		if err := syncAdvisories(); err != nil {
+		if err := syncAdvisories(lastSyncTS); err != nil {
 			return errors.Wrap(err, "Failed to sync advisories")
 		}
 	}
 
 	if enablePackagesSync {
-		if err := syncPackages(); err != nil {
+		if err := syncPackages(lastSyncTS); err != nil {
 			return errors.Wrap(err, "Failed to sync packages")
 		}
 	}
 
 	if enableReposSync {
-		if err := syncRepos(); err != nil {
+		if err := syncRepos(lastSyncTS); err != nil {
 			return errors.Wrap(err, "Failed to sync repos")
 		}
 	}
+
+	database.UpdateTimestampKVValue(currentSyncTS, LastSync)
 	return nil
 }
 

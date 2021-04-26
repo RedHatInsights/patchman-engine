@@ -2,11 +2,12 @@ package vmaas_sync //nolint:golint,stylecheck
 import (
 	"app/base/database"
 	"github.com/pkg/errors"
+	"time"
 )
 
-func syncRepos() error {
+func syncRepos(modifiedSince *time.Time) error {
 	// mark non-thirdparty repos known to vmaas
-	updateRepos, err := getUpdatedRepos(nil, false)
+	updateRepos, err := getUpdatedRepos(modifiedSince, false)
 	if err != nil {
 		return err
 	}

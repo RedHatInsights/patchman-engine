@@ -15,7 +15,7 @@ import (
 
 const SyncBatchSize = 1000 // Should be < 5000
 
-func syncAdvisories() error {
+func syncAdvisories(modifiedSince *time.Time) error {
 	if vmaasClient == nil {
 		panic("VMaaS client is nil")
 	}
@@ -23,7 +23,7 @@ func syncAdvisories() error {
 	iPage := 0
 	iPageMax := 1
 	for iPage <= iPageMax {
-		errataResponse, err := downloadAndProcessErratasPage(iPage)
+		errataResponse, err := downloadAndProcessErratasPage(iPage, modifiedSince)
 		if err != nil {
 			return errors.Wrap(err, "Erratas page download and process failed")
 		}
@@ -206,8 +206,8 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 	return nil
 }
 
-func downloadAndProcessErratasPage(iPage int) (*vmaas.ErrataResponse, error) {
-	errataResponse, err := vmaasErrataRequest(iPage)
+func downloadAndProcessErratasPage(iPage int, modifiedSince *time.Time) (*vmaas.ErrataResponse, error) {
+	errataResponse, err := vmaasErrataRequest(iPage, modifiedSince)
 	if err != nil {
 		return nil, errors.Wrap(err, "Advisories sync failed on vmaas request")
 	}
@@ -219,13 +219,12 @@ func downloadAndProcessErratasPage(iPage int) (*vmaas.ErrataResponse, error) {
 	return errataResponse, nil
 }
 
-func vmaasErrataRequest(iPage int) (*vmaas.ErrataResponse, error) {
-	modifiedSince := time.Time{}
+func vmaasErrataRequest(iPage int, modifiedSince *time.Time) (*vmaas.ErrataResponse, error) {
 	errataRequest := vmaas.ErrataRequest{
 		Page:          utils.PtrFloat32(float32(iPage)),
 		PageSize:      utils.PtrFloat32(float32(advisoryPageSize)),
 		ErrataList:    []string{".*"},
-		ModifiedSince: &modifiedSince, // TODO: use incremental update
+		ModifiedSince: modifiedSince,
 	}
 
 	resp, _, err := vmaasClient.DefaultApi.AppErrataHandlerPostPost(base.Context).ErrataRequest(errataRequest).Execute()

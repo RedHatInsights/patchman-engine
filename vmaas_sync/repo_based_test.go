@@ -2,6 +2,7 @@ package vmaas_sync //nolint:golint,stylecheck
 
 import (
 	"app/base/core"
+	"app/base/database"
 	"app/base/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -26,7 +27,7 @@ func TestGetLastRepobasedEvalTms(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	ts, err := getLastRepobasedEvalTms()
+	ts, err := database.GetTimestampKVValue(LastEvalRepoBased)
 	assert.Nil(t, err)
 	assert.Equal(t, "2018-04-04 23:23:45 +0000 UTC", ts.String())
 }
@@ -35,9 +36,9 @@ func TestUpdateRepoBaseEvalTimestamp(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	updateRepoBaseEvalTimestamp(time.Now())
+	database.UpdateTimestampKVValue(time.Now(), LastEvalRepoBased)
 
-	ts, err := getLastRepobasedEvalTms()
+	ts, err := database.GetTimestampKVValue(LastEvalRepoBased)
 	assert.Nil(t, err)
 	assert.Equal(t, time.Now().Year(), ts.Year())
 
@@ -78,6 +79,6 @@ func TestGetUpdatedRepos(t *testing.T) {
 }
 
 func resetLastEvalTimestamp(t *testing.T) {
-	err := updateRepoBaseEvalTimestampStr("2018-04-05T01:23:45+02:00")
+	err := database.UpdateTimestampKVValueStr("2018-04-05T01:23:45+02:00", LastEvalRepoBased)
 	assert.Nil(t, err)
 }
