@@ -83,7 +83,8 @@ func vmaasPkgtreeRequest(iPage int, modifiedSince *time.Time) (*vmaas.PkgtreeRes
 		vmaasCallCnt.WithLabelValues("error-download-errata").Inc()
 		return nil, errors.Wrap(err, "Downloading erratas")
 	}
-	utils.Log("count", len(resp.GetPackageNameList())).Debug("Downloaded package names")
+	utils.Log("page", iPage, "pages", int(resp.GetPages()), "count", len(resp.GetPackageNameList())).
+		Debug("Downloaded package names")
 	vmaasCallCnt.WithLabelValues("success").Inc()
 	return &resp, nil
 }

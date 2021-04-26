@@ -78,7 +78,8 @@ func getUpdatedRepos(modifiedSince *time.Time, thirdParty bool) ([]string, error
 			break
 		}
 
-		utils.Log("count", len(repos.GetRepositoryList())).Debug("Downloaded repos")
+		utils.Log("page", int(page), "pages", int(repos.GetPages()), "count", len(repos.GetRepositoryList())).
+			Debug("Downloaded repos")
 		for k := range repos.GetRepositoryList() {
 			reposArr = append(reposArr, k)
 		}

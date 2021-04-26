@@ -232,7 +232,8 @@ func vmaasErrataRequest(iPage int, modifiedSince *time.Time) (*vmaas.ErrataRespo
 		vmaasCallCnt.WithLabelValues("error-download-errata").Inc()
 		return nil, errors.Wrap(err, "Downloading erratas")
 	}
-	utils.Log("count", len(resp.GetErrataList())).Debug("Downloaded advisories")
+	utils.Log("page", iPage, "pages", int(resp.GetPages()), "count", len(resp.GetErrataList())).
+		Debug("Downloaded advisories")
 	vmaasCallCnt.WithLabelValues("success").Inc()
 	return &resp, nil
 }
