@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-const BatchSize = 4000
-
 func sendReevaluationMessages() error {
 	if !enableRecalcMessagesSend {
 		utils.Log().Info("Recalc messages sending disabled, skipping...")
@@ -31,13 +29,7 @@ func sendReevaluationMessages() error {
 
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageSendDuration)
-	for i := 0; i < len(inventoryAIDs); i += BatchSize {
-		end := i + BatchSize
-		if end > len(inventoryAIDs) {
-			end = len(inventoryAIDs)
-		}
-		mqueue.SendMessages(base.Context, evalWriter, inventoryAIDs[i:end]...)
-	}
+	mqueue.SendMessages(base.Context, evalWriter, inventoryAIDs...)
 	utils.Log("count", len(inventoryAIDs)).Info("systems sent to re-calc")
 	return nil
 }
