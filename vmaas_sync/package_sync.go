@@ -14,7 +14,7 @@ import (
 
 const chunkSize = 10 * 1024
 
-func syncPackages() error {
+func syncPackages(modifiedSince *time.Time) error {
 	if vmaasClient == nil {
 		panic("VMaaS client is nil")
 	}
@@ -22,7 +22,7 @@ func syncPackages() error {
 	iPage := 0
 	iPageMax := 1
 	for iPage <= iPageMax {
-		pkgtreeResponse, err := downloadAndProcessPkgtreePage(iPage)
+		pkgtreeResponse, err := downloadAndProcessPkgtreePage(iPage, modifiedSince)
 		if err != nil {
 			return errors.Wrap(err, "Pkgtree page download and process failed")
 		}
@@ -34,8 +34,8 @@ func syncPackages() error {
 	return nil
 }
 
-func downloadAndProcessPkgtreePage(iPage int) (*vmaas.PkgtreeResponse, error) {
-	pkgtreeResponse, err := vmaasPkgtreeRequest(iPage)
+func downloadAndProcessPkgtreePage(iPage int, modifiedSince *time.Time) (*vmaas.PkgtreeResponse, error) {
+	pkgtreeResponse, err := vmaasPkgtreeRequest(iPage, modifiedSince)
 	if err != nil {
 		return nil, errors.Wrap(err, "Advisories sync failed on vmaas request")
 	}
@@ -64,8 +64,7 @@ func storePackagesData(vmaasData map[string][]vmaas.PkgTreeItem) error {
 	return nil
 }
 
-func vmaasPkgtreeRequest(iPage int) (*vmaas.PkgtreeResponse, error) {
-	modifiedSince := time.Time{}
+func vmaasPkgtreeRequest(iPage int, modifiedSince *time.Time) (*vmaas.PkgtreeResponse, error) {
 	errataRequest := vmaas.PkgtreeRequest{
 		Page:               utils.PtrFloat32(float32(iPage)),
 		PageSize:           utils.PtrFloat32(float32(packagesPageSize)),
@@ -75,7 +74,7 @@ func vmaasPkgtreeRequest(iPage int) (*vmaas.PkgtreeResponse, error) {
 		ReturnRepositories: vmaas.PtrBool(false),
 		ReturnErrata:       vmaas.PtrBool(false),
 		ThirdParty:         vmaas.PtrBool(true),
-		ModifiedSince:      &modifiedSince, // TODO: use incremental update
+		ModifiedSince:      modifiedSince,
 	}
 
 	resp, _, err := vmaasClient.DefaultApi.AppPkgtreeHandlerV3PostPost(base.Context).

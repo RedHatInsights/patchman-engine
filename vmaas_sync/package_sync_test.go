@@ -12,7 +12,7 @@ func TestSyncPackages(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
-	err := syncPackages()
+	err := syncPackages(nil)
 	assert.NoError(t, err)
 
 	database.CheckPackagesNamesInDB(t, "bash", "curl")

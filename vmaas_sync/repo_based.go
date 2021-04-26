@@ -2,16 +2,16 @@ package vmaas_sync //nolint:golint,stylecheck
 import (
 	"app/base"
 	"app/base/database"
-	"app/base/models"
 	"app/base/utils"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"time"
 )
 
 const LastEvalRepoBased = "last_eval_repo_based"
+const LastSync = "last_sync"
 
 func getCurrentRepoBasedInventoryIDs() ([]inventoryAID, error) {
-	lastRepoBaseEval, err := getLastRepobasedEvalTms()
+	lastRepoBaseEval, err := database.GetTimestampKVValue(LastEvalRepoBased)
 	if err != nil {
 		return nil, err
 	}
@@ -26,39 +26,9 @@ func getCurrentRepoBasedInventoryIDs() ([]inventoryAID, error) {
 		return nil, err
 	}
 
-	updateRepoBaseEvalTimestamp(time.Now())
+	database.UpdateTimestampKVValue(time.Now(), LastEvalRepoBased)
 
 	return inventoryAIDs, nil
-}
-
-func getLastRepobasedEvalTms() (*time.Time, error) {
-	var timestamps []*time.Time
-	err := database.Db.Model(&models.TimestampKV{}).
-		Where("name = ?", LastEvalRepoBased).
-		Pluck("value", &timestamps).Error
-	if err != nil {
-		return nil, err
-	}
-
-	if len(timestamps) == 0 {
-		return nil, nil
-	}
-
-	return timestamps[0], nil
-}
-
-func updateRepoBaseEvalTimestamp(value time.Time) {
-	ts := value.Format(time.RFC3339)
-	err := updateRepoBaseEvalTimestampStr(ts)
-	if err != nil {
-		utils.Log("err", err.Error()).Error("unable to update repo-based eval. timestamp")
-	}
-}
-
-func updateRepoBaseEvalTimestampStr(value string) error {
-	err := database.Db.Exec("INSERT INTO timestamp_kv (name, value) values (?, ?)"+
-		"ON CONFLICT (name) DO UPDATE SET value = ?", LastEvalRepoBased, value, value).Error
-	return err
 }
 
 type inventoryAID struct {
@@ -85,7 +55,6 @@ func getRepoBasedInventoryIDs(repos []string) ([]inventoryAID, error) {
 	return ids, nil
 }
 
-//nolint unused
 func getUpdatedRepos(modifiedSince *time.Time, thirdParty bool) ([]string, error) {
 	page := float32(1)
 	var reposArr []string
@@ -95,10 +64,7 @@ func getUpdatedRepos(modifiedSince *time.Time, thirdParty bool) ([]string, error
 			RepositoryList: []string{".*"},
 			PageSize:       utils.PtrFloat32(float32(advisoryPageSize)),
 			ThirdParty:     utils.PtrBool(thirdParty),
-		}
-
-		if modifiedSince != nil {
-			reposReq.SetModifiedSince(*modifiedSince)
+			ModifiedSince:  modifiedSince,
 		}
 
 		repos, _, err := vmaasClient.DefaultApi.AppReposHandlerPostPost(base.Context).ReposRequest(reposReq).Execute()
@@ -113,7 +79,7 @@ func getUpdatedRepos(modifiedSince *time.Time, thirdParty bool) ([]string, error
 		}
 
 		utils.Log("count", len(repos.GetRepositoryList())).Debug("Downloaded repos")
-		for k, _ := range repos.GetRepositoryList() {
+		for k := range repos.GetRepositoryList() {
 			reposArr = append(reposArr, k)
 		}
 

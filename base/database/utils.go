@@ -1,6 +1,11 @@
 package database
 
-import "github.com/jinzhu/gorm"
+import (
+	"app/base/models"
+	"app/base/utils"
+	"github.com/jinzhu/gorm"
+	"time"
+)
 
 func Systems(tx *gorm.DB, accountID int) *gorm.DB {
 	return tx.Table("system_platform sp").Where("sp.rh_account_id = ?", accountID)
@@ -51,4 +56,34 @@ func systemAdvisoriesQuery(tx *gorm.DB, accountID int) *gorm.DB {
 		Joins("join system_platform sp ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id").
 		Where("sa.rh_account_id = ? AND sp.rh_account_id = ?", accountID, accountID)
 	return query
+}
+
+func GetTimestampKVValue(key string) (*time.Time, error) {
+	var timestamps []*time.Time
+	err := Db.Model(&models.TimestampKV{}).
+		Where("name = ?", key).
+		Pluck("value", &timestamps).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if len(timestamps) == 0 {
+		return nil, nil
+	}
+
+	return timestamps[0], nil
+}
+
+func UpdateTimestampKVValue(value time.Time, key string) {
+	ts := value.Format(time.RFC3339)
+	err := UpdateTimestampKVValueStr(ts, key)
+	if err != nil {
+		utils.Log("err", err.Error(), "key", key).Error("Unable to updated timestamp KV value")
+	}
+}
+
+func UpdateTimestampKVValueStr(value, key string) error {
+	err := Db.Exec("INSERT INTO timestamp_kv (name, value) values (?, ?)"+
+		"ON CONFLICT (name) DO UPDATE SET value = ?", key, value, value).Error
+	return err
 }
