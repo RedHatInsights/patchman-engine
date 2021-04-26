@@ -3,6 +3,7 @@ package vmaas_sync //nolint:golint,stylecheck
 import (
 	"app/base/core"
 	"app/base/database"
+	"app/base/mqueue"
 	"app/base/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -16,9 +17,9 @@ func TestGetCurrentRepoBasedInventoryIDs(t *testing.T) {
 
 	inventoryAIDs, err := getCurrentRepoBasedInventoryIDs()
 	assert.Nil(t, err)
-	assert.Equal(t, []inventoryAID{
-		{"00000000-0000-0000-0000-000000000002", 1},
-		{"00000000-0000-0000-0000-000000000003", 1}},
+	assert.Equal(t, []mqueue.InventoryAID{
+		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1},
+		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1}},
 		inventoryAIDs)
 	resetLastEvalTimestamp(t)
 }
@@ -52,9 +53,9 @@ func TestGetRepoBasedInventoryIDs(t *testing.T) {
 	repos := []string{"repo1", "repo2"}
 	inventoryAIDs, err := getRepoBasedInventoryIDs(repos)
 	assert.Nil(t, err)
-	assert.Equal(t, []inventoryAID{
-		{"00000000-0000-0000-0000-000000000002", 1},
-		{"00000000-0000-0000-0000-000000000003", 1}},
+	assert.Equal(t, []mqueue.InventoryAID{
+		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1},
+		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1}},
 		inventoryAIDs)
 }
 

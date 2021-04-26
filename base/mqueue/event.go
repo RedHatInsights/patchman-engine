@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const BatchSize = 4000
+
 var policy = backoff.NewExponential(
 	backoff.WithInterval(time.Second),
 	backoff.WithMaxRetries(5),
@@ -25,6 +27,11 @@ type PlatformEvent struct {
 	B64Identity *string                `json:"b64_identity"`
 	URL         *string                `json:"url"`
 	SystemIDs   []string               `json:"system_ids,omitempty"`
+}
+
+type InventoryAID struct {
+	InventoryID string
+	RhAccountID int
 }
 
 type EventHandler func(message PlatformEvent) error
@@ -54,4 +61,41 @@ func WriteEvents(ctx context.Context, w Writer, events ...PlatformEvent) error {
 		msgs[i] = kafka.Message{Value: data}
 	}
 	return w.WriteMessages(ctx, msgs...)
+}
+
+func SendMessages(ctx context.Context, w Writer, inventoryAIDs ...InventoryAID) {
+	// group systems by account
+	grouped := map[int][]string{}
+	for _, aid := range inventoryAIDs {
+		grouped[aid.RhAccountID] = append(grouped[aid.RhAccountID], aid.InventoryID)
+	}
+
+	// compute how many batches we will create
+	var batches int = 0
+	for _, ev := range grouped {
+		batches += len(ev)/BatchSize + 1
+	}
+
+	// create events, per BatchSize of systems from one account
+	now := base.Rfc3339Timestamp(time.Now())
+	events := make([]PlatformEvent, 0, batches)
+	for acc, ev := range grouped {
+		for start := 0; start < len(ev); start += BatchSize {
+			end := start + BatchSize
+			if end > len(ev) {
+				end = len(ev)
+			}
+			events = append(events, PlatformEvent{
+				Timestamp: &now,
+				AccountID: acc,
+				SystemIDs: ev[start:end],
+			})
+		}
+	}
+
+	// write events to queue
+	err := WriteEvents(ctx, w, events...)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("sending to re-evaluate failed")
+	}
 }
