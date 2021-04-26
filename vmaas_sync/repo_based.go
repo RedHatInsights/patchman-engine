@@ -2,6 +2,7 @@ package vmaas_sync //nolint:golint,stylecheck
 import (
 	"app/base"
 	"app/base/database"
+	"app/base/mqueue"
 	"app/base/utils"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"time"
@@ -10,7 +11,7 @@ import (
 const LastEvalRepoBased = "last_eval_repo_based"
 const LastSync = "last_sync"
 
-func getCurrentRepoBasedInventoryIDs() ([]inventoryAID, error) {
+func getCurrentRepoBasedInventoryIDs() ([]mqueue.InventoryAID, error) {
 	lastRepoBaseEval, err := database.GetTimestampKVValue(LastEvalRepoBased)
 	if err != nil {
 		return nil, err
@@ -31,13 +32,8 @@ func getCurrentRepoBasedInventoryIDs() ([]inventoryAID, error) {
 	return inventoryAIDs, nil
 }
 
-type inventoryAID struct {
-	InventoryID string
-	RhAccountID int
-}
-
-func getRepoBasedInventoryIDs(repos []string) ([]inventoryAID, error) {
-	var ids []inventoryAID
+func getRepoBasedInventoryIDs(repos []string) ([]mqueue.InventoryAID, error) {
+	var ids []mqueue.InventoryAID
 	if len(repos) == 0 {
 		return ids, nil
 	}

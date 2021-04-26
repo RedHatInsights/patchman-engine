@@ -6,7 +6,6 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
-	"context"
 	"time"
 )
 
@@ -18,7 +17,7 @@ func sendReevaluationMessages() error {
 		return nil
 	}
 
-	var inventoryAIDs []inventoryAID
+	var inventoryAIDs []mqueue.InventoryAID
 	var err error
 
 	if enabledRepoBasedReeval {
@@ -30,19 +29,21 @@ func sendReevaluationMessages() error {
 		return err
 	}
 
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, messageSendDuration)
 	for i := 0; i < len(inventoryAIDs); i += BatchSize {
 		end := i + BatchSize
 		if end > len(inventoryAIDs) {
 			end = len(inventoryAIDs)
 		}
-		sendMessages(base.Context, inventoryAIDs[i:end]...)
+		mqueue.SendMessages(base.Context, evalWriter, inventoryAIDs[i:end]...)
 	}
 	utils.Log("count", len(inventoryAIDs)).Info("systems sent to re-calc")
 	return nil
 }
 
-func getAllInventoryIDs() ([]inventoryAID, error) {
-	var inventoryAIDs []inventoryAID
+func getAllInventoryIDs() ([]mqueue.InventoryAID, error) {
+	var inventoryAIDs []mqueue.InventoryAID
 	err := database.Db.Model(&models.SystemPlatform{}).
 		Select("inventory_id, rh_account_id").
 		Order("rh_account_id").
@@ -51,35 +52,4 @@ func getAllInventoryIDs() ([]inventoryAID, error) {
 		return nil, err
 	}
 	return inventoryAIDs, nil
-}
-
-func sendMessages(ctx context.Context, inventoryAIDs ...inventoryAID) {
-	tStart := time.Now()
-	defer utils.ObserveSecondsSince(tStart, messageSendDuration)
-
-	now := base.Rfc3339Timestamp(time.Now())
-	grouped := map[int][]string{}
-	for _, aid := range inventoryAIDs {
-		grouped[aid.RhAccountID] = append(grouped[aid.RhAccountID], aid.InventoryID)
-	}
-
-	events := make([]mqueue.PlatformEvent, 0, len(inventoryAIDs))
-	for acc, ev := range grouped {
-		for start := 0; start < len(ev); start += BatchSize {
-			end := start + BatchSize
-			if end > len(ev) {
-				end = len(ev)
-			}
-			events = append(events, mqueue.PlatformEvent{
-				Timestamp: &now,
-				AccountID: acc,
-				SystemIDs: ev[start:end],
-			})
-		}
-	}
-
-	err := mqueue.WriteEvents(ctx, evalWriter, events...)
-	if err != nil {
-		utils.Log("err", err.Error()).Error("sending to re-evaluate failed")
-	}
 }
