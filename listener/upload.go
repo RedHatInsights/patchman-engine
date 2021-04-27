@@ -26,6 +26,8 @@ const (
 	ErrorProcessUpload     = "unable to process upload"
 	UploadSuccessNoEval    = "upload event handled successfully, no eval required"
 	UploadSuccess          = "upload event handled successfully"
+	FlushedFullBuffer      = "flushing full eval event buffer"
+	FlushedTimeoutBuffer   = "flushing eval event buffer after timeout"
 )
 
 var DeletionThreshold = time.Hour * time.Duration(utils.GetIntEnvOrDefault("SYSTEM_DELETE_HRS", 4))
@@ -115,13 +117,21 @@ func HandleUpload(event HostEvent) error {
 
 // accumulate events and create group PlatformEvents to save some resources
 const evalBufferSize = 5 * mqueue.BatchSize
+const flushTimeout = 500 * time.Millisecond
+
 var evalBuffer = make([]mqueue.InventoryAID, 0, evalBufferSize+1)
+var flushTimer = time.AfterFunc(87600*time.Hour, func() {
+	utils.Log().Debug(FlushedTimeoutBuffer)
+	flushEvalEvents()
+})
 
 // send events after full buffer or timeout
 func bufferEvalEvents(inventoryID string, rhAccountID int) {
 	inventoryAID := mqueue.InventoryAID{InventoryID: inventoryID, RhAccountID: rhAccountID}
 	evalBuffer = append(evalBuffer, inventoryAID)
+	flushTimer.Reset(flushTimeout)
 	if len(evalBuffer) >= evalBufferSize {
+		utils.Log().Debug(FlushedFullBuffer)
 		flushEvalEvents()
 	}
 }
