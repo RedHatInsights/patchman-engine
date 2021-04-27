@@ -172,7 +172,8 @@ func TestUploadHandlerError2(t *testing.T) {
 	_ = getOrCreateTestAccount(t)
 	event := createTestUploadEvent("1", id, "puptoo", true)
 	err := HandleUpload(event)
-	assert.Error(t, err)
+	assert.Nil(t, err)
+	time.Sleep(2 * flushTimeout)
 	assert.Equal(t, ErrorKafkaSend, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
 	deleteData(t)
 }
