@@ -16,7 +16,7 @@ func getCurrentRepoBasedInventoryIDs() ([]inventoryAID, error) {
 		return nil, err
 	}
 
-	updateRepos, err := getUpdatedRepos(lastRepoBaseEval, true)
+	updateRepos, err := getUpdatedRepos(time.Now(), lastRepoBaseEval, true)
 	if err != nil {
 		return nil, err
 	}
@@ -55,9 +55,10 @@ func getRepoBasedInventoryIDs(repos []string) ([]inventoryAID, error) {
 	return ids, nil
 }
 
-func getUpdatedRepos(modifiedSince *time.Time, thirdParty bool) ([]string, error) {
+func getUpdatedRepos(syncStart time.Time, modifiedSince *time.Time, thirdParty bool) ([]string, error) {
 	page := float32(1)
 	var reposArr []string
+	reposSyncStart := time.Now()
 	for {
 		reposReq := vmaas.ReposRequest{
 			Page:           utils.PtrFloat32(page),
@@ -78,7 +79,8 @@ func getUpdatedRepos(modifiedSince *time.Time, thirdParty bool) ([]string, error
 			break
 		}
 
-		utils.Log("page", int(page), "pages", int(repos.GetPages()), "count", len(repos.GetRepositoryList())).
+		utils.Log("page", int(page), "pages", int(repos.GetPages()), "count", len(repos.GetRepositoryList()),
+			"sync_duration", utils.SinceStr(syncStart), "repos_sync_duration", utils.SinceStr(reposSyncStart)).
 			Debug("Downloaded repos")
 		for k := range repos.GetRepositoryList() {
 			reposArr = append(reposArr, k)

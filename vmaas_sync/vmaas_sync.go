@@ -144,30 +144,29 @@ func getLastSyncIfNeeded() *time.Time {
 }
 
 func syncData() error {
-	tStart := time.Now()
-	defer utils.ObserveSecondsSince(tStart, syncDuration)
-	currentSyncTS := time.Now()
+	syncStart := time.Now()
+	defer utils.ObserveSecondsSince(syncStart, syncDuration)
 	lastSyncTS := getLastSyncIfNeeded()
 
 	if enableAdvisoriesSync {
-		if err := syncAdvisories(lastSyncTS); err != nil {
+		if err := syncAdvisories(syncStart, lastSyncTS); err != nil {
 			return errors.Wrap(err, "Failed to sync advisories")
 		}
 	}
 
 	if enablePackagesSync {
-		if err := syncPackages(lastSyncTS); err != nil {
+		if err := syncPackages(syncStart, lastSyncTS); err != nil {
 			return errors.Wrap(err, "Failed to sync packages")
 		}
 	}
 
 	if enableReposSync {
-		if err := syncRepos(lastSyncTS); err != nil {
+		if err := syncRepos(syncStart, lastSyncTS); err != nil {
 			return errors.Wrap(err, "Failed to sync repos")
 		}
 	}
 
-	database.UpdateTimestampKVValue(currentSyncTS, LastSync)
+	database.UpdateTimestampKVValue(syncStart, LastSync)
 	return nil
 }
 

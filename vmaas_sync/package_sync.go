@@ -14,13 +14,14 @@ import (
 
 const chunkSize = 10 * 1024
 
-func syncPackages(modifiedSince *time.Time) error {
+func syncPackages(syncStart time.Time, modifiedSince *time.Time) error {
 	if vmaasClient == nil {
 		panic("VMaaS client is nil")
 	}
 
 	iPage := 0
 	iPageMax := 1
+	pkgSyncStart := time.Now()
 	for iPage <= iPageMax {
 		pkgtreeResponse, err := downloadAndProcessPkgtreePage(iPage, modifiedSince)
 		if err != nil {
@@ -29,6 +30,9 @@ func syncPackages(modifiedSince *time.Time) error {
 
 		iPageMax = int(pkgtreeResponse.GetPages())
 		iPage++
+		utils.Log("page", iPage, "pages", int(pkgtreeResponse.GetPages()), "count", len(pkgtreeResponse.GetPackageNameList()),
+			"sync_duration", utils.SinceStr(syncStart), "packages_sync_duration", utils.SinceStr(pkgSyncStart)).
+			Debug("Downloaded packages")
 	}
 	utils.Log().Info("Packages synced successfully")
 	return nil
@@ -83,8 +87,6 @@ func vmaasPkgtreeRequest(iPage int, modifiedSince *time.Time) (*vmaas.PkgtreeRes
 		vmaasCallCnt.WithLabelValues("error-download-errata").Inc()
 		return nil, errors.Wrap(err, "Downloading erratas")
 	}
-	utils.Log("page", iPage, "pages", int(resp.GetPages()), "count", len(resp.GetPackageNameList())).
-		Debug("Downloaded package names")
 	vmaasCallCnt.WithLabelValues("success").Inc()
 	return &resp, nil
 }

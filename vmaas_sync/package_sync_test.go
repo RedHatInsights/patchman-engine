@@ -5,6 +5,7 @@ import (
 	"app/base/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestSyncPackages(t *testing.T) {
@@ -12,7 +13,7 @@ func TestSyncPackages(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
-	err := syncPackages(nil)
+	err := syncPackages(time.Now(), nil)
 	assert.NoError(t, err)
 
 	database.CheckPackagesNamesInDB(t, "bash", "curl")

@@ -15,13 +15,14 @@ import (
 
 const SyncBatchSize = 1000 // Should be < 5000
 
-func syncAdvisories(modifiedSince *time.Time) error {
+func syncAdvisories(syncStart time.Time, modifiedSince *time.Time) error {
 	if vmaasClient == nil {
 		panic("VMaaS client is nil")
 	}
 
 	iPage := 0
 	iPageMax := 1
+	advSyncStart := time.Now()
 	for iPage <= iPageMax {
 		errataResponse, err := downloadAndProcessErratasPage(iPage, modifiedSince)
 		if err != nil {
@@ -30,6 +31,9 @@ func syncAdvisories(modifiedSince *time.Time) error {
 
 		iPageMax = int(errataResponse.GetPages())
 		iPage++
+		utils.Log("page", iPage, "pages", int(errataResponse.GetPages()), "count", len(errataResponse.GetErrataList()),
+			"sync_duration", utils.SinceStr(syncStart), "advisories_sync_duration", utils.SinceStr(advSyncStart)).
+			Debug("Downloaded advisories")
 	}
 	utils.Log().Info("Advisories synced successfully")
 	return nil
@@ -232,8 +236,6 @@ func vmaasErrataRequest(iPage int, modifiedSince *time.Time) (*vmaas.ErrataRespo
 		vmaasCallCnt.WithLabelValues("error-download-errata").Inc()
 		return nil, errors.Wrap(err, "Downloading erratas")
 	}
-	utils.Log("page", iPage, "pages", int(resp.GetPages()), "count", len(resp.GetErrataList())).
-		Debug("Downloaded advisories")
 	vmaasCallCnt.WithLabelValues("success").Inc()
 	return &resp, nil
 }
