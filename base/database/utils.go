@@ -33,9 +33,9 @@ func SystemPackages(tx *gorm.DB, accountID int) *gorm.DB {
 func Packages(tx *gorm.DB) *gorm.DB {
 	return tx.Table("package p").
 		Joins("JOIN package_name pn on p.name_id = pn.id").
-		Joins("JOIN (SELECT id, value FROM strings) descr ON p.description_hash = descr.id").
-		Joins("JOIN (SELECT id, value from strings) sum ON p.summary_hash = sum.id").
-		Joins("LEFT JOIN (SELECT id, name, public_date from advisory_metadata) am ON p.advisory_id = am.id")
+		Joins("JOIN strings descr ON p.description_hash = descr.id").
+		Joins("JOIN strings sum ON p.summary_hash = sum.id").
+		Joins("LEFT JOIN advisory_metadata am ON p.advisory_id = am.id")
 }
 
 func PackageByName(tx *gorm.DB, pkgName string) *gorm.DB {
