@@ -10,6 +10,7 @@ import (
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestInit(t *testing.T) {
@@ -154,7 +155,7 @@ func TestSyncAdvisories(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
-	err := syncAdvisories(nil)
+	err := syncAdvisories(time.Now(), nil)
 	assert.NoError(t, err)
 
 	expected := []string{"RH-100"}

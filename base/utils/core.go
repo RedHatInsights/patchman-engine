@@ -8,9 +8,10 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"time"
 )
 
-// load environment variable or return default value
+// Getenv Load environment variable or return default value
 func Getenv(key, defaultt string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
@@ -18,7 +19,7 @@ func Getenv(key, defaultt string) string {
 	return defaultt
 }
 
-// load environment variable or fail
+// GetenvOrFail Load environment variable or fail
 func GetenvOrFail(envname string) string {
 	value := os.Getenv(envname)
 	if value == "" {
@@ -28,7 +29,7 @@ func GetenvOrFail(envname string) string {
 	return value
 }
 
-// parse bool value from env variable
+// GetBoolEnvOrFail Parse bool value from env variable
 func GetBoolEnvOrFail(envname string) bool {
 	value := os.Getenv(envname)
 	if value == "" {
@@ -43,7 +44,7 @@ func GetBoolEnvOrFail(envname string) bool {
 	return parsedBool
 }
 
-// parse bool value from env variable
+// GetBoolEnvOrDefault Parse bool value from env variable
 func GetBoolEnvOrDefault(envname string, defval bool) bool {
 	value := os.Getenv(envname)
 	if value == "" {
@@ -58,7 +59,7 @@ func GetBoolEnvOrDefault(envname string, defval bool) bool {
 	return parsedBool
 }
 
-// load int environment variable or fail
+// GetIntEnvOrFail Load int environment variable or fail
 func GetIntEnvOrFail(envname string) int {
 	valueStr := os.Getenv(envname)
 	if valueStr == "" {
@@ -73,7 +74,7 @@ func GetIntEnvOrFail(envname string) int {
 	return value
 }
 
-// load int environment variable or load default
+// GetIntEnvOrDefault Load int environment variable or load default
 func GetIntEnvOrDefault(envname string, defval int) int {
 	valueStr := os.Getenv(envname)
 	if valueStr == "" {
@@ -88,7 +89,7 @@ func GetIntEnvOrDefault(envname string, defval int) int {
 	return value
 }
 
-// set environment variable or fail
+// SetenvOrFail Set environment variable or fail
 func SetenvOrFail(envname, value string) string {
 	err := os.Setenv(envname, value)
 	if err != nil {
@@ -113,7 +114,7 @@ func TestLoadEnv(files ...string) {
 	}
 }
 
-// Catches panics, and logs them to stderr, then exit conditionally
+// LogPanics Catches panics, and logs them to stderr, then exit conditionally
 func LogPanics(exitAfterLogging bool) {
 	if obj := recover(); obj != nil {
 		stack := string(debug.Stack())
@@ -124,4 +125,9 @@ func LogPanics(exitAfterLogging bool) {
 			os.Exit(1)
 		}
 	}
+}
+
+// SinceStr Format duration since given time as "1h2m3s
+func SinceStr(tStart time.Time) string {
+	return time.Since(tStart).Round(time.Second).String()
 }
