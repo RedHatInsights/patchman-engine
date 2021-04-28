@@ -30,7 +30,7 @@ func TestGetOrCreateAccount(t *testing.T) {
 }
 
 func createTestInvHost(t *testing.T) *Host {
-	correctTimestamp, err := time.Parse(base.Rfc3339NoTz, "2018-09-22T12:00:00-04:00")
+	correctTimestamp, err := base.ParseTime("2018-09-22T12:00:00-04:00")
 	correctTime := base.Rfc3339Timestamp(correctTimestamp)
 	assert.NoError(t, err)
 

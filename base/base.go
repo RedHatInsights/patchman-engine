@@ -15,7 +15,13 @@ const VMaaSAPIPrefix = "/api/v3"
 const RBACApiPrefix = "/api/rbac/v1"
 
 // Go datetime parser does not like slightly incorrect RFC 3339 which we are using (missing Z )
-const Rfc3339NoTz = "2006-01-02T15:04:05-07:00"
+// Also, we're receiving multiple formats from inventory
+var timeFormats = []string{
+	"2006-01-02T15:04:05.999999-07:00",
+	"2006-01-02T15:04:05Z07:00",
+	"2006-01-02T15:04:05-07:00",
+	"2006-01-02T15:04:05",
+}
 
 var Context context.Context
 var CancelContext context.CancelFunc
@@ -49,8 +55,19 @@ func RemoveInvalidChars(s string) string {
 
 type Rfc3339Timestamp time.Time
 
+func ParseTime(s string) (time.Time, error) {
+	var t time.Time
+	var err error
+	for _, f := range timeFormats {
+		t, err = time.Parse(f, s)
+		if err == nil {
+			return t, err
+		}
+	}
+	return t, err
+}
 func (d Rfc3339Timestamp) MarshalJSON() ([]byte, error) {
-	return json.Marshal(d.Time().Format(Rfc3339NoTz))
+	return json.Marshal(d.Time().Format(timeFormats[0]))
 }
 
 func (d *Rfc3339Timestamp) UnmarshalJSON(data []byte) error {
@@ -59,7 +76,7 @@ func (d *Rfc3339Timestamp) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &jd); err != nil {
 		return err
 	}
-	t, err := time.Parse(Rfc3339NoTz, jd)
+	t, err := ParseTime(jd)
 	*d = Rfc3339Timestamp(t)
 	return err
 }
