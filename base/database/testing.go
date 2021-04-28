@@ -99,21 +99,17 @@ func CheckCachesValid(t *testing.T) {
 }
 
 func CheckAdvisoriesInDB(t *testing.T, advisories []string) []int {
-	var advisoriesObjs []models.AdvisoryMetadata
-	err := Db.Where("name IN (?)", advisories).Find(&advisoriesObjs).Error
+	var advisoryIDs []int
+	err := Db.Model(models.AdvisoryMetadata{}).Where("name IN (?)", advisories).
+		Pluck("id", &advisoryIDs).Error
 	assert.Nil(t, err)
-	assert.Equal(t, len(advisoriesObjs), len(advisories))
-	var ids []int //nolint:prealloc
-	for _, advisoryObj := range advisoriesObjs {
-		ids = append(ids, advisoryObj.ID)
-	}
-	return ids
+	assert.Equal(t, len(advisories), len(advisoryIDs))
+	return advisoryIDs
 }
 
 func CheckThirdPartyRepos(t *testing.T, repoNames []string, thirdParty bool) {
 	var reposObjs []models.Repo
-	err := Db.Where("name IN (?)", repoNames).Find(&reposObjs).Error
-	assert.Nil(t, err)
+	assert.Nil(t, Db.Where("name IN (?)", repoNames).Find(&reposObjs).Error)
 	assert.Equal(t, len(reposObjs), len(repoNames), "loaded repos count match")
 	for _, reposObj := range reposObjs {
 		assert.Equal(t, thirdParty, reposObj.ThirdParty,
@@ -123,8 +119,7 @@ func CheckThirdPartyRepos(t *testing.T, repoNames []string, thirdParty bool) {
 
 func CheckPackagesNamesInDB(t *testing.T, packageNames ...string) {
 	var count int
-	err := Db.Model(&models.PackageName{}).Where("name in (?)", packageNames).Count(&count).Error
-	assert.Nil(t, err)
+	assert.Nil(t, Db.Model(&models.PackageName{}).Where("name in (?)", packageNames).Count(&count).Error)
 	assert.Equal(t, len(packageNames), count)
 }
 
@@ -197,9 +192,7 @@ func CreateAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int,
 
 func CreateSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
 	for _, repoID := range repoIDs {
-		err := Db.Create(&models.SystemRepo{
-			RhAccountID: rhAccountID, SystemID: systemID, RepoID: repoID}).Error
-		assert.Nil(t, err)
+		assert.Nil(t, Db.Create(&models.SystemRepo{RhAccountID: rhAccountID, SystemID: systemID, RepoID: repoID}).Error)
 	}
 	CheckSystemRepos(t, rhAccountID, systemID, repoIDs)
 }
@@ -223,8 +216,7 @@ func CheckSystemAdvisoriesWhenPatched(t *testing.T, systemID int, advisoryIDs []
 
 func CheckEVRAsInDB(t *testing.T, nExpected int, evras ...string) {
 	var packages []models.Package
-	err := Db.Where("evra IN (?)", evras).Find(&packages).Error
-	assert.Nil(t, err)
+	assert.Nil(t, Db.Where("evra IN (?)", evras).Find(&packages).Error)
 	assert.Equal(t, nExpected, len(packages))
 }
 
@@ -234,9 +226,7 @@ func CheckSystemPackages(t *testing.T, systemID int, nExpected int, packageIDs .
 	if len(packageIDs) > 0 {
 		query = query.Where("package_id IN (?)", packageIDs)
 	}
-	err := query.Find(&systemPackages).Error
-
-	assert.Nil(t, err)
+	assert.Nil(t, query.Find(&systemPackages).Error)
 	assert.Equal(t, nExpected, len(systemPackages))
 }
 
@@ -250,28 +240,24 @@ func CheckSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int
 }
 
 func DeleteSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int) {
-	err := Db.Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
-		Delete(&models.SystemAdvisories{}).Error
-	assert.Nil(t, err)
+	query := Db.Model(&models.SystemAdvisories{}).Where("system_id = ? AND advisory_id IN (?)",
+		systemID, advisoryIDs)
+	assert.Nil(t, query.Delete(&models.SystemAdvisories{}).Error)
 
-	var systemAdvisories []models.SystemAdvisories
-	err = Db.Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
-		Find(&systemAdvisories).Error
-	assert.Nil(t, err)
-	assert.Equal(t, 0, len(systemAdvisories))
+	var cnt int
+	assert.Nil(t, query.Count(&cnt).Error)
+	assert.Equal(t, 0, cnt)
 	assert.Nil(t, Db.Exec("SELECT * FROM update_system_caches(?)", systemID).Error)
 }
 
 func DeleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int) {
-	err := Db.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
-		Delete(&models.AdvisoryAccountData{}).Error
-	assert.Nil(t, err)
+	query := Db.Model(&models.AdvisoryAccountData{}).Where("rh_account_id = ? AND advisory_id IN (?)",
+		rhAccountID, advisoryIDs)
+	assert.Nil(t, query.Delete(&models.AdvisoryAccountData{}).Error)
 
-	var advisoryAccountData []models.AdvisoryAccountData
-	err = Db.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
-		Find(&advisoryAccountData).Error
-	assert.Nil(t, err)
-	assert.Equal(t, 0, len(advisoryAccountData))
+	var cnt int
+	assert.Nil(t, query.Count(&cnt).Error)
+	assert.Equal(t, 0, cnt)
 }
 
 func DeleteSystemPackages(t *testing.T, systemID int, pkgIDs ...int) {
@@ -279,18 +265,15 @@ func DeleteSystemPackages(t *testing.T, systemID int, pkgIDs ...int) {
 	if len(pkgIDs) > 0 {
 		query = query.Where("package_id in (?)", pkgIDs)
 	}
-	err := query.Delete(&models.SystemPackage{}).Error
-	assert.Nil(t, err)
+	assert.Nil(t, query.Delete(&models.SystemPackage{}).Error)
 
 	var count int // ensure deleted
-	err = query.Count(&count).Error
-	assert.Nil(t, err)
+	assert.Nil(t, query.Count(&count).Error)
 	assert.Equal(t, 0, count)
 }
 
 func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
-	err := Db.Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)",
-		rhAccountID, systemID, repoIDs).
+	err := Db.Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)", rhAccountID, systemID, repoIDs).
 		Delete(&models.SystemRepo{}).Error
 	assert.Nil(t, err)
 }
