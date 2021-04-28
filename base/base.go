@@ -61,7 +61,7 @@ func ParseTime(s string) (time.Time, error) {
 	for _, f := range timeFormats {
 		t, err = time.Parse(f, s)
 		if err == nil {
-			return t, err
+			return t, nil
 		}
 	}
 	return t, err
