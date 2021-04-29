@@ -9,9 +9,10 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
-var staleDate, _ = base.ParseTime("2006-01-02T15:04:05-07:00")
+var staleDate, _ = time.Parse(base.Rfc3339NoTz, "2006-01-02T15:04:05-07:00")
 
 func TestSingleSystemStale(t *testing.T) {
 	utils.SkipWithoutDB(t)

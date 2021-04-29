@@ -41,9 +41,8 @@ func EventsMessageHandler(m kafka.Message) error {
 	case "delete":
 		var event mqueue.PlatformEvent
 		if err := json.Unmarshal(m.Value, &event); err != nil {
-			utils.Log("inventoryID", msgData["id"], "msg", string(m.Value), "err", err).
+			utils.Log("inventoryID", msgData["id"], "msg", string(m.Value)).
 				Error("Invalid 'delete' message format")
-			return err
 		}
 		return HandleDelete(event)
 	case "updated":
@@ -51,9 +50,9 @@ func EventsMessageHandler(m kafka.Message) error {
 	case "created":
 		var event HostEvent
 		if err := json.Unmarshal(m.Value, &event); err != nil {
-			utils.Log("inventoryID", msgData["id"], "msg", string(m.Value), "err", err).
+			utils.Log("inventoryID", msgData["id"], "err", err, "msg", string(m.Value)).
 				Error("Invalid 'updated' message format")
-			return err
+			return nil
 		}
 		return HandleUpload(event)
 	default:
