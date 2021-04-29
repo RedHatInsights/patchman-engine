@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"strconv"
 	"time"
 )
@@ -13,14 +14,14 @@ var (
 	Db *gorm.DB //nolint:stylecheck
 )
 
-// configure database, PostgreSQL or SQLite connection
+// Configure Configure database, PostgreSQL or SQLite connection
 func Configure() {
 	pgConfig := loadEnvPostgreSQLConfig()
 	Db = openPostgreSQL(pgConfig)
 	check(Db)
 }
 
-// PostgreSQL database config
+// PostgreSQLConfig PostgreSQL database config
 type PostgreSQLConfig struct {
 	Host     string
 	Port     int
@@ -37,10 +38,18 @@ type PostgreSQLConfig struct {
 	MaxConnectionLifetimeS int
 }
 
+func createGormConfig(debug bool) *gorm.Config {
+	cfg := gorm.Config{}
+	if !debug {
+		cfg.Logger = logger.Default.LogMode(logger.Silent) // Allow "Slow SQL" warnings on debug mode only.
+	}
+	return &cfg
+}
+
 // open database connection
 func openPostgreSQL(dbConfig *PostgreSQLConfig) *gorm.DB {
 	connectString := dataSourceName(dbConfig)
-	db, err := gorm.Open(postgres.Open(connectString), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(connectString), createGormConfig(dbConfig.Debug))
 	if err != nil {
 		panic(err)
 	}
