@@ -119,7 +119,8 @@ func TestParseAdvisories(t *testing.T) {
 	assert.Equal(t, "URL", *adv.URL)
 	assert.Equal(t, "SYN", adv.Synopsis)
 	assert.Equal(t, 2, adv.AdvisoryTypeID)
-	cves, _ := json.Marshal(adv.CveList)
+	js := json.RawMessage(string(adv.CveList))
+	cves, _ := json.Marshal(js)
 	assert.Equal(t, string(cves), `["CVE-1","CVE-2","CVE-3"]`)
 }
 
@@ -140,11 +141,11 @@ func TestSaveAdvisories(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		err := storeAdvisories(data.GetErrataList())
 		assert.NoError(t, err)
-		var count int
+		var count int64
 
 		assert.Nil(t, database.Db.Model(&models.AdvisoryMetadata{}).Where("url = ?", "TEST").Count(&count).Error)
 
-		assert.Equal(t, count, len(data.GetErrataList()))
+		assert.Equal(t, count, int64(len(data.GetErrataList())))
 	}
 
 	assert.Nil(t, database.Db.Unscoped().Where("url = ?", "TEST").Delete(&models.AdvisoryMetadata{}).Error)

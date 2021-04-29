@@ -34,7 +34,7 @@ type PackageDetailAttributes struct {
 	Summary     string `json:"summary" query:"sum.value"`
 	Name        string `json:"name" query:"pn.name"`
 	EVRA        string `json:"version" query:"p.evra"`
-	AdvID       string `json:"advisory_id" query:"am.name"`
+	AdvID       string `json:"advisory_id" query:"am.name" gorm:"column:advisory_id"`
 }
 
 var PackageSelect = database.MustGetSelect(&PackageDetailAttributes{})
@@ -72,7 +72,7 @@ func packageEvraHandler(c *gin.Context, nevra *utils.Nevra) {
 
 	query := database.PackageByName(database.Db, nevra.Name)
 	var pkg PackageDetailAttributes
-	err := query.Select(PackageSelect).Where("p.evra = ?", nevra.EVRAString()).Find(&pkg).Error
+	err := query.Select(PackageSelect).Where("p.evra = ?", nevra.EVRAString()).Take(&pkg).Error
 	if err != nil {
 		LogAndRespNotFound(c, err, "package not found")
 		return

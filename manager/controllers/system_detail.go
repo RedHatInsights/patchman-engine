@@ -4,8 +4,9 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"errors"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -37,8 +38,8 @@ func SystemDetailHandler(c *gin.Context) {
 		Joins("JOIN inventory.hosts ih ON ih.id = inventory_id").
 		Where("sp.inventory_id = ?::uuid", inventoryID)
 
-	err := query.First(&systemItemAttributes).Error
-	if gorm.IsRecordNotFoundError(err) {
+	err := query.Take(&systemItemAttributes).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		LogAndRespNotFound(c, err, "inventory not found")
 		return
 	}

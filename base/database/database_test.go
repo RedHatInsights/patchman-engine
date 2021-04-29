@@ -6,15 +6,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
-	"time"
 )
 
 func TestOnConflictDoUpdate(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
 
-	Db.AutoMigrate(&TestTable{})
-	Db.Unscoped().Delete(&TestTable{})
+	err := Db.AutoMigrate(&TestTable{})
+	assert.NoError(t, err)
+	err = Db.Unscoped().Delete(&TestTable{}, "true").Error
+	assert.NoError(t, err)
 
 	obj := TestTable{
 		Name:  "Bla",
@@ -45,16 +46,11 @@ func TestCancelContext(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
 
-	tx := Db.BeginTx(base.Context, nil)
-
-	go func() {
-		time.Sleep(time.Millisecond * 100)
-		base.CancelContext()
-	}()
-
+	tx := Db.WithContext(base.Context).Begin()
+	base.CancelContext()
 	err := tx.Exec("select pg_sleep(1)").Error
 	assert.NotNil(t, err)
-	assert.Equal(t, "pq: canceling statement due to user request", err.Error())
+	assert.Equal(t, "context canceled", err.Error())
 }
 
 func TestStatementTimeout(t *testing.T) {
@@ -64,5 +60,5 @@ func TestStatementTimeout(t *testing.T) {
 
 	err := Db.Exec("select pg_sleep(10)").Error
 	assert.NotNil(t, err)
-	assert.Equal(t, "pq: canceling statement due to statement timeout", err.Error())
+	assert.Equal(t, "ERROR: canceling statement due to statement timeout (SQLSTATE 57014)", err.Error())
 }

@@ -4,7 +4,7 @@ import (
 	"app/base/database"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 var PackagesFields = database.MustGetQueryAttrs(&PackageItem{})
@@ -17,11 +17,12 @@ var PackagesOpts = ListOpts{
 	SearchFields:   []string{"pn.name", "latest.summary"},
 }
 
+//nolint:lll
 type PackageItem struct {
-	Name             string `json:"name" csv:"name" query:"pn.name"`
-	SystemsInstalled int    `json:"systems_installed" csv:"systems_installed" query:"res.systems_installed"`
-	SystemsUpdatable int    `json:"systems_updatable" csv:"systems_updatable" query:"res.systems_updatable"`
-	Summary          string `json:"summary" csv:"summary" query:"latest.summary"`
+	Name             string `json:"name" csv:"name" query:"pn.name" gorm:"column:name"`
+	SystemsInstalled int    `json:"systems_installed" csv:"systems_installed" query:"res.systems_installed" gorm:"column:systems_installed"`
+	SystemsUpdatable int    `json:"systems_updatable" csv:"systems_updatable" query:"res.systems_updatable" gorm:"column:systems_updatable"`
+	Summary          string `json:"summary" csv:"summary" query:"latest.summary" gorm:"column:summary"`
 }
 
 type PackagesResponse struct {
@@ -33,9 +34,9 @@ type PackagesResponse struct {
 // nolint: lll
 // Used as a for subquery performing the actual calculation which is joined with latest summaries
 type queryItem struct {
-	NameID           int `query:"spkg.name_id"`
-	SystemsInstalled int `json:"systems_installed" query:"count(spkg.system_id)"`
-	SystemsUpdatable int `json:"systems_updatable" query:"count(spkg.system_id) filter (where spkg.latest_evra IS NOT NULL)"`
+	NameID           int `query:"spkg.name_id" gorm:"column:name_id"`
+	SystemsInstalled int `json:"systems_installed" query:"count(spkg.system_id)" gorm:"column:systems_installed"`
+	SystemsUpdatable int `json:"systems_updatable" query:"count(spkg.system_id) filter (where spkg.latest_evra IS NOT NULL)" gorm:"column:systems_updatable"`
 }
 
 var queryItemSelect = database.MustGetSelect(&queryItem{})
@@ -56,7 +57,7 @@ func packagesQuery(c *gin.Context, acc int) (*gorm.DB, error) {
 	return database.Db.
 		Select(PackagesSelect).
 		Table("package_latest_cache latest").
-		Joins("INNER JOIN ? res ON res.name_id = latest.name_id", subQ.SubQuery()).
+		Joins("INNER JOIN (?) res ON res.name_id = latest.name_id", subQ).
 		Joins("INNER JOIN package_name pn on pn.id = res.name_id"), nil
 }
 

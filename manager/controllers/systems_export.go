@@ -39,7 +39,7 @@ func SystemsExportHandler(c *gin.Context) {
 
 	var systems []SystemDBLookup
 
-	query = query.Order("id")
+	query = query.Order("sp.id")
 	query, err = ExportListCommon(query, c, SystemOpts)
 	if err != nil {
 		return

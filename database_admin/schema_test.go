@@ -38,7 +38,8 @@ func TestSchemaCompatiblity(t *testing.T) {
 	_, err := dropAll.CombinedOutput()
 	assert.NoError(t, err)
 
-	driver, err := postgres.WithInstance(database.Db.DB(), &cfg)
+	sqlDB, _ := database.Db.DB()
+	driver, err := postgres.WithInstance(sqlDB, &cfg)
 	assert.NoError(t, err)
 
 	// Tests are run from local directory

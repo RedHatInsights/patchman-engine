@@ -7,8 +7,8 @@ import (
 	"app/manager/middlewares"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -56,7 +56,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	var exists int
+	var exists int64
 	err := database.Db.Model(&models.AdvisoryMetadata{}).
 		Where("name = ? ", advisoryName).Count(&exists).Error
 	if err != nil {

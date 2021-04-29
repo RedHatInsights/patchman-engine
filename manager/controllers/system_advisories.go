@@ -22,18 +22,18 @@ var SystemAdvisoriesOpts = ListOpts{
 }
 
 type SystemAdvisoriesDBLookup struct {
-	ID string `query:"am.name"`
+	ID string `query:"am.name" gorm:"column:id"`
 	SystemAdvisoryItemAttributes
 }
 
 // nolint:lll
 type SystemAdvisoryItemAttributes struct {
-	Description  string    `json:"description" csv:"description" query:"am.description"`
-	PublicDate   time.Time `json:"public_date" csv:"public_date" query:"am.public_date"`
-	Synopsis     string    `json:"synopsis" csv:"synopsis" query:"am.synopsis"`
-	AdvisoryType int       `json:"advisory_type" csv:"advisory_type" query:"am.advisory_type_id"`
-	Severity     *int      `json:"severity,omitempty" csv:"severity" query:"am.severity_id"`
-	CveCount     int       `json:"cve_count" csv:"cve_count" query:"CASE WHEN jsonb_typeof(am.cve_list) = 'array' THEN jsonb_array_length(am.cve_list) ELSE 0 END"`
+	Description  string    `json:"description" csv:"description" query:"am.description" gorm:"column:description"`
+	PublicDate   time.Time `json:"public_date" csv:"public_date" query:"am.public_date" gorm:"column:public_date"`
+	Synopsis     string    `json:"synopsis" csv:"synopsis" query:"am.synopsis" gorm:"column:synopsis"`
+	AdvisoryType int       `json:"advisory_type" csv:"advisory_type" query:"am.advisory_type_id" gorm:"column:advisory_type"`
+	Severity     *int      `json:"severity,omitempty" csv:"severity" query:"am.severity_id" gorm:"column:severity"`
+	CveCount     int       `json:"cve_count" csv:"cve_count" query:"CASE WHEN jsonb_typeof(am.cve_list) = 'array' THEN jsonb_array_length(am.cve_list) ELSE 0 END" gorm:"column:cve_count"`
 }
 
 type SystemAdvisoryItem struct {
@@ -77,7 +77,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		return
 	}
 
-	var exists int
+	var exists int64
 	err := database.Db.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid ", inventoryID).
 		Count(&exists).Error
 

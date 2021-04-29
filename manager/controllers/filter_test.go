@@ -86,7 +86,7 @@ func TestFilterInvalidValue(t *testing.T) {
 	assert.NoError(t, err)
 	attrMap, _, err := database.GetQueryAttrs(struct{ V string }{""})
 	assert.NoError(t, err)
-	_, value, err := filter.ToWhere("v", attrMap)
+	_, value, err := filter.ToWhere("V", attrMap)
 	assert.NoError(t, err)
 	assert.Equal(t, []interface{}{"aaaa"}, value)
 }

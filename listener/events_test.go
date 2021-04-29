@@ -33,7 +33,7 @@ func TestUpdateSystem(t *testing.T) {
 	assert.NoError(t, HandleUpload(ev))
 
 	var system models.SystemPlatform
-	assert.NoError(t, database.Db.Find(&system, "inventory_id = ?::uuid", id).Error)
+	assert.NoError(t, database.Db.Order("ID DESC").Find(&system, "inventory_id = ?::uuid", id).Error)
 
 	assert.Equal(t, name, system.DisplayName)
 }
@@ -114,5 +114,6 @@ func TestDeleteCleanup(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
-	assert.NoError(t, database.Db.Delete(&models.DeletedSystem{}).Error)
+	err := database.Db.Exec("DELETE FROM deleted_system").Error
+	assert.NoError(t, err)
 }

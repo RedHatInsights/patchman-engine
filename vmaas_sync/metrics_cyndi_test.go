@@ -25,9 +25,9 @@ func TestUploadedCyndiSystemsCounts1D(t *testing.T) {
 
 	systemsQuery := database.Db.Table("inventory.hosts")
 	systemsQuery = updateCyndiQueryLastUpload(systemsQuery, refTime(), 1)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, 16, nSystems)
+	assert.Equal(t, int64(16), nSystems)
 }
 
 func TestUploadedCyndiSystemsCounts7D(t *testing.T) {
@@ -36,9 +36,9 @@ func TestUploadedCyndiSystemsCounts7D(t *testing.T) {
 
 	systemsQuery := database.Db.Table("inventory.hosts")
 	systemsQuery = updateCyndiQueryLastUpload(systemsQuery, refTime(), 7)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, 16, nSystems)
+	assert.Equal(t, int64(16), nSystems)
 }
 
 func TestUploadedCyndiSystemsCounts30D(t *testing.T) {
@@ -47,9 +47,9 @@ func TestUploadedCyndiSystemsCounts30D(t *testing.T) {
 
 	systemsQuery := database.Db.Table("inventory.hosts")
 	systemsQuery = updateCyndiQueryLastUpload(systemsQuery, refTime(), 30)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, 16, nSystems)
+	assert.Equal(t, int64(16), nSystems)
 }
 
 func TestUploadedCyndiSystemsCountsNoSystems(t *testing.T) {
@@ -59,9 +59,9 @@ func TestUploadedCyndiSystemsCountsNoSystems(t *testing.T) {
 	systemsQuery := database.Db.Table("inventory.hosts")
 	refTime := time.Date(2020, 9, 23, 10, 0, 0, 0, time.UTC)
 	systemsQuery = updateCyndiQueryLastUpload(systemsQuery, refTime, 30)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, 0, nSystems)
+	assert.Equal(t, int64(0), nSystems)
 }
 
 func TestUploadedCyndiSystemsCountsAllSystems(t *testing.T) {
@@ -70,9 +70,9 @@ func TestUploadedCyndiSystemsCountsAllSystems(t *testing.T) {
 
 	systemsQuery := database.Db.Table("inventory.hosts")
 	systemsQuery = updateCyndiQueryLastUpload(systemsQuery, refTime(), -1)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, 16, nSystems)
+	assert.Equal(t, int64(16), nSystems)
 }
 
 func TestCyndiTags(t *testing.T) {
@@ -81,8 +81,8 @@ func TestCyndiTags(t *testing.T) {
 
 	cyndiData, err := getCyndiData()
 	assert.Nil(t, err)
-	assert.Equal(t, 16, cyndiData.SystemsCount)
-	assert.Equal(t, 3, cyndiData.UniqueTags)
-	assert.Equal(t, 14, cyndiData.SapCount)
-	assert.Equal(t, 15, cyndiData.SystemsWithTags)
+	assert.Equal(t, int64(16), cyndiData.SystemsCount)
+	assert.Equal(t, int64(3), cyndiData.UniqueTags)
+	assert.Equal(t, int64(14), cyndiData.SapCount)
+	assert.Equal(t, int64(15), cyndiData.SystemsWithTags)
 }
