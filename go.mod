@@ -37,6 +37,6 @@ require (
 	golang.org/x/net v0.0.0-20210414194228-064579744ee0
 	golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	modernc.org/mathutil v1.0.0
+	modernc.org/mathutil v1.0.0 // indirect
 	modernc.org/strutil v1.1.0
 )
