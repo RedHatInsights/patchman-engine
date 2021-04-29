@@ -134,12 +134,12 @@ func websocketHandler(data []byte, _ *websocket.Conn) error {
 	return nil
 }
 
-func getLastSyncIfNeeded() *time.Time {
+func getLastSyncIfNeeded() *string {
 	if !enableModifiedSinceSync {
 		return nil
 	}
 
-	lastSync, err := database.GetTimestampKVValue(LastSync)
+	lastSync, err := database.GetTimestampKVValueStr(LastSync)
 	if err != nil {
 		utils.Log("err", err).Error("Unable to load last sync timestamp")
 		return nil

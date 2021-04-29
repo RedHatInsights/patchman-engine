@@ -16,7 +16,7 @@ import (
 
 const chunkSize = 10 * 1024
 
-func syncPackages(syncStart time.Time, modifiedSince *time.Time) error {
+func syncPackages(syncStart time.Time, modifiedSince *string) error {
 	if vmaasClient == nil {
 		panic("VMaaS client is nil")
 	}
@@ -40,7 +40,7 @@ func syncPackages(syncStart time.Time, modifiedSince *time.Time) error {
 	return nil
 }
 
-func downloadAndProcessPkgtreePage(iPage int, modifiedSince *time.Time) (*vmaas.PkgtreeResponse, error) {
+func downloadAndProcessPkgtreePage(iPage int, modifiedSince *string) (*vmaas.PkgtreeResponse, error) {
 	pkgtreeResponse, err := vmaasPkgtreeRequest(iPage, modifiedSince)
 	if err != nil {
 		return nil, errors.Wrap(err, "Advisories sync failed on vmaas request")
@@ -70,7 +70,7 @@ func storePackagesData(vmaasData map[string][]vmaas.PkgTreeItem) error {
 	return nil
 }
 
-func vmaasPkgtreeRequest(iPage int, modifiedSince *time.Time) (*vmaas.PkgtreeResponse, error) {
+func vmaasPkgtreeRequest(iPage int, modifiedSince *string) (*vmaas.PkgtreeResponse, error) {
 	errataRequest := vmaas.PkgtreeRequest{
 		Page:               utils.PtrFloat32(float32(iPage)),
 		PageSize:           utils.PtrFloat32(float32(packagesPageSize)),

@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"net/http"
-	"time"
 )
 
 func updatesHandler(c *gin.Context) {
@@ -67,7 +66,7 @@ func erratasHandler(c *gin.Context) {
 			Updated:       utils.PtrString("2016-09-22T12:00:00+04:00"),
 			Severity:      vmaas.NullableString{},
 			ReferenceList: utils.PtrSliceString([]string{}),
-			Issued:        utils.PtrTimeParse("2016-09-22T12:00:00+04:00"),
+			Issued:        utils.PtrString("2016-09-22T12:00:00+04:00"),
 			Description:   utils.PtrString("adv-1-des"),
 			Solution:      utils.PtrString("adv-1-sol"),
 			Summary:       utils.PtrString("adv-1-sum"),
@@ -82,7 +81,7 @@ func erratasHandler(c *gin.Context) {
 			Updated:       utils.PtrString("2016-09-22T12:00:00+04:00"),
 			Severity:      vmaas.NullableString{},
 			ReferenceList: utils.PtrSliceString([]string{}),
-			Issued:        utils.PtrTimeParse("2016-09-22T12:00:00+04:00"),
+			Issued:        utils.PtrString("2016-09-22T12:00:00+04:00"),
 			Description:   utils.PtrString("adv-2-des"),
 			Solution:      utils.PtrString("adv-2-sol"),
 			Summary:       utils.PtrString("adv-2-sum"),
@@ -97,7 +96,7 @@ func erratasHandler(c *gin.Context) {
 			Updated:       utils.PtrString("2020-01-02T15:04:05+07:00"),
 			Severity:      vmaas.NullableString{},
 			ReferenceList: utils.PtrSliceString([]string{}),
-			Issued:        utils.PtrTimeParse("2020-01-02T15:04:05+07:00"),
+			Issued:        utils.PtrString("2020-01-02T15:04:05+07:00"),
 			Description:   utils.PtrString("adv-100-des"),
 			Solution:      utils.PtrString("adv-100-sol"),
 			Summary:       utils.PtrString("adv-100-sum"),
@@ -109,13 +108,12 @@ func erratasHandler(c *gin.Context) {
 			Type:          utils.PtrString("security"),
 		},
 	}
-	modifiedSince := time.Time{}
 	data := vmaas.ErrataResponse{
 		Page:          utils.PtrFloat32(0),
 		PageSize:      utils.PtrFloat32(10),
 		Pages:         utils.PtrFloat32(1),
 		ErrataList:    &errataList,
-		ModifiedSince: &modifiedSince,
+		ModifiedSince: utils.PtrString(""),
 	}
 	c.JSON(http.StatusOK, data)
 }

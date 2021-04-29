@@ -51,9 +51,9 @@ func TestSync(t *testing.T) {
 	// For one account we expect a bulk message
 	assert.Equal(t, 1, len(msgs))
 
-	ts, err := database.GetTimestampKVValue(LastEvalRepoBased) // check updated timestamp
+	ts, err := database.GetTimestampKVValueStr(LastEvalRepoBased) // check updated timestamp
 	assert.Nil(t, err)
-	assert.Equal(t, time.Now().Year(), ts.Year())
+	assert.Equal(t, time.Now().Format("2006"), (*ts)[0:4])
 	resetLastEvalTimestamp(t)
 	database.DeleteNewlyAddedPackages(t)
 	database.DeleteNewlyAddedAdvisories(t)
