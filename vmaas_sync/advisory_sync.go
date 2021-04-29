@@ -111,7 +111,7 @@ func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataRespons
 
 func checkUpdatedSummaryDescription(errataName string, vmaasData vmaas.ErrataResponseErrataList) (
 	modified time.Time, success bool) {
-	modified, err := base.ParseTime(vmaasData.GetUpdated())
+	modified, err := time.Parse(base.Rfc3339NoTz, vmaasData.GetUpdated())
 	if err != nil {
 		utils.Log("err", err.Error(), "erratum", errataName).Error("Invalid errata modified date")
 		return time.Time{}, false
