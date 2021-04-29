@@ -18,7 +18,6 @@ require (
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/jinzhu/gorm v1.9.12
 	github.com/joho/godotenv v1.3.0
 	github.com/klauspost/compress v1.11.7 // indirect
 	github.com/lestrrat-go/backoff v1.0.0
@@ -37,6 +36,8 @@ require (
 	golang.org/x/net v0.0.0-20210414194228-064579744ee0
 	golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	modernc.org/mathutil v1.0.0 // indirect
+	gorm.io/driver/postgres v1.0.5
+	gorm.io/gorm v1.20.12
+	modernc.org/mathutil v1.0.0
 	modernc.org/strutil v1.1.0
 )

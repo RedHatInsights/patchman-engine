@@ -6,6 +6,7 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 	"testing"
 	"time"
 )
@@ -29,13 +30,13 @@ func TestSystemsCountsStale(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemsQuery := database.Db.Model(models.SystemPlatform{})
-	var stale int
-	var notStale int
-	assert.Nil(t, updateSystemsQueryStale(systemsQuery, true).Count(&stale).Error)
-	assert.Nil(t, updateSystemsQueryStale(systemsQuery, false).Count(&notStale).Error)
-	assert.Equal(t, 0, stale)
-	assert.Equal(t, 14, notStale)
+	systemsQuery := database.Db.Model(models.SystemPlatform{}).Session(&gorm.Session{PrepareStmt: true})
+	var optOuted int64
+	var notOptOuted int64
+	assert.Nil(t, updateSystemsQueryStale(systemsQuery, true).Count(&optOuted).Error)
+	assert.Nil(t, updateSystemsQueryStale(systemsQuery, false).Count(&notOptOuted).Error)
+	assert.Equal(t, int64(0), optOuted)
+	assert.Equal(t, int64(14), notOptOuted)
 }
 
 func TestUploadedSystemsCounts1D(t *testing.T) {
@@ -44,9 +45,9 @@ func TestUploadedSystemsCounts1D(t *testing.T) {
 
 	systemsQuery := database.Db.Model(models.SystemPlatform{})
 	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime(), 1)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, 2, nSystems)
+	assert.Equal(t, int64(2), nSystems)
 }
 
 func TestUploadedSystemsCounts7D(t *testing.T) {
@@ -55,9 +56,9 @@ func TestUploadedSystemsCounts7D(t *testing.T) {
 
 	systemsQuery := database.Db.Model(models.SystemPlatform{})
 	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime(), 7)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, 5, nSystems)
+	assert.Equal(t, int64(5), nSystems)
 }
 
 func TestUploadedSystemsCounts30D(t *testing.T) {
@@ -66,9 +67,9 @@ func TestUploadedSystemsCounts30D(t *testing.T) {
 
 	systemsQuery := database.Db.Model(models.SystemPlatform{})
 	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime(), 30)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, 8, nSystems)
+	assert.Equal(t, int64(8), nSystems)
 }
 
 func TestUploadedSystemsCountsNoSystems(t *testing.T) {
@@ -78,9 +79,9 @@ func TestUploadedSystemsCountsNoSystems(t *testing.T) {
 	systemsQuery := database.Db.Model(models.SystemPlatform{})
 	refTime := time.Date(2020, 9, 23, 10, 0, 0, 0, time.UTC)
 	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime, 30)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, 1, nSystems)
+	assert.Equal(t, int64(1), nSystems)
 }
 
 func TestUploadedSystemsCountsAllSystems(t *testing.T) {
@@ -89,9 +90,9 @@ func TestUploadedSystemsCountsAllSystems(t *testing.T) {
 
 	systemsQuery := database.Db.Model(models.SystemPlatform{})
 	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime(), -1)
-	var nSystems int
+	var nSystems int64
 	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, 14, nSystems)
+	assert.Equal(t, int64(14), nSystems)
 }
 
 func TestAdvisoryCounts(t *testing.T) {
@@ -100,10 +101,10 @@ func TestAdvisoryCounts(t *testing.T) {
 
 	unknown, enh, bug, sec, err := getAdvisoryCounts()
 	assert.Nil(t, err)
-	assert.Equal(t, 0, unknown)
-	assert.Equal(t, 3, enh)
-	assert.Equal(t, 3, bug)
-	assert.Equal(t, 3, sec)
+	assert.Equal(t, int64(0), unknown)
+	assert.Equal(t, int64(3), enh)
+	assert.Equal(t, int64(3), bug)
+	assert.Equal(t, int64(3), sec)
 }
 
 func TestPackageCounts(t *testing.T) {
@@ -113,7 +114,7 @@ func TestPackageCounts(t *testing.T) {
 
 	count, err := getPackageCounts()
 	assert.Nil(t, err)
-	assert.Equal(t, 11, count)
+	assert.Equal(t, int64(11), count)
 }
 
 func TestPackageNameCounts(t *testing.T) {
@@ -122,7 +123,7 @@ func TestPackageNameCounts(t *testing.T) {
 
 	count, err := getPackageNameCounts()
 	assert.Nil(t, err)
-	assert.Equal(t, 10, count)
+	assert.Equal(t, int64(10), count)
 }
 
 func TestSystemAdvisoriesStats(t *testing.T) {

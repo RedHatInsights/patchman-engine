@@ -6,19 +6,20 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
-	"github.com/jinzhu/gorm/dialects/postgres"
+	"gorm.io/gorm"
 	"net/http"
 )
 
+//nolint: lll
 type SystemPackagesAttrs struct {
-	Name        string `json:"name" query:"pn.name"`
-	EVRA        string `json:"evra" query:"p.evra"`
-	Summary     string `json:"summary" query:"sum.value"`
-	Description string `json:"description" query:"descr.value"`
-	Updatable   bool   `json:"updatable" query:"(COALESCE(json_array_length(spkg.update_data::json),0) > 0)"`
+	Name        string `json:"name" query:"pn.name" gorm:"column:name"`
+	EVRA        string `json:"evra" query:"p.evra" gorm:"column:evra"`
+	Summary     string `json:"summary" query:"sum.value" gorm:"column:summary"`
+	Description string `json:"description" query:"descr.value" gorm:"column:description"`
+	Updatable   bool   `json:"updatable" query:"(COALESCE(json_array_length(spkg.update_data::json),0) > 0)" gorm:"column:updatable"`
 }
 
 type SystemPackageData struct {
@@ -42,7 +43,7 @@ var SystemPackagesOpts = ListOpts{
 
 type SystemPackageDBLoad struct {
 	SystemPackagesAttrs
-	Updates postgres.Jsonb `json:"updates" query:"spkg.update_data"`
+	Updates []byte `json:"updates" query:"spkg.update_data" gorm:"column:updates"`
 }
 
 func systemPackageQuery(account int, inventoryID string) *gorm.DB {
@@ -89,7 +90,7 @@ func SystemPackagesHandler(c *gin.Context) {
 	}
 
 	err = q.Find(&loaded).Error
-	if gorm.IsRecordNotFoundError(err) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		LogAndRespNotFound(c, err, "inventory_id not found")
 		return
 	}
@@ -106,10 +107,10 @@ func SystemPackagesHandler(c *gin.Context) {
 	}
 	for i, sp := range loaded {
 		response.Data[i].SystemPackagesAttrs = sp.SystemPackagesAttrs
-		if sp.Updates.RawMessage == nil {
+		if sp.Updates == nil {
 			continue
 		}
-		if err := json.Unmarshal(sp.Updates.RawMessage, &response.Data[i].Updates); err != nil {
+		if err := json.Unmarshal(sp.Updates, &response.Data[i].Updates); err != nil {
 			panic(err)
 		}
 	}

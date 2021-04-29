@@ -9,9 +9,9 @@ import (
 	"app/manager/middlewares"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -183,21 +183,22 @@ type systemsCntLabels struct {
 // Load stored systems counts according to "opt_out" and "last_upload" properties.
 // Result is loaded into the map {"opt_out_on:last1D": 12, "opt_out_off:last1D": 3, ...}.
 func getSystemCounts(refTime time.Time) (map[systemsCntLabels]int, error) {
-	systemsQuery := database.Db.Model(&models.SystemPlatform{})
 	StaleKV := map[string]bool{staleOn: true, staleOff: false}
 	lastUploadKV := map[string]int{lastUploadLast1D: 1, lastUploadLast7D: 7, lastUploadLast30D: 30, lastUploadAll: -1}
 	counts := map[systemsCntLabels]int{}
 	for StaleK, StaleV := range StaleKV {
-		systemsQueryStale := updateSystemsQueryStale(systemsQuery, StaleV)
+		systemsQuery := database.Db.Model(&models.SystemPlatform{})
+		systemsQueryStale := updateSystemsQueryStale(systemsQuery, StaleV).
+			Session(&gorm.Session{PrepareStmt: true})
 		for lastUploadK, lastUploadV := range lastUploadKV {
 			systemsQueryStaleLastUpload := updateSystemsQueryLastUpload(systemsQueryStale, refTime, lastUploadV)
-			var nSystems int
+			var nSystems int64
 			err := systemsQueryStaleLastUpload.Count(&nSystems).Error
 			if err != nil {
 				return nil, errors.Wrap(err, "unable to load systems counts: "+
 					fmt.Sprintf("opt_out: %v, last_upload_before_days: %v", StaleV, lastUploadV))
 			}
-			counts[systemsCntLabels{StaleK, lastUploadK}] = nSystems
+			counts[systemsCntLabels{StaleK, lastUploadK}] = int(nSystems)
 		}
 	}
 	return counts, nil
@@ -212,7 +213,7 @@ func updateSystemsQueryStale(systemsQuery *gorm.DB, stale bool) *gorm.DB {
 // Constraint is not added if "lastNDays" argument is negative.
 func updateSystemsQueryLastUpload(systemsQuery *gorm.DB, refTime time.Time, lastNDays int) *gorm.DB {
 	if lastNDays >= 0 {
-		return systemsQuery.Where("last_upload > ?", refTime.AddDate(0, 0, -lastNDays))
+		return systemsQuery.Where("(last_upload > ?)", refTime.AddDate(0, 0, -lastNDays))
 	}
 	return systemsQuery
 }
@@ -242,8 +243,9 @@ func updatePackageMetrics() {
 	packageNameCnt.Set(float64(nPackageNames))
 }
 
-func getAdvisoryCounts() (unknown, enh, bug, sec int, err error) {
-	advisoryQuery := database.Db.Model(&models.AdvisoryMetadata{})
+func getAdvisoryCounts() (unknown, enh, bug, sec int64, err error) {
+	advisoryQuery := database.Db.Model(&models.AdvisoryMetadata{}).
+		Session(&gorm.Session{PrepareStmt: true})
 	err = advisoryQuery.Where("advisory_type_id = 0").Count(&unknown).Error
 	if err != nil {
 		return 0, 0, 0, 0, errors.Wrap(err, "unable to get advisories count - type unknown")
@@ -266,7 +268,7 @@ func getAdvisoryCounts() (unknown, enh, bug, sec int, err error) {
 	return unknown, enh, bug, sec, nil
 }
 
-func getPackageCounts() (count int, err error) {
+func getPackageCounts() (count int64, err error) {
 	err = database.Db.Model(&models.Package{}).Count(&count).Error
 	if err != nil {
 		return 0, errors.Wrap(err, "Unable to get package table items count")
@@ -274,7 +276,7 @@ func getPackageCounts() (count int, err error) {
 	return count, nil
 }
 
-func getPackageNameCounts() (count int, err error) {
+func getPackageNameCounts() (count int64, err error) {
 	err = database.Db.Model(&models.PackageName{}).Count(&count).Error
 	if err != nil {
 		return 0, errors.Wrap(err, "Unable to get package_name table items count")
@@ -301,11 +303,12 @@ type SystemAdvisoryStats struct {
 	MaxSec int
 }
 
+// Old query was inserting ORDER BY "system_platform"."max_all" AND max_all
 func getSystemAdvisorieStats() (stats SystemAdvisoryStats, err error) {
-	err = database.Db.Table("system_platform").
-		Select("MAX(advisory_count_cache) as max_all, MAX(advisory_enh_count_cache) as max_enh," +
-			"MAX(advisory_bug_count_cache) as max_bug, MAX(advisory_sec_count_cache) as max_sec").
-		First(&stats).Error
+	err = database.Db.Raw("SELECT MAX(advisory_count_cache) as max_all, " +
+		"MAX(advisory_enh_count_cache) as max_enh,MAX(advisory_bug_count_cache) " +
+		"as max_bug, MAX(advisory_sec_count_cache) as max_sec FROM " +
+		"system_platform ORDER BY max_all LIMIT 1").Scan(&stats).Error
 	if err != nil {
 		return stats, errors.Wrap(err, "unable to get system advisory stats from db")
 	}

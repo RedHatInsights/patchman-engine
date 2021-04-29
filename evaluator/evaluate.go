@@ -11,9 +11,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/jinzhu/gorm"
 	"github.com/lestrrat-go/backoff"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"net/http"
 	"sync"
 	"time"
@@ -90,9 +91,9 @@ func Evaluate(ctx context.Context, accountID int, inventoryID string, requested 
 
 func evaluateInDatabase(ctx context.Context, accountID int, inventoryID string,
 	requested *base.Rfc3339Timestamp) (*models.SystemPlatform, *vmaas.UpdatesV2Response, error) {
-	tx := database.Db.BeginTx(base.Context, nil)
+	tx := database.Db.WithContext(base.Context).Begin()
 	// Don'requested allow TX to hang around locking the rows
-	defer tx.RollbackUnlessCommitted()
+	defer tx.Rollback()
 
 	updatesReq, system, err := tryGetVmaasRequest(tx, accountID, inventoryID, requested)
 	if err != nil {
@@ -154,7 +155,7 @@ func tryGetVmaasRequest(tx *gorm.DB, accountID int, inventoryID string,
 func tryGetSystem(tx *gorm.DB, accountID int, inventoryID string,
 	requested *base.Rfc3339Timestamp) *models.SystemPlatform {
 	system, err := loadSystemData(tx, accountID, inventoryID)
-	if err != nil {
+	if err != nil || system.ID == 0 {
 		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
 		return nil
 	}
@@ -215,7 +216,7 @@ func analyzeRepos(tx *gorm.DB, system *models.SystemPlatform) (
 
 	// if system has associated at least one third party repo
 	// it's marked as third party system
-	var thirdPartyCount int
+	var thirdPartyCount int64
 	err = tx.Table("system_repo sr").
 		Joins("join repo r on r.id = sr.repo_id").
 		Where("sr.rh_account_id = ?", system.RhAccountID).
@@ -269,7 +270,7 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 		data["third_party"] = thirdParty
 	}
 
-	return tx.Model(system).Update(data).Error
+	return tx.Model(system).Updates(data).Error
 }
 
 // nolint: bodyclose
@@ -308,9 +309,12 @@ func loadSystemData(tx *gorm.DB, accountID int, inventoryID string) (*models.Sys
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("data-loading"))
 
 	var system models.SystemPlatform
-	err := tx.Set("gorm:query_option", "FOR UPDATE OF system_platform").
-		Where("rh_account_id = ?", accountID).
-		Where("inventory_id = ?::uuid", inventoryID).Find(&system).Error
+	err := tx.Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table:    clause.Table{Name: clause.CurrentTable},
+	}).Where("rh_account_id = ?", accountID).
+		Where("inventory_id = ?::uuid", inventoryID).
+		Find(&system).Error
 	return &system, err
 }
 

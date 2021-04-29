@@ -25,7 +25,7 @@ type packageMetadataModel struct {
 
 func ConfigurePackageNameCache() {
 	tx := database.Db.Begin()
-	defer tx.RollbackUnlessCommitted()
+	defer tx.Rollback()
 	rows, err := tx.Table("package").
 		Select("DISTINCT ON (name_id) name_id, name, summary_hash, description_hash").
 		Joins("JOIN package_name pn ON pn.id = name_id").

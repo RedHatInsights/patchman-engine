@@ -7,8 +7,9 @@ import (
 	"app/base/utils"
 	"crypto/sha256"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"time"
 )
 
@@ -94,8 +95,10 @@ func vmaasPkgtreeRequest(iPage int, modifiedSince *time.Time) (*vmaas.PkgtreeRes
 func storePackageNames(tx *gorm.DB, vmaasData map[string][]vmaas.PkgTreeItem) (map[string]int, error) {
 	packageNames, packageNameModels := getPackageArrays(vmaasData)
 	utils.Log("names", len(packageNames)).Debug("Got package names")
-	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING") // Insert missing
-	err := database.BulkInsertChunk(tx, packageNameModels, chunkSize)
+	tx = tx.Clauses(clause.OnConflict{
+		DoNothing: true,
+	}) // Insert missing
+	err := tx.CreateInBatches(packageNameModels, chunkSize).Error
 	if err != nil {
 		return nil, errors.Wrap(err, "Bulk insert of package names failed")
 	}
@@ -138,8 +141,10 @@ func storePackageStrings(tx *gorm.DB, vmaasData map[string][]vmaas.PkgTreeItem) 
 	}
 
 	utils.Log("strings", len(strings)).Debug("Created package strings to store")
-	tx = tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
-	return database.BulkInsertChunk(tx, strings, chunkSize)
+	tx = tx.Clauses(clause.OnConflict{
+		DoNothing: true,
+	})
+	return tx.CreateInBatches(strings, chunkSize).Error
 }
 
 type nameIDandEvra struct {
@@ -170,7 +175,7 @@ func storePackageDetails(tx *gorm.DB, nameIDs map[string]int, vmaasData map[stri
 
 	tx = database.OnConflictUpdateMulti(tx, []string{"name_id", "evra"},
 		"description_hash", "summary_hash", "advisory_id")
-	if err := database.BulkInsertChunk(tx, toStore, chunkSize); err != nil {
+	if err := tx.CreateInBatches(toStore, chunkSize).Error; err != nil {
 		storePackagesCnt.WithLabelValues("error").Add(float64(len(toStore)))
 		return errors.Wrap(err, "Packages bulk insert failed")
 	}

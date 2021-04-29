@@ -16,15 +16,18 @@ var defaultValues = TestTableSlice{
 	{Name: "M", Email: "N"},
 }
 
+//nolint: errcheck
 func TestBatchInsert(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
 
-	Db.AutoMigrate(&TestTable{})
-	Db.Unscoped().Delete(&TestTable{})
+	err := Db.AutoMigrate(&TestTable{})
+	assert.NoError(t, err)
+	err = Db.Unscoped().Delete(&TestTable{}, "true").Error
+	assert.NoError(t, err)
 
 	// Bulk insert should create new rows
-	err := BulkInsert(Db, defaultValues)
+	err = BulkInsert(Db, defaultValues)
 	assert.NoError(t, err)
 
 	var res []TestTable
@@ -39,38 +42,18 @@ func TestBatchInsert(t *testing.T) {
 	}
 }
 
-func TestBatchInsertChunked(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	Configure()
-
-	Db.AutoMigrate(&TestTable{})
-	Db.Unscoped().Delete(&TestTable{})
-
-	err := BulkInsertChunk(Db, defaultValues, 2)
-	assert.Nil(t, err)
-
-	var res []TestTable
-	assert.NoError(t, Db.Find(&res).Error)
-
-	// Same behavior as before, chunked save should scan database values into the source slice
-	assert.Equal(t, len(defaultValues), len(res))
-	for i := range defaultValues {
-		assert.Equal(t, res[i].ID, defaultValues[i].ID)
-		assert.Equal(t, res[i].Name, defaultValues[i].Name)
-		assert.Equal(t, res[i].Email, defaultValues[i].Email)
-	}
-}
-
 func TestBatchInsertOnConflictUpdate(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
 	db := Db
 
-	db.AutoMigrate(&TestTable{})
-	db.Unscoped().Delete(&TestTable{}, "true")
+	err := Db.AutoMigrate(&TestTable{})
+	assert.NoError(t, err)
+	err = Db.Unscoped().Delete(&TestTable{}, "true").Error
+	assert.NoError(t, err)
 
 	// Perform first insert
-	err := BulkInsert(db, defaultValues)
+	err = BulkInsert(db, defaultValues)
 	assert.NoError(t, err)
 
 	var outputs []TestTable

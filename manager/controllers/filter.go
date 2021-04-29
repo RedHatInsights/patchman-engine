@@ -3,8 +3,8 @@ package controllers
 import (
 	"app/base/database"
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 	"strings"
 )
 

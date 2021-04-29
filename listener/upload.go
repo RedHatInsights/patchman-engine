@@ -11,8 +11,9 @@ import (
 	"encoding/json"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"strings"
 	"time"
 )
@@ -188,7 +189,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 
 	var oldJSONChecksum []string
 	// Lock the row for update & return checksum
-	tx.Set("gorm:query_option", "FOR UPDATE OF system_platform").
+	tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 		Table("system_platform").
 		Where("inventory_id = ?::uuid", inventoryID).
 		Where("rh_account_id = ?", accountID).
@@ -254,8 +255,10 @@ func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int, added int64, e
 		repoObjs[i] = models.Repo{Name: repo}
 	}
 
-	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
-	err = database.BulkInsert(txOnConflict, repoObjs)
+	txOnConflict := tx.Clauses(clause.OnConflict{
+		DoNothing: true,
+	})
+	err = txOnConflict.Create(repoObjs).Error
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "unable to update repos")
 	}
@@ -278,7 +281,9 @@ func updateSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs []int
 		repoSystemObjs[i] = models.SystemRepo{RhAccountID: rhAccountID, SystemID: systemID, RepoID: repoID}
 	}
 
-	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	txOnConflict := tx.Clauses(clause.OnConflict{
+		DoNothing: true,
+	})
 	err = database.BulkInsert(txOnConflict, repoSystemObjs)
 	if err != nil {
 		return 0, 0, errors.Wrap(err, "unable to update system repos")
@@ -365,12 +370,12 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 		updatesReq.SetReleasever(releasever)
 	}
 
-	tx := database.Db.BeginTx(base.Context, nil)
-	defer tx.RollbackUnlessCommitted()
+	tx := database.Db.WithContext(base.Context).Begin()
+	defer tx.Rollback()
 
 	var deleted models.DeletedSystem
 	if err := tx.Find(&deleted, "inventory_id = ?", host.ID).Error; err != nil &&
-		!gorm.IsRecordNotFoundError(err) {
+		!errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.Wrap(err, "Checking deleted systems")
 	}
 

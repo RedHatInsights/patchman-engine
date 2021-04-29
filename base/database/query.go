@@ -3,7 +3,6 @@ package database
 import (
 	"app/base"
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"reflect"
 	"regexp"
@@ -89,7 +88,7 @@ func getQueryFromTags(v reflect.Type) (AttrMap, []AttrName, error) {
 				res[k] = v
 			}
 		} else {
-			columnName := gorm.ToColumnName(field.Name)
+			columnName := field.Name
 			if expr, has := field.Tag.Lookup("gorm"); has {
 				match := ColumnNameRe.FindStringSubmatch(expr)
 				if len(match) > 0 {
@@ -101,7 +100,6 @@ func getQueryFromTags(v reflect.Type) (AttrMap, []AttrName, error) {
 			if err != nil {
 				return nil, nil, err
 			}
-
 			if expr, has := field.Tag.Lookup("query"); has {
 				res[columnName] = AttrInfo{
 					Query:  expr,

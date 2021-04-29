@@ -7,14 +7,14 @@ import (
 )
 
 type inherited struct {
-	Bare string
+	Bare string `gorm:"column:bare"`
 }
 
 type queryStruct struct {
-	ID    int   `query:"am.id"`
-	Int64 int64 `query:"am.id"`
-	Int32 int64 `query:"am.id"`
-	Bool  bool  `query:"am.id != 0"`
+	ID    int   `query:"am.id" gorm:"column:id"`
+	Int64 int64 `query:"am.id" gorm:"column:int64"`
+	Int32 int64 `query:"am.id" gorm:"column:int32"`
+	Bool  bool  `query:"am.id != 0" gorm:"column:bool"`
 	// We have to take gorm column name into account
 	Note    string     `gorm:"column:note_str" query:"COALESCE(am.text_note, '')"`
 	Date    time.Time  `gorm:"column:date"`

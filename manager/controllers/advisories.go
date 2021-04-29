@@ -4,7 +4,7 @@ import (
 	"app/base/database"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -18,13 +18,14 @@ var AdvisoriesOpts = ListOpts{
 }
 
 type AdvisoriesDBLookup struct {
-	ID string `query:"am.name"`
+	ID string `query:"am.name" gorm:"column:id"`
 	AdvisoryItemAttributes
 }
 
+// nolint: lll
 type AdvisoryItemAttributes struct {
 	SystemAdvisoryItemAttributes
-	ApplicableSystems int `json:"applicable_systems" query:"COALESCE(aad.systems_affected, 0)" csv:"applicable_systems"`
+	ApplicableSystems int `json:"applicable_systems" query:"COALESCE(aad.systems_affected, 0)" csv:"applicable_systems" gorm:"column:applicable_systems"`
 }
 
 type AdvisoryItem struct {
@@ -129,7 +130,7 @@ func buildQueryAdvisoriesTagged(c *gin.Context, account int) (*gorm.DB, error) {
 
 	query := database.Db.Table("advisory_metadata am").
 		Select(AdvisoriesSelect).
-		Joins("JOIN (?) aad ON am.id = aad.advisory_id and aad.systems_affected > 0", subq.SubQuery())
+		Joins("JOIN (?) aad ON am.id = aad.advisory_id and aad.systems_affected > 0", subq)
 
 	return query, nil
 }

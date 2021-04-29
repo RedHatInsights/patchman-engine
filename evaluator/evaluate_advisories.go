@@ -5,8 +5,9 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"time"
 )
 
@@ -150,7 +151,9 @@ func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int, advisory
 			models.SystemAdvisories{RhAccountID: rhAccountID, SystemID: systemID, AdvisoryID: advisoryID})
 	}
 
-	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	txOnConflict := tx.Clauses(clause.OnConflict{
+		DoNothing: true,
+	})
 	err := database.BulkInsert(txOnConflict, advisoriesObjs)
 	return err
 }
@@ -158,8 +161,10 @@ func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int, advisory
 func lockAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int) error {
 	// Lock advisory-account data, so it's not changed by other concurrent queries
 	var aads []models.AdvisoryAccountData
-	err := tx.Set("gorm:query_option", "FOR UPDATE OF advisory_account_data").
-		Order("advisory_id").
+	err := tx.Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table:    clause.Table{Name: clause.CurrentTable},
+	}).Order("advisory_id").
 		Find(&aads, "rh_account_id = ? AND (advisory_id in (?) OR advisory_id in (?))",
 			system.RhAccountID, patched, unpatched).Error
 

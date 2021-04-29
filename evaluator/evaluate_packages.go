@@ -7,9 +7,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/jinzhu/gorm"
-	"github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"strings"
 	"time"
 )
@@ -49,7 +49,9 @@ func lazySavePackages(tx *gorm.DB, names, evras []string) error {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("lazy-package-save"))
 
 	toEnsure := getPacakgesToEnsureInDB(names, evras)
-	txOnConflict := tx.Set("gorm:insert_option", "ON CONFLICT DO NOTHING")
+	txOnConflict := tx.Clauses(clause.OnConflict{
+		DoNothing: true,
+	})
 	err := database.BulkInsert(txOnConflict, toEnsure)
 	if err != nil {
 		return errors.Wrap(err, "packages bulk insert failed")
@@ -163,7 +165,7 @@ func isValidNevra(nevraStr string, packagesByNEVRA *map[utils.Nevra]namedPackage
 }
 
 func updateDataChanged(currentNamedPackage *namedPackage, updateDataJSON []byte) bool {
-	if bytes.Equal(updateDataJSON, currentNamedPackage.UpdateData.RawMessage) {
+	if bytes.Equal(updateDataJSON, currentNamedPackage.UpdateData) {
 		// If the update_data we want to store is null, we skip only if there was a row for this specific
 		// system_package already stored.
 		if updateDataJSON == nil && currentNamedPackage.WasStored {
@@ -198,7 +200,7 @@ func createSystemPackage(nevra *utils.Nevra,
 		RhAccountID: system.RhAccountID,
 		SystemID:    system.ID,
 		PackageID:   currentNamedPackage.PackageID,
-		UpdateData:  postgres.Jsonb{RawMessage: updateDataJSON},
+		UpdateData:  updateDataJSON,
 		NameID:      currentNamedPackage.NameID,
 	}
 	return &systemPackage, true
@@ -285,5 +287,5 @@ type namedPackage struct {
 	PackageID  int
 	EVRA       string
 	WasStored  bool
-	UpdateData postgres.Jsonb
+	UpdateData []byte
 }

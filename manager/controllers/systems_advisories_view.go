@@ -4,7 +4,7 @@ import (
 	"app/base/database"
 	"app/manager/middlewares"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -24,8 +24,8 @@ type AdvisoriesSystemsResponse struct {
 }
 
 type systemsAdvisoriesDBLoad struct {
-	SystemID   SystemID     `query:"sp.inventory_id"`
-	AdvisoryID AdvisoryName `query:"am.name"`
+	SystemID   SystemID     `query:"sp.inventory_id" gorm:"column:system_id"`
+	AdvisoryID AdvisoryName `query:"am.name" gorm:"column:advisory_id"`
 }
 
 var systemsAdvisoriesSelect = database.MustGetSelect(&systemsAdvisoriesDBLoad{})
@@ -34,7 +34,7 @@ func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryNa
 	query := database.SystemAdvisories(database.Db, acc).
 		Select(systemsAdvisoriesSelect).
 		Joins("join advisory_metadata am on am.id = sa.advisory_id").
-		Where("sp.inventory_id in (?::uuid)", systems).
+		Where("sp.inventory_id::text in (?)", systems).
 		Where("am.name in (?)", advisories).
 		Order("sp.inventory_id, am.id")
 

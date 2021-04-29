@@ -7,7 +7,6 @@ import (
 	"app/base/utils"
 	"encoding/json"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/pkg/errors"
 	"strings"
 	"time"
@@ -100,11 +99,11 @@ func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataRespons
 		Summary:        vmaasData.GetSummary(),
 		Solution:       vmaasData.GetSolution(),
 		SeverityID:     getSeverityID(&vmaasData, severities),
-		CveList:        &postgres.Jsonb{RawMessage: cvesData},
+		CveList:        cvesData,
 		PublicDate:     vmaasData.GetIssued(),
 		ModifiedDate:   modified,
 		URL:            vmaasData.Url,
-		PackageData:    &postgres.Jsonb{RawMessage: packageData},
+		PackageData:    packageData,
 	}
 	return &advisory, nil
 }
@@ -201,7 +200,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary", "solution",
 		"public_date", "modified_date", "url", "advisory_type_id", "severity_id", "cve_list", "package_data")
 
-	err = database.BulkInsertChunk(tx, advisories, SyncBatchSize)
+	err = tx.CreateInBatches(&advisories, SyncBatchSize).Error
 	if err != nil {
 		return errors.WithMessage(err, "Storing advisories")
 	}

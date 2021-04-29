@@ -39,7 +39,8 @@ func CheckCachesValidRet() (bool, error) {
 	valid := true
 	var aad []models.AdvisoryAccountData
 
-	tx := Db.BeginTx(base.Context, nil)
+	tx := Db.WithContext(base.Context).Begin()
+	defer tx.Rollback()
 	err := tx.Set("gorm:query_option", "FOR SHARE OF advisory_account_data").
 		Order("rh_account_id, advisory_id").Find(&aad).Error
 	if err != nil {
@@ -88,7 +89,6 @@ func CheckCachesValidRet() (bool, error) {
 		}
 	}
 	tx.Commit()
-	tx.RollbackUnlessCommitted()
 	return valid, nil
 }
 
@@ -118,9 +118,9 @@ func CheckThirdPartyRepos(t *testing.T, repoNames []string, thirdParty bool) {
 }
 
 func CheckPackagesNamesInDB(t *testing.T, packageNames ...string) {
-	var count int
+	var count int64
 	assert.Nil(t, Db.Model(&models.PackageName{}).Where("name in (?)", packageNames).Count(&count).Error)
-	assert.Equal(t, len(packageNames), count)
+	assert.Equal(t, int64(len(packageNames)), count)
 }
 
 func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug, nSec, nInstall, nUpdate int,
@@ -244,9 +244,9 @@ func DeleteSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int) {
 		systemID, advisoryIDs)
 	assert.Nil(t, query.Delete(&models.SystemAdvisories{}).Error)
 
-	var cnt int
+	var cnt int64
 	assert.Nil(t, query.Count(&cnt).Error)
-	assert.Equal(t, 0, cnt)
+	assert.Equal(t, int64(0), cnt)
 	assert.Nil(t, Db.Exec("SELECT * FROM update_system_caches(?)", systemID).Error)
 }
 
@@ -255,9 +255,9 @@ func DeleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int)
 		rhAccountID, advisoryIDs)
 	assert.Nil(t, query.Delete(&models.AdvisoryAccountData{}).Error)
 
-	var cnt int
+	var cnt int64
 	assert.Nil(t, query.Count(&cnt).Error)
-	assert.Equal(t, 0, cnt)
+	assert.Equal(t, int64(0), cnt)
 }
 
 func DeleteSystemPackages(t *testing.T, systemID int, pkgIDs ...int) {
@@ -267,9 +267,9 @@ func DeleteSystemPackages(t *testing.T, systemID int, pkgIDs ...int) {
 	}
 	assert.Nil(t, query.Delete(&models.SystemPackage{}).Error)
 
-	var count int // ensure deleted
+	var count int64 // ensure deleted
 	assert.Nil(t, query.Count(&count).Error)
-	assert.Equal(t, 0, count)
+	assert.Equal(t, int64(0), count)
 }
 
 func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
@@ -281,17 +281,17 @@ func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []in
 func DeleteNewlyAddedPackages(t *testing.T) {
 	query := Db.Model(models.Package{}).Where("id >= 100")
 	assert.Nil(t, query.Delete(models.Package{}).Error)
-	var cnt int
+	var cnt int64
 	assert.Nil(t, query.Count(&cnt).Error)
-	assert.Equal(t, 0, cnt)
+	assert.Equal(t, int64(0), cnt)
 }
 
 func DeleteNewlyAddedAdvisories(t *testing.T) {
 	query := Db.Model(models.AdvisoryMetadata{}).Where("id >= 100")
 	assert.Nil(t, query.Delete(models.AdvisoryMetadata{}).Error)
-	var cnt int
+	var cnt int64
 	assert.Nil(t, query.Count(&cnt).Error)
-	assert.Equal(t, 0, cnt)
+	assert.Equal(t, int64(0), cnt)
 }
 
 func UpdateSystemAdvisoriesWhenPatched(t *testing.T, systemID, accountID int, advisoryIDs []int,
