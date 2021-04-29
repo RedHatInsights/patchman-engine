@@ -1,7 +1,6 @@
 package platform
 
 import (
-	"app/base/utils"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"math/rand"
 )
@@ -38,25 +37,24 @@ func makeSystemProfile(id string, randomPkgs bool) inventory.SystemProfileSpecYa
 		nPkgs := rand.Intn(len(pkgs))
 		_pkgs = pkgs[0:nPkgs]
 	}
-	yumRepos := []inventory.SystemProfileSpecYamlYumRepo{
-		{
-			Id:       utils.PtrString("repo1"),
-			Name:     utils.PtrString("Debug packages"),
-			BaseUrl:  utils.PtrString("http://repo.com/$arch/$releasever/$product/repo"),
-			Enabled:  utils.PtrBool(true),
-			Gpgcheck: utils.PtrBool(false),
-		},
-	}
-	dnfModules := []inventory.SystemProfileSpecYamlDnfModule{
-		{
-			Name:   utils.PtrString("firefox"),
-			Stream: utils.PtrString("60"),
-		},
-	}
+
 	return inventory.SystemProfileSpecYamlSystemProfile{
-		Arch:              utils.PtrString("i686"),
-		InstalledPackages: &_pkgs,
-		YumRepos:          &yumRepos,
-		DnfModules:        &dnfModules,
+		Arch:              "i686",
+		InstalledPackages: _pkgs,
+		YumRepos: []inventory.SystemProfileSpecYamlYumRepo{
+			{
+				Id:       "repo1",
+				Name:     "Debug packages",
+				BaseUrl:  "http://repo.com/$arch/$releasever/$product/repo",
+				Enabled:  true,
+				Gpgcheck: false,
+			},
+		},
+		DnfModules: []inventory.SystemProfileSpecYamlDnfModule{
+			{
+				Name:   "firefox",
+				Stream: "60",
+			},
+		},
 	}
 }
