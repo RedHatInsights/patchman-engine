@@ -14,7 +14,7 @@ import (
 
 const SyncBatchSize = 1000 // Should be < 5000
 
-func syncAdvisories(syncStart time.Time, modifiedSince *time.Time) error {
+func syncAdvisories(syncStart time.Time, modifiedSince *string) error {
 	if vmaasClient == nil {
 		panic("VMaaS client is nil")
 	}
@@ -81,6 +81,10 @@ func getSeverityID(vmaasData *vmaas.ErrataResponseErrataList, severities map[str
 
 func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataResponseErrataList,
 	severities, advisoryTypes map[string]int) (*models.AdvisoryMetadata, error) {
+	issued, err := time.Parse(base.Rfc3339NoTz, vmaasData.GetIssued())
+	if err != nil {
+		return nil, errors.Wrap(err, "Invalid errata issued date")
+	}
 	modified, success := checkUpdatedSummaryDescription(errataName, vmaasData)
 	if !success {
 		return nil, nil
@@ -100,7 +104,7 @@ func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataRespons
 		Solution:       vmaasData.GetSolution(),
 		SeverityID:     getSeverityID(&vmaasData, severities),
 		CveList:        cvesData,
-		PublicDate:     vmaasData.GetIssued(),
+		PublicDate:     issued,
 		ModifiedDate:   modified,
 		URL:            vmaasData.Url,
 		PackageData:    packageData,
@@ -209,7 +213,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 	return nil
 }
 
-func downloadAndProcessErratasPage(iPage int, modifiedSince *time.Time) (*vmaas.ErrataResponse, error) {
+func downloadAndProcessErratasPage(iPage int, modifiedSince *string) (*vmaas.ErrataResponse, error) {
 	errataResponse, err := vmaasErrataRequest(iPage, modifiedSince)
 	if err != nil {
 		return nil, errors.Wrap(err, "Advisories sync failed on vmaas request")
@@ -222,7 +226,7 @@ func downloadAndProcessErratasPage(iPage int, modifiedSince *time.Time) (*vmaas.
 	return errataResponse, nil
 }
 
-func vmaasErrataRequest(iPage int, modifiedSince *time.Time) (*vmaas.ErrataResponse, error) {
+func vmaasErrataRequest(iPage int, modifiedSince *string) (*vmaas.ErrataResponse, error) {
 	errataRequest := vmaas.ErrataRequest{
 		Page:          utils.PtrFloat32(float32(iPage)),
 		PageSize:      utils.PtrFloat32(float32(advisoryPageSize)),

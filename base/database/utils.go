@@ -58,20 +58,20 @@ func systemAdvisoriesQuery(tx *gorm.DB, accountID int) *gorm.DB {
 	return query
 }
 
-func GetTimestampKVValue(key string) (*time.Time, error) {
-	var timestamps []*time.Time
+func GetTimestampKVValueStr(key string) (*string, error) {
+	var timestrings []*string
 	err := Db.Model(&models.TimestampKV{}).
 		Where("name = ?", key).
-		Pluck("value", &timestamps).Error
+		Pluck("value", &timestrings).Error
 	if err != nil {
 		return nil, err
 	}
 
-	if len(timestamps) == 0 {
+	if len(timestrings) == 0 {
 		return nil, nil
 	}
 
-	return timestamps[0], nil
+	return timestrings[0], nil
 }
 
 func UpdateTimestampKVValue(value time.Time, key string) {

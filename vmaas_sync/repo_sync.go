@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func syncRepos(syncStart time.Time, modifiedSince *time.Time) error {
+func syncRepos(syncStart time.Time, modifiedSince *string) error {
 	// mark non-thirdparty repos known to vmaas
 	updateRepos, err := getUpdatedRepos(syncStart, modifiedSince, false)
 	if err != nil {

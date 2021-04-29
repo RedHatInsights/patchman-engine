@@ -12,12 +12,13 @@ const LastEvalRepoBased = "last_eval_repo_based"
 const LastSync = "last_sync"
 
 func getCurrentRepoBasedInventoryIDs() ([]mqueue.InventoryAID, error) {
-	lastRepoBaseEval, err := database.GetTimestampKVValue(LastEvalRepoBased)
+	lastRepoBaseEval, err := database.GetTimestampKVValueStr(LastEvalRepoBased)
 	if err != nil {
 		return nil, err
 	}
 
-	updateRepos, err := getUpdatedRepos(time.Now(), lastRepoBaseEval, true)
+	now := time.Now()
+	updateRepos, err := getUpdatedRepos(now, lastRepoBaseEval, true)
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +28,7 @@ func getCurrentRepoBasedInventoryIDs() ([]mqueue.InventoryAID, error) {
 		return nil, err
 	}
 
-	database.UpdateTimestampKVValue(time.Now(), LastEvalRepoBased)
+	database.UpdateTimestampKVValue(now, LastEvalRepoBased)
 
 	return inventoryAIDs, nil
 }
@@ -51,7 +52,7 @@ func getRepoBasedInventoryIDs(repos []string) ([]mqueue.InventoryAID, error) {
 	return ids, nil
 }
 
-func getUpdatedRepos(syncStart time.Time, modifiedSince *time.Time, thirdParty bool) ([]string, error) {
+func getUpdatedRepos(syncStart time.Time, modifiedSince *string, thirdParty bool) ([]string, error) {
 	page := float32(1)
 	var reposArr []string
 	reposSyncStart := time.Now()

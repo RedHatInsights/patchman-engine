@@ -1,6 +1,7 @@
 package vmaas_sync //nolint:golint,stylecheck
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/mqueue"
@@ -28,20 +29,21 @@ func TestGetLastRepobasedEvalTms(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	ts, err := database.GetTimestampKVValue(LastEvalRepoBased)
+	ts, err := database.GetTimestampKVValueStr(LastEvalRepoBased)
 	assert.Nil(t, err)
-	assert.Equal(t, "2018-04-04 23:23:45 +0000 UTC", ts.String())
+	assert.Equal(t, "2018-04-04T23:23:45Z", *ts)
 }
 
 func TestUpdateRepoBaseEvalTimestamp(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	database.UpdateTimestampKVValue(time.Now(), LastEvalRepoBased)
+	now := "2021-04-01T23:23:45Z"
+	assert.Nil(t, database.UpdateTimestampKVValueStr(now, LastEvalRepoBased))
 
-	ts, err := database.GetTimestampKVValue(LastEvalRepoBased)
+	ts, err := database.GetTimestampKVValueStr(LastEvalRepoBased)
 	assert.Nil(t, err)
-	assert.Equal(t, time.Now().Year(), ts.Year())
+	assert.Equal(t, now, *ts)
 
 	resetLastEvalTimestamp(t)
 }
@@ -73,7 +75,7 @@ func TestGetUpdatedRepos(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
-	modifiedSince := time.Now()
+	modifiedSince := time.Now().Format(base.Rfc3339NoTz)
 	repos, err := getUpdatedRepos(time.Now(), &modifiedSince, true)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(repos))
