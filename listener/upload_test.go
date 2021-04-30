@@ -189,6 +189,17 @@ func TestEnsureReposInDB(t *testing.T) {
 	deleteData(t)
 }
 
+func TestEnsureReposEmpty(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	var repos []string
+	repoIDs, nAdded, err := ensureReposInDB(database.Db, repos)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(0), nAdded)
+	assert.Equal(t, 0, len(repoIDs))
+}
+
 func TestUpdateSystemRepos1(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
