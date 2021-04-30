@@ -34,9 +34,9 @@ type SystemItemAttributes struct {
 	DisplayName    string     `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name"`
 	LastEvaluation *time.Time `json:"last_evaluation" csv:"last_evaluation" query:"sp.last_evaluation" gorm:"column:last_evaluation"`
 	LastUpload     *time.Time `json:"last_upload" csv:"last_upload" query:"sp.last_upload" gorm:"column:last_upload"`
-	RhsaCount      int        `json:"rhsa_count" csv:"rhsa_count" query:"sp.advisory_sec_count_cache" gorm:"column:advisory_sec_count_cache"`
-	RhbaCount      int        `json:"rhba_count" csv:"rhba_count" query:"sp.advisory_bug_count_cache" gorm:"column:advisory_bug_count_cache"`
-	RheaCount      int        `json:"rhea_count" csv:"rhea_count" query:"sp.advisory_enh_count_cache" gorm:"column:advisory_enh_count_cache"`
+	RhsaCount      int        `json:"rhsa_count" csv:"rhsa_count" query:"sp.advisory_sec_count_cache" gorm:"column:rhsa_count"`
+	RhbaCount      int        `json:"rhba_count" csv:"rhba_count" query:"sp.advisory_bug_count_cache" gorm:"column:rhba_count"`
+	RheaCount      int        `json:"rhea_count" csv:"rhea_count" query:"sp.advisory_enh_count_cache" gorm:"column:rhea_count"`
 	Stale          bool       `json:"stale" csv:"stale" query:"sp.stale" gorm:"column:stale"`
 	ThirdParty     bool       `json:"third_party" csv:"third_party" query:"sp.third_party" gorm:"column:third_party"`
 
