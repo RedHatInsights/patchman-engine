@@ -258,3 +258,35 @@ func TestSystemsPackagesCount(t *testing.T) {
 	assert.Equal(t, 2, output.Data[0].Attributes.PackagesInstalled)
 	assert.Equal(t, 2, output.Data[0].Attributes.PackagesUpdatable)
 }
+
+func doTestSystemsFilter(t *testing.T, url string) SystemsResponse {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", url, nil)
+	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	var output SystemsResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	return output
+}
+
+func TestSystemsFilterAdvCount1(t *testing.T) {
+	output := doTestSystemsFilter(t, "/?filter[rhba_count]=3")
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, 3, output.Data[0].Attributes.RhbaCount)
+}
+
+func TestSystemsFilterAdvCount2(t *testing.T) {
+	output := doTestSystemsFilter(t, "/?filter[rhea_count]=3")
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, 3, output.Data[0].Attributes.RheaCount)
+}
+
+func TestSystemsFilterAdvCount3(t *testing.T) {
+	output := doTestSystemsFilter(t, "/?filter[rhsa_count]=2")
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
+}
