@@ -47,8 +47,8 @@ github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/RedHatInsights/patchman-clients/inventory v0.9.0 h1:j/cmmgdIjB8sNNt15x6MWlKrNERl9D8yu7JQ1JisCoY=
 github.com/RedHatInsights/patchman-clients/inventory v0.9.0/go.mod h1:Dexksp0JpaW4qEfjKsTpIQ1HMgva7sOW+qGwsaQIscE=
-github.com/RedHatInsights/patchman-clients/rbac v0.11.0 h1:VbnyH9yt2VJrBU+9RTIudlo/WKhn0gl0NnH5VVJOt+M=
-github.com/RedHatInsights/patchman-clients/rbac v0.11.0/go.mod h1:xncQYCH+1KVmaQaqt+XazFxhLTl9oVndBf3s7MUe9zY=
+github.com/RedHatInsights/patchman-clients/rbac v0.14.0 h1:TFd2SU50ujGzivzL6BlLs+1ZRvLM1eMWIIhDTMo1AM4=
+github.com/RedHatInsights/patchman-clients/rbac v0.14.0/go.mod h1:xncQYCH+1KVmaQaqt+XazFxhLTl9oVndBf3s7MUe9zY=
 github.com/RedHatInsights/patchman-clients/vmaas v0.14.0 h1:TxiDM87rhwtEGfD1+mPsWVJDyXY6VACn/rJmcf+l1rM=
 github.com/RedHatInsights/patchman-clients/vmaas v0.14.0/go.mod h1:snz+a2gQjX5YvxUfS0ZjdNI6LLt8THyJHzUEeehfKxQ=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
