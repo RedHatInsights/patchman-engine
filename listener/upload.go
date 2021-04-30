@@ -250,6 +250,9 @@ func updateRepos(tx *gorm.DB, rhAccountID int, systemID int, repos []string) (ad
 }
 
 func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int, added int64, err error) {
+	if len(repos) == 0 {
+		return repoIDs, 0, nil
+	}
 	repoObjs := make(models.RepoSlice, len(repos))
 	for i, repo := range repos {
 		repoObjs[i] = models.Repo{Name: repo}
