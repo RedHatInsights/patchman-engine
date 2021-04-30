@@ -45,8 +45,8 @@ github.com/PuerkitoBio/purell v1.1.0 h1:rmGxhojJlM0tuKtfdvliR84CFHljx9ag64t2xmVk
 github.com/PuerkitoBio/purell v1.1.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV/sSk/8dngufqelfh6jnri85riMAaF/M=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
-github.com/RedHatInsights/patchman-clients/inventory v0.9.0 h1:j/cmmgdIjB8sNNt15x6MWlKrNERl9D8yu7JQ1JisCoY=
-github.com/RedHatInsights/patchman-clients/inventory v0.9.0/go.mod h1:Dexksp0JpaW4qEfjKsTpIQ1HMgva7sOW+qGwsaQIscE=
+github.com/RedHatInsights/patchman-clients/inventory v0.14.0 h1:G7TcuEaR1iCscKlMyWEmVr/WjKRRgjFgLPVM+jWCf8M=
+github.com/RedHatInsights/patchman-clients/inventory v0.14.0/go.mod h1:cDxpbSJrACBJQAiTWdfI8O43Gszi49iCxnRh5F0mbvY=
 github.com/RedHatInsights/patchman-clients/rbac v0.14.0 h1:TFd2SU50ujGzivzL6BlLs+1ZRvLM1eMWIIhDTMo1AM4=
 github.com/RedHatInsights/patchman-clients/rbac v0.14.0/go.mod h1:xncQYCH+1KVmaQaqt+XazFxhLTl9oVndBf3s7MUe9zY=
 github.com/RedHatInsights/patchman-clients/vmaas v0.14.0 h1:TxiDM87rhwtEGfD1+mPsWVJDyXY6VACn/rJmcf+l1rM=
@@ -55,8 +55,6 @@ github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuy
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
-github.com/antihax/optional v1.0.0 h1:xK2lYat7ZLaVVcIuj82J8kIro4V6kDe0AUDFboUCwcg=
-github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
 github.com/apache/arrow/go/arrow v0.0.0-20200601151325-b2287a20f230/go.mod h1:QNYViu/X0HXDHw7m3KXzWSVXIbfUvJqBFe6Gj8/pYA0=
 github.com/aws/aws-sdk-go v1.17.7/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go v1.30.9 h1:DntpBUKkchINPDbhEzDRin1eEn1TG9TZFlzWPf0i8to=

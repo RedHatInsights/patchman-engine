@@ -70,8 +70,8 @@ func getOrCreateTestAccount(t *testing.T) int {
 
 // nolint: unparam
 func createTestUploadEvent(rhAccountID, inventoryID, reporter string, packages bool) HostEvent {
-	ns := "insights"
-	v1 := "prod"
+	ns := inventory.NewNullableString(utils.PtrString("insights"))
+	v1 := inventory.NewNullableString(utils.PtrString("prod"))
 	ev := HostEvent{
 		Type:             "created",
 		PlatformMetadata: nil,
@@ -81,22 +81,24 @@ func createTestUploadEvent(rhAccountID, inventoryID, reporter string, packages b
 			Reporter: reporter,
 			Tags: []inventory.StructuredTag{
 				{
-					Key:       "env",
-					Namespace: &ns,
-					Value:     &v1,
+					Key:       utils.PtrString("env"),
+					Namespace: *ns,
+					Value:     *v1,
 				}, {
-					Key:       "release",
-					Namespace: &ns,
-					Value:     &v1,
+					Key:       utils.PtrString("release"),
+					Namespace: *ns,
+					Value:     *v1,
 				},
 			},
 		},
 	}
 	if packages {
-		ev.Host.SystemProfile.InstalledPackages = []string{"kernel-54321.rhel8.x86_64"}
+		ev.Host.SystemProfile.SetInstalledPackages([]string{"kernel-54321.rhel8.x86_64"})
 	}
-	ev.Host.SystemProfile.DnfModules = []inventory.SystemProfileSpecYamlDnfModule{{Name: "modName", Stream: "modStream"}}
-	ev.Host.SystemProfile.YumRepos = []inventory.SystemProfileSpecYamlYumRepo{{Id: "repo1", Enabled: true}}
+	ev.Host.SystemProfile.SetDnfModules(
+		[]inventory.SystemProfileSpecYamlDnfModule{{Name: utils.PtrString("modName"), Stream: utils.PtrString("modStream")}})
+	ev.Host.SystemProfile.SetYumRepos(
+		[]inventory.SystemProfileSpecYamlYumRepo{{Id: utils.PtrString("repo1"), Enabled: utils.PtrBool(true)}})
 	return ev
 }
 
