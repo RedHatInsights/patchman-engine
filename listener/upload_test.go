@@ -12,6 +12,7 @@ import (
 	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"strings"
 	"testing"
 	"time"
 )
@@ -100,8 +101,8 @@ func TestUploadHandler(t *testing.T) {
 	assertSystemInDB(t, id, nil, &reporterID)
 
 	var sys models.SystemPlatform
-
 	assert.NoError(t, database.Db.Where("inventory_id::text = ?", id).Find(&sys).Error)
+	assert.True(t, strings.Contains(sys.VmaasJSON, `"third_party":true`)) // ensure "third_party" is enabled
 	after := time.Now().Add(time.Hour)
 	sys.LastEvaluation = &after
 	assert.NoError(t, database.Db.Save(&sys).Error)
