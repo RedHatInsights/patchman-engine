@@ -9,9 +9,7 @@ import (
 	"app/base/utils"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/lestrrat-go/backoff"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -273,35 +271,22 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 	return tx.Model(system).Updates(data).Error
 }
 
-// nolint: bodyclose
 func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.UpdatesV2Response, error) {
-	var policy = backoff.NewExponential(
-		backoff.WithInterval(time.Second),
-		backoff.WithMaxRetries(8),
-	)
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("vmaas-updates-call"))
 
-	backoffState, cancel := policy.Start(base.Context)
-	defer cancel()
-	for backoff.Continue(backoffState) {
-		vmaasData, resp, err := vmaasClient.DefaultApi.AppUpdatesHandlerV3PostPost(ctx).UpdatesV3Request(*request).Execute()
-
-		// VMaaS is probably refreshing caches, continue waiting
-		if resp != nil && resp.StatusCode == http.StatusServiceUnavailable {
-			continue
-		}
-
-		if err != nil {
-			responseDetails := utils.TryGetResponseDetails(resp)
-			return nil, errors.Wrap(err, "vmaas API call failed"+responseDetails+fmt.Sprintf(
-				", (packages: %d, basearch: %s, modules: %d, releasever: %s, repolist: %d)",
-				len(request.PackageList), request.GetBasearch(), len(request.GetModulesList()),
-				request.GetReleasever(), len(request.GetRepositoryList())))
-		}
-		return &vmaasData, nil
+	vmaasCallFunc := func() (interface{}, *http.Response, error) {
+		vmaasData, resp, err := vmaasClient.DefaultApi.AppUpdatesHandlerV3PostPost(ctx).UpdatesV3Request(*request).
+			Execute()
+		return &vmaasData, resp, err
 	}
-	return nil, errors.New("VMaaS is unavailable")
+
+	vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc, true, 8,
+		http.StatusServiceUnavailable)
+	if err != nil {
+		return nil, errors.Wrap(err, "vmaas /v3/updates API call failed")
+	}
+	return vmaasDataPtr.(*vmaas.UpdatesV2Response), nil
 }
 
 func loadSystemData(tx *gorm.DB, accountID int, inventoryID string) (*models.SystemPlatform, error) {
