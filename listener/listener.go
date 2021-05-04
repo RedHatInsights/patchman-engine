@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 var (
@@ -18,6 +19,7 @@ var (
 	validReporters    map[string]int
 	excludedReporters map[string]bool
 	enableBypass      bool
+	uploadEvalTimeout time.Duration
 )
 
 func configure() {
@@ -34,6 +36,8 @@ func configure() {
 	excludedReporters = loadExcludedReporters()
 
 	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
+
+	uploadEvalTimeout = time.Duration(utils.GetIntEnvOrDefault("UPLOAD_EVAL_TIMEOUT_MS", 500)) * time.Millisecond
 }
 
 func loadExcludedReporters() map[string]bool {
