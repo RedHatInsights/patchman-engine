@@ -9,14 +9,15 @@ import (
 	"app/base/utils"
 	"context"
 	"encoding/json"
-	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/pkg/errors"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/RedHatInsights/patchman-clients/vmaas"
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type SystemAdvisoryMap map[string]models.SystemAdvisories
@@ -51,10 +52,9 @@ func configure() {
 	enableStaleSysEval = utils.GetBoolEnvOrDefault("ENABLE_STALE_SYSTEM_EVALUATION", true)
 	enableLazyPackageSave = utils.GetBoolEnvOrDefault("ENABLE_LAZY_PACKAGE_SAVE", true)
 	prunePackageLatestOnly = utils.GetBoolEnvOrDefault("PRUNE_UPDATES_LATEST_ONLY", false)
-	if enableLazyPackageSave {
-		ConfigurePackageNameCache()
-	}
 	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
+	memoryPackageCache = NewPackageCache()
+	memoryPackageCache.Load()
 	vmaasConfig.HTTPClient = &http.Client{Transport: &http.Transport{
 		DisableCompression: disableCompression,
 	}}
