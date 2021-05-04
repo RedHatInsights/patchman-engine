@@ -117,7 +117,6 @@ func HandleUpload(event HostEvent) error {
 
 // accumulate events and create group PlatformEvents to save some resources
 const evalBufferSize = 5 * mqueue.BatchSize
-const flushTimeout = 500 * time.Millisecond
 
 var evalBuffer = make([]mqueue.InventoryAID, 0, evalBufferSize+1)
 var flushTimer = time.AfterFunc(87600*time.Hour, func() {
@@ -129,7 +128,7 @@ var flushTimer = time.AfterFunc(87600*time.Hour, func() {
 func bufferEvalEvents(inventoryID string, rhAccountID int) {
 	inventoryAID := mqueue.InventoryAID{InventoryID: inventoryID, RhAccountID: rhAccountID}
 	evalBuffer = append(evalBuffer, inventoryAID)
-	flushTimer.Reset(flushTimeout)
+	flushTimer.Reset(uploadEvalTimeout)
 	if len(evalBuffer) >= evalBufferSize {
 		utils.Log().Debug(FlushedFullBuffer)
 		flushEvalEvents()
