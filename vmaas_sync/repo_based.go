@@ -5,7 +5,6 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"net/http"
 	"time"
 )
 
@@ -65,18 +64,12 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *time.Time, thirdParty b
 			ModifiedSince:  modifiedSince,
 		}
 
-		vmaasCallFunc := func() (interface{}, *http.Response, error) {
-			vmaasData, resp, err := vmaasClient.DefaultApi.AppReposHandlerPostPost(base.Context).ReposRequest(reposReq).
-				Execute()
-			return &vmaasData, resp, err
-		}
-
-		vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc, vmaasCallExpRetry, vmaasCallMaxRetries)
+		repos, _, err := vmaasClient.DefaultApi.AppReposHandlerPostPost(base.Context).ReposRequest(reposReq).Execute()
 		if err != nil {
 			return nil, err
 		}
 		vmaasCallCnt.WithLabelValues("success").Inc()
-		repos := vmaasDataPtr.(*vmaas.ReposResponse)
+
 		if repos.GetPages() < 1 {
 			utils.Log().Debug("No repos returned from VMaaS")
 			break

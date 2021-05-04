@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/pkg/errors"
-	"net/http"
 	"strings"
 	"time"
 )
@@ -231,17 +230,11 @@ func vmaasErrataRequest(iPage int, modifiedSince *time.Time) (*vmaas.ErrataRespo
 		ModifiedSince: modifiedSince,
 	}
 
-	vmaasCallFunc := func() (interface{}, *http.Response, error) {
-		vmaasData, resp, err := vmaasClient.DefaultApi.AppErrataHandlerPostPost(base.Context).ErrataRequest(errataRequest).
-			Execute()
-		return &vmaasData, resp, err
-	}
-
-	vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc, vmaasCallExpRetry, vmaasCallMaxRetries)
+	resp, _, err := vmaasClient.DefaultApi.AppErrataHandlerPostPost(base.Context).ErrataRequest(errataRequest).Execute()
 	if err != nil {
 		vmaasCallCnt.WithLabelValues("error-download-errata").Inc()
 		return nil, errors.Wrap(err, "Downloading erratas")
 	}
 	vmaasCallCnt.WithLabelValues("success").Inc()
-	return vmaasDataPtr.(*vmaas.ErrataResponse), nil
+	return &resp, nil
 }

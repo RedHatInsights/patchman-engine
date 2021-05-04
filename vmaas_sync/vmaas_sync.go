@@ -30,8 +30,6 @@ var (
 	enablePackagesSync       bool
 	enableReposSync          bool
 	enableModifiedSinceSync  bool
-	vmaasCallExpRetry        bool
-	vmaasCallMaxRetries      int
 )
 
 func configure() {
@@ -63,8 +61,6 @@ func configure() {
 	deleteCulledSystemsLimit = utils.GetIntEnvOrDefault("DELETE_CULLED_SYSTEMS_LIMIT", 1000)
 	enableCulledSystemDelete = utils.GetBoolEnvOrDefault("ENABLE_CULLED_SYSTEM_DELETE", true)
 	enableSystemStaling = utils.GetBoolEnvOrDefault("ENABLE_SYSTEM_STALING", true)
-	vmaasCallMaxRetries = utils.GetIntEnvOrDefault("VMAAS_CALL_MAX_RETRIES", 0)  // 0 - retry forever
-	vmaasCallExpRetry = utils.GetBoolEnvOrDefault("VMAAS_CALL_EXP_RETRY", false) // false - retry periodically
 }
 
 type Handler func(data []byte, conn *websocket.Conn) error
