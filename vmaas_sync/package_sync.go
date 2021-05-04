@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"net/http"
 	"time"
 )
 
@@ -82,14 +83,19 @@ func vmaasPkgtreeRequest(iPage int, modifiedSince *time.Time) (*vmaas.PkgtreeRes
 		ModifiedSince:      modifiedSince,
 	}
 
-	resp, _, err := vmaasClient.DefaultApi.AppPkgtreeHandlerV3PostPost(base.Context).
-		PkgtreeRequest(errataRequest).Execute()
+	vmaasCallFunc := func() (interface{}, *http.Response, error) {
+		vmaasData, resp, err := vmaasClient.DefaultApi.AppPkgtreeHandlerV3PostPost(base.Context).
+			PkgtreeRequest(errataRequest).Execute()
+		return &vmaasData, resp, err
+	}
+
+	vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc, vmaasCallExpRetry, vmaasCallMaxRetries)
 	if err != nil {
 		vmaasCallCnt.WithLabelValues("error-download-errata").Inc()
 		return nil, errors.Wrap(err, "Downloading erratas")
 	}
 	vmaasCallCnt.WithLabelValues("success").Inc()
-	return &resp, nil
+	return vmaasDataPtr.(*vmaas.PkgtreeResponse), nil
 }
 
 func storePackageNames(tx *gorm.DB, vmaasData map[string][]vmaas.PkgTreeItem) (map[string]int, error) {
