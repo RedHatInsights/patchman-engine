@@ -29,7 +29,7 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 	assert.Equal(t, "2016-09-22 20:00:00 +0000 UTC", output.Data.Attributes.PublicDate.String())
 	assert.Equal(t, "2018-09-22 20:00:00 +0000 UTC", output.Data.Attributes.ModifiedDate.String())
 	assert.Equal(t, 1, len(output.Data.Attributes.Packages))
-	assert.Equal(t, "77.0.1-1.fc31-x86_64", output.Data.Attributes.Packages["firefox"])
+	assert.Equal(t, "77.0.1-1.fc31.x86_64", output.Data.Attributes.Packages["firefox"])
 	assert.Nil(t, output.Data.Attributes.Severity)
 }
 
