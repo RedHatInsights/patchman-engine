@@ -49,7 +49,7 @@ INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solutio
 (8, 'RH-8', 'adv-8-des', 'adv-8-syn', 'adv-8-sum', 'adv-8-sol', 2, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url8', NULL, NULL),
 (9, 'RH-9', 'adv-9-des', 'adv-9-syn', 'adv-9-sum', 'adv-9-sol', 3, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url9', NULL, '["CVE-4"]');
 
-UPDATE advisory_metadata SET package_data = '{"firefox": "77.0.1-1.fc31-x86_64"}' WHERE name = 'RH-9';
+UPDATE advisory_metadata SET package_data = '{"firefox": "77.0.1-1.fc31.x86_64"}' WHERE name = 'RH-9';
 
 INSERT INTO system_advisories (rh_account_id, system_id, advisory_id, first_reported, when_patched, status_id) VALUES
 (1, 1, 1, '2016-09-22 12:00:00-04', NULL, 0),
@@ -133,10 +133,10 @@ INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_
 (11, 101, '5.6.13-201.fc31.x86_64', '11', '1', 7); -- kernel
 
 INSERT INTO system_package (rh_account_id, system_id, package_id, name_id, update_data) VALUES
-(3, 12, 1, 101, '[{"evra": "5.10.13-200.fc31-x86_64", "advisory": "RH-100"}]'),
-(3, 12, 2, 102, '[{"evra": "77.0.1-1.fc31-x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31-x86_64", "advisory": "RH-2"}]'),
+(3, 12, 1, 101, '[{"evra": "5.10.13-200.fc31.x86_64", "advisory": "RH-100"}]'),
+(3, 12, 2, 102, '[{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31.x86_64", "advisory": "RH-2"}]'),
 (3, 13, 1, 101, null),
-(3, 13, 2, 102, '[{"evra": "77.0.1-1.fc31-x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31-x86_64", "advisory": "RH-2"}]'),
+(3, 13, 2, 102, '[{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31.x86_64", "advisory": "RH-2"}]'),
 (3, 13, 3, 103, null),
 (3, 13, 4, 104, null);
 
