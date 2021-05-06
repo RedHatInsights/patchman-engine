@@ -111,6 +111,13 @@ func evaluateInDatabase(ctx context.Context, accountID int, inventoryID string,
 
 func evaluateWithVmaas(ctx context.Context, tx *gorm.DB, updatesReq *vmaas.UpdatesV3Request,
 	system *models.SystemPlatform) (*vmaas.UpdatesV2Response, error) {
+	thirdParty, err := analyzeRepos(tx, system)
+	if err != nil {
+		return nil, errors.Wrap(err, "Repo analysis failed")
+	}
+	system.ThirdParty = thirdParty                    // to set "system_platform.third_party" column
+	updatesReq.ThirdParty = utils.PtrBool(thirdParty) // enable "third_party" updates in VMaaS if needed
+
 	vmaasData, err := callVMaas(ctx, updatesReq)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-call-vmaas-updates").Inc()
@@ -192,12 +199,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vma
 		return errors.Wrap(err, "Package analysis failed")
 	}
 
-	thirdParty, err := analyzeRepos(tx, system)
-	if err != nil {
-		return errors.Wrap(err, "Repo analysis failed")
-	}
-
-	err = updateSystemPlatform(tx, system, newSystemAdvisories, installed, updatable, thirdParty)
+	err = updateSystemPlatform(tx, system, newSystemAdvisories, installed, updatable)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-update-system").Inc()
 		return errors.Wrap(err, "Unable to update system")
@@ -231,7 +233,7 @@ func analyzeRepos(tx *gorm.DB, system *models.SystemPlatform) (
 }
 
 func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
-	new SystemAdvisoryMap, installed, updatable int, thirdParty bool) error {
+	new SystemAdvisoryMap, installed, updatable int) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("system-update"))
 	defer utils.ObserveSecondsSince(*system.LastUpload, uploadEvaluationDelay)
@@ -265,7 +267,7 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 	}
 
 	if enableRepoAnalysis {
-		data["third_party"] = thirdParty
+		data["third_party"] = system.ThirdParty
 	}
 
 	return tx.Model(system).Updates(data).Error
