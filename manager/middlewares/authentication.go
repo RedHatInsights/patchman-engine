@@ -26,7 +26,11 @@ func findAccount(c *gin.Context, identity *identity.Identity) bool {
 		c.Set(KeyAccount, id)
 	} else {
 		var acc models.RhAccount
-		if err := database.Db.Where("name = ?", identity.AccountNumber).Find(&acc).Error; err != nil {
+		err := database.Db.Where("name = ?", identity.AccountNumber).Find(&acc).Error
+		if err != nil {
+			utils.Log("err", err, "name", identity.AccountNumber).Warn("Could not find account")
+		}
+		if acc.ID == 0 {
 			c.AbortWithStatus(http.StatusNoContent)
 			return false
 		}
