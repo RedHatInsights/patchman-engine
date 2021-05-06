@@ -38,6 +38,6 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	gorm.io/driver/postgres v1.0.5
 	gorm.io/gorm v1.20.12
-	modernc.org/mathutil v1.0.0
+	modernc.org/mathutil v1.0.0 // indirect
 	modernc.org/strutil v1.1.0
 )
