@@ -148,6 +148,7 @@ func getLastSyncIfNeeded() *string {
 }
 
 func syncData() error {
+	utils.Log().Info("Data sync started")
 	syncStart := time.Now()
 	defer utils.ObserveSecondsSince(syncStart, syncDuration)
 	lastSyncTS := getLastSyncIfNeeded()
@@ -171,6 +172,7 @@ func syncData() error {
 	}
 
 	database.UpdateTimestampKVValue(syncStart, LastSync)
+	utils.Log().Info("Data sync finished successfully")
 	return nil
 }
 
@@ -191,7 +193,7 @@ func syncAndRecalcOnStartIfSet() {
 	if enableSyncOnStart {
 		err := syncData()
 		if err != nil {
-			utils.Log("err", err.Error()).Error("unable to sync advisories on start")
+			utils.Log("err", err.Error()).Error("unable to sync data on start")
 		}
 	}
 
