@@ -391,7 +391,6 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 		Basearch:       systemProfile.Arch,
 		SecurityOnly:   utils.PtrBool(false),
 		LatestOnly:     utils.PtrBool(true),
-		ThirdParty:     utils.PtrBool(true),
 	}
 
 	// use rhsm version if set
