@@ -43,12 +43,11 @@ func syncPackages(syncStart time.Time, modifiedSince *time.Time) error {
 func downloadAndProcessPkgtreePage(iPage int, modifiedSince *time.Time) (*vmaas.PkgtreeResponse, error) {
 	pkgtreeResponse, err := vmaasPkgtreeRequest(iPage, modifiedSince)
 	if err != nil {
-		return nil, errors.Wrap(err, "Advisories sync failed on vmaas request")
+		return nil, errors.Wrap(err, "Packages sync failed on vmaas request")
 	}
 
 	err = storePackagesData(pkgtreeResponse.GetPackageNameList())
 	if err != nil {
-		//	storeAdvisoriesCnt.WithLabelValues("error").Add(float64(len(pkgtreeResponse.GetErrataList())))
 		return nil, errors.Wrap(err, "Packages data storing failed")
 	}
 	return pkgtreeResponse, nil
