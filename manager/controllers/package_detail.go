@@ -47,7 +47,9 @@ func packageLatestHandler(c *gin.Context, packageName string) {
 
 	query := database.PackageByName(database.Db, packageName)
 	var pkg PackageDetailAttributes
-	err := query.Select(PackageSelect).Order("am.public_date DESC").Limit(1).Find(&pkg).Error
+	// Perform 'soft-filtering' by ordering on boolean column first
+	err := query.Select(PackageSelect).
+		Order("(sum.value IS NOT NULL) DESC NULLS LAST, am.public_date DESC").Limit(1).Find(&pkg).Error
 	if err != nil {
 		LogAndRespNotFound(c, err, "package not found")
 		return
