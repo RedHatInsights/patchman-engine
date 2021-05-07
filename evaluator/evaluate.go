@@ -117,6 +117,7 @@ func evaluateWithVmaas(ctx context.Context, tx *gorm.DB, updatesReq *vmaas.Updat
 	}
 	system.ThirdParty = thirdParty                    // to set "system_platform.third_party" column
 	updatesReq.ThirdParty = utils.PtrBool(thirdParty) // enable "third_party" updates in VMaaS if needed
+	updatesReq.OptimisticUpdates = utils.PtrBool(thirdParty)
 
 	vmaasData, err := callVMaas(ctx, updatesReq)
 	if err != nil {
