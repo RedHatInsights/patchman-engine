@@ -82,6 +82,7 @@ func (c *PackageCache) GetByID(id int) (*PackageCacheMetadata, bool) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 	metadata, ok := c.byID[id]
+	utils.Log("id", id, "ok", ok).Debug("PackageCache.GetByID")
 	if ok {
 		return metadata, true
 	}
@@ -93,6 +94,7 @@ func (c *PackageCache) GetByNevra(nevra string) (*PackageCacheMetadata, bool) {
 	defer c.mtx.RUnlock()
 
 	metadata, ok := c.byNevra[nevra]
+	utils.Log("nevra", nevra, "ok", ok).Debug("PackageCache.GetByNevra")
 	if ok {
 		return metadata, true
 	}
@@ -104,6 +106,7 @@ func (c *PackageCache) GetLatestByName(name string) (*PackageCacheMetadata, bool
 	defer c.mtx.RUnlock()
 
 	metadata, ok := c.latestByName[name]
+	utils.Log("name", name, "ok", ok).Debug("PackageCache.GetNameByID")
 	if ok {
 		return metadata, true
 	}
@@ -115,6 +118,7 @@ func (c *PackageCache) GetNameByID(id int) (string, bool) {
 	defer c.mtx.RUnlock()
 
 	metadata, ok := c.nameByID[id]
+	utils.Log("id", id, "ok", ok).Debug("PackageCache.GetNameByID")
 	return metadata, ok
 }
 
@@ -134,4 +138,5 @@ func (c *PackageCache) AddWithoutLock(pkg *PackageCacheMetadata) {
 	if _, ok := c.nameByID[pkg.NameID]; !ok {
 		c.nameByID[pkg.NameID] = pkg.Name
 	}
+	utils.Log("nevra", nevra).Debug("PackageCache.Add")
 }
