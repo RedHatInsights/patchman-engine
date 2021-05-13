@@ -232,6 +232,7 @@ func vmaasErrataRequest(iPage int, modifiedSince *string) (*vmaas.ErrataResponse
 		Page:          utils.PtrFloat32(float32(iPage)),
 		PageSize:      utils.PtrFloat32(float32(advisoryPageSize)),
 		ErrataList:    []string{".*"},
+		ThirdParty:    utils.PtrBool(true),
 		ModifiedSince: modifiedSince,
 	}
 
