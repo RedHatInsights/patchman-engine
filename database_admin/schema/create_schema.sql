@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (64, false);
+VALUES (65, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -734,7 +734,6 @@ CREATE TABLE IF NOT EXISTS advisory_metadata
     summary          TEXT                     NOT NULL,
     CHECK (NOT empty(summary)),
     solution         TEXT                     NOT NULL,
-    CHECK (NOT empty(solution)),
     advisory_type_id INT                      NOT NULL,
     public_date      TIMESTAMP WITH TIME ZONE NULL,
     modified_date    TIMESTAMP WITH TIME ZONE NULL,
