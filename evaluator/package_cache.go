@@ -73,7 +73,7 @@ func (c *PackageCache) Load() {
 		c.AddWithoutLock(&pkg)
 	}
 	runtime.ReadMemStats(&mEnd)
-	utils.Log("rows", len(c.byID), "allocated-size-KiB", (mEnd.TotalAlloc-mStart.TotalAlloc)/1024,
+	utils.Log("rows", len(c.byID), "allocated-size", utils.SizeStr(mEnd.TotalAlloc-mStart.TotalAlloc),
 		"duration", utils.SinceStr(tStart, time.Millisecond)).Info("PackageCache.Load")
 }
 
