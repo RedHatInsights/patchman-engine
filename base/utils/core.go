@@ -2,13 +2,14 @@ package utils
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
 	"os"
 	"path"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 // Getenv Load environment variable or return default value
@@ -128,6 +129,6 @@ func LogPanics(exitAfterLogging bool) {
 }
 
 // SinceStr Format duration since given time as "1h2m3s
-func SinceStr(tStart time.Time) string {
-	return time.Since(tStart).Round(time.Second).String()
+func SinceStr(tStart time.Time, precision time.Duration) string {
+	return time.Since(tStart).Round(precision).String()
 }
