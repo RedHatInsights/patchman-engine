@@ -6,11 +6,12 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"encoding/json"
-	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/pkg/errors"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/RedHatInsights/patchman-clients/vmaas"
+	"github.com/pkg/errors"
 )
 
 const SyncBatchSize = 1000 // Should be < 5000
@@ -32,7 +33,8 @@ func syncAdvisories(syncStart time.Time, modifiedSince *string) error {
 		iPageMax = int(errataResponse.GetPages())
 		iPage++
 		utils.Log("page", iPage, "pages", int(errataResponse.GetPages()), "count", len(errataResponse.GetErrataList()),
-			"sync_duration", utils.SinceStr(syncStart), "advisories_sync_duration", utils.SinceStr(advSyncStart)).
+			"sync_duration", utils.SinceStr(syncStart, time.Second),
+			"advisories_sync_duration", utils.SinceStr(advSyncStart, time.Second)).
 			Debug("Downloaded advisories")
 	}
 	utils.Log().Info("Advisories synced successfully")
