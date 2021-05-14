@@ -1,6 +1,12 @@
 version: '3'
 
 services:
+  patchimg:
+    build:
+      context: .
+      dockerfile: Dockerfile.centos
+    image: patchman-engine_patchimg
+
   db_volumefix:
     container_name: db_volumefix
     build:
@@ -28,15 +34,14 @@ services:
 
   db_admin:
     container_name: db_admin
-    build:
-      context: .
-      dockerfile: Dockerfile.centos
+    image: patchman-engine_patchimg
     env_file:
       - ./conf/common.env
       - ./conf/database_admin.env
     command: ./database_admin/entrypoint.sh
     depends_on:
       - db
+      - patchimg
     volumes:
       - ./:/go/src/app
     security_opt:
@@ -44,14 +49,13 @@ services:
 
   db_feed:
     container_name: db_feed
-    build:
-      context: .
-      dockerfile: Dockerfile.centos
+    image: patchman-engine_patchimg
     env_file:
       - ./conf/test.env
     command: ./scripts/feed_db.sh
     depends_on:
       - db
+      - patchimg
     volumes:
       - ./:/go/src/app
     security_opt:
@@ -83,9 +87,7 @@ services:
 
   platform:
     container_name: platform
-    build:
-      context: .
-      dockerfile: Dockerfile.centos
+    image: patchman-engine_patchimg
     env_file:
       - ./conf/platform.env
     command: ./scripts/entrypoint.sh platform
@@ -93,14 +95,13 @@ services:
     depends_on:
       - db
       - kafka
+      - patchimg
     ports:
       - 9001:9001
 
   manager:
     container_name: manager
-    build:
-      context: .
-      dockerfile: Dockerfile.centos
+    image: patchman-engine_patchimg
     env_file:
       - ./conf/common.env
       - ./conf/manager.env
@@ -110,6 +111,7 @@ services:
     depends_on:
       - db
       - platform
+      - patchimg
     volumes:
       - ./:/go/src/app
     security_opt:
@@ -117,9 +119,7 @@ services:
 
   listener:
     container_name: listener
-    build:
-      context: .
-      dockerfile: Dockerfile.centos
+    image: patchman-engine_patchimg
     env_file:
       - ./conf/common.env
       - ./conf/listener.env
@@ -129,6 +129,7 @@ services:
     depends_on:
       - db
       - platform
+      - patchimg
     volumes:
       - ./:/go/src/app
     security_opt:
@@ -136,9 +137,7 @@ services:
 
   evaluator_upload:
     container_name: evaluator_upload
-    build:
-      context: .
-      dockerfile: Dockerfile.centos
+    image: patchman-engine_patchimg
     env_file:
       - ./conf/common.env
       - ./conf/evaluator_common.env
@@ -149,6 +148,7 @@ services:
     depends_on:
       - db
       - platform
+      - patchimg
     volumes:
       - ./:/go/src/app
     security_opt:
@@ -156,9 +156,7 @@ services:
 
   evaluator_recalc:
     container_name: evaluator_recalc
-    build:
-      context: .
-      dockerfile: Dockerfile.centos
+    image: patchman-engine_patchimg
     env_file:
       - ./conf/common.env
       - ./conf/evaluator_common.env
@@ -169,6 +167,7 @@ services:
     depends_on:
       - db
       - platform
+      - patchimg
     volumes:
       - ./:/go/src/app
     security_opt:
@@ -176,9 +175,7 @@ services:
 
   vmaas_sync:
     container_name: vmaas_sync
-    build:
-      context: .
-      dockerfile: Dockerfile.centos
+    image: patchman-engine_patchimg
     env_file:
       - ./conf/common.env
       - ./conf/vmaas_sync.env
@@ -189,6 +186,7 @@ services:
     depends_on:
       - db
       - platform
+      - patchimg
     volumes:
       - ./:/go/src/app
     security_opt:
