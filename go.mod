@@ -26,6 +26,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_golang v1.7.0
+	github.com/redhatinsights/app-common-go v1.5.0
 	github.com/redhatinsights/platform-go-middlewares v0.7.1-0.20201008161041-14dd768deef9
 	github.com/segmentio/kafka-go v0.4.9
 	github.com/sirupsen/logrus v1.7.0
@@ -38,6 +39,5 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	gorm.io/driver/postgres v1.0.5
 	gorm.io/gorm v1.20.12
-	modernc.org/mathutil v1.0.0 // indirect
 	modernc.org/strutil v1.1.0
 )
