@@ -188,6 +188,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		"stale_timestamp",
 		"stale_warning_timestamp",
 		"culled_timestamp",
+		"insights_id",
 	}
 
 	now := time.Now()
@@ -210,6 +211,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		CulledTimestamp:       host.CulledTimestamp.Time(),
 		Stale:                 staleWarning != nil && staleWarning.Before(time.Now()),
 		ReporterID:            getReporterID(host.Reporter),
+		InsightsID:            host.InsightsID,
 	}
 
 	var oldJSONChecksum []string

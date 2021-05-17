@@ -1,0 +1,1 @@
+ALTER TABLE system_platform DROP COLUMN insights_id;

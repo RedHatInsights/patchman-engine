@@ -12,6 +12,7 @@ import (
 )
 
 const del = "99c0ffee-0000-0000-0000-000000000de1"
+const insightsID = "99c0ffee-0000-0000-1111-000000000de1"
 
 func TestInitDelete(t *testing.T) {
 	utils.TestLoadEnv("conf/test.env")
@@ -22,6 +23,7 @@ func TestInitDelete(t *testing.T) {
 		InventoryID: del,
 		RhAccountID: 1,
 		DisplayName: del,
+		InsightsID:  insightsID,
 	}).Error)
 	utils.TestLoadEnv("conf/manager.env")
 }

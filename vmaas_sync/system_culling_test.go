@@ -143,11 +143,13 @@ func TestCullSystems(t *testing.T) {
 	nToDelete := 4
 	for i := 0; i < nToDelete; i++ {
 		invID := fmt.Sprintf("00000000-0000-0000-0000-000000000de%d", i+1)
+		insightsID := fmt.Sprintf("00000000-0000-0000-1111-000000000de%d", i+1)
 		assert.NoError(t, database.Db.Create(&models.SystemPlatform{
 			InventoryID:     invID,
 			RhAccountID:     1,
 			DisplayName:     invID,
 			CulledTimestamp: &staleDate,
+			InsightsID:      insightsID,
 		}).Error)
 	}
 

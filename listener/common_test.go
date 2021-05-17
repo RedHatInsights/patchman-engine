@@ -13,6 +13,7 @@ import (
 )
 
 const id = "99c0ffee-0000-0000-0000-0000c0ffee99"
+const insightsID = "99c0ffee-0000-0000-1111-0000c0ffee99"
 
 func TestInit(t *testing.T) {
 	utils.TestLoadEnv("conf/listener.env")
@@ -90,6 +91,7 @@ func createTestUploadEvent(rhAccountID, inventoryID, reporter string, packages b
 					Value:     *v1,
 				},
 			},
+			InsightsID: insightsID,
 		},
 	}
 	if packages {

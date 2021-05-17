@@ -24,12 +24,14 @@ func TestUpdateSystem(t *testing.T) {
 		InventoryID: id,
 		RhAccountID: 1,
 		DisplayName: id,
+		InsightsID:  insightsID,
 	}).Error)
 
 	ev := createTestUploadEvent("1", id, "puptoo", false)
 	name := "TEST_NAME"
 	ev.Host.DisplayName = &name
 	ev.Host.SystemProfile.SetInstalledPackages([]string{"kernel"})
+	ev.Host.InsightsID = insightsID
 	assert.NoError(t, HandleUpload(ev))
 
 	var system models.SystemPlatform
@@ -44,6 +46,7 @@ func TestDeleteSystem(t *testing.T) {
 		InventoryID: id,
 		RhAccountID: 1,
 		DisplayName: id,
+		InsightsID:  insightsID,
 	}).Error)
 
 	deleteEvent := createTestDeleteEvent(id)

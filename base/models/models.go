@@ -46,6 +46,7 @@ type SystemPlatform struct {
 	PackagesUpdatable     int
 	ThirdParty            bool
 	ReporterID            *int
+	InsightsID            string
 }
 
 func (SystemPlatform) TableName() string {

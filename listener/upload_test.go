@@ -36,7 +36,9 @@ func createTestInvHost(t *testing.T) *Host {
 
 	host := Host{
 		StaleTimestamp: &correctTime,
-		Reporter:       "puptoo"}
+		Reporter:       "puptoo",
+		InsightsID:     insightsID,
+	}
 	return &host
 }
 
@@ -77,6 +79,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	assert.Equal(t, sys1.ID, sys2.ID)
 	assert.Equal(t, sys1.InventoryID, sys2.InventoryID)
 	assert.Equal(t, sys1.Stale, sys2.Stale)
+	assert.Equal(t, sys1.InsightsID, sys2.InsightsID)
 	assert.NotNil(t, sys1.StaleTimestamp)
 	assert.Nil(t, sys1.StaleWarningTimestamp)
 	assert.Nil(t, sys1.CulledTimestamp)

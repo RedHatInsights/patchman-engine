@@ -1,0 +1,1 @@
+ALTER TABLE system_platform ADD COLUMN IF NOT EXISTS insights_id UUID;

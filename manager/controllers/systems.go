@@ -31,17 +31,17 @@ type SystemDBLookup struct {
 
 // nolint: lll
 type SystemItemAttributes struct {
-	DisplayName    string     `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name"`
-	LastEvaluation *time.Time `json:"last_evaluation" csv:"last_evaluation" query:"sp.last_evaluation" gorm:"column:last_evaluation"`
-	LastUpload     *time.Time `json:"last_upload" csv:"last_upload" query:"sp.last_upload" gorm:"column:last_upload"`
-	RhsaCount      int        `json:"rhsa_count" csv:"rhsa_count" query:"sp.advisory_sec_count_cache" gorm:"column:rhsa_count"`
-	RhbaCount      int        `json:"rhba_count" csv:"rhba_count" query:"sp.advisory_bug_count_cache" gorm:"column:rhba_count"`
-	RheaCount      int        `json:"rhea_count" csv:"rhea_count" query:"sp.advisory_enh_count_cache" gorm:"column:rhea_count"`
-	Stale          bool       `json:"stale" csv:"stale" query:"sp.stale" gorm:"column:stale"`
-	ThirdParty     bool       `json:"third_party" csv:"third_party" query:"sp.third_party" gorm:"column:third_party"`
-
-	PackagesInstalled int `json:"packages_installed" csv:"packages_installed" query:"sp.packages_installed" gorm:"column:packages_installed"`
-	PackagesUpdatable int `json:"packages_updatable" csv:"packages_updatable" query:"sp.packages_updatable" gorm:"column:packages_updatable"`
+	DisplayName       string     `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name"`
+	LastEvaluation    *time.Time `json:"last_evaluation" csv:"last_evaluation" query:"sp.last_evaluation" gorm:"column:last_evaluation"`
+	LastUpload        *time.Time `json:"last_upload" csv:"last_upload" query:"sp.last_upload" gorm:"column:last_upload"`
+	RhsaCount         int        `json:"rhsa_count" csv:"rhsa_count" query:"sp.advisory_sec_count_cache" gorm:"column:rhsa_count"`
+	RhbaCount         int        `json:"rhba_count" csv:"rhba_count" query:"sp.advisory_bug_count_cache" gorm:"column:rhba_count"`
+	RheaCount         int        `json:"rhea_count" csv:"rhea_count" query:"sp.advisory_enh_count_cache" gorm:"column:rhea_count"`
+	Stale             bool       `json:"stale" csv:"stale" query:"sp.stale" gorm:"column:stale"`
+	ThirdParty        bool       `json:"third_party" csv:"third_party" query:"sp.third_party" gorm:"column:third_party"`
+	InsightsID        string     `json:"insights_id" csv:"insights_id" query:"sp.insights_id" gorm:"column:insights_id"`
+	PackagesInstalled int        `json:"packages_installed" csv:"packages_installed" query:"sp.packages_installed" gorm:"column:packages_installed"`
+	PackagesUpdatable int        `json:"packages_updatable" csv:"packages_updatable" query:"sp.packages_updatable" gorm:"column:packages_updatable"`
 
 	OSName  string `json:"os_name" csv:"os_name" query:"ih.system_profile->'operating_system'->>'name'" gorm:"column:osname"`
 	OSMajor string `json:"os_major" csv:"os_major" query:"ih.system_profile->'operating_system'->>'major'" gorm:"column:osmajor"`
@@ -96,6 +96,7 @@ type SystemsResponse struct {
 // @Param    filter[stale_warning_timestamp] query string false "Filter"
 // @Param    filter[culled_timestamp] query string false "Filter"
 // @Param    filter[created] query string false "Filter"
+// @Param    filter[insights_id] query string false "Filter"
 // @Param    tags                    query   []string  false "Tag filter"
 // @Param    filter[system_profile][sap_system]   query string   false "Filter only SAP systems"
 // @Param    filter[system_profile][sap_sids][in] query []string false "Filter systems by their SAP SIDs"
