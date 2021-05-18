@@ -37,6 +37,9 @@ func main() {
 		case "platform":
 			platform.RunPlatformMock()
 			return
+		case "print_clowder_params":
+			utils.PrintClowderParams()
+			return
 		}
 	}
 	log.Panic("You need to provide a command")
