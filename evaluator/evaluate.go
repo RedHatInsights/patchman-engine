@@ -25,7 +25,6 @@ var (
 	vmaasClient            *vmaas.APIClient
 	evalTopic              string
 	evalLabel              string
-	port                   string
 	enableAdvisoryAnalysis bool
 	enablePackageAnalysis  bool
 	enableRepoAnalysis     bool
@@ -36,7 +35,6 @@ var (
 
 func configure() {
 	core.ConfigureApp()
-	port = utils.GetenvOrFail("PORT")
 	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
 
 	evalTopic = utils.GetenvOrFail("EVAL_TOPIC")
@@ -343,7 +341,7 @@ func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 	utils.Log().Info("evaluator starting")
 	configure()
 
-	go RunMetrics(port)
+	go RunMetrics()
 
 	var handler = mqueue.MakeRetryingHandler(mqueue.MakeMessageHandler(evaluateHandler))
 	// We create multiple consumers, and hope that the partition rebalancing

@@ -1,0 +1,93 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: patchman
+objects:
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdApp
+  metadata:
+    name: patchman
+  spec:
+    envName: ${ENV_NAME}
+    deployments:
+    - name: database-admin
+      minReplicas: 1
+      webServices:
+        public:
+          enabled: false
+        private:
+          enabled: false
+        metrics:
+          enabled: false
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        command:
+          - ./database_admin/entrypoint.sh
+        env:
+        - {name: CW_ENABLED, value: "false"}
+        - {name: CLOWDER_ENABLED, value: "true"}
+        - {name: MANAGER_PASSWORD, value: manager}
+        - {name: LISTENER_PASSWORD, value: listener}
+        - {name: VMAAS_SYNC_PASSWORD, value: vmaas_sync}
+        - {name: EVALUATOR_PASSWORD, value: evaluator}
+        - {name: CYNDI_PASSWORD, value: cyndi}
+        resources:
+          limits: {cpu: 100m, memory: 100Mi}
+          requests: {cpu: 100m, memory: 100Mi}
+
+    - name: manager
+      minReplicas: ${{REPLICAS_MANAGER}}
+      webServices:
+        public:
+          enabled: true
+        private:
+          enabled: false
+        metrics:
+          enabled: false
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        command:
+          - ./scripts/entrypoint.sh
+          - manager
+        env:
+        - {name: CW_ENABLED, value: "false"}
+        - {name: CLOWDER_ENABLED, value: "true"}
+        - {name: DB_PASSWD, value: manager}
+        - {name: DB_USER, value: manager}
+        - {name: RBAC_ADDRESS, value: http://platform:9001}
+        - {name: ENABLE_RBAC, value: "false"}
+        - {name: ENABLE_CYNDI_TAGS, value: "true"}
+        resources:
+          limits: {cpu: 100m, memory: 100Mi}
+          requests: {cpu: 100m, memory: 100Mi}
+
+    database:
+      name: patchman
+      version: 12
+
+parameters:
+- description: ClowdEnv Name
+  name: ENV_NAME
+  # value: insights-ephemeral
+  required: false
+- name: MEMORY_LIMIT
+  description: Maximum memory limit for pod
+  # value: "{{ '4Gi' if env == 'prod' else '2Gi' }}"
+  value: '2Gi'
+- name: REPLICAS_MANAGER
+  description: Number of manager
+  value: '1'
+- name: IMAGE_TAG
+  description: Image version
+  value: latest
+- description: Image name
+  name: IMAGE
+  value: quay.io/cloudservices/patchman-engine-app
+- description: Determines Clowder deployment
+  name: CLOWDER_ENABLED
+  value: "True"
+  required: false
+- name: CW_ENABLED
+  description: CloudWatch enabled
+  value: 'FALSE'

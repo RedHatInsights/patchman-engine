@@ -25,7 +25,12 @@ func Readiness(c *gin.Context) {
 }
 
 func InitProbes(app *gin.Engine) {
-	// public routes
+	// public routes - deprecated
 	app.GET("/liveness", Liveness)
 	app.GET("/readiness", Readiness)
+
+	// public routes
+	app.GET("/healthz", Liveness)
+	app.GET("/livez", Liveness)
+	app.GET("/readyz", Readiness)
 }

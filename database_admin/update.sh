@@ -1,13 +1,13 @@
 #!/bin/bash
 
 export PGHOST=$DB_HOST
-export PGUSER=$DB_USER
-export PGPASSWORD=$DB_PASSWD
+export PGUSER=$DB_ADMIN_USER
+export PGPASSWORD=$DB_ADMIN_PASSWD
 export PGDATABASE=$DB_NAME
 export PGPORT=$DB_PORT
 export PGSSLMODE=$DB_SSLMODE
 
-WAIT_FOR_EMPTY_DB=1 ./scripts/wait-for-services.sh
+DB_USER=$DB_ADMIN_USER DB_PASSWD=$DB_ADMIN_PASSWD WAIT_FOR_EMPTY_DB=1 ./scripts/wait-for-services.sh
 
 if [[ $RESET_SCHEMA == "true" ]]; then
   psql -c "DROP SCHEMA IF EXISTS public CASCADE"

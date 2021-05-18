@@ -5,6 +5,7 @@ import (
 	"app/base/core"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -62,7 +63,8 @@ func RunMetrics() {
 	core.InitProbes(app)
 	middlewares.Prometheus().Use(app)
 
-	err := utils.RunServer(base.Context, app, ":8081")
+	port := utils.GetIntEnvOrDefault("PUBLIC_PORT", 8081)
+	err := utils.RunServer(base.Context, app, fmt.Sprintf(":%d", port))
 	if err != nil {
 		utils.Log("err", err.Error()).Error()
 		panic(err)

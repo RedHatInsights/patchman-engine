@@ -133,7 +133,9 @@ func RunMetrics() {
 	app := gin.New()
 	core.InitProbes(app)
 	middlewares.Prometheus().Use(app)
-	err := utils.RunServer(base.Context, app, ":8083")
+
+	port := utils.GetIntEnvOrDefault("PUBLIC_PORT", 8083)
+	err := utils.RunServer(base.Context, app, fmt.Sprintf(":%d", port))
 	if err != nil {
 		utils.Log("err", err.Error()).Error()
 		panic(err)
