@@ -39,6 +39,7 @@ type SystemItemAttributes struct {
 	RheaCount      int        `json:"rhea_count" csv:"rhea_count" query:"sp.advisory_enh_count_cache" gorm:"column:rhea_count"`
 	Stale          bool       `json:"stale" csv:"stale" query:"sp.stale" gorm:"column:stale"`
 	ThirdParty     bool       `json:"third_party" csv:"third_party" query:"sp.third_party" gorm:"column:third_party"`
+	InsightsID     string     `json:"insights_id" csv:"insights_id" query:"ih.insights_id" gorm:"column:insights_id"`
 
 	PackagesInstalled int `json:"packages_installed" csv:"packages_installed" query:"sp.packages_installed" gorm:"column:packages_installed"`
 	PackagesUpdatable int `json:"packages_updatable" csv:"packages_updatable" query:"sp.packages_updatable" gorm:"column:packages_updatable"`
@@ -82,6 +83,7 @@ type SystemsResponse struct {
 // @Param    offset  query   int     false   "Offset for paging"
 // @Param    sort    query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale, packages_installed, packages_updatable)
 // @Param    search         query   string  false   "Find matching text"
+// @Param    filter[insights_id]     query   string  false "Filter"
 // @Param    filter[id]              query   string  false "Filter"
 // @Param    filter[display_name]    query   string  false "Filter"
 // @Param    filter[last_evaluation] query   string  false "Filter"
