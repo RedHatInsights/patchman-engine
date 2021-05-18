@@ -25,6 +25,7 @@ func TestSystemsDefault(t *testing.T) {
 	// data
 	assert.Equal(t, 8, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
+	assert.Equal(t, "00000000-0000-0000-0001-000000000001", output.Data[0].Attributes.InsightsID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2020-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastEvaluation.String())

@@ -273,6 +273,14 @@
                         }
                     },
                     {
+                        "name": "filter[insights_id]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[display_name]",
                         "in": "query",
                         "description": "Filter",
@@ -1074,6 +1082,14 @@
                         "name": "search",
                         "in": "query",
                         "description": "Find matching text",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[insights_id]",
+                        "in": "query",
+                        "description": "Filter",
                         "schema": {
                             "type": "string"
                         }
@@ -2036,6 +2052,9 @@
                     "id": {
                         "type": "string"
                     },
+                    "insights_id": {
+                        "type": "string"
+                    },
                     "last_evaluation": {
                         "type": "string"
                     },
@@ -2107,6 +2126,9 @@
                         "type": "string"
                     },
                     "display_name": {
+                        "type": "string"
+                    },
+                    "insights_id": {
                         "type": "string"
                     },
                     "last_evaluation": {

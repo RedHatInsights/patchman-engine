@@ -31,6 +31,7 @@ type AdvisorySystemsResponse struct {
 // @Param    sort    query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale)
 // @Param    search         query   string  false   "Find matching text"
 // @Param    filter[id]              query   string  false "Filter"
+// @Param    filter[insights_id]     query   string  false "Filter"
 // @Param    filter[display_name]    query   string  false "Filter"
 // @Param    filter[last_evaluation] query   string  false "Filter"
 // @Param    filter[last_upload]     query   string  false "Filter"
