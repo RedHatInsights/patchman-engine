@@ -15,7 +15,7 @@ var remediationsPublisher mqueue.Writer
 
 func configureRemediations() {
 	if topic, has := os.LookupEnv("REMEDIATIONS_UPDATE_TOPIC"); has {
-		remediationsPublisher = mqueue.NewKafkaGoWriterFromEnv(topic)
+		remediationsPublisher = mqueue.NewKafkaWriterFromEnv(topic)
 	}
 }
 

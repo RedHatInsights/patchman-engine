@@ -7,6 +7,7 @@ import (
 	"context"
 	"github.com/lestrrat-go/backoff"
 	"io"
+	"os"
 	"strings"
 	"sync"
 )
@@ -21,6 +22,20 @@ type Reader interface {
 
 type Writer interface {
 	WriteMessages(ctx context.Context, msgs ...KafkaMessage) error
+}
+
+func NewKafkaReaderFromEnv(topic string) Reader {
+	if os.Getenv("KAFKA_CLIENT_LIB") == "confluent-kafka-go" {
+		return newConfluentReaderFromEnv(topic)
+	}
+	return newKafkaGoReaderFromEnv(topic)
+}
+
+func NewKafkaWriterFromEnv(topic string) Writer {
+	if os.Getenv("KAFKA_CLIENT_LIB") == "confluent-kafka-go" {
+		return newConfluentWriterFromEnv(topic)
+	}
+	return newKafkaGoWriterFromEnv(topic)
 }
 
 func createLoggerFunc(counter Counter) func(fmt string, args ...interface{}) {
@@ -60,32 +75,6 @@ func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 			attempt++
 		}
 		return err
-	}
-}
-
-func (t *kafkaGoReaderImpl) HandleMessages(handler MessageHandler) {
-	for {
-		m, err := t.FetchMessage(base.Context)
-		if err != nil {
-			if err.Error() == errContextCanceled {
-				break
-			}
-			utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
-			panic(err)
-		}
-		// At this level, all errors are fatal
-		kafkaMessage := KafkaMessage{Key: m.Key, Value: m.Value}
-		if err = handler(kafkaMessage); err != nil {
-			utils.Log("err", err.Error()).Panic("Handler failed")
-		}
-		err = t.CommitMessages(base.Context, m)
-		if err != nil {
-			if err.Error() == errContextCanceled {
-				break
-			}
-			utils.Log("err", err.Error()).Error("unable to commit kafka message")
-			panic(err)
-		}
 	}
 }
 
