@@ -7,7 +7,6 @@ import (
 	"app/base/utils"
 	"encoding/json"
 	"github.com/pkg/errors"
-	"github.com/segmentio/kafka-go"
 	"gorm.io/gorm"
 	"time"
 )
@@ -18,7 +17,7 @@ const (
 	WarnNoRowsModified = "no rows modified on delete event"
 )
 
-func EventsMessageHandler(m kafka.Message) error {
+func EventsMessageHandler(m mqueue.KafkaMessage) error {
 	var msgData map[string]interface{}
 	if err := json.Unmarshal(m.Value, &msgData); err != nil {
 		utils.Log("msg", string(m.Value)).Error("message is not a valid JSON")

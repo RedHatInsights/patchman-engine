@@ -45,7 +45,7 @@ func configure() {
 	vmaasClient = vmaas.NewAPIClient(cfg)
 
 	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
-	evalWriter = mqueue.WriterFromEnv(evalTopic)
+	evalWriter = mqueue.NewKafkaGoWriterFromEnv(evalTopic)
 	enabledRepoBasedReeval = utils.GetBoolEnvOrDefault("ENABLE_REPO_BASED_RE_EVALUATION", true)
 	enableRecalcMessagesSend = utils.GetBoolEnvOrDefault("ENABLE_RECALC_MESSAGES_SEND", true)
 	enableSyncOnStart = utils.GetBoolEnvOrDefault("ENABLE_SYNC_ON_START", false)

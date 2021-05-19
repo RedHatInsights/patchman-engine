@@ -30,7 +30,7 @@ func configure() {
 
 	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
 
-	evalWriter = mqueue.WriterFromEnv(evalTopic)
+	evalWriter = mqueue.NewKafkaGoWriterFromEnv(evalTopic)
 
 	validReporters = loadValidReporters()
 	excludedReporters = loadExcludedReporters()
@@ -77,7 +77,7 @@ func runReaders(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 
 func RunListener() {
 	var wg sync.WaitGroup
-	runReaders(&wg, mqueue.ReaderFromEnv)
+	runReaders(&wg, mqueue.NewKafkaGoReaderFromEnv)
 	wg.Wait()
 	utils.Log().Info("listener completed")
 }

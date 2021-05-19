@@ -24,7 +24,7 @@ func TestEvaluate(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	configure()
-	mockWriter := utils.MockKafkaWriter{}
+	mockWriter := mqueue.MockKafkaWriter{}
 	remediationsPublisher = &mockWriter
 
 	systemID := 12

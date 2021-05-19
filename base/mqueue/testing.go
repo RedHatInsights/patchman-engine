@@ -1,5 +1,7 @@
 package mqueue
 
+import "context"
+
 type mockReader struct{}
 
 func (t *mockReader) HandleMessages(_ MessageHandler) {}
@@ -12,4 +14,13 @@ func CreateCountedMockReader(cnt *int) CreateReader {
 		*cnt++
 		return reader
 	}
+}
+
+type MockKafkaWriter struct {
+	Messages []KafkaMessage
+}
+
+func (t *MockKafkaWriter) WriteMessages(_ context.Context, ev ...KafkaMessage) error {
+	t.Messages = append(t.Messages, ev...)
+	return nil
 }

@@ -4,7 +4,6 @@ import (
 	"app/base/utils"
 	"context"
 	"errors"
-	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
@@ -13,7 +12,7 @@ import (
 const id = "99c0ffee-0000-0000-0000-0000c0ffee99"
 const someid = "99c0ffee-0000-0000-0000-0000000050de"
 
-var msg = kafka.Message{Value: []byte(`{"id": "` + id + `", "type": "delete"}`)}
+var msg = KafkaMessage{Value: []byte(`{"id": "` + id + `", "type": "delete"}`)}
 
 func TestParseEvents(t *testing.T) {
 	reached := false
@@ -31,7 +30,7 @@ func TestParseEvents(t *testing.T) {
 
 func TestRoundTrip(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
-	reader := ReaderFromEnv("test")
+	reader := NewKafkaGoReaderFromEnv("test")
 
 	var eventOut PlatformEvent
 	go reader.HandleMessages(MakeMessageHandler(func(event PlatformEvent) error {
@@ -39,7 +38,7 @@ func TestRoundTrip(t *testing.T) {
 		return nil
 	}))
 
-	writer := WriterFromEnv("test")
+	writer := NewKafkaGoWriterFromEnv("test")
 	eventIn := PlatformEvent{ID: someid}
 	assert.NoError(t, WriteEvents(context.Background(), writer, eventIn))
 	utils.AssertEqualWait(t, 8, func() (exp, act interface{}) {
