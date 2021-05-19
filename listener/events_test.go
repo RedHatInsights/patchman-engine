@@ -4,9 +4,9 @@ import (
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
+	"app/base/mqueue"
 	"app/base/utils"
 	"encoding/json"
-	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -61,7 +61,7 @@ func TestDeleteSystemWarn1(t *testing.T) {
 	data, err := json.Marshal(deleteEvent)
 	assert.NoError(t, err)
 
-	err = EventsMessageHandler(kafka.Message{Value: data})
+	err = EventsMessageHandler(mqueue.KafkaMessage{Value: data})
 	assert.Equal(t, WarnEmptyEventType, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
 
 	assert.NoError(t, err)
@@ -77,7 +77,7 @@ func TestDeleteSystemWarn2(t *testing.T) {
 	data, err := json.Marshal(deleteEvent)
 	assert.NoError(t, err)
 
-	err = EventsMessageHandler(kafka.Message{Value: data})
+	err = EventsMessageHandler(mqueue.KafkaMessage{Value: data})
 	assert.Equal(t, WarnUnknownType, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
 
 	assert.NoError(t, err)

@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"context"
-	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"os"
@@ -42,15 +40,6 @@ func NewTestLogHook(levelsToStore ...log.Level) *TestLogHook {
 			log.DebugLevel, log.TraceLevel}
 	}
 	return &TestLogHook{LevelsToStore: levelsToStore}
-}
-
-type MockKafkaWriter struct {
-	Messages []kafka.Message
-}
-
-func (t *MockKafkaWriter) WriteMessages(_ context.Context, ev ...kafka.Message) error {
-	t.Messages = append(t.Messages, ev...)
-	return nil
 }
 
 func AssertEqualWait(t *testing.T, timeoutSeconds int, values func() (exp, act interface{})) {

@@ -6,11 +6,9 @@ import (
 	"app/base/utils"
 	"context"
 	"github.com/lestrrat-go/backoff"
-	"github.com/segmentio/kafka-go"
 	"io"
 	"strings"
 	"sync"
-	"time"
 )
 
 const errContextCanceled = "context canceled"
@@ -21,54 +19,8 @@ type Reader interface {
 	io.Closer
 }
 
-type readerImpl struct {
-	kafka.Reader
-}
-
 type Writer interface {
-	WriteMessages(ctx context.Context, msgs ...kafka.Message) error
-}
-
-type writerImpl struct {
-	*kafka.Writer
-}
-
-func ReaderFromEnv(topic string) Reader {
-	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
-	kafkaGroup := utils.GetenvOrFail("KAFKA_GROUP")
-	minBytes := utils.GetIntEnvOrDefault("KAFKA_READER_MIN_BYTES", 1)
-	maxBytes := utils.GetIntEnvOrDefault("KAFKA_READER_MAX_BYTES", 1e6)
-
-	config := kafka.ReaderConfig{
-		Brokers:     []string{kafkaAddress},
-		Topic:       topic,
-		GroupID:     kafkaGroup,
-		MinBytes:    minBytes,
-		MaxBytes:    maxBytes,
-		ErrorLogger: kafka.LoggerFunc(createLoggerFunc(kafkaErrorReadCnt)),
-		Dialer:      tryCreateSecuredDialerFromEnv(),
-	}
-
-	reader := &readerImpl{*kafka.NewReader(config)}
-	return reader
-}
-
-func WriterFromEnv(topic string) Writer {
-	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
-
-	config := kafka.WriterConfig{
-		Brokers: []string{kafkaAddress},
-		Topic:   topic,
-		// By default the writer will wait for a second (or until the buffer is filled by different goroutines)
-		// before sending the batch of messages. Disable this, and use it in 'non-batched' mode
-		// meaning single messages are sent immediately for now. We'll maybe change this later if the
-		// sending overhead is a bottleneck
-		BatchTimeout: time.Nanosecond,
-		ErrorLogger:  kafka.LoggerFunc(createLoggerFunc(kafkaErrorWriteCnt)),
-		Dialer:       tryCreateSecuredDialerFromEnv(),
-	}
-	writer := &writerImpl{kafka.NewWriter(config)}
-	return writer
+	WriteMessages(ctx context.Context, msgs ...KafkaMessage) error
 }
 
 func createLoggerFunc(counter Counter) func(fmt string, args ...interface{}) {
@@ -86,10 +38,15 @@ func createLoggerFunc(counter Counter) func(fmt string, args ...interface{}) {
 	return fn
 }
 
-type MessageHandler func(message kafka.Message) error
+type KafkaMessage struct {
+	Key   []byte
+	Value []byte
+}
+
+type MessageHandler func(message KafkaMessage) error
 
 func MakeRetryingHandler(handler MessageHandler) MessageHandler {
-	return func(message kafka.Message) error {
+	return func(message KafkaMessage) error {
 		var err error
 		var attempt int
 
@@ -106,7 +63,7 @@ func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 	}
 }
 
-func (t *readerImpl) HandleMessages(handler MessageHandler) {
+func (t *kafkaGoReaderImpl) HandleMessages(handler MessageHandler) {
 	for {
 		m, err := t.FetchMessage(base.Context)
 		if err != nil {
@@ -117,7 +74,8 @@ func (t *readerImpl) HandleMessages(handler MessageHandler) {
 			panic(err)
 		}
 		// At this level, all errors are fatal
-		if err = handler(m); err != nil {
+		kafkaMessage := KafkaMessage{Key: m.Key, Value: m.Value}
+		if err = handler(kafkaMessage); err != nil {
 			utils.Log("err", err.Error()).Panic("Handler failed")
 		}
 		err = t.CommitMessages(base.Context, m)

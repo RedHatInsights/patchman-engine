@@ -2,6 +2,7 @@ package platform
 
 import (
 	"app/base"
+	"app/base/mqueue"
 	"app/base/utils"
 	"app/manager/middlewares"
 	"encoding/json"
@@ -9,7 +10,6 @@ import (
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
-	"github.com/segmentio/kafka-go"
 	"modernc.org/strutil"
 	"net/http"
 	"time"
@@ -50,15 +50,6 @@ func mockSyncHandler(_ *gin.Context) {
 	for _, ws := range websockets {
 		ws <- "sync"
 	}
-}
-
-func mockKafkaWriter(topic string) *kafka.Writer {
-	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
-	return kafka.NewWriter(kafka.WriterConfig{
-		Brokers:  []string{kafkaAddress},
-		Topic:    topic,
-		Balancer: &kafka.LeastBytes{},
-	})
 }
 
 func mockIdentity() string {
@@ -102,9 +93,10 @@ func upload(randomPkgs bool) {
 }
 
 func sendMessageToTopic(topic, message string) {
-	writer := mockKafkaWriter(topic)
+	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
+	writer := mqueue.NewKafkaGoWriter(kafkaAddress, topic)
 
-	err := writer.WriteMessages(base.Context, kafka.Message{
+	err := writer.WriteMessages(base.Context, mqueue.KafkaMessage{
 		Key:   []byte{},
 		Value: []byte(message),
 	})
