@@ -8,6 +8,7 @@ require (
 	github.com/RedHatInsights/patchman-clients/vmaas v0.14.0
 	github.com/aws/aws-sdk-go v1.30.9
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
+	github.com/confluentinc/confluent-kafka-go v1.7.0 // indirect
 	github.com/getkin/kin-openapi v0.9.0
 	github.com/gin-contrib/gzip v0.0.1
 	github.com/gin-gonic/gin v1.6.3
@@ -35,6 +36,7 @@ require (
 	golang.org/x/net v0.0.0-20210414194228-064579744ee0
 	golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
+	gopkg.in/confluentinc/confluent-kafka-go.v1 v1.7.0
 	gorm.io/driver/postgres v1.0.5
 	gorm.io/gorm v1.20.12
 	modernc.org/strutil v1.1.0
