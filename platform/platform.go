@@ -93,8 +93,7 @@ func upload(randomPkgs bool) {
 }
 
 func sendMessageToTopic(topic, message string) {
-	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
-	writer := mqueue.NewKafkaGoWriter(kafkaAddress, topic)
+	writer := mqueue.NewKafkaWriterFromEnv(topic)
 
 	err := writer.WriteMessages(base.Context, mqueue.KafkaMessage{
 		Key:   []byte{},

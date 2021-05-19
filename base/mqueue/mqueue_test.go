@@ -28,9 +28,9 @@ func TestParseEvents(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestRoundTrip(t *testing.T) {
+func TestRoundTripKafkaGo(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
-	reader := NewKafkaGoReaderFromEnv("test")
+	reader := newKafkaGoReaderFromEnv("test")
 
 	var eventOut PlatformEvent
 	go reader.HandleMessages(MakeMessageHandler(func(event PlatformEvent) error {
@@ -38,7 +38,7 @@ func TestRoundTrip(t *testing.T) {
 		return nil
 	}))
 
-	writer := NewKafkaGoWriterFromEnv("test")
+	writer := newKafkaGoWriterFromEnv("test")
 	eventIn := PlatformEvent{ID: someid}
 	assert.NoError(t, WriteEvents(context.Background(), writer, eventIn))
 	utils.AssertEqualWait(t, 8, func() (exp, act interface{}) {

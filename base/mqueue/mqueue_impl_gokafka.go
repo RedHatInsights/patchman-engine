@@ -1,6 +1,7 @@
 package mqueue
 
 import (
+	"app/base"
 	"app/base/utils"
 	"context"
 	"crypto/tls"
@@ -12,6 +13,32 @@ import (
 
 type kafkaGoReaderImpl struct {
 	kafka.Reader
+}
+
+func (t *kafkaGoReaderImpl) HandleMessages(handler MessageHandler) {
+	for {
+		m, err := t.FetchMessage(base.Context)
+		if err != nil {
+			if err.Error() == errContextCanceled {
+				break
+			}
+			utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
+			panic(err)
+		}
+		// At this level, all errors are fatal
+		kafkaMessage := KafkaMessage{Key: m.Key, Value: m.Value}
+		if err = handler(kafkaMessage); err != nil {
+			utils.Log("err", err.Error()).Panic("Handler failed")
+		}
+		err = t.CommitMessages(base.Context, m)
+		if err != nil {
+			if err.Error() == errContextCanceled {
+				break
+			}
+			utils.Log("err", err.Error()).Error("unable to commit kafka message")
+			panic(err)
+		}
+	}
 }
 
 type kafkaGoWriterImpl struct {
@@ -27,7 +54,7 @@ func (t *kafkaGoWriterImpl) WriteMessages(ctx context.Context, msgs ...KafkaMess
 	return err
 }
 
-func NewKafkaGoReaderFromEnv(topic string) Reader {
+func newKafkaGoReaderFromEnv(topic string) Reader {
 	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
 	kafkaGroup := utils.GetenvOrFail("KAFKA_GROUP")
 	minBytes := utils.GetIntEnvOrDefault("KAFKA_READER_MIN_BYTES", 1)
@@ -47,7 +74,7 @@ func NewKafkaGoReaderFromEnv(topic string) Reader {
 	return reader
 }
 
-func NewKafkaGoWriterFromEnv(topic string) Writer {
+func newKafkaGoWriterFromEnv(topic string) Writer {
 	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
 
 	config := kafka.WriterConfig{
@@ -62,16 +89,6 @@ func NewKafkaGoWriterFromEnv(topic string) Writer {
 		Dialer:       tryCreateSecuredDialerFromEnv(),
 	}
 	writer := &kafkaGoWriterImpl{kafka.NewWriter(config)}
-	return writer
-}
-
-func NewKafkaGoWriter(kafkaAddress, topic string) Writer {
-	kafkaGoWriter := kafka.NewWriter(kafka.WriterConfig{
-		Brokers:  []string{kafkaAddress},
-		Topic:    topic,
-		Balancer: &kafka.LeastBytes{},
-	})
-	writer := &kafkaGoWriterImpl{kafkaGoWriter}
 	return writer
 }
 
