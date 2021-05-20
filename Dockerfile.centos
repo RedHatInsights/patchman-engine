@@ -1,51 +1,52 @@
 FROM centos:8
 
 ADD /scripts/manifest /manifest
-# make sure (redhat|centos|fedora)-release is always included in the manifest
-RUN /manifest/rpm_list.sh | grep -v -E "^(redhat|centos|fedora)-release" > /tmp/base_rpm.txt
+# remember and later exclude base image rpms except for (redhat|centos-linux|fedora)-release
+RUN /manifest/rpm_list.sh | grep -v -E "^(redhat|centos-linux|fedora)-release" > /tmp/base_rpm.txt
 
+# install build environment
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-
-RUN yum module -y install go-toolset && \
-    yum module -y enable postgresql:12 && \
-    yum install -y postgresql && \
-    /manifest/rpm_list.sh > /tmp/final_rpm.txt && \
-    yum install -y git diffutils
+RUN dnf module -y enable postgresql:12 && \
+    dnf install -y go-toolset postgresql git-core diffutils && \
+    /manifest/rpm_list.sh > /tmp/final_rpm.txt
 
 RUN curl -L -o /usr/bin/haberdasher \
     https://github.com/RedHatInsights/haberdasher/releases/latest/download/haberdasher_linux_amd64 && \
     chmod 755 /usr/bin/haberdasher
 
-ENV GOPATH=/go
-ENV GO111MODULE=on
-ENV GOPROXY=https://proxy.golang.org
+ENV GOPATH=/go \
+    GO111MODULE=on \
+    GOPROXY=https://proxy.golang.org
 
-ADD go.mod  /go/src/app/
-ADD go.sum  /go/src/app/
-
-ENV MANIFEST_PREFIX="mgmt_services\/patchman-engine\/"
-RUN /manifest/generate.sh manifest.txt $MANIFEST_PREFIX /tmp/base_rpm.txt /tmp/final_rpm.txt "" /go/src/app/go.sum && \
-    echo 'MANIFEST:' && cat manifest.txt
-
-RUN adduser --gid 0 -d /go --no-create-home insights
-RUN chown -R insights:0 /go
+# now add patchman sources and build app
+RUN adduser --gid 0 -d /go insights
 USER insights
-
+RUN mkdir -p /go/src/app
 WORKDIR /go/src/app
+
+ADD --chown=insights:root go.mod go.sum     /go/src/app/
+
 RUN go mod download
 
-ADD /base             /go/src/app/base
-ADD /manager          /go/src/app/manager
-ADD /listener         /go/src/app/listener
-ADD /evaluator        /go/src/app/evaluator
-ADD /vmaas_sync       /go/src/app/vmaas_sync
-ADD /docs             /go/src/app/docs
-ADD /platform         /go/src/app/platform
-ADD main.go           /go/src/app/
-ADD /database_admin   /go/src/app/database_admin
-
-ADD /scripts    /go/src/app/scripts
+ADD --chown=insights:root /base             /go/src/app/base
+ADD --chown=insights:root /database_admin   /go/src/app/database_admin
+ADD --chown=insights:root /docs             /go/src/app/docs
+ADD --chown=insights:root /evaluator        /go/src/app/evaluator
+ADD --chown=insights:root /listener         /go/src/app/listener
+ADD --chown=insights:root /manager          /go/src/app/manager
+ADD --chown=insights:root /platform         /go/src/app/platform
+ADD --chown=insights:root /scripts          /go/src/app/scripts
+ADD --chown=insights:root /vmaas_sync       /go/src/app/vmaas_sync
+ADD --chown=insights:root main.go           /go/src/app/
 
 RUN go build -v main.go
+
+USER root
+ENV MANIFEST_PREFIX="mgmt_services\/patchman-engine\/"
+RUN /manifest/rpm_list.sh > /tmp/final_rpm.txt && \
+    /manifest/generate.sh /manifest.txt $MANIFEST_PREFIX /tmp/base_rpm.txt /tmp/final_rpm.txt "" /go/src/app/go.sum && \
+    echo 'MANIFEST:' && cat manifest.txt
+
+USER insights
 
 EXPOSE 8080
