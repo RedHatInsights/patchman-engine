@@ -50,7 +50,7 @@ FROM centos:8 as runtimeimg
 
 ADD /scripts/manifest /manifest
 # remember and later exclude base image rpms except for (redhat|centos-linux|fedora)-release
-RUN /manifest/rpm_list.sh | grep -v -E "^(redhat|centos-linux|fedora)-release" > /tmp/base_rpm.txt
+RUN /manifest/rpm_list.sh "(redhat|centos-linux|fedora)-release" > /tmp/base_rpm.txt
 
 ENV MANIFEST_PREFIX="mgmt_services/patchman-engine/"
 
