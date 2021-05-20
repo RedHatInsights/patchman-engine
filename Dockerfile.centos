@@ -52,7 +52,7 @@ ADD /scripts/manifest /manifest
 # remember and later exclude base image rpms except for (redhat|centos-linux|fedora)-release
 RUN /manifest/rpm_list.sh | grep -v -E "^(redhat|centos-linux|fedora)-release" > /tmp/base_rpm.txt
 
-ENV MANIFEST_PREFIX="mgmt_services\/patchman-engine\/"
+ENV MANIFEST_PREFIX="mgmt_services/patchman-engine/"
 
 RUN dnf module -y enable postgresql:12 && \
     dnf install -y postgresql diffutils && \
