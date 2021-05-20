@@ -15,6 +15,7 @@ services:
     build:
       context: .
       dockerfile: dev/database/Dockerfile.centos
+    image: patchman-engine_db
     user: root
     command: 'chown -R postgres /var/lib/pgsql/data'
     volumes:
@@ -22,9 +23,7 @@ services:
 
   db:
     container_name: db
-    build:
-      context: .
-      dockerfile: dev/database/Dockerfile.centos
+    image: patchman-engine_db
     command: 'run-postgresql -c logging_collector=off'
     depends_on:
       - db_volumefix
