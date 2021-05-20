@@ -1,10 +1,11 @@
-version: '3'
+version: '3.4'
 
 services:
   patchimg:
     build:
       context: .
       dockerfile: Dockerfile.centos
+      target: buildimg
     image: patchman-engine_patchimg
 
   db_volumefix:

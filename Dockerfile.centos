@@ -1,18 +1,9 @@
-FROM centos:8
-
-ADD /scripts/manifest /manifest
-# remember and later exclude base image rpms except for (redhat|centos-linux|fedora)-release
-RUN /manifest/rpm_list.sh | grep -v -E "^(redhat|centos-linux|fedora)-release" > /tmp/base_rpm.txt
+FROM centos:8 as buildimg
 
 # install build environment
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 RUN dnf module -y enable postgresql:12 && \
-    dnf install -y go-toolset postgresql git-core diffutils && \
-    /manifest/rpm_list.sh > /tmp/final_rpm.txt
-
-RUN curl -L -o /usr/bin/haberdasher \
-    https://github.com/RedHatInsights/haberdasher/releases/latest/download/haberdasher_linux_amd64 && \
-    chmod 755 /usr/bin/haberdasher
+    dnf install -y go-toolset postgresql git-core diffutils
 
 ENV GOPATH=/go \
     GO111MODULE=on \
@@ -41,11 +32,40 @@ ADD --chown=insights:root main.go           /go/src/app/
 
 RUN go build -v main.go
 
-USER root
+EXPOSE 8080
+
+# ---------------------------------------
+# runtime image with only necessary stuff
+FROM centos:8 as runtimeimg
+
+ADD /scripts/manifest /manifest
+# remember and later exclude base image rpms except for (redhat|centos-linux|fedora)-release
+RUN /manifest/rpm_list.sh | grep -v -E "^(redhat|centos-linux|fedora)-release" > /tmp/base_rpm.txt
+
 ENV MANIFEST_PREFIX="mgmt_services\/patchman-engine\/"
-RUN /manifest/rpm_list.sh > /tmp/final_rpm.txt && \
-    /manifest/generate.sh /manifest.txt $MANIFEST_PREFIX /tmp/base_rpm.txt /tmp/final_rpm.txt "" /go/src/app/go.sum && \
-    echo 'MANIFEST:' && cat manifest.txt
+
+RUN dnf module -y enable postgresql:12 && \
+    dnf install -y postgresql diffutils && \
+    /manifest/rpm_list.sh > /tmp/final_rpm.txt
+
+RUN adduser --gid 0 -d /go insights
+
+RUN curl -L -o /usr/bin/haberdasher \
+    https://github.com/RedHatInsights/haberdasher/releases/latest/download/haberdasher_linux_amd64 && \
+    chmod 755 /usr/bin/haberdasher
+
+ADD go.sum                      /go/src/app/
+ADD /scripts                    /go/src/app/scripts
+ADD /database_admin/*.sh        /go/src/app/database_admin/
+ADD /database_admin/*.sql       /go/src/app/database_admin/
+ADD /database_admin/schema      /go/src/app/database_admin/schema
+ADD /database_admin/migrations  /go/src/app/database_admin/migrations
+ADD /vmaas_sync/entrypoint.sh   /go/src/app/vmaas_sync/
+
+RUN /manifest/generate.sh /manifest.txt $MANIFEST_PREFIX /tmp/base_rpm.txt /tmp/final_rpm.txt "" /go/src/app/go.sum && \
+    echo 'MANIFEST:' && cat /manifest.txt
+
+COPY --from=buildimg /go/src/app/main /go/src/app/
 
 USER insights
 
