@@ -1,13 +1,16 @@
 FROM centos:8 as buildimg
 
-# install build environment
+ARG INSTALL_TOOLS=no
+
+# install build, development and test environment
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 RUN dnf module -y enable postgresql:12 && \
     dnf install -y go-toolset postgresql git-core diffutils
 
 ENV GOPATH=/go \
     GO111MODULE=on \
-    GOPROXY=https://proxy.golang.org
+    GOPROXY=https://proxy.golang.org \
+    PATH=$PATH:/go/bin
 
 # now add patchman sources and build app
 RUN adduser --gid 0 -d /go insights
@@ -19,16 +22,23 @@ ADD --chown=insights:root go.mod go.sum     /go/src/app/
 
 RUN go mod download
 
-ADD --chown=insights:root /base             /go/src/app/base
-ADD --chown=insights:root /database_admin   /go/src/app/database_admin
-ADD --chown=insights:root /docs             /go/src/app/docs
-ADD --chown=insights:root /evaluator        /go/src/app/evaluator
-ADD --chown=insights:root /listener         /go/src/app/listener
-ADD --chown=insights:root /manager          /go/src/app/manager
-ADD --chown=insights:root /platform         /go/src/app/platform
-ADD --chown=insights:root /scripts          /go/src/app/scripts
-ADD --chown=insights:root /vmaas_sync       /go/src/app/vmaas_sync
-ADD --chown=insights:root main.go           /go/src/app/
+RUN if [ "$INSTALL_TOOLS" == "yes" ] ; then \
+        go get -u github.com/swaggo/swag/cmd/swag && \
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
+        | sh -s -- -b $(go env GOPATH)/bin latest ; \
+    fi
+
+ADD --chown=insights:root /dev/kafka/secrets/ca.crt /opt/
+ADD --chown=insights:root /base                     /go/src/app/base
+ADD --chown=insights:root /database_admin           /go/src/app/database_admin
+ADD --chown=insights:root /docs                     /go/src/app/docs
+ADD --chown=insights:root /evaluator                /go/src/app/evaluator
+ADD --chown=insights:root /listener                 /go/src/app/listener
+ADD --chown=insights:root /manager                  /go/src/app/manager
+ADD --chown=insights:root /platform                 /go/src/app/platform
+ADD --chown=insights:root /scripts                  /go/src/app/scripts
+ADD --chown=insights:root /vmaas_sync               /go/src/app/vmaas_sync
+ADD --chown=insights:root main.go                   /go/src/app/
 
 RUN go build -v main.go
 
