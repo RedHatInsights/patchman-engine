@@ -9,6 +9,7 @@ sed \
     -e "s|dockerfile: Dockerfile.centos|dockerfile: Dockerfile.rhel8|" \
     -e "s|INSTALL_TOOLS=yes|INSTALL_TOOLS=no|" \
     -e "s|target: buildimg|target: runtimeimg|" \
+    -e "/ - \.\/conf\/gorun.env/ d" \
     -e "/    volumes:/,+1 { N;}; /- \.\/:\/go\/src\/app/ d" \
     "$DEV" | diff -u - "$PROD"
 diff_rc=$?

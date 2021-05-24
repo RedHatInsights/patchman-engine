@@ -61,6 +61,7 @@ services:
       - ./conf/test.env
       - ./conf/database.env
       - ./conf/database_admin.env
+      - ./conf/gorun.env
     depends_on:
       - db
       - platform

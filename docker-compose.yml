@@ -40,6 +40,7 @@ services:
     env_file:
       - ./conf/common.env
       - ./conf/database_admin.env
+      - ./conf/gorun.env
     command: ./database_admin/entrypoint.sh
     depends_on:
       - db
@@ -54,6 +55,7 @@ services:
     image: patchman-engine_patchimg
     env_file:
       - ./conf/test.env
+      - ./conf/gorun.env
     command: ./scripts/feed_db.sh
     depends_on:
       - db
@@ -107,6 +109,7 @@ services:
     env_file:
       - ./conf/common.env
       - ./conf/manager.env
+      - ./conf/gorun.env
     command: ./scripts/entrypoint.sh manager
     ports:
       - 8080:8080
@@ -125,6 +128,7 @@ services:
     env_file:
       - ./conf/common.env
       - ./conf/listener.env
+      - ./conf/gorun.env
     command: ./scripts/entrypoint.sh listener
     ports:
       - 8081:8081
@@ -144,6 +148,7 @@ services:
       - ./conf/common.env
       - ./conf/evaluator_common.env
       - ./conf/evaluator_upload.env
+      - ./conf/gorun.env
     command: ./scripts/entrypoint.sh evaluator
     ports:
       - 8082:8082
@@ -163,6 +168,7 @@ services:
       - ./conf/common.env
       - ./conf/evaluator_common.env
       - ./conf/evaluator_recalc.env
+      - ./conf/gorun.env
     command: ./scripts/entrypoint.sh evaluator
     ports:
       - 8084:8084
@@ -181,6 +187,7 @@ services:
     env_file:
       - ./conf/common.env
       - ./conf/vmaas_sync.env
+      - ./conf/gorun.env
     command: ./vmaas_sync/entrypoint.sh
     ports:
       - 8083:8083
