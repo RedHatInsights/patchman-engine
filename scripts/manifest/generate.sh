@@ -15,29 +15,24 @@ GO_SUM=$6
 grep -v -f ${BASE_RPM_LIST} ${FINAL_RPM_LIST} > ${MANIFEST_PATH}
 
 ## Write Python packages if python set.
-if [[ ! -z $PYTHON ]]
+if [[ ! -z "$PYTHON" ]]
 then
-    $PYTHON -m pip freeze | sort > /tmp/pipdeps
-    sed -i -e 's/^/'$PYTHON'-/' /tmp/pipdeps  # add 'python' prefix
-    sed -i -e 's/==/-/' /tmp/pipdeps       # replace '==' with '-'
-    sed -i -e 's/$/.pipfile/' /tmp/pipdeps # add '.pipfile' suffix
-    cat /tmp/pipdeps >> ${MANIFEST_PATH}   # append python deps to manifest
+    "$PYTHON" -m pip freeze | sort | \
+    sed -e "s/^/$PYTHON-/; # add 'python' prefix" \
+        -e "s/==/-/;       # replace '==' with '-'" \
+        -e "s/\$/.pipfile/ # add '.pipfile' suffix" \
+            >> ${MANIFEST_PATH}   # append python deps to manifest
 fi
 
 ## Write go deps
-if [[ ! -z $GO_SUM ]]
+if [[ ! -z "$GO_SUM" ]]
 then
-    cat $GO_SUM | sed -e 's/\(\/go.mod\)\? h1:.*//' | sed 's/ /:/' | sort | uniq > /tmp/godeps
-    cat /tmp/godeps >> ${MANIFEST_PATH}   # append python deps to manifest
+    sed -e 's/\(\/go.mod\)\? h1:.*//; s/ /:/' "$GO_SUM" | sort | uniq \
+        >> ${MANIFEST_PATH}   # append python deps to manifest
 fi
 
 ## Add prefix to all lines.
-sed -i -e 's/^/'${PREFIX}'/' ${MANIFEST_PATH}
+sed -i -e "s|^|${PREFIX}|" ${MANIFEST_PATH}
 
 ## Write APP_VERSION if provided to :VERSION: placeholder
-if [[ ! -z $APP_VERSION ]]
-then
-    sed -i -e 's/:VERSION:/:'$APP_VERSION':/' ${MANIFEST_PATH}
-else
-    sed -i -e 's/:VERSION:/:latest:/' ${MANIFEST_PATH}
-fi
+sed -i -e "s/:VERSION:/:${APP_VERSION:-latest}:/" ${MANIFEST_PATH}
