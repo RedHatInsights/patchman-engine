@@ -1,0 +1,184 @@
+version: '3.4'
+
+services:
+  patchimg:
+    build:
+      context: .
+      dockerfile: Dockerfile.rhel8
+      args:
+        - INSTALL_TOOLS=no
+      target: runtimeimg
+    image: patchman-engine_patchimg
+
+  db_volumefix:
+    container_name: db_volumefix
+    build:
+      context: .
+      dockerfile: dev/database/Dockerfile.centos
+    image: patchman-engine_db
+    user: root
+    command: 'chown -R postgres /var/lib/pgsql/data'
+    volumes:
+      - db-data:/var/lib/pgsql/data
+
+  db:
+    container_name: db
+    image: patchman-engine_db
+    command: 'run-postgresql -c logging_collector=off'
+    depends_on:
+      - db_volumefix
+    volumes:
+      - db-data:/var/lib/pgsql/data
+    ports:
+      - 5432:5432
+    env_file:
+      - ./conf/database.env
+
+  db_admin:
+    container_name: db_admin
+    image: patchman-engine_patchimg
+    env_file:
+      - ./conf/common.env
+      - ./conf/database_admin.env
+    command: ./database_admin/entrypoint.sh
+    depends_on:
+      - db
+      - patchimg
+    security_opt:
+      - label=disable
+
+  db_feed:
+    container_name: db_feed
+    image: patchman-engine_patchimg
+    env_file:
+      - ./conf/test.env
+    command: ./scripts/feed_db.sh
+    depends_on:
+      - db
+      - patchimg
+    security_opt:
+      - label=disable
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:5.4.0
+    container_name: zookeeper
+    env_file:
+      - ./conf/zookeeper.env
+    ports:
+      - 2181:2181
+    command: sh -c "echo 'admin.enableServer=false' >> /etc/confluent/docker/zookeeper.properties.template && /etc/confluent/docker/run"
+
+  kafka:
+    container_name: kafka
+    build:
+      context: .
+      dockerfile: ./dev/kafka/Dockerfile
+    env_file:
+      - ./conf/kafka.env
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+      - 29093:29093
+      - 9092:9092
+      - 9093:9093
+
+  platform:
+    container_name: platform
+    image: patchman-engine_patchimg
+    env_file:
+      - ./conf/platform.env
+    command: ./scripts/entrypoint.sh platform
+    restart: unless-stopped
+    depends_on:
+      - db
+      - kafka
+      - patchimg
+    ports:
+      - 9001:9001
+
+  manager:
+    container_name: manager
+    image: patchman-engine_patchimg
+    env_file:
+      - ./conf/common.env
+      - ./conf/manager.env
+    command: ./scripts/entrypoint.sh manager
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+      - platform
+      - patchimg
+    security_opt:
+      - label=disable
+
+  listener:
+    container_name: listener
+    image: patchman-engine_patchimg
+    env_file:
+      - ./conf/common.env
+      - ./conf/listener.env
+    command: ./scripts/entrypoint.sh listener
+    ports:
+      - 8081:8081
+    depends_on:
+      - db
+      - platform
+      - patchimg
+    security_opt:
+      - label=disable
+
+  evaluator_upload:
+    container_name: evaluator_upload
+    image: patchman-engine_patchimg
+    env_file:
+      - ./conf/common.env
+      - ./conf/evaluator_common.env
+      - ./conf/evaluator_upload.env
+    command: ./scripts/entrypoint.sh evaluator
+    ports:
+      - 8082:8082
+    depends_on:
+      - db
+      - platform
+      - patchimg
+    security_opt:
+      - label=disable
+
+  evaluator_recalc:
+    container_name: evaluator_recalc
+    image: patchman-engine_patchimg
+    env_file:
+      - ./conf/common.env
+      - ./conf/evaluator_common.env
+      - ./conf/evaluator_recalc.env
+    command: ./scripts/entrypoint.sh evaluator
+    ports:
+      - 8084:8084
+    depends_on:
+      - db
+      - platform
+      - patchimg
+    security_opt:
+      - label=disable
+
+  vmaas_sync:
+    container_name: vmaas_sync
+    image: patchman-engine_patchimg
+    env_file:
+      - ./conf/common.env
+      - ./conf/vmaas_sync.env
+    command: ./vmaas_sync/entrypoint.sh
+    ports:
+      - 8083:8083
+    restart: unless-stopped
+    depends_on:
+      - db
+      - platform
+      - patchimg
+    security_opt:
+      - label=disable
+
+volumes:
+  db-data:

@@ -5,8 +5,9 @@ set -e -o pipefail
 # Analyse generated docs/openapi.json
 ./scripts/check-openapi-docs.sh
 
-# Analyse dockerfiles
+# Check dockerfiles and docker-composes consistency
 ./scripts/check-dockerfiles.sh
+./scripts/check-dockercomposes.sh
 
 # Analyse code using lint
 golangci-lint run --timeout 5m

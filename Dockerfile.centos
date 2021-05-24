@@ -13,9 +13,9 @@ ENV GOPATH=/go \
     PATH=$PATH:/go/bin
 
 # now add patchman sources and build app
-RUN adduser --gid 0 -d /go insights
+RUN adduser --gid 0 -d /go --no-create-home insights
+RUN mkdir -p /go/src/app && chown -R insights:root /go
 USER insights
-RUN mkdir -p /go/src/app
 WORKDIR /go/src/app
 
 ADD --chown=insights:root go.mod go.sum     /go/src/app/
@@ -58,19 +58,19 @@ RUN dnf module -y enable postgresql:12 && \
     dnf install -y postgresql diffutils && \
     /manifest/rpm_list.sh > /tmp/final_rpm.txt
 
-RUN adduser --gid 0 -d /go insights
+RUN adduser --gid 0 -d /go --no-create-home insights
 
 RUN curl -L -o /usr/bin/haberdasher \
     https://github.com/RedHatInsights/haberdasher/releases/latest/download/haberdasher_linux_amd64 && \
     chmod 755 /usr/bin/haberdasher
 
-ADD go.sum                     /go/src/app/
-ADD scripts                    /go/src/app/scripts
-ADD database_admin/*.sh        /go/src/app/database_admin/
-ADD database_admin/*.sql       /go/src/app/database_admin/
-ADD database_admin/schema      /go/src/app/database_admin/schema
-ADD database_admin/migrations  /go/src/app/database_admin/migrations
-ADD vmaas_sync/entrypoint.sh   /go/src/app/vmaas_sync/
+ADD --chown=insights:root go.sum                     /go/src/app/
+ADD --chown=insights:root scripts                    /go/src/app/scripts
+ADD --chown=insights:root database_admin/*.sh        /go/src/app/database_admin/
+ADD --chown=insights:root database_admin/*.sql       /go/src/app/database_admin/
+ADD --chown=insights:root database_admin/schema      /go/src/app/database_admin/schema
+ADD --chown=insights:root database_admin/migrations  /go/src/app/database_admin/migrations
+ADD --chown=insights:root vmaas_sync/entrypoint.sh   /go/src/app/vmaas_sync/
 
 RUN /manifest/generate.sh /manifest.txt $MANIFEST_PREFIX /tmp/base_rpm.txt /tmp/final_rpm.txt "" /go/src/app/go.sum && \
     echo 'MANIFEST:' && cat /manifest.txt
@@ -78,5 +78,6 @@ RUN /manifest/generate.sh /manifest.txt $MANIFEST_PREFIX /tmp/base_rpm.txt /tmp/
 COPY --from=buildimg /go/src/app/main /go/src/app/
 
 USER insights
+WORKDIR /go/src/app
 
 EXPOSE 8080
