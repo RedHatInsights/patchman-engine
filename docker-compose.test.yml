@@ -1,4 +1,4 @@
-version: '3.4'
+version: '3'
 services:
   db:
     container_name: db
@@ -40,10 +40,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.centos
-      args:
-        - INSTALL_TOOLS=yes
-      target: buildimg
-    image: patchman-engine_patchimg
     env_file:
       - ./conf/platform.env
     command: ./scripts/entrypoint.sh platform
@@ -56,7 +52,9 @@ services:
 
   test:
     container_name: test
-    image: patchman-engine_patchimg
+    build:
+      context: .
+      dockerfile: Dockerfile.test
     env_file:
       - ./conf/test.env
       - ./conf/database.env
@@ -64,7 +62,6 @@ services:
     depends_on:
       - db
       - platform
-    user: root
     command: ./scripts/go_test_on_ci.sh
     volumes:
       - ./:/go/src/app/

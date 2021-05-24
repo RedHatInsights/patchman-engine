@@ -2,11 +2,7 @@
 
 # ./scripts/generate_rpm_list.sh
 # Example:
-# ./scripts/generate_rpm_list.sh "exclude1|exclude2"
+# ./scripts/generate_rpm_list.sh > /tmp/rpm_list.txt
+# cat /tmp/rpm_list.txt
 
-EXCLUDE="\(none\)|kernel-"
-if [ -n "$1" ] ; then
-    EXCLUDE="$EXCLUDE|$1"
-fi
-
-rpm -qa --qf='%{sourcerpm}\n' | grep -vE "^($EXCLUDE)" | sort -u | sed 's/\.src\.rpm$//'
+rpm -qa --qf='%{sourcerpm}\n' | grep -vE '(none|kernel-.*)' | sort -u | sed 's/\.src\.rpm$//'
