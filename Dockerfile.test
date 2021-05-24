@@ -1,0 +1,23 @@
+FROM centos:8
+
+RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+
+RUN yum module -y install go-toolset && \
+    yum module -y enable postgresql:12 && \
+    yum install -y git postgresql diffutils python3
+
+ENV GOPATH=/go
+ENV GO111MODULE=on
+ENV GOPROXY=https://proxy.golang.org
+ENV PATH=/go/bin:$PATH
+
+ADD go.mod  /go/src/app/
+ADD go.sum  /go/src/app/
+
+WORKDIR /go/src/app
+RUN go mod download && \
+    go get -u github.com/swaggo/swag/cmd/swag && \
+    curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
+    | sh -s -- -b $(go env GOPATH)/bin latest
+
+ADD /dev/kafka/secrets/ca.crt   /opt/
