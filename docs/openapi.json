@@ -252,7 +252,8 @@
                                 "rhsa_count",
                                 "rhba_count",
                                 "rhea_count",
-                                "stale"
+                                "stale",
+                                "os_name"
                             ]
                         }
                     },
@@ -1066,7 +1067,8 @@
                                 "rhea_count",
                                 "stale",
                                 "packages_installed",
-                                "packages_updatable"
+                                "packages_updatable",
+                                "os_name"
                             ]
                         }
                     },

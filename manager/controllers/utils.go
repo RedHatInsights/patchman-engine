@@ -47,6 +47,17 @@ func LogAndRespNotFound(c *gin.Context, err error, respMsg string) {
 	c.AbortWithStatusJSON(http.StatusNotFound, utils.ErrorResponse{Error: respMsg})
 }
 
+func createOrderFields(fieldExprs database.AttrMap, order string, enteredField string) string {
+	var orderFields string
+	if enteredField == "os_name" {
+		orderFields = fmt.Sprintf("%s %s NULLS LAST,%s %s NULLS LAST,%s %s NULLS LAST",
+			fieldExprs["os_name"].Query, order, fieldExprs["os_minor"].Query, order, fieldExprs["os_major"].Query, order)
+	} else {
+		orderFields = fmt.Sprintf("%s %s NULLS LAST", fieldExprs[enteredField].Query, order)
+	}
+	return orderFields
+}
+
 // nolint: prealloc
 func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 	defaultSort string) (*gorm.DB, []string, error) {
@@ -64,9 +75,9 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 	// We sort by a column expression and not the column name. The column expression is retrieved from fieldExprs
 	for _, enteredField := range fields {
 		if strings.HasPrefix(enteredField, "-") && allowedFieldSet[enteredField[1:]] { //nolint:gocritic
-			tx = tx.Order(fmt.Sprintf("%s DESC NULLS LAST", fieldExprs[enteredField[1:]].Query))
+			tx = tx.Order(createOrderFields(fieldExprs, "DESC", enteredField[1:]))
 		} else if allowedFieldSet[enteredField] {
-			tx = tx.Order(fmt.Sprintf("%s ASC NULLS FIRST", fieldExprs[enteredField].Query))
+			tx = tx.Order(createOrderFields(fieldExprs, "ASC", enteredField))
 		} else {
 			// We have not found any matches in allowed fields, return an error
 			return nil, nil, errors.Errorf("Invalid sort field: %v", enteredField)

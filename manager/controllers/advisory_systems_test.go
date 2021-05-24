@@ -178,3 +178,29 @@ func TestAdvisorySystemsTagsUnknown(t *testing.T) { //nolint:dupl
 func TestAdvisorySystemsWrongOffset(t *testing.T) {
 	doTestWrongOffset(t, "/:advisory_id", "/RH-1?offset=1000", AdvisorySystemsListHandler)
 }
+
+func TestAdvisorySystemsSortByOsName(t *testing.T) { //nolint:dupl
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/RH-1?sort=os_name", nil)
+	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+
+	var output AdvisorySystemsResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+
+	assert.Equal(t, 6, len(output.Data))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
+	assert.Equal(t, "RHEL", output.Data[0].Attributes.OSName)
+	assert.Equal(t, "8", output.Data[0].Attributes.OSMajor)
+	assert.Equal(t, "1", output.Data[0].Attributes.OSMinor)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.Data[1].ID)
+	assert.Equal(t, "RHEL", output.Data[1].Attributes.OSName)
+	assert.Equal(t, "8", output.Data[1].Attributes.OSMajor)
+	assert.Equal(t, "1", output.Data[1].Attributes.OSMinor)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000004", output.Data[4].ID)
+	assert.Equal(t, "RHEL", output.Data[4].Attributes.OSName)
+	assert.Equal(t, "8", output.Data[4].Attributes.OSMajor)
+	assert.Equal(t, "2", output.Data[4].Attributes.OSMinor)
+}

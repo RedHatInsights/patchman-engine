@@ -290,3 +290,29 @@ func TestSystemsFilterAdvCount3(t *testing.T) {
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
 }
+
+func TestSystemsSortByOsName(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?sort=-os_name", nil)
+	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
+
+	var output SystemsResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+
+	assert.Equal(t, 8, len(output.Data))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000008", output.Data[0].ID)
+	assert.Equal(t, "RHEL", output.Data[0].Attributes.OSName)
+	assert.Equal(t, "8", output.Data[0].Attributes.OSMajor)
+	assert.Equal(t, "3", output.Data[0].Attributes.OSMinor)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000005", output.Data[1].ID)
+	assert.Equal(t, "RHEL", output.Data[1].Attributes.OSName)
+	assert.Equal(t, "8", output.Data[1].Attributes.OSMajor)
+	assert.Equal(t, "3", output.Data[1].Attributes.OSMinor)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.Data[7].ID)
+	assert.Equal(t, "RHEL", output.Data[4].Attributes.OSName)
+	assert.Equal(t, "8", output.Data[4].Attributes.OSMajor)
+	assert.Equal(t, "1", output.Data[4].Attributes.OSMinor)
+}
