@@ -22,4 +22,5 @@ done
 
 echo "VMaaS websocket is up"
 
+echo "Running in $(pwd) as $(id)"
 exec ./scripts/entrypoint.sh vmaas_sync
