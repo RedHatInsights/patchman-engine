@@ -7,8 +7,8 @@ import (
 )
 
 func InitAPI(api *gin.RouterGroup) {
-	api.Use(middlewares.PublicAuthenticator())
 	api.Use(middlewares.RBAC())
+	api.Use(middlewares.PublicAuthenticator())
 
 	advisories := api.Group("/advisories")
 	advisories.GET("/", controllers.AdvisoriesListHandler)
