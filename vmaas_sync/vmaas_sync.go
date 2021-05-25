@@ -14,24 +14,25 @@ import (
 )
 
 var (
-	vmaasClient              *vmaas.APIClient
-	evalWriter               mqueue.Writer
-	advisoryPageSize         int
-	packagesPageSize         int
-	deleteCulledSystemsLimit int
-	enabledRepoBasedReeval   bool
-	enableRecalcMessagesSend bool
-	enableSyncOnStart        bool
-	enableRecalcOnStart      bool
-	enableCulledSystemDelete bool
-	enableSystemStaling      bool
-	enableTurnpikeAuth       bool
-	enableAdvisoriesSync     bool
-	enablePackagesSync       bool
-	enableReposSync          bool
-	enableModifiedSinceSync  bool
-	vmaasCallExpRetry        bool
-	vmaasCallMaxRetries      int
+	vmaasClient                *vmaas.APIClient
+	evalWriter                 mqueue.Writer
+	advisoryPageSize           int
+	packagesPageSize           int
+	deleteCulledSystemsLimit   int
+	enabledRepoBasedReeval     bool
+	enableRecalcMessagesSend   bool
+	enableSyncOnStart          bool
+	enableRecalcOnStart        bool
+	enableCulledSystemDelete   bool
+	enableSystemStaling        bool
+	enableTurnpikeAuth         bool
+	enableAdvisoriesSync       bool
+	enablePackagesSync         bool
+	enableReposSync            bool
+	enableModifiedSinceSync    bool
+	enableRefreshPackagesCache bool
+	vmaasCallExpRetry          bool
+	vmaasCallMaxRetries        int
 )
 
 func configure() {
@@ -65,6 +66,8 @@ func configure() {
 	enableSystemStaling = utils.GetBoolEnvOrDefault("ENABLE_SYSTEM_STALING", true)
 	vmaasCallMaxRetries = utils.GetIntEnvOrDefault("VMAAS_CALL_MAX_RETRIES", 0)  // 0 - retry forever
 	vmaasCallExpRetry = utils.GetBoolEnvOrDefault("VMAAS_CALL_EXP_RETRY", false) // false - retry periodically
+
+	enableRefreshPackagesCache = utils.GetBoolEnvOrDefault("ENABLE_REFRESH_PACKAGES_CACHE", true)
 }
 
 type Handler func(data []byte, conn *websocket.Conn) error
@@ -214,6 +217,8 @@ func RunVmaasSync() {
 	go runAdminAPI()
 
 	go RunSystemCulling()
+
+	go refreshLatestPackagesCount()
 
 	syncAndRecalcOnStartIfSet() // sync advisories and re-calc on start if configured
 
