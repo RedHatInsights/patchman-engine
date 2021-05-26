@@ -6,7 +6,6 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"app/manager/routes"
-	"fmt"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 )
@@ -46,7 +45,7 @@ func RunManager() {
 	routes.InitAPI(api)
 
 	port := utils.GetIntEnvOrDefault("PUBLIC_PORT", 8080)
-	err := utils.RunServer(base.Context, app, fmt.Sprintf(":%d", port))
+	err := utils.RunServer(base.Context, app, port)
 	if err != nil {
 		utils.Log("err", err.Error()).Fatal("server listening failed")
 		panic(err)

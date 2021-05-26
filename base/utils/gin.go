@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"net/http"
@@ -53,7 +54,8 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-func RunServer(ctx context.Context, handler http.Handler, addr string) error {
+func RunServer(ctx context.Context, handler http.Handler, port int) error {
+	addr := fmt.Sprintf(":%d", port)
 	srv := http.Server{Addr: addr, Handler: handler}
 	go func() {
 		<-ctx.Done()

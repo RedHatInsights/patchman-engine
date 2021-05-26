@@ -21,7 +21,7 @@ func TestRunServer(t *testing.T) {
 		time.Sleep(time.Millisecond * 100)
 		cancel()
 	}()
-	err := RunServer(ctx, gin.Default(), ":8888")
+	err := RunServer(ctx, gin.Default(), 8888)
 	assert.Nil(t, err)
 	AssertEqualWait(t, 1, func() (exp, act interface{}) {
 		return 1, len(hook.LogEntries)

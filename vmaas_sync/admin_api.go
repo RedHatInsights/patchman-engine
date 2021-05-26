@@ -20,7 +20,7 @@ func runAdminAPI() {
 	app.GET("/re-calc", recalc)
 	app.GET("/check-caches", checkCaches)
 
-	err := utils.RunServer(base.Context, app, ":9999")
+	err := utils.RunServer(base.Context, app, 9999)
 
 	if err != nil {
 		utils.Log("err", err.Error()).Error()
