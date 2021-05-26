@@ -5,7 +5,6 @@ import (
 	"app/base/core"
 	"app/base/utils"
 	"app/manager/middlewares"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -67,7 +66,7 @@ func RunMetrics() {
 
 	port := utils.GetIntEnvOrDefault("PORT", 8082)              // legacy env var
 	publicPort := utils.GetIntEnvOrDefault("PUBLIC_PORT", port) // clowder env var
-	err := utils.RunServer(base.Context, app, fmt.Sprintf(":%d", publicPort))
+	err := utils.RunServer(base.Context, app, publicPort)
 	if err != nil {
 		utils.Log("err", err.Error()).Error()
 		panic(err)

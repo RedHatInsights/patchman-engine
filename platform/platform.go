@@ -38,7 +38,7 @@ func platformMock() {
 	app.POST("/control/sync", mockSyncHandler)
 	app.POST("/control/toggle_upload", mockToggleUpload)
 
-	err := utils.RunServer(base.Context, app, ":9001")
+	err := utils.RunServer(base.Context, app, 9001)
 	if err != nil {
 		panic(err)
 	}
