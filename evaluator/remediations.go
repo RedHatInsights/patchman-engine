@@ -13,7 +13,7 @@ import (
 
 var remediationsPublisher mqueue.Writer
 
-func init() {
+func configureRemediations() {
 	if topic, has := os.LookupEnv("REMEDIATIONS_UPDATE_TOPIC"); has {
 		remediationsPublisher = mqueue.NewKafkaGoWriterFromEnv(topic)
 	}

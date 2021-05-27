@@ -11,7 +11,7 @@ import (
 // configure logging using env variables
 func ConfigureLogging() {
 	InitLogging(log.DebugLevel)
-	strlevel := Getenv("LOG_LEVEL", "TRACE")
+	strlevel := Getenv("LOG_LEVEL", "INFO")
 	level := parseLogLevel(strlevel)
 	log.SetLevel(level)
 	style := os.Getenv("LOG_STYLE")

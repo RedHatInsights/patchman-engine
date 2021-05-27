@@ -25,6 +25,7 @@ objects:
         command:
           - ./database_admin/entrypoint.sh
         env:
+        - {name: LOG_LEVEL, value: "debug"}
         - {name: CW_ENABLED, value: "false"}
         - {name: CLOWDER_ENABLED, value: "true"}
         - {name: MANAGER_PASSWORD, value: manager}
@@ -51,6 +52,7 @@ objects:
           - ./scripts/entrypoint.sh
           - manager
         env:
+        - {name: LOG_LEVEL, value: "debug"}
         - {name: CW_ENABLED, value: "false"}
         - {name: CLOWDER_ENABLED, value: "true"}
         - {name: DB_PASSWD, value: manager}
@@ -62,9 +64,136 @@ objects:
           limits: {cpu: 100m, memory: 100Mi}
           requests: {cpu: 100m, memory: 100Mi}
 
+    - name: listener
+      minReplicas: ${{REPLICAS_LISTENER}}
+      webServices:
+        public:
+          enabled: true
+        private:
+          enabled: false
+        metrics:
+          enabled: false
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        command:
+          - ./scripts/entrypoint.sh
+          - listener
+        env:
+        - {name: LOG_LEVEL, value: "debug"}
+        - {name: CW_ENABLED, value: "false"}
+        - {name: CLOWDER_ENABLED, value: "true"}
+        - {name: DB_PASSWD, value: vmaas_sync}
+        - {name: DB_USER, value: vmaas_sync}
+        - {name: KAFKA_GROUP, value: patchman}
+        - {name: EVENTS_TOPIC, value: platform.inventory.events}
+        - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
+        - {name: CONSUMER_COUNT, value: "1"}
+        resources:
+          limits: {cpu: 100m, memory: 100Mi}
+          requests: {cpu: 100m, memory: 100Mi}
+
+    - name: evaluator-upload
+      minReplicas: ${{REPLICAS_EVALUATOR_UPLOAD}}
+      webServices:
+        public:
+          enabled: true
+        private:
+          enabled: false
+        metrics:
+          enabled: false
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        command:
+          - ./scripts/entrypoint.sh
+          - evaluator
+        env:
+        - {name: LOG_LEVEL, value: "debug"}
+        - {name: CW_ENABLED, value: "false"}
+        - {name: CLOWDER_ENABLED, value: "true"}
+        - {name: DB_PASSWD, value: vmaas_sync}
+        - {name: DB_USER, value: vmaas_sync}
+        - {name: KAFKA_GROUP, value: patchman}
+        - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
+        - {name: REMEDIATIONS_UPDATE_TOPIC, value: "platform.remediation-updates.patch"}
+        - {name: EVAL_LABEL, value: upload}
+        - {name: CONSUMER_COUNT, value: "1"}
+        resources:
+          limits: {cpu: 100m, memory: 100Mi}
+          requests: {cpu: 100m, memory: 100Mi}
+
+    - name: evaluator-recalc
+      minReplicas: ${{REPLICAS_EVALUATOR_RECALC}}
+      webServices:
+        public:
+          enabled: true
+        private:
+          enabled: false
+        metrics:
+          enabled: false
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        command:
+          - ./scripts/entrypoint.sh
+          - evaluator
+        env:
+        - {name: LOG_LEVEL, value: "debug"}
+        - {name: CW_ENABLED, value: "false"}
+        - {name: CLOWDER_ENABLED, value: "true"}
+        - {name: DB_PASSWD, value: vmaas_sync}
+        - {name: DB_USER, value: vmaas_sync}
+        - {name: KAFKA_GROUP, value: patchman}
+        - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
+        - {name: REMEDIATIONS_UPDATE_TOPIC, value: "platform.remediation-updates.patch"}
+        - {name: EVAL_LABEL, value: recalc}
+        - {name: CONSUMER_COUNT, value: "1"}
+        resources:
+          limits: {cpu: 100m, memory: 100Mi}
+          requests: {cpu: 100m, memory: 100Mi}
+
+    - name: vmaas-sync
+      minReplicas: ${{REPLICAS_VMAAS_SYNC}}
+      webServices:
+        public:
+          enabled: true
+        private:
+          enabled: false
+        metrics:
+          enabled: false
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        command:
+          - ./scripts/entrypoint.sh
+          - vmaas_sync
+        env:
+        - {name: LOG_LEVEL, value: "debug"}
+        - {name: CW_ENABLED, value: "false"}
+        - {name: CLOWDER_ENABLED, value: "true"}
+        - {name: DB_PASSWD, value: vmaas_sync}
+        - {name: DB_USER, value: vmaas_sync}
+        - {name: KAFKA_GROUP, value: patchman}
+        - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
+        - {name: VMAAS_ADDRESS, value: vmaas.addr}
+        - {name: VMAAS_WS_ADDRESS, value: vmaas.ws.addr}
+        resources:
+          limits: {cpu: 100m, memory: 100Mi}
+          requests: {cpu: 100m, memory: 100Mi}
+
     database:
       name: patchman
       version: 12
+
+    kafkaTopics:
+    - {replicas: 3, partitions: 10, topicName: platform.inventory.events}
+    - {replicas: 3, partitions: 10, topicName: patchman.evaluator.upload}
+    - {replicas: 3, partitions: 10, topicName: patchman.evaluator.recalc}
+    - {replicas: 3, partitions: 10, topicName: platform.remediation-updates.patch}
+
+    dependencies:
+    - host-inventory
+    - ingress
+    - rbac
+    - puptoo
+    - vmaas
 
 parameters:
 - description: ClowdEnv Name
@@ -76,7 +205,19 @@ parameters:
   # value: "{{ '4Gi' if env == 'prod' else '2Gi' }}"
   value: '2Gi'
 - name: REPLICAS_MANAGER
-  description: Number of manager
+  description: Number of component pods
+  value: '1'
+- name: REPLICAS_LISTENER
+  description: Number of component pods
+  value: '1'
+- name: REPLICAS_EVALUATOR_UPLOAD
+  description: Number of component pods
+  value: '1'
+- name: REPLICAS_EVALUATOR_RECALC
+  description: Number of component pods
+  value: '1'
+- name: REPLICAS_VMAAS_SYNC
+  description: Number of component pods
   value: '1'
 - name: IMAGE_TAG
   description: Image version

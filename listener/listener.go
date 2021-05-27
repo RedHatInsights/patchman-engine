@@ -26,7 +26,7 @@ func configure() {
 	core.ConfigureApp()
 	eventsTopic = utils.GetenvOrFail("EVENTS_TOPIC")
 
-	consumerCount = utils.GetIntEnvOrFail("CONSUMER_COUNT")
+	consumerCount = utils.GetIntEnvOrDefault("CONSUMER_COUNT", 1)
 
 	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
 

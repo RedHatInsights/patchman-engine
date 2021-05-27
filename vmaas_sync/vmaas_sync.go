@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -36,11 +37,11 @@ var (
 
 func configure() {
 	core.ConfigureApp()
-	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
+	useTraceLevel := strings.ToLower(utils.Getenv("LOG_LEVEL", "INFO")) == "trace"
 
 	cfg := vmaas.NewConfiguration()
 	cfg.Servers[0].URL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
-	cfg.Debug = traceAPI
+	cfg.Debug = useTraceLevel
 
 	vmaasClient = vmaas.NewAPIClient(cfg)
 
