@@ -7,17 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // Make RBAC client on demand, with specified identity
 func makeClient(identity string) *rbac.APIClient {
-	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
-
 	rbacConfig := rbac.NewConfiguration()
-	rbacConfig.Debug = traceAPI
+	useTraceLevel := strings.ToLower(utils.Getenv("LOG_LEVEL", "INFO")) == "trace"
+	rbacConfig.Debug = useTraceLevel
 	rbacConfig.Servers[0].URL = utils.GetenvOrFail("RBAC_ADDRESS") + base.RBACApiPrefix
 	rbacConfig.AddDefaultHeader("x-rh-identity", identity)
-
 	return rbac.NewAPIClient(rbacConfig)
 }
 

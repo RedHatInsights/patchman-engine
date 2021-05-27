@@ -14,6 +14,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
@@ -35,15 +36,13 @@ var (
 
 func configure() {
 	core.ConfigureApp()
-	traceAPI := utils.GetenvOrFail("LOG_LEVEL") == "trace"
-
 	evalTopic = utils.GetenvOrFail("EVAL_TOPIC")
 	evalLabel = utils.GetenvOrFail("EVAL_LABEL")
-	consumerCount = utils.GetIntEnvOrFail("CONSUMER_COUNT")
-
+	consumerCount = utils.GetIntEnvOrDefault("CONSUMER_COUNT", 1)
 	vmaasConfig := vmaas.NewConfiguration()
 	vmaasConfig.Servers[0].URL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
-	vmaasConfig.Debug = traceAPI
+	useTraceLevel := strings.ToLower(utils.Getenv("LOG_LEVEL", "INFO")) == "trace"
+	vmaasConfig.Debug = useTraceLevel
 	disableCompression := !utils.GetBoolEnvOrDefault("ENABLE_VMAAS_CALL_COMPRESSION", true)
 	enableAdvisoryAnalysis = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_ANALYSIS", true)
 	enablePackageAnalysis = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_ANALYSIS", true)
@@ -58,6 +57,7 @@ func configure() {
 		DisableCompression: disableCompression,
 	}}
 	vmaasClient = vmaas.NewAPIClient(vmaasConfig)
+	configureRemediations()
 }
 
 func Evaluate(ctx context.Context, accountID int, inventoryID string, requested *base.Rfc3339Timestamp,
