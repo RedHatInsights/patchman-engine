@@ -10,7 +10,6 @@ import (
 	"testing"
 )
 
-// nolint: lll
 func TestSystemsDefault(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()

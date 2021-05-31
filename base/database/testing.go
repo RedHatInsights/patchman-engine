@@ -34,7 +34,6 @@ type advisoryCount struct {
 	Count       int
 }
 
-// nolint: lll
 func CheckCachesValidRet() (bool, error) {
 	valid := true
 	var aad []models.AdvisoryAccountData

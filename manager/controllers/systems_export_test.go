@@ -39,7 +39,6 @@ func TestSystemsExportJSON(t *testing.T) {
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output[0].SystemItemAttributes.Created.String())
 }
 
-// nolint: lll
 func TestSystemsExportCSV(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
