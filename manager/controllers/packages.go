@@ -41,7 +41,6 @@ type queryItem struct {
 
 var queryItemSelect = database.MustGetSelect(&queryItem{})
 
-// nolint: lll
 func packagesQuery(c *gin.Context, acc int) (*gorm.DB, error) {
 	subQ := database.SystemPackagesShort(database.Db, acc).
 		Select(queryItemSelect).

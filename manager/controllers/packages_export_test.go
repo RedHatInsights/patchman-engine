@@ -27,7 +27,6 @@ func TestPackageExportJSON(t *testing.T) {
 	assert.Equal(t, "kernel", output[0].Name)
 }
 
-// nolint: lll
 func TestPackageExportCSV(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()

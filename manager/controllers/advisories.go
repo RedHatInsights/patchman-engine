@@ -111,10 +111,10 @@ func buildQueryAdvisories(account int) *gorm.DB {
 	return query
 }
 
-// nolint: lll
 func buildAdvisoryAccountDataQuery(account int) *gorm.DB {
 	query := database.SystemAdvisories(database.Db, account).
-		Select("sa.advisory_id, sp.rh_account_id as rh_account_id, 0 as status_id, count(sp.id) as systems_affected, 0 as systems_status_divergent").
+		Select("sa.advisory_id, sp.rh_account_id as rh_account_id, 0 as status_id, count(sp.id) as systems_affected, " +
+			"0 as systems_status_divergent").
 		Where("sp.stale = false").
 		Group("sp.rh_account_id, sa.advisory_id")
 
