@@ -1,9 +1,9 @@
-FROM centos:8 as buildimg
+FROM redhat/ubi8 as buildimg
 
 ARG INSTALL_TOOLS=no
 
 # install build, development and test environment
-RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+
 RUN dnf module -y enable postgresql:12 && \
     dnf install -y go-toolset postgresql git-core diffutils
 
@@ -46,7 +46,7 @@ EXPOSE 8080
 
 # ---------------------------------------
 # runtime image with only necessary stuff
-FROM centos:8 as runtimeimg
+FROM redhat/ubi8 as runtimeimg
 
 ADD scripts/manifest /manifest
 # remember and later exclude base image rpms except for (redhat|centos-linux|fedora)-release

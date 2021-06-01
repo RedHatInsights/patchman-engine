@@ -39,7 +39,7 @@ services:
     container_name: platform
     build:
       context: .
-      dockerfile: Dockerfile.centos
+      dockerfile: Dockerfile
       args:
         - INSTALL_TOOLS=yes
       target: buildimg

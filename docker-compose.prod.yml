@@ -4,7 +4,7 @@ services:
   patchimg:
     build:
       context: .
-      dockerfile: Dockerfile.rhel8
+      dockerfile: Dockerfile
       args:
         - INSTALL_TOOLS=no
       target: runtimeimg

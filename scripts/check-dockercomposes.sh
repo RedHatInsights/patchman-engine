@@ -6,7 +6,6 @@ DEV=docker-compose.yml
 PROD=docker-compose.prod.yml
 # Check consistency of docker-compose.yml and docker-compose.yml
 sed \
-    -e "s|dockerfile: Dockerfile.centos|dockerfile: Dockerfile.rhel8|" \
     -e "s|INSTALL_TOOLS=yes|INSTALL_TOOLS=no|" \
     -e "s|target: buildimg|target: runtimeimg|" \
     -e "/ - \.\/conf\/gorun.env/ d" \

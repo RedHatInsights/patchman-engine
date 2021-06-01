@@ -3,7 +3,7 @@
 rc=0
 
 # Check consistent testing (centos) and production (redhat) dockerfiles.
-for dockerfile in "Dockerfile" "database/Dockerfile"
+for dockerfile in "database/Dockerfile"
 do
     if [ ! -f "$dockerfile.centos" ]; then
         echo "Dockerfile '$dockerfile.centos' doesn't exist" >&2
