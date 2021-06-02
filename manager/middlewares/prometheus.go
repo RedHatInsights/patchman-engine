@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"app/base/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	ginprometheus "github.com/zsais/go-gin-prometheus"
@@ -18,6 +19,7 @@ func Prometheus() *ginprometheus.Prometheus {
 	prometheus.MustRegister(serviceErrorCnt)
 
 	p := ginprometheus.NewPrometheus("patchman_engine")
+	p.MetricsPath = utils.Getenv("METRICS_PATH", "/metrics")
 	unifyParametrizedUrlsCounters(p)
 	return p
 }

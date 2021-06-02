@@ -64,6 +64,8 @@ func RunMetrics() {
 	core.InitProbes(app)
 	middlewares.Prometheus().Use(app)
 
+	go base.TryExposeOnMetricsPort(app)
+
 	port := utils.GetIntEnvOrDefault("PORT", 8082)              // legacy env var
 	publicPort := utils.GetIntEnvOrDefault("PUBLIC_PORT", port) // clowder env var
 	err := utils.RunServer(base.Context, app, publicPort)

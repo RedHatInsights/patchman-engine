@@ -4,6 +4,7 @@ import (
 	"app/base/utils"
 	"context"
 	"encoding/json"
+	"github.com/gin-gonic/gin"
 	"os"
 	"os/signal"
 	"strings"
@@ -69,4 +70,17 @@ func (d *Rfc3339Timestamp) Time() *time.Time {
 		return nil
 	}
 	return (*time.Time)(d)
+}
+
+// TryExposeOnMetricsPort Expose app on required port if set
+func TryExposeOnMetricsPort(app *gin.Engine) {
+	metricsPort := utils.GetIntEnvOrDefault("METRICS_PORT", -1)
+	if metricsPort == -1 {
+		return // Do not expose extra metrics port if not set using METRICS_PORT var
+	}
+	err := utils.RunServer(Context, app, metricsPort)
+	if err != nil {
+		utils.Log("err", err.Error()).Error()
+		panic(err)
+	}
 }

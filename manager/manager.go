@@ -44,6 +44,8 @@ func RunManager() {
 	api := app.Group("/api/patch/v1")
 	routes.InitAPI(api)
 
+	go base.TryExposeOnMetricsPort(app)
+
 	port := utils.GetIntEnvOrDefault("PUBLIC_PORT", 8080)
 	err := utils.RunServer(base.Context, app, port)
 	if err != nil {

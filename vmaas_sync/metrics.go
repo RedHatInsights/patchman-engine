@@ -134,6 +134,8 @@ func RunMetrics() {
 	core.InitProbes(app)
 	middlewares.Prometheus().Use(app)
 
+	go base.TryExposeOnMetricsPort(app)
+
 	port := utils.GetIntEnvOrDefault("PUBLIC_PORT", 8083)
 	err := utils.RunServer(base.Context, app, port)
 	if err != nil {

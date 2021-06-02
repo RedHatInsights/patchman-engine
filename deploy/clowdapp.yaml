@@ -45,7 +45,7 @@ objects:
         private:
           enabled: false
         metrics:
-          enabled: false
+          enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         command:
@@ -72,7 +72,7 @@ objects:
         private:
           enabled: false
         metrics:
-          enabled: false
+          enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         command:
@@ -100,7 +100,7 @@ objects:
         private:
           enabled: false
         metrics:
-          enabled: false
+          enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         command:
@@ -129,7 +129,7 @@ objects:
         private:
           enabled: false
         metrics:
-          enabled: false
+          enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         command:
@@ -158,7 +158,7 @@ objects:
         private:
           enabled: false
         metrics:
-          enabled: false
+          enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         command:

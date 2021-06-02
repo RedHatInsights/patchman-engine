@@ -106,6 +106,7 @@ services:
     command: ./scripts/entrypoint.sh manager
     ports:
       - 8080:8080
+      - 9080:9080 # metrics
     depends_on:
       - db
       - platform
@@ -122,6 +123,7 @@ services:
     command: ./scripts/entrypoint.sh listener
     ports:
       - 8081:8081
+      - 9081:9081 # metrics
     depends_on:
       - db
       - platform
