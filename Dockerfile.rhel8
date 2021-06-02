@@ -56,6 +56,7 @@ ENV MANIFEST_PREFIX="mgmt_services/patchman-engine/"
 
 RUN dnf module -y enable postgresql:12 && \
     dnf install -y postgresql diffutils && \
+    dnf clean all && \
     /manifest/rpm_list.sh > /tmp/final_rpm.txt
 
 RUN adduser --gid 0 -d /go --no-create-home insights
