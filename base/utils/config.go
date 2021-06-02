@@ -33,6 +33,8 @@ func PrintClowderParams() {
 		printKafkaParams()
 		// Services (vmaas, rbac)
 		printServicesParams()
+		// Cloudwatch logging
+		printCloudwatchParams()
 		fmt.Println("...done")
 	} else {
 		fmt.Println("Clowder not enabled")
@@ -77,4 +79,16 @@ func printServicesParams() {
 			}
 		}
 	}
+}
+
+func printCloudwatchParams() {
+	cwCfg := clowder.LoadedConfig.Logging.Cloudwatch
+	if cwCfg == nil {
+		fmt.Println("No Cloudwatch logging found")
+		return
+	}
+	fmt.Printf("CW_AWS_ACCESS_KEY_ID=%s\n", cwCfg.AccessKeyId)
+	fmt.Printf("CW_AWS_SECRET_ACCESS_KEY=%s\n", cwCfg.SecretAccessKey)
+	fmt.Printf("CW_AWS_REGION=%s\n", cwCfg.Region)
+	fmt.Printf("CW_AWS_LOG_GROUP=%s\n", cwCfg.LogGroup)
 }
