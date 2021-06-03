@@ -8,7 +8,6 @@ require (
 	github.com/RedHatInsights/patchman-clients/vmaas v0.14.0
 	github.com/aws/aws-sdk-go v1.30.9
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
-	github.com/frankban/quicktest v1.11.3 // indirect
 	github.com/getkin/kin-openapi v0.9.0
 	github.com/gin-contrib/gzip v0.0.1
 	github.com/gin-gonic/gin v1.6.3
@@ -22,13 +21,12 @@ require (
 	github.com/klauspost/compress v1.11.7 // indirect
 	github.com/lestrrat-go/backoff v1.0.0
 	github.com/lib/pq v1.9.0
-	github.com/pierrec/lz4 v2.6.0+incompatible // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_golang v1.7.0
 	github.com/redhatinsights/app-common-go v1.5.0
 	github.com/redhatinsights/platform-go-middlewares v0.7.1-0.20201008161041-14dd768deef9
-	github.com/segmentio/kafka-go v0.4.9
+	github.com/segmentio/kafka-go v0.4.16
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.6.1
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
