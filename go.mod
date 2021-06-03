@@ -26,7 +26,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_golang v1.7.0
-	github.com/redhatinsights/app-common-go v1.5.0
+	github.com/redhatinsights/app-common-go v1.5.1
 	github.com/redhatinsights/platform-go-middlewares v0.7.1-0.20201008161041-14dd768deef9
 	github.com/segmentio/kafka-go v0.4.9
 	github.com/sirupsen/logrus v1.7.0
