@@ -6,7 +6,11 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"github.com/segmentio/kafka-go"
+	"github.com/segmentio/kafka-go/sasl"
+	kafkaPlain "github.com/segmentio/kafka-go/sasl/plain"
+	kafkaScram "github.com/segmentio/kafka-go/sasl/scram"
 	"io/ioutil"
 	"time"
 )
@@ -106,11 +110,34 @@ func tryCreateSecuredDialerFromEnv() *kafka.Dialer {
 	}
 
 	dialer := &kafka.Dialer{
-		Timeout:   10 * time.Second,
-		DualStack: true,
-		TLS:       tlsConfig,
+		Timeout:       10 * time.Second,
+		DualStack:     true,
+		TLS:           tlsConfig,
+		SASLMechanism: getSaslMechanism(),
 	}
+
 	return dialer
+}
+
+func getSaslMechanism() sasl.Mechanism {
+	kafkaUsername := utils.Getenv("KAFKA_USERNAME", "")
+	if kafkaUsername == "" {
+		return nil
+	}
+	kafkaPassword := utils.GetenvOrFail("KAFKA_PASSWORD")
+	saslType := utils.Getenv("KAFKA_SASL_TYPE", "scram")
+	switch saslType {
+	case "scram":
+		mechanism, err := kafkaScram.Mechanism(kafkaScram.SHA512, kafkaUsername, kafkaPassword)
+		if err != nil {
+			panic(err)
+		}
+		return mechanism
+	case "plain":
+		mechanism := kafkaPlain.Mechanism{Username: kafkaUsername, Password: kafkaPassword}
+		return mechanism
+	}
+	panic(fmt.Sprintf("Unknown sasl type '%s', options: {scram, plain}", saslType))
 }
 
 func caCertTLSConfigFromEnv() *tls.Config {
