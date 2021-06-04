@@ -48,7 +48,13 @@ func printKafkaParams() {
 		fmt.Printf("KAFKA_ADDRESS=%s:%d\n", kafkaHost, kafkaPort)
 		kafkaCert := clowder.LoadedConfig.Kafka.Brokers[0].Cacert
 		if kafkaCert != nil {
+			fmt.Println("ENABLE_KAFKA_SSL=true")
 			fmt.Printf("KAFKA_SSL_CERT=%s\n", *kafkaCert)
+			saslCfg := clowder.LoadedConfig.Kafka.Brokers[0].Sasl
+			if saslCfg.Username != nil {
+				fmt.Printf("KAFKA_USERNAME=%s\n", *saslCfg.Username)
+				fmt.Printf("KAFKA_PASSWORD=%s\n", *saslCfg.Password)
+			}
 		}
 		topics := []string{"EVENTS_TOPIC", "EVAL_TOPIC", "REMEDIATIONS_UPDATE_TOPIC"}
 		for _, topic := range topics {
