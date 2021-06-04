@@ -64,11 +64,11 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 		LogAndRespError(c, err, "database error")
 	}
 	if exists == 0 {
-		LogAndRespNotFound(c, errors.New("System not found"), "Systems not found")
+		LogAndRespNotFound(c, errors.New("Advisory not found"), "Advisory not found")
 		return
 	}
 
-	query := buildQuery(account, advisoryName)
+	query := buildAdvisorySystemsQuery(account, advisoryName)
 	query, _, err = ApplyTagsFilter(c, query, "sp.inventory_id")
 	if err != nil {
 		return
@@ -95,7 +95,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildQuery(account int, advisoryName string) *gorm.DB {
+func buildAdvisorySystemsQuery(account int, advisoryName string) *gorm.DB {
 	query := database.SystemAdvisories(database.Db, account).
 		Select(SystemsSelect).
 		Joins("JOIN advisory_metadata am ON am.id = sa.advisory_id").

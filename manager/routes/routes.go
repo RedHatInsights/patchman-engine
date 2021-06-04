@@ -29,6 +29,9 @@ func InitAPI(api *gin.RouterGroup) {
 
 	export := api.Group("export")
 	export.GET("/advisories", controllers.AdvisoriesExportHandler)
+	export.GET("/advisories/:advisory_id/systems", controllers.AdvisorySystemsExportHandler)
+	export.GET("/systems/:inventory_id/advisories", controllers.SystemAdvisoriesExportHandler)
+
 	export.GET("/systems", controllers.SystemsExportHandler)
 	export.GET("/packages", controllers.PackagesExportHandler)
 
