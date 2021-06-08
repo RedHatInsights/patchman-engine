@@ -5,7 +5,8 @@ ARG INSTALL_TOOLS=no
 # install build, development and test environment
 
 RUN dnf module -y enable postgresql:12 && \
-    dnf install -y go-toolset postgresql git-core diffutils
+    dnf install -y go-toolset postgresql git-core diffutils && \
+    ln -s /usr/libexec/platform-python /usr/bin/python3
 
 ENV GOPATH=/go \
     GO111MODULE=on \
