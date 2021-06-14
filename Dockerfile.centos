@@ -72,6 +72,7 @@ ADD --chown=insights:root database_admin/*.sh        /go/src/app/database_admin/
 ADD --chown=insights:root database_admin/*.sql       /go/src/app/database_admin/
 ADD --chown=insights:root database_admin/schema      /go/src/app/database_admin/schema
 ADD --chown=insights:root database_admin/migrations  /go/src/app/database_admin/migrations
+ADD --chown=insights:root docs/openapi.json          /go/src/app/docs/
 ADD --chown=insights:root vmaas_sync/entrypoint.sh   /go/src/app/vmaas_sync/
 
 RUN /manifest/generate.sh /manifest.txt $MANIFEST_PREFIX /tmp/base_rpm.txt /tmp/final_rpm.txt "" /go/src/app/go.sum && \
