@@ -6,7 +6,7 @@ require (
 	github.com/RedHatInsights/patchman-clients/inventory v0.14.0
 	github.com/RedHatInsights/patchman-clients/rbac v0.14.0
 	github.com/RedHatInsights/patchman-clients/vmaas v0.14.0
-	github.com/aws/aws-sdk-go v1.30.9
+	github.com/aws/aws-sdk-go v1.38.51
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/confluentinc/confluent-kafka-go v1.7.0 // indirect
 	github.com/getkin/kin-openapi v0.9.0
@@ -26,9 +26,9 @@ require (
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_golang v1.7.0
 	github.com/redhatinsights/app-common-go v1.5.1
-	github.com/redhatinsights/platform-go-middlewares v0.7.1-0.20201008161041-14dd768deef9
+	github.com/redhatinsights/platform-go-middlewares v0.8.1
 	github.com/segmentio/kafka-go v0.4.16
-	github.com/sirupsen/logrus v1.7.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.6.1
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/gin-swagger v1.2.0
