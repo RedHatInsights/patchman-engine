@@ -22,10 +22,10 @@ var PackageSystemsOpts = ListOpts{
 
 //nolint:lll
 type PackageSystemItem struct {
-	ID            string `json:"id" query:"sp.inventory_id" gorm:"column:id"`
-	InstalledEVRA string `json:"installed_evra" query:"p.evra" gorm:"column:installed_evra"`
-	AvailableEVRA string `json:"available_evra" query:"spkg.latest_evra" gorm:"column:available_evra"`
-	Updatable     bool   `json:"updatable" query:"spkg.latest_evra IS NOT NULL" gorm:"column:updatable"`
+	ID            string `json:"id" csv:"id" query:"sp.inventory_id" gorm:"column:id"`
+	InstalledEVRA string `json:"installed_evra" csv:"installed_evra" query:"p.evra" gorm:"column:installed_evra"`
+	AvailableEVRA string `json:"available_evra" csv:"available_evra" query:"spkg.latest_evra" gorm:"column:available_evra"`
+	Updatable     bool   `json:"updatable" csv:"updatable" query:"spkg.latest_evra IS NOT NULL" gorm:"column:updatable"`
 }
 
 type PackageSystemsResponse struct {
