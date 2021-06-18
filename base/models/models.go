@@ -142,6 +142,7 @@ type AdvisoryMetadata struct {
 	SeverityID     *int
 	PackageData    []byte
 	CveList        []byte
+	RebootRequired bool
 }
 
 func (AdvisoryMetadata) TableName() string {
