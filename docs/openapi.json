@@ -795,6 +795,91 @@
                 ]
             }
         },
+        "/api/patch/v1/export/packages/{package_name}/systems": {
+            "get": {
+                "summary": "Show me all my systems which have a package installed",
+                "description": "Show me all my systems which have a package installed",
+                "operationId": "exportPackageSystems",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit for paging, set -1 to return all",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Offset for paging",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "package_name",
+                        "in": "path",
+                        "description": "Package name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Tag filter",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][sap_system]",
+                        "in": "query",
+                        "description": "Filter only SAP systems",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][sap_sids][in]",
+                        "in": "query",
+                        "description": "Filter systems by their SAP SIDs",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.PackageSystemsResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
         "/api/patch/v1/export/systems": {
             "get": {
                 "summary": "Export systems for my account",
@@ -1030,6 +1115,108 @@
                                     "type": "array",
                                     "items": {
                                         "$ref": "#/components/schemas/controllers.AdvisoryInlineItem"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
+        "/api/patch/v1/export/systems/{inventory_id}/packages": {
+            "get": {
+                "summary": "Show me details about a system packages by given inventory id",
+                "description": "Show me details about a system packages by given inventory id",
+                "operationId": "exportSystemPackages",
+                "parameters": [
+                    {
+                        "name": "inventory_id",
+                        "in": "path",
+                        "description": "Inventory ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit for paging, set -1 to return all",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Offset for paging",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Find matching text",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[description]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[evra]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[summary]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[updatable]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/controllers.SystemPackageInline"
                                     }
                                 }
                             }
@@ -2458,6 +2645,29 @@
                         "items": {
                             "$ref": "#/components/schemas/models.PackageUpdate"
                         }
+                    }
+                }
+            },
+            "controllers.SystemPackageInline": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "evra": {
+                        "type": "string"
+                    },
+                    "latest_evra": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "summary": {
+                        "type": "string"
+                    },
+                    "updatable": {
+                        "type": "boolean"
                     }
                 }
             },
