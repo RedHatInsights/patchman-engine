@@ -4,7 +4,7 @@ ARG INSTALL_TOOLS=no
 
 # install build, development and test environment
 
-RUN dnf module -y enable postgresql:12 && \
+RUN dnf module -y enable postgresql:13 && \
     dnf install -y go-toolset postgresql git-core diffutils && \
     ln -s /usr/libexec/platform-python /usr/bin/python3
 
@@ -55,7 +55,7 @@ RUN /manifest/rpm_list.sh "(redhat|centos-linux|fedora)-release" > /tmp/base_rpm
 
 ENV MANIFEST_PREFIX="mgmt_services/patchman-engine/"
 
-RUN dnf module -y enable postgresql:12 && \
+RUN dnf module -y enable postgresql:13 && \
     dnf install -y postgresql diffutils && \
     dnf clean all && \
     /manifest/rpm_list.sh > /tmp/final_rpm.txt
