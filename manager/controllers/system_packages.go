@@ -15,11 +15,11 @@ import (
 
 //nolint: lll
 type SystemPackagesAttrs struct {
-	Name        string `json:"name" query:"pn.name" gorm:"column:name"`
-	EVRA        string `json:"evra" query:"p.evra" gorm:"column:evra"`
-	Summary     string `json:"summary" query:"sum.value" gorm:"column:summary"`
-	Description string `json:"description" query:"descr.value" gorm:"column:description"`
-	Updatable   bool   `json:"updatable" query:"(COALESCE(json_array_length(spkg.update_data::json),0) > 0)" gorm:"column:updatable"`
+	Name        string `json:"name" csv:"name" query:"pn.name" gorm:"column:name"`
+	EVRA        string `json:"evra" csv:"evra" query:"p.evra" gorm:"column:evra"`
+	Summary     string `json:"summary" csv:"summary" query:"sum.value" gorm:"column:summary"`
+	Description string `json:"description" csv:"description" query:"descr.value" gorm:"column:description"`
+	Updatable   bool   `json:"updatable" csv:"updatable" query:"(COALESCE(json_array_length(spkg.update_data::json),0) > 0)" gorm:"column:updatable"`
 }
 
 type SystemPackageData struct {
