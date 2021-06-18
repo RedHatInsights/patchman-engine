@@ -4,10 +4,11 @@ import (
 	"app/base"
 	"app/base/utils"
 	"encoding/json"
+	"time"
+
 	"github.com/lestrrat-go/backoff"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"time"
 )
 
 const BatchSize = 4000
@@ -70,7 +71,7 @@ func SendMessages(ctx context.Context, w Writer, inventoryAIDs ...InventoryAID) 
 	}
 
 	// compute how many batches we will create
-	var batches int = 0
+	var batches = 0
 	for _, ev := range grouped {
 		batches += len(ev)/BatchSize + 1
 	}
