@@ -9,7 +9,6 @@ import (
 	"strings"
 )
 
-// nolint: gocritic
 // @Summary Export applicable advisories for all my systems
 // @Description  Export applicable advisories for all my systems
 // @ID exportAdvisories
@@ -60,7 +59,7 @@ func AdvisoriesExportHandler(c *gin.Context) {
 		data[i] = AdvisoryInlineItem(v)
 	}
 	accept := c.GetHeader("Accept")
-	if strings.Contains(accept, "application/json") {
+	if strings.Contains(accept, "application/json") { // nolint: gocritic
 		c.JSON(http.StatusOK, data)
 	} else if strings.Contains(accept, "text/csv") {
 		Csv(c, http.StatusOK, data)
