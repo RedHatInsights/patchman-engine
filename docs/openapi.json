@@ -2239,6 +2239,9 @@
                     "public_date": {
                         "type": "string"
                     },
+                    "reboot_required": {
+                        "type": "boolean"
+                    },
                     "severity": {
                         "type": "integer"
                     },
@@ -2278,6 +2281,9 @@
                     },
                     "public_date": {
                         "type": "string"
+                    },
+                    "reboot_required": {
+                        "type": "boolean"
                     },
                     "severity": {
                         "type": "integer"
@@ -2526,6 +2532,9 @@
                     "public_date": {
                         "type": "string"
                     },
+                    "reboot_required": {
+                        "type": "boolean"
+                    },
                     "severity": {
                         "type": "integer"
                     },
@@ -2580,6 +2589,9 @@
                     },
                     "public_date": {
                         "type": "string"
+                    },
+                    "reboot_required": {
+                        "type": "boolean"
                     },
                     "severity": {
                         "type": "integer"

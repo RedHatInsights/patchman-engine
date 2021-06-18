@@ -41,6 +41,7 @@ func TestAdvisoriesDefault(t *testing.T) {
 		assert.Equal(t, "adv-7-des", output.Data[0].Attributes.Description)
 		assert.Equal(t, "adv-7-syn", output.Data[0].Attributes.Synopsis)
 		assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
+		assert.Equal(t, false, output.Data[0].Attributes.RebootRequired)
 
 		// links
 		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date", output.Links.First)
