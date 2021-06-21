@@ -4,6 +4,9 @@ set -e
 
 cmd="$@"
 
+export PGSSLMODE=$DB_SSLMODE
+export PGSSLROOTCERT=$DB_SSLROOTCERT
+
 if [ ! -z "$DB_HOST" ]; then
   >&2 echo "Checking if PostgreSQL is up"
   if [ ! -z "$WAIT_FOR_EMPTY_DB" ]; then
