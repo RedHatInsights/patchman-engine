@@ -15,25 +15,26 @@ import (
 )
 
 var (
-	vmaasClient                *vmaas.APIClient
-	evalWriter                 mqueue.Writer
-	advisoryPageSize           int
-	packagesPageSize           int
-	deleteCulledSystemsLimit   int
-	enabledRepoBasedReeval     bool
-	enableRecalcMessagesSend   bool
-	enableSyncOnStart          bool
-	enableRecalcOnStart        bool
-	enableCulledSystemDelete   bool
-	enableSystemStaling        bool
-	enableTurnpikeAuth         bool
-	enableAdvisoriesSync       bool
-	enablePackagesSync         bool
-	enableReposSync            bool
-	enableModifiedSinceSync    bool
-	enableRefreshPackagesCache bool
-	vmaasCallExpRetry          bool
-	vmaasCallMaxRetries        int
+	vmaasClient                 *vmaas.APIClient
+	evalWriter                  mqueue.Writer
+	advisoryPageSize            int
+	packagesPageSize            int
+	deleteCulledSystemsLimit    int
+	enabledRepoBasedReeval      bool
+	enableRecalcMessagesSend    bool
+	enableSyncOnStart           bool
+	enableRecalcOnStart         bool
+	enableCulledSystemDelete    bool
+	enableSystemStaling         bool
+	enableTurnpikeAuth          bool
+	enableAdvisoriesSync        bool
+	enablePackagesSync          bool
+	enableReposSync             bool
+	enableModifiedSinceSync     bool
+	enableRefreshPackagesCache  bool
+	enableRefreshAdvisoryCaches bool
+	vmaasCallExpRetry           bool
+	vmaasCallMaxRetries         int
 )
 
 func configure() {
@@ -69,6 +70,7 @@ func configure() {
 	vmaasCallExpRetry = utils.GetBoolEnvOrDefault("VMAAS_CALL_EXP_RETRY", false) // false - retry periodically
 
 	enableRefreshPackagesCache = utils.GetBoolEnvOrDefault("ENABLE_REFRESH_PACKAGES_CACHE", true)
+	enableRefreshAdvisoryCaches = utils.GetBoolEnvOrDefault("ENABLE_REFRESH_ADVISORY_CACHES", true)
 }
 
 type Handler func(data []byte, conn *websocket.Conn) error
@@ -220,6 +222,8 @@ func RunVmaasSync() {
 	go RunSystemCulling()
 
 	go refreshLatestPackagesCount()
+
+	go refreshAdvisoryCaches()
 
 	syncAndRecalcOnStartIfSet() // sync advisories and re-calc on start if configured
 

@@ -87,3 +87,12 @@ func UpdateTimestampKVValueStr(value, key string) error {
 		"ON CONFLICT (name) DO UPDATE SET value = ?", key, value, value).Error
 	return err
 }
+
+func PluckInt(tx *gorm.DB, columnName string) int {
+	var val int
+	err := tx.Pluck(columnName, &val).Error
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
