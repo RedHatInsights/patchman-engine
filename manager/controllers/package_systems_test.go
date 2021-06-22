@@ -26,6 +26,7 @@ func TestPackageSystems(t *testing.T) {
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output.Data[0].ID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output.Data[0].DisplayName)
 	assert.Equal(t, "5.6.13-200.fc31.x86_64", output.Data[0].InstalledEVRA)
 	assert.Equal(t, "5.10.13-200.fc31.x86_64", output.Data[0].AvailableEVRA)
 }
