@@ -44,8 +44,10 @@ func TestPackageSystemsExportHandlerCSV(t *testing.T) {
 	lines := strings.Split(body, "\n")
 
 	assert.Equal(t, 4, len(lines))
-	assert.Equal(t, "id,installed_evra,available_evra,updatable", lines[0])
-	assert.Equal(t, "00000000-0000-0000-0000-000000000012,5.6.13-200.fc31.x86_64,5.10.13-200.fc31.x86_64,true",
+	assert.Equal(t, "id,display_name,installed_evra,available_evra,updatable", lines[0])
+	assert.Equal(t, "00000000-0000-0000-0000-000000000012,00000000-0000-0000-0000-000000000012,"+
+		"5.6.13-200.fc31.x86_64,5.10.13-200.fc31.x86_64,true",
 		lines[1])
-	assert.Equal(t, "00000000-0000-0000-0000-000000000013,5.6.13-200.fc31.x86_64,,false", lines[2])
+	assert.Equal(t, "00000000-0000-0000-0000-000000000013,00000000-0000-0000-0000-000000000013,"+
+		"5.6.13-200.fc31.x86_64,,false", lines[2])
 }
