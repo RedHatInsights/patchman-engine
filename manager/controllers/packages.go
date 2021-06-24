@@ -91,7 +91,7 @@ func PackagesListHandler(c *gin.Context) {
 		return
 	} // Error handled in method itself
 
-	var packages []PackageItem
+	var packages = make([]PackageItem, 0)
 	err = query.Scan(&packages).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")

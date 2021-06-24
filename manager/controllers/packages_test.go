@@ -10,26 +10,36 @@ import (
 	"testing"
 )
 
-func doTestPackages(t *testing.T, q string) PackagesResponse {
+func doTestPackagesBytes(t *testing.T, q string) (resp []byte, status int) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-
 	req, _ := http.NewRequest("GET", q, nil)
 	core.InitRouterWithParams(PackagesListHandler, 3, "GET", "/").
 		ServeHTTP(w, req)
+	return w.Body.Bytes(), w.Code
+}
 
-	assert.Equal(t, http.StatusOK, w.Code)
+func doTestPackages(t *testing.T, q string) PackagesResponse {
+	respBytes, code := doTestPackagesBytes(t, q)
+	assert.Equal(t, http.StatusOK, code)
 	var output PackagesResponse
-	assert.Greater(t, len(w.Body.Bytes()), 0)
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	assert.Greater(t, len(respBytes), 0)
+	ParseReponseBody(t, respBytes, &output)
 	return output
 }
 
 func TestPackagesFilterInstalled(t *testing.T) {
 	output := doTestPackages(t, "/?filter[systems_installed]=44")
 	assert.Equal(t, 0, len(output.Data))
+}
+
+func TestPackagesEmptyResponse(t *testing.T) {
+	respBytes, code := doTestPackagesBytes(t, "/?filter[systems_installed]=44")
+	assert.Equal(t, http.StatusOK, code)
+	respStr := string(respBytes)
+	assert.Equal(t, "{\"data\":[]", respStr[:10])
 }
 
 func TestPackagesFilterUpdatable(t *testing.T) {
