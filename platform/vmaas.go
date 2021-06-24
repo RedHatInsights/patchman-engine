@@ -9,7 +9,7 @@ import (
 )
 
 func updatesHandler(c *gin.Context) {
-	ffUpdates := []vmaas.UpdatesV2ResponseAvailableUpdates{
+	updates1 := []vmaas.UpdatesV2ResponseAvailableUpdates{
 		{
 			Repository: utils.PtrString("repo1"),
 			Releasever: utils.PtrString("ser1"),
@@ -25,7 +25,7 @@ func updatesHandler(c *gin.Context) {
 			Package:    utils.PtrString("firefox-1:76.0.1-1.fc31.x86_64"),
 		},
 	}
-	kUpdates := []vmaas.UpdatesV2ResponseAvailableUpdates{
+	updates2 := []vmaas.UpdatesV2ResponseAvailableUpdates{
 		{
 			Repository: utils.PtrString("repo1"),
 			Releasever: utils.PtrString("ser1"),
@@ -35,8 +35,8 @@ func updatesHandler(c *gin.Context) {
 		},
 	}
 	updatesList := map[string]vmaas.UpdatesV2ResponseUpdateList{
-		"firefox-0:76.0.1-1.fc31.x86_64": {AvailableUpdates: &ffUpdates},
-		"kernel-5.6.13-200.fc31.x86_64":  {AvailableUpdates: &kUpdates},
+		"firefox-0:76.0.1-1.fc31.x86_64": {AvailableUpdates: &updates1},
+		"kernel-5.6.13-200.fc31.x86_64":  {AvailableUpdates: &updates2},
 	}
 	moduleList := []vmaas.UpdatesV3RequestModulesList{}
 	data := vmaas.UpdatesV2Response{

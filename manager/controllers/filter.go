@@ -96,7 +96,7 @@ func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (str
 	case "notin":
 		return fmt.Sprintf("%s NOT IN (?) ", attributes[fieldName].Query), []interface{}{values}, nil
 	default:
-		return "", []interface{}{}, errors.New(fmt.Sprintf("Unknown filter : %s", t.Operator))
+		return "", []interface{}{}, errors.Errorf("Unknown filter : %s", t.Operator)
 	}
 }
 
