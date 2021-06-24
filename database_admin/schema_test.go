@@ -1,4 +1,4 @@
-package database_admin //nolint:golint,stylecheck
+package database_admin //nolint:revive,stylecheck
 
 import (
 	"app/base/database"
