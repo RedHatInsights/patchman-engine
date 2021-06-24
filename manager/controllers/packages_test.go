@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func doTestPackages(t *testing.T, q string, check func(output PackagesResponse)) {
+func doTestPackages(t *testing.T, q string) PackagesResponse {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
@@ -24,44 +24,39 @@ func doTestPackages(t *testing.T, q string, check func(output PackagesResponse))
 	var output PackagesResponse
 	assert.Greater(t, len(w.Body.Bytes()), 0)
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	check(output)
+	return output
 }
 
 func TestPackagesFilterInstalled(t *testing.T) {
-	doTestPackages(t, "/?filter[systems_installed]=44", func(output PackagesResponse) {
-		assert.Equal(t, 0, len(output.Data))
-	})
+	output := doTestPackages(t, "/?filter[systems_installed]=44")
+	assert.Equal(t, 0, len(output.Data))
 }
 
 func TestPackagesFilterUpdatable(t *testing.T) {
-	doTestPackages(t, "/?filter[systems_updatable]=4", func(output PackagesResponse) {
-		assert.Equal(t, 0, len(output.Data))
-	})
+	output := doTestPackages(t, "/?filter[systems_updatable]=4")
+	assert.Equal(t, 0, len(output.Data))
 }
 
 func TestPackagesFilterSummary(t *testing.T) {
-	doTestPackages(t, `/?filter[summary]=Mozilla Firefox Web browser`, func(output PackagesResponse) {
-		assert.Equal(t, 1, len(output.Data))
-		assert.Equal(t, "firefox", output.Data[0].Name)
-		assert.Equal(t, 2, output.Data[0].SystemsInstalled)
-		assert.Equal(t, 2, output.Data[0].SystemsUpdatable)
-	})
+	output := doTestPackages(t, `/?filter[summary]=Mozilla Firefox Web browser`)
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, "firefox", output.Data[0].Name)
+	assert.Equal(t, 2, output.Data[0].SystemsInstalled)
+	assert.Equal(t, 2, output.Data[0].SystemsUpdatable)
 }
 
 func TestPackagesFilterSAP(t *testing.T) {
-	doTestPackages(t, "/?filter[system_profile][is_sap][eq]=true", func(output PackagesResponse) {
-		assert.Equal(t, 4, len(output.Data))
-		assert.Equal(t, "kernel", output.Data[3].Name)
-		assert.Equal(t, 2, output.Data[3].SystemsInstalled)
-		assert.Equal(t, 1, output.Data[3].SystemsUpdatable)
-	})
+	output := doTestPackages(t, "/?filter[system_profile][is_sap][eq]=true")
+	assert.Equal(t, 4, len(output.Data))
+	assert.Equal(t, "kernel", output.Data[3].Name)
+	assert.Equal(t, 2, output.Data[3].SystemsInstalled)
+	assert.Equal(t, 1, output.Data[3].SystemsUpdatable)
 }
 
 func TestSearchPackages(t *testing.T) {
-	doTestPackages(t, "/?search=fire", func(output PackagesResponse) {
-		assert.Equal(t, 1, len(output.Data))
-		assert.Equal(t, "firefox", output.Data[0].Name)
-	})
+	output := doTestPackages(t, "/?search=fire")
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, "firefox", output.Data[0].Name)
 }
 
 func TestPackageTagsInvalid(t *testing.T) {
