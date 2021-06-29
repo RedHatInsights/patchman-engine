@@ -50,6 +50,7 @@ func packageSystemsQuery(acc int, packageIDs []int) *gorm.DB {
 	return query
 }
 
+//nolint: dupl
 // @Summary Show me all my systems which have a package installed
 // @Description  Show me all my systems which have a package installed
 // @ID packageSystems

@@ -25,6 +25,7 @@ func InitAPI(api *gin.RouterGroup) {
 	packages := api.Group("/packages")
 	packages.GET("/", controllers.PackagesListHandler)
 	packages.GET("/:package_name/systems", controllers.PackageSystemsListHandler)
+	packages.GET("/:package_name/versions", controllers.PackageVersionsListHandler)
 	packages.GET("/:package_name", controllers.PackageDetailHandler)
 
 	export := api.Group("export")
