@@ -1443,6 +1443,91 @@
                 ]
             }
         },
+        "/api/patch/v1/packages/{package_name}/versions": {
+            "get": {
+                "summary": "Show me all package versions installed on some system",
+                "description": "Show me all package versions installed on some system",
+                "operationId": "packageVersions",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit for paging, set -1 to return all",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Offset for paging",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "package_name",
+                        "in": "path",
+                        "description": "Package name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Tag filter",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][sap_system]",
+                        "in": "query",
+                        "description": "Filter only SAP systems",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][sap_sids][in]",
+                        "in": "query",
+                        "description": "Filter systems by their SAP SIDs",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.PackageVersionsResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
         "/api/patch/v1/systems": {
             "get": {
                 "summary": "Show me all my systems",
@@ -2357,6 +2442,31 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/controllers.PackageSystemItem"
+                        }
+                    },
+                    "links": {
+                        "$ref": "#/components/schemas/controllers.Links"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/controllers.ListMeta"
+                    }
+                }
+            },
+            "controllers.PackageVersionItem": {
+                "type": "object",
+                "properties": {
+                    "evra": {
+                        "type": "string"
+                    }
+                }
+            },
+            "controllers.PackageVersionsResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.PackageVersionItem"
                         }
                     },
                     "links": {
