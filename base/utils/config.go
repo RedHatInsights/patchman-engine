@@ -24,6 +24,7 @@ func PrintClowderParams() {
 		fmt.Printf("DB_NAME=%s\n", clowder.LoadedConfig.Database.Name)
 		fmt.Printf("DB_PORT=%d\n", clowder.LoadedConfig.Database.Port)
 		fmt.Printf("DB_SSLMODE=%s\n", clowder.LoadedConfig.Database.SslMode)
+		fmt.Printf("DB_SSLROOTCERT=%s\n", *clowder.LoadedConfig.Database.RdsCa)
 		// API
 		fmt.Printf("PUBLIC_PORT=%d\n", *clowder.LoadedConfig.PublicPort)
 		fmt.Printf("PRIVATE_PORT=%d\n", *clowder.LoadedConfig.PrivatePort)
