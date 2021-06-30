@@ -254,6 +254,7 @@ func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList)
 			uniqUpdates[pkgUpdate] = true
 		}
 	}
+
 	if prunePackageLatestOnly && len(pkgUpdates) > 1 {
 		pkgUpdates = pkgUpdates[len(pkgUpdates)-1:]
 	}

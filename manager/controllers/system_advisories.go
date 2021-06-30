@@ -22,7 +22,7 @@ var SystemAdvisoriesOpts = ListOpts{
 }
 
 type SystemAdvisoriesDBLookup struct {
-	ID string `query:"am.name" gorm:"column:id"`
+	ID string `json:"id" csv:"id" query:"am.name" gorm:"column:id"`
 	SystemAdvisoryItemAttributes
 }
 
