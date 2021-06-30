@@ -26,8 +26,7 @@ import (
 // @Param    filter[synopsis]        query   string  false "Filter"
 // @Param    filter[advisory_type]   query   string  false "Filter"
 // @Param    filter[severity]        query   string  false "Filter"
-// @Param    filter[applicable_systems] query   string  false "Filter"
-// @Success 200 {array} AdvisoryInlineItem
+// @Success 200 {array} SystemAdvisoriesDBLookup
 // @Router /api/patch/v1/export/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
@@ -46,7 +45,7 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 		LogAndRespError(c, err, "database error")
 	}
 	if exists == 0 {
-		LogAndRespNotFound(c, errors.New("System not found"), "Systems not found")
+		LogAndRespNotFound(c, errors.New("System not found"), "System not found")
 		return
 	}
 
@@ -54,7 +53,7 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 		Joins("JOIN advisory_metadata am on am.id = sa.advisory_id").
 		Select(SystemAdvisoriesSelect)
 
-	var advisories []AdvisoriesDBLookup
+	var advisories []SystemAdvisoriesDBLookup
 
 	query = query.Order("id")
 	query, err = ExportListCommon(query, c, AdvisoriesOpts)
@@ -69,16 +68,11 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 		return
 	}
 
-	data := make([]AdvisoryInlineItem, len(advisories))
-
-	for i, v := range advisories {
-		data[i] = AdvisoryInlineItem(v)
-	}
 	accept := c.GetHeader("Accept")
 	if strings.Contains(accept, "application/json") { // nolint: gocritic
-		c.JSON(http.StatusOK, data)
+		c.JSON(http.StatusOK, advisories)
 	} else if strings.Contains(accept, "text/csv") {
-		Csv(c, http.StatusOK, data)
+		Csv(c, http.StatusOK, advisories)
 	} else {
 		LogWarnAndResp(c, http.StatusUnsupportedMediaType,
 			fmt.Sprintf("Invalid content type '%s', use 'application/json' or 'text/csv'", accept))

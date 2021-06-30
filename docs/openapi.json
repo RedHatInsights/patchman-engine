@@ -1091,14 +1091,6 @@
                         "schema": {
                             "type": "string"
                         }
-                    },
-                    {
-                        "name": "filter[applicable_systems]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
                     }
                 ],
                 "responses": {
@@ -1109,7 +1101,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.AdvisoryInlineItem"
+                                        "$ref": "#/components/schemas/controllers.SystemAdvisoriesDBLookup"
                                     }
                                 }
                             },
@@ -1117,7 +1109,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.AdvisoryInlineItem"
+                                        "$ref": "#/components/schemas/controllers.SystemAdvisoriesDBLookup"
                                     }
                                 }
                             }
@@ -2421,6 +2413,32 @@
                     },
                     "meta": {
                         "$ref": "#/components/schemas/controllers.ListMeta"
+                    }
+                }
+            },
+            "controllers.SystemAdvisoriesDBLookup": {
+                "type": "object",
+                "properties": {
+                    "advisory_type": {
+                        "type": "integer"
+                    },
+                    "cve_count": {
+                        "type": "integer"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "public_date": {
+                        "type": "string"
+                    },
+                    "severity": {
+                        "type": "integer"
+                    },
+                    "synopsis": {
+                        "type": "string"
                     }
                 }
             },
