@@ -25,8 +25,6 @@ type SystemPackageInline struct {
 // @Accept   json
 // @Produce  json
 // @Param    inventory_id    path    string   true "Inventory ID"
-// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
-// @Param    offset         query   int     false   "Offset for paging"
 // @Param    search          query   string  false   "Find matching text"
 // @Param    filter[name]            query   string  false "Filter"
 // @Param    filter[description]     query   string  false "Filter"
