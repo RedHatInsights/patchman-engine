@@ -190,10 +190,10 @@ objects:
 
     dependencies:
     - host-inventory
-    - ingress
     - rbac
-    - puptoo
     - vmaas
+    # - ingress # These deps are failing, commenting temporarily
+    # - puptoo
 
 parameters:
 - description: ClowdEnv Name
