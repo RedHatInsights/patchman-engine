@@ -30,6 +30,7 @@ RUN if [ "$INSTALL_TOOLS" == "yes" ] ; then \
     fi
 
 ADD --chown=insights:root dev/kafka/secrets/ca.crt /opt/
+ADD --chown=insights:root database/pgca.crt        /opt/
 ADD --chown=insights:root base                     /go/src/app/base
 ADD --chown=insights:root database_admin           /go/src/app/database_admin
 ADD --chown=insights:root docs                     /go/src/app/docs
