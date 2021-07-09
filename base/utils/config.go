@@ -18,13 +18,7 @@ func PrintClowderParams() {
 	if IsClowderEnabled() {
 		fmt.Println("Clowder config enabled, exporting variables..")
 		// Database
-		fmt.Printf("DB_ADMIN_USER=%s\n", clowder.LoadedConfig.Database.AdminUsername)
-		fmt.Printf("DB_ADMIN_PASSWD=%s\n", clowder.LoadedConfig.Database.AdminPassword)
-		fmt.Printf("DB_HOST=%s\n", clowder.LoadedConfig.Database.Hostname)
-		fmt.Printf("DB_NAME=%s\n", clowder.LoadedConfig.Database.Name)
-		fmt.Printf("DB_PORT=%d\n", clowder.LoadedConfig.Database.Port)
-		fmt.Printf("DB_SSLMODE=%s\n", clowder.LoadedConfig.Database.SslMode)
-		fmt.Printf("DB_SSLROOTCERT=%s\n", *clowder.LoadedConfig.Database.RdsCa)
+		printDBParams()
 		// API
 		fmt.Printf("PUBLIC_PORT=%d\n", *clowder.LoadedConfig.PublicPort)
 		fmt.Printf("PRIVATE_PORT=%d\n", *clowder.LoadedConfig.PrivatePort)
@@ -39,6 +33,19 @@ func PrintClowderParams() {
 		fmt.Println("...done")
 	} else {
 		fmt.Println("Clowder not enabled")
+	}
+}
+
+func printDBParams() {
+	fmt.Printf("DB_ADMIN_USER=%s\n", clowder.LoadedConfig.Database.AdminUsername)
+	fmt.Printf("DB_ADMIN_PASSWD=%s\n", clowder.LoadedConfig.Database.AdminPassword)
+	fmt.Printf("DB_HOST=%s\n", clowder.LoadedConfig.Database.Hostname)
+	fmt.Printf("DB_NAME=%s\n", clowder.LoadedConfig.Database.Name)
+	fmt.Printf("DB_PORT=%d\n", clowder.LoadedConfig.Database.Port)
+	fmt.Printf("DB_SSLMODE=%s\n", clowder.LoadedConfig.Database.SslMode)
+	RdsCa := clowder.LoadedConfig.Database.RdsCa
+	if RdsCa != nil {
+		fmt.Printf("DB_SSLROOTCERT=%s\n", *clowder.LoadedConfig.Database.RdsCa)
 	}
 }
 
