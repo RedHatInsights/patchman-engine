@@ -44,7 +44,6 @@ func packageVersionsQuery(acc int, packageNameIDs []int) *gorm.DB {
 	return query
 }
 
-//nolint: dupl
 // @Summary Show me all package versions installed on some system
 // @Description Show me all package versions installed on some system
 // @ID packageVersions
@@ -54,9 +53,6 @@ func packageVersionsQuery(acc int, packageNameIDs []int) *gorm.DB {
 // @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    package_name    path    string    true  "Package name"
-// @Param    tags            query   []string  false "Tag filter"
-// @Param    filter[system_profile][sap_system]   query  string  false "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in] query []string  false "Filter systems by their SAP SIDs"
 // @Success 200 {object} PackageVersionsResponse
 // @Router /api/patch/v1/packages/{package_name}/versions [get]
 func PackageVersionsListHandler(c *gin.Context) {
@@ -75,10 +71,7 @@ func PackageVersionsListHandler(c *gin.Context) {
 	}
 
 	query := packageVersionsQuery(account, packageNameIDs)
-	query, _, err := ApplyTagsFilter(c, query, "sp.inventory_id")
-	if err != nil {
-		return
-	} // Error handled in method itself
+	// we don't support tags and filters for this endpoint
 	query, meta, links, err := ListCommon(query, c, fmt.Sprintf("/packages/%s/versions", packageName), PackageVersionsOpts)
 	if err != nil {
 		return
