@@ -6,13 +6,12 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"crypto/sha256"
-	"net/http"
-	"time"
-
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"net/http"
+	"time"
 )
 
 const chunkSize = 10 * 1024
@@ -34,8 +33,7 @@ func syncPackages(syncStart time.Time, modifiedSince *string) error {
 		iPageMax = int(pkgtreeResponse.GetPages())
 		iPage++
 		utils.Log("page", iPage, "pages", int(pkgtreeResponse.GetPages()), "count", len(pkgtreeResponse.GetPackageNameList()),
-			"sync_duration", utils.SinceStr(syncStart, time.Second),
-			"packages_sync_duration", utils.SinceStr(pkgSyncStart, time.Second)).
+			"sync_duration", utils.SinceStr(syncStart), "packages_sync_duration", utils.SinceStr(pkgSyncStart)).
 			Debug("Downloaded packages")
 	}
 	utils.Log().Info("Packages synced successfully")

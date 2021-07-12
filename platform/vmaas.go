@@ -2,11 +2,10 @@ package platform
 
 import (
 	"app/base/utils"
-	"net/http"
-
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"net/http"
 )
 
 func updatesHandler(c *gin.Context) {
@@ -16,7 +15,7 @@ func updatesHandler(c *gin.Context) {
 			Releasever: utils.PtrString("ser1"),
 			Basearch:   utils.PtrString("i686"),
 			Erratum:    utils.PtrString("RH-1"),
-			Package:    utils.PtrString("firefox-77.0.1-1.fc31.x86_64"),
+			Package:    utils.PtrString("firefox-0:77.0.1-1.fc31.x86_64"),
 		},
 		{
 			Repository: utils.PtrString("repo1"),
@@ -36,8 +35,8 @@ func updatesHandler(c *gin.Context) {
 		},
 	}
 	updatesList := map[string]vmaas.UpdatesV2ResponseUpdateList{
-		"firefox-76.0.1-1.fc31.x86_64":  {AvailableUpdates: &updates1},
-		"kernel-5.6.13-200.fc31.x86_64": {AvailableUpdates: &updates2},
+		"firefox-0:76.0.1-1.fc31.x86_64": {AvailableUpdates: &updates1},
+		"kernel-5.6.13-200.fc31.x86_64":  {AvailableUpdates: &updates2},
 	}
 	moduleList := []vmaas.UpdatesV3RequestModulesList{}
 	data := vmaas.UpdatesV2Response{
@@ -126,7 +125,7 @@ func pkgTreeHandler(c *gin.Context) {
     "pages": 1,
     "package_name_list": {
         "firefox": [{
-                "nevra": "firefox-76.0.1-1.fc31.x86_64",
+                "nevra": "firefox-0:76.0.1-1.fc31.x86_64",
                 "summary": "Mozilla Firefox Web browser",
                 "description": "Mozilla Firefox is an open-source web browser..."
             },{

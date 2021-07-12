@@ -1,6 +1,6 @@
 module app
 
-go 1.13
+go 1.12
 
 require (
 	github.com/RedHatInsights/patchman-clients/inventory v0.14.0
