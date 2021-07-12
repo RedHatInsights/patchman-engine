@@ -6,15 +6,17 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"fmt"
+	"testing"
+
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestAnalyzePackages(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	configure()
+	loadCache()
 
 	system := models.SystemPlatform{ID: 11, RhAccountID: 2}
 	database.CheckSystemPackages(t, system.ID, 0)
