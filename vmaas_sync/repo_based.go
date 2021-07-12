@@ -4,10 +4,9 @@ import (
 	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
+	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"net/http"
 	"time"
-
-	"github.com/RedHatInsights/patchman-clients/vmaas"
 )
 
 const LastEvalRepoBased = "last_eval_repo_based"
@@ -85,8 +84,7 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string, thirdParty bool
 		}
 
 		utils.Log("page", int(page), "pages", int(repos.GetPages()), "count", len(repos.GetRepositoryList()),
-			"sync_duration", utils.SinceStr(syncStart, time.Second),
-			"repos_sync_duration", utils.SinceStr(reposSyncStart, time.Second)).
+			"sync_duration", utils.SinceStr(syncStart), "repos_sync_duration", utils.SinceStr(reposSyncStart)).
 			Debug("Downloaded repos")
 		for k := range repos.GetRepositoryList() {
 			reposArr = append(reposArr, k)

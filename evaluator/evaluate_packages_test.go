@@ -5,7 +5,6 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
-	"fmt"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -46,14 +45,9 @@ func TestLazySavePackages(t *testing.T) {
 
 	names := []string{"kernel", "firefox", "custom-package"}
 	evras := []string{"1-0.el7.x86_64", "1-1.1.el7.x86_64", "11-1.el7.x86_64"}
-	updateList := map[string]vmaas.UpdatesV2ResponseUpdateList{}
-	for i, name := range names {
-		nevra := fmt.Sprintf("%s-%s", name, evras[i])
-		updateList[nevra] = vmaas.UpdatesV2ResponseUpdateList{}
-	}
-	vmaasData := vmaas.UpdatesV2Response{UpdateList: &updateList}
 	database.CheckEVRAsInDB(t, 0, evras...)
-	err := lazySavePackages(database.Db, &vmaasData)
+
+	err := lazySavePackages(database.Db, names, evras)
 	assert.Nil(t, err)
 	database.CheckEVRAsInDB(t, 2, evras[:2]...) // EVRAs were added
 	database.CheckEVRAsInDB(t, 0, evras[2:]...) // EVRA for unknown package was not added

@@ -2,15 +2,13 @@ package utils
 
 import (
 	"fmt"
-	"math"
+	"github.com/joho/godotenv"
 	"os"
 	"path"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
 // Getenv Load environment variable or return default value
@@ -130,17 +128,6 @@ func LogPanics(exitAfterLogging bool) {
 }
 
 // SinceStr Format duration since given time as "1h2m3s
-func SinceStr(tStart time.Time, precision time.Duration) string {
-	return time.Since(tStart).Round(precision).String()
-}
-
-var _suffixes = []string{"B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"}
-
-// SizeStr Format memory size to human readable
-func SizeStr(size uint64) string {
-	order := 0
-	if size > 0 {
-		order = int(math.Log2(float64(size)) / 10)
-	}
-	return fmt.Sprintf("%.4g%s", float64(size)/float64(int(1)<<(order*10)), _suffixes[order])
+func SinceStr(tStart time.Time) string {
+	return time.Since(tStart).Round(time.Second).String()
 }

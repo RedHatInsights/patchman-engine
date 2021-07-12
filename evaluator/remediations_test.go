@@ -2,10 +2,9 @@ package evaluator
 
 import (
 	"app/base/utils"
-	"testing"
-
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 var testFfUpdates = []vmaas.UpdatesV2ResponseAvailableUpdates{
@@ -19,7 +18,7 @@ var testKUpdates = []vmaas.UpdatesV2ResponseAvailableUpdates{
 		Erratum: utils.PtrString("RH-100"), Package: utils.PtrString("kernel-5.10.13-200.fc31.x86_64")},
 }
 var testUpdateList = map[string]vmaas.UpdatesV2ResponseUpdateList{
-	"firefox-76.0.1-1.fc31.x86_64": {
+	"firefox-0:76.0.1-1.fc31.x86_64": {
 		AvailableUpdates: &testFfUpdates,
 	},
 	"kernel-5.6.13-200.fc31.x86_64": {
