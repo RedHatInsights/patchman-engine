@@ -53,8 +53,6 @@ func configure() {
 	enableLazyPackageSave = utils.GetBoolEnvOrDefault("ENABLE_LAZY_PACKAGE_SAVE", true)
 	prunePackageLatestOnly = utils.GetBoolEnvOrDefault("PRUNE_UPDATES_LATEST_ONLY", false)
 	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
-	memoryPackageCache = NewPackageCache()
-	memoryPackageCache.Load()
 	vmaasConfig.HTTPClient = &http.Client{Transport: &http.Transport{
 		DisableCompression: disableCompression,
 	}}
@@ -339,11 +337,18 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 	return nil
 }
 
+func loadCache() {
+	memoryPackageCache = NewPackageCache()
+	memoryPackageCache.Load()
+}
+
 func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 	utils.Log().Info("evaluator starting")
 	configure()
 
 	go RunMetrics()
+
+	loadCache()
 
 	var handler = mqueue.MakeRetryingHandler(mqueue.MakeMessageHandler(evaluateHandler))
 	// We create multiple consumers, and hope that the partition rebalancing
