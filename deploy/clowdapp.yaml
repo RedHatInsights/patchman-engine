@@ -88,6 +88,7 @@ objects:
         - {name: EVENTS_TOPIC, value: platform.inventory.events}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
         - {name: CONSUMER_COUNT, value: "1"}
+        - {name: SHOW_CLOWDER_VARS, value: ""}
         resources:
           limits: {cpu: 100m, memory: 100Mi}
           requests: {cpu: 100m, memory: 100Mi}
