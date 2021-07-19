@@ -15,8 +15,8 @@ func TestGetPackageCache(t *testing.T) {
 	pc := NewPackageCache()
 	assert.NotNil(t, pc)
 	pc.Load()
-	assert.Equal(t, 11, len(pc.byID))
-	assert.Equal(t, 11, len(pc.byNevra))
+	assert.Equal(t, 12, len(pc.byID))
+	assert.Equal(t, 12, len(pc.byNevra))
 	assert.Equal(t, 10, len(pc.latestByName))
 	assert.Equal(t, 10, len(pc.nameByID))
 	val, ok := pc.GetByID(1)
@@ -54,8 +54,8 @@ func TestAddPackageCache(t *testing.T) {
 	pc := NewPackageCache()
 	assert.NotNil(t, pc)
 	pc.Load()
-	assert.Equal(t, 11, len(pc.byID))
-	assert.Equal(t, 11, len(pc.byNevra))
+	assert.Equal(t, 12, len(pc.byID))
+	assert.Equal(t, 12, len(pc.byNevra))
 	assert.Equal(t, 10, len(pc.latestByName))
 	assert.Equal(t, 10, len(pc.nameByID))
 
@@ -68,8 +68,8 @@ func TestAddPackageCache(t *testing.T) {
 		SummaryHash:     []byte("4"),
 	}
 	pc.Add(&pkg)
-	assert.Equal(t, 12, len(pc.byID))
-	assert.Equal(t, 12, len(pc.byNevra))
+	assert.Equal(t, 13, len(pc.byID))
+	assert.Equal(t, 13, len(pc.byNevra))
 	assert.Equal(t, 10, len(pc.latestByName))
 	assert.Equal(t, 10, len(pc.nameByID))
 
