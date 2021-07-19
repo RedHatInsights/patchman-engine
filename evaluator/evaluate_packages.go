@@ -326,3 +326,30 @@ type namedPackage struct {
 	WasStored  bool
 	UpdateData []byte
 }
+
+
+func lockPackageAccountData(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int) error {
+	// Lock package-account data, so it's not changed by other concurrent queries
+	var aads []models.PackageAccountData
+	err := tx.Clauses(clause.Locking{
+		Strength: "UPDATE",
+		Table:    clause.Table{Name: clause.CurrentTable},
+	}).Order("advisory_id").
+		Find(&aads, "rh_account_id = ? AND (advisory_id in (?) OR advisory_id in (?))",
+			system.RhAccountID, patched, unpatched).Error
+
+	return err
+}
+
+func updateAdvisoryAccountDatas(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int) error {
+	err := lockAdvisoryAccountData(tx, system, patched, unpatched)
+	if err != nil {
+		return err
+	}
+
+	changes := calcAdvisoryChanges(system, patched, unpatched)
+	txOnConflict := database.OnConflictDoUpdateExpr(tx, []string{"rh_account_id", "advisory_id"},
+		database.UpExpr{Name: "systems_affected", Expr: "advisory_account_data.systems_affected + excluded.systems_affected"})
+
+	return database.BulkInsert(txOnConflict, changes)
+}

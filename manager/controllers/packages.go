@@ -47,17 +47,21 @@ func packagesQuery(c *gin.Context, acc int) (*gorm.DB, error) {
 		Where("sp.stale = false").
 		Group("spkg.name_id")
 
-	// We need to apply tag filtering on subquery
-	subQ, _, err := ApplyTagsFilter(c, subQ, "sp.inventory_id")
-	if err != nil {
-		return nil, err
+	if HasTags(c) {
+		// We need to apply tag filtering on subquery
+		subQ, _, err := ApplyTagsFilter(c, subQ, "sp.inventory_id")
+		if err != nil {
+			return nil, err
+		}
+		return database.Db.
+			Select(PackagesSelect).
+			Table("package_latest_cache latest").
+			Joins("INNER JOIN (?) res ON res.name_id = latest.name_id", subQ).
+			Joins("INNER JOIN package_name pn on pn.id = res.name_id"), nil
+	} else {
+		// Caching approach
+		return nil, nil
 	}
-
-	return database.Db.
-		Select(PackagesSelect).
-		Table("package_latest_cache latest").
-		Joins("INNER JOIN (?) res ON res.name_id = latest.name_id", subQ).
-		Joins("INNER JOIN package_name pn on pn.id = res.name_id"), nil
 }
 
 // @Summary Show me all installed packages across my systems

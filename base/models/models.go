@@ -179,6 +179,20 @@ func (AdvisoryAccountData) TableName() string {
 }
 
 type AdvisoryAccountDataSlice []AdvisoryAccountData
+
+type PackageAccountData struct {
+	NameID           int
+	RhAccountID      int
+	SystemsInstalled int
+	SystemsUpdatable int
+}
+
+func (PackageAccountData) TableName() string {
+	return "package_account_data"
+}
+
+type PackageAccountDataSlice []PackageAccountData
+
 type Repo struct {
 	ID         int
 	Name       string
