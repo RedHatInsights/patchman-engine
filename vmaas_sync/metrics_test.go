@@ -114,7 +114,7 @@ func TestPackageCounts(t *testing.T) {
 
 	count, err := getPackageCounts()
 	assert.Nil(t, err)
-	assert.Equal(t, int64(11), count)
+	assert.Equal(t, int64(12), count)
 }
 
 func TestPackageNameCounts(t *testing.T) {

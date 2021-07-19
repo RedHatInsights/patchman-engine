@@ -130,7 +130,8 @@ INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_
 (8, 108, '3.1-6.el8.x86_64', '88', '8', 8), -- grep
 (9, 109, '2.21-10.el8.x86_64', '99', '9', 9), -- which
 (10, 110, '0.80-2.el8.x86_64', '1010', '10', 9), -- passwd
-(11, 101, '5.6.13-201.fc31.x86_64', '11', '1', 7); -- kernel
+(11, 101, '5.6.13-201.fc31.x86_64', '11', '1', 7), -- kernel
+(12, 102, '76.0.1-2.fc31.x86_64', '22', '2', null); -- firefox
 
 INSERT INTO system_package (rh_account_id, system_id, package_id, name_id, update_data) VALUES
 (3, 12, 1, 101, '[{"evra": "5.10.13-200.fc31.x86_64", "advisory": "RH-100"}]'),

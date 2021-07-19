@@ -19,7 +19,7 @@ func refreshLatestPackagesCount() {
 		<-ticker.C
 
 		err := withTx(func(tx *gorm.DB) error {
-			return tx.Raw("select refresh_latest_packages_view()").Error
+			return tx.Exec("select refresh_latest_packages_view()").Error
 		})
 
 		if err != nil {
