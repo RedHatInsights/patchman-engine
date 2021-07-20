@@ -26,7 +26,7 @@ func TestGetPackageCache(t *testing.T) {
 	assert.Equal(t, 101, val.NameID)
 	assert.Equal(t, "1", string(val.SummaryHash))
 	assert.Equal(t, "11", string(val.DescriptionHash))
-	val, ok = pc.GetByNevra("kernel-5.6.13-201.fc31.x86_64")
+	val, ok = pc.GetByNevra("kernel-0:5.6.13-201.fc31.x86_64")
 	assert.True(t, ok)
 	assert.Equal(t, 11, val.ID)
 	assert.Equal(t, "kernel", val.Name)
