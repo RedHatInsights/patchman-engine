@@ -17,6 +17,6 @@ func ConfigureApp() {
 }
 
 func SetupTestEnvironment() {
-	utils.SetenvOrFail("LOG_LEVEL", "debug")
+	utils.SetDefaultEnvOrFail("LOG_LEVEL", "debug")
 	ConfigureApp()
 }

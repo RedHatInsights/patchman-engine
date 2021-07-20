@@ -91,8 +91,12 @@ func GetIntEnvOrDefault(envname string, defval int) int {
 	return value
 }
 
-// SetenvOrFail Set environment variable or fail
-func SetenvOrFail(envname, value string) string {
+// SetDefaultEnvOrFail Set environment variable if not already or fail
+func SetDefaultEnvOrFail(envname, value string) string {
+	val := os.Getenv(envname)
+	if val != "" {
+		return val
+	}
 	err := os.Setenv(envname, value)
 	if err != nil {
 		panic(err)
