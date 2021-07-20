@@ -140,8 +140,9 @@ func packages2NevraMap(packages []namedPackage) map[string]namedPackage {
 func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform,
 	vmaasData *vmaas.UpdatesV2Response) ([]namedPackage, error) {
 	updates := vmaasData.GetUpdateList()
-	packageIDs := make([]int, len(updates))
-	packages := make([]namedPackage, len(updates))
+	numUpdates := len(updates)
+	packageIDs := make([]int, numUpdates)
+	packages := make([]namedPackage, numUpdates)
 	id2index := map[int]int{}
 	i := 0
 	for nevra := range updates {
@@ -178,6 +179,7 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform,
 		packages[index].WasStored = true
 		packages[index].UpdateData = columns.UpdateData
 	}
+	utils.Log("inventoryID", system.InventoryID, "packages", numUpdates, "already stored", len(packages)).Debug()
 	return packages, err
 }
 
