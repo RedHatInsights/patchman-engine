@@ -21,13 +21,15 @@ func TestAnalyzePackages(t *testing.T) {
 	system := models.SystemPlatform{ID: 11, RhAccountID: 2}
 	database.CheckSystemPackages(t, system.ID, 0)
 	database.CheckEVRAsInDB(t, 0, "12.0.1-1.fc31.x86_64") // lazy added package
+	// we send request with zero epoch and expect response with zero epoch
+	// so we have to test with zero epoch
 	vmaasData := vmaas.UpdatesV2Response{UpdateList: &map[string]vmaas.UpdatesV2ResponseUpdateList{
-		"kernel-5.6.13-200.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV2ResponseAvailableUpdates{}},
-		"firefox-12.0.1-1.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV2ResponseAvailableUpdates{{
-			Package: utils.PtrString("firefox-77.0.1-1.fc31.x86_64"),
+		"kernel-0:5.6.13-200.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV2ResponseAvailableUpdates{}},
+		"firefox-0:12.0.1-1.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV2ResponseAvailableUpdates{{
+			Package: utils.PtrString("firefox-0:77.0.1-1.fc31.x86_64"),
 		}}},
 		// this custom-package will be ignored
-		"custom-package-1.2.3-1.fc33.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV2ResponseAvailableUpdates{{}}}}}
+		"custom-package-0:1.2.3-1.fc33.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV2ResponseAvailableUpdates{{}}}}}
 
 	installed, updatable, err := analyzePackages(database.Db, &system, &vmaasData)
 	assert.Nil(t, err)
