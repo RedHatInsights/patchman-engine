@@ -2,9 +2,10 @@ package utils
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"regexp"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 var (
@@ -63,23 +64,35 @@ func ParseNameEVRA(name, evra string) (*Nevra, error) {
 	return ParseNevra(fmt.Sprintf("%s-%s", name, evra))
 }
 
-func (n Nevra) String() string {
-	if n.Epoch != 0 {
+func (n Nevra) StringE(showEpoch bool) string {
+	if n.Epoch != 0 || showEpoch {
 		return fmt.Sprintf("%s-%d:%s-%s.%s", n.Name, n.Epoch, n.Version, n.Release, n.Arch)
 	}
 	return fmt.Sprintf("%s-%s-%s.%s", n.Name, n.Version, n.Release, n.Arch)
 }
 
-func (n Nevra) EVRString() string {
-	if n.Epoch != 0 {
+func (n Nevra) String() string {
+	return n.StringE(false)
+}
+
+func (n Nevra) EVRStringE(showEpoch bool) string {
+	if n.Epoch != 0 || showEpoch {
 		return fmt.Sprintf("%d:%s-%s", n.Epoch, n.Version, n.Release)
 	}
 	return fmt.Sprintf("%s-%s", n.Version, n.Release)
 }
 
-func (n Nevra) EVRAString() string {
-	if n.Epoch != 0 {
+func (n Nevra) EVRString() string {
+	return n.EVRStringE(false)
+}
+
+func (n Nevra) EVRAStringE(showEpoch bool) string {
+	if n.Epoch != 0 || showEpoch {
 		return fmt.Sprintf("%d:%s-%s.%s", n.Epoch, n.Version, n.Release, n.Arch)
 	}
 	return fmt.Sprintf("%s-%s.%s", n.Version, n.Release, n.Arch)
+}
+
+func (n Nevra) EVRAString() string {
+	return n.EVRAStringE(false)
 }

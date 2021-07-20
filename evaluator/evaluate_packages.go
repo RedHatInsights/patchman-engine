@@ -67,6 +67,7 @@ func getMissingPackages(vmaasData *vmaas.UpdatesV2Response) models.PackageSlice 
 			// package is already in db/cache, nothing needed
 			continue
 		}
+		utils.Log("missing nevra", nevra).Trace("getMissingPackages")
 		parsed, err := utils.ParseNevra(nevra)
 		if err != nil {
 			utils.Log("err", err.Error(), "nevra", nevra).Warn("Unable to parse nevra")
@@ -96,6 +97,7 @@ func updatePackageDB(tx *gorm.DB, missing *models.PackageSlice) error {
 }
 
 func updatePackageCache(missing models.PackageSlice) {
+	utils.Log().Trace("updatePackageCache")
 	for _, dbPkg := range missing {
 		name, ok := memoryPackageCache.GetNameByID(dbPkg.NameID)
 		if !ok {
@@ -131,8 +133,14 @@ func loadPackages(tx *gorm.DB, system *models.SystemPlatform,
 func packages2NevraMap(packages []namedPackage) map[string]namedPackage {
 	pkgByNevra := map[string]namedPackage{}
 	for _, p := range packages {
-		nevra := p.Name + "-" + p.EVRA
-		pkgByNevra[nevra] = p
+		// make sure nevra contains epoch even if epoch==0
+		nevra, err := utils.ParseNameEVRA(p.Name, p.EVRA)
+		if err != nil {
+			utils.Log("name", p.Name, "evra", p.EVRA).Warn("PackageCache.Add: cannot parse evra")
+			continue
+		}
+		nevraString := nevra.StringE(true)
+		pkgByNevra[nevraString] = p
 	}
 	return pkgByNevra
 }

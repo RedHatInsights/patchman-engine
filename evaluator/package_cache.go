@@ -151,13 +151,19 @@ func (c *PackageCache) Add(pkg *PackageCacheMetadata) {
 
 func (c *PackageCache) AddWithoutLock(pkg *PackageCacheMetadata) {
 	c.byID[pkg.ID] = pkg
-	nevra := pkg.Name + "-" + pkg.Evra
-	c.byNevra[nevra] = pkg
+	// make sure nevra contains epoch even if epoch==0
+	nevra, err := utils.ParseNameEVRA(pkg.Name, pkg.Evra)
+	if err != nil {
+		utils.Log("name", pkg.Name, "evra", pkg.Evra).Warn("PackageCache.Add: cannot parse evra")
+		return
+	}
+	nevraString := nevra.StringE(true)
+	c.byNevra[nevraString] = pkg
 	if _, ok := c.latestByName[pkg.Name]; !ok {
 		c.latestByName[pkg.Name] = pkg
 	}
 	if _, ok := c.nameByID[pkg.NameID]; !ok {
 		c.nameByID[pkg.NameID] = pkg.Name
 	}
-	utils.Log("nevra", nevra).Trace("PackageCache.Add")
+	utils.Log("nevra", nevraString).Trace("PackageCache.Add")
 }
