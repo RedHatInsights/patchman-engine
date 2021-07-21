@@ -77,11 +77,16 @@ services:
       - ./conf/kafka.env
     depends_on:
       - zookeeper
+    volumes:
+      - ./dev/kafka/secrets:/etc/kafka/secrets
+      - ./dev/kafka:/app
     ports:
       - 29092:29092
       - 29093:29093
       - 9092:9092
       - 9093:9093
+    security_opt:
+      - label=disable
 
   platform:
     container_name: platform
