@@ -627,6 +627,27 @@
                         }
                     },
                     {
+                        "name": "filter[system_profile][sap_system]",
+                        "in": "query",
+                        "description": "Filter only SAP systems",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][sap_sids][in]",
+                        "in": "query",
+                        "description": "Filter systems by their SAP SIDs",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
                         "name": "tags",
                         "in": "query",
                         "description": "Tag filter",
@@ -729,40 +750,6 @@
                         "schema": {
                             "type": "string"
                         }
-                    },
-                    {
-                        "name": "tags",
-                        "in": "query",
-                        "description": "Tag filter",
-                        "style": "form",
-                        "explode": true,
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    {
-                        "name": "filter[system_profile][sap_system]",
-                        "in": "query",
-                        "description": "Filter only SAP systems",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[system_profile][sap_sids][in]",
-                        "in": "query",
-                        "description": "Filter systems by their SAP SIDs",
-                        "style": "form",
-                        "explode": true,
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
                     }
                 ],
                 "responses": {
@@ -811,19 +798,6 @@
                         }
                     },
                     {
-                        "name": "tags",
-                        "in": "query",
-                        "description": "Tag filter",
-                        "style": "form",
-                        "explode": true,
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -835,6 +809,19 @@
                         "name": "filter[system_profile][sap_sids][in]",
                         "in": "query",
                         "description": "Filter systems by their SAP SIDs",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Tag filter",
                         "style": "form",
                         "explode": true,
                         "schema": {
@@ -959,6 +946,27 @@
                         "description": "Filter",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][sap_system]",
+                        "in": "query",
+                        "description": "Filter only SAP systems",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][sap_sids][in]",
+                        "in": "query",
+                        "description": "Filter systems by their SAP SIDs",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
                         }
                     },
                     {
