@@ -16,9 +16,9 @@ import (
 // @Accept   json
 // @Produce  json
 // @Param    package_name    path    string    true  "Package name"
+// @Param    filter[system_profile][sap_system]   query string   false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_sids][in] query []string false "Filter systems by their SAP SIDs"
 // @Param    tags            query   []string  false "Tag filter"
-// @Param    filter[system_profile][sap_system]   query  string  false "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in] query []string  false "Filter systems by their SAP SIDs"
 // @Success 200 {array} PackageSystemItem
 // @Router /api/patch/v1/export/packages/{package_name}/systems [get]
 func PackageSystemsExportHandler(c *gin.Context) {

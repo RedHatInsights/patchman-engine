@@ -30,6 +30,8 @@ import (
 // @Param    filter[stale]           query   string  false "Filter"
 // @Param    filter[packages_installed] query string false "Filter"
 // @Param    filter[packages_updatable] query string false "Filter"
+// @Param    filter[system_profile][sap_system]   query string   false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_sids][in] query []string false "Filter systems by their SAP SIDs"
 // @Param    tags                    query   []string  false "Tag filter"
 // @Success 200 {array} SystemInlineItem
 // @Router /api/patch/v1/export/advisories/{advisory_id}/systems [get]
