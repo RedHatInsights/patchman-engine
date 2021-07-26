@@ -165,3 +165,19 @@ func TestSyncAdvisories(t *testing.T) {
 	database.DeleteNewlyAddedPackages(t)
 	database.DeleteNewlyAddedAdvisories(t)
 }
+
+func TestSyncAdvisoriesCheck(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	modifiedSince := "2020-01-01T00:00:00+00:00"
+	err := syncAdvisories(time.Now(), &modifiedSince)
+	assert.NoError(t, err)
+
+	expected := []string{"RH-100"}
+	database.CheckAdvisoriesInDB(t, expected)
+
+	database.DeleteNewlyAddedPackages(t)
+	database.DeleteNewlyAddedAdvisories(t)
+}
