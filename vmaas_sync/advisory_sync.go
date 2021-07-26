@@ -37,6 +37,15 @@ func syncAdvisories(syncStart time.Time, modifiedSince *string) error {
 			"advisories_sync_duration", utils.SinceStr(advSyncStart, time.Second)).
 			Debug("Downloaded advisories")
 	}
+
+	advisoryCheckEnabled := utils.GetBoolEnvOrDefault("ENABLE_ADVISORIES_COUNT_CHECK", true)
+	if modifiedSince != nil && advisoryCheckEnabled {
+		err := checkAdvisoriesCount()
+		if err != nil {
+			return errors.Wrap(err, "Advisories check failed")
+		}
+	}
+
 	utils.Log().Info("Advisories synced successfully")
 	return nil
 }
@@ -217,7 +226,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 }
 
 func downloadAndProcessErratasPage(iPage int, modifiedSince *string) (*vmaas.ErrataResponse, error) {
-	errataResponse, err := vmaasErrataRequest(iPage, modifiedSince)
+	errataResponse, err := vmaasErrataRequest(iPage, modifiedSince, advisoryPageSize)
 	if err != nil {
 		return nil, errors.Wrap(err, "Advisories sync failed on vmaas request")
 	}
@@ -229,10 +238,10 @@ func downloadAndProcessErratasPage(iPage int, modifiedSince *string) (*vmaas.Err
 	return errataResponse, nil
 }
 
-func vmaasErrataRequest(iPage int, modifiedSince *string) (*vmaas.ErrataResponse, error) {
+func vmaasErrataRequest(iPage int, modifiedSince *string, pageSize int) (*vmaas.ErrataResponse, error) {
 	errataRequest := vmaas.ErrataRequest{
 		Page:          utils.PtrFloat32(float32(iPage)),
-		PageSize:      utils.PtrFloat32(float32(advisoryPageSize)),
+		PageSize:      utils.PtrFloat32(float32(pageSize)),
 		ErrataList:    []string{".*"},
 		ThirdParty:    utils.PtrBool(true),
 		ModifiedSince: modifiedSince,
@@ -251,4 +260,26 @@ func vmaasErrataRequest(iPage int, modifiedSince *string) (*vmaas.ErrataResponse
 	}
 	vmaasCallCnt.WithLabelValues("success").Inc()
 	return vmaasDataPtr.(*vmaas.ErrataResponse), nil
+}
+
+func checkAdvisoriesCount() error {
+	var databaseAdvisoriesCount int64
+	err := database.Db.Table("advisory_metadata").Count(&databaseAdvisoriesCount).Error
+	if err != nil {
+		return errors.Wrap(err, "Advisories check failed on db query")
+	}
+
+	errataResponse, err := vmaasErrataRequest(0, nil, 1)
+	if err != nil {
+		return errors.Wrap(err, "Advisories check failed on vmaas request")
+	}
+
+	errataCount := int64(errataResponse.GetPages()) + 1
+	if databaseAdvisoriesCount != errataCount {
+		err = syncAdvisories(time.Now(), nil)
+		if err != nil {
+			return errors.Wrap(err, "Full advisories sync failed")
+		}
+	}
+	return nil
 }
