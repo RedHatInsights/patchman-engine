@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/pkg/errors"
@@ -236,7 +237,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 
 	if shouldUpdateRepos {
 		// We also don't need to update repos if vmaas_json haven't changed
-		addedRepos, addedSysRepos, deletedSysRepos, err = updateRepos(tx, accountID,
+		addedRepos, addedSysRepos, deletedSysRepos, err = updateRepos(tx, host.SystemProfile, accountID,
 			systemPlatform.ID, updatesReq.GetRepositoryList())
 		if err != nil {
 			utils.Log("repository_list", updatesReq.RepositoryList, "inventoryID", systemPlatform.ID).
@@ -260,8 +261,20 @@ func getReporterID(reporter string) *int {
 	return nil
 }
 
-func updateRepos(tx *gorm.DB, rhAccountID int, systemID int, repos []string) (addedRepos int64, addedSysRepos int64,
-	deletedSysRepos int64, err error) {
+// EPEL uses the `epel` repo identifier on both rhel 7 and rhel 8. We create our own mapping to
+// `epel-7` and `epel-8`
+func fixEpelRepos(sys inventory.SystemProfileSpecYamlSystemProfile, repos []string) []string {
+	for i, r := range repos {
+		if r == "epel" && sys.OperatingSystem.Major != nil {
+			repos[i] = fmt.Sprintf("%s-%d", r, *sys.OperatingSystem.Major)
+		}
+	}
+	return repos
+}
+
+func updateRepos(tx *gorm.DB, profile inventory.SystemProfileSpecYamlSystemProfile, rhAccountID int,
+	systemID int, repos []string) (addedRepos int64, addedSysRepos int64, deletedSysRepos int64, err error) {
+	repos = fixEpelRepos(profile, repos)
 	repoIDs, addedRepos, err := ensureReposInDB(tx, repos)
 	if err != nil {
 		return 0, 0, 0, err
