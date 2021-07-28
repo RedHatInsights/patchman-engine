@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (66, false);
+VALUES (67, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -704,7 +704,8 @@ INSERT INTO advisory_type (id, name)
 VALUES (0, 'unknown'),
        (1, 'enhancement'),
        (2, 'bugfix'),
-       (3, 'security')
+       (3, 'security'),
+       (4, 'unspecified')
 ON CONFLICT DO NOTHING;
 
 CREATE TABLE advisory_severity
