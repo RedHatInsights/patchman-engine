@@ -16,6 +16,11 @@ import (
 
 const SyncBatchSize = 1000 // Should be < 5000
 
+// Map advisory types received from vmaas. Done to support EPEL content
+var advisoryTypeRemap = map[string]string{
+	"newpackage": "enhancement",
+}
+
 func syncAdvisories(syncStart time.Time, modifiedSince *string) error {
 	if vmaasClient == nil {
 		panic("VMaaS client is nil")
@@ -62,6 +67,11 @@ func getAdvisoryTypes() (map[string]int, error) {
 	for _, t := range advisoryTypesArr {
 		advisoryTypes[strings.ToLower(t.Name)] = t.ID
 	}
+
+	for from, to := range advisoryTypeRemap {
+		advisoryTypes[from] = advisoryTypes[to]
+	}
+
 	return advisoryTypes, nil
 }
 
