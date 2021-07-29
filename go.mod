@@ -11,7 +11,7 @@ require (
 	github.com/confluentinc/confluent-kafka-go v1.7.0 // indirect
 	github.com/getkin/kin-openapi v0.9.0
 	github.com/gin-contrib/gzip v0.0.1
-	github.com/gin-gonic/gin v1.6.3
+	github.com/gin-gonic/gin v1.7.0
 	github.com/gocarina/gocsv v0.0.0-20200330101823-46266ca37bd3
 	github.com/golang-migrate/migrate/v4 v4.14.1
 	github.com/golang/protobuf v1.5.2 // indirect
