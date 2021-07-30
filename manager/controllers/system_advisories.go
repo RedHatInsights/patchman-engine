@@ -77,6 +77,11 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		return
 	}
 
+	if !utils.IsValidUUID(inventoryID) {
+		LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+		return
+	}
+
 	var exists int64
 	err := database.Db.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid ", inventoryID).
 		Count(&exists).Error

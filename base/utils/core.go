@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"path"
+	"regexp"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/joho/godotenv"
 )
+
+var uuidRegex = regexp.MustCompile("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$")
 
 // Getenv Load environment variable or return default value
 func Getenv(key, defaultt string) string {
@@ -147,4 +150,8 @@ func SizeStr(size uint64) string {
 		order = int(math.Log2(float64(size)) / 10)
 	}
 	return fmt.Sprintf("%.4g%s", float64(size)/float64(int(1)<<(order*10)), _suffixes[order])
+}
+
+func IsValidUUID(uuid string) bool {
+	return uuidRegex.MatchString(uuid)
 }

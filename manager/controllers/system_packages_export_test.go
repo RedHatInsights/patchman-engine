@@ -51,3 +51,14 @@ func TestSystemPackagesExportHandlerCSV(t *testing.T) {
 	assert.Equal(t, "firefox,76.0.1-1.fc31.x86_64,Mozilla Firefox Web browser,Mozilla Firefox is an "+
 		"open-source web browser...,true,76.0.1-1.fc31.x86_64", lines[2])
 }
+
+func TestSystemPackagesExportUnknown(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/unknownsystem/packages", nil)
+	req.Header.Add("Accept", "text/csv")
+	core.InitRouterWithParams(SystemPackagesExportHandler, 3, "GET", "/:inventory_id/packages").ServeHTTP(w, req)
+	assert.Equal(t, 400, w.Code)
+}

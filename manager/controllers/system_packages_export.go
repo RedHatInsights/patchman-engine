@@ -42,6 +42,11 @@ func SystemPackagesExportHandler(c *gin.Context) {
 		return
 	}
 
+	if !utils.IsValidUUID(inventoryID) {
+		LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+		return
+	}
+
 	var loaded []SystemPackageDBLoad
 	q := systemPackageQuery(account, inventoryID)
 	q, err := ExportListCommon(q, c, SystemPackagesOpts)

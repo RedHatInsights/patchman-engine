@@ -127,3 +127,14 @@ func TestRHSMGreaterThanOS(t *testing.T) {
 	assert.Equal(t, "8", output.Data.Attributes.OSMajor)
 	assert.Equal(t, "2", output.Data.Attributes.OSMinor)
 }
+
+func TestSystemUnknown(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/unknownsystem", nil)
+	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 1).ServeHTTP(w, req)
+
+	assert.Equal(t, 400, w.Code)
+}
