@@ -27,7 +27,7 @@ func SystemPackages(tx *gorm.DB, accountID int) *gorm.DB {
 	return Systems(tx, accountID).
 		Joins("JOIN system_package spkg on spkg.system_id = sp.id AND spkg.rh_account_id = ?", accountID).
 		Joins("JOIN package p on p.id = spkg.package_id").
-		Joins("JOIN package_name pn on pn.id = p.name_id")
+		Joins("JOIN package_name pn on pn.id = spkg.name_id")
 }
 
 func Packages(tx *gorm.DB) *gorm.DB {
