@@ -58,3 +58,14 @@ func TestSystemDeleteNotFound(t *testing.T) {
 
 	assert.Equal(t, 404, w.Code)
 }
+
+func TestSystemDeleteUnknown(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/unknownsystem", nil)
+	core.InitRouterWithParams(SystemDeleteHandler, 1, "DELETE", "/:inventory_id").ServeHTTP(w, req)
+
+	assert.Equal(t, 400, w.Code)
+}

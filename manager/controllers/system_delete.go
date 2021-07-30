@@ -27,6 +27,12 @@ func SystemDeleteHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
 		return
 	}
+
+	if !utils.IsValidUUID(inventoryID) {
+		LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+		return
+	}
+
 	var systemInventoryID []string
 	tx := database.Db.WithContext(base.Context).Begin()
 

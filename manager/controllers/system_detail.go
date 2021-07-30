@@ -32,6 +32,11 @@ func SystemDetailHandler(c *gin.Context) {
 		return
 	}
 
+	if !utils.IsValidUUID(inventoryID) {
+		LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+		return
+	}
+
 	var systemItemAttributes SystemItemAttributes
 	query := database.Systems(database.Db, account).
 		Select(database.MustGetSelect(&systemItemAttributes)).

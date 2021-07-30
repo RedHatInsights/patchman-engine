@@ -100,3 +100,15 @@ func TestSystemPackagesWrongOffset(t *testing.T) {
 	doTestWrongOffset(t, "/:inventory_id/packages",
 		"/00000000-0000-0000-0000-000000000001/packages?offset=1000", SystemPackagesHandler)
 }
+
+func TestSystemPackegesUnknown(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/unknownsystem/packages", nil)
+	core.InitRouterWithParams(SystemPackagesHandler, 3, "GET", "/:inventory_id/packages").
+		ServeHTTP(w, req)
+
+	assert.Equal(t, 400, w.Code)
+}

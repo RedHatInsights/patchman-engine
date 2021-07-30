@@ -123,3 +123,14 @@ func TestSystemAdvisoriesWrongOffset(t *testing.T) {
 	doTestWrongOffset(t, "/:inventory_id", "/00000000-0000-0000-0000-000000000001?offset=1000",
 		SystemAdvisoriesHandler)
 }
+
+func TestSystemAdvisoriesExportUnknown(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/unknownsystem", nil)
+	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
+
+	assert.Equal(t, 400, w.Code)
+}

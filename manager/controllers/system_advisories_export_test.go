@@ -41,3 +41,14 @@ func TestSystemAdvisoriesExportCSV(t *testing.T) {
 	assert.Equal(t, "id,description,public_date,synopsis,advisory_type,severity,cve_count", lines[0])
 	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,,0", lines[1])
 }
+
+func TestUnknownSystemAdvisoriesExport(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/unknownsystem", nil)
+	req.Header.Add("Accept", "text/csv")
+	core.InitRouterWithPath(SystemAdvisoriesExportHandler, "/:inventory_id").ServeHTTP(w, req)
+	assert.Equal(t, 400, w.Code)
+}

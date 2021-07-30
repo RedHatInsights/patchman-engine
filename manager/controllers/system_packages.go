@@ -82,6 +82,11 @@ func SystemPackagesHandler(c *gin.Context) {
 		return
 	}
 
+	if !utils.IsValidUUID(inventoryID) {
+		LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+		return
+	}
+
 	var loaded []SystemPackageDBLoad
 	q := systemPackageQuery(account, inventoryID)
 	q, meta, links, err := ListCommon(q, c, fmt.Sprintf("/systems/%s/packages", inventoryID), SystemPackagesOpts)
