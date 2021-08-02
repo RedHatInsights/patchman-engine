@@ -36,7 +36,7 @@ func PackageSystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	query := packageSystemsQuery(account, packageIDs)
+	query := packageSystemsQuery(account, packageName, packageIDs)
 	query, _, err := ApplyTagsFilter(c, query, "sp.inventory_id")
 	if err != nil {
 		return
