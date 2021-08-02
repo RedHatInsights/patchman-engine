@@ -19,7 +19,9 @@ func SystemAdvisories(tx *gorm.DB, accountID int) *gorm.DB {
 
 func SystemPackagesShort(tx *gorm.DB, accountID int) *gorm.DB {
 	return Systems(tx, accountID).
-		Joins("JOIN system_package spkg on spkg.system_id = sp.id AND spkg.rh_account_id = ?", accountID).
+		Joins("JOIN system_package spkg on spkg.system_id = sp.id "+
+			"AND spkg.system_id IN (SELECT id FROM system_platform WHERE rh_account_id = ? AND stale = 'false' "+
+			"AND packages_installed > 0) AND spkg.rh_account_id = ?", accountID, accountID).
 		Joins("JOIN package_name pn on pn.id = spkg.name_id")
 }
 
