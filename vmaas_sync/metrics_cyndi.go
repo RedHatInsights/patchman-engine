@@ -12,7 +12,6 @@ import (
 
 const (
 	allSystemCount        = "allSystem"
-	uniqueTagsCount       = "uniqueTags"
 	systemsSapSystemCount = "systemsSapSystem"
 	systemsWithTagsCount  = "systemsWithTag"
 )
@@ -35,7 +34,6 @@ var (
 
 type InventoryHostsStats struct {
 	SystemsCount    int64
-	UniqueTags      int64
 	SapCount        int64
 	SystemsWithTags int64
 }
@@ -47,21 +45,12 @@ func updateCyndiData() {
 		stats = InventoryHostsStats{}
 	}
 	cyndiTagsCnt.WithLabelValues(allSystemCount).Set(float64(stats.SystemsCount))
-	cyndiTagsCnt.WithLabelValues(uniqueTagsCount).Set(float64(stats.UniqueTags))
 	cyndiTagsCnt.WithLabelValues(systemsSapSystemCount).Set(float64(stats.SapCount))
 	cyndiTagsCnt.WithLabelValues(systemsWithTagsCount).Set(float64(stats.SystemsWithTags))
 }
 
 func getCyndiData() (stats InventoryHostsStats, err error) {
 	err = database.Db.Table("inventory.hosts").Count(&stats.SystemsCount).Error
-	if err != nil {
-		utils.Log("err", err.Error()).Error("unable to update cyndi metrics")
-		return stats, err
-	}
-
-	err = database.Db.Table("(SELECT jsonb_array_elements(tags) as tag FROM inventory.hosts" +
-		" where jsonb_array_length(tags) > 0) as t").
-		Select("count(DISTINCT tag)").Count(&stats.UniqueTags).Error
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to update cyndi metrics")
 		return stats, err

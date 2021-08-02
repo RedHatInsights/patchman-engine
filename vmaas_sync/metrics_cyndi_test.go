@@ -82,7 +82,6 @@ func TestCyndiTags(t *testing.T) {
 	cyndiData, err := getCyndiData()
 	assert.Nil(t, err)
 	assert.Equal(t, int64(16), cyndiData.SystemsCount)
-	assert.Equal(t, int64(3), cyndiData.UniqueTags)
 	assert.Equal(t, int64(14), cyndiData.SapCount)
 	assert.Equal(t, int64(15), cyndiData.SystemsWithTags)
 }
