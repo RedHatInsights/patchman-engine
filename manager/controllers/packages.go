@@ -56,8 +56,8 @@ func packagesQuery(c *gin.Context, acc int) (*gorm.DB, error) {
 	return database.Db.
 		Select(PackagesSelect).
 		Table("package_latest_cache latest").
-		Joins("INNER JOIN (?) res ON res.name_id = latest.name_id", subQ).
-		Joins("INNER JOIN package_name pn on pn.id = res.name_id"), nil
+		Joins("JOIN (?) res ON res.name_id = latest.name_id", subQ).
+		Joins("JOIN package_name pn on pn.id = res.name_id"), nil
 }
 
 // @Summary Show me all installed packages across my systems
