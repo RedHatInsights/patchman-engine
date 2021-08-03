@@ -82,8 +82,8 @@ objects:
         - {name: LOG_LEVEL, value: "debug"}
         - {name: CW_ENABLED, value: "false"}
         - {name: CLOWDER_ENABLED, value: "true"}
-        - {name: DB_PASSWD, value: vmaas_sync}
-        - {name: DB_USER, value: vmaas_sync}
+        - {name: DB_PASSWD, value: listener}
+        - {name: DB_USER, value: listener}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: EVENTS_TOPIC, value: platform.inventory.events}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
@@ -111,8 +111,8 @@ objects:
         - {name: LOG_LEVEL, value: "debug"}
         - {name: CW_ENABLED, value: "false"}
         - {name: CLOWDER_ENABLED, value: "true"}
-        - {name: DB_PASSWD, value: vmaas_sync}
-        - {name: DB_USER, value: vmaas_sync}
+        - {name: DB_PASSWD, value: evaluator}
+        - {name: DB_USER, value: evaluator}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: "platform.remediation-updates.patch"}
@@ -140,8 +140,8 @@ objects:
         - {name: LOG_LEVEL, value: "debug"}
         - {name: CW_ENABLED, value: "false"}
         - {name: CLOWDER_ENABLED, value: "true"}
-        - {name: DB_PASSWD, value: vmaas_sync}
-        - {name: DB_USER, value: vmaas_sync}
+        - {name: DB_PASSWD, value: evaluator}
+        - {name: DB_USER, value: evaluator}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: "platform.remediation-updates.patch"}
