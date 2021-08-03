@@ -193,8 +193,8 @@ objects:
     - host-inventory
     - rbac
     - vmaas
-    # - ingress # These deps are failing, commenting temporarily
-    # - puptoo
+    - ingress
+    - puptoo
 
 parameters:
 - description: ClowdEnv Name
