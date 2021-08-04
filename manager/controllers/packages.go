@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/database"
 	"app/manager/middlewares"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -42,22 +43,25 @@ type queryItem struct {
 var queryItemSelect = database.MustGetSelect(&queryItem{})
 
 func packagesQuery(c *gin.Context, acc int) (*gorm.DB, error) {
-	subQ := database.SystemPackagesShort(database.Db, acc).
-		Select(queryItemSelect).
-		Where("sp.stale = false").
-		Group("spkg.name_id")
+	systemsWithPkgsInstalledQ := database.Systems(database.Db, acc).
+		Select("id").
+		Where("sp.stale = false AND sp.packages_installed > 0")
 
 	// We need to apply tag filtering on subquery
-	subQ, _, err := ApplyTagsFilter(c, subQ, "sp.inventory_id")
+	systemsWithPkgsInstalledQ, _, err := ApplyTagsFilter(c, systemsWithPkgsInstalledQ, "sp.inventory_id")
 	if err != nil {
 		return nil, err
 	}
+	subQ := database.SystemPackagesShort(database.Db, acc).
+		Select(queryItemSelect).
+		Where("spkg.system_id IN (?)", systemsWithPkgsInstalledQ).
+		Group("spkg.name_id")
 
 	return database.Db.
 		Select(PackagesSelect).
 		Table("package_latest_cache latest").
-		Joins("JOIN (?) res ON res.name_id = latest.name_id", subQ).
-		Joins("JOIN package_name pn on pn.id = res.name_id"), nil
+		Joins("JOIN package_name pn ON pn.id = latest.name_id").
+		Joins("JOIN (?) res ON res.name_id = latest.name_id", subQ), nil
 }
 
 // @Summary Show me all installed packages across my systems
