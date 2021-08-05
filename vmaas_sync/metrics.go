@@ -7,12 +7,12 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
-	"fmt"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"gorm.io/gorm"
-	"time"
 )
 
 const (
@@ -168,7 +168,7 @@ func update() {
 }
 
 func updateSystemMetrics() {
-	counts, err := getSystemCounts(time.Now())
+	counts, err := getSystemCounts()
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to update system metrics")
 		return
@@ -184,42 +184,41 @@ type systemsCntLabels struct {
 	LastUpload string
 }
 
-// Load stored systems counts according to "opt_out" and "last_upload" properties.
-// Result is loaded into the map {"opt_out_on:last1D": 12, "opt_out_off:last1D": 3, ...}.
-func getSystemCounts(refTime time.Time) (map[systemsCntLabels]int, error) {
-	StaleKV := map[string]bool{staleOn: true, staleOff: false}
-	lastUploadKV := map[string]int{lastUploadLast1D: 1, lastUploadLast7D: 7, lastUploadLast30D: 30, lastUploadAll: -1}
-	counts := map[systemsCntLabels]int{}
-	for StaleK, StaleV := range StaleKV {
-		systemsQuery := database.Db.Model(&models.SystemPlatform{})
-		systemsQueryStale := updateSystemsQueryStale(systemsQuery, StaleV).
-			Session(&gorm.Session{PrepareStmt: true})
-		for lastUploadK, lastUploadV := range lastUploadKV {
-			systemsQueryStaleLastUpload := updateSystemsQueryLastUpload(systemsQueryStale, refTime, lastUploadV)
-			var nSystems int64
-			err := systemsQueryStaleLastUpload.Count(&nSystems).Error
-			if err != nil {
-				return nil, errors.Wrap(err, "unable to load systems counts: "+
-					fmt.Sprintf("opt_out: %v, last_upload_before_days: %v", StaleV, lastUploadV))
-			}
-			counts[systemsCntLabels{StaleK, lastUploadK}] = int(nSystems)
-		}
+// nolint: lll
+type systemCountColumns struct {
+	OnLast1D   int `json:"on_last1d" query:"count(*) filter (where stale = true and last_upload > (now() - interval '1 day'))" gorm:"column:on_last1d"`
+	OnLast7D   int `json:"on_last7d" query:"count(*) filter (where stale = true and last_upload > (now() - interval '7 day'))" gorm:"column:on_last7d"`
+	OnLast30D  int `json:"on_last30d" query:"count(*) filter (where stale = true and last_upload > (now() - interval '30 day'))" gorm:"column:on_last30d"`
+	OnAll      int `json:"on_all" query:"count(*) filter (where stale = true)" gorm:"column:on_all"`
+	OffLast1D  int `json:"off_last1d" query:"count(*) filter (where stale = false and last_upload > (now() - interval '1 day'))" gorm:"column:off_last1d"`
+	OffLast7D  int `json:"off_last7d" query:"count(*) filter (where stale = false and last_upload > (now() - interval '7 day'))" gorm:"column:off_last7d"`
+	OffLast30D int `json:"off_last30d" query:"count(*) filter (where stale = false and last_upload > (now() - interval '30 day'))" gorm:"column:off_last30d"`
+	OffAll     int `json:"off_all" query:"count(*) filter (where stale = false)" gorm:"column:off_all"`
+}
+
+var querySystemCountColumns = database.MustGetSelect(&systemCountColumns{})
+
+// Load stored systems counts according to "stale" and "last_upload" properties.
+// This mad-looking query will read all 8 metrics at once and faster then 8 different queries with different where parts
+// Result is loaded into the map {"stale_on:last1D": 12, "stale_off:last1D": 3, ...}.
+func getSystemCounts() (map[systemsCntLabels]int, error) {
+	var row systemCountColumns
+	err := database.Db.Model(&models.SystemPlatform{}).
+		Select(querySystemCountColumns).Take(&row).Error
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to load systems count metrics")
+	}
+	counts := map[systemsCntLabels]int{
+		{staleOn, lastUploadLast1D}:   row.OnLast1D,
+		{staleOn, lastUploadLast7D}:   row.OnLast7D,
+		{staleOn, lastUploadLast30D}:  row.OnLast30D,
+		{staleOn, lastUploadAll}:      row.OnAll,
+		{staleOff, lastUploadLast1D}:  row.OffLast1D,
+		{staleOff, lastUploadLast7D}:  row.OffLast7D,
+		{staleOff, lastUploadLast30D}: row.OffLast30D,
+		{staleOff, lastUploadAll}:     row.OffAll,
 	}
 	return counts, nil
-}
-
-// Update input systems query with "opt_out = X" constraint.
-func updateSystemsQueryStale(systemsQuery *gorm.DB, stale bool) *gorm.DB {
-	return systemsQuery.Where("stale = ?", stale)
-}
-
-// Update input systems query with "last_upload > T" constraint.
-// Constraint is not added if "lastNDays" argument is negative.
-func updateSystemsQueryLastUpload(systemsQuery *gorm.DB, refTime time.Time, lastNDays int) *gorm.DB {
-	if lastNDays >= 0 {
-		return systemsQuery.Where("(last_upload > ?)", refTime.AddDate(0, 0, -lastNDays))
-	}
-	return systemsQuery
 }
 
 func updateAdvisoryMetrics() {
