@@ -13,6 +13,7 @@ import (
 const LastEvalRepoBased = "last_eval_repo_based"
 const LastSync = "last_sync"
 
+// nolint: gocritic
 func getCurrentRepoBasedInventoryIDs() ([]mqueue.InventoryAID, error) {
 	lastRepoBaseEval, err := database.GetTimestampKVValueStr(LastEvalRepoBased)
 	if err != nil {
@@ -20,12 +21,14 @@ func getCurrentRepoBasedInventoryIDs() ([]mqueue.InventoryAID, error) {
 	}
 
 	now := time.Now()
-	updateRepos, err := getUpdatedRepos(now, lastRepoBaseEval, true)
+	redhatRepos, thirdPartyRepos, err := getUpdatedRepos(now, lastRepoBaseEval)
+	allRepos := append(redhatRepos, thirdPartyRepos...)
+
 	if err != nil {
 		return nil, err
 	}
 
-	inventoryAIDs, err := getRepoBasedInventoryIDs(updateRepos)
+	inventoryAIDs, err := getRepoBasedInventoryIDs(allRepos)
 	if err != nil {
 		return nil, err
 	}
@@ -54,16 +57,17 @@ func getRepoBasedInventoryIDs(repos []string) ([]mqueue.InventoryAID, error) {
 	return ids, nil
 }
 
-func getUpdatedRepos(syncStart time.Time, modifiedSince *string, thirdParty bool) ([]string, error) {
+func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []string, error) {
 	page := float32(1)
-	var reposArr []string
+	var reposRedHat []string
+	var reposThirdParty []string
 	reposSyncStart := time.Now()
 	for {
 		reposReq := vmaas.ReposRequest{
 			Page:           utils.PtrFloat32(page),
 			RepositoryList: []string{".*"},
 			PageSize:       utils.PtrFloat32(float32(advisoryPageSize)),
-			ThirdParty:     utils.PtrBool(thirdParty),
+			ThirdParty:     utils.PtrBool(true),
 			ModifiedSince:  modifiedSince,
 		}
 
@@ -75,7 +79,7 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string, thirdParty bool
 
 		vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc, vmaasCallExpRetry, vmaasCallMaxRetries)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		vmaasCallCnt.WithLabelValues("success").Inc()
 		repos := vmaasDataPtr.(*vmaas.ReposResponse)
@@ -88,8 +92,20 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string, thirdParty bool
 			"sync_duration", utils.SinceStr(syncStart, time.Second),
 			"repos_sync_duration", utils.SinceStr(reposSyncStart, time.Second)).
 			Debug("Downloaded repos")
-		for k := range repos.GetRepositoryList() {
-			reposArr = append(reposArr, k)
+
+		for k, contentSet := range repos.GetRepositoryList() {
+			thirdParty := false
+			for _, repo := range contentSet {
+				if repo["third_party"] == (interface{})(true) {
+					thirdParty = true
+				}
+			}
+
+			if thirdParty {
+				reposThirdParty = append(reposThirdParty, k)
+			} else {
+				reposRedHat = append(reposRedHat, k)
+			}
 		}
 
 		if page == repos.GetPages() {
@@ -98,6 +114,6 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string, thirdParty bool
 		page++
 	}
 
-	utils.Log("count", len(reposArr)).Info("Repos downloading complete")
-	return reposArr, nil
+	utils.Log("redhat", len(reposRedHat), "thirdparty", len(reposThirdParty)).Info("Repos downloading complete")
+	return reposRedHat, reposThirdParty, nil
 }

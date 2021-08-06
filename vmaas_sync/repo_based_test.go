@@ -76,9 +76,10 @@ func TestGetUpdatedRepos(t *testing.T) {
 	configure()
 
 	modifiedSince := time.Now().Format(base.Rfc3339NoTz)
-	repos, err := getUpdatedRepos(time.Now(), &modifiedSince, true)
+	redhat, thirdparty, err := getUpdatedRepos(time.Now(), &modifiedSince)
 	assert.Nil(t, err)
-	assert.Equal(t, 3, len(repos))
+	assert.Equal(t, 3, len(redhat))
+	assert.Equal(t, 0, len(thirdparty))
 }
 
 func resetLastEvalTimestamp(t *testing.T) {
