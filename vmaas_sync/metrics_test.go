@@ -3,96 +3,38 @@ package vmaas_sync //nolint:revive,stylecheck
 import (
 	"app/base/core"
 	"app/base/database"
-	"app/base/models"
 	"app/base/utils"
-	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func refTime() time.Time {
 	return time.Date(2018, 9, 23, 10, 0, 0, 0, time.UTC)
 }
 
+func shiftSystemsLastUpload(timeshift time.Duration) error {
+	return database.Db.Exec("UPDATE system_platform SET last_upload = last_upload + ?", timeshift).Error
+}
+
 func TestSystemsCounts(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	counts, err := getSystemCounts(refTime())
+	timeshift := time.Since(refTime())
+	assert.Nil(t, shiftSystemsLastUpload(timeshift))
+	counts, err := getSystemCounts()
 	assert.Nil(t, err)
 	assert.Equal(t, 2, counts[systemsCntLabels{staleOff, lastUploadLast1D}])
+	assert.Equal(t, 5, counts[systemsCntLabels{staleOff, lastUploadLast7D}])
+	assert.Equal(t, 8, counts[systemsCntLabels{staleOff, lastUploadLast30D}])
 	assert.Equal(t, 14, counts[systemsCntLabels{staleOff, lastUploadAll}])
+	assert.Equal(t, 0, counts[systemsCntLabels{staleOn, lastUploadLast1D}])
+	assert.Equal(t, 0, counts[systemsCntLabels{staleOn, lastUploadLast7D}])
+	assert.Equal(t, 0, counts[systemsCntLabels{staleOn, lastUploadLast30D}])
 	assert.Equal(t, 0, counts[systemsCntLabels{staleOn, lastUploadAll}])
-}
-
-func TestSystemsCountsStale(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	systemsQuery := database.Db.Model(models.SystemPlatform{}).Session(&gorm.Session{PrepareStmt: true})
-	var optOuted int64
-	var notOptOuted int64
-	assert.Nil(t, updateSystemsQueryStale(systemsQuery, true).Count(&optOuted).Error)
-	assert.Nil(t, updateSystemsQueryStale(systemsQuery, false).Count(&notOptOuted).Error)
-	assert.Equal(t, int64(0), optOuted)
-	assert.Equal(t, int64(14), notOptOuted)
-}
-
-func TestUploadedSystemsCounts1D(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	systemsQuery := database.Db.Model(models.SystemPlatform{})
-	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime(), 1)
-	var nSystems int64
-	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, int64(2), nSystems)
-}
-
-func TestUploadedSystemsCounts7D(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	systemsQuery := database.Db.Model(models.SystemPlatform{})
-	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime(), 7)
-	var nSystems int64
-	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, int64(5), nSystems)
-}
-
-func TestUploadedSystemsCounts30D(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	systemsQuery := database.Db.Model(models.SystemPlatform{})
-	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime(), 30)
-	var nSystems int64
-	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, int64(8), nSystems)
-}
-
-func TestUploadedSystemsCountsNoSystems(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	systemsQuery := database.Db.Model(models.SystemPlatform{})
-	refTime := time.Date(2020, 9, 23, 10, 0, 0, 0, time.UTC)
-	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime, 30)
-	var nSystems int64
-	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, int64(1), nSystems)
-}
-
-func TestUploadedSystemsCountsAllSystems(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	systemsQuery := database.Db.Model(models.SystemPlatform{})
-	systemsQuery = updateSystemsQueryLastUpload(systemsQuery, refTime(), -1)
-	var nSystems int64
-	assert.Nil(t, systemsQuery.Count(&nSystems).Error)
-	assert.Equal(t, int64(14), nSystems)
+	assert.Nil(t, shiftSystemsLastUpload(-timeshift))
 }
 
 func TestAdvisoryCounts(t *testing.T) {
