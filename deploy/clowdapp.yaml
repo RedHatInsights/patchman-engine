@@ -195,6 +195,12 @@ objects:
     - vmaas
     - ingress
     - puptoo
+    cyndi:
+      enabled: true
+      appName: patchman
+      insightsOnly: true
+    testing:
+      iqePlugin: patchman
 
 parameters:
 - description: ClowdEnv Name
