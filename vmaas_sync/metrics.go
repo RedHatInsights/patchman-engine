@@ -163,7 +163,6 @@ func update() {
 
 	if enableCyndiMetrics {
 		updateCyndiData()
-		updateCyndiSystemMetrics()
 	}
 }
 

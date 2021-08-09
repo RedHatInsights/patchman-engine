@@ -3,11 +3,8 @@ package vmaas_sync //nolint:revive,stylecheck
 import (
 	"app/base/database"
 	"app/base/utils"
-	"fmt"
-	"github.com/pkg/errors"
+
 	"github.com/prometheus/client_golang/prometheus"
-	"gorm.io/gorm"
-	"time"
 )
 
 const (
@@ -32,80 +29,50 @@ var (
 	}, []string{"type"})
 )
 
-type InventoryHostsStats struct {
-	SystemsCount    int64
-	SapCount        int64
-	SystemsWithTags int64
+// nolint: lll
+type cyndiMetricColumns struct {
+	AllSystems    int64 `query:"count(*)" gorm:"column:all_systems"`
+	SapSystems    int64 `query:"count(*) filter (where system_profile -> 'sap_system' = 'true')" gorm:"column:sap_systems"`
+	TaggedSystems int64 `query:"count(*) filter (where jsonb_array_length(tags) > 0)" gorm:"column:tagged_systems"`
+	Updated1D     int64 `query:"count(*) filter (where updated > (now() - interval '1 day'))" gorm:"column:updated1d"`
+	Updated7D     int64 `query:"count(*) filter (where updated > (now() - interval '7 day'))" gorm:"column:updated7d"`
+	Updated30D    int64 `query:"count(*) filter (where updated > (now() - interval '30 day'))" gorm:"column:updated30d"`
 }
+
+var queryCyndiMetricColumns = database.MustGetSelect(&cyndiMetricColumns{})
 
 func updateCyndiData() {
-	stats, err := getCyndiData()
+	tagStats, systemStats, err := getCyndiData()
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to update cyndi metrics")
-		stats = InventoryHostsStats{}
-	}
-	cyndiTagsCnt.WithLabelValues(allSystemCount).Set(float64(stats.SystemsCount))
-	cyndiTagsCnt.WithLabelValues(systemsSapSystemCount).Set(float64(stats.SapCount))
-	cyndiTagsCnt.WithLabelValues(systemsWithTagsCount).Set(float64(stats.SystemsWithTags))
-}
-
-func getCyndiData() (stats InventoryHostsStats, err error) {
-	err = database.Db.Table("inventory.hosts").Count(&stats.SystemsCount).Error
-	if err != nil {
-		utils.Log("err", err.Error()).Error("unable to update cyndi metrics")
-		return stats, err
 	}
 
-	err = database.Db.Table("inventory.hosts").Where("system_profile -> 'sap_system' = 'true'").
-		Count(&stats.SapCount).Error
-	if err != nil {
-		utils.Log("err", err.Error()).Error("unable to update cyndi metrics")
-		return stats, err
+	for label, count := range tagStats {
+		cyndiTagsCnt.WithLabelValues(label).Set(float64(count))
 	}
-
-	err = database.Db.Table("inventory.hosts").Select("tags").Where("jsonb_array_length(tags) > 0").
-		Count(&stats.SystemsWithTags).Error
-	if err != nil {
-		utils.Log("err", err.Error()).Error("unable to update cyndi metrics")
-		return stats, err
-	}
-
-	return stats, nil
-}
-
-func updateCyndiSystemMetrics() {
-	counts, err := getCyndiCounts(time.Now())
-	if err != nil {
-		utils.Log("err", err.Error()).Error("unable to update cyndi system metrics")
-		return
-	}
-
-	for labels, count := range counts {
-		cyndiSystemsCnt.WithLabelValues(labels).Set(float64(count))
+	for label, count := range systemStats {
+		cyndiSystemsCnt.WithLabelValues(label).Set(float64(count))
 	}
 }
 
-func getCyndiCounts(refTime time.Time) (map[string]int, error) {
-	lastUploadKV := map[string]int{lastUploadLast1D: 1, lastUploadLast7D: 7, lastUploadLast30D: 30, lastUploadAll: -1}
-	counts := map[string]int{}
-	for lastUploadK, lastUploadV := range lastUploadKV {
-		systemsQuery := database.Db.Table("inventory.hosts").
-			Session(&gorm.Session{PrepareStmt: true})
-		systemsQueryOptOutLastUpload := updateCyndiQueryLastUpload(systemsQuery, refTime, lastUploadV)
-		var nSystems int64
-		err := systemsQueryOptOutLastUpload.Count(&nSystems).Error
-		if err != nil {
-			return nil, errors.Wrap(err, "unable to load systems counts: "+
-				fmt.Sprintf("last_upload_before_days: %v", lastUploadV))
-		}
-		counts[lastUploadK] = int(nSystems)
+func getCyndiData() (tagStats map[string]int64, systemStats map[string]int64, err error) {
+	var row cyndiMetricColumns
+	err = database.Db.Table("inventory.hosts").
+		Select(queryCyndiMetricColumns).Take(&row).Error
+	if err != nil {
+		utils.Log("err", err.Error()).Error("unable to update cyndi metrics")
+		return tagStats, systemStats, err
 	}
-	return counts, nil
-}
-
-func updateCyndiQueryLastUpload(systemsQuery *gorm.DB, refTime time.Time, lastNDays int) *gorm.DB {
-	if lastNDays >= 0 {
-		return systemsQuery.Where("updated > ?", refTime.AddDate(0, 0, -lastNDays))
+	tagStats = map[string]int64{
+		allSystemCount:        row.AllSystems,
+		systemsSapSystemCount: row.SapSystems,
+		systemsWithTagsCount:  row.TaggedSystems,
 	}
-	return systemsQuery
+	systemStats = map[string]int64{
+		lastUploadLast1D:  row.Updated1D,
+		lastUploadLast7D:  row.Updated7D,
+		lastUploadLast30D: row.Updated30D,
+		lastUploadAll:     row.AllSystems,
+	}
+	return tagStats, systemStats, nil
 }
