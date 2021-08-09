@@ -12,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
-	"gorm.io/gorm"
 )
 
 const (
@@ -245,29 +244,25 @@ func updatePackageMetrics() {
 	packageNameCnt.Set(float64(nPackageNames))
 }
 
+// nolint: lll
+type advisoryColumns struct {
+	Unknown     int64 `query:"count(*) filter (where advisory_type_id = 0)" gorm:"column:unknown"`
+	Enhancement int64 `query:"count(*) filter (where advisory_type_id = 1)" gorm:"column:enhancement"`
+	Bugfix      int64 `query:"count(*) filter (where advisory_type_id = 2)" gorm:"column:bugfix"`
+	Security    int64 `query:"count(*) filter (where advisory_type_id = 3)" gorm:"column:security"`
+}
+
+var queryAdvisoryColumns = database.MustGetSelect(&advisoryColumns{})
+
 func getAdvisoryCounts() (unknown, enh, bug, sec int64, err error) {
-	advisoryQuery := database.Db.Model(&models.AdvisoryMetadata{}).
-		Session(&gorm.Session{PrepareStmt: true})
-	err = advisoryQuery.Where("advisory_type_id = 0").Count(&unknown).Error
+	var row advisoryColumns
+	err = database.Db.Model(&models.AdvisoryMetadata{}).
+		Select(queryAdvisoryColumns).Take(&row).Error
 	if err != nil {
-		return 0, 0, 0, 0, errors.Wrap(err, "unable to get advisories count - type unknown")
+		return 0, 0, 0, 0, errors.Wrap(err, "unable to get advisory type counts")
 	}
 
-	err = advisoryQuery.Where("advisory_type_id = 1").Count(&enh).Error
-	if err != nil {
-		return 0, 0, 0, 0, errors.Wrap(err, "unable to get advisories count - type enhancement")
-	}
-
-	err = advisoryQuery.Where("advisory_type_id = 2").Count(&bug).Error
-	if err != nil {
-		return 0, 0, 0, 0, errors.Wrap(err, "unable to get advisories count - type bugfix")
-	}
-
-	err = advisoryQuery.Where("advisory_type_id = 3").Count(&sec).Error
-	if err != nil {
-		return 0, 0, 0, 0, errors.Wrap(err, "unable to get advisories count - type security")
-	}
-	return unknown, enh, bug, sec, nil
+	return row.Unknown, row.Enhancement, row.Bugfix, row.Security, nil
 }
 
 func getPackageCounts() (count int64, err error) {
