@@ -6,6 +6,7 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"encoding/json"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -286,6 +287,9 @@ func checkAdvisoriesCount() error {
 
 	errataCount := int64(errataResponse.GetPages()) + 1
 	if databaseAdvisoriesCount != errataCount {
+		mismatch := errataCount - databaseAdvisoriesCount
+		advisoriesCountMismatch.Add(math.Abs(float64(mismatch)))
+		utils.Log("mismatch", mismatch).Warning("Incremental advisories sync mismatch found!")
 		err = syncAdvisories(time.Now(), nil)
 		if err != nil {
 			return errors.Wrap(err, "Full advisories sync failed")
