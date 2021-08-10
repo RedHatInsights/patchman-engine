@@ -247,7 +247,7 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 		if new == nil {
 			return errors.New("Invalid args")
 		}
-		counts := make([]int, 4)
+		counts := make([]int, 5)
 		for _, sa := range new {
 			if sa.Advisory.AdvisoryTypeID > 0 {
 				counts[sa.Advisory.AdvisoryTypeID]++
