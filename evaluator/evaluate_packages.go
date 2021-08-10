@@ -150,15 +150,15 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform,
 	vmaasData *vmaas.UpdatesV2Response) ([]namedPackage, error) {
 	updates := vmaasData.GetUpdateList()
 	numUpdates := len(updates)
-	packageIDs := make([]int, numUpdates)
-	packages := make([]namedPackage, numUpdates)
+	packageIDs := make([]int, 0, numUpdates)
+	packages := make([]namedPackage, 0, numUpdates)
 	id2index := map[int]int{}
 	i := 0
 	for nevra := range updates {
 		pkgMeta, ok := memoryPackageCache.GetByNevra(nevra)
 		if ok {
-			packageIDs[i] = pkgMeta.ID
-			packages[i] = namedPackage{
+			packageIDs = append(packageIDs, pkgMeta.ID)
+			p := namedPackage{
 				NameID:     pkgMeta.NameID,
 				Name:       pkgMeta.Name,
 				PackageID:  pkgMeta.ID,
@@ -166,9 +166,10 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform,
 				WasStored:  false,
 				UpdateData: nil,
 			}
+			packages = append(packages, p)
 			id2index[pkgMeta.ID] = i
+			i++
 		}
-		i++
 	}
 	rows, err := tx.Table("system_package").
 		Select("package_id, update_data").
