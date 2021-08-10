@@ -136,7 +136,7 @@ func packages2NevraMap(packages []namedPackage) map[string]namedPackage {
 		// make sure nevra contains epoch even if epoch==0
 		nevra, err := utils.ParseNameEVRA(p.Name, p.EVRA)
 		if err != nil {
-			utils.Log("name", p.Name, "evra", p.EVRA).Warn("PackageCache.Add: cannot parse evra")
+			utils.Log("name", p.Name, "evra", p.EVRA).Warn("packages2NevraMap: cannot parse evra")
 			continue
 		}
 		nevraString := nevra.StringE(true)
