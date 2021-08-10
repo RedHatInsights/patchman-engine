@@ -154,7 +154,8 @@ func (c *PackageCache) AddWithoutLock(pkg *PackageCacheMetadata) {
 	// make sure nevra contains epoch even if epoch==0
 	nevra, err := utils.ParseNameEVRA(pkg.Name, pkg.Evra)
 	if err != nil {
-		utils.Log("name", pkg.Name, "evra", pkg.Evra).Warn("PackageCache.Add: cannot parse evra")
+		utils.Log("id", pkg.ID, "name_id", pkg.NameID, "name", pkg.Name, "evra", pkg.Evra).
+			Warn("PackageCache.Add: cannot parse evra")
 		return
 	}
 	nevraString := nevra.StringE(true)
