@@ -99,6 +99,7 @@ func createTestUploadEvent(rhAccountID, inventoryID, reporter string, packages b
 		[]inventory.SystemProfileSpecYamlDnfModule{{Name: utils.PtrString("modName"), Stream: utils.PtrString("modStream")}})
 	ev.Host.SystemProfile.SetYumRepos(
 		[]inventory.SystemProfileSpecYamlYumRepo{{Id: utils.PtrString("repo1"), Enabled: utils.PtrBool(true)}})
+
 	return ev
 }
 
@@ -116,4 +117,15 @@ func assertReposInDB(t *testing.T, repos []string) {
 	fmt.Println(n)
 	assert.Nil(t, err)
 	assert.Equal(t, len(repos), len(n))
+}
+
+func assertSystemReposInDB(t *testing.T, systemID int, repos []string) {
+	var c int64
+
+	err := database.Db.Table("repo r").
+		Joins("JOIN system_repo sr on sr.repo_id = r.id and sr.system_id = ? ", systemID).
+		Where("r.name in (?)", repos).
+		Count(&c).Error
+	assert.NoError(t, err)
+	assert.Equal(t, c, int64(len(repos)))
 }

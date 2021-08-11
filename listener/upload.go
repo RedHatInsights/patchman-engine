@@ -263,7 +263,7 @@ func getReporterID(reporter string) *int {
 
 // EPEL uses the `epel` repo identifier on both rhel 7 and rhel 8. We create our own mapping to
 // `epel-7` and `epel-8`
-func fixEpelRepos(sys inventory.SystemProfileSpecYamlSystemProfile, repos []string) []string {
+func fixEpelRepos(sys *inventory.SystemProfileSpecYamlSystemProfile, repos []string) []string {
 	for i, r := range repos {
 		if r == "epel" && sys.OperatingSystem.Major != nil {
 			repos[i] = fmt.Sprintf("%s-%d", r, *sys.OperatingSystem.Major)
@@ -274,7 +274,7 @@ func fixEpelRepos(sys inventory.SystemProfileSpecYamlSystemProfile, repos []stri
 
 func updateRepos(tx *gorm.DB, profile inventory.SystemProfileSpecYamlSystemProfile, rhAccountID int,
 	systemID int, repos []string) (addedRepos int64, addedSysRepos int64, deletedSysRepos int64, err error) {
-	repos = fixEpelRepos(profile, repos)
+	repos = fixEpelRepos(&profile, repos)
 	repoIDs, addedRepos, err := ensureReposInDB(tx, repos)
 	if err != nil {
 		return 0, 0, 0, err
@@ -370,6 +370,7 @@ func processRepos(systemProfile *inventory.SystemProfileSpecYamlSystemProfile) *
 			repos = append(repos, rID)
 		}
 	}
+	fixEpelRepos(systemProfile, repos)
 	return &repos
 }
 
