@@ -82,6 +82,7 @@ func Evaluate(ctx context.Context, accountID int, inventoryID string, requested 
 	}
 
 	evaluationCnt.WithLabelValues("success").Inc()
+	utils.Log("inventoryID", inventoryID, "evalLabel", evaluationType).Info("system evaluated successfully")
 	return nil
 }
 
@@ -333,7 +334,6 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 			Error("Eval message handling")
 		return err
 	}
-	utils.Log("inventoryID", event.ID, "evalLabel", evalLabel).Debug("system evaluated successfully")
 	return nil
 }
 
