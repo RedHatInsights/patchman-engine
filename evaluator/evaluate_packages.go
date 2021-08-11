@@ -91,7 +91,10 @@ func getMissingPackages(vmaasData *vmaas.UpdatesV2Response) models.PackageSlice 
 func updatePackageDB(tx *gorm.DB, missing *models.PackageSlice) error {
 	// tx.Create() also updates packages with their IDs
 	if len(*missing) > 0 {
-		return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(missing).Error
+		err := tx.Transaction(func(tx2 *gorm.DB) error {
+			return tx2.Clauses(clause.OnConflict{DoNothing: true}).Create(missing).Error
+		})
+		return err
 	}
 	return nil
 }
