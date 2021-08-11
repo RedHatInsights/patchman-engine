@@ -247,17 +247,25 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 		if new == nil {
 			return errors.New("Invalid args")
 		}
-		counts := make([]int, 5)
+		count := 0
+		enhCount := 0
+		bugCount := 0
+		secCount := 0
 		for _, sa := range new {
-			if sa.Advisory.AdvisoryTypeID > 0 {
-				counts[sa.Advisory.AdvisoryTypeID]++
+			switch sa.Advisory.AdvisoryTypeID {
+			case 1:
+				enhCount++
+			case 2:
+				bugCount++
+			case 3:
+				secCount++
 			}
-			counts[0]++
+			count++
 		}
-		data["advisory_count_cache"] = counts[0]
-		data["advisory_enh_count_cache"] = counts[1]
-		data["advisory_bug_count_cache"] = counts[2]
-		data["advisory_sec_count_cache"] = counts[3]
+		data["advisory_count_cache"] = count
+		data["advisory_enh_count_cache"] = enhCount
+		data["advisory_bug_count_cache"] = bugCount
+		data["advisory_sec_count_cache"] = secCount
 	}
 
 	if enablePackageAnalysis {
