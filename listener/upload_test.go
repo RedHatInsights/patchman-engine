@@ -9,6 +9,7 @@ import (
 	"app/base/utils"
 	"context"
 	"errors"
+	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -93,6 +94,13 @@ func TestUploadHandler(t *testing.T) {
 
 	_ = getOrCreateTestAccount(t)
 	event := createTestUploadEvent(id, id, "puptoo", true)
+
+	event.Host.SystemProfile.SetOperatingSystem(inventory.SystemProfileSpecYamlSystemProfileOperatingSystem{
+		Major: utils.PtrInt32(8),
+	})
+	event.Host.SystemProfile.SetYumRepos(append(*event.Host.SystemProfile.YumRepos,
+		inventory.SystemProfileSpecYamlYumRepo{Id: utils.PtrString("epel"), Enabled: utils.PtrBool(true)}))
+
 	err := HandleUpload(event)
 	assert.NoError(t, err)
 
@@ -111,6 +119,7 @@ func TestUploadHandler(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(logHook.LogEntries))
 	assert.Equal(t, UploadSuccessNoEval, logHook.LogEntries[1].Message)
+	assertSystemReposInDB(t, sys.ID, []string{"epel-8"})
 	deleteData(t)
 }
 
