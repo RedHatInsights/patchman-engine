@@ -6,13 +6,14 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"fmt"
+	"net/http"
+	"regexp"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gocarina/gocsv"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"net/http"
-	"regexp"
-	"strings"
 )
 
 const InvalidOffsetMsg = "Invalid offset"
@@ -112,6 +113,7 @@ type ListOpts struct {
 	DefaultFilters map[string]FilterData
 	DefaultSort    string
 	SearchFields   []string
+	TotalFunc      totalFuncType
 }
 
 func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, error) {
@@ -138,6 +140,16 @@ func extractTagsQueryString(c *gin.Context) string {
 		tagQ = fmt.Sprintf("tags=%s&%s", t, tagQ)
 	}
 	return strings.TrimSuffix(tagQ, "&")
+}
+
+// function type to return subtotals
+type totalFuncType func(tx *gorm.DB) (int, map[string]int, error)
+
+// generic function to return only total number of rows
+func CountRows(tx *gorm.DB) (total int, subTotals map[string]int, err error) {
+	var total64 int64
+	err = tx.Count(&total64).Error
+	return int(total64), subTotals, err
 }
 
 //nolint: funlen
@@ -174,14 +186,14 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params 
 		return nil, nil, nil, errors.Wrap(err, "filters applying failed")
 	}
 
-	var total int64
-	err = tx.Count(&total).Error
+	// err = tx.Count(&total).Error
+	total, subTotals, err := opts.TotalFunc(tx)
 	if err != nil {
 		LogAndRespError(c, err, "Database connection error")
 		return nil, nil, nil, err
 	}
 
-	if offset > int(total) {
+	if offset > total {
 		err = errors.New("Offset")
 		LogAndRespBadRequest(c, err, InvalidOffsetMsg)
 		return nil, nil, nil, err
@@ -193,13 +205,14 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params 
 		Filter:     filters,
 		Sort:       sortFields,
 		Search:     base.RemoveInvalidChars(c.Query("search")),
-		TotalItems: int(total),
+		TotalItems: total,
+		SubTotals:  subTotals,
 	}
 
 	tagQ := extractTagsQueryString(c)
 
 	params = append(params, filters.ToQueryParams(), sortQ, tagQ, searchQ)
-	links := CreateLinks(path, offset, limit, int(total), params...)
+	links := CreateLinks(path, offset, limit, total, params...)
 
 	if limit != -1 {
 		tx = tx.Limit(limit)
