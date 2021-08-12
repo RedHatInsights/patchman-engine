@@ -14,4 +14,5 @@ type ListMeta struct {
 	Search     string                `json:"search,omitempty"`
 	Filter     map[string]FilterData `json:"filter"`
 	TotalItems int                   `json:"total_items"`
+	SubTotals  map[string]int        `json:"subtotals,omitempty"`
 }
