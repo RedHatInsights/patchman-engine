@@ -11,32 +11,6 @@ objects:
   spec:
     envName: ${ENV_NAME}
     deployments:
-    - name: database-admin
-      minReplicas: 1
-      webServices:
-        public:
-          enabled: false
-        private:
-          enabled: false
-        metrics:
-          enabled: false
-      podSpec:
-        image: ${IMAGE}:${IMAGE_TAG}
-        command:
-          - ./database_admin/entrypoint.sh
-        env:
-        - {name: LOG_LEVEL, value: "debug"}
-        - {name: CW_ENABLED, value: "false"}
-        - {name: CLOWDER_ENABLED, value: "true"}
-        - {name: MANAGER_PASSWORD, value: manager}
-        - {name: LISTENER_PASSWORD, value: listener}
-        - {name: VMAAS_SYNC_PASSWORD, value: vmaas_sync}
-        - {name: EVALUATOR_PASSWORD, value: evaluator}
-        - {name: CYNDI_PASSWORD, value: cyndi}
-        resources:
-          limits: {cpu: 100m, memory: 100Mi}
-          requests: {cpu: 100m, memory: 100Mi}
-
     - name: manager
       minReplicas: ${{REPLICAS_MANAGER}}
       webServices:
@@ -47,22 +21,44 @@ objects:
         metrics:
           enabled: true
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG}
+        image: ${IMAGE}:${IMAGE_TAG_MANAGER}
+        initContainers:
+          - command:
+            - /manifest/push.sh
+            - RedHatInsights/manifests
+            - ${MANIFEST_PUSH_BRANCH}
+            - /manifest.txt
+            - patchman-engine/patchman-engine.txt
+            env:
+            - name: GIT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: GIT_TOKEN
+                  name: github-patchman-bot
+            - name: MANIFEST_PUSH_BRANCH
+              value: ${MANIFEST_PUSH_BRANCH}
         command:
           - ./scripts/entrypoint.sh
           - manager
         env:
-        - {name: LOG_LEVEL, value: "debug"}
-        - {name: CW_ENABLED, value: "false"}
-        - {name: CLOWDER_ENABLED, value: "true"}
-        - {name: DB_PASSWD, value: manager}
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_MANAGER}'}
+        - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
+        - {name: GODEBUG, value: '${GODEBUG_MANAGER}'}
+        - {name: GOMAXPROCS, value: '${GOMAXPROCS_MANAGER}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: CLOWDER_ENABLED, value: '${CLOWDER_ENABLED}'}
+        - {name: SHOW_CLOWDER_VARS, value: ''}
+        - {name: MANIFEST_PUSH_BRANCH, value: '${MANIFEST_PUSH_BRANCH}'}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_MANAGER}'}
         - {name: DB_USER, value: manager}
-        - {name: RBAC_ADDRESS, value: http://platform:9001}
-        - {name: ENABLE_RBAC, value: "false"}
-        - {name: ENABLE_CYNDI_TAGS, value: "true"}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                       key: manager-database-password}}}
+        - {name: ENABLE_CYNDI_TAGS, value: '${ENABLE_CYNDI_TAGS}'}
+        - {name: ENABLE_RBAC, value: '${ENABLE_RBAC}'}
+        - {name: DISABLE_CACHE_COUNTS, value: '${DISABLE_CACHE_COUNTS}'}
         resources:
-          limits: {cpu: 100m, memory: 100Mi}
-          requests: {cpu: 100m, memory: 100Mi}
+          limits: {cpu: '${RES_CPU_MANAGER}', memory: '${RES_MEM_MANAGER}'}
+          requests: {cpu: '${RES_CPU_MANAGER}', memory: '${RES_MEM_MANAGER}'}
 
     - name: listener
       minReplicas: ${{REPLICAS_LISTENER}}
@@ -74,24 +70,32 @@ objects:
         metrics:
           enabled: true
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG}
+        image: ${IMAGE}:${IMAGE_TAG_LISTENER}
         command:
           - ./scripts/entrypoint.sh
           - listener
         env:
-        - {name: LOG_LEVEL, value: "debug"}
-        - {name: CW_ENABLED, value: "false"}
-        - {name: CLOWDER_ENABLED, value: "true"}
-        - {name: DB_PASSWD, value: listener}
+        - {name: LOG_LEVEL, value: 'debug'}
+        - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
+        - {name: GODEBUG, value: '${GODEBUG_LISTENER}'}
+        - {name: GOMAXPROCS, value: '${GOMAXPROCS_LISTENER}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: CLOWDER_ENABLED, value: '${CLOWDER_ENABLED}'}
+        - {name: SHOW_CLOWDER_VARS, value: ''}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_LISTENER}'}
         - {name: DB_USER, value: listener}
+        - {name: DB_PASSWD, valueFrom: { secretKeyRef: { name: patchman-engine-database-passwords,
+                                                           key: listener-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: EVENTS_TOPIC, value: platform.inventory.events}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
-        - {name: CONSUMER_COUNT, value: "1"}
-        - {name: SHOW_CLOWDER_VARS, value: ""}
+        - {name: CONSUMER_COUNT, value: '${CONSUMER_COUNT_LISTENER}'}
+        - {name: ENABLE_BYPASS, value: '${ENABLE_BYPASS_LISTENER}'}
+        - {name: EXCLUDED_REPORTERS, value: '${EXCLUDED_REPORTERS}'}
+
         resources:
-          limits: {cpu: 100m, memory: 100Mi}
-          requests: {cpu: 100m, memory: 100Mi}
+          limits: {cpu: '${RES_CPU_LISTENER}', memory: '${RES_MEM_LISTENER}'}
+          requests: {cpu: '${RES_CPU_LISTENER}', memory: '${RES_MEM_LISTENER}'}
 
     - name: evaluator-upload
       minReplicas: ${{REPLICAS_EVALUATOR_UPLOAD}}
@@ -103,24 +107,36 @@ objects:
         metrics:
           enabled: true
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG}
+        image: ${IMAGE}:${IMAGE_TAG_EVALUATOR_UPLOAD}
         command:
           - ./scripts/entrypoint.sh
           - evaluator
         env:
-        - {name: LOG_LEVEL, value: "debug"}
-        - {name: CW_ENABLED, value: "false"}
-        - {name: CLOWDER_ENABLED, value: "true"}
-        - {name: DB_PASSWD, value: evaluator}
+        - {name: LOG_LEVEL, value: 'debug'}
+        - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
+        - {name: GODEBUG, value: '${GODEBUG_EVALUATOR_UPLOAD}'}
+        - {name: GOMAXPROCS, value: '${GOMAXPROCS_EVALUATOR_UPLOAD}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: CLOWDER_ENABLED, value: '${CLOWDER_ENABLED}'}
+        - {name: SHOW_CLOWDER_VARS, value: ''}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_EVALUATOR_UPLOAD}'}
         - {name: DB_USER, value: evaluator}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                       key: evaluator-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
-        - {name: REMEDIATIONS_UPDATE_TOPIC, value: "platform.remediation-updates.patch"}
+        - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: EVAL_LABEL, value: upload}
-        - {name: CONSUMER_COUNT, value: "1"}
+        - {name: CONSUMER_COUNT, value: '${CONSUMER_COUNT_EVALUATOR_UPLOAD}'}
+        - {name: ENABLE_BYPASS, value: '${ENABLE_BYPASS_EVALUATOR_UPLOAD}'}
+        - {name: ENABLE_LAZY_PACKAGE_SAVE, value: '${ENABLE_LAZY_PACKAGE_SAVE_EVALUATOR_UPLOAD}'}
+        - {name: ENABLE_ADVISORY_ANALYSIS, value: '${ENABLE_ADVISORY_ANALYSIS_SAVE_EVALUATOR_UPLOAD}'}
+        - {name: ENABLE_PACKAGE_ANALYSIS, value: '${ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_UPLOAD}'}
+        - {name: ENABLE_REPO_ANALYSIS, value: '${ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_UPLOAD}'}
+        - {name: ENABLE_STALE_SYSTEM_EVALUATION, value: '${ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_UPLOAD}'}
         resources:
-          limits: {cpu: 100m, memory: 100Mi}
-          requests: {cpu: 100m, memory: 100Mi}
+          limits: {cpu: '${RES_CPU_EVALUATOR_UPLOAD}', memory: '${RES_MEM_EVALUATOR_UPLOAD}'}
+          requests: {cpu: '${RES_CPU_EVALUATOR_UPLOAD}', memory: '${RES_MEM_EVALUATOR_UPLOAD}'}
 
     - name: evaluator-recalc
       minReplicas: ${{REPLICAS_EVALUATOR_RECALC}}
@@ -132,24 +148,36 @@ objects:
         metrics:
           enabled: true
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG}
+        image: ${IMAGE}:${IMAGE_TAG_EVALUATOR_RECALC}
         command:
           - ./scripts/entrypoint.sh
           - evaluator
         env:
-        - {name: LOG_LEVEL, value: "debug"}
-        - {name: CW_ENABLED, value: "false"}
-        - {name: CLOWDER_ENABLED, value: "true"}
-        - {name: DB_PASSWD, value: evaluator}
+        - {name: LOG_LEVEL, value: 'debug'}
+        - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
+        - {name: GODEBUG, value: '${GODEBUG_EVALUATOR_RECALC}'}
+        - {name: GOMAXPROCS, value: '${GOMAXPROCS_EVALUATOR_RECALC}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: CLOWDER_ENABLED, value: '${CLOWDER_ENABLED}'}
+        - {name: SHOW_CLOWDER_VARS, value: ''}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_EVALUATOR_RECALC}'}
         - {name: DB_USER, value: evaluator}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                       key: evaluator-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
-        - {name: REMEDIATIONS_UPDATE_TOPIC, value: "platform.remediation-updates.patch"}
+        - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: EVAL_LABEL, value: recalc}
-        - {name: CONSUMER_COUNT, value: "1"}
+        - {name: CONSUMER_COUNT, value: '${CONSUMER_COUNT_EVALUATOR_RECALC}'}
+        - {name: ENABLE_BYPASS, value: '${ENABLE_BYPASS_EVALUATOR_RECALC}'}
+        - {name: ENABLE_LAZY_PACKAGE_SAVE, value: '${ENABLE_LAZY_PACKAGE_SAVE_EVALUATOR_RECALC}'}
+        - {name: ENABLE_ADVISORY_ANALYSIS, value: '${ENABLE_ADVISORY_ANALYSIS_SAVE_EVALUATOR_RECALC}'}
+        - {name: ENABLE_PACKAGE_ANALYSIS, value: '${ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_RECALC}'}
+        - {name: ENABLE_REPO_ANALYSIS, value: '${ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_RECALC}'}
+        - {name: ENABLE_STALE_SYSTEM_EVALUATION, value: '${ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_RECALC}'}
         resources:
-          limits: {cpu: 100m, memory: 100Mi}
-          requests: {cpu: 100m, memory: 100Mi}
+          limits: {cpu: '${RES_CPU_EVALUATOR_RECALC}', memory: '${RES_MEM_EVALUATOR_RECALC}'}
+          requests: {cpu: '${RES_CPU_EVALUATOR_RECALC}', memory: '${RES_MEM_EVALUATOR_RECALC}'}
 
     - name: vmaas-sync
       minReplicas: ${{REPLICAS_VMAAS_SYNC}}
@@ -161,23 +189,83 @@ objects:
         metrics:
           enabled: true
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG}
+        image: ${IMAGE}:${IMAGE_TAG_VMAAS_SYNC}
         command:
           - ./scripts/entrypoint.sh
           - vmaas_sync
         env:
-        - {name: LOG_LEVEL, value: "debug"}
-        - {name: CW_ENABLED, value: "false"}
-        - {name: CLOWDER_ENABLED, value: "true"}
-        - {name: DB_PASSWD, value: vmaas_sync}
+        - {name: LOG_LEVEL, value: 'debug'}
+        - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
+        - {name: GODEBUG, value: '${GODEBUG_VMAAS_SYNC}'}
+        - {name: GOMAXPROCS, value: '${GOMAXPROCS_VMAAS_SYNC}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: CLOWDER_ENABLED, value: '${CLOWDER_ENABLED}'}
+        - {name: SHOW_CLOWDER_VARS, value: ''}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_VMAAS_SYNC}'}
         - {name: DB_USER, value: vmaas_sync}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                       key: vmaas-sync-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
-        - {name: VMAAS_ADDRESS, value: vmaas.addr}
-        - {name: VMAAS_WS_ADDRESS, value: vmaas.ws.addr}
+        - {name: ENABLE_REPO_BASED_RE_EVALUATION, value: '${ENABLE_REPO_BASED_RE_EVALUATION}'}
+        - {name: ENABLE_RECALC_MESSAGES_SEND, value: '${ENABLE_RECALC_MESSAGES_SEND}'}
+        - {name: ENABLE_SYNC_ON_START, value: '${ENABLE_SYNC_ON_START}'}
+        - {name: ENABLE_RECALC_ON_START, value: '${ENABLE_RECALC_ON_START}'}
+        - {name: DELETE_CULLED_SYSTEMS_LIMIT, value: '${DELETE_CULLED_SYSTEMS_LIMIT}'}
+        - {name: ENABLE_CULLED_SYSTEM_DELETE, value: '${ENABLE_CULLED_SYSTEM_DELETE}'}
+        - {name: ENABLE_SYSTEM_STALING, value: '${ENABLE_SYSTEM_STALING}'}
+        - {name: ENABLE_REFRESH_PACKAGES_CACHE, value: '${ENABLE_REFRESH_PACKAGES_CACHE}'}
+        - {name: ENABLE_REFRESH_ADVISORY_CACHES, value: '${ENABLE_REFRESH_ADVISORY_CACHES}'}
+        - {name: ENABLE_TURNPIKE_AUTH, value: '${ENABLE_TURNPIKE_AUTH}'}
+        - {name: ENABLE_ADVISORIES_SYNC, value: '${ENABLE_ADVISORIES_SYNC}'}
+        - {name: ENABLE_PACKAGES_SYNC, value: '${ENABLE_PACKAGES_SYNC}'}
+        - {name: ENABLE_REPOS_SYNC, value: '${ENABLE_REPOS_SYNC}'}
+        - {name: ENABLE_MODIFIED_SINCE_SYNC, value: '${ENABLE_MODIFIED_SINCE_SYNC}'}
+        - {name: ERRATA_PAGE_SIZE, value: '${ERRATA_PAGE_SIZE}'}
+        - {name: PACKAGES_PAGE_SIZE, value: '${PACKAGES_PAGE_SIZE}'}
+        - {name: ENABLE_CYNDI_METRICS, value: '${ENABLE_CYNDI_METRICS}'}
+        - {name: ENABLE_ADVISORIES_COUNT_CHECK, value: '${ENABLE_ADVISORIES_COUNT_CHECK}'}
         resources:
-          limits: {cpu: 100m, memory: 100Mi}
-          requests: {cpu: 100m, memory: 100Mi}
+          limits: {cpu: '${RES_CPU_VMAAS_SYNC}', memory: '${RES_MEM_VMAAS_SYNC}'}
+          requests: {cpu: '${RES_CPU_VMAAS_SYNC}', memory: '${RES_MEM_VMAAS_SYNC}'}
+
+    - name: database-admin
+      minReplicas: 1
+      webServices:
+        public:
+          enabled: false
+        private:
+          enabled: false
+        metrics:
+          enabled: false
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+        command:
+          - ./database_admin/entrypoint.sh
+        env:
+        - {name: LOG_LEVEL, value: 'debug'}
+        - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
+        - {name: GODEBUG, value: '${GODEBUG_DATABASE_ADMIN}'}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_DATABASE_ADMIN}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SHOW_CLOWDER_VARS, value: ''}
+        - {name: CLOWDER_ENABLED, value: '${CLOWDER_ENABLED}'}
+        - {name: SHOW_CLOWDER_VARS, value: ''}
+        - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+        - {name: RESET_SCHEMA, value: '${RESET_SCHEMA}'}
+        - {name: MANAGER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                              key: manager-database-password}}}
+        - {name: LISTENER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                               key: listener-database-password}}}
+        - {name: EVALUATOR_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                                key: evaluator-database-password}}}
+        - {name: VMAAS_SYNC_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                                 key: vmaas-sync-database-password}}}
+        - {name: CYNDI_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                            key: cyndi-database-password}}}
+        resources:
+          limits: {cpu: '${RES_CPU_DATABASE_ADMIN}', memory: '${RES_MEM_DATABASE_ADMIN}'}
+          requests: {cpu: '${RES_CPU_DATABASE_ADMIN}', memory: '${RES_MEM_DATABASE_ADMIN}'}
 
     database:
       name: patchman
@@ -202,40 +290,131 @@ objects:
     testing:
       iqePlugin: patchman
 
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: patchman-engine-database-passwords
+    namespace: test  # namespace is overwritten by bonfire
+  type: Opaque
+  data:
+    manager-database-password: bWFuYWdlcg== # manager
+    listener-database-password: bGlzdGVuZXI= # listener
+    evaluator-database-password: ZXZhbHVhdG9y # evaluator
+    vmaas-sync-database-password: dm1hYXMtc3luYw== # vmaas-sync
+    cyndi-database-password: Y3luZGk= # cyndi
+
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: github-patchman-bot
+    namespace: test  # namespace is overwritten by bonfire
+  type: Opaque
+  data:
+    GIT_TOKEN: R0lUX1RPS0VO # GIT_TOKEN
+
 parameters:
-- description: ClowdEnv Name
-  name: ENV_NAME
-  # value: insights-ephemeral
-  required: false
-- name: MEMORY_LIMIT
-  description: Maximum memory limit for pod
-  # value: "{{ '4Gi' if env == 'prod' else '2Gi' }}"
-  value: '2Gi'
-- name: REPLICAS_MANAGER
-  description: Number of component pods
-  value: '1'
-- name: REPLICAS_LISTENER
-  description: Number of component pods
-  value: '1'
-- name: REPLICAS_EVALUATOR_UPLOAD
-  description: Number of component pods
-  value: '1'
-- name: REPLICAS_EVALUATOR_RECALC
-  description: Number of component pods
-  value: '1'
-- name: REPLICAS_VMAAS_SYNC
-  description: Number of component pods
-  value: '1'
-- name: IMAGE_TAG
-  description: Image version
-  value: latest
-- description: Image name
-  name: IMAGE
-  value: quay.io/cloudservices/patchman-engine-app
-- description: Determines Clowder deployment
-  name: CLOWDER_ENABLED
-  value: "True"
-  required: false
-- name: CW_ENABLED
-  description: CloudWatch enabled
-  value: 'FALSE'
+# Manager
+- {name: MANIFEST_PUSH_BRANCH, value: 'master'} # Manifest repo branch to push
+- {name: REPLICAS_MANAGER, value: '1'}
+- {name: IMAGE_TAG_MANAGER, value: latest}
+- {name: LOG_LEVEL_MANAGER, value: debug}
+- {name: GODEBUG_MANAGER, value: 'x509ignoreCN=0'}
+- {name: GOMAXPROCS_MANAGER, value: '8'}
+- {name: DB_DEBUG_MANAGER, value: 'false'} # Log database queries if enabled
+- {name: ENABLE_CYNDI_TAGS, value: 'true'} # Enable filtering with Cyndi tags
+- {name: ENABLE_RBAC, value: 'true'} # Enable requesting RBAC service
+- {name: DISABLE_CACHE_COUNTS, value: 'false'} # Don't use advisory cache counts
+- {name: RES_CPU_MANAGER, value: 200m}
+- {name: RES_MEM_MANAGER, value: 256Mi}
+
+# Listener
+- {name: REPLICAS_LISTENER, value: '1'}
+- {name: IMAGE_TAG_LISTENER, value: latest}
+- {name: LOG_LEVEL_LISTENER, value: debug}
+- {name: GODEBUG_LISTENER, value: 'x509ignoreCN=0'}
+- {name: GOMAXPROCS_LISTENER, value: '8'}
+- {name: DB_DEBUG_LISTENER, value: 'false'}
+- {name: CONSUMER_COUNT_LISTENER, value: '8'}
+- {name: ENABLE_BYPASS_LISTENER, value: 'false'} # Enable only bypass (fake) messages processing
+- {name: EXCLUDED_REPORTERS, value: 'yupana'} # Comma-separated list of reporters to exclude from processing
+- {name: RES_CPU_LISTENER, value: 250m}
+- {name: RES_MEM_LISTENER, value: 256Mi}
+
+# Evaluator - upload
+- {name: REPLICAS_EVALUATOR_UPLOAD, value: '1'}
+- {name: IMAGE_TAG_EVALUATOR_UPLOAD, value: latest}
+- {name: LOG_LEVEL_EVALUATOR_UPLOAD, value: debug}
+- {name: GODEBUG_EVALUATOR_UPLOAD, value: 'x509ignoreCN=0'}
+- {name: GOMAXPROCS_EVALUATOR_UPLOAD, value: '8'}
+- {name: DB_DEBUG_EVALUATOR_UPLOAD, value: 'false'}
+- {name: CONSUMER_COUNT_EVALUATOR_UPLOAD, value: '8'}
+- {name: ENABLE_BYPASS_EVALUATOR_UPLOAD, value: 'false'} # Enable only bypass (fake) messages processing
+- {name: ENABLE_LAZY_PACKAGE_SAVE_EVALUATOR_UPLOAD, value: 'false'} # Enable unknown EVRAs saving during the evaluation
+- {name: ENABLE_ADVISORY_ANALYSIS_SAVE_EVALUATOR_UPLOAD, value: 'true'}
+- {name: ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_UPLOAD, value: 'true'}
+- {name: ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_UPLOAD, value: 'true'}
+- {name: ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_UPLOAD, value: 'true'}
+- {name: RES_CPU_EVALUATOR_UPLOAD, value: 256m}
+- {name: RES_MEM_EVALUATOR_UPLOAD, value: 1024Mi}
+
+# Evaluator - recalc
+- {name: REPLICAS_EVALUATOR_RECALC, value: '1'}
+- {name: IMAGE_TAG_EVALUATOR_RECALC, value: latest}
+- {name: LOG_LEVEL_EVALUATOR_RECALC, value: debug}
+- {name: GODEBUG_EVALUATOR_RECALC, value: 'x509ignoreCN=0'}
+- {name: GOMAXPROCS_EVALUATOR_RECALC, value: '8'}
+- {name: DB_DEBUG_EVALUATOR_RECALC, value: 'false'}
+- {name: CONSUMER_COUNT_EVALUATOR_RECALC, value: '8'}
+- {name: ENABLE_BYPASS_EVALUATOR_RECALC, value: 'false'} # Enable only bypass (fake) messages processing
+- {name: ENABLE_LAZY_PACKAGE_SAVE_EVALUATOR_RECALC, value: 'false'} # Enable unknown EVRAs saving during the evaluation
+- {name: ENABLE_ADVISORY_ANALYSIS_SAVE_EVALUATOR_RECALC, value: 'true'}
+- {name: ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_RECALC, value: 'true'}
+- {name: ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_RECALC, value: 'true'}
+- {name: ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_RECALC, value: 'true'}
+- {name: RES_CPU_EVALUATOR_RECALC, value: 256m}
+- {name: RES_MEM_EVALUATOR_RECALC, value: 1024Mi}
+
+# VMaaS sync
+- {name: REPLICAS_VMAAS_SYNC, value: '1'}
+- {name: IMAGE_TAG_VMAAS_SYNC, value: latest}
+- {name: LOG_LEVEL_VMAAS_SYNC, value: debug}
+- {name: GODEBUG_VMAAS_SYNC, value: 'x509ignoreCN=0'}
+- {name: GOMAXPROCS_VMAAS_SYNC, value: '8'}
+- {name: DB_DEBUG_VMAAS_SYNC, value: 'false'}
+- {name: ENABLE_REPO_BASED_RE_EVALUATION, value: 'true'} # Optimize re-evaluation using repositories
+- {name: ENABLE_RECALC_MESSAGES_SEND, value: 'true'} # Send re-calc messages after sync
+- {name: ENABLE_SYNC_ON_START, value: 'false'} # Force advisories, packages and repos metadata sync on start
+- {name: ENABLE_RECALC_ON_START, value: 'false'} # Force recalc messages sending on start
+- {name: DELETE_CULLED_SYSTEMS_LIMIT, value: '1000'} # Culled systems deletion limit
+- {name: ENABLE_CULLED_SYSTEM_DELETE, value: 'true'} # Enable deleting part of culling method
+- {name: ENABLE_SYSTEM_STALING, value: 'true'} # Enable marking systems stale of culling method
+- {name: ENABLE_REFRESH_PACKAGES_CACHE, value: 'true'} # Enable periodic refresh of materialized view of the latest packages
+- {name: ENABLE_REFRESH_ADVISORY_CACHES, value: 'true'} # Enable periodic refresh of account advisory caches
+- {name: ENABLE_TURNPIKE_AUTH, value: 'false'} # Enable Turnpike authentication for internal API (manual sync, re-calc)
+- {name: ENABLE_ADVISORIES_SYNC, value: 'true'} # Enable advisories sync - part of sync process.
+- {name: ENABLE_PACKAGES_SYNC, value: 'true'} # Enable packages sync - part of sync process.
+- {name: ENABLE_REPOS_SYNC, value: 'true'} # Enable repos sync - part of sync process.
+- {name: ENABLE_MODIFIED_SINCE_SYNC, value: 'false'} # Enable incremental sync using 'modified_since' param.
+- {name: ERRATA_PAGE_SIZE, value: '500'} # Requested Vmaas response page size for advisories sync
+- {name: PACKAGES_PAGE_SIZE, value: '5'} # Requested Vmaas response page size for packages sync
+- {name: ENABLE_CYNDI_METRICS, value: 'true'} # Calculate and expose metrics about Cyndi data
+- {name: ENABLE_ADVISORIES_COUNT_CHECK, value: 'true'} # Check all advisories count after sync, re-sync all if needed
+- {name: RES_CPU_VMAAS_SYNC, value: 500m}
+- {name: RES_MEM_VMAAS_SYNC, value: 384Mi}
+
+# Database admin
+- {name: IMAGE_TAG_DATABASE_ADMIN, value: latest}
+- {name: LOG_LEVEL_DATABASE_ADMIN, value: debug}
+- {name: GODEBUG_DATABASE_ADMIN, value: 'x509ignoreCN=0'}
+- {name: DB_DEBUG_DATABASE_ADMIN, value: 'false'}
+- {name: SCHEMA_MIGRATION, value: '-1'} # Set specific database schema version or use the last schema version (-1)
+- {name: RESET_SCHEMA, value: 'false'} # Drop and recreate database schema, use SCHEMA_MIGRATION to create specific schema version
+- {name: RES_CPU_DATABASE_ADMIN, value: 100m}
+- {name: RES_MEM_DATABASE_ADMIN, value: 128Mi}
+
+# Common parameters
+- {name: IMAGE, value: quay.io/cloudservices/patchman-engine-app}
+- {name: ENV_NAME, required: false}
+- {name: CMD_WRAPPER, value: ''} # Optional wrapper to run base command with (e.g. "haberdasher").
+- {name: GIN_MODE, value: 'release'} # Gin webframework running mode
+- {name: CLOWDER_ENABLED, value: 'true'} # Enable params reading from Clowder json config (ACG_CONFIG)
