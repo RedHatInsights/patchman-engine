@@ -5,9 +5,10 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 var PackageSystemFields = database.MustGetQueryAttrs(&PackageSystemItem{})
@@ -18,6 +19,7 @@ var PackageSystemsOpts = ListOpts{
 	DefaultFilters: map[string]FilterData{},
 	DefaultSort:    "id",
 	SearchFields:   []string{"sp.display_name"},
+	TotalFunc:      CountRows,
 }
 
 //nolint:lll

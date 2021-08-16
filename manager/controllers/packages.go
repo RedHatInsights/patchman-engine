@@ -16,6 +16,7 @@ var PackagesOpts = ListOpts{
 	DefaultFilters: map[string]FilterData{},
 	DefaultSort:    "name",
 	SearchFields:   []string{"pn.name", "latest.summary"},
+	TotalFunc:      CountRows,
 }
 
 //nolint:lll
