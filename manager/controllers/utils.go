@@ -162,16 +162,6 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params 
 	}
 	tx, searchQ := ApplySearch(c, tx, opts.SearchFields...)
 
-	tx, sortFields, err := ApplySort(c, tx, opts.Fields, opts.DefaultSort)
-	if err != nil {
-		LogAndRespBadRequest(c, err, err.Error())
-		return nil, nil, nil, errors.Wrap(err, "invalid sort")
-	}
-	var sortQ string
-	if len(sortFields) > 0 {
-		sortQ = fmt.Sprintf("sort=%v", strings.Join(sortFields, ","))
-	}
-
 	query := NestedQueryMap(c, "filter")
 
 	filters, err := ParseFilters(query, opts.Fields, opts.DefaultFilters)
@@ -197,6 +187,16 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params 
 		err = errors.New("Offset")
 		LogAndRespBadRequest(c, err, InvalidOffsetMsg)
 		return nil, nil, nil, err
+	}
+
+	tx, sortFields, err := ApplySort(c, tx, opts.Fields, opts.DefaultSort)
+	if err != nil {
+		LogAndRespBadRequest(c, err, err.Error())
+		return nil, nil, nil, errors.Wrap(err, "invalid sort")
+	}
+	var sortQ string
+	if len(sortFields) > 0 {
+		sortQ = fmt.Sprintf("sort=%v", strings.Join(sortFields, ","))
 	}
 
 	meta := ListMeta{
