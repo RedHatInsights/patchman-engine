@@ -5,9 +5,10 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 var PackageVersionFields = database.MustGetQueryAttrs(&PackageVersionItem{})
@@ -18,6 +19,7 @@ var PackageVersionsOpts = ListOpts{
 	DefaultFilters: map[string]FilterData{},
 	DefaultSort:    "evra",
 	SearchFields:   []string{"p.evra"},
+	TotalFunc:      CountRows,
 }
 
 type PackageVersionItem struct {

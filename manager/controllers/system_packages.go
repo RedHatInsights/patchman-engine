@@ -8,9 +8,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 //nolint: lll
@@ -39,6 +40,7 @@ var SystemPackagesOpts = ListOpts{
 	DefaultFilters: nil,
 	DefaultSort:    "name",
 	SearchFields:   []string{"pn.name", "sum.value"},
+	TotalFunc:      CountRows,
 }
 
 type SystemPackageDBLoad struct {

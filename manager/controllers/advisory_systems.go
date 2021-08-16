@@ -19,6 +19,20 @@ type AdvisorySystemsResponse struct {
 	Meta  ListMeta     `json:"meta"`
 }
 
+var AdvisorySystemOpts = ListOpts{
+	Fields: SystemsFields,
+	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
+	DefaultFilters: map[string]FilterData{
+		"stale": {
+			Operator: "eq",
+			Values:   []string{"false"},
+		},
+	},
+	DefaultSort:  "-last_upload",
+	SearchFields: []string{"sp.display_name"},
+	TotalFunc:    CountRows,
+}
+
 // nolint: lll
 // @Summary Show me systems on which the given advisory is applicable
 // @Description Show me systems on which the given advisory is applicable
@@ -76,7 +90,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 		return
 	} // Error handled in method itself
 	path := fmt.Sprintf("/api/patch/v1/advisories/%v/systems", advisoryName)
-	query, meta, links, err := ListCommon(query, c, path, SystemOpts)
+	query, meta, links, err := ListCommon(query, c, path, AdvisorySystemOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself

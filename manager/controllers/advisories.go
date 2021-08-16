@@ -3,9 +3,10 @@ package controllers
 import (
 	"app/base/database"
 	"app/manager/middlewares"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 var AdvisoriesFields = database.MustGetQueryAttrs(&AdvisoriesDBLookup{})
@@ -15,6 +16,7 @@ var AdvisoriesOpts = ListOpts{
 	DefaultFilters: nil,
 	DefaultSort:    "-public_date",
 	SearchFields:   []string{"am.name", "am.cve_list", "synopsis"},
+	TotalFunc:      CountRows,
 }
 
 type AdvisoriesDBLookup struct {

@@ -6,10 +6,11 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
 var SystemAdvisoriesFields = database.MustGetQueryAttrs(&SystemAdvisoriesDBLookup{})
@@ -19,6 +20,7 @@ var SystemAdvisoriesOpts = ListOpts{
 	DefaultFilters: nil,
 	DefaultSort:    "-public_date",
 	SearchFields:   []string{"am.name", "am.synopsis"},
+	TotalFunc:      CountRows,
 }
 
 type SystemAdvisoriesDBLookup struct {
