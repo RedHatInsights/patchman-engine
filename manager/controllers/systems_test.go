@@ -53,6 +53,9 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, 0, output.Meta.Offset)
 	assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
 	assert.Equal(t, 8, output.Meta.TotalItems)
+	assert.Equal(t, 8, output.Meta.SubTotals["patched"])
+	assert.Equal(t, 0, output.Meta.SubTotals["unpatched"])
+	assert.Equal(t, 0, output.Meta.SubTotals["stale"])
 }
 
 func TestSystemsOffsetLimit(t *testing.T) { //nolint:dupl
