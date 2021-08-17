@@ -176,12 +176,13 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params 
 		return nil, nil, nil, errors.Wrap(err, "filters applying failed")
 	}
 
-	// err = tx.Count(&total).Error
+	origSelects := tx.Statement.Selects // save original selected columns...
 	total, subTotals, err := opts.TotalFunc(tx)
 	if err != nil {
 		LogAndRespError(c, err, "Database connection error")
 		return nil, nil, nil, err
 	}
+	tx = tx.Select(origSelects) // ... and after counts calculation set it back
 
 	if offset > total {
 		err = errors.New("Offset")
