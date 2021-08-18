@@ -47,7 +47,8 @@ INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solutio
 (6, 'RH-6', 'adv-6-des', 'adv-6-syn', 'adv-6-sum', 'adv-6-sol', 3, '2016-09-22 12:00:00-06', '2017-09-22 12:00:00-06', 'url6', 4, '["CVE-2","CVE-3"]'),
 (7, 'RH-7', 'adv-7-des', 'adv-7-syn', 'adv-7-sum', 'adv-7-sol', 1, '2017-09-22 12:00:00-07', '2017-09-22 12:00:00-07', 'url7', NULL, NULL),
 (8, 'RH-8', 'adv-8-des', 'adv-8-syn', 'adv-8-sum', 'adv-8-sol', 2, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url8', NULL, NULL),
-(9, 'RH-9', 'adv-9-des', 'adv-9-syn', 'adv-9-sum', 'adv-9-sol', 3, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url9', NULL, '["CVE-4"]');
+(9, 'RH-9', 'adv-9-des', 'adv-9-syn', 'adv-9-sum', 'adv-9-sol', 3, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url9', NULL, '["CVE-4"]'),
+(10, 'UNSPEC-10', 'adv-10-des', 'adv-10-syn', 'adv-10-sum', 'adv-10-sol', 4, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url10', NULL, NULL);
 
 UPDATE advisory_metadata SET package_data = '{"firefox": "77.0.1-1.fc31.x86_64"}' WHERE name = 'RH-9';
 
@@ -68,6 +69,7 @@ INSERT INTO system_advisories (rh_account_id, system_id, advisory_id, first_repo
 (1, 6, 1, '2016-09-22 12:00:00-04', NULL, 0),
 (1, 7, 1, '2016-09-22 12:00:00-04', '2016-09-23 12:00:00-04', 1),
 (1, 8, 1, '2016-09-22 12:00:00-04', '2016-09-23 12:00:00-04', 2),
+(1, 8, 10, '2016-09-22 12:00:00-04', NULL, 0),
 (2, 9, 1, '2016-09-22 12:00:00-04', '2016-09-23 12:00:00-04', 0),
 (2, 10, 1, '2016-09-22 12:00:00-04', NULL, 1),
 (2, 11, 1, '2016-09-22 12:00:00-04', NULL, 0);

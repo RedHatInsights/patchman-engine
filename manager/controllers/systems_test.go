@@ -4,10 +4,11 @@ import (
 	"app/base/core"
 	"app/base/utils"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSystemsDefault(t *testing.T) {
@@ -289,4 +290,10 @@ func TestSystemsFilterAdvCount3(t *testing.T) {
 	output := doTestSystemsFilter(t, "/?filter[rhsa_count]=2")
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
+}
+
+func TestSystemsFilterAdvCount4(t *testing.T) {
+	output := doTestSystemsFilter(t, "/?filter[other_count]=1")
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, 1, output.Data[0].Attributes.OtherCount)
 }
