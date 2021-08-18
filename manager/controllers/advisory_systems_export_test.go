@@ -3,11 +3,12 @@ package controllers // nolint: dupl
 import (
 	"app/base/core"
 	"app/base/utils"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAdvisorySystemsExportJSON(t *testing.T) {
@@ -39,12 +40,12 @@ func TestAdvisorySystemsExportCSV(t *testing.T) {
 
 	assert.Equal(t, 8, len(lines))
 	assert.Equal(t,
-		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale,third_party,"+
+		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale,third_party,"+
 			"insights_id,packages_installed,packages_updatable,os_name,os_major,os_minor,rhsm,stale_timestamp,"+
 			"stale_warning_timestamp,culled_timestamp,created",
 		lines[0])
 
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,"+
-		"2018-09-22T16:00:00Z,2020-09-22T16:00:00Z,2,3,3,false,true,00000000-0000-0000-0001-000000000001,0,0,"+
+		"2018-09-22T16:00:00Z,2020-09-22T16:00:00Z,2,3,3,0,false,true,00000000-0000-0000-0001-000000000001,0,0,"+
 		"RHEL,8,1,8.1,2018-08-26T16:00:00Z,2018-09-02T16:00:00Z,2018-09-09T16:00:00Z,2018-08-26T16:00:00Z", lines[1])
 }
