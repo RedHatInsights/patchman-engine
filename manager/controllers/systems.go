@@ -37,6 +37,7 @@ type SystemItemAttributes struct {
 	RhsaCount      int        `json:"rhsa_count" csv:"rhsa_count" query:"sp.advisory_sec_count_cache" gorm:"column:rhsa_count"`
 	RhbaCount      int        `json:"rhba_count" csv:"rhba_count" query:"sp.advisory_bug_count_cache" gorm:"column:rhba_count"`
 	RheaCount      int        `json:"rhea_count" csv:"rhea_count" query:"sp.advisory_enh_count_cache" gorm:"column:rhea_count"`
+	OtherCount     int        `json:"other_count" csv:"other_count" query:"(sp.advisory_count_cache - sp.advisory_sec_count_cache - sp.advisory_bug_count_cache - sp.advisory_enh_count_cache)" gorm:"column:other_count"`
 	Stale          bool       `json:"stale" csv:"stale" query:"sp.stale" gorm:"column:stale"`
 	ThirdParty     bool       `json:"third_party" csv:"third_party" query:"sp.third_party" gorm:"column:third_party"`
 	InsightsID     string     `json:"insights_id" csv:"insights_id" query:"ih.insights_id" gorm:"column:insights_id"`
@@ -81,7 +82,7 @@ type SystemsResponse struct {
 // @Produce  json
 // @Param    limit   query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset  query   int     false   "Offset for paging"
-// @Param    sort    query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,stale, packages_installed, packages_updatable)
+// @Param    sort    query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale, packages_installed, packages_updatable)
 // @Param    search         query   string  false   "Find matching text"
 // @Param    filter[insights_id]     query   string  false "Filter"
 // @Param    filter[id]              query   string  false "Filter"
@@ -91,6 +92,7 @@ type SystemsResponse struct {
 // @Param    filter[rhsa_count]      query   string  false "Filter"
 // @Param    filter[rhba_count]      query   string  false "Filter"
 // @Param    filter[rhea_count]      query   string  false "Filter"
+// @Param    filter[other_count]     query   string  false "Filter"
 // @Param    filter[stale]           query   string  false "Filter"
 // @Param    filter[packages_installed] query string false "Filter"
 // @Param    filter[packages_updatable] query string false "Filter"
