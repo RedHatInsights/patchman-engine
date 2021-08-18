@@ -252,6 +252,7 @@
                                 "rhsa_count",
                                 "rhba_count",
                                 "rhea_count",
+                                "other_count",
                                 "stale"
                             ]
                         }
@@ -322,6 +323,14 @@
                     },
                     {
                         "name": "filter[rhea_count]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[other_count]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -596,6 +605,14 @@
                     },
                     {
                         "name": "filter[rhea_count]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[other_count]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -918,6 +935,14 @@
                     },
                     {
                         "name": "filter[rhea_count]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[other_count]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -1538,6 +1563,7 @@
                                 "rhsa_count",
                                 "rhba_count",
                                 "rhea_count",
+                                "other_count",
                                 "stale",
                                 "packages_installed",
                                 "packages_updatable"
@@ -1610,6 +1636,14 @@
                     },
                     {
                         "name": "filter[rhea_count]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[other_count]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -2590,6 +2624,9 @@
                     "os_name": {
                         "type": "string"
                     },
+                    "other_count": {
+                        "type": "integer"
+                    },
                     "packages_installed": {
                         "type": "integer"
                     },
@@ -2665,6 +2702,9 @@
                     },
                     "os_name": {
                         "type": "string"
+                    },
+                    "other_count": {
+                        "type": "integer"
                     },
                     "packages_installed": {
                         "type": "integer"
