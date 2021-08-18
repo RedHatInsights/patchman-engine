@@ -4,11 +4,12 @@ import (
 	"app/base/core"
 	"app/base/utils"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInit(t *testing.T) {
@@ -33,7 +34,7 @@ func testAdvisoriesOk(t *testing.T, method, url string, check func(out Advisorie
 //nolint:dupl
 func TestAdvisoriesDefault(t *testing.T) {
 	testAdvisoriesOk(t, "GET", "/", func(output AdvisoriesResponse) {
-		assert.Equal(t, 8, len(output.Data))
+		assert.Equal(t, 9, len(output.Data))
 		assert.Equal(t, "RH-7", output.Data[0].ID, output.Data[0])
 		assert.Equal(t, "advisory", output.Data[0].Type)
 		assert.Equal(t, "2017-09-22 19:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
@@ -50,7 +51,7 @@ func TestAdvisoriesDefault(t *testing.T) {
 		// meta
 		assert.Equal(t, 0, output.Meta.Offset)
 		assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
-		assert.Equal(t, 8, output.Meta.TotalItems)
+		assert.Equal(t, 9, output.Meta.TotalItems)
 	})
 }
 
@@ -59,15 +60,15 @@ func TestAdvisoriesOffsetLimit(t *testing.T) {
 		assert.Equal(t, 2, len(output.Data))
 		assert.Equal(t, 0, output.Meta.Offset)
 		assert.Equal(t, 2, output.Meta.Limit)
-		assert.Equal(t, 8, output.Meta.TotalItems)
+		assert.Equal(t, 9, output.Meta.TotalItems)
 	})
 }
 
 func TestAdvisoriesUnlimited(t *testing.T) {
 	testAdvisoriesOk(t, "GET", "/?offset=0&limit=-1", func(output AdvisoriesResponse) {
-		assert.Equal(t, 8, len(output.Data))
+		assert.Equal(t, 9, len(output.Data))
 		assert.Equal(t, -1, output.Meta.Limit)
-		assert.Equal(t, 8, output.Meta.TotalItems)
+		assert.Equal(t, 9, output.Meta.TotalItems)
 	})
 }
 
@@ -76,7 +77,7 @@ func TestAdvisoriesOffset(t *testing.T) {
 		assert.Equal(t, 4, len(output.Data))
 		assert.Equal(t, 1, output.Meta.Offset)
 		assert.Equal(t, 4, output.Meta.Limit)
-		assert.Equal(t, 8, output.Meta.TotalItems)
+		assert.Equal(t, 9, output.Meta.TotalItems)
 	})
 }
 
@@ -96,7 +97,7 @@ func TestAdvisoriesOffsetOverflow(t *testing.T) {
 func TestAdvisoriesOrder(t *testing.T) {
 	testAdvisoriesOk(t, "GET", "/?sort=-public_date", func(output AdvisoriesResponse) {
 		// Advisory RH-7 has latest public date
-		assert.Equal(t, 8, len(output.Data))
+		assert.Equal(t, 9, len(output.Data))
 		assert.Equal(t, "RH-7", output.Data[0].ID)
 		assert.Equal(t, "advisory", output.Data[0].Type)
 		assert.Equal(t, "2017-09-22 19:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
@@ -109,7 +110,7 @@ func TestAdvisoriesOrder(t *testing.T) {
 // Ensure patched systems (ids: {7,8}) are not counted
 func TestAdvisoriesPatchedMissing(t *testing.T) {
 	testAdvisoriesOk(t, "GET", "/?sort=id", func(output AdvisoriesResponse) {
-		assert.Equal(t, 8, len(output.Data))
+		assert.Equal(t, 9, len(output.Data))
 		assert.Equal(t, "RH-1", output.Data[0].ID)
 		assert.Equal(t, 6, output.Data[0].Attributes.ApplicableSystems) //
 	})
