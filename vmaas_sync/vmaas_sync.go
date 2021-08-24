@@ -172,7 +172,7 @@ func syncData() error {
 	}
 
 	if enableReposSync {
-		if err := syncRepos(syncStart, lastSyncTS); err != nil {
+		if err := syncRepos(syncStart); err != nil {
 			return errors.Wrap(err, "Failed to sync repos")
 		}
 	}
