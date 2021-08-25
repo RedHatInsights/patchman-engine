@@ -285,7 +285,7 @@ objects:
     - puptoo
     cyndi:
       enabled: true
-      appName: patchman
+      appName: patch
       insightsOnly: true
     testing:
       iqePlugin: patchman
