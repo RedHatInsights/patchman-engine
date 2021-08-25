@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -69,6 +70,11 @@ func PackageVersionsListHandler(c *gin.Context) {
 	var packageNameIDs []int
 	if err := packagesNameID(packageName).Pluck("pn.id", &packageNameIDs).Error; err != nil {
 		LogAndRespError(c, err, "database error")
+		return
+	}
+
+	if len(packageNameIDs) == 0 {
+		LogAndRespNotFound(c, errors.New("not found"), "package not found")
 		return
 	}
 
