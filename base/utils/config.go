@@ -43,9 +43,12 @@ func printDBParams() {
 	fmt.Printf("DB_NAME=%s\n", clowder.LoadedConfig.Database.Name)
 	fmt.Printf("DB_PORT=%d\n", clowder.LoadedConfig.Database.Port)
 	fmt.Printf("DB_SSLMODE=%s\n", clowder.LoadedConfig.Database.SslMode)
-	RdsCa := clowder.LoadedConfig.Database.RdsCa
-	if RdsCa != nil {
-		fmt.Printf("DB_SSLROOTCERT=%s\n", *clowder.LoadedConfig.Database.RdsCa)
+	if clowder.LoadedConfig.Database.RdsCa != nil {
+		certPath, err := clowder.LoadedConfig.RdsCa()
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("DB_SSLROOTCERT=%s\n", certPath)
 	}
 }
 
@@ -54,14 +57,17 @@ func printKafkaParams() {
 		kafkaHost := clowder.LoadedConfig.Kafka.Brokers[0].Hostname
 		kafkaPort := *clowder.LoadedConfig.Kafka.Brokers[0].Port
 		fmt.Printf("KAFKA_ADDRESS=%s:%d\n", kafkaHost, kafkaPort)
-		kafkaCert := clowder.LoadedConfig.Kafka.Brokers[0].Cacert
-		if kafkaCert != nil {
+		brokerCfg := clowder.LoadedConfig.Kafka.Brokers[0]
+		if brokerCfg.Cacert != nil {
 			fmt.Println("ENABLE_KAFKA_SSL=true")
-			fmt.Printf("KAFKA_SSL_CERT=%s\n", *kafkaCert)
-			saslCfg := clowder.LoadedConfig.Kafka.Brokers[0].Sasl
-			if saslCfg.Username != nil {
-				fmt.Printf("KAFKA_USERNAME=%s\n", *saslCfg.Username)
-				fmt.Printf("KAFKA_PASSWORD=%s\n", *saslCfg.Password)
+			certPath, err := clowder.LoadedConfig.KafkaCa(brokerCfg)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Printf("KAFKA_SSL_CERT=%s\n", certPath)
+			if brokerCfg.Sasl.Username != nil {
+				fmt.Printf("KAFKA_USERNAME=%s\n", *brokerCfg.Sasl.Username)
+				fmt.Printf("KAFKA_PASSWORD=%s\n", *brokerCfg.Sasl.Password)
 			}
 		}
 		topics := []string{"EVENTS_TOPIC", "EVAL_TOPIC", "REMEDIATIONS_UPDATE_TOPIC"}
