@@ -14,7 +14,7 @@ import (
 func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) (
 	SystemAdvisoryMap, error) {
 	if !enableAdvisoryAnalysis {
-		utils.Log().Debug("advisory analysis disabled, skipping")
+		utils.Log().Info("advisory analysis disabled, skipping")
 		return nil, nil
 	}
 
@@ -48,10 +48,10 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 
 	patched = getPatchedAdvisories(reported, oldSystemAdvisories)
 	updatesCnt.WithLabelValues("patched").Add(float64(len(patched)))
-	utils.Log("inventoryID", inventoryID, "patched", len(patched)).Debug("patched advisories")
+	utils.Log("inventoryID", inventoryID, "patched", len(patched)).Info("patched advisories")
 
 	newsAdvisoriesNames, unpatched := getNewAndUnpatchedAdvisories(reported, oldSystemAdvisories)
-	utils.Log("inventoryID", inventoryID, "newAdvisories", len(newsAdvisoriesNames)).Debug("new advisories")
+	utils.Log("inventoryID", inventoryID, "newAdvisories", len(newsAdvisoriesNames)).Info("new advisories")
 
 	newIDs, err := getAdvisoriesFromDB(tx, newsAdvisoriesNames)
 	if err != nil {
@@ -59,13 +59,13 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 	}
 	nUnknown := len(newsAdvisoriesNames) - len(newIDs)
 	if nUnknown > 0 {
-		utils.Log("inventoryID", inventoryID, "unknown", nUnknown).Debug("unknown advisories - ignored")
+		utils.Log("inventoryID", inventoryID, "unknown", nUnknown).Info("unknown advisories - ignored")
 		updatesCnt.WithLabelValues("unknown").Add(float64(nUnknown))
 	}
 
 	unpatched = append(unpatched, newIDs...)
 	updatesCnt.WithLabelValues("unpatched").Add(float64(len(unpatched)))
-	utils.Log("inventoryID", inventoryID, "unpatched", len(unpatched)).Debug("patched advisories")
+	utils.Log("inventoryID", inventoryID, "unpatched", len(unpatched)).Info("patched advisories")
 	return patched, unpatched, nil
 }
 

@@ -210,7 +210,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vma
 func analyzeRepos(tx *gorm.DB, system *models.SystemPlatform) (
 	thirdParty bool, err error) {
 	if !enableRepoAnalysis {
-		utils.Log().Debug("repo analysis disabled, skipping")
+		utils.Log().Info("repo analysis disabled, skipping")
 		return false, nil
 	}
 

@@ -104,7 +104,7 @@ func HandleUpload(event HostEvent) error {
 	if sys.UnchangedSince != nil && sys.LastEvaluation != nil {
 		if sys.UnchangedSince.Before(*sys.LastEvaluation) {
 			messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccessNoEval).Inc()
-			utils.Log("inventoryID", event.Host.ID).Debug(UploadSuccessNoEval)
+			utils.Log("inventoryID", event.Host.ID).Info(UploadSuccessNoEval)
 			return nil
 		}
 	}
@@ -112,7 +112,7 @@ func HandleUpload(event HostEvent) error {
 	bufferEvalEvents(sys.InventoryID, sys.RhAccountID)
 
 	messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
-	utils.Log("inventoryID", event.Host.ID).Debug(UploadSuccess)
+	utils.Log("inventoryID", event.Host.ID).Info(UploadSuccess)
 	return nil
 }
 
@@ -121,7 +121,7 @@ const evalBufferSize = 5 * mqueue.BatchSize
 
 var evalBuffer = make([]mqueue.InventoryAID, 0, evalBufferSize+1)
 var flushTimer = time.AfterFunc(87600*time.Hour, func() {
-	utils.Log().Debug(FlushedTimeoutBuffer)
+	utils.Log().Info(FlushedTimeoutBuffer)
 	flushEvalEvents()
 })
 
@@ -131,7 +131,7 @@ func bufferEvalEvents(inventoryID string, rhAccountID int) {
 	evalBuffer = append(evalBuffer, inventoryAID)
 	flushTimer.Reset(uploadEvalTimeout)
 	if len(evalBuffer) >= evalBufferSize {
-		utils.Log().Debug(FlushedFullBuffer)
+		utils.Log().Info(FlushedFullBuffer)
 		flushEvalEvents()
 	}
 }
@@ -249,7 +249,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	utils.Log("inventoryID", inventoryID, "packages", len(updatesReq.PackageList), "repos",
 		len(updatesReq.GetRepositoryList()), "modules", len(updatesReq.GetModulesList()),
 		"addedRepos", addedRepos, "addedSysRepos", addedSysRepos, "deletedSysRepos", deletedSysRepos).
-		Debug("System created or updated successfully")
+		Info("System created or updated successfully")
 	return &systemPlatform, nil
 }
 

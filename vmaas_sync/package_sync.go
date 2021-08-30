@@ -36,7 +36,7 @@ func syncPackages(syncStart time.Time, modifiedSince *string) error {
 		utils.Log("page", iPage, "pages", int(pkgtreeResponse.GetPages()), "count", len(pkgtreeResponse.GetPackageNameList()),
 			"sync_duration", utils.SinceStr(syncStart, time.Second),
 			"packages_sync_duration", utils.SinceStr(pkgSyncStart, time.Second)).
-			Debug("Downloaded packages")
+			Info("Downloaded packages")
 	}
 	utils.Log().Info("Packages synced successfully")
 	return nil
@@ -101,7 +101,7 @@ func vmaasPkgtreeRequest(iPage int, modifiedSince *string) (*vmaas.PkgtreeRespon
 
 func storePackageNames(tx *gorm.DB, vmaasData map[string][]vmaas.PkgTreeItem) (map[string]int, error) {
 	packageNames, packageNameModels := getPackageArrays(vmaasData)
-	utils.Log("names", len(packageNames)).Debug("Got package names")
+	utils.Log("names", len(packageNames)).Info("Got package names")
 	tx = tx.Clauses(clause.OnConflict{
 		DoNothing: true,
 	}) // Insert missing
@@ -109,13 +109,13 @@ func storePackageNames(tx *gorm.DB, vmaasData map[string][]vmaas.PkgTreeItem) (m
 	if err != nil {
 		return nil, errors.Wrap(err, "Bulk insert of package names failed")
 	}
-	utils.Log().Debug("Package names stored")
+	utils.Log().Info("Package names stored")
 
 	packageNameIDMap, err := getPackageNameMap(tx, packageNames)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to get package name map")
 	}
-	utils.Log("names", len(packageNameIDMap)).Debug("Package names map loaded")
+	utils.Log("names", len(packageNameIDMap)).Info("Package names map loaded")
 	return packageNameIDMap, nil
 }
 
@@ -147,7 +147,7 @@ func storePackageStrings(tx *gorm.DB, vmaasData map[string][]vmaas.PkgTreeItem) 
 		strings = append(strings, models.String{ID: keySlice, Value: v})
 	}
 
-	utils.Log("strings", len(strings)).Debug("Created package strings to store")
+	utils.Log("strings", len(strings)).Info("Created package strings to store")
 	tx = tx.Clauses(clause.OnConflict{
 		DoNothing: true,
 	})
@@ -178,7 +178,7 @@ func storePackageDetails(tx *gorm.DB, nameIDs map[string]int, vmaasData map[stri
 			}
 		}
 	}
-	utils.Log("packages", len(toStore)).Debug("Collected packages to store")
+	utils.Log("packages", len(toStore)).Info("Collected packages to store")
 
 	tx = database.OnConflictUpdateMulti(tx, []string{"name_id", "evra"},
 		"description_hash", "summary_hash", "advisory_id")
@@ -187,7 +187,7 @@ func storePackageDetails(tx *gorm.DB, nameIDs map[string]int, vmaasData map[stri
 		return errors.Wrap(err, "Packages bulk insert failed")
 	}
 	storePackagesCnt.WithLabelValues("success").Add(float64(len(toStore)))
-	utils.Log().Debug("Packages stored")
+	utils.Log().Info("Packages stored")
 	return nil
 }
 

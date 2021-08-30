@@ -41,7 +41,7 @@ func syncAdvisories(syncStart time.Time, modifiedSince *string) error {
 		utils.Log("page", iPage, "pages", int(errataResponse.GetPages()), "count", len(errataResponse.GetErrataList()),
 			"sync_duration", utils.SinceStr(syncStart, time.Second),
 			"advisories_sync_duration", utils.SinceStr(advSyncStart, time.Second)).
-			Debug("Downloaded advisories")
+			Info("Downloaded advisories")
 	}
 
 	advisoryCheckEnabled := utils.GetBoolEnvOrDefault("ENABLE_ADVISORIES_COUNT_CHECK", true)
