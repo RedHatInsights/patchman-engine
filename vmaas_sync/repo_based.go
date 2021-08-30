@@ -84,14 +84,14 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []st
 		vmaasCallCnt.WithLabelValues("success").Inc()
 		repos := vmaasDataPtr.(*vmaas.ReposResponse)
 		if repos.GetPages() < 1 {
-			utils.Log().Debug("No repos returned from VMaaS")
+			utils.Log().Info("No repos returned from VMaaS")
 			break
 		}
 
 		utils.Log("page", int(page), "pages", int(repos.GetPages()), "count", len(repos.GetRepositoryList()),
 			"sync_duration", utils.SinceStr(syncStart, time.Second),
 			"repos_sync_duration", utils.SinceStr(reposSyncStart, time.Second)).
-			Debug("Downloaded repos")
+			Info("Downloaded repos")
 
 		for k, contentSet := range repos.GetRepositoryList() {
 			thirdParty := false

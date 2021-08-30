@@ -192,7 +192,7 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform,
 		packages[index].WasStored = true
 		packages[index].UpdateData = columns.UpdateData
 	}
-	utils.Log("inventoryID", system.InventoryID, "packages", numUpdates, "already stored", len(packages)).Debug()
+	utils.Log("inventoryID", system.InventoryID, "packages", numUpdates, "already stored", len(packages)).Info()
 	return packages, err
 }
 
