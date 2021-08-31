@@ -75,7 +75,7 @@ objects:
           - ./scripts/entrypoint.sh
           - listener
         env:
-        - {name: LOG_LEVEL, value: 'debug'}
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_LISTENER}'}
         - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
         - {name: GODEBUG, value: '${GODEBUG_LISTENER}'}
         - {name: GOMAXPROCS, value: '${GOMAXPROCS_LISTENER}'}
@@ -112,7 +112,7 @@ objects:
           - ./scripts/entrypoint.sh
           - evaluator
         env:
-        - {name: LOG_LEVEL, value: 'debug'}
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_EVALUATOR_UPLOAD}'}
         - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
         - {name: GODEBUG, value: '${GODEBUG_EVALUATOR_UPLOAD}'}
         - {name: GOMAXPROCS, value: '${GOMAXPROCS_EVALUATOR_UPLOAD}'}
@@ -153,7 +153,7 @@ objects:
           - ./scripts/entrypoint.sh
           - evaluator
         env:
-        - {name: LOG_LEVEL, value: 'debug'}
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_EVALUATOR_RECALC}'}
         - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
         - {name: GODEBUG, value: '${GODEBUG_EVALUATOR_RECALC}'}
         - {name: GOMAXPROCS, value: '${GOMAXPROCS_EVALUATOR_RECALC}'}
@@ -194,7 +194,7 @@ objects:
           - ./scripts/entrypoint.sh
           - vmaas_sync
         env:
-        - {name: LOG_LEVEL, value: 'debug'}
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_VMAAS_SYNC}'}
         - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
         - {name: GODEBUG, value: '${GODEBUG_VMAAS_SYNC}'}
         - {name: GOMAXPROCS, value: '${GOMAXPROCS_VMAAS_SYNC}'}
@@ -243,7 +243,7 @@ objects:
         command:
           - ./database_admin/entrypoint.sh
         env:
-        - {name: LOG_LEVEL, value: 'debug'}
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_DATABASE_ADMIN}'}
         - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
         - {name: GODEBUG, value: '${GODEBUG_DATABASE_ADMIN}'}
         - {name: DB_DEBUG, value: '${DB_DEBUG_DATABASE_ADMIN}'}
