@@ -286,8 +286,11 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("vmaas-updates-call"))
 
 	vmaasCallFunc := func() (interface{}, *http.Response, error) {
+		utils.Log("request", *request).Trace("vmaas /updates request")
 		vmaasData, resp, err := vmaasClient.DefaultApi.AppUpdatesHandlerV3PostPost(ctx).UpdatesV3Request(*request).
 			Execute()
+		utils.Log("status_code", resp.StatusCode).Debug("vmaas /updates call")
+		utils.Log("response", resp).Trace("vmaas /updates response")
 		return &vmaasData, resp, err
 	}
 
