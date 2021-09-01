@@ -103,7 +103,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                     {
-                        "expr": "sum(increase(patchman_engine_requests_total{job=\"patchman.*-manager\"}[$__range]))",
+                        "expr": "sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\"}[$__range]))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "",
@@ -191,7 +191,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                     {
-                        "expr": "sum(increase(patchman_engine_requests_total{job=\"patchman.*-manager\", code=~\"2.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=\"patchman.*-manager\"}[$__range]))",
+                        "expr": "sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\", code=~\"2.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\"}[$__range]))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "refId": "A"
@@ -797,7 +797,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                     {
-                        "expr": "sum(increase(patchman_engine_requests_total{job=\"patchman.*-manager\", code=~\"5.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=\"patchman.*-manager\"}[$__range]))",
+                        "expr": "sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\", code=~\"5.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\"}[$__range]))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "refId": "A"
@@ -884,7 +884,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                     {
-                        "expr": "sum(increase(patchman_engine_requests_total{job=\"patchman.*-manager\", code=~\"4.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=\"patchman.*-manager\"}[$__range]))",
+                        "expr": "sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\", code=~\"4.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\"}[$__range]))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "refId": "A"
