@@ -103,7 +103,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                     {
-                        "expr": "sum(increase(patchman_engine_requests_total{job=\"patchman-engine-manager\"}[$__range]))",
+                        "expr": "sum(increase(patchman_engine_requests_total{job=\"patchman.*-manager\"}[$__range]))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "",
@@ -191,7 +191,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                     {
-                        "expr": "sum(increase(patchman_engine_requests_total{job=\"patchman-engine-manager\", code=~\"2.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=\"patchman-engine-manager\"}[$__range]))",
+                        "expr": "sum(increase(patchman_engine_requests_total{job=\"patchman.*-manager\", code=~\"2.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=\"patchman.*-manager\"}[$__range]))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "refId": "A"
@@ -277,7 +277,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                     {
-                        "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman-engine-manager.*\"}))",
+                        "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman.*-manager.*\"}))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "refId": "A"
@@ -363,7 +363,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                     {
-                        "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman-engine-listener.*\"}))",
+                        "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman.*-listener.*\"}))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "refId": "A"
@@ -621,7 +621,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                     {
-                        "expr": "max(kube_pod_container_status_restarts_total{pod=~\"patchman-engine-vmaas-sync.*\"})",
+                        "expr": "max(kube_pod_container_status_restarts_total{pod=~\"patchman.*-vmaas-sync.*\"})",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "refId": "A"
@@ -797,7 +797,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                     {
-                        "expr": "sum(increase(patchman_engine_requests_total{job=\"patchman-engine-manager\", code=~\"5.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=\"patchman-engine-manager\"}[$__range]))",
+                        "expr": "sum(increase(patchman_engine_requests_total{job=\"patchman.*-manager\", code=~\"5.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=\"patchman.*-manager\"}[$__range]))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "refId": "A"
@@ -884,7 +884,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                     {
-                        "expr": "sum(increase(patchman_engine_requests_total{job=\"patchman-engine-manager\", code=~\"4.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=\"patchman-engine-manager\"}[$__range]))",
+                        "expr": "sum(increase(patchman_engine_requests_total{job=\"patchman.*-manager\", code=~\"4.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=\"patchman.*-manager\"}[$__range]))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "refId": "A"
@@ -1913,7 +1913,7 @@ data:
                 "steppedLine": false,
                 "targets": [
                     {
-                        "expr": "sum(kube_pod_container_status_restarts_total{pod=~\"patchman-engine-.*\", namespace=~\"patchman-engine$namespace\"}) by (container)",
+                        "expr": "sum(kube_pod_container_status_restarts_total{pod=~\"patchman.*-.*\", namespace=~\"patchman-engine$namespace\"}) by (container)",
                         "format": "time_series",
                         "interval": "",
                         "intervalFactor": 1,
