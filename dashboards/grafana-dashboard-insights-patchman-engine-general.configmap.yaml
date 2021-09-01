@@ -449,7 +449,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                     {
-                        "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman-engine-evaluator-upload.*\"}))",
+                        "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman.*-evaluator-upload.*\"}))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "refId": "A"
@@ -535,7 +535,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                     {
-                        "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman-engine-evaluator-recalc.*\"}))",
+                        "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman.*-evaluator-recalc.*\"}))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "refId": "A"
@@ -1093,7 +1093,7 @@ data:
                     "#d44a3a"
                 ],
                 "datasource": "$datasource",
-                "description": "Systems evaluated using component \"patchman-engine-evaluator-upload\".",
+                "description": "Systems evaluated using component \"patchman.*-evaluator-upload\".",
                 "fieldConfig": {
                     "defaults": {
                         "custom": {}
@@ -1151,7 +1151,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                     {
-                        "expr": "sum(patchman_engine_evaluator_evaluation{pod=~\"patchman-engine-evaluator-upload-.*\", type=\"success\"})",
+                        "expr": "sum(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-upload-.*\", type=\"success\"})",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "refId": "A"
@@ -1180,7 +1180,7 @@ data:
                     "#d44a3a"
                 ],
                 "datasource": "$datasource",
-                "description": "Systems evaluated using component \"patchman-engine-evaluator-recalc\".",
+                "description": "Systems evaluated using component \"patchman.*-evaluator-recalc\".",
                 "fieldConfig": {
                     "defaults": {
                         "custom": {}
@@ -1238,7 +1238,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                     {
-                        "expr": "sum(patchman_engine_evaluator_evaluation{pod=~\"patchman-engine-evaluator-recalc-.*\", type=\"success\"})",
+                        "expr": "sum(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-recalc-.*\", type=\"success\"})",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "",
@@ -2502,7 +2502,7 @@ data:
                 "reverseYBuckets": false,
                 "targets": [
                     {
-                        "expr": "sum(increase(patchman_engine_evaluator_evaluation_duration_seconds_bucket{job=~\"patchman-engine-evaluator-$evaluator\"}[$interval])) by (le)",
+                        "expr": "sum(increase(patchman_engine_evaluator_evaluation_duration_seconds_bucket{job=~\"patchman.*-evaluator-$evaluator\"}[$interval])) by (le)",
                         "format": "heatmap",
                         "intervalFactor": 10,
                         "legendFormat": "{{le}}",
@@ -2590,7 +2590,7 @@ data:
                 "steppedLine": false,
                 "targets": [
                     {
-                        "expr": "sum(rate(patchman_engine_evaluator_evaluation{pod=~\"patchman-engine-evaluator-$evaluator\"}[$interval])) by (type)",
+                        "expr": "sum(rate(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-$evaluator\"}[$interval])) by (type)",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "{{type}}",
@@ -2675,7 +2675,7 @@ data:
                 "reverseYBuckets": false,
                 "targets": [
                     {
-                        "expr": "sum(increase(patchman_engine_evaluator_upload_evaluation_delay_seconds_bucket{job=~\"patchman-engine-evaluator-upload\"}[$interval])) by (le)",
+                        "expr": "sum(increase(patchman_engine_evaluator_upload_evaluation_delay_seconds_bucket{job=~\"patchman.*-evaluator-upload\"}[$interval])) by (le)",
                         "format": "heatmap",
                         "intervalFactor": 10,
                         "legendFormat": "{{le}}",
@@ -2758,7 +2758,7 @@ data:
                 "steppedLine": false,
                 "targets": [
                     {
-                        "expr": "sum(rate(patchman_engine_evaluator_updates{pod=~\"patchman-engine-evaluator-$evaluator\"}[$interval])) by (type)",
+                        "expr": "sum(rate(patchman_engine_evaluator_updates{pod=~\"patchman.*-evaluator-$evaluator\"}[$interval])) by (type)",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "{{type}}",
@@ -2843,7 +2843,7 @@ data:
                 "reverseYBuckets": false,
                 "targets": [
                     {
-                        "expr": "sum(increase(patchman_engine_evaluator_two_evaluations_interval_hours_bucket{pod=~\"patchman-engine-evaluator-$evaluator\"}[$interval])) by (le)",
+                        "expr": "sum(increase(patchman_engine_evaluator_two_evaluations_interval_hours_bucket{pod=~\"patchman.*-evaluator-$evaluator\"}[$interval])) by (le)",
                         "format": "heatmap",
                         "interval": "",
                         "intervalFactor": 10,
@@ -2925,7 +2925,7 @@ data:
                 "steppedLine": false,
                 "targets": [
                     {
-                        "expr": "histogram_quantile(0.5, sum(rate(patchman_engine_evaluator_evaluation_part_duration_seconds_bucket{job=~\"patchman-engine-evaluator-$evaluator\"}[$interval])) by (part, le))",
+                        "expr": "histogram_quantile(0.5, sum(rate(patchman_engine_evaluator_evaluation_part_duration_seconds_bucket{job=~\"patchman.*-evaluator-$evaluator\"}[$interval])) by (part, le))",
                         "format": "time_series",
                         "groupBy": [
                             {
