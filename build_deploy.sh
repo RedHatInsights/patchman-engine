@@ -22,3 +22,7 @@ podman login -u="$QUAY_USER" -p="$QUAY_TOKEN" quay.io
 podman login -u="$RH_REGISTRY_USER" -p="$RH_REGISTRY_TOKEN" registry.redhat.io
 podman build -f Dockerfile.rhel8 -t "${IMAGE}:${IMAGE_TAG}" .
 podman push "${IMAGE}:${IMAGE_TAG}"
+podman tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:latest"
+podman push "${IMAGE}:latest"
+podman tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:qa"
+podman push "${IMAGE}:qa"
