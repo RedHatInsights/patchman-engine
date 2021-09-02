@@ -4,6 +4,7 @@ import (
 	"fmt"
 	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 	"os"
+	"strings"
 )
 
 // IsClowderEnabled Check env variable CLOWDER_ENABLED = "true".
@@ -84,7 +85,7 @@ func printServicesParams() {
 	for _, endpoint := range clowder.LoadedConfig.Endpoints {
 		switch endpoint.App {
 		case "vmaas":
-			if endpoint.Name == "webapp" {
+			if strings.Contains(endpoint.Name, "webapp") {
 				fmt.Printf("VMAAS_ADDRESS=http://%s:%d\n", endpoint.Hostname, endpoint.Port)
 			}
 		case "rbac":
@@ -94,7 +95,7 @@ func printServicesParams() {
 
 	for _, endpoint := range clowder.LoadedConfig.PrivateEndpoints {
 		if endpoint.App == "vmaas" {
-			if endpoint.Name == "websocket" {
+			if strings.Contains(endpoint.Name, "websocket") {
 				fmt.Printf("VMAAS_WS_ADDRESS=ws://%s:%d\n", endpoint.Hostname, endpoint.Port)
 			}
 		}
