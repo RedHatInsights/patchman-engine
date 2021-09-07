@@ -50,16 +50,9 @@ EXPOSE 8080
 # runtime image with only necessary stuff
 FROM centos:8 as runtimeimg
 
-ADD scripts/manifest /manifest
-# remember and later exclude base image rpms except for (redhat|centos-linux|fedora)-release
-RUN /manifest/rpm_list.sh "(redhat|centos-linux|fedora)-release" > /tmp/base_rpm.txt
-
-ENV MANIFEST_PREFIX="mgmt_services/patchman-engine/"
-
 RUN dnf module -y enable postgresql:12 && \
-    dnf install -y postgresql diffutils && \
-    dnf clean all && \
-    /manifest/rpm_list.sh > /tmp/final_rpm.txt
+    dnf install -y postgresql && \
+    dnf clean all
 
 RUN adduser --gid 0 -d /go --no-create-home insights
 
@@ -75,9 +68,6 @@ ADD --chown=insights:root database_admin/schema      /go/src/app/database_admin/
 ADD --chown=insights:root database_admin/migrations  /go/src/app/database_admin/migrations
 ADD --chown=insights:root docs/openapi.json          /go/src/app/docs/
 ADD --chown=insights:root vmaas_sync/entrypoint.sh   /go/src/app/vmaas_sync/
-
-RUN /manifest/generate.sh /manifest.txt $MANIFEST_PREFIX /tmp/base_rpm.txt /tmp/final_rpm.txt "" /go/src/app/go.sum && \
-    echo 'MANIFEST:' && cat /manifest.txt
 
 COPY --from=buildimg /go/src/app/main /go/src/app/
 
