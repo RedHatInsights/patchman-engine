@@ -22,21 +22,6 @@ objects:
           enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG_MANAGER}
-        initContainers:
-          - command:
-            - /manifest/push.sh
-            - RedHatInsights/manifests
-            - ${MANIFEST_PUSH_BRANCH}
-            - /manifest.txt
-            - patchman-engine/patchman-engine.txt
-            env:
-            - name: GIT_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: GIT_TOKEN
-                  name: github-patchman-bot
-            - name: MANIFEST_PUSH_BRANCH
-              value: ${MANIFEST_PUSH_BRANCH}
         command:
           - ./scripts/entrypoint.sh
           - manager
@@ -48,7 +33,6 @@ objects:
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: CLOWDER_ENABLED, value: '${CLOWDER_ENABLED}'}
         - {name: SHOW_CLOWDER_VARS, value: ''}
-        - {name: MANIFEST_PUSH_BRANCH, value: '${MANIFEST_PUSH_BRANCH}'}
         - {name: DB_DEBUG, value: '${DB_DEBUG_MANAGER}'}
         - {name: DB_USER, value: manager}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
@@ -318,7 +302,6 @@ objects:
 
 parameters:
 # Manager
-- {name: MANIFEST_PUSH_BRANCH, value: 'master'} # Manifest repo branch to push
 - {name: REPLICAS_MANAGER, value: '1'}
 - {name: IMAGE_TAG_MANAGER, value: latest}
 - {name: LOG_LEVEL_MANAGER, value: debug}
