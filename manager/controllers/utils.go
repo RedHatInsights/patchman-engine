@@ -77,16 +77,33 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 	return tx, appliedFields, nil
 }
 
+func validateFilters(q QueryMap, allowedFields database.AttrMap) error {
+	for key := range q {
+		// system_profile is hadled by tags, so it can be skipped
+		if key == "system_profile" {
+			continue
+		}
+		if _, ok := allowedFields[key]; !ok {
+			return errors.Errorf("Invalid filter field: %v", key)
+		}
+	}
+	return nil
+}
+
 func ParseFilters(q QueryMap, allowedFields database.AttrMap,
 	defaultFilters map[string]FilterData) (Filters, error) {
 	filters := Filters{}
+	var err error
+
+	if err = validateFilters(q, allowedFields); err != nil {
+		return filters, err
+	}
 
 	// Apply default filters
 	for n, v := range defaultFilters {
 		filters[n] = v
 	}
 
-	var err error
 	// nolint: scopelint
 	for f := range allowedFields {
 		if elem := q.Path(f); elem != nil {
