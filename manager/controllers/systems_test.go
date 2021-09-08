@@ -19,7 +19,7 @@ func TestSystemsDefault(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	// data
@@ -66,7 +66,7 @@ func TestSystemsOffsetLimit(t *testing.T) { //nolint:dupl
 	req, _ := http.NewRequest("GET", "/?offset=0&limit=4", nil)
 	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 4, len(output.Data))
@@ -83,7 +83,7 @@ func TestSystemsOffset(t *testing.T) { //nolint:dupl
 	req, _ := http.NewRequest("GET", "/?offset=4&limit=4", nil)
 	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 4, len(output.Data))
@@ -115,7 +115,7 @@ func TestSystemsSearch(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/?search=001", nil)
 	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 1, len(output.Data))
@@ -132,7 +132,7 @@ func TestSystemsTags(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/?tags=ns1/k2=val2", nil)
 	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, len(output.Data))
@@ -147,7 +147,7 @@ func TestSystemsTagsMultiple(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil)
 	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 1, len(output.Data))
@@ -162,7 +162,7 @@ func TestSystemsTagsUnknown(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=unk", nil)
 	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 0, len(output.Data))
@@ -176,7 +176,7 @@ func TestSystemsTagsNoVal(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=ns1/k1", nil)
 	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 1, len(output.Data))
@@ -206,7 +206,7 @@ func TestSystemsWorkloads1(t *testing.T) {
 		"/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][in][]=ABC", nil)
 	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, len(output.Data))
@@ -222,7 +222,7 @@ func TestSystemsWorkloads2(t *testing.T) {
 		"/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][]=ABC", nil)
 	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, len(output.Data))
@@ -238,7 +238,7 @@ func TestSystemsWorkloads3(t *testing.T) {
 		"/?filter[system_profile][sap_system]=false", nil)
 	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 0, len(output.Data))
@@ -252,7 +252,7 @@ func TestSystemsPackagesCount(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/?sort=-packages_installed,id", nil)
 	core.InitRouterWithAccount(SystemsListHandler, "/", 3).ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 3, len(output.Data))
@@ -271,7 +271,7 @@ func doTestSystemsFilter(t *testing.T, url string) SystemsResponse {
 	req, _ := http.NewRequest("GET", url, nil)
 	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	return output

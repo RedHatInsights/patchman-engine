@@ -18,7 +18,7 @@ func TestSystemAdvisoriesDefault(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001", nil)
 	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemAdvisoriesResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 8, len(output.Data))
@@ -51,7 +51,7 @@ func TestSystemAdvisoriesOffsetLimit(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001?offset=4&limit=3", nil)
 	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemAdvisoriesResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 3, len(output.Data))
@@ -84,7 +84,7 @@ func TestSystemAdvisoriesPossibleSorts(t *testing.T) {
 		var output SystemAdvisoriesResponse
 		ParseReponseBody(t, w.Body.Bytes(), &output)
 
-		assert.Equal(t, 200, w.Code)
+		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, output.Meta.Sort[0], sort)
 	}
 }
@@ -108,7 +108,7 @@ func TestSystemAdvisoriesSearch(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001?search=h-3", nil)
 	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemAdvisoriesResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 1, len(output.Data))
@@ -132,5 +132,5 @@ func TestSystemAdvisoriesExportUnknown(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/unknownsystem", nil)
 	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
 
-	assert.Equal(t, 400, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

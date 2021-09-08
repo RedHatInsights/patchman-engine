@@ -17,7 +17,7 @@ func TestSystemDetailDefault1(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001", nil)
 	core.InitRouterWithPath(SystemDetailHandler, "/:inventory_id").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data.ID)
@@ -45,7 +45,7 @@ func TestSystemDetailDefault2(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000012", nil)
 	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 3).ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, output.Data.Attributes.PackagesInstalled)
@@ -86,7 +86,7 @@ func TestSystemsNoRHSM(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000014", nil)
 	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 3).ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000014", output.Data.ID)
@@ -102,7 +102,7 @@ func TestRHSMLessThanOS(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000003", nil)
 	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 1).ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data.ID)
@@ -119,7 +119,7 @@ func TestRHSMGreaterThanOS(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000004", nil)
 	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 1).ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000004", output.Data.ID)
@@ -136,5 +136,5 @@ func TestSystemUnknown(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/unknownsystem", nil)
 	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 1).ServeHTTP(w, req)
 
-	assert.Equal(t, 400, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

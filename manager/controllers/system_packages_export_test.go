@@ -20,7 +20,7 @@ func TestSystemPackagesExportHandlerJSON(t *testing.T) {
 	req.Header.Add("Accept", "application/json")
 	core.InitRouterWithParams(SystemPackagesExportHandler, 3, "GET", "/:inventory_id/packages").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemPackageInline
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 4, len(output))
@@ -39,7 +39,7 @@ func TestSystemPackagesExportHandlerCSV(t *testing.T) {
 	req.Header.Add("Accept", "text/csv")
 	core.InitRouterWithParams(SystemPackagesExportHandler, 3, "GET", "/:inventory_id/packages").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
 	lines := strings.Split(body, "\n")
 
@@ -60,5 +60,5 @@ func TestSystemPackagesExportUnknown(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/unknownsystem/packages", nil)
 	req.Header.Add("Accept", "text/csv")
 	core.InitRouterWithParams(SystemPackagesExportHandler, 3, "GET", "/:inventory_id/packages").ServeHTTP(w, req)
-	assert.Equal(t, 400, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

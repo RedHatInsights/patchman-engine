@@ -35,7 +35,7 @@ func doTestView(t *testing.T, handler gin.HandlerFunc, checker func(w *httptest.
 
 func TestSystemsAdvisoriesView(t *testing.T) {
 	doTestView(t, PostSystemsAdvisories, func(w *httptest.ResponseRecorder) {
-		assert.Equal(t, 200, w.Code)
+		assert.Equal(t, http.StatusOK, w.Code)
 		var output SystemsAdvisoriesResponse
 		ParseReponseBody(t, w.Body.Bytes(), &output)
 		assert.Equal(t, output.Data["00000000-0000-0000-0000-000000000001"][0], AdvisoryName("RH-1"))
@@ -46,7 +46,7 @@ func TestSystemsAdvisoriesView(t *testing.T) {
 
 func TestAdvisoriesSystemsView(t *testing.T) {
 	doTestView(t, PostAdvisoriesSystems, func(w *httptest.ResponseRecorder) {
-		assert.Equal(t, 200, w.Code)
+		assert.Equal(t, http.StatusOK, w.Code)
 		var output AdvisoriesSystemsResponse
 		ParseReponseBody(t, w.Body.Bytes(), &output)
 		assert.Equal(t, output.Data["RH-1"][0], SystemID("00000000-0000-0000-0000-000000000001"))

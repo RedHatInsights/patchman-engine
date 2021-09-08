@@ -17,7 +17,7 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/RH-9", nil)
 	core.InitRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output AdvisoryDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	// data
@@ -41,7 +41,7 @@ func TestAdvisoryDetailCVE(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/RH-3", nil)
 	core.InitRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output AdvisoryDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, len(output.Data.Attributes.Cves))

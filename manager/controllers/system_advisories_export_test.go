@@ -18,7 +18,7 @@ func TestSystemAdvisoriesExportJSON(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001", nil)
 	req.Header.Add("Accept", "application/json")
 	core.InitRouterWithPath(SystemAdvisoriesExportHandler, "/:inventory_id").ServeHTTP(w, req)
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output []AdvisoryInlineItem
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 8, len(output))
@@ -33,7 +33,7 @@ func TestSystemAdvisoriesExportCSV(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001", nil)
 	req.Header.Add("Accept", "text/csv")
 	core.InitRouterWithPath(SystemAdvisoriesExportHandler, "/:inventory_id").ServeHTTP(w, req)
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
 	lines := strings.Split(body, "\n")
 
@@ -50,5 +50,5 @@ func TestUnknownSystemAdvisoriesExport(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/unknownsystem", nil)
 	req.Header.Add("Accept", "text/csv")
 	core.InitRouterWithPath(SystemAdvisoriesExportHandler, "/:inventory_id").ServeHTTP(w, req)
-	assert.Equal(t, 400, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

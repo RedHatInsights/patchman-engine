@@ -21,7 +21,7 @@ func TestSystemsExportJSON(t *testing.T) {
 	req.Header.Add("Accept", "application/json")
 	core.InitRouterWithPath(SystemsExportHandler, "/").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemInlineItem
 
 	ParseReponseBody(t, w.Body.Bytes(), &output)
@@ -49,7 +49,7 @@ func TestSystemsExportCSV(t *testing.T) {
 	req.Header.Add("Accept", "text/csv")
 	core.InitRouter(SystemsExportHandler).ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
 	lines := strings.Split(body, "\n")
 
@@ -89,7 +89,7 @@ func TestSystemsExportCSVFilter(t *testing.T) {
 	req.Header.Add("Accept", "text/csv")
 	core.InitRouter(SystemsExportHandler).ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
 	lines := strings.Split(body, "\n")
 
@@ -111,7 +111,7 @@ func TestExportSystemsTags(t *testing.T) {
 	req.Header.Add("Accept", "application/json")
 	core.InitRouterWithPath(SystemsExportHandler, "/").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemInlineItem
 
 	ParseReponseBody(t, w.Body.Bytes(), &output)
@@ -143,7 +143,7 @@ func TestSystemsExportWorkloads(t *testing.T) {
 	req.Header.Add("Accept", "application/json")
 	core.InitRouterWithPath(SystemsExportHandler, "/").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemInlineItem
 
 	ParseReponseBody(t, w.Body.Bytes(), &output)
