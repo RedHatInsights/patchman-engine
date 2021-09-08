@@ -291,15 +291,6 @@ objects:
     vmaas-sync-database-password: dm1hYXMtc3luYw== # vmaas-sync
     cyndi-database-password: Y3luZGk= # cyndi
 
-- apiVersion: v1
-  kind: Secret
-  metadata:
-    name: github-patchman-bot
-    namespace: test  # namespace is overwritten by bonfire
-  type: Opaque
-  data:
-    GIT_TOKEN: R0lUX1RPS0VO # GIT_TOKEN
-
 parameters:
 # Manager
 - {name: REPLICAS_MANAGER, value: '1'}
