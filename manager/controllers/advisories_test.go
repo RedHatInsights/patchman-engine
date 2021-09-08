@@ -25,7 +25,7 @@ func testAdvisoriesOk(t *testing.T, method, url string, check func(out Advisorie
 	req, _ := http.NewRequest(method, url, nil)
 	core.InitRouter(AdvisoriesListHandler).ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output AdvisoriesResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	check(output)
@@ -157,7 +157,7 @@ func TestAdvisoriesPossibleSorts(t *testing.T) {
 		var output AdvisoriesResponse
 		ParseReponseBody(t, w.Body.Bytes(), &output)
 
-		assert.Equal(t, 200, w.Code)
+		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, 1, len(output.Meta.Sort))
 		assert.Equal(t, output.Meta.Sort[0], sort)
 	}

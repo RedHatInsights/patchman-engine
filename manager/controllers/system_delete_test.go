@@ -34,7 +34,7 @@ func TestSystemDelete(t *testing.T) {
 	req, _ := http.NewRequest("DELETE", "/"+del, nil)
 	core.InitRouterWithParams(SystemDeleteHandler, 1, "DELETE", "/:inventory_id").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestSystemDeleteWrongAccount(t *testing.T) {
@@ -45,7 +45,7 @@ func TestSystemDeleteWrongAccount(t *testing.T) {
 	req, _ := http.NewRequest("DELETE", "/"+del, nil)
 	core.InitRouterWithParams(SystemDeleteHandler, 2, "DELETE", "/:inventory_id").ServeHTTP(w, req)
 
-	assert.Equal(t, 404, w.Code)
+	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestSystemDeleteNotFound(t *testing.T) {
@@ -56,7 +56,7 @@ func TestSystemDeleteNotFound(t *testing.T) {
 	req, _ := http.NewRequest("DELETE", "/"+del, nil)
 	core.InitRouterWithParams(SystemDeleteHandler, 1, "DELETE", "/:inventory_id").ServeHTTP(w, req)
 
-	assert.Equal(t, 404, w.Code)
+	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestSystemDeleteUnknown(t *testing.T) {
@@ -67,5 +67,5 @@ func TestSystemDeleteUnknown(t *testing.T) {
 	req, _ := http.NewRequest("DELETE", "/unknownsystem", nil)
 	core.InitRouterWithParams(SystemDeleteHandler, 1, "DELETE", "/:inventory_id").ServeHTTP(w, req)
 
-	assert.Equal(t, 400, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

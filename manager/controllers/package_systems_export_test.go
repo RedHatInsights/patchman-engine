@@ -20,7 +20,7 @@ func TestPackageSystemsExportHandlerJSON(t *testing.T) {
 	core.InitRouterWithParams(PackageSystemsExportHandler, 3, "GET", "/:package_name/systems").
 		ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output []PackageSystemItem
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, len(output))
@@ -39,7 +39,7 @@ func TestPackageSystemsExportHandlerCSV(t *testing.T) {
 	core.InitRouterWithParams(PackageSystemsExportHandler, 3, "GET", "/:package_name/systems").
 		ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
 	lines := strings.Split(body, "\n")
 

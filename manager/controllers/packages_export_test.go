@@ -19,7 +19,7 @@ func TestPackageExportJSON(t *testing.T) {
 	req.Header.Add("Accept", "application/json")
 	core.InitRouterWithParams(PackagesExportHandler, 3, "GET", "/").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output []PackageItem
 
 	ParseReponseBody(t, w.Body.Bytes(), &output)
@@ -36,7 +36,7 @@ func TestPackageExportCSV(t *testing.T) {
 	req.Header.Add("Accept", "text/csv")
 	core.InitRouterWithParams(PackagesExportHandler, 3, "GET", "/").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
 	lines := strings.Split(body, "\n")
 

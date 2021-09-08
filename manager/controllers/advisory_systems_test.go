@@ -18,7 +18,7 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	req, _ := http.NewRequest("GET", "/RH-1", nil)
 	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 6, len(output.Data))
@@ -61,7 +61,7 @@ func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
 	req, _ := http.NewRequest("GET", "/RH-1?offset=5&limit=3", nil)
 	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 1, len(output.Data))
@@ -99,7 +99,7 @@ func TestAdvisorySystemsSorts(t *testing.T) {
 		var output AdvisorySystemsResponse
 		ParseReponseBody(t, w.Body.Bytes(), &output)
 
-		assert.Equal(t, 200, w.Code)
+		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, 1, len(output.Meta.Sort))
 		assert.Equal(t, output.Meta.Sort[0], sort)
 	}
@@ -127,7 +127,7 @@ func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, 5, len(output.Data))
 }
 
@@ -142,7 +142,7 @@ func TestAdvisorySystemsTagsMultiple(t *testing.T) { //nolint:dupl
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data[0].ID)
 }
@@ -172,7 +172,7 @@ func TestAdvisorySystemsTagsUnknown(t *testing.T) { //nolint:dupl
 	var output AdvisorySystemsResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, 0, len(output.Data))
 }
 
