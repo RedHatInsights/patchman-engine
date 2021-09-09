@@ -72,8 +72,8 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []st
 		}
 
 		vmaasCallFunc := func() (interface{}, *http.Response, error) {
-			vmaasData, resp, err := vmaasClient.DefaultApi.AppReposHandlerPostPost(base.Context).ReposRequest(reposReq).
-				Execute()
+			vmaasData, resp, err := vmaasClient.DefaultApi.VmaasWebappAppReposHandlerPostPost(base.Context).
+				ReposRequest(reposReq).Execute()
 			return &vmaasData, resp, err
 		}
 

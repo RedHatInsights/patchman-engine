@@ -135,7 +135,8 @@ func TestEnsureSystemAdvisories(t *testing.T) {
 }
 
 func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {
-	vmaasData, resp, err := vmaasClient.DefaultApi.AppUpdatesHandlerV3PostPost(context.Background()).Execute()
+	vmaasData, resp, err := vmaasClient.DefaultApi.VmaasWebappAppUpdatesHandlerV3PostPost(context.Background()).
+		Execute()
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Nil(t, resp.Body.Close())

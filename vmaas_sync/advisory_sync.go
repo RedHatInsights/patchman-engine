@@ -132,6 +132,7 @@ func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataRespons
 		URL:            vmaasData.Url,
 		PackageData:    packageData,
 	}
+	// TODO add - vmaasData.GetRequiresReboot()
 	return &advisory, nil
 }
 
@@ -226,6 +227,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 
 	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary", "solution",
 		"public_date", "modified_date", "url", "advisory_type_id", "severity_id", "cve_list", "package_data")
+	// TODO add "reboot_required"
 
 	err = tx.CreateInBatches(&advisories, SyncBatchSize).Error
 	if err != nil {
@@ -259,8 +261,8 @@ func vmaasErrataRequest(iPage int, modifiedSince *string, pageSize int) (*vmaas.
 	}
 
 	vmaasCallFunc := func() (interface{}, *http.Response, error) {
-		vmaasData, resp, err := vmaasClient.DefaultApi.AppErrataHandlerPostPost(base.Context).ErrataRequest(errataRequest).
-			Execute()
+		vmaasData, resp, err := vmaasClient.DefaultApi.VmaasWebappAppErrataHandlerPostPost(base.Context).
+			ErrataRequest(errataRequest).Execute()
 		return &vmaasData, resp, err
 	}
 
