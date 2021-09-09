@@ -51,3 +51,16 @@ func TestPackageSystemsExportHandlerCSV(t *testing.T) {
 	assert.Equal(t, "00000000-0000-0000-0000-000000000013,00000000-0000-0000-0000-000000000013,"+
 		"5.6.13-200.fc31.x86_64,,false", lines[2])
 }
+
+func TestPackageSystemsExportInvalidName(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/unknown_package/systems", nil)
+	req.Header.Add("Accept", "text/csv")
+	core.InitRouterWithParams(PackageSystemsExportHandler, 3, "GET", "/:package_name/systems").
+		ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
