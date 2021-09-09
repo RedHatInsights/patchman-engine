@@ -85,7 +85,7 @@ func vmaasPkgtreeRequest(iPage int, modifiedSince *string) (*vmaas.PkgtreeRespon
 	}
 
 	vmaasCallFunc := func() (interface{}, *http.Response, error) {
-		vmaasData, resp, err := vmaasClient.DefaultApi.AppPkgtreeHandlerV3PostPost(base.Context).
+		vmaasData, resp, err := vmaasClient.DefaultApi.VmaasWebappAppPkgtreeHandlerV3PostPost(base.Context).
 			PkgtreeRequest(errataRequest).Execute()
 		return &vmaasData, resp, err
 	}

@@ -110,11 +110,10 @@ func erratasHandler(c *gin.Context) {
 		},
 	}
 	data := vmaas.ErrataResponse{
-		Page:          utils.PtrFloat32(0),
-		PageSize:      utils.PtrFloat32(10),
-		Pages:         utils.PtrFloat32(1),
-		ErrataList:    &errataList,
-		ModifiedSince: utils.PtrString(""),
+		Page:       utils.PtrFloat32(0),
+		PageSize:   utils.PtrFloat32(10),
+		Pages:      utils.PtrFloat32(1),
+		ErrataList: &errataList,
 	}
 	c.JSON(http.StatusOK, data)
 }
