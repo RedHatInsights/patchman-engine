@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/utils"
 	"app/manager/middlewares"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -33,6 +34,11 @@ func PackageSystemsExportHandler(c *gin.Context) {
 	var packageIDs []int
 	if err := packagesByNameQuery(packageName).Pluck("p.id", &packageIDs).Error; err != nil {
 		LogAndRespError(c, err, "database error")
+		return
+	}
+
+	if len(packageIDs) == 0 {
+		LogAndRespNotFound(c, errors.New("not found"), "package not found")
 		return
 	}
 
