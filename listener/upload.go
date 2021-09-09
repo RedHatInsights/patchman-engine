@@ -264,8 +264,12 @@ func getReporterID(reporter string) *int {
 // EPEL uses the `epel` repo identifier on both rhel 7 and rhel 8. We create our own mapping to
 // `epel-7` and `epel-8`
 func fixEpelRepos(sys *inventory.SystemProfileSpecYamlSystemProfile, repos []string) []string {
+	if sys == nil || sys.OperatingSystem == nil || sys.OperatingSystem.Major == nil {
+		return repos
+	}
+
 	for i, r := range repos {
-		if r == "epel" && sys.OperatingSystem.Major != nil {
+		if r == "epel" {
 			repos[i] = fmt.Sprintf("%s-%d", r, *sys.OperatingSystem.Major)
 		}
 	}
