@@ -48,7 +48,8 @@ const testAdvisories = `
          "modules_list":[
 
          ],
-         "url":"https://access.redhat.com/errata/RHBA-2004:391"
+         "url":"https://access.redhat.com/errata/RHBA-2004:391",
+         "requires_reboot": true
       },
       "RHBA-2004:403":{
          "synopsis":"Updated rusers packages",
@@ -77,7 +78,8 @@ const testAdvisories = `
          "modules_list":[
 
          ],
-         "url":"https://access.redhat.com/errata/RHBA-2004:403"
+         "url":"https://access.redhat.com/errata/RHBA-2004:403",
+         "requires_reboot": true
       }
 	},
    "page":0,
@@ -92,15 +94,16 @@ func TestParseAdvisories(t *testing.T) {
 
 	data := map[string]vmaas.ErrataResponseErrataList{
 		"ER1": {
-			Updated:     utils.PtrString("2004-09-02T00:00:00+00:00"),
-			Issued:      utils.PtrString("2004-09-02T00:00:00+00:00"),
-			Description: utils.PtrString("DESC"),
-			Solution:    utils.PtrString("SOL"),
-			Summary:     utils.PtrString("SUM"),
-			Url:         utils.PtrString("URL"),
-			Synopsis:    utils.PtrString("SYN"),
-			Type:        utils.PtrString("bugfix"),
-			CveList:     utils.PtrSliceString([]string{"CVE-1", "CVE-2", "CVE-3"}),
+			Updated:        utils.PtrString("2004-09-02T00:00:00+00:00"),
+			Issued:         utils.PtrString("2004-09-02T00:00:00+00:00"),
+			Description:    utils.PtrString("DESC"),
+			Solution:       utils.PtrString("SOL"),
+			Summary:        utils.PtrString("SUM"),
+			Url:            utils.PtrString("URL"),
+			Synopsis:       utils.PtrString("SYN"),
+			Type:           utils.PtrString("bugfix"),
+			CveList:        utils.PtrSliceString([]string{"CVE-1", "CVE-2", "CVE-3"}),
+			RequiresReboot: utils.PtrBool(true),
 		},
 	}
 
@@ -119,6 +122,8 @@ func TestParseAdvisories(t *testing.T) {
 	assert.Equal(t, "URL", *adv.URL)
 	assert.Equal(t, "SYN", adv.Synopsis)
 	assert.Equal(t, 2, adv.AdvisoryTypeID)
+	assert.Equal(t, 2, adv.AdvisoryTypeID)
+	assert.Equal(t, true, adv.RebootRequired)
 	js := json.RawMessage(string(adv.CveList))
 	cves, _ := json.Marshal(js)
 	assert.Equal(t, string(cves), `["CVE-1","CVE-2","CVE-3"]`)
@@ -177,6 +182,17 @@ func TestSyncAdvisoriesCheck(t *testing.T) {
 
 	expected := []string{"RH-100"}
 	database.CheckAdvisoriesInDB(t, expected)
+
+	var am models.AdvisoryMetadata
+	assert.Nil(t, database.Db.Model(&models.AdvisoryMetadata{}).Where("name in (?)", expected).Find(&am).Error)
+	assert.Equal(t, "adv-100-des", am.Description)
+	assert.Equal(t, "adv-100-sum", am.Summary)
+	assert.Equal(t, "adv-100-syn", am.Synopsis)
+	assert.Equal(t, "adv-100-sol", am.Solution)
+	assert.Equal(t, true, am.RebootRequired)
+	assert.Equal(t, 3, am.AdvisoryTypeID)
+	assert.Equal(t, "2020-01-02 08:04:05 +0000 UTC", am.PublicDate.String())
+	assert.Equal(t, "2020-01-02 08:04:05 +0000 UTC", am.ModifiedDate.String())
 
 	database.DeleteNewlyAddedPackages(t)
 	database.DeleteNewlyAddedAdvisories(t)
