@@ -265,7 +265,7 @@ func getReporterID(reporter string) *int {
 // `epel-7` and `epel-8`
 func fixEpelRepos(sys *inventory.SystemProfileSpecYamlSystemProfile, repos []string) []string {
 	for i, r := range repos {
-		if r == "epel" && sys.OperatingSystem.Major != nil {
+		if r == "epel" && sys.OperatingSystem != nil && sys.OperatingSystem.Major != nil {
 			repos[i] = fmt.Sprintf("%s-%d", r, *sys.OperatingSystem.Major)
 		}
 	}
