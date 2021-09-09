@@ -49,3 +49,15 @@ func TestPackageSystemsTagsInvalid(t *testing.T) {
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
+
+func TestPackageSystemsInvalidName(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/unknown_package/systems", nil)
+	core.InitRouterWithParams(PackageSystemsListHandler, 3, "GET", "/:package_name/systems").
+		ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
