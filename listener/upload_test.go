@@ -248,3 +248,10 @@ func TestUpdateSystemRepos2(t *testing.T) {
 	assert.Equal(t, int64(2), nDeleted)
 	deleteData(t)
 }
+
+func TestFixEpelRepos(t *testing.T) {
+	repos := []string{"epel"}
+	var sys = inventory.SystemProfileSpecYamlSystemProfile{}
+	repos = fixEpelRepos(&sys, repos)
+	assert.Equal(t, "epel", repos[0])
+}
