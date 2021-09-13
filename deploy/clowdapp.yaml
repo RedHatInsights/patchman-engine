@@ -230,6 +230,12 @@ objects:
         image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
         command:
           - ./database_admin/entrypoint.sh
+        livenessProbe:
+          exec:
+            command: [echo]
+        readinessProbe:
+          exec:
+            command: [echo]
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_DATABASE_ADMIN}'}
         - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
