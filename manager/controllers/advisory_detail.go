@@ -23,17 +23,18 @@ type AdvisoryDetailItem struct {
 }
 
 type AdvisoryDetailAttributes struct {
-	Description  string            `json:"description"`
-	ModifiedDate time.Time         `json:"modified_date"`
-	PublicDate   time.Time         `json:"public_date"`
-	Topic        string            `json:"topic"`
-	Synopsis     string            `json:"synopsis"`
-	Solution     string            `json:"solution"`
-	Severity     *int              `json:"severity"`
-	Fixes        *string           `json:"fixes"`
-	Cves         []string          `json:"cves"`
-	Packages     map[string]string `json:"packages"`
-	References   []string          `json:"references"`
+	Description    string            `json:"description"`
+	ModifiedDate   time.Time         `json:"modified_date"`
+	PublicDate     time.Time         `json:"public_date"`
+	Topic          string            `json:"topic"`
+	Synopsis       string            `json:"synopsis"`
+	Solution       string            `json:"solution"`
+	Severity       *int              `json:"severity"`
+	Fixes          *string           `json:"fixes"`
+	Cves           []string          `json:"cves"`
+	Packages       map[string]string `json:"packages"`
+	References     []string          `json:"references"`
+	RebootRequired bool              `json:"reboot_required"`
 }
 
 // @Summary Show me details an advisory by given advisory name
@@ -79,17 +80,18 @@ func AdvisoryDetailHandler(c *gin.Context) {
 	var resp = AdvisoryDetailResponse{
 		Data: AdvisoryDetailItem{
 			Attributes: AdvisoryDetailAttributes{
-				Description:  advisory.Description,
-				ModifiedDate: advisory.ModifiedDate,
-				PublicDate:   advisory.PublicDate,
-				Topic:        advisory.Summary,
-				Synopsis:     advisory.Synopsis,
-				Solution:     advisory.Solution,
-				Severity:     advisory.SeverityID,
-				Fixes:        nil,
-				Cves:         cves,
-				Packages:     packages,
-				References:   []string{}, // TODO joins
+				Description:    advisory.Description,
+				ModifiedDate:   advisory.ModifiedDate,
+				PublicDate:     advisory.PublicDate,
+				Topic:          advisory.Summary,
+				Synopsis:       advisory.Synopsis,
+				Solution:       advisory.Solution,
+				Severity:       advisory.SeverityID,
+				Fixes:          nil,
+				Cves:           cves,
+				Packages:       packages,
+				References:     []string{},
+				RebootRequired: advisory.RebootRequired,
 			},
 			ID:   advisory.Name,
 			Type: "advisory",

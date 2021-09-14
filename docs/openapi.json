@@ -2176,6 +2176,9 @@
                     "public_date": {
                         "type": "string"
                     },
+                    "reboot_required": {
+                        "type": "boolean"
+                    },
                     "references": {
                         "type": "array",
                         "items": {
