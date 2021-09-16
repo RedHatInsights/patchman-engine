@@ -14,6 +14,7 @@ import (
 )
 
 var enableAdvisoryDetailCache = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_DETAIL_CACHE", true)
+var advisoryDetailCacheSize = utils.GetIntEnvOrDefault("ADVISORY_DETAIL_CACHE_SIZE", 100)
 var advisoryDetailCache = initAdvisoryDetailCache()
 
 type AdvisoryDetailResponse struct {
@@ -152,13 +153,38 @@ func initAdvisoryDetailCache() *lru.Cache {
 		return nil
 	}
 
-	cacheSize := utils.GetIntEnvOrDefault("ADVISORY_DETAIL_CACHE_SIZE", 1000)
-	cache, err := lru.New(cacheSize)
+	cache, err := lru.New(advisoryDetailCacheSize)
 	if err != nil {
 		panic(err)
 	}
 
 	return cache
+}
+
+func PreloadAdvisoryCacheItems() {
+	preLoadCache := utils.GetBoolEnvOrDefault("PRELOAD_ADVISORY_DETAIL_CACHE", true)
+	if !preLoadCache {
+		return
+	}
+
+	utils.Log("cacheSize", advisoryDetailCacheSize).Info("loading items to advisory detail cache...")
+	var advisoryNames []string
+	err := database.Db.Table("advisory_metadata").Limit(advisoryDetailCacheSize).Order("public_date DESC").
+		Pluck("name", &advisoryNames).Error // preload first N most recent advisories to cache
+	if err != nil {
+		panic(err)
+	}
+
+	for i, advisoryName := range advisoryNames {
+		_, err = getAdvisory(advisoryName)
+		if err != nil {
+			utils.Log("advisoryName", advisoryName, "err", err.Error()).Error("can not re-load item to cache")
+		}
+		perc := 1000 * (i + 1) / len(advisoryNames)
+		if perc%10 == 0 { // log each 1% increment
+			utils.Log("percent", perc/10).Info("advisory detail cache loading")
+		}
+	}
 }
 
 func tryGetAdvisoryFromCache(advisoryName string) *AdvisoryDetailResponse {

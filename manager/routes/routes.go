@@ -12,6 +12,7 @@ func InitAPI(api *gin.RouterGroup) {
 
 	advisories := api.Group("/advisories")
 	advisories.GET("/", controllers.AdvisoriesListHandler)
+	controllers.PreloadAdvisoryCacheItems()
 	advisories.GET("/:advisory_id", controllers.AdvisoryDetailHandler)
 	advisories.GET("/:advisory_id/systems", controllers.AdvisorySystemsListHandler)
 
