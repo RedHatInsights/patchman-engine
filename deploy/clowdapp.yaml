@@ -309,6 +309,8 @@ parameters:
 - {name: ENABLE_CYNDI_TAGS, value: 'true'} # Enable filtering with Cyndi tags
 - {name: ENABLE_RBAC, value: 'true'} # Enable requesting RBAC service
 - {name: DISABLE_CACHE_COUNTS, value: 'false'} # Don't use advisory cache counts
+- {name: ENABLE_ADVISORY_DETAIL_CACHE, value: 'true'} # Use LRU cache in advisory detail endpoint
+- {name: ADVISORY_DETAIL_CACHE_SIZE, value: '1000'} # Advisory detail cache size (cached items count)
 - {name: RES_CPU_MANAGER, value: 200m}
 - {name: RES_MEM_MANAGER, value: 256Mi}
 
