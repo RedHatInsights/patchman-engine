@@ -104,3 +104,18 @@ func TestAdvisoryDetailCached(t *testing.T) {
 	checkRH9Fields(t, output)
 	assert.Equal(t, "found in cache", hook.LogEntries[4].Message)
 }
+
+func TestAdvisoryDetailCachePreloading(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	advisoryDetailCache.Purge()
+	var hook = utils.NewTestLogHook()
+	log.AddHook(hook)
+
+	PreloadAdvisoryCacheItems()
+
+	_, ok := advisoryDetailCache.Get("RH-8") // ensure some advisory in cache
+	assert.True(t, ok)
+	advisoryDetailCache.Purge()
+}
