@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -21,17 +22,21 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 	var output AdvisoryDetailResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	// data
-	assert.Equal(t, "advisory", output.Data.Type)
-	assert.Equal(t, "RH-9", output.Data.ID)
-	assert.Equal(t, "adv-9-syn", output.Data.Attributes.Synopsis)
-	assert.Equal(t, "adv-9-des", output.Data.Attributes.Description)
-	assert.Equal(t, "adv-9-sol", output.Data.Attributes.Solution)
-	assert.Equal(t, "2016-09-22 20:00:00 +0000 UTC", output.Data.Attributes.PublicDate.String())
-	assert.Equal(t, "2018-09-22 20:00:00 +0000 UTC", output.Data.Attributes.ModifiedDate.String())
-	assert.Equal(t, 1, len(output.Data.Attributes.Packages))
-	assert.Equal(t, "77.0.1-1.fc31.x86_64", output.Data.Attributes.Packages["firefox"])
-	assert.Equal(t, false, output.Data.Attributes.RebootRequired)
-	assert.Nil(t, output.Data.Attributes.Severity)
+	checkRH9Fields(t, output)
+}
+
+func checkRH9Fields(t *testing.T, response AdvisoryDetailResponse) {
+	assert.Equal(t, "advisory", response.Data.Type)
+	assert.Equal(t, "RH-9", response.Data.ID)
+	assert.Equal(t, "adv-9-syn", response.Data.Attributes.Synopsis)
+	assert.Equal(t, "adv-9-des", response.Data.Attributes.Description)
+	assert.Equal(t, "adv-9-sol", response.Data.Attributes.Solution)
+	assert.Equal(t, "2016-09-22 20:00:00 +0000 UTC", response.Data.Attributes.PublicDate.String())
+	assert.Equal(t, "2018-09-22 20:00:00 +0000 UTC", response.Data.Attributes.ModifiedDate.String())
+	assert.Equal(t, 1, len(response.Data.Attributes.Packages))
+	assert.Equal(t, "77.0.1-1.fc31.x86_64", response.Data.Attributes.Packages["firefox"])
+	assert.Equal(t, false, response.Data.Attributes.RebootRequired)
+	assert.Nil(t, response.Data.Attributes.Severity)
 }
 
 func TestAdvisoryDetailCVE(t *testing.T) {
@@ -74,4 +79,28 @@ func TestAdvisoryNotFound(t *testing.T) {
 	var errResp utils.ErrorResponse
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "advisory not found", errResp.Error)
+}
+
+func testReq() *httptest.ResponseRecorder {
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/RH-9", nil)
+	core.InitRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
+	return w
+}
+
+func TestAdvisoryDetailCached(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	var hook = utils.NewTestLogHook()
+	log.AddHook(hook)
+
+	testReq()      // load from db and save to cache
+	w := testReq() // load from cache
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var output AdvisoryDetailResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	checkRH9Fields(t, output)
+	assert.Equal(t, "found in cache", hook.LogEntries[4].Message)
 }

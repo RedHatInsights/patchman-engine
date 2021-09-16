@@ -5,12 +5,16 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"encoding/json"
-	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/hashicorp/golang-lru"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"net/http"
 	"time"
 )
+
+var enableAdvisoryDetailCache = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_DETAIL_CACHE", true)
+var advisoryDetailCache = initAdvisoryDetailCache()
 
 type AdvisoryDetailResponse struct {
 	Data AdvisoryDetailItem `json:"data"`
@@ -53,28 +57,34 @@ func AdvisoryDetailHandler(c *gin.Context) {
 		return
 	}
 
-	var advisory models.AdvisoryMetadata
-	err := database.Db.Where("name = ?", advisoryName).First(&advisory).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		LogAndRespNotFound(c, err, "advisory not found")
+	resp, err := getAdvisory(advisoryName)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			LogAndRespNotFound(c, err, "advisory not found")
+		} else {
+			LogAndRespError(c, err, "advisory detail error")
+		}
 		return
 	}
 
+	c.JSON(http.StatusOK, resp)
+}
+
+func getAdvisoryFromDB(advisoryName string) (*AdvisoryDetailResponse, error) {
+	var advisory models.AdvisoryMetadata
+	err := database.Db.Where("name = ?", advisoryName).First(&advisory).Error
 	if err != nil {
-		LogAndRespError(c, err, "database error")
-		return
+		return nil, err
 	}
 
 	cves, err := parseCVEs(advisory.CveList)
 	if err != nil {
-		LogAndRespError(c, err, "CVEs parsing error")
-		return
+		return nil, errors.Wrap(err, "CVEs parsing error")
 	}
 
 	packages, err := parsePackages(advisory.PackageData)
 	if err != nil {
-		LogAndRespError(c, err, "packages parsing error")
-		return
+		return nil, errors.Wrap(err, "packages parsing error")
 	}
 
 	var resp = AdvisoryDetailResponse{
@@ -96,7 +106,7 @@ func AdvisoryDetailHandler(c *gin.Context) {
 			ID:   advisory.Name,
 			Type: "advisory",
 		}}
-	c.JSON(http.StatusOK, &resp)
+	return &resp, nil
 }
 
 func parseCVEs(jsonb []byte) ([]string, error) {
@@ -135,4 +145,56 @@ func parsePackages(jsonb []byte) (map[string]string, error) {
 		return nil, err
 	}
 	return packages, nil
+}
+
+func initAdvisoryDetailCache() *lru.Cache {
+	if !enableAdvisoryDetailCache {
+		return nil
+	}
+
+	cacheSize := utils.GetIntEnvOrDefault("ADVISORY_DETAIL_CACHE_SIZE", 1000)
+	cache, err := lru.New(cacheSize)
+	if err != nil {
+		panic(err)
+	}
+
+	return cache
+}
+
+func tryGetAdvisoryFromCache(advisoryName string) *AdvisoryDetailResponse {
+	if advisoryDetailCache == nil {
+		return nil
+	}
+
+	val, ok := advisoryDetailCache.Get(advisoryName)
+	if !ok {
+		return nil
+	}
+
+	resp := val.(AdvisoryDetailResponse)
+	return &resp
+}
+
+func tryAddAdvisoryToCache(advisoryName string, resp *AdvisoryDetailResponse) {
+	if advisoryDetailCache == nil {
+		return
+	}
+	evicted := advisoryDetailCache.Add(advisoryName, *resp)
+	utils.Log("evicted", evicted, "advisoryName", advisoryName).Debug("saved to cache")
+}
+
+func getAdvisory(advisoryName string) (*AdvisoryDetailResponse, error) {
+	resp := tryGetAdvisoryFromCache(advisoryName)
+	if resp != nil {
+		utils.Log("advisoryName", advisoryName).Debug("found in cache")
+		return resp, nil // return data found in cache
+	}
+
+	resp, err := getAdvisoryFromDB(advisoryName) // search for data in database
+	if err != nil {
+		return nil, err
+	}
+
+	tryAddAdvisoryToCache(advisoryName, resp) // save data to cache if initialized
+	return resp, nil
 }
