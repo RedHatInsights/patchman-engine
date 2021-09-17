@@ -40,6 +40,10 @@ objects:
         - {name: ENABLE_CYNDI_TAGS, value: '${ENABLE_CYNDI_TAGS}'}
         - {name: ENABLE_RBAC, value: '${ENABLE_RBAC}'}
         - {name: DISABLE_CACHE_COUNTS, value: '${DISABLE_CACHE_COUNTS}'}
+        - {name: ENABLE_ADVISORY_DETAIL_CACHE, value: '${ENABLE_ADVISORY_DETAIL_CACHE}'}
+        - {name: ADVISORY_DETAIL_CACHE_SIZE, value: '${ADVISORY_DETAIL_CACHE_SIZE}'}
+        - {name: PRELOAD_ADVISORY_DETAIL_CACHE, value: '${PRELOAD_ADVISORY_DETAIL_CACHE}'}
+
         resources:
           limits: {cpu: '${RES_CPU_MANAGER}', memory: '${RES_MEM_MANAGER}'}
           requests: {cpu: '${RES_CPU_MANAGER}', memory: '${RES_MEM_MANAGER}'}
