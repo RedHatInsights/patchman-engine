@@ -1,0 +1,29 @@
+name: Semantic release
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: increment version, commit, push
+      run: |
+        MANAGER_FILE=manager/manager.go
+        METRICS_FILE=base/metrics/metrics.go
+        DOC_FILE=docs/openapi.json
+        VERSION=$(awk '/^\/\/ @version/ {print $3}' $MANAGER_FILE)
+        RELEASE_TYPE=$(git log -1 | tail -n1) # Check release type (/major, /minor, /patch (default))
+        VERSION_NEXT=$(./scripts/increment_version.sh $VERSION $RELEASE_TYPE)
+        sed -i "s|\(// @version \).*$|\1 $VERSION_NEXT|;" $MANAGER_FILE
+        sed -i 's|\(ENGINEVERSION = "\)[^"]*\("\)$|'"\1$VERSION_NEXT\2|;" $METRICS_FILE
+        sed -i 's|\("version": "\)[^"]*\("\)$|'"\1$VERSION_NEXT\2|;" $DOC_FILE
+        git config --global user.name 'semantic-release'
+        git config --global user.email ''
+        git commit -am "${VERSION_NEXT}"
+        git push
+        git tag ${VERSION_NEXT}
+        git push origin ${VERSION_NEXT}
