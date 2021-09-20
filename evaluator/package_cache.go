@@ -3,9 +3,13 @@ package evaluator
 import (
 	"app/base/database"
 	"app/base/utils"
+	"errors"
 	"runtime"
-	"sync"
 	"time"
+
+	rpm "github.com/ezamriy/gorpm"
+	lru "github.com/hashicorp/golang-lru"
+	"gorm.io/gorm"
 )
 
 var memoryPackageCache *PackageCache
@@ -22,20 +26,45 @@ type PackageCacheMetadata struct {
 }
 
 type PackageCache struct {
-	mtx          sync.RWMutex
-	byID         map[int]*PackageCacheMetadata
-	byNevra      map[string]*PackageCacheMetadata
-	latestByName map[string]*PackageCacheMetadata
-	nameByID     map[int]string
+	enabled      bool
+	preload      bool
+	size         int
+	nameSize     int
+	byID         *lru.Cache
+	byNevra      *lru.Cache
+	latestByName *lru.Cache
+	nameByID     *lru.Cache
 }
 
-func NewPackageCache() *PackageCache {
+func NewPackageCache(enabled bool, preload bool, size int, nameSize int) *PackageCache {
 	c := new(PackageCache)
-	c.byID = map[int]*PackageCacheMetadata{}
-	c.byNevra = map[string]*PackageCacheMetadata{}
-	c.latestByName = map[string]*PackageCacheMetadata{}
-	c.nameByID = map[int]string{}
-	return c
+
+	c.enabled = enabled
+	c.preload = preload
+	c.size = size
+	c.nameSize = nameSize
+
+	if c.enabled {
+		var err error
+		c.byID, err = lru.New(c.size)
+		if err != nil {
+			panic(err)
+		}
+		c.byNevra, err = lru.New(c.size)
+		if err != nil {
+			panic(err)
+		}
+		c.latestByName, err = lru.New(c.nameSize)
+		if err != nil {
+			panic(err)
+		}
+		c.nameByID, err = lru.New(c.nameSize)
+		if err != nil {
+			panic(err)
+		}
+		return c
+	}
+	return nil
 }
 
 func logLoadProgress(t *time.Ticker, count *int64, total *int64) {
@@ -46,19 +75,20 @@ func logLoadProgress(t *time.Ticker, count *int64, total *int64) {
 }
 
 func (c *PackageCache) Load() {
+	if !c.enabled || !c.preload {
+		return
+	}
+
+	utils.Log("size", c.size).Info("PackageCache.Load")
 	tx := database.Db.Begin()
 	defer tx.Rollback()
 
-	var total, count int64
-	err := tx.Table("package p").Count(&total).Error
-	if err != nil {
-		panic(err)
-	}
-
+	// load N last recently added packages, i.e. newest
 	rows, err := tx.Table("package p").
 		Select("p.id, p.name_id, pn.name, p.evra, p.summary_hash, p.description_hash").
 		Joins("JOIN package_name pn ON pn.id = p.name_id").
-		Order("evra DESC").
+		Order("id DESC").
+		Limit(c.size).
 		Rows()
 	if err != nil {
 		panic(err)
@@ -68,10 +98,8 @@ func (c *PackageCache) Load() {
 	runtime.ReadMemStats(&mStart)
 	tStart := time.Now()
 
-	c.mtx = sync.RWMutex{}
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-
+	var count int64
+	total := int64(c.size)
 	progressTicker := time.NewTicker(logProgressDuration)
 	go logLoadProgress(progressTicker, &count, &total)
 
@@ -89,82 +117,182 @@ func (c *PackageCache) Load() {
 			DescriptionHash: columns.DescriptionHash,
 			SummaryHash:     columns.SummaryHash,
 		}
-		c.AddWithoutLock(&pkg)
+		c.Add(&pkg)
 		count++
 	}
 	progressTicker.Stop()
 
 	runtime.ReadMemStats(&mEnd)
-	utils.Log("rows", len(c.byID), "allocated-size", utils.SizeStr(mEnd.TotalAlloc-mStart.TotalAlloc),
+	utils.Log("rows", c.byID.Len(), "allocated-size", utils.SizeStr(mEnd.TotalAlloc-mStart.TotalAlloc),
 		"duration", utils.SinceStr(tStart, time.Millisecond)).Info("PackageCache.Load")
 }
 
 func (c *PackageCache) GetByID(id int) (*PackageCacheMetadata, bool) {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
-	metadata, ok := c.byID[id]
-	utils.Log("id", id, "ok", ok).Trace("PackageCache.GetByID")
-	if ok {
+	if c.enabled {
+		val, ok := c.byID.Get(id)
+		if ok {
+			utils.Log("id", id).Trace("PackageCache.GetByID cache hit")
+			metadata := val.(*PackageCacheMetadata)
+			return metadata, true
+		}
+	}
+
+	metadata := c.ReadByID(id)
+	if c.enabled && metadata != nil {
+		c.Add(metadata)
+		utils.Log("id", id).Trace("PackageCache.GetByID read from db")
 		return metadata, true
 	}
+	utils.Log("id", id).Trace("PackageCache.GetByID not found")
 	return nil, false
 }
 
 func (c *PackageCache) GetByNevra(nevra string) (*PackageCacheMetadata, bool) {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
+	if c.enabled {
+		val, ok := c.byNevra.Get(nevra)
+		if ok {
+			utils.Log("nevra", nevra).Trace("PackageCache.GetByNevra cache hit")
+			metadata := val.(*PackageCacheMetadata)
+			return metadata, true
+		}
+	}
 
-	metadata, ok := c.byNevra[nevra]
-	utils.Log("nevra", nevra, "ok", ok).Trace("PackageCache.GetByNevra")
-	if ok {
+	metadata := c.ReadByNevra(nevra)
+	if c.enabled && metadata != nil {
+		c.Add(metadata)
+		utils.Log("nevra", nevra).Trace("PackageCache.GetByNevra read from db")
 		return metadata, true
 	}
+	utils.Log("nevra", nevra).Trace("PackageCache.GetByNevra not found")
 	return nil, false
 }
 
 func (c *PackageCache) GetLatestByName(name string) (*PackageCacheMetadata, bool) {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
+	if c.enabled {
+		val, ok := c.latestByName.Get(name)
+		if ok {
+			utils.Log("name", name).Trace("PackageCache.GetLatestByName cache hit")
+			metadata := val.(*PackageCacheMetadata)
+			return metadata, true
+		}
+	}
 
-	metadata, ok := c.latestByName[name]
-	utils.Log("name", name, "ok", ok).Trace("PackageCache.GetNameByID")
-	if ok {
+	metadata := c.ReadLatestByName(name)
+	if c.enabled && metadata != nil {
+		c.Add(metadata)
+		utils.Log("name", name).Trace("PackageCache.GetLatestByName read from db")
 		return metadata, true
 	}
+	utils.Log("name", name).Trace("PackageCache.GetLatestByName not found")
 	return nil, false
 }
 
 func (c *PackageCache) GetNameByID(id int) (string, bool) {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
+	if c.enabled {
+		val, ok := c.nameByID.Get(id)
+		if ok {
+			utils.Log("id", id).Trace("PackageCache.GetNameByID cache hit")
+			metadata := val.(*PackageCacheMetadata)
+			return metadata.Name, true
+		}
+	}
 
-	metadata, ok := c.nameByID[id]
-	utils.Log("id", id, "ok", ok).Trace("PackageCache.GetNameByID")
-	return metadata, ok
+	metadata := c.ReadNameByID(id)
+	if c.enabled && metadata != nil {
+		c.Add(metadata)
+		utils.Log("id", id).Trace("PackageCache.GetNameByID read from db")
+		return metadata.Name, true
+	}
+	utils.Log("id", id).Trace("PackageCache.GetNameByID not found")
+	return "", false
 }
 
 func (c *PackageCache) Add(pkg *PackageCacheMetadata) {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-	c.AddWithoutLock(pkg)
+	c.addByID(pkg)
+	c.addByNevra(pkg)
+	c.addLatestByName(pkg)
+	c.addNameByID(pkg)
 }
 
-func (c *PackageCache) AddWithoutLock(pkg *PackageCacheMetadata) {
-	c.byID[pkg.ID] = pkg
+func (c *PackageCache) addByID(pkg *PackageCacheMetadata) {
+	evicted := c.byID.Add(pkg.ID, pkg)
+	utils.Log("byID", pkg.ID, "evicted", evicted).Trace("PackageCache.addByID")
+}
+
+func (c *PackageCache) addByNevra(pkg *PackageCacheMetadata) {
 	// make sure nevra contains epoch even if epoch==0
 	nevra, err := utils.ParseNameEVRA(pkg.Name, pkg.Evra)
 	if err != nil {
 		utils.Log("id", pkg.ID, "name_id", pkg.NameID, "name", pkg.Name, "evra", pkg.Evra).
-			Warn("PackageCache.Add: cannot parse evra")
+			Warn("PackageCache.addByNevra: cannot parse evra")
 		return
 	}
 	nevraString := nevra.StringE(true)
-	c.byNevra[nevraString] = pkg
-	if _, ok := c.latestByName[pkg.Name]; !ok {
-		c.latestByName[pkg.Name] = pkg
+	evicted := c.byNevra.Add(nevraString, pkg)
+	utils.Log("byNevra", nevraString, "evicted", evicted).Trace("PackageCache.addByNevra")
+}
+
+func (c *PackageCache) addLatestByName(pkg *PackageCacheMetadata) {
+	var latestEvra string
+	latest, ok := c.latestByName.Peek(pkg.Name)
+	if ok {
+		latestEvra = latest.(*PackageCacheMetadata).Evra
 	}
-	if _, ok := c.nameByID[pkg.NameID]; !ok {
-		c.nameByID[pkg.NameID] = pkg.Name
+	if !ok || rpm.Vercmp(pkg.Evra, latestEvra) > 0 {
+		// if there is no record yet
+		// or it has older EVR we have to replace it
+		evicted := c.latestByName.Add(pkg.Name, pkg)
+		utils.Log("latestByName", pkg.Name, "evicted", evicted).Trace("PackageCache.addLatestByName")
 	}
-	utils.Log("nevra", nevraString).Trace("PackageCache.Add")
+}
+
+func (c *PackageCache) addNameByID(pkg *PackageCacheMetadata) {
+	ok, evicted := c.nameByID.ContainsOrAdd(pkg.NameID, pkg)
+	if !ok {
+		// name was not there and we've added it
+		utils.Log("nameByID", pkg.NameID, "evicted", evicted).Trace("PackageCache.addNameByID")
+	}
+}
+
+func readPackageFromDB(where string, order string, args ...interface{}) *PackageCacheMetadata {
+	tx := database.Db.Begin()
+	defer tx.Rollback()
+
+	var pkg PackageCacheMetadata
+	query := tx.Table("package p").
+		Select("p.id, p.name_id, pn.name, p.evra, p.summary_hash, p.description_hash").
+		Joins("JOIN package_name pn ON pn.id = p.name_id").
+		Where(where, args...)
+	if order != "" {
+		query = query.Order(order)
+	}
+	err := query.Take(&pkg).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		panic(err)
+	}
+	return &pkg
+}
+
+func (c *PackageCache) ReadByID(id int) *PackageCacheMetadata {
+	return readPackageFromDB("p.id = ?", "", id)
+}
+
+func (c *PackageCache) ReadByNevra(nevraString string) *PackageCacheMetadata {
+	nevra, err := utils.ParseNevra(nevraString)
+	if err != nil {
+		utils.Log("nevra", nevraString).Warn("PackageCache.ReadByNevra: cannot parse evra")
+		return nil
+	}
+	return readPackageFromDB("pn.name = ? and p.evra = ?", "", nevra.Name, nevra.EVRAString())
+}
+
+func (c *PackageCache) ReadLatestByName(name string) *PackageCacheMetadata {
+	return readPackageFromDB("pn.name = ?", "p.evra DESC", name)
+}
+
+func (c *PackageCache) ReadNameByID(id int) *PackageCacheMetadata {
+	return readPackageFromDB("pn.id = ?", "p.evra DESC", id)
 }
