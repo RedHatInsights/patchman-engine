@@ -49,3 +49,5 @@ require (
 	gorm.io/gorm v1.20.12
 	modernc.org/strutil v1.1.0
 )
+
+replace github.com/ezamriy/gorpm v0.0.0-20160905202458-25f7273cbf51 => github.com/MichaelMraka/gorpm v0.0.0-20210923131407-e21b5950f175
