@@ -88,3 +88,15 @@ func TestAdvisoriesExportTagsInvalid(t *testing.T) {
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
+
+func TestAdvisoriesExportIncorrectFilter(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?filter[filteriamnotexitst]=abcd", nil)
+	req.Header.Add("Accept", "text/csv")
+	core.InitRouterWithPath(AdvisoriesExportHandler, "/").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
