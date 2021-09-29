@@ -137,7 +137,7 @@ func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, err
 	query := NestedQueryMap(c, "filter")
 	filters, err := ParseFilters(query, opts.Fields, opts.DefaultFilters)
 	if err != nil {
-		LogAndRespBadRequest(c, err, "Failed to parse filters")
+		LogAndRespBadRequest(c, err, err.Error())
 		return nil, errors.Wrap(err, "filters parsing failed")
 	}
 	tx, _ = ApplySearch(c, tx, opts.SearchFields...)
