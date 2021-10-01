@@ -16,12 +16,13 @@ import (
 // @Accept   json
 // @Produce  json,text/csv
 // @Param    search         query   string  false   "Find matching text"
-// @Param    filter[id]              query   string  false "Filter"
-// @Param    filter[description]     query   string  false "Filter"
-// @Param    filter[public_date]     query   string  false "Filter"
-// @Param    filter[synopsis]        query   string  false "Filter"
-// @Param    filter[advisory_type]   query   string  false "Filter"
-// @Param    filter[severity]        query   string  false "Filter"
+// @Param    filter[id]                 query   string  false "Filter"
+// @Param    filter[description]        query   string  false "Filter"
+// @Param    filter[public_date]        query   string  false "Filter"
+// @Param    filter[synopsis]           query   string  false "Filter"
+// @Param    filter[advisory_type]      query   string  false "Filter"
+// @Param    filter[advisory_type_name] query   string  false "Filter"
+// @Param    filter[severity]           query   string  false "Filter"
 // @Param    filter[applicable_systems] query   string  false "Filter"
 // @Success 200 {array} AdvisoryInlineItem
 // @Router /api/patch/v1/export/advisories [get]
