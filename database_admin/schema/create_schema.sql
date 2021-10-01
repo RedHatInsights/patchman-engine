@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (69, false);
+VALUES (70, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -696,16 +696,17 @@ CREATE TABLE IF NOT EXISTS advisory_type
 (
     id   INT  NOT NULL,
     name TEXT NOT NULL UNIQUE,
+    preference INTEGER NOT NULL DEFAULT 0,
     CHECK (NOT empty(name)),
     PRIMARY KEY (id)
 ) TABLESPACE pg_default;
 
-INSERT INTO advisory_type (id, name)
-VALUES (0, 'unknown'),
-       (1, 'enhancement'),
-       (2, 'bugfix'),
-       (3, 'security'),
-       (4, 'unspecified')
+INSERT INTO advisory_type (id, name, preference)
+VALUES (0, 'unknown', 100),
+       (1, 'enhancement', 300),
+       (2, 'bugfix', 400),
+       (3, 'security', 500),
+       (4, 'unspecified', 200)
 ON CONFLICT DO NOTHING;
 
 CREATE TABLE advisory_severity
