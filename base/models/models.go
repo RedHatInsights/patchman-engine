@@ -118,8 +118,9 @@ func (AdvisorySeverity) TableName() string {
 }
 
 type AdvisoryType struct {
-	ID   int
-	Name string
+	ID         int
+	Name       string
+	Preference int
 }
 
 func (AdvisoryType) TableName() string {

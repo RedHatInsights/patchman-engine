@@ -6,6 +6,7 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"fmt"
+	"gorm.io/gorm"
 	"net/http"
 	"time"
 
@@ -30,13 +31,14 @@ type SystemAdvisoriesDBLookup struct {
 
 // nolint:lll
 type SystemAdvisoryItemAttributes struct {
-	Description    string    `json:"description" csv:"description" query:"am.description" gorm:"column:description"`
-	PublicDate     time.Time `json:"public_date" csv:"public_date" query:"am.public_date" gorm:"column:public_date"`
-	Synopsis       string    `json:"synopsis" csv:"synopsis" query:"am.synopsis" gorm:"column:synopsis"`
-	AdvisoryType   int       `json:"advisory_type" csv:"advisory_type" query:"am.advisory_type_id" gorm:"column:advisory_type"`
-	Severity       *int      `json:"severity,omitempty" csv:"severity" query:"am.severity_id" gorm:"column:severity"`
-	CveCount       int       `json:"cve_count" csv:"cve_count" query:"CASE WHEN jsonb_typeof(am.cve_list) = 'array' THEN jsonb_array_length(am.cve_list) ELSE 0 END" gorm:"column:cve_count"`
-	RebootRequired bool      `json:"reboot_required" csv:"reboot_required" query:"am.reboot_required" gorm:"column:reboot_required"`
+	Description      string    `json:"description" csv:"description" query:"am.description" gorm:"column:description"`
+	PublicDate       time.Time `json:"public_date" csv:"public_date" query:"am.public_date" gorm:"column:public_date"`
+	Synopsis         string    `json:"synopsis" csv:"synopsis" query:"am.synopsis" gorm:"column:synopsis"`
+	AdvisoryType     int       `json:"advisory_type" csv:"advisory_type" query:"am.advisory_type_id" gorm:"column:advisory_type"`                                // Deprecated, not useful database ID (0 - unknown, 1 -, enhancement, 2 - bugfix, 3 - security, 4 - unspecified)
+	AdvisoryTypeName string    `json:"advisory_type_name" csv:"advisory_type_name" query:"at.name" order_query:"at.preference" gorm:"column:advisory_type_name"` // Advisory type name, proper ordering ensured (unknown, unspecified, enhancement, bugfix, security)
+	Severity         *int      `json:"severity,omitempty" csv:"severity" query:"am.severity_id" gorm:"column:severity"`
+	CveCount         int       `json:"cve_count" csv:"cve_count" query:"CASE WHEN jsonb_typeof(am.cve_list) = 'array' THEN jsonb_array_length(am.cve_list) ELSE 0 END" gorm:"column:cve_count"`
+	RebootRequired   bool      `json:"reboot_required" csv:"reboot_required" query:"am.reboot_required" gorm:"column:reboot_required"`
 }
 
 type SystemAdvisoryItem struct {
@@ -63,12 +65,13 @@ type SystemAdvisoriesResponse struct {
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,name,type,synopsis,public_date)
 // @Param    search         query   string  false   "Find matching text"
-// @Param    filter[id]              query   string  false "Filter"
-// @Param    filter[description]     query   string  false "Filter"
-// @Param    filter[public_date]     query   string  false "Filter"
-// @Param    filter[synopsis]        query   string  false "Filter"
-// @Param    filter[advisory_type]   query   string  false "Filter"
-// @Param    filter[severity]        query   string  false "Filter"
+// @Param    filter[id]                  query   string  false "Filter"
+// @Param    filter[description]         query   string  false "Filter"
+// @Param    filter[public_date]         query   string  false "Filter"
+// @Param    filter[synopsis]            query   string  false "Filter"
+// @Param    filter[advisory_type]       query   string  false "Filter"
+// @Param    filter[advisory_type_name]  query   string  false "Filter"
+// @Param    filter[severity]            query   string  false "Filter"
 // @Success 200 {object} SystemAdvisoriesResponse
 // @Router /api/patch/v1/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesHandler(c *gin.Context) {
@@ -97,10 +100,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		return
 	}
 
-	query := database.SystemAdvisoriesByInventoryID(database.Db, account, inventoryID).
-		Joins("JOIN advisory_metadata am on am.id = sa.advisory_id").
-		Select(SystemAdvisoriesSelect)
-
+	query := buildSystemAdvisoriesQuery(account, inventoryID)
 	path := fmt.Sprintf("/api/patch/v1/systems/%v/advisories", inventoryID)
 	query, meta, links, err := ListCommon(query, c, path, SystemAdvisoriesOpts)
 	if err != nil {
@@ -122,6 +122,14 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		Meta:  *meta,
 	}
 	c.JSON(http.StatusOK, &resp)
+}
+
+func buildSystemAdvisoriesQuery(account int, inventoryID string) *gorm.DB {
+	query := database.SystemAdvisoriesByInventoryID(database.Db, account, inventoryID).
+		Joins("JOIN advisory_metadata am on am.id = sa.advisory_id").
+		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
+		Select(SystemAdvisoriesSelect)
+	return query
 }
 
 func buildSystemAdvisoriesData(models []SystemAdvisoriesDBLookup) []SystemAdvisoryItem {

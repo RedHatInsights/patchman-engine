@@ -58,14 +58,15 @@ type AdvisoriesResponse struct {
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,name,advisory_type,synopsis,public_date,applicable_systems)
 // @Param    search         query   string  false   "Find matching text"
-// @Param    filter[id]              query   string  false "Filter "
-// @Param    filter[description]     query   string  false "Filter"
-// @Param    filter[public_date]     query   string  false "Filter"
-// @Param    filter[synopsis]        query   string  false "Filter"
-// @Param    filter[advisory_type]   query   string  false "Filter"
-// @Param    filter[severity]        query   string  false "Filter"
-// @Param    filter[applicable_systems] query  string  false "Filter"
-// @Param    tags                    query   []string  false "Tag filter"
+// @Param    filter[id]                  query   string  false "Filter "
+// @Param    filter[description]         query   string  false "Filter"
+// @Param    filter[public_date]         query   string  false "Filter"
+// @Param    filter[synopsis]            query   string  false "Filter"
+// @Param    filter[advisory_type]       query   string  false "Filter"
+// @Param    filter[advisory_type_name]  query   string  false "Filter"
+// @Param    filter[severity]            query   string  false "Filter"
+// @Param    filter[applicable_systems]  query   string  false "Filter"
+// @Param    tags                        query   []string  false "Tag filter"
 // @Param    filter[system_profile][sap_system] query  string  false "Filter only SAP systems"
 // @Param    filter[system_profile][sap_sids][in] query []string  false "Filter systems by their SAP SIDs"
 // @Success 200 {object} AdvisoriesResponse
@@ -109,6 +110,7 @@ func buildQueryAdvisories(account int) *gorm.DB {
 	query := database.Db.Table("advisory_metadata am").
 		Select(AdvisoriesSelect).
 		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id and aad.systems_affected > 0").
+		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
 		Where("aad.rh_account_id = ?", account)
 	return query
 }
@@ -132,6 +134,7 @@ func buildQueryAdvisoriesTagged(c *gin.Context, account int) (*gorm.DB, error) {
 
 	query := database.Db.Table("advisory_metadata am").
 		Select(AdvisoriesSelect).
+		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
 		Joins("JOIN (?) aad ON am.id = aad.advisory_id and aad.systems_affected > 0", subq)
 
 	return query, nil

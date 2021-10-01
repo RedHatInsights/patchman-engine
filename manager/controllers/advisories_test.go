@@ -16,70 +16,65 @@ func TestInit(t *testing.T) {
 	utils.TestLoadEnv("conf/manager.env")
 }
 
-// nolint: unparam
-func testAdvisoriesOk(t *testing.T, method, url string, check func(out AdvisoriesResponse)) {
+func testAdvisories(t *testing.T, url string) AdvisoriesResponse {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest(method, url, nil)
+	req, _ := http.NewRequest("GET", url, nil)
 	core.InitRouter(AdvisoriesListHandler).ServeHTTP(w, req)
-
 	assert.Equal(t, http.StatusOK, w.Code)
+
 	var output AdvisoriesResponse
 	ParseReponseBody(t, w.Body.Bytes(), &output)
-	check(output)
+	return output
 }
 
 //nolint:dupl
 func TestAdvisoriesDefault(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "/", func(output AdvisoriesResponse) {
-		assert.Equal(t, 9, len(output.Data))
-		assert.Equal(t, "RH-7", output.Data[0].ID, output.Data[0])
-		assert.Equal(t, "advisory", output.Data[0].Type)
-		assert.Equal(t, "2017-09-22 19:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
-		assert.Equal(t, "adv-7-des", output.Data[0].Attributes.Description)
-		assert.Equal(t, "adv-7-syn", output.Data[0].Attributes.Synopsis)
-		assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
-		assert.Equal(t, false, output.Data[0].Attributes.RebootRequired)
+	output := testAdvisories(t, "/")
+	assert.Equal(t, 9, len(output.Data))
+	assert.Equal(t, "RH-7", output.Data[0].ID, output.Data[0])
+	assert.Equal(t, "advisory", output.Data[0].Type)
+	assert.Equal(t, "2017-09-22 19:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
+	assert.Equal(t, "adv-7-des", output.Data[0].Attributes.Description)
+	assert.Equal(t, "adv-7-syn", output.Data[0].Attributes.Synopsis)
+	assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
+	assert.Equal(t, false, output.Data[0].Attributes.RebootRequired)
 
-		// links
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date", output.Links.First)
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date", output.Links.Last)
-		assert.Nil(t, output.Links.Next)
-		assert.Nil(t, output.Links.Previous)
+	// links
+	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date", output.Links.First)
+	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date", output.Links.Last)
+	assert.Nil(t, output.Links.Next)
+	assert.Nil(t, output.Links.Previous)
 
-		// meta
-		assert.Equal(t, 0, output.Meta.Offset)
-		assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
-		assert.Equal(t, 9, output.Meta.TotalItems)
-	})
+	// meta
+	assert.Equal(t, 0, output.Meta.Offset)
+	assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
+	assert.Equal(t, 9, output.Meta.TotalItems)
 }
 
 func TestAdvisoriesOffsetLimit(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "/?offset=0&limit=2", func(output AdvisoriesResponse) {
-		assert.Equal(t, 2, len(output.Data))
-		assert.Equal(t, 0, output.Meta.Offset)
-		assert.Equal(t, 2, output.Meta.Limit)
-		assert.Equal(t, 9, output.Meta.TotalItems)
-	})
+	output := testAdvisories(t, "/?offset=0&limit=2")
+	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, 0, output.Meta.Offset)
+	assert.Equal(t, 2, output.Meta.Limit)
+	assert.Equal(t, 9, output.Meta.TotalItems)
 }
 
 func TestAdvisoriesUnlimited(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "/?offset=0&limit=-1", func(output AdvisoriesResponse) {
-		assert.Equal(t, 9, len(output.Data))
-		assert.Equal(t, -1, output.Meta.Limit)
-		assert.Equal(t, 9, output.Meta.TotalItems)
-	})
+	output := testAdvisories(t, "/?offset=0&limit=-1")
+	assert.Equal(t, 9, len(output.Data))
+	assert.Equal(t, -1, output.Meta.Limit)
+	assert.Equal(t, 9, output.Meta.TotalItems)
 }
 
 func TestAdvisoriesOffset(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "/?offset=1&limit=4", func(output AdvisoriesResponse) {
-		assert.Equal(t, 4, len(output.Data))
-		assert.Equal(t, 1, output.Meta.Offset)
-		assert.Equal(t, 4, output.Meta.Limit)
-		assert.Equal(t, 9, output.Meta.TotalItems)
-	})
+	output := testAdvisories(t, "/?offset=1&limit=4")
+	assert.Equal(t, 4, len(output.Data))
+	assert.Equal(t, 1, output.Meta.Offset)
+	assert.Equal(t, 4, output.Meta.Limit)
+	assert.Equal(t, 9, output.Meta.TotalItems)
 }
 
 func TestAdvisoriesOffsetOverflow(t *testing.T) {
@@ -95,55 +90,64 @@ func TestAdvisoriesOffsetOverflow(t *testing.T) {
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
-func TestAdvisoriesOrder(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "/?sort=-public_date", func(output AdvisoriesResponse) {
-		// Advisory RH-7 has latest public date
-		assert.Equal(t, 9, len(output.Data))
-		assert.Equal(t, "RH-7", output.Data[0].ID)
-		assert.Equal(t, "advisory", output.Data[0].Type)
-		assert.Equal(t, "2017-09-22 19:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
-		assert.Equal(t, "adv-7-des", output.Data[0].Attributes.Description)
-		assert.Equal(t, "adv-7-syn", output.Data[0].Attributes.Synopsis)
-		assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
-	})
+func TestAdvisoriesOrderDate(t *testing.T) {
+	output := testAdvisories(t, "/?sort=-public_date")
+	// Advisory RH-7 has latest public date
+	assert.Equal(t, 9, len(output.Data))
+	assert.Equal(t, "RH-7", output.Data[0].ID)
+	assert.Equal(t, "advisory", output.Data[0].Type)
+	assert.Equal(t, "2017-09-22 19:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
+	assert.Equal(t, "adv-7-des", output.Data[0].Attributes.Description)
+	assert.Equal(t, "adv-7-syn", output.Data[0].Attributes.Synopsis)
+	assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
+}
+
+func TestAdvisoriesOrderTypeID(t *testing.T) {
+	output := testAdvisories(t, "/?sort=-advisory_type_name")
+	assert.Equal(t, 9, len(output.Data))
+	assert.Equal(t, "security", output.Data[0].Attributes.AdvisoryTypeName)
+	assert.Equal(t, "security", output.Data[1].Attributes.AdvisoryTypeName)
+	assert.Equal(t, "bugfix", output.Data[2].Attributes.AdvisoryTypeName)
+	assert.Equal(t, "bugfix", output.Data[3].Attributes.AdvisoryTypeName)
+	assert.Equal(t, "bugfix", output.Data[4].Attributes.AdvisoryTypeName)
+	assert.Equal(t, "enhancement", output.Data[5].Attributes.AdvisoryTypeName)
+	assert.Equal(t, "enhancement", output.Data[7].Attributes.AdvisoryTypeName)
+	assert.Equal(t, "unspecified", output.Data[8].Attributes.AdvisoryTypeName)
 }
 
 // Ensure patched systems (ids: {7,8}) are not counted
 func TestAdvisoriesPatchedMissing(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "/?sort=id", func(output AdvisoriesResponse) {
-		assert.Equal(t, 9, len(output.Data))
-		assert.Equal(t, "RH-1", output.Data[0].ID)
-		assert.Equal(t, 6, output.Data[0].Attributes.ApplicableSystems) //
-	})
+	output := testAdvisories(t, "/?sort=id")
+	assert.Equal(t, 9, len(output.Data))
+	assert.Equal(t, "RH-1", output.Data[0].ID)
+	assert.Equal(t, 6, output.Data[0].Attributes.ApplicableSystems)
 }
 
-func TestAdvisoriesFilter(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "/?sort=id&filter[advisory_type]=1", func(output AdvisoriesResponse) {
-		assert.Equal(t, 3, len(output.Data))
-		assert.Equal(t, "RH-1", output.Data[0].ID)
-		assert.Equal(t, "RH-4", output.Data[1].ID)
-		assert.Equal(t, "RH-7", output.Data[2].ID)
+func TestAdvisoriesFilterTypeID1(t *testing.T) {
+	output := testAdvisories(t, "/?sort=id&filter[advisory_type_name]=enhancement")
+	assert.Equal(t, 3, len(output.Data))
+	assert.Equal(t, "RH-1", output.Data[0].ID)
+	assert.Equal(t, "RH-4", output.Data[1].ID)
+	assert.Equal(t, "RH-7", output.Data[2].ID)
+	assert.Equal(t, FilterData{Values: []string{"enhancement"}, Operator: "eq"}, output.Meta.Filter["advisory_type_name"])
+	assert.Equal(t,
+		"/api/patch/v1/advisories?offset=0&limit=20&filter[advisory_type_name]=eq:enhancement&sort=id",
+		output.Links.First)
+}
 
-		assert.Equal(t, FilterData{Values: []string{"1"}, Operator: "eq"}, output.Meta.Filter["advisory_type"])
+func TestAdvisoriesFilterTypeID2(t *testing.T) {
+	output := testAdvisories(t, "/?filter[advisory_type_name]=in:bugfix,enhancement")
+	assert.Equal(t, 6, len(output.Data))
+	assert.Equal(t, "RH-7", output.Data[0].ID)
+	for _, a := range output.Data {
+		assert.Contains(t, []string{"bugfix", "enhancement"}, a.Attributes.AdvisoryTypeName)
+	}
+}
 
-		assert.Equal(t,
-			"/api/patch/v1/advisories?offset=0&limit=20&filter[advisory_type]=eq:1&sort=id",
-			output.Links.First)
-	})
-
-	testAdvisoriesOk(t, "GET", "/?filter[applicable_systems]=gt:1", func(output AdvisoriesResponse) {
-		assert.Equal(t, 1, len(output.Data))
-		assert.Equal(t, "RH-1", output.Data[0].ID)
-	})
-
-	testAdvisoriesOk(t, "GET", "/?filter[advisory_type]=in:1,2", func(output AdvisoriesResponse) {
-		assert.Equal(t, 6, len(output.Data))
-		assert.Equal(t, "RH-7", output.Data[0].ID)
-
-		for _, a := range output.Data {
-			assert.Contains(t, []int{1, 2}, a.Attributes.AdvisoryType)
-		}
-	})
+func TestAdvisoriesFilterApplicableSystems(t *testing.T) {
+	output := testAdvisories(t, "/?filter[applicable_systems]=gt:1")
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, "RH-1", output.Data[0].ID)
 }
 
 func TestAdvisoriesPossibleSorts(t *testing.T) {
@@ -177,50 +181,46 @@ func TestAdvisoriesWrongSort(t *testing.T) {
 
 //nolint:dupl
 func TestAdvisoriesSearch(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "/?search=h-3", func(output AdvisoriesResponse) {
-		assert.Equal(t, 1, len(output.Data))
-		assert.Equal(t, "RH-3", output.Data[0].ID)
-		assert.Equal(t, "advisory", output.Data[0].Type)
-		assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
-		assert.Equal(t, "adv-3-des", output.Data[0].Attributes.Description)
-		assert.Equal(t, "adv-3-syn", output.Data[0].Attributes.Synopsis)
-		assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
+	output := testAdvisories(t, "/?search=h-3")
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, "RH-3", output.Data[0].ID)
+	assert.Equal(t, "advisory", output.Data[0].Type)
+	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
+	assert.Equal(t, "adv-3-des", output.Data[0].Attributes.Description)
+	assert.Equal(t, "adv-3-syn", output.Data[0].Attributes.Synopsis)
+	assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
 
-		// links
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date&search=h-3",
-			output.Links.First)
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date&search=h-3",
-			output.Links.Last)
-		assert.Nil(t, output.Links.Next)
-		assert.Nil(t, output.Links.Previous)
+	// links
+	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date&search=h-3",
+		output.Links.First)
+	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date&search=h-3",
+		output.Links.Last)
+	assert.Nil(t, output.Links.Next)
+	assert.Nil(t, output.Links.Previous)
 
-		// meta
-		assert.Equal(t, 0, output.Meta.Offset)
-		assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
-		assert.Equal(t, 1, output.Meta.TotalItems)
-	})
+	// meta
+	assert.Equal(t, 0, output.Meta.Offset)
+	assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
+	assert.Equal(t, 1, output.Meta.TotalItems)
 }
 
 func TestAdvisoriesSearchCVE(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "/?search=CVE-2", func(output AdvisoriesResponse) {
-		assert.Equal(t, 2, len(output.Data))
-		assert.Equal(t, "RH-6", output.Data[0].ID)
-		assert.Equal(t, "RH-3", output.Data[1].ID)
-	})
+	output := testAdvisories(t, "/?search=CVE-2")
+	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, "RH-6", output.Data[0].ID)
+	assert.Equal(t, "RH-3", output.Data[1].ID)
 }
 
 func TestAdvisoriesSearchFilter(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "/?search=adv-3&filter[advisory_type]=1", func(output AdvisoriesResponse) {
-		assert.Equal(t, 0, len(output.Data))
-	})
+	output := testAdvisories(t, "/?search=adv-3&filter[advisory_type_name]=other")
+	assert.Equal(t, 0, len(output.Data))
 }
 
 func TestAdvisoriesTags(t *testing.T) {
-	testAdvisoriesOk(t, "GET", "/?sort=id&tags=ns1/k2=val2", func(output AdvisoriesResponse) {
-		assert.Equal(t, 8, len(output.Data))
-		assert.Equal(t, 2, output.Data[0].Attributes.ApplicableSystems)
-		assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=id&tags=ns1/k2=val2", output.Links.First)
-	})
+	output := testAdvisories(t, "/?sort=id&tags=ns1/k2=val2")
+	assert.Equal(t, 8, len(output.Data))
+	assert.Equal(t, 2, output.Data[0].Attributes.ApplicableSystems)
+	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=id&tags=ns1/k2=val2", output.Links.First)
 }
 
 func TestListAdvisoriesTagsInvalid(t *testing.T) {

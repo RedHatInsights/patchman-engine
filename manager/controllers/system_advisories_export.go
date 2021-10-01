@@ -20,12 +20,13 @@ import (
 // @Produce  json,text/csv
 // @Param    inventory_id   path    string  true    "Inventory ID"
 // @Param    search         query   string  false   "Find matching text"
-// @Param    filter[id]              query   string  false "Filter"
-// @Param    filter[description]     query   string  false "Filter"
-// @Param    filter[public_date]     query   string  false "Filter"
-// @Param    filter[synopsis]        query   string  false "Filter"
-// @Param    filter[advisory_type]   query   string  false "Filter"
-// @Param    filter[severity]        query   string  false "Filter"
+// @Param    filter[id]                  query   string  false "Filter"
+// @Param    filter[description]         query   string  false "Filter"
+// @Param    filter[public_date]         query   string  false "Filter"
+// @Param    filter[synopsis]            query   string  false "Filter"
+// @Param    filter[advisory_type]       query   string  false "Filter"
+// @Param    filter[advisory_type_name]  query   string  false "Filter"
+// @Param    filter[severity]            query   string  false "Filter"
 // @Success 200 {array} SystemAdvisoriesDBLookup
 // @Router /api/patch/v1/export/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesExportHandler(c *gin.Context) {
@@ -54,12 +55,7 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 		return
 	}
 
-	query := database.SystemAdvisoriesByInventoryID(database.Db, account, inventoryID).
-		Joins("JOIN advisory_metadata am on am.id = sa.advisory_id").
-		Select(SystemAdvisoriesSelect)
-
-	var advisories []SystemAdvisoriesDBLookup
-
+	query := buildSystemAdvisoriesQuery(account, inventoryID)
 	query = query.Order("id")
 	query, err = ExportListCommon(query, c, AdvisoriesOpts)
 	if err != nil {
@@ -67,6 +63,7 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 		return
 	}
 
+	var advisories []SystemAdvisoriesDBLookup
 	err = query.Find(&advisories).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
