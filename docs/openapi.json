@@ -103,6 +103,14 @@
                         }
                     },
                     {
+                        "name": "filter[advisory_type_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[severity]",
                         "in": "query",
                         "description": "Filter",
@@ -479,6 +487,14 @@
                     },
                     {
                         "name": "filter[advisory_type]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[advisory_type_name]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -1095,6 +1111,14 @@
                     },
                     {
                         "name": "filter[advisory_type]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[advisory_type_name]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -1917,6 +1941,14 @@
                         }
                     },
                     {
+                        "name": "filter[advisory_type_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[severity]",
                         "in": "query",
                         "description": "Filter",
@@ -2225,7 +2257,12 @@
                 "type": "object",
                 "properties": {
                     "advisory_type": {
-                        "type": "integer"
+                        "type": "integer",
+                        "description": "Deprecated, not useful database ID (0 - unknown, 1 -, enhancement, 2 - bugfix, 3 - security, 4 - unspecified)"
+                    },
+                    "advisory_type_name": {
+                        "type": "string",
+                        "description": "Advisory type name, proper ordering ensured (unknown, unspecified, enhancement, bugfix, security)"
                     },
                     "applicable_systems": {
                         "type": "integer"
@@ -2271,7 +2308,12 @@
                 "type": "object",
                 "properties": {
                     "advisory_type": {
-                        "type": "integer"
+                        "type": "integer",
+                        "description": "Deprecated, not useful database ID (0 - unknown, 1 -, enhancement, 2 - bugfix, 3 - security, 4 - unspecified)"
+                    },
+                    "advisory_type_name": {
+                        "type": "string",
+                        "description": "Advisory type name, proper ordering ensured (unknown, unspecified, enhancement, bugfix, security)"
                     },
                     "applicable_systems": {
                         "type": "integer"
@@ -2521,7 +2563,12 @@
                 "type": "object",
                 "properties": {
                     "advisory_type": {
-                        "type": "integer"
+                        "type": "integer",
+                        "description": "Deprecated, not useful database ID (0 - unknown, 1 -, enhancement, 2 - bugfix, 3 - security, 4 - unspecified)"
+                    },
+                    "advisory_type_name": {
+                        "type": "string",
+                        "description": "Advisory type name, proper ordering ensured (unknown, unspecified, enhancement, bugfix, security)"
                     },
                     "cve_count": {
                         "type": "integer"
@@ -2582,7 +2629,12 @@
                 "type": "object",
                 "properties": {
                     "advisory_type": {
-                        "type": "integer"
+                        "type": "integer",
+                        "description": "Deprecated, not useful database ID (0 - unknown, 1 -, enhancement, 2 - bugfix, 3 - security, 4 - unspecified)"
+                    },
+                    "advisory_type_name": {
+                        "type": "string",
+                        "description": "Advisory type name, proper ordering ensured (unknown, unspecified, enhancement, bugfix, security)"
                     },
                     "cve_count": {
                         "type": "integer"
