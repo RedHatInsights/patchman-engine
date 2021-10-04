@@ -15,8 +15,9 @@ type AttrParser func(string) (interface{}, error)
 
 type AttrName = string
 type AttrInfo struct {
-	Query  string
-	Parser AttrParser
+	DataQuery  string
+	OrderQuery string
+	Parser     AttrParser
 }
 
 // Used to store field name => sql query mapping
@@ -32,7 +33,7 @@ func MustGetSelect(t interface{}) string {
 	}
 	fields := make([]string, 0, len(names))
 	for _, n := range names {
-		fields = append(fields, fmt.Sprintf("%v as %v", attrs[n].Query, n))
+		fields = append(fields, fmt.Sprintf("%v as %v", attrs[n].DataQuery, n))
 	}
 	return strings.Join(fields, ", ")
 }
@@ -102,16 +103,25 @@ func getQueryFromTags(v reflect.Type) (AttrMap, []AttrName, error) {
 			}
 			if expr, has := field.Tag.Lookup("query"); has {
 				res[columnName] = AttrInfo{
-					Query:  expr,
-					Parser: parser,
+					DataQuery: expr,
+					Parser:    parser,
 				}
 			} else {
 				// If we dont have expr, we just use raw column name
 				res[columnName] = AttrInfo{
-					Query:  columnName,
-					Parser: parser,
+					DataQuery: columnName,
+					Parser:    parser,
 				}
 			}
+
+			info := res[columnName]
+			if expr, has := field.Tag.Lookup("order_query"); has {
+				info.OrderQuery = expr
+			} else {
+				info.OrderQuery = info.DataQuery
+			}
+			res[columnName] = info
+
 			// Result HAS to contain all columns, because gorm loads by index, not by name
 			resNames = append(resNames, columnName)
 		}

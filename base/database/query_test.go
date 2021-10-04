@@ -17,6 +17,7 @@ type queryStruct struct {
 	Bool  bool  `query:"am.id != 0" gorm:"column:bool"`
 	// We have to take gorm column name into account
 	Note    string     `gorm:"column:note_str" query:"COALESCE(am.text_note, '')"`
+	Note2   int64      `gorm:"column:note2" query:"am.text_note" order_query:"REVERSE(am.text_note)"`
 	Date    time.Time  `gorm:"column:date"`
 	DatePtr *time.Time `gorm:"column:date"`
 	inherited
@@ -33,13 +34,13 @@ func testQueryAttrsOk(t *testing.T, v interface{}) {
 	assert.NoError(t, err)
 
 	assert.NotNil(t, attrs["id"].Parser)
-	assert.Equal(t, "am.id", attrs["id"].Query)
+	assert.Equal(t, "am.id", attrs["id"].DataQuery)
 
 	assert.NotNil(t, attrs["note_str"].Parser)
-	assert.Equal(t, "COALESCE(am.text_note, '')", attrs["note_str"].Query)
+	assert.Equal(t, "COALESCE(am.text_note, '')", attrs["note_str"].DataQuery)
 
 	assert.NotNil(t, attrs["bare"].Parser)
-	assert.Equal(t, "bare", attrs["bare"].Query)
+	assert.Equal(t, "bare", attrs["bare"].DataQuery)
 }
 
 func TestGetAttrs(t *testing.T) {
@@ -74,4 +75,10 @@ func TestSelect(t *testing.T) {
 	assert.Contains(t, sel, "am.id as id")
 	assert.Contains(t, sel, "COALESCE(am.text_note, '') as note_str")
 	assert.Contains(t, sel, "bare as bare")
+}
+
+func TestOrderQuery(t *testing.T) {
+	info := MustGetQueryAttrs(queryStruct{})
+	assert.Equal(t, info["note"].OrderQuery, info["note"].DataQuery)
+	assert.Equal(t, info["note2"].OrderQuery, "REVERSE(am.text_note)")
 }
