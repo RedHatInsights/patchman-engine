@@ -75,26 +75,26 @@ func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (str
 	// column aliases
 	switch t.Operator {
 	case "eq":
-		return fmt.Sprintf("%s = ? ", attributes[fieldName].Query), values, nil
+		return fmt.Sprintf("%s = ? ", attributes[fieldName].DataQuery), values, nil
 	case "neq":
-		return fmt.Sprintf("%s <> ? ", attributes[fieldName].Query), values, nil
+		return fmt.Sprintf("%s <> ? ", attributes[fieldName].DataQuery), values, nil
 	case "gt":
-		return fmt.Sprintf("%s > ? ", attributes[fieldName].Query), values, nil
+		return fmt.Sprintf("%s > ? ", attributes[fieldName].DataQuery), values, nil
 	case "lt":
-		return fmt.Sprintf("%s < ? ", attributes[fieldName].Query), values, nil
+		return fmt.Sprintf("%s < ? ", attributes[fieldName].DataQuery), values, nil
 	case "geq":
-		return fmt.Sprintf("%s >= ? ", attributes[fieldName].Query), values, nil
+		return fmt.Sprintf("%s >= ? ", attributes[fieldName].DataQuery), values, nil
 	case "leq":
-		return fmt.Sprintf("%s <= ? ", attributes[fieldName].Query), values, nil
+		return fmt.Sprintf("%s <= ? ", attributes[fieldName].DataQuery), values, nil
 	case "between":
 		if len(t.Values) != 2 {
 			return "", []interface{}{}, errors.New("the `between` filter needs 2 values")
 		}
-		return fmt.Sprintf("%s BETWEEN ? AND ? ", attributes[fieldName].Query), values, nil
+		return fmt.Sprintf("%s BETWEEN ? AND ? ", attributes[fieldName].DataQuery), values, nil
 	case "in":
-		return fmt.Sprintf("%s IN (?) ", attributes[fieldName].Query), []interface{}{values}, nil
+		return fmt.Sprintf("%s IN (?) ", attributes[fieldName].DataQuery), []interface{}{values}, nil
 	case "notin":
-		return fmt.Sprintf("%s NOT IN (?) ", attributes[fieldName].Query), []interface{}{values}, nil
+		return fmt.Sprintf("%s NOT IN (?) ", attributes[fieldName].DataQuery), []interface{}{values}, nil
 	default:
 		return "", []interface{}{}, errors.Errorf("Unknown filter : %s", t.Operator)
 	}
