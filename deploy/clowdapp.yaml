@@ -122,6 +122,10 @@ objects:
         - {name: ENABLE_PACKAGE_ANALYSIS, value: '${ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_UPLOAD}'}
         - {name: ENABLE_REPO_ANALYSIS, value: '${ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_UPLOAD}'}
         - {name: ENABLE_STALE_SYSTEM_EVALUATION, value: '${ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_UPLOAD}'}
+        - {name: ENABLE_PACKAGE_CACHE, value: '${ENABLE_PACKAGE_CACHE_EVALUATOR_UPLOAD}'}
+        - {name: PRELOAD_PACKAGE_CACHE, value: '${PRELOAD_PACKAGE_CACHE_EVALUATOR_UPLOAD}'}
+        - {name: PACKAGE_CACHE_SIZE, value: '${PACKAGE_CACHE_SIZE}'}
+        - {name: PACKAGE_NAME_CACHE_SIZE, value: '${PACKAGE_NAME_CACHE_SIZE}'}
         - {name: VMAAS_ADDRESS, value: '${VMAAS_ADDRESS}'}
         resources:
           limits: {cpu: '${RES_CPU_EVALUATOR_UPLOAD}', memory: '${RES_MEM_EVALUATOR_UPLOAD}'}
@@ -164,6 +168,10 @@ objects:
         - {name: ENABLE_PACKAGE_ANALYSIS, value: '${ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_RECALC}'}
         - {name: ENABLE_REPO_ANALYSIS, value: '${ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_RECALC}'}
         - {name: ENABLE_STALE_SYSTEM_EVALUATION, value: '${ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_RECALC}'}
+        - {name: ENABLE_PACKAGE_CACHE, value: '${ENABLE_PACKAGE_CACHE_EVALUATOR_RECALC}'}
+        - {name: PRELOAD_PACKAGE_CACHE, value: '${PRELOAD_PACKAGE_CACHE_EVALUATOR_RECALC}'}
+        - {name: PACKAGE_CACHE_SIZE, value: '${PACKAGE_CACHE_SIZE}'}
+        - {name: PACKAGE_NAME_CACHE_SIZE, value: '${PACKAGE_NAME_CACHE_SIZE}'}
         - {name: VMAAS_ADDRESS, value: '${VMAAS_ADDRESS}'}
         resources:
           limits: {cpu: '${RES_CPU_EVALUATOR_RECALC}', memory: '${RES_MEM_EVALUATOR_RECALC}'}
@@ -346,6 +354,8 @@ parameters:
 - {name: ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_UPLOAD, value: 'true'}
 - {name: ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_UPLOAD, value: 'true'}
 - {name: ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_UPLOAD, value: 'true'}
+- {name: ENABLE_PACKAGE_CACHE_EVALUATOR_UPLOAD, value: 'true'}
+- {name: PRELOAD_PACKAGE_CACHE_EVALUATOR_UPLOAD, value: 'true'}
 - {name: RES_CPU_EVALUATOR_UPLOAD, value: 256m}
 - {name: RES_MEM_EVALUATOR_UPLOAD, value: 1024Mi}
 
@@ -363,6 +373,8 @@ parameters:
 - {name: ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_RECALC, value: 'true'}
 - {name: ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_RECALC, value: 'true'}
 - {name: ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_RECALC, value: 'true'}
+- {name: ENABLE_PACKAGE_CACHE_EVALUATOR_RECALC, value: 'true'}
+- {name: PRELOAD_PACKAGE_CACHE_EVALUATOR_RECALC, value: 'true'}
 - {name: RES_CPU_EVALUATOR_RECALC, value: 256m}
 - {name: RES_MEM_EVALUATOR_RECALC, value: 1024Mi}
 
@@ -413,3 +425,5 @@ parameters:
 - {name: GIN_MODE, value: 'release'} # Gin webframework running mode
 - {name: CLOWDER_ENABLED, value: 'true'} # Enable params reading from Clowder json config (ACG_CONFIG)
 - {name: VMAAS_ADDRESS, value: ''} # Use vmaas address if it's not included in clowder config.
+- {name: PACKAGE_CACHE_SIZE, value: '1000000'}
+- {name: PACKAGE_NAME_CACHE_SIZE, value: '60000'}
