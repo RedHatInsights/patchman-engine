@@ -20,7 +20,7 @@ mkdir -p $AUTH_CONF_DIR
 export REGISTRY_AUTH_FILE="$AUTH_CONF_DIR/auth.json"
 podman login -u="$QUAY_USER" -p="$QUAY_TOKEN" quay.io
 podman login -u="$RH_REGISTRY_USER" -p="$RH_REGISTRY_TOKEN" registry.redhat.io
-podman build -f Dockerfile.rhel8 -t "${IMAGE}:${IMAGE_TAG}" .
+podman build -f Dockerfile -t "${IMAGE}:${IMAGE_TAG}" .
 podman push "${IMAGE}:${IMAGE_TAG}"
 podman tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:latest"
 podman push "${IMAGE}:latest"

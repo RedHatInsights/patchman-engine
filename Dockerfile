@@ -1,4 +1,6 @@
-FROM registry.access.redhat.com/ubi8 as buildimg
+ARG BUILDIMG=registry.access.redhat.com/ubi8
+ARG RUNIMG=registry.access.redhat.com/ubi8
+FROM ${BUILDIMG} as buildimg
 
 ARG INSTALL_TOOLS=no
 
@@ -48,7 +50,7 @@ EXPOSE 8080
 
 # ---------------------------------------
 # runtime image with only necessary stuff
-FROM registry.access.redhat.com/ubi8 as runtimeimg
+FROM ${RUNIMG} as runtimeimg
 
 RUN dnf module -y enable postgresql:12 && \
     dnf install -y postgresql && \

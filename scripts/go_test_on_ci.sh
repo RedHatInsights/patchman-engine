@@ -6,7 +6,6 @@ set -e -o pipefail
 ./scripts/check-openapi-docs.sh
 
 # Check dockerfiles and docker-composes consistency
-./scripts/check-dockerfiles.sh
 ./scripts/check-dockercomposes.sh
 
 # Analyse code using lint

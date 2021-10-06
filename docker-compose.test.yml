@@ -4,7 +4,7 @@ services:
     container_name: db
     build:
       context: .
-      dockerfile: dev/database/Dockerfile.centos
+      dockerfile: dev/database/Dockerfile
     command: 'run-postgresql -c logging_collector=off'
     ports:
       - 5432:5432
@@ -44,8 +44,10 @@ services:
     container_name: platform
     build:
       context: .
-      dockerfile: Dockerfile.centos
+      dockerfile: Dockerfile
       args:
+        - BUILDIMG=centos:8
+        - RUNIMG=centos:8
         - INSTALL_TOOLS=yes
       target: buildimg
     image: patchman-engine_patchimg
