@@ -1,3 +1,0 @@
-FROM registry.redhat.io/rhel8/postgresql-12
-
-ADD /database/init.sh ${CONTAINER_SCRIPTS_PATH}/start/

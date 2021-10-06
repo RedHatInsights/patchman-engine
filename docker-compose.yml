@@ -4,8 +4,10 @@ services:
   patchimg:
     build:
       context: .
-      dockerfile: Dockerfile.centos
+      dockerfile: Dockerfile
       args:
+        - BUILDIMG=centos:8
+        - RUNIMG=centos:8
         - INSTALL_TOOLS=yes
       target: buildimg
     image: patchman-engine_patchimg
@@ -14,7 +16,7 @@ services:
     container_name: db_volumefix
     build:
       context: .
-      dockerfile: dev/database/Dockerfile.centos
+      dockerfile: dev/database/Dockerfile
     image: patchman-engine_db
     user: root
     command: 'chown -R postgres /var/lib/pgsql/data'
