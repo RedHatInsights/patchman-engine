@@ -4,12 +4,13 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"fmt"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
-	"github.com/pmezard/go-difflib/difflib"
-	"github.com/stretchr/testify/assert"
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/pmezard/go-difflib/difflib"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -33,9 +34,7 @@ func TestSchemaCompatiblity(t *testing.T) {
 	}
 	database.Configure()
 
-	dropAll := exec.Command("/usr/bin/psql", "-f", "./schema/clear_db.sql")
-	setCmdAuth(dropAll)
-	_, err := dropAll.CombinedOutput()
+	err := database.ExecFile("./schema/clear_db.sql")
 	assert.NoError(t, err)
 
 	sqlDB, _ := database.Db.DB()
@@ -58,10 +57,8 @@ func TestSchemaCompatiblity(t *testing.T) {
 	err = m.Drop()
 	assert.NoError(t, err)
 
-	rawCreate := exec.Command("/usr/bin/psql", "-f", "./schema/create_schema.sql")
-	setCmdAuth(rawCreate)
+	err = database.ExecFile("./schema/create_schema.sql")
 
-	_, err = rawCreate.CombinedOutput()
 	assert.NoError(t, err)
 
 	dumpCmd = exec.Command("pg_dump", "-O")

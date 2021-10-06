@@ -3,6 +3,7 @@ package database
 import (
 	"app/base/models"
 	"app/base/utils"
+	"io/ioutil"
 	"time"
 
 	"gorm.io/gorm"
@@ -95,4 +96,15 @@ func PluckInt(tx *gorm.DB, columnName string) int {
 		panic(err)
 	}
 	return val
+}
+
+func ExecFile(filename string) error {
+	sql, err := ioutil.ReadFile(filename)
+	if err != nil {
+		panic(err)
+	}
+
+	sqldb, _ := Db.DB()
+	_, err = sqldb.Exec(string(sql))
+	return err
 }
