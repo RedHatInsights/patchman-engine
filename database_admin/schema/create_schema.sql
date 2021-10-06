@@ -1008,11 +1008,23 @@ GRANT SELECT, UPDATE ON repo TO vmaas_sync;
 CREATE SCHEMA IF NOT EXISTS inventory;
 
 -- The admin ROLE that allows the inventory schema to be managed
-CREATE ROLE cyndi_admin;
+DO $$
+BEGIN
+  CREATE ROLE cyndi_admin;
+  EXCEPTION WHEN DUPLICATE_OBJECT THEN
+    RAISE NOTICE 'cyndi_admin already exists';
+END
+$$;
 GRANT ALL PRIVILEGES ON SCHEMA inventory TO cyndi_admin;
 
 -- The reader ROLE that provides SELECT access to the inventory.hosts view
-CREATE ROLE cyndi_reader;
+DO $$
+BEGIN
+  CREATE ROLE cyndi_reader;
+  EXCEPTION WHEN DUPLICATE_OBJECT THEN
+    RAISE NOTICE 'cyndi_reader already exists';
+END
+$$;
 GRANT USAGE ON SCHEMA inventory TO cyndi_reader;
 
 -- The application user is granted the reader role only to eliminate any interference with Cyndi
