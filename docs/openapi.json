@@ -410,6 +410,14 @@
                         }
                     },
                     {
+                        "name": "filter[os]",
+                        "in": "query",
+                        "description": "Filter OS version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "tags",
                         "in": "query",
                         "description": "Tag filter",
@@ -724,6 +732,14 @@
                         "name": "filter[osmajor]",
                         "in": "query",
                         "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[os]",
+                        "in": "query",
+                        "description": "Filter OS version",
                         "schema": {
                             "type": "string"
                         }
@@ -1078,6 +1094,14 @@
                         "name": "filter[osmajor]",
                         "in": "query",
                         "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[os]",
+                        "in": "query",
+                        "description": "Filter OS version",
                         "schema": {
                             "type": "string"
                         }
@@ -1822,6 +1846,14 @@
                         "name": "filter[osmajor]",
                         "in": "query",
                         "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[os]",
+                        "in": "query",
+                        "description": "Filter OS version",
                         "schema": {
                             "type": "string"
                         }
@@ -2784,6 +2816,9 @@
                     "last_upload": {
                         "type": "string"
                     },
+                    "os": {
+                        "type": "string"
+                    },
                     "os_major": {
                         "type": "string"
                     },
@@ -2861,6 +2896,9 @@
                         "type": "string"
                     },
                     "last_upload": {
+                        "type": "string"
+                    },
+                    "os": {
                         "type": "string"
                     },
                     "os_major": {

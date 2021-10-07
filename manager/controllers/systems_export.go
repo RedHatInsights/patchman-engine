@@ -29,9 +29,10 @@ import (
 // @Param    filter[packages_updatable] query string false "Filter"
 // @Param    filter[system_profile][sap_system]   query string   false "Filter only SAP systems"
 // @Param    filter[system_profile][sap_sids][in] query []string false "Filter systems by their SAP SIDs"
-// @Param    filter[osname] query string false "Filter"
-// @Param    filter[osminor] query string false "Filter"
-// @Param    filter[osmajor] query string false "Filter"
+// @Param    filter[osname]          query   string false "Filter"
+// @Param    filter[osminor]         query   string false "Filter"
+// @Param    filter[osmajor]         query   string false "Filter"
+// @Param    filter[os]              query   string    false "Filter OS version"
 // @Param    tags                    query   []string  false "Tag filter"
 // @Success 200 {array} SystemInlineItem
 // @Router /api/patch/v1/export/systems [get]

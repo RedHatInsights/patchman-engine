@@ -51,6 +51,7 @@ type SystemItemAttributes struct {
 	OSName  string `json:"os_name" csv:"os_name" query:"ih.system_profile->'operating_system'->>'name'" gorm:"column:osname"`
 	OSMajor string `json:"os_major" csv:"os_major" query:"ih.system_profile->'operating_system'->>'major'" gorm:"column:osmajor"`
 	OSMinor string `json:"os_minor" csv:"os_minor" query:"ih.system_profile->'operating_system'->>'minor'" gorm:"column:osminor"`
+	OS      string `json:"os" csv:"os" query:"concat(COALESCE(ih.system_profile->'operating_system'->>'name' || ' ',''), COALESCE(ih.system_profile->'operating_system'->>'major', ''), '.' || (ih.system_profile->'operating_system'->>'minor'))" order_query:"ih.system_profile->'operating_system'->>'name',cast(substring(ih.system_profile->'operating_system'->>'major','^\\d+') as int),cast(substring(ih.system_profile->'operating_system'->>'minor','^\\d+') as int)" gorm:"column:os"`
 	Rhsm    string `json:"rhsm" csv:"rhsm" query:"ih.system_profile->'rhsm'->>'version'" gorm:"column:rhsm"`
 
 	StaleTimestamp        *time.Time `json:"stale_timestamp" csv:"stale_timestamp" query:"ih.stale_timestamp" gorm:"column:stale_timestamp"`
@@ -123,12 +124,13 @@ func systemSubtotals(tx *gorm.DB) (total int, subTotals map[string]int, err erro
 // @Param    filter[packages_updatable] query string false "Filter"
 // @Param    filter[stale_timestamp] query string false "Filter"
 // @Param    filter[stale_warning_timestamp] query string false "Filter"
-// @Param    filter[culled_timestamp] query string false "Filter"
-// @Param    filter[created] query string false "Filter"
-// @Param    filter[osname] query string false "Filter"
-// @Param    filter[osminor] query string false "Filter"
-// @Param    filter[osmajor] query string false "Filter"
-// @Param    tags                    query   []string  false "Tag filter"
+// @Param    filter[culled_timestamp] query   string    false "Filter"
+// @Param    filter[created]          query   string    false "Filter"
+// @Param    filter[osname]           query   string false "Filter"
+// @Param    filter[osminor]          query   string false "Filter"
+// @Param    filter[osmajor]          query   string false "Filter"
+// @Param    filter[os]               query   string    false "Filter OS version"
+// @Param    tags                     query   []string  false "Tag filter"
 // @Param    filter[system_profile][sap_system]   query string   false "Filter only SAP systems"
 // @Param    filter[system_profile][sap_sids][in] query []string false "Filter systems by their SAP SIDs"
 // @Success 200 {object} SystemsResponse
