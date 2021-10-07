@@ -32,8 +32,9 @@ func TestSystemDetailDefault1(t *testing.T) {
 	assert.Equal(t, 3, output.Data.Attributes.RheaCount)
 	assert.Equal(t, "RHEL", output.Data.Attributes.OSName)
 	assert.Equal(t, "8", output.Data.Attributes.OSMajor)
-	assert.Equal(t, "1", output.Data.Attributes.OSMinor)
-	assert.Equal(t, "8.1", output.Data.Attributes.Rhsm)
+	assert.Equal(t, "10", output.Data.Attributes.OSMinor)
+	assert.Equal(t, "8.10", output.Data.Attributes.Rhsm)
+	assert.Equal(t, "RHEL 8.10", output.Data.Attributes.OS)
 }
 
 func TestSystemDetailDefault2(t *testing.T) {

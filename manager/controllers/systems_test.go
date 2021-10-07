@@ -36,8 +36,9 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, 0, output.Data[0].Attributes.PackagesUpdatable)
 	assert.Equal(t, "RHEL", output.Data[0].Attributes.OSName)
 	assert.Equal(t, "8", output.Data[0].Attributes.OSMajor)
-	assert.Equal(t, "1", output.Data[0].Attributes.OSMinor)
-	assert.Equal(t, "8.1", output.Data[0].Attributes.Rhsm)
+	assert.Equal(t, "10", output.Data[0].Attributes.OSMinor)
+	assert.Equal(t, "RHEL 8.10", output.Data[0].Attributes.OS)
+	assert.Equal(t, "8.10", output.Data[0].Attributes.Rhsm)
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.StaleTimestamp.String())
 	assert.Equal(t, "2018-09-02 16:00:00 +0000 UTC", output.Data[0].Attributes.StaleWarningTimestamp.String())
 	assert.Equal(t, "2018-09-09 16:00:00 +0000 UTC", output.Data[0].Attributes.CulledTimestamp.String())
@@ -312,15 +313,31 @@ func TestSystemsFilterNotExisting(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
-func TestSystemsFilterOS(t *testing.T) {
+func TestSystemsFilterPartialOS(t *testing.T) {
 	output := doTestSystemsFilter(t, "/?filter[osname]=RHEL&filter[osmajor]=8&filter[osminor]=1")
-	assert.Equal(t, 4, len(output.Data))
+	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "RHEL 8.1", fmt.Sprintf("%s %s.%s", output.Data[0].Attributes.OSName,
 		output.Data[0].Attributes.OSMajor, output.Data[0].Attributes.OSMinor))
 	assert.Equal(t, "RHEL 8.1", fmt.Sprintf("%s %s.%s", output.Data[1].Attributes.OSName,
 		output.Data[1].Attributes.OSMajor, output.Data[1].Attributes.OSMinor))
-	assert.Equal(t, "RHEL 8.1", fmt.Sprintf("%s %s.%s", output.Data[2].Attributes.OSName,
-		output.Data[2].Attributes.OSMajor, output.Data[2].Attributes.OSMinor))
-	assert.Equal(t, "RHEL 8.1", fmt.Sprintf("%s %s.%s", output.Data[3].Attributes.OSName,
-		output.Data[3].Attributes.OSMajor, output.Data[3].Attributes.OSMinor))
+}
+
+func TestSystemsFilterOS(t *testing.T) {
+	output := doTestSystemsFilter(t, `/?filter[os]=in:RHEL%208.1,RHEL%207.3&sort=os`)
+	assert.Equal(t, 3, len(output.Data))
+	assert.Equal(t, "RHEL 7.3", output.Data[0].Attributes.OS)
+	assert.Equal(t, "RHEL 8.1", output.Data[1].Attributes.OS)
+	assert.Equal(t, "RHEL 8.1", output.Data[2].Attributes.OS)
+}
+
+func TestSystemsOrderOS(t *testing.T) {
+	output := doTestSystemsFilter(t, `/?sort=os`)
+	assert.Equal(t, "RHEL 7.3", output.Data[0].Attributes.OS)
+	assert.Equal(t, "RHEL 8.x", output.Data[1].Attributes.OS) // yes, we should be robust against this
+	assert.Equal(t, "RHEL 8.1", output.Data[2].Attributes.OS)
+	assert.Equal(t, "RHEL 8.1", output.Data[3].Attributes.OS)
+	assert.Equal(t, "RHEL 8.2", output.Data[4].Attributes.OS)
+	assert.Equal(t, "RHEL 8.3", output.Data[5].Attributes.OS)
+	assert.Equal(t, "RHEL 8.3", output.Data[6].Attributes.OS)
+	assert.Equal(t, "RHEL 8.10", output.Data[7].Attributes.OS)
 }
