@@ -311,3 +311,16 @@ func TestSystemsFilterNotExisting(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
+
+func TestSystemsFilterOS(t *testing.T) {
+	output := doTestSystemsFilter(t, "/?filter[osname]=RHEL&filter[osmajor]=8&filter[osminor]=1")
+	assert.Equal(t, 4, len(output.Data))
+	assert.Equal(t, "RHEL 8.1", fmt.Sprintf("%s %s.%s", output.Data[0].Attributes.OSName,
+		output.Data[0].Attributes.OSMajor, output.Data[0].Attributes.OSMinor))
+	assert.Equal(t, "RHEL 8.1", fmt.Sprintf("%s %s.%s", output.Data[1].Attributes.OSName,
+		output.Data[1].Attributes.OSMajor, output.Data[1].Attributes.OSMinor))
+	assert.Equal(t, "RHEL 8.1", fmt.Sprintf("%s %s.%s", output.Data[2].Attributes.OSName,
+		output.Data[2].Attributes.OSMajor, output.Data[2].Attributes.OSMinor))
+	assert.Equal(t, "RHEL 8.1", fmt.Sprintf("%s %s.%s", output.Data[3].Attributes.OSName,
+		output.Data[3].Attributes.OSMajor, output.Data[3].Attributes.OSMinor))
+}

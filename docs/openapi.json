@@ -386,6 +386,30 @@
                         }
                     },
                     {
+                        "name": "filter[osname]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osminor]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osmajor]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "tags",
                         "in": "query",
                         "description": "Tag filter",
@@ -678,6 +702,30 @@
                             "items": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    {
+                        "name": "filter[osname]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osminor]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osmajor]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     {
@@ -1008,6 +1056,30 @@
                             "items": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    {
+                        "name": "filter[osname]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osminor]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osmajor]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     {
@@ -1724,6 +1796,30 @@
                     },
                     {
                         "name": "filter[created]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osname]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osminor]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osmajor]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
