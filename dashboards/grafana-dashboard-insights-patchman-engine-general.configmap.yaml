@@ -1701,7 +1701,7 @@ data:
                 "steppedLine": false,
                 "targets": [
                     {
-                        "expr": "sum(rate(container_cpu_usage_seconds_total{container=~\"patchman-engine.*\", namespace=~\"patchman-engine$namespace\"}[$interval])) by (container)/ sum(kube_pod_container_resource_limits_cpu_cores{container=~\"patchman-engine.*\", namespace=~\"patchman-engine$namespace\"}) by (container)",
+                        "expr": "sum(rate(container_cpu_usage_seconds_total{container=~\"patchman-.*\", namespace=~\"patchman-engine$namespace\"}[$interval])) by (container)/ sum(kube_pod_container_resource_limits{container=~\"patchman-.*\", namespace=~\"patchman-engine$namespace\", resource=\"cpu\"}) by (container)",
                         "format": "time_series",
                         "interval": "",
                         "intervalFactor": 1,
@@ -1800,7 +1800,7 @@ data:
                 "steppedLine": false,
                 "targets": [
                     {
-                        "expr": "sum(container_memory_usage_bytes{container=~\"patchman-engine.*\", namespace=~\"patchman-engine$namespace\"}) by (container) / sum(kube_pod_container_resource_limits_memory_bytes{container=~\"patchman-engine.*\", namespace=~\"patchman-engine$namespace\"}) by (container)",
+                        "expr": "sum(container_memory_usage_bytes{container=~\"patchman-.*\", namespace=~\"patchman-engine$namespace\"}) by (container) / sum(kube_pod_container_resource_limits{container=~\"patchman-.*\", namespace=~\"patchman-engine$namespace\", resource=\"memory\"}) by (container)",
                         "format": "time_series",
                         "interval": "",
                         "intervalFactor": 1,
