@@ -1,5 +1,5 @@
 ARG BUILDIMG=registry.access.redhat.com/ubi8
-ARG RUNIMG=registry.access.redhat.com/ubi8
+ARG RUNIMG=registry.access.redhat.com/ubi8-minimal
 FROM ${BUILDIMG} as buildimg
 
 ARG INSTALL_TOOLS=no
@@ -52,11 +52,17 @@ EXPOSE 8080
 # runtime image with only necessary stuff
 FROM ${RUNIMG} as runtimeimg
 
-RUN dnf module -y enable postgresql:12 && \
-    dnf install -y postgresql && \
-    dnf clean all
+RUN microdnf install -y libpq rpm-build-libs && \
+    microdnf clean all
 
 RUN adduser --gid 0 -d /go --no-create-home insights
+
+# copy postgresql binaries
+COPY --from=buildimg /usr/bin/clusterdb /usr/bin/createdb /usr/bin/createuser \
+                     /usr/bin/dropdb /usr/bin/dropuser /usr/bin/pg_dump \
+                     /usr/bin/pg_dumpall /usr/bin/pg_isready /usr/bin/pg_restore \
+                     /usr/bin/pg_upgrade /usr/bin/psql /usr/bin/reindexdb \
+                     /usr/bin/vacuumdb /usr/bin/
 
 RUN curl -L -o /usr/bin/haberdasher \
     https://github.com/RedHatInsights/haberdasher/releases/latest/download/haberdasher_linux_amd64 && \
