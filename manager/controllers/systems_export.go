@@ -38,7 +38,7 @@ import (
 // @Router /api/patch/v1/export/systems [get]
 func SystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
-	query := querySystems(account)
+	query := querySystems(account, c)
 	query, _, err := ApplyTagsFilter(c, query, "sp.inventory_id")
 	if err != nil {
 		return

@@ -2784,6 +2784,80 @@
                     }
                 }
             },
+            "controllers.SystemCompoundResponse": {
+                "type": "object",
+                "properties": {
+                    "created": {
+                        "type": "string"
+                    },
+                    "culled_timestamp": {
+                        "type": "string"
+                    },
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "insights_id": {
+                        "type": "string"
+                    },
+                    "last_evaluation": {
+                        "type": "string"
+                    },
+                    "last_upload": {
+                        "type": "string"
+                    },
+                    "os": {
+                        "type": "string"
+                    },
+                    "os_major": {
+                        "type": "string"
+                    },
+                    "os_minor": {
+                        "type": "string"
+                    },
+                    "os_name": {
+                        "type": "string"
+                    },
+                    "other_count": {
+                        "type": "integer"
+                    },
+                    "packages_installed": {
+                        "type": "integer"
+                    },
+                    "packages_updatable": {
+                        "type": "integer"
+                    },
+                    "rhba_count": {
+                        "type": "integer"
+                    },
+                    "rhea_count": {
+                        "type": "integer"
+                    },
+                    "rhsa_count": {
+                        "type": "integer"
+                    },
+                    "rhsm": {
+                        "type": "string"
+                    },
+                    "stale": {
+                        "type": "boolean"
+                    },
+                    "stale_timestamp": {
+                        "type": "string"
+                    },
+                    "stale_warning_timestamp": {
+                        "type": "string"
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemTags"
+                        }
+                    },
+                    "third_party": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "controllers.SystemDetailResponse": {
                 "type": "object",
                 "properties": {
@@ -2945,6 +3019,20 @@
                     }
                 }
             },
+            "controllers.SystemOnlyItem": {
+                "type": "object",
+                "properties": {
+                    "attributes": {
+                        "$ref": "#/components/schemas/controllers.SystemCompoundResponse"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
             "controllers.SystemPackageData": {
                 "type": "object",
                 "properties": {
@@ -3011,6 +3099,20 @@
                     }
                 }
             },
+            "controllers.SystemTags": {
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string"
+                    },
+                    "namespace": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    }
+                }
+            },
             "controllers.SystemsAdvisoriesRequest": {
                 "type": "object",
                 "properties": {
@@ -3048,7 +3150,7 @@
                     "data": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/controllers.SystemItem"
+                            "$ref": "#/components/schemas/controllers.SystemOnlyItem"
                         }
                     },
                     "links": {

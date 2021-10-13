@@ -12,6 +12,7 @@ import (
 
 var SystemsFields = database.MustGetQueryAttrs(&SystemDBLookup{})
 var SystemsSelect = database.MustGetSelect(&SystemDBLookup{})
+var SystemsTagsSelect = database.MustGetSelect(&SystemTags{})
 var SystemsSumFields = database.MustGetSelect(&SystemSums{})
 var SystemOpts = ListOpts{
 	Fields: SystemsFields,
@@ -30,6 +31,17 @@ var SystemOpts = ListOpts{
 type SystemDBLookup struct {
 	ID string `query:"sp.inventory_id" gorm:"column:id"`
 	SystemItemAttributes
+}
+
+type SystemCompoundResponse struct {
+	SystemItemAttributes
+	Tags []SystemTags
+}
+
+type SystemTags struct {
+	Key       string `json:"key" query:"ih.tags::json->key"`
+	Value     string `json:"value" query:"ih.tags::json->value"`
+	NameSpace string `json:"namespace" query:"ih.tags::json->namespace"`
 }
 
 // nolint: lll
@@ -74,15 +86,21 @@ type SystemItem struct {
 	Type       string               `json:"type"`
 }
 
+type SystemOnlyItem struct {
+	Attributes SystemCompoundResponse `json:"attributes"`
+	ID         string                 `json:"id"`
+	Type       string                 `json:"type"`
+}
+
 type SystemInlineItem struct {
 	ID string `json:"id" csv:"id"`
 	SystemItemAttributes
 }
 
 type SystemsResponse struct {
-	Data  []SystemItem `json:"data"`
-	Links Links        `json:"links"`
-	Meta  ListMeta     `json:"meta"`
+	Data  []SystemOnlyItem `json:"data"`
+	Links Links            `json:"links"`
+	Meta  ListMeta         `json:"meta"`
 }
 
 func systemSubtotals(tx *gorm.DB) (total int, subTotals map[string]int, err error) {
@@ -137,7 +155,7 @@ func systemSubtotals(tx *gorm.DB) (total int, subTotals map[string]int, err erro
 // @Router /api/patch/v1/systems [get]
 func SystemsListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
-	query := querySystems(account)
+	query := querySystems(account, c)
 	query, _, err := ApplyTagsFilter(c, query, "sp.inventory_id")
 	if err != nil {
 		return
@@ -147,7 +165,7 @@ func SystemsListHandler(c *gin.Context) {
 		return
 	} // Error handled method itself
 
-	var systems []SystemDBLookup
+	var systems []SystemOnlyItem
 	err = query.Find(&systems).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
@@ -163,19 +181,34 @@ func SystemsListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func querySystems(account int) *gorm.DB {
+func querySystemTags(account int) *gorm.DB {
 	return database.Systems(database.Db, account).
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
+		Select(SystemsTagsSelect)
+}
+
+func querySystems(account int, c *gin.Context) *gorm.DB {
+	subq := querySystemTags(account)
+	subq, _, err := ApplyTagsFilter(c, subq, "sp.inventory_id")
+	if err != nil {
+		return nil
+	}
+
+	return database.Systems(database.Db, account).
+		Joins("JOIN (?) ih ON ih.id = sp.inventory_id", subq).
 		Select(SystemsSelect)
 }
 
-func buildData(systems []SystemDBLookup) []SystemItem {
-	data := make([]SystemItem, len(systems))
+func buildData(systems []SystemOnlyItem) []SystemOnlyItem {
+	data := make([]SystemOnlyItem, len(systems))
 	for i, system := range systems {
-		data[i] = SystemItem{
-			Attributes: system.SystemItemAttributes,
-			ID:         system.ID,
-			Type:       "system",
+		data[i] = SystemOnlyItem{
+			Attributes: SystemCompoundResponse{
+				SystemItemAttributes: system.Attributes.SystemItemAttributes,
+				Tags:                 system.Attributes.Tags,
+			},
+			ID:   system.ID,
+			Type: "system",
 		}
 	}
 	return data
