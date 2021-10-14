@@ -12,16 +12,8 @@ import (
 )
 
 func TestSystemsDefault(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	output := testSystems(t, `/`, 1)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
-	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var output SystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
 	// data
 	assert.Equal(t, 8, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
@@ -59,34 +51,16 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, 0, output.Meta.SubTotals["stale"])
 }
 
-func TestSystemsOffsetLimit(t *testing.T) { //nolint:dupl
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?offset=0&limit=4", nil)
-	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var output SystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+func TestSystemsOffset(t *testing.T) {
+	output := testSystems(t, `/?offset=0&limit=4`, 1)
 	assert.Equal(t, 4, len(output.Data))
 	assert.Equal(t, 0, output.Meta.Offset)
 	assert.Equal(t, 4, output.Meta.Limit)
 	assert.Equal(t, 8, output.Meta.TotalItems)
 }
 
-func TestSystemsOffset(t *testing.T) { //nolint:dupl
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?offset=4&limit=4", nil)
-	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var output SystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+func TestSystemsOffsetLimit(t *testing.T) {
+	output := testSystems(t, `/?offset=4&limit=4`, 1)
 	assert.Equal(t, 4, len(output.Data))
 	assert.Equal(t, 4, output.Meta.Offset)
 	assert.Equal(t, 4, output.Meta.Limit)
@@ -98,27 +72,13 @@ func TestSystemsWrongOffset(t *testing.T) {
 }
 
 func TestSystemsWrongSort(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?sort=unknown_key", nil)
-	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	statusCode, errResp := testSystemsError(t, "/?sort=unknown_key")
+	assert.Equal(t, http.StatusBadRequest, statusCode)
+	assert.Equal(t, "Invalid sort field: unknown_key", errResp.Error)
 }
 
 func TestSystemsSearch(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?search=001", nil)
-	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var output SystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	output := testSystems(t, "/?search=001", 1)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
@@ -126,136 +86,55 @@ func TestSystemsSearch(t *testing.T) {
 }
 
 func TestSystemsTags(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?tags=ns1/k2=val2", nil)
-	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var output SystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	output := testSystems(t, "/?tags=ns1/k2=val2", 1)
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 }
 
 func TestSystemsTagsMultiple(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil)
-	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var output SystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	output := testSystems(t, "/?tags=ns1/k3=val4&tags=ns1/k1=val1", 1)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data[0].ID)
 }
 
 func TestSystemsTagsUnknown(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=unk", nil)
-	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var output SystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	output := testSystems(t, "/?tags=ns1/k3=val4&tags=ns1/k1=unk", 1)
 	assert.Equal(t, 0, len(output.Data))
 }
 
 func TestSystemsTagsNoVal(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=ns1/k1", nil)
-	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var output SystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	output := testSystems(t, "/?tags=ns1/k3=val4&tags=ns1/k1", 1)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data[0].ID)
 }
 
 func TestSystemsTagsInvalid(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil)
-	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	statusCode, errResp := testSystemsError(t, "/?tags=ns1/k3=val4&tags=invalidTag")
+	assert.Equal(t, http.StatusBadRequest, statusCode)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
 func TestSystemsWorkloads1(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET",
-		"/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][in][]=ABC", nil)
-	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var output SystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	url := "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][in][]=ABC"
+	output := testSystems(t, url, 1)
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 }
 
 func TestSystemsWorkloads2(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET",
-		"/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][]=ABC", nil)
-	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var output SystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	url := "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][]=ABC"
+	output := testSystems(t, url, 1)
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 }
 
 func TestSystemsWorkloads3(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET",
-		"/?filter[system_profile][sap_system]=false", nil)
-	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var output SystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	output := testSystems(t, "/?filter[system_profile][sap_system]=false", 1)
 	assert.Equal(t, 0, len(output.Data))
 }
 
 func TestSystemsPackagesCount(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?sort=-packages_installed,id", nil)
-	core.InitRouterWithAccount(SystemsListHandler, "/", 3).ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var output SystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	output := testSystems(t, "/?sort=-packages_installed,id", 3)
 	assert.Equal(t, 3, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
@@ -264,57 +143,38 @@ func TestSystemsPackagesCount(t *testing.T) {
 	assert.Equal(t, 2, output.Data[0].Attributes.PackagesUpdatable)
 }
 
-func doTestSystemsFilter(t *testing.T, url string) SystemsResponse {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", url, nil)
-	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var output SystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
-	return output
-}
-
 func TestSystemsFilterAdvCount1(t *testing.T) {
-	output := doTestSystemsFilter(t, "/?filter[rhba_count]=3")
+	output := testSystems(t, "/?filter[rhba_count]=3", 1)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, 3, output.Data[0].Attributes.RhbaCount)
 }
 
 func TestSystemsFilterAdvCount2(t *testing.T) {
-	output := doTestSystemsFilter(t, "/?filter[rhea_count]=3")
+	output := testSystems(t, "/?filter[rhea_count]=3", 1)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, 3, output.Data[0].Attributes.RheaCount)
 }
 
 func TestSystemsFilterAdvCount3(t *testing.T) {
-	output := doTestSystemsFilter(t, "/?filter[rhsa_count]=2")
+	output := testSystems(t, "/?filter[rhsa_count]=2", 1)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
 }
 
 func TestSystemsFilterAdvCount4(t *testing.T) {
-	output := doTestSystemsFilter(t, "/?filter[other_count]=1")
+	output := testSystems(t, "/?filter[other_count]=1", 1)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, 1, output.Data[0].Attributes.OtherCount)
 }
 
 func TestSystemsFilterNotExisting(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?filter[not-existing]=1", nil)
-	core.InitRouter(SystemsListHandler).ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	statusCode, errResp := testSystemsError(t, "/?filter[not-existing]=1")
+	assert.Equal(t, http.StatusBadRequest, statusCode)
+	assert.Equal(t, "Invalid filter field: not-existing", errResp.Error)
 }
 
 func TestSystemsFilterPartialOS(t *testing.T) {
-	output := doTestSystemsFilter(t, "/?filter[osname]=RHEL&filter[osmajor]=8&filter[osminor]=1")
+	output := testSystems(t, "/?filter[osname]=RHEL&filter[osmajor]=8&filter[osminor]=1", 1)
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "RHEL 8.1", fmt.Sprintf("%s %s.%s", output.Data[0].Attributes.OSName,
 		output.Data[0].Attributes.OSMajor, output.Data[0].Attributes.OSMinor))
@@ -323,15 +183,21 @@ func TestSystemsFilterPartialOS(t *testing.T) {
 }
 
 func TestSystemsFilterOS(t *testing.T) {
-	output := doTestSystemsFilter(t, `/?filter[os]=in:RHEL%208.1,RHEL%207.3&sort=os`)
+	output := testSystems(t, `/?filter[os]=in:RHEL 8.1,RHEL 7.3&sort=os`, 1)
 	assert.Equal(t, 3, len(output.Data))
 	assert.Equal(t, "RHEL 7.3", output.Data[0].Attributes.OS)
 	assert.Equal(t, "RHEL 8.1", output.Data[1].Attributes.OS)
 	assert.Equal(t, "RHEL 8.1", output.Data[2].Attributes.OS)
 }
 
+func TestSystemsFilterInvalidSyntax(t *testing.T) {
+	statusCode, errResp := testSystemsError(t, "/?filter[os][in]=RHEL 8.1,RHEL 7.3")
+	assert.Equal(t, http.StatusBadRequest, statusCode)
+	assert.Equal(t, InvalidNestedFilter, errResp.Error)
+}
+
 func TestSystemsOrderOS(t *testing.T) {
-	output := doTestSystemsFilter(t, `/?sort=os`)
+	output := testSystems(t, `/?sort=os`, 1)
 	assert.Equal(t, "RHEL 7.3", output.Data[0].Attributes.OS)
 	assert.Equal(t, "RHEL 8.x", output.Data[1].Attributes.OS) // yes, we should be robust against this
 	assert.Equal(t, "RHEL 8.1", output.Data[2].Attributes.OS)
@@ -340,4 +206,30 @@ func TestSystemsOrderOS(t *testing.T) {
 	assert.Equal(t, "RHEL 8.3", output.Data[5].Attributes.OS)
 	assert.Equal(t, "RHEL 8.3", output.Data[6].Attributes.OS)
 	assert.Equal(t, "RHEL 8.10", output.Data[7].Attributes.OS)
+}
+
+func testSystems(t *testing.T, url string, account int) SystemsResponse {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", url, nil)
+	core.InitRouterWithAccount(SystemsListHandler, "/", account).ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var output SystemsResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	return output
+}
+
+func testSystemsError(t *testing.T, url string) (int, utils.ErrorResponse) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", url, nil)
+	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
+	var errResp utils.ErrorResponse
+	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	return w.Code, errResp
 }
