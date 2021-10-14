@@ -18,6 +18,7 @@ import (
 
 const InvalidOffsetMsg = "Invalid offset"
 const InvalidTagMsg = "Invalid tag '%s'. Use 'namespace/key=val format'"
+const InvalidNestedFilter = "Nested operators not yet implemented for standard filters"
 
 var tagRegex = regexp.MustCompile(`([^/=]+)/([^/=]+)(=([^/=]+))?`)
 var enableCyndiTags = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_TAGS", false)
@@ -115,7 +116,8 @@ func ParseFilters(q QueryMap, allowedFields database.AttrMap,
 
 				// the filter[a][eq]=b syntax was not yet implemented
 				if len(path) > 0 {
-					panic("Nested operators not yet implemented for standard filters")
+					err = errors.New(InvalidNestedFilter)
+					return
 				}
 				filters[f], err = ParseFilterValue(val)
 			})
