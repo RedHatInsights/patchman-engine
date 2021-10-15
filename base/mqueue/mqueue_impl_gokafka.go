@@ -21,28 +21,44 @@ type kafkaGoReaderImpl struct {
 
 func (t *kafkaGoReaderImpl) HandleMessages(handler MessageHandler) {
 	for {
-		m, err := t.FetchMessage(base.Context)
-		if err != nil {
-			if err.Error() == errContextCanceled {
-				break
-			}
-			utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
-			panic(err)
+		message := t.tryFetchMessage()
+		if message == nil {
+			break
 		}
 		// At this level, all errors are fatal
-		kafkaMessage := KafkaMessage{Key: m.Key, Value: m.Value}
-		if err = handler(kafkaMessage); err != nil {
+		kafkaMessage := KafkaMessage{Key: message.Key, Value: message.Value}
+		if err := handler(kafkaMessage); err != nil {
 			utils.Log("err", err.Error()).Panic("Handler failed")
 		}
-		err = t.CommitMessages(base.Context, m)
-		if err != nil {
-			if err.Error() == errContextCanceled {
-				break
-			}
-			utils.Log("err", err.Error()).Error("unable to commit kafka message")
-			panic(err)
+		canceled := t.tryCommitMessage(message)
+		if canceled {
+			break
 		}
 	}
+}
+
+func (t *kafkaGoReaderImpl) tryFetchMessage() *kafka.Message {
+	m, err := t.FetchMessage(base.Context)
+	if err != nil {
+		if err.Error() == errContextCanceled {
+			return nil
+		}
+		utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
+		panic(err)
+	}
+	return &m
+}
+
+func (t *kafkaGoReaderImpl) tryCommitMessage(message *kafka.Message) (canceled bool) {
+	err := t.CommitMessages(base.Context, *message)
+	if err != nil {
+		if err.Error() == errContextCanceled {
+			return true
+		}
+		utils.Log("err", err.Error()).Error("unable to commit kafka message")
+		panic(err)
+	}
+	return false
 }
 
 type kafkaGoWriterImpl struct {
