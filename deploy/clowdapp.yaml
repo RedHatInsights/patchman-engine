@@ -75,6 +75,7 @@ objects:
         - {name: DB_PASSWD, valueFrom: { secretKeyRef: { name: patchman-engine-database-passwords,
                                                            key: listener-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
+        - {name: ENABLE_KAFKA_READER_RETRY, value: '${ENABLE_KAFKA_READER_RETRY}'}
         - {name: EVENTS_TOPIC, value: platform.inventory.events}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
         - {name: CONSUMER_COUNT, value: '${CONSUMER_COUNT_LISTENER}'}
@@ -112,6 +113,7 @@ objects:
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                        key: evaluator-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
+        - {name: ENABLE_KAFKA_READER_RETRY, value: '${ENABLE_KAFKA_READER_RETRY}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: EVAL_LABEL, value: upload}
@@ -158,6 +160,7 @@ objects:
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                        key: evaluator-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
+        - {name: ENABLE_KAFKA_READER_RETRY, value: '${ENABLE_KAFKA_READER_RETRY}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: EVAL_LABEL, value: recalc}
@@ -427,3 +430,4 @@ parameters:
 - {name: VMAAS_ADDRESS, value: ''} # Use vmaas address if it's not included in clowder config.
 - {name: PACKAGE_CACHE_SIZE, value: '1000000'}
 - {name: PACKAGE_NAME_CACHE_SIZE, value: '60000'}
+- {name: ENABLE_KAFKA_READER_RETRY, value: 'false'}

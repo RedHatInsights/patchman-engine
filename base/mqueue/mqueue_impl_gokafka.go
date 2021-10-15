@@ -15,8 +15,11 @@ import (
 	"time"
 )
 
+var retrySleepInterval = time.Second * 1
+
 type kafkaGoReaderImpl struct {
 	kafka.Reader
+	retry bool
 }
 
 func (t *kafkaGoReaderImpl) HandleMessages(handler MessageHandler) {
@@ -38,27 +41,42 @@ func (t *kafkaGoReaderImpl) HandleMessages(handler MessageHandler) {
 }
 
 func (t *kafkaGoReaderImpl) tryFetchMessage() *kafka.Message {
-	m, err := t.FetchMessage(base.Context)
-	if err != nil {
+	for {
+		m, err := t.FetchMessage(base.Context)
+		if err == nil {
+			return &m
+		}
+
 		if err.Error() == errContextCanceled {
 			return nil
 		}
+
 		utils.Log("err", err.Error()).Error("unable to read message from Kafka reader")
-		panic(err)
+		if !t.retry {
+			panic(err)
+		}
+
+		time.Sleep(retrySleepInterval)
 	}
-	return &m
 }
 
 func (t *kafkaGoReaderImpl) tryCommitMessage(message *kafka.Message) (canceled bool) {
-	err := t.CommitMessages(base.Context, *message)
-	if err != nil {
+	for {
+		err := t.CommitMessages(base.Context, *message)
+		if err == nil {
+			return false
+		}
+
 		if err.Error() == errContextCanceled {
 			return true
 		}
+
 		utils.Log("err", err.Error()).Error("unable to commit kafka message")
-		panic(err)
+		if !t.retry {
+			panic(err)
+		}
+		time.Sleep(retrySleepInterval)
 	}
-	return false
 }
 
 type kafkaGoWriterImpl struct {
@@ -90,7 +108,8 @@ func newKafkaGoReaderFromEnv(topic string) Reader {
 		Dialer:      tryCreateSecuredDialerFromEnv(),
 	}
 
-	reader := &kafkaGoReaderImpl{*kafka.NewReader(config)}
+	retry := utils.GetBoolEnvOrDefault("ENABLE_KAFKA_READER_RETRY", false)
+	reader := &kafkaGoReaderImpl{*kafka.NewReader(config), retry}
 	return reader
 }
 
