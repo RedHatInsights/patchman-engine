@@ -75,6 +75,8 @@ objects:
         - {name: DB_PASSWD, valueFrom: { secretKeyRef: { name: patchman-engine-database-passwords,
                                                            key: listener-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
+        - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
+        - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVENTS_TOPIC, value: platform.inventory.events}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
         - {name: CONSUMER_COUNT, value: '${CONSUMER_COUNT_LISTENER}'}
@@ -112,6 +114,8 @@ objects:
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                        key: evaluator-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
+        - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
+        - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: EVAL_LABEL, value: upload}
@@ -158,6 +162,8 @@ objects:
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                        key: evaluator-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
+        - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
+        - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: EVAL_LABEL, value: recalc}
@@ -204,6 +210,7 @@ objects:
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                        key: vmaas-sync-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
+        - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
         - {name: ENABLE_REPO_BASED_RE_EVALUATION, value: '${ENABLE_REPO_BASED_RE_EVALUATION}'}
         - {name: ENABLE_RECALC_MESSAGES_SEND, value: '${ENABLE_RECALC_MESSAGES_SEND}'}
@@ -427,3 +434,5 @@ parameters:
 - {name: VMAAS_ADDRESS, value: ''} # Use vmaas address if it's not included in clowder config.
 - {name: PACKAGE_CACHE_SIZE, value: '1000000'}
 - {name: PACKAGE_NAME_CACHE_SIZE, value: '60000'}
+- {name: KAFKA_READER_MAX_ATTEMPTS, value: '3'} # Limit of how many attempts will be made before kafka read error.
+- {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '10'} # Limit of how many attempts will be made before kafka write error.
