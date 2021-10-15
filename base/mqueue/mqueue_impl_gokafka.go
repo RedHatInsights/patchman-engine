@@ -63,6 +63,7 @@ func newKafkaGoReaderFromEnv(topic string) Reader {
 	kafkaGroup := utils.GetenvOrFail("KAFKA_GROUP")
 	minBytes := utils.GetIntEnvOrDefault("KAFKA_READER_MIN_BYTES", 1)
 	maxBytes := utils.GetIntEnvOrDefault("KAFKA_READER_MAX_BYTES", 1e6)
+	maxAttempts := utils.GetIntEnvOrDefault("KAFKA_READER_MAX_ATTEMPTS", 3)
 
 	config := kafka.ReaderConfig{
 		Brokers:     []string{kafkaAddress},
@@ -72,6 +73,7 @@ func newKafkaGoReaderFromEnv(topic string) Reader {
 		MaxBytes:    maxBytes,
 		ErrorLogger: kafka.LoggerFunc(createLoggerFunc(kafkaErrorReadCnt)),
 		Dialer:      tryCreateSecuredDialerFromEnv(),
+		MaxAttempts: maxAttempts,
 	}
 
 	reader := &kafkaGoReaderImpl{*kafka.NewReader(config)}
@@ -80,6 +82,7 @@ func newKafkaGoReaderFromEnv(topic string) Reader {
 
 func newKafkaGoWriterFromEnv(topic string) Writer {
 	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
+	maxAttempts := utils.GetIntEnvOrDefault("KAFKA_WRITER_MAX_ATTEMPTS", 10)
 
 	config := kafka.WriterConfig{
 		Brokers: []string{kafkaAddress},
@@ -91,6 +94,7 @@ func newKafkaGoWriterFromEnv(topic string) Writer {
 		BatchTimeout: time.Nanosecond,
 		ErrorLogger:  kafka.LoggerFunc(createLoggerFunc(kafkaErrorWriteCnt)),
 		Dialer:       tryCreateSecuredDialerFromEnv(),
+		MaxAttempts:  maxAttempts,
 	}
 	writer := &kafkaGoWriterImpl{kafka.NewWriter(config)}
 	return writer
