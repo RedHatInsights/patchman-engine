@@ -31,6 +31,7 @@ func checkRH9Fields(t *testing.T, response AdvisoryDetailResponse) {
 	assert.Equal(t, "adv-9-syn", response.Data.Attributes.Synopsis)
 	assert.Equal(t, "adv-9-des", response.Data.Attributes.Description)
 	assert.Equal(t, "adv-9-sol", response.Data.Attributes.Solution)
+	assert.Equal(t, "security", response.Data.Attributes.AdvisoryTypeName)
 	assert.Equal(t, "2016-09-22 20:00:00 +0000 UTC", response.Data.Attributes.PublicDate.String())
 	assert.Equal(t, "2018-09-22 20:00:00 +0000 UTC", response.Data.Attributes.ModifiedDate.String())
 	assert.Equal(t, 1, len(response.Data.Attributes.Packages))

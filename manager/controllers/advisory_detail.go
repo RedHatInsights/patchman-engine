@@ -28,18 +28,19 @@ type AdvisoryDetailItem struct {
 }
 
 type AdvisoryDetailAttributes struct {
-	Description    string            `json:"description"`
-	ModifiedDate   time.Time         `json:"modified_date"`
-	PublicDate     time.Time         `json:"public_date"`
-	Topic          string            `json:"topic"`
-	Synopsis       string            `json:"synopsis"`
-	Solution       string            `json:"solution"`
-	Severity       *int              `json:"severity"`
-	Fixes          *string           `json:"fixes"`
-	Cves           []string          `json:"cves"`
-	Packages       map[string]string `json:"packages"`
-	References     []string          `json:"references"`
-	RebootRequired bool              `json:"reboot_required"`
+	Description      string            `json:"description"`
+	ModifiedDate     time.Time         `json:"modified_date"`
+	PublicDate       time.Time         `json:"public_date"`
+	Topic            string            `json:"topic"`
+	Synopsis         string            `json:"synopsis"`
+	Solution         string            `json:"solution"`
+	AdvisoryTypeName string            `json:"advisory_type_name"`
+	Severity         *int              `json:"severity"`
+	Fixes            *string           `json:"fixes"`
+	Cves             []string          `json:"cves"`
+	Packages         map[string]string `json:"packages"`
+	References       []string          `json:"references"`
+	RebootRequired   bool              `json:"reboot_required"`
 }
 
 // @Summary Show me details an advisory by given advisory name
@@ -71,9 +72,17 @@ func AdvisoryDetailHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+type advisoryDetailItem struct {
+	models.AdvisoryMetadata
+	AdvisoryTypeName string
+}
+
 func getAdvisoryFromDB(advisoryName string) (*AdvisoryDetailResponse, error) {
-	var advisory models.AdvisoryMetadata
-	err := database.Db.Where("name = ?", advisoryName).First(&advisory).Error
+	var advisory advisoryDetailItem
+	err := database.Db.Table("advisory_metadata am").
+		Select("am.*, at.name as advisory_type_name").
+		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
+		Where("am.name = ?", advisoryName).Take(&advisory).Error
 	if err != nil {
 		return nil, err
 	}
@@ -91,18 +100,19 @@ func getAdvisoryFromDB(advisoryName string) (*AdvisoryDetailResponse, error) {
 	var resp = AdvisoryDetailResponse{
 		Data: AdvisoryDetailItem{
 			Attributes: AdvisoryDetailAttributes{
-				Description:    advisory.Description,
-				ModifiedDate:   advisory.ModifiedDate,
-				PublicDate:     advisory.PublicDate,
-				Topic:          advisory.Summary,
-				Synopsis:       advisory.Synopsis,
-				Solution:       advisory.Solution,
-				Severity:       advisory.SeverityID,
-				Fixes:          nil,
-				Cves:           cves,
-				Packages:       packages,
-				References:     []string{},
-				RebootRequired: advisory.RebootRequired,
+				Description:      advisory.Description,
+				ModifiedDate:     advisory.ModifiedDate,
+				PublicDate:       advisory.PublicDate,
+				Topic:            advisory.Summary,
+				Synopsis:         advisory.Synopsis,
+				Solution:         advisory.Solution,
+				Severity:         advisory.SeverityID,
+				AdvisoryTypeName: advisory.AdvisoryTypeName,
+				Fixes:            nil,
+				Cves:             cves,
+				Packages:         packages,
+				References:       []string{},
+				RebootRequired:   advisory.RebootRequired,
 			},
 			ID:   advisory.Name,
 			Type: "advisory",
