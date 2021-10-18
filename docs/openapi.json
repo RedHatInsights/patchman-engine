@@ -2312,6 +2312,9 @@
             "controllers.AdvisoryDetailAttributes": {
                 "type": "object",
                 "properties": {
+                    "advisory_type_name": {
+                        "type": "string"
+                    },
                     "cves": {
                         "type": "array",
                         "items": {
