@@ -297,7 +297,7 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 		utils.Log("request", *request).Trace("vmaas /updates request")
 		vmaasData, resp, err := vmaasClient.DefaultApi.VmaasWebappAppUpdatesHandlerV3PostPost(ctx).
 			UpdatesV3Request(*request).Execute()
-		utils.Log("status_code", resp.StatusCode).Debug("vmaas /updates call")
+		utils.Log("status_code", utils.TryGetStatusCode(resp)).Debug("vmaas /updates call")
 		utils.Log("response", resp).Trace("vmaas /updates response")
 		return &vmaasData, resp, err
 	}
