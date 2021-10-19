@@ -9,7 +9,11 @@ sed \
     -e "s|INSTALL_TOOLS=yes|INSTALL_TOOLS=no|" \
     -e "s|target: buildimg|target: runtimeimg|" \
     -e "/ - \.\/conf\/gorun.env/ d" \
-    -e "/    volumes:/,+1 { N;}; /- \.\/:\/go\/src\/app/ d" \
+    -e "/  \(db_admin\|db_feed\|manager\|listener\|evaluator_recalc\|evaluator_upload\|vmaas_sync\):/,/^$/ {
+      s/- \.\/:\/go\/src\/app/- \.\/dev:\/go\/src\/app\/dev\n\
+      - .\/dev\/database\/secrets:\/opt\/postgresql\n\
+      - \.\/dev\/kafka\/secrets:\/opt\/kafka/
+      }" \
     -e "/ - BUILDIMG=centos:8/ d" \
     -e "/ - RUNIMG=centos:8/ d" \
     "$DEV" | diff -u - "$PROD"
