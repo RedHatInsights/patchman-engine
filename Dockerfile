@@ -31,8 +31,8 @@ RUN if [ "$INSTALL_TOOLS" == "yes" ] ; then \
         | sh -s -- -b $(go env GOPATH)/bin latest ; \
     fi
 
-ADD --chown=insights:root dev/kafka/secrets/ca.crt /opt/
-ADD --chown=insights:root dev/database/pgca.crt    /opt/
+ADD --chown=insights:root dev/kafka/secrets/ca.crt /opt/kafka/
+ADD --chown=insights:root dev/database/secrets/pgca.crt /opt/postgresql/
 ADD --chown=insights:root base                     /go/src/app/base
 ADD --chown=insights:root database_admin           /go/src/app/database_admin
 ADD --chown=insights:root docs                     /go/src/app/docs
