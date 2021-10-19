@@ -45,6 +45,7 @@ services:
       - db
       - patchimg
     volumes:
+      - ./dev:/go/src/app/dev
       - ./dev/database/secrets:/opt/postgresql
       - ./dev/kafka/secrets:/opt/kafka
     security_opt:
@@ -60,6 +61,7 @@ services:
       - db
       - patchimg
     volumes:
+      - ./dev:/go/src/app/dev
       - ./dev/database/secrets:/opt/postgresql
       - ./dev/kafka/secrets:/opt/kafka
     security_opt:
@@ -123,6 +125,7 @@ services:
       - platform
       - patchimg
     volumes:
+      - ./dev:/go/src/app/dev
       - ./dev/database/secrets:/opt/postgresql
       - ./dev/kafka/secrets:/opt/kafka
     security_opt:
@@ -143,6 +146,7 @@ services:
       - platform
       - patchimg
     volumes:
+      - ./dev:/go/src/app/dev
       - ./dev/database/secrets:/opt/postgresql
       - ./dev/kafka/secrets:/opt/kafka
     security_opt:
@@ -163,6 +167,7 @@ services:
       - platform
       - patchimg
     volumes:
+      - ./dev:/go/src/app/dev
       - ./dev/database/secrets:/opt/postgresql
       - ./dev/kafka/secrets:/opt/kafka
     security_opt:
@@ -183,6 +188,7 @@ services:
       - platform
       - patchimg
     volumes:
+      - ./dev:/go/src/app/dev
       - ./dev/database/secrets:/opt/postgresql
       - ./dev/kafka/secrets:/opt/kafka
     security_opt:
@@ -203,6 +209,7 @@ services:
       - platform
       - patchimg
     volumes:
+      - ./dev:/go/src/app/dev
       - ./dev/database/secrets:/opt/postgresql
       - ./dev/kafka/secrets:/opt/kafka
     security_opt:
