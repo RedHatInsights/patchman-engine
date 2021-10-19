@@ -18,7 +18,7 @@ func HTTPCallRetry(ctx context.Context, httpCallFun func() (outputDataPtr interf
 		attempt++
 		outDataPtr, resp, callErr := httpCallFun()
 		if statusCodeFound(resp, codesToRetry) {
-			Log("attempt", attempt, "status_code", tryGetStatusCode(resp)).
+			Log("attempt", attempt, "status_code", TryGetStatusCode(resp)).
 				Warn("HTTP call ended with wrong status code")
 			continue
 		}
@@ -46,7 +46,7 @@ func tryGetResponseDetails(response *http.Response) string {
 	return details
 }
 
-func tryGetStatusCode(response *http.Response) int {
+func TryGetStatusCode(response *http.Response) int {
 	if response == nil {
 		return 0
 	}
