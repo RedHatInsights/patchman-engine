@@ -44,6 +44,9 @@ services:
     depends_on:
       - db
       - patchimg
+    volumes:
+      - ./dev/database/secrets:/opt/postgresql
+      - ./dev/kafka/secrets:/opt/kafka
     security_opt:
       - label=disable
 
@@ -56,6 +59,9 @@ services:
     depends_on:
       - db
       - patchimg
+    volumes:
+      - ./dev/database/secrets:/opt/postgresql
+      - ./dev/kafka/secrets:/opt/kafka
     security_opt:
       - label=disable
 
@@ -116,6 +122,9 @@ services:
       - db
       - platform
       - patchimg
+    volumes:
+      - ./dev/database/secrets:/opt/postgresql
+      - ./dev/kafka/secrets:/opt/kafka
     security_opt:
       - label=disable
 
@@ -133,6 +142,9 @@ services:
       - db
       - platform
       - patchimg
+    volumes:
+      - ./dev/database/secrets:/opt/postgresql
+      - ./dev/kafka/secrets:/opt/kafka
     security_opt:
       - label=disable
 
@@ -150,6 +162,9 @@ services:
       - db
       - platform
       - patchimg
+    volumes:
+      - ./dev/database/secrets:/opt/postgresql
+      - ./dev/kafka/secrets:/opt/kafka
     security_opt:
       - label=disable
 
@@ -167,6 +182,9 @@ services:
       - db
       - platform
       - patchimg
+    volumes:
+      - ./dev/database/secrets:/opt/postgresql
+      - ./dev/kafka/secrets:/opt/kafka
     security_opt:
       - label=disable
 
@@ -184,6 +202,9 @@ services:
       - db
       - platform
       - patchimg
+    volumes:
+      - ./dev/database/secrets:/opt/postgresql
+      - ./dev/kafka/secrets:/opt/kafka
     security_opt:
       - label=disable
 
