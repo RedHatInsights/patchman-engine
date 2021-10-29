@@ -30,8 +30,11 @@ var SystemOpts = ListOpts{
 }
 
 type SystemDBLookup struct {
-	ID      string `query:"sp.inventory_id" gorm:"column:id"`
+	ID string `query:"sp.inventory_id" gorm:"column:id"`
+
+	// this returns tags info in plain string, then parsed to "Tags" attribute
 	TagsStr string `query:"ih.tags"         gorm:"column:tags_str"`
+
 	SystemItemAttributes
 }
 
