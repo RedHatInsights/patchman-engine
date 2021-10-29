@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"app/base/database"
-	"app/base/utils"
 	"app/manager/middlewares"
 	"encoding/json"
 	"net/http"
@@ -165,7 +164,7 @@ func SystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	data := buildData(systems)
+	data := systemDBLookups2SystemItems(systems)
 	resp := SystemsResponse{
 		Data:  data,
 		Links: *links,
@@ -178,23 +177,6 @@ func querySystems(account int) *gorm.DB {
 	return database.Systems(database.Db, account).
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Select(SystemsSelect)
-}
-
-func buildData(systems []SystemDBLookup) []SystemItem {
-	data := make([]SystemItem, len(systems))
-	var err error
-	for i, system := range systems {
-		system.Tags, err = parseSystemTags(system.TagsStr)
-		if err != nil {
-			utils.Log("err", err.Error(), "inventory_id", system.ID).Debug("system tags parsing failed")
-		}
-		data[i] = SystemItem{
-			Attributes: system.SystemItemAttributes,
-			ID:         system.ID,
-			Type:       "system",
-		}
-	}
-	return data
 }
 
 func parseSystemTags(jsonStr string) ([]SystemTag, error) {
