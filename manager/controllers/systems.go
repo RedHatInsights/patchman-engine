@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"app/base/database"
+	"app/base/utils"
 	"app/manager/middlewares"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -28,7 +30,8 @@ var SystemOpts = ListOpts{
 }
 
 type SystemDBLookup struct {
-	ID string `query:"sp.inventory_id" gorm:"column:id"`
+	ID      string `query:"sp.inventory_id" gorm:"column:id"`
+	TagsStr string `query:"ih.tags"         gorm:"column:tags_str"`
 	SystemItemAttributes
 }
 
@@ -58,6 +61,8 @@ type SystemItemAttributes struct {
 	StaleWarningTimestamp *time.Time `json:"stale_warning_timestamp" csv:"stale_warning_timestamp" query:"ih.stale_warning_timestamp" gorm:"column:stale_warning_timestamp"`
 	CulledTimestamp       *time.Time `json:"culled_timestamp" csv:"culled_timestamp" query:"ih.culled_timestamp" gorm:"column:culled_timestamp"`
 	Created               *time.Time `json:"created" csv:"created" query:"ih.created" gorm:"column:created"`
+
+	Tags []SystemTag `json:"tags" csv:"-" gorm:"-"`
 }
 
 // nolint: lll
@@ -68,6 +73,12 @@ type SystemSums struct {
 	Stale     int64 `query:"count(*) filter (where sp.stale = true)" gorm:"column:stale"`
 }
 
+type SystemTag struct {
+	Key       string `json:"key"`
+	Namespace string `json:"namespace"`
+	Value     string `json:"value"`
+}
+
 type SystemItem struct {
 	Attributes SystemItemAttributes `json:"attributes"`
 	ID         string               `json:"id"`
@@ -75,7 +86,8 @@ type SystemItem struct {
 }
 
 type SystemInlineItem struct {
-	ID string `json:"id" csv:"id"`
+	ID      string `json:"id"  csv:"id"`
+	TagsStr string `json:"-"   csv:"-"` // just helper field to get tags from db, excluded from output data
 	SystemItemAttributes
 }
 
@@ -171,7 +183,12 @@ func querySystems(account int) *gorm.DB {
 
 func buildData(systems []SystemDBLookup) []SystemItem {
 	data := make([]SystemItem, len(systems))
+	var err error
 	for i, system := range systems {
+		system.Tags, err = parseSystemTags(system.TagsStr)
+		if err != nil {
+			utils.Log("err", err.Error(), "inventory_id", system.ID).Debug("system tags parsing failed")
+		}
 		data[i] = SystemItem{
 			Attributes: system.SystemItemAttributes,
 			ID:         system.ID,
@@ -179,4 +196,19 @@ func buildData(systems []SystemDBLookup) []SystemItem {
 		}
 	}
 	return data
+}
+
+func parseSystemTags(jsonStr string) ([]SystemTag, error) {
+	js := json.RawMessage(jsonStr)
+	b, err := json.Marshal(js)
+	if err != nil {
+		return nil, err
+	}
+
+	var systemTags []SystemTag
+	err = json.Unmarshal(b, &systemTags)
+	if err != nil {
+		return nil, err
+	}
+	return systemTags, nil
 }
