@@ -52,7 +52,7 @@ func TestGetAttrs(t *testing.T) {
 	assert.Error(t, err)
 
 	_, _, err = GetQueryAttrs(queryInvalid{})
-	assert.Error(t, err)
+	assert.Nil(t, err) // ignore invalid fields
 
 	_, _, err = GetQueryAttrs(0)
 	assert.Error(t, err)
