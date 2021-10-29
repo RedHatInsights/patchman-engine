@@ -22,7 +22,7 @@ func TestSystemsExportJSON(t *testing.T) {
 	core.InitRouterWithPath(SystemsExportHandler, "/").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	var output []SystemInlineItem
+	var output []SystemDBLookup
 
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 8, len(output))
@@ -113,7 +113,7 @@ func TestExportSystemsTags(t *testing.T) {
 	core.InitRouterWithPath(SystemsExportHandler, "/").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	var output []SystemInlineItem
+	var output []SystemDBLookup
 
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, len(output))
@@ -145,7 +145,7 @@ func TestSystemsExportWorkloads(t *testing.T) {
 	core.InitRouterWithPath(SystemsExportHandler, "/").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	var output []SystemInlineItem
+	var output []SystemDBLookup
 
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, len(output))

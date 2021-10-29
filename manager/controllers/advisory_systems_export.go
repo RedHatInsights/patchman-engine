@@ -80,17 +80,11 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	data := make([]SystemInlineItem, len(systems))
-
-	for i, v := range systems {
-		data[i] = SystemInlineItem(v)
-	}
-
 	accept := c.GetHeader("Accept")
 	if strings.Contains(accept, "application/json") { // nolint: gocritic
-		c.JSON(http.StatusOK, data)
+		c.JSON(http.StatusOK, systems)
 	} else if strings.Contains(accept, "text/csv") {
-		Csv(c, 200, data)
+		Csv(c, 200, systems)
 	} else {
 		LogWarnAndResp(c, http.StatusUnsupportedMediaType,
 			fmt.Sprintf("Invalid content type '%s', use 'application/json' or 'text/csv'", accept))

@@ -30,13 +30,15 @@ var SystemOpts = ListOpts{
 }
 
 type SystemDBLookup struct {
-	ID string `query:"sp.inventory_id" gorm:"column:id"`
+	ID string `json:"id" csv:"id" query:"sp.inventory_id" gorm:"column:id"`
 
-	// this returns tags info in plain string, then parsed to "Tags" attribute
-	TagsStr string `query:"ih.tags"         gorm:"column:tags_str"`
+	// Just helper field to get tags from db in plain string, then parsed to "Tags" attr., excluded from output data.
+	TagsStr string `json:"-" csv:"-" query:"ih.tags" gorm:"column:tags_str"`
 
 	SystemItemAttributes
 }
+
+type SystemInlineItem SystemDBLookup
 
 // nolint: lll
 type SystemItemAttributes struct {
@@ -86,12 +88,6 @@ type SystemItem struct {
 	Attributes SystemItemAttributes `json:"attributes"`
 	ID         string               `json:"id"`
 	Type       string               `json:"type"`
-}
-
-type SystemInlineItem struct {
-	ID      string `json:"id"  csv:"id"`
-	TagsStr string `json:"-"   csv:"-"` // just helper field to get tags from db, excluded from output data
-	SystemItemAttributes
 }
 
 type SystemsResponse struct {
