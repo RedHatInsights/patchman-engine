@@ -473,3 +473,20 @@ func Csv(ctx *gin.Context, code int, res interface{}) {
 		panic(err)
 	}
 }
+
+func systemDBLookups2SystemItems(systems []SystemDBLookup) []SystemItem {
+	data := make([]SystemItem, len(systems))
+	var err error
+	for i, system := range systems {
+		system.Tags, err = parseSystemTags(system.TagsStr)
+		if err != nil {
+			utils.Log("err", err.Error(), "inventory_id", system.ID).Debug("system tags parsing failed")
+		}
+		data[i] = SystemItem{
+			Attributes: system.SystemItemAttributes,
+			ID:         system.ID,
+			Type:       "system",
+		}
+	}
+	return data
+}

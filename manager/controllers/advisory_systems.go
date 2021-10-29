@@ -106,7 +106,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	data := buildAdvisorySystemsData(dbItems)
+	data := systemDBLookups2SystemItems(dbItems)
 	var resp = AdvisorySystemsResponse{
 		Data:  data,
 		Links: *links,
@@ -124,17 +124,4 @@ func buildAdvisorySystemsQuery(account int, advisoryName string) *gorm.DB {
 		Where("sp.stale = false")
 
 	return query
-}
-
-func buildAdvisorySystemsData(dbItems []SystemDBLookup) []SystemItem {
-	data := make([]SystemItem, len(dbItems))
-	for i, model := range dbItems {
-		item := SystemItem{
-			ID:         model.ID,
-			Type:       "system",
-			Attributes: model.SystemItemAttributes,
-		}
-		data[i] = item
-	}
-	return data
 }
