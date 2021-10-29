@@ -2,6 +2,7 @@ package database
 
 import (
 	"app/base"
+	"app/base/utils"
 	"fmt"
 	"github.com/pkg/errors"
 	"reflect"
@@ -66,7 +67,8 @@ func parserForType(v reflect.Type) (AttrParser, error) {
 		}
 		fallthrough
 	default:
-		return nil, errors.Errorf("Unknown type %v", v.Name())
+		utils.Log("attribute", v.Name()).Debug("No query parser found")
+		return nil, nil
 	}
 }
 
