@@ -20,10 +20,11 @@ func TestAdvisorySystemsExportJSON(t *testing.T) {
 	req.Header.Add("Accept", "application/json")
 	core.InitRouterWithPath(AdvisorySystemsExportHandler, "/:advisory_id").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
-	var output []AdvisoryInlineItem
+	var output []SystemDBLookup
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 6, len(output))
 	assert.Equal(t, output[0].ID, "00000000-0000-0000-0000-000000000001")
+	assert.Equal(t, []SystemTag{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output[0].SystemItemAttributes.Tags)
 }
 
 func TestAdvisorySystemsExportCSV(t *testing.T) {
