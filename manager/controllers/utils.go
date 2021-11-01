@@ -490,3 +490,15 @@ func systemDBLookups2SystemItems(systems []SystemDBLookup) []SystemItem {
 	}
 	return data
 }
+
+// Parse tags from TagsStr string attribute to Tags SystemTag array attribute.
+// It's used in /*systems endpoints as we can not map this attribute directly from database query result.
+func parseAndFillTags(systems *[]SystemDBLookup) {
+	var err error
+	for i, system := range *systems {
+		(*systems)[i].Tags, err = parseSystemTags(system.TagsStr)
+		if err != nil {
+			utils.Log("err", err.Error(), "inventory_id", system.ID).Debug("system tags to export parsing failed")
+		}
+	}
+}
