@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (70, false);
+VALUES (71, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -744,6 +744,7 @@ CREATE TABLE IF NOT EXISTS advisory_metadata
     package_data     JSONB,
     cve_list         JSONB,
     reboot_required  BOOLEAN NOT NULL DEFAULT false,
+    release_versions JSONB,
     UNIQUE (name),
     PRIMARY KEY (id),
     CONSTRAINT advisory_type_id
