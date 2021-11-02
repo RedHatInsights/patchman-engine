@@ -2348,6 +2348,12 @@
                             "type": "string"
                         }
                     },
+                    "release_versions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
                     "severity": {
                         "type": "integer"
                     },

@@ -5,12 +5,13 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
-	"github.com/hashicorp/golang-lru"
-	"github.com/pkg/errors"
-	"gorm.io/gorm"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	lru "github.com/hashicorp/golang-lru"
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 var enableAdvisoryDetailCache = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_DETAIL_CACHE", true)
@@ -41,6 +42,7 @@ type AdvisoryDetailAttributes struct {
 	Packages         map[string]string `json:"packages"`
 	References       []string          `json:"references"`
 	RebootRequired   bool              `json:"reboot_required"`
+	ReleaseVersions  []string          `json:"release_versions"`
 }
 
 // @Summary Show me details an advisory by given advisory name
@@ -87,7 +89,7 @@ func getAdvisoryFromDB(advisoryName string) (*AdvisoryDetailResponse, error) {
 		return nil, err
 	}
 
-	cves, err := parseCVEs(advisory.CveList)
+	cves, err := parseJSONList(advisory.CveList)
 	if err != nil {
 		return nil, errors.Wrap(err, "CVEs parsing error")
 	}
@@ -95,6 +97,11 @@ func getAdvisoryFromDB(advisoryName string) (*AdvisoryDetailResponse, error) {
 	packages, err := parsePackages(advisory.PackageData)
 	if err != nil {
 		return nil, errors.Wrap(err, "packages parsing error")
+	}
+
+	releaseVersions, err := parseJSONList(advisory.ReleaseVersions)
+	if err != nil {
+		return nil, errors.Wrap(err, "release_versions parsing error")
 	}
 
 	var resp = AdvisoryDetailResponse{
@@ -113,6 +120,7 @@ func getAdvisoryFromDB(advisoryName string) (*AdvisoryDetailResponse, error) {
 				Packages:         packages,
 				References:       []string{},
 				RebootRequired:   advisory.RebootRequired,
+				ReleaseVersions:  releaseVersions,
 			},
 			ID:   advisory.Name,
 			Type: "advisory",
@@ -120,7 +128,7 @@ func getAdvisoryFromDB(advisoryName string) (*AdvisoryDetailResponse, error) {
 	return &resp, nil
 }
 
-func parseCVEs(jsonb []byte) ([]string, error) {
+func parseJSONList(jsonb []byte) ([]string, error) {
 	if jsonb == nil {
 		return []string{}, nil
 	}
@@ -131,12 +139,12 @@ func parseCVEs(jsonb []byte) ([]string, error) {
 		return nil, err
 	}
 
-	var cves []string
-	err = json.Unmarshal(b, &cves)
+	var items []string
+	err = json.Unmarshal(b, &items)
 	if err != nil {
 		return nil, err
 	}
-	return cves, nil
+	return items, nil
 }
 
 func parsePackages(jsonb []byte) (map[string]string, error) {
