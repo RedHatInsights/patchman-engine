@@ -7,10 +7,11 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"encoding/json"
-	"github.com/RedHatInsights/patchman-clients/vmaas"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/RedHatInsights/patchman-clients/vmaas"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInit(t *testing.T) {
@@ -94,16 +95,23 @@ func TestParseAdvisories(t *testing.T) {
 
 	data := map[string]vmaas.ErrataResponseErrataList{
 		"ER1": {
-			Updated:        utils.PtrString("2004-09-02T00:00:00+00:00"),
-			Issued:         utils.PtrString("2004-09-02T00:00:00+00:00"),
-			Description:    utils.PtrString("DESC"),
-			Solution:       utils.PtrString("SOL"),
-			Summary:        utils.PtrString("SUM"),
-			Url:            utils.PtrString("URL"),
-			Synopsis:       utils.PtrString("SYN"),
-			Type:           utils.PtrString("bugfix"),
-			CveList:        utils.PtrSliceString([]string{"CVE-1", "CVE-2", "CVE-3"}),
-			RequiresReboot: utils.PtrBool(true),
+			Updated:           utils.PtrString("2004-09-02T00:00:00+00:00"),
+			Severity:          vmaas.NullableString{},
+			ReferenceList:     &[]string{},
+			Issued:            utils.PtrString("2004-09-02T00:00:00+00:00"),
+			Description:       utils.PtrString("DESC"),
+			Solution:          utils.PtrString("SOL"),
+			Summary:           utils.PtrString("SUM"),
+			Url:               utils.PtrString("URL"),
+			Synopsis:          utils.PtrString("SYN"),
+			CveList:           utils.PtrSliceString([]string{"CVE-1", "CVE-2", "CVE-3"}),
+			BugzillaList:      &[]string{},
+			PackageList:       &[]string{},
+			SourcePackageList: &[]string{},
+			Type:              utils.PtrString("bugfix"),
+			ThirdParty:        new(bool),
+			RequiresReboot:    utils.PtrBool(true),
+			ReleaseVersions:   utils.PtrSliceString([]string{"8.0", "8.1"}),
 		},
 	}
 
@@ -127,6 +135,9 @@ func TestParseAdvisories(t *testing.T) {
 	js := json.RawMessage(string(adv.CveList))
 	cves, _ := json.Marshal(js)
 	assert.Equal(t, string(cves), `["CVE-1","CVE-2","CVE-3"]`)
+	js = json.RawMessage(string(adv.ReleaseVersions))
+	relvers, _ := json.Marshal(js)
+	assert.Equal(t, string(relvers), `["8.0","8.1"]`)
 }
 
 func TestSaveAdvisories(t *testing.T) {
