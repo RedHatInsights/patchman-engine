@@ -113,25 +113,26 @@ func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataRespons
 		return nil, nil
 	}
 
-	packageData, cvesData, err := getJSONFields(&vmaasData)
+	packageData, cvesData, releaseVersionsData, err := getJSONFields(&vmaasData)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to get JSON fields data")
 	}
 
 	advisory := models.AdvisoryMetadata{
-		Name:           errataName,
-		AdvisoryTypeID: advisoryTypes[strings.ToLower(vmaasData.GetType())],
-		Description:    vmaasData.GetDescription(),
-		Synopsis:       vmaasData.GetSynopsis(),
-		Summary:        vmaasData.GetSummary(),
-		Solution:       vmaasData.GetSolution(),
-		SeverityID:     getSeverityID(&vmaasData, severities),
-		CveList:        cvesData,
-		PublicDate:     issued,
-		ModifiedDate:   modified,
-		URL:            vmaasData.Url,
-		PackageData:    packageData,
-		RebootRequired: vmaasData.GetRequiresReboot(),
+		Name:            errataName,
+		AdvisoryTypeID:  advisoryTypes[strings.ToLower(vmaasData.GetType())],
+		Description:     vmaasData.GetDescription(),
+		Synopsis:        vmaasData.GetSynopsis(),
+		Summary:         vmaasData.GetSummary(),
+		Solution:        vmaasData.GetSolution(),
+		SeverityID:      getSeverityID(&vmaasData, severities),
+		CveList:         cvesData,
+		PublicDate:      issued,
+		ModifiedDate:    modified,
+		URL:             vmaasData.Url,
+		PackageData:     packageData,
+		RebootRequired:  vmaasData.GetRequiresReboot(),
+		ReleaseVersions: releaseVersionsData,
 	}
 	return &advisory, nil
 }
@@ -151,17 +152,23 @@ func checkUpdatedSummaryDescription(errataName string, vmaasData vmaas.ErrataRes
 	return modified, true
 }
 
-func getJSONFields(vmaasData *vmaas.ErrataResponseErrataList) ([]byte, []byte, error) {
+func getJSONFields(vmaasData *vmaas.ErrataResponseErrataList) ([]byte, []byte, []byte, error) {
 	packageData, err := getPackageData(vmaasData)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "unable to get package data")
+		return nil, nil, nil, errors.Wrap(err, "unable to get package data")
 	}
 
 	cvesData, err := json.Marshal(vmaasData.CveList)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "Could not serialize CVEs data")
+		return nil, nil, nil, errors.Wrap(err, "Could not serialize CVEs data")
 	}
-	return packageData, cvesData, nil
+
+	releaseVersionsData, err := json.Marshal(vmaasData.ReleaseVersions)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "Could not serialize release_versions data")
+	}
+
+	return packageData, cvesData, releaseVersionsData, nil
 }
 
 func getPackageData(vmaasData *vmaas.ErrataResponseErrataList) ([]byte, error) {
@@ -227,7 +234,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 
 	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary", "solution",
 		"public_date", "modified_date", "url", "advisory_type_id", "severity_id", "cve_list", "package_data",
-		"reboot_required")
+		"reboot_required", "release_versions")
 
 	err = tx.CreateInBatches(&advisories, SyncBatchSize).Error
 	if err != nil {

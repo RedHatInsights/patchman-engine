@@ -130,20 +130,21 @@ func (AdvisoryType) TableName() string {
 type AdvisoryPackageData map[string]string
 
 type AdvisoryMetadata struct {
-	ID             int
-	Name           string
-	Description    string
-	Synopsis       string
-	Summary        string
-	Solution       string
-	AdvisoryTypeID int
-	PublicDate     time.Time
-	ModifiedDate   time.Time
-	URL            *string
-	SeverityID     *int
-	PackageData    []byte
-	CveList        []byte
-	RebootRequired bool
+	ID              int
+	Name            string
+	Description     string
+	Synopsis        string
+	Summary         string
+	Solution        string
+	AdvisoryTypeID  int
+	PublicDate      time.Time
+	ModifiedDate    time.Time
+	URL             *string
+	SeverityID      *int
+	PackageData     []byte
+	CveList         []byte
+	RebootRequired  bool
+	ReleaseVersions []byte
 }
 
 func (AdvisoryMetadata) TableName() string {
