@@ -3,11 +3,12 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
-	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAdvisoryDetailDefault(t *testing.T) {
@@ -37,6 +38,7 @@ func checkRH9Fields(t *testing.T, response AdvisoryDetailResponse) {
 	assert.Equal(t, 1, len(response.Data.Attributes.Packages))
 	assert.Equal(t, "77.0.1-1.fc31.x86_64", response.Data.Attributes.Packages["firefox"])
 	assert.Equal(t, false, response.Data.Attributes.RebootRequired)
+	assert.Equal(t, []string{"8.2", "8.4"}, response.Data.Attributes.ReleaseVersions)
 	assert.Nil(t, response.Data.Attributes.Severity)
 }
 
