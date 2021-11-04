@@ -38,6 +38,8 @@ var (
 	preloadPackageCache    bool
 	packageCacheSize       int
 	packageNameCacheSize   int
+	vmaasCallMaxRetries    int
+	vmaasCallUseExpRetry   bool
 )
 
 func configure() {
@@ -65,6 +67,8 @@ func configure() {
 	preloadPackageCache = utils.GetBoolEnvOrDefault("PRELOAD_PACKAGE_CACHE", true)
 	packageCacheSize = utils.GetIntEnvOrDefault("PACKAGE_CACHE_SIZE", 1000000)
 	packageNameCacheSize = utils.GetIntEnvOrDefault("PACKAGE_NAME_CACHE_SIZE", 60000)
+	vmaasCallMaxRetries = utils.GetIntEnvOrDefault("VMAAS_CALL_MAX_RETRIES", 8)
+	vmaasCallUseExpRetry = utils.GetBoolEnvOrDefault("VMAAS_CALL_USE_EXP_RETRY", true)
 	configureRemediations()
 }
 
@@ -302,7 +306,7 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 		return &vmaasData, resp, err
 	}
 
-	vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc, true, 8,
+	vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc, vmaasCallUseExpRetry, vmaasCallMaxRetries,
 		http.StatusServiceUnavailable)
 	if err != nil {
 		return nil, errors.Wrap(err, "vmaas /v3/updates API call failed")
