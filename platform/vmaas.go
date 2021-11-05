@@ -158,6 +158,41 @@ func pkgTreeHandler(c *gin.Context) {
 	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
 }
 
+func pkgListHandler(c *gin.Context) {
+	data := `{
+    "page": 0,
+    "page_size": 3,
+    "pages": 1,
+    "package_list": [{
+			"nevra": "firefox-76.0.1-1.fc31.x86_64",
+			"summary": "Mozilla Firefox Web browser",
+			"description": "Mozilla Firefox is an open-source web browser..."
+        },{
+			"nevra": "kernel-5.6.13-200.fc31.x86_64",
+			"summary": "The Linux kernel",
+			"description": "The kernel meta package"		
+        },{
+			"nevra": "firefox-0:77.0.1-1.fc31.x86_64",
+			"summary": "Mozilla Firefox Web browser",
+			"description": "Mozilla Firefox is an open-source web browser..."
+		},{
+			"nevra": "kernel-5.7.13-200.fc31.x86_64",
+			"summary": "The Linux kernel",
+			"description": "The kernel meta package"
+		},{
+            "nevra": "firefox-0:77.0.1-1.fc31.src",
+			"summary": null,
+			"description": null
+		},{
+			"nevra": "kernel-5.7.13-200.fc31.src",
+			"summary": null,
+			"description": null
+		}
+    ],
+    "last_change": "2021-04-09T04:52:06.999732+00:00"}`
+	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
+}
+
 func reposHandler(c *gin.Context) {
 	repoList := map[string][]map[string]interface{}{
 		"repo1": make([]map[string]interface{}, 0),
@@ -199,6 +234,7 @@ func initVMaaS(app *gin.Engine) {
 	app.POST("/api/v3/errata", erratasHandler)
 	app.POST("/api/v3/repos", reposHandler)
 	app.POST("/api/v3/pkgtree", pkgTreeHandler)
+	app.POST("/api/v3/pkglist", pkgListHandler)
 	// Mock websocket endpoint for VMaaS
 	app.GET("/ws", func(context *gin.Context) {
 		wshandler(context.Writer, context.Request)
