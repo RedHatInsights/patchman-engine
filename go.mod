@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/RedHatInsights/patchman-clients/inventory v0.14.0
 	github.com/RedHatInsights/patchman-clients/rbac v0.14.0
-	github.com/RedHatInsights/patchman-clients/vmaas v0.16.0
+	github.com/RedHatInsights/patchman-clients/vmaas v0.17.0
 	github.com/aws/aws-sdk-go v1.38.51
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/confluentinc/confluent-kafka-go v1.7.0 // indirect
@@ -39,8 +39,8 @@ require (
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/ugorji/go v1.2.6 // indirect
 	github.com/zsais/go-gin-prometheus v0.1.0
-	golang.org/x/net v0.0.0-20211029224645-99673261e6eb
-	golang.org/x/oauth2 v0.0.0-20211028175245-ba495a64dcb5 // indirect
+	golang.org/x/net v0.0.0-20211104170005-ce137452f963
+	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/confluentinc/confluent-kafka-go.v1 v1.7.0
