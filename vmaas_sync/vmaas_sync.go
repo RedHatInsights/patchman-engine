@@ -29,6 +29,7 @@ var (
 	enableTurnpikeAuth          bool
 	enableAdvisoriesSync        bool
 	enablePackagesSync          bool
+	enablePkgTreeSync           bool
 	enableReposSync             bool
 	enableModifiedSinceSync     bool
 	enableRefreshPackagesCache  bool
@@ -57,6 +58,7 @@ func configure() {
 
 	enableAdvisoriesSync = utils.GetBoolEnvOrDefault("ENABLE_ADVISORIES_SYNC", true)
 	enablePackagesSync = utils.GetBoolEnvOrDefault("ENABLE_PACKAGES_SYNC", true)
+	enablePkgTreeSync = utils.GetBoolEnvOrDefault("ENABLE_PKG_TREE_SYNC", true)
 	enableReposSync = utils.GetBoolEnvOrDefault("ENABLE_REPOS_SYNC", true)
 	enableModifiedSinceSync = utils.GetBoolEnvOrDefault("ENABLE_MODIFIED_SINCE_SYNC", true)
 
