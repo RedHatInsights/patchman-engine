@@ -2419,6 +2419,12 @@
                     "reboot_required": {
                         "type": "boolean"
                     },
+                    "release_versions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
                     "severity": {
                         "type": "integer"
                     },
@@ -2466,6 +2472,12 @@
                     },
                     "reboot_required": {
                         "type": "boolean"
+                    },
+                    "release_versions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     },
                     "severity": {
                         "type": "integer"
@@ -2722,6 +2734,12 @@
                     "reboot_required": {
                         "type": "boolean"
                     },
+                    "release_versions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
                     "severity": {
                         "type": "integer"
                     },
@@ -2784,6 +2802,12 @@
                     },
                     "reboot_required": {
                         "type": "boolean"
+                    },
+                    "release_versions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     },
                     "severity": {
                         "type": "integer"

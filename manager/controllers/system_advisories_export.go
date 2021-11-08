@@ -6,10 +6,11 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
 // @Summary Export applicable advisories for all my systems
@@ -65,6 +66,10 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 
 	var advisories []SystemAdvisoriesDBLookup
 	err = query.Find(&advisories).Error
+	for i := 0; i < len(advisories); i++ {
+		advisories[i].SystemAdvisoryItemAttributes =
+			systemAdvisoryItemAttributeParse(advisories[i].SystemAdvisoryItemAttributes)
+	}
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return
