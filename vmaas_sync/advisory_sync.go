@@ -163,9 +163,12 @@ func getJSONFields(vmaasData *vmaas.ErrataResponseErrataList) ([]byte, []byte, [
 		return nil, nil, nil, errors.Wrap(err, "Could not serialize CVEs data")
 	}
 
-	releaseVersionsData, err := json.Marshal(vmaasData.ReleaseVersions)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "Could not serialize release_versions data")
+	var releaseVersionsData []byte
+	if vmaasData.ReleaseVersions != nil {
+		releaseVersionsData, err = json.Marshal(vmaasData.ReleaseVersions)
+		if err != nil {
+			return nil, nil, nil, errors.Wrap(err, "Could not serialize release_versions data")
+		}
 	}
 
 	return packageData, cvesData, releaseVersionsData, nil
