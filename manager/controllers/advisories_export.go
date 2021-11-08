@@ -3,10 +3,11 @@ package controllers
 import (
 	"app/manager/middlewares"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // @Summary Export applicable advisories for all my systems
@@ -57,6 +58,7 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	data := make([]AdvisoryInlineItem, len(advisories))
 
 	for i, v := range advisories {
+		v.SystemAdvisoryItemAttributes = systemAdvisoryItemAttributeParse(v.SystemAdvisoryItemAttributes)
 		data[i] = AdvisoryInlineItem(v)
 	}
 	accept := c.GetHeader("Accept")

@@ -144,6 +144,7 @@ func buildAdvisoriesData(advisories []AdvisoriesDBLookup) []AdvisoryItem {
 	data := make([]AdvisoryItem, len(advisories))
 	for i := 0; i < len(advisories); i++ {
 		advisory := (advisories)[i]
+		advisory.SystemAdvisoryItemAttributes = systemAdvisoryItemAttributeParse(advisory.SystemAdvisoryItemAttributes)
 		data[i] = AdvisoryItem{
 			Attributes: AdvisoryItemAttributes{
 				SystemAdvisoryItemAttributes: advisory.SystemAdvisoryItemAttributes,

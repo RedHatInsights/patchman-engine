@@ -128,25 +128,6 @@ func getAdvisoryFromDB(advisoryName string) (*AdvisoryDetailResponse, error) {
 	return &resp, nil
 }
 
-func parseJSONList(jsonb []byte) ([]string, error) {
-	if jsonb == nil {
-		return []string{}, nil
-	}
-
-	js := json.RawMessage(string(jsonb))
-	b, err := json.Marshal(js)
-	if err != nil {
-		return nil, err
-	}
-
-	var items []string
-	err = json.Unmarshal(b, &items)
-	if err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 func parsePackages(jsonb []byte) (map[string]string, error) {
 	if jsonb == nil {
 		return map[string]string{}, nil

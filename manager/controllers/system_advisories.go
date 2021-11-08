@@ -6,9 +6,11 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"fmt"
-	"gorm.io/gorm"
 	"net/http"
+	"strings"
 	"time"
+
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -23,6 +25,8 @@ var SystemAdvisoriesOpts = ListOpts{
 	SearchFields:   []string{"am.name", "am.synopsis"},
 	TotalFunc:      CountRows,
 }
+
+type RelList []string
 
 type SystemAdvisoriesDBLookup struct {
 	ID string `json:"id" csv:"id" query:"am.name" gorm:"column:id"`
@@ -39,6 +43,10 @@ type SystemAdvisoryItemAttributes struct {
 	Severity         *int      `json:"severity,omitempty" csv:"severity" query:"am.severity_id" gorm:"column:severity"`
 	CveCount         int       `json:"cve_count" csv:"cve_count" query:"CASE WHEN jsonb_typeof(am.cve_list) = 'array' THEN jsonb_array_length(am.cve_list) ELSE 0 END" gorm:"column:cve_count"`
 	RebootRequired   bool      `json:"reboot_required" csv:"reboot_required" query:"am.reboot_required" gorm:"column:reboot_required"`
+	ReleaseVersions  RelList   `json:"release_versions" csv:"release_versions" query:"null" gorm:"-"`
+
+	// helper field to get release_version json from db and parse it to ReleaseVersions field
+	ReleaseVersionsJSONB []byte `json:"-" csv:"-" query:"am.release_versions" gorm:"column:release_versions_json"`
 }
 
 type SystemAdvisoryItem struct {
@@ -51,6 +59,10 @@ type SystemAdvisoriesResponse struct {
 	Data  []SystemAdvisoryItem `json:"data"` // advisories items
 	Links Links                `json:"links"`
 	Meta  ListMeta             `json:"meta"`
+}
+
+func (v RelList) String() string {
+	return strings.Join(v, ",")
 }
 
 // nolint:lll
@@ -135,6 +147,7 @@ func buildSystemAdvisoriesQuery(account int, inventoryID string) *gorm.DB {
 func buildSystemAdvisoriesData(models []SystemAdvisoriesDBLookup) []SystemAdvisoryItem {
 	data := make([]SystemAdvisoryItem, len(models))
 	for i, advisory := range models {
+		advisory.SystemAdvisoryItemAttributes = systemAdvisoryItemAttributeParse(advisory.SystemAdvisoryItemAttributes)
 		item := SystemAdvisoryItem{
 			ID:         advisory.ID,
 			Type:       "advisory",

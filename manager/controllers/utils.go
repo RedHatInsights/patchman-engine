@@ -5,6 +5,7 @@ import (
 	"app/base/core"
 	"app/base/database"
 	"app/base/utils"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -501,4 +502,33 @@ func parseAndFillTags(systems *[]SystemDBLookup) {
 			utils.Log("err", err.Error(), "inventory_id", system.ID).Debug("system tags to export parsing failed")
 		}
 	}
+}
+
+func systemAdvisoryItemAttributeParse(advisory SystemAdvisoryItemAttributes) SystemAdvisoryItemAttributes {
+	// parse release version from json to []strings
+	var err error
+	advisory.ReleaseVersions, err = parseJSONList(advisory.ReleaseVersionsJSONB)
+	if err != nil {
+		utils.Log("err", err.Error(), "json", advisory.ReleaseVersionsJSONB).Warn("Unable to parse json list")
+	}
+	return advisory
+}
+
+func parseJSONList(jsonb []byte) ([]string, error) {
+	if jsonb == nil {
+		return []string{}, nil
+	}
+
+	js := json.RawMessage(string(jsonb))
+	b, err := json.Marshal(js)
+	if err != nil {
+		return nil, err
+	}
+
+	var items []string
+	err = json.Unmarshal(b, &items)
+	if err != nil {
+		return nil, err
+	}
+	return items, nil
 }
