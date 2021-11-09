@@ -52,7 +52,12 @@ func syncPackages(syncStart time.Time, modifiedSince *string) error {
 				Info("Downloaded packages")
 		}
 	}
-	utils.Log().Info("Packages synced successfully")
+
+	if modifiedSince != nil {
+		checkPackagesCount()
+	}
+
+	utils.Log("modified_since", modifiedSince).Info("Packages synced successfully")
 	return nil
 }
 
@@ -407,4 +412,34 @@ func getPackageFromPkgListItem(pkgListItem vmaas.PkgListItem, nameIDs map[string
 		AdvisoryID:      nil, // we don't need to store package-advisory relation so far
 	}
 	return &pkg
+}
+
+func checkPackagesCount() {
+	packagesCheckEnabled := utils.GetBoolEnvOrDefault("ENABLE_PACKAGES_COUNT_CHECK", true)
+	if !packagesCheckEnabled {
+		return
+	}
+
+	var dbPkgCount int64
+	err := database.Db.Table("package").Count(&dbPkgCount).Error
+	if err != nil {
+		utils.Log("err", err.Error()).Error("Packages check failed on db query")
+		return
+	}
+
+	response, err := vmaasPkgListRequest(0, nil)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("Packages check failed on vmaas request")
+	}
+
+	vmaasPkgCount := int64(response.GetTotal())
+	if vmaasPkgCount <= dbPkgCount {
+		utils.Log("vmaas-count", vmaasPkgCount, "patch-db-count", dbPkgCount).Info("Packages sync check OK")
+		return
+	}
+	utils.Log("vmaas-count", vmaasPkgCount, "patch-db-count", dbPkgCount).Info("Running full packages sync")
+	err = syncPackages(time.Now(), nil)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("Full advisories sync failed")
+	}
 }
