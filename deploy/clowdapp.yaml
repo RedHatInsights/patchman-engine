@@ -235,6 +235,7 @@ objects:
         - {name: PACKAGES_PAGE_SIZE, value: '${PACKAGES_PAGE_SIZE}'}
         - {name: ENABLE_CYNDI_METRICS, value: '${ENABLE_CYNDI_METRICS}'}
         - {name: ENABLE_ADVISORIES_COUNT_CHECK, value: '${ENABLE_ADVISORIES_COUNT_CHECK}'}
+        - {name: ENABLE_PACKAGES_COUNT_CHECK, value: '${ENABLE_PACKAGES_COUNT_CHECK}'}
         - {name: VMAAS_ADDRESS, value: '${VMAAS_ADDRESS}'}
         - {name: VMAAS_WS_ADDRESS, value: '${VMAAS_WS_ADDRESS}'}
         resources:
@@ -416,6 +417,7 @@ parameters:
 - {name: PACKAGES_PAGE_SIZE, value: '5'} # Requested Vmaas response page size for packages sync
 - {name: ENABLE_CYNDI_METRICS, value: 'true'} # Calculate and expose metrics about Cyndi data
 - {name: ENABLE_ADVISORIES_COUNT_CHECK, value: 'true'} # Check all advisories count after sync, re-sync all if needed
+- {name: ENABLE_PACKAGES_COUNT_CHECK, value: 'true'} # Check all packages count after sync, re-sync all if needed
 - {name: VMAAS_WS_ADDRESS, value: ''} # Use vmaas websocket address if it's not included in clowder config.
 - {name: RES_CPU_VMAAS_SYNC, value: 500m}
 - {name: RES_MEM_VMAAS_SYNC, value: 384Mi}
