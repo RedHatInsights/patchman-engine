@@ -52,7 +52,7 @@ func syncAdvisories(syncStart time.Time, modifiedSince *string) error {
 		}
 	}
 
-	utils.Log().Info("Advisories synced successfully")
+	utils.Log("modified_since", modifiedSince).Info("Advisories synced successfully")
 	return nil
 }
 
