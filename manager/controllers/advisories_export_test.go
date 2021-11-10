@@ -24,7 +24,14 @@ func TestAdvisoriesExportJSON(t *testing.T) {
 	var output []AdvisoryInlineItem
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 9, len(output))
+	assert.Equal(t, output[0].ID, "RH-1")
 	assert.Equal(t, output[0].Description, "adv-1-des")
+	assert.Equal(t, output[0].Synopsis, "adv-1-syn")
+	assert.Equal(t, output[0].AdvisoryTypeName, "enhancement")
+	assert.Equal(t, output[0].CveCount, 0)
+	assert.Equal(t, output[0].RebootRequired, false)
+	assert.Equal(t, output[0].ReleaseVersions, RelList{"7.0", "7Server"})
+	assert.Equal(t, output[0].ApplicableSystems, 6)
 }
 
 func TestAdvisoriesExportCSV(t *testing.T) {
@@ -40,7 +47,7 @@ func TestAdvisoriesExportCSV(t *testing.T) {
 	lines := strings.Split(body, "\n")
 
 	assert.Equal(t, 11, len(lines))
-	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,enhancement,,0,false,6", lines[1])
+	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,enhancement,,0,false,\"7.0,7Server\",6", lines[1])
 }
 
 func TestAdvisoriesExportWrongFormat(t *testing.T) {
@@ -71,7 +78,7 @@ func TestAdvisoriesExportCSVFilter(t *testing.T) {
 	lines := strings.Split(body, "\n")
 
 	assert.Equal(t, 3, len(lines))
-	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,enhancement,,0,false,6", lines[1])
+	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,enhancement,,0,false,\"7.0,7Server\",6", lines[1])
 	assert.Equal(t, "", lines[2])
 }
 

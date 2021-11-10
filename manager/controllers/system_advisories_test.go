@@ -4,10 +4,11 @@ import (
 	"app/base/core"
 	"app/base/utils"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSystemAdvisoriesDefault(t *testing.T) {
@@ -79,6 +80,10 @@ func TestSystemAdvisoriesPossibleSorts(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	for sort := range SystemAdvisoriesFields {
+		if sort == "ReleaseVersions" {
+			// this fiesd is not sortable, skip it
+			continue
+		}
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", fmt.Sprintf("/00000000-0000-0000-0000-000000000001?sort=%v", sort), nil)
 		core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
