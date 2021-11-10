@@ -155,6 +155,10 @@ func TestAdvisoriesPossibleSorts(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	for sort := range AdvisoriesFields {
+		if sort == "ReleaseVersions" {
+			// this fiesd is not sortable, skip it
+			continue
+		}
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", fmt.Sprintf("/?sort=%v", sort), nil)
 		core.InitRouter(AdvisoriesListHandler).ServeHTTP(w, req)

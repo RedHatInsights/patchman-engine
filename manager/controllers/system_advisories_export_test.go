@@ -3,11 +3,12 @@ package controllers // nolint: dupl
 import (
 	"app/base/core"
 	"app/base/utils"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSystemAdvisoriesExportJSON(t *testing.T) {
@@ -39,8 +40,8 @@ func TestSystemAdvisoriesExportCSV(t *testing.T) {
 
 	assert.Equal(t, 10, len(lines))
 	assert.Equal(t, "id,description,public_date,synopsis,advisory_type,advisory_type_name,severity,cve_count,"+
-		"reboot_required", lines[0])
-	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,enhancement,,0,false", lines[1])
+		"reboot_required,release_versions", lines[0])
+	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,enhancement,,0,false,\"7.0,7Server\"", lines[1])
 }
 
 func TestUnknownSystemAdvisoriesExport(t *testing.T) {
