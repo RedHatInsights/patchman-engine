@@ -100,7 +100,7 @@ func loadEnvPostgreSQLConfig() *PostgreSQLConfig {
 		SSLRootCert: utils.Getenv("DB_SSLROOTCERT", ""),
 		Debug:       utils.GetBoolEnvOrDefault("DB_DEBUG", false),
 
-		StatementTimeoutMs:     utils.GetIntEnvOrDefault("DB_STATEMENT_TIMEOUT_MS", 0),
+		StatementTimeoutMs:     utils.GetIntEnvOrDefault("DB_STATEMENT_TIMEOUT_MS", 500),
 		MaxConnections:         utils.GetIntEnvOrDefault("DB_MAX_CONNECTIONS", 250),
 		MaxIdleConnections:     utils.GetIntEnvOrDefault("DB_MAX_IDLE_CONNECTIONS", 50),
 		MaxConnectionLifetimeS: utils.GetIntEnvOrDefault("DB_MAX_CONNECTION_LIFETIME_S", 60),
