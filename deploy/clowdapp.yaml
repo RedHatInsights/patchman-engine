@@ -37,6 +37,7 @@ objects:
         - {name: DB_USER, value: manager}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                        key: manager-database-password}}}
+        - {name: DB_STATEMENT_TIMEOUT_MS, value: '${DB_STATEMENT_TIMEOUT_MS_MANAGER}'}
         - {name: ENABLE_CYNDI_TAGS, value: '${ENABLE_CYNDI_TAGS}'}
         - {name: ENABLE_RBAC, value: '${ENABLE_RBAC}'}
         - {name: DISABLE_CACHE_COUNTS, value: '${DISABLE_CACHE_COUNTS}'}
@@ -330,6 +331,7 @@ parameters:
 - {name: GODEBUG_MANAGER, value: 'x509ignoreCN=0'}
 - {name: GOMAXPROCS_MANAGER, value: '8'}
 - {name: DB_DEBUG_MANAGER, value: 'false'} # Log database queries if enabled
+- {name: DB_STATEMENT_TIMEOUT_MS_MANAGER, value: '0'} # Set database timeout during connection setup
 - {name: ENABLE_CYNDI_TAGS, value: 'true'} # Enable filtering with Cyndi tags
 - {name: ENABLE_RBAC, value: 'true'} # Enable requesting RBAC service
 - {name: DISABLE_CACHE_COUNTS, value: 'false'} # Don't use advisory cache counts
