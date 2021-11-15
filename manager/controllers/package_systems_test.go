@@ -10,20 +10,8 @@ import (
 	"testing"
 )
 
-//nolint: dupl
 func TestPackageSystems(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/kernel/systems?sort=id", nil)
-	core.InitRouterWithParams(PackageSystemsListHandler, 3, "GET", "/:package_name/systems").
-		ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var output PackageSystemsResponse
-	assert.Greater(t, len(w.Body.Bytes()), 0)
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	output := testPackageSystems(t, "/kernel/systems?sort=id", 3)
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output.Data[0].ID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output.Data[0].DisplayName)
@@ -36,28 +24,42 @@ func TestPackageSystemsWrongOffset(t *testing.T) {
 }
 
 func TestPackageSystemsTagsInvalid(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/kernel/systems?tags=ns1/k3=val4&tags=invalidTag", nil)
-	core.InitRouterWithParams(PackageSystemsListHandler, 3, "GET", "/:package_name/systems").
-		ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	code, errResp := testPackageSystemsError(t, "/kernel/systems?tags=ns1/k3=val4&tags=invalidTag", 3)
+	assert.Equal(t, http.StatusBadRequest, code)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
 func TestPackageSystemsInvalidName(t *testing.T) {
+	code, errResp := testPackageSystemsError(t, "/unknown_package/systems", 3)
+	assert.Equal(t, http.StatusNotFound, code)
+	assert.Equal(t, "package not found", errResp.Error)
+}
+
+func testPackageSystems(t *testing.T, url string, account int) PackageSystemsResponse {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/unknown_package/systems", nil)
-	core.InitRouterWithParams(PackageSystemsListHandler, 3, "GET", "/:package_name/systems").
+	req, _ := http.NewRequest("GET", url, nil)
+	core.InitRouterWithParams(PackageSystemsListHandler, account, "GET", "/:package_name/systems").
 		ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusNotFound, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
+	var output PackageSystemsResponse
+	ParseReponseBody(t, w.Body.Bytes(), &output)
+	return output
+}
+
+func testPackageSystemsError(t *testing.T, url string, account int) (int, utils.ErrorResponse) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", url, nil)
+	core.InitRouterWithParams(PackageSystemsListHandler, account, "GET", "/:package_name/systems").
+		ServeHTTP(w, req)
+
+	var errResp utils.ErrorResponse
+	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	return w.Code, errResp
 }
