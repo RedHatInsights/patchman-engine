@@ -81,8 +81,8 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 	}
 
 	accept := c.GetHeader("Accept")
+	parseAndFillTags(&systems)
 	if strings.Contains(accept, "application/json") { // nolint: gocritic
-		parseAndFillTags(&systems)
 		c.JSON(http.StatusOK, systems)
 	} else if strings.Contains(accept, "text/csv") {
 		Csv(c, 200, systems)

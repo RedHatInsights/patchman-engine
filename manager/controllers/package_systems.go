@@ -25,12 +25,12 @@ var PackageSystemsOpts = ListOpts{
 
 //nolint:lll
 type PackageSystemItem struct {
-	ID            string      `json:"id" csv:"id" query:"sp.inventory_id" gorm:"column:id"`
-	DisplayName   string      `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name"`
-	InstalledEVRA string      `json:"installed_evra" csv:"installed_evra" query:"p.evra" gorm:"column:installed_evra"`
-	AvailableEVRA string      `json:"available_evra" csv:"available_evra" query:"spkg.latest_evra" gorm:"column:available_evra"`
-	Updatable     bool        `json:"updatable" csv:"updatable" query:"spkg.latest_evra IS NOT NULL" gorm:"column:updatable"`
-	Tags          []SystemTag `json:"tags" csv:"-" query:"null" gorm:"-"`
+	ID            string         `json:"id" csv:"id" query:"sp.inventory_id" gorm:"column:id"`
+	DisplayName   string         `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name"`
+	InstalledEVRA string         `json:"installed_evra" csv:"installed_evra" query:"p.evra" gorm:"column:installed_evra"`
+	AvailableEVRA string         `json:"available_evra" csv:"available_evra" query:"spkg.latest_evra" gorm:"column:available_evra"`
+	Updatable     bool           `json:"updatable" csv:"updatable" query:"spkg.latest_evra IS NOT NULL" gorm:"column:updatable"`
+	Tags          SystemTagsList `json:"tags" csv:"tags" query:"null" gorm:"-"`
 }
 
 type PackageSystemDBLookup struct {

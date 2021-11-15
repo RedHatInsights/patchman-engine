@@ -58,9 +58,9 @@ func SystemsExportHandler(c *gin.Context) {
 		return
 	}
 
+	parseAndFillTags(&systems)
 	accept := c.GetHeader("Accept")
 	if strings.Contains(accept, "application/json") { // nolint: gocritic
-		parseAndFillTags(&systems)
 		c.JSON(http.StatusOK, systems)
 	} else if strings.Contains(accept, "text/csv") {
 		Csv(c, 200, systems)

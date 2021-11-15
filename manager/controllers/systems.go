@@ -2,9 +2,11 @@ package controllers
 
 import (
 	"app/base/database"
+	"app/base/utils"
 	"app/manager/middlewares"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -66,7 +68,18 @@ type SystemItemAttributes struct {
 	CulledTimestamp       *time.Time `json:"culled_timestamp" csv:"culled_timestamp" query:"ih.culled_timestamp" gorm:"column:culled_timestamp"`
 	Created               *time.Time `json:"created" csv:"created" query:"ih.created" gorm:"column:created"`
 
-	Tags []SystemTag `json:"tags" csv:"-" gorm:"-"`
+	Tags SystemTagsList `json:"tags" csv:"tags" gorm:"-"`
+}
+
+type SystemTagsList []SystemTag
+
+func (v SystemTagsList) String() string {
+	b, err := json.Marshal(v)
+	if err != nil {
+		utils.Log("err", err.Error()).Error("Unable to convert tags struct to json")
+	}
+	replacedQuotes := strings.ReplaceAll(string(b), `"`, `'`) // use the same way as "vulnerability app"
+	return replacedQuotes
 }
 
 // nolint: lll
