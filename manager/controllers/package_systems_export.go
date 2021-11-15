@@ -52,18 +52,20 @@ func PackageSystemsExportHandler(c *gin.Context) {
 		return
 	} // Error handled in method itself
 
-	var systems []PackageSystemItem
+	var systems []PackageSystemDBLookup
 	err = query.Find(&systems).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")
 		return
 	}
 
+	outputItems := packageSystemDBLookups2PackageSystemItems(systems)
+
 	accept := c.GetHeader("Accept")
 	if strings.Contains(accept, "application/json") { // nolint: gocritic
-		c.JSON(http.StatusOK, systems)
+		c.JSON(http.StatusOK, outputItems)
 	} else if strings.Contains(accept, "text/csv") {
-		Csv(c, 200, systems)
+		Csv(c, 200, outputItems)
 	} else {
 		LogWarnAndResp(c, http.StatusUnsupportedMediaType,
 			fmt.Sprintf("Invalid content type '%s', use 'application/json' or 'text/csv'", accept))
