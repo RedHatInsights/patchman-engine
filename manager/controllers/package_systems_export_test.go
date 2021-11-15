@@ -24,9 +24,10 @@ func TestPackageSystemsExportHandlerJSON(t *testing.T) {
 	var output []PackageSystemItem
 	ParseReponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, len(output))
-	assert.Equal(t, output[0].ID, "00000000-0000-0000-0000-000000000012")
-	assert.Equal(t, output[0].InstalledEVRA, "5.6.13-200.fc31.x86_64")
-	assert.Equal(t, output[0].AvailableEVRA, "5.10.13-200.fc31.x86_64")
+	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output[0].ID)
+	assert.Equal(t, "5.6.13-200.fc31.x86_64", output[0].InstalledEVRA)
+	assert.Equal(t, "5.10.13-200.fc31.x86_64", output[0].AvailableEVRA)
+	assert.Equal(t, []SystemTag{{"k1", "ns1", "val1"}}, output[0].Tags)
 }
 
 func TestPackageSystemsExportHandlerCSV(t *testing.T) {
