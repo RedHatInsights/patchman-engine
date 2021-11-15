@@ -12,8 +12,8 @@ import (
 	"gorm.io/gorm"
 )
 
-var PackageSystemFields = database.MustGetQueryAttrs(&PackageSystemItem{})
-var PackageSystemsSelect = database.MustGetSelect(&PackageSystemItem{})
+var PackageSystemFields = database.MustGetQueryAttrs(&PackageSystemDBLookup{})
+var PackageSystemsSelect = database.MustGetSelect(&PackageSystemDBLookup{})
 var PackageSystemsOpts = ListOpts{
 	Fields: PackageSystemFields,
 	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
@@ -25,11 +25,19 @@ var PackageSystemsOpts = ListOpts{
 
 //nolint:lll
 type PackageSystemItem struct {
-	ID            string `json:"id" csv:"id" query:"sp.inventory_id" gorm:"column:id"`
-	DisplayName   string `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name"`
-	InstalledEVRA string `json:"installed_evra" csv:"installed_evra" query:"p.evra" gorm:"column:installed_evra"`
-	AvailableEVRA string `json:"available_evra" csv:"available_evra" query:"spkg.latest_evra" gorm:"column:available_evra"`
-	Updatable     bool   `json:"updatable" csv:"updatable" query:"spkg.latest_evra IS NOT NULL" gorm:"column:updatable"`
+	ID            string      `json:"id" csv:"id" query:"sp.inventory_id" gorm:"column:id"`
+	DisplayName   string      `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name"`
+	InstalledEVRA string      `json:"installed_evra" csv:"installed_evra" query:"p.evra" gorm:"column:installed_evra"`
+	AvailableEVRA string      `json:"available_evra" csv:"available_evra" query:"spkg.latest_evra" gorm:"column:available_evra"`
+	Updatable     bool        `json:"updatable" csv:"updatable" query:"spkg.latest_evra IS NOT NULL" gorm:"column:updatable"`
+	Tags          []SystemTag `json:"tags" csv:"-" query:"null" gorm:"-"`
+}
+
+type PackageSystemDBLookup struct {
+	// Just helper field to get tags from db in plain string, then parsed to "Tags" attr., excluded from output data.
+	TagsStr string `json:"-" csv:"-" query:"ih.tags" gorm:"column:tags_str"`
+
+	PackageSystemItem
 }
 
 type PackageSystemsResponse struct {
@@ -47,6 +55,7 @@ func packagesByNameQuery(pkgName string) *gorm.DB {
 func packageSystemsQuery(acc int, packageName string, packageIDs []int) *gorm.DB {
 	query := database.SystemPackages(database.Db, acc).
 		Select(PackageSystemsSelect).
+		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Where("sp.stale = false").
 		Where("pn.name = ?", packageName).
 		Where("spkg.package_id in (?)", packageIDs)
@@ -99,16 +108,30 @@ func PackageSystemsListHandler(c *gin.Context) {
 		return
 	} // Error handled in method itself
 
-	var systems []PackageSystemItem
+	var systems []PackageSystemDBLookup
 	err = query.Find(&systems).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")
 		return
 	}
 
+	outputItems := packageSystemDBLookups2PackageSystemItems(systems)
 	c.JSON(200, PackageSystemsResponse{
-		Data:  systems,
+		Data:  outputItems,
 		Links: *links,
 		Meta:  *meta,
 	})
+}
+
+func packageSystemDBLookups2PackageSystemItems(systems []PackageSystemDBLookup) []PackageSystemItem {
+	data := make([]PackageSystemItem, len(systems))
+	var err error
+	for i, system := range systems {
+		system.PackageSystemItem.Tags, err = parseSystemTags(system.TagsStr)
+		if err != nil {
+			utils.Log("err", err.Error(), "inventory_id", system.ID).Debug("system tags parsing failed")
+		}
+		data[i] = system.PackageSystemItem
+	}
+	return data
 }
