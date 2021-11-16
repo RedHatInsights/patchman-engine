@@ -33,11 +33,11 @@ func syncPackages(syncStart time.Time, modifiedSince *string) error {
 				return errors.Wrap(err, "Pkgtree page download and process failed")
 			}
 			iPageMax = int(pkgtreeResponse.GetPages())
-			iPage++
 			utils.Log("page", iPage, "pages", iPageMax, "count", len(pkgtreeResponse.GetPackageNameList()),
 				"sync_duration", utils.SinceStr(syncStart, time.Second),
 				"packages_sync_duration", utils.SinceStr(pkgSyncStart, time.Second)).
 				Info("Downloaded packages")
+			iPage++
 		} else {
 			// Sync packages using /pkglist vmaas endpoint
 			pkgListResponse, err := downloadAndProcessPkgListPage(iPage, modifiedSince)
@@ -45,11 +45,11 @@ func syncPackages(syncStart time.Time, modifiedSince *string) error {
 				return errors.Wrap(err, "PkgList page download and process failed")
 			}
 			iPageMax = int(pkgListResponse.GetPages())
-			iPage++
 			utils.Log("page", iPage, "pages", iPageMax, "count", len(pkgListResponse.GetPackageList()),
 				"sync_duration", utils.SinceStr(syncStart, time.Second),
 				"packages_sync_duration", utils.SinceStr(pkgSyncStart, time.Second)).
 				Info("Downloaded packages")
+			iPage++
 		}
 	}
 
