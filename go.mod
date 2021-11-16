@@ -34,7 +34,7 @@ require (
 	github.com/redhatinsights/platform-go-middlewares v0.8.1
 	github.com/segmentio/kafka-go v0.4.16
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/ugorji/go v1.2.6 // indirect
@@ -45,6 +45,7 @@ require (
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/confluentinc/confluent-kafka-go.v1 v1.7.0
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	gorm.io/driver/postgres v1.0.5
 	gorm.io/gorm v1.20.12
 	modernc.org/strutil v1.1.0
