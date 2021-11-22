@@ -91,3 +91,16 @@ func TestPackageDetailNoPackage(t *testing.T) {
 	ParseReponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "package_param not found", errResp.Error)
 }
+
+func TestPackageDetailFiltering(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/packages/kernel-5.6.13-202.fc31.x86_64?filter[filter]=abcd", nil)
+	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
+		ServeHTTP(w, req)
+	var errResp utils.ErrorResponse
+	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
+}

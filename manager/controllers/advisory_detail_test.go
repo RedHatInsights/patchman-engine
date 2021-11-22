@@ -122,3 +122,15 @@ func TestAdvisoryDetailCachePreloading(t *testing.T) {
 	assert.True(t, ok)
 	advisoryDetailCache.Purge()
 }
+
+func TestAdvisoryDetailFiltering(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/RH-9?filter[filter]=abcd", nil)
+	core.InitRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
+	var errResp utils.ErrorResponse
+	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
+}

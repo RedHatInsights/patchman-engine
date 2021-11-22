@@ -105,6 +105,10 @@ func PackageDetailHandler(c *gin.Context) {
 		return
 	}
 
+	if !isFilterInURLValid(c) {
+		return
+	}
+
 	nevra, err := utils.ParseNevra(parameter)
 	if err == nil {
 		packageEvraHandler(c, nevra)

@@ -20,6 +20,7 @@ import (
 const InvalidOffsetMsg = "Invalid offset"
 const InvalidTagMsg = "Invalid tag '%s'. Use 'namespace/key=val format'"
 const InvalidNestedFilter = "Nested operators not yet implemented for standard filters"
+const FilterNotSupportedMsg = "filtering not supported on this endpoint"
 
 var tagRegex = regexp.MustCompile(`([^/=]+)/([^/=]+)(=([^/=]+))?`)
 var enableCyndiTags = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_TAGS", false)
@@ -531,4 +532,12 @@ func parseJSONList(jsonb []byte) ([]string, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+func isFilterInURLValid(c *gin.Context) bool {
+	if strings.Contains(c.Request.URL.String(), "filter") {
+		LogAndRespBadRequest(c, errors.New(FilterNotSupportedMsg), FilterNotSupportedMsg)
+		return false
+	}
+	return true
 }
