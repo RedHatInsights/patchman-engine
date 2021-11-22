@@ -37,6 +37,10 @@ func SystemDetailHandler(c *gin.Context) {
 		return
 	}
 
+	if !isFilterInURLValid(c) {
+		return
+	}
+
 	var systemItemAttributes SystemItemAttributes
 	query := database.Systems(database.Db, account).
 		Select(database.MustGetSelect(&systemItemAttributes)).

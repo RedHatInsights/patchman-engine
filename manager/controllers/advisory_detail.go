@@ -61,6 +61,10 @@ func AdvisoryDetailHandler(c *gin.Context) {
 		return
 	}
 
+	if !isFilterInURLValid(c) {
+		return
+	}
+
 	resp, err := getAdvisory(advisoryName)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

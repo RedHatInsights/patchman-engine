@@ -139,3 +139,15 @@ func TestSystemUnknown(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
+
+func TestSystemDetailFiltering(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001?filter[filter]=abcd", nil)
+	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 1).ServeHTTP(w, req)
+	var errResp utils.ErrorResponse
+	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
+}
