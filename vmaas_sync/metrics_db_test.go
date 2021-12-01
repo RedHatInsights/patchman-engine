@@ -17,8 +17,8 @@ func TestTableSizes(t *testing.T) {
 	for _, item := range tableSizes {
 		uniqueTables[item.Key] = true
 	}
-	assert.Equal(t, 195, len(tableSizes))
-	assert.Equal(t, 195, len(uniqueTables))
+	assert.Equal(t, 212, len(tableSizes))
+	assert.Equal(t, 212, len(uniqueTables))
 	assert.True(t, uniqueTables["system_platform"]) // check whether table names were loaded
 	assert.True(t, uniqueTables["package"])
 	assert.True(t, uniqueTables["repo"])
