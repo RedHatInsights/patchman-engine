@@ -1,4 +1,4 @@
-FROM centos:8
+FROM registry.access.redhat.com/ubi8
 
 RUN yum install -y unzip java && \
     yum clean all

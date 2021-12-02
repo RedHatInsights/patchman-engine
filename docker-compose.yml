@@ -6,7 +6,6 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - BUILDIMG=centos:8
         - INSTALL_TOOLS=yes
       target: buildimg
     image: patchman-engine_patchimg
