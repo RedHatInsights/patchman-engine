@@ -14,8 +14,6 @@ sed \
       - .\/dev\/database\/secrets:\/opt\/postgresql\n\
       - \.\/dev\/kafka\/secrets:\/opt\/kafka/
       }" \
-    -e "/ - BUILDIMG=centos:8/ d" \
-    -e "/ - RUNIMG=centos:8/ d" \
     "$DEV" | diff -u - "$PROD"
 rc=$?
 if [ $rc -gt 0 ]; then
