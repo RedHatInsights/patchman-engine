@@ -1,6 +1,6 @@
-FROM centos/postgresql-12-centos8
+FROM docker.io/library/postgres:12
 
-ADD /dev/database/init.sh ${CONTAINER_SCRIPTS_PATH}/start/
+ADD /dev/database/init.sh /docker-entrypoint-initdb.d/
 
 USER postgres
 

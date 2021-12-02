@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: dev/database/Dockerfile
-    command: 'run-postgresql -c logging_collector=off'
+    command: 'postgres -c config_file=/opt/app-root/src/postgresql-cfg/custom.conf'
     ports:
       - 5432:5432
     env_file:
