@@ -18,6 +18,8 @@ func TestPackageSystems(t *testing.T) {
 	assert.Equal(t, "5.6.13-200.fc31.x86_64", output.Data[0].InstalledEVRA)
 	assert.Equal(t, "5.10.13-200.fc31.x86_64", output.Data[0].AvailableEVRA)
 	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}}, output.Data[0].Tags)
+	assert.Equal(t, "", output.Data[0].BaselineName)
+	assert.Equal(t, utils.PtrBoolNil(), output.Data[0].BaselineUpToDate)
 }
 
 func TestPackageSystemsWrongOffset(t *testing.T) {
