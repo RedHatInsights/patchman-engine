@@ -22,6 +22,17 @@ func (Reporter) TableName() string {
 	return "reporter"
 }
 
+type Baseline struct {
+	ID          int
+	RhAccountID int
+	Name        string
+	Config      []byte
+}
+
+func (Baseline) TableName() string {
+	return "baseline"
+}
+
 // nolint: maligned
 type SystemPlatform struct {
 	ID                    int    `gorm:"primary_key"`
@@ -46,6 +57,8 @@ type SystemPlatform struct {
 	PackagesUpdatable     int
 	ThirdParty            bool
 	ReporterID            *int
+	BaselineID            *int
+	BaselineUpToDate      *bool `gorm:"column:baseline_uptodate"`
 }
 
 func (SystemPlatform) TableName() string {

@@ -120,6 +120,7 @@ func buildAdvisorySystemsQuery(account int, advisoryName string) *gorm.DB {
 		Select(SystemsSelect).
 		Joins("JOIN advisory_metadata am ON am.id = sa.advisory_id").
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
+		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
 		Where("am.name = ?", advisoryName).
 		Where("sp.stale = false")
 
