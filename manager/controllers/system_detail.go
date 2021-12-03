@@ -45,6 +45,7 @@ func SystemDetailHandler(c *gin.Context) {
 	query := database.Systems(database.Db, account).
 		Select(database.MustGetSelect(&systemItemAttributes)).
 		Joins("JOIN inventory.hosts ih ON ih.id = inventory_id").
+		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
 		Where("sp.inventory_id = ?::uuid", inventoryID)
 
 	err := query.Take(&systemItemAttributes).Error
