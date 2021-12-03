@@ -42,6 +42,8 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	assert.Equal(t, "2018-09-09 16:00:00 +0000 UTC", output.Data[0].Attributes.CulledTimestamp.String())
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.Created.String())
 	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output.Data[0].Attributes.Tags)
+	assert.Equal(t, "baseline_1-1", output.Data[0].Attributes.BaselineName)
+	assert.Equal(t, true, *output.Data[0].Attributes.BaselineUpToDate)
 }
 
 func TestAdvisorySystemsNotFound(t *testing.T) { //nolint:dupl

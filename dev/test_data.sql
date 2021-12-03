@@ -11,17 +11,22 @@ DELETE FROM package_name;
 DELETE FROM advisory_metadata;
 DELETE FROM rh_account;
 DELETE FROM strings;
+DELETE FROM baseline;
 
 INSERT INTO rh_account (id, name) VALUES
 (1, 'acc-1'), (2, 'acc-2'), (3, 'acc-3'), (4, 'acc-4');
 
-INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id, reporter_id, vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_updatable, third_party) VALUES
-(1, '00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2020-09-22 12:00:00-04',0,0, true),
-(2, '00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000002', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04',0,0, false),
-(3, '00000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000003', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0, false),
-(4, '00000000-0000-0000-0000-000000000004','00000000-0000-0000-0000-000000000004', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0, false),
-(5, '00000000-0000-0000-0000-000000000005','00000000-0000-0000-0000-000000000005', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0, false),
-(6, '00000000-0000-0000-0000-000000000006','00000000-0000-0000-0000-000000000006', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04',0,0, false);
+INSERT INTO baseline (id, rh_account_id, name, config) VALUES
+(1, 1, 'baseline_1-1', '{"to_time": "2010-09-22 12:00:00-04"}'),
+(2, 1, 'baseline_1-2', '{"to_time": "2021-01-01 12:00:00-04"}');
+
+INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id, reporter_id, vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_updatable, third_party, baseline_id, baseline_uptodate) VALUES
+(1, '00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2020-09-22 12:00:00-04',0,0, true, 1, true),
+(2, '00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000002', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04',0,0, false, 1, true),
+(3, '00000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000003', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0, false, 2, false),
+(4, '00000000-0000-0000-0000-000000000004','00000000-0000-0000-0000-000000000004', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0, false, 2, false),
+(5, '00000000-0000-0000-0000-000000000005','00000000-0000-0000-0000-000000000005', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0, false, NULL, NULL),
+(6, '00000000-0000-0000-0000-000000000006','00000000-0000-0000-0000-000000000006', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04',0,0, false, NULL, NULL);
 
 INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_updated, unchanged_since, last_upload, packages_installed, packages_updatable) VALUES
 (7, '00000000-0000-0000-0000-000000000007','00000000-0000-0000-0000-000000000007', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-10-04 14:13:12-04', '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04',0,0);
@@ -154,6 +159,7 @@ ALTER TABLE system_platform ALTER COLUMN id RESTART WITH 100;
 ALTER TABLE rh_account ALTER COLUMN id RESTART WITH 100;
 ALTER TABLE repo ALTER COLUMN id RESTART WITH 100;
 ALTER TABLE package ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE baseline ALTER COLUMN id RESTART WITH 100;
 
 -- Create "inventory.hosts" for testing purposes. In deployment it's created by remote Cyndi service.
 
