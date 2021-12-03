@@ -69,6 +69,9 @@ type SystemItemAttributes struct {
 	Created               *time.Time `json:"created" csv:"created" query:"ih.created" gorm:"column:created"`
 
 	Tags SystemTagsList `json:"tags" csv:"tags" gorm:"-"`
+
+	BaselineName     string `json:"baseline_name" csv:"baseline_name" query:"bl.name" gorm:"column:baseline_name"`
+	BaselineUpToDate *bool  `json:"baseline_uptodate" csv:"baseline_uptodate" query:"sp.baseline_uptodate" gorm:"column:baseline_uptodate"`
 }
 
 type SystemTagsList []SystemTag
@@ -189,6 +192,7 @@ func SystemsListHandler(c *gin.Context) {
 func querySystems(account int) *gorm.DB {
 	return database.Systems(database.Db, account).
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
+		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
 		Select(SystemsSelect)
 }
 
