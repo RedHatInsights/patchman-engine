@@ -2635,6 +2635,12 @@
                     "available_evra": {
                         "type": "string"
                     },
+                    "baseline_name": {
+                        "type": "string"
+                    },
+                    "baseline_uptodate": {
+                        "type": "boolean"
+                    },
                     "display_name": {
                         "type": "string"
                     },
@@ -2834,6 +2840,12 @@
             "controllers.SystemInlineItem": {
                 "type": "object",
                 "properties": {
+                    "baseline_name": {
+                        "type": "string"
+                    },
+                    "baseline_uptodate": {
+                        "type": "boolean"
+                    },
                     "created": {
                         "type": "string"
                     },
@@ -2925,6 +2937,12 @@
             "controllers.SystemItemAttributes": {
                 "type": "object",
                 "properties": {
+                    "baseline_name": {
+                        "type": "string"
+                    },
+                    "baseline_uptodate": {
+                        "type": "boolean"
+                    },
                     "created": {
                         "type": "string"
                     },
