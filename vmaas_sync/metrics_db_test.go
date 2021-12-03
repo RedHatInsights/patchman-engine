@@ -3,8 +3,9 @@ package vmaas_sync //nolint:revive,stylecheck
 import (
 	"app/base/core"
 	"app/base/utils"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTableSizes(t *testing.T) {
@@ -41,5 +42,11 @@ func TestDatabaseProcCounts(t *testing.T) {
 	processesInfo := getDatabaseProcesses()
 
 	assert.Less(t, 0, len(processesInfo))
-	assert.Equal(t, "-", processesInfo[0].Key)
+	ndash := 0
+	for _, info := range processesInfo {
+		if info.Key == "-" {
+			ndash++
+		}
+	}
+	assert.Less(t, 0, ndash)
 }
