@@ -11,20 +11,32 @@ data:
                     "hide": true,
                     "iconColor": "rgba(0, 211, 255, 1)",
                     "name": "Annotations & Alerts",
+                    "target": {
+                        "limit": 100,
+                        "matchAny": false,
+                        "tags": [],
+                        "type": "dashboard"
+                    },
                     "type": "dashboard"
                 }
             ]
         },
         "editable": true,
+        "fiscalYearStartMonth": 0,
         "gnetId": null,
         "graphTooltip": 0,
-        "id": 57,
-        "iteration": 1625000706197,
+        "id": 79,
+        "iteration": 1638888061333,
         "links": [],
+        "liveNow": false,
         "panels": [
             {
                 "collapsed": false,
                 "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
+                },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
@@ -38,27 +50,43 @@ data:
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": true,
-                "colorValue": false,
-                "colors": [
-                    "#d44a3a",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#299c46"
-                ],
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#d44a3a",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.1
+                                },
+                                {
+                                    "color": "#299c46",
+                                    "value": 1
+                                }
+                            ]
+                        },
+                        "unit": "none"
                     },
                     "overrides": []
-                },
-                "format": "none",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -69,38 +97,23 @@ data:
                 "id": 8,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "delta"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\"}[$__range]))",
@@ -110,43 +123,49 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "0.1,1",
                 "title": "Manager requests",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "delta"
+                "type": "stat"
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": true,
-                "colorValue": false,
-                "colors": [
-                    "#d44a3a",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#299c46"
-                ],
                 "datasource": "$datasource",
-                "decimals": 2,
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "decimals": 2,
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#d44a3a",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.9
+                                },
+                                {
+                                    "color": "#299c46",
+                                    "value": 0.2
+                                }
+                            ]
+                        },
+                        "unit": "percentunit"
                     },
                     "overrides": []
-                },
-                "format": "percentunit",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -157,38 +176,23 @@ data:
                 "id": 14,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "lastNotNull"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\", code=~\"2.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\"}[$__range]))",
@@ -197,42 +201,48 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "0.9,0.2",
                 "title": "Manager 2xx ratio",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "current"
+                "type": "stat"
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": true,
-                "colorValue": false,
-                "colors": [
-                    "#299c46",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#d44a3a"
-                ],
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#299c46",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.1
+                                },
+                                {
+                                    "color": "#d44a3a",
+                                    "value": 3
+                                }
+                            ]
+                        },
+                        "unit": "none"
                     },
                     "overrides": []
-                },
-                "format": "none",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -243,38 +253,23 @@ data:
                 "id": 9,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "delta"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman.*-manager.*\"}))",
@@ -283,42 +278,48 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "0.1,3",
                 "title": "Manager restarts",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "delta"
+                "type": "stat"
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": true,
-                "colorValue": false,
-                "colors": [
-                    "#299c46",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#d44a3a"
-                ],
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#299c46",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.1
+                                },
+                                {
+                                    "color": "#d44a3a",
+                                    "value": 3
+                                }
+                            ]
+                        },
+                        "unit": "none"
                     },
                     "overrides": []
-                },
-                "format": "none",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -329,38 +330,23 @@ data:
                 "id": 24,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "delta"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman.*-listener.*\"}))",
@@ -369,42 +355,48 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "0.1,3",
                 "title": "Listener restarts",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "delta"
+                "type": "stat"
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": true,
-                "colorValue": false,
-                "colors": [
-                    "#299c46",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#d44a3a"
-                ],
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#299c46",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.1
+                                },
+                                {
+                                    "color": "#d44a3a",
+                                    "value": 3
+                                }
+                            ]
+                        },
+                        "unit": "none"
                     },
                     "overrides": []
-                },
-                "format": "none",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -415,38 +407,23 @@ data:
                 "id": 41,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "delta"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman.*-evaluator-upload.*\"}))",
@@ -455,42 +432,48 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "0.1,3",
                 "title": "Evaluator-upload restarts",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "delta"
+                "type": "stat"
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": true,
-                "colorValue": false,
-                "colors": [
-                    "#299c46",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#d44a3a"
-                ],
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#299c46",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.1
+                                },
+                                {
+                                    "color": "#d44a3a",
+                                    "value": 3
+                                }
+                            ]
+                        },
+                        "unit": "none"
                     },
                     "overrides": []
-                },
-                "format": "none",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -501,38 +484,23 @@ data:
                 "id": 45,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "delta"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman.*-evaluator-recalc.*\"}))",
@@ -541,42 +509,48 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "0.1,3",
                 "title": "Evaluator-recalc restarts",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "delta"
+                "type": "stat"
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": true,
-                "colorValue": false,
-                "colors": [
-                    "#299c46",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#d44a3a"
-                ],
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#299c46",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.1
+                                },
+                                {
+                                    "color": "#d44a3a",
+                                    "value": 3
+                                }
+                            ]
+                        },
+                        "unit": "none"
                     },
                     "overrides": []
-                },
-                "format": "none",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -587,38 +561,23 @@ data:
                 "id": 32,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "delta"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "max(kube_pod_container_status_restarts_total{pod=~\"patchman.*-vmaas-sync.*\"})",
@@ -627,43 +586,48 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "0.1,3",
                 "title": "VMaaS-sync restarts",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "delta"
+                "type": "stat"
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": true,
-                "colorValue": false,
-                "colors": [
-                    "#d44a3a",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#299c46"
-                ],
                 "datasource": "$datasource",
-                "decimals": null,
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#d44a3a",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.9
+                                },
+                                {
+                                    "color": "#299c46",
+                                    "value": 0.95
+                                }
+                            ]
+                        },
+                        "unit": "percentunit"
                     },
                     "overrides": []
-                },
-                "format": "percentunit",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -674,38 +638,23 @@ data:
                 "id": 79,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "mean"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "avg_over_time(service:sli:latency_gt_2000:pctl10rate5m{exported_service=\"patch\"}[30d])",
@@ -716,43 +665,49 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "0.9,0.95",
                 "title": "Latency uptime (30d)",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "avg"
+                "type": "stat"
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": true,
-                "colorValue": false,
-                "colors": [
-                    "#299c46",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#d44a3a"
-                ],
                 "datasource": "$datasource",
-                "decimals": 2,
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "decimals": 2,
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#299c46",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.05
+                                },
+                                {
+                                    "color": "#d44a3a",
+                                    "value": 0.2
+                                }
+                            ]
+                        },
+                        "unit": "percentunit"
                     },
                     "overrides": []
-                },
-                "format": "percentunit",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -763,38 +718,23 @@ data:
                 "id": 25,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "lastNotNull"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\", code=~\"5.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\"}[$__range]))",
@@ -803,43 +743,49 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "0.05,0.2",
                 "title": "Manager 5xx ratio",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "current"
+                "type": "stat"
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": true,
-                "colorValue": false,
-                "colors": [
-                    "#299c46",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#d44a3a"
-                ],
                 "datasource": "$datasource",
-                "decimals": 2,
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "decimals": 2,
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#299c46",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.05
+                                },
+                                {
+                                    "color": "#d44a3a",
+                                    "value": 0.2
+                                }
+                            ]
+                        },
+                        "unit": "percentunit"
                     },
                     "overrides": []
-                },
-                "format": "percentunit",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -850,38 +796,23 @@ data:
                 "id": 28,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "lastNotNull"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\", code=~\"4.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\"}[$__range]))",
@@ -890,44 +821,50 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "0.05,0.2",
                 "title": "Manager 4xx ratio",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "current"
+                "type": "stat"
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": true,
-                "colorValue": false,
-                "colors": [
-                    "#299c46",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#d44a3a"
-                ],
                 "datasource": "$datasource",
-                "decimals": 2,
                 "description": "Build version running in this environment.",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "decimals": 2,
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#299c46",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.05
+                                },
+                                {
+                                    "color": "#d44a3a",
+                                    "value": 0.2
+                                }
+                            ]
+                        },
+                        "unit": "percentunit"
                     },
                     "overrides": []
-                },
-                "format": "percentunit",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -938,38 +875,23 @@ data:
                 "id": 74,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "lastNotNull"
+                        ],
+                        "fields": "/^version$/",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "version",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "sum(patchman_engine_core_info{namespace=~\"patchman-engine$namespace\"}) by (version)",
@@ -980,44 +902,50 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "0.05,0.2",
                 "title": "Version",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "current"
+                "type": "stat"
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": true,
-                "colorValue": false,
-                "colors": [
-                    "#299c46",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#d44a3a"
-                ],
                 "datasource": "$datasource",
-                "decimals": 2,
                 "description": "This is to ensure that all components are running in the same version.",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "decimals": 2,
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#299c46",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 1.1
+                                },
+                                {
+                                    "color": "#d44a3a",
+                                    "value": 5
+                                }
+                            ]
+                        },
+                        "unit": "none"
                     },
                     "overrides": []
-                },
-                "format": "none",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -1028,38 +956,23 @@ data:
                 "id": 75,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "lastNotNull"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "count(sum(patchman_engine_core_info{namespace=~\"patchman-engine$namespace\"}) by (version))",
@@ -1070,43 +983,49 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "1.1,5",
                 "title": "Deployed versions",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "current"
+                "type": "stat"
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": false,
-                "colorValue": false,
-                "colors": [
-                    "#299c46",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#d44a3a"
-                ],
                 "datasource": "$datasource",
                 "description": "Systems evaluated using component \"patchman.*-evaluator-upload\".",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#299c46",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.1
+                                },
+                                {
+                                    "color": "#d44a3a",
+                                    "value": 3
+                                }
+                            ]
+                        },
+                        "unit": "none"
                     },
                     "overrides": []
-                },
-                "format": "none",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -1117,38 +1036,23 @@ data:
                 "id": 49,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "none",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "delta"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "sum(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-upload-.*\", type=\"success\"})",
@@ -1157,43 +1061,49 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "0.1,3",
                 "title": "Evaluated uploads",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "delta"
+                "type": "stat"
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": false,
-                "colorValue": false,
-                "colors": [
-                    "#299c46",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#d44a3a"
-                ],
                 "datasource": "$datasource",
                 "description": "Systems evaluated using component \"patchman.*-evaluator-recalc\".",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#299c46",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.1
+                                },
+                                {
+                                    "color": "#d44a3a",
+                                    "value": 3
+                                }
+                            ]
+                        },
+                        "unit": "none"
                     },
                     "overrides": []
-                },
-                "format": "none",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -1204,38 +1114,23 @@ data:
                 "id": 48,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "none",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "delta"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "sum(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-recalc-.*\", type=\"success\"})",
@@ -1245,43 +1140,49 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "0.1,3",
                 "title": "Evaluated recalcs",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "delta"
+                "type": "stat"
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": false,
-                "colorValue": false,
-                "colors": [
-                    "#299c46",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#d44a3a"
-                ],
                 "datasource": "$datasource",
                 "description": "Messages processed using Listener",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#299c46",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.1
+                                },
+                                {
+                                    "color": "#d44a3a",
+                                    "value": 3
+                                }
+                            ]
+                        },
+                        "unit": "none"
                     },
                     "overrides": []
-                },
-                "format": "none",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -1292,38 +1193,23 @@ data:
                 "id": 50,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "none",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "delta"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "sum(patchman_engine_listener_kafka_message_received{event=~\"$event\"})",
@@ -1333,43 +1219,48 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "0.1,3",
                 "title": "Listener messages",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "delta"
+                "type": "stat"
             },
             {
                 "cacheTimeout": null,
-                "colorBackground": true,
-                "colorValue": false,
-                "colors": [
-                    "#d44a3a",
-                    "rgba(237, 129, 40, 0.89)",
-                    "#299c46"
-                ],
                 "datasource": "$datasource",
-                "decimals": null,
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#d44a3a",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.9
+                                },
+                                {
+                                    "color": "#299c46",
+                                    "value": 0.95
+                                }
+                            ]
+                        },
+                        "unit": "percentunit"
                     },
                     "overrides": []
-                },
-                "format": "percentunit",
-                "gauge": {
-                    "maxValue": 100,
-                    "minValue": 0,
-                    "show": false,
-                    "thresholdLabels": false,
-                    "thresholdMarkers": true
                 },
                 "gridPos": {
                     "h": 3,
@@ -1380,38 +1271,23 @@ data:
                 "id": 80,
                 "interval": null,
                 "links": [],
-                "mappingType": 1,
-                "mappingTypes": [
-                    {
-                        "name": "value to text",
-                        "value": 1
-                    },
-                    {
-                        "name": "range to text",
-                        "value": 2
-                    }
-                ],
                 "maxDataPoints": 100,
-                "nullPointMode": "connected",
-                "nullText": null,
-                "postfix": "",
-                "postfixFontSize": "50%",
-                "prefix": "",
-                "prefixFontSize": "50%",
-                "rangeMaps": [
-                    {
-                        "from": "null",
-                        "text": "N/A",
-                        "to": "null"
-                    }
-                ],
-                "sparkline": {
-                    "fillColor": "rgba(31, 118, 189, 0.18)",
-                    "full": false,
-                    "lineColor": "rgb(31, 120, 193)",
-                    "show": false
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "mean"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
                 },
-                "tableColumn": "",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
                         "expr": "avg_over_time(service:sli:latency_gt_2000:pctl10rate5m{exported_service=\"patch\"}[$__range])",
@@ -1422,22 +1298,16 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": "0.9,0.95",
                 "title": "Latency uptime",
-                "type": "singlestat",
-                "valueFontSize": "80%",
-                "valueMaps": [
-                    {
-                        "op": "=",
-                        "text": "N/A",
-                        "value": "null"
-                    }
-                ],
-                "valueName": "avg"
+                "type": "stat"
             },
             {
                 "collapsed": false,
                 "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
+                },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
@@ -1463,7 +1333,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -1495,7 +1364,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -1561,7 +1430,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -1593,7 +1461,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -1659,7 +1527,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -1691,7 +1558,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -1758,7 +1625,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -1790,7 +1656,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -1852,6 +1718,10 @@ data:
             {
                 "collapsed": false,
                 "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
+                },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
@@ -1871,7 +1741,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -1903,7 +1772,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -1970,7 +1839,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -2002,7 +1870,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2063,6 +1931,10 @@ data:
             {
                 "collapsed": false,
                 "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
+                },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
@@ -2075,74 +1947,6 @@ data:
                 "type": "row"
             },
             {
-                "cards": {
-                    "cardPadding": null,
-                    "cardRound": null
-                },
-                "color": {
-                    "cardColor": "#b4ff00",
-                    "colorScale": "sqrt",
-                    "colorScheme": "interpolateSpectral",
-                    "exponent": 0.5,
-                    "mode": "spectrum"
-                },
-                "dataFormat": "tsbuckets",
-                "datasource": "$datasource",
-                "fieldConfig": {
-                    "defaults": {
-                        "custom": {}
-                    },
-                    "overrides": []
-                },
-                "gridPos": {
-                    "h": 6,
-                    "w": 12,
-                    "x": 0,
-                    "y": 28
-                },
-                "heatmap": {},
-                "hideZeroBuckets": false,
-                "highlightCards": true,
-                "id": 36,
-                "legend": {
-                    "show": true
-                },
-                "links": [],
-                "reverseYBuckets": false,
-                "targets": [
-                    {
-                        "expr": "sum(increase(patchman_engine_listener_kafka_message_handling_duration_seconds_bucket{event=~\"$event\"}[$interval])) by (le)",
-                        "format": "heatmap",
-                        "intervalFactor": 10,
-                        "legendFormat": "{{le}}",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Listener message handling duration",
-                "tooltip": {
-                    "show": true,
-                    "showHistogram": false
-                },
-                "type": "heatmap",
-                "xAxis": {
-                    "show": true
-                },
-                "xBucketNumber": null,
-                "xBucketSize": null,
-                "yAxis": {
-                    "decimals": null,
-                    "format": "s",
-                    "logBase": 1,
-                    "max": null,
-                    "min": null,
-                    "show": true,
-                    "splitFactor": null
-                },
-                "yBucketBound": "auto",
-                "yBucketNumber": null,
-                "yBucketSize": null
-            },
-            {
                 "aliasColors": {
                     "error-identity": "#890f02",
                     "error-no-rows": "#58140c",
@@ -2155,110 +1959,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
-                        "links": []
-                    },
-                    "overrides": []
-                },
-                "fill": 1,
-                "fillGradient": 0,
-                "gridPos": {
-                    "h": 6,
-                    "w": 12,
-                    "x": 12,
-                    "y": 28
-                },
-                "hiddenSeries": false,
-                "id": 43,
-                "legend": {
-                    "avg": false,
-                    "current": false,
-                    "max": false,
-                    "min": false,
-                    "show": true,
-                    "total": false,
-                    "values": false
-                },
-                "lines": true,
-                "linewidth": 1,
-                "links": [],
-                "nullPointMode": "null",
-                "options": {
-                    "alertThreshold": true
-                },
-                "percentage": false,
-                "pluginVersion": "7.2.1",
-                "pointradius": 5,
-                "points": false,
-                "renderer": "flot",
-                "seriesOverrides": [],
-                "spaceLength": 10,
-                "stack": false,
-                "steppedLine": false,
-                "targets": [
-                    {
-                        "expr": "sum(rate(patchman_engine_listener_kafka_message_received{event=~\"$event\"}[$interval])) by (type)",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "legendFormat": "{{type}}",
-                        "refId": "A"
-                    }
-                ],
-                "thresholds": [],
-                "timeFrom": null,
-                "timeRegions": [],
-                "timeShift": null,
-                "title": "Listener processed messages by result",
-                "tooltip": {
-                    "shared": true,
-                    "sort": 0,
-                    "value_type": "individual"
-                },
-                "type": "graph",
-                "xaxis": {
-                    "buckets": null,
-                    "mode": "time",
-                    "name": null,
-                    "show": true,
-                    "values": []
-                },
-                "yaxes": [
-                    {
-                        "format": "none",
-                        "label": null,
-                        "logBase": 1,
-                        "max": null,
-                        "min": null,
-                        "show": true
-                    },
-                    {
-                        "format": "short",
-                        "label": null,
-                        "logBase": 1,
-                        "max": null,
-                        "min": null,
-                        "show": true
-                    }
-                ],
-                "yaxis": {
-                    "align": false,
-                    "alignLevel": null
-                }
-            },
-            {
-                "aliasColors": {
-                    "error-identity": "#890f02",
-                    "error-no-rows": "#58140c",
-                    "error-processing": "#bf1b00",
-                    "success": "#629e51"
-                },
-                "bars": false,
-                "dashLength": 10,
-                "dashes": false,
-                "datasource": "$datasource",
-                "fieldConfig": {
-                    "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -2269,7 +1969,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 34
+                    "y": 28
                 },
                 "hiddenSeries": false,
                 "id": 56,
@@ -2290,7 +1990,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2361,7 +2061,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -2372,10 +2071,10 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 34
+                    "y": 28
                 },
                 "hiddenSeries": false,
-                "id": 57,
+                "id": 43,
                 "legend": {
                     "avg": false,
                     "current": false,
@@ -2393,7 +2092,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2403,10 +2102,10 @@ data:
                 "steppedLine": false,
                 "targets": [
                     {
-                        "expr": "sum(rate(patchman_engine_listener_repos_added{}[$interval]))",
+                        "expr": "sum(rate(patchman_engine_listener_kafka_message_received{event=~\"$event\"}[$interval])) by (type)",
                         "format": "time_series",
                         "intervalFactor": 1,
-                        "legendFormat": "added repos",
+                        "legendFormat": "{{type}}",
                         "refId": "A"
                     }
                 ],
@@ -2414,7 +2113,7 @@ data:
                 "timeFrom": null,
                 "timeRegions": [],
                 "timeShift": null,
-                "title": "Listener added repos",
+                "title": "Listener processed messages by result",
                 "tooltip": {
                     "shared": true,
                     "sort": 0,
@@ -2454,11 +2153,15 @@ data:
             {
                 "collapsed": false,
                 "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
+                },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 40
+                    "y": 34
                 },
                 "id": 65,
                 "panels": [],
@@ -2466,72 +2169,140 @@ data:
                 "type": "row"
             },
             {
-                "cards": {
-                    "cardPadding": null,
-                    "cardRound": null
+                "aliasColors": {
+                    "delay": "purple"
                 },
-                "color": {
-                    "cardColor": "#b4ff00",
-                    "colorScale": "sqrt",
-                    "colorScheme": "interpolateSpectral",
-                    "exponent": 0.5,
-                    "mode": "spectrum"
-                },
-                "dataFormat": "tsbuckets",
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "links": [],
+                        "unit": "s"
                     },
                     "overrides": []
                 },
+                "fill": 1,
+                "fillGradient": 0,
                 "gridPos": {
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 41
+                    "y": 35
                 },
-                "heatmap": {},
-                "hideZeroBuckets": false,
-                "highlightCards": true,
-                "id": 35,
+                "hiddenSeries": false,
+                "id": 81,
                 "legend": {
-                    "show": true
+                    "avg": false,
+                    "current": false,
+                    "max": false,
+                    "min": false,
+                    "show": true,
+                    "total": false,
+                    "values": false
                 },
+                "lines": true,
+                "linewidth": 1,
                 "links": [],
-                "reverseYBuckets": false,
+                "nullPointMode": "null",
+                "options": {
+                    "alertThreshold": true
+                },
+                "percentage": false,
+                "pluginVersion": "8.2.1",
+                "pointradius": 5,
+                "points": false,
+                "renderer": "flot",
+                "seriesOverrides": [],
+                "spaceLength": 10,
+                "stack": false,
+                "steppedLine": false,
                 "targets": [
                     {
-                        "expr": "sum(increase(patchman_engine_evaluator_evaluation_duration_seconds_bucket{job=~\"patchman.*-evaluator-$evaluator\"}[$interval])) by (le)",
-                        "format": "heatmap",
-                        "intervalFactor": 10,
-                        "legendFormat": "{{le}}",
-                        "refId": "A"
+                        "exemplar": true,
+                        "expr": "sum(rate(patchman_engine_evaluator_upload_evaluation_delay_seconds_sum{job=~\"patchman.*-evaluator-upload\"}[5m]))",
+                        "format": "time_series",
+                        "groupBy": [
+                            {
+                                "params": [
+                                    "$__interval"
+                                ],
+                                "type": "time"
+                            },
+                            {
+                                "params": [
+                                    "null"
+                                ],
+                                "type": "fill"
+                            }
+                        ],
+                        "interval": "",
+                        "intervalFactor": 1,
+                        "legendFormat": "delay",
+                        "orderByTime": "ASC",
+                        "policy": "default",
+                        "refId": "A",
+                        "resultFormat": "time_series",
+                        "select": [
+                            [
+                                {
+                                    "params": [
+                                        "value"
+                                    ],
+                                    "type": "field"
+                                },
+                                {
+                                    "params": [],
+                                    "type": "mean"
+                                }
+                            ]
+                        ],
+                        "tags": []
                     }
                 ],
-                "title": "System evaluation duration",
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
+                "title": "Upload - evaluation delay",
                 "tooltip": {
+                    "shared": true,
+                    "sort": 0,
+                    "value_type": "individual"
+                },
+                "type": "graph",
+                "xaxis": {
+                    "buckets": null,
+                    "mode": "time",
+                    "name": null,
                     "show": true,
-                    "showHistogram": false
+                    "values": []
                 },
-                "type": "heatmap",
-                "xAxis": {
-                    "show": true
-                },
-                "xBucketNumber": null,
-                "xBucketSize": null,
-                "yAxis": {
-                    "decimals": null,
-                    "format": "s",
-                    "logBase": 1,
-                    "max": null,
-                    "min": null,
-                    "show": true,
-                    "splitFactor": null
-                },
-                "yBucketBound": "auto",
-                "yBucketNumber": null,
-                "yBucketSize": null
+                "yaxes": [
+                    {
+                        "$$hashKey": "object:227",
+                        "format": "s",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    },
+                    {
+                        "$$hashKey": "object:228",
+                        "format": "short",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    }
+                ],
+                "yaxis": {
+                    "align": false,
+                    "alignLevel": null
+                }
             },
             {
                 "aliasColors": {
@@ -2548,7 +2319,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -2559,7 +2329,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 41
+                    "y": 35
                 },
                 "hiddenSeries": false,
                 "id": 38,
@@ -2580,7 +2350,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2639,72 +2409,141 @@ data:
                 }
             },
             {
-                "cards": {
-                    "cardPadding": null,
-                    "cardRound": null
+                "aliasColors": {
+                    "delay": "blue"
                 },
-                "color": {
-                    "cardColor": "#b4ff00",
-                    "colorScale": "sqrt",
-                    "colorScheme": "interpolateSpectral",
-                    "exponent": 0.5,
-                    "mode": "spectrum"
-                },
-                "dataFormat": "tsbuckets",
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
                 "datasource": "$datasource",
+                "description": "",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "links": [],
+                        "unit": "s"
                     },
                     "overrides": []
                 },
+                "fill": 1,
+                "fillGradient": 0,
                 "gridPos": {
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 47
+                    "y": 41
                 },
-                "heatmap": {},
-                "hideZeroBuckets": false,
-                "highlightCards": true,
-                "id": 72,
+                "hiddenSeries": false,
+                "id": 82,
                 "legend": {
-                    "show": true
+                    "avg": false,
+                    "current": false,
+                    "max": false,
+                    "min": false,
+                    "show": true,
+                    "total": false,
+                    "values": false
                 },
+                "lines": true,
+                "linewidth": 1,
                 "links": [],
-                "reverseYBuckets": false,
+                "nullPointMode": "null",
+                "options": {
+                    "alertThreshold": true
+                },
+                "percentage": false,
+                "pluginVersion": "8.2.1",
+                "pointradius": 5,
+                "points": false,
+                "renderer": "flot",
+                "seriesOverrides": [],
+                "spaceLength": 10,
+                "stack": false,
+                "steppedLine": false,
                 "targets": [
                     {
-                        "expr": "sum(increase(patchman_engine_evaluator_upload_evaluation_delay_seconds_bucket{job=~\"patchman.*-evaluator-upload\"}[$interval])) by (le)",
-                        "format": "heatmap",
-                        "intervalFactor": 10,
-                        "legendFormat": "{{le}}",
-                        "refId": "A"
+                        "exemplar": true,
+                        "expr": "sum(rate(patchman_engine_evaluator_evaluation_duration_seconds_sum{job=~\"patchman.*-evaluator-$evaluator\"}[$interval]))",
+                        "format": "time_series",
+                        "groupBy": [
+                            {
+                                "params": [
+                                    "$__interval"
+                                ],
+                                "type": "time"
+                            },
+                            {
+                                "params": [
+                                    "null"
+                                ],
+                                "type": "fill"
+                            }
+                        ],
+                        "interval": "",
+                        "intervalFactor": 1,
+                        "legendFormat": "delay",
+                        "orderByTime": "ASC",
+                        "policy": "default",
+                        "refId": "A",
+                        "resultFormat": "time_series",
+                        "select": [
+                            [
+                                {
+                                    "params": [
+                                        "value"
+                                    ],
+                                    "type": "field"
+                                },
+                                {
+                                    "params": [],
+                                    "type": "mean"
+                                }
+                            ]
+                        ],
+                        "tags": []
                     }
                 ],
-                "title": "Upload - evaluation delay",
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
+                "title": "System evaluation duration",
                 "tooltip": {
+                    "shared": true,
+                    "sort": 0,
+                    "value_type": "individual"
+                },
+                "type": "graph",
+                "xaxis": {
+                    "buckets": null,
+                    "mode": "time",
+                    "name": null,
                     "show": true,
-                    "showHistogram": false
+                    "values": []
                 },
-                "type": "heatmap",
-                "xAxis": {
-                    "show": true
-                },
-                "xBucketNumber": null,
-                "xBucketSize": null,
-                "yAxis": {
-                    "decimals": null,
-                    "format": "s",
-                    "logBase": 1,
-                    "max": null,
-                    "min": null,
-                    "show": true,
-                    "splitFactor": null
-                },
-                "yBucketBound": "auto",
-                "yBucketNumber": null,
-                "yBucketSize": null
+                "yaxes": [
+                    {
+                        "$$hashKey": "object:227",
+                        "format": "s",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    },
+                    {
+                        "$$hashKey": "object:228",
+                        "format": "short",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    }
+                ],
+                "yaxis": {
+                    "align": false,
+                    "alignLevel": null
+                }
             },
             {
                 "aliasColors": {
@@ -2716,7 +2555,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -2727,7 +2565,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 47
+                    "y": 41
                 },
                 "hiddenSeries": false,
                 "id": 39,
@@ -2748,7 +2586,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2807,73 +2645,140 @@ data:
                 }
             },
             {
-                "cards": {
-                    "cardPadding": null,
-                    "cardRound": null
+                "aliasColors": {
+                    "delay": "light-orange"
                 },
-                "color": {
-                    "cardColor": "#b4ff00",
-                    "colorScale": "sqrt",
-                    "colorScheme": "interpolateSpectral",
-                    "exponent": 0.5,
-                    "mode": "spectrum"
-                },
-                "dataFormat": "tsbuckets",
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
                 "datasource": "$datasource",
+                "description": "",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {}
+                        "links": []
                     },
                     "overrides": []
                 },
+                "fill": 1,
+                "fillGradient": 0,
                 "gridPos": {
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 53
+                    "y": 47
                 },
-                "heatmap": {},
-                "hideZeroBuckets": false,
-                "highlightCards": true,
-                "id": 77,
+                "hiddenSeries": false,
+                "id": 83,
                 "legend": {
-                    "show": true
+                    "avg": false,
+                    "current": false,
+                    "max": false,
+                    "min": false,
+                    "show": true,
+                    "total": false,
+                    "values": false
                 },
+                "lines": true,
+                "linewidth": 1,
                 "links": [],
-                "reverseYBuckets": false,
+                "nullPointMode": "null",
+                "options": {
+                    "alertThreshold": true
+                },
+                "percentage": false,
+                "pluginVersion": "8.2.1",
+                "pointradius": 5,
+                "points": false,
+                "renderer": "flot",
+                "seriesOverrides": [],
+                "spaceLength": 10,
+                "stack": false,
+                "steppedLine": false,
                 "targets": [
                     {
-                        "expr": "sum(increase(patchman_engine_evaluator_two_evaluations_interval_hours_bucket{pod=~\"patchman.*-evaluator-$evaluator\"}[$interval])) by (le)",
-                        "format": "heatmap",
+                        "exemplar": true,
+                        "expr": "sum(rate(patchman_engine_evaluator_two_evaluations_interval_hours_sum{job=~\"patchman.*-evaluator-$evaluator\"}[$interval]))",
+                        "format": "time_series",
+                        "groupBy": [
+                            {
+                                "params": [
+                                    "$__interval"
+                                ],
+                                "type": "time"
+                            },
+                            {
+                                "params": [
+                                    "null"
+                                ],
+                                "type": "fill"
+                            }
+                        ],
                         "interval": "",
-                        "intervalFactor": 10,
-                        "legendFormat": "{{le}}",
-                        "refId": "A"
+                        "intervalFactor": 1,
+                        "legendFormat": "delay",
+                        "orderByTime": "ASC",
+                        "policy": "default",
+                        "refId": "A",
+                        "resultFormat": "time_series",
+                        "select": [
+                            [
+                                {
+                                    "params": [
+                                        "value"
+                                    ],
+                                    "type": "field"
+                                },
+                                {
+                                    "params": [],
+                                    "type": "mean"
+                                }
+                            ]
+                        ],
+                        "tags": []
                     }
                 ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Two evaluations interval",
                 "tooltip": {
+                    "shared": true,
+                    "sort": 0,
+                    "value_type": "individual"
+                },
+                "type": "graph",
+                "xaxis": {
+                    "buckets": null,
+                    "mode": "time",
+                    "name": null,
                     "show": true,
-                    "showHistogram": false
+                    "values": []
                 },
-                "type": "heatmap",
-                "xAxis": {
-                    "show": true
-                },
-                "xBucketNumber": null,
-                "xBucketSize": null,
-                "yAxis": {
-                    "decimals": null,
-                    "format": "h",
-                    "logBase": 1,
-                    "max": null,
-                    "min": null,
-                    "show": true,
-                    "splitFactor": null
-                },
-                "yBucketBound": "auto",
-                "yBucketNumber": null,
-                "yBucketSize": null
+                "yaxes": [
+                    {
+                        "$$hashKey": "object:227",
+                        "format": "h",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    },
+                    {
+                        "$$hashKey": "object:228",
+                        "format": "short",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    }
+                ],
+                "yaxis": {
+                    "align": false,
+                    "alignLevel": null
+                }
             },
             {
                 "aliasColors": {},
@@ -2883,7 +2788,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -2894,7 +2798,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 53
+                    "y": 47
                 },
                 "hiddenSeries": false,
                 "id": 47,
@@ -2915,7 +2819,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2925,6 +2829,7 @@ data:
                 "steppedLine": false,
                 "targets": [
                     {
+                        "exemplar": true,
                         "expr": "histogram_quantile(0.5, sum(rate(patchman_engine_evaluator_evaluation_part_duration_seconds_bucket{job=~\"patchman.*-evaluator-$evaluator\"}[$interval])) by (part, le))",
                         "format": "time_series",
                         "groupBy": [
@@ -2941,6 +2846,7 @@ data:
                                 "type": "fill"
                             }
                         ],
+                        "interval": "",
                         "intervalFactor": 1,
                         "legendFormat": "{{part}}",
                         "orderByTime": "ASC",
@@ -3008,11 +2914,15 @@ data:
             {
                 "collapsed": false,
                 "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
+                },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 59
+                    "y": 53
                 },
                 "id": 67,
                 "panels": [],
@@ -3020,74 +2930,6 @@ data:
                 "type": "row"
             },
             {
-                "cards": {
-                    "cardPadding": null,
-                    "cardRound": null
-                },
-                "color": {
-                    "cardColor": "#b4ff00",
-                    "colorScale": "sqrt",
-                    "colorScheme": "interpolateSpectral",
-                    "exponent": 0.5,
-                    "mode": "spectrum"
-                },
-                "dataFormat": "tsbuckets",
-                "datasource": "$datasource",
-                "fieldConfig": {
-                    "defaults": {
-                        "custom": {}
-                    },
-                    "overrides": []
-                },
-                "gridPos": {
-                    "h": 6,
-                    "w": 12,
-                    "x": 0,
-                    "y": 60
-                },
-                "heatmap": {},
-                "hideZeroBuckets": false,
-                "highlightCards": true,
-                "id": 37,
-                "legend": {
-                    "show": true
-                },
-                "links": [],
-                "reverseYBuckets": false,
-                "targets": [
-                    {
-                        "expr": "sum(increase(patchman_engine_vmaas_sync_sync_duration_seconds_bucket{}[$interval])) by (le)",
-                        "format": "heatmap",
-                        "intervalFactor": 10,
-                        "legendFormat": "{{le}}",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Sync duration (vmaas_sync)",
-                "tooltip": {
-                    "show": true,
-                    "showHistogram": false
-                },
-                "type": "heatmap",
-                "xAxis": {
-                    "show": true
-                },
-                "xBucketNumber": null,
-                "xBucketSize": null,
-                "yAxis": {
-                    "decimals": null,
-                    "format": "s",
-                    "logBase": 1,
-                    "max": null,
-                    "min": null,
-                    "show": true,
-                    "splitFactor": null
-                },
-                "yBucketBound": "auto",
-                "yBucketNumber": null,
-                "yBucketSize": null
-            },
-            {
                 "aliasColors": {},
                 "bars": false,
                 "dashLength": 10,
@@ -3095,112 +2937,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
-                        "links": []
-                    },
-                    "overrides": []
-                },
-                "fill": 1,
-                "fillGradient": 0,
-                "gridPos": {
-                    "h": 6,
-                    "w": 12,
-                    "x": 12,
-                    "y": 60
-                },
-                "hiddenSeries": false,
-                "id": 40,
-                "legend": {
-                    "avg": false,
-                    "current": false,
-                    "max": false,
-                    "min": false,
-                    "show": true,
-                    "total": false,
-                    "values": false
-                },
-                "lines": true,
-                "linewidth": 1,
-                "links": [],
-                "nullPointMode": "null",
-                "options": {
-                    "alertThreshold": true
-                },
-                "percentage": false,
-                "pluginVersion": "7.2.1",
-                "pointradius": 5,
-                "points": false,
-                "renderer": "flot",
-                "seriesOverrides": [],
-                "spaceLength": 10,
-                "stack": false,
-                "steppedLine": false,
-                "targets": [
-                    {
-                        "expr": "sum(increase(patchman_engine_vmaas_sync_vmaas_call{}[$interval])) by (type)",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "legendFormat": "VMaaS Sync - {{type}}",
-                        "refId": "A"
-                    },
-                    {
-                        "expr": "sum(increase(patchman_engine_manager_dependency_call{name=\"rbac\"}[$interval])) by (name, status)",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "legendFormat": "{{name}} - {{status}}",
-                        "refId": "B"
-                    }
-                ],
-                "thresholds": [],
-                "timeFrom": null,
-                "timeRegions": [],
-                "timeShift": null,
-                "title": "External services",
-                "tooltip": {
-                    "shared": true,
-                    "sort": 0,
-                    "value_type": "individual"
-                },
-                "type": "graph",
-                "xaxis": {
-                    "buckets": null,
-                    "mode": "time",
-                    "name": null,
-                    "show": true,
-                    "values": []
-                },
-                "yaxes": [
-                    {
-                        "format": "none",
-                        "label": null,
-                        "logBase": 1,
-                        "max": null,
-                        "min": null,
-                        "show": true
-                    },
-                    {
-                        "format": "short",
-                        "label": null,
-                        "logBase": 1,
-                        "max": null,
-                        "min": null,
-                        "show": true
-                    }
-                ],
-                "yaxis": {
-                    "align": false,
-                    "alignLevel": null
-                }
-            },
-            {
-                "aliasColors": {},
-                "bars": false,
-                "dashLength": 10,
-                "dashes": false,
-                "datasource": "$datasource",
-                "fieldConfig": {
-                    "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -3211,7 +2947,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 66
+                    "y": 54
                 },
                 "hiddenSeries": false,
                 "id": 76,
@@ -3232,7 +2968,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3300,6 +3036,110 @@ data:
                 }
             },
             {
+                "aliasColors": {},
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
+                "datasource": "$datasource",
+                "fieldConfig": {
+                    "defaults": {
+                        "links": []
+                    },
+                    "overrides": []
+                },
+                "fill": 1,
+                "fillGradient": 0,
+                "gridPos": {
+                    "h": 6,
+                    "w": 12,
+                    "x": 12,
+                    "y": 54
+                },
+                "hiddenSeries": false,
+                "id": 40,
+                "legend": {
+                    "avg": false,
+                    "current": false,
+                    "max": false,
+                    "min": false,
+                    "show": true,
+                    "total": false,
+                    "values": false
+                },
+                "lines": true,
+                "linewidth": 1,
+                "links": [],
+                "nullPointMode": "null",
+                "options": {
+                    "alertThreshold": true
+                },
+                "percentage": false,
+                "pluginVersion": "8.2.1",
+                "pointradius": 5,
+                "points": false,
+                "renderer": "flot",
+                "seriesOverrides": [],
+                "spaceLength": 10,
+                "stack": false,
+                "steppedLine": false,
+                "targets": [
+                    {
+                        "expr": "sum(increase(patchman_engine_vmaas_sync_vmaas_call{}[$interval])) by (type)",
+                        "format": "time_series",
+                        "intervalFactor": 1,
+                        "legendFormat": "VMaaS Sync - {{type}}",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "sum(increase(patchman_engine_manager_dependency_call{name=\"rbac\"}[$interval])) by (name, status)",
+                        "format": "time_series",
+                        "intervalFactor": 1,
+                        "legendFormat": "{{name}} - {{status}}",
+                        "refId": "B"
+                    }
+                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
+                "title": "External services",
+                "tooltip": {
+                    "shared": true,
+                    "sort": 0,
+                    "value_type": "individual"
+                },
+                "type": "graph",
+                "xaxis": {
+                    "buckets": null,
+                    "mode": "time",
+                    "name": null,
+                    "show": true,
+                    "values": []
+                },
+                "yaxes": [
+                    {
+                        "format": "none",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    },
+                    {
+                        "format": "short",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    }
+                ],
+                "yaxis": {
+                    "align": false,
+                    "alignLevel": null
+                }
+            },
+            {
                 "aliasColors": {
                     "all": "#ba43a9",
                     "bugfix": "#ef843c",
@@ -3313,7 +3153,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -3324,7 +3163,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 66
+                    "y": 60
                 },
                 "hiddenSeries": false,
                 "id": 42,
@@ -3345,7 +3184,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3413,11 +3252,15 @@ data:
             {
                 "collapsed": false,
                 "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
+                },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 72
+                    "y": 66
                 },
                 "id": 69,
                 "panels": [],
@@ -3438,7 +3281,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -3449,7 +3291,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 73
+                    "y": 67
                 },
                 "hiddenSeries": false,
                 "id": 51,
@@ -3470,7 +3312,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3550,7 +3392,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -3561,7 +3402,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 73
+                    "y": 67
                 },
                 "hiddenSeries": false,
                 "id": 78,
@@ -3582,7 +3423,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3663,7 +3504,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -3674,7 +3514,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 79
+                    "y": 73
                 },
                 "hiddenSeries": false,
                 "id": 73,
@@ -3695,7 +3535,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3767,7 +3607,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -3778,7 +3617,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 79
+                    "y": 73
                 },
                 "hiddenSeries": false,
                 "id": 59,
@@ -3799,7 +3638,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3871,7 +3710,6 @@ data:
                 "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -3882,7 +3720,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 85
+                    "y": 79
                 },
                 "hiddenSeries": false,
                 "id": 58,
@@ -3903,7 +3741,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3987,11 +3825,15 @@ data:
             {
                 "collapsed": false,
                 "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
+                },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 91
+                    "y": 85
                 },
                 "id": 71,
                 "panels": [],
@@ -4013,7 +3855,6 @@ data:
                 "datasource": "$rds_datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -4024,7 +3865,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 92
+                    "y": 86
                 },
                 "hiddenSeries": false,
                 "id": 53,
@@ -4045,7 +3886,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -4118,7 +3959,6 @@ data:
                 "datasource": "$rds_datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -4129,7 +3969,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 92
+                    "y": 86
                 },
                 "hiddenSeries": false,
                 "id": 52,
@@ -4150,7 +3990,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -4231,7 +4071,6 @@ data:
                 "datasource": "$rds_datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -4242,7 +4081,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 98
+                    "y": 92
                 },
                 "hiddenSeries": false,
                 "id": 54,
@@ -4263,7 +4102,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -4357,7 +4196,6 @@ data:
                 "datasource": "$rds_datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "custom": {},
                         "links": []
                     },
                     "overrides": []
@@ -4368,7 +4206,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 98
+                    "y": 92
                 },
                 "hiddenSeries": false,
                 "id": 55,
@@ -4389,7 +4227,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "7.2.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -4463,7 +4301,7 @@ data:
             }
         ],
         "refresh": false,
-        "schemaVersion": 26,
+        "schemaVersion": 31,
         "style": "dark",
         "tags": [],
         "templating": {
@@ -4477,6 +4315,8 @@ data:
                         "text": "5m",
                         "value": "5m"
                     },
+                    "description": null,
+                    "error": null,
                     "hide": 0,
                     "label": null,
                     "name": "interval",
@@ -4549,6 +4389,8 @@ data:
                         "text": ".*",
                         "value": ".*"
                     },
+                    "description": null,
+                    "error": null,
                     "hide": 0,
                     "includeAll": false,
                     "label": null,
@@ -4572,6 +4414,7 @@ data:
                         }
                     ],
                     "query": ".*, upload.*, recalc.*",
+                    "queryValue": "",
                     "skipUrlSync": false,
                     "type": "custom"
                 },
@@ -4582,6 +4425,8 @@ data:
                         "text": ".*",
                         "value": ".*"
                     },
+                    "description": null,
+                    "error": null,
                     "hide": 0,
                     "includeAll": false,
                     "label": "event",
@@ -4610,10 +4455,12 @@ data:
                 },
                 {
                     "current": {
-                        "selected": false,
+                        "selected": true,
                         "text": "crcp01ue1-prometheus",
                         "value": "crcp01ue1-prometheus"
                     },
+                    "description": null,
+                    "error": null,
                     "hide": 0,
                     "includeAll": false,
                     "label": "datasource",
@@ -4621,6 +4468,7 @@ data:
                     "name": "datasource",
                     "options": [],
                     "query": "prometheus",
+                    "queryValue": "",
                     "refresh": 1,
                     "regex": "/.*crc.*/",
                     "skipUrlSync": false,
@@ -4628,10 +4476,12 @@ data:
                 },
                 {
                     "current": {
-                        "selected": false,
+                        "selected": true,
                         "text": "app-sre-prod-01-prometheus",
                         "value": "app-sre-prod-01-prometheus"
                     },
+                    "description": null,
+                    "error": null,
                     "hide": 0,
                     "includeAll": false,
                     "label": "rds_datasource",
@@ -4639,6 +4489,7 @@ data:
                     "name": "rds_datasource",
                     "options": [],
                     "query": "prometheus",
+                    "queryValue": "",
                     "refresh": 1,
                     "regex": "app-sre.*-prometheus",
                     "skipUrlSync": false,
@@ -4651,6 +4502,8 @@ data:
                         "text": ".*",
                         "value": ".*"
                     },
+                    "description": null,
+                    "error": null,
                     "hide": 0,
                     "includeAll": false,
                     "label": null,
