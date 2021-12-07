@@ -101,7 +101,7 @@ func Evaluate(ctx context.Context, accountID int, inventoryID string, requested 
 func evaluateInDatabase(ctx context.Context, accountID int, inventoryID string,
 	requested *base.Rfc3339Timestamp) (*models.SystemPlatform, *vmaas.UpdatesV2Response, error) {
 	tx := database.Db.WithContext(base.Context).Begin()
-	// Don'requested allow TX to hang around locking the rows
+	// Don't allow requested TX to hang around locking the rows
 	defer tx.Rollback()
 
 	updatesReq, system, err := tryGetVmaasRequest(tx, accountID, inventoryID, requested)
