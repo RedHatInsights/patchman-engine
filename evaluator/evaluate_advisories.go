@@ -18,7 +18,7 @@ func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vm
 		return nil, nil
 	}
 
-	patched, unpatched, err := processSystemAdvisories(tx, system, vmaasData, system.InventoryID)
+	patched, unpatched, err := processSystemAdvisories(tx, system, vmaasData)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
 		return nil, errors.Wrap(err, "Unable to process system advisories")
@@ -35,8 +35,8 @@ func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vm
 // Changes data stored in system_advisories, in order to match newest evaluation
 // Before this methods stores the entries into the system_advisories table, it locks
 // advisory_account_data table, so other evaluations don't interfere with this one
-func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response,
-	inventoryID string) (patched []int, unpatched []int, err error) {
+func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) (
+	patched []int, unpatched []int, err error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))
 
@@ -48,10 +48,10 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 
 	patched = getPatchedAdvisories(reported, oldSystemAdvisories)
 	updatesCnt.WithLabelValues("patched").Add(float64(len(patched)))
-	utils.Log("inventoryID", inventoryID, "patched", len(patched)).Info("patched advisories")
+	utils.Log("inventoryID", system.InventoryID, "patched", len(patched)).Info("patched advisories")
 
 	newsAdvisoriesNames, unpatched := getNewAndUnpatchedAdvisories(reported, oldSystemAdvisories)
-	utils.Log("inventoryID", inventoryID, "newAdvisories", len(newsAdvisoriesNames)).Info("new advisories")
+	utils.Log("inventoryID", system.InventoryID, "newAdvisories", len(newsAdvisoriesNames)).Info("new advisories")
 
 	newIDs, err := getAdvisoriesFromDB(tx, newsAdvisoriesNames)
 	if err != nil {
@@ -59,13 +59,13 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 	}
 	nUnknown := len(newsAdvisoriesNames) - len(newIDs)
 	if nUnknown > 0 {
-		utils.Log("inventoryID", inventoryID, "unknown", nUnknown).Info("unknown advisories - ignored")
+		utils.Log("inventoryID", system.InventoryID, "unknown", nUnknown).Info("unknown advisories - ignored")
 		updatesCnt.WithLabelValues("unknown").Add(float64(nUnknown))
 	}
 
 	unpatched = append(unpatched, newIDs...)
 	updatesCnt.WithLabelValues("unpatched").Add(float64(len(unpatched)))
-	utils.Log("inventoryID", inventoryID, "unpatched", len(unpatched)).Info("patched advisories")
+	utils.Log("inventoryID", system.InventoryID, "unpatched", len(unpatched)).Info("patched advisories")
 	return patched, unpatched, nil
 }
 
