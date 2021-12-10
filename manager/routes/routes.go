@@ -3,6 +3,7 @@ package routes
 import (
 	"app/manager/controllers"
 	"app/manager/middlewares"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,6 +16,9 @@ func InitAPI(api *gin.RouterGroup) {
 	controllers.PreloadAdvisoryCacheItems()
 	advisories.GET("/:advisory_id", controllers.AdvisoryDetailHandler)
 	advisories.GET("/:advisory_id/systems", controllers.AdvisorySystemsListHandler)
+
+	baselines := api.Group("/baselines")
+	baselines.GET("/", controllers.BaselinesListHandler)
 
 	systems := api.Group("/systems")
 	systems.GET("/", controllers.SystemsListHandler)
