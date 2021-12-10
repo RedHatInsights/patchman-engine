@@ -19,6 +19,7 @@ func InitAPI(api *gin.RouterGroup) {
 
 	baselines := api.Group("/baselines")
 	baselines.GET("/", controllers.BaselinesListHandler)
+	baselines.GET("/:baseline_id/systems", controllers.BaselineSystemsListHandler)
 
 	systems := api.Group("/systems")
 	systems.GET("/", controllers.SystemsListHandler)
