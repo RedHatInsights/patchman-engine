@@ -558,6 +558,86 @@
                 ]
             }
         },
+        "/api/patch/v1/baselines/{baseline_id}/systems": {
+            "get": {
+                "summary": "Show me all systems belonging to a baseline",
+                "description": "Show me all systems applicable to a baseline",
+                "operationId": "listBaselineSystems",
+                "parameters": [
+                    {
+                        "name": "baseline_id",
+                        "in": "path",
+                        "description": "Baseline ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit for paging, set -1 to return all",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Offset for paging",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort field",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "id",
+                                "name",
+                                "config"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Find matching text",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[display_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.BaselineSystemsResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
         "/api/patch/v1/export/advisories": {
             "get": {
                 "summary": "Export applicable advisories for all my systems",
@@ -2613,6 +2693,45 @@
                     },
                     "systems": {
                         "type": "integer"
+                    }
+                }
+            },
+            "controllers.BaselineSystemAttributes": {
+                "type": "object",
+                "properties": {
+                    "display_name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "controllers.BaselineSystemItem": {
+                "type": "object",
+                "properties": {
+                    "attributes": {
+                        "$ref": "#/components/schemas/controllers.BaselineSystemAttributes"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "controllers.BaselineSystemsResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.BaselineSystemItem"
+                        }
+                    },
+                    "links": {
+                        "$ref": "#/components/schemas/controllers.Links"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/controllers.ListMeta"
                     }
                 }
             },
