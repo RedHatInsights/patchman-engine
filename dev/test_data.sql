@@ -17,8 +17,8 @@ INSERT INTO rh_account (id, name) VALUES
 (1, 'acc-1'), (2, 'acc-2'), (3, 'acc-3'), (4, 'acc-4');
 
 INSERT INTO baseline (id, rh_account_id, name, config) VALUES
-(1, 1, 'baseline_1-1', '{"to_time": "2010-09-22 12:00:00-04"}'),
-(2, 1, 'baseline_1-2', '{"to_time": "2021-01-01 12:00:00-04"}');
+(1, 1, 'baseline_1-1', '{"to_time": "2010-09-22T00:00:00+00:00"}'),
+(2, 1, 'baseline_1-2', '{"to_time": "2021-01-01T00:00:00+00:00"}');
 
 INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id, reporter_id, vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_updatable, third_party, baseline_id, baseline_uptodate) VALUES
 (1, '00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2020-09-22 12:00:00-04',0,0, true, 1, true),
