@@ -4,11 +4,13 @@ import (
 	"app/base"
 	"app/base/models"
 	"app/base/utils"
+	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func DebugWithCachesCheck(part string, fun func()) {
@@ -311,4 +313,57 @@ func UpdateSystemAdvisoriesWhenPatched(t *testing.T, systemID, accountID int, ad
 		Where("advisory_id IN (?)", advisoryIDs).
 		Update("when_patched", whenPatched).Error
 	assert.Nil(t, err)
+}
+
+func CreateBaseline(t *testing.T) int {
+	type BaselineConfig struct {
+		ToTime string `json:"to_time"`
+	}
+
+	baselineConfig, err := json.Marshal(BaselineConfig{ToTime: "2021-01-01 12:00:00-04"})
+	assert.Nil(t, err)
+
+	temporaryBaseline := &models.Baseline{
+		RhAccountID: 1, Name: "temporary_baseline", Config: baselineConfig,
+	}
+	err = Db.Create(temporaryBaseline).Error
+
+	assert.Nil(t, err)
+	checkBaselineStatus(t, temporaryBaseline.ID, 1)
+
+	return temporaryBaseline.ID
+}
+
+func DeleteBaseline(t *testing.T, baselineID int, inventoryIDs []string) {
+	tx := Db.WithContext(base.Context).Begin()
+	defer tx.Rollback()
+
+	err := tx.Model(models.SystemPlatform{}).
+		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
+		Where("rh_account_id = (?) AND inventory_id::text IN (?)", 1, inventoryIDs).
+		Update("baseline_id", nil).Error
+
+	assert.Nil(t, err)
+
+	err = tx.Delete(&models.Baseline{}).Where("rh_account_id = ? AND id = ?", 1, baselineID).Error
+	assert.Nil(t, err)
+
+	err = tx.Commit().Error
+	assert.Nil(t, err)
+
+	checkBaselineStatus(t, baselineID, 0)
+}
+
+func checkBaselineStatus(t *testing.T, baselineID int, expectedBaselineCount int) {
+	type Response struct {
+		ID int `query:"bl.id" gorm:"column:id"`
+	}
+	var response Response
+
+	query := Db.Table("baseline as bl").Select("bl.id").Where("bl.id = ? ", baselineID)
+	err := query.Find(&response).Error
+
+	assert.Nil(t, query.Error)
+	assert.Nil(t, err)
+	assert.Equal(t, query.RowsAffected, int64(expectedBaselineCount))
 }
