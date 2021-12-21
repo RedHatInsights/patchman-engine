@@ -3,11 +3,12 @@ package middlewares
 import (
 	"app/base"
 	"app/base/utils"
-	"github.com/RedHatInsights/patchman-clients/rbac"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/RedHatInsights/patchman-clients/rbac"
+	"github.com/gin-gonic/gin"
 )
 
 // Make RBAC client on demand, with specified identity
@@ -78,7 +79,7 @@ func RBAC() gin.HandlerFunc {
 			if grantedPerms.Read {
 				return
 			}
-		case "DELETE":
+		case "DELETE", "PUT":
 			if grantedPerms.Write {
 				return
 			}
