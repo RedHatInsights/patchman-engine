@@ -4,6 +4,7 @@ DELETE FROM system_package;
 DELETE FROM system_platform;
 DELETE FROM deleted_system;
 DELETE FROM repo;
+DELETE FROM baseline;
 DELETE FROM timestamp_kv;
 DELETE FROM advisory_account_data;
 DELETE FROM package;
@@ -11,7 +12,7 @@ DELETE FROM package_name;
 DELETE FROM advisory_metadata;
 DELETE FROM rh_account;
 DELETE FROM strings;
-DELETE FROM baseline;
+
 
 INSERT INTO rh_account (id, name) VALUES
 (1, 'acc-1'), (2, 'acc-2'), (3, 'acc-3'), (4, 'acc-4');
