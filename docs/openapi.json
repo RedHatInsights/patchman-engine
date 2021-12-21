@@ -558,6 +558,35 @@
                 ]
             }
         },
+        "/api/patch/v1/baselines/{baseline_id}": {
+            "delete": {
+                "summary": "Delete a baseline",
+                "description": "Delete a baseline",
+                "operationId": "baselineDelete",
+                "parameters": [
+                    {
+                        "name": "baseline_id",
+                        "in": "path",
+                        "description": "Baseline ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "content": {}
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
         "/api/patch/v1/baselines/{baseline_id}/systems": {
             "get": {
                 "summary": "Show me all systems belonging to a baseline",
