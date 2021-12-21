@@ -392,3 +392,13 @@ func CheckBaseline(t *testing.T, baselineID int, inventoryIDs []string, config, 
 		}
 	}
 }
+
+func CheckBaselineDeleted(t *testing.T, baselineID int) {
+	var cntBaselines int64
+	assert.Nil(t, Db.Model(&models.Baseline{}).Where("id = ?", baselineID).Count(&cntBaselines).Error)
+	assert.Equal(t, 0, int(cntBaselines))
+
+	var cntSystems int64
+	assert.Nil(t, Db.Model(&models.SystemPlatform{}).Where("baseline_id = ?", baselineID).Count(&cntSystems).Error)
+	assert.Equal(t, 0, int(cntSystems))
+}
