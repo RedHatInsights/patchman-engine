@@ -33,6 +33,7 @@ var (
 	enableBypass           bool
 	enableStaleSysEval     bool
 	enableLazyPackageSave  bool
+	enableBaselineEval     bool
 	prunePackageLatestOnly bool
 	enablePackageCache     bool
 	preloadPackageCache    bool
@@ -57,6 +58,7 @@ func configure() {
 	enableRepoAnalysis = utils.GetBoolEnvOrDefault("ENABLE_REPO_ANALYSIS", true)
 	enableStaleSysEval = utils.GetBoolEnvOrDefault("ENABLE_STALE_SYSTEM_EVALUATION", true)
 	enableLazyPackageSave = utils.GetBoolEnvOrDefault("ENABLE_LAZY_PACKAGE_SAVE", true)
+	enableBaselineEval = utils.GetBoolEnvOrDefault("ENABLE_BASELINE_EVAL", true)
 	prunePackageLatestOnly = utils.GetBoolEnvOrDefault("PRUNE_UPDATES_LATEST_ONLY", false)
 	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
 	vmaasConfig.HTTPClient = &http.Client{Transport: &http.Transport{
@@ -134,6 +136,13 @@ func evaluateWithVmaas(ctx context.Context, tx *gorm.DB, updatesReq *vmaas.Updat
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-call-vmaas-updates").Inc()
 		return nil, errors.Wrap(err, "vmaas API call failed")
+	}
+
+	if enableBaselineEval {
+		err = limitVmaasToBaseline(tx, system, vmaasData)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to evaluate baseline")
+		}
 	}
 
 	err = evaluateAndStore(tx, system, vmaasData)
