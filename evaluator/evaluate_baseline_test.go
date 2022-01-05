@@ -1,0 +1,53 @@
+package evaluator
+
+import (
+	"app/base/core"
+	"app/base/database"
+	"app/base/models"
+	"app/base/utils"
+	"sort"
+	"testing"
+
+	"github.com/RedHatInsights/patchman-clients/vmaas"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestLimitVmaasToBaseline(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	// a system without baseline
+	system := models.SystemPlatform{ID: 5, RhAccountID: 1, BaselineID: nil}
+	originalVmaasData := getVMaaSUpdates(t)
+	vmaasData := getVMaaSUpdates(t)
+	err := limitVmaasToBaseline(database.Db, &system, &vmaasData)
+	assert.Nil(t, err)
+	assert.Equal(t, originalVmaasData, vmaasData)
+
+	// a system with baseline but nothing filtered out
+	system = models.SystemPlatform{ID: 3, RhAccountID: 1, BaselineID: utils.PtrInt(2)}
+	err = limitVmaasToBaseline(database.Db, &system, &vmaasData)
+	assert.Nil(t, err)
+	assert.Equal(t, []string{"RH-1", "RH-100", "RH-2"}, errataInVmaasData(vmaasData))
+
+	// a system with baseline and filtered errata
+	system = models.SystemPlatform{ID: 1, RhAccountID: 1, BaselineID: utils.PtrInt(1)}
+	vmaasData = getVMaaSUpdates(t)
+	err = limitVmaasToBaseline(database.Db, &system, &vmaasData)
+	assert.Nil(t, err)
+	assert.Equal(t, []string{"RH-100"}, errataInVmaasData(vmaasData))
+}
+
+func errataInVmaasData(vmaasData vmaas.UpdatesV2Response) []string {
+	errata := make([]string, 0)
+	for _, updates := range vmaasData.GetUpdateList() {
+		availableUpdates := updates.GetAvailableUpdates()
+		for _, u := range availableUpdates {
+			advisoryName := u.GetErratum()
+			errata = append(errata, advisoryName)
+		}
+	}
+	sort.Strings(errata)
+	return errata
+}
