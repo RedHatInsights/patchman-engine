@@ -21,7 +21,7 @@ func TestSystemAdvisoriesDefault(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemAdvisoriesResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 8, len(output.Data))
 	assert.Equal(t, "RH-7", output.Data[0].ID)
 	assert.Equal(t, "advisory", output.Data[0].Type)
@@ -56,7 +56,7 @@ func TestSystemAdvisoriesOffsetLimit(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemAdvisoriesResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 3, len(output.Data))
 	assert.Equal(t, "RH-1", output.Data[0].ID)
 }
@@ -71,7 +71,7 @@ func TestSystemAdvisoriesOffsetOverflow(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
@@ -89,7 +89,7 @@ func TestSystemAdvisoriesPossibleSorts(t *testing.T) {
 		core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
 
 		var output SystemAdvisoriesResponse
-		ParseReponseBody(t, w.Body.Bytes(), &output)
+		ParseResponseBody(t, w.Body.Bytes(), &output)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, output.Meta.Sort[0], sort)
@@ -117,7 +117,7 @@ func TestSystemAdvisoriesSearch(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemAdvisoriesResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "RH-3", output.Data[0].ID)
 	assert.Equal(t, "advisory", output.Data[0].Type)

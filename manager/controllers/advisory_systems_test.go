@@ -20,7 +20,7 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output AdvisorySystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 6, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 	assert.Equal(t, "00000000-0000-0000-0001-000000000001", output.Data[0].Attributes.InsightsID)
@@ -67,7 +67,7 @@ func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output AdvisorySystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000006", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
@@ -87,7 +87,7 @@ func TestAdvisorySystemsOffsetOverflow(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
@@ -101,7 +101,7 @@ func TestAdvisorySystemsSorts(t *testing.T) {
 		core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
 		var output AdvisorySystemsResponse
-		ParseReponseBody(t, w.Body.Bytes(), &output)
+		ParseResponseBody(t, w.Body.Bytes(), &output)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, 1, len(output.Meta.Sort))
@@ -129,7 +129,7 @@ func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
 	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
 	var output AdvisorySystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, 5, len(output.Data))
@@ -144,7 +144,7 @@ func TestAdvisorySystemsTagsMultiple(t *testing.T) { //nolint:dupl
 	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
 	var output AdvisorySystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, 1, len(output.Data))
@@ -161,7 +161,7 @@ func TestAdvisorySystemsTagsInvalid(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
@@ -174,7 +174,7 @@ func TestAdvisorySystemsTagsUnknown(t *testing.T) { //nolint:dupl
 	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
 
 	var output AdvisorySystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, 0, len(output.Data))

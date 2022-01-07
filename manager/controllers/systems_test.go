@@ -221,7 +221,7 @@ func testSystems(t *testing.T, url string, account int) SystemsResponse {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	return output
 }
 
@@ -233,6 +233,6 @@ func testSystemsError(t *testing.T, url string) (int, utils.ErrorResponse) {
 	req, _ := http.NewRequest("GET", url, nil)
 	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	return w.Code, errResp
 }

@@ -20,7 +20,7 @@ func TestLatestPackage(t *testing.T) {
 		ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageDetailResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, "kernel", output.Data.Attributes.Name)
 	assert.Equal(t, "The Linux kernel", output.Data.Attributes.Summary)
 	assert.Equal(t, "The kernel meta package", output.Data.Attributes.Description)
@@ -41,7 +41,7 @@ func TestEvraPackage(t *testing.T) {
 		ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageDetailResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, "kernel", output.Data.Attributes.Name)
 	assert.Equal(t, "The Linux kernel", output.Data.Attributes.Summary)
 	assert.Equal(t, "The kernel meta package", output.Data.Attributes.Description)
@@ -61,7 +61,7 @@ func TestNonExitentPackage(t *testing.T) {
 		ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "invalid package name", errResp.Error)
 }
 
@@ -75,7 +75,7 @@ func TestNonExitentEvra(t *testing.T) {
 		ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "package not found", errResp.Error)
 }
 
@@ -88,7 +88,7 @@ func TestPackageDetailNoPackage(t *testing.T) {
 	core.InitRouter(PackageDetailHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "package_param not found", errResp.Error)
 }
 
@@ -101,6 +101,6 @@ func TestPackageDetailFiltering(t *testing.T) {
 	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
 		ServeHTTP(w, req)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
 }

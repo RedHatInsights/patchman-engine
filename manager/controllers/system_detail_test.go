@@ -19,7 +19,7 @@ func TestSystemDetailDefault1(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemDetailResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data.ID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data.Attributes.DisplayName)
 	assert.Equal(t, "system", output.Data.Type)
@@ -50,7 +50,7 @@ func TestSystemDetailDefault2(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemDetailResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, output.Data.Attributes.PackagesInstalled)
 	assert.Equal(t, 2, output.Data.Attributes.PackagesUpdatable)
 }
@@ -64,7 +64,7 @@ func TestSystemDetailNoIdProvided(t *testing.T) {
 	core.InitRouter(SystemDetailHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "inventory_id param not found", errResp.Error)
 }
 
@@ -77,7 +77,7 @@ func TestSystemDetailNotFound(t *testing.T) {
 	core.InitRouterWithPath(SystemDetailHandler, "/:inventory_id").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "inventory not found", errResp.Error)
 }
 
@@ -91,7 +91,7 @@ func TestSystemsNoRHSM(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemDetailResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000014", output.Data.ID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000014", output.Data.Attributes.DisplayName)
 	assert.Equal(t, "", output.Data.Attributes.Rhsm)
@@ -107,7 +107,7 @@ func TestRHSMLessThanOS(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemDetailResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data.ID)
 	assert.Equal(t, "8.0", output.Data.Attributes.Rhsm)
 	assert.Equal(t, "8", output.Data.Attributes.OSMajor)
@@ -124,7 +124,7 @@ func TestRHSMGreaterThanOS(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemDetailResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000004", output.Data.ID)
 	assert.Equal(t, "8.3", output.Data.Attributes.Rhsm)
 	assert.Equal(t, "8", output.Data.Attributes.OSMajor)
@@ -150,6 +150,6 @@ func TestSystemDetailFiltering(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001?filter[filter]=abcd", nil)
 	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 1).ServeHTTP(w, req)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
 }

@@ -24,7 +24,7 @@ func TestSystemsExportJSON(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemDBLookup
 
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 8, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 	assert.Equal(t, 2, output[0].SystemItemAttributes.RhsaCount)
@@ -120,7 +120,7 @@ func TestExportSystemsTags(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemDBLookup
 
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 }
@@ -135,7 +135,7 @@ func TestExportSystemsTagsInvalid(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
@@ -152,7 +152,7 @@ func TestSystemsExportWorkloads(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemDBLookup
 
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 }

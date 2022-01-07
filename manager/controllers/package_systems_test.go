@@ -49,7 +49,7 @@ func testPackageSystems(t *testing.T, url string, account int) PackageSystemsRes
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageSystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	return output
 }
 
@@ -63,6 +63,6 @@ func testPackageSystemsError(t *testing.T, url string, account int) (int, utils.
 		ServeHTTP(w, req)
 
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	return w.Code, errResp
 }

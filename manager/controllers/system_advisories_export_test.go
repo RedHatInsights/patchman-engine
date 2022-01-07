@@ -21,7 +21,7 @@ func TestSystemAdvisoriesExportJSON(t *testing.T) {
 	core.InitRouterWithPath(SystemAdvisoriesExportHandler, "/:inventory_id").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output []AdvisoryInlineItem
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 8, len(output))
 	assert.Equal(t, output[0].Description, "adv-1-des")
 }

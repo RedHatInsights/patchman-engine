@@ -20,7 +20,7 @@ func testBaselines(t *testing.T, url string) BaselinesResponse {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	var output BaselinesResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	return output
 }
 
@@ -70,7 +70,7 @@ func TestBaselinesOffsetOverflow(t *testing.T) {
 	core.InitRouter(BaselinesListHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 

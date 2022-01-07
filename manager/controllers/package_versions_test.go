@@ -22,7 +22,7 @@ func TestPackageVersions(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageVersionsResponse
 	assert.Greater(t, len(w.Body.Bytes()), 0)
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "76.0.1-1.fc31.x86_64", output.Data[0].Evra)
 }
