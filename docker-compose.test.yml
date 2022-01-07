@@ -7,7 +7,7 @@ services:
       dockerfile: dev/database/Dockerfile
     command: 'postgres -c config_file=/opt/app-root/src/postgresql-cfg/custom.conf'
     ports:
-      - 5432:5432
+      - 5433:5432
     env_file:
       - ./conf/database.env
 
