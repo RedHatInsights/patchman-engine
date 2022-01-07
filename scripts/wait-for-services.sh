@@ -19,7 +19,7 @@ if [ ! -z "$DB_HOST" ]; then
     CHECK_QUERY="SELECT * FROM schema_migrations;"
   fi
   until PGPASSWORD="$DB_PASSWD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "${CHECK_QUERY}" -q 2>/dev/null; do
-    >&2 echo "PostgreSQL is unavailable - sleeping"
+    >&2 echo "PostgreSQL is unavailable - sleeping (host: $DB_HOST, port: $DB_PORT, user: $DB_USER, db_name: $DB_NAME)"
     sleep 1
   done
 else
