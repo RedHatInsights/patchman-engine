@@ -18,7 +18,7 @@ func testAccountSystemCounts(t *testing.T, acc int, count int) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	core.InitRouterWithAccount(SystemsListHandler, "/", acc).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	// data
 	assert.Equal(t, count, len(output.Data))
 }

@@ -26,7 +26,7 @@ func testAdvisories(t *testing.T, url string) AdvisoriesResponse {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	var output AdvisoriesResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	return output
 }
 
@@ -86,7 +86,7 @@ func TestAdvisoriesOffsetOverflow(t *testing.T) {
 	core.InitRouter(AdvisoriesListHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
@@ -164,7 +164,7 @@ func TestAdvisoriesPossibleSorts(t *testing.T) {
 		core.InitRouter(AdvisoriesListHandler).ServeHTTP(w, req)
 
 		var output AdvisoriesResponse
-		ParseReponseBody(t, w.Body.Bytes(), &output)
+		ParseResponseBody(t, w.Body.Bytes(), &output)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, 1, len(output.Meta.Sort))
@@ -237,7 +237,7 @@ func TestListAdvisoriesTagsInvalid(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
@@ -253,7 +253,7 @@ func doTestWrongOffset(t *testing.T, path, q string, handler gin.HandlerFunc) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 

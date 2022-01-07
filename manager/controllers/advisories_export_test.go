@@ -22,7 +22,7 @@ func TestAdvisoriesExportJSON(t *testing.T) {
 	core.InitRouter(AdvisoriesExportHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output []AdvisoryInlineItem
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 9, len(output))
 	assert.Equal(t, output[0].ID, "RH-1")
 	assert.Equal(t, output[0].Description, "adv-1-des")
@@ -92,7 +92,7 @@ func TestAdvisoriesExportTagsInvalid(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 

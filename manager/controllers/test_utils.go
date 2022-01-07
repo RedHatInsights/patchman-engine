@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func ParseReponseBody(t *testing.T, bytes []byte, out interface{}) {
+func ParseResponseBody(t *testing.T, bytes []byte, out interface{}) {
 	err := json.Unmarshal(bytes, out)
 	assert.Nil(t, err, string(bytes))
 }

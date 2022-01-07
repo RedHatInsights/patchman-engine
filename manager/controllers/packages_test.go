@@ -26,7 +26,7 @@ func doTestPackages(t *testing.T, q string) PackagesResponse {
 	assert.Equal(t, http.StatusOK, code)
 	var output PackagesResponse
 	assert.Greater(t, len(respBytes), 0)
-	ParseReponseBody(t, respBytes, &output)
+	ParseResponseBody(t, respBytes, &output)
 	return output
 }
 
@@ -79,7 +79,7 @@ func TestPackageTagsInvalid(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 

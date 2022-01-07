@@ -22,7 +22,7 @@ func TestSystemPackagesExportHandlerJSON(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemPackageInline
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 4, len(output))
 	assert.Equal(t, output[0].Name, "kernel")
 	assert.Equal(t, output[0].EVRA, "5.6.13-200.fc31.x86_64")

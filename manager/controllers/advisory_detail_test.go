@@ -21,7 +21,7 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output AdvisoryDetailResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	// data
 	checkRH9Fields(t, output)
 }
@@ -52,7 +52,7 @@ func TestAdvisoryDetailCVE(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output AdvisoryDetailResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, len(output.Data.Attributes.Cves))
 	assert.Equal(t, "CVE-1", output.Data.Attributes.Cves[0])
 	assert.Equal(t, "CVE-2", output.Data.Attributes.Cves[1])
@@ -67,7 +67,7 @@ func TestAdvisoryNoIdProvided(t *testing.T) {
 	core.InitRouter(AdvisoryDetailHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "advisory_id param not found", errResp.Error)
 }
 
@@ -80,7 +80,7 @@ func TestAdvisoryNotFound(t *testing.T) {
 	core.InitRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "advisory not found", errResp.Error)
 }
 
@@ -103,7 +103,7 @@ func TestAdvisoryDetailCached(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output AdvisoryDetailResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	checkRH9Fields(t, output)
 	assert.Equal(t, "found in cache", hook.LogEntries[4].Message)
 }
@@ -131,6 +131,6 @@ func TestAdvisoryDetailFiltering(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/RH-9?filter[filter]=abcd", nil)
 	core.InitRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
 }

@@ -22,7 +22,7 @@ func TestPackageSystemsExportHandlerJSON(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output []PackageSystemItem
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output[0].ID)
 	assert.Equal(t, "5.6.13-200.fc31.x86_64", output[0].InstalledEVRA)

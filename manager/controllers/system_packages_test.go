@@ -20,7 +20,7 @@ func TestSystemPackages(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemPackageResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Len(t, output.Data, 4)
 	assert.Equal(t, output.Data[0].Name, "bash")
 	assert.Equal(t, len(output.Data[0].Updates), 0)
@@ -44,7 +44,7 @@ func TestPackagesSearch(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemPackageResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Len(t, output.Data, 1)
 	assert.Equal(t, output.Data[0].Name, "kernel")
 }
@@ -72,7 +72,7 @@ func TestSystemPackagesUpdatableOnly(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemPackageResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Len(t, output.Data, 1)
 	assert.Equal(t, output.Data[0].Name, "firefox")
 }
@@ -89,7 +89,7 @@ func TestSystemPackagesNonUpdatableOnly(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemPackageResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Len(t, output.Data, 3)
 	assert.Equal(t, output.Data[0].Name, "bash")
 	assert.Equal(t, output.Data[1].Name, "curl")

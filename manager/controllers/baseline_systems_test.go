@@ -20,7 +20,7 @@ func testBaselineSystems(t *testing.T, url string) BaselineSystemsResponse {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	var output BaselineSystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 
 	return output
 }
@@ -71,7 +71,7 @@ func TestBaselineSystemOffsetOverflow(t *testing.T) {
 	core.InitRouterWithPath(BaselineSystemsListHandler, "/:baseline_id/systems").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 

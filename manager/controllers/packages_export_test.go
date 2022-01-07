@@ -22,7 +22,7 @@ func TestPackageExportJSON(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output []PackageItem
 
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 4, len(output))
 	assert.Equal(t, "kernel", output[0].Name)
 }
