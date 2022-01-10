@@ -1,6 +1,7 @@
 -- mark all systems as fresh, since we had the wrong implementation for function for marking
 UPDATE system_platform
-SET stale = false;
+SET stale = false
+WHERE 1=1;
 
 CREATE OR REPLACE FUNCTION mark_stale_systems()
     RETURNS INTEGER

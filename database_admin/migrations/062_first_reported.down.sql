@@ -10,7 +10,8 @@ SELECT create_table_partition_triggers('system_platform_set_first_reported',
                                        $$FOR EACH ROW EXECUTE PROCEDURE set_first_reported()$$);
 
 -- For existing rows set "first_reported" value from "last_updated".
-UPDATE system_platform SET first_reported = last_updated;
+UPDATE system_platform SET first_reported = last_updated
+WHERE 1=1;
 
 -- Now we can add "NOT NULL" constraint to the "first_reported" column.
 ALTER TABLE system_platform

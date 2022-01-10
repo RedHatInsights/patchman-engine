@@ -5,7 +5,8 @@ UPDATE system_package
 SET name_id = (select pn.id
                from package_name pn
                         JOIN package p on pn.id = p.name_id
-               where p.id = system_package.package_id);
+               where p.id = system_package.package_id)
+WHERE 1=1;
 
 DELETE FROM system_package WHERE name_id IS NULL;
 
