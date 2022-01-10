@@ -17,9 +17,9 @@ import (
 )
 
 type UpdateBaselineRequest struct {
-	Name         string          `json:"name"`
+	Name         *string         `json:"name"`
 	InventoryIDs map[string]bool `json:"inventory_ids"`
-	Config       BaselineConfig  `json:"config"`
+	Config       *BaselineConfig `json:"config"`
 }
 
 type BaselineConfig struct {
@@ -148,36 +148,45 @@ func updateSystemsBaselineID(tx *gorm.DB, rhAccountID int, inventoryIDs []string
 
 func buildUpdateBaselineQuery(baselineID int, req UpdateBaselineRequest, newIDs, obsoleteIDs []string,
 	account int) error {
-	config, err := json.Marshal(&req.Config)
-	if err != nil {
-		return err
+	data := map[string]interface{}{}
+	if req.Name != nil {
+		data["name"] = req.Name
 	}
 
-	data := map[string]interface{}{}
-	data["name"] = req.Name
-	data["config"] = config
+	if req.Config != nil {
+		config, err := json.Marshal(req.Config)
+		if err != nil {
+			return err
+		}
+		data["config"] = config
+	}
 
 	tx := database.Db.WithContext(base.Context).Begin()
 	defer tx.Rollback()
 
-	err = tx.Model(models.Baseline{}).
-		Where("id = ? AND rh_account_id = ?", baselineID, account).
-		Updates(&data).Error
-	if err != nil {
-		return err
+	if req.Name != nil || req.Config != nil {
+		err := tx.Model(models.Baseline{}).
+			Where("id = ? AND rh_account_id = ?", baselineID, account).
+			Updates(&data).Error
+		if err != nil {
+			return err
+		}
 	}
 
-	err = updateSystemsBaselineID(tx, account, newIDs, baselineID)
-	if err != nil {
-		return err
+	if len(newIDs) > 0 {
+		err := updateSystemsBaselineID(tx, account, newIDs, baselineID)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = updateSystemsBaselineID(tx, account, obsoleteIDs, nil)
-	if err != nil {
-		return err
+	if len(obsoleteIDs) > 0 {
+		err := updateSystemsBaselineID(tx, account, obsoleteIDs, nil)
+		if err != nil {
+			return err
+		}
 	}
 
-	query := tx.Commit()
-
-	return query.Error
+	err := tx.Commit().Error
+	return err
 }
