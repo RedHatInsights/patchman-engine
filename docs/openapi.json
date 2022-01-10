@@ -558,6 +558,53 @@
                 ]
             }
         },
+        "/api/patch/v1/baselines/{baseline_id}": {
+            "post": {
+                "summary": "Update a baseline for my set of systems",
+                "description": "Update a baseline for my set of systems",
+                "operationId": "updateBaseline",
+                "parameters": [
+                    {
+                        "name": "baseline_id",
+                        "in": "path",
+                        "description": "Baseline ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Request body",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controllers.UpdateBaselineRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.UpdateBaselineResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ],
+                "x-codegen-request-body-name": "body"
+            }
+        },
         "/api/patch/v1/baselines/{baseline_id}/systems": {
             "get": {
                 "summary": "Show me all systems belonging to a baseline",
@@ -2671,6 +2718,14 @@
                     }
                 }
             },
+            "controllers.BaselineConfig": {
+                "type": "object",
+                "properties": {
+                    "to_time": {
+                        "type": "string"
+                    }
+                }
+            },
             "controllers.BaselineItem": {
                 "type": "object",
                 "properties": {
@@ -3369,6 +3424,31 @@
                     },
                     "meta": {
                         "$ref": "#/components/schemas/controllers.ListMeta"
+                    }
+                }
+            },
+            "controllers.UpdateBaselineRequest": {
+                "type": "object",
+                "properties": {
+                    "config": {
+                        "$ref": "#/components/schemas/controllers.BaselineConfig"
+                    },
+                    "inventory_ids": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "boolean"
+                        }
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "controllers.UpdateBaselineResponse": {
+                "type": "object",
+                "properties": {
+                    "baselineID": {
+                        "type": "integer"
                     }
                 }
             },
