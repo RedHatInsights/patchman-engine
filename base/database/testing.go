@@ -4,11 +4,13 @@ import (
 	"app/base"
 	"app/base/models"
 	"app/base/utils"
+	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func DebugWithCachesCheck(part string, fun func()) {
@@ -311,4 +313,96 @@ func UpdateSystemAdvisoriesWhenPatched(t *testing.T, systemID, accountID int, ad
 		Where("advisory_id IN (?)", advisoryIDs).
 		Update("when_patched", whenPatched).Error
 	assert.Nil(t, err)
+}
+
+func CreateBaseline(t *testing.T, inventoryIDs []string) int {
+	type BaselineConfig struct {
+		ToTime string `json:"to_time"`
+	}
+
+	baselineConfig, err := json.Marshal(BaselineConfig{ToTime: "2021-01-01 12:00:00-04"})
+	assert.Nil(t, err)
+
+	temporaryBaseline := &models.Baseline{
+		RhAccountID: 1, Name: "temporary_baseline", Config: baselineConfig,
+	}
+
+	tx := Db.WithContext(base.Context).Begin()
+	defer tx.Rollback()
+
+	if err := tx.Create(temporaryBaseline).Error; err != nil {
+		assert.Nil(t, err)
+	}
+
+	query := tx.Model(models.SystemPlatform{}).
+		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
+		Where("rh_account_id = (?) AND inventory_id::text IN (?)", 1, inventoryIDs).
+		Update("baseline_id", temporaryBaseline.ID)
+
+	if query.Error != nil {
+		assert.Nil(t, err)
+	}
+
+	transactionQuery := tx.Commit()
+
+	assert.Nil(t, transactionQuery.Error)
+
+	return temporaryBaseline.ID
+}
+
+func DeleteBaseline(t *testing.T, baselineID int) {
+	tx := Db.WithContext(base.Context).Begin()
+	defer tx.Rollback()
+
+	err := tx.Model(models.SystemPlatform{}).
+		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
+		Where("rh_account_id = (?) AND baseline_id = (?)", 1, baselineID).
+		Update("baseline_id", nil).Error
+
+	assert.Nil(t, err)
+
+	err = tx.Where(models.Baseline{ID: baselineID, RhAccountID: 1}).Delete(&models.Baseline{}).Error
+	assert.Nil(t, err)
+
+	err = tx.Commit().Error
+	assert.Nil(t, err)
+}
+
+func CheckBaseline(t *testing.T, baselineID int, inventoryIDs []string, config, name string) {
+	type Baseline struct {
+		ID     int    `query:"bl.id" gorm:"column:id"`
+		Name   string `json:"name" query:"bl.name" gorm:"column:name"`
+		Config string `json:"config" query:"bl.config" gorm:"column:config"`
+	}
+
+	type Associations struct {
+		ID string `json:"system" query:"id"`
+	}
+
+	var associations []Associations
+	var baseline Baseline
+
+	err := Db.Table("system_platform as sp").Select("sp.inventory_id as id").
+		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
+		Where("sp.rh_account_id = (?) AND sp.baseline_id = (?)", 1, baselineID).Order("id").Find(&associations).Error
+
+	assert.Nil(t, err)
+
+	err = Db.Table("baseline as bl").
+		Select("bl.id, bl.name, bl.config").
+		Where("bl.rh_account_id = (?) AND bl.id = (?)", 1, baselineID).Find(&baseline).Error
+
+	assert.Nil(t, err)
+
+	assert.Equal(t, baseline.ID, baselineID)
+	assert.Equal(t, baseline.Name, name)
+	assert.Equal(t, baseline.Config, config)
+
+	if len(inventoryIDs) == 0 {
+		assert.Equal(t, len(associations), 0)
+	} else {
+		for index, inventoryID := range inventoryIDs {
+			assert.Equal(t, associations[index].ID, inventoryID)
+		}
+	}
 }
