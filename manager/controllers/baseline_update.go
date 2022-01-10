@@ -6,7 +6,9 @@ import (
 	"app/base/models"
 	"app/manager/middlewares"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -47,9 +49,10 @@ func BaselineUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	baselineID, err := strconv.Atoi(c.Param("baseline_id"))
+	baselineIDstr := c.Param("baseline_id")
+	baselineID, err := strconv.Atoi(baselineIDstr)
 	if err != nil {
-		LogAndRespError(c, err, "Invalid baseline id: "+err.Error())
+		LogAndRespError(c, err, "Invalid baseline id: "+baselineIDstr)
 		return
 	}
 
@@ -57,7 +60,7 @@ func BaselineUpdateHandler(c *gin.Context) {
 	err = database.Db.Model(&models.Baseline{}).
 		Where("id = ? ", baselineID).Count(&exists).Error
 	if err != nil {
-		LogAndRespError(c, err, "database error: "+err.Error())
+		LogAndRespError(c, err, "Database error")
 		return
 	}
 	if exists == 0 {
@@ -65,15 +68,22 @@ func BaselineUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	newAssociations, obsoleteAssociations, err := sortInventoryIDs(req.InventoryIDs)
+	missingIDs, err := checkInventoryIDs(account, req.InventoryIDs)
 	if err != nil {
-		c.JSON(http.StatusNotFound, "System(s) do(es) not exist: "+err.Error())
+		LogAndRespError(c, err, "Database error")
 		return
 	}
 
+	if len(missingIDs) > 0 {
+		msg := fmt.Sprintf("Missing inventory_ids: %v", missingIDs)
+		LogAndRespNotFound(c, errors.New(msg), msg)
+		return
+	}
+
+	newAssociations, obsoleteAssociations := sortInventoryIDs(req.InventoryIDs)
 	err = buildUpdateBaselineQuery(baselineID, req, newAssociations, obsoleteAssociations, account)
 	if err != nil {
-		LogAndRespError(c, err, "Database error: "+err.Error())
+		LogAndRespError(c, err, "Database error")
 		return
 	}
 
@@ -84,30 +94,48 @@ type SystemPlatform struct {
 	*models.SystemPlatform
 }
 
-func checkInventoryID(inventoryID string) error {
-	var exists int64
-	err := database.Db.Model(&models.SystemPlatform{}).
-		Where("inventory_id = ? ", inventoryID).Count(&exists).Error
-	if err != nil {
-		return err
+func checkInventoryIDs(accountID int, inventoryIDsMap map[string]bool) (missingIDs []string, err error) {
+	inventoryIDs := make([]string, 0, len(inventoryIDsMap))
+	for id := range inventoryIDsMap {
+		inventoryIDs = append(inventoryIDs, id)
 	}
-	return nil
+
+	var containingIDs []string
+	err = database.Db.Table("system_platform sp").
+		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
+		Where("rh_account_id = (?) AND inventory_id::text IN (?)", accountID, inventoryIDs).
+		Pluck("sp.inventory_id", &containingIDs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if len(inventoryIDs) == len(containingIDs) {
+		return []string{}, nil // all inventoryIDs found in database
+	}
+
+	containingIDsMap := map[string]bool{}
+	for _, containingID := range containingIDs {
+		containingIDsMap[containingID] = true
+	}
+
+	for _, inventoryID := range inventoryIDs {
+		if _, ok := containingIDsMap[inventoryID]; !ok {
+			missingIDs = append(missingIDs, inventoryID)
+		}
+	}
+	sort.Strings(missingIDs)
+	return missingIDs, nil
 }
 
-func sortInventoryIDs(inventoryIDs map[string]bool) (newIDs, obsoleteIDs []string, err error) {
+func sortInventoryIDs(inventoryIDs map[string]bool) (newIDs, obsoleteIDs []string) {
 	for key, value := range inventoryIDs {
-		err := checkInventoryID(key)
-		if err != nil {
-			return nil, nil, err
-		}
-
 		if value {
 			newIDs = append(newIDs, key)
 		} else {
 			obsoleteIDs = append(obsoleteIDs, key)
 		}
 	}
-	return newIDs, obsoleteIDs, nil
+	return newIDs, obsoleteIDs
 }
 
 func updateSystemsBaselineID(tx *gorm.DB, rhAccountID int, inventoryIDs []string, baselineID interface{}) error {
@@ -118,8 +146,8 @@ func updateSystemsBaselineID(tx *gorm.DB, rhAccountID int, inventoryIDs []string
 	return err
 }
 
-//nolint:lll
-func buildUpdateBaselineQuery(baselineID int, req UpdateBaselineRequest, newIDs, obsoleteIDs []string, account int) error {
+func buildUpdateBaselineQuery(baselineID int, req UpdateBaselineRequest, newIDs, obsoleteIDs []string,
+	account int) error {
 	config, err := json.Marshal(&req.Config)
 	if err != nil {
 		return err
