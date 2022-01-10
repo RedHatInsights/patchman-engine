@@ -394,9 +394,9 @@ func CheckBaseline(t *testing.T, baselineID int, inventoryIDs []string, config, 
 
 	assert.Nil(t, err)
 
-	assert.Equal(t, baseline.ID, baselineID)
-	assert.Equal(t, baseline.Name, name)
-	assert.Equal(t, baseline.Config, config)
+	assert.Equal(t, baselineID, baseline.ID)
+	assert.Equal(t, name, baseline.Name)
+	assert.Equal(t, config, baseline.Config)
 
 	if len(inventoryIDs) == 0 {
 		assert.Equal(t, len(associations), 0)

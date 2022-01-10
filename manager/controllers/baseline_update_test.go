@@ -163,8 +163,8 @@ func TestUpdateBaselineInvalidSystem(t *testing.T) {
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp.Error)
-	assert.True(t, strings.Contains(errResp.Error, "System(s) do(es) not exist"))
-
+	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, "Missing inventory_ids: [00000000-0000-0000-0000-000000000009 incorrect_id]",
+		errResp.Error)
 	database.DeleteBaseline(t, baselineID)
 }
