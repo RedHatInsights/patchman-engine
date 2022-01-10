@@ -9,7 +9,8 @@ CALL raise_notice('column added');
 
 -- data migration
 UPDATE system_repo sr
-    SET rh_account_id = (SELECT sp.rh_account_id FROM system_platform sp WHERE sp.id = sr.system_id);
+    SET rh_account_id = (SELECT sp.rh_account_id FROM system_platform sp WHERE sp.id = sr.system_id)
+    WHERE 1=1;
 
 CALL raise_notice('data altered');
 
