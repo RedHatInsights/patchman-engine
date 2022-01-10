@@ -32,11 +32,8 @@ func TestUpdateBaseline(t *testing.T) {
 			"00000000-0000-0000-0000-000000000005": false,
 			"00000000-0000-0000-0000-000000000008": true
 		},
-		"config": {
-			"to_time": "2021-01-01 12:00:00-04"
-		}
+		"config": {"to_time": "2021-12-31 12:00:00-04"}
 	}`
-
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf(`/%v`, baselineID)
 	req, _ := http.NewRequest("POST", path, bytes.NewBufferString(data))
@@ -48,9 +45,7 @@ func TestUpdateBaseline(t *testing.T) {
 		"00000000-0000-0000-0000-000000000006",
 		"00000000-0000-0000-0000-000000000007",
 		"00000000-0000-0000-0000-000000000008",
-	},
-		`{"to_time": "2021-01-01 12:00:00-04"}`,
-		"updated_name")
+	}, `{"to_time": "2021-12-31 12:00:00-04"}`, "updated_name")
 	database.DeleteBaseline(t, baselineID)
 }
 
@@ -59,15 +54,7 @@ func TestUpdateBaselineWithEmptyAssociations(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	baselineID := database.CreateBaseline(t, testingInventoryIDs)
-
-	data := `{
-		"name": "updated_name",
-		"inventory_ids": {},
-		"config": {
-			"to_time": "2021-01-01 12:00:00-04"
-		}
-	}`
-
+	data := `{"inventory_ids": {}}`
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf(`/%v`, baselineID)
 	req, _ := http.NewRequest("POST", path, bytes.NewBufferString(data))
@@ -81,9 +68,7 @@ func TestUpdateBaselineWithEmptyAssociations(t *testing.T) {
 			"00000000-0000-0000-0000-000000000005",
 			"00000000-0000-0000-0000-000000000006",
 			"00000000-0000-0000-0000-000000000007",
-		},
-		`{"to_time": "2021-01-01 12:00:00-04"}`,
-		"updated_name")
+		}, `{"to_time": "2021-01-01 12:00:00-04"}`, "temporary_baseline")
 
 	database.DeleteBaseline(t, baselineID)
 }
@@ -93,7 +78,6 @@ func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	baselineID := database.CreateBaseline(t, testingInventoryIDs)
-
 	data := `{
 		"name": "updated_name",
 		"inventory_ids": {
@@ -101,11 +85,8 @@ func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
 			"00000000-0000-0000-0000-000000000006": false,
 			"00000000-0000-0000-0000-000000000007": false
 		},
-		"config": {
-			"to_time": "2021-01-01 12:00:00-04"
-		}
+		"config": {"to_time": "2021-01-01 12:00:00-04"}
 	}`
-
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf(`/%v`, baselineID)
 	req, _ := http.NewRequest("POST", path, bytes.NewBufferString(data))
@@ -113,11 +94,8 @@ func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	database.CheckBaseline(t,
-		baselineID,
-		[]string{},
-		`{"to_time": "2021-01-01 12:00:00-04"}`,
-		"updated_name")
+	database.CheckBaseline(t, baselineID, []string{},
+		`{"to_time": "2021-01-01 12:00:00-04"}`, "updated_name")
 
 	database.DeleteBaseline(t, baselineID)
 }
@@ -126,16 +104,13 @@ func TestUpdateBaselineInvalidPayload(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	data := `{
-		"name": 0
-	}`
-
+	data := `{"name": 0}`
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/1", bytes.NewBufferString(data))
 	core.InitRouterWithParams(BaselineUpdateHandler, 1, "POST", "/:baseline_id").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.True(t, strings.Contains(errResp.Error, "name of type string"))
 }
 
@@ -151,11 +126,8 @@ func TestUpdateBaselineInvalidSystem(t *testing.T) {
 			"incorrect_id": false,
 			"00000000-0000-0000-0000-000000000009": true
 		},
-		"config": {
-			"to_time": "2021-01-01 12:00:00-04"
-		}
+		"config": {"to_time": "2021-01-01 12:00:00-04"}
 	}`
-
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf(`/%v`, baselineID)
 	req, _ := http.NewRequest("POST", path, bytes.NewBufferString(data))
@@ -163,8 +135,27 @@ func TestUpdateBaselineInvalidSystem(t *testing.T) {
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	var errResp utils.ErrorResponse
-	ParseReponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "Missing inventory_ids: [00000000-0000-0000-0000-000000000009 incorrect_id]",
 		errResp.Error)
+	database.DeleteBaseline(t, baselineID)
+}
+
+func TestUpdateBaselineNullValues(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	baselineID := database.CreateBaseline(t, testingInventoryIDs)
+	data := `{}`
+	w := httptest.NewRecorder()
+	path := fmt.Sprintf(`/%v`, baselineID)
+	req, _ := http.NewRequest("POST", path, bytes.NewBufferString(data))
+	core.InitRouterWithParams(BaselineUpdateHandler, 1, "POST", "/:baseline_id").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	database.CheckBaseline(t, baselineID, testingInventoryIDs, // do not change on null values
+		`{"to_time": "2021-01-01 12:00:00-04"}`, "temporary_baseline")
+
 	database.DeleteBaseline(t, baselineID)
 }
