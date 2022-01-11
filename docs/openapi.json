@@ -2613,7 +2613,7 @@
                     },
                     "advisory_type_name": {
                         "type": "string",
-                        "description": "Advisory type name, proper ordering ensured (unknown, unspecified, enhancement, bugfix, security)"
+                        "description": "Advisory type name, proper ordering ensured (unknown, unspecified, other, enhancement, bugfix, security)"
                     },
                     "applicable_systems": {
                         "type": "integer"
@@ -2670,7 +2670,7 @@
                     },
                     "advisory_type_name": {
                         "type": "string",
-                        "description": "Advisory type name, proper ordering ensured (unknown, unspecified, enhancement, bugfix, security)"
+                        "description": "Advisory type name, proper ordering ensured (unknown, unspecified, other, enhancement, bugfix, security)"
                     },
                     "applicable_systems": {
                         "type": "integer"
@@ -3026,7 +3026,7 @@
                     },
                     "advisory_type_name": {
                         "type": "string",
-                        "description": "Advisory type name, proper ordering ensured (unknown, unspecified, enhancement, bugfix, security)"
+                        "description": "Advisory type name, proper ordering ensured (unknown, unspecified, other, enhancement, bugfix, security)"
                     },
                     "cve_count": {
                         "type": "integer"
@@ -3098,7 +3098,7 @@
                     },
                     "advisory_type_name": {
                         "type": "string",
-                        "description": "Advisory type name, proper ordering ensured (unknown, unspecified, enhancement, bugfix, security)"
+                        "description": "Advisory type name, proper ordering ensured (unknown, unspecified, other, enhancement, bugfix, security)"
                     },
                     "cve_count": {
                         "type": "integer"
