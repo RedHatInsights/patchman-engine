@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"app/base/core"
 	"app/base/database"
+	"app/base/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -89,4 +91,11 @@ func TestFilterInvalidValue(t *testing.T) {
 	_, value, err := filter.ToWhere("V", attrMap)
 	assert.NoError(t, err)
 	assert.Equal(t, []interface{}{"aaaa"}, value)
+}
+
+func TestFilterOtherAdvisoryTypes(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	// Check the list is loaded from database correctly
+	assert.Equal(t, []string{"unknown", "unspecified"}, database.OtherAdvisoryTypes)
 }
