@@ -1,1 +1,1 @@
-GRANT SELECT, UPDATE, DELETE, INSERT ON system_platform TO manager;
+GRANT SELECT, UPDATE, DELETE ON system_platform TO manager;
