@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	Db *gorm.DB //nolint:stylecheck
+	Db                 *gorm.DB //nolint:stylecheck
+	OtherAdvisoryTypes []string
 )
 
 // Configure Configure database, PostgreSQL or SQLite connection
@@ -20,6 +21,7 @@ func Configure() {
 	pgConfig := loadEnvPostgreSQLConfig()
 	Db = openPostgreSQL(pgConfig)
 	check(Db)
+	loadAdditionalParamsFromDB()
 }
 
 // PostgreSQLConfig PostgreSQL database config
@@ -117,4 +119,15 @@ func dataSourceName(dbConfig *PostgreSQLConfig) string {
 		dbsource = fmt.Sprintf("%s sslrootcert=%s", dbsource, dbConfig.SSLRootCert)
 	}
 	return dbsource
+}
+
+func loadAdditionalParamsFromDB() {
+	// Load OtherAdvisoryTypes list
+	err := Db.Table("advisory_type").
+		Where("name NOT IN ('enhancement', 'bugfix', 'security')").
+		Order("name").
+		Pluck("name", &OtherAdvisoryTypes).Error
+	if err != nil {
+		panic(err)
+	}
 }
