@@ -43,7 +43,7 @@ func TestAdvisoryCounts(t *testing.T) {
 
 	unknown, enh, bug, sec, err := getAdvisoryCounts()
 	assert.Nil(t, err)
-	assert.Equal(t, int64(0), unknown)
+	assert.Equal(t, int64(2), unknown)
 	assert.Equal(t, int64(3), enh)
 	assert.Equal(t, int64(3), bug)
 	assert.Equal(t, int64(3), sec)
