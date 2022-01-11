@@ -228,11 +228,11 @@ func getSystemCounts() (map[systemsCntLabels]int, error) {
 }
 
 func updateAdvisoryMetrics() {
-	unknown, enh, bug, sec, err := getAdvisoryCounts()
+	other, enh, bug, sec, err := getAdvisoryCounts()
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to update advisory metrics")
 	}
-	advisoriesCnt.WithLabelValues("unknown").Set(float64(unknown))
+	advisoriesCnt.WithLabelValues("other").Set(float64(other))
 	advisoriesCnt.WithLabelValues("enhancement").Set(float64(enh))
 	advisoriesCnt.WithLabelValues("bugfix").Set(float64(bug))
 	advisoriesCnt.WithLabelValues("security").Set(float64(sec))
@@ -254,7 +254,7 @@ func updatePackageMetrics() {
 
 // nolint: lll
 type advisoryColumns struct {
-	Unknown     int64 `query:"count(*) filter (where advisory_type_id = 0)" gorm:"column:unknown"`
+	Other       int64 `query:"count(*) filter (where advisory_type_id not in (1,2,3))" gorm:"column:other"`
 	Enhancement int64 `query:"count(*) filter (where advisory_type_id = 1)" gorm:"column:enhancement"`
 	Bugfix      int64 `query:"count(*) filter (where advisory_type_id = 2)" gorm:"column:bugfix"`
 	Security    int64 `query:"count(*) filter (where advisory_type_id = 3)" gorm:"column:security"`
@@ -262,7 +262,7 @@ type advisoryColumns struct {
 
 var queryAdvisoryColumns = database.MustGetSelect(&advisoryColumns{})
 
-func getAdvisoryCounts() (unknown, enh, bug, sec int64, err error) {
+func getAdvisoryCounts() (other, enh, bug, sec int64, err error) {
 	var row advisoryColumns
 	err = database.Db.Model(&models.AdvisoryMetadata{}).
 		Select(queryAdvisoryColumns).Take(&row).Error
@@ -270,7 +270,7 @@ func getAdvisoryCounts() (unknown, enh, bug, sec int64, err error) {
 		return 0, 0, 0, 0, errors.Wrap(err, "unable to get advisory type counts")
 	}
 
-	return row.Unknown, row.Enhancement, row.Bugfix, row.Security, nil
+	return row.Other, row.Enhancement, row.Bugfix, row.Security, nil
 }
 
 func getPackageCounts() (count int64, err error) {
