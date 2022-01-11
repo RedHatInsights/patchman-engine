@@ -41,9 +41,9 @@ func TestAdvisoryCounts(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	unknown, enh, bug, sec, err := getAdvisoryCounts()
+	other, enh, bug, sec, err := getAdvisoryCounts()
 	assert.Nil(t, err)
-	assert.Equal(t, int64(2), unknown)
+	assert.Equal(t, int64(4), other)
 	assert.Equal(t, int64(3), enh)
 	assert.Equal(t, int64(3), bug)
 	assert.Equal(t, int64(3), sec)
