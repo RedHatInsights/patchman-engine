@@ -16,14 +16,12 @@ import (
 	"gorm.io/gorm"
 )
 
+type BaselineConfig database.BaselineConfig
+
 type UpdateBaselineRequest struct {
 	Name         *string         `json:"name"`
 	InventoryIDs map[string]bool `json:"inventory_ids"`
 	Config       *BaselineConfig `json:"config"`
-}
-
-type BaselineConfig struct {
-	ToTime string `json:"to_time"`
 }
 
 type UpdateBaselineResponse struct {
@@ -88,10 +86,6 @@ func BaselineUpdateHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, baselineID)
-}
-
-type SystemPlatform struct {
-	*models.SystemPlatform
 }
 
 func checkInventoryIDs(accountID int, inventoryIDsMap map[string]bool) (missingIDs []string, err error) {
