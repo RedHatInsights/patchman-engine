@@ -54,8 +54,9 @@ func (t *FilterData) CheckValueCount(attrMap database.AttrMap) bool {
 // Convert a single filter to where clauses
 func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (string, []interface{}, error) {
 	var err error
-	var values = make([]interface{}, len(t.Values))
-	for i, v := range t.Values {
+	transformedValues := transformValues(fieldName, t.Values)
+	var values = make([]interface{}, len(transformedValues))
+	for i, v := range transformedValues {
 		fieldInfo, found := attributes[fieldName]
 		if !found {
 			return "", nil, errors.Errorf("Unknown field: %s", fieldName)
@@ -98,6 +99,23 @@ func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (str
 	default:
 		return "", []interface{}{}, errors.Errorf("Unknown filter : %s", t.Operator)
 	}
+}
+
+// transformValues Allow exceptions in ToWhere values usage (e.g. "other").
+func transformValues(fieldName string, originalValues []string) (transformedValues []string) {
+	if fieldName != "advisory_type_name" {
+		return originalValues
+	}
+
+	transformedValues = make([]string, 0, len(originalValues))
+	for _, originalValue := range originalValues {
+		if originalValue == "other" {
+			transformedValues = append(transformedValues, database.OtherAdvisoryTypes...)
+		} else {
+			transformedValues = append(transformedValues, originalValue)
+		}
+	}
+	return transformedValues
 }
 
 func (t Filters) ToQueryParams() string {
