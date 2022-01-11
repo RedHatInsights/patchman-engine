@@ -4,7 +4,6 @@ import (
 	"app/base"
 	"app/base/models"
 	"app/base/utils"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"testing"
@@ -316,15 +315,8 @@ func UpdateSystemAdvisoriesWhenPatched(t *testing.T, systemID, accountID int, ad
 }
 
 func CreateBaseline(t *testing.T, inventoryIDs []string) int {
-	type BaselineConfig struct {
-		ToTime string `json:"to_time"`
-	}
-
-	baselineConfig, err := json.Marshal(BaselineConfig{ToTime: "2021-01-01 12:00:00-04"})
-	assert.Nil(t, err)
-
 	temporaryBaseline := &models.Baseline{
-		RhAccountID: 1, Name: "temporary_baseline", Config: baselineConfig,
+		RhAccountID: 1, Name: "temporary_baseline", Config: []byte(`{"to_time": "2021-01-01T12:00:00-04:00"}`),
 	}
 
 	tx := Db.WithContext(base.Context).Begin()
@@ -334,19 +326,13 @@ func CreateBaseline(t *testing.T, inventoryIDs []string) int {
 		assert.Nil(t, err)
 	}
 
-	query := tx.Model(models.SystemPlatform{}).
+	err := tx.Model(models.SystemPlatform{}).
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Where("rh_account_id = (?) AND inventory_id::text IN (?)", 1, inventoryIDs).
-		Update("baseline_id", temporaryBaseline.ID)
-
-	if query.Error != nil {
-		assert.Nil(t, err)
-	}
-
-	transactionQuery := tx.Commit()
-
-	assert.Nil(t, transactionQuery.Error)
-
+		Update("baseline_id", temporaryBaseline.ID).Error
+	assert.Nil(t, err)
+	err = tx.Commit().Error
+	assert.Nil(t, err)
 	return temporaryBaseline.ID
 }
 

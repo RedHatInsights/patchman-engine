@@ -32,7 +32,7 @@ func TestUpdateBaseline(t *testing.T) {
 			"00000000-0000-0000-0000-000000000005": false,
 			"00000000-0000-0000-0000-000000000008": true
 		},
-		"config": {"to_time": "2021-12-31 12:00:00-04"}
+        "config": {"to_time": "2022-12-31T12:00:00-04:00"}
 	}`
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf(`/%v`, baselineID)
@@ -45,7 +45,7 @@ func TestUpdateBaseline(t *testing.T) {
 		"00000000-0000-0000-0000-000000000006",
 		"00000000-0000-0000-0000-000000000007",
 		"00000000-0000-0000-0000-000000000008",
-	}, `{"to_time": "2021-12-31 12:00:00-04"}`, "updated_name")
+	}, `{"to_time": "2022-12-31T12:00:00-04:00"}`, "updated_name")
 	database.DeleteBaseline(t, baselineID)
 }
 
@@ -68,7 +68,7 @@ func TestUpdateBaselineWithEmptyAssociations(t *testing.T) {
 			"00000000-0000-0000-0000-000000000005",
 			"00000000-0000-0000-0000-000000000006",
 			"00000000-0000-0000-0000-000000000007",
-		}, `{"to_time": "2021-01-01 12:00:00-04"}`, "temporary_baseline")
+		}, `{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline")
 
 	database.DeleteBaseline(t, baselineID)
 }
@@ -79,13 +79,11 @@ func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
 
 	baselineID := database.CreateBaseline(t, testingInventoryIDs)
 	data := `{
-		"name": "updated_name",
 		"inventory_ids": {
 			"00000000-0000-0000-0000-000000000005": false,
 			"00000000-0000-0000-0000-000000000006": false,
 			"00000000-0000-0000-0000-000000000007": false
-		},
-		"config": {"to_time": "2021-01-01 12:00:00-04"}
+		}
 	}`
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf(`/%v`, baselineID)
@@ -95,7 +93,7 @@ func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	database.CheckBaseline(t, baselineID, []string{},
-		`{"to_time": "2021-01-01 12:00:00-04"}`, "updated_name")
+		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline")
 
 	database.DeleteBaseline(t, baselineID)
 }
@@ -120,13 +118,11 @@ func TestUpdateBaselineInvalidSystem(t *testing.T) {
 
 	baselineID := database.CreateBaseline(t, testingInventoryIDs)
 	data := `{
-		"name": "updated_name",
 		"inventory_ids": {
 			"00000000-0000-0000-0000-000000000005": false,
 			"incorrect_id": false,
 			"00000000-0000-0000-0000-000000000009": true
-		},
-		"config": {"to_time": "2021-01-01 12:00:00-04"}
+		}
 	}`
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf(`/%v`, baselineID)
@@ -155,7 +151,7 @@ func TestUpdateBaselineNullValues(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	database.CheckBaseline(t, baselineID, testingInventoryIDs, // do not change on null values
-		`{"to_time": "2021-01-01 12:00:00-04"}`, "temporary_baseline")
+		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline")
 
 	database.DeleteBaseline(t, baselineID)
 }
