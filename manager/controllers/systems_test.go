@@ -165,9 +165,9 @@ func TestSystemsFilterAdvCount3(t *testing.T) {
 }
 
 func TestSystemsFilterAdvCount4(t *testing.T) {
-	output := testSystems(t, "/?filter[other_count]=1", 1)
+	output := testSystems(t, "/?filter[other_count]=4", 1)
 	assert.Equal(t, 1, len(output.Data))
-	assert.Equal(t, 1, output.Data[0].Attributes.OtherCount)
+	assert.Equal(t, 4, output.Data[0].Attributes.OtherCount)
 }
 
 func TestSystemsFilterNotExisting(t *testing.T) {
