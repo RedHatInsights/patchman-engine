@@ -147,6 +147,38 @@ func TestAdvisoriesFilterTypeID2(t *testing.T) {
 	}
 }
 
+func TestAdvisoriesFilterTypeID3(t *testing.T) {
+	output := testAdvisories(t, "/?filter[advisory_type_name]=in:unspecified,unknown")
+	assert.Equal(t, 4, len(output.Data))
+	for _, advisory := range output.Data {
+		assert.Contains(t, "unknown unspecified", advisory.Attributes.AdvisoryTypeName)
+	}
+}
+
+func TestAdvisoriesFilterTypeID4(t *testing.T) {
+	output := testAdvisories(t, "/?filter[advisory_type_name]=in:other")
+	assert.Equal(t, 4, len(output.Data))
+	for _, advisory := range output.Data {
+		assert.Contains(t, "unknown unspecified", advisory.Attributes.AdvisoryTypeName)
+	}
+}
+
+func TestAdvisoriesFilterTypeID5(t *testing.T) {
+	output := testAdvisories(t, "/?filter[advisory_type_name]=in:other,bugfix")
+	assert.Equal(t, 7, len(output.Data))
+	for _, advisory := range output.Data {
+		assert.Contains(t, "bugfix unknown unspecified", advisory.Attributes.AdvisoryTypeName)
+	}
+}
+
+func TestAdvisoriesFilterTypeID6(t *testing.T) {
+	output := testAdvisories(t, "/?sort=id&filter[advisory_type_name]=notin:other,bugfix")
+	assert.Equal(t, 5, len(output.Data))
+	for _, advisory := range output.Data {
+		assert.Contains(t, "enhancement security", advisory.Attributes.AdvisoryTypeName)
+	}
+}
+
 func TestAdvisoriesFilterApplicableSystems(t *testing.T) {
 	output := testAdvisories(t, "/?filter[applicable_systems]=gt:1")
 	assert.Equal(t, 1, len(output.Data))
