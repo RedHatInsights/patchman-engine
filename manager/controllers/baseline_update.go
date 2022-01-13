@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sort"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -66,7 +65,7 @@ func BaselineUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	missingIDs, err := checkInventoryIDs(account, req.InventoryIDs)
+	missingIDs, err := checkInventoryIDs(account, map2list(req.InventoryIDs))
 	if err != nil {
 		LogAndRespError(c, err, "Database error")
 		return
@@ -88,37 +87,12 @@ func BaselineUpdateHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, baselineID)
 }
 
-func checkInventoryIDs(accountID int, inventoryIDsMap map[string]bool) (missingIDs []string, err error) {
-	inventoryIDs := make([]string, 0, len(inventoryIDsMap))
-	for id := range inventoryIDsMap {
-		inventoryIDs = append(inventoryIDs, id)
+func map2list(m map[string]bool) []string {
+	l := make([]string, 0, len(m))
+	for key := range m {
+		l = append(l, key)
 	}
-
-	var containingIDs []string
-	err = database.Db.Table("system_platform sp").
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
-		Where("rh_account_id = (?) AND inventory_id::text IN (?)", accountID, inventoryIDs).
-		Pluck("sp.inventory_id", &containingIDs).Error
-	if err != nil {
-		return nil, err
-	}
-
-	if len(inventoryIDs) == len(containingIDs) {
-		return []string{}, nil // all inventoryIDs found in database
-	}
-
-	containingIDsMap := map[string]bool{}
-	for _, containingID := range containingIDs {
-		containingIDsMap[containingID] = true
-	}
-
-	for _, inventoryID := range inventoryIDs {
-		if _, ok := containingIDsMap[inventoryID]; !ok {
-			missingIDs = append(missingIDs, inventoryID)
-		}
-	}
-	sort.Strings(missingIDs)
-	return missingIDs, nil
+	return l
 }
 
 func sortInventoryIDs(inventoryIDs map[string]bool) (newIDs, obsoleteIDs []string) {
