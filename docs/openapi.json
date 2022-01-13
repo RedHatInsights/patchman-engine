@@ -556,6 +556,40 @@
                         "RhIdentity": []
                     }
                 ]
+            },
+            "put": {
+                "summary": "Create a baseline for my set of systems",
+                "description": "Create a baseline for my set of systems",
+                "operationId": "createBaseline",
+                "requestBody": {
+                    "description": "Request body",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controllers.CreateBaselineRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.CreateBaselineResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ],
+                "x-codegen-request-body-name": "body"
             }
         },
         "/api/patch/v1/baselines/{baseline_id}": {
@@ -2804,6 +2838,31 @@
                     },
                     "meta": {
                         "$ref": "#/components/schemas/controllers.ListMeta"
+                    }
+                }
+            },
+            "controllers.CreateBaselineRequest": {
+                "type": "object",
+                "properties": {
+                    "config": {
+                        "$ref": "#/components/schemas/controllers.BaselineConfig"
+                    },
+                    "inventory_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "controllers.CreateBaselineResponse": {
+                "type": "object",
+                "properties": {
+                    "baselineID": {
+                        "type": "integer"
                     }
                 }
             },
