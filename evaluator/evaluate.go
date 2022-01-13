@@ -23,24 +23,25 @@ import (
 type SystemAdvisoryMap map[string]models.SystemAdvisories
 
 var (
-	consumerCount          int
-	vmaasClient            *vmaas.APIClient
-	evalTopic              string
-	evalLabel              string
-	enableAdvisoryAnalysis bool
-	enablePackageAnalysis  bool
-	enableRepoAnalysis     bool
-	enableBypass           bool
-	enableStaleSysEval     bool
-	enableLazyPackageSave  bool
-	enableBaselineEval     bool
-	prunePackageLatestOnly bool
-	enablePackageCache     bool
-	preloadPackageCache    bool
-	packageCacheSize       int
-	packageNameCacheSize   int
-	vmaasCallMaxRetries    int
-	vmaasCallUseExpRetry   bool
+	consumerCount                 int
+	vmaasClient                   *vmaas.APIClient
+	evalTopic                     string
+	evalLabel                     string
+	enableAdvisoryAnalysis        bool
+	enablePackageAnalysis         bool
+	enableRepoAnalysis            bool
+	enableBypass                  bool
+	enableStaleSysEval            bool
+	enableLazyPackageSave         bool
+	enableBaselineEval            bool
+	prunePackageLatestOnly        bool
+	enablePackageCache            bool
+	preloadPackageCache           bool
+	packageCacheSize              int
+	packageNameCacheSize          int
+	vmaasCallMaxRetries           int
+	vmaasCallUseExpRetry          bool
+	vmaasCallUseOptimisticUpdates bool
 )
 
 func configure() {
@@ -71,6 +72,7 @@ func configure() {
 	packageNameCacheSize = utils.GetIntEnvOrDefault("PACKAGE_NAME_CACHE_SIZE", 60000)
 	vmaasCallMaxRetries = utils.GetIntEnvOrDefault("VMAAS_CALL_MAX_RETRIES", 8)
 	vmaasCallUseExpRetry = utils.GetBoolEnvOrDefault("VMAAS_CALL_USE_EXP_RETRY", true)
+	vmaasCallUseOptimisticUpdates = utils.GetBoolEnvOrDefault("VMAAS_CALL_USE_OPTIMISTIC_UPDATES", true)
 	configureRemediations()
 }
 
@@ -130,7 +132,8 @@ func evaluateWithVmaas(ctx context.Context, tx *gorm.DB, updatesReq *vmaas.Updat
 	}
 	system.ThirdParty = thirdParty                    // to set "system_platform.third_party" column
 	updatesReq.ThirdParty = utils.PtrBool(thirdParty) // enable "third_party" updates in VMaaS if needed
-	updatesReq.OptimisticUpdates = utils.PtrBool(thirdParty)
+	useOptimisticUpdates := thirdParty || vmaasCallUseOptimisticUpdates
+	updatesReq.OptimisticUpdates = utils.PtrBool(useOptimisticUpdates)
 
 	vmaasData, err := callVMaas(ctx, updatesReq)
 	if err != nil {
