@@ -5,60 +5,93 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"bytes"
-	"encoding/json"
-	"fmt"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateBaseline(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	body := CreateBaselineRequst{
-		Name:         "test_name",
-		InventoryIDs: []SystemID{"00000000-0000-0000-0000-000000000005", "00000000-0000-0000-0000-000000000006"},
-		ToTime:       "2021-01-01 12:00:00-04",
-	}
-
-	bodyJSON, err := json.Marshal(&body)
-	if err != nil {
-		panic(err)
-	}
-
+	data := `{
+		"name": "my_baseline",
+		"inventory_ids": [
+			"00000000-0000-0000-0000-000000000005",
+			"00000000-0000-0000-0000-000000000006"
+		],
+        "config": {"to_time": "2022-12-31T12:00:00-04:00"}
+	}`
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("PUT", "/", bytes.NewBuffer(bodyJSON))
+	req, _ := http.NewRequest("PUT", "/", bytes.NewBufferString(data))
 	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	var output int
-	ParseReponseBody(t, w.Body.Bytes(), &output)
-
-	testUpdatedBaselineSystems(t, output)
-
-	database.DeleteBaseline(t, 100, []string{
+	var baselineID int
+	ParseResponseBody(t, w.Body.Bytes(), &baselineID)
+	database.CheckBaseline(t, baselineID, []string{
 		"00000000-0000-0000-0000-000000000005",
 		"00000000-0000-0000-0000-000000000006",
-	})
+	}, `{"to_time": "2022-12-31T12:00:00-04:00"}`, "my_baseline")
+	database.DeleteBaseline(t, baselineID)
 }
 
-func testUpdatedBaselineSystems(t *testing.T, temporaryBaselineID int) {
+func TestCreateBaselineNameOnly(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-
-	path := fmt.Sprintf(`/%v/systems`, temporaryBaselineID)
+	data := `{"name": "my_empty_baseline"}`
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", path, nil)
-	core.InitRouterWithPath(BaselineSystemsListHandler, "/:baseline_id/systems").ServeHTTP(w, req)
+	req, _ := http.NewRequest("PUT", "/", bytes.NewBufferString(data))
+	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
+
 	assert.Equal(t, http.StatusOK, w.Code)
+	var baselineID int
+	ParseResponseBody(t, w.Body.Bytes(), &baselineID)
+	database.CheckBaseline(t, baselineID, []string{}, "", "my_empty_baseline")
+	database.DeleteBaseline(t, baselineID)
+}
 
-	var output BaselineSystemsResponse
-	ParseReponseBody(t, w.Body.Bytes(), &output)
+func TestCreateBaselineNameEmptyString(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	data := `{"name": ""}`
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/", bytes.NewBufferString(data))
+	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
 
-	assert.Equal(t, 2, len(output.Data))
-	assert.Equal(t, "baseline_systems", output.Data[0].Type)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000006", output.Data[0].ID)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000005", output.Data[1].ID)
+	assert.Equal(t, http.StatusOK, w.Code)
+	var baselineID int
+	ParseResponseBody(t, w.Body.Bytes(), &baselineID)
+	database.CheckBaseline(t, baselineID, []string{}, "", "")
+	database.DeleteBaseline(t, baselineID)
+}
+
+func TestCreateBaselineMissingName(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	data := `{}`
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/", bytes.NewBufferString(data))
+	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var errResp utils.ErrorResponse
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, "missing required parameter 'name'", errResp.Error)
+}
+
+func TestCreateBaselineInvalidRequest(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	data := `{"name": 0}`
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/", bytes.NewBufferString(data))
+	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var errResp utils.ErrorResponse
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	assert.True(t, strings.Contains(errResp.Error,
+		"cannot unmarshal number into Go struct field CreateBaselineRequest.name of type string"))
 }
