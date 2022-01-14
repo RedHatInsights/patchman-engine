@@ -155,3 +155,16 @@ func TestUpdateBaselineNullValues(t *testing.T) {
 
 	database.DeleteBaseline(t, baselineID)
 }
+
+func TestUpdateBaselineInvalidBaselineID(t *testing.T) {
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/invalidBaseline", bytes.NewBufferString("{}"))
+	core.InitRouterWithParams(BaselineUpdateHandler, 1, "POST", "/:baseline_id").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var errResp utils.ErrorResponse
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, "Invalid baseline_id: invalidBaseline", errResp.Error)
+}

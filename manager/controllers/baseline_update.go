@@ -49,7 +49,7 @@ func BaselineUpdateHandler(c *gin.Context) {
 	baselineIDstr := c.Param("baseline_id")
 	baselineID, err := strconv.Atoi(baselineIDstr)
 	if err != nil {
-		LogAndRespError(c, err, "Invalid baseline id: "+baselineIDstr)
+		LogAndRespBadRequest(c, err, "Invalid baseline_id: "+baselineIDstr)
 		return
 	}
 
