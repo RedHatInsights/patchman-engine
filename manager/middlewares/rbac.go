@@ -71,11 +71,7 @@ func RBAC() gin.HandlerFunc {
 		grantedPerms := isAccessGranted(c)
 
 		switch c.Request.Method {
-		case "POST":
-			if grantedPerms.Read || grantedPerms.Write {
-				return
-			}
-		case "GET":
+		case "GET", "POST":
 			if grantedPerms.Read {
 				return
 			}

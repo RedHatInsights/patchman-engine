@@ -36,8 +36,8 @@ func TestUpdateBaseline(t *testing.T) {
 	}`
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf(`/%v`, baselineID)
-	req, _ := http.NewRequest("POST", path, bytes.NewBufferString(data))
-	core.InitRouterWithParams(BaselineUpdateHandler, 1, "POST", "/:baseline_id").ServeHTTP(w, req)
+	req, _ := http.NewRequest("PUT", path, bytes.NewBufferString(data))
+	core.InitRouterWithParams(BaselineUpdateHandler, 1, "PUT", "/:baseline_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	database.CheckBaseline(t, baselineID, []string{
@@ -57,8 +57,8 @@ func TestUpdateBaselineWithEmptyAssociations(t *testing.T) {
 	data := `{"inventory_ids": {}}`
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf(`/%v`, baselineID)
-	req, _ := http.NewRequest("POST", path, bytes.NewBufferString(data))
-	core.InitRouterWithParams(BaselineUpdateHandler, 1, "POST", "/:baseline_id").ServeHTTP(w, req)
+	req, _ := http.NewRequest("PUT", path, bytes.NewBufferString(data))
+	core.InitRouterWithParams(BaselineUpdateHandler, 1, "PUT", "/:baseline_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -87,8 +87,8 @@ func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
 	}`
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf(`/%v`, baselineID)
-	req, _ := http.NewRequest("POST", path, bytes.NewBufferString(data))
-	core.InitRouterWithParams(BaselineUpdateHandler, 1, "POST", "/:baseline_id").ServeHTTP(w, req)
+	req, _ := http.NewRequest("PUT", path, bytes.NewBufferString(data))
+	core.InitRouterWithParams(BaselineUpdateHandler, 1, "PUT", "/:baseline_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -104,8 +104,8 @@ func TestUpdateBaselineInvalidPayload(t *testing.T) {
 
 	data := `{"name": 0}`
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/1", bytes.NewBufferString(data))
-	core.InitRouterWithParams(BaselineUpdateHandler, 1, "POST", "/:baseline_id").ServeHTTP(w, req)
+	req, _ := http.NewRequest("PUT", "/1", bytes.NewBufferString(data))
+	core.InitRouterWithParams(BaselineUpdateHandler, 1, "PUT", "/:baseline_id").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
@@ -126,8 +126,8 @@ func TestUpdateBaselineInvalidSystem(t *testing.T) {
 	}`
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf(`/%v`, baselineID)
-	req, _ := http.NewRequest("POST", path, bytes.NewBufferString(data))
-	core.InitRouterWithParams(BaselineUpdateHandler, 1, "POST", "/:baseline_id").ServeHTTP(w, req)
+	req, _ := http.NewRequest("PUT", path, bytes.NewBufferString(data))
+	core.InitRouterWithParams(BaselineUpdateHandler, 1, "PUT", "/:baseline_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	var errResp utils.ErrorResponse
@@ -145,8 +145,8 @@ func TestUpdateBaselineNullValues(t *testing.T) {
 	data := `{}`
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf(`/%v`, baselineID)
-	req, _ := http.NewRequest("POST", path, bytes.NewBufferString(data))
-	core.InitRouterWithParams(BaselineUpdateHandler, 1, "POST", "/:baseline_id").ServeHTTP(w, req)
+	req, _ := http.NewRequest("PUT", path, bytes.NewBufferString(data))
+	core.InitRouterWithParams(BaselineUpdateHandler, 1, "PUT", "/:baseline_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -160,8 +160,8 @@ func TestUpdateBaselineInvalidBaselineID(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/invalidBaseline", bytes.NewBufferString("{}"))
-	core.InitRouterWithParams(BaselineUpdateHandler, 1, "POST", "/:baseline_id").ServeHTTP(w, req)
+	req, _ := http.NewRequest("PUT", "/invalidBaseline", bytes.NewBufferString("{}"))
+	core.InitRouterWithParams(BaselineUpdateHandler, 1, "PUT", "/:baseline_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
