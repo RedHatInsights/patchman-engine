@@ -60,7 +60,7 @@ type SystemItemAttributes struct {
 	OSName  string `json:"os_name" csv:"os_name" query:"ih.system_profile->'operating_system'->>'name'" gorm:"column:osname"`
 	OSMajor string `json:"os_major" csv:"os_major" query:"ih.system_profile->'operating_system'->>'major'" gorm:"column:osmajor"`
 	OSMinor string `json:"os_minor" csv:"os_minor" query:"ih.system_profile->'operating_system'->>'minor'" gorm:"column:osminor"`
-	OS      string `json:"os" csv:"os" query:"concat(COALESCE(ih.system_profile->'operating_system'->>'name' || ' ',''), COALESCE(ih.system_profile->'operating_system'->>'major', ''), '.' || (ih.system_profile->'operating_system'->>'minor'))" order_query:"ih.system_profile->'operating_system'->>'name',cast(substring(ih.system_profile->'operating_system'->>'major','^\\d+') as int),cast(substring(ih.system_profile->'operating_system'->>'minor','^\\d+') as int)" gorm:"column:os"`
+	OS      string `json:"os" csv:"os" query:"ih.system_profile->'operating_system'->>'name' || ' ' || coalesce(ih.system_profile->'operating_system'->>'major' || '.' || (ih.system_profile->'operating_system'->>'minor'), '')" order_query:"ih.system_profile->'operating_system'->>'name',cast(substring(ih.system_profile->'operating_system'->>'major','^\\d+') as int),cast(substring(ih.system_profile->'operating_system'->>'minor','^\\d+') as int)" gorm:"column:os"`
 	Rhsm    string `json:"rhsm" csv:"rhsm" query:"ih.system_profile->'rhsm'->>'version'" gorm:"column:rhsm"`
 
 	StaleTimestamp        *time.Time `json:"stale_timestamp" csv:"stale_timestamp" query:"ih.stale_timestamp" gorm:"column:stale_timestamp"`
