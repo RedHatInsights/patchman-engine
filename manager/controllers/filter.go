@@ -38,23 +38,23 @@ func ParseFilterValue(val string) (FilterData, error) {
 	}, nil
 }
 
-func (t *FilterData) CheckValueCount(attrMap database.AttrMap) bool {
-	switch t.Operator {
+func checkValueCount(operator string, nValues int) bool {
+	switch operator {
 	case "between":
-		return len(t.Values) == 2
+		return nValues == 2
 	case "in":
 		fallthrough
-	case "notin":
-		return len(t.Values) > 0
+	case "notin": // nolint: goconst
+		return nValues > 0
 	default:
-		return len(t.Values) == 1
+		return nValues == 1
 	}
 }
 
 // Convert a single filter to where clauses
 func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (string, []interface{}, error) {
 	var err error
-	transformedValues := transformValues(fieldName, t.Values)
+	transformedValues, transformedOperator := transformFilterParams(fieldName, t.Values, t.Operator)
 	var values = make([]interface{}, len(transformedValues))
 	for i, v := range transformedValues {
 		fieldInfo, found := attributes[fieldName]
@@ -68,13 +68,13 @@ func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (str
 		}
 	}
 
-	if !t.CheckValueCount(attributes) {
+	if !checkValueCount(transformedOperator, len(transformedValues)) {
 		return "", nil,
 			errors.Errorf("Invalid number of values: %v for operator '%s'", len(t.Values), t.Operator)
 	}
 	// We need to look up expression used to create the attribute, because FROM clause can't contain
 	// column aliases
-	switch t.Operator {
+	switch transformedOperator {
 	case "eq":
 		return fmt.Sprintf("%s = ? ", attributes[fieldName].DataQuery), values, nil
 	case "neq":
@@ -88,7 +88,7 @@ func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (str
 	case "leq":
 		return fmt.Sprintf("%s <= ? ", attributes[fieldName].DataQuery), values, nil
 	case "between":
-		if len(t.Values) != 2 {
+		if len(transformedValues) != 2 {
 			return "", []interface{}{}, errors.New("the `between` filter needs 2 values")
 		}
 		return fmt.Sprintf("%s BETWEEN ? AND ? ", attributes[fieldName].DataQuery), values, nil
@@ -101,10 +101,11 @@ func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (str
 	}
 }
 
-// transformValues Allow exceptions in ToWhere values usage (e.g. "other").
-func transformValues(fieldName string, originalValues []string) (transformedValues []string) {
+// transformFilterParams Allow exceptions in ToWhere values usage (e.g. "other").
+func transformFilterParams(fieldName string, originalValues []string, originalOperator string) (
+	transformedValues []string, transformedOperator string) {
 	if fieldName != "advisory_type_name" {
-		return originalValues
+		return originalValues, originalOperator
 	}
 
 	transformedValues = make([]string, 0, len(originalValues))
@@ -115,7 +116,20 @@ func transformValues(fieldName string, originalValues []string) (transformedValu
 			transformedValues = append(transformedValues, originalValue)
 		}
 	}
-	return transformedValues
+
+	if len(transformedValues) == len(originalValues) {
+		return originalValues, originalOperator
+	}
+
+	switch originalOperator {
+	case "eq":
+		transformedOperator = "in"
+	case "neq":
+		transformedOperator = "notin"
+	default:
+		transformedOperator = originalOperator
+	}
+	return transformedValues, transformedOperator
 }
 
 func (t Filters) ToQueryParams() string {
