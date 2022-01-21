@@ -145,6 +145,19 @@ func TestUploadHandlerWarnSkipReporter(t *testing.T) {
 	assert.Equal(t, WarnSkippingReporter, logHook.LogEntries[0].Message)
 }
 
+func TestUploadHandlerWarnSkipHostType(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	configure()
+	logHook := utils.NewTestLogHook()
+	log.AddHook(logHook)
+	event := createTestUploadEvent("1", id, "puptoo", true)
+	event.Host.SystemProfile.HostType = "edge"
+	err := HandleUpload(event)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(logHook.LogEntries))
+	assert.Equal(t, WarnSkippingHostType, logHook.LogEntries[0].Message)
+}
+
 // error when parsing identity
 func TestUploadHandlerError1(t *testing.T) {
 	utils.SkipWithoutDB(t)
