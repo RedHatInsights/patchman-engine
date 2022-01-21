@@ -80,7 +80,7 @@ func HandleUpload(event HostEvent) error {
 		return nil
 	}
 
-	if len(*event.Host.SystemProfile.InstalledPackages) == 0 {
+	if len(event.Host.SystemProfile.GetInstalledPackages()) == 0 {
 		utils.Log("inventoryID", event.Host.ID).Warn(WarnSkippingNoPackages)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
 		return nil
@@ -263,13 +263,13 @@ func getReporterID(reporter string) *int {
 // EPEL uses the `epel` repo identifier on both rhel 7 and rhel 8. We create our own mapping to
 // `epel-7` and `epel-8`
 func fixEpelRepos(sys *inventory.SystemProfile, repos []string) []string {
-	if sys == nil || sys.OperatingSystem == nil || sys.OperatingSystem.Major == nil {
+	if sys == nil || sys.OperatingSystem.Major == 0 {
 		return repos
 	}
 
 	for i, r := range repos {
 		if r == "epel" {
-			repos[i] = fmt.Sprintf("%s-%d", r, *sys.OperatingSystem.Major)
+			repos[i] = fmt.Sprintf("%s-%d", r, sys.OperatingSystem.Major)
 		}
 	}
 	return repos
@@ -361,15 +361,15 @@ func deleteOtherSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs 
 }
 
 func processRepos(systemProfile *inventory.SystemProfile) *[]string {
-	repos := make([]string, 0, len(*systemProfile.YumRepos))
-	for _, r := range *systemProfile.YumRepos {
-		rID := *r.ID
+	repos := make([]string, 0, len(systemProfile.GetYumRepos()))
+	for _, r := range systemProfile.GetYumRepos() {
+		rID := r.ID
 		if len(strings.TrimSpace(rID)) == 0 {
 			utils.Log("repo", rID).Warn("removed repo with invalid name")
 			continue
 		}
 
-		if *r.Enabled {
+		if r.Enabled {
 			repos = append(repos, rID)
 		}
 	}
@@ -379,12 +379,12 @@ func processRepos(systemProfile *inventory.SystemProfile) *[]string {
 
 func processModules(systemProfile *inventory.SystemProfile) *[]vmaas.UpdatesV3RequestModulesList {
 	var modules []vmaas.UpdatesV3RequestModulesList
-	if count := len(*systemProfile.DnfModules); count > 0 {
+	if count := len(systemProfile.GetDnfModules()); count > 0 {
 		modules = make([]vmaas.UpdatesV3RequestModulesList, count)
-		for i, m := range *systemProfile.DnfModules {
+		for i, m := range systemProfile.GetDnfModules() {
 			modules[i] = vmaas.UpdatesV3RequestModulesList{
-				ModuleName:   *m.Name,
-				ModuleStream: *m.Stream,
+				ModuleName:   m.Name,
+				ModuleStream: m.Stream,
 			}
 		}
 	}
@@ -402,7 +402,7 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 	systemProfile := host.SystemProfile
 	// Prepare VMaaS request
 	updatesReq := vmaas.UpdatesV3Request{
-		PackageList:    *systemProfile.InstalledPackages,
+		PackageList:    systemProfile.GetInstalledPackages(),
 		RepositoryList: processRepos(&systemProfile),
 		ModulesList:    processModules(&systemProfile),
 		Basearch:       systemProfile.Arch,

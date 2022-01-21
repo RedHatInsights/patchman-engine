@@ -41,15 +41,15 @@ func makeSystemProfile(id string, randomPkgs bool) inventory.SystemProfile {
 
 	yumRepos := []inventory.YumRepo{
 		{
-			ID:      utils.PtrString("repo1"),
-			Name:    utils.PtrString("Debug packages"),
-			Enabled: utils.PtrBool(true),
+			ID:      "repo1",
+			Name:    "Debug packages",
+			Enabled: true,
 		},
 	}
 	dnfModules := []inventory.DnfModule{
 		{
-			Name:   utils.PtrString("firefox"),
-			Stream: utils.PtrString("60"),
+			Name:   "firefox",
+			Stream: "60",
 		},
 	}
 	return inventory.SystemProfile{
