@@ -36,19 +36,7 @@ var DeletionThreshold = time.Hour * time.Duration(utils.GetIntEnvOrDefault("SYST
 type Host struct {
 	ID                    string                  `json:"id,omitempty"`
 	DisplayName           *string                 `json:"display_name,omitempty"`
-	AnsibleHost           *string                 `json:"ansible_host,omitempty"`
 	Account               string                  `json:"account,omitempty"`
-	InsightsID            string                  `json:"insights_id,omitempty"`
-	RhelMachineID         string                  `json:"rhel_machine_id,omitempty"`
-	SubscriptionManagerID string                  `json:"subscription_manager_id,omitempty"`
-	SatelliteID           string                  `json:"satellite_id,omitempty"`
-	FQDN                  string                  `json:"fqdn,omitempty"`
-	BiosUUID              string                  `json:"bios_uuid,omitempty"`
-	IPAddresses           []string                `json:"ip_addresses,omitempty"`
-	MacAddresses          []string                `json:"mac_addresses,omitempty"`
-	ExternalID            string                  `json:"external_id,omitempty"`
-	Created               string                  `json:"created,omitempty"`
-	Updated               string                  `json:"updated,omitempty"`
 	StaleTimestamp        *base.Rfc3339Timestamp  `json:"stale_timestamp,omitempty"`
 	StaleWarningTimestamp *base.Rfc3339Timestamp  `json:"stale_warning_timestamp,omitempty"`
 	CulledTimestamp       *base.Rfc3339Timestamp  `json:"culled_timestamp,omitempty"`
