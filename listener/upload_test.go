@@ -95,9 +95,8 @@ func TestUploadHandler(t *testing.T) {
 	_ = getOrCreateTestAccount(t)
 	event := createTestUploadEvent(id, id, "puptoo", true)
 
-	event.Host.SystemProfile.OperatingSystem = &inventory.OperatingSystem{Major: utils.PtrInt32(8)}
-	repos := append(*event.Host.SystemProfile.YumRepos,
-		inventory.YumRepo{ID: utils.PtrString("epel"), Enabled: utils.PtrBool(true)})
+	event.Host.SystemProfile.OperatingSystem = inventory.OperatingSystem{Major: 8}
+	repos := append(event.Host.SystemProfile.GetYumRepos(), inventory.YumRepo{ID: "epel", Enabled: true})
 	event.Host.SystemProfile.YumRepos = &repos
 
 	err := HandleUpload(event)
