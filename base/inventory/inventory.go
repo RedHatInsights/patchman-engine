@@ -2,6 +2,7 @@ package inventory
 
 type SystemProfile struct {
 	Arch              *string         `json:"arch,omitempty"`
+	HostType          string          `json:"host_type,omitempty"`
 	InstalledPackages *[]string       `json:"installed_packages,omitempty"`
 	YumRepos          *[]YumRepo      `json:"yum_repos,omitempty"`
 	DnfModules        *[]DnfModule    `json:"dnf_modules,omitempty"`

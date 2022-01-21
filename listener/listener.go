@@ -18,6 +18,7 @@ var (
 	evalWriter        mqueue.Writer
 	validReporters    map[string]int
 	excludedReporters map[string]bool
+	excludedHostTypes map[string]bool
 	enableBypass      bool
 	uploadEvalTimeout time.Duration
 )
@@ -33,21 +34,26 @@ func configure() {
 	evalWriter = mqueue.NewKafkaWriterFromEnv(evalTopic)
 
 	validReporters = loadValidReporters()
-	excludedReporters = loadExcludedReporters()
+	excludedReporters = getEnvVarStringsSet("EXCLUDED_REPORTERS")
+	excludedHostTypes = getEnvVarStringsSet("EXCLUDED_HOST_TYPES")
 
 	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
 
 	uploadEvalTimeout = time.Duration(utils.GetIntEnvOrDefault("UPLOAD_EVAL_TIMEOUT_MS", 500)) * time.Millisecond
 }
 
-func loadExcludedReporters() map[string]bool {
-	excludeReportersStr := os.Getenv("EXCLUDED_REPORTERS")
-	arr := strings.Split(excludeReportersStr, ",")
-	excludedReporters := map[string]bool{}
-	for _, m := range arr {
-		excludedReporters[m] = true
+func getEnvVarStringsSet(envVarName string) map[string]bool {
+	strValue := os.Getenv(envVarName)
+	mapValue := map[string]bool{}
+	if strValue == "" {
+		return mapValue
 	}
-	return excludedReporters
+	arr := strings.Split(strValue, ",")
+
+	for _, m := range arr {
+		mapValue[m] = true
+	}
+	return mapValue
 }
 
 func loadValidReporters() map[string]int {
