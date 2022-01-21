@@ -4,12 +4,12 @@ import (
 	"app/base"
 	"app/base/core"
 	"app/base/database"
+	"app/base/inventory"
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
 	"context"
 	"errors"
-	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -95,11 +95,10 @@ func TestUploadHandler(t *testing.T) {
 	_ = getOrCreateTestAccount(t)
 	event := createTestUploadEvent(id, id, "puptoo", true)
 
-	event.Host.SystemProfile.SetOperatingSystem(inventory.SystemProfileSpecYamlSystemProfileOperatingSystem{
-		Major: utils.PtrInt32(8),
-	})
-	event.Host.SystemProfile.SetYumRepos(append(*event.Host.SystemProfile.YumRepos,
-		inventory.SystemProfileSpecYamlYumRepo{Id: utils.PtrString("epel"), Enabled: utils.PtrBool(true)}))
+	event.Host.SystemProfile.OperatingSystem = &inventory.OperatingSystem{Major: utils.PtrInt32(8)}
+	repos := append(*event.Host.SystemProfile.YumRepos,
+		inventory.YumRepo{ID: utils.PtrString("epel"), Enabled: utils.PtrBool(true)})
+	event.Host.SystemProfile.YumRepos = &repos
 
 	err := HandleUpload(event)
 	assert.NoError(t, err)
@@ -251,7 +250,7 @@ func TestUpdateSystemRepos2(t *testing.T) {
 
 func TestFixEpelRepos(t *testing.T) {
 	repos := []string{"epel"}
-	var sys = inventory.SystemProfileSpecYamlSystemProfile{}
+	var sys = inventory.SystemProfile{}
 	repos = fixEpelRepos(&sys, repos)
 	assert.Equal(t, "epel", repos[0])
 }

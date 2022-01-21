@@ -1,8 +1,8 @@
 package platform
 
 import (
+	"app/base/inventory"
 	"app/base/utils"
-	"github.com/RedHatInsights/patchman-clients/inventory"
 	"math/rand"
 )
 
@@ -30,7 +30,7 @@ var pkgs = []string{
 
 // nolint: gosec
 // Create bare system profile
-func makeSystemProfile(id string, randomPkgs bool) inventory.SystemProfileSpecYamlSystemProfile {
+func makeSystemProfile(id string, randomPkgs bool) inventory.SystemProfile {
 	_pkgs := pkgs
 	if id == "TEST-NO-PKGS" {
 		_pkgs = []string{}
@@ -39,22 +39,20 @@ func makeSystemProfile(id string, randomPkgs bool) inventory.SystemProfileSpecYa
 		_pkgs = pkgs[0:nPkgs]
 	}
 
-	yumRepos := []inventory.SystemProfileSpecYamlYumRepo{
+	yumRepos := []inventory.YumRepo{
 		{
-			Id:       utils.PtrString("repo1"),
-			Name:     utils.PtrString("Debug packages"),
-			BaseUrl:  utils.PtrString("http://repo.com/$arch/$releasever/$product/repo"),
-			Enabled:  utils.PtrBool(true),
-			Gpgcheck: utils.PtrBool(false),
+			ID:      utils.PtrString("repo1"),
+			Name:    utils.PtrString("Debug packages"),
+			Enabled: utils.PtrBool(true),
 		},
 	}
-	dnfModules := []inventory.SystemProfileSpecYamlDnfModule{
+	dnfModules := []inventory.DnfModule{
 		{
 			Name:   utils.PtrString("firefox"),
 			Stream: utils.PtrString("60"),
 		},
 	}
-	return inventory.SystemProfileSpecYamlSystemProfile{
+	return inventory.SystemProfile{
 		Arch:              utils.PtrString("i686"),
 		InstalledPackages: &_pkgs,
 		YumRepos:          &yumRepos,

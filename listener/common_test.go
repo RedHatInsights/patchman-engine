@@ -2,11 +2,11 @@ package listener
 
 import (
 	"app/base/database"
+	"app/base/inventory"
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
 	"fmt"
-	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -70,8 +70,6 @@ func getOrCreateTestAccount(t *testing.T) int {
 
 // nolint: unparam
 func createTestUploadEvent(rhAccountID, inventoryID, reporter string, packages bool) HostEvent {
-	ns := inventory.NewNullableString(utils.PtrString("insights"))
-	v1 := inventory.NewNullableString(utils.PtrString("prod"))
 	ev := HostEvent{
 		Type:             "created",
 		PlatformMetadata: nil,
@@ -79,27 +77,15 @@ func createTestUploadEvent(rhAccountID, inventoryID, reporter string, packages b
 			ID:       inventoryID,
 			Account:  rhAccountID,
 			Reporter: reporter,
-			Tags: []inventory.StructuredTag{
-				{
-					Key:       utils.PtrString("env"),
-					Namespace: *ns,
-					Value:     *v1,
-				}, {
-					Key:       utils.PtrString("release"),
-					Namespace: *ns,
-					Value:     *v1,
-				},
-			},
 		},
 	}
 	if packages {
-		ev.Host.SystemProfile.SetInstalledPackages([]string{"kernel-54321.rhel8.x86_64"})
+		ev.Host.SystemProfile.InstalledPackages = &[]string{"kernel-54321.rhel8.x86_64"}
 	}
-	ev.Host.SystemProfile.SetDnfModules(
-		[]inventory.SystemProfileSpecYamlDnfModule{{Name: utils.PtrString("modName"), Stream: utils.PtrString("modStream")}})
-	ev.Host.SystemProfile.SetYumRepos(
-		[]inventory.SystemProfileSpecYamlYumRepo{{Id: utils.PtrString("repo1"), Enabled: utils.PtrBool(true)}})
-
+	ev.Host.SystemProfile.DnfModules = &[]inventory.DnfModule{{
+		Name:   utils.PtrString("modName"),
+		Stream: utils.PtrString("modStream")}}
+	ev.Host.SystemProfile.YumRepos = &[]inventory.YumRepo{{ID: utils.PtrString("repo1"), Enabled: utils.PtrBool(true)}}
 	return ev
 }
 
