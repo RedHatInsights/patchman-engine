@@ -3,7 +3,6 @@ module app
 go 1.13
 
 require (
-	github.com/RedHatInsights/patchman-clients/inventory v0.14.0
 	github.com/RedHatInsights/patchman-clients/rbac v0.14.0
 	github.com/RedHatInsights/patchman-clients/vmaas v0.17.0
 	github.com/aws/aws-sdk-go v1.38.51
