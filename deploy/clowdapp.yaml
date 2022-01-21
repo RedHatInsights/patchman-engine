@@ -82,6 +82,7 @@ objects:
         - {name: CONSUMER_COUNT, value: '${CONSUMER_COUNT_LISTENER}'}
         - {name: ENABLE_BYPASS, value: '${ENABLE_BYPASS_LISTENER}'}
         - {name: EXCLUDED_REPORTERS, value: '${EXCLUDED_REPORTERS}'}
+        - {name: EXCLUDED_HOST_TYPES, value: '${EXCLUDED_HOST_TYPES}'}
 
         resources:
           limits: {cpu: '${RES_CPU_LISTENER}', memory: '${RES_MEM_LISTENER}'}
@@ -354,6 +355,7 @@ parameters:
 - {name: CONSUMER_COUNT_LISTENER, value: '8'}
 - {name: ENABLE_BYPASS_LISTENER, value: 'false'} # Enable only bypass (fake) messages processing
 - {name: EXCLUDED_REPORTERS, value: 'yupana'} # Comma-separated list of reporters to exclude from processing
+- {name: EXCLUDED_HOST_TYPES, value: 'edge'} # Comma-separated list of host types to exclude from processing
 - {name: RES_CPU_LISTENER, value: 250m}
 - {name: RES_MEM_LISTENER, value: 256Mi}
 
