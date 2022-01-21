@@ -3,6 +3,7 @@ package listener
 import (
 	"app/base"
 	"app/base/database"
+	"app/base/inventory"
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
@@ -10,7 +11,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/RedHatInsights/patchman-clients/inventory"
 	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -34,27 +34,26 @@ const (
 var DeletionThreshold = time.Hour * time.Duration(utils.GetIntEnvOrDefault("SYSTEM_DELETE_HRS", 4))
 
 type Host struct {
-	ID                    string                                       `json:"id,omitempty"`
-	DisplayName           *string                                      `json:"display_name,omitempty"`
-	AnsibleHost           *string                                      `json:"ansible_host,omitempty"`
-	Account               string                                       `json:"account,omitempty"`
-	InsightsID            string                                       `json:"insights_id,omitempty"`
-	RhelMachineID         string                                       `json:"rhel_machine_id,omitempty"`
-	SubscriptionManagerID string                                       `json:"subscription_manager_id,omitempty"`
-	SatelliteID           string                                       `json:"satellite_id,omitempty"`
-	FQDN                  string                                       `json:"fqdn,omitempty"`
-	BiosUUID              string                                       `json:"bios_uuid,omitempty"`
-	IPAddresses           []string                                     `json:"ip_addresses,omitempty"`
-	MacAddresses          []string                                     `json:"mac_addresses,omitempty"`
-	ExternalID            string                                       `json:"external_id,omitempty"`
-	Created               string                                       `json:"created,omitempty"`
-	Updated               string                                       `json:"updated,omitempty"`
-	StaleTimestamp        *base.Rfc3339Timestamp                       `json:"stale_timestamp,omitempty"`
-	StaleWarningTimestamp *base.Rfc3339Timestamp                       `json:"stale_warning_timestamp,omitempty"`
-	CulledTimestamp       *base.Rfc3339Timestamp                       `json:"culled_timestamp,omitempty"`
-	Reporter              string                                       `json:"reporter,omitempty"`
-	Tags                  []inventory.StructuredTag                    `json:"tags,omitempty"`
-	SystemProfile         inventory.SystemProfileSpecYamlSystemProfile `json:"system_profile,omitempty"`
+	ID                    string                  `json:"id,omitempty"`
+	DisplayName           *string                 `json:"display_name,omitempty"`
+	AnsibleHost           *string                 `json:"ansible_host,omitempty"`
+	Account               string                  `json:"account,omitempty"`
+	InsightsID            string                  `json:"insights_id,omitempty"`
+	RhelMachineID         string                  `json:"rhel_machine_id,omitempty"`
+	SubscriptionManagerID string                  `json:"subscription_manager_id,omitempty"`
+	SatelliteID           string                  `json:"satellite_id,omitempty"`
+	FQDN                  string                  `json:"fqdn,omitempty"`
+	BiosUUID              string                  `json:"bios_uuid,omitempty"`
+	IPAddresses           []string                `json:"ip_addresses,omitempty"`
+	MacAddresses          []string                `json:"mac_addresses,omitempty"`
+	ExternalID            string                  `json:"external_id,omitempty"`
+	Created               string                  `json:"created,omitempty"`
+	Updated               string                  `json:"updated,omitempty"`
+	StaleTimestamp        *base.Rfc3339Timestamp  `json:"stale_timestamp,omitempty"`
+	StaleWarningTimestamp *base.Rfc3339Timestamp  `json:"stale_warning_timestamp,omitempty"`
+	CulledTimestamp       *base.Rfc3339Timestamp  `json:"culled_timestamp,omitempty"`
+	Reporter              string                  `json:"reporter,omitempty"`
+	SystemProfile         inventory.SystemProfile `json:"system_profile,omitempty"`
 }
 
 type HostEvent struct {
@@ -81,7 +80,7 @@ func HandleUpload(event HostEvent) error {
 		return nil
 	}
 
-	if len(event.Host.SystemProfile.GetInstalledPackages()) == 0 {
+	if len(*event.Host.SystemProfile.InstalledPackages) == 0 {
 		utils.Log("inventoryID", event.Host.ID).Warn(WarnSkippingNoPackages)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
 		return nil
@@ -263,7 +262,7 @@ func getReporterID(reporter string) *int {
 
 // EPEL uses the `epel` repo identifier on both rhel 7 and rhel 8. We create our own mapping to
 // `epel-7` and `epel-8`
-func fixEpelRepos(sys *inventory.SystemProfileSpecYamlSystemProfile, repos []string) []string {
+func fixEpelRepos(sys *inventory.SystemProfile, repos []string) []string {
 	if sys == nil || sys.OperatingSystem == nil || sys.OperatingSystem.Major == nil {
 		return repos
 	}
@@ -276,7 +275,7 @@ func fixEpelRepos(sys *inventory.SystemProfileSpecYamlSystemProfile, repos []str
 	return repos
 }
 
-func updateRepos(tx *gorm.DB, profile inventory.SystemProfileSpecYamlSystemProfile, rhAccountID int,
+func updateRepos(tx *gorm.DB, profile inventory.SystemProfile, rhAccountID int,
 	systemID int, repos []string) (addedRepos int64, addedSysRepos int64, deletedSysRepos int64, err error) {
 	repos = fixEpelRepos(&profile, repos)
 	repoIDs, addedRepos, err := ensureReposInDB(tx, repos)
@@ -361,16 +360,16 @@ func deleteOtherSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs 
 	return res.DeletedCount, nil
 }
 
-func processRepos(systemProfile *inventory.SystemProfileSpecYamlSystemProfile) *[]string {
-	repos := make([]string, 0, len(systemProfile.GetYumRepos()))
-	for _, r := range systemProfile.GetYumRepos() {
-		rID := r.GetId()
+func processRepos(systemProfile *inventory.SystemProfile) *[]string {
+	repos := make([]string, 0, len(*systemProfile.YumRepos))
+	for _, r := range *systemProfile.YumRepos {
+		rID := *r.ID
 		if len(strings.TrimSpace(rID)) == 0 {
 			utils.Log("repo", rID).Warn("removed repo with invalid name")
 			continue
 		}
 
-		if r.GetEnabled() {
+		if *r.Enabled {
 			repos = append(repos, rID)
 		}
 	}
@@ -378,14 +377,14 @@ func processRepos(systemProfile *inventory.SystemProfileSpecYamlSystemProfile) *
 	return &repos
 }
 
-func processModules(systemProfile *inventory.SystemProfileSpecYamlSystemProfile) *[]vmaas.UpdatesV3RequestModulesList {
+func processModules(systemProfile *inventory.SystemProfile) *[]vmaas.UpdatesV3RequestModulesList {
 	var modules []vmaas.UpdatesV3RequestModulesList
-	if count := len(systemProfile.GetDnfModules()); count > 0 {
+	if count := len(*systemProfile.DnfModules); count > 0 {
 		modules = make([]vmaas.UpdatesV3RequestModulesList, count)
-		for i, m := range systemProfile.GetDnfModules() {
+		for i, m := range *systemProfile.DnfModules {
 			modules[i] = vmaas.UpdatesV3RequestModulesList{
-				ModuleName:   m.GetName(),
-				ModuleStream: m.GetStream(),
+				ModuleName:   *m.Name,
+				ModuleStream: *m.Stream,
 			}
 		}
 	}
@@ -403,7 +402,7 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 	systemProfile := host.SystemProfile
 	// Prepare VMaaS request
 	updatesReq := vmaas.UpdatesV3Request{
-		PackageList:    systemProfile.GetInstalledPackages(),
+		PackageList:    *systemProfile.InstalledPackages,
 		RepositoryList: processRepos(&systemProfile),
 		ModulesList:    processModules(&systemProfile),
 		Basearch:       systemProfile.Arch,
@@ -412,7 +411,7 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 	}
 
 	// use rhsm version if set
-	releasever := systemProfile.Rhsm.GetVersion()
+	releasever := systemProfile.Rhsm.Version
 	if len(releasever) > 0 {
 		updatesReq.SetReleasever(releasever)
 	}
