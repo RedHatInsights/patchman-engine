@@ -22,6 +22,7 @@ import (
 const (
 	WarnSkippingNoPackages = "skipping profile with no packages"
 	WarnSkippingReporter   = "skipping excluded reporter"
+	WarnSkippingHostType   = "skipping excluded host type"
 	ErrorNoAccountProvided = "no account provided in host message"
 	ErrorKafkaSend         = "unable to send evaluation message"
 	ErrorProcessUpload     = "unable to process upload"
@@ -59,6 +60,12 @@ func HandleUpload(event HostEvent) error {
 	if _, ok := excludedReporters[event.Host.Reporter]; ok {
 		utils.Log("inventoryID", event.Host.ID, "reporter", event.Host.Reporter).Warn(WarnSkippingReporter)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedReporter).Inc()
+		return nil
+	}
+
+	if _, ok := excludedHostTypes[event.Host.SystemProfile.HostType]; ok {
+		utils.Log("inventoryID", event.Host.ID, "hostType", event.Host.SystemProfile.HostType).Warn(WarnSkippingHostType)
+		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedHostType).Inc()
 		return nil
 	}
 

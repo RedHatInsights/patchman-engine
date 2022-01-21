@@ -22,6 +22,7 @@ const (
 	ReceivedWarnNoRows           = "warn-no-rows"
 	ReceivedWarnNoPackages       = "warn-no-packages"
 	ReceivedWarnExcludedReporter = "warn-excluded-reporter"
+	ReceivedWarnExcludedHostType = "warn-excluded-host-type"
 )
 
 var (
