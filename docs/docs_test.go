@@ -7,9 +7,25 @@ import (
 	"testing"
 )
 
+const openAPIPath = "openapi.json"
+
 func TestValidateOpenAPI3DocStr(t *testing.T) {
-	doc, err := ioutil.ReadFile("openapi.json")
+	doc, err := ioutil.ReadFile(openAPIPath)
 	assert.Nil(t, err)
 	_, err = openapi3.NewSwaggerLoader().LoadSwaggerFromData(doc)
 	assert.Nil(t, err)
+}
+
+func TestFilterOpenAPIPaths1(t *testing.T) {
+	nRemovedPaths := filterOpenAPI(EndpointsConfig{
+		EnableBaselines: true,
+	}, openAPIPath, "/tmp/openapi-filter-test.json")
+	assert.Equal(t, 0, nRemovedPaths)
+}
+
+func TestFilterOpenAPIPaths2(t *testing.T) {
+	nRemovedPaths := filterOpenAPI(EndpointsConfig{
+		EnableBaselines: false,
+	}, openAPIPath, "/tmp/openapi-filter-test.json")
+	assert.Equal(t, 3, nRemovedPaths)
 }
