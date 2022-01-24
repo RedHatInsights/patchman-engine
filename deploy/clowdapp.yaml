@@ -43,6 +43,7 @@ objects:
         - {name: ENABLE_ADVISORY_DETAIL_CACHE, value: '${ENABLE_ADVISORY_DETAIL_CACHE}'}
         - {name: ADVISORY_DETAIL_CACHE_SIZE, value: '${ADVISORY_DETAIL_CACHE_SIZE}'}
         - {name: PRELOAD_ADVISORY_DETAIL_CACHE, value: '${PRELOAD_ADVISORY_DETAIL_CACHE}'}
+        - {name: ENABLE_BASELINES_API, value: '${ENABLE_BASELINES_API}'}
 
         resources:
           limits: {cpu: '${RES_CPU_MANAGER}', memory: '${RES_MEM_MANAGER}'}
@@ -342,6 +343,7 @@ parameters:
 - {name: ENABLE_ADVISORY_DETAIL_CACHE, value: 'true'} # Use LRU cache in advisory detail endpoint
 - {name: ADVISORY_DETAIL_CACHE_SIZE, value: '100'} # Advisory detail cache size (cached items count)
 - {name: PRELOAD_ADVISORY_DETAIL_CACHE, value: 'true'} # Enable advisory detail cache preloading
+- {name: ENABLE_BASELINES_API, value: 'true'} # Enable baselines API endpoints
 - {name: RES_CPU_MANAGER, value: 200m}
 - {name: RES_MEM_MANAGER, value: 256Mi}
 
