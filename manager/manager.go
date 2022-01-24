@@ -4,6 +4,7 @@ import (
 	"app/base"
 	"app/base/core"
 	"app/base/utils"
+	"app/docs"
 	"app/manager/middlewares"
 	"app/manager/routes"
 	"github.com/gin-contrib/gzip"
@@ -36,13 +37,14 @@ func RunManager() {
 	middlewares.Prometheus().Use(app)
 	app.Use(middlewares.RequestResponseLogger())
 	app.Use(gzip.Gzip(gzip.DefaultCompression))
-	middlewares.SetSwagger(app)
+	endpointsConfig := getEndpointsConfig()
+	middlewares.SetSwagger(app, endpointsConfig)
 	app.HandleMethodNotAllowed = true
 
 	// routes
 	core.InitProbes(app)
 	api := app.Group("/api/patch/v1")
-	routes.InitAPI(api)
+	routes.InitAPI(api, endpointsConfig)
 
 	go base.TryExposeOnMetricsPort(app)
 
@@ -53,4 +55,11 @@ func RunManager() {
 		panic(err)
 	}
 	utils.Log().Info("manager completed")
+}
+
+func getEndpointsConfig() docs.EndpointsConfig {
+	config := docs.EndpointsConfig{
+		EnableBaselines: utils.GetBoolEnvOrDefault("ENABLE_BASELINES_API", true),
+	}
+	return config
 }
