@@ -9,10 +9,10 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 )
 
-func SetSwagger(app *gin.Engine) {
+func SetSwagger(app *gin.Engine, config docs.EndpointsConfig) {
 	// Serving openapi docs
-	docs.Init(app)
+	docs.Init(app, config)
 
-	url := ginSwagger.URL("/api/patch/v1/openapi.json")
+	url := ginSwagger.URL(docs.OpenapiURL)
 	app.GET("/openapi/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 }

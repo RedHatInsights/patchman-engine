@@ -1,13 +1,14 @@
 package routes
 
 import (
+	"app/docs"
 	"app/manager/controllers"
 	"app/manager/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
 
-func InitAPI(api *gin.RouterGroup) {
+func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) {
 	api.Use(middlewares.RBAC())
 	api.Use(middlewares.PublicAuthenticator())
 
@@ -17,12 +18,14 @@ func InitAPI(api *gin.RouterGroup) {
 	advisories.GET("/:advisory_id", controllers.AdvisoryDetailHandler)
 	advisories.GET("/:advisory_id/systems", controllers.AdvisorySystemsListHandler)
 
-	baselines := api.Group("/baselines")
-	baselines.GET("/", controllers.BaselinesListHandler)
-	baselines.GET("/:baseline_id/systems", controllers.BaselineSystemsListHandler)
-	baselines.PUT("/", controllers.CreateBaselineHandler)
-	baselines.PUT("/:baseline_id", controllers.BaselineUpdateHandler)
-	baselines.DELETE("/:baseline_id", controllers.BaselineDeleteHandler)
+	if config.EnableBaselines {
+		baselines := api.Group("/baselines")
+		baselines.GET("/", controllers.BaselinesListHandler)
+		baselines.GET("/:baseline_id/systems", controllers.BaselineSystemsListHandler)
+		baselines.PUT("/", controllers.CreateBaselineHandler)
+		baselines.PUT("/:baseline_id", controllers.BaselineUpdateHandler)
+		baselines.DELETE("/:baseline_id", controllers.BaselineDeleteHandler)
+	}
 
 	systems := api.Group("/systems")
 	systems.GET("/", controllers.SystemsListHandler)
