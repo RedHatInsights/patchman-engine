@@ -27,6 +27,7 @@ func TestEvaluate(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	configure()
+	loadCache()
 	mockWriter := mqueue.MockKafkaWriter{}
 	remediationsPublisher = &mockWriter
 
