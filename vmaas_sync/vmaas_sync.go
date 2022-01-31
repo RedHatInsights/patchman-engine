@@ -2,11 +2,13 @@ package vmaas_sync //nolint:revive,stylecheck
 
 import (
 	"app/base"
+	"app/base/api"
 	"app/base/core"
 	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
-	"github.com/RedHatInsights/patchman-clients/vmaas"
+	"net/http"
+
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	"os"
@@ -15,7 +17,10 @@ import (
 )
 
 var (
-	vmaasClient                 *vmaas.APIClient
+	vmaasClient                 *api.Client
+	vmaasErratasURL             string
+	vmaasPkgListURL             string
+	vmaasReposURL               string
 	evalWriter                  mqueue.Writer
 	advisoryPageSize            int
 	packagesPageSize            int
@@ -40,13 +45,14 @@ var (
 func configure() {
 	core.ConfigureApp()
 	useTraceLevel := strings.ToLower(utils.Getenv("LOG_LEVEL", "INFO")) == "trace"
-
-	cfg := vmaas.NewConfiguration()
-	cfg.Servers[0].URL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
-	cfg.Debug = useTraceLevel
-
-	vmaasClient = vmaas.NewAPIClient(cfg)
-
+	vmaasClient = &api.Client{
+		HTTPClient: &http.Client{},
+		HTTPMethod: http.MethodPost,
+		Debug:      useTraceLevel,
+	}
+	vmaasErratasURL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/errata"
+	vmaasPkgListURL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/pkglist"
+	vmaasReposURL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/repos"
 	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
 	evalWriter = mqueue.NewKafkaWriterFromEnv(evalTopic)
 	enabledRepoBasedReeval = utils.GetBoolEnvOrDefault("ENABLE_REPO_BASED_RE_EVALUATION", true)
