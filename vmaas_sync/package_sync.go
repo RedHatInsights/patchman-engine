@@ -5,11 +5,11 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/base/vmaas"
 	"crypto/sha256"
 	"net/http"
 	"time"
 
-	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -31,8 +31,8 @@ func syncPackages(syncStart time.Time, modifiedSince *string) error {
 		if err != nil {
 			return errors.Wrap(err, "PkgList page download and process failed")
 		}
-		iPageMax = int(pkgListResponse.GetPages())
-		utils.Log("page", iPage, "pages", iPageMax, "count", len(pkgListResponse.GetPackageList()),
+		iPageMax = pkgListResponse.Pages
+		utils.Log("page", iPage, "pages", iPageMax, "count", len(pkgListResponse.PackageList),
 			"sync_duration", utils.SinceStr(syncStart, time.Second),
 			"packages_sync_duration", utils.SinceStr(pkgSyncStart, time.Second)).
 			Info("Downloaded packages")
@@ -79,7 +79,7 @@ func downloadAndProcessPkgListPage(iPage int, modifiedSince *string) (*vmaas.Pkg
 		return nil, errors.Wrap(err, "Packages sync failed on vmaas request")
 	}
 
-	err = storePkgListData(pkgListResponse.GetPackageList())
+	err = storePkgListData(pkgListResponse.PackageList)
 	if err != nil {
 		return nil, errors.Wrap(err, "Packages data storing failed")
 	}
@@ -88,14 +88,14 @@ func downloadAndProcessPkgListPage(iPage int, modifiedSince *string) (*vmaas.Pkg
 
 func vmaasPkgListRequest(iPage int, modifiedSince *string) (*vmaas.PkgListResponse, error) {
 	request := vmaas.PkgListRequest{
-		Page:          utils.PtrFloat32(float32(iPage)),
-		PageSize:      utils.PtrFloat32(float32(packagesPageSize)),
+		Page:          iPage,
+		PageSize:      packagesPageSize,
 		ModifiedSince: modifiedSince,
 	}
 
 	vmaasCallFunc := func() (interface{}, *http.Response, error) {
-		vmaasData, resp, err := vmaasClient.DefaultApi.VmaasWebappAppPkgListHandlerPostPost(base.Context).
-			PkgListRequest(request).Execute()
+		vmaasData := vmaas.PkgListResponse{}
+		resp, err := vmaasClient.Request(&base.Context, vmaasPkgListURL, &request, &vmaasData)
 		return &vmaasData, resp, err
 	}
 
@@ -127,8 +127,8 @@ func storePkgListData(vmaasData []vmaas.PkgListItem) error {
 func storeStringsFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListItem) error {
 	stringMap := map[[32]byte]string{}
 	for _, pkgListItem := range vmaasData {
-		stringMap[sha256.Sum256([]byte(pkgListItem.GetDescription()))] = pkgListItem.GetDescription()
-		stringMap[sha256.Sum256([]byte(pkgListItem.GetSummary()))] = pkgListItem.GetSummary()
+		stringMap[sha256.Sum256([]byte(pkgListItem.Description))] = pkgListItem.Description
+		stringMap[sha256.Sum256([]byte(pkgListItem.Summary))] = pkgListItem.Summary
 	}
 
 	strings := make([]models.String, 0, len(stringMap))
@@ -171,9 +171,9 @@ func getPackageArraysFromPkgListItems(pkgListItems []vmaas.PkgListItem) ([]strin
 	// get unique package names
 	namesMap := map[string]*bool{}
 	for _, pkgListItem := range pkgListItems {
-		nevra, err := utils.ParseNevra(pkgListItem.GetNevra())
+		nevra, err := utils.ParseNevra(pkgListItem.Nevra)
 		if err != nil {
-			utils.Log("nevra", pkgListItem.GetNevra()).Warn("Unable to parse package name")
+			utils.Log("nevra", pkgListItem.Nevra).Warn("Unable to parse package name")
 			continue
 		}
 		namesMap[nevra.Name] = nil
@@ -219,14 +219,14 @@ func storePackageDetailsFrmPkgListItems(tx *gorm.DB, nameIDs map[string]int, pkg
 }
 
 func getPackageFromPkgListItem(pkgListItem vmaas.PkgListItem, nameIDs map[string]int) *models.Package {
-	nevraPtr, err := utils.ParseNevra(pkgListItem.GetNevra())
+	nevraPtr, err := utils.ParseNevra(pkgListItem.Nevra)
 	if err != nil {
 		utils.Log("nevra", pkgListItem.Nevra).Error("Unable to parse nevra")
 		return nil
 	}
 
-	descriptionStr := pkgListItem.GetDescription()
-	summaryStr := pkgListItem.GetSummary()
+	descriptionStr := pkgListItem.Description
+	summaryStr := pkgListItem.Summary
 	pkg := models.Package{
 		NameID:          nameIDs[nevraPtr.Name],
 		EVRA:            nevraPtr.EVRAString(),
@@ -255,7 +255,7 @@ func checkPackagesCount() {
 		utils.Log("err", err.Error()).Error("Packages check failed on vmaas request")
 	}
 
-	vmaasPkgCount := int64(response.GetTotal())
+	vmaasPkgCount := int64(response.Total)
 	if vmaasPkgCount <= dbPkgCount {
 		utils.Log("vmaas-count", vmaasPkgCount, "patch-db-count", dbPkgCount).Info("Packages sync check OK")
 		return

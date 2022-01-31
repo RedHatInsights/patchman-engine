@@ -113,3 +113,28 @@ type ErrataResponseErrataList struct {
 	RequiresReboot    bool      `json:"requires_reboot,omitempty"`
 	ReleaseVersions   *[]string `json:"release_versions,omitempty"`
 }
+
+type PkgListRequest struct {
+	Page          int     `json:"page,omitempty"`
+	PageSize      int     `json:"page_size,omitempty"`
+	ModifiedSince *string `json:"modified_since,omitempty"`
+	// Include 'modified' package attribute into the response
+	ReturnModified *bool `json:"return_modified,omitempty"`
+}
+
+type PkgListResponse struct {
+	Page        int           `json:"page,omitempty"`
+	PageSize    int           `json:"page_size,omitempty"`
+	Pages       int           `json:"pages,omitempty"`
+	LastChange  *string       `json:"last_change,omitempty"`
+	PackageList []PkgListItem `json:"package_list,omitempty"`
+	// Total number of packages to return.
+	Total int `json:"total,omitempty"`
+}
+
+type PkgListItem struct {
+	Nevra       string `json:"nevra,omitempty"`
+	Summary     string `json:"summary,omitempty"`
+	Description string `json:"description,omitempty"`
+	Modified    string `json:"modified,omitempty"`
+}
