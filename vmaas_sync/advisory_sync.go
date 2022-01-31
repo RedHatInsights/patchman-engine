@@ -5,13 +5,13 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/base/vmaas"
 	"encoding/json"
 	"math"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/pkg/errors"
 )
 
@@ -36,8 +36,8 @@ func syncAdvisories(syncStart time.Time, modifiedSince *string) error {
 			return errors.Wrap(err, "Erratas page download and process failed")
 		}
 
-		iPageMax = int(errataResponse.GetPages())
-		utils.Log("page", iPage, "pages", int(errataResponse.GetPages()), "count", len(errataResponse.GetErrataList()),
+		iPageMax = errataResponse.Pages
+		utils.Log("page", iPage, "pages", errataResponse.Pages, "count", len(errataResponse.ErrataList),
 			"sync_duration", utils.SinceStr(syncStart, time.Second),
 			"advisories_sync_duration", utils.SinceStr(advSyncStart, time.Second)).
 			Info("Downloaded advisories")
@@ -93,7 +93,7 @@ func getAdvisorySeverities() (map[string]int, error) {
 
 func getSeverityID(vmaasData *vmaas.ErrataResponseErrataList, severities map[string]int) *int {
 	var severityID *int
-	severity := vmaasData.GetSeverity()
+	severity := vmaasData.Severity
 	if severity != "" {
 		if id, has := severities[strings.ToLower(severity)]; has {
 			severityID = &id
@@ -104,7 +104,7 @@ func getSeverityID(vmaasData *vmaas.ErrataResponseErrataList, severities map[str
 
 func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataResponseErrataList,
 	severities, advisoryTypes map[string]int) (*models.AdvisoryMetadata, error) {
-	issued, err := time.Parse(base.Rfc3339NoTz, vmaasData.GetIssued())
+	issued, err := time.Parse(base.Rfc3339NoTz, vmaasData.Issued)
 	if err != nil {
 		return nil, errors.Wrap(err, "Invalid errata issued date")
 	}
@@ -120,18 +120,18 @@ func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataRespons
 
 	advisory := models.AdvisoryMetadata{
 		Name:            errataName,
-		AdvisoryTypeID:  advisoryTypes[strings.ToLower(vmaasData.GetType())],
-		Description:     vmaasData.GetDescription(),
-		Synopsis:        vmaasData.GetSynopsis(),
-		Summary:         vmaasData.GetSummary(),
-		Solution:        vmaasData.GetSolution(),
+		AdvisoryTypeID:  advisoryTypes[strings.ToLower(vmaasData.Type)],
+		Description:     vmaasData.Description,
+		Synopsis:        vmaasData.Synopsis,
+		Summary:         vmaasData.Summary,
+		Solution:        vmaasData.Solution,
 		SeverityID:      getSeverityID(&vmaasData, severities),
 		CveList:         cvesData,
 		PublicDate:      issued,
 		ModifiedDate:    modified,
-		URL:             vmaasData.Url,
+		URL:             &vmaasData.URL,
 		PackageData:     packageData,
-		RebootRequired:  vmaasData.GetRequiresReboot(),
+		RebootRequired:  vmaasData.RequiresReboot,
 		ReleaseVersions: releaseVersionsData,
 	}
 	return &advisory, nil
@@ -139,13 +139,13 @@ func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataRespons
 
 func checkUpdatedSummaryDescription(errataName string, vmaasData vmaas.ErrataResponseErrataList) (
 	modified time.Time, success bool) {
-	modified, err := time.Parse(base.Rfc3339NoTz, vmaasData.GetUpdated())
+	modified, err := time.Parse(base.Rfc3339NoTz, vmaasData.Updated)
 	if err != nil {
 		utils.Log("err", err.Error(), "erratum", errataName).Error("Invalid errata modified date")
 		return time.Time{}, false
 	}
 
-	if vmaasData.GetDescription() == "" || vmaasData.GetSummary() == "" {
+	if vmaasData.Description == "" || vmaasData.Summary == "" {
 		utils.Log("name", errataName).Error("An advisory without description or summary")
 		return time.Time{}, false
 	}
@@ -176,7 +176,7 @@ func getJSONFields(vmaasData *vmaas.ErrataResponseErrataList) ([]byte, []byte, [
 
 func getPackageData(vmaasData *vmaas.ErrataResponseErrataList) ([]byte, error) {
 	packages := make(models.AdvisoryPackageData)
-	for _, p := range vmaasData.GetPackageList() {
+	for _, p := range vmaasData.PackageList {
 		nevra, err := utils.ParseNevra(p)
 		if err != nil {
 			return nil, errors.Wrapf(err, "Could not parse nevra %s", p)
@@ -254,8 +254,8 @@ func downloadAndProcessErratasPage(iPage int, modifiedSince *string) (*vmaas.Err
 		return nil, errors.Wrap(err, "Advisories sync failed on vmaas request")
 	}
 
-	if err = storeAdvisories(errataResponse.GetErrataList()); err != nil {
-		storeAdvisoriesCnt.WithLabelValues("error").Add(float64(len(errataResponse.GetErrataList())))
+	if err = storeAdvisories(errataResponse.ErrataList); err != nil {
+		storeAdvisoriesCnt.WithLabelValues("error").Add(float64(len(errataResponse.ErrataList)))
 		return nil, errors.WithMessage(err, "Storing advisories")
 	}
 	return errataResponse, nil
@@ -263,16 +263,16 @@ func downloadAndProcessErratasPage(iPage int, modifiedSince *string) (*vmaas.Err
 
 func vmaasErrataRequest(iPage int, modifiedSince *string, pageSize int) (*vmaas.ErrataResponse, error) {
 	errataRequest := vmaas.ErrataRequest{
-		Page:          utils.PtrFloat32(float32(iPage)),
-		PageSize:      utils.PtrFloat32(float32(pageSize)),
+		Page:          iPage,
+		PageSize:      pageSize,
 		ErrataList:    []string{".*"},
 		ThirdParty:    utils.PtrBool(true),
 		ModifiedSince: modifiedSince,
 	}
 
 	vmaasCallFunc := func() (interface{}, *http.Response, error) {
-		vmaasData, resp, err := vmaasClient.DefaultApi.VmaasWebappAppErrataHandlerPostPost(base.Context).
-			ErrataRequest(errataRequest).Execute()
+		vmaasData := vmaas.ErrataResponse{}
+		resp, err := vmaasClient.Request(&base.Context, vmaasErratasURL, &errataRequest, &vmaasData)
 		return &vmaasData, resp, err
 	}
 
@@ -297,7 +297,7 @@ func checkAdvisoriesCount() error {
 		return errors.Wrap(err, "Advisories check failed on vmaas request")
 	}
 
-	errataCount := int64(errataResponse.GetPages()) + 1
+	errataCount := int64(errataResponse.Pages + 1)
 	if databaseAdvisoriesCount != errataCount {
 		mismatch := errataCount - databaseAdvisoriesCount
 		advisoriesCountMismatch.Add(math.Abs(float64(mismatch)))
