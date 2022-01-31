@@ -4,10 +4,9 @@ import (
 	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
+	"app/base/vmaas"
 	"net/http"
 	"time"
-
-	"github.com/RedHatInsights/patchman-clients/vmaas"
 )
 
 const LastEvalRepoBased = "last_eval_repo_based"
@@ -58,22 +57,22 @@ func getRepoBasedInventoryIDs(repos []string) ([]mqueue.InventoryAID, error) {
 }
 
 func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []string, error) {
-	page := float32(1)
+	page := 1
 	var reposRedHat []string
 	var reposThirdParty []string
 	reposSyncStart := time.Now()
 	for {
 		reposReq := vmaas.ReposRequest{
-			Page:           utils.PtrFloat32(page),
+			Page:           page,
 			RepositoryList: []string{".*"},
-			PageSize:       utils.PtrFloat32(float32(advisoryPageSize)),
+			PageSize:       advisoryPageSize,
 			ThirdParty:     utils.PtrBool(true),
 			ModifiedSince:  modifiedSince,
 		}
 
 		vmaasCallFunc := func() (interface{}, *http.Response, error) {
-			vmaasData, resp, err := vmaasClient.DefaultApi.VmaasWebappAppReposHandlerPostPost(base.Context).
-				ReposRequest(reposReq).Execute()
+			vmaasData := vmaas.ReposResponse{}
+			resp, err := vmaasClient.Request(&base.Context, vmaasReposURL, &reposReq, &vmaasData)
 			return &vmaasData, resp, err
 		}
 
@@ -83,17 +82,17 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []st
 		}
 		vmaasCallCnt.WithLabelValues("success").Inc()
 		repos := vmaasDataPtr.(*vmaas.ReposResponse)
-		if repos.GetPages() < 1 {
+		if repos.Pages < 1 {
 			utils.Log().Info("No repos returned from VMaaS")
 			break
 		}
 
-		utils.Log("page", int(page), "pages", int(repos.GetPages()), "count", len(repos.GetRepositoryList()),
+		utils.Log("page", page, "pages", repos.Pages, "count", len(repos.RepositoryList),
 			"sync_duration", utils.SinceStr(syncStart, time.Second),
 			"repos_sync_duration", utils.SinceStr(reposSyncStart, time.Second)).
 			Info("Downloaded repos")
 
-		for k, contentSet := range repos.GetRepositoryList() {
+		for k, contentSet := range repos.RepositoryList {
 			thirdParty := false
 			for _, repo := range contentSet {
 				if repo["third_party"] == (interface{})(true) {
@@ -108,7 +107,7 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []st
 			}
 		}
 
-		if page == repos.GetPages() {
+		if page == repos.Pages {
 			break
 		}
 		page++

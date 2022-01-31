@@ -138,3 +138,21 @@ type PkgListItem struct {
 	Description string `json:"description,omitempty"`
 	Modified    string `json:"modified,omitempty"`
 }
+
+type ReposRequest struct {
+	Page           int      `json:"page,omitempty"`
+	PageSize       int      `json:"page_size,omitempty"`
+	RepositoryList []string `json:"repository_list"`
+	// Return only repositories changed after the given date
+	ModifiedSince *string `json:"modified_since,omitempty"`
+	// Include content from \"third party\" repositories into the response, disabled by default.
+	ThirdParty *bool `json:"third_party,omitempty"`
+}
+
+type ReposResponse struct {
+	Page           int                                 `json:"page,omitempty"`
+	PageSize       int                                 `json:"page_size,omitempty"`
+	Pages          int                                 `json:"pages,omitempty"`
+	RepositoryList map[string][]map[string]interface{} `json:"repository_list,omitempty"`
+	LastChange     *string                             `json:"last_change,omitempty"`
+}
