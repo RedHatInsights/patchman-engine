@@ -4,7 +4,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
-	"github.com/RedHatInsights/patchman-clients/vmaas"
+	"app/base/vmaas"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

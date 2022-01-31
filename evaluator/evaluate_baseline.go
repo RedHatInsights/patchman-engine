@@ -3,9 +3,9 @@ package evaluator
 import (
 	"app/base/database"
 	"app/base/models"
+	"app/base/vmaas"
 	"time"
 
-	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -49,7 +49,7 @@ func limitVmaasToBaseline(tx *gorm.DB, system *models.SystemPlatform, vmaasData 
 				filteredUpdates = append(filteredUpdates, u)
 			}
 		}
-		updates.SetAvailableUpdates(filteredUpdates)
+		updates.AvailableUpdates = &filteredUpdates
 		(*vmaasData.UpdateList)[pkg] = updates
 	}
 

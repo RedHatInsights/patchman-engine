@@ -2,9 +2,9 @@ package evaluator
 
 import (
 	"app/base/utils"
+	"app/base/vmaas"
 	"testing"
 
-	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/stretchr/testify/assert"
 )
 

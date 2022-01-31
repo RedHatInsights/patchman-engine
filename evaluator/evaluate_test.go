@@ -5,7 +5,10 @@ import (
 	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
+	"app/base/vmaas"
+	"context"
 	"github.com/stretchr/testify/assert"
+	"net/http"
 	"os"
 	"sync"
 	"testing"
@@ -112,4 +115,22 @@ func TestRun(t *testing.T) {
 	utils.AssertEqualWait(t, 10, func() (exp, act interface{}) {
 		return 8, nReaders
 	})
+}
+
+func TestVMaaSUpdatesCall(t *testing.T) {
+	utils.SkipWithoutPlatform(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	req := vmaas.UpdatesV3Request{
+		OptimisticUpdates: utils.PtrBool(true),
+		PackageList:       []string{"curl-7.29.0-51.el7_6.3.x86_64"},
+	}
+
+	resp := vmaas.UpdatesV2Response{}
+	ctx := context.Background()
+	httpResp, err := vmaasClient.Request(&ctx, vmaasUpdatesURL, &req, &resp) // nolint: bodyclose
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
+	assert.Equal(t, 2, len(resp.GetUpdateList()))
 }
