@@ -6,6 +6,7 @@ import (
 	"github.com/lestrrat-go/backoff"
 	"github.com/pkg/errors"
 	"net/http"
+	"net/http/httputil"
 	"time"
 )
 
@@ -36,6 +37,30 @@ func HTTPCallRetry(ctx context.Context, httpCallFun func() (outputDataPtr interf
 		return nil, errors.Wrap(callErr, "HTTP call failed"+responseDetails)
 	}
 	return nil, errors.Errorf("HTTP retry call failed, attempts: %d", attempt)
+}
+
+func CallAPI(client *http.Client, request *http.Request, debugEnabled bool) (*http.Response, error) {
+	if debugEnabled {
+		dump, err := httputil.DumpRequestOut(request, true)
+		if err != nil {
+			return nil, err
+		}
+		Log("dump", fmt.Sprintf("\n%s\n", string(dump))).Debug("http call")
+	}
+
+	resp, err := client.Do(request)
+	if err != nil {
+		return resp, err
+	}
+
+	if debugEnabled {
+		dump, err := httputil.DumpResponse(resp, true)
+		if err != nil {
+			return resp, err
+		}
+		Log("dump", fmt.Sprintf("\n%s\n", string(dump))).Debug("http response")
+	}
+	return resp, err
 }
 
 func tryGetResponseDetails(response *http.Response) string {
