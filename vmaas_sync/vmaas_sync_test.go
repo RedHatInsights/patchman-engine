@@ -89,3 +89,17 @@ func TestVMaaSErrataCall(t *testing.T) {
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
 	assert.Equal(t, 3, len(resp.ErrataList))
 }
+
+func TestVMaaSReposCall(t *testing.T) {
+	utils.SkipWithoutPlatform(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	req := vmaas.ReposRequest{PageSize: 10, RepositoryList: []string{".*"}}
+	resp := vmaas.ReposResponse{}
+	ctx := context.Background()
+	httpResp, err := vmaasClient.Request(&ctx, vmaasReposURL, &req, &resp) // nolint: bodyclose
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
+	assert.Equal(t, 3, len(resp.RepositoryList))
+}
