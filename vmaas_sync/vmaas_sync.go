@@ -231,7 +231,7 @@ func RunVmaasSync() {
 
 	// Continually try to reconnect
 	for {
-		conn, _, err := websocket.DefaultDialer.DialContext(base.Context,
+		conn, _, err := websocket.DefaultDialer.DialContext(base.Context, // nolint: bodyclose
 			utils.GetenvOrFail("VMAAS_WS_ADDRESS"), nil)
 		if err != nil {
 			utils.Log("err", err.Error()).Fatal("Failed to connect to VMaaS")
