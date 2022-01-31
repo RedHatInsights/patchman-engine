@@ -234,7 +234,6 @@ objects:
         - {name: ENABLE_TURNPIKE_AUTH, value: '${ENABLE_TURNPIKE_AUTH}'}
         - {name: ENABLE_ADVISORIES_SYNC, value: '${ENABLE_ADVISORIES_SYNC}'}
         - {name: ENABLE_PACKAGES_SYNC, value: '${ENABLE_PACKAGES_SYNC}'}
-        - {name: ENABLE_PKG_TREE_SYNC, value: '${ENABLE_PKG_TREE_SYNC}'}
         - {name: ENABLE_REPOS_SYNC, value: '${ENABLE_REPOS_SYNC}'}
         - {name: ENABLE_MODIFIED_SINCE_SYNC, value: '${ENABLE_MODIFIED_SINCE_SYNC}'}
         - {name: ERRATA_PAGE_SIZE, value: '${ERRATA_PAGE_SIZE}'}
@@ -420,7 +419,6 @@ parameters:
 - {name: ENABLE_TURNPIKE_AUTH, value: 'false'} # Enable Turnpike authentication for internal API (manual sync, re-calc)
 - {name: ENABLE_ADVISORIES_SYNC, value: 'true'} # Enable advisories sync - part of sync process.
 - {name: ENABLE_PACKAGES_SYNC, value: 'true'} # Enable packages sync - part of sync process.
-- {name: ENABLE_PKG_TREE_SYNC, value: 'true'} # Use vmaas /pkgtree to sync packages (otherwise use /pkglist)
 - {name: ENABLE_REPOS_SYNC, value: 'true'} # Enable repos sync - part of sync process.
 - {name: ENABLE_MODIFIED_SINCE_SYNC, value: 'false'} # Enable incremental sync using 'modified_since' param.
 - {name: ERRATA_PAGE_SIZE, value: '500'} # Requested Vmaas response page size for advisories sync
