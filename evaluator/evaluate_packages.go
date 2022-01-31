@@ -4,12 +4,12 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/base/vmaas"
 	"bytes"
 	"encoding/json"
 	"strings"
 	"time"
 
-	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

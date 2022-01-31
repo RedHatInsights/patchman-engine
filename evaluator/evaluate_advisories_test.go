@@ -5,8 +5,8 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/base/vmaas"
 	"context"
-	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"strings"
@@ -135,8 +135,9 @@ func TestEnsureSystemAdvisories(t *testing.T) {
 }
 
 func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {
-	vmaasData, resp, err := vmaasClient.DefaultApi.VmaasWebappAppUpdatesHandlerV3PostPost(context.Background()).
-		Execute()
+	ctx := context.Background()
+	vmaasData := vmaas.UpdatesV2Response{}
+	resp, err := vmaasClient.Request(&ctx, vmaasUpdatesURL, nil, &vmaasData)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Nil(t, resp.Body.Close())

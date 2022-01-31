@@ -2,11 +2,13 @@ package evaluator
 
 import (
 	"app/base"
+	"app/base/api"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+	"app/base/vmaas"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -14,7 +16,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -24,7 +25,8 @@ type SystemAdvisoryMap map[string]models.SystemAdvisories
 
 var (
 	consumerCount                 int
-	vmaasClient                   *vmaas.APIClient
+	vmaasClient                   *api.Client
+	vmaasUpdatesURL               string
 	evalTopic                     string
 	evalLabel                     string
 	enableAdvisoryAnalysis        bool
@@ -49,10 +51,6 @@ func configure() {
 	evalTopic = utils.GetenvOrFail("EVAL_TOPIC")
 	evalLabel = utils.GetenvOrFail("EVAL_LABEL")
 	consumerCount = utils.GetIntEnvOrDefault("CONSUMER_COUNT", 1)
-	vmaasConfig := vmaas.NewConfiguration()
-	vmaasConfig.Servers[0].URL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix
-	useTraceLevel := strings.ToLower(utils.Getenv("LOG_LEVEL", "INFO")) == "trace"
-	vmaasConfig.Debug = useTraceLevel
 	disableCompression := !utils.GetBoolEnvOrDefault("ENABLE_VMAAS_CALL_COMPRESSION", true)
 	enableAdvisoryAnalysis = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_ANALYSIS", true)
 	enablePackageAnalysis = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_ANALYSIS", true)
@@ -62,10 +60,13 @@ func configure() {
 	enableBaselineEval = utils.GetBoolEnvOrDefault("ENABLE_BASELINE_EVAL", true)
 	prunePackageLatestOnly = utils.GetBoolEnvOrDefault("PRUNE_UPDATES_LATEST_ONLY", false)
 	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
-	vmaasConfig.HTTPClient = &http.Client{Transport: &http.Transport{
-		DisableCompression: disableCompression,
-	}}
-	vmaasClient = vmaas.NewAPIClient(vmaasConfig)
+	useTraceLevel := strings.ToLower(utils.Getenv("LOG_LEVEL", "INFO")) == "trace"
+	vmaasClient = &api.Client{
+		HTTPClient: &http.Client{Transport: &http.Transport{DisableCompression: disableCompression}},
+		HTTPMethod: http.MethodPost,
+		Debug:      useTraceLevel,
+	}
+	vmaasUpdatesURL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/updates"
 	enablePackageCache = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_CACHE", true)
 	preloadPackageCache = utils.GetBoolEnvOrDefault("PRELOAD_PACKAGE_CACHE", true)
 	packageCacheSize = utils.GetIntEnvOrDefault("PACKAGE_CACHE_SIZE", 1000000)
@@ -311,8 +312,8 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 
 	vmaasCallFunc := func() (interface{}, *http.Response, error) {
 		utils.Log("request", *request).Trace("vmaas /updates request")
-		vmaasData, resp, err := vmaasClient.DefaultApi.VmaasWebappAppUpdatesHandlerV3PostPost(ctx).
-			UpdatesV3Request(*request).Execute()
+		vmaasData := vmaas.UpdatesV2Response{}
+		resp, err := vmaasClient.Request(&ctx, vmaasUpdatesURL, request, &vmaasData)
 		utils.Log("status_code", utils.TryGetStatusCode(resp)).Debug("vmaas /updates call")
 		utils.Log("response", resp).Trace("vmaas /updates response")
 		return &vmaasData, resp, err

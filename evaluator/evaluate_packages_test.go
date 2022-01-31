@@ -5,10 +5,10 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/base/vmaas"
 	"fmt"
 	"testing"
 
-	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/stretchr/testify/assert"
 )
 
