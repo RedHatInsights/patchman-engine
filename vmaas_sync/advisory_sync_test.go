@@ -6,11 +6,11 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/base/vmaas"
 	"encoding/json"
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -95,22 +95,22 @@ func TestParseAdvisories(t *testing.T) {
 
 	data := map[string]vmaas.ErrataResponseErrataList{
 		"ER1": {
-			Updated:           utils.PtrString("2004-09-02T00:00:00+00:00"),
-			Severity:          vmaas.NullableString{},
+			Updated:           "2004-09-02T00:00:00+00:00",
+			Severity:          "",
 			ReferenceList:     &[]string{},
-			Issued:            utils.PtrString("2004-09-02T00:00:00+00:00"),
-			Description:       utils.PtrString("DESC"),
-			Solution:          utils.PtrString("SOL"),
-			Summary:           utils.PtrString("SUM"),
-			Url:               utils.PtrString("URL"),
-			Synopsis:          utils.PtrString("SYN"),
+			Issued:            "2004-09-02T00:00:00+00:00",
+			Description:       "DESC",
+			Solution:          "SOL",
+			Summary:           "SUM",
+			URL:               "URL",
+			Synopsis:          "SYN",
 			CveList:           utils.PtrSliceString([]string{"CVE-1", "CVE-2", "CVE-3"}),
 			BugzillaList:      &[]string{},
-			PackageList:       &[]string{},
+			PackageList:       []string{},
 			SourcePackageList: &[]string{},
-			Type:              utils.PtrString("bugfix"),
+			Type:              "bugfix",
 			ThirdParty:        new(bool),
-			RequiresReboot:    utils.PtrBool(true),
+			RequiresReboot:    true,
 			ReleaseVersions:   utils.PtrSliceString([]string{"8.0", "8.1"}),
 		},
 	}
@@ -147,21 +147,21 @@ func TestSaveAdvisories(t *testing.T) {
 	var data vmaas.ErrataResponse
 
 	assert.Nil(t, json.Unmarshal([]byte(testAdvisories), &data))
-	errataList := data.GetErrataList()
+	errataList := data.ErrataList
 	for i, v := range errataList {
-		v.SetUrl("TEST")
+		v.URL = "TEST"
 		errataList[i] = v
 	}
 
 	// Repeatedly storing erratas should just overwrite them
 	for i := 0; i < 2; i++ {
-		err := storeAdvisories(data.GetErrataList())
+		err := storeAdvisories(data.ErrataList)
 		assert.NoError(t, err)
 		var count int64
 
 		assert.Nil(t, database.Db.Model(&models.AdvisoryMetadata{}).Where("url = ?", "TEST").Count(&count).Error)
 
-		assert.Equal(t, count, int64(len(data.GetErrataList())))
+		assert.Equal(t, count, int64(len(data.ErrataList)))
 	}
 
 	assert.Nil(t, database.Db.Unscoped().Where("url = ?", "TEST").Delete(&models.AdvisoryMetadata{}).Error)

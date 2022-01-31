@@ -7,9 +7,11 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+	"app/base/vmaas"
 	"context"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -72,4 +74,18 @@ func TestHandleContextCancel(t *testing.T) {
 		return 1, len(hook.LogEntries)
 	})
 	assert.Equal(t, "stopping vmaas_sync", hook.LogEntries[0].Message)
+}
+
+func TestVMaaSErrataCall(t *testing.T) {
+	utils.SkipWithoutPlatform(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	req := vmaas.ErrataRequest{PageSize: 10, ErrataList: []string{".*"}}
+	resp := vmaas.ErrataResponse{}
+	ctx := context.Background()
+	httpResp, err := vmaasClient.Request(&ctx, vmaasErratasURL, &req, &resp) // nolint: bodyclose
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
+	assert.Equal(t, 3, len(resp.ErrataList))
 }

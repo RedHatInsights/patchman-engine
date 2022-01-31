@@ -72,3 +72,44 @@ func (o *UpdatesV2ResponseAvailableUpdates) GetErratum() string {
 	}
 	return *o.Erratum
 }
+
+type ErrataRequest struct {
+	Page          int      `json:"page,omitempty"`
+	PageSize      int      `json:"page_size,omitempty"`
+	ErrataList    []string `json:"errata_list"`
+	ModifiedSince *string  `json:"modified_since,omitempty"`
+	// Include content from \"third party\" repositories into the response, disabled by default.
+	ThirdParty *bool     `json:"third_party,omitempty"`
+	Type       *[]string `json:"type,omitempty"`
+	Severity   *[]string `json:"severity,omitempty"`
+}
+
+type ErrataResponse struct {
+	Page       int                                 `json:"page,omitempty"`
+	PageSize   int                                 `json:"page_size,omitempty"`
+	Pages      int                                 `json:"pages,omitempty"`
+	ErrataList map[string]ErrataResponseErrataList `json:"errata_list,omitempty"`
+	Type       []string                            `json:"type,omitempty"`
+	Severity   []string                            `json:"severity,omitempty"`
+	LastChange string                              `json:"last_change,omitempty"`
+}
+
+type ErrataResponseErrataList struct {
+	Updated           string    `json:"updated,omitempty"`
+	Severity          string    `json:"severity,omitempty"`
+	ReferenceList     *[]string `json:"reference_list,omitempty"`
+	Issued            string    `json:"issued,omitempty"`
+	Description       string    `json:"description,omitempty"`
+	Solution          string    `json:"solution,omitempty"`
+	Summary           string    `json:"summary,omitempty"`
+	URL               string    `json:"url,omitempty"`
+	Synopsis          string    `json:"synopsis,omitempty"`
+	CveList           *[]string `json:"cve_list,omitempty"`
+	BugzillaList      *[]string `json:"bugzilla_list,omitempty"`
+	PackageList       []string  `json:"package_list,omitempty"`
+	SourcePackageList *[]string `json:"source_package_list,omitempty"`
+	Type              string    `json:"type,omitempty"`
+	ThirdParty        *bool     `json:"third_party,omitempty"`
+	RequiresReboot    bool      `json:"requires_reboot,omitempty"`
+	ReleaseVersions   *[]string `json:"release_versions,omitempty"`
+}
