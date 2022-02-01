@@ -129,7 +129,7 @@ func TestVMaaSUpdatesCall(t *testing.T) {
 
 	resp := vmaas.UpdatesV2Response{}
 	ctx := context.Background()
-	httpResp, err := vmaasClient.Request(&ctx, vmaasUpdatesURL, &req, &resp) // nolint: bodyclose
+	httpResp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasUpdatesURL, &req, &resp) // nolint: bodyclose
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
 	assert.Equal(t, 2, len(resp.GetUpdateList()))

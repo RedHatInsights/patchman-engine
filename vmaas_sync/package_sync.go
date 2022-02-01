@@ -95,7 +95,7 @@ func vmaasPkgListRequest(iPage int, modifiedSince *string) (*vmaas.PkgListRespon
 
 	vmaasCallFunc := func() (interface{}, *http.Response, error) {
 		vmaasData := vmaas.PkgListResponse{}
-		resp, err := vmaasClient.Request(&base.Context, vmaasPkgListURL, &request, &vmaasData)
+		resp, err := vmaasClient.Request(&base.Context, http.MethodPost, vmaasPkgListURL, &request, &vmaasData)
 		return &vmaasData, resp, err
 	}
 

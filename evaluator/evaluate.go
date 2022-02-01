@@ -63,7 +63,6 @@ func configure() {
 	useTraceLevel := strings.ToLower(utils.Getenv("LOG_LEVEL", "INFO")) == "trace"
 	vmaasClient = &api.Client{
 		HTTPClient: &http.Client{Transport: &http.Transport{DisableCompression: disableCompression}},
-		HTTPMethod: http.MethodPost,
 		Debug:      useTraceLevel,
 	}
 	vmaasUpdatesURL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/updates"
@@ -313,7 +312,7 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 	vmaasCallFunc := func() (interface{}, *http.Response, error) {
 		utils.Log("request", *request).Trace("vmaas /updates request")
 		vmaasData := vmaas.UpdatesV2Response{}
-		resp, err := vmaasClient.Request(&ctx, vmaasUpdatesURL, request, &vmaasData)
+		resp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasUpdatesURL, request, &vmaasData)
 		utils.Log("status_code", utils.TryGetStatusCode(resp)).Debug("vmaas /updates call")
 		utils.Log("response", resp).Trace("vmaas /updates response")
 		return &vmaasData, resp, err

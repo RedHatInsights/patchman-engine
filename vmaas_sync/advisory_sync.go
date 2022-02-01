@@ -272,7 +272,7 @@ func vmaasErrataRequest(iPage int, modifiedSince *string, pageSize int) (*vmaas.
 
 	vmaasCallFunc := func() (interface{}, *http.Response, error) {
 		vmaasData := vmaas.ErrataResponse{}
-		resp, err := vmaasClient.Request(&base.Context, vmaasErratasURL, &errataRequest, &vmaasData)
+		resp, err := vmaasClient.Request(&base.Context, http.MethodPost, vmaasErratasURL, &errataRequest, &vmaasData)
 		return &vmaasData, resp, err
 	}
 
