@@ -47,7 +47,6 @@ func configure() {
 	useTraceLevel := strings.ToLower(utils.Getenv("LOG_LEVEL", "INFO")) == "trace"
 	vmaasClient = &api.Client{
 		HTTPClient: &http.Client{},
-		HTTPMethod: http.MethodPost,
 		Debug:      useTraceLevel,
 	}
 	vmaasErratasURL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/errata"

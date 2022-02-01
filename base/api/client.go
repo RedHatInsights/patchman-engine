@@ -12,11 +12,10 @@ import (
 
 type Client struct {
 	HTTPClient *http.Client
-	HTTPMethod string
 	Debug      bool
 }
 
-func (o *Client) Request(ctx *context.Context, url string,
+func (o *Client) Request(ctx *context.Context, method, url string,
 	requestPtr interface{}, responseOutPtr interface{}) (*http.Response, error) {
 	body := &bytes.Buffer{}
 	if requestPtr != nil {
@@ -26,7 +25,7 @@ func (o *Client) Request(ctx *context.Context, url string,
 		}
 	}
 
-	httpReq, err := http.NewRequestWithContext(*ctx, o.HTTPMethod, url, body)
+	httpReq, err := http.NewRequestWithContext(*ctx, method, url, body)
 	if err != nil {
 		return nil, errors.Wrap(err, "Updates request making failed")
 	}

@@ -84,7 +84,7 @@ func TestVMaaSErrataCall(t *testing.T) {
 	req := vmaas.ErrataRequest{PageSize: 10, ErrataList: []string{".*"}}
 	resp := vmaas.ErrataResponse{}
 	ctx := context.Background()
-	httpResp, err := vmaasClient.Request(&ctx, vmaasErratasURL, &req, &resp) // nolint: bodyclose
+	httpResp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasErratasURL, &req, &resp) // nolint: bodyclose
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
 	assert.Equal(t, 3, len(resp.ErrataList))
@@ -98,7 +98,7 @@ func TestVMaaSReposCall(t *testing.T) {
 	req := vmaas.ReposRequest{PageSize: 10, RepositoryList: []string{".*"}}
 	resp := vmaas.ReposResponse{}
 	ctx := context.Background()
-	httpResp, err := vmaasClient.Request(&ctx, vmaasReposURL, &req, &resp) // nolint: bodyclose
+	httpResp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasReposURL, &req, &resp) // nolint: bodyclose
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
 	assert.Equal(t, 3, len(resp.RepositoryList))
