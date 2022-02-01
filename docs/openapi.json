@@ -593,7 +593,7 @@
             }
         },
         "/api/patch/v1/baselines/{baseline_id}": {
-            "post": {
+            "put": {
                 "summary": "Update a baseline for my set of systems",
                 "description": "Update a baseline for my set of systems",
                 "operationId": "updateBaseline",
