@@ -2,23 +2,35 @@ package middlewares
 
 import (
 	"app/base"
+	"app/base/api"
+	"app/base/rbac"
 	"app/base/utils"
 	"net/http"
+	"os"
 	"strconv"
-	"strings"
 
-	"github.com/RedHatInsights/patchman-clients/rbac"
 	"github.com/gin-gonic/gin"
 )
 
+var (
+	rbacURL      = ""
+	debugRequest = os.Getenv("LOG_LEVEL") == "trace"
+	httpClient   = &http.Client{}
+)
+
+const xRHIdentity = "x-rh-identity"
+
 // Make RBAC client on demand, with specified identity
-func makeClient(identity string) *rbac.APIClient {
-	rbacConfig := rbac.NewConfiguration()
-	useTraceLevel := strings.ToLower(utils.Getenv("LOG_LEVEL", "INFO")) == "trace"
-	rbacConfig.Debug = useTraceLevel
-	rbacConfig.Servers[0].URL = utils.GetenvOrFail("RBAC_ADDRESS") + base.RBACApiPrefix
-	rbacConfig.AddDefaultHeader("x-rh-identity", identity)
-	return rbac.NewAPIClient(rbacConfig)
+func makeClient(identity string) *api.Client {
+	client := api.Client{
+		HTTPClient:     httpClient,
+		Debug:          debugRequest,
+		DefaultHeaders: map[string]string{xRHIdentity: identity},
+	}
+	if rbacURL == "" {
+		rbacURL = utils.GetenvOrFail("RBAC_ADDRESS") + base.RBACApiPrefix + "/access/?application=patch"
+	}
+	return &client
 }
 
 type rbacPerms struct {
@@ -28,9 +40,8 @@ type rbacPerms struct {
 
 func isAccessGranted(c *gin.Context) rbacPerms {
 	client := makeClient(c.GetHeader("x-rh-identity"))
-	// Body is closed inside api method, don't know why liter is complaining
-	// nolint: bodyclose
-	access, res, err := client.AccessApi.GetPrincipalAccess(base.Context).Application("patch").Execute()
+	access := rbac.AccessPagination{}
+	res, err := client.Request(&base.Context, http.MethodGet, rbacURL, nil, &access)
 	if res != nil && res.Body != nil {
 		defer res.Body.Close()
 	}

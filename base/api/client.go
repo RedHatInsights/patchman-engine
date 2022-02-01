@@ -11,8 +11,9 @@ import (
 )
 
 type Client struct {
-	HTTPClient *http.Client
-	Debug      bool
+	HTTPClient     *http.Client
+	Debug          bool
+	DefaultHeaders map[string]string
 }
 
 func (o *Client) Request(ctx *context.Context, method, url string,
@@ -30,6 +31,7 @@ func (o *Client) Request(ctx *context.Context, method, url string,
 		return nil, errors.Wrap(err, "Updates request making failed")
 	}
 	httpReq.Header.Add("Content-Type", "application/json")
+	addHeaders(httpReq, o.DefaultHeaders)
 
 	httpResp, err := utils.CallAPI(o.HTTPClient, httpReq, o.Debug)
 	if err != nil {
@@ -46,4 +48,13 @@ func (o *Client) Request(ctx *context.Context, method, url string,
 		return httpResp, errors.Wrap(err, "Response json parsing failed")
 	}
 	return httpResp, nil
+}
+
+func addHeaders(request *http.Request, headersMap map[string]string) {
+	if headersMap == nil {
+		return
+	}
+	for k, v := range headersMap {
+		request.Header.Add(k, v)
+	}
 }
