@@ -292,6 +292,34 @@ objects:
           limits: {cpu: '${RES_CPU_DATABASE_ADMIN}', memory: '${RES_MEM_DATABASE_ADMIN}'}
           requests: {cpu: '${RES_CPU_DATABASE_ADMIN}', memory: '${RES_MEM_DATABASE_ADMIN}'}
 
+    jobs:
+    - name: floorist
+      schedule: ${FLOORIST_SCHEDULE}
+      suspend: ${{FLOORIST_SUSPEND}}
+      concurrencyPolicy: Forbid
+      podSpec:
+        image: ${FLOORIST_IMAGE}:${FLOORIST_IMAGE_TAG}
+        env:
+        - {name: AWS_BUCKET, valueFrom: {secretKeyRef: {name: '${FLOORIST_BUCKET_SECRET_NAME}',
+                                                        key: bucket}}}
+        - {name: AWS_REGION, valueFrom: {secretKeyRef: {name: '${FLOORIST_BUCKET_SECRET_NAME}',
+                                                        key: aws_region}}}
+        - {name: AWS_ENDPOINT, valueFrom: {secretKeyRef: {name: '${FLOORIST_BUCKET_SECRET_NAME}',
+                                                          key: endpoint}}}
+        - {name: AWS_ACCESS_KEY_ID, valueFrom: {secretKeyRef: {name: '${FLOORIST_BUCKET_SECRET_NAME}',
+                                                               key: aws_access_key_id}}}
+        - {name: AWS_SECRET_ACCESS_KEY, valueFrom: {secretKeyRef: {name: '${FLOORIST_BUCKET_SECRET_NAME}',
+                                                                   key: aws_secret_access_key}}}
+        - {name: FLOORPLAN_FILE, value: '/tmp/floorplan/floorplan.yaml'}
+        - {name: LOGLEVEL, value: '${FLOORIST_LOGLEVEL}'}
+        volumeMounts:
+        - {name: floorplan-volume, mountPath: '/tmp/floorplan'}
+        volumes:
+        - {name: floorplan-volume, configMap: {name: floorplan}}
+        resources:
+          limits: {cpu: '${CPU_LIMIT_FLOO}', memory: '${MEMORY_LIMIT_FLOO}'}
+          requests: {cpu: '${CPU_REQUEST_FLOO}', memory: '${MEMORY_REQUEST_FLOO}'}
+
     database:
       name: patchman
       version: 12
@@ -314,6 +342,25 @@ objects:
       insightsOnly: true
     testing:
       iqePlugin: patchman
+
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: floorplan
+  data:
+    floorplan.yaml: |
+      - prefix: insights/patch/advisories
+        query: >-
+          SELECT ra.name AS rh_account_id, am.name AS advisory_name, at.name AS advisory_type
+          FROM system_advisories sa
+          JOIN system_platform sp ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id
+          JOIN inventory.hosts ih ON sp.inventory_id = ih.id
+          JOIN advisory_metadata am ON sa.advisory_id = am.id
+          JOIN rh_account ra ON ra.id = sa.rh_account_id
+          JOIN advisory_type at ON am.advisory_type_id = at.id
+          GROUP BY ra.name, am.name, at.name
+          ORDER BY ra.name ASC, applicable_systems DESC;
+
 
 - apiVersion: v1
   kind: Secret
@@ -455,3 +502,15 @@ parameters:
 - {name: VMAAS_CALL_MAX_RETRIES, value: '8'} # Limit of how many unsuccessful vmaas calls are allowed before panic.
 - {name: VMAAS_CALL_USE_EXP_RETRY, value: 'true'} # Use exponential retry policy for vmaas call.
 - {name: VMAAS_CALL_USE_OPTIMISTIC_UPDATES, value: 'true'} # Always use "optimistic_updates" in vmaas request (not only for third party usage).
+
+# Floorist parameters
+- {name: FLOORIST_SCHEDULE, value: '50 0 * * *', required: true} # Cronjob schedule definition
+- {name: FLOORIST_SUSPEND, value: 'true', required: true} # Disable Floorist cronjob execution
+- {name: FLOORIST_IMAGE, value: quay.io/cloudservices/floorist} # Floorist image name
+- {name: FLOORIST_IMAGE_TAG, value: latest, required: true} # Floorist Image tag
+- {name: FLOORIST_BUCKET_SECRET_NAME, value: dummy-secret, required: true} # Bucket secret name
+- {name: FLOORIST_LOGLEVEL, value: INFO} # Floorist loglevel config
+- {name: CPU_LIMIT_FLOO, value: 100m}
+- {name: CPU_REQUEST_FLOO, value: 50m}
+- {name: MEMORY_LIMIT_FLOO, value: 200Mi}
+- {name: MEMORY_REQUEST_FLOO, value: 100Mi}
