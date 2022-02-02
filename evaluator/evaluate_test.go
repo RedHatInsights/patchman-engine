@@ -108,13 +108,12 @@ func TestEvaluateDontPruneUpdates(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
-	nReaders := 0
+	configure()
+	var nReaders int32
 	wg := sync.WaitGroup{}
-	wg.Add(1)
 	run(&wg, mqueue.CreateCountedMockReader(&nReaders))
-	utils.AssertEqualWait(t, 10, func() (exp, act interface{}) {
-		return 8, nReaders
-	})
+	wg.Wait()
+	assert.Equal(t, 8, int(nReaders)) // 8 - is default
 }
 
 func TestVMaaSUpdatesCall(t *testing.T) {
