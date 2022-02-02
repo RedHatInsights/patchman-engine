@@ -1,6 +1,9 @@
 package mqueue
 
-import "context"
+import (
+	"context"
+	"sync/atomic"
+)
 
 type mockReader struct{}
 
@@ -8,10 +11,10 @@ func (t *mockReader) HandleMessages(_ MessageHandler) {}
 func (t *mockReader) Close() error                    { return nil }
 
 // Count how many times reader is created.
-func CreateCountedMockReader(cnt *int) CreateReader {
+func CreateCountedMockReader(cnt *int32) CreateReader {
 	return func(_ string) Reader {
 		reader := &mockReader{}
-		*cnt++
+		atomic.AddInt32(cnt, 1)
 		return reader
 	}
 }

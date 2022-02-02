@@ -47,12 +47,12 @@ func TestRoundTripKafkaGo(t *testing.T) {
 }
 
 func TestSpawnReader(t *testing.T) {
-	nReaders := 0
+	var nReaders int32
 	wg := sync.WaitGroup{}
 	SpawnReader(&wg, "", CreateCountedMockReader(&nReaders),
 		MakeMessageHandler(func(event PlatformEvent) error { return nil }))
 	wg.Wait()
-	assert.Equal(t, 1, nReaders)
+	assert.Equal(t, 1, int(nReaders))
 }
 
 func TestRetry(t *testing.T) {
