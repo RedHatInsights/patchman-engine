@@ -24,8 +24,6 @@ func deleteData(t *testing.T) {
 		"USING rh_account ra WHERE ra.id = aad.rh_account_id AND ra.name = ?", id).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("first_reported > timestamp '2020-01-01'").
 		Delete(&models.SystemAdvisories{}).Error)
-	assert.Nil(t, database.Db.Unscoped().Where("name IN ('ER1', 'ER2', 'ER3')").
-		Delete(&models.AdvisoryMetadata{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("repo_id NOT IN (1) OR system_id NOT IN (2, 3)").
 		Delete(&models.SystemRepo{}).Error)
 	assert.Nil(t, database.Db.Unscoped().Where("name NOT IN ('repo1', 'repo2', 'repo3', 'repo4')").
