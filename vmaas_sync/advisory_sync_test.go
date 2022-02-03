@@ -204,6 +204,7 @@ func TestSyncAdvisoriesCheck(t *testing.T) {
 	assert.Equal(t, 3, am.AdvisoryTypeID)
 	assert.Equal(t, "2020-01-02 08:04:05 +0000 UTC", am.PublicDate.String())
 	assert.Equal(t, "2020-01-02 08:04:05 +0000 UTC", am.ModifiedDate.String())
+	assert.Equal(t, true, am.Synced)
 
 	database.DeleteNewlyAddedPackages(t)
 	database.DeleteNewlyAddedAdvisories(t)

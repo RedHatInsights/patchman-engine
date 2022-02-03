@@ -133,6 +133,7 @@ func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataRespons
 		PackageData:     packageData,
 		RebootRequired:  vmaasData.RequiresReboot,
 		ReleaseVersions: releaseVersionsData,
+		Synced:          true,
 	}
 	return &advisory, nil
 }
@@ -237,7 +238,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 
 	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary", "solution",
 		"public_date", "modified_date", "url", "advisory_type_id", "severity_id", "cve_list", "package_data",
-		"reboot_required", "release_versions")
+		"reboot_required", "release_versions", "synced")
 
 	err = tx.CreateInBatches(&advisories, SyncBatchSize).Error
 	if err != nil {
