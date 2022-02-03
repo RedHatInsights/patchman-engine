@@ -230,6 +230,15 @@ func CheckEVRAsInDB(t *testing.T, nExpected int, evras ...string) {
 	assert.Equal(t, nExpected, len(packages))
 }
 
+func CheckEVRAsInDBSynced(t *testing.T, nExpected int, synced bool, evras ...string) {
+	var packages []models.Package
+	assert.Nil(t, Db.Where("evra IN (?)", evras).Find(&packages).Error)
+	assert.Equal(t, nExpected, len(packages))
+	for _, pkg := range packages {
+		assert.Equal(t, synced, pkg.Synced)
+	}
+}
+
 func CheckSystemPackages(t *testing.T, systemID int, nExpected int, packageIDs ...int) {
 	var systemPackages []models.SystemPackage
 	query := Db.Where("system_id = ?", systemID)
