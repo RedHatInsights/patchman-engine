@@ -233,6 +233,7 @@ func getPackageFromPkgListItem(pkgListItem vmaas.PkgListItem, nameIDs map[string
 		DescriptionHash: stringPtr2Hash(&descriptionStr),
 		SummaryHash:     stringPtr2Hash(&summaryStr),
 		AdvisoryID:      nil, // we don't need to store package-advisory relation so far
+		Synced:          true,
 	}
 	return &pkg
 }
