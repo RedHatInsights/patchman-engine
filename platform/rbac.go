@@ -1,7 +1,7 @@
 package platform
 
 import (
-	"github.com/RedHatInsights/patchman-clients/rbac"
+	"app/base/rbac"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
