@@ -19,6 +19,26 @@ type UpdatesV3RequestModulesList struct {
 	ModuleStream string `json:"module_stream"`
 }
 
+func (o *UpdatesV3Request) GetRepositoryList() []string {
+	if o == nil || o.RepositoryList == nil {
+		var ret []string
+		return ret
+	}
+	return *o.RepositoryList
+}
+
+func (o *UpdatesV3Request) GetModulesList() []UpdatesV3RequestModulesList {
+	if o == nil || o.ModulesList == nil {
+		var ret []UpdatesV3RequestModulesList
+		return ret
+	}
+	return *o.ModulesList
+}
+
+func (o *UpdatesV3Request) SetReleasever(v string) {
+	o.Releasever = &v
+}
+
 type UpdatesV2Response struct {
 	UpdateList     *map[string]UpdatesV2ResponseUpdateList `json:"update_list,omitempty"`
 	RepositoryList *[]string                               `json:"repository_list,omitempty"`
