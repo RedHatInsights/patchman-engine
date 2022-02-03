@@ -86,6 +86,7 @@ type Package struct {
 	DescriptionHash *[]byte
 	SummaryHash     *[]byte
 	AdvisoryID      *int
+	Synced          bool
 }
 
 func (Package) TableName() string {
