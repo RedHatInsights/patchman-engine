@@ -1,20 +1,17 @@
 package utils
 
 import (
-	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"time"
 )
 
-// let's "define" all function on one place so it's easy to find them
-
-var PtrBool = vmaas.PtrBool
-var PtrInt = vmaas.PtrInt
-var PtrInt32 = vmaas.PtrInt32
-var PtrInt64 = vmaas.PtrInt64
-var PtrFloat32 = vmaas.PtrFloat32
-var PtrFloat64 = vmaas.PtrFloat64
-var PtrString = vmaas.PtrString
-var PtrTime = vmaas.PtrTime
+func PtrBool(v bool) *bool           { return &v }
+func PtrInt(v int) *int              { return &v }
+func PtrInt32(v int32) *int32        { return &v }
+func PtrInt64(v int64) *int64        { return &v }
+func PtrFloat32(v float32) *float32  { return &v }
+func PtrFloat64(v float64) *float64  { return &v }
+func PtrString(v string) *string     { return &v }
+func PtrTime(v time.Time) *time.Time { return &v }
 
 func PtrSliceString(v []string) *[]string {
 	return &v
