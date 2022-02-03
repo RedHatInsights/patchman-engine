@@ -4,122 +4,126 @@ import (
 	"app/base/utils"
 	"net/http"
 
-	"github.com/RedHatInsights/patchman-clients/vmaas"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
 func updatesHandler(c *gin.Context) {
-	updates1 := []vmaas.UpdatesV2ResponseAvailableUpdates{
-		{
-			Repository: utils.PtrString("repo1"),
-			Releasever: utils.PtrString("ser1"),
-			Basearch:   utils.PtrString("i686"),
-			Erratum:    utils.PtrString("RH-1"),
-			Package:    utils.PtrString("firefox-0:77.0.1-1.fc31.x86_64"),
-		},
-		{
-			Repository: utils.PtrString("repo1"),
-			Releasever: utils.PtrString("ser1"),
-			Basearch:   utils.PtrString("i686"),
-			Erratum:    utils.PtrString("RH-2"),
-			Package:    utils.PtrString("firefox-1:76.0.1-1.fc31.x86_64"),
-		},
-	}
-	updates2 := []vmaas.UpdatesV2ResponseAvailableUpdates{
-		{
-			Repository: utils.PtrString("repo1"),
-			Releasever: utils.PtrString("ser1"),
-			Basearch:   utils.PtrString("i686"),
-			Erratum:    utils.PtrString("RH-100"),
-			Package:    utils.PtrString("kernel-0:5.10.13-200.fc31.x86_64"),
-		},
-	}
-	updatesList := map[string]vmaas.UpdatesV2ResponseUpdateList{
-		"firefox-0:76.0.1-1.fc31.x86_64":  {AvailableUpdates: &updates1},
-		"kernel-0:5.6.13-200.fc31.x86_64": {AvailableUpdates: &updates2},
-	}
-	moduleList := []vmaas.UpdatesV3RequestModulesList{}
-	data := vmaas.UpdatesV2Response{
-		UpdateList:     &updatesList,
-		RepositoryList: utils.PtrSliceString([]string{"repo1"}),
-		ModulesList:    &moduleList,
-		Releasever:     utils.PtrString("ser1"),
-		Basearch:       utils.PtrString("i686"),
-	}
-
-	c.JSON(http.StatusOK, data)
+	data := `{
+		"basearch": "i686",
+		"modules_list": [],
+		"releasever": "ser1",
+		"repository_list": [
+			"repo1"
+		],
+		"update_list": {
+			"firefox-0:76.0.1-1.fc31.x86_64": {
+				"available_updates": [
+					{
+						"basearch": "i686",
+						"erratum": "RH-1",
+						"package": "firefox-0:77.0.1-1.fc31.x86_64",
+						"releasever": "ser1",
+						"repository": "repo1"
+					},
+					{
+						"basearch": "i686",
+						"erratum": "RH-2",
+						"package": "firefox-1:76.0.1-1.fc31.x86_64",
+						"releasever": "ser1",
+						"repository": "repo1"
+					}
+				]
+			},
+			"kernel-0:5.6.13-200.fc31.x86_64": {
+				"available_updates": [
+					{
+						"basearch": "i686",
+						"erratum": "RH-100",
+						"package": "kernel-0:5.10.13-200.fc31.x86_64",
+						"releasever": "ser1",
+						"repository": "repo1"
+					}
+				]
+			}
+		}
+	}`
+	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
 }
 
 func patchesHandler(c *gin.Context) {
-	data := vmaas.PatchesResponse{
-		ErrataList: utils.PtrSliceString([]string{
-			"RH-1", "RH-2", "RH-100",
-		}),
-	}
-
-	c.JSON(http.StatusOK, data)
+	data := `{"errata_list":["RH-1","RH-2","RH-100"]}`
+	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
 }
 
+// nolint: funlen
 func erratasHandler(c *gin.Context) {
-	errataList := map[string]vmaas.ErrataResponseErrataList{
-		"RH-1": {
-			Updated:         utils.PtrString("2016-09-22T12:00:00+04:00"),
-			Severity:        vmaas.NullableString{},
-			ReferenceList:   utils.PtrSliceString([]string{}),
-			Issued:          utils.PtrString("2016-09-22T12:00:00+04:00"),
-			Description:     utils.PtrString("adv-1-des"),
-			Solution:        utils.PtrString("adv-1-sol"),
-			Summary:         utils.PtrString("adv-1-sum"),
-			Url:             utils.PtrString("url1"),
-			Synopsis:        utils.PtrString("adv-1-syn"),
-			CveList:         utils.PtrSliceString([]string{}),
-			BugzillaList:    utils.PtrSliceString([]string{}),
-			PackageList:     utils.PtrSliceString([]string{"firefox-0:77.0.1-1.fc31.x86_64"}),
-			Type:            utils.PtrString("enhancement"),
-			RequiresReboot:  utils.PtrBool(false),
-			ReleaseVersions: utils.PtrSliceString([]string{"7.0", "7Server"}),
-		},
-		"RH-2": {
-			Updated:        utils.PtrString("2016-09-22T12:00:00+04:00"),
-			Severity:       vmaas.NullableString{},
-			ReferenceList:  utils.PtrSliceString([]string{}),
-			Issued:         utils.PtrString("2016-09-22T12:00:00+04:00"),
-			Description:    utils.PtrString("adv-2-des"),
-			Solution:       utils.PtrString("adv-2-sol"),
-			Summary:        utils.PtrString("adv-2-sum"),
-			Url:            utils.PtrString("url2"),
-			Synopsis:       utils.PtrString("adv-2-syn"),
-			CveList:        utils.PtrSliceString([]string{}),
-			BugzillaList:   utils.PtrSliceString([]string{}),
-			PackageList:    utils.PtrSliceString([]string{"firefox-1:76.0.1-1.fc31.x86_64"}),
-			Type:           utils.PtrString("bugfix"),
-			RequiresReboot: utils.PtrBool(false),
-		},
-		"RH-100": {
-			Updated:        utils.PtrString("2020-01-02T15:04:05+07:00"),
-			Severity:       vmaas.NullableString{},
-			ReferenceList:  utils.PtrSliceString([]string{}),
-			Issued:         utils.PtrString("2020-01-02T15:04:05+07:00"),
-			Description:    utils.PtrString("adv-100-des"),
-			Solution:       utils.PtrString("adv-100-sol"),
-			Summary:        utils.PtrString("adv-100-sum"),
-			Url:            utils.PtrString("url100"),
-			Synopsis:       utils.PtrString("adv-100-syn"),
-			CveList:        utils.PtrSliceString([]string{"CVE-1001", "CVE-1002"}),
-			BugzillaList:   utils.PtrSliceString([]string{}),
-			PackageList:    utils.PtrSliceString([]string{"kernel-5.10.13-200.fc31.x86_64"}),
-			Type:           utils.PtrString("security"),
-			RequiresReboot: utils.PtrBool(true),
-		},
-	}
-	data := vmaas.ErrataResponse{
-		Page:       utils.PtrFloat32(0),
-		PageSize:   utils.PtrFloat32(10),
-		Pages:      utils.PtrFloat32(1),
-		ErrataList: &errataList,
-	}
-	c.JSON(http.StatusOK, data)
+	data := `{
+    "errata_list": {
+        "RH-1": {
+            "bugzilla_list": [],
+            "cve_list": [],
+            "description": "adv-1-des",
+            "issued": "2016-09-22T12:00:00+04:00",
+            "package_list": [
+                "firefox-0:77.0.1-1.fc31.x86_64"
+            ],
+            "reference_list": [],
+            "release_versions": [
+                "7.0",
+                "7Server"
+            ],
+            "requires_reboot": false,
+            "solution": "adv-1-sol",
+            "summary": "adv-1-sum",
+            "synopsis": "adv-1-syn",
+            "type": "enhancement",
+            "updated": "2016-09-22T12:00:00+04:00",
+            "url": "url1"
+        },
+        "RH-100": {
+            "bugzilla_list": [],
+            "cve_list": [
+                "CVE-1001",
+                "CVE-1002"
+            ],
+            "description": "adv-100-des",
+            "issued": "2020-01-02T15:04:05+07:00",
+            "package_list": [
+                "kernel-5.10.13-200.fc31.x86_64"
+            ],
+            "reference_list": [],
+            "requires_reboot": true,
+            "solution": "adv-100-sol",
+            "summary": "adv-100-sum",
+            "synopsis": "adv-100-syn",
+            "type": "security",
+            "updated": "2020-01-02T15:04:05+07:00",
+            "url": "url100"
+        },
+        "RH-2": {
+            "bugzilla_list": [],
+            "cve_list": [],
+            "description": "adv-2-des",
+            "issued": "2016-09-22T12:00:00+04:00",
+            "package_list": [
+                "firefox-1:76.0.1-1.fc31.x86_64"
+            ],
+            "reference_list": [],
+            "requires_reboot": false,
+            "solution": "adv-2-sol",
+            "summary": "adv-2-sum",
+            "synopsis": "adv-2-syn",
+            "type": "bugfix",
+            "updated": "2016-09-22T12:00:00+04:00",
+            "url": "url2"
+        }
+    },
+    "page": 0,
+    "page_size": 10,
+    "pages": 1
+    }`
+	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
 }
 
 func pkgListHandler(c *gin.Context) {
@@ -158,18 +162,16 @@ func pkgListHandler(c *gin.Context) {
 }
 
 func reposHandler(c *gin.Context) {
-	repoList := map[string][]map[string]interface{}{
-		"repo1": make([]map[string]interface{}, 0),
-		"repo2": make([]map[string]interface{}, 0),
-		"repo3": make([]map[string]interface{}, 0),
-	}
-	data := vmaas.ReposResponse{
-		Page:           utils.PtrFloat32(0),
-		PageSize:       utils.PtrFloat32(3),
-		Pages:          utils.PtrFloat32(1),
-		RepositoryList: &repoList,
-	}
-	c.JSON(http.StatusOK, data)
+	data := `{
+    "page": 0,
+    "page_size": 3,
+    "pages": 1,
+    "repository_list": {
+        "repo1": [],
+        "repo2": [],
+        "repo3": []
+    }}`
+	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
 }
 
 var upgrader = websocket.Upgrader{} // use default options
