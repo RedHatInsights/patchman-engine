@@ -158,6 +158,7 @@ type AdvisoryMetadata struct {
 	CveList         []byte
 	RebootRequired  bool
 	ReleaseVersions []byte
+	Synced          bool
 }
 
 func (AdvisoryMetadata) TableName() string {
