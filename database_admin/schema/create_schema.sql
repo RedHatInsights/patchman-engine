@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (74, false);
+VALUES (75, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -766,6 +766,7 @@ CREATE TABLE IF NOT EXISTS advisory_metadata
     cve_list         JSONB,
     reboot_required  BOOLEAN NOT NULL DEFAULT false,
     release_versions JSONB,
+    synced           BOOLEAN NOT NULL DEFAULT false,
     UNIQUE (name),
     PRIMARY KEY (id),
     CONSTRAINT advisory_type_id
@@ -784,8 +785,6 @@ CREATE INDEX IF NOT EXISTS
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO evaluator;
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO vmaas_sync;
--- TODO: Remove
-GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO listener;
 GRANT SELECT ON advisory_metadata TO manager;
 
 -- status table
@@ -945,6 +944,7 @@ CREATE TABLE IF NOT EXISTS package
     description_hash BYTEA                                         REFERENCES strings (id),
     summary_hash     BYTEA                                         REFERENCES strings (id),
     advisory_id      INT REFERENCES advisory_metadata (id),
+    synced           BOOLEAN                              NOT NULL DEFAULT false,
     UNIQUE (name_id, evra)
 ) WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
   TABLESPACE pg_default;
