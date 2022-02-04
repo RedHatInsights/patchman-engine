@@ -351,7 +351,8 @@ objects:
     floorplan.yaml: |
       - prefix: insights/patch/advisories
         query: >-
-          SELECT ra.name AS rh_account_id, am.name AS advisory_name, at.name AS advisory_type
+          SELECT ra.name AS rh_account_id, am.name AS advisory_name, at.name AS advisory_type,
+          count(sp.inventory_id) as applicable_systems
           FROM system_advisories sa
           JOIN system_platform sp ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id
           JOIN inventory.hosts ih ON sp.inventory_id = ih.id
