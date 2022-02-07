@@ -593,6 +593,39 @@
             }
         },
         "/api/patch/v1/baselines/{baseline_id}": {
+            "get": {
+                "summary": "Show baseline detail by given baseline ID",
+                "description": "Show baseline detail by given baseline ID",
+                "operationId": "detailBaseline",
+                "parameters": [
+                    {
+                        "name": "baseline_id",
+                        "in": "path",
+                        "description": "Baseline ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.BaselineDetailResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            },
             "put": {
                 "summary": "Update a baseline for my set of systems",
                 "description": "Update a baseline for my set of systems",
@@ -2784,6 +2817,39 @@
                 "properties": {
                     "to_time": {
                         "type": "string"
+                    }
+                }
+            },
+            "controllers.BaselineDetailAttributes": {
+                "type": "object",
+                "properties": {
+                    "config": {
+                        "$ref": "#/components/schemas/controllers.BaselineConfig"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "controllers.BaselineDetailItem": {
+                "type": "object",
+                "properties": {
+                    "attributes": {
+                        "$ref": "#/components/schemas/controllers.BaselineDetailAttributes"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "controllers.BaselineDetailResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/controllers.BaselineDetailItem"
                     }
                 }
             },
