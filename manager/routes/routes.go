@@ -21,6 +21,7 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) {
 	if config.EnableBaselines {
 		baselines := api.Group("/baselines")
 		baselines.GET("/", controllers.BaselinesListHandler)
+		baselines.GET("/:baseline_id", controllers.BaselineDetailHandler)
 		baselines.GET("/:baseline_id/systems", controllers.BaselineSystemsListHandler)
 		baselines.PUT("/", controllers.CreateBaselineHandler)
 		baselines.PUT("/:baseline_id", controllers.BaselineUpdateHandler)
