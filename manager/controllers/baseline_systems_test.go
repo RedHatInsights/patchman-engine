@@ -25,7 +25,7 @@ func testBaselineSystems(t *testing.T, url string) BaselineSystemsResponse {
 	return output
 }
 
-func TestBaselinesystemsDefault(t *testing.T) {
+func TestBaselineSystemsDefault(t *testing.T) {
 	output := testBaselineSystems(t, "/1/systems")
 
 	assert.Equal(t, 2, len(output.Data))
@@ -45,6 +45,22 @@ func TestBaselinesystemsDefault(t *testing.T) {
 	assert.Equal(t, 0, output.Meta.Offset)
 	assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
 	assert.Equal(t, 2, output.Meta.TotalItems)
+}
+
+func TestBaselinesystemsEmpty(t *testing.T) {
+	output := testBaselineSystems(t, "/3/systems")
+
+	assert.Equal(t, 0, len(output.Data))
+	// links
+	assert.Equal(t, "/api/patch/v1/baselines/3/systems?offset=0&limit=20&sort=-display_name", output.Links.First)
+	assert.Equal(t, "/api/patch/v1/baselines/3/systems?offset=0&limit=20&sort=-display_name", output.Links.Last)
+	assert.Nil(t, output.Links.Next)
+	assert.Nil(t, output.Links.Previous)
+
+	// meta
+	assert.Equal(t, 0, output.Meta.Offset)
+	assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
+	assert.Equal(t, 0, output.Meta.TotalItems)
 }
 
 func TestBaselineSystemsOffsetLimit(t *testing.T) {
@@ -80,6 +96,11 @@ func TestBaselinesFilterDisplayName(t *testing.T) {
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].Attributes.DisplayName)
+}
+
+func TestBaselinesFilterTag(t *testing.T) {
+	output := testBaselineSystems(t, "/1/systems?tags=ns1/k3=val3")
+	assert.Equal(t, 1, len(output.Data))
 }
 
 func TestBaselineSystemsWrongSort(t *testing.T) {
