@@ -45,7 +45,8 @@ func BaselineDeleteHandler(c *gin.Context) {
 		return
 	}
 
-	deleteQuery := tx.Delete(&models.Baseline{}, baselineID).Where("rh_account_id = (?)", account)
+	deleteQuery := tx.Where("rh_account_id = ? AND id = ?", account, baselineID).
+		Delete(&models.Baseline{})
 	err = deleteQuery.Error
 	if err != nil {
 		LogAndRespError(c, err, "Could not delete baseline")
