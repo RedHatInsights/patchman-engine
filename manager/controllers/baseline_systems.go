@@ -57,6 +57,7 @@ type BaselineSystemsResponse struct {
 // @Param    sort           query   string  false   "Sort field"    Enums(id,name,config)
 // @Param    search         query   string  false   "Find matching text"
 // @Param    filter[display_name]           query   string  false "Filter"
+// @Param    tags           query   []string  false "Tag filter"
 // @Success 200 {object} BaselineSystemsResponse
 // @Router /api/patch/v1/baselines/{baseline_id}/systems [get]
 func BaselineSystemsListHandler(c *gin.Context) {

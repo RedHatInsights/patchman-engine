@@ -59,6 +59,7 @@ type BaselinesResponse struct {
 // @Param    filter[id]           query   string  false "Filter "
 // @Param    filter[name]         query   string  false "Filter"
 // @Param    filter[systems]      query   string  false "Filter"
+// @Param    tags           query   []string  false "Tag filter"
 // @Success 200 {object} BaselinesResponse
 // @Router /api/patch/v1/baselines [get]
 func BaselinesListHandler(c *gin.Context) {
