@@ -55,7 +55,7 @@ func BaselineUpdateHandler(c *gin.Context) {
 
 	var exists int64
 	err = database.Db.Model(&models.Baseline{}).
-		Where("id = ? ", baselineID).Count(&exists).Error
+		Where("id = ? AND rh_account_id = ?", baselineID, account).Count(&exists).Error
 	if err != nil {
 		LogAndRespError(c, err, "Database error")
 		return
