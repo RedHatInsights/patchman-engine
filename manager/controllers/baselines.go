@@ -25,14 +25,16 @@ type BaselinesDBLookup struct {
 }
 
 type BaselineItemAttributes struct {
-	Name    string `json:"name" csv:"name" query:"bl.name" gorm:"column:name"`
-	Systems int    `json:"systems" csv:"systems" query:"systems" gorm:"column:systems"`
+	// Baseline name
+	Name string `json:"name" csv:"name" query:"bl.name" gorm:"column:name" example:"my-baseline"`
+	// Count of the systems associated with the baseline
+	Systems int `json:"systems" csv:"systems" query:"systems" gorm:"column:systems" example:"22"`
 }
 
 type BaselineItem struct {
-	Attributes BaselineItemAttributes `json:"attributes"`
-	ID         int                    `json:"id"`
-	Type       string                 `json:"type"`
+	Attributes BaselineItemAttributes `json:"attributes"`              // Additional baseline attributes
+	ID         int                    `json:"id" example:"10"`         // Unique baseline id
+	Type       string                 `json:"type" example:"baseline"` // Document type name
 }
 
 type BaselineInlineItem struct {
@@ -41,9 +43,9 @@ type BaselineInlineItem struct {
 }
 
 type BaselinesResponse struct {
-	Data  []BaselineItem `json:"data"`
-	Links Links          `json:"links"`
-	Meta  ListMeta       `json:"meta"`
+	Data  []BaselineItem `json:"data"`  // Baseline items
+	Links Links          `json:"links"` // Pagination links
+	Meta  ListMeta       `json:"meta"`  // Generic response fields (pagination params, filters etc.)
 }
 
 // @Summary Show me all baselines for all my systems

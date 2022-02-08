@@ -15,9 +15,12 @@ import (
 )
 
 type CreateBaselineRequest struct {
-	Name         *string         `json:"name"`
-	InventoryIDs []string        `json:"inventory_ids"`
-	Config       *BaselineConfig `json:"config"`
+	// Baseline name (optional).
+	Name *string `json:"name"`
+	// Inventory IDs list of systems to associate with this baseline (optional).
+	InventoryIDs []string `json:"inventory_ids"`
+	// Baseline config to filter applicable advisories and package updates for the associated systems (optional).
+	Config *BaselineConfig `json:"config"`
 }
 
 type CreateBaselineResponse UpdateBaselineResponse

@@ -29,10 +29,10 @@ func TestBaselineSystemsDefault(t *testing.T) {
 	output := testBaselineSystems(t, "/1/systems")
 
 	assert.Equal(t, 2, len(output.Data))
-	assert.Equal(t, "baseline_systems", output.Data[0].Type)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.Data[0].ID)
+	assert.Equal(t, "baseline_system", output.Data[0].Type)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.Data[0].InventoryID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.Data[0].Attributes.DisplayName)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[1].ID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[1].InventoryID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[1].Attributes.DisplayName)
 
 	// links
@@ -94,7 +94,7 @@ func TestBaselineSystemOffsetOverflow(t *testing.T) {
 func TestBaselinesFilterDisplayName(t *testing.T) {
 	output := testBaselineSystems(t, "/1/systems?filter[display_name]=00000000-0000-0000-0000-000000000001")
 	assert.Equal(t, 1, len(output.Data))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].InventoryID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].Attributes.DisplayName)
 }
 
@@ -118,8 +118,8 @@ func TestBaselineSystemsWrongSort(t *testing.T) {
 func TestBaselineSystemsSearch(t *testing.T) {
 	output := testBaselineSystems(t, "/1/systems?search=00000000-0000-0000-0000-000000000001")
 	assert.Equal(t, 1, len(output.Data))
-	assert.Equal(t, "baseline_systems", output.Data[0].Type)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
+	assert.Equal(t, "baseline_system", output.Data[0].Type)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].InventoryID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].Attributes.DisplayName)
 
 	// links

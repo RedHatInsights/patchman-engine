@@ -10,7 +10,8 @@ import (
 )
 
 type BaselineConfig struct {
-	ToTime time.Time `json:"to_time"`
+	// Filter applicable advisories (updates) by the latest publish time.
+	ToTime time.Time `json:"to_time" example:"2022-12-31T12:00:00-04:00"`
 }
 
 func GetBaselineConfig(tx *gorm.DB, system *models.SystemPlatform) (*BaselineConfig, error) {

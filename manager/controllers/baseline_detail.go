@@ -18,14 +18,14 @@ type BaselineDetailResponse struct {
 }
 
 type BaselineDetailItem struct {
-	Attributes BaselineDetailAttributes
-	ID         int    `json:"id"`
-	Type       string `json:"type"`
+	Attributes BaselineDetailAttributes // Additional baseline attributes
+	ID         int                      `json:"id" example:"1"`          // Baseline ID
+	Type       string                   `json:"type" example:"baseline"` // Document type name
 }
 
 type BaselineDetailAttributes struct {
-	Name   string          `json:"name"`
-	Config *BaselineConfig `json:"config"`
+	Name   string          `json:"name" example:"my_baseline"` // Baseline name
+	Config *BaselineConfig `json:"config"`                     // Baseline config
 }
 
 // @Summary Show baseline detail by given baseline ID
