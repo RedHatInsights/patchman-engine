@@ -28,13 +28,17 @@ type BaselineSystemsDBLookup struct {
 }
 
 type BaselineSystemAttributes struct {
-	DisplayName string `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name"`
+	// Baseline system display name
+	DisplayName string `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name" example:"my-baselined-system"` // nolint: lll
 }
 
 type BaselineSystemItem struct {
+	// Additional baseline system attributes
 	Attributes BaselineSystemAttributes `json:"attributes"`
-	ID         string                   `json:"id"`
-	Type       string                   `json:"type"`
+	// Baseline system inventory ID (uuid format)
+	InventoryID string `json:"inventory_id" example:"00000000-0000-0000-0000-000000000001"`
+	// Document type name
+	Type string `json:"type" example:"baseline_system"`
 }
 
 type BaselineSystemInlineItem BaselineSystemsDBLookup
@@ -124,8 +128,8 @@ func buildBaselineSystemData(baselineSystems []BaselineSystemsDBLookup) []Baseli
 			Attributes: BaselineSystemAttributes{
 				DisplayName: baselineSystemDB.BaselineSystemAttributes.DisplayName,
 			},
-			ID:   baselineSystemDB.ID,
-			Type: "baseline_systems",
+			InventoryID: baselineSystemDB.ID,
+			Type:        "baseline_system",
 		}
 	}
 	return data

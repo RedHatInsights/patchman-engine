@@ -18,13 +18,16 @@ import (
 type BaselineConfig database.BaselineConfig
 
 type UpdateBaselineRequest struct {
-	Name         *string         `json:"name"`
+	// Updated baseline name (optional)
+	Name *string `json:"name" example:"my-changed-baseline-name"`
+	// Map of inventories to add to (true) or remove (false) from given baseline (optional)
 	InventoryIDs map[string]bool `json:"inventory_ids"`
-	Config       *BaselineConfig `json:"config"`
+	// Updated baseline config (optional)
+	Config *BaselineConfig `json:"config"`
 }
 
 type UpdateBaselineResponse struct {
-	BaselineID int
+	BaselineID int `example:"1"` // Updated baseline unique ID, it can not be changed
 }
 
 // @Summary Update a baseline for my set of systems
