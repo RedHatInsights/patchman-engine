@@ -2842,7 +2842,9 @@
                 "type": "object",
                 "properties": {
                     "to_time": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Filter applicable advisories (updates) by the latest publish time.",
+                        "example": "2022-12-31T12:00:00-04:00"
                     }
                 }
             },
@@ -2853,7 +2855,9 @@
                         "$ref": "#/components/schemas/controllers.BaselineConfig"
                     },
                     "name": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Baseline name",
+                        "example": "my_baseline"
                     }
                 }
             },
@@ -2864,10 +2868,14 @@
                         "$ref": "#/components/schemas/controllers.BaselineDetailAttributes"
                     },
                     "id": {
-                        "type": "integer"
+                        "type": "integer",
+                        "description": "Baseline ID",
+                        "example": 1
                     },
                     "type": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Document type name",
+                        "example": "baseline"
                     }
                 }
             },
@@ -2886,10 +2894,14 @@
                         "$ref": "#/components/schemas/controllers.BaselineItemAttributes"
                     },
                     "id": {
-                        "type": "integer"
+                        "type": "integer",
+                        "description": "Unique baseline id",
+                        "example": 10
                     },
                     "type": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Document type name",
+                        "example": "baseline"
                     }
                 }
             },
@@ -2897,10 +2909,14 @@
                 "type": "object",
                 "properties": {
                     "name": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Baseline name",
+                        "example": "my-baseline"
                     },
                     "systems": {
-                        "type": "integer"
+                        "type": "integer",
+                        "description": "Count of the systems associated with the baseline",
+                        "example": 22
                     }
                 }
             },
@@ -2908,7 +2924,9 @@
                 "type": "object",
                 "properties": {
                     "display_name": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Baseline system display name",
+                        "example": "my-baselined-system"
                     }
                 }
             },
@@ -2918,11 +2936,15 @@
                     "attributes": {
                         "$ref": "#/components/schemas/controllers.BaselineSystemAttributes"
                     },
-                    "id": {
-                        "type": "string"
+                    "inventory_id": {
+                        "type": "string",
+                        "description": "Baseline system inventory ID (uuid format)",
+                        "example": "00000000-0000-0000-0000-000000000001"
                     },
                     "type": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Document type name",
+                        "example": "baseline_system"
                     }
                 }
             },
@@ -2948,6 +2970,7 @@
                 "properties": {
                     "data": {
                         "type": "array",
+                        "description": "Baseline items",
                         "items": {
                             "$ref": "#/components/schemas/controllers.BaselineItem"
                         }
@@ -2968,12 +2991,14 @@
                     },
                     "inventory_ids": {
                         "type": "array",
+                        "description": "Inventory IDs list of systems to associate with this baseline (optional).",
                         "items": {
                             "type": "string"
                         }
                     },
                     "name": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Baseline name (optional)."
                     }
                 }
             },
@@ -2981,7 +3006,9 @@
                 "type": "object",
                 "properties": {
                     "baselineID": {
-                        "type": "integer"
+                        "type": "integer",
+                        "description": "Updated baseline unique ID, it can not be changed",
+                        "example": 1
                     }
                 }
             },
@@ -3003,16 +3030,20 @@
                 "type": "object",
                 "properties": {
                     "first": {
-                        "type": "string"
+                        "type": "string",
+                        "example": "/link/to/the/first"
                     },
                     "last": {
-                        "type": "string"
+                        "type": "string",
+                        "example": "/link/to/the/last"
                     },
                     "next": {
-                        "type": "string"
+                        "type": "string",
+                        "example": "/link/to/the/next"
                     },
                     "previous": {
-                        "type": "string"
+                        "type": "string",
+                        "example": "/link/to/the/previous"
                     }
                 }
             },
@@ -3023,19 +3054,30 @@
                         "type": "object",
                         "additionalProperties": {
                             "$ref": "#/components/schemas/controllers.FilterData"
-                        }
+                        },
+                        "description": "Used filters"
                     },
                     "limit": {
-                        "type": "integer"
+                        "type": "integer",
+                        "description": "Used response limit (page size) - pagination",
+                        "example": 20
                     },
                     "offset": {
-                        "type": "integer"
+                        "type": "integer",
+                        "description": "Used response offset - pagination",
+                        "example": 0
                     },
                     "search": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Used search terms",
+                        "example": "kernel"
                     },
                     "sort": {
                         "type": "array",
+                        "description": "Used sorting fields",
+                        "example": [
+                            "name"
+                        ],
                         "items": {
                             "type": "string"
                         }
@@ -3044,10 +3086,13 @@
                         "type": "object",
                         "additionalProperties": {
                             "type": "integer"
-                        }
+                        },
+                        "description": "Some subtotals used by some endpoints"
                     },
                     "total_items": {
-                        "type": "integer"
+                        "type": "integer",
+                        "description": "Total items count to return",
+                        "example": 1000
                     }
                 }
             },
@@ -3615,10 +3660,13 @@
                         "type": "object",
                         "additionalProperties": {
                             "type": "boolean"
-                        }
+                        },
+                        "description": "Map of inventories to add to (true) or remove (false) from given baseline (optional)"
                     },
                     "name": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Updated baseline name (optional)",
+                        "example": "my-changed-baseline-name"
                     }
                 }
             },
@@ -3626,7 +3674,9 @@
                 "type": "object",
                 "properties": {
                     "baselineID": {
-                        "type": "integer"
+                        "type": "integer",
+                        "description": "Updated baseline unique ID, it can not be changed",
+                        "example": 1
                     }
                 }
             },
