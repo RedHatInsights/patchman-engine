@@ -7,12 +7,12 @@ import (
 	"app/manager/middlewares"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"net/http"
+	"strconv"
+	"time"
 )
 
 type BaselineConfig database.BaselineConfig
@@ -109,11 +109,12 @@ func sortInventoryIDs(inventoryIDs map[string]bool) (newIDs, obsoleteIDs []strin
 	return newIDs, obsoleteIDs
 }
 
-func updateSystemsBaselineID(tx *gorm.DB, rhAccountID int, inventoryIDs []string, baselineID interface{}) error {
+func updateSystemsBaselineID(tx *gorm.DB, rhAccountID int, inventoryIDs []string, baselineID *int) error {
+	updateFields := map[string]interface{}{"baseline_id": baselineID, "unchanged_since": time.Now()}
 	err := tx.Model(models.SystemPlatform{}).
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Where("rh_account_id = (?) AND inventory_id::text IN (?)", rhAccountID, inventoryIDs).
-		Update("baseline_id", baselineID).Error
+		Updates(updateFields).Error
 	return err
 }
 
@@ -145,7 +146,7 @@ func buildUpdateBaselineQuery(baselineID int, req UpdateBaselineRequest, newIDs,
 	}
 
 	if len(newIDs) > 0 {
-		err := updateSystemsBaselineID(tx, account, newIDs, baselineID)
+		err := updateSystemsBaselineID(tx, account, newIDs, &baselineID)
 		if err != nil {
 			return err
 		}
