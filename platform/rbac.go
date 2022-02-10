@@ -2,14 +2,18 @@ package platform
 
 import (
 	"app/base/rbac"
-	"github.com/gin-gonic/gin"
+	"app/base/utils"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
+
+var rbacPermissions = utils.Getenv("RBAC_PERMISSIONS", "patch:*:read")
 
 func rbacHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, rbac.AccessPagination{
 		Data: []rbac.Access{
-			{Permission: "patch:*:read"},
+			{Permission: rbacPermissions},
 		},
 	})
 }
