@@ -27,3 +27,9 @@ func (t *MockKafkaWriter) WriteMessages(_ context.Context, ev ...KafkaMessage) e
 	t.Messages = append(t.Messages, ev...)
 	return nil
 }
+
+func MockCreateKafkaWriter(writer Writer) CreateWriter {
+	return func(topic string) Writer {
+		return writer
+	}
+}
