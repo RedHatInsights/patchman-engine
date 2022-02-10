@@ -5,6 +5,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/manager/kafka"
 	"app/manager/middlewares"
 	"net/http"
 	"strconv"
@@ -63,5 +64,8 @@ func BaselineDeleteHandler(c *gin.Context) {
 		LogAndRespNotFound(c, errors.New("no rows returned"), "baseline not found")
 		return
 	}
+
+	kafka.EvaluateBaselineSystems(nil, account)
+
 	c.Status(http.StatusOK)
 }

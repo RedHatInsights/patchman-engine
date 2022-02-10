@@ -4,15 +4,17 @@ import (
 	"app/base"
 	"app/base/database"
 	"app/base/models"
+	"app/manager/kafka"
 	"app/manager/middlewares"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
-	"gorm.io/gorm"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 type BaselineConfig database.BaselineConfig
@@ -86,6 +88,7 @@ func BaselineUpdateHandler(c *gin.Context) {
 		LogAndRespError(c, err, "Database error")
 		return
 	}
+	kafka.EvaluateBaselineSystems(&baselineID, account)
 
 	c.JSON(http.StatusOK, baselineID)
 }

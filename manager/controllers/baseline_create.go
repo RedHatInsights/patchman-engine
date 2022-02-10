@@ -4,6 +4,7 @@ import (
 	"app/base"
 	"app/base/database"
 	"app/base/models"
+	"app/manager/kafka"
 	"app/manager/middlewares"
 	"encoding/json"
 	"errors"
@@ -64,7 +65,10 @@ func CreateBaselineHandler(c *gin.Context) {
 	baselineID, err := buildCreateBaselineQuery(request, accountID)
 	if err != nil {
 		LogAndRespError(c, err, "Database error")
+		return
 	}
+
+	kafka.EvaluateBaselineSystems(&baselineID, accountID)
 
 	c.JSON(http.StatusOK, baselineID)
 }

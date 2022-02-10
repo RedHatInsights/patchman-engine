@@ -3,10 +3,13 @@ package manager
 import (
 	"app/base"
 	"app/base/core"
+	"app/base/mqueue"
 	"app/base/utils"
 	"app/docs"
+	"app/manager/kafka"
 	"app/manager/middlewares"
 	"app/manager/routes"
+
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 )
@@ -47,6 +50,8 @@ func RunManager() {
 	routes.InitAPI(api, endpointsConfig)
 
 	go base.TryExposeOnMetricsPort(app)
+
+	kafka.TryStartEvalQueue(mqueue.NewKafkaWriterFromEnv)
 
 	port := utils.GetIntEnvOrDefault("PUBLIC_PORT", 8080)
 	err := utils.RunServer(base.Context, app, port)
