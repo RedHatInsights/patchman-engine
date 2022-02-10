@@ -5,11 +5,12 @@ import (
 	"app/base"
 	"app/base/utils"
 	"context"
-	"github.com/lestrrat-go/backoff"
 	"io"
 	"os"
 	"strings"
 	"sync"
+
+	"github.com/lestrrat-go/backoff"
 )
 
 const errContextCanceled = "context canceled"
@@ -79,6 +80,7 @@ func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 }
 
 type CreateReader func(topic string) Reader
+type CreateWriter func(topic string) Writer
 
 func runReader(wg *sync.WaitGroup, topic string, createReader CreateReader, msgHandler MessageHandler) {
 	defer wg.Done()
