@@ -46,6 +46,7 @@ func BaselineDeleteHandler(c *gin.Context) {
 		return
 	}
 
+	inventoryAIDs := kafka.GetInventoryIDsToEvaluate(&baselineID, account, true, nil)
 	deleteQuery := tx.Where("rh_account_id = ? AND id = ?", account, baselineID).
 		Delete(&models.Baseline{})
 	err = deleteQuery.Error
@@ -65,7 +66,7 @@ func BaselineDeleteHandler(c *gin.Context) {
 		return
 	}
 
-	kafka.EvaluateBaselineSystems(nil, account)
+	kafka.EvaluateBaselineSystems(inventoryAIDs)
 
 	c.Status(http.StatusOK)
 }

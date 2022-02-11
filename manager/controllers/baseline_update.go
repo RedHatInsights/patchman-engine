@@ -70,7 +70,8 @@ func BaselineUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	missingIDs, err := checkInventoryIDs(account, map2list(req.InventoryIDs))
+	inventoryIDsList := map2list(req.InventoryIDs)
+	missingIDs, err := checkInventoryIDs(account, inventoryIDsList)
 	if err != nil {
 		LogAndRespError(c, err, "Database error")
 		return
@@ -88,7 +89,10 @@ func BaselineUpdateHandler(c *gin.Context) {
 		LogAndRespError(c, err, "Database error")
 		return
 	}
-	kafka.EvaluateBaselineSystems(&baselineID, account)
+
+	configUpdated := req.Config != nil
+	inventoryAIDs := kafka.GetInventoryIDsToEvaluate(&baselineID, account, configUpdated, inventoryIDsList)
+	kafka.EvaluateBaselineSystems(inventoryAIDs)
 
 	c.JSON(http.StatusOK, baselineID)
 }
