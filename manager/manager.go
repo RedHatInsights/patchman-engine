@@ -15,7 +15,7 @@ import (
 // @title Patchman-engine API
 // DO NOT EDIT version MANUALLY - this variable is modified by generate_docs.sh
 // @version  v1.18.40
-// @description API of the Patch application on [cloud.redhat.com](cloud.redhat.com)
+// @description API of the Patch application on [console.redhat.com](https://console.redhat.com)
 // @description
 // @description Syntax of the `filter[name]` query parameters is described in  [Filters documentation](https://github.com/RedHatInsights/patchman-engine/wiki/API-custom-filters)
 
