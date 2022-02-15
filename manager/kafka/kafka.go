@@ -98,11 +98,11 @@ func sendInventoryIDs(inventoryIDs []mqueue.InventoryAID) {
 
 // Send all account systems of given baseline to evaluation.
 // Evaluate all account systems with no baseline if baselineID is nil (used for deleted baseline).
-func EvaluateBaselineSystems(inventoryIDs []mqueue.InventoryAID) {
+func EvaluateBaselineSystems(inventoryAIDs []mqueue.InventoryAID) {
 	if !enableBaselineChangeEval {
 		return
 	}
 
-	batch := inventoryIDsBatch{InventoryIDs: inventoryIDs}
+	batch := inventoryIDsBatch{InventoryIDs: inventoryAIDs}
 	inventoryIDsChan <- batch
 }
