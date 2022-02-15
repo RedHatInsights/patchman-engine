@@ -9,11 +9,12 @@ import (
 	"app/base/utils"
 	"net/http"
 
-	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -25,10 +26,12 @@ var (
 	advisoryPageSize            int
 	packagesPageSize            int
 	deleteCulledSystemsLimit    int
+	deleteUnusedDataLimit       int
 	enabledRepoBasedReeval      bool
 	enableRecalcMessagesSend    bool
 	enableSyncOnStart           bool
 	enableRecalcOnStart         bool
+	enableUnusedDataDelete      bool
 	enableCulledSystemDelete    bool
 	enableSystemStaling         bool
 	enableTurnpikeAuth          bool
@@ -68,6 +71,8 @@ func configure() {
 	advisoryPageSize = utils.GetIntEnvOrDefault("ERRATA_PAGE_SIZE", 500)
 	packagesPageSize = utils.GetIntEnvOrDefault("PACKAGES_PAGE_SIZE", 5)
 
+	deleteUnusedDataLimit = utils.GetIntEnvOrDefault("DELETE_UNUSED_DATA_LIMIT", 1000)
+	enableUnusedDataDelete = utils.GetBoolEnvOrDefault("ENABLE_UNUSED_DATA_DELETE", true)
 	deleteCulledSystemsLimit = utils.GetIntEnvOrDefault("DELETE_CULLED_SYSTEMS_LIMIT", 1000)
 	enableCulledSystemDelete = utils.GetBoolEnvOrDefault("ENABLE_CULLED_SYSTEM_DELETE", true)
 	enableSystemStaling = utils.GetBoolEnvOrDefault("ENABLE_SYSTEM_STALING", true)
