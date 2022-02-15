@@ -11,7 +11,7 @@ import (
 var (
 	evalWriter               mqueue.Writer
 	inventoryIDsChan         chan inventoryIDsBatch
-	enableEvaluationRequests = utils.GetBoolEnvOrDefault("ENABLE_EVALUATION_REQUESTS", true)
+	enableBaselineChangeEval = utils.GetBoolEnvOrDefault("ENABLE_BASELINE_CHANGE_EVAL", true)
 )
 
 type inventoryIDsBatch struct {
@@ -19,7 +19,7 @@ type inventoryIDsBatch struct {
 }
 
 func TryStartEvalQueue(createWriter mqueue.CreateWriter) {
-	if !enableEvaluationRequests {
+	if !enableBaselineChangeEval {
 		return
 	}
 	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
@@ -37,7 +37,7 @@ func runBaselineRecalcLoop() {
 
 func GetInventoryIDsToEvaluate(baselineID *int, accountID int,
 	configUpdated bool, updatedInventoryIDs []string) []mqueue.InventoryAID {
-	if !enableEvaluationRequests {
+	if !enableBaselineChangeEval {
 		return nil
 	}
 
@@ -99,7 +99,7 @@ func sendInventoryIDs(inventoryIDs []mqueue.InventoryAID) {
 // Send all account systems of given baseline to evaluation.
 // Evaluate all account systems with no baseline if baselineID is nil (used for deleted baseline).
 func EvaluateBaselineSystems(inventoryIDs []mqueue.InventoryAID) {
-	if !enableEvaluationRequests {
+	if !enableBaselineChangeEval {
 		return
 	}
 

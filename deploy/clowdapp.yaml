@@ -44,7 +44,7 @@ objects:
         - {name: ADVISORY_DETAIL_CACHE_SIZE, value: '${ADVISORY_DETAIL_CACHE_SIZE}'}
         - {name: PRELOAD_ADVISORY_DETAIL_CACHE, value: '${PRELOAD_ADVISORY_DETAIL_CACHE}'}
         - {name: ENABLE_BASELINES_API, value: '${ENABLE_BASELINES_API}'}
-        - {name: ENABLE_EVALUATION_REQUESTS, value: '${ENABLE_EVALUATION_REQUESTS}'}
+        - {name: ENABLE_BASELINE_CHANGE_EVAL, value: '${ENABLE_BASELINE_CHANGE_EVAL}'}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: '${EVAL_TOPIC_MANAGER}'}
@@ -395,7 +395,7 @@ parameters:
 - {name: ADVISORY_DETAIL_CACHE_SIZE, value: '100'} # Advisory detail cache size (cached items count)
 - {name: PRELOAD_ADVISORY_DETAIL_CACHE, value: 'true'} # Enable advisory detail cache preloading
 - {name: ENABLE_BASELINES_API, value: 'true'} # Enable baselines API endpoints
-- {name: ENABLE_EVALUATION_REQUESTS, value: 'true'} # Send Kafka eval messages on baseline update
+- {name: ENABLE_BASELINE_CHANGE_EVAL, value: 'true'} # Send Kafka eval messages on baseline update
 - {name: EVAL_TOPIC_MANAGER, value: patchman.evaluator.upload}
 - {name: RES_CPU_MANAGER, value: 200m}
 - {name: RES_MEM_MANAGER, value: 256Mi}
