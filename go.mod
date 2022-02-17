@@ -3,8 +3,6 @@ module app
 go 1.13
 
 require (
-	github.com/RedHatInsights/patchman-clients/rbac v0.14.0
-	github.com/RedHatInsights/patchman-clients/vmaas v0.17.0
 	github.com/aws/aws-sdk-go v1.38.51
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/confluentinc/confluent-kafka-go v1.7.0 // indirect
@@ -39,8 +37,7 @@ require (
 	github.com/ugorji/go v1.2.6 // indirect
 	github.com/zsais/go-gin-prometheus v0.1.0
 	golang.org/x/net v0.0.0-20211104170005-ce137452f963
-	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
+	golang.org/x/tools v0.0.0-20200825202427-b303f430e36d // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/confluentinc/confluent-kafka-go.v1 v1.7.0
 	gopkg.in/yaml.v2 v2.4.0 // indirect
