@@ -43,10 +43,11 @@ func PackageSystemsExportHandler(c *gin.Context) {
 	}
 
 	query := packageSystemsQuery(account, packageName, packageIDs)
-	query, _, err := ApplyTagsFilter(c, query, "sp.inventory_id")
+	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
+	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
 	query, err = ExportListCommon(query, c, PackageSystemsOpts)
 	if err != nil {
 		return

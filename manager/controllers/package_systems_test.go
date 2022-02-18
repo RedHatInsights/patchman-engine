@@ -66,3 +66,22 @@ func testPackageSystemsError(t *testing.T, url string, account int) (int, utils.
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	return w.Code, errResp
 }
+
+func TestPackageSystemsTagsInMetadata(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/kernel/systems?tags=ns1/k3=val4&tags=ns1/k1=val1", nil)
+	core.InitRouterWithParams(PackageSystemsListHandler, 3, "GET", "/:package_name/systems").
+		ServeHTTP(w, req)
+
+	var output PackageSystemsResponse
+	ParseResponseBody(t, w.Body.Bytes(), &output)
+
+	testMap := map[string]FilterData{
+		"ns1/k1": {"eq", []string{"val1"}},
+		"ns1/k3": {"eq", []string{"val4"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}

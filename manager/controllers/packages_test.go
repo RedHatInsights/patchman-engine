@@ -86,3 +86,21 @@ func TestPackageTagsInvalid(t *testing.T) {
 func TestPackagesWrongOffset(t *testing.T) {
 	doTestWrongOffset(t, "/", "/?offset=1000", PackagesListHandler)
 }
+
+func TestPackageTagsInMetadata(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil)
+	core.InitRouterWithParams(PackagesListHandler, 3, "GET", "/").ServeHTTP(w, req)
+
+	var output PackagesResponse
+	ParseResponseBody(t, w.Body.Bytes(), &output)
+
+	testMap := map[string]FilterData{
+		"ns1/k1": {"eq", []string{"val1"}},
+		"ns1/k3": {"eq", []string{"val4"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}

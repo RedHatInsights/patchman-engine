@@ -83,6 +83,7 @@ func packageSystemsQuery(acc int, packageName string, packageIDs []int) *gorm.DB
 // @Router /api/patch/v1/packages/{package_name}/systems [get]
 func PackageSystemsListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
+	var filters map[string]FilterData
 
 	packageName := c.Param("package_name")
 	if packageName == "" {
@@ -102,11 +103,13 @@ func PackageSystemsListHandler(c *gin.Context) {
 	}
 
 	query := packageSystemsQuery(account, packageName, packageIDs)
-	query, _, err := ApplyTagsFilter(c, query, "sp.inventory_id")
+	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
-	query, meta, links, err := ListCommon(query, c, fmt.Sprintf("/packages/%s/systems", packageName), PackageSystemsOpts)
+	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
+	packageEndpoint := fmt.Sprintf("/packages/%s/systems", packageName)
+	query, meta, links, err := ListCommon(query, c, filters, packageEndpoint, PackageSystemsOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself

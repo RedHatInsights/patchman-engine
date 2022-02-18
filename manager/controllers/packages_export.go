@@ -24,7 +24,11 @@ import (
 // @Router /api/patch/v1/export/packages [get]
 func PackagesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
-	query, err := packagesQuery(c, account)
+	filters, err := ParseTagsFilters(c)
+	if err != nil {
+		return
+	}
+	query := packagesQuery(filters, account)
 	if err != nil {
 		return
 	}

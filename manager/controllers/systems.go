@@ -164,11 +164,12 @@ func systemSubtotals(tx *gorm.DB) (total int, subTotals map[string]int, err erro
 func SystemsListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	query := querySystems(account)
-	query, _, err := ApplyTagsFilter(c, query, "sp.inventory_id")
+	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return
 	} // Error handled method itself
-	query, meta, links, err := ListCommon(query, c, "/api/patch/v1/systems", SystemOpts)
+	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
+	query, meta, links, err := ListCommon(query, c, filters, "/api/patch/v1/systems", SystemOpts)
 	if err != nil {
 		return
 	} // Error handled method itself

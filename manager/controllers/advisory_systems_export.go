@@ -61,10 +61,11 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 	}
 
 	query := buildAdvisorySystemsQuery(account, advisoryName)
-	query, _, err = ApplyTagsFilter(c, query, "sp.inventory_id")
+	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
+	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
 
 	var systems []SystemDBLookup
 

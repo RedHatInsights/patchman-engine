@@ -236,3 +236,53 @@ func testSystemsError(t *testing.T, url string) (int, utils.ErrorResponse) {
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	return w.Code, errResp
 }
+
+func TestSystemsTagsInMetadata(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil)
+	core.InitRouterWithAccount(SystemsListHandler, "/", 3).ServeHTTP(w, req)
+
+	var output SystemsResponse
+	ParseResponseBody(t, w.Body.Bytes(), &output)
+
+	testMap := map[string]FilterData{
+		"ns1/k1": {"eq", []string{"val1"}},
+		"ns1/k3": {"eq", []string{"val4"}},
+		"stale":  {"eq", []string{"false"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
+func TestSAPSystemMeta1(t *testing.T) {
+	url := "/?filter[system_profile][sap_sids][]=ABC"
+	output := testSystems(t, url, 1)
+	testMap := map[string]FilterData{
+		"sap_sids": {"eq", []string{`"ABC"`}},
+		"stale":    {"eq", []string{"false"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
+func TestSAPSystemMeta2(t *testing.T) {
+	url := "/?filter[system_profile][sap_sids][in][]=ABC"
+	output := testSystems(t, url, 1)
+	testMap := map[string]FilterData{
+		"sap_sids": {"in", []string{`"ABC"`}},
+		"stale":    {"eq", []string{"false"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
+func TestSAPSystemMeta3(t *testing.T) {
+	url := "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][]=ABC"
+	output := testSystems(t, url, 1)
+	testMap := map[string]FilterData{
+		"sap_system": {"eq", []string{"true"}},
+		"sap_sids":   {"eq", []string{`"ABC"`}},
+		"stale":      {"eq", []string{"false"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}

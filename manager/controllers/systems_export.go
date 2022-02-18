@@ -39,10 +39,11 @@ import (
 func SystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	query := querySystems(account)
-	query, _, err := ApplyTagsFilter(c, query, "sp.inventory_id")
+	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
+	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
 
 	var systems []SystemDBLookup
 

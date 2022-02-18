@@ -89,12 +89,13 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 	}
 
 	query := buildAdvisorySystemsQuery(account, advisoryName)
-	query, _, err = ApplyTagsFilter(c, query, "sp.inventory_id")
+	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
+	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
 	path := fmt.Sprintf("/api/patch/v1/advisories/%v/systems", advisoryName)
-	query, meta, links, err := ListCommon(query, c, path, AdvisorySystemOpts)
+	query, meta, links, err := ListCommon(query, c, filters, path, AdvisorySystemOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself

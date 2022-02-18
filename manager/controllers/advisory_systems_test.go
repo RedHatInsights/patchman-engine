@@ -183,3 +183,22 @@ func TestAdvisorySystemsTagsUnknown(t *testing.T) { //nolint:dupl
 func TestAdvisorySystemsWrongOffset(t *testing.T) {
 	doTestWrongOffset(t, "/:advisory_id", "/RH-1?offset=1000", AdvisorySystemsListHandler)
 }
+
+func TestAdvisorySystemsTagsInMetadata(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1", nil)
+	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+
+	var output AdvisorySystemsResponse
+	ParseResponseBody(t, w.Body.Bytes(), &output)
+
+	testMap := map[string]FilterData{
+		"ns1/k1": {"eq", []string{"val1"}},
+		"ns1/k3": {"eq", []string{"val4"}},
+		"stale":  {"eq", []string{"false"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}

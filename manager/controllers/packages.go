@@ -43,16 +43,13 @@ type queryItem struct {
 
 var queryItemSelect = database.MustGetSelect(&queryItem{})
 
-func packagesQuery(c *gin.Context, acc int) (*gorm.DB, error) {
+func packagesQuery(filters map[string]FilterData, acc int) *gorm.DB {
 	systemsWithPkgsInstalledQ := database.Systems(database.Db, acc).
 		Select("id").
 		Where("sp.stale = false AND sp.packages_installed > 0")
 
 	// We need to apply tag filtering on subquery
-	systemsWithPkgsInstalledQ, _, err := ApplyTagsFilter(c, systemsWithPkgsInstalledQ, "sp.inventory_id")
-	if err != nil {
-		return nil, err
-	}
+	systemsWithPkgsInstalledQ, _ = ApplyTagsFilter(filters, systemsWithPkgsInstalledQ, "sp.inventory_id")
 	subQ := database.SystemPackagesShort(database.Db, acc).
 		Select(queryItemSelect).
 		Where("spkg.system_id IN (?)", systemsWithPkgsInstalledQ).
@@ -62,7 +59,7 @@ func packagesQuery(c *gin.Context, acc int) (*gorm.DB, error) {
 		Select(PackagesSelect).
 		Table("package_latest_cache latest").
 		Joins("JOIN package_name pn ON pn.id = latest.name_id").
-		Joins("JOIN (?) res ON res.name_id = latest.name_id", subQ), nil
+		Joins("JOIN (?) res ON res.name_id = latest.name_id", subQ)
 }
 
 // @Summary Show me all installed packages across my systems
@@ -85,13 +82,18 @@ func packagesQuery(c *gin.Context, acc int) (*gorm.DB, error) {
 // @Success 200 {object} PackagesResponse
 // @Router /api/patch/v1/packages/ [get]
 func PackagesListHandler(c *gin.Context) {
+	var filters map[string]FilterData
 	account := c.GetInt(middlewares.KeyAccount)
 
-	query, err := packagesQuery(c, account)
+	filters, err := ParseTagsFilters(c)
+	if err != nil {
+		return
+	}
+	query := packagesQuery(filters, account)
 	if err != nil {
 		return
 	} // Error handled in method itself
-	query, meta, links, err := ListCommon(query, c, "/packages", PackagesOpts)
+	query, meta, links, err := ListCommon(query, c, filters, "/packages", PackagesOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself

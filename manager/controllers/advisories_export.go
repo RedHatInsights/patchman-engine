@@ -29,10 +29,14 @@ import (
 // @Router /api/patch/v1/export/advisories [get]
 func AdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
+	filters, err := ParseTagsFilters(c)
+	if err != nil {
+		return
+	}
 	var query *gorm.DB
 	if disableCachedCounts || HasTags(c) {
 		var err error
-		query, err = buildQueryAdvisoriesTagged(c, account)
+		query = buildQueryAdvisoriesTagged(filters, account)
 		if err != nil {
 			return
 		} // Error handled in method itself
@@ -43,7 +47,7 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	var advisories []AdvisoriesDBLookup
 
 	query = query.Order("id")
-	query, err := ExportListCommon(query, c, AdvisoriesOpts)
+	query, err = ExportListCommon(query, c, AdvisoriesOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return
