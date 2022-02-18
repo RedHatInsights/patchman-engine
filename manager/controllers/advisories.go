@@ -74,10 +74,13 @@ type AdvisoriesResponse struct {
 func AdvisoriesListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	var query *gorm.DB
-
+	filters, err := ParseTagsFilters(c)
+	if err != nil {
+		return
+	}
 	if disableCachedCounts || HasTags(c) {
 		var err error
-		query, err = buildQueryAdvisoriesTagged(c, account)
+		query = buildQueryAdvisoriesTagged(filters, account)
 		if err != nil {
 			return
 		} // Error handled in method itself
@@ -85,7 +88,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 		query = buildQueryAdvisories(account)
 	}
 
-	query, meta, links, err := ListCommon(query, c, "/api/patch/v1/advisories", AdvisoriesOpts)
+	query, meta, links, err := ListCommon(query, c, filters, "/api/patch/v1/advisories", AdvisoriesOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return
@@ -125,19 +128,16 @@ func buildAdvisoryAccountDataQuery(account int) *gorm.DB {
 	return query
 }
 
-func buildQueryAdvisoriesTagged(c *gin.Context, account int) (*gorm.DB, error) {
+func buildQueryAdvisoriesTagged(filters map[string]FilterData, account int) *gorm.DB {
 	subq := buildAdvisoryAccountDataQuery(account)
-	subq, _, err := ApplyTagsFilter(c, subq, "sp.inventory_id")
-	if err != nil {
-		return nil, err
-	}
+	subq, _ = ApplyTagsFilter(filters, subq, "sp.inventory_id")
 
 	query := database.Db.Table("advisory_metadata am").
 		Select(AdvisoriesSelect).
 		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
 		Joins("JOIN (?) aad ON am.id = aad.advisory_id and aad.systems_affected > 0", subq)
 
-	return query, nil
+	return query
 }
 
 func buildAdvisoriesData(advisories []AdvisoriesDBLookup) []AdvisoryItem {

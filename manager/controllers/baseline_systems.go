@@ -85,13 +85,14 @@ func BaselineSystemsListHandler(c *gin.Context) {
 	}
 
 	query := buildQueryBaselineSystems(account, baselineID)
-	query, _, err = ApplyTagsFilter(c, query, "sp.inventory_id")
+	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
+	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
 
 	path := fmt.Sprintf("/api/patch/v1/baselines/%v/systems", baselineID)
-	query, meta, links, err := ListCommon(query, c, path, BaselineSystemOpts)
+	query, meta, links, err := ListCommon(query, c, nil, path, BaselineSystemOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return

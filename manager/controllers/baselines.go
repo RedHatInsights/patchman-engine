@@ -66,14 +66,18 @@ type BaselinesResponse struct {
 // @Router /api/patch/v1/baselines [get]
 func BaselinesListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
-	var query *gorm.DB
+	filters, err := ParseTagsFilters(c)
+	if err != nil {
+		return
+	}
 
-	query, err := buildQueryBaselines(c, account)
+	var query *gorm.DB
+	query = buildQueryBaselines(filters, account)
 	if err != nil {
 		return
 	} // Error handled in method itself
 
-	query, meta, links, err := ListCommon(query, c, "/api/patch/v1/baselines", BaselineOpts)
+	query, meta, links, err := ListCommon(query, c, filters, "/api/patch/v1/baselines", BaselineOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return
@@ -94,7 +98,7 @@ func BaselinesListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildQueryBaselines(c *gin.Context, account int) (*gorm.DB, error) {
+func buildQueryBaselines(filters map[string]FilterData, account int) *gorm.DB {
 	subq := database.Db.Table("system_platform sp").
 		Select("sp.baseline_id, count(sp.inventory_id) as systems").
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
@@ -102,17 +106,14 @@ func buildQueryBaselines(c *gin.Context, account int) (*gorm.DB, error) {
 		Where("sp.stale = false").
 		Group("sp.baseline_id")
 
-	subq, _, err := ApplyTagsFilter(c, subq, "sp.inventory_id")
-	if err != nil {
-		return nil, err
-	}
+	subq, _ = ApplyTagsFilter(filters, subq, "sp.inventory_id")
 
 	query := database.Db.Table("baseline as bl").
 		Select(BaselineSelect).
 		Joins("LEFT JOIN (?) sp ON sp.baseline_id = bl.id", subq).
 		Where("bl.rh_account_id = ?", account)
 
-	return query, nil
+	return query
 }
 
 func buildBaselinesData(baselines []BaselinesDBLookup) []BaselineItem {

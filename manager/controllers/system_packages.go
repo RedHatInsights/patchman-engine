@@ -91,7 +91,7 @@ func SystemPackagesHandler(c *gin.Context) {
 
 	var loaded []SystemPackageDBLoad
 	q := systemPackageQuery(account, inventoryID)
-	q, meta, links, err := ListCommon(q, c, fmt.Sprintf("/systems/%s/packages", inventoryID), SystemPackagesOpts)
+	q, meta, links, err := ListCommon(q, c, nil, fmt.Sprintf("/systems/%s/packages", inventoryID), SystemPackagesOpts)
 	if err != nil {
 		return
 	}

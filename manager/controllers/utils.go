@@ -173,8 +173,8 @@ func CountRows(tx *gorm.DB) (total int, subTotals map[string]int, err error) {
 	return int(total64), subTotals, err
 }
 
-//nolint: funlen
-func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params ...string) (
+//nolint: funlen, lll
+func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, path string, opts ListOpts, params ...string) (
 	*gorm.DB, *ListMeta, *Links, error) {
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
@@ -220,7 +220,6 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params 
 	if len(sortFields) > 0 {
 		sortQ = fmt.Sprintf("sort=%v", strings.Join(sortFields, ","))
 	}
-
 	meta := ListMeta{
 		Limit:      limit,
 		Offset:     offset,
@@ -235,6 +234,7 @@ func ListCommon(tx *gorm.DB, c *gin.Context, path string, opts ListOpts, params 
 
 	params = append(params, filters.ToQueryParams(), sortQ, tagQ, searchQ)
 	links := CreateLinks(path, offset, limit, total, params...)
+	mergeMaps(meta.Filter, tagFilter)
 
 	if limit != -1 {
 		tx = tx.Limit(limit)
@@ -323,10 +323,56 @@ func (t *Tag) ApplyTag(tx *gorm.DB) *gorm.DB {
 	return tx.Where("h.tags @> ?::jsonb", query)
 }
 
+func ParseTagsFilters(c *gin.Context) (map[string]FilterData, error) {
+	filters := Filters{}
+	tags := c.QueryArray("tags")
+	for _, t := range tags {
+		tag, err := ParseTag(t)
+		if err != nil {
+			LogAndRespBadRequest(c, err, err.Error())
+			return nil, err
+		}
+		key := *tag.Namespace + "/" + tag.Key
+		var value []string
+		if value = []string{}; tag.Value != nil {
+			value = strings.Split(*tag.Value, ",")
+		}
+		filters[key] = FilterData{
+			Operator: "eq",
+			Values:   value,
+		}
+	}
+
+	filter := NestedQueryMap(c, "filter").Path("system_profile")
+	if filter != nil {
+		filter.Visit(func(path []string, val string) {
+			if len(path) == 1 && path[0] == "sap_system" {
+				filters["sap_system"] = FilterData{
+					Operator: "eq",
+					Values:   strings.Split(val, ","),
+				}
+			}
+			if len(path) >= 1 && path[0] == "sap_sids" {
+				val = fmt.Sprintf(`"%s"`, val)
+				var op string
+				if op = "eq"; len(path) > 1 {
+					op = path[1]
+				}
+				filters["sap_sids"] = FilterData{
+					Operator: op,
+					Values:   strings.Split(val, ","),
+				}
+			}
+		})
+	}
+
+	return filters, nil
+}
+
 // Filter systems by tags,
-func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool, error) {
+func ApplyTagsFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
 	if !enableCyndiTags {
-		return tx, false, nil
+		return tx, false
 	}
 	var applied bool
 
@@ -334,38 +380,31 @@ func ApplyTagsFilter(c *gin.Context, tx *gorm.DB, systemIDExpr string) (*gorm.DB
 		Table("inventory.hosts h").
 		Select("h.id")
 
-	tags := c.QueryArray("tags")
-	for _, t := range tags {
-		tag, err := ParseTag(t)
-		if err != nil {
-			LogAndRespBadRequest(c, err, err.Error())
-			return tx, false, err
+	for key, val := range filters {
+		if strings.Contains(key, "/") {
+			tagString := key + "=" + strings.Join(val.Values, ",")
+			tag, _ := ParseTag(tagString)
+			subq = tag.ApplyTag(subq)
+			applied = true
+			continue
 		}
-		subq = tag.ApplyTag(subq)
-		applied = true
-	}
-
-	// Additional filters
-	filter := NestedQueryMap(c, "filter").Path("system_profile")
-	if filter != nil {
-		filter.Visit(func(path []string, val string) {
-			if len(path) == 1 && path[0] == "sap_system" {
-				subq = subq.Where("(h.system_profile ->> 'sap_system')::text = ?", val)
-				applied = true
-			}
-			if len(path) >= 1 && path[0] == "sap_sids" {
-				val = fmt.Sprintf(`"%s"`, val)
-				subq = subq.Where("(h.system_profile ->> 'sap_sids')::jsonb @> ?::jsonb", val)
-				applied = true
-			}
-		})
+		if key == "sap_system" {
+			subq = subq.Where("(h.system_profile ->> 'sap_system')::text = ?", strings.Join(val.Values, ","))
+			applied = true
+			continue
+		}
+		if key == "sap_sids" {
+			subq = subq.Where("(h.system_profile ->> 'sap_sids')::jsonb @> ?::jsonb", strings.Join(val.Values, ","))
+			applied = true
+			continue
+		}
 	}
 
 	// Don't add the subquery if we don't have to
 	if !applied {
-		return tx, false, nil
+		return tx, false
 	}
-	return tx.Where(fmt.Sprintf("%s::uuid in (?)", systemIDExpr), subq), true, nil
+	return tx.Where(fmt.Sprintf("%s::uuid in (?)", systemIDExpr), subq), true
 }
 
 type QueryItem interface {
@@ -540,4 +579,10 @@ func isFilterInURLValid(c *gin.Context) bool {
 		return false
 	}
 	return true
+}
+
+func mergeMaps(first map[string]FilterData, second map[string]FilterData) {
+	for key, val := range second {
+		first[key] = val
+	}
 }
