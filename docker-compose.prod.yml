@@ -10,25 +10,14 @@ services:
       target: runtimeimg
     image: patchman-engine_patchimg
 
-  db_volumefix:
-    container_name: db_volumefix
+  db:
+    container_name: db
     build:
       context: .
       dockerfile: dev/database/Dockerfile
-    image: patchman-engine_db
-    user: root
-    command: 'chown -R postgres /var/lib/pgsql/data'
-    volumes:
-      - db-data:/var/lib/pgsql/data
-
-  db:
-    container_name: db
-    image: patchman-engine_db
     command: 'postgres -c config_file=/opt/app-root/src/postgresql-cfg/custom.conf'
-    depends_on:
-      - db_volumefix
     volumes:
-      - db-data:/var/lib/pgsql/data
+      - db-data:/var/lib/postgresql/data
     ports:
       - 5433:5432
     env_file:
