@@ -701,8 +701,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Ok",
-                        "content": {}
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.DeleteBaselineResponse"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -3005,7 +3011,17 @@
             "controllers.CreateBaselineResponse": {
                 "type": "object",
                 "properties": {
-                    "baselineID": {
+                    "baseline_id": {
+                        "type": "integer",
+                        "description": "Updated baseline unique ID, it can not be changed",
+                        "example": 1
+                    }
+                }
+            },
+            "controllers.DeleteBaselineResponse": {
+                "type": "object",
+                "properties": {
+                    "baseline_id": {
                         "type": "integer",
                         "description": "Updated baseline unique ID, it can not be changed",
                         "example": 1
@@ -3673,7 +3689,7 @@
             "controllers.UpdateBaselineResponse": {
                 "type": "object",
                 "properties": {
-                    "baselineID": {
+                    "baseline_id": {
                         "type": "integer",
                         "description": "Updated baseline unique ID, it can not be changed",
                         "example": 1
