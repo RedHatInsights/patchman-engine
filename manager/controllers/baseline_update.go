@@ -29,7 +29,7 @@ type UpdateBaselineRequest struct {
 }
 
 type UpdateBaselineResponse struct {
-	BaselineID int `example:"1"` // Updated baseline unique ID, it can not be changed
+	BaselineID int `json:"baseline_id" example:"1"` // Updated baseline unique ID, it can not be changed
 }
 
 // @Summary Update a baseline for my set of systems
@@ -94,7 +94,8 @@ func BaselineUpdateHandler(c *gin.Context) {
 	inventoryAIDs := kafka.GetInventoryIDsToEvaluate(&baselineID, account, configUpdated, inventoryIDsList)
 	kafka.EvaluateBaselineSystems(inventoryAIDs)
 
-	c.JSON(http.StatusOK, baselineID)
+	resp := UpdateBaselineResponse{BaselineID: baselineID}
+	c.JSON(http.StatusOK, &resp)
 }
 
 func map2list(m map[string]bool) []string {

@@ -72,7 +72,8 @@ func CreateBaselineHandler(c *gin.Context) {
 	inventoryIDs := kafka.GetInventoryIDsToEvaluate(&baselineID, accountID, configUpdated, nil)
 	kafka.EvaluateBaselineSystems(inventoryIDs)
 
-	c.JSON(http.StatusOK, baselineID)
+	resp := CreateBaselineResponse{BaselineID: baselineID}
+	c.JSON(http.StatusOK, &resp)
 }
 
 func buildCreateBaselineQuery(request CreateBaselineRequest, accountID int) (int, error) {

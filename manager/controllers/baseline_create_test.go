@@ -5,11 +5,12 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"bytes"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateBaseline(t *testing.T) {
@@ -28,13 +29,13 @@ func TestCreateBaseline(t *testing.T) {
 	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	var baselineID int
-	ParseResponseBody(t, w.Body.Bytes(), &baselineID)
-	database.CheckBaseline(t, baselineID, []string{
+	var resp CreateBaselineResponse
+	ParseResponseBody(t, w.Body.Bytes(), &resp)
+	database.CheckBaseline(t, resp.BaselineID, []string{
 		"00000000-0000-0000-0000-000000000005",
 		"00000000-0000-0000-0000-000000000006",
 	}, `{"to_time": "2022-12-31T12:00:00-04:00"}`, "my_baseline")
-	database.DeleteBaseline(t, baselineID)
+	database.DeleteBaseline(t, resp.BaselineID)
 }
 
 func TestCreateBaselineNameOnly(t *testing.T) {
@@ -46,10 +47,10 @@ func TestCreateBaselineNameOnly(t *testing.T) {
 	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	var baselineID int
-	ParseResponseBody(t, w.Body.Bytes(), &baselineID)
-	database.CheckBaseline(t, baselineID, []string{}, "", "my_empty_baseline")
-	database.DeleteBaseline(t, baselineID)
+	var resp CreateBaselineResponse
+	ParseResponseBody(t, w.Body.Bytes(), &resp)
+	database.CheckBaseline(t, resp.BaselineID, []string{}, "", "my_empty_baseline")
+	database.DeleteBaseline(t, resp.BaselineID)
 }
 
 func TestCreateBaselineNameEmptyString(t *testing.T) {
@@ -61,10 +62,10 @@ func TestCreateBaselineNameEmptyString(t *testing.T) {
 	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	var baselineID int
-	ParseResponseBody(t, w.Body.Bytes(), &baselineID)
-	database.CheckBaseline(t, baselineID, []string{}, "", "")
-	database.DeleteBaseline(t, baselineID)
+	var resp CreateBaselineResponse
+	ParseResponseBody(t, w.Body.Bytes(), &resp)
+	database.CheckBaseline(t, resp.BaselineID, []string{}, "", "")
+	database.DeleteBaseline(t, resp.BaselineID)
 }
 
 func TestCreateBaselineMissingName(t *testing.T) {

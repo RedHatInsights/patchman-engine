@@ -7,10 +7,11 @@ import (
 	"app/manager/middlewares"
 	"encoding/json"
 	"errors"
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type BaselineDetailResponse struct {
@@ -18,7 +19,7 @@ type BaselineDetailResponse struct {
 }
 
 type BaselineDetailItem struct {
-	Attributes BaselineDetailAttributes // Additional baseline attributes
+	Attributes BaselineDetailAttributes `json:"attributes"`              // Additional baseline attributes
 	ID         int                      `json:"id" example:"1"`          // Baseline ID
 	Type       string                   `json:"type" example:"baseline"` // Document type name
 }

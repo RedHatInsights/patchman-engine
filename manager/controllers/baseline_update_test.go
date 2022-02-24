@@ -40,6 +40,9 @@ func TestUpdateBaseline(t *testing.T) {
 	core.InitRouterWithParams(BaselineUpdateHandler, 1, "PUT", "/:baseline_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+	var resp UpdateBaselineResponse
+	ParseResponseBody(t, w.Body.Bytes(), &resp)
+	assert.Equal(t, baselineID, resp.BaselineID)
 	database.CheckBaseline(t, baselineID, []string{
 		"00000000-0000-0000-0000-000000000004",
 		"00000000-0000-0000-0000-000000000006",
@@ -61,7 +64,9 @@ func TestUpdateBaselineWithEmptyAssociations(t *testing.T) {
 	core.InitRouterWithParams(BaselineUpdateHandler, 1, "PUT", "/:baseline_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-
+	var resp UpdateBaselineResponse
+	ParseResponseBody(t, w.Body.Bytes(), &resp)
+	assert.Equal(t, baselineID, resp.BaselineID)
 	database.CheckBaseline(t,
 		baselineID,
 		[]string{
@@ -91,7 +96,9 @@ func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
 	core.InitRouterWithParams(BaselineUpdateHandler, 1, "PUT", "/:baseline_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-
+	var resp UpdateBaselineResponse
+	ParseResponseBody(t, w.Body.Bytes(), &resp)
+	assert.Equal(t, baselineID, resp.BaselineID)
 	database.CheckBaseline(t, baselineID, []string{},
 		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline")
 
@@ -149,7 +156,9 @@ func TestUpdateBaselineNullValues(t *testing.T) {
 	core.InitRouterWithParams(BaselineUpdateHandler, 1, "PUT", "/:baseline_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-
+	var resp UpdateBaselineResponse
+	ParseResponseBody(t, w.Body.Bytes(), &resp)
+	assert.Equal(t, baselineID, resp.BaselineID)
 	database.CheckBaseline(t, baselineID, testingInventoryIDs, // do not change on null values
 		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline")
 
