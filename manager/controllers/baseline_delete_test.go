@@ -5,10 +5,11 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBaselineDelete(t *testing.T) {
@@ -25,7 +26,9 @@ func TestBaselineDelete(t *testing.T) {
 	core.InitRouterWithPath(BaselineDeleteHandler, "/:baseline_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	database.CheckBaselineDeleted(t, baselineID)
+	var resp DeleteBaselineResponse
+	ParseResponseBody(t, w.Body.Bytes(), &resp)
+	database.CheckBaselineDeleted(t, resp.BaselineID)
 }
 
 func TestBaselineDeleteNonExisting(t *testing.T) {
@@ -37,6 +40,9 @@ func TestBaselineDeleteNonExisting(t *testing.T) {
 	core.InitRouterWithPath(BaselineDeleteHandler, "/:baseline_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
+	var errResp utils.ErrorResponse
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, "baseline not found", errResp.Error)
 }
 
 func TestBaselineDeleteInvalid(t *testing.T) {
@@ -49,5 +55,5 @@ func TestBaselineDeleteInvalid(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
-	assert.Equal(t, errResp.Error, "Invalid baseline_id: invalidBaseline")
+	assert.Equal(t, "Invalid baseline_id: invalidBaseline", errResp.Error)
 }

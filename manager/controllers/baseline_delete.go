@@ -14,6 +14,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+type DeleteBaselineResponse UpdateBaselineResponse
+
 // @Summary Delete a baseline
 // @Description Delete a baseline
 // @ID baselineDelete
@@ -21,7 +23,7 @@ import (
 // @Accept   json
 // @Produce  json
 // @Param baseline_id path int true "Baseline ID"
-// @Success 200 "Ok"
+// @Success 200 {object} DeleteBaselineResponse
 // @Router /api/patch/v1/baselines/{baseline_id} [delete]
 func BaselineDeleteHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
@@ -68,5 +70,6 @@ func BaselineDeleteHandler(c *gin.Context) {
 
 	kafka.EvaluateBaselineSystems(inventoryAIDs)
 
-	c.Status(http.StatusOK)
+	resp := DeleteBaselineResponse{BaselineID: baselineID}
+	c.JSON(http.StatusOK, &resp)
 }
