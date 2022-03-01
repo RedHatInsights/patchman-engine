@@ -111,3 +111,6 @@ Copy Grafana board json config to the temporary file, e.g. `grafana.json` and ru
 ~~~bash
 ./scripts/grafana-json-to-yaml.sh grafana.json > ./dashboards/grafana-dashboard-insights-patchman-engine-general.configmap.yaml
 ~~~
+
+## Deps backup
+[patchman-engine-deps](https://github.com/RedHatInsights/patchman-engine-deps)
