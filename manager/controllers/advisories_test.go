@@ -329,20 +329,20 @@ func TestAdvisoryMetadataSums(t *testing.T) {
 		switch ai.Attributes.AdvisoryType {
 		case 1:
 			enhancement++
-			assert.Equal(t, ai.Attributes.AdvisoryTypeName, "enhancement")
+			assert.Equal(t, "enhancement", ai.Attributes.AdvisoryTypeName)
 		case 2:
 			bugfix++
-			assert.Equal(t, ai.Attributes.AdvisoryTypeName, "bugfix")
+			assert.Equal(t, "bugfix", ai.Attributes.AdvisoryTypeName)
 		case 3:
 			security++
-			assert.Equal(t, ai.Attributes.AdvisoryTypeName, "security")
+			assert.Equal(t, "security", ai.Attributes.AdvisoryTypeName)
 		default:
 			other++
 		}
 	}
 	st := output.Meta.SubTotals
-	assert.Equal(t, st["other"], other)
-	assert.Equal(t, st["enhancement"], enhancement)
-	assert.Equal(t, st["bugfix"], bugfix)
-	assert.Equal(t, st["security"], security)
+	assert.Equal(t, other, st["other"])
+	assert.Equal(t, enhancement, st["enhancement"])
+	assert.Equal(t, bugfix, st["bugfix"])
+	assert.Equal(t, security, st["security"])
 }
