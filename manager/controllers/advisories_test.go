@@ -321,3 +321,25 @@ func TestAdvisoryTagsInMetadata(t *testing.T) {
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
+
+func TestAdvisoryMetadataSums(t *testing.T) {
+	output := testAdvisories(t, "/")
+	var other, enhancement, bugfix, security int
+	for _, ai := range output.Data {
+		switch ai.Attributes.AdvisoryType {
+		case 1:
+			enhancement++
+		case 2:
+			bugfix++
+		case 3:
+			security++
+		default:
+			other++
+		}
+	}
+	st := output.Meta.SubTotals
+	assert.Equal(t, st["other"], other)
+	assert.Equal(t, st["enhancement"], enhancement)
+	assert.Equal(t, st["bugfix"], bugfix)
+	assert.Equal(t, st["security"], security)
+}
