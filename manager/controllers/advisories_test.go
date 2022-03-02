@@ -329,10 +329,13 @@ func TestAdvisoryMetadataSums(t *testing.T) {
 		switch ai.Attributes.AdvisoryType {
 		case 1:
 			enhancement++
+			assert.Equal(t, ai.Attributes.AdvisoryTypeName, "enhancement")
 		case 2:
 			bugfix++
+			assert.Equal(t, ai.Attributes.AdvisoryTypeName, "bugfix")
 		case 3:
 			security++
+			assert.Equal(t, ai.Attributes.AdvisoryTypeName, "security")
 		default:
 			other++
 		}
