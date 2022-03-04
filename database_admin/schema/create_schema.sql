@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (75, false);
+VALUES (76, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -983,6 +983,8 @@ CREATE TABLE IF NOT EXISTS system_package
 
 CREATE INDEX IF NOT EXISTS system_package_name_pkg_system_idx
     ON system_package (rh_account_id, name_id, package_id, system_id) INCLUDE (latest_evra);
+
+CREATE INDEX IF NOT EXISTS system_package_package_id_idx on system_package (package_id);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_package TO evaluator;
 GRANT SELECT, UPDATE, DELETE ON system_package TO listener;
