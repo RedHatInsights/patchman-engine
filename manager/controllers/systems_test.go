@@ -286,3 +286,23 @@ func TestSAPSystemMeta3(t *testing.T) {
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
+
+func TestAAPSystemMeta(t *testing.T) {
+	url := `/?filter[system_profile][ansible][controller_version]="1.0"`
+	output := testSystems(t, url, 1)
+	testMap := map[string]FilterData{
+		"ansible->controller_version": {"eq", []string{`"1.0"`}},
+		"stale":                       {"eq", []string{"false"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
+func TestMSSQLSystemMeta(t *testing.T) {
+	url := `/?filter[system_profile][mssql]="15.3"`
+	output := testSystems(t, url, 1)
+	testMap := map[string]FilterData{
+		"mssql": {"eq", []string{`"15.3"`}},
+		"stale": {"eq", []string{"false"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}

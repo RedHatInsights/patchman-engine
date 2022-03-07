@@ -325,12 +325,24 @@ func (t *Tag) ApplyTag(tx *gorm.DB) *gorm.DB {
 
 func ParseTagsFilters(c *gin.Context) (map[string]FilterData, error) {
 	filters := Filters{}
+
+	err := parseTagsFromCtx(c, filters)
+	if err != nil {
+		return nil, err
+	}
+
+	parseFiltersFromCtx(c, filters)
+
+	return filters, nil
+}
+
+func parseTagsFromCtx(c *gin.Context, filters Filters) error {
 	tags := c.QueryArray("tags")
 	for _, t := range tags {
 		tag, err := ParseTag(t)
 		if err != nil {
 			LogAndRespBadRequest(c, err, err.Error())
-			return nil, err
+			return err
 		}
 		key := *tag.Namespace + "/" + tag.Key
 		var value []string
@@ -343,30 +355,50 @@ func ParseTagsFilters(c *gin.Context) (map[string]FilterData, error) {
 		}
 	}
 
+	return nil
+}
+
+func parseFiltersFromCtx(c *gin.Context, filters Filters) {
 	filter := NestedQueryMap(c, "filter").Path("system_profile")
-	if filter != nil {
-		filter.Visit(func(path []string, val string) {
-			if len(path) == 1 && path[0] == "sap_system" {
-				filters["sap_system"] = FilterData{
-					Operator: "eq",
-					Values:   strings.Split(val, ","),
-				}
-			}
-			if len(path) >= 1 && path[0] == "sap_sids" {
-				val = fmt.Sprintf(`"%s"`, val)
-				var op string
-				if op = "eq"; len(path) > 1 {
-					op = path[1]
-				}
-				filters["sap_sids"] = FilterData{
-					Operator: op,
-					Values:   strings.Split(val, ","),
-				}
-			}
-		})
+	if filter == nil {
+		return
 	}
 
-	return filters, nil
+	filter.Visit(func(path []string, val string) {
+		if len(path) == 1 && path[0] == "sap_system" {
+			filters["sap_system"] = FilterData{
+				Operator: "eq",
+				Values:   strings.Split(val, ","),
+			}
+			return
+		}
+		if len(path) >= 1 && path[0] == "sap_sids" {
+			val = fmt.Sprintf(`"%s"`, val)
+			var op string
+			if op = "eq"; len(path) > 1 {
+				op = path[1]
+			}
+			filters["sap_sids"] = FilterData{
+				Operator: op,
+				Values:   strings.Split(val, ","),
+			}
+			return
+		}
+		if len(path) == 2 && path[0] == "ansible" && path[1] == "controller_version" {
+			filters["ansible->controller_version"] = FilterData{
+				Operator: "eq",
+				Values:   strings.Split(val, ","),
+			}
+			return
+		}
+		if len(path) == 1 && path[0] == "mssql" {
+			filters["mssql"] = FilterData{
+				Operator: "eq",
+				Values:   strings.Split(val, ","),
+			}
+			return
+		}
+	})
 }
 
 // Filter systems by tags,
@@ -388,15 +420,21 @@ func ApplyTagsFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr st
 			applied = true
 			continue
 		}
-		if key == "sap_system" {
+
+		switch key {
+		case "sap_system":
 			subq = subq.Where("(h.system_profile ->> 'sap_system')::text = ?", strings.Join(val.Values, ","))
 			applied = true
-			continue
-		}
-		if key == "sap_sids" {
+		case "sap_sids":
 			subq = subq.Where("(h.system_profile ->> 'sap_sids')::jsonb @> ?::jsonb", strings.Join(val.Values, ","))
 			applied = true
-			continue
+		case "ansible->controller_version":
+			subq = subq.Where("(h.system_profile -> 'ansible' ->> 'controller_version')::text = ?",
+				strings.Join(val.Values, ","))
+			applied = true
+		case "mssql":
+			subq = subq.Where("(h.system_profile -> 'mssql' ->> 'version')::text = ?", strings.Join(val.Values, ","))
+			applied = true
 		}
 	}
 
