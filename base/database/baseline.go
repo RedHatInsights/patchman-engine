@@ -14,25 +14,32 @@ type BaselineConfig struct {
 	ToTime time.Time `json:"to_time" example:"2022-12-31T12:00:00-04:00"`
 }
 
-func GetBaselineConfig(tx *gorm.DB, system *models.SystemPlatform) (*BaselineConfig, error) {
+func GetBaselineConfig(tx *gorm.DB, system *models.SystemPlatform) *BaselineConfig {
 	if system.BaselineID == nil {
-		return nil, nil
+		return nil
 	}
 
-	var config BaselineConfig
 	var jsonb [][]byte
-
 	err := tx.Table("baseline").
 		Where("id = ? and rh_account_id = ?", system.BaselineID, system.RhAccountID).
 		Pluck("config", &jsonb).Error
 	if err != nil {
-		return nil, err
+		utils.Log("baseline_id", system.BaselineID, "err", err.Error()).
+			Error("Unable to load baseline config from db")
+		return nil
+	}
+
+	var config BaselineConfig
+	if len(jsonb[0]) == 0 {
+		utils.Log("baseline_id", system.BaselineID).Debug("Empty baseline config found")
+		return nil
 	}
 
 	err = json.Unmarshal(jsonb[0], &config)
 	if err != nil {
-		utils.Log("err", err.Error(), "baseline", system.BaselineID).Error("Can't parse baseline")
-		return nil, err
+		utils.Log("err", err.Error(), "baseline_id", system.BaselineID,
+			"config", string(jsonb[0])).Error("Can't parse baseline")
+		return nil
 	}
-	return &config, err
+	return &config
 }

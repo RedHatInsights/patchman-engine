@@ -6,18 +6,13 @@ import (
 	"app/base/vmaas"
 	"time"
 
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 func limitVmaasToBaseline(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) error {
-	baseline, err := database.GetBaselineConfig(tx, system)
-	if err != nil {
-		return errors.Wrap(err, "Failed to read system's baseline")
-	}
-	if baseline == nil {
-		// no baseline, nothing to change
-		return nil
+	baselineConfig := database.GetBaselineConfig(tx, system)
+	if baselineConfig == nil {
+		return nil // no baseline config, nothing to change
 	}
 
 	reportedMap := getReportedAdvisories(vmaasData)
@@ -27,8 +22,8 @@ func limitVmaasToBaseline(tx *gorm.DB, system *models.SystemPlatform, vmaasData 
 	}
 
 	var filterOutNames []string
-	err = tx.Model(&models.AdvisoryMetadata{}).Where("name IN (?)", reportedNames).
-		Where("public_date >= ?", baseline.ToTime.Truncate(24*time.Hour)).
+	err := tx.Model(&models.AdvisoryMetadata{}).Where("name IN (?)", reportedNames).
+		Where("public_date >= ?", baselineConfig.ToTime.Truncate(24*time.Hour)).
 		Pluck("name", &filterOutNames).Error
 	if err != nil {
 		return err
