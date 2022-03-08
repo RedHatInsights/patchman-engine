@@ -384,6 +384,12 @@ func parseFiltersFromCtx(c *gin.Context, filters Filters) {
 			}
 			return
 		}
+		if len(path) == 1 && path[0] == "ansible" {
+			filters["ansible"] = FilterData{
+				Operator: "eq",
+				Values:   strings.Split(val, ","),
+			}
+		}
 		if len(path) == 2 && path[0] == "ansible" && path[1] == "controller_version" {
 			filters["ansible->controller_version"] = FilterData{
 				Operator: "eq",
@@ -391,7 +397,7 @@ func parseFiltersFromCtx(c *gin.Context, filters Filters) {
 			}
 			return
 		}
-		if len(path) == 1 && path[0] == "mssql" {
+		if len(path) == 2 && path[0] == "mssql" && path[1] == "version" {
 			filters["mssql"] = FilterData{
 				Operator: "eq",
 				Values:   strings.Split(val, ","),
@@ -428,12 +434,24 @@ func ApplyTagsFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr st
 		case "sap_sids":
 			subq = subq.Where("(h.system_profile ->> 'sap_sids')::jsonb @> ?::jsonb", strings.Join(val.Values, ","))
 			applied = true
+		case "ansible":
+			if strings.Join(val.Values, ",") == "not_nil" {
+				subq = subq.Where("(h.system_profile ->> 'ansible') is not null")
+			}
 		case "ansible->controller_version":
-			subq = subq.Where("(h.system_profile -> 'ansible' ->> 'controller_version')::text = ?",
-				strings.Join(val.Values, ","))
+			if strings.Join(val.Values, ",") == "not_nil" {
+				subq = subq.Where("(h.system_profile -> 'ansible' ->> 'controller_version') is not null")
+			} else {
+				subq = subq.Where("(h.system_profile -> 'ansible' ->> 'controller_version')::text = ?",
+					strings.Join(val.Values, ","))
+			}
 			applied = true
 		case "mssql":
-			subq = subq.Where("(h.system_profile -> 'mssql' ->> 'version')::text = ?", strings.Join(val.Values, ","))
+			if strings.Join(val.Values, ",") == "not_nil" {
+				subq = subq.Where("(h.system_profile -> 'mssql' ->> 'version') is not null")
+			} else {
+				subq = subq.Where("(h.system_profile -> 'mssql' ->> 'version')::text = ?", strings.Join(val.Values, ","))
+			}
 			applied = true
 		}
 	}
