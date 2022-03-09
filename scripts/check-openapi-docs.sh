@@ -2,7 +2,7 @@
 
 OPENAPI_COPY=$(mktemp -t openapi.json.XXX)
 cp docs/openapi.json $OPENAPI_COPY
-./scripts/generate_docs.sh --keep
+./scripts/generate_docs.sh
 diff docs/openapi.json $OPENAPI_COPY
 rc=$?
 if [ $rc -gt 0 ]; then
