@@ -288,21 +288,63 @@ func TestSAPSystemMeta3(t *testing.T) {
 }
 
 func TestAAPSystemMeta(t *testing.T) {
-	url := `/?filter[system_profile][ansible][controller_version]="1.0"`
+	url := `/?filter[system_profile][ansible][controller_version]=1.0`
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
-		"ansible->controller_version": {"eq", []string{`"1.0"`}},
+		"ansible->controller_version": {"eq", []string{"1.0"}},
 		"stale":                       {"eq", []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
 
-func TestMSSQLSystemMeta(t *testing.T) {
-	url := `/?filter[system_profile][mssql]="15.3"`
+func TestAAPSystemMeta2(t *testing.T) {
+	url := `/?filter[system_profile][ansible]=not_nil`
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
-		"mssql": {"eq", []string{`"15.3"`}},
+		"ansible": {"eq", []string{"not_nil"}},
+		"stale":   {"eq", []string{"false"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
+func TestAAPSystemMeta3(t *testing.T) {
+	const (
+		ID         = "00000000-0000-0000-0000-000000000007"
+		totalItems = 1
+	)
+	url := `/?filter[system_profile][ansible][controller_version]=1.0`
+	output := testSystems(t, url, 1)
+	assert.Equal(t, ID, output.Data[0].ID)
+	assert.Equal(t, totalItems, output.Meta.TotalItems)
+}
+
+func TestMSSQLSystemMeta(t *testing.T) {
+	url := `/?filter[system_profile][mssql][version]=15.3.0`
+	output := testSystems(t, url, 1)
+	testMap := map[string]FilterData{
+		"mssql->version": {"eq", []string{"15.3.0"}},
+		"stale":          {"eq", []string{"false"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
+func TestMSSQLSystemMeta2(t *testing.T) {
+	url := `/?filter[system_profile][mssql]=not_nil`
+	output := testSystems(t, url, 1)
+	testMap := map[string]FilterData{
+		"mssql": {"eq", []string{"not_nil"}},
 		"stale": {"eq", []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
+func TestMSSQLSystemMeta3(t *testing.T) {
+	const (
+		ID         = "00000000-0000-0000-0000-000000000006"
+		totalItems = 1
+	)
+	url := `/?filter[system_profile][mssql][version]=15.3.0`
+	output := testSystems(t, url, 1)
+	assert.Equal(t, ID, output.Data[0].ID)
+	assert.Equal(t, totalItems, output.Meta.TotalItems)
 }

@@ -159,6 +159,38 @@
                                 "type": "string"
                             }
                         }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible]",
+                        "in": "query",
+                        "description": "Filter systems by ansible",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible][controller_version]",
+                        "in": "query",
+                        "description": "Filter systems by ansible version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql][version]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -449,6 +481,38 @@
                             "items": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible]",
+                        "in": "query",
+                        "description": "Filter systems by ansible",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible][controller_version]",
+                        "in": "query",
+                        "description": "Filter systems by ansible version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql][version]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],
@@ -1053,6 +1117,38 @@
                         }
                     },
                     {
+                        "name": "filter[system_profile][ansible]",
+                        "in": "query",
+                        "description": "Filter systems by ansible",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible][controller_version]",
+                        "in": "query",
+                        "description": "Filter systems by ansible version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql][version]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[osname]",
                         "in": "query",
                         "description": "Filter",
@@ -1256,6 +1352,38 @@
                         }
                     },
                     {
+                        "name": "filter[system_profile][ansible]",
+                        "in": "query",
+                        "description": "Filter systems by ansible",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible][controller_version]",
+                        "in": "query",
+                        "description": "Filter systems by ansible version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql][version]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "tags",
                         "in": "query",
                         "description": "Tag filter",
@@ -1412,6 +1540,38 @@
                             "items": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible]",
+                        "in": "query",
+                        "description": "Filter systems by ansible",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible][controller_version]",
+                        "in": "query",
+                        "description": "Filter systems by ansible version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql][version]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     {
@@ -1795,6 +1955,38 @@
                                 "type": "string"
                             }
                         }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible]",
+                        "in": "query",
+                        "description": "Filter systems by ansible",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible][controller_version]",
+                        "in": "query",
+                        "description": "Filter systems by ansible version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql][version]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -1914,6 +2106,38 @@
                             "items": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible]",
+                        "in": "query",
+                        "description": "Filter systems by ansible",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible][controller_version]",
+                        "in": "query",
+                        "description": "Filter systems by ansible version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql][version]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],
@@ -2230,6 +2454,38 @@
                             "items": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible]",
+                        "in": "query",
+                        "description": "Filter systems by ansible",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible][controller_version]",
+                        "in": "query",
+                        "description": "Filter systems by ansible version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql][version]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],
