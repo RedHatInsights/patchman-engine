@@ -17,8 +17,12 @@ import (
 // @Accept   json
 // @Produce  json
 // @Param    package_name    path    string    true  "Package name"
-// @Param    filter[system_profile][sap_system]   query string   false "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in] query []string false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
+// @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
+// @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
+// @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Param    tags            query   []string  false "Tag filter"
 // @Success 200 {array} PackageSystemItem
 // @Router /api/patch/v1/export/packages/{package_name}/systems [get]

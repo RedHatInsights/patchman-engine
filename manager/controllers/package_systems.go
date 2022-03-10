@@ -77,8 +77,12 @@ func packageSystemsQuery(acc int, packageName string, packageIDs []int) *gorm.DB
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    package_name    path    string    true  "Package name"
 // @Param    tags            query   []string  false "Tag filter"
-// @Param    filter[system_profile][sap_system]   query  string  false "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in] query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
+// @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
+// @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
+// @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Success 200 {object} PackageSystemsResponse
 // @Router /api/patch/v1/packages/{package_name}/systems [get]
 func PackageSystemsListHandler(c *gin.Context) {

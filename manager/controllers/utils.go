@@ -365,13 +365,7 @@ func parseFiltersFromCtx(c *gin.Context, filters Filters) {
 	}
 
 	filter.Visit(func(path []string, val string) {
-		if len(path) == 1 && path[0] == "sap_system" {
-			filters["sap_system"] = FilterData{
-				Operator: "eq",
-				Values:   strings.Split(val, ","),
-			}
-			return
-		}
+		// Specific filter keys
 		if len(path) >= 1 && path[0] == "sap_sids" {
 			val = fmt.Sprintf(`"%s"`, val)
 			var op string
@@ -384,19 +378,20 @@ func parseFiltersFromCtx(c *gin.Context, filters Filters) {
 			}
 			return
 		}
-		if len(path) == 2 && path[0] == "ansible" && path[1] == "controller_version" {
-			filters["ansible->controller_version"] = FilterData{
-				Operator: "eq",
-				Values:   strings.Split(val, ","),
+
+		// Generic filter keys
+		var key string
+		// Builds key in following format path[0]->path[1]->path[2]...
+		for i, s := range path {
+			if i == 0 {
+				key = path[0]
+				continue
 			}
-			return
+			key = fmt.Sprintf("%s->%s", key, s)
 		}
-		if len(path) == 1 && path[0] == "mssql" {
-			filters["mssql"] = FilterData{
-				Operator: "eq",
-				Values:   strings.Split(val, ","),
-			}
-			return
+		filters[key] = FilterData{
+			Operator: "eq",
+			Values:   strings.Split(val, ","),
 		}
 	})
 }
@@ -406,7 +401,16 @@ func ApplyTagsFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr st
 	if !enableCyndiTags {
 		return tx, false
 	}
+
 	var applied bool
+	validFilters := map[string]bool{
+		"sap_sids":                    true,
+		"sap_system":                  true,
+		"mssql":                       true,
+		"mssql->version":              true,
+		"ansible":                     true,
+		"ansible->controller_version": true,
+	}
 
 	subq := database.Db.
 		Table("inventory.hosts h").
@@ -421,19 +425,16 @@ func ApplyTagsFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr st
 			continue
 		}
 
-		switch key {
-		case "sap_system":
-			subq = subq.Where("(h.system_profile ->> 'sap_system')::text = ?", strings.Join(val.Values, ","))
-			applied = true
-		case "sap_sids":
-			subq = subq.Where("(h.system_profile ->> 'sap_sids')::jsonb @> ?::jsonb", strings.Join(val.Values, ","))
-			applied = true
-		case "ansible->controller_version":
-			subq = subq.Where("(h.system_profile -> 'ansible' ->> 'controller_version')::text = ?",
-				strings.Join(val.Values, ","))
-			applied = true
-		case "mssql":
-			subq = subq.Where("(h.system_profile -> 'mssql' ->> 'version')::text = ?", strings.Join(val.Values, ","))
+		if validFilters[key] {
+			values := strings.Join(val.Values, ",")
+			q := buildQuery(key, values)
+
+			if values == "not_nil" {
+				subq = subq.Where(q)
+			} else {
+				subq = subq.Where(q, values)
+			}
+
 			applied = true
 		}
 	}
@@ -443,6 +444,38 @@ func ApplyTagsFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr st
 		return tx, false
 	}
 	return tx.Where(fmt.Sprintf("%s::uuid in (?)", systemIDExpr), subq), true
+}
+
+// Builds system_profile sub query in generic way.
+// Example:
+// buildQuery("mssql->version", "1.0")
+// returns "(h.system_profile -> 'mssql' ->> 'version')::text = 1.0"
+func buildQuery(key string, val string) string {
+	var cmp string
+
+	switch key {
+	case "sap_sids":
+		cmp = "::jsonb @> ?::jsonb"
+	default:
+		cmp = "::text = ?"
+	}
+
+	if val == "not_nil" {
+		cmp = " is not null"
+	}
+
+	subq := "(h.system_profile"
+	sbkeys := strings.Split(key, "->")
+	for i, sbkey := range sbkeys {
+		sbkey = fmt.Sprintf("'%s'", sbkey)
+		if i == len(sbkeys)-1 {
+			subq = fmt.Sprintf("%s ->> %s)", subq, sbkey)
+		} else {
+			subq = fmt.Sprintf("%s -> %s", subq, sbkey)
+		}
+	}
+
+	return fmt.Sprintf("%s%s", subq, cmp)
 }
 
 type QueryItem interface {

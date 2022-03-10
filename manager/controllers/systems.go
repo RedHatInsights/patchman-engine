@@ -157,8 +157,12 @@ func systemSubtotals(tx *gorm.DB) (total int, subTotals map[string]int, err erro
 // @Param    filter[osmajor]          query   string false "Filter"
 // @Param    filter[os]               query   string    false "Filter OS version"
 // @Param    tags                     query   []string  false "Tag filter"
-// @Param    filter[system_profile][sap_system]   query string   false "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in] query []string false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
+// @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
+// @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
+// @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Success 200 {object} SystemsResponse
 // @Router /api/patch/v1/systems [get]
 func SystemsListHandler(c *gin.Context) {
