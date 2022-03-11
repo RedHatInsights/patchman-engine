@@ -372,10 +372,8 @@ func parseFiltersFromCtx(c *gin.Context, filters Filters) {
 			if op = "eq"; len(path) > 1 {
 				op = path[1]
 			}
-			filters["sap_sids"] = FilterData{
-				Operator: op,
-				Values:   strings.Split(val, ","),
-			}
+			appendFilterData(filters, "sap_sids", op, val)
+
 			return
 		}
 
@@ -389,10 +387,7 @@ func parseFiltersFromCtx(c *gin.Context, filters Filters) {
 			}
 			key = fmt.Sprintf("%s->%s", key, s)
 		}
-		filters[key] = FilterData{
-			Operator: "eq",
-			Values:   strings.Split(val, ","),
-		}
+		appendFilterData(filters, key, "eq", val)
 	})
 }
 
@@ -428,6 +423,11 @@ func ApplyTagsFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr st
 		if validFilters[key] {
 			values := strings.Join(val.Values, ",")
 			q := buildQuery(key, values)
+
+			// Builds array of values
+			if len(val.Values) > 1 {
+				values = fmt.Sprintf("[%s]", values)
+			}
 
 			if values == "not_nil" {
 				subq = subq.Where(q)
@@ -655,5 +655,17 @@ func isFilterInURLValid(c *gin.Context) bool {
 func mergeMaps(first map[string]FilterData, second map[string]FilterData) {
 	for key, val := range second {
 		first[key] = val
+	}
+}
+
+func appendFilterData(filters Filters, key string, op, val string) {
+	if fd, ok := filters[key]; ok {
+		fd.Values = append(fd.Values, val)
+		filters[key] = fd
+	} else {
+		filters[key] = FilterData{
+			Operator: op,
+			Values:   strings.Split(val, ","),
+		}
 	}
 }
