@@ -287,6 +287,16 @@ func TestSAPSystemMeta3(t *testing.T) {
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
 
+func TestSAPSystemMeta4(t *testing.T) {
+	url := "/?filter[system_profile][sap_sids][in]=ABC&filter[system_profile][sap_sids][in]=GHI"
+	output := testSystems(t, url, 1)
+	testMap := map[string]FilterData{
+		"sap_sids": {"in", []string{`"ABC"`, `"GHI"`}},
+		"stale":    {"eq", []string{"false"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
 func TestAAPSystemMeta(t *testing.T) {
 	url := `/?filter[system_profile][ansible][controller_version]=1.0`
 	output := testSystems(t, url, 1)
