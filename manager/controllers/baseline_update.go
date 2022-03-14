@@ -41,6 +41,9 @@ type UpdateBaselineResponse struct {
 // @Param    baseline_id path    int                  true "Baseline ID"
 // @Param    body        body    UpdateBaselineRequest true "Request body"
 // @Success 200 {object} UpdateBaselineResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/baselines/{baseline_id} [put]
 func BaselineUpdateHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)

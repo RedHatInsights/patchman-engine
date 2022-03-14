@@ -44,6 +44,10 @@ import (
 // @Param    filter[os]              query   string    false "Filter OS version"
 // @Param    tags                    query   []string  false "Tag filter"
 // @Success 200 {array} SystemInlineItem
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 415 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/export/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)

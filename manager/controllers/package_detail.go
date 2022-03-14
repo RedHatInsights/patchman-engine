@@ -97,6 +97,9 @@ func packageEvraHandler(c *gin.Context, nevra *utils.Nevra) {
 // @Produce  json
 // @Param    package_name    path    string   true "package_name - latest, nevra - exact version"
 // @Success 200 {object} PackageDetailResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/packages/{package_name} [get]
 func PackageDetailHandler(c *gin.Context) {
 	parameter := c.Param("package_name")

@@ -22,6 +22,9 @@ type SystemDetailResponse struct {
 // @Produce  json
 // @Param    inventory_id    path    string   true "Inventory ID"
 // @Success 200 {object} SystemDetailResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/systems/{inventory_id} [get]
 func SystemDetailHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
