@@ -26,6 +26,8 @@ import (
 // @Param    filter[severity]           query   string  false "Filter"
 // @Param    filter[applicable_systems] query   string  false "Filter"
 // @Success 200 {array} AdvisoryInlineItem
+// @Failure 415 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/export/advisories [get]
 func AdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)

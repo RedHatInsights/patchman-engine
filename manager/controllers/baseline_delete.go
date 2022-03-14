@@ -24,6 +24,9 @@ type DeleteBaselineResponse UpdateBaselineResponse
 // @Produce  json
 // @Param baseline_id path int true "Baseline ID"
 // @Success 200 {object} DeleteBaselineResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/baselines/{baseline_id} [delete]
 func BaselineDeleteHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)

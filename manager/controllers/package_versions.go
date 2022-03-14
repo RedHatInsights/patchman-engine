@@ -57,6 +57,9 @@ func packageVersionsQuery(acc int, packageNameIDs []int) *gorm.DB {
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    package_name    path    string    true  "Package name"
 // @Success 200 {object} PackageVersionsResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/packages/{package_name}/versions [get]
 func PackageVersionsListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)

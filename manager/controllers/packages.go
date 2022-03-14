@@ -84,6 +84,9 @@ func packagesQuery(filters map[string]FilterData, acc int) *gorm.DB {
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Success 200 {object} PackagesResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/packages/ [get]
 func PackagesListHandler(c *gin.Context) {
 	var filters map[string]FilterData

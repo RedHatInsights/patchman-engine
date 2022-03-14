@@ -34,6 +34,9 @@ type CreateBaselineResponse UpdateBaselineResponse
 // @Produce  json
 // @Param    body    body    CreateBaselineRequest true "Request body"
 // @Success 200 {object} CreateBaselineResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/baselines [put]
 func CreateBaselineHandler(c *gin.Context) {
 	accountID := c.GetInt(middlewares.KeyAccount)

@@ -37,6 +37,9 @@ type BaselineDetailAttributes struct {
 // @Produce  json
 // @Param    baseline_id    path    string   true "Baseline ID"
 // @Success 200 {object} BaselineDetailResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/baselines/{baseline_id} [get]
 func BaselineDetailHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)

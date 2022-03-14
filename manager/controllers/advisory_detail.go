@@ -53,6 +53,9 @@ type AdvisoryDetailAttributes struct {
 // @Produce  json
 // @Param    advisory_id    path    string   true "Advisory ID"
 // @Success 200 {object} AdvisoryDetailResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/advisories/{advisory_id} [get]
 func AdvisoryDetailHandler(c *gin.Context) {
 	advisoryName := c.Param("advisory_id")

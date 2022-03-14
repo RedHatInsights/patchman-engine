@@ -49,6 +49,8 @@ func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryNa
 // @Produce  json
 // @Param    body    body    SystemsAdvisoriesRequest true "Request body"
 // @Success 200 {object} SystemsAdvisoriesResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/views/systems/advisories [post]
 func PostSystemsAdvisories(c *gin.Context) {
 	var req SystemsAdvisoriesRequest
@@ -80,6 +82,8 @@ func PostSystemsAdvisories(c *gin.Context) {
 // @Produce  json
 // @Param    body    body    SystemsAdvisoriesRequest true "Request body"
 // @Success 200 {object} AdvisoriesSystemsResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/views/advisories/systems [post]
 func PostAdvisoriesSystems(c *gin.Context) {
 	var req SystemsAdvisoriesRequest

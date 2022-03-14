@@ -29,6 +29,10 @@ import (
 // @Param    filter[advisory_type_name]  query   string  false "Filter"
 // @Param    filter[severity]            query   string  false "Filter"
 // @Success 200 {array} SystemAdvisoriesDBLookup
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 415 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/export/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)

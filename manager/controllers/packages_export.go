@@ -21,6 +21,8 @@ import (
 // @Param    filter[systems_updatable] query   string  false "Filter"
 // @Param    filter[summary]           query   string  false "Filter"
 // @Success 200 {array} PackageItem
+// @Failure 415 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/export/packages [get]
 func PackagesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)

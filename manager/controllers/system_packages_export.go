@@ -32,6 +32,10 @@ type SystemPackageInline struct {
 // @Param    filter[summary]         query   string  false "Filter"
 // @Param    filter[updatable]       query   bool    false "Filter"
 // @Success 200 {array} SystemPackageInline
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 415 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/export/systems/{inventory_id}/packages [get]
 func SystemPackagesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)

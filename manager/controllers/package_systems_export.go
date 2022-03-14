@@ -25,6 +25,10 @@ import (
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Param    tags            query   []string  false "Tag filter"
 // @Success 200 {array} PackageSystemItem
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 415 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
 // @Router /api/patch/v1/export/packages/{package_name}/systems [get]
 func PackageSystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)

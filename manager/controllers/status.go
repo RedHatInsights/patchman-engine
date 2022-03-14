@@ -6,6 +6,9 @@ import (
 	"net/http"
 )
 
+// @Summary	Status endpoint
+// @Success 200 {int}		http.StatusOK
+// @Failure 503 {object} 	utils.ErrorResponse
 func Status(c *gin.Context) {
 	sqlDB, _ := database.Db.DB()
 	if err := sqlDB.Ping(); err != nil {
