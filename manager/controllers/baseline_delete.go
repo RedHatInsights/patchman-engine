@@ -14,7 +14,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-type DeleteBaselineResponse UpdateBaselineResponse
+type DeleteBaselineResponse struct {
+	BaselineID int `json:"baseline_id" example:"1"` // Updated baseline unique ID, it can not be changed
+}
 
 // @Summary Delete a baseline
 // @Description Delete a baseline

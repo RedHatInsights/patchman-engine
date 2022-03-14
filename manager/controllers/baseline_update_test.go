@@ -42,7 +42,9 @@ func TestUpdateBaseline(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var resp UpdateBaselineResponse
 	ParseResponseBody(t, w.Body.Bytes(), &resp)
-	assert.Equal(t, baselineID, resp.BaselineID)
+	assert.Equal(t, baselineID, resp.Data.ID)
+	assert.Equal(t, "updated_name", resp.Data.Attributes.Name)
+	assert.Equal(t, "baseline", resp.Data.Type)
 	database.CheckBaseline(t, baselineID, []string{
 		"00000000-0000-0000-0000-000000000004",
 		"00000000-0000-0000-0000-000000000006",
@@ -66,7 +68,7 @@ func TestUpdateBaselineWithEmptyAssociations(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var resp UpdateBaselineResponse
 	ParseResponseBody(t, w.Body.Bytes(), &resp)
-	assert.Equal(t, baselineID, resp.BaselineID)
+	assert.Equal(t, baselineID, resp.Data.ID)
 	database.CheckBaseline(t,
 		baselineID,
 		[]string{
@@ -98,7 +100,7 @@ func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var resp UpdateBaselineResponse
 	ParseResponseBody(t, w.Body.Bytes(), &resp)
-	assert.Equal(t, baselineID, resp.BaselineID)
+	assert.Equal(t, baselineID, resp.Data.ID)
 	database.CheckBaseline(t, baselineID, []string{},
 		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline")
 
@@ -158,7 +160,7 @@ func TestUpdateBaselineNullValues(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var resp UpdateBaselineResponse
 	ParseResponseBody(t, w.Body.Bytes(), &resp)
-	assert.Equal(t, baselineID, resp.BaselineID)
+	assert.Equal(t, baselineID, resp.Data.ID)
 	database.CheckBaseline(t, baselineID, testingInventoryIDs, // do not change on null values
 		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline")
 
