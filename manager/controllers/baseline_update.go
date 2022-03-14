@@ -29,7 +29,7 @@ type UpdateBaselineRequest struct {
 }
 
 type UpdateBaselineResponse struct {
-	BaselineID int `json:"baseline_id" example:"1"` // Updated baseline unique ID, it can not be changed
+	Data BaselineDetailItem `json:"data"`
 }
 
 // @Summary Update a baseline for my set of systems
@@ -90,11 +90,18 @@ func BaselineUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	configUpdated := req.Config != nil
-	inventoryAIDs := kafka.GetInventoryIDsToEvaluate(&baselineID, account, configUpdated, inventoryIDsList)
+	inventoryAIDs := kafka.GetInventoryIDsToEvaluate(&baselineID, account, req.Config != nil, inventoryIDsList)
 	kafka.EvaluateBaselineSystems(inventoryAIDs)
 
-	resp := UpdateBaselineResponse{BaselineID: baselineID}
+	respItem, err := getBaseline(account, baselineID)
+	if err != nil {
+		LogAndRespError(c, err, "baseline detail error")
+		return
+	}
+	resp := UpdateBaselineResponse{
+		Data: *respItem,
+	}
+
 	c.JSON(http.StatusOK, &resp)
 }
 

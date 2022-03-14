@@ -24,7 +24,9 @@ type CreateBaselineRequest struct {
 	Config *BaselineConfig `json:"config"`
 }
 
-type CreateBaselineResponse UpdateBaselineResponse
+type CreateBaselineResponse struct {
+	BaselineID int `json:"baseline_id" example:"1"` // Updated baseline unique ID, it can not be changed
+}
 
 // @Summary Create a baseline for my set of systems
 // @Description Create a baseline for my set of systems

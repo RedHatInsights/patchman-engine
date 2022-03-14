@@ -3945,10 +3945,8 @@
             "controllers.UpdateBaselineResponse": {
                 "type": "object",
                 "properties": {
-                    "baseline_id": {
-                        "type": "integer",
-                        "description": "Updated baseline unique ID, it can not be changed",
-                        "example": 1
+                    "data": {
+                        "$ref": "#/components/schemas/controllers.BaselineDetailItem"
                     }
                 }
             },
