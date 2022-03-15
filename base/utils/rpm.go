@@ -35,7 +35,7 @@ func ParseNevra(nevra string) (*Nevra, error) {
 	parsed := nevraRegex.FindStringSubmatch(nevra)
 
 	if len(parsed) != 9 {
-		return nil, errors.New("unable to parse nevra")
+		return nil, errors.Errorf("unable to parse (%s)", nevra)
 	}
 	var err error
 	epoch := 0
