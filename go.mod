@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/aws/aws-sdk-go v1.38.51
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
-	github.com/confluentinc/confluent-kafka-go v1.7.0 // indirect
+	github.com/confluentinc/confluent-kafka-go v1.7.0
 	github.com/ezamriy/gorpm v0.0.0-20160905202458-25f7273cbf51
 	github.com/getkin/kin-openapi v0.9.0
 	github.com/gin-contrib/gzip v0.0.1
@@ -39,7 +39,6 @@ require (
 	golang.org/x/net v0.0.0-20211104170005-ce137452f963
 	golang.org/x/tools v0.0.0-20200825202427-b303f430e36d // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
-	gopkg.in/confluentinc/confluent-kafka-go.v1 v1.7.0
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	gorm.io/driver/postgres v1.0.5
