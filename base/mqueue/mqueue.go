@@ -6,7 +6,6 @@ import (
 	"app/base/utils"
 	"context"
 	"io"
-	"os"
 	"strings"
 	"sync"
 
@@ -26,16 +25,10 @@ type Writer interface {
 }
 
 func NewKafkaReaderFromEnv(topic string) Reader {
-	if os.Getenv("KAFKA_CLIENT_LIB") == "confluent-kafka-go" {
-		return newConfluentReaderFromEnv(topic)
-	}
 	return newKafkaGoReaderFromEnv(topic)
 }
 
 func NewKafkaWriterFromEnv(topic string) Writer {
-	if os.Getenv("KAFKA_CLIENT_LIB") == "confluent-kafka-go" {
-		return newConfluentWriterFromEnv(topic)
-	}
 	return newKafkaGoWriterFromEnv(topic)
 }
 
