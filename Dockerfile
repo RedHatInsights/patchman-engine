@@ -27,9 +27,7 @@ RUN mkdir -p /go/src/app && chown -R insights:root /go
 USER insights
 WORKDIR /go/src/app
 
-ADD --chown=insights:root go.mod go.sum     /go/src/app/
-
-RUN go mod download
+ADD --chown=insights:root patchman-engine-deps/vendor  /go/src/app/vendor
 
 RUN if [ "$INSTALL_TOOLS" == "yes" ] ; then \
         go get -u github.com/swaggo/swag/cmd/swag && \
@@ -48,9 +46,9 @@ ADD --chown=insights:root manager                  /go/src/app/manager
 ADD --chown=insights:root platform                 /go/src/app/platform
 ADD --chown=insights:root scripts                  /go/src/app/scripts
 ADD --chown=insights:root vmaas_sync               /go/src/app/vmaas_sync
-ADD --chown=insights:root main.go                   /go/src/app/
+ADD --chown=insights:root main.go go.mod go.sum    /go/src/app/
 
-RUN go build -v main.go
+RUN go build -mod vendor -v main.go
 
 EXPOSE 8080
 
