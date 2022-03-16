@@ -1,0 +1,3 @@
+[submodule "patchman-engine-deps"]
+	path = patchman-engine-deps
+	url = git@github.com:RedHatInsights/patchman-engine-deps.git
