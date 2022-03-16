@@ -133,19 +133,19 @@ INSERT INTO strings(id, value) VALUES
 ('10', 'An utility for setting or changing passwords using PAM'), -- passwd summary
 ('1010', 'This package contains a system utility (passwd) which sets...'); -- passwd description
 
-INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_id) VALUES
-(1, 101, '5.6.13-200.fc31.x86_64', '11', '1', 1), -- kernel
-(2, 102, '76.0.1-1.fc31.x86_64', '22', '2', 1), -- firefox
-(3, 103, '4.4.19-8.el8_0.x86_64', '33', '3', 3), -- bas
-(4, 104, '7.61.1-8.el8.x86_64', '44', '4', 4), -- curl
-(5, 105, '1.30-4.el8.x86_64', '55', '5', 5), -- tar
-(6, 106, '239-13.el8_0.5.x86_64', '66', '6', 6), -- systemd
-(7, 107, '4.5-1.el8.x86_64', '77', '7', 7), -- sed
-(8, 108, '3.1-6.el8.x86_64', '88', '8', 8), -- grep
-(9, 109, '2.21-10.el8.x86_64', '99', '9', 9), -- which
-(10, 110, '0.80-2.el8.x86_64', '1010', '10', 9), -- passwd
-(11, 101, '5.6.13-201.fc31.x86_64', '11', '1', 7), -- kernel
-(12, 102, '76.0.1-2.fc31.x86_64', '22', '2', null); -- firefox
+INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_id, synced) VALUES
+(1, 101, '5.6.13-200.fc31.x86_64', '11', '1', 1, true), -- kernel
+(2, 102, '76.0.1-1.fc31.x86_64', '22', '2', 1, true), -- firefox
+(3, 103, '4.4.19-8.el8_0.x86_64', '33', '3', 3, true), -- bas
+(4, 104, '7.61.1-8.el8.x86_64', '44', '4', 4, true), -- curl
+(5, 105, '1.30-4.el8.x86_64', '55', '5', 5, true), -- tar
+(6, 106, '239-13.el8_0.5.x86_64', '66', '6', 6, true), -- systemd
+(7, 107, '4.5-1.el8.x86_64', '77', '7', 7, true), -- sed
+(8, 108, '3.1-6.el8.x86_64', '88', '8', 8, true), -- grep
+(9, 109, '2.21-10.el8.x86_64', '99', '9', 9, true), -- which
+(10, 110, '0.80-2.el8.x86_64', '1010', '10', 9, true), -- passwd
+(11, 101, '5.6.13-201.fc31.x86_64', '11', '1', 7, true), -- kernel
+(12, 102, '76.0.1-2.fc31.x86_64', '22', '2', null, true); -- firefox
 
 INSERT INTO system_package (rh_account_id, system_id, package_id, name_id, update_data) VALUES
 (3, 12, 1, 101, '[{"evra": "5.10.13-200.fc31.x86_64", "advisory": "RH-100"}]'),
