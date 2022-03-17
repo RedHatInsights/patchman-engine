@@ -31,8 +31,8 @@ type PackageSystemItem struct {
 	AvailableEVRA    string         `json:"available_evra" csv:"available_evra" query:"spkg.latest_evra" gorm:"column:available_evra"`
 	Updatable        bool           `json:"updatable" csv:"updatable" query:"spkg.latest_evra IS NOT NULL" gorm:"column:updatable"`
 	Tags             SystemTagsList `json:"tags" csv:"tags" query:"null" gorm:"-"`
-	BaselineName     string         `json:"-" csv:"-" query:"bl.name" gorm:"column:baseline_name"`
-	BaselineUpToDate *bool          `json:"-" csv:"-" query:"sp.baseline_uptodate" gorm:"column:baseline_uptodate"`
+	BaselineName     string         `json:"baseline_name" csv:"baseline_name" query:"bl.name" gorm:"column:baseline_name"`
+	BaselineUpToDate *bool          `json:"baseline_uptodate" csv:"baseline_uptodate" query:"sp.baseline_uptodate" gorm:"column:baseline_uptodate"`
 }
 
 type PackageSystemDBLookup struct {

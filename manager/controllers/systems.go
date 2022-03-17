@@ -70,8 +70,8 @@ type SystemItemAttributes struct {
 
 	Tags SystemTagsList `json:"tags" csv:"tags" gorm:"-"`
 
-	BaselineName     string `json:"-" csv:"-" query:"bl.name" gorm:"column:baseline_name"`
-	BaselineUpToDate *bool  `json:"-" csv:"-" query:"sp.baseline_uptodate" gorm:"column:baseline_uptodate"`
+	BaselineName     string `json:"baseline_name" csv:"baseline_name" query:"bl.name" gorm:"column:baseline_name"`
+	BaselineUpToDate *bool  `json:"baseline_uptodate" csv:"baseline_uptodate" query:"sp.baseline_uptodate" gorm:"column:baseline_uptodate"`
 }
 
 type SystemTagsList []SystemTag
