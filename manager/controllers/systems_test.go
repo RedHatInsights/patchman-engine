@@ -36,8 +36,8 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, "2018-09-09 16:00:00 +0000 UTC", output.Data[0].Attributes.CulledTimestamp.String())
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.Created.String())
 	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output.Data[0].Attributes.Tags)
-	// TODO: assert.Equal(t, "baseline_1-1", output.Data[0].Attributes.BaselineName)
-	// TODO: assert.Equal(t, true, *output.Data[0].Attributes.BaselineUpToDate)
+	assert.Equal(t, "baseline_1-1", output.Data[0].Attributes.BaselineName)
+	assert.Equal(t, true, *output.Data[0].Attributes.BaselineUpToDate)
 
 	// links
 	assert.Equal(t, "/api/patch/v1/systems?offset=0&limit=20&filter[stale]=eq:false&sort=-last_upload", output.Links.First)
