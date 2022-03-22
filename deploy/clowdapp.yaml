@@ -230,6 +230,8 @@ objects:
         - {name: ENABLE_RECALC_MESSAGES_SEND, value: '${ENABLE_RECALC_MESSAGES_SEND}'}
         - {name: ENABLE_SYNC_ON_START, value: '${ENABLE_SYNC_ON_START}'}
         - {name: ENABLE_RECALC_ON_START, value: '${ENABLE_RECALC_ON_START}'}
+        - {name: DELETE_UNUSED_DATA_LIMIT, value: '${DELETE_UNUSED_DATA_LIMIT}'}
+        - {name: ENABLE_UNUSED_DATA_DELETE, value: '${ENABLE_UNUSED_DATA_DELETE}'}
         - {name: DELETE_CULLED_SYSTEMS_LIMIT, value: '${DELETE_CULLED_SYSTEMS_LIMIT}'}
         - {name: ENABLE_CULLED_SYSTEM_DELETE, value: '${ENABLE_CULLED_SYSTEM_DELETE}'}
         - {name: ENABLE_SYSTEM_STALING, value: '${ENABLE_SYSTEM_STALING}'}
@@ -465,6 +467,8 @@ parameters:
 - {name: ENABLE_RECALC_MESSAGES_SEND, value: 'true'} # Send re-calc messages after sync
 - {name: ENABLE_SYNC_ON_START, value: 'false'} # Force advisories, packages and repos metadata sync on start
 - {name: ENABLE_RECALC_ON_START, value: 'false'} # Force recalc messages sending on start
+- {name: DELETE_UNUSED_DATA_LIMIT, value: '1000'}  # Unused data deletion limit
+- {name: ENABLE_UNUSED_DATA_DELETE, value: 'true'} # Unused data feature switch
 - {name: DELETE_CULLED_SYSTEMS_LIMIT, value: '1000'} # Culled systems deletion limit
 - {name: ENABLE_CULLED_SYSTEM_DELETE, value: 'true'} # Enable deleting part of culling method
 - {name: ENABLE_SYSTEM_STALING, value: 'true'} # Enable marking systems stale of culling method
