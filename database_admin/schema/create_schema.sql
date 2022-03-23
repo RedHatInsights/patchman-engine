@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (76, false);
+VALUES (77, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -659,6 +659,7 @@ CREATE TABLE IF NOT EXISTS system_platform
     third_party              BOOLEAN                  NOT NULL DEFAULT false,
     baseline_id              INT,
     baseline_uptodate        BOOLEAN,
+    yum_updates              JSONB,
     PRIMARY KEY (rh_account_id, id),
     UNIQUE (rh_account_id, inventory_id),
     CONSTRAINT reporter_id FOREIGN KEY (reporter_id) REFERENCES reporter (id),

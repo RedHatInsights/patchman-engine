@@ -59,7 +59,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 		Basearch:       utils.PtrString("x86_64"),
 	}
 
-	sys1, err := updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(t), &req)
+	sys1, err := updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(t), nil, &req)
 	assert.Nil(t, err)
 
 	reporterID1 := 1
@@ -69,7 +69,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	host2 := createTestInvHost(t)
 	host2.Reporter = "yupana"
 	req.PackageList = []string{"package0", "package1"}
-	sys2, err := updateSystemPlatform(database.Db, id, accountID2, host2, &req)
+	sys2, err := updateSystemPlatform(database.Db, id, accountID2, host2, nil, &req)
 	assert.Nil(t, err)
 
 	reporterID2 := 3
@@ -265,4 +265,32 @@ func TestFixEpelRepos(t *testing.T) {
 	var sys = inventory.SystemProfile{}
 	repos = fixEpelRepos(&sys, repos)
 	assert.Equal(t, "epel", repos[0])
+}
+
+func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	deleteData(t)
+
+	accountID1 := getOrCreateTestAccount(t)
+
+	hostEvent := createTestUploadEvent("1", id, "puptoo", false)
+	hostEvent.PlatformMetadata = map[string]interface{}{
+		"custom_metadata": []byte(`{"yum_updates": {"update_list": {"kernel-0.3": {}}}}`),
+	}
+	yumUpdates := getCustomMetadata(hostEvent).getYumUpdates()
+
+	req := vmaas.UpdatesV3Request{}
+
+	_, err := updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(t), yumUpdates, &req)
+	assert.Nil(t, err)
+
+	reporterID1 := 1
+	assertSystemInDB(t, id, &accountID1, &reporterID1)
+	assertReposInDB(t, req.GetRepositoryList())
+	assertYumUpdatesInDB(t, id, yumUpdates)
+
+	deleteData(t)
 }

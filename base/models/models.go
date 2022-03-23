@@ -58,7 +58,8 @@ type SystemPlatform struct {
 	ThirdParty            bool
 	ReporterID            *int
 	BaselineID            *int
-	BaselineUpToDate      *bool `gorm:"column:baseline_uptodate"`
+	BaselineUpToDate      *bool  `gorm:"column:baseline_uptodate"`
+	YumUpdates            []byte `gorm:"column:yum_updates"`
 }
 
 func (SystemPlatform) TableName() string {
