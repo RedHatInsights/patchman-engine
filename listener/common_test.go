@@ -113,3 +113,10 @@ func assertSystemReposInDB(t *testing.T, systemID int, repos []string) {
 	assert.NoError(t, err)
 	assert.Equal(t, c, int64(len(repos)))
 }
+
+func assertYumUpdatesInDB(t *testing.T, inventoryID string, yumUpdates []byte) {
+	var system models.SystemPlatform
+	assert.NoError(t, database.Db.Where("inventory_id = ?::uuid", inventoryID).Find(&system).Error)
+	assert.Equal(t, system.InventoryID, inventoryID)
+	assert.Equal(t, system.YumUpdates, yumUpdates)
+}

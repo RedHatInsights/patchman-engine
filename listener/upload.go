@@ -30,6 +30,7 @@ const (
 	UploadSuccess          = "upload event handled successfully"
 	FlushedFullBuffer      = "flushing full eval event buffer"
 	FlushedTimeoutBuffer   = "flushing eval event buffer after timeout"
+	ErrorUnmarshalMetadata = "unable to unmarshall platform metadata value"
 )
 
 var DeletionThreshold = time.Hour * time.Duration(utils.GetIntEnvOrDefault("SYSTEM_DELETE_HRS", 4))
@@ -49,6 +50,10 @@ type HostEvent struct {
 	Type             string                 `json:"type"`
 	PlatformMetadata map[string]interface{} `json:"platform_metadata"`
 	Host             Host                   `json:"host"`
+}
+
+type CustomMetadata struct {
+	YumUpdates json.RawMessage `json:"yum_updates,omitempty"`
 }
 
 func HandleUpload(event HostEvent) error {
@@ -75,13 +80,15 @@ func HandleUpload(event HostEvent) error {
 		return nil
 	}
 
-	if len(event.Host.SystemProfile.GetInstalledPackages()) == 0 {
+	yumUpdates := getCustomMetadata(event).getYumUpdates()
+
+	if len(event.Host.SystemProfile.GetInstalledPackages()) == 0 && yumUpdates == nil {
 		utils.Log("inventoryID", event.Host.ID).Warn(WarnSkippingNoPackages)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
 		return nil
 	}
 
-	sys, err := processUpload(event.Host.Account, &event.Host)
+	sys, err := processUpload(event.Host.Account, &event.Host, yumUpdates)
 
 	if err != nil {
 		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorProcessUpload)
@@ -165,7 +172,7 @@ func getOrCreateAccount(account string) (int, error) {
 // nolint: funlen
 // Stores or updates base system profile, returing internal system id
 func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *Host,
-	updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
+	yumUpdates []byte, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
 	updatesReqJSON, err := json.Marshal(updatesReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "Serializing vmaas request")
@@ -205,6 +212,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		CulledTimestamp:       host.CulledTimestamp.Time(),
 		Stale:                 staleWarning != nil && staleWarning.Before(time.Now()),
 		ReporterID:            getReporterID(host.Reporter),
+		YumUpdates:            yumUpdates,
 	}
 
 	var oldJSONChecksum []string
@@ -387,7 +395,7 @@ func processModules(systemProfile *inventory.SystemProfile) *[]vmaas.UpdatesV3Re
 }
 
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
-func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
+func processUpload(account string, host *Host, yumUpdates []byte) (*models.SystemPlatform, error) {
 	// Ensure we have account stored
 	accountID, err := getOrCreateAccount(account)
 	if err != nil {
@@ -425,7 +433,7 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 		utils.Log("inventoryID", host.ID).Info("Received recently deleted system")
 		return nil, nil
 	}
-	sys, err := updateSystemPlatform(tx, host.ID, accountID, host, &updatesReq)
+	sys, err := updateSystemPlatform(tx, host.ID, accountID, host, yumUpdates, &updatesReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "saving system into the database")
 	}
@@ -434,4 +442,32 @@ func processUpload(account string, host *Host) (*models.SystemPlatform, error) {
 		return nil, errors.Wrap(err, "Committing changes")
 	}
 	return sys, nil
+}
+
+func getCustomMetadata(event HostEvent) *CustomMetadata {
+	customMetadata := event.PlatformMetadata["custom_metadata"]
+	if customMetadata == nil {
+		return nil
+	}
+
+	var res CustomMetadata
+	var err error
+	metadata, ok := customMetadata.([]byte)
+	if ok {
+		err = json.Unmarshal(metadata, &res)
+	}
+	if !ok || err != nil {
+		utils.Log("inventoryID", event.Host.ID).Error(ErrorUnmarshalMetadata)
+		return nil
+	}
+
+	return &res
+}
+
+func (cu *CustomMetadata) getYumUpdates() []byte {
+	if cu == nil {
+		return nil
+	}
+
+	return cu.YumUpdates
 }
