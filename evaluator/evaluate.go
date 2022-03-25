@@ -21,6 +21,11 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+const (
+	uploadTopic = "patchman.evaluator.upload"
+	recalcTopic = "patchman.evaluator.recalc"
+)
+
 type SystemAdvisoryMap map[string]models.SystemAdvisories
 
 var (
@@ -46,6 +51,7 @@ var (
 	vmaasCallMaxRetries           int
 	vmaasCallUseExpRetry          bool
 	vmaasCallUseOptimisticUpdates bool
+	enableYumUpdatesEval          bool
 )
 
 const WarnPayloadTracker = "unable to send message to payload tracker"
@@ -79,6 +85,7 @@ func configure() {
 	vmaasCallMaxRetries = utils.GetIntEnvOrDefault("VMAAS_CALL_MAX_RETRIES", 8)
 	vmaasCallUseExpRetry = utils.GetBoolEnvOrDefault("VMAAS_CALL_USE_EXP_RETRY", true)
 	vmaasCallUseOptimisticUpdates = utils.GetBoolEnvOrDefault("VMAAS_CALL_USE_OPTIMISTIC_UPDATES", true)
+	enableYumUpdatesEval = utils.GetBoolEnvOrDefault("ENABLE_YUM_UPDATES_EVAL", true)
 	configureRemediations()
 	configureNotifications()
 }
@@ -115,47 +122,56 @@ func evaluateInDatabase(ctx context.Context, accountID int, inventoryID, account
 	// Don't allow requested TX to hang around locking the rows
 	defer tx.Rollback()
 
-	updatesReq, system, err := tryGetVmaasRequest(tx, accountID, inventoryID, requested)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "unable to get vmaas request")
-	}
-
-	if updatesReq == nil {
+	system := tryGetSystem(tx, accountID, inventoryID, requested)
+	if system == nil {
 		return nil, nil, nil
 	}
 
-	vmaasData, err := evaluateWithVmaas(ctx, tx, updatesReq, system, accountName)
+	updatesData, err := getUpdatesData(ctx, tx, system)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "unable to get updates data")
+	}
+	if updatesData == nil {
+		return nil, nil, nil
+	}
+
+	vmaasData, err := evaluateWithVmaas(tx, updatesData, system, accountName)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluation with vmaas failed")
 	}
+
 	return system, vmaasData, nil
 }
 
-func evaluateWithVmaas(ctx context.Context, tx *gorm.DB, updatesReq *vmaas.UpdatesV3Request,
+func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV2Response, error) {
+	if system.YumUpdates == nil {
+		return nil, nil
+	}
+
+	var resp vmaas.UpdatesV2Response
+	err := json.Unmarshal(system.YumUpdates, &resp)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to unmarshall yum updates")
+	}
+
+	if len(resp.GetUpdateList()) == 0 {
+		// TODO: do we need evaluationCnt.WithLabelValues("error-no-yum-packages").Inc()?
+		return nil, nil
+	}
+
+	return &resp, nil
+}
+
+func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV2Response,
 	system *models.SystemPlatform, accountName string) (*vmaas.UpdatesV2Response, error) {
-	thirdParty, err := analyzeRepos(tx, system)
-	if err != nil {
-		return nil, errors.Wrap(err, "Repo analysis failed")
-	}
-	system.ThirdParty = thirdParty                    // to set "system_platform.third_party" column
-	updatesReq.ThirdParty = utils.PtrBool(thirdParty) // enable "third_party" updates in VMaaS if needed
-	useOptimisticUpdates := thirdParty || vmaasCallUseOptimisticUpdates
-	updatesReq.OptimisticUpdates = utils.PtrBool(useOptimisticUpdates)
-
-	vmaasData, err := callVMaas(ctx, updatesReq)
-	if err != nil {
-		evaluationCnt.WithLabelValues("error-call-vmaas-updates").Inc()
-		return nil, errors.Wrap(err, "vmaas API call failed")
-	}
-
 	if enableBaselineEval {
-		err = limitVmaasToBaseline(tx, system, vmaasData)
+		err := limitVmaasToBaseline(tx, system, updatesData)
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to evaluate baseline")
 		}
 	}
 
-	err = evaluateAndStore(tx, system, vmaasData, accountName)
+	err := evaluateAndStore(tx, system, updatesData, accountName)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to evaluate and store results")
 	}
@@ -165,35 +181,94 @@ func evaluateWithVmaas(ctx context.Context, tx *gorm.DB, updatesReq *vmaas.Updat
 		evaluationCnt.WithLabelValues("error-database-commit").Inc()
 		return nil, errors.New("database commit failed")
 	}
-	return vmaasData, nil
+	return updatesData, nil
 }
 
-func tryGetVmaasRequest(tx *gorm.DB, accountID int, inventoryID string,
-	requested *base.Rfc3339Timestamp) (*vmaas.UpdatesV3Request, *models.SystemPlatform, error) {
-	system := tryGetSystem(tx, accountID, inventoryID, requested)
-	if system == nil {
-		return nil, nil, nil
+func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatform) (*vmaas.UpdatesV2Response, error) {
+	if !enableYumUpdatesEval {
+		return getVmaasUpdates(ctx, tx, system)
 	}
+
+	var vmaasErr error
+	var yumErr error
+	vmaasData, vmaasErr := getVmaasUpdates(ctx, tx, system)
+	yumUpdates, yumErr := tryGetYumUpdates(system)
+	if vmaasErr != nil && yumErr != nil {
+		return nil, errors.Wrap(vmaasErr, yumErr.Error())
+	}
+	if vmaasErr != nil || vmaasData == nil {
+		return yumUpdates, nil
+	}
+	if yumErr != nil || yumUpdates == nil {
+		return vmaasData, nil
+	}
+	if yumUpdates == nil && vmaasData == nil {
+		return nil, nil
+	}
+
+	// Return YumUpdates if it is uploader
+	if evalTopic == uploadTopic {
+		return yumUpdates, nil
+	}
+
+	// Try to merge YumUpdates and VMaaS updates in recalc
+	updatesData, err := utils.MergeVMaaSResponses(vmaasData, yumUpdates)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatesData, nil
+}
+
+func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
+	system *models.SystemPlatform) (*vmaas.UpdatesV2Response, error) {
+	updatesReq, err := tryGetVmaasRequest(system)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get vmaas request")
+	}
+
+	if updatesReq == nil {
+		return nil, nil
+	}
+
+	thirdParty, err := analyzeRepos(tx, system)
+	if err != nil {
+		return nil, errors.Wrap(err, "Repo analysis failed")
+	}
+	system.ThirdParty = thirdParty                    // to set "system_platform.third_party" column
+	updatesReq.ThirdParty = utils.PtrBool(thirdParty) // enable "third_party" updates in VMaaS if needed
+	useOptimisticUpdates := thirdParty || vmaasCallUseOptimisticUpdates
+	updatesReq.OptimisticUpdates = utils.PtrBool(useOptimisticUpdates)
 
 	if system.VmaasJSON == "" {
 		evaluationCnt.WithLabelValues("error-parse-vmaas-json").Inc()
 		utils.Log("inventory_id", system.InventoryID).Warn("system with empty vmaas json")
 		// skip the system
 		// don't return error as it will cause panic of evaluator pod
-		return nil, nil, nil
+		return nil, nil
 	}
 
+	vmaasData, err := callVMaas(ctx, updatesReq)
+	if err != nil {
+		evaluationCnt.WithLabelValues("error-call-vmaas-updates").Inc()
+		return nil, errors.Wrap(err, "vmaas API call failed")
+	}
+
+	return vmaasData, nil
+}
+
+func tryGetVmaasRequest(system *models.SystemPlatform) (*vmaas.UpdatesV3Request, error) {
 	updatesReq, err := parseVmaasJSON(system)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-parse-vmaas-json").Inc()
-		return nil, nil, errors.Wrap(err, "Unable to parse system vmaas json")
+		return nil, errors.Wrap(err, "Unable to parse system vmaas json")
 	}
 
 	if len(updatesReq.PackageList) == 0 {
 		evaluationCnt.WithLabelValues("error-no-packages").Inc()
-		return nil, nil, nil
+		return nil, nil
 	}
-	return &updatesReq, system, nil
+	return &updatesReq, nil
 }
 
 func tryGetSystem(tx *gorm.DB, accountID int, inventoryID string,

@@ -43,6 +43,12 @@ INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vma
 (13, '00000000-0000-0000-0000-000000000013','00000000-0000-0000-0000-000000000013', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 1,0),
 (14, '00000000-0000-0000-0000-000000000014','00000000-0000-0000-0000-000000000014', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 0,0);
 
+INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_updatable, yum_updates) VALUES
+(15, '00000000-0000-0000-0000-000000000015','00000000-0000-0000-0000-000000000015', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.i686" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 1,0,
+'{"update_list": {"kernel-2.6.32-696.20.1.el6.i686": {"available_updates": [{"erratum": "RHSA-2021:3801", "basearch": "i686", "releasever": "696.20.1.el6", "repository": "rhel-6-server-rpms", "package": "kernel-0:3.10.0-696.20.1.el6.i686"}]}}, "basearch": "i686", "releasever": "ser1"}'),
+(16, '00000000-0000-0000-0000-000000000016','00000000-0000-0000-0000-000000000016', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.i686" ]}', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 0,0,
+'{"update_list": {"kernel-2.6.32-696.20.1.el6.i686": {"available_updates": [{"erratum": "RHSA-2021:3801", "basearch": "i686", "releasever": "696.20.1.el6", "repository": "rhel-6-server-rpms", "package": "kernel-0:3.10.0-696.20.1.el6.i686"}]}}, "basearch": "i686", "releasever": "ser1"}');
+
 INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solution, advisory_type_id,
                                public_date, modified_date, url, severity_id, cve_list, release_versions) VALUES
 (1, 'RH-1', 'adv-1-des', 'adv-1-syn', 'adv-1-sum', 'adv-1-sol', 1, '2016-09-22 12:00:00-04', '2017-09-22 12:00:00-04', 'url1', NULL, NULL, '["7.0","7Server"]'),
@@ -57,7 +63,8 @@ INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solutio
 (10, 'UNSPEC-10', 'adv-10-des', 'adv-10-syn', 'adv-10-sum', 'adv-10-sol', 4, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url10', NULL, NULL, NULL),
 (11, 'UNSPEC-11', 'adv-11-des', 'adv-11-syn', 'adv-11-sum', 'adv-11-sol', 4, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url11', NULL, NULL, NULL),
 (12, 'CUSTOM-12', 'adv-12-des', 'adv-12-syn', 'adv-12-sum', 'adv-12-sol', 0, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url12', NULL, NULL, NULL),
-(13, 'CUSTOM-13', 'adv-13-des', 'adv-13-syn', 'adv-13-sum', 'adv-13-sol', 0, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url13', NULL, NULL, NULL);
+(13, 'CUSTOM-13', 'adv-13-des', 'adv-13-syn', 'adv-13-sum', 'adv-13-sol', 0, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url13', NULL, NULL, NULL),
+(14, 'RHSA-2021:3801', 'adv-14-des', 'adv-14-syn', 'adv-14-sum', 'adv-14-sol', 3, '2016-09-22 12:00:00-04', '2017-09-22 12:00:00-04', 'url14', NULL, NULL, '["7.0","ser1"]');
 
 UPDATE advisory_metadata SET package_data = '["firefox-77.0.1-1.fc31.x86_64", "firefox-77.0.1-1.fc31.s390"]' WHERE name = 'RH-9';
 

@@ -3,6 +3,7 @@ package evaluator
 import (
 	"app/base/core"
 	"app/base/database"
+	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
 	"app/base/vmaas"
@@ -87,6 +88,40 @@ func TestEvaluate(t *testing.T) {
 	assert.Equal(t, 2, len(mockWriter.Messages))
 }
 
+func TestEvaluateYum(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	utils.SkipWithoutPlatform(t)
+	core.SetupTestEnvironment()
+	configure()
+	loadCache()
+
+	const (
+		id = "00000000-0000-0000-0000-000000000015"
+	)
+
+	mockWriter := mqueue.MockKafkaWriter{}
+	remediationsPublisher = &mockWriter
+	evalTopic = recalcTopic
+
+	// RHSA-2021:3801(id: 14, type: security) comes from YumUpdates
+	// RH-1, RH-2 from VMaaS json
+	expectedAddedAdvisories := []string{"RH-1", "RH-2", "RHSA-2021:3801"}
+	expectedAdvisoryIDs := []int{1, 2, 14} // advisories expected to be paired to the system after evaluation
+
+	database.DeleteSystemAdvisories(t, systemID, expectedAdvisoryIDs)
+	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
+
+	err := evaluateHandler(mqueue.PlatformEvent{
+		SystemIDs: []string{id},
+		AccountID: rhAccountID})
+	assert.NoError(t, err)
+
+	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
+	_ = advisoryIDs
+	database.CheckSystemJustEvaluated(t, id, 3, 1, 1,
+		1, 2, 2, false)
+}
+
 func TestEvaluatePruneUpdates(t *testing.T) {
 	assert.NoError(t, os.Setenv("PRUNE_UPDATES_LATEST_ONLY", "true"))
 	defer os.Setenv("PRUNE_UPDATES_LATEST_ONLY", "false")
@@ -135,4 +170,40 @@ func TestVMaaSUpdatesCall(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
 	assert.Equal(t, 2, len(resp.GetUpdateList()))
+}
+
+func TestGetYumUpdates(t *testing.T) {
+	data := []byte(`
+	{
+		"update_list": {
+			"kernel-2.6.32-696.20.1.el6.x86_64": {
+				"available_updates": [
+					{
+						"erratum": "RHSA-2021:3801",
+						"basearch": "x86_64",
+						"releasever": "6Server",
+						"repository": "rhel-6-server-rpms",
+						"package": "kernel-0:3.10.0-696.20.1.el6.x86_64"
+					},
+					{
+						"erratum": "RHSA-2021:3801",
+						"basearch": "x86_64",
+						"releasever": "6Server",
+						"repository": "rhel-6-server-rpms",
+						"package": "kernel-0:3.18.0-696.20.1.el6.x86_64"
+					}
+				]
+			}
+		},
+		"basearch": "x86_64",
+		"releasever": "6Server"
+	}
+	`)
+
+	system := &models.SystemPlatform{YumUpdates: data}
+	updates, err := tryGetYumUpdates(system)
+	updateList := updates.GetUpdateList()["kernel-2.6.32-696.20.1.el6.x86_64"]
+	assert.Nil(t, err)
+	assert.NotNil(t, updates)
+	assert.Equal(t, 2, len(updateList.GetAvailableUpdates()))
 }
