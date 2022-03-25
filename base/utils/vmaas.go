@@ -2,6 +2,7 @@ package utils
 
 import (
 	"app/base/vmaas"
+
 	"github.com/pkg/errors"
 )
 
@@ -81,19 +82,13 @@ func processMerge(updatesA,
 			if err != nil {
 				return nil, err
 			}
-			AIsLess, err := nevraA.IsLessVersion(nevraB)
-			if err != nil {
-				return nil, err
-			}
-			BIsLess, err := nevraB.IsLessVersion(nevraA)
-			if err != nil {
-				return nil, err
-			}
-			if AIsLess {
+			cmp := nevraA.Cmp(nevraB)
+
+			if cmp < 0 {
 				appendUpdateIfNotExists(&newUpdates, updatesA[i], nevraA.Version, processed)
 				break
 			}
-			if BIsLess {
+			if cmp > 0 {
 				appendUpdateIfNotExists(&newUpdates, updatesB[j], nevraB.Version, processed)
 				offset++
 				if offset == len(updatesB) {
