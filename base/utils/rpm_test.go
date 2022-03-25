@@ -24,3 +24,28 @@ func TestNevraParse2(t *testing.T) {
 	_, err = ParseNevra("kernel-5.6.13-200.fc31.x86_64")
 	assert.NoError(t, err)
 }
+
+func TestNevraCmp(t *testing.T) {
+	ff0, err := ParseNevra("firefox-76.0.1-1.fc31.x86_64")
+	assert.NoError(t, err)
+	ff1, err := ParseNevra("firefox-0:76.0.1-1.fc31.x86_64")
+	assert.NoError(t, err)
+	ff2, err := ParseNevra("firefox-1:76.0.1-1.fc31.x86_64")
+	assert.NoError(t, err)
+	ff3, err := ParseNevra("firefox-1:77.0.1-1.fc31.x86_64")
+	assert.NoError(t, err)
+	ff4, err := ParseNevra("firefox-1:77.0.1-1.fc33.x86_64")
+	assert.NoError(t, err)
+	fb4, err := ParseNevra("firebird-1:77.0.1-1.fc33.x86_64")
+	assert.NoError(t, err)
+
+	assert.Equal(t, 0, ff0.Cmp(ff1))
+	// epoch
+	assert.Equal(t, -1, ff1.Cmp(ff2))
+	// version
+	assert.Equal(t, 1, ff3.Cmp(ff2))
+	// release
+	assert.Equal(t, 1, ff4.Cmp(ff3))
+	// name
+	assert.Equal(t, 1, ff4.Cmp(fb4))
+}

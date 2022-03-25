@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	rpm "github.com/ezamriy/gorpm"
 	"github.com/pkg/errors"
 )
 
@@ -125,4 +126,12 @@ func (n Nevra) IsLessVersion(other *Nevra) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (n Nevra) Cmp(other *Nevra) int {
+	ret := strings.Compare(n.Name, other.Name)
+	if ret != 0 {
+		return ret
+	}
+	return rpm.Vercmp(n.EVRAStringE(true), other.EVRAStringE(true))
 }
