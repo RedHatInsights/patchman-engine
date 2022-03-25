@@ -99,35 +99,6 @@ func (n Nevra) EVRAString() string {
 	return n.EVRAStringE(false)
 }
 
-func (n Nevra) IsLessVersion(other *Nevra) (bool, error) {
-	versionA := strings.Split(n.Version, ".")
-	versionB := strings.Split(other.Version, ".")
-
-	if len(versionA) != len(versionB) {
-		return false, errors.New("unable to compare versions")
-	}
-
-	for i := range versionA {
-		a, err := strconv.Atoi(versionA[i])
-		if err != nil {
-			return false, err
-		}
-		b, err := strconv.Atoi(versionB[i])
-		if err != nil {
-			return false, err
-		}
-
-		if a < b {
-			return true, nil
-		}
-		if a > b {
-			return false, nil
-		}
-	}
-
-	return false, nil
-}
-
 func (n Nevra) Cmp(other *Nevra) int {
 	ret := strings.Compare(n.Name, other.Name)
 	if ret != 0 {
