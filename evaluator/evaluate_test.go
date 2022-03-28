@@ -96,30 +96,40 @@ func TestEvaluateYum(t *testing.T) {
 	loadCache()
 
 	const (
-		id = "00000000-0000-0000-0000-000000000015"
+		ID    = "00000000-0000-0000-0000-000000000015"
+		sysID = 15
 	)
 
 	mockWriter := mqueue.MockKafkaWriter{}
 	remediationsPublisher = &mockWriter
 	evalTopic = recalcTopic
 
-	// RHSA-2021:3801(id: 14, type: security) comes from YumUpdates
-	// RH-1, RH-2 from VMaaS json
 	expectedAddedAdvisories := []string{"RH-1", "RH-2", "RHSA-2021:3801"}
 	expectedAdvisoryIDs := []int{1, 2, 14} // advisories expected to be paired to the system after evaluation
+	oldSystemAdvisoryIDs := []int{1, 2}    // old advisories paired with the system
+	expectedPackageIDs := []int{1, 2}
 
-	database.DeleteSystemAdvisories(t, systemID, expectedAdvisoryIDs)
+	database.DeleteSystemAdvisories(t, sysID, expectedAdvisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
+	database.CreateSystemAdvisories(t, rhAccountID, sysID, oldSystemAdvisoryIDs, nil)
+	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
+	database.CheckCachesValid(t)
 
 	err := evaluateHandler(mqueue.PlatformEvent{
-		SystemIDs: []string{id},
+		SystemIDs: []string{ID},
 		AccountID: rhAccountID})
 	assert.NoError(t, err)
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
-	_ = advisoryIDs
-	database.CheckSystemJustEvaluated(t, id, 3, 1, 1,
+	database.CheckSystemJustEvaluated(t, ID, 3, 1, 1,
 		1, 2, 2, false)
+
+	database.DeleteSystemPackages(t, sysID, expectedPackageIDs...)
+	database.DeleteSystemAdvisories(t, sysID, advisoryIDs)
+	database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
+	database.DeleteAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs)
+
+	assert.Equal(t, 1, len(mockWriter.Messages))
 }
 
 func TestEvaluatePruneUpdates(t *testing.T) {

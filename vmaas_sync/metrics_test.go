@@ -29,7 +29,7 @@ func TestSystemsCounts(t *testing.T) {
 	assert.Equal(t, 2, counts[systemsCntLabels{staleOff, lastUploadLast1D}])
 	assert.Equal(t, 5, counts[systemsCntLabels{staleOff, lastUploadLast7D}])
 	assert.Equal(t, 8, counts[systemsCntLabels{staleOff, lastUploadLast30D}])
-	assert.Equal(t, 14, counts[systemsCntLabels{staleOff, lastUploadAll}])
+	assert.Equal(t, 15, counts[systemsCntLabels{staleOff, lastUploadAll}])
 	assert.Equal(t, 0, counts[systemsCntLabels{staleOn, lastUploadLast1D}])
 	assert.Equal(t, 0, counts[systemsCntLabels{staleOn, lastUploadLast7D}])
 	assert.Equal(t, 0, counts[systemsCntLabels{staleOn, lastUploadLast30D}])
@@ -46,7 +46,7 @@ func TestAdvisoryCounts(t *testing.T) {
 	assert.Equal(t, int64(4), other)
 	assert.Equal(t, int64(3), enh)
 	assert.Equal(t, int64(3), bug)
-	assert.Equal(t, int64(3), sec)
+	assert.Equal(t, int64(4), sec)
 }
 
 func TestPackageCounts(t *testing.T) {
