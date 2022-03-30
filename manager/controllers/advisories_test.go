@@ -322,6 +322,24 @@ func TestAdvisoryTagsInMetadata(t *testing.T) {
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
 
+func TestAdvisoryTagsInMetadata2(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1&tags=ns1/k3=val7", nil)
+	core.InitRouterWithPath(AdvisoriesListHandler, "/:advisory_id").ServeHTTP(w, req)
+
+	var output AdvisoriesResponse
+	ParseResponseBody(t, w.Body.Bytes(), &output)
+
+	testMap := map[string]FilterData{
+		"ns1/k1": {"eq", []string{"val1"}},
+		"ns1/k3": {"eq", []string{"val4", "val7"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
 func TestAdvisoryMetadataSums(t *testing.T) {
 	output := testAdvisories(t, "/")
 	var other, enhancement, bugfix, security int

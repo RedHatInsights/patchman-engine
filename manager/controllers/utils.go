@@ -349,6 +349,15 @@ func parseTagsFromCtx(c *gin.Context, filters Filters) error {
 		if value = []string{}; tag.Value != nil {
 			value = strings.Split(*tag.Value, ",")
 		}
+
+		if filter, ok := filters[key]; ok {
+			filters[key] = FilterData{
+				Operator: filter.Operator,
+				Values:   append(filter.Values, *tag.Value),
+			}
+			continue
+		}
+
 		filters[key] = FilterData{
 			Operator: "eq",
 			Values:   value,
