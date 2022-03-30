@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"app/base/core"
+	"app/base/database"
 	"app/base/utils"
 	"fmt"
 	"net/http"
@@ -338,6 +339,29 @@ func TestAdvisoryTagsInMetadata2(t *testing.T) {
 		"ns1/k3": {"eq", []string{"val4", "val7"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
+func TestAdvisoryTagsInMetadata3(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	const (
+		systemID  = 5
+		accountID = 1
+	)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/?tags=ns1/k1=val1&tags=ns1/k1=val7", nil)
+	core.InitRouterWithPath(AdvisoriesListHandler, "/").ServeHTTP(w, req)
+
+	var output AdvisoriesResponse
+	ParseResponseBody(t, w.Body.Bytes(), &output)
+
+	testMap := map[string]FilterData{
+		"ns1/k1": {"eq", []string{"val1", "val7"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+	assert.Equal(t, database.GetAdvisoriesCount(t, accountID, systemID), len(output.Data))
 }
 
 func TestAdvisoryMetadataSums(t *testing.T) {

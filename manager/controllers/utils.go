@@ -314,12 +314,22 @@ func (t *Tag) ApplyTag(tx *gorm.DB) *gorm.DB {
 		ns = fmt.Sprintf(`"namespace": "%s",`, *t.Namespace)
 	}
 
-	v := ""
+	values := []string{""}
 	if t.Value != nil {
-		v = fmt.Sprintf(`, "value":"%s"`, *t.Value)
+		values = strings.Split(*t.Value, ",")
 	}
 
-	query := fmt.Sprintf(`[{%s "key": "%s" %s}]`, ns, t.Key, v)
+	subqueries := make([]string, 0)
+	for _, val := range values {
+		// We want to be able to check for empty values and to not check values at all
+		if t.Value != nil {
+			val = fmt.Sprintf(`, "value":"%s"`, val)
+		}
+
+		subqueries = append(subqueries, fmt.Sprintf(`{%s "key": "%s" %s}`, ns, t.Key, val))
+	}
+
+	query := fmt.Sprintf(`[%s]`, strings.Join(subqueries, ","))
 	return tx.Where("h.tags @> ?::jsonb", query)
 }
 

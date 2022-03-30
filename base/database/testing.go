@@ -417,3 +417,14 @@ func CheckBaselineDeleted(t *testing.T, baselineID int) {
 	assert.Nil(t, Db.Model(&models.SystemPlatform{}).Where("baseline_id = ?", baselineID).Count(&cntSystems).Error)
 	assert.Equal(t, 0, int(cntSystems))
 }
+
+func GetAdvisoriesCount(t *testing.T, accountID, systemID int) int {
+	var count int64
+	err := SystemAdvisories(Db, accountID).
+		Where("sp.id = ?", systemID).
+		Count(&count).
+		Error
+	assert.Nil(t, err)
+
+	return int(count)
+}
