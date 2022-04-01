@@ -8,7 +8,7 @@
             "name": "GPLv3",
             "url": "https://www.gnu.org/licenses/gpl-3.0.en.html"
         },
-        "version": "v1.18.59"
+        "version": "v1.18.60"
     },
     "servers": [
         {
@@ -3966,6 +3966,9 @@
                     "config": {
                         "$ref": "#/components/schemas/controllers.BaselineConfig"
                     },
+                    "description": {
+                        "type": "string"
+                    },
                     "name": {
                         "type": "string",
                         "description": "Baseline name",
@@ -4100,6 +4103,10 @@
                 "properties": {
                     "config": {
                         "$ref": "#/components/schemas/controllers.BaselineConfig"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the baseline (optional)."
                     },
                     "inventory_ids": {
                         "type": "array",
@@ -4796,6 +4803,10 @@
                     "config": {
                         "$ref": "#/components/schemas/controllers.BaselineConfig"
                     },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the baseline (optional)."
+                    },
                     "inventory_ids": {
                         "type": "object",
                         "additionalProperties": {
@@ -4813,8 +4824,10 @@
             "controllers.UpdateBaselineResponse": {
                 "type": "object",
                 "properties": {
-                    "data": {
-                        "$ref": "#/components/schemas/controllers.BaselineDetailItem"
+                    "baseline_id": {
+                        "type": "integer",
+                        "description": "Updated baseline unique ID, it can not be changed",
+                        "example": 1
                     }
                 }
             },

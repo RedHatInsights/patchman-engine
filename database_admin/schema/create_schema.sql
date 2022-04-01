@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (77, false);
+VALUES (78, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -620,7 +620,9 @@ CREATE TABLE IF NOT EXISTS baseline
     rh_account_id INT               NOT NULL REFERENCES rh_account (id),
     name          TEXT              NOT NULL,
     config        JSONB,
-    PRIMARY KEY (rh_account_id, id)
+    description   TEXT,
+    PRIMARY KEY (rh_account_id, id),
+    UNIQUE(rh_account_id, name)
 ) PARTITION BY HASH (rh_account_id);
 
 GRANT SELECT, UPDATE, DELETE, INSERT ON baseline TO manager;

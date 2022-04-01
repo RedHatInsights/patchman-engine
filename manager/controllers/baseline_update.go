@@ -26,12 +26,15 @@ type UpdateBaselineRequest struct {
 	InventoryIDs map[string]bool `json:"inventory_ids"`
 	// Updated baseline config (optional)
 	Config *BaselineConfig `json:"config"`
+	// Description of the baseline (optional).
+	Description string `json:"description,omitempty"`
 }
 
 type UpdateBaselineResponse struct {
-	Data BaselineDetailItem `json:"data"`
+	BaselineID int `json:"baseline_id" example:"1"` // Updated baseline unique ID, it can not be changed
 }
 
+// nolint: funlen
 // @Summary Update a baseline for my set of systems
 // @Description Update a baseline for my set of systems
 // @ID updateBaseline
@@ -89,6 +92,10 @@ func BaselineUpdateHandler(c *gin.Context) {
 	newAssociations, obsoleteAssociations := sortInventoryIDs(req.InventoryIDs)
 	err = buildUpdateBaselineQuery(baselineID, req, newAssociations, obsoleteAssociations, account)
 	if err != nil {
+		if database.ErrKeyValueDuplicate(err) {
+			LogAndRespBadRequest(c, err, "baseline name already exists")
+			return
+		}
 		LogAndRespError(c, err, "Database error")
 		return
 	}
@@ -96,15 +103,7 @@ func BaselineUpdateHandler(c *gin.Context) {
 	inventoryAIDs := kafka.GetInventoryIDsToEvaluate(&baselineID, account, req.Config != nil, inventoryIDsList)
 	kafka.EvaluateBaselineSystems(inventoryAIDs)
 
-	respItem, err := getBaseline(account, baselineID)
-	if err != nil {
-		LogAndRespError(c, err, "baseline detail error")
-		return
-	}
-	resp := UpdateBaselineResponse{
-		Data: *respItem,
-	}
-
+	resp := UpdateBaselineResponse{BaselineID: baselineID}
 	c.JSON(http.StatusOK, &resp)
 }
 
@@ -149,6 +148,12 @@ func buildUpdateBaselineQuery(baselineID int, req UpdateBaselineRequest, newIDs,
 			return err
 		}
 		data["config"] = config
+	}
+
+	if req.Description != "" {
+		data["description"] = req.Description
+	} else {
+		data["description"] = nil
 	}
 
 	tx := database.Db.WithContext(base.Context).Begin()

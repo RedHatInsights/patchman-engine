@@ -369,11 +369,12 @@ func DeleteBaseline(t *testing.T, baselineID int) {
 	assert.Nil(t, err)
 }
 
-func CheckBaseline(t *testing.T, baselineID int, inventoryIDs []string, config, name string) {
+func CheckBaseline(t *testing.T, baselineID int, inventoryIDs []string, config, name, description string) {
 	type Baseline struct {
-		ID     int    `query:"bl.id" gorm:"column:id"`
-		Name   string `json:"name" query:"bl.name" gorm:"column:name"`
-		Config string `json:"config" query:"bl.config" gorm:"column:config"`
+		ID          int    `query:"bl.id" gorm:"column:id"`
+		Name        string `json:"name" query:"bl.name" gorm:"column:name"`
+		Config      string `json:"config" query:"bl.config" gorm:"column:config"`
+		Description string `json:"description" query:"bl.description" gorm:"column:description"`
 	}
 
 	type Associations struct {
@@ -390,7 +391,7 @@ func CheckBaseline(t *testing.T, baselineID int, inventoryIDs []string, config, 
 	assert.Nil(t, err)
 
 	err = Db.Table("baseline as bl").
-		Select("bl.id, bl.name, bl.config").
+		Select("bl.id, bl.name, bl.config, bl.description").
 		Where("bl.rh_account_id = (?) AND bl.id = (?)", 1, baselineID).Find(&baseline).Error
 
 	assert.Nil(t, err)
@@ -398,6 +399,7 @@ func CheckBaseline(t *testing.T, baselineID int, inventoryIDs []string, config, 
 	assert.Equal(t, baselineID, baseline.ID)
 	assert.Equal(t, name, baseline.Name)
 	assert.Equal(t, config, baseline.Config)
+	assert.Equal(t, description, baseline.Description)
 
 	if len(inventoryIDs) == 0 {
 		assert.Equal(t, len(associations), 0)

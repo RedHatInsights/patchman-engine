@@ -22,6 +22,8 @@ type CreateBaselineRequest struct {
 	InventoryIDs []string `json:"inventory_ids"`
 	// Baseline config to filter applicable advisories and package updates for the associated systems (optional).
 	Config *BaselineConfig `json:"config"`
+	// Description of the baseline (optional).
+	Description string `json:"description"`
 }
 
 type CreateBaselineResponse struct {
@@ -69,6 +71,10 @@ func CreateBaselineHandler(c *gin.Context) {
 
 	baselineID, err := buildCreateBaselineQuery(request, accountID)
 	if err != nil {
+		if database.ErrKeyValueDuplicate(err) {
+			LogAndRespBadRequest(c, err, "baseline name already exists")
+			return
+		}
 		LogAndRespError(c, err, "Database error")
 		return
 	}
@@ -88,6 +94,10 @@ func buildCreateBaselineQuery(request CreateBaselineRequest, accountID int) (int
 	baseline := models.Baseline{
 		RhAccountID: accountID,
 		Name:        *request.Name,
+	}
+
+	if request.Description != "" {
+		baseline.Description = &request.Description
 	}
 
 	if request.Config != nil {

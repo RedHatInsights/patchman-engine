@@ -6,8 +6,12 @@ import (
 	"io/ioutil"
 	"time"
 
+	"github.com/jackc/pgconn"
+
 	"gorm.io/gorm"
 )
+
+const errDuplicatedKeyVal = "23505"
 
 func Systems(tx *gorm.DB, accountID int) *gorm.DB {
 	return tx.Table("system_platform sp").Where("sp.rh_account_id = ?", accountID)
@@ -107,4 +111,17 @@ func ExecFile(filename string) error {
 	sqldb, _ := Db.DB()
 	_, err = sqldb.Exec(string(sql))
 	return err
+}
+
+func getErrorCode(err error) string {
+	switch e := err.(type) {
+	case *pgconn.PgError:
+		return e.Code
+	default:
+		return ""
+	}
+}
+
+func ErrKeyValueDuplicate(err error) bool {
+	return getErrorCode(err) == errDuplicatedKeyVal
 }
