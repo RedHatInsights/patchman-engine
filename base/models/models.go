@@ -27,6 +27,7 @@ type Baseline struct {
 	RhAccountID int
 	Name        string
 	Config      []byte
+	Description *string
 }
 
 func (Baseline) TableName() string {

@@ -5,11 +5,12 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func testBaselineDetail(t *testing.T, url string, expectedStatus int, output interface{}) {
@@ -32,6 +33,7 @@ func TestBaselineDetailDefault(t *testing.T) {
 	assert.Equal(t, "baseline_1-1", output.Data.Attributes.Name)
 	assert.Equal(t, "2010-09-22T00:00:00Z",
 		output.Data.Attributes.Config.ToTime.Format(time.RFC3339))
+	assert.Equal(t, "desc", output.Data.Attributes.Description)
 }
 
 func TestBaselineDetailNotFound(t *testing.T) {

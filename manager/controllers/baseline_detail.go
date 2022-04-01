@@ -25,8 +25,9 @@ type BaselineDetailItem struct {
 }
 
 type BaselineDetailAttributes struct {
-	Name   string          `json:"name" example:"my_baseline"` // Baseline name
-	Config *BaselineConfig `json:"config"`                     // Baseline config
+	Name        string          `json:"name" example:"my_baseline"` // Baseline name
+	Config      *BaselineConfig `json:"config"`                     // Baseline config
+	Description string          `json:"description,omitempty"`
 }
 
 // @Summary Show baseline detail by given baseline ID
@@ -60,9 +61,7 @@ func BaselineDetailHandler(c *gin.Context) {
 		}
 		return
 	}
-	resp := BaselineDetailResponse{
-		Data: *respItem,
-	}
+	resp := BaselineDetailResponse{Data: *respItem}
 
 	c.JSON(http.StatusOK, &resp)
 }
@@ -76,15 +75,22 @@ func getBaseline(accountID, baselineID int) (*BaselineDetailItem, error) {
 		return nil, err
 	}
 
+	var description string
+	if d := baseline.Description; d != nil {
+		description = *d
+	}
+
 	config := tryParseBaselineConfig(baseline.Config)
 	resp := BaselineDetailItem{
 		ID: baseline.ID,
 		Attributes: BaselineDetailAttributes{
-			Name:   baseline.Name,
-			Config: config,
+			Name:        baseline.Name,
+			Config:      config,
+			Description: description,
 		},
 		Type: "baseline",
 	}
+
 	return &resp, nil
 }
 

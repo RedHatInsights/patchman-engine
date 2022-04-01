@@ -32,7 +32,8 @@ func TestUpdateBaseline(t *testing.T) {
 			"00000000-0000-0000-0000-000000000005": false,
 			"00000000-0000-0000-0000-000000000008": true
 		},
-        "config": {"to_time": "2022-12-31T12:00:00-04:00"}
+        "config": {"to_time": "2022-12-31T12:00:00-04:00"},
+		"description": "desc"
 	}`
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf(`/%v`, baselineID)
@@ -42,15 +43,13 @@ func TestUpdateBaseline(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var resp UpdateBaselineResponse
 	ParseResponseBody(t, w.Body.Bytes(), &resp)
-	assert.Equal(t, baselineID, resp.Data.ID)
-	assert.Equal(t, "updated_name", resp.Data.Attributes.Name)
-	assert.Equal(t, "baseline", resp.Data.Type)
+	assert.Equal(t, baselineID, resp.BaselineID)
 	database.CheckBaseline(t, baselineID, []string{
 		"00000000-0000-0000-0000-000000000004",
 		"00000000-0000-0000-0000-000000000006",
 		"00000000-0000-0000-0000-000000000007",
 		"00000000-0000-0000-0000-000000000008",
-	}, `{"to_time": "2022-12-31T12:00:00-04:00"}`, "updated_name")
+	}, `{"to_time": "2022-12-31T12:00:00-04:00"}`, "updated_name", "desc")
 	database.DeleteBaseline(t, baselineID)
 }
 
@@ -68,14 +67,14 @@ func TestUpdateBaselineWithEmptyAssociations(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var resp UpdateBaselineResponse
 	ParseResponseBody(t, w.Body.Bytes(), &resp)
-	assert.Equal(t, baselineID, resp.Data.ID)
+	assert.Equal(t, baselineID, resp.BaselineID)
 	database.CheckBaseline(t,
 		baselineID,
 		[]string{
 			"00000000-0000-0000-0000-000000000005",
 			"00000000-0000-0000-0000-000000000006",
 			"00000000-0000-0000-0000-000000000007",
-		}, `{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline")
+		}, `{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline", "")
 
 	database.DeleteBaseline(t, baselineID)
 }
@@ -100,9 +99,9 @@ func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var resp UpdateBaselineResponse
 	ParseResponseBody(t, w.Body.Bytes(), &resp)
-	assert.Equal(t, baselineID, resp.Data.ID)
+	assert.Equal(t, baselineID, resp.BaselineID)
 	database.CheckBaseline(t, baselineID, []string{},
-		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline")
+		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline", "")
 
 	database.DeleteBaseline(t, baselineID)
 }
@@ -160,9 +159,9 @@ func TestUpdateBaselineNullValues(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var resp UpdateBaselineResponse
 	ParseResponseBody(t, w.Body.Bytes(), &resp)
-	assert.Equal(t, baselineID, resp.Data.ID)
+	assert.Equal(t, baselineID, resp.BaselineID)
 	database.CheckBaseline(t, baselineID, testingInventoryIDs, // do not change on null values
-		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline")
+		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline", "")
 
 	database.DeleteBaseline(t, baselineID)
 }
@@ -178,4 +177,18 @@ func TestUpdateBaselineInvalidBaselineID(t *testing.T) {
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "Invalid baseline_id: invalidBaseline", errResp.Error)
+}
+
+func TestUpdateBaselineDuplicatedName(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	data := `{"name": "baseline_1-2"}`
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/1", bytes.NewBufferString(data))
+	core.InitRouterWithParams(BaselineUpdateHandler, 1, "PUT", "/:baseline_id").ServeHTTP(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var errResp utils.ErrorResponse
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, "baseline name already exists", errResp.Error)
 }
