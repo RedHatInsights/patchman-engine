@@ -62,11 +62,10 @@ func TestCreateBaselineNameEmptyString(t *testing.T) {
 	req, _ := http.NewRequest("PUT", "/", bytes.NewBufferString(data))
 	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	var resp CreateBaselineResponse
-	ParseResponseBody(t, w.Body.Bytes(), &resp)
-	database.CheckBaseline(t, resp.BaselineID, []string{}, "", "", "")
-	database.DeleteBaseline(t, resp.BaselineID)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var errResp utils.ErrorResponse
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, BaselineMissingNameErr, errResp.Error)
 }
 
 func TestCreateBaselineMissingName(t *testing.T) {
@@ -80,7 +79,7 @@ func TestCreateBaselineMissingName(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
-	assert.Equal(t, "missing required parameter 'name'", errResp.Error)
+	assert.Equal(t, BaselineMissingNameErr, errResp.Error)
 }
 
 func TestCreateBaselineInvalidRequest(t *testing.T) {

@@ -27,7 +27,7 @@ type UpdateBaselineRequest struct {
 	// Updated baseline config (optional)
 	Config *BaselineConfig `json:"config"`
 	// Description of the baseline (optional).
-	Description string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 }
 
 type UpdateBaselineResponse struct {
@@ -150,10 +150,8 @@ func buildUpdateBaselineQuery(baselineID int, req UpdateBaselineRequest, newIDs,
 		data["config"] = config
 	}
 
-	if req.Description != "" {
+	if req.Description != nil {
 		data["description"] = req.Description
-	} else {
-		data["description"] = nil
 	}
 
 	tx := database.Db.WithContext(base.Context).Begin()

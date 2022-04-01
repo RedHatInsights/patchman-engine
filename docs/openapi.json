@@ -4117,7 +4117,7 @@
                     },
                     "name": {
                         "type": "string",
-                        "description": "Baseline name (optional)."
+                        "description": "Baseline name"
                     }
                 }
             },
