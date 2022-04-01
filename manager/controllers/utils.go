@@ -309,6 +309,10 @@ func ParseTag(tag string) (*Tag, error) {
 }
 
 func (t *Tag) ApplyTag(tx *gorm.DB) *gorm.DB {
+	if t == nil {
+		return tx
+	}
+
 	ns := ""
 	if t.Namespace != nil {
 		ns = fmt.Sprintf(`"namespace": "%s",`, *t.Namespace)
@@ -344,7 +348,13 @@ func parseTagsFromCtx(c *gin.Context, filters Filters) error {
 			LogAndRespBadRequest(c, err, err.Error())
 			return err
 		}
-		key := *tag.Namespace + "/" + tag.Key
+
+		var namespace string
+		if tag.Namespace != nil {
+			namespace = *tag.Namespace
+		}
+
+		key := namespace + "/" + tag.Key
 		var value []string
 		if value = []string{}; tag.Value != nil {
 			value = strings.Split(*tag.Value, ",")
