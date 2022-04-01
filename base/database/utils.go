@@ -11,7 +11,9 @@ import (
 	"gorm.io/gorm"
 )
 
-const errDuplicatedKeyVal = "23505"
+const (
+	PgErrorDuplicateKey = "23505"
+)
 
 func Systems(tx *gorm.DB, accountID int) *gorm.DB {
 	return tx.Table("system_platform sp").Where("sp.rh_account_id = ?", accountID)
@@ -113,15 +115,11 @@ func ExecFile(filename string) error {
 	return err
 }
 
-func getErrorCode(err error) string {
+func IsPgErrorCode(err error, pgCode string) bool {
 	switch e := err.(type) {
 	case *pgconn.PgError:
-		return e.Code
+		return e.Code == pgCode
 	default:
-		return ""
+		return false
 	}
-}
-
-func ErrKeyValueDuplicate(err error) bool {
-	return getErrorCode(err) == errDuplicatedKeyVal
 }

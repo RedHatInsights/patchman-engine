@@ -92,7 +92,7 @@ func BaselineUpdateHandler(c *gin.Context) {
 	newAssociations, obsoleteAssociations := sortInventoryIDs(req.InventoryIDs)
 	err = buildUpdateBaselineQuery(baselineID, req, newAssociations, obsoleteAssociations, account)
 	if err != nil {
-		if database.ErrKeyValueDuplicate(err) {
+		if database.IsPgErrorCode(err, database.PgErrorDuplicateKey) {
 			LogAndRespBadRequest(c, err, "baseline name already exists")
 			return
 		}

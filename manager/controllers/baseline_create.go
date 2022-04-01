@@ -71,7 +71,7 @@ func CreateBaselineHandler(c *gin.Context) {
 
 	baselineID, err := buildCreateBaselineQuery(request, accountID)
 	if err != nil {
-		if database.ErrKeyValueDuplicate(err) {
+		if database.IsPgErrorCode(err, database.PgErrorDuplicateKey) {
 			LogAndRespBadRequest(c, err, "baseline name already exists")
 			return
 		}
