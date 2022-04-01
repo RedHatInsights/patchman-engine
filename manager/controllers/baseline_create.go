@@ -15,15 +15,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const BaselineMissingNameErr = "missing required parameter 'name'"
+
 type CreateBaselineRequest struct {
-	// Baseline name (optional).
-	Name *string `json:"name"`
+	// Baseline name
+	Name string `json:"name"`
 	// Inventory IDs list of systems to associate with this baseline (optional).
 	InventoryIDs []string `json:"inventory_ids"`
 	// Baseline config to filter applicable advisories and package updates for the associated systems (optional).
 	Config *BaselineConfig `json:"config"`
 	// Description of the baseline (optional).
-	Description string `json:"description"`
+	Description *string `json:"description"`
 }
 
 type CreateBaselineResponse struct {
@@ -51,9 +53,8 @@ func CreateBaselineHandler(c *gin.Context) {
 		return
 	}
 
-	if request.Name == nil {
-		msg := "missing required parameter 'name'"
-		LogAndRespBadRequest(c, errors.New(msg), msg)
+	if request.Name == "" {
+		LogAndRespBadRequest(c, errors.New(BaselineMissingNameErr), BaselineMissingNameErr)
 		return
 	}
 
@@ -93,11 +94,8 @@ func buildCreateBaselineQuery(request CreateBaselineRequest, accountID int) (int
 
 	baseline := models.Baseline{
 		RhAccountID: accountID,
-		Name:        *request.Name,
-	}
-
-	if request.Description != "" {
-		baseline.Description = &request.Description
+		Name:        request.Name,
+		Description: request.Description,
 	}
 
 	if request.Config != nil {
