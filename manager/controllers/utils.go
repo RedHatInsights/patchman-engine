@@ -563,6 +563,7 @@ func (q *QueryMap) appendValue(steps []string, value []string) {
 	}
 }
 
+// nolint: gocognit
 func nestedQueryImpl(values map[string][]string, key string) QueryMap {
 	root := QueryMap{}
 
@@ -571,14 +572,19 @@ func nestedQueryImpl(values map[string][]string, key string) QueryMap {
 		var i int
 		var j int
 		for len(name) > 0 && i >= 0 && j >= 0 {
-			if i = strings.IndexByte(name, '['); i >= 0 && (name[0:i] == key || len(steps) > 0) {
-				// if j is 0 here, that means we received []as a part of query param name, should indicate an array
-				if j = strings.IndexByte(name[i+1:], ']'); j >= 0 {
-					// Skip [] in param names
-					if len(name[i+1:][:j]) > 0 {
-						steps = append(steps, name[i+1:][:j])
+			if i = strings.IndexByte(name, '['); i >= 0 {
+				if name[0:i] == key || len(steps) > 0 {
+					// if j is 0 here, that means we received []as a part of query param name, should indicate an array
+					if j = strings.IndexByte(name[i+1:], ']'); j >= 0 {
+						// Skip [] in param names
+						if len(name[i+1:][:j]) > 0 {
+							steps = append(steps, name[i+1:][:j])
+						}
+						name = name[i+j+2:]
 					}
-					name = name[i+j+2:]
+				} else if name[0:i] != key && steps == nil {
+					// Invalid key for the context - abort.
+					return root
 				}
 			}
 		}

@@ -1,9 +1,11 @@
 package controllers
 
 import (
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNestedQueryParse(t *testing.T) {
@@ -25,4 +27,24 @@ func TestNestedQueryParse(t *testing.T) {
 			assert.Contains(t, []string{"b", "c"}, val)
 		}
 	})
+}
+
+func TestNestedQueryInvalidKey(t *testing.T) {
+	timeout := time.After(5 * time.Second)
+	done := make(chan bool)
+
+	go func() {
+		q := map[string][]string{
+			"filter[abc][efg][eq]": {"a"},
+		}
+		res := nestedQueryImpl(q, "filte")
+		assert.Equal(t, res, QueryMap{})
+		done <- true
+	}()
+
+	select {
+	case <-timeout:
+		t.Fatal("Timeout exceeded - probably infinite loop in nested query")
+	case <-done:
+	}
 }
