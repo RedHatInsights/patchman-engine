@@ -349,12 +349,11 @@ func parseTagsFromCtx(c *gin.Context, filters Filters) error {
 			return err
 		}
 
-		var namespace string
+		key := tag.Key
 		if tag.Namespace != nil {
-			namespace = *tag.Namespace
+			key = *tag.Namespace + "/" + tag.Key
 		}
 
-		key := namespace + "/" + tag.Key
 		var value []string
 		if value = []string{}; tag.Value != nil {
 			value = strings.Split(*tag.Value, ",")
