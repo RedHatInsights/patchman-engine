@@ -3,243 +3,81 @@ package utils
 import (
 	"app/base/vmaas"
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestMergeUpdates(t *testing.T) {
-	var listA vmaas.UpdatesV2ResponseUpdateList
-	var listB vmaas.UpdatesV2ResponseUpdateList
-
-	err := json.Unmarshal(updatesBash, &listA)
+func compareUpdatesMerge(t *testing.T, jsonA, jsonB, merged []byte) {
+	var listA, listB vmaas.UpdatesV2ResponseUpdateList
+	err := json.Unmarshal(jsonA, &listA)
 	assert.Nil(t, err)
-	err = json.Unmarshal(updatesBash2, &listB)
+	err = json.Unmarshal(jsonB, &listB)
 	assert.Nil(t, err)
 
-	merged, err := mergeUpdates(listA, listB)
+	listMerged, err := mergeUpdates(listA, listB)
 	assert.Nil(t, err)
 
-	assert.Equal(t, 8, len(merged.GetAvailableUpdates()))
-	assert.Equal(t, true, updatesAscending(merged.GetAvailableUpdates()))
+	res, err := json.Marshal(listMerged)
+	assert.Nil(t, err)
+
+	require.JSONEq(t, string(merged), string(res))
 }
 
-func TestMergeUpdatesWithDuplicates(t *testing.T) {
-	var listA vmaas.UpdatesV2ResponseUpdateList
-	var listB vmaas.UpdatesV2ResponseUpdateList
-
-	err := json.Unmarshal(updatesBash3, &listA)
-	assert.Nil(t, err)
-	err = json.Unmarshal(updatesBash4, &listB)
-	assert.Nil(t, err)
-
-	merged, err := mergeUpdates(listA, listB)
-	assert.Nil(t, err)
-
-	assert.Equal(t, 6, len(merged.GetAvailableUpdates()))
-	assert.Equal(t, true, updatesAscending(merged.GetAvailableUpdates()))
+func TestMergeEmptyStruct(t *testing.T) {
+	compareUpdatesMerge(t, emptyStruct, pkgA1, pkgA1)
+	compareUpdatesMerge(t, pkgA1, emptyStruct, pkgA1)
 }
 
-func TestMergeUpdatesWithALonger(t *testing.T) {
-	var listA vmaas.UpdatesV2ResponseUpdateList
-	var listB vmaas.UpdatesV2ResponseUpdateList
-
-	err := json.Unmarshal(updatesBash5, &listA)
-	assert.Nil(t, err)
-	err = json.Unmarshal(updatesBash6, &listB)
-	assert.Nil(t, err)
-
-	merged, err := mergeUpdates(listA, listB)
-	assert.Nil(t, err)
-
-	assert.Equal(t, 8, len(merged.GetAvailableUpdates()))
-	assert.Equal(t, true, updatesAscending(merged.GetAvailableUpdates()))
+func TestMergeEmptyAvailableUpdates(t *testing.T) {
+	compareUpdatesMerge(t, emptyUpdate, pkgA1, pkgA1)
+	compareUpdatesMerge(t, pkgA1, emptyUpdate, pkgA1)
 }
 
-func TestMergeUpdatesWithAShorter(t *testing.T) {
-	var listA vmaas.UpdatesV2ResponseUpdateList
-	var listB vmaas.UpdatesV2ResponseUpdateList
-
-	err := json.Unmarshal(updatesBash6, &listA)
-	assert.Nil(t, err)
-	err = json.Unmarshal(updatesBash5, &listB)
-	assert.Nil(t, err)
-
-	merged, err := mergeUpdates(listA, listB)
-	assert.Nil(t, err)
-
-	assert.Equal(t, 8, len(merged.GetAvailableUpdates()))
-	assert.Equal(t, true, updatesAscending(merged.GetAvailableUpdates()))
+func TestMergeTwoDifferent(t *testing.T) {
+	compareUpdatesMerge(t, pkgA1, pkgA2, pkgA12)
+	compareUpdatesMerge(t, pkgA2, pkgA1, pkgA12)
 }
 
-func TestMergeUpdatesWithALesserLonger(t *testing.T) {
-	var listA vmaas.UpdatesV2ResponseUpdateList
-	var listB vmaas.UpdatesV2ResponseUpdateList
-
-	err := json.Unmarshal(updatesBash7, &listA)
-	assert.Nil(t, err)
-	err = json.Unmarshal(updatesBash8, &listB)
-	assert.Nil(t, err)
-
-	merged, err := mergeUpdates(listA, listB)
-	assert.Nil(t, err)
-
-	assert.Equal(t, 7, len(merged.GetAvailableUpdates()))
-	assert.Equal(t, true, updatesAscending(merged.GetAvailableUpdates()))
+func TestMergeDuplicate(t *testing.T) {
+	compareUpdatesMerge(t, pkgA2, pkgA123, pkgA123)
+	compareUpdatesMerge(t, pkgA123, pkgA2, pkgA123)
 }
 
-func TestMergeUpdatesWithAGreaterLonger(t *testing.T) {
-	var listA vmaas.UpdatesV2ResponseUpdateList
-	var listB vmaas.UpdatesV2ResponseUpdateList
-
-	err := json.Unmarshal(updatesBash9, &listA)
-	assert.Nil(t, err)
-	err = json.Unmarshal(updatesBash10, &listB)
-	assert.Nil(t, err)
-
-	merged, err := mergeUpdates(listA, listB)
-	assert.Nil(t, err)
-
-	assert.Equal(t, 7, len(merged.GetAvailableUpdates()))
-	assert.Equal(t, true, updatesAscending(merged.GetAvailableUpdates()))
+func TestMergeDifferentAttrs(t *testing.T) {
+	compareUpdatesMerge(t, pkgA1Xattrs, pkgA123, pkgA123Xattrs)
+	compareUpdatesMerge(t, pkgA123, pkgA1Xattrs, pkgA123Xattrs)
 }
 
-func TestMergeUpdatesWithALesserShorter(t *testing.T) {
-	var listA vmaas.UpdatesV2ResponseUpdateList
-	var listB vmaas.UpdatesV2ResponseUpdateList
+func compareResponseMerge(t *testing.T, jsonA, jsonB, merged []byte) {
+	var respA, respB vmaas.UpdatesV2Response
 
-	err := json.Unmarshal(updatesBash11, &listA)
+	err := json.Unmarshal(jsonA, &respA)
 	assert.Nil(t, err)
-	err = json.Unmarshal(updatesBash12, &listB)
-	assert.Nil(t, err)
-
-	merged, err := mergeUpdates(listA, listB)
+	err = json.Unmarshal(jsonB, &respB)
 	assert.Nil(t, err)
 
-	assert.Equal(t, 8, len(merged.GetAvailableUpdates()))
-	assert.Equal(t, true, updatesAscending(merged.GetAvailableUpdates()))
-}
-
-func TestMergeUpdatesWithAGreaterShorter(t *testing.T) {
-	var listA vmaas.UpdatesV2ResponseUpdateList
-	var listB vmaas.UpdatesV2ResponseUpdateList
-
-	err := json.Unmarshal(updatesBash8, &listA)
-	assert.Nil(t, err)
-	err = json.Unmarshal(updatesBash7, &listB)
+	respMerged, err := MergeVMaaSResponses(&respA, &respB)
 	assert.Nil(t, err)
 
-	merged, err := mergeUpdates(listA, listB)
+	res, err := json.Marshal(respMerged)
 	assert.Nil(t, err)
 
-	assert.Equal(t, 7, len(merged.GetAvailableUpdates()))
-	assert.Equal(t, true, updatesAscending(merged.GetAvailableUpdates()))
-}
-
-func TestMergeUpdatesWithDifferentRepos(t *testing.T) {
-	var listA vmaas.UpdatesV2ResponseUpdateList
-	var listB vmaas.UpdatesV2ResponseUpdateList
-
-	err := json.Unmarshal(updatesBash13, &listA)
-	assert.Nil(t, err)
-	err = json.Unmarshal(updatesBash14, &listB)
-	assert.Nil(t, err)
-
-	merged, err := mergeUpdates(listA, listB)
-	assert.Nil(t, err)
-
-	assert.Equal(t, 10, len(merged.GetAvailableUpdates()))
-	assert.Equal(t, true, updatesAscending(merged.GetAvailableUpdates()))
-}
-
-func updatesAscending(updates []vmaas.UpdatesV2ResponseAvailableUpdates) bool {
-	var prev string
-	var prevRepo string
-
-	for i, u := range updates {
-		nevra, err := ParseNevra(u.GetPackage())
-		if err != nil {
-			return false
-		}
-
-		if i == 0 {
-			prev = nevra.Version
-			prevRepo = *u.Repository
-			continue
-		}
-		// Simplified, ideally should be map check.
-		if prev >= nevra.Version && prevRepo == *u.Repository {
-			return false
-		}
-	}
-
-	return true
+	require.JSONEq(t, string(merged), string(res))
 }
 
 func TestMergeVMaaSResponses(t *testing.T) {
-	var respA vmaas.UpdatesV2Response
-	var respB vmaas.UpdatesV2Response
-
-	err := json.Unmarshal(kernel3101, &respA)
-	assert.Nil(t, err)
-	err = json.Unmarshal(kernel3102, &respB)
-	assert.Nil(t, err)
-
-	res, err := MergeVMaaSResponses(&respA, &respB)
-	assert.Nil(t, err)
-
-	updateList := (*res.UpdateList)[kernel310Pkg]
-	assert.Equal(t, 6, len(updateList.GetAvailableUpdates()))
+	compareResponseMerge(t, kernel3101, kernel3102, kernel3101and3102)
+	compareResponseMerge(t, kernel3102, kernel3101, kernel3101and3102)
 }
 
 func TestMergeVMaaSResponses2(t *testing.T) {
-	var respA vmaas.UpdatesV2Response
-	var respB vmaas.UpdatesV2Response
-	var merged vmaas.UpdatesV2Response
-
-	err := json.Unmarshal(kernel3111, &respA)
-	assert.Nil(t, err)
-	err = json.Unmarshal(kernel3121, &respB)
-	assert.Nil(t, err)
-	err = json.Unmarshal(kernel3111AndKernel3121, &merged)
-	assert.Nil(t, err)
-
-	res, err := MergeVMaaSResponses(&respA, &respB)
-	assert.Nil(t, err)
-
-	updateList := (*res.UpdateList)[kernel3111Pkg]
-	updateList2 := (*res.UpdateList)[kernel3121Pkg]
-	updateListMerged := (*merged.UpdateList)[kernel3111Pkg]
-	updateListMerged2 := (*merged.UpdateList)[kernel3121Pkg]
-	assert.Equal(t, len(updateListMerged.GetAvailableUpdates()), len(updateList.GetAvailableUpdates()))
-	assert.Equal(t, len(updateListMerged2.GetAvailableUpdates()), len(updateList2.GetAvailableUpdates()))
-	assert.Equal(t, len(merged.GetUpdateList()), len(res.GetUpdateList()))
+	compareResponseMerge(t, kernel3111, kernel3121, kernel3111AndKernel3121)
+	compareResponseMerge(t, kernel3121, kernel3111, kernel3111AndKernel3121)
 }
 
 func TestMergeVMaaSResponses3(t *testing.T) {
-	var respA vmaas.UpdatesV2Response
-	var respB vmaas.UpdatesV2Response
-	var merged vmaas.UpdatesV2Response
-
-	err := json.Unmarshal(bash44201, &respA)
-	assert.Nil(t, err)
-	err = json.Unmarshal(bash44202, &respB)
-	assert.Nil(t, err)
-	err = json.Unmarshal(bash44201AndBash44202, &merged)
-	assert.Nil(t, err)
-
-	res, err := MergeVMaaSResponses(&respA, &respB)
-	assert.Nil(t, err)
-
-	updateList := (*res.UpdateList)[bash4420Pkg]
-	updateList2 := (*res.UpdateList)[bash4420Pkg]
-	updateListMerged := (*merged.UpdateList)[bash4420Pkg]
-	updateListMerged2 := (*merged.UpdateList)[bash4420Pkg]
-	assert.Equal(t, len(updateListMerged.GetAvailableUpdates()), len(updateList.GetAvailableUpdates()))
-	assert.Equal(t, len(updateListMerged2.GetAvailableUpdates()), len(updateList2.GetAvailableUpdates()))
-	assert.Equal(t, len(merged.GetUpdateList()), len(res.GetUpdateList()))
-
-	if !reflect.DeepEqual(res.GetUpdateList(), merged.GetUpdateList()) {
-		t.Fatal("update lists are not equal\n")
-	}
+	compareResponseMerge(t, bash44201, bash44202, bash44201AndBash44202)
+	compareResponseMerge(t, bash44202, bash44201, bash44201AndBash44202)
 }
