@@ -16,7 +16,7 @@ export IQE_CJI_TIMEOUT="30m"
 
 
 # Install bonfire repo/initialize
-CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
+CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/switch_cicd_to_v4/cicd
 curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
 
 source $CICD_ROOT/build.sh
