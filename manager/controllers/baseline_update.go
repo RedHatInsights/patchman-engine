@@ -157,7 +157,7 @@ func buildUpdateBaselineQuery(baselineID int, req UpdateBaselineRequest, newIDs,
 	tx := database.Db.WithContext(base.Context).Begin()
 	defer tx.Rollback()
 
-	if req.Name != nil || req.Config != nil {
+	if req.Name != nil || req.Config != nil || req.Description != nil {
 		err := tx.Model(models.Baseline{}).
 			Where("id = ? AND rh_account_id = ?", baselineID, account).
 			Updates(&data).Error
