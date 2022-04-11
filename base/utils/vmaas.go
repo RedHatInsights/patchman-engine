@@ -8,6 +8,12 @@ import (
 // Requires sorted update input and returns sorted output.
 func MergeVMaaSResponses(vmaasDataA *vmaas.UpdatesV2Response,
 	vmaasDataB *vmaas.UpdatesV2Response) (*vmaas.UpdatesV2Response, error) {
+	if vmaasDataA == nil {
+		return vmaasDataB, nil
+	}
+	if vmaasDataB == nil {
+		return vmaasDataA, nil
+	}
 	mergedList := vmaasDataA.GetUpdateList()
 	for nevraB, updateListB := range vmaasDataB.GetUpdateList() {
 		if updateListA, ok := mergedList[nevraB]; ok {
