@@ -185,30 +185,28 @@ func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV2Response,
 }
 
 func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatform) (*vmaas.UpdatesV2Response, error) {
-	if !enableYumUpdatesEval {
-		return getVmaasUpdates(ctx, tx, system)
-	}
-
-	var vmaasErr error
+	var yumUpdates *vmaas.UpdatesV2Response
 	var yumErr error
-	vmaasData, vmaasErr := getVmaasUpdates(ctx, tx, system)
-	yumUpdates, yumErr := tryGetYumUpdates(system)
-	if vmaasErr != nil && yumErr != nil {
-		return nil, errors.Wrap(vmaasErr, yumErr.Error())
-	}
-	if vmaasErr != nil || vmaasData == nil {
-		return yumUpdates, nil
-	}
-	if yumErr != nil || yumUpdates == nil {
-		return vmaasData, nil
-	}
-	if yumUpdates == nil && vmaasData == nil {
-		return nil, nil
+	if enableYumUpdatesEval {
+		yumUpdates, yumErr = tryGetYumUpdates(system)
+		if yumErr != nil {
+			// ignore broken yum updates
+			utils.Log("Can't parse yum_updates").Warn(yumErr.Error())
+		}
+
+		// in evaluator-upload return just return YumUpdates
+		if yumUpdates != nil && evalTopic == uploadTopic {
+			return yumUpdates, nil
+		}
 	}
 
-	// Return YumUpdates if it is uploader
-	if evalTopic == uploadTopic {
-		return yumUpdates, nil
+	vmaasData, vmaasErr := getVmaasUpdates(ctx, tx, system)
+	if vmaasErr != nil {
+		// if there's no yum update fail hard otherwise only log warning and use yum data
+		if yumUpdates == nil {
+			return nil, errors.Wrap(vmaasErr, vmaasErr.Error())
+		}
+		utils.Log("Vmaas response error, continuing with yum updates only").Warn(vmaasErr.Error())
 	}
 
 	// Try to merge YumUpdates and VMaaS updates in recalc
