@@ -27,7 +27,7 @@ type BaselineDetailItem struct {
 type BaselineDetailAttributes struct {
 	Name        string          `json:"name" example:"my_baseline"` // Baseline name
 	Config      *BaselineConfig `json:"config"`                     // Baseline config
-	Description string          `json:"description,omitempty"`
+	Description string          `json:"description"`
 }
 
 // @Summary Show baseline detail by given baseline ID
