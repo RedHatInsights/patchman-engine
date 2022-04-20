@@ -170,6 +170,13 @@ func TestSystemsFilterAdvCount4(t *testing.T) {
 	assert.Equal(t, 4, output.Data[0].Attributes.OtherCount)
 }
 
+func TestSystemsFilterBaseline(t *testing.T) {
+	output := testSystems(t, "/?filter[baseline_name]=baseline_1-1", 1)
+	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.Data[1].ID)
+}
+
 func TestSystemsFilterNotExisting(t *testing.T) {
 	statusCode, errResp := testSystemsError(t, "/?filter[not-existing]=1")
 	assert.Equal(t, http.StatusBadRequest, statusCode)

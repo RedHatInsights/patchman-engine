@@ -155,6 +155,7 @@ func systemSubtotals(tx *gorm.DB) (total int, subTotals map[string]int, err erro
 // @Param    filter[osname]           query   string false "Filter"
 // @Param    filter[osminor]          query   string false "Filter"
 // @Param    filter[osmajor]          query   string false "Filter"
+// @Param    filter[baseline_name]    query   string false "Filter"
 // @Param    filter[os]               query   string    false "Filter OS version"
 // @Param    tags                     query   []string  false "Tag filter"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"

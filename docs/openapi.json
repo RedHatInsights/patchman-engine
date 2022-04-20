@@ -3085,6 +3085,14 @@
                         }
                     },
                     {
+                        "name": "filter[baseline_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[os]",
                         "in": "query",
                         "description": "Filter OS version",
