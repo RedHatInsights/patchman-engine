@@ -8,13 +8,14 @@ services:
       args:
         - INSTALL_TOOLS=no
       target: runtimeimg
-    image: patchman-engine_patchimg
+    image: patchman-engine-app
 
   db:
     container_name: db
     build:
       context: .
       dockerfile: dev/database/Dockerfile
+    image: patchman-engine-db
     command: 'postgres -c config_file=/opt/app-root/src/postgresql-cfg/custom.conf'
     volumes:
       - db-data:/var/lib/postgresql/data
@@ -25,7 +26,7 @@ services:
 
   db_admin:
     container_name: db_admin
-    image: patchman-engine_patchimg
+    image: patchman-engine-app
     env_file:
       - ./conf/common.env
       - ./conf/database_admin.env
@@ -42,7 +43,7 @@ services:
 
   db_feed:
     container_name: db_feed
-    image: patchman-engine_patchimg
+    image: patchman-engine-app
     env_file:
       - ./conf/test.env
     command: ./scripts/feed_db.sh
@@ -70,6 +71,7 @@ services:
     build:
       context: .
       dockerfile: ./dev/kafka/Dockerfile
+    image: patchman-engine-kafka
     env_file:
       - ./conf/kafka.env
     depends_on:
@@ -87,7 +89,7 @@ services:
 
   platform:
     container_name: platform
-    image: patchman-engine_patchimg
+    image: patchman-engine-app
     env_file:
       - ./conf/platform.env
     command: ./scripts/entrypoint.sh platform
@@ -101,7 +103,7 @@ services:
 
   manager:
     container_name: manager
-    image: patchman-engine_patchimg
+    image: patchman-engine-app
     env_file:
       - ./conf/common.env
       - ./conf/manager.env
@@ -122,7 +124,7 @@ services:
 
   listener:
     container_name: listener
-    image: patchman-engine_patchimg
+    image: patchman-engine-app
     env_file:
       - ./conf/common.env
       - ./conf/listener.env
@@ -143,7 +145,7 @@ services:
 
   evaluator_upload:
     container_name: evaluator_upload
-    image: patchman-engine_patchimg
+    image: patchman-engine-app
     env_file:
       - ./conf/common.env
       - ./conf/evaluator_common.env
@@ -164,7 +166,7 @@ services:
 
   evaluator_recalc:
     container_name: evaluator_recalc
-    image: patchman-engine_patchimg
+    image: patchman-engine-app
     env_file:
       - ./conf/common.env
       - ./conf/evaluator_common.env
@@ -185,7 +187,7 @@ services:
 
   vmaas_sync:
     container_name: vmaas_sync
-    image: patchman-engine_patchimg
+    image: patchman-engine-app
     env_file:
       - ./conf/common.env
       - ./conf/vmaas_sync.env
