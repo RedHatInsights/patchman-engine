@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: dev/database/Dockerfile
+    image: patchman-engine-db
     command: 'postgres -c config_file=/opt/app-root/src/postgresql-cfg/custom.conf'
     ports:
       - 5433:5432
@@ -25,6 +26,7 @@ services:
     build:
       context: .
       dockerfile: ./dev/kafka/Dockerfile
+    image: patchman-engine-kafka
     env_file:
       - ./conf/kafka.env
     depends_on:
@@ -48,7 +50,7 @@ services:
       args:
         - INSTALL_TOOLS=yes
       target: buildimg
-    image: patchman-engine_patchimg
+    image: patchman-engine-app
     env_file:
       - ./conf/platform.env
     command: ./scripts/entrypoint.sh platform
@@ -61,7 +63,7 @@ services:
 
   test:
     container_name: test
-    image: patchman-engine_patchimg
+    image: patchman-engine-app
     env_file:
       - ./conf/test.env
       - ./conf/database.env
