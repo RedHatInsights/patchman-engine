@@ -1,5 +1,5 @@
 ARG BUILDIMG=registry.access.redhat.com/ubi8
-ARG RUNIMG=registry.access.redhat.com/ubi8-minimal
+ARG RUNIMG=registry.access.redhat.com/ubi8-micro
 FROM ${BUILDIMG} as buildimg
 
 ARG INSTALL_TOOLS=no
@@ -52,16 +52,28 @@ ADD --chown=insights:root main.go                   /go/src/app/
 
 RUN go build -v main.go
 
+# libs to be copied into runtime
+RUN mkdir -p /go/lib64 && \
+    ldd /go/src/app/main /bin/psql /lib64/libpq.so.5 \
+    | awk '/=>/ {print $3}' \
+    | sort -u \
+    | while read lib ; do \
+        ln -v -t /go/lib64/ -s $lib ; \
+    done
+
 EXPOSE 8080
 
 # ---------------------------------------
 # runtime image with only necessary stuff
 FROM ${RUNIMG} as runtimeimg
 
-RUN microdnf install -y libpq rpm-build-libs && \
-    microdnf clean all
+# create insights user
+RUN echo "insights:x:1000:0::/go:/bin/bash" >>/etc/passwd && \
+    mkdir /go && \
+    chown insights:root /go
 
-RUN adduser --gid 0 -d /go --no-create-home insights
+# copy libs needed by main
+COPY --from=buildimg /lib64/libpq.so.5 /go/lib64/* /lib64/
 
 # copy postgresql binaries
 COPY --from=buildimg /usr/bin/clusterdb /usr/bin/createdb /usr/bin/createuser \
