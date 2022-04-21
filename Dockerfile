@@ -70,10 +70,6 @@ COPY --from=buildimg /usr/bin/clusterdb /usr/bin/createdb /usr/bin/createuser \
                      /usr/bin/pg_upgrade /usr/bin/psql /usr/bin/reindexdb \
                      /usr/bin/vacuumdb /usr/bin/
 
-RUN curl -L -o /usr/bin/haberdasher \
-    https://github.com/RedHatInsights/haberdasher/releases/latest/download/haberdasher_linux_amd64 && \
-    chmod 755 /usr/bin/haberdasher
-
 ADD --chown=insights:root go.sum                     /go/src/app/
 ADD --chown=insights:root scripts                    /go/src/app/scripts
 ADD --chown=insights:root database_admin/*.sh        /go/src/app/database_admin/
