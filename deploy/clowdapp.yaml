@@ -27,7 +27,6 @@ objects:
           - manager
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_MANAGER}'}
-        - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
         - {name: GODEBUG, value: '${GODEBUG_MANAGER}'}
         - {name: GOMAXPROCS, value: '${GOMAXPROCS_MANAGER}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
@@ -69,7 +68,6 @@ objects:
           - listener
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_LISTENER}'}
-        - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
         - {name: GODEBUG, value: '${GODEBUG_LISTENER}'}
         - {name: GOMAXPROCS, value: '${GOMAXPROCS_LISTENER}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
@@ -109,7 +107,6 @@ objects:
           - evaluator
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_EVALUATOR_UPLOAD}'}
-        - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
         - {name: GODEBUG, value: '${GODEBUG_EVALUATOR_UPLOAD}'}
         - {name: GOMAXPROCS, value: '${GOMAXPROCS_EVALUATOR_UPLOAD}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
@@ -161,7 +158,6 @@ objects:
           - evaluator
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_EVALUATOR_RECALC}'}
-        - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
         - {name: GODEBUG, value: '${GODEBUG_EVALUATOR_RECALC}'}
         - {name: GOMAXPROCS, value: '${GOMAXPROCS_EVALUATOR_RECALC}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
@@ -213,7 +209,6 @@ objects:
           - vmaas_sync
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_VMAAS_SYNC}'}
-        - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
         - {name: GODEBUG, value: '${GODEBUG_VMAAS_SYNC}'}
         - {name: GOMAXPROCS, value: '${GOMAXPROCS_VMAAS_SYNC}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
@@ -274,7 +269,6 @@ objects:
             command: [echo]
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_DATABASE_ADMIN}'}
-        - {name: CMD_WRAPPER, value: '${CMD_WRAPPER}'}
         - {name: GODEBUG, value: '${GODEBUG_DATABASE_ADMIN}'}
         - {name: DB_DEBUG, value: '${DB_DEBUG_DATABASE_ADMIN}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
@@ -502,7 +496,6 @@ parameters:
 # Common parameters
 - {name: IMAGE, value: quay.io/cloudservices/patchman-engine-app}
 - {name: ENV_NAME, required: false}
-- {name: CMD_WRAPPER, value: ''} # Optional wrapper to run base command with (e.g. "haberdasher").
 - {name: GIN_MODE, value: 'release'} # Gin webframework running mode
 - {name: CLOWDER_ENABLED, value: 'true'} # Enable params reading from Clowder json config (ACG_CONFIG)
 - {name: VMAAS_ADDRESS, value: ''} # Use vmaas address if it's not included in clowder config.
