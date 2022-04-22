@@ -2,8 +2,9 @@ package metrics
 
 import (
 	"app/base/mqueue"
-	"github.com/prometheus/client_golang/prometheus"
 	"os"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (

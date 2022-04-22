@@ -26,6 +26,7 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) {
 		baselines.PUT("/", controllers.CreateBaselineHandler)
 		baselines.PUT("/:baseline_id", controllers.BaselineUpdateHandler)
 		baselines.DELETE("/:baseline_id", controllers.BaselineDeleteHandler)
+		baselines.POST("/systems/remove", controllers.BaselineSystemsRemoveHandler)
 	}
 
 	systems := api.Group("/systems")

@@ -24,7 +24,7 @@ func TestUpdateBaseline(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	baselineID := database.CreateBaseline(t, testingInventoryIDs)
+	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
 	data := `{
 		"name": "updated_name",
 		"inventory_ids": {
@@ -57,7 +57,7 @@ func TestUpdateBaselineWithEmptyAssociations(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	baselineID := database.CreateBaseline(t, testingInventoryIDs)
+	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
 	data := `{"inventory_ids": {}}`
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf(`/%v`, baselineID)
@@ -83,7 +83,7 @@ func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	baselineID := database.CreateBaseline(t, testingInventoryIDs)
+	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
 	data := `{
 		"inventory_ids": {
 			"00000000-0000-0000-0000-000000000005": false,
@@ -124,7 +124,7 @@ func TestUpdateBaselineInvalidSystem(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	baselineID := database.CreateBaseline(t, testingInventoryIDs)
+	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
 	data := `{
 		"inventory_ids": {
 			"00000000-0000-0000-0000-000000000005": false,
@@ -149,7 +149,7 @@ func TestUpdateBaselineNullValues(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	baselineID := database.CreateBaseline(t, testingInventoryIDs)
+	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
 	data := `{}`
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf(`/%v`, baselineID)

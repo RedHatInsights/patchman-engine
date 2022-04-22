@@ -22,7 +22,7 @@ func TestBaselineConfig(t *testing.T) {
 	baselineConfig = GetBaselineConfig(Db, &system)
 	assert.Equal(t, "2010-09-22 00:00:00+00", baselineConfig.ToTime.Format("2006-01-02 15:04:05-07"))
 
-	baselineID := CreateBaselineWithConfig(t, nil, nil)
+	baselineID := CreateBaselineWithConfig(t, "", nil, nil)
 	// baseline with empty config
 	system = models.SystemPlatform{ID: 1, RhAccountID: 1, BaselineID: &baselineID}
 	baselineConfig = GetBaselineConfig(Db, &system)
