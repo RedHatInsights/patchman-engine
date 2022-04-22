@@ -2,9 +2,10 @@ package utils
 
 import (
 	"fmt"
-	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 	"os"
 	"strings"
+
+	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 )
 
 // IsClowderEnabled Check env variable CLOWDER_ENABLED = "true".
@@ -15,9 +16,7 @@ func IsClowderEnabled() bool {
 
 // PrintClowderParams Print Clowder params to export environment variables.
 func PrintClowderParams() {
-	fmt.Println("Trying to export variables from Clowder")
 	if IsClowderEnabled() {
-		fmt.Println("Clowder config enabled, exporting variables..")
 		// Database
 		printDBParams()
 		// API
@@ -31,9 +30,6 @@ func PrintClowderParams() {
 		printServicesParams()
 		// Cloudwatch logging
 		printCloudwatchParams()
-		fmt.Println("...done")
-	} else {
-		fmt.Println("Clowder not enabled")
 	}
 }
 
