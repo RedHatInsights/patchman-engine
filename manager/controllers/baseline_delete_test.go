@@ -19,7 +19,7 @@ func TestBaselineDelete(t *testing.T) {
 		"00000000-0000-0000-0000-000000000005",
 		"00000000-0000-0000-0000-000000000006",
 		"00000000-0000-0000-0000-000000000007"}
-	baselineID := database.CreateBaseline(t, inventoryIDs)
+	baselineID := database.CreateBaseline(t, "", inventoryIDs)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", fmt.Sprintf(`/%v`, baselineID), nil)

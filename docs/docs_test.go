@@ -1,10 +1,11 @@
 package docs
 
 import (
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"testing"
+
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/stretchr/testify/assert"
 )
 
 const openAPIPath = "openapi.json"
@@ -27,5 +28,5 @@ func TestFilterOpenAPIPaths2(t *testing.T) {
 	nRemovedPaths := filterOpenAPI(EndpointsConfig{
 		EnableBaselines: false,
 	}, openAPIPath, "/tmp/openapi-filter-test.json")
-	assert.Equal(t, 3, nRemovedPaths)
+	assert.Equal(t, 4, nRemovedPaths)
 }

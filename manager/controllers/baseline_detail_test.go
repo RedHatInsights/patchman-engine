@@ -51,7 +51,7 @@ func TestBaselineDetailInvalid(t *testing.T) {
 func TestBaselineDetailEmptyConfig(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	baselineID := database.CreateBaselineWithConfig(t, nil, nil)
+	baselineID := database.CreateBaselineWithConfig(t, "", nil, nil)
 	var output BaselineDetailResponse
 	url := fmt.Sprintf("/%d", baselineID)
 	testBaselineDetail(t, url, http.StatusOK, &output)

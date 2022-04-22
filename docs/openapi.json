@@ -809,6 +809,72 @@
                 "x-codegen-request-body-name": "body"
             }
         },
+        "/api/patch/v1/baselines/systems/remove": {
+            "post": {
+                "summary": "Remove systems from baseline",
+                "description": "Remove systems from baseline",
+                "operationId": "removeBaselineSystems",
+                "requestBody": {
+                    "description": "Request body",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controllers.BaselineSystemsRemoveRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.BaselineSystemsRemoveResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ],
+                "x-codegen-request-body-name": "body"
+            }
+        },
         "/api/patch/v1/baselines/{baseline_id}": {
             "get": {
                 "summary": "Show baseline detail by given baseline ID",
@@ -4068,6 +4134,30 @@
                         "type": "string",
                         "description": "Document type name",
                         "example": "baseline_system"
+                    }
+                }
+            },
+            "controllers.BaselineSystemsRemoveRequest": {
+                "type": "object",
+                "properties": {
+                    "inventory_ids": {
+                        "type": "array",
+                        "description": "List of inventory IDs to have baselines removed",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "controllers.BaselineSystemsRemoveResponse": {
+                "type": "object",
+                "properties": {
+                    "inventory_ids": {
+                        "type": "array",
+                        "description": "List of inventory IDs with successfully removed baselines",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 }
             },

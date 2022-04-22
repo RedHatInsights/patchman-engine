@@ -323,9 +323,13 @@ func UpdateSystemAdvisoriesWhenPatched(t *testing.T, systemID, accountID int, ad
 	assert.Nil(t, err)
 }
 
-func CreateBaselineWithConfig(t *testing.T, inventoryIDs []string, configBytes []byte) int {
+func CreateBaselineWithConfig(t *testing.T, name string, inventoryIDs []string, configBytes []byte) int {
+	if name == "" {
+		name = "temporary_baseline"
+	}
+
 	temporaryBaseline := &models.Baseline{
-		RhAccountID: 1, Name: "temporary_baseline", Config: configBytes,
+		RhAccountID: 1, Name: name, Config: configBytes,
 	}
 
 	tx := Db.WithContext(base.Context).Begin()
@@ -345,9 +349,9 @@ func CreateBaselineWithConfig(t *testing.T, inventoryIDs []string, configBytes [
 	return temporaryBaseline.ID
 }
 
-func CreateBaseline(t *testing.T, inventoryIDs []string) int {
+func CreateBaseline(t *testing.T, name string, inventoryIDs []string) int {
 	configBytes := []byte(`{"to_time": "2021-01-01T12:00:00-04:00"}`)
-	baselineID := CreateBaselineWithConfig(t, inventoryIDs, configBytes)
+	baselineID := CreateBaselineWithConfig(t, name, inventoryIDs, configBytes)
 	return baselineID
 }
 
