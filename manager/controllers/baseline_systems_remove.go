@@ -14,17 +14,8 @@ import (
 
 const InvalidInventoryIDsErr = "invalid list of inventory IDs"
 
-type InventoryDBLookUp struct {
-	InventoryID string `gorm:"column:inventory_id"`
-}
-
 type BaselineSystemsRemoveRequest struct {
 	// List of inventory IDs to have baselines removed
-	InventoryIDs []string `json:"inventory_ids"`
-}
-
-type BaselineSystemsRemoveResponse struct {
-	// List of inventory IDs with successfully removed baselines
 	InventoryIDs []string `json:"inventory_ids"`
 }
 
@@ -35,7 +26,7 @@ type BaselineSystemsRemoveResponse struct {
 // @Accept   json
 // @Produce  json
 // @Param    body    body   BaselineSystemsRemoveRequest true "Request body"
-// @Success 200 {object}	BaselineSystemsRemoveResponse
+// @Success 200 {int}		http.StatusOK
 // @Failure 400 {object} 	utils.ErrorResponse
 // @Failure 404 {object} 	utils.ErrorResponse
 // @Failure 500 {object} 	utils.ErrorResponse
@@ -49,7 +40,7 @@ func BaselineSystemsRemoveHandler(c *gin.Context) {
 		return
 	}
 
-	resp, err := buildBaselineSystemsRemoveQuery(req.InventoryIDs, account)
+	err := buildBaselineSystemsRemoveQuery(req.InventoryIDs, account)
 	if err != nil {
 		switch e := err.Error(); e {
 		case InvalidInventoryIDsErr:
@@ -60,35 +51,27 @@ func BaselineSystemsRemoveHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, resp)
+	c.Status(http.StatusOK)
 }
 
 func buildBaselineSystemsRemoveQuery(inventoryIDs []string,
-	accountID int) (*BaselineSystemsRemoveResponse, error) {
+	accountID int) error {
 	tx := database.Db.WithContext(base.Context).Begin()
 	defer tx.Rollback()
-
-	resp := &BaselineSystemsRemoveResponse{make([]string, 0)}
-	var ivs []InventoryDBLookUp
 
 	tx = tx.Model(models.SystemPlatform{}).
 		Where("rh_account_id = ? AND "+
 			"baseline_id is NOT NULL AND "+
 			"inventory_id::uuid IN (?)",
 			accountID, inventoryIDs).
-		Find(&ivs).
 		Update("baseline_id", nil)
-	if tx.Error != nil {
-		return nil, tx.Error
+	if e := tx.Error; e != nil {
+		return e
 	}
 	if int(tx.RowsAffected) != len(inventoryIDs) {
-		return nil, errors.New(InvalidInventoryIDsErr)
-	}
-
-	for _, i := range ivs {
-		resp.InventoryIDs = append(resp.InventoryIDs, i.InventoryID)
+		return errors.New(InvalidInventoryIDsErr)
 	}
 
 	err := tx.Commit().Error
-	return resp, err
+	return err
 }
