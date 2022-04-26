@@ -44,14 +44,14 @@ func TestBaselinesDefault(t *testing.T) {
 	output := testBaselines(t, "/")
 
 	assert.Equal(t, 3, len(output.Data))
-	assert.Equal(t, 3, output.Data[0].ID)
-	assert.Equal(t, "baseline", output.Data[0].Type)
-	assert.Equal(t, "baseline_1-3", output.Data[0].Attributes.Name)
-	assert.Equal(t, 0, output.Data[0].Attributes.Systems)
+	assert.Equal(t, "baseline_1-1", output.Data[0].Attributes.Name)
+	assert.Equal(t, 2, output.Data[0].Attributes.Systems)
 	assert.Equal(t, "baseline_1-2", output.Data[1].Attributes.Name)
 	assert.Equal(t, 1, output.Data[1].Attributes.Systems)
-	assert.Equal(t, "baseline_1-1", output.Data[2].Attributes.Name)
-	assert.Equal(t, 2, output.Data[2].Attributes.Systems)
+	assert.Equal(t, "baseline", output.Data[2].Type)
+	assert.Equal(t, "baseline_1-3", output.Data[2].Attributes.Name)
+	assert.Equal(t, 3, output.Data[2].ID)
+	assert.Equal(t, 0, output.Data[2].Attributes.Systems)
 
 	// links
 	assert.Equal(t, "/api/patch/v1/baselines?offset=0&limit=20&sort=-name", output.Links.First)
