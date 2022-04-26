@@ -828,13 +828,7 @@
                 "responses": {
                     "200": {
                         "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/controllers.BaselineSystemsRemoveResponse"
-                                }
-                            }
-                        }
+                        "content": {}
                     },
                     "400": {
                         "description": "Bad Request",
@@ -4143,18 +4137,6 @@
                     "inventory_ids": {
                         "type": "array",
                         "description": "List of inventory IDs to have baselines removed",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "controllers.BaselineSystemsRemoveResponse": {
-                "type": "object",
-                "properties": {
-                    "inventory_ids": {
-                        "type": "array",
-                        "description": "List of inventory IDs with successfully removed baselines",
                         "items": {
                             "type": "string"
                         }
