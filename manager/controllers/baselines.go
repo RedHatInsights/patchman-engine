@@ -113,7 +113,7 @@ func buildQueryBaselines(filters map[string]FilterData, account int) *gorm.DB {
 	query := database.Db.Table("baseline as bl").
 		Select(BaselineSelect).
 		Joins("LEFT JOIN (?) sp ON sp.baseline_id = bl.id", subq).
-		Where("bl.rh_account_id = ?", account)
+		Where("bl.rh_account_id = ?", account).Order("bl.name asc")
 
 	return query
 }
