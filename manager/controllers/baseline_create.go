@@ -124,8 +124,7 @@ func buildCreateBaselineQuery(request CreateBaselineRequest, accountID int) (int
 func checkInventoryIDs(accountID int, inventoryIDs []string) (missingIDs []string, err error) {
 	var containingIDs []string
 	err = database.Db.Table("system_platform sp").
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
-		Where("rh_account_id = (?) AND inventory_id::text IN (?)", accountID, inventoryIDs).
+		Where("rh_account_id = ? AND inventory_id::text IN (?)", accountID, inventoryIDs).
 		Pluck("sp.inventory_id", &containingIDs).Error
 	if err != nil {
 		return nil, err
