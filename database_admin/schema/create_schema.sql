@@ -1061,3 +1061,78 @@ GRANT cyndi_reader to manager;
 GRANT cyndi_reader TO vmaas_sync;
 
 GRANT cyndi_admin to cyndi;
+
+-- Create constraints on all text columns, to disallow empty strings.
+CREATE OR REPLACE FUNCTION create_varnull_constriants()
+    RETURNS INTEGER AS
+$$
+DECLARE
+    tabs record;
+    total INTEGER DEFAULT 0;
+BEGIN
+    FOR tabs IN
+    SELECT
+        c.relname AS "tab",
+        a.attname AS "col"
+    FROM
+        pg_catalog.pg_attribute a
+        LEFT OUTER JOIN
+            pg_catalog.pg_class c
+            ON a.attrelid = c.oid
+    WHERE
+        -- skip system columns
+        a.attnum > 0
+        -- skip dropped columns
+    AND NOT a.attisdropped
+        -- filter only varchars/text
+    AND
+        (
+            a.atttypid = 1043
+            OR a.atttypid = 25
+        )
+        -- skip cols that already has this constraint
+    AND NOT EXISTS
+        (
+            SELECT
+                1
+            FROM
+                pg_catalog.pg_constraint
+            WHERE
+                conname = c.relname || '_' || a.attname
+        )
+        -- filter only tables owned by current user
+    AND a.attrelid IN
+        (
+            SELECT
+                c.oid
+            FROM
+                pg_catalog.pg_class c
+            WHERE
+                relkind = 'r'
+                AND pg_catalog.pg_table_is_visible(c.oid)
+                AND relowner =
+                (
+                    SELECT
+                        oid
+                    FROM
+                        pg_catalog.pg_authid
+                    WHERE
+                        rolname = CURRENT_USER
+                )
+        )
+        LOOP
+            BEGIN
+                -- create constraint
+                EXECUTE 'ALTER TABLE ' || tabs.tab || ' ADD CONSTRAINT ' || tabs.tab || '_' || tabs.col || ' CHECK (' || tabs.col || ' <> '''')';
+                -- count them
+            exception
+            WHEN
+                others
+            THEN
+                total = total + 1;
+                raise warning '% unable to create constraint for %.%', now(), tabs.tab, tabs.col;
+            END;
+        END LOOP;
+        RETURN total;
+END;
+$$ LANGUAGE plpgsql;
