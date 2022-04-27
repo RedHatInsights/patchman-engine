@@ -17,6 +17,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const ForeignBaselineViolationErr = "unable to update systems of another baseline"
+
 type BaselineConfig database.BaselineConfig
 
 type UpdateBaselineRequest struct {
@@ -92,6 +94,10 @@ func BaselineUpdateHandler(c *gin.Context) {
 	newAssociations, obsoleteAssociations := sortInventoryIDs(req.InventoryIDs)
 	err = buildUpdateBaselineQuery(baselineID, req, newAssociations, obsoleteAssociations, account)
 	if err != nil {
+		if e := err.Error(); e == ForeignBaselineViolationErr {
+			LogAndRespBadRequest(c, err, "Invalid inventory IDs: "+e)
+			return
+		}
 		if database.IsPgErrorCode(err, database.PgErrorDuplicateKey) {
 			LogAndRespBadRequest(c, err, "baseline name already exists")
 			return
@@ -126,13 +132,27 @@ func sortInventoryIDs(inventoryIDs map[string]bool) (newIDs, obsoleteIDs []strin
 	return newIDs, obsoleteIDs
 }
 
-func updateSystemsBaselineID(tx *gorm.DB, rhAccountID int, inventoryIDs []string, baselineID *int) error {
-	updateFields := map[string]interface{}{"baseline_id": baselineID, "unchanged_since": time.Now()}
-	err := tx.Model(models.SystemPlatform{}).
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
-		Where("rh_account_id = (?) AND inventory_id::text IN (?)", rhAccountID, inventoryIDs).
-		Updates(updateFields).Error
-	return err
+func updateSystemsBaselineID(tx *gorm.DB, rhAccountID int, inventoryIDs []string,
+	newBaselineID, oldBaselineID *int) error {
+	updateFields := map[string]interface{}{"baseline_id": newBaselineID, "unchanged_since": time.Now()}
+	tx = tx.Model(models.SystemPlatform{}).
+		Where("rh_account_id = (?) AND inventory_id::text IN (?)", rhAccountID, inventoryIDs)
+
+	// oldBaselineID is used to prevent overwriting inventory IDs of another baseline
+	if oldBaselineID != nil {
+		tx = tx.Where("baseline_id = (?) OR baseline_id is NULL", oldBaselineID)
+	}
+
+	tx = tx.Updates(updateFields)
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	if int(tx.RowsAffected) < len(inventoryIDs) {
+		return errors.New(ForeignBaselineViolationErr)
+	}
+
+	return nil
 }
 
 func buildUpdateBaselineQuery(baselineID int, req UpdateBaselineRequest, newIDs, obsoleteIDs []string,
@@ -167,14 +187,14 @@ func buildUpdateBaselineQuery(baselineID int, req UpdateBaselineRequest, newIDs,
 	}
 
 	if len(newIDs) > 0 {
-		err := updateSystemsBaselineID(tx, account, newIDs, &baselineID)
+		err := updateSystemsBaselineID(tx, account, newIDs, &baselineID, nil)
 		if err != nil {
 			return err
 		}
 	}
 
 	if len(obsoleteIDs) > 0 {
-		err := updateSystemsBaselineID(tx, account, obsoleteIDs, nil)
+		err := updateSystemsBaselineID(tx, account, obsoleteIDs, nil, &baselineID)
 		if err != nil {
 			return err
 		}

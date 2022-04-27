@@ -111,7 +111,7 @@ func buildCreateBaselineQuery(request CreateBaselineRequest, accountID int) (int
 	}
 
 	if len(request.InventoryIDs) > 0 {
-		err := updateSystemsBaselineID(tx, accountID, request.InventoryIDs, &baseline.ID)
+		err := updateSystemsBaselineID(tx, accountID, request.InventoryIDs, &baseline.ID, nil)
 		if err != nil {
 			return baseline.ID, err
 		}
