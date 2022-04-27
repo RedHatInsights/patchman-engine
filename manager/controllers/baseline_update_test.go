@@ -192,3 +192,48 @@ func TestUpdateBaselineDuplicatedName(t *testing.T) {
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "baseline name already exists", errResp.Error)
 }
+
+func TestUpdateBaselineSystems(t *testing.T) {
+	core.SetupTestEnvironment()
+
+	// Assign inventory ID used by baseline 1 to check if it can be reassigned back during update
+	baselineID := database.CreateBaseline(t, "test_baseline", []string{"00000000-0000-0000-0000-000000000002"})
+
+	// Reassigning inventory IDs of another baselines is allowed
+	data := `{
+		"inventory_ids": {
+			"00000000-0000-0000-0000-000000000001": true,
+			"00000000-0000-0000-0000-000000000002": true
+		}
+	}`
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/1", bytes.NewBufferString(data))
+	core.InitRouterWithParams(BaselineUpdateHandler, 1, "PUT", "/:baseline_id").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp UpdateBaselineResponse
+	ParseResponseBody(t, w.Body.Bytes(), &resp)
+	assert.Equal(t, 1, resp.BaselineID)
+
+	database.DeleteBaseline(t, baselineID)
+}
+
+func TestUpdateBaselineSystemsInvalid(t *testing.T) {
+	core.SetupTestEnvironment()
+
+	// Removing inventory IDs of another baselines is not allowed
+	data := `{
+		"inventory_ids": {
+			"00000000-0000-0000-0000-000000000001": false,
+			"00000000-0000-0000-0000-000000000003": false
+		}
+	}`
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/1", bytes.NewBufferString(data))
+	core.InitRouterWithParams(BaselineUpdateHandler, 1, "PUT", "/:baseline_id").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var errResp utils.ErrorResponse
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, "Invalid inventory IDs: unable to update systems of another baseline", errResp.Error)
+}
