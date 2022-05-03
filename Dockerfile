@@ -3,6 +3,7 @@ ARG RUNIMG=registry.access.redhat.com/ubi8-micro
 FROM ${BUILDIMG} as buildimg
 
 ARG INSTALL_TOOLS=no
+ARG BUILD_TAGS=""
 
 # install build, development and test environment
 #RUN FULL_RHEL=$(dnf repolist rhel-8-for-x86_64-baseos-rpms --enabled -q) ; \
@@ -20,7 +21,24 @@ RUN dnf module -y enable postgresql:12 && \
 ENV GOPATH=/go \
     GO111MODULE=on \
     GOPROXY=https://proxy.golang.org \
-    PATH=$PATH:/go/bin
+    PATH=$PATH:/go/bin \
+    BUILD_TAGS_ENV=$BUILD_TAGS \
+    PKG_CONFIG_PATH=/usr/lib/pkgconfig:$PKG_CONFIG_PATH
+
+# confluent-kafka-go is not built for aarch64
+# https://github.com/confluentinc/confluent-kafka-go/issues/576#issuecomment-1009766473
+RUN if [ "$(uname -m)" == "aarch64" ] ; then \
+        # build librdkafka from source for aarch64
+        git clone --depth 1 --branch v1.6.2 https://github.com/edenhill/librdkafka.git ; \
+        pushd librdkafka ; \
+        dnf install -y gcc-c++ make cyrus-sasl-devel cyrus-sasl-lib cyrus-sasl-gssapi libcurl-devel lz4-devel lz4-libs libtool ; \
+        ./configure --install-deps ; \
+        make ; \
+        make install ; \
+        ln -s /usr/local/lib/librdkafka.so.1 /usr/lib64/librdkafka.so.1 ; \
+        ln -s /usr/local/lib/pkgconfig /usr/lib/pkgconfig ; \
+        popd ; \
+    fi
 
 # now add patchman sources and build app
 RUN adduser --gid 0 -d /go --no-create-home insights
@@ -51,7 +69,7 @@ ADD --chown=insights:root scripts                  /go/src/app/scripts
 ADD --chown=insights:root vmaas_sync               /go/src/app/vmaas_sync
 ADD --chown=insights:root main.go                   /go/src/app/
 
-RUN go build -v main.go
+RUN go build ${BUILD_TAGS} -v main.go
 
 # libs to be copied into runtime
 RUN mkdir -p /go/lib64 && \
@@ -67,6 +85,9 @@ EXPOSE 8080
 # ---------------------------------------
 # runtime image with only necessary stuff
 FROM ${RUNIMG} as runtimeimg
+
+# allows using shared librdkafka library
+ENV BUILD_TAGS_ENV=""
 
 # create insights user
 RUN echo "insights:x:1000:0::/go:/bin/bash" >>/etc/passwd && \

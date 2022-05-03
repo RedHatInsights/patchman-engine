@@ -12,7 +12,7 @@ psql -c "ALTER USER vmaas_sync NOLOGIN"
 ./scripts/wait-for-sessions-closed.sh
 
 if [[ -n $GORUN ]]; then
-  go run main.go migrate $MIGRATION_FILES $DATABASE_URL
+  go run $BUILD_TAGS_ENV main.go migrate $MIGRATION_FILES $DATABASE_URL
 else
   ./main migrate $MIGRATION_FILES $DATABASE_URL
 fi
