@@ -32,7 +32,7 @@ var (
 // nolint: lll
 type cyndiMetricColumns struct {
 	AllSystems    int64 `query:"count(*)" gorm:"column:all_systems"`
-	SapSystems    int64 `query:"count(*) filter (where system_profile -> 'sap_system' = 'true')" gorm:"column:sap_systems"`
+	SapSystems    int64 `query:"count(*) filter (where system_profile::jsonb ? 'sap_version')" gorm:"column:sap_systems"`
 	TaggedSystems int64 `query:"count(*) filter (where jsonb_array_length(tags) > 0)" gorm:"column:tagged_systems"`
 	Updated1D     int64 `query:"count(*) filter (where updated > (now() - interval '1 day'))" gorm:"column:updated1d"`
 	Updated7D     int64 `query:"count(*) filter (where updated > (now() - interval '7 day'))" gorm:"column:updated7d"`

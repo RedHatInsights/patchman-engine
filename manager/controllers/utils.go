@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -438,7 +439,7 @@ func ApplyTagsFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr st
 				values = fmt.Sprintf("[%s]", values)
 			}
 
-			if values == "not_nil" {
+			if values == "not_nil" || key == "sap_system" {
 				subq = subq.Where(q)
 			} else {
 				subq = subq.Where(q, values)
@@ -465,6 +466,14 @@ func buildQuery(key string, val string) string {
 	switch key {
 	case "sap_sids":
 		cmp = "::jsonb @> ?::jsonb"
+	case "sap_system":
+		// use presence of other sap fields to imply sap_system
+		isSap, _ := strconv.ParseBool(val)
+		not := "not "
+		if isSap {
+			not = ""
+		}
+		return fmt.Sprintf(`%sh.system_profile::jsonb ? 'sap_version'`, not)
 	default:
 		cmp = "::text = ?"
 	}

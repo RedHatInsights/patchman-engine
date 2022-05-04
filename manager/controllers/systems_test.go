@@ -133,7 +133,7 @@ func TestSystemsWorkloads2(t *testing.T) {
 
 func TestSystemsWorkloads3(t *testing.T) {
 	output := testSystems(t, "/?filter[system_profile][sap_system]=false", 1)
-	assert.Equal(t, 0, len(output.Data))
+	assert.Equal(t, 1, len(output.Data))
 }
 
 func TestSystemsPackagesCount(t *testing.T) {

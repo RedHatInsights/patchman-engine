@@ -8,6 +8,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type filterTestCase struct {
+	filter string
+	val    string
+	out    string
+}
+
 func TestNestedQueryParse(t *testing.T) {
 	q1 := map[string][]string{
 		"filter[abc][efg][eq]": {"a"},
@@ -46,5 +52,17 @@ func TestNestedQueryInvalidKey(t *testing.T) {
 	case <-timeout:
 		t.Fatal("Timeout exceeded - probably infinite loop in nested query")
 	case <-done:
+	}
+}
+
+func TestBuildQuery(t *testing.T) {
+	cases := []filterTestCase{
+		{"sap_system", "True", "h.system_profile::jsonb ? 'sap_version'"},
+		{"sap_system", "False", "not h.system_profile::jsonb ? 'sap_version'"},
+		// todo: add tests for other cases
+	}
+	for _, tc := range cases {
+		res := buildQuery(tc.filter, tc.val)
+		assert.Equal(t, tc.out, res)
 	}
 }
