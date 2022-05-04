@@ -53,7 +53,7 @@ RUN go mod download
 RUN if [ "$INSTALL_TOOLS" == "yes" ] ; then \
         go get -u github.com/swaggo/swag/cmd/swag && \
         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
-        | sh -s -- -b $(go env GOPATH)/bin latest ; \
+        | sh -s -- -b $(go env GOPATH)/bin v1.44.2 ; \
     fi
 
 ADD --chown=insights:root dev/kafka/secrets/ca.crt /opt/kafka/
