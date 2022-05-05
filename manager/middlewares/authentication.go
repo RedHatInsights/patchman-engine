@@ -4,11 +4,12 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
-	"github.com/gin-gonic/gin"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"net/http"
 	"strings"
 	"sync"
+
+	"github.com/gin-gonic/gin"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 const KeyAccount = "account"
@@ -18,6 +19,26 @@ var AccountIDCache = struct {
 	Lock   sync.Mutex
 }{Values: map[string]int{}, Lock: sync.Mutex{}}
 
+// Stores or updates the account data, returning the account id
+func GetOrCreateAccount(account string) (int, error) {
+	rhAccount := models.RhAccount{
+		Name: account,
+	}
+	// Select, and only if not found attempt an insertion
+	err := database.Db.Where("name = ?", account).Find(&rhAccount).Error
+	if err != nil {
+		utils.Log("err", err, "name", account).Warn("Error in finding account")
+	}
+	if rhAccount.ID != 0 {
+		return rhAccount.ID, nil
+	}
+	err = database.OnConflictUpdate(database.Db, "name", "name").Create(&rhAccount).Error
+	if err != nil {
+		utils.Log("err", err, "name", account).Warn("Error creating account")
+	}
+	return rhAccount.ID, err
+}
+
 func findAccount(c *gin.Context, identity *identity.Identity) bool {
 	AccountIDCache.Lock.Lock()
 	defer AccountIDCache.Lock.Unlock()
@@ -25,17 +46,13 @@ func findAccount(c *gin.Context, identity *identity.Identity) bool {
 	if id, has := AccountIDCache.Values[identity.AccountNumber]; has {
 		c.Set(KeyAccount, id)
 	} else {
-		var acc models.RhAccount
-		err := database.Db.Where("name = ?", identity.AccountNumber).Find(&acc).Error
+		// create new account if it does not exist
+		accID, err := GetOrCreateAccount(identity.AccountNumber)
 		if err != nil {
-			utils.Log("err", err, "name", identity.AccountNumber).Warn("Could not find account")
-		}
-		if acc.ID == 0 {
-			c.AbortWithStatus(http.StatusNoContent)
 			return false
 		}
-		AccountIDCache.Values[acc.Name] = acc.ID
-		c.Set(KeyAccount, acc.ID)
+		AccountIDCache.Values[identity.AccountNumber] = accID
+		c.Set(KeyAccount, accID)
 	}
 	return true
 }

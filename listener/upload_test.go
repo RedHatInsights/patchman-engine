@@ -17,19 +17,6 @@ import (
 	"time"
 )
 
-func TestGetOrCreateAccount(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	deleteData(t)
-
-	accountID1 := getOrCreateTestAccount(t)
-	accountID2 := getOrCreateTestAccount(t)
-	assert.Equal(t, accountID1, accountID2)
-
-	deleteData(t)
-}
-
 func createTestInvHost(t *testing.T) *Host {
 	correctTimestamp, err := time.Parse(base.Rfc3339NoTz, "2018-09-22T12:00:00-04:00")
 	correctTime := base.Rfc3339Timestamp(correctTimestamp)
