@@ -9,7 +9,11 @@ set -e -o pipefail
 ./scripts/check-dockercomposes.sh
 
 # Analyse code using lint
-golangci-lint run --timeout 5m
+build_tags=""
+if [[ -n $BUILD_TAGS_ENV ]]; then
+    build_tags="--build-tags dynamic"
+fi
+golangci-lint run $build_tags --timeout 5m
 echo "Go code analysed successfully."
 
 # Run project tests

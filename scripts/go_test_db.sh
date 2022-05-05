@@ -6,7 +6,7 @@ set -e -o pipefail
 ./database_admin/update.sh
 
 # Run database test, destroys and recreates database
-go test -v app/database_admin
+go test $BUILD_TAGS_ENV -v app/database_admin
 
 # Fill database with testing data
 ./scripts/feed_db.sh
