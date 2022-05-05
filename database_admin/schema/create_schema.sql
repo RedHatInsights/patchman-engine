@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (78, false);
+VALUES (79, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -599,6 +599,7 @@ CREATE TABLE IF NOT EXISTS rh_account
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON rh_account TO listener;
 GRANT SELECT, UPDATE ON rh_account TO evaluator;
+GRANT SELECT, INSERT, UPDATE ON rh_account TO manager;
 
 CREATE TABLE reporter
 (

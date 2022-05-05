@@ -8,15 +8,17 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"app/base/vmaas"
+	"app/manager/middlewares"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"strings"
-	"time"
 )
 
 const (
@@ -153,20 +155,6 @@ func updateReporterCounter(reporter string) {
 		receivedFromReporter.WithLabelValues("unknown").Inc()
 		utils.Log("reporter", reporter).Warn("unknown reporter")
 	}
-}
-
-// Stores or updates the account data, returning the account id
-func getOrCreateAccount(account string) (int, error) {
-	rhAccount := models.RhAccount{
-		Name: account,
-	}
-	// Select, and only if not found attempt an insertion
-	database.Db.Where("name = ?", account).Find(&rhAccount)
-	if rhAccount.ID != 0 {
-		return rhAccount.ID, nil
-	}
-	err := database.OnConflictUpdate(database.Db, "name", "name").Create(&rhAccount).Error
-	return rhAccount.ID, err
 }
 
 // nolint: funlen
@@ -397,7 +385,7 @@ func processModules(systemProfile *inventory.SystemProfile) *[]vmaas.UpdatesV3Re
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
 func processUpload(account string, host *Host, yumUpdates []byte) (*models.SystemPlatform, error) {
 	// Ensure we have account stored
-	accountID, err := getOrCreateAccount(account)
+	accountID, err := middlewares.GetOrCreateAccount(account)
 	if err != nil {
 		return nil, errors.Wrap(err, "saving account into the database")
 	}

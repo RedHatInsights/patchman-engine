@@ -6,10 +6,12 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const id = "99c0ffee-0000-0000-0000-0000c0ffee99"
@@ -61,7 +63,7 @@ func assertSystemNotInDB(t *testing.T) {
 }
 
 func getOrCreateTestAccount(t *testing.T) int {
-	accountID, err := getOrCreateAccount(id)
+	accountID, err := middlewares.GetOrCreateAccount(id)
 	assert.Nil(t, err)
 	return accountID
 }
