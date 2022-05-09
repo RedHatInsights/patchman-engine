@@ -3,9 +3,9 @@ package database
 import (
 	"app/base"
 	"app/base/utils"
-	"github.com/stretchr/testify/assert"
-	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestOnConflictDoUpdate(t *testing.T) {
@@ -54,7 +54,7 @@ func TestCancelContext(t *testing.T) {
 }
 
 func TestStatementTimeout(t *testing.T) {
-	assert.Nil(t, os.Setenv("DB_STATEMENT_TIMEOUT_MS", "100"))
+	utils.Cfg.DBStatementTimeoutMs = 100
 	utils.SkipWithoutDB(t)
 	Configure()
 

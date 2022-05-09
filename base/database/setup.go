@@ -3,7 +3,6 @@ package database
 import (
 	"app/base/utils"
 	"fmt"
-	"strconv"
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -87,25 +86,19 @@ func check(db *gorm.DB) {
 
 // load database config from environment vars using inserted prefix
 func loadEnvPostgreSQLConfig() *PostgreSQLConfig {
-	port, err := strconv.Atoi(utils.Getenv("DB_PORT", "FILL"))
-	if err != nil {
-		panic(err)
-	}
-
 	config := PostgreSQLConfig{
-		User:        utils.Getenv("DB_USER", "FILL"),
-		Host:        utils.Getenv("DB_HOST", "FILL"),
-		Port:        port,
-		Database:    utils.Getenv("DB_NAME", "FILL"),
-		Passwd:      utils.Getenv("DB_PASSWD", "FILL"),
-		SSLMode:     utils.Getenv("DB_SSLMODE", "FILL"),
-		SSLRootCert: utils.Getenv("DB_SSLROOTCERT", ""),
-		Debug:       utils.GetBoolEnvOrDefault("DB_DEBUG", false),
-
-		StatementTimeoutMs:     utils.GetIntEnvOrDefault("DB_STATEMENT_TIMEOUT_MS", 0),
-		MaxConnections:         utils.GetIntEnvOrDefault("DB_MAX_CONNECTIONS", 250),
-		MaxIdleConnections:     utils.GetIntEnvOrDefault("DB_MAX_IDLE_CONNECTIONS", 50),
-		MaxConnectionLifetimeS: utils.GetIntEnvOrDefault("DB_MAX_CONNECTION_LIFETIME_S", 60),
+		User:                   utils.Cfg.DBUser,
+		Host:                   utils.Cfg.DBHost,
+		Port:                   utils.Cfg.DBPort,
+		Database:               utils.Cfg.DBName,
+		Passwd:                 utils.Cfg.DBPassword,
+		SSLMode:                utils.Cfg.DBSslMode,
+		SSLRootCert:            utils.Cfg.DBSslRootCert,
+		Debug:                  utils.Cfg.DBDebug,
+		StatementTimeoutMs:     utils.Cfg.DBStatementTimeoutMs,
+		MaxConnections:         utils.Cfg.DBMaxConnections,
+		MaxIdleConnections:     utils.Cfg.DBMaxIdleConnections,
+		MaxConnectionLifetimeS: utils.Cfg.DBMaxConnectionLifetimeS,
 	}
 	return &config
 }
