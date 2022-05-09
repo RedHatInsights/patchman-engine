@@ -46,6 +46,12 @@ type Config struct {
 	VmaasAddress   string
 	RbacAddress    string
 	VmaasWsAddress string
+
+	// cloudwatch
+	CloudWatchAccessKeyID     string
+	CloudWatchSecretAccesskey string
+	CloudWatchRegion          string
+	CloudWatchLogGroup        string
 }
 
 func init() {
@@ -53,11 +59,13 @@ func init() {
 	initAPIFromEnv()
 	initKafkaFromEnv()
 	initServicesFromEnv()
+	initCloudwatchFromEnv()
 	if clowder.IsClowderEnabled() {
 		initDBFromClowder()
 		initAPIromClowder()
 		initKafkaFromClowder()
 		initServicesFromClowder()
+		initCloudwatchFromClowder()
 	}
 }
 
@@ -100,6 +108,13 @@ func initServicesFromEnv() {
 	Cfg.VmaasAddress = Getenv("VMAAS_ADDRESS", "")
 	Cfg.RbacAddress = Getenv("RBAC_ADDRESS", "")
 	Cfg.VmaasWsAddress = Getenv("VMAAS_WS_ADDRESS", "")
+}
+
+func initCloudwatchFromEnv() {
+	Cfg.CloudWatchAccessKeyID = Getenv("CW_AWS_ACCESS_KEY_ID", "")
+	Cfg.CloudWatchSecretAccesskey = Getenv("CW_AWS_SECRET_ACCESS_KEY", "")
+	Cfg.CloudWatchRegion = Getenv("CW_AWS_REGION", "")
+	Cfg.CloudWatchLogGroup = Getenv("CW_AWS_LOG_GROUP", "")
 }
 
 func initDBFromClowder() {
@@ -177,6 +192,16 @@ func initServicesFromClowder() {
 	}
 }
 
+func initCloudwatchFromClowder() {
+	cwCfg := clowder.LoadedConfig.Logging.Cloudwatch
+	if cwCfg != nil {
+		Cfg.CloudWatchAccessKeyID = cwCfg.AccessKeyId
+		Cfg.CloudWatchSecretAccesskey = cwCfg.SecretAccessKey
+		Cfg.CloudWatchRegion = cwCfg.Region
+		Cfg.CloudWatchLogGroup = cwCfg.LogGroup
+	}
+}
+
 // PrintClowderParams Print Clowder params to export environment variables.
 func PrintClowderParams() {
 	if clowder.IsClowderEnabled() {
@@ -237,8 +262,8 @@ func printCloudwatchParams() {
 		fmt.Println("No Cloudwatch logging found")
 		return
 	}
-	fmt.Printf("CW_AWS_ACCESS_KEY_ID=%s\n", cwCfg.AccessKeyId)
-	fmt.Printf("CW_AWS_SECRET_ACCESS_KEY=%s\n", cwCfg.SecretAccessKey)
-	fmt.Printf("CW_AWS_REGION=%s\n", cwCfg.Region)
-	fmt.Printf("CW_AWS_LOG_GROUP=%s\n", cwCfg.LogGroup)
+	fmt.Printf("CW_AWS_ACCESS_KEY_ID=%s\n", Cfg.CloudWatchAccessKeyID)
+	fmt.Printf("CW_AWS_SECRET_ACCESS_KEY=%s\n", Cfg.CloudWatchSecretAccesskey)
+	fmt.Printf("CW_AWS_REGION=%s\n", Cfg.CloudWatchRegion)
+	fmt.Printf("CW_AWS_LOG_GROUP=%s\n", Cfg.CloudWatchLogGroup)
 }
