@@ -5,6 +5,7 @@ import (
 	"app/base/utils"
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -18,11 +19,11 @@ import (
 
 func setCmdAuth(cmd *exec.Cmd) {
 	cmd.Args = append(cmd.Args,
-		"-h", utils.GetenvOrFail("DB_HOST"),
-		"-p", utils.GetenvOrFail("DB_PORT"),
-		"-U", utils.GetenvOrFail("DB_USER"),
-		"-d", utils.GetenvOrFail("DB_NAME"))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("PGPASSWORD=%v", utils.GetenvOrFail("DB_PASSWD")))
+		"-h", utils.FailIfEmpty(utils.Cfg.DBHost, "DB_HOST"),
+		"-p", strconv.Itoa(utils.Cfg.DBPort),
+		"-U", utils.FailIfEmpty(utils.Cfg.DBUser, "DB_USER"),
+		"-d", utils.FailIfEmpty(utils.Cfg.DBName, "DB_NAME"))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("PGPASSWORD=%v", utils.FailIfEmpty(utils.Cfg.DBPassword, "DB_PASSWD")))
 }
 
 func TestSchemaCompatiblity(t *testing.T) {
@@ -43,7 +44,7 @@ func TestSchemaCompatiblity(t *testing.T) {
 
 	// Tests are run from local directory
 	m, err := migrate.NewWithDatabaseInstance("file://migrations",
-		utils.GetenvOrFail("DB_NAME"), driver)
+		utils.FailIfEmpty(utils.Cfg.DBName, "DB_NAME"), driver)
 	assert.Nil(t, err)
 
 	err = m.Up()

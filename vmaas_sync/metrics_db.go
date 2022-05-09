@@ -4,8 +4,8 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"fmt"
+
 	"github.com/prometheus/client_golang/prometheus"
-	"os"
 )
 
 var (
@@ -61,7 +61,7 @@ func getTableSizes() []keyValue {
 }
 
 func getDatabaseSize() []keyValue {
-	dbName := os.Getenv("DB_NAME")
+	dbName := utils.Cfg.DBName
 	var dbSize []keyValue
 	err := database.Db.Raw(
 		fmt.Sprintf(`SELECT 'database' as key, pg_database_size('%s') as value;`, dbName)).
