@@ -26,12 +26,20 @@ type Config struct {
 	DBMaxConnections         int
 	DBMaxIdleConnections     int
 	DBMaxConnectionLifetimeS int
+
+	// API
+	PublicPort  int
+	PrivatePort int
+	MetricsPort int
+	MetricsPath string
 }
 
 func init() {
 	initDBFromEnv()
+	initAPIFromEnv()
 	if clowder.IsClowderEnabled() {
 		initDBFromClowder()
+		initAPIromClowder()
 	}
 }
 
@@ -52,6 +60,13 @@ func initDBFromEnv() {
 	Cfg.DBMaxConnectionLifetimeS = GetIntEnvOrDefault("DB_MAX_CONNECTION_LIFETIME_S", 60)
 }
 
+func initAPIFromEnv() {
+	Cfg.PublicPort = GetIntEnvOrDefault("PUBLIC_PORT", -1)
+	Cfg.PrivatePort = GetIntEnvOrDefault("PRIVATE_PORT", -1)
+	Cfg.MetricsPort = GetIntEnvOrDefault("METRICS_PORT", -1)
+	Cfg.MetricsPath = Getenv("METRICS_PATH", "/metrics")
+}
+
 func initDBFromClowder() {
 	Cfg.DBHost = clowder.LoadedConfig.Database.Hostname
 	Cfg.DBName = clowder.LoadedConfig.Database.Name
@@ -68,16 +83,20 @@ func initDBFromClowder() {
 	Cfg.DBAdminPassword = clowder.LoadedConfig.Database.AdminPassword
 }
 
+func initAPIromClowder() {
+	Cfg.PublicPort = *clowder.LoadedConfig.PublicPort
+	Cfg.PrivatePort = *clowder.LoadedConfig.PrivatePort
+	Cfg.MetricsPort = clowder.LoadedConfig.MetricsPort
+	Cfg.MetricsPath = clowder.LoadedConfig.MetricsPath
+}
+
 // PrintClowderParams Print Clowder params to export environment variables.
 func PrintClowderParams() {
 	if clowder.IsClowderEnabled() {
 		// Database
 		printDBParams()
 		// API
-		fmt.Printf("PUBLIC_PORT=%d\n", *clowder.LoadedConfig.PublicPort)
-		fmt.Printf("PRIVATE_PORT=%d\n", *clowder.LoadedConfig.PrivatePort)
-		fmt.Printf("METRICS_PORT=%d\n", clowder.LoadedConfig.MetricsPort)
-		fmt.Printf("METRICS_PATH=%s\n", clowder.LoadedConfig.MetricsPath)
+		printAPIParams()
 		// Kafka
 		printKafkaParams()
 		// Services (vmaas, rbac)
@@ -95,6 +114,13 @@ func printDBParams() {
 	fmt.Printf("DB_PORT=%d\n", Cfg.DBPort)
 	fmt.Printf("DB_SSLMODE=%s\n", Cfg.DBSslMode)
 	fmt.Printf("DB_SSLROOTCERT=%s\n", Cfg.DBSslRootCert)
+}
+
+func printAPIParams() {
+	fmt.Printf("PUBLIC_PORT=%d\n", Cfg.PublicPort)
+	fmt.Printf("PRIVATE_PORT=%d\n", Cfg.PrivatePort)
+	fmt.Printf("METRICS_PORT=%d\n", Cfg.MetricsPort)
+	fmt.Printf("METRICS_PATH=%s\n", Cfg.MetricsPath)
 }
 
 func printKafkaParams() {
