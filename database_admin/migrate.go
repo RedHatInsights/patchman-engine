@@ -4,12 +4,13 @@ import (
 	"app/base/utils"
 	"database/sql"
 	"fmt"
+	"os"
+
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // we load migrations from local folder
 	"github.com/lib/pq"
-	"os"
 )
 
 func NewConn(databaseURL string) (database.Driver, error) {
@@ -39,7 +40,7 @@ func MigrateUp(sourceURL, databaseURL string) {
 		panic(err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance(sourceURL, utils.GetenvOrFail("DB_NAME"), conn)
+	m, err := migrate.NewWithDatabaseInstance(sourceURL, utils.FailIfEmpty(utils.Cfg.DBName, "DB_NAME"), conn)
 	if err != nil {
 		panic(err)
 	}

@@ -34,6 +34,15 @@ func GetenvOrFail(envname string) string {
 	return value
 }
 
+// FailIfEmpty Check that value is not empty otherwise fail hard
+func FailIfEmpty(value string, varName string) string {
+	if value == "" {
+		panic(fmt.Sprintf("%s must be set!", varName))
+	}
+
+	return value
+}
+
 // GetBoolEnvOrFail Parse bool value from env variable
 func GetBoolEnvOrFail(envname string) bool {
 	value := os.Getenv(envname)
@@ -117,7 +126,7 @@ func TestLoadEnv(files ...string) {
 	err := godotenv.Overload(files...)
 
 	Log("files", files).Debug("Loading new env file")
-	Log("dbuser", Getenv("DB_USER", ""), "passwd", Getenv("DB_PASSWD", "")).Debug("Db auth info")
+	Log("dbuser", Cfg.DBUser, "passwd", Cfg.DBPassword).Debug("Db auth info")
 	if err != nil {
 		Log().Panic("Could not load env file")
 	}
