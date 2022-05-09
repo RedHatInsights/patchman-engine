@@ -41,16 +41,23 @@ type Config struct {
 	EventsTopic            string
 	EvalTopic              string
 	RemediationUpdateTopic string
+
+	// services
+	VmaasAddress   string
+	RbacAddress    string
+	VmaasWsAddress string
 }
 
 func init() {
 	initDBFromEnv()
 	initAPIFromEnv()
 	initKafkaFromEnv()
+	initServicesFromEnv()
 	if clowder.IsClowderEnabled() {
 		initDBFromClowder()
 		initAPIromClowder()
 		initKafkaFromClowder()
+		initServicesFromClowder()
 	}
 }
 
@@ -87,6 +94,12 @@ func initKafkaFromEnv() {
 	Cfg.EventsTopic = Getenv("EVENTS_TOPIC", "")
 	Cfg.EvalTopic = Getenv("EVAL_TOPIC", "")
 	Cfg.RemediationUpdateTopic = Getenv("REMEDIATIONS_UPDATE_TOPIC", "")
+}
+
+func initServicesFromEnv() {
+	Cfg.VmaasAddress = Getenv("VMAAS_ADDRESS", "")
+	Cfg.RbacAddress = Getenv("RBAC_ADDRESS", "")
+	Cfg.VmaasWsAddress = Getenv("VMAAS_WS_ADDRESS", "")
 }
 
 func initDBFromClowder() {
@@ -144,6 +157,26 @@ func initKafkaFromClowder() {
 	}
 }
 
+func initServicesFromClowder() {
+	for _, endpoint := range clowder.LoadedConfig.Endpoints {
+		switch endpoint.App {
+		case "vmaas":
+			if strings.Contains(endpoint.Name, "webapp") {
+				Cfg.VmaasAddress = fmt.Sprintf("http://%s:%d", endpoint.Hostname, endpoint.Port)
+			}
+		case "rbac":
+			Cfg.RbacAddress = fmt.Sprintf("http://%s:%d", endpoint.Hostname, endpoint.Port)
+		}
+	}
+	for _, endpoint := range clowder.LoadedConfig.PrivateEndpoints {
+		if endpoint.App == "vmaas" {
+			if strings.Contains(endpoint.Name, "websocket") {
+				Cfg.VmaasWsAddress = fmt.Sprintf("ws://%s:%d", endpoint.Hostname, endpoint.Port)
+			}
+		}
+	}
+}
+
 // PrintClowderParams Print Clowder params to export environment variables.
 func PrintClowderParams() {
 	if clowder.IsClowderEnabled() {
@@ -193,24 +226,9 @@ func printKafkaParams() {
 }
 
 func printServicesParams() {
-	for _, endpoint := range clowder.LoadedConfig.Endpoints {
-		switch endpoint.App {
-		case "vmaas":
-			if strings.Contains(endpoint.Name, "webapp") {
-				fmt.Printf("VMAAS_ADDRESS=http://%s:%d\n", endpoint.Hostname, endpoint.Port)
-			}
-		case "rbac":
-			fmt.Printf("RBAC_ADDRESS=http://%s:%d\n", endpoint.Hostname, endpoint.Port)
-		}
-	}
-
-	for _, endpoint := range clowder.LoadedConfig.PrivateEndpoints {
-		if endpoint.App == "vmaas" {
-			if strings.Contains(endpoint.Name, "websocket") {
-				fmt.Printf("VMAAS_WS_ADDRESS=ws://%s:%d\n", endpoint.Hostname, endpoint.Port)
-			}
-		}
-	}
+	fmt.Printf("VMAAS_ADDRESS=http://%s\n", Cfg.VmaasAddress)
+	fmt.Printf("RBAC_ADDRESS=http://%s\n", Cfg.RbacAddress)
+	fmt.Printf("VMAAS_WS_ADDRESS=ws://%s\n", Cfg.VmaasWsAddress)
 }
 
 func printCloudwatchParams() {
