@@ -8,15 +8,69 @@ import (
 	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 )
 
-// IsClowderEnabled Check env variable CLOWDER_ENABLED = "true".
-func IsClowderEnabled() bool {
-	clowderEnabled := GetBoolEnvOrDefault("CLOWDER_ENABLED", false)
-	return clowderEnabled
+var Cfg = Config{}
+
+type Config struct {
+	// database
+	DBHost                   string
+	DBName                   string
+	DBPort                   int
+	DBSslMode                string
+	DBSslRootCert            string
+	DBAdminUser              string
+	DBAdminPassword          string
+	DBUser                   string
+	DBPassword               string
+	DBDebug                  bool
+	DBStatementTimeoutMs     int
+	DBMaxConnections         int
+	DBMaxIdleConnections     int
+	DBMaxConnectionLifetimeS int
+}
+
+func init() {
+	initDBFromEnv()
+	if clowder.IsClowderEnabled() {
+		initDBFromClowder()
+	}
+}
+
+func initDBFromEnv() {
+	Cfg.DBHost = Getenv("DB_HOST", "UNSET")
+	Cfg.DBName = Getenv("DB_NAME", "UNSET")
+	Cfg.DBPort = GetIntEnvOrDefault("DB_PORT", -1)
+	Cfg.DBSslMode = Getenv("DB_SSLMODE", "UNSET")
+	Cfg.DBSslRootCert = Getenv("DB_SSLROOTCERT", "")
+	Cfg.DBAdminUser = Getenv("DB_ADMIN_USER", "")
+	Cfg.DBAdminPassword = Getenv("DB_ADMIN_PASSWD", "")
+	Cfg.DBUser = Getenv("DB_USER", "UNSET")
+	Cfg.DBPassword = Getenv("DB_PASSWD", "UNSET")
+	Cfg.DBDebug = GetBoolEnvOrDefault("DB_DEBUG", false)
+	Cfg.DBStatementTimeoutMs = GetIntEnvOrDefault("DB_STATEMENT_TIMEOUT_MS", 0)
+	Cfg.DBMaxConnections = GetIntEnvOrDefault("DB_MAX_CONNECTIONS", 250)
+	Cfg.DBMaxIdleConnections = GetIntEnvOrDefault("DB_MAX_IDLE_CONNECTIONS", 50)
+	Cfg.DBMaxConnectionLifetimeS = GetIntEnvOrDefault("DB_MAX_CONNECTION_LIFETIME_S", 60)
+}
+
+func initDBFromClowder() {
+	Cfg.DBHost = clowder.LoadedConfig.Database.Hostname
+	Cfg.DBName = clowder.LoadedConfig.Database.Name
+	Cfg.DBPort = clowder.LoadedConfig.Database.Port
+	Cfg.DBSslMode = clowder.LoadedConfig.Database.SslMode
+	if clowder.LoadedConfig.Database.RdsCa != nil {
+		certPath, err := clowder.LoadedConfig.RdsCa()
+		if err != nil {
+			panic(err)
+		}
+		Cfg.DBSslRootCert = certPath
+	}
+	Cfg.DBAdminUser = clowder.LoadedConfig.Database.AdminUsername
+	Cfg.DBAdminPassword = clowder.LoadedConfig.Database.AdminPassword
 }
 
 // PrintClowderParams Print Clowder params to export environment variables.
 func PrintClowderParams() {
-	if IsClowderEnabled() {
+	if clowder.IsClowderEnabled() {
 		// Database
 		printDBParams()
 		// API
@@ -34,19 +88,13 @@ func PrintClowderParams() {
 }
 
 func printDBParams() {
-	fmt.Printf("DB_ADMIN_USER=%s\n", clowder.LoadedConfig.Database.AdminUsername)
-	fmt.Printf("DB_ADMIN_PASSWD=%s\n", clowder.LoadedConfig.Database.AdminPassword)
-	fmt.Printf("DB_HOST=%s\n", clowder.LoadedConfig.Database.Hostname)
-	fmt.Printf("DB_NAME=%s\n", clowder.LoadedConfig.Database.Name)
-	fmt.Printf("DB_PORT=%d\n", clowder.LoadedConfig.Database.Port)
-	fmt.Printf("DB_SSLMODE=%s\n", clowder.LoadedConfig.Database.SslMode)
-	if clowder.LoadedConfig.Database.RdsCa != nil {
-		certPath, err := clowder.LoadedConfig.RdsCa()
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("DB_SSLROOTCERT=%s\n", certPath)
-	}
+	fmt.Printf("DB_ADMIN_USER=%s\n", Cfg.DBAdminUser)
+	fmt.Printf("DB_ADMIN_PASSWD=%s\n", Cfg.DBAdminPassword)
+	fmt.Printf("DB_HOST=%s\n", Cfg.DBHost)
+	fmt.Printf("DB_NAME=%s\n", Cfg.DBName)
+	fmt.Printf("DB_PORT=%d\n", Cfg.DBPort)
+	fmt.Printf("DB_SSLMODE=%s\n", Cfg.DBSslMode)
+	fmt.Printf("DB_SSLROOTCERT=%s\n", Cfg.DBSslRootCert)
 }
 
 func printKafkaParams() {
