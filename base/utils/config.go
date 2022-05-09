@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
@@ -32,14 +31,26 @@ type Config struct {
 	PrivatePort int
 	MetricsPort int
 	MetricsPath string
+
+	// kafka
+	KafkaAddress           string
+	KafkaSslEnabled        bool
+	KafkaSslCert           string
+	KafkaUsername          string
+	KafkaPassword          string
+	EventsTopic            string
+	EvalTopic              string
+	RemediationUpdateTopic string
 }
 
 func init() {
 	initDBFromEnv()
 	initAPIFromEnv()
+	initKafkaFromEnv()
 	if clowder.IsClowderEnabled() {
 		initDBFromClowder()
 		initAPIromClowder()
+		initKafkaFromClowder()
 	}
 }
 
@@ -67,6 +78,17 @@ func initAPIFromEnv() {
 	Cfg.MetricsPath = Getenv("METRICS_PATH", "/metrics")
 }
 
+func initKafkaFromEnv() {
+	Cfg.KafkaAddress = Getenv("KAFKA_ADDRESS", "")
+	Cfg.KafkaSslEnabled = GetBoolEnvOrDefault("ENABLE_KAFKA_SSL", false)
+	Cfg.KafkaSslCert = Getenv("KAFKA_SSL_CERT", "")
+	Cfg.KafkaUsername = Getenv("KAFKA_USERNAME", "")
+	Cfg.KafkaPassword = Getenv("KAFKA_PASSWORD", "")
+	Cfg.EventsTopic = Getenv("EVENTS_TOPIC", "")
+	Cfg.EvalTopic = Getenv("EVAL_TOPIC", "")
+	Cfg.RemediationUpdateTopic = Getenv("REMEDIATIONS_UPDATE_TOPIC", "")
+}
+
 func initDBFromClowder() {
 	Cfg.DBHost = clowder.LoadedConfig.Database.Hostname
 	Cfg.DBName = clowder.LoadedConfig.Database.Name
@@ -88,6 +110,38 @@ func initAPIromClowder() {
 	Cfg.PrivatePort = *clowder.LoadedConfig.PrivatePort
 	Cfg.MetricsPort = clowder.LoadedConfig.MetricsPort
 	Cfg.MetricsPath = clowder.LoadedConfig.MetricsPath
+}
+
+func initKafkaFromClowder() {
+	if len(clowder.LoadedConfig.Kafka.Brokers) > 0 {
+		kafkaHost := clowder.LoadedConfig.Kafka.Brokers[0].Hostname
+		kafkaPort := *clowder.LoadedConfig.Kafka.Brokers[0].Port
+		Cfg.KafkaAddress = fmt.Sprintf("%s:%d", kafkaHost, kafkaPort)
+		brokerCfg := clowder.LoadedConfig.Kafka.Brokers[0]
+		if brokerCfg.Cacert != nil {
+			Cfg.KafkaSslEnabled = true
+			certPath, err := clowder.LoadedConfig.KafkaCa(brokerCfg)
+			if err != nil {
+				panic(err)
+			}
+			Cfg.KafkaSslCert = certPath
+			if brokerCfg.Sasl.Username != nil {
+				Cfg.KafkaUsername = *brokerCfg.Sasl.Username
+				Cfg.KafkaPassword = *brokerCfg.Sasl.Password
+			}
+		}
+
+		// translate kafka topic names
+		if Cfg.EventsTopic != "" {
+			Cfg.EventsTopic = clowder.KafkaTopics[Cfg.EventsTopic].Name
+		}
+		if Cfg.EvalTopic != "" {
+			Cfg.EvalTopic = clowder.KafkaTopics[Cfg.EvalTopic].Name
+		}
+		if Cfg.RemediationUpdateTopic != "" {
+			Cfg.RemediationUpdateTopic = clowder.KafkaTopics[Cfg.RemediationUpdateTopic].Name
+		}
+	}
 }
 
 // PrintClowderParams Print Clowder params to export environment variables.
@@ -124,31 +178,18 @@ func printAPIParams() {
 }
 
 func printKafkaParams() {
-	if len(clowder.LoadedConfig.Kafka.Brokers) > 0 {
-		kafkaHost := clowder.LoadedConfig.Kafka.Brokers[0].Hostname
-		kafkaPort := *clowder.LoadedConfig.Kafka.Brokers[0].Port
-		fmt.Printf("KAFKA_ADDRESS=%s:%d\n", kafkaHost, kafkaPort)
-		brokerCfg := clowder.LoadedConfig.Kafka.Brokers[0]
-		if brokerCfg.Cacert != nil {
-			fmt.Println("ENABLE_KAFKA_SSL=true")
-			certPath, err := clowder.LoadedConfig.KafkaCa(brokerCfg)
-			if err != nil {
-				panic(err)
-			}
-			fmt.Printf("KAFKA_SSL_CERT=%s\n", certPath)
-			if brokerCfg.Sasl.Username != nil {
-				fmt.Printf("KAFKA_USERNAME=%s\n", *brokerCfg.Sasl.Username)
-				fmt.Printf("KAFKA_PASSWORD=%s\n", *brokerCfg.Sasl.Password)
-			}
-		}
-		topics := []string{"EVENTS_TOPIC", "EVAL_TOPIC", "REMEDIATIONS_UPDATE_TOPIC"}
-		for _, topic := range topics {
-			topicValue := os.Getenv(topic)
-			if len(topicValue) > 0 {
-				fmt.Printf("%s=%s\n", topic, clowder.KafkaTopics[topicValue].Name)
-			}
+	fmt.Printf("KAFKA_ADDRESS=%s\n", Cfg.KafkaAddress)
+	if Cfg.KafkaSslEnabled {
+		fmt.Println("ENABLE_KAFKA_SSL=true")
+		fmt.Printf("KAFKA_SSL_CERT=%s\n", Cfg.KafkaSslCert)
+		if Cfg.KafkaUsername != "" {
+			fmt.Printf("KAFKA_USERNAME=%s\n", Cfg.KafkaUsername)
+			fmt.Printf("KAFKA_PASSWORD=%s\n", Cfg.KafkaPassword)
 		}
 	}
+	fmt.Printf("EVENTS_TOPIC=%s\n", Cfg.EventsTopic)
+	fmt.Printf("EVAL_TOPIC=%s\n", Cfg.EvalTopic)
+	fmt.Printf("REMEDIATIONS_UPDATE_TOPIC=%s\n", Cfg.RemediationUpdateTopic)
 }
 
 func printServicesParams() {
