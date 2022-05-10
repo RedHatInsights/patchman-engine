@@ -12,14 +12,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSystemsExportJSON(t *testing.T) {
+func testSetup(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
+}
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
-	req.Header.Add("Accept", "application/json")
-	core.InitRouterWithPath(SystemsExportHandler, "/").ServeHTTP(w, req)
+func makeRequest(t *testing.T, path string, contentType string) *httptest.ResponseRecorder {
+	testSetup(t)
+
+	r := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", path, nil)
+	req.Header.Add("Accept", contentType)
+	core.InitRouter(SystemsExportHandler).ServeHTTP(r, req)
+	return r
+}
+
+func TestSystemsExportJSON(t *testing.T) {
+	w := makeRequest(t, "/", "application/json")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemDBLookup
@@ -45,13 +54,7 @@ func TestSystemsExportJSON(t *testing.T) {
 }
 
 func TestSystemsExportCSV(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
-	req.Header.Add("Accept", "text/csv")
-	core.InitRouter(SystemsExportHandler).ServeHTTP(w, req)
+	w := makeRequest(t, "/", "text/csv")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
@@ -72,13 +75,7 @@ func TestSystemsExportCSV(t *testing.T) {
 }
 
 func TestSystemsExportWrongFormat(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
-	req.Header.Add("Accept", "test-format")
-	core.InitRouter(SystemsExportHandler).ServeHTTP(w, req)
+	w := makeRequest(t, "/", "test-format")
 
 	assert.Equal(t, http.StatusUnsupportedMediaType, w.Code)
 	body := w.Body.String()
@@ -87,13 +84,7 @@ func TestSystemsExportWrongFormat(t *testing.T) {
 }
 
 func TestSystemsExportCSVFilter(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?filter[display_name]=nonexistant", nil)
-	req.Header.Add("Accept", "text/csv")
-	core.InitRouter(SystemsExportHandler).ServeHTTP(w, req)
+	w := makeRequest(t, "/?filter[display_name]=nonexistant", "text/csv")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
@@ -109,13 +100,7 @@ func TestSystemsExportCSVFilter(t *testing.T) {
 }
 
 func TestExportSystemsTags(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?tags=ns1/k2=val2", nil)
-	req.Header.Add("Accept", "application/json")
-	core.InitRouterWithPath(SystemsExportHandler, "/").ServeHTTP(w, req)
+	w := makeRequest(t, "/?tags=ns1/k2=val2", "application/json")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemDBLookup
@@ -126,12 +111,7 @@ func TestExportSystemsTags(t *testing.T) {
 }
 
 func TestExportSystemsTagsInvalid(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil)
-	core.InitRouterWithPath(SystemsExportHandler, "/").ServeHTTP(w, req)
+	w := makeRequest(t, "/?tags=ns1/k3=val4&tags=invalidTag", "application/json")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
@@ -140,14 +120,11 @@ func TestExportSystemsTagsInvalid(t *testing.T) {
 }
 
 func TestSystemsExportWorkloads(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET",
-		"/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][in][]=ABC", nil)
-	req.Header.Add("Accept", "application/json")
-	core.InitRouterWithPath(SystemsExportHandler, "/").ServeHTTP(w, req)
+	w := makeRequest(
+		t,
+		"/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][in][]=ABC",
+		"application/json",
+	)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemDBLookup
@@ -155,4 +132,16 @@ func TestSystemsExportWorkloads(t *testing.T) {
 	ParseResponseBody(t, w.Body.Bytes(), &output)
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
+}
+
+func TestSystemsExportBaselineFilter(t *testing.T) {
+	w := makeRequest(t, "/?filter[baseline_name]=baseline_1-1", "application/json")
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var output []SystemDBLookup
+	ParseResponseBody(t, w.Body.Bytes(), &output)
+
+	assert.Equal(t, 2, len(output))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output[1].ID)
 }
