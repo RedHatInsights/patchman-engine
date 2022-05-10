@@ -9,7 +9,7 @@ COMPONENT=$1
 echo "Running in $(pwd) as $(id)"
 if [[ -n $GORUN ]]; then
   # Running using 'go run'
-  exec ./scripts/wait-for-services.sh go run $BUILD_TAGS_ENV main.go $COMPONENT
+  exec ./scripts/wait-for-services.sh go run main.go $COMPONENT
 else
   exec ./scripts/wait-for-services.sh ./main $COMPONENT
 fi

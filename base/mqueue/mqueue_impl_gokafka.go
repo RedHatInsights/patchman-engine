@@ -7,12 +7,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io/ioutil"
+	"time"
+
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/sasl"
 	kafkaPlain "github.com/segmentio/kafka-go/sasl/plain"
 	kafkaScram "github.com/segmentio/kafka-go/sasl/scram"
-	"io/ioutil"
-	"time"
 )
 
 type kafkaGoReaderImpl struct {
@@ -58,7 +59,7 @@ func (t *kafkaGoWriterImpl) WriteMessages(ctx context.Context, msgs ...KafkaMess
 	return err
 }
 
-func newKafkaGoReaderFromEnv(topic string) Reader {
+func NewKafkaReaderFromEnv(topic string) Reader {
 	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
 	kafkaGroup := utils.GetenvOrFail("KAFKA_GROUP")
 	minBytes := utils.GetIntEnvOrDefault("KAFKA_READER_MIN_BYTES", 1)
@@ -80,7 +81,7 @@ func newKafkaGoReaderFromEnv(topic string) Reader {
 	return reader
 }
 
-func newKafkaGoWriterFromEnv(topic string) Writer {
+func NewKafkaWriterFromEnv(topic string) Writer {
 	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
 	maxAttempts := utils.GetIntEnvOrDefault("KAFKA_WRITER_MAX_ATTEMPTS", 10)
 
