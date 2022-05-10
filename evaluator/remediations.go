@@ -4,17 +4,18 @@ import (
 	"app/base"
 	"app/base/models"
 	"app/base/mqueue"
+	"app/base/utils"
 	"app/base/vmaas"
 	"fmt"
-	"github.com/pkg/errors"
-	"os"
 	"sort"
+
+	"github.com/pkg/errors"
 )
 
 var remediationsPublisher mqueue.Writer
 
 func configureRemediations() {
-	if topic, has := os.LookupEnv("REMEDIATIONS_UPDATE_TOPIC"); has {
+	if topic := utils.Cfg.RemediationUpdateTopic; topic != "" {
 		remediationsPublisher = mqueue.NewKafkaWriterFromEnv(topic)
 	}
 }

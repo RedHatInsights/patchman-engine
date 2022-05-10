@@ -48,7 +48,7 @@ var (
 
 func configure() {
 	core.ConfigureApp()
-	evalTopic = utils.GetenvOrFail("EVAL_TOPIC")
+	evalTopic = utils.FailIfEmpty(utils.Cfg.EvalTopic, "EVAL_TOPIC")
 	evalLabel = utils.GetenvOrFail("EVAL_LABEL")
 	consumerCount = utils.GetIntEnvOrDefault("CONSUMER_COUNT", 1)
 	disableCompression := !utils.GetBoolEnvOrDefault("ENABLE_VMAAS_CALL_COMPRESSION", true)

@@ -25,11 +25,11 @@ var (
 
 func configure() {
 	core.ConfigureApp()
-	eventsTopic = utils.GetenvOrFail("EVENTS_TOPIC")
+	eventsTopic = utils.FailIfEmpty(utils.Cfg.EventsTopic, "EVENTS_TOPIC")
 
 	consumerCount = utils.GetIntEnvOrDefault("CONSUMER_COUNT", 1)
 
-	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
+	evalTopic := utils.FailIfEmpty(utils.Cfg.EvalTopic, "EVAL_TOPIC")
 
 	evalWriter = mqueue.NewKafkaWriterFromEnv(evalTopic)
 

@@ -2,7 +2,7 @@ package metrics
 
 import (
 	"app/base/mqueue"
-	"os"
+	"app/base/utils"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -27,7 +27,7 @@ var (
 )
 
 func init() {
-	if os.Getenv("KAFKA_ADDRESS") != "" {
+	if utils.Cfg.KafkaAddress != "" {
 		prometheus.MustRegister(KafkaConnectionErrorCnt)
 	}
 	prometheus.MustRegister(EngineVersion)
@@ -35,7 +35,7 @@ func init() {
 }
 
 func Configure() {
-	if os.Getenv("KAFKA_ADDRESS") != "" {
+	if utils.Cfg.KafkaAddress != "" {
 		mqueue.SetKafkaErrorReadCnt(KafkaConnectionErrorCnt.WithLabelValues("read"))
 		mqueue.SetKafkaErrorWriteCnt(KafkaConnectionErrorCnt.WithLabelValues("write"))
 	}

@@ -36,8 +36,15 @@ type Config struct {
 	KafkaAddress           string
 	KafkaSslEnabled        bool
 	KafkaSslCert           string
+	KafkaSslSkipVerify     bool
+	KafkaSaslType          string
 	KafkaUsername          string
 	KafkaPassword          string
+	KafkaGroup             string
+	KafkaReaderMinBytes    int
+	KafkaReaderMaxBytes    int
+	KafkaReaderMaxAttempts int
+	KafkaWriterMaxAttempts int
 	EventsTopic            string
 	EvalTopic              string
 	RemediationUpdateTopic string
@@ -97,8 +104,15 @@ func initKafkaFromEnv() {
 	Cfg.KafkaAddress = Getenv("KAFKA_ADDRESS", "")
 	Cfg.KafkaSslEnabled = GetBoolEnvOrDefault("ENABLE_KAFKA_SSL", false)
 	Cfg.KafkaSslCert = Getenv("KAFKA_SSL_CERT", "")
+	Cfg.KafkaSslSkipVerify = GetBoolEnvOrDefault("KAFKA_SSL_SKIP_VERIFY", false)
+	Cfg.KafkaSaslType = Getenv("KAFKA_SASL_TYPE", "scram")
 	Cfg.KafkaUsername = Getenv("KAFKA_USERNAME", "")
 	Cfg.KafkaPassword = Getenv("KAFKA_PASSWORD", "")
+	Cfg.KafkaGroup = Getenv("KAFKA_GROUP", "")
+	Cfg.KafkaReaderMinBytes = GetIntEnvOrDefault("KAFKA_READER_MIN_BYTES", 1)
+	Cfg.KafkaReaderMaxBytes = GetIntEnvOrDefault("KAFKA_READER_MAX_BYTES", 1e6)
+	Cfg.KafkaReaderMaxAttempts = GetIntEnvOrDefault("KAFKA_READER_MAX_ATTEMPTS", 3)
+	Cfg.KafkaWriterMaxAttempts = GetIntEnvOrDefault("KAFKA_WRITER_MAX_ATTEMPTS", 10)
 	Cfg.EventsTopic = Getenv("EVENTS_TOPIC", "")
 	Cfg.EvalTopic = Getenv("EVAL_TOPIC", "")
 	Cfg.RemediationUpdateTopic = Getenv("REMEDIATIONS_UPDATE_TOPIC", "")

@@ -60,11 +60,11 @@ func (t *kafkaGoWriterImpl) WriteMessages(ctx context.Context, msgs ...KafkaMess
 }
 
 func NewKafkaReaderFromEnv(topic string) Reader {
-	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
-	kafkaGroup := utils.GetenvOrFail("KAFKA_GROUP")
-	minBytes := utils.GetIntEnvOrDefault("KAFKA_READER_MIN_BYTES", 1)
-	maxBytes := utils.GetIntEnvOrDefault("KAFKA_READER_MAX_BYTES", 1e6)
-	maxAttempts := utils.GetIntEnvOrDefault("KAFKA_READER_MAX_ATTEMPTS", 3)
+	kafkaAddress := utils.FailIfEmpty(utils.Cfg.KafkaAddress, "KAFKA_ADDRESS")
+	kafkaGroup := utils.FailIfEmpty(utils.Cfg.KafkaGroup, "KAFKA_GROUP")
+	minBytes := utils.Cfg.KafkaReaderMinBytes
+	maxBytes := utils.Cfg.KafkaReaderMaxBytes
+	maxAttempts := utils.Cfg.KafkaReaderMaxAttempts
 
 	config := kafka.ReaderConfig{
 		Brokers:     []string{kafkaAddress},
@@ -82,8 +82,8 @@ func NewKafkaReaderFromEnv(topic string) Reader {
 }
 
 func NewKafkaWriterFromEnv(topic string) Writer {
-	kafkaAddress := utils.GetenvOrFail("KAFKA_ADDRESS")
-	maxAttempts := utils.GetIntEnvOrDefault("KAFKA_WRITER_MAX_ATTEMPTS", 10)
+	kafkaAddress := utils.FailIfEmpty(utils.Cfg.KafkaAddress, "KAFKA_ADDRESS")
+	maxAttempts := utils.Cfg.KafkaWriterMaxAttempts
 
 	config := kafka.WriterConfig{
 		Brokers: []string{kafkaAddress},
@@ -103,12 +103,12 @@ func NewKafkaWriterFromEnv(topic string) Writer {
 
 // Init encrypting dialer if env var configured or return nil
 func tryCreateSecuredDialerFromEnv() *kafka.Dialer {
-	enableKafkaSsl := utils.GetBoolEnvOrDefault("ENABLE_KAFKA_SSL", false)
+	enableKafkaSsl := utils.Cfg.KafkaSslEnabled
 	if !enableKafkaSsl {
 		return nil
 	}
 
-	kafkaSslSkipVerify := utils.GetBoolEnvOrDefault("KAFKA_SSL_SKIP_VERIFY", false)
+	kafkaSslSkipVerify := utils.Cfg.KafkaSslSkipVerify
 	tlsConfig := &tls.Config{InsecureSkipVerify: true} // nolint:gosec
 	if !kafkaSslSkipVerify {
 		tlsConfig = caCertTLSConfigFromEnv()
@@ -125,12 +125,12 @@ func tryCreateSecuredDialerFromEnv() *kafka.Dialer {
 }
 
 func getSaslMechanism() sasl.Mechanism {
-	kafkaUsername := utils.Getenv("KAFKA_USERNAME", "")
+	kafkaUsername := utils.Cfg.KafkaUsername
 	if kafkaUsername == "" {
 		return nil
 	}
-	kafkaPassword := utils.GetenvOrFail("KAFKA_PASSWORD")
-	saslType := utils.Getenv("KAFKA_SASL_TYPE", "scram")
+	kafkaPassword := utils.FailIfEmpty(utils.Cfg.KafkaPassword, "KAFKA_PASSWORD")
+	saslType := utils.Cfg.KafkaSaslType
 	switch saslType {
 	case "scram":
 		mechanism, err := kafkaScram.Mechanism(kafkaScram.SHA512, kafkaUsername, kafkaPassword)
@@ -146,7 +146,7 @@ func getSaslMechanism() sasl.Mechanism {
 }
 
 func caCertTLSConfigFromEnv() *tls.Config {
-	caCertPath := utils.GetenvOrFail("KAFKA_SSL_CERT")
+	caCertPath := utils.FailIfEmpty(utils.Cfg.KafkaSslCert, "KAFKA_SSL_CERT")
 	caCert, err := ioutil.ReadFile(caCertPath)
 	if err != nil {
 		panic(err)
