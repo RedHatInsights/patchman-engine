@@ -4,7 +4,7 @@
 # Use go app command to print Clowder params
 function print_clowder_params() {
   if [[ -n $GORUN ]]; then
-    go run $BUILD_TAGS_ENV main.go print_clowder_params
+    go run main.go print_clowder_params
   else
     ./main print_clowder_params
   fi

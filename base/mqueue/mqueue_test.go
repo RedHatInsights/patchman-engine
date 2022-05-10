@@ -4,9 +4,10 @@ import (
 	"app/base/utils"
 	"context"
 	"errors"
-	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const id = "99c0ffee-0000-0000-0000-0000c0ffee99"
@@ -30,7 +31,7 @@ func TestParseEvents(t *testing.T) {
 
 func TestRoundTripKafkaGo(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
-	reader := newKafkaGoReaderFromEnv("test")
+	reader := NewKafkaReaderFromEnv("test")
 
 	var eventOut PlatformEvent
 	go reader.HandleMessages(MakeMessageHandler(func(event PlatformEvent) error {
@@ -38,7 +39,7 @@ func TestRoundTripKafkaGo(t *testing.T) {
 		return nil
 	}))
 
-	writer := newKafkaGoWriterFromEnv("test")
+	writer := NewKafkaWriterFromEnv("test")
 	eventIn := PlatformEvent{ID: someid}
 	assert.NoError(t, WriteEvents(context.Background(), writer, eventIn))
 	utils.AssertEqualWait(t, 8, func() (exp, act interface{}) {
