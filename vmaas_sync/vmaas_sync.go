@@ -55,7 +55,7 @@ func configure() {
 	vmaasErratasURL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/errata"
 	vmaasPkgListURL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/pkglist"
 	vmaasReposURL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/repos"
-	evalTopic := utils.GetenvOrFail("EVAL_TOPIC")
+	evalTopic := utils.FailIfEmpty(utils.Cfg.EvalTopic, "EVAL_TOPIC")
 	evalWriter = mqueue.NewKafkaWriterFromEnv(evalTopic)
 	enabledRepoBasedReeval = utils.GetBoolEnvOrDefault("ENABLE_REPO_BASED_RE_EVALUATION", true)
 	enableRecalcMessagesSend = utils.GetBoolEnvOrDefault("ENABLE_RECALC_MESSAGES_SEND", true)
