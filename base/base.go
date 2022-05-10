@@ -4,12 +4,13 @@ import (
 	"app/base/utils"
 	"context"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 const VMaaSAPIPrefix = "/api/v3"
@@ -74,9 +75,9 @@ func (d *Rfc3339Timestamp) Time() *time.Time {
 
 // TryExposeOnMetricsPort Expose app on required port if set
 func TryExposeOnMetricsPort(app *gin.Engine) {
-	metricsPort := utils.GetIntEnvOrDefault("METRICS_PORT", -1)
+	metricsPort := utils.Cfg.MetricsPort
 	if metricsPort == -1 {
-		return // Do not expose extra metrics port if not set using METRICS_PORT var
+		return // Do not expose extra metrics port if not set
 	}
 	err := utils.RunServer(Context, app, metricsPort)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"app/base/core"
 	"app/base/utils"
 	"app/manager/middlewares"
+
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -66,8 +67,7 @@ func RunMetrics() {
 
 	go base.TryExposeOnMetricsPort(app)
 
-	port := utils.GetIntEnvOrDefault("PORT", 8082)              // legacy env var
-	publicPort := utils.GetIntEnvOrDefault("PUBLIC_PORT", port) // clowder env var
+	publicPort := utils.Cfg.PublicPort
 	err := utils.RunServer(base.Context, app, publicPort)
 	if err != nil {
 		utils.Log("err", err.Error()).Error()
