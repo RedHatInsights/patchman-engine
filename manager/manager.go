@@ -53,7 +53,7 @@ func RunManager() {
 
 	kafka.TryStartEvalQueue(mqueue.NewKafkaWriterFromEnv)
 
-	port := utils.GetIntEnvOrDefault("PUBLIC_PORT", 8080)
+	port := utils.Cfg.PublicPort
 	err := utils.RunServer(base.Context, app, port)
 	if err != nil {
 		utils.Log("err", err.Error()).Fatal("server listening failed")

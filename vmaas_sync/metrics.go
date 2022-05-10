@@ -143,7 +143,7 @@ func RunMetrics() {
 
 	go base.TryExposeOnMetricsPort(app)
 
-	port := utils.GetIntEnvOrDefault("PUBLIC_PORT", 8083)
+	port := utils.Cfg.PublicPort
 	err := utils.RunServer(base.Context, app, port)
 	if err != nil {
 		utils.Log("err", err.Error()).Error()
