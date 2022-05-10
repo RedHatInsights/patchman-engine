@@ -52,9 +52,10 @@ func configure() {
 		HTTPClient: &http.Client{},
 		Debug:      useTraceLevel,
 	}
-	vmaasErratasURL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/errata"
-	vmaasPkgListURL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/pkglist"
-	vmaasReposURL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/repos"
+	vmaasAddress := utils.FailIfEmpty(utils.Cfg.VmaasAddress, "VMAAS_ADDRESS")
+	vmaasErratasURL = vmaasAddress + base.VMaaSAPIPrefix + "/errata"
+	vmaasPkgListURL = vmaasAddress + base.VMaaSAPIPrefix + "/pkglist"
+	vmaasReposURL = vmaasAddress + base.VMaaSAPIPrefix + "/repos"
 	evalTopic := utils.FailIfEmpty(utils.Cfg.EvalTopic, "EVAL_TOPIC")
 	evalWriter = mqueue.NewKafkaWriterFromEnv(evalTopic)
 	enabledRepoBasedReeval = utils.GetBoolEnvOrDefault("ENABLE_REPO_BASED_RE_EVALUATION", true)
@@ -238,9 +239,10 @@ func RunVmaasSync() {
 	syncAndRecalcOnStartIfSet() // sync advisories and re-calc on start if configured
 
 	// Continually try to reconnect
+	vmaasWsAddress := utils.FailIfEmpty(utils.Cfg.VmaasWsAddress, "VMAAS_WS_ADDRESS")
 	for {
 		conn, _, err := websocket.DefaultDialer.DialContext(base.Context, // nolint: bodyclose
-			utils.GetenvOrFail("VMAAS_WS_ADDRESS"), nil)
+			vmaasWsAddress, nil)
 		if err != nil {
 			utils.Log("err", err.Error()).Fatal("Failed to connect to VMaaS")
 		}
