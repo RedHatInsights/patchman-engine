@@ -1,11 +1,12 @@
 package utils
 
 import (
-	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func SkipWithoutDB(t *testing.T) {
@@ -15,7 +16,7 @@ func SkipWithoutDB(t *testing.T) {
 }
 
 func SkipWithoutPlatform(t *testing.T) {
-	if os.Getenv("VMAAS_ADDRESS") == "" {
+	if Cfg.VmaasAddress == "" {
 		t.Skip("testing platform instance not used - skipping")
 	}
 }

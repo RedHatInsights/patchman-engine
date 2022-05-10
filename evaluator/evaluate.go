@@ -65,7 +65,7 @@ func configure() {
 		HTTPClient: &http.Client{Transport: &http.Transport{DisableCompression: disableCompression}},
 		Debug:      useTraceLevel,
 	}
-	vmaasUpdatesURL = utils.GetenvOrFail("VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/updates"
+	vmaasUpdatesURL = utils.FailIfEmpty(utils.Cfg.VmaasAddress, "VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/updates"
 	enablePackageCache = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_CACHE", true)
 	preloadPackageCache = utils.GetBoolEnvOrDefault("PRELOAD_PACKAGE_CACHE", true)
 	packageCacheSize = utils.GetIntEnvOrDefault("PACKAGE_CACHE_SIZE", 1000000)
