@@ -17,15 +17,15 @@ var hook *lc.Hook
 
 // Try to init CloudWatch logging
 func trySetupCloudWatchLogging() {
-	key := os.Getenv("CW_AWS_ACCESS_KEY_ID")
+	key := Cfg.CloudWatchAccessKeyID
 	if key == "" {
 		log.Info("config for aws CloudWatch not loaded")
 		return
 	}
 
-	secret := GetenvOrFail("CW_AWS_SECRET_ACCESS_KEY")
-	region := Getenv("CW_AWS_REGION", "us-east-1")
-	group := Getenv("CW_AWS_LOG_GROUP", "platform-dev")
+	secret := FailIfEmpty(Cfg.CloudWatchSecretAccesskey, "CW_AWS_SECRET_ACCESS_KEY")
+	region := Cfg.CloudWatchRegion
+	group := Cfg.CloudWatchLogGroup
 
 	hostname, err := os.Hostname()
 	if err != nil {

@@ -127,8 +127,8 @@ func initServicesFromEnv() {
 func initCloudwatchFromEnv() {
 	Cfg.CloudWatchAccessKeyID = Getenv("CW_AWS_ACCESS_KEY_ID", "")
 	Cfg.CloudWatchSecretAccesskey = Getenv("CW_AWS_SECRET_ACCESS_KEY", "")
-	Cfg.CloudWatchRegion = Getenv("CW_AWS_REGION", "")
-	Cfg.CloudWatchLogGroup = Getenv("CW_AWS_LOG_GROUP", "")
+	Cfg.CloudWatchRegion = Getenv("CW_AWS_REGION", "us-east-1")
+	Cfg.CloudWatchLogGroup = Getenv("CW_AWS_LOG_GROUP", "platform-dev")
 }
 
 func initDBFromClowder() {
