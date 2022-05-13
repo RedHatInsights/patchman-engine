@@ -14,7 +14,7 @@ RUN FULL_RHEL=$(dnf repolist rhel-8-for-x86_64-baseos-rpms --enabled -q) ; \
     fi
 
 RUN dnf module -y enable postgresql:12 && \
-    dnf install -y go-toolset postgresql git-core diffutils rpm-devel && \
+    dnf install -y go-toolset-1.16.* postgresql git-core diffutils rpm-devel && \
     ln -s /usr/libexec/platform-python /usr/bin/python3
 
 ENV GOPATH=/go \
