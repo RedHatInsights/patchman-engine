@@ -1,5 +1,5 @@
-ARG BUILDIMG=registry.access.redhat.com/ubi8
-ARG RUNIMG=registry.access.redhat.com/ubi8-micro
+ARG BUILDIMG=registry.access.redhat.com/ubi8:8.5
+ARG RUNIMG=registry.access.redhat.com/ubi8-micro:8.5
 FROM ${BUILDIMG} as buildimg
 
 ARG INSTALL_TOOLS=no
@@ -14,7 +14,7 @@ RUN FULL_RHEL=$(dnf repolist rhel-8-for-x86_64-baseos-rpms --enabled -q) ; \
     fi
 
 RUN dnf module -y enable postgresql:12 && \
-    dnf install -y go-toolset-1.16.* postgresql git-core diffutils rpm-devel && \
+    dnf install -y go-toolset postgresql git-core diffutils rpm-devel && \
     ln -s /usr/libexec/platform-python /usr/bin/python3
 
 ENV GOPATH=/go \
