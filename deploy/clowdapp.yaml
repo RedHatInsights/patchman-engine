@@ -381,7 +381,6 @@ parameters:
 - {name: REPLICAS_MANAGER, value: '1'}
 - {name: IMAGE_TAG_MANAGER, value: latest}
 - {name: LOG_LEVEL_MANAGER, value: debug}
-- {name: GODEBUG_MANAGER, value: 'x509ignoreCN=0'}
 - {name: GOMAXPROCS_MANAGER, value: '8'}
 - {name: DB_DEBUG_MANAGER, value: 'false'} # Log database queries if enabled
 - {name: ENABLE_CYNDI_TAGS, value: 'true'} # Enable filtering with Cyndi tags
@@ -400,7 +399,6 @@ parameters:
 - {name: REPLICAS_LISTENER, value: '1'}
 - {name: IMAGE_TAG_LISTENER, value: latest}
 - {name: LOG_LEVEL_LISTENER, value: debug}
-- {name: GODEBUG_LISTENER, value: 'x509ignoreCN=0'}
 - {name: GOMAXPROCS_LISTENER, value: '8'}
 - {name: DB_DEBUG_LISTENER, value: 'false'}
 - {name: CONSUMER_COUNT_LISTENER, value: '8'}
@@ -414,7 +412,6 @@ parameters:
 - {name: REPLICAS_EVALUATOR_UPLOAD, value: '1'}
 - {name: IMAGE_TAG_EVALUATOR_UPLOAD, value: latest}
 - {name: LOG_LEVEL_EVALUATOR_UPLOAD, value: debug}
-- {name: GODEBUG_EVALUATOR_UPLOAD, value: 'x509ignoreCN=0'}
 - {name: GOMAXPROCS_EVALUATOR_UPLOAD, value: '8'}
 - {name: DB_DEBUG_EVALUATOR_UPLOAD, value: 'false'}
 - {name: CONSUMER_COUNT_EVALUATOR_UPLOAD, value: '8'}
@@ -434,7 +431,6 @@ parameters:
 - {name: REPLICAS_EVALUATOR_RECALC, value: '1'}
 - {name: IMAGE_TAG_EVALUATOR_RECALC, value: latest}
 - {name: LOG_LEVEL_EVALUATOR_RECALC, value: debug}
-- {name: GODEBUG_EVALUATOR_RECALC, value: 'x509ignoreCN=0'}
 - {name: GOMAXPROCS_EVALUATOR_RECALC, value: '8'}
 - {name: DB_DEBUG_EVALUATOR_RECALC, value: 'false'}
 - {name: CONSUMER_COUNT_EVALUATOR_RECALC, value: '8'}
@@ -454,7 +450,6 @@ parameters:
 - {name: REPLICAS_VMAAS_SYNC, value: '1'}
 - {name: IMAGE_TAG_VMAAS_SYNC, value: latest}
 - {name: LOG_LEVEL_VMAAS_SYNC, value: debug}
-- {name: GODEBUG_VMAAS_SYNC, value: 'x509ignoreCN=0'}
 - {name: GOMAXPROCS_VMAAS_SYNC, value: '8'}
 - {name: DB_DEBUG_VMAAS_SYNC, value: 'false'}
 - {name: ENABLE_REPO_BASED_RE_EVALUATION, value: 'true'} # Optimize re-evaluation using repositories
@@ -485,7 +480,6 @@ parameters:
 # Database admin
 - {name: IMAGE_TAG_DATABASE_ADMIN, value: latest}
 - {name: LOG_LEVEL_DATABASE_ADMIN, value: debug}
-- {name: GODEBUG_DATABASE_ADMIN, value: 'x509ignoreCN=0'}
 - {name: DB_DEBUG_DATABASE_ADMIN, value: 'false'}
 - {name: SCHEMA_MIGRATION, value: '-1'} # Set specific database schema version or use the last schema version (-1)
 - {name: RESET_SCHEMA, value: 'false'} # Drop and recreate database schema, use SCHEMA_MIGRATION to create specific schema version
