@@ -5,10 +5,11 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/base/vmaas"
+	"time"
+
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"time"
 )
 
 func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) (
@@ -77,7 +78,7 @@ func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform,
 		return nil, errors.Wrap(err, "Unable to update system advisories")
 	}
 
-	err = updateAdvisoryAccountDatas(tx, system, patched, unpatched)
+	err = updateAdvisoryAccountData(tx, system, patched, unpatched)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to update advisory_account_data caches")
 	}
@@ -172,11 +173,11 @@ func lockAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, patched
 }
 
 func calcAdvisoryChanges(system *models.SystemPlatform, patched, unpatched []int) []models.AdvisoryAccountData {
-	aadMap := map[int]models.AdvisoryAccountData{}
 	// If system is stale, we won't change any rows  in advisory_account_data
 	if system.Stale {
 		return []models.AdvisoryAccountData{}
 	}
+	aadMap := map[int]models.AdvisoryAccountData{}
 
 	for _, id := range unpatched {
 		aadMap[id] = models.AdvisoryAccountData{
@@ -237,13 +238,18 @@ func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
 	return newSystemAdvisories, nil
 }
 
-func updateAdvisoryAccountDatas(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int) error {
+func updateAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int) error {
 	err := lockAdvisoryAccountData(tx, system, patched, unpatched)
 	if err != nil {
 		return err
 	}
 
 	changes := calcAdvisoryChanges(system, patched, unpatched)
+
+	if len(changes) == 0 {
+		return nil
+	}
+
 	txOnConflict := database.OnConflictDoUpdateExpr(tx, []string{"rh_account_id", "advisory_id"},
 		database.UpExpr{Name: "systems_affected", Expr: "advisory_account_data.systems_affected + excluded.systems_affected"})
 
