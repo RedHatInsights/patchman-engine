@@ -121,6 +121,7 @@ objects:
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
+        - {name: NOTIFICATIONS_TOPIC, value: 'platform.notifications.ingress'}
         - {name: EVAL_LABEL, value: upload}
         - {name: CONSUMER_COUNT, value: '${CONSUMER_COUNT_EVALUATOR_UPLOAD}'}
         - {name: ENABLE_BYPASS, value: '${ENABLE_BYPASS_EVALUATOR_UPLOAD}'}
@@ -172,6 +173,7 @@ objects:
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
+        - {name: NOTIFICATIONS_TOPIC, value: 'platform.notifications.ingress'}
         - {name: EVAL_LABEL, value: recalc}
         - {name: CONSUMER_COUNT, value: '${CONSUMER_COUNT_EVALUATOR_RECALC}'}
         - {name: ENABLE_BYPASS, value: '${ENABLE_BYPASS_EVALUATOR_RECALC}'}
@@ -329,6 +331,7 @@ objects:
     - {replicas: 3, partitions: 10, topicName: patchman.evaluator.upload}
     - {replicas: 3, partitions: 10, topicName: patchman.evaluator.recalc}
     - {replicas: 3, partitions: 10, topicName: platform.remediation-updates.patch}
+    - {replicas: 3, partitions: 10, topicName: platform.notifications.ingress}
 
     dependencies:
     - host-inventory
