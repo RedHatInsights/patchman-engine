@@ -74,6 +74,7 @@ func configure() {
 	vmaasCallUseExpRetry = utils.GetBoolEnvOrDefault("VMAAS_CALL_USE_EXP_RETRY", true)
 	vmaasCallUseOptimisticUpdates = utils.GetBoolEnvOrDefault("VMAAS_CALL_USE_OPTIMISTIC_UPDATES", true)
 	configureRemediations()
+	configureNotifications()
 }
 
 func Evaluate(ctx context.Context, accountID int, inventoryID string, requested *base.Rfc3339Timestamp,
@@ -228,6 +229,14 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vma
 		evaluationCnt.WithLabelValues("error-update-system").Inc()
 		return errors.Wrap(err, "Unable to update system")
 	}
+
+	// Send instant notification with new advisories
+	err = publishNewAdvisoriesNotification(tx, system.InventoryID, system.RhAccountID, newSystemAdvisories)
+	if err != nil {
+		utils.Log("RHAccountID", system.RhAccountID, "newSystemAdvisories", newSystemAdvisories).
+			Error("publishing new advisories notification failed")
+	}
+
 	return nil
 }
 
