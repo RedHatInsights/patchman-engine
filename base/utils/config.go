@@ -48,6 +48,7 @@ type Config struct {
 	EventsTopic            string
 	EvalTopic              string
 	RemediationUpdateTopic string
+	NotificationsTopic     string
 
 	// services
 	VmaasAddress   string
@@ -116,6 +117,7 @@ func initKafkaFromEnv() {
 	Cfg.EventsTopic = Getenv("EVENTS_TOPIC", "")
 	Cfg.EvalTopic = Getenv("EVAL_TOPIC", "")
 	Cfg.RemediationUpdateTopic = Getenv("REMEDIATIONS_UPDATE_TOPIC", "")
+	Cfg.NotificationsTopic = Getenv("NOTIFICATIONS_TOPIC", "")
 }
 
 func initServicesFromEnv() {
@@ -182,6 +184,9 @@ func initKafkaFromClowder() {
 		}
 		if Cfg.RemediationUpdateTopic != "" {
 			Cfg.RemediationUpdateTopic = clowder.KafkaTopics[Cfg.RemediationUpdateTopic].Name
+		}
+		if Cfg.NotificationsTopic != "" {
+			Cfg.NotificationsTopic = clowder.KafkaTopics[Cfg.NotificationsTopic].Name
 		}
 	}
 }
@@ -262,6 +267,7 @@ func printKafkaParams() {
 	fmt.Printf("EVENTS_TOPIC=%s\n", Cfg.EventsTopic)
 	fmt.Printf("EVAL_TOPIC=%s\n", Cfg.EvalTopic)
 	fmt.Printf("REMEDIATIONS_UPDATE_TOPIC=%s\n", Cfg.RemediationUpdateTopic)
+	fmt.Printf("NOTIFICATIONS_TOPIC=%s\n", Cfg.NotificationsTopic)
 }
 
 func printServicesParams() {
