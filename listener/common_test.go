@@ -82,7 +82,7 @@ func createTestUploadEvent(rhAccountID, inventoryID, reporter string, packages b
 		PlatformMetadata: nil,
 		Host: Host{
 			ID:       inventoryID,
-			Account:  rhAccountID,
+			Account:  &rhAccountID,
 			Reporter: reporter,
 		},
 	}

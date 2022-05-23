@@ -84,12 +84,12 @@ func getInventoryIDs(baselineID *int, accountID int, inventoryIDs []string) []mq
 	return inventoryAIDs
 }
 
-func sendInventoryIDs(inventoryIDs []mqueue.InventoryAID) {
+func sendInventoryIDs(inventoryIDs mqueue.InventoryAIDs) {
 	if len(inventoryIDs) == 0 {
 		return
 	}
 
-	err := mqueue.SendMessages(base.Context, evalWriter, inventoryIDs...)
+	err := mqueue.SendMessages(base.Context, evalWriter, &inventoryIDs)
 	if err != nil {
 		utils.Log("nInventoryIDs", len(inventoryIDs), "err", err.Error()).
 			Error("Inventory IDs sending failed")

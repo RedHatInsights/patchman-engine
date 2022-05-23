@@ -25,6 +25,7 @@ const (
 	WarnSkippingNoPackages = "skipping profile with no packages"
 	WarnSkippingReporter   = "skipping excluded reporter"
 	WarnSkippingHostType   = "skipping excluded host type"
+	WarnPayloadTracker     = "unable to send message to payload tracker"
 	ErrorNoAccountProvided = "no account provided in host message"
 	ErrorKafkaSend         = "unable to send evaluation message"
 	ErrorProcessUpload     = "unable to process upload"
@@ -33,6 +34,8 @@ const (
 	FlushedFullBuffer      = "flushing full eval event buffer"
 	FlushedTimeoutBuffer   = "flushing eval event buffer after timeout"
 	ErrorUnmarshalMetadata = "unable to unmarshall platform metadata value"
+	ErrorStatus            = "error"
+	SuccessStatus          = "success"
 )
 
 var DeletionThreshold = time.Hour * time.Duration(utils.GetIntEnvOrDefault("SYSTEM_DELETE_HRS", 4))
@@ -40,7 +43,8 @@ var DeletionThreshold = time.Hour * time.Duration(utils.GetIntEnvOrDefault("SYST
 type Host struct {
 	ID                    string                  `json:"id,omitempty"`
 	DisplayName           *string                 `json:"display_name,omitempty"`
-	Account               string                  `json:"account,omitempty"`
+	Account               *string                 `json:"account,omitempty"`
+	OrgID                 *string                 `json:"org_id,omitempty"`
 	StaleTimestamp        *base.Rfc3339Timestamp  `json:"stale_timestamp,omitempty"`
 	StaleWarningTimestamp *base.Rfc3339Timestamp  `json:"stale_warning_timestamp,omitempty"`
 	CulledTimestamp       *base.Rfc3339Timestamp  `json:"culled_timestamp,omitempty"`
@@ -48,37 +52,55 @@ type Host struct {
 	SystemProfile         inventory.SystemProfile `json:"system_profile,omitempty"`
 }
 
+type HostMetadata struct {
+	RequestID string `json:"request_id"`
+}
+
 type HostEvent struct {
 	Type             string                 `json:"type"`
 	PlatformMetadata map[string]interface{} `json:"platform_metadata"`
 	Host             Host                   `json:"host"`
+	Metadata         HostMetadata           `json:"metadata"`
 }
 
 type CustomMetadata struct {
 	YumUpdates json.RawMessage `json:"yum_updates,omitempty"`
 }
 
+//nolint:funlen
 func HandleUpload(event HostEvent) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventUpload))
 
 	updateReporterCounter(event.Host.Reporter)
 
+	payloadTrackerEvent := mqueue.PayloadTrackerEvent{
+		Account:     event.Host.Account,
+		OrgID:       event.Host.OrgID,
+		RequestID:   &event.Metadata.RequestID,
+		InventoryID: event.Host.ID,
+		Status:      "received",
+	}
+	sendPayloadStatus(ptWriter, payloadTrackerEvent, "", "")
+
 	if _, ok := excludedReporters[event.Host.Reporter]; ok {
 		utils.Log("inventoryID", event.Host.ID, "reporter", event.Host.Reporter).Warn(WarnSkippingReporter)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedReporter).Inc()
+		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, WarnSkippingReporter)
 		return nil
 	}
 
 	if _, ok := excludedHostTypes[event.Host.SystemProfile.HostType]; ok {
 		utils.Log("inventoryID", event.Host.ID, "hostType", event.Host.SystemProfile.HostType).Warn(WarnSkippingHostType)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedHostType).Inc()
+		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, WarnSkippingHostType)
 		return nil
 	}
 
-	if len(event.Host.Account) == 0 {
+	if event.Host.Account == nil || *event.Host.Account == "" {
 		utils.Log("inventoryID", event.Host.ID).Error(ErrorNoAccountProvided)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
+		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, ErrorNoAccountProvided)
 		return nil
 	}
 
@@ -87,20 +109,23 @@ func HandleUpload(event HostEvent) error {
 	if len(event.Host.SystemProfile.GetInstalledPackages()) == 0 && yumUpdates == nil {
 		utils.Log("inventoryID", event.Host.ID).Warn(WarnSkippingNoPackages)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
+		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, WarnSkippingNoPackages)
 		return nil
 	}
 
-	sys, err := processUpload(event.Host.Account, &event.Host, yumUpdates)
+	sys, err := processUpload(*event.Host.Account, &event.Host, yumUpdates)
 
 	if err != nil {
 		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorProcessUpload)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
+		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, ErrorProcessUpload)
 		return errors.Wrap(err, "Could not process upload")
 	}
 
 	// Deleted system, return nil
 	if sys == nil {
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedDeleted).Inc()
+		sendPayloadStatus(ptWriter, payloadTrackerEvent, SuccessStatus, ReceivedDeleted)
 		return nil
 	}
 
@@ -108,30 +133,54 @@ func HandleUpload(event HostEvent) error {
 		if sys.UnchangedSince.Before(*sys.LastEvaluation) {
 			messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccessNoEval).Inc()
 			utils.Log("inventoryID", event.Host.ID).Info(UploadSuccessNoEval)
+			sendPayloadStatus(ptWriter, payloadTrackerEvent, SuccessStatus, ReceivedSuccessNoEval)
 			return nil
 		}
 	}
 
-	bufferEvalEvents(sys.InventoryID, sys.RhAccountID)
+	// OrgID is empty till inventory starts sending OrgID
+	bufferEvalEvents(sys.InventoryID, sys.RhAccountID, &payloadTrackerEvent)
 
 	messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
 	utils.Log("inventoryID", event.Host.ID).Info(UploadSuccess)
 	return nil
 }
 
+func sendPayloadStatus(w mqueue.Writer, event mqueue.PayloadTrackerEvent, status string, statusMsg string) {
+	if status != "" {
+		event.Status = status
+	}
+	if statusMsg != "" {
+		event.StatusMsg = statusMsg
+	}
+	if err := mqueue.SendMessages(base.Context, w, &event); err != nil {
+		utils.Log("err", err.Error()).Warn(WarnPayloadTracker)
+	}
+}
+
 // accumulate events and create group PlatformEvents to save some resources
 const evalBufferSize = 5 * mqueue.BatchSize
 
-var evalBuffer = make([]mqueue.InventoryAID, 0, evalBufferSize+1)
+var evalBuffer = make(mqueue.EvalDataSlice, 0, evalBufferSize+1)
+var ptBuffer = make(mqueue.PayloadTrackerEvents, 0, evalBufferSize+1)
 var flushTimer = time.AfterFunc(87600*time.Hour, func() {
 	utils.Log().Info(FlushedTimeoutBuffer)
 	flushEvalEvents()
 })
 
 // send events after full buffer or timeout
-func bufferEvalEvents(inventoryID string, rhAccountID int) {
-	inventoryAID := mqueue.InventoryAID{InventoryID: inventoryID, RhAccountID: rhAccountID}
-	evalBuffer = append(evalBuffer, inventoryAID)
+func bufferEvalEvents(inventoryID string, rhAccountID int, ptEvent *mqueue.PayloadTrackerEvent) {
+	evalData := mqueue.EvalData{
+		InventoryID: inventoryID,
+		RhAccountID: rhAccountID,
+		AccountInfo: mqueue.AccountInfo{
+			AccountName: ptEvent.Account,
+			OrgID:       ptEvent.OrgID,
+		},
+		RequestID: *ptEvent.RequestID,
+	}
+	evalBuffer = append(evalBuffer, evalData)
+	ptBuffer = append(ptBuffer, *ptEvent)
 	flushTimer.Reset(uploadEvalTimeout)
 	if len(evalBuffer) >= evalBufferSize {
 		utils.Log().Info(FlushedFullBuffer)
@@ -140,12 +189,17 @@ func bufferEvalEvents(inventoryID string, rhAccountID int) {
 }
 
 func flushEvalEvents() {
-	err := mqueue.SendMessages(base.Context, evalWriter, evalBuffer...)
+	err := mqueue.SendMessages(base.Context, evalWriter, &evalBuffer)
 	if err != nil {
 		utils.Log("err", err.Error()).Error(ErrorKafkaSend)
 	}
+	err = mqueue.SendMessages(base.Context, ptWriter, &ptBuffer)
+	if err != nil {
+		utils.Log("err", err.Error()).Warn(WarnPayloadTracker)
+	}
 	// empty buffer
 	evalBuffer = evalBuffer[:0]
+	ptBuffer = ptBuffer[:0]
 }
 
 func updateReporterCounter(reporter string) {

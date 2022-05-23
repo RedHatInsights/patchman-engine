@@ -29,6 +29,8 @@ var (
 	vmaasUpdatesURL               string
 	evalTopic                     string
 	evalLabel                     string
+	ptTopic                       string
+	ptWriter                      mqueue.Writer
 	enableAdvisoryAnalysis        bool
 	enablePackageAnalysis         bool
 	enableRepoAnalysis            bool
@@ -46,10 +48,14 @@ var (
 	vmaasCallUseOptimisticUpdates bool
 )
 
+const WarnPayloadTracker = "unable to send message to payload tracker"
+
 func configure() {
 	core.ConfigureApp()
 	evalTopic = utils.FailIfEmpty(utils.Cfg.EvalTopic, "EVAL_TOPIC")
 	evalLabel = utils.GetenvOrFail("EVAL_LABEL")
+	ptTopic = utils.FailIfEmpty(utils.Cfg.PayloadTrackerTopic, "PAYLOAD_TRACKER_TOPIC")
+	ptWriter = mqueue.NewKafkaWriterFromEnv(ptTopic)
 	consumerCount = utils.GetIntEnvOrDefault("CONSUMER_COUNT", 1)
 	disableCompression := !utils.GetBoolEnvOrDefault("ENABLE_VMAAS_CALL_COMPRESSION", true)
 	enableAdvisoryAnalysis = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_ANALYSIS", true)
@@ -360,14 +366,29 @@ func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, erro
 
 func evaluateHandler(event mqueue.PlatformEvent) error {
 	var err error
-
+	nSystems := 1
+	if event.SystemIDs != nil {
+		nSystems = len(event.SystemIDs)
+	}
+	ptEvents := make(mqueue.PayloadTrackerEvents, 0, nSystems)
+	ptEvent := mqueue.PayloadTrackerEvent{
+		Account:   event.Account,
+		OrgID:     event.OrgID,
+		Status:    "success",
+		StatusMsg: "advisories evaluation",
+	}
 	if event.SystemIDs != nil {
 		// Evaluate in bulk
-		for _, id := range event.SystemIDs {
+		for i, id := range event.SystemIDs {
+			ptEvent.InventoryID = id
+			ptEvent.RequestID = &event.RequestIDs[i]
 			err = Evaluate(base.Context, event.AccountID, id, event.Timestamp, evalLabel)
 			if err != nil {
+				ptEvent.Status = "error"
+				ptEvents = append(ptEvents, ptEvent)
 				continue
 			}
+			ptEvents = append(ptEvents, ptEvent)
 		}
 	} else {
 		err = Evaluate(base.Context, event.AccountID, event.ID, event.Timestamp, evalLabel)
@@ -376,7 +397,23 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 	if err != nil {
 		utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
 			Error("Eval message handling")
+		if event.SystemIDs == nil {
+			// this is an evaluator-recalc event, we don't need to send info to payload tracker
+			return err
+		}
+		// send kafka message to payload tracker
+		ptErr := mqueue.SendMessages(base.Context, ptWriter, &ptEvents)
+		if ptErr != nil {
+			utils.Log("err", err.Error()).Warn(WarnPayloadTracker)
+		}
 		return err
+	}
+
+	// send kafka message to payload tracker
+	err = mqueue.SendMessages(base.Context, ptWriter, &ptEvents)
+	if err != nil {
+		// don't fail with err, just log that we couldn't send msg to payload tracker
+		utils.Log("err", err.Error()).Warn(WarnPayloadTracker)
 	}
 	return nil
 }

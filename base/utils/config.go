@@ -47,6 +47,7 @@ type Config struct {
 	KafkaWriterMaxAttempts int
 	EventsTopic            string
 	EvalTopic              string
+	PayloadTrackerTopic    string
 	RemediationUpdateTopic string
 	NotificationsTopic     string
 
@@ -116,6 +117,7 @@ func initKafkaFromEnv() {
 	Cfg.KafkaWriterMaxAttempts = GetIntEnvOrDefault("KAFKA_WRITER_MAX_ATTEMPTS", 10)
 	Cfg.EventsTopic = Getenv("EVENTS_TOPIC", "")
 	Cfg.EvalTopic = Getenv("EVAL_TOPIC", "")
+	Cfg.PayloadTrackerTopic = Getenv("PAYLOAD_TRACKER_TOPIC", "")
 	Cfg.RemediationUpdateTopic = Getenv("REMEDIATIONS_UPDATE_TOPIC", "")
 	Cfg.NotificationsTopic = Getenv("NOTIFICATIONS_TOPIC", "")
 }
@@ -181,6 +183,9 @@ func initKafkaFromClowder() {
 		}
 		if Cfg.EvalTopic != "" {
 			Cfg.EvalTopic = clowder.KafkaTopics[Cfg.EvalTopic].Name
+		}
+		if Cfg.PayloadTrackerTopic != "" {
+			Cfg.PayloadTrackerTopic = clowder.KafkaTopics[Cfg.PayloadTrackerTopic].Name
 		}
 		if Cfg.RemediationUpdateTopic != "" {
 			Cfg.RemediationUpdateTopic = clowder.KafkaTopics[Cfg.RemediationUpdateTopic].Name
@@ -266,6 +271,7 @@ func printKafkaParams() {
 	}
 	fmt.Printf("EVENTS_TOPIC=%s\n", Cfg.EventsTopic)
 	fmt.Printf("EVAL_TOPIC=%s\n", Cfg.EvalTopic)
+	fmt.Printf("PAYLOAD_TRACKER_TOPIC=%s\n", Cfg.PayloadTrackerTopic)
 	fmt.Printf("REMEDIATIONS_UPDATE_TOPIC=%s\n", Cfg.RemediationUpdateTopic)
 	fmt.Printf("NOTIFICATIONS_TOPIC=%s\n", Cfg.NotificationsTopic)
 }

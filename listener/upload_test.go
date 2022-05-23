@@ -11,10 +11,11 @@ import (
 	"app/base/vmaas"
 	"context"
 	"errors"
-	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func createTestInvHost(t *testing.T) *Host {
@@ -152,7 +153,7 @@ func TestUploadHandlerError1(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
 	event := createTestUploadEvent("1", id, "puptoo", true)
-	event.Host.Account = ""
+	*event.Host.Account = ""
 	err := HandleUpload(event)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(logHook.LogEntries))

@@ -1,13 +1,11 @@
 package mqueue
 
 import (
-	"app/base"
 	"app/base/utils"
 	"encoding/json"
 	"time"
 
 	"github.com/lestrrat-go/backoff"
-	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -18,23 +16,11 @@ var policy = backoff.NewExponential(
 	backoff.WithMaxRetries(5),
 )
 
-type PlatformEvent struct {
-	ID          string                 `json:"id"`
-	Type        *string                `json:"type"`
-	Timestamp   *base.Rfc3339Timestamp `json:"timestamp"`
-	Account     *string                `json:"account"`
-	AccountID   int                    `json:"account_id"`
-	B64Identity *string                `json:"b64_identity"`
-	URL         *string                `json:"url"`
-	SystemIDs   []string               `json:"system_ids,omitempty"`
-}
-
-type InventoryAID struct {
-	InventoryID string
-	RhAccountID int
-}
-
 type EventHandler func(message PlatformEvent) error
+
+type MessageData interface {
+	WriteEvents(ctx context.Context, w Writer) error
+}
 
 // Performs parsing of kafka message, and then dispatches this message into provided functions
 func MakeMessageHandler(eventHandler EventHandler) MessageHandler {
@@ -50,50 +36,6 @@ func MakeMessageHandler(eventHandler EventHandler) MessageHandler {
 	}
 }
 
-// nolint: scopelint
-func WriteEvents(ctx context.Context, w Writer, events ...PlatformEvent) error {
-	msgs := make([]KafkaMessage, len(events))
-	for i, ev := range events {
-		data, err := json.Marshal(&ev) //nolint:gosec
-		if err != nil {
-			return errors.Wrap(err, "Serializing event")
-		}
-		msgs[i] = KafkaMessage{Value: data}
-	}
-	return w.WriteMessages(ctx, msgs...)
-}
-
-func SendMessages(ctx context.Context, w Writer, inventoryAIDs ...InventoryAID) error {
-	// group systems by account
-	grouped := map[int][]string{}
-	for _, aid := range inventoryAIDs {
-		grouped[aid.RhAccountID] = append(grouped[aid.RhAccountID], aid.InventoryID)
-	}
-
-	// compute how many batches we will create
-	var batches = 0
-	for _, ev := range grouped {
-		batches += len(ev)/BatchSize + 1
-	}
-
-	// create events, per BatchSize of systems from one account
-	now := base.Rfc3339Timestamp(time.Now())
-	events := make([]PlatformEvent, 0, batches)
-	for acc, ev := range grouped {
-		for start := 0; start < len(ev); start += BatchSize {
-			end := start + BatchSize
-			if end > len(ev) {
-				end = len(ev)
-			}
-			events = append(events, PlatformEvent{
-				Timestamp: &now,
-				AccountID: acc,
-				SystemIDs: ev[start:end],
-			})
-		}
-	}
-
-	// write events to queue
-	err := WriteEvents(ctx, w, events...)
-	return err
+func SendMessages(ctx context.Context, w Writer, data MessageData) error {
+	return data.WriteEvents(ctx, w)
 }

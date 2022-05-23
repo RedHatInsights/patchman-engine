@@ -15,7 +15,7 @@ func sendReevaluationMessages() error {
 		return nil
 	}
 
-	var inventoryAIDs []mqueue.InventoryAID
+	var inventoryAIDs mqueue.InventoryAIDs
 	var err error
 
 	if enabledRepoBasedReeval {
@@ -29,7 +29,7 @@ func sendReevaluationMessages() error {
 
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageSendDuration)
-	err = mqueue.SendMessages(base.Context, evalWriter, inventoryAIDs...)
+	err = mqueue.SendMessages(base.Context, evalWriter, &inventoryAIDs)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("sending to re-evaluate failed")
 	}
