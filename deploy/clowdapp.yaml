@@ -82,6 +82,7 @@ objects:
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVENTS_TOPIC, value: platform.inventory.events}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
+        - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: CONSUMER_COUNT, value: '${CONSUMER_COUNT_LISTENER}'}
         - {name: ENABLE_BYPASS, value: '${ENABLE_BYPASS_LISTENER}'}
         - {name: EXCLUDED_REPORTERS, value: '${EXCLUDED_REPORTERS}'}
@@ -120,6 +121,7 @@ objects:
         - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
+        - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: NOTIFICATIONS_TOPIC, value: 'platform.notifications.ingress'}
         - {name: EVAL_LABEL, value: upload}
@@ -172,6 +174,7 @@ objects:
         - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
+        - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: NOTIFICATIONS_TOPIC, value: 'platform.notifications.ingress'}
         - {name: EVAL_LABEL, value: recalc}
@@ -330,6 +333,7 @@ objects:
     - {replicas: 3, partitions: 10, topicName: platform.inventory.events}
     - {replicas: 3, partitions: 10, topicName: patchman.evaluator.upload}
     - {replicas: 3, partitions: 10, topicName: patchman.evaluator.recalc}
+    - {replicas: 3, partitions: 8, topicName: platform.payload-status}
     - {replicas: 3, partitions: 10, topicName: platform.remediation-updates.patch}
     - {replicas: 3, partitions: 10, topicName: platform.notifications.ingress}
 

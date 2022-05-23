@@ -16,6 +16,7 @@ var (
 	eventsTopic       string
 	consumerCount     int
 	evalWriter        mqueue.Writer
+	ptWriter          mqueue.Writer
 	validReporters    map[string]int
 	excludedReporters map[string]bool
 	excludedHostTypes map[string]bool
@@ -30,8 +31,10 @@ func configure() {
 	consumerCount = utils.GetIntEnvOrDefault("CONSUMER_COUNT", 1)
 
 	evalTopic := utils.FailIfEmpty(utils.Cfg.EvalTopic, "EVAL_TOPIC")
+	ptTopic := utils.FailIfEmpty(utils.Cfg.PayloadTrackerTopic, "PAYLOAD_TRACKER_TOPIC")
 
 	evalWriter = mqueue.NewKafkaWriterFromEnv(evalTopic)
+	ptWriter = mqueue.NewKafkaWriterFromEnv(ptTopic)
 
 	validReporters = loadValidReporters()
 	excludedReporters = getEnvVarStringsSet("EXCLUDED_REPORTERS")
