@@ -72,6 +72,9 @@ RUN echo "insights:x:1000:0::/go:/bin/bash" >>/etc/passwd && \
     mkdir /go && \
     chown insights:root /go
 
+# copy root ca certs so we can access https://logs.us-east-1.amazonaws.com/
+COPY --from=buildimg /etc/pki/tls/certs/ca-bundle.crt /etc/pki/tls/certs/
+
 # copy libs needed by main
 COPY --from=buildimg /lib64/libpq.so.5 /go/lib64/* /lib64/
 
