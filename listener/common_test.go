@@ -42,7 +42,11 @@ func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int, report
 
 	var account models.RhAccount
 	assert.NoError(t, database.Db.Where("id = ?", system.RhAccountID).Find(&account).Error)
-	assert.Equal(t, inventoryID, account.Name)
+	if account.Name == nil || *account.Name == "" {
+		assert.Equal(t, inventoryID, *account.OrgID)
+	} else {
+		assert.Equal(t, inventoryID, *account.Name)
+	}
 	if rhAccountID != nil {
 		assert.Equal(t, system.RhAccountID, *rhAccountID)
 	}
@@ -63,7 +67,10 @@ func assertSystemNotInDB(t *testing.T) {
 }
 
 func getOrCreateTestAccount(t *testing.T) int {
-	accountID, err := middlewares.GetOrCreateAccount(id)
+	ident := utils.Identity{
+		OrgID: id,
+	}
+	accountID, err := middlewares.GetOrCreateAccount(&ident)
 	assert.Nil(t, err)
 	return accountID
 }

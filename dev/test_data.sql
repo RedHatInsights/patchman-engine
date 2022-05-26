@@ -13,8 +13,8 @@ DELETE FROM baseline;
 DELETE FROM rh_account;
 DELETE FROM strings;
 
-INSERT INTO rh_account (id, name) VALUES
-(1, 'acc-1'), (2, 'acc-2'), (3, 'acc-3'), (4, 'acc-4');
+INSERT INTO rh_account (id, name, org_id) VALUES
+(1, 'acc-1', 'org_1'), (2, 'acc-2', 'org_2'), (3, 'acc-3', 'org_3'), (4, 'acc-4', 'org_4');
 
 INSERT INTO baseline (id, rh_account_id, name, config, description) VALUES
 (1, 1, 'baseline_1-1', '{"to_time": "2010-09-22T00:00:00+00:00"}', 'desc'),
