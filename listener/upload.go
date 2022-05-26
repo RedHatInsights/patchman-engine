@@ -385,7 +385,10 @@ func processModules(systemProfile *inventory.SystemProfile) *[]vmaas.UpdatesV3Re
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
 func processUpload(account string, host *Host, yumUpdates []byte) (*models.SystemPlatform, error) {
 	// Ensure we have account stored
-	accountID, err := middlewares.GetOrCreateAccount(account)
+	identity := utils.Identity{
+		AccountNumber: account,
+	}
+	accountID, err := middlewares.GetOrCreateAccount(&identity)
 	if err != nil {
 		return nil, errors.Wrap(err, "saving account into the database")
 	}

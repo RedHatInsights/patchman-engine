@@ -5,8 +5,9 @@ import (
 )
 
 type RhAccount struct {
-	ID   int
-	Name string
+	ID    int
+	Name  *string
+	OrgID *string
 }
 
 func (RhAccount) TableName() string {
