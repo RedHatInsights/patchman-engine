@@ -304,6 +304,18 @@ func TestSAPSystemMeta4(t *testing.T) {
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
 
+func TestSAPSystemMeta5(t *testing.T) {
+	const (
+		ID         = "00000000-0000-0000-0000-000000000002"
+		totalItems = 1
+		SapVersion = "1.00.122.04.1478575637"
+	)
+	url := fmt.Sprintf(`/?filter[system_profile][sap_version]=%s`, SapVersion)
+	output := testSystems(t, url, 1)
+	assert.Equal(t, ID, output.Data[0].ID)
+	assert.Equal(t, totalItems, output.Meta.TotalItems)
+}
+
 func TestAAPSystemMeta(t *testing.T) {
 	url := `/?filter[system_profile][ansible][controller_version]=1.0`
 	output := testSystems(t, url, 1)
