@@ -1,6 +1,7 @@
 package database
 
 import (
+	"app/base/models"
 	"app/base/utils"
 	"fmt"
 	"time"
@@ -13,6 +14,7 @@ import (
 var (
 	Db                 *gorm.DB //nolint:stylecheck
 	OtherAdvisoryTypes []string
+	AdvisoryTypes      map[int]string
 )
 
 // Configure Configure database, PostgreSQL or SQLite connection
@@ -123,5 +125,21 @@ func loadAdditionalParamsFromDB() {
 	utils.Log("other_advisory_types", OtherAdvisoryTypes).Debug("Other advisory types loaded from DB")
 	if err != nil {
 		panic(err)
+	}
+
+	// Load AdvisoryTypes
+	var types []models.AdvisoryType
+
+	err = Db.Table("advisory_type").
+		Select("id, name").
+		Scan(&types).
+		Error
+	if err != nil {
+		panic(err)
+	}
+
+	AdvisoryTypes = make(map[int]string)
+	for _, at := range types {
+		AdvisoryTypes[at.ID] = at.Name
 	}
 }
