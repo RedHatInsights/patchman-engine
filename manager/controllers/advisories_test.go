@@ -2,8 +2,10 @@ package controllers
 
 import (
 	"app/base/core"
+	"app/base/database"
 	"app/base/utils"
 	"fmt"
+	"github.com/pkg/errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -322,18 +324,36 @@ func TestAdvisoryTagsInMetadata(t *testing.T) {
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
 
+func getAdvisoryTypeKey(value string) (int, error) {
+	for i, s := range database.AdvisoryTypes {
+		if s == value {
+			return i, nil
+		}
+	}
+	return -1, errors.New("such value does not exist")
+}
+
 func TestAdvisoryMetadataSums(t *testing.T) {
 	output := testAdvisories(t, "/")
+
+	enhKey, err := getAdvisoryTypeKey("enhancement")
+	assert.Nil(t, err)
+	fixKey, err := getAdvisoryTypeKey("bugfix")
+	assert.Nil(t, err)
+	secKey, err := getAdvisoryTypeKey("security")
+	assert.Nil(t, err)
+
 	var other, enhancement, bugfix, security int
+
 	for _, ai := range output.Data {
 		switch ai.Attributes.AdvisoryType {
-		case 1:
+		case enhKey:
 			enhancement++
 			assert.Equal(t, "enhancement", ai.Attributes.AdvisoryTypeName)
-		case 2:
+		case fixKey:
 			bugfix++
 			assert.Equal(t, "bugfix", ai.Attributes.AdvisoryTypeName)
-		case 3:
+		case secKey:
 			security++
 			assert.Equal(t, "security", ai.Attributes.AdvisoryTypeName)
 		default:
