@@ -10,7 +10,7 @@ export DOCKERFILE="Dockerfile"
 export COMPONENTS_W_RESOURCES="vmaas"
 
 export IQE_PLUGINS="patchman"
-export IQE_MARKER_EXPRESSION="patch_smoke"
+export IQE_MARKER_EXPRESSION="patch_rest and core and qa"
 export IQE_FILTER_EXPRESSION=""
 export IQE_CJI_TIMEOUT="30m"
 
@@ -25,3 +25,6 @@ source $CICD_ROOT/deploy_ephemeral_env.sh
 
 # Run iqe-patchman somke tests with ClowdJobInvocation
 source $CICD_ROOT/cji_smoke_test.sh
+
+# Post test results to ibutsu
+source $CICD_ROOT/post_test_results.sh
