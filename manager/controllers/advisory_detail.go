@@ -81,17 +81,10 @@ func AdvisoryDetailHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-type advisoryDetailItem struct {
-	models.AdvisoryMetadata
-	AdvisoryTypeName string
-}
-
 func getAdvisoryFromDB(advisoryName string) (*AdvisoryDetailResponse, error) {
-	var advisory advisoryDetailItem
-	err := database.Db.Table("advisory_metadata am").
-		Select("am.*, at.name as advisory_type_name").
-		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
-		Where("am.name = ?", advisoryName).Take(&advisory).Error
+	var advisory models.AdvisoryMetadata
+	err := database.Db.Table(advisory.TableName()).
+		Take(&advisory, "name = ?", advisoryName).Error
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +114,7 @@ func getAdvisoryFromDB(advisoryName string) (*AdvisoryDetailResponse, error) {
 				Synopsis:         advisory.Synopsis,
 				Solution:         advisory.Solution,
 				Severity:         advisory.SeverityID,
-				AdvisoryTypeName: advisory.AdvisoryTypeName,
+				AdvisoryTypeName: database.AdvisoryTypes[advisory.AdvisoryTypeID],
 				Fixes:            nil,
 				Cves:             cves,
 				Packages:         packages,
