@@ -7,8 +7,9 @@ import (
 	ntf "app/base/notification"
 	"app/base/utils"
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -45,8 +46,9 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 
 	// do evaluate the system
 	err := evaluateHandler(mqueue.PlatformEvent{
-		SystemIDs: []string{"00000000-0000-0000-0000-000000000012"},
-		AccountID: rhAccountID})
+		SystemIDs:  []string{"00000000-0000-0000-0000-000000000012"},
+		RequestIDs: []string{"request-2"},
+		AccountID:  rhAccountID})
 	assert.NoError(t, err)
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
 

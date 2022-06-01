@@ -11,12 +11,27 @@ import (
 	"app/base/vmaas"
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
+
+func assertInLogs(t *testing.T, msg string, logs ...log.Entry) {
+	nLogs := len(logs)
+	i := 0
+	for i = 0; i < nLogs; i++ {
+		if logs[i].Message == msg {
+			assert.Equal(t, msg, logs[i].Message)
+			break
+		}
+	}
+	if i == nLogs {
+		assert.Fail(t, fmt.Sprintf("Log not found: %s", msg))
+	}
+}
 
 func createTestInvHost(t *testing.T) *Host {
 	correctTimestamp, err := time.Parse(base.Rfc3339NoTz, "2018-09-22T12:00:00-04:00")
@@ -81,7 +96,7 @@ func TestUploadHandler(t *testing.T) {
 	deleteData(t)
 
 	_ = getOrCreateTestAccount(t)
-	event := createTestUploadEvent(id, id, "puptoo", true)
+	event := createTestUploadEvent(id, id, id, "puptoo", true)
 
 	event.Host.SystemProfile.OperatingSystem = inventory.OperatingSystem{Major: 8}
 	repos := append(event.Host.SystemProfile.GetYumRepos(), inventory.YumRepo{ID: "epel", Enabled: true})
@@ -103,8 +118,7 @@ func TestUploadHandler(t *testing.T) {
 	log.AddHook(logHook)
 	err = HandleUpload(event)
 	assert.NoError(t, err)
-	assert.Equal(t, 2, len(logHook.LogEntries))
-	assert.Equal(t, UploadSuccessNoEval, logHook.LogEntries[1].Message)
+	assertInLogs(t, UploadSuccessNoEval, logHook.LogEntries...)
 	assertSystemReposInDB(t, sys.ID, []string{"epel-8"})
 	deleteData(t)
 }
@@ -114,11 +128,10 @@ func TestUploadHandlerWarn(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	noPkgsEvent := createTestUploadEvent("1", id, "puptoo", false)
+	noPkgsEvent := createTestUploadEvent("1", "1", id, "puptoo", false)
 	err := HandleUpload(noPkgsEvent)
 	assert.NoError(t, err)
-	assert.Equal(t, 1, len(logHook.LogEntries))
-	assert.Equal(t, WarnSkippingNoPackages, logHook.LogEntries[0].Message)
+	assertInLogs(t, WarnSkippingNoPackages, logHook.LogEntries...)
 }
 
 func TestUploadHandlerWarnSkipReporter(t *testing.T) {
@@ -126,11 +139,10 @@ func TestUploadHandlerWarnSkipReporter(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	noPkgsEvent := createTestUploadEvent("1", id, "yupana", false)
+	noPkgsEvent := createTestUploadEvent("1", "1", id, "yupana", false)
 	err := HandleUpload(noPkgsEvent)
 	assert.NoError(t, err)
-	assert.Equal(t, 1, len(logHook.LogEntries))
-	assert.Equal(t, WarnSkippingReporter, logHook.LogEntries[0].Message)
+	assertInLogs(t, WarnSkippingReporter, logHook.LogEntries...)
 }
 
 func TestUploadHandlerWarnSkipHostType(t *testing.T) {
@@ -138,12 +150,11 @@ func TestUploadHandlerWarnSkipHostType(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	event := createTestUploadEvent("1", id, "puptoo", true)
+	event := createTestUploadEvent("1", "1", id, "puptoo", true)
 	event.Host.SystemProfile.HostType = "edge"
 	err := HandleUpload(event)
 	assert.NoError(t, err)
-	assert.Equal(t, 1, len(logHook.LogEntries))
-	assert.Equal(t, WarnSkippingHostType, logHook.LogEntries[0].Message)
+	assertInLogs(t, WarnSkippingHostType, logHook.LogEntries...)
 }
 
 // error when parsing identity
@@ -152,12 +163,12 @@ func TestUploadHandlerError1(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	event := createTestUploadEvent("1", id, "puptoo", true)
+	event := createTestUploadEvent("1", "1", id, "puptoo", true)
 	*event.Host.Account = ""
+	*event.Host.OrgID = ""
 	err := HandleUpload(event)
 	assert.NoError(t, err)
-	assert.Equal(t, 1, len(logHook.LogEntries))
-	assert.Equal(t, ErrorNoAccountProvided, logHook.LogEntries[0].Message)
+	assertInLogs(t, ErrorNoAccountProvided, logHook.LogEntries...)
 }
 
 type erroringWriter struct{}
@@ -176,11 +187,11 @@ func TestUploadHandlerError2(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
 	_ = getOrCreateTestAccount(t)
-	event := createTestUploadEvent("1", id, "puptoo", true)
+	event := createTestUploadEvent("1", "1", id, "puptoo", true)
 	err := HandleUpload(event)
 	assert.Nil(t, err)
 	time.Sleep(2 * uploadEvalTimeout)
-	assert.Equal(t, ErrorKafkaSend, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
+	assertInLogs(t, ErrorKafkaSend, logHook.LogEntries...)
 	deleteData(t)
 }
 
@@ -264,7 +275,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 
 	accountID1 := getOrCreateTestAccount(t)
 
-	hostEvent := createTestUploadEvent("1", id, "puptoo", false)
+	hostEvent := createTestUploadEvent("1", "1", id, "puptoo", false)
 	hostEvent.PlatformMetadata = map[string]interface{}{
 		"custom_metadata": []byte(`{"yum_updates": {"update_list": {"kernel-0.3": {}}}}`),
 	}
