@@ -97,7 +97,7 @@ func HandleUpload(event HostEvent) error {
 		return nil
 	}
 
-	if event.Host.Account == nil || *event.Host.Account == "" {
+	if (event.Host.Account == nil || *event.Host.Account == "") && (event.Host.OrgID == nil || *event.Host.OrgID == "") {
 		utils.Log("inventoryID", event.Host.ID).Error(ErrorNoAccountProvided)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, ErrorNoAccountProvided)
@@ -113,7 +113,7 @@ func HandleUpload(event HostEvent) error {
 		return nil
 	}
 
-	sys, err := processUpload(*event.Host.Account, &event.Host, yumUpdates)
+	sys, err := processUpload(&event.Host, yumUpdates)
 
 	if err != nil {
 		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorProcessUpload)
@@ -138,7 +138,6 @@ func HandleUpload(event HostEvent) error {
 		}
 	}
 
-	// OrgID is empty till inventory starts sending OrgID
 	bufferEvalEvents(sys.InventoryID, sys.RhAccountID, &payloadTrackerEvent)
 
 	messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
@@ -437,10 +436,19 @@ func processModules(systemProfile *inventory.SystemProfile) *[]vmaas.UpdatesV3Re
 }
 
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
-func processUpload(account string, host *Host, yumUpdates []byte) (*models.SystemPlatform, error) {
+func processUpload(host *Host, yumUpdates []byte) (*models.SystemPlatform, error) {
 	// Ensure we have account stored
+	var accountNumber string
+	var orgID string
+	if host.Account != nil {
+		accountNumber = *host.Account
+	}
+	if host.OrgID != nil {
+		orgID = *host.OrgID
+	}
 	identity := utils.Identity{
-		AccountNumber: account,
+		AccountNumber: accountNumber,
+		OrgID:         orgID,
 	}
 	accountID, err := middlewares.GetOrCreateAccount(&identity)
 	if err != nil {
