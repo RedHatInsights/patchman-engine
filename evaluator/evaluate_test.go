@@ -7,12 +7,13 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"context"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"os"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var testDate, _ = time.Parse(time.RFC3339, "2020-01-01T01-01-01")
@@ -54,8 +55,9 @@ func TestEvaluate(t *testing.T) {
 
 	// do evaluate the system
 	err := evaluateHandler(mqueue.PlatformEvent{
-		SystemIDs: []string{"00000000-0000-0000-0000-000000000012", "00000000-0000-0000-0000-000000000011"},
-		AccountID: rhAccountID})
+		SystemIDs:  []string{"00000000-0000-0000-0000-000000000012", "00000000-0000-0000-0000-000000000011"},
+		RequestIDs: []string{"request-1", "request-2"},
+		AccountID:  rhAccountID})
 	assert.NoError(t, err)
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
@@ -70,8 +72,9 @@ func TestEvaluate(t *testing.T) {
 	database.DeleteSystemRepos(t, rhAccountID, systemID, systemRepoIDs)
 	database.CreateSystemRepos(t, rhAccountID, systemID, thirdPartySystemRepoIDs)
 	err = evaluateHandler(mqueue.PlatformEvent{
-		SystemIDs: []string{"00000000-0000-0000-0000-000000000012"},
-		AccountID: rhAccountID})
+		SystemIDs:  []string{"00000000-0000-0000-0000-000000000012"},
+		RequestIDs: []string{"request-1"},
+		AccountID:  rhAccountID})
 	assert.NoError(t, err)
 	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 2, 1, 1,
 		0, 2, 2, true)

@@ -76,13 +76,14 @@ func getOrCreateTestAccount(t *testing.T) int {
 }
 
 // nolint: unparam
-func createTestUploadEvent(rhAccountID, inventoryID, reporter string, packages bool) HostEvent {
+func createTestUploadEvent(rhAccountID, orgID, inventoryID, reporter string, packages bool) HostEvent {
 	ev := HostEvent{
 		Type:             "created",
 		PlatformMetadata: nil,
 		Host: Host{
 			ID:       inventoryID,
 			Account:  &rhAccountID,
+			OrgID:    &orgID,
 			Reporter: reporter,
 		},
 	}
