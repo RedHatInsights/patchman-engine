@@ -15,12 +15,23 @@ const (
 	inventoryID = "00000000-0000-0000-0000-000000000012"
 )
 
-func checkPayload(t *testing.T, notification ntf.Notification, idx int, name, advType, synopsis string) {
-	payload, ok := notification.Events[idx].Payload.(map[string]interface{})
-	assert.True(t, ok)
-	assert.Equal(t, payload["advisory_name"], name)
-	assert.Equal(t, payload["advisory_type"], advType)
-	assert.Equal(t, payload["synopsis"], synopsis)
+func checkNotificationPayload(t *testing.T, notification ntf.Notification, name, advType, synopsis string) {
+	for _, event := range notification.Events {
+		payload, ok := event.Payload.(map[string]interface{})
+		assert.True(t, ok)
+
+		if payload["advisory_name"] != name {
+			continue
+		}
+		if payload["advisory_type"] != advType {
+			continue
+		}
+		if payload["synopsis"] != synopsis {
+			continue
+		}
+		return
+	}
+	t.Fatal("such payload does not exist")
 }
 
 func TestAdvisoriesNotificationPublish(t *testing.T) {
@@ -54,8 +65,8 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 
 	var notificationSent ntf.Notification
 	assert.Nil(t, json.Unmarshal(mockWriter.Messages[0].Value, &notificationSent))
-	checkPayload(t, notificationSent, 0, "RH-1", "enhancement", "adv-1-syn")
-	checkPayload(t, notificationSent, 1, "RH-2", "bugfix", "adv-2-syn")
+	checkNotificationPayload(t, notificationSent, "RH-1", "enhancement", "adv-1-syn")
+	checkNotificationPayload(t, notificationSent, "RH-2", "bugfix", "adv-2-syn")
 
 	database.DeleteSystemAdvisories(t, systemID, advisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
