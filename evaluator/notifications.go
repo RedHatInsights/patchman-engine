@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const NewAdvisoriesEvent = "new-advisories"
+const NewAdvisoryEvent = "new-advisory"
 
 var notificationsPublisher mqueue.Writer
 
@@ -69,7 +69,7 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, inventoryID string, accountID
 
 	msg, err := mqueue.MessageFromJSON(
 		inventoryID,
-		ntf.MakeNotification(accountID, inventoryID, NewAdvisoriesEvent, events))
+		ntf.MakeNotification(accountID, inventoryID, NewAdvisoryEvent, events))
 	if err != nil {
 		return errors.Wrap(err, "creating message from notification failed")
 	}
