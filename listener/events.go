@@ -20,7 +20,7 @@ const (
 
 func EventsMessageHandler(m mqueue.KafkaMessage) error {
 	var msgData map[string]interface{}
-	utils.Log("kafka message data", m.Value).Trace()
+	utils.Log("kafka message data", string(m.Value)).Trace()
 	if err := json.Unmarshal(m.Value, &msgData); err != nil {
 		utils.Log("msg", string(m.Value)).Error("message is not a valid JSON")
 		// Skip invalid messages
