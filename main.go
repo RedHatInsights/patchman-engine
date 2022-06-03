@@ -32,7 +32,7 @@ func main() {
 			vmaas_sync.RunVmaasSync()
 			return
 		case "migrate":
-			database_admin.MigrateUp(os.Args[2], os.Args[3])
+			database_admin.UpdateDB(os.Args[2])
 			return
 		case "platform":
 			platform.RunPlatformMock()
