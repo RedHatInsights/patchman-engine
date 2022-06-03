@@ -14,6 +14,7 @@ func ConfigureApp() {
 	utils.ConfigureLogging()
 	database.Configure()
 	metrics.Configure()
+	database.DBWait(utils.Getenv("WAIT_FOR_DB", "UNSET"))
 }
 
 func SetupTestEnvironment() {

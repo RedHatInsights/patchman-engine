@@ -283,6 +283,7 @@ objects:
         - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
         - {name: RESET_SCHEMA, value: '${RESET_SCHEMA}'}
         - {name: UPDATE_CYNDI_PASSWD, value: '${UPDATE_CYNDI_PASSWD}'}
+        - {name: WAIT_FOR_DB, value: 'empty'}
         - {name: MANAGER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                               key: manager-database-password}}}
         - {name: LISTENER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
