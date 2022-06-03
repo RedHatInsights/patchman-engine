@@ -46,7 +46,7 @@ services:
     image: patchman-engine-app
     env_file:
       - ./conf/test.env
-    command: ./scripts/feed_db.sh
+    command: go run ./scripts/feed_db.go
     depends_on:
       - db
       - patchimg

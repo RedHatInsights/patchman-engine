@@ -17,11 +17,15 @@ var (
 	AdvisoryTypes      map[int]string
 )
 
-// Configure Configure database, PostgreSQL or SQLite connection
-func Configure() {
+func InitDB() {
 	pgConfig := loadEnvPostgreSQLConfig()
 	Db = openPostgreSQL(pgConfig)
 	check(Db)
+}
+
+// Configure Configure database, PostgreSQL or SQLite connection
+func Configure() {
+	InitDB()
 	loadAdditionalParamsFromDB()
 }
 
