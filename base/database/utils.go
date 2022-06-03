@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgconn"
 
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -121,5 +122,42 @@ func IsPgErrorCode(err error, pgCode string) bool {
 		return e.Code == pgCode
 	default:
 		return false
+	}
+}
+
+// Wait for database service
+func DBWait(waitForDB string) {
+	var query string
+	if utils.Cfg.DBHost == "UNSET" {
+		log.Info("Skipping PostgreSQL check")
+		return
+	}
+	log.Info("Checking if PostgreSQL is up")
+	switch waitForDB {
+	case "empty":
+		query = ";" // Wait only for empty database.
+	case "full":
+		// Wait for full schema, all migrations, e.g. before tests (schema_migrations.dirty='f').
+		query = "SELECT 1/count(*) FROM schema_migrations WHERE dirty='f';"
+	default:
+		query = "SELECT * FROM schema_migrations;"
+	}
+
+	for {
+		db, _ := Db.DB()
+		if db != nil {
+			if _, err := db.Exec(query); err == nil {
+				log.Info("Everything is up - executing command")
+				return
+			}
+		}
+		utils.Log(
+			"host", utils.Cfg.DBHost,
+			"port", utils.Cfg.DBPort,
+			"user", utils.Cfg.DBUser,
+			"db_name", utils.Cfg.DBName,
+			"command", query,
+		).Info("PostgreSQL is unavailable - sleeping")
+		time.Sleep(time.Second)
 	}
 }
