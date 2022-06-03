@@ -46,7 +46,7 @@ services:
     env_file:
       - ./conf/test.env
       - ./conf/gorun.env
-    command: ./scripts/feed_db.sh
+    command: go run ./scripts/feed_db.go
     depends_on:
       - db
       - patchimg
