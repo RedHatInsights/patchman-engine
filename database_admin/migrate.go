@@ -13,10 +13,10 @@ import (
 	"github.com/lib/pq"
 )
 
-func NewConn(databaseURL string) (database.Driver, error) {
+func NewConn(databaseURL string) (database.Driver, *sql.DB, error) {
 	baseConn, err := pq.NewConnector(databaseURL)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	loggingConn := pq.ConnectorWithNoticeHandler(baseConn, func(e *pq.Error) {
@@ -25,21 +25,16 @@ func NewConn(databaseURL string) (database.Driver, error) {
 
 	db := sql.OpenDB(loggingConn)
 	if _, err = db.Exec("SET client_min_messages TO NOTICE"); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var driver database.Driver
 	if driver, err = postgres.WithInstance(db, &postgres.Config{}); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return driver, nil
+	return driver, db, nil
 }
 
-func MigrateUp(sourceURL, databaseURL string) {
-	conn, err := NewConn(databaseURL)
-	if err != nil {
-		panic(err)
-	}
-
+func MigrateUp(conn database.Driver, sourceURL string) {
 	m, err := migrate.NewWithDatabaseInstance(sourceURL, utils.FailIfEmpty(utils.Cfg.DBName, "DB_NAME"), conn)
 	if err != nil {
 		panic(err)

@@ -2,9 +2,13 @@
 
 set -e -o pipefail # stop on error
 
-source ./scripts/try_export_clowder_params.sh
+MIGRATION_FILES=file://./database_admin/migrations
 
 echo "Running in $(pwd) as $(id)"
-./database_admin/update.sh
+if [[ -n $GORUN ]]; then
+  go run main.go migrate $MIGRATION_FILES
+else
+  ./main migrate $MIGRATION_FILES
+fi
 
 exec sleep infinity
