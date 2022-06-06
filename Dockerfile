@@ -54,7 +54,7 @@ RUN go build -v main.go
 
 # libs to be copied into runtime
 RUN mkdir -p /go/lib64 && \
-    ldd /go/src/app/main /bin/psql /lib64/libpq.so.5 \
+    ldd /go/src/app/main \
     | awk '/=>/ {print $3}' \
     | sort -u \
     | while read lib ; do \
@@ -76,14 +76,7 @@ RUN echo "insights:x:1000:0::/go:/bin/bash" >>/etc/passwd && \
 COPY --from=buildimg /etc/pki/tls/certs/ca-bundle.crt /etc/pki/tls/certs/
 
 # copy libs needed by main
-COPY --from=buildimg /lib64/libpq.so.5 /go/lib64/* /lib64/
-
-# copy postgresql binaries
-COPY --from=buildimg /usr/bin/clusterdb /usr/bin/createdb /usr/bin/createuser \
-                     /usr/bin/dropdb /usr/bin/dropuser /usr/bin/pg_dump \
-                     /usr/bin/pg_dumpall /usr/bin/pg_isready /usr/bin/pg_restore \
-                     /usr/bin/pg_upgrade /usr/bin/psql /usr/bin/reindexdb \
-                     /usr/bin/vacuumdb /usr/bin/
+COPY --from=buildimg /go/lib64/* /lib64/
 
 ADD --chown=insights:root go.sum                     /go/src/app/
 ADD --chown=insights:root scripts                    /go/src/app/scripts
