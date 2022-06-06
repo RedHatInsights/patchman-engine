@@ -3,11 +3,7 @@
 
 # Use go app command to print Clowder params
 function print_clowder_params() {
-  if [[ -n $GORUN ]]; then
-    go run main.go print_clowder_params
-  else
-    ./main print_clowder_params
-  fi
+  ${GORUN:+go run} ./main${GORUN:+.go} print_clowder_params
 }
 
 if [[ -n $ACG_CONFIG ]] ; then
