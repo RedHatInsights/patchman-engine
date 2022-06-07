@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const openAPIPath = "openapi.json"
+const openAPIPath = "v2/openapi.json"
 
 func TestValidateOpenAPI3DocStr(t *testing.T) {
 	doc, err := ioutil.ReadFile(openAPIPath)

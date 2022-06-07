@@ -176,16 +176,7 @@ func getJSONFields(vmaasData *vmaas.ErrataResponseErrataList) ([]byte, []byte, [
 }
 
 func getPackageData(vmaasData *vmaas.ErrataResponseErrataList) ([]byte, error) {
-	packages := make(models.AdvisoryPackageData)
-	for _, p := range vmaasData.PackageList {
-		nevra, err := utils.ParseNevra(p)
-		if err != nil {
-			return nil, errors.Wrapf(err, "Could not parse nevra %s", p)
-		}
-		packages[nevra.Name] = nevra.EVRAString()
-	}
-
-	packageData, err := json.Marshal(packages)
+	packageData, err := json.Marshal(vmaasData.PackageList)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not serialize package data")
 	}
