@@ -379,9 +379,12 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 	}
 	if event.SystemIDs != nil {
 		// Evaluate in bulk
+		nRequestIDs := len(event.RequestIDs)
 		for i, id := range event.SystemIDs {
 			ptEvent.InventoryID = id
-			ptEvent.RequestID = &event.RequestIDs[i]
+			if nRequestIDs > i {
+				ptEvent.RequestID = &event.RequestIDs[i]
+			}
 			err = Evaluate(base.Context, event.AccountID, id, event.Timestamp, evalLabel)
 			if err != nil {
 				ptEvent.Status = "error"
