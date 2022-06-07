@@ -105,6 +105,7 @@ func HandleUpload(event HostEvent) error {
 	}
 
 	yumUpdates := getCustomMetadata(event).getYumUpdates()
+	utils.Log("inventoryID", event.Host.ID, "yum_updates", yumUpdates).Trace()
 
 	if len(event.Host.SystemProfile.GetInstalledPackages()) == 0 && yumUpdates == nil {
 		utils.Log("inventoryID", event.Host.ID).Warn(WarnSkippingNoPackages)
