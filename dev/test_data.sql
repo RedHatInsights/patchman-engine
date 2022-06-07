@@ -59,7 +59,7 @@ INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solutio
 (12, 'CUSTOM-12', 'adv-12-des', 'adv-12-syn', 'adv-12-sum', 'adv-12-sol', 0, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url12', NULL, NULL, NULL),
 (13, 'CUSTOM-13', 'adv-13-des', 'adv-13-syn', 'adv-13-sum', 'adv-13-sol', 0, '2016-09-22 12:00:00-08', '2018-09-22 12:00:00-08', 'url13', NULL, NULL, NULL);
 
-UPDATE advisory_metadata SET package_data = '{"firefox": "77.0.1-1.fc31.x86_64"}' WHERE name = 'RH-9';
+UPDATE advisory_metadata SET package_data = '["firefox-77.0.1-1.fc31.x86_64", "firefox-77.0.1-1.fc31.s390"]' WHERE name = 'RH-9';
 
 INSERT INTO system_advisories (rh_account_id, system_id, advisory_id, first_reported, when_patched, status_id) VALUES
 (1, 1, 1, '2016-09-22 12:00:00-04', NULL, 0),

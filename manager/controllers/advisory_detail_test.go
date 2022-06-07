@@ -17,29 +17,58 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/RH-9", nil)
-	core.InitRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
+	core.InitRouterWithPath(AdvisoryDetailHandlerV1, "/:advisory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	var output AdvisoryDetailResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	var outputV1 AdvisoryDetailResponseV1
+	ParseResponseBody(t, w.Body.Bytes(), &outputV1)
 	// data
-	checkRH9Fields(t, output)
+	outputV1.checkRH9Fields(t)
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", "/RH-9", nil)
+	core.InitRouterWithPath(AdvisoryDetailHandlerV2, "/:advisory_id").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var outputV2 AdvisoryDetailResponseV2
+	ParseResponseBody(t, w.Body.Bytes(), &outputV2)
+	// data
+	outputV2.checkRH9Fields(t)
 }
 
-func checkRH9Fields(t *testing.T, response AdvisoryDetailResponse) {
-	assert.Equal(t, "advisory", response.Data.Type)
-	assert.Equal(t, "RH-9", response.Data.ID)
-	assert.Equal(t, "adv-9-syn", response.Data.Attributes.Synopsis)
-	assert.Equal(t, "adv-9-des", response.Data.Attributes.Description)
-	assert.Equal(t, "adv-9-sol", response.Data.Attributes.Solution)
-	assert.Equal(t, "security", response.Data.Attributes.AdvisoryTypeName)
-	assert.Equal(t, "2016-09-22 20:00:00 +0000 UTC", response.Data.Attributes.PublicDate.String())
-	assert.Equal(t, "2018-09-22 20:00:00 +0000 UTC", response.Data.Attributes.ModifiedDate.String())
-	assert.Equal(t, 1, len(response.Data.Attributes.Packages))
-	assert.Equal(t, "77.0.1-1.fc31.x86_64", response.Data.Attributes.Packages["firefox"])
-	assert.Equal(t, false, response.Data.Attributes.RebootRequired)
-	assert.Equal(t, []string{"8.2", "8.4"}, response.Data.Attributes.ReleaseVersions)
-	assert.Nil(t, response.Data.Attributes.Severity)
+func (r *AdvisoryDetailResponseV1) checkRH9Fields(t *testing.T) {
+	assert.Equal(t, "advisory", r.Data.Type)
+	assert.Equal(t, "RH-9", r.Data.ID)
+	assert.Equal(t, "adv-9-syn", r.Data.Attributes.Synopsis)
+	assert.Equal(t, "adv-9-des", r.Data.Attributes.Description)
+	assert.Equal(t, "adv-9-sol", r.Data.Attributes.Solution)
+	assert.Equal(t, "security", r.Data.Attributes.AdvisoryTypeName)
+	assert.Equal(t, "2016-09-22 20:00:00 +0000 UTC", r.Data.Attributes.PublicDate.String())
+	assert.Equal(t, "2018-09-22 20:00:00 +0000 UTC", r.Data.Attributes.ModifiedDate.String())
+	assert.Equal(t, 1, len(r.Data.Attributes.Packages))
+	assert.Equal(t, "77.0.1-1.fc31.x86_64", r.Data.Attributes.Packages["firefox"])
+	assert.Equal(t, false, r.Data.Attributes.RebootRequired)
+	assert.Equal(t, []string{"8.2", "8.4"}, r.Data.Attributes.ReleaseVersions)
+	assert.Nil(t, r.Data.Attributes.Severity)
+}
+
+func (r *AdvisoryDetailResponseV2) checkRH9Fields(t *testing.T) {
+	assert.Equal(t, "advisory", r.Data.Type)
+	assert.Equal(t, "RH-9", r.Data.ID)
+	assert.Equal(t, "adv-9-syn", r.Data.Attributes.Synopsis)
+	assert.Equal(t, "adv-9-des", r.Data.Attributes.Description)
+	assert.Equal(t, "adv-9-sol", r.Data.Attributes.Solution)
+	assert.Equal(t, "security", r.Data.Attributes.AdvisoryTypeName)
+	assert.Equal(t, "2016-09-22 20:00:00 +0000 UTC", r.Data.Attributes.PublicDate.String())
+	assert.Equal(t, "2018-09-22 20:00:00 +0000 UTC", r.Data.Attributes.ModifiedDate.String())
+	assert.Equal(t, 2, len(r.Data.Attributes.Packages))
+	assert.Equal(
+		t, packagesV2{"firefox-77.0.1-1.fc31.x86_64", "firefox-77.0.1-1.fc31.s390"},
+		r.Data.Attributes.Packages,
+	)
+	assert.Equal(t, false, r.Data.Attributes.RebootRequired)
+	assert.Equal(t, []string{"8.2", "8.4"}, r.Data.Attributes.ReleaseVersions)
+	assert.Nil(t, r.Data.Attributes.Severity)
 }
 
 func TestAdvisoryDetailCVE(t *testing.T) {
@@ -48,25 +77,43 @@ func TestAdvisoryDetailCVE(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/RH-3", nil)
-	core.InitRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
+	core.InitRouterWithPath(AdvisoryDetailHandlerV1, "/:advisory_id").ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	var output AdvisoryDetailResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
-	assert.Equal(t, 2, len(output.Data.Attributes.Cves))
-	assert.Equal(t, "CVE-1", output.Data.Attributes.Cves[0])
-	assert.Equal(t, "CVE-2", output.Data.Attributes.Cves[1])
+	var outputV1 AdvisoryDetailResponseV1
+	ParseResponseBody(t, w.Body.Bytes(), &outputV1)
+	assert.Equal(t, 2, len(outputV1.Data.Attributes.Cves))
+	assert.Equal(t, "CVE-1", outputV1.Data.Attributes.Cves[0])
+	assert.Equal(t, "CVE-2", outputV1.Data.Attributes.Cves[1])
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", "/RH-3", nil)
+	core.InitRouterWithPath(AdvisoryDetailHandlerV2, "/:advisory_id").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var outputV2 AdvisoryDetailResponseV2
+	ParseResponseBody(t, w.Body.Bytes(), &outputV2)
+	assert.Equal(t, 2, len(outputV2.Data.Attributes.Cves))
+	assert.Equal(t, "CVE-1", outputV2.Data.Attributes.Cves[0])
+	assert.Equal(t, "CVE-2", outputV2.Data.Attributes.Cves[1])
 }
 
 func TestAdvisoryNoIdProvided(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
+	var errResp utils.ErrorResponse
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/", nil)
-	core.InitRouter(AdvisoryDetailHandler).ServeHTTP(w, req)
+	core.InitRouter(AdvisoryDetailHandlerV1).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	var errResp utils.ErrorResponse
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, "advisory_id param not found", errResp.Error)
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", "/", nil)
+	core.InitRouter(AdvisoryDetailHandlerV2).ServeHTTP(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "advisory_id param not found", errResp.Error)
 }
@@ -75,19 +122,33 @@ func TestAdvisoryNotFound(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
+	var errResp utils.ErrorResponse
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/foo", nil)
-	core.InitRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
+	core.InitRouterWithPath(AdvisoryDetailHandlerV1, "/:advisory_id").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)
-	var errResp utils.ErrorResponse
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, "advisory not found", errResp.Error)
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", "/foo", nil)
+	core.InitRouterWithPath(AdvisoryDetailHandlerV2, "/:advisory_id").ServeHTTP(w, req)
+	assert.Equal(t, http.StatusNotFound, w.Code)
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "advisory not found", errResp.Error)
 }
 
-func testReq() *httptest.ResponseRecorder {
+func testReqV1() *httptest.ResponseRecorder {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/RH-9", nil)
-	core.InitRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
+	core.InitRouterWithPath(AdvisoryDetailHandlerV1, "/:advisory_id").ServeHTTP(w, req)
+	return w
+}
+
+func testReqV2() *httptest.ResponseRecorder {
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/RH-9", nil)
+	core.InitRouterWithPath(AdvisoryDetailHandlerV2, "/:advisory_id").ServeHTTP(w, req)
 	return w
 }
 
@@ -98,39 +159,58 @@ func TestAdvisoryDetailCached(t *testing.T) {
 	var hook = utils.NewTestLogHook()
 	log.AddHook(hook)
 
-	testReq()      // load from db and save to cache
-	w := testReq() // load from cache
+	testReqV1()      // load from db and save to cache
+	w := testReqV1() // load from cache
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	var output AdvisoryDetailResponse
+	var output AdvisoryDetailResponseV1
 	ParseResponseBody(t, w.Body.Bytes(), &output)
-	checkRH9Fields(t, output)
+	output.checkRH9Fields(t)
 	assert.Equal(t, "found in cache", hook.LogEntries[4].Message)
+
+	testReqV2()     // load from db and save to cache
+	w = testReqV2() // load from cache
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var outputV2 AdvisoryDetailResponseV2
+	ParseResponseBody(t, w.Body.Bytes(), &outputV2)
+	output.checkRH9Fields(t)
+	assert.Equal(t, "found in cache", hook.LogEntries[7].Message)
 }
 
 func TestAdvisoryDetailCachePreloading(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	advisoryDetailCache.Purge()
+	advisoryDetailCacheV1.Purge()
+	advisoryDetailCacheV2.Purge()
 	var hook = utils.NewTestLogHook()
 	log.AddHook(hook)
 
 	PreloadAdvisoryCacheItems()
 
-	_, ok := advisoryDetailCache.Get("RH-8") // ensure some advisory in cache
+	_, ok := advisoryDetailCacheV1.Get("RH-8") // ensure some advisory in cache
 	assert.True(t, ok)
-	advisoryDetailCache.Purge()
+	advisoryDetailCacheV1.Purge()
+	_, ok = advisoryDetailCacheV2.Get("RH-8") // ensure some advisory in cache
+	assert.True(t, ok)
+	advisoryDetailCacheV2.Purge()
 }
 
 func TestAdvisoryDetailFiltering(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
+	var errResp utils.ErrorResponse
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/RH-9?filter[filter]=abcd", nil)
-	core.InitRouterWithPath(AdvisoryDetailHandler, "/:advisory_id").ServeHTTP(w, req)
-	var errResp utils.ErrorResponse
+	core.InitRouterWithPath(AdvisoryDetailHandlerV1, "/:advisory_id").ServeHTTP(w, req)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", "/RH-9?filter[filter]=abcd", nil)
+	core.InitRouterWithPath(AdvisoryDetailHandlerV2, "/:advisory_id").ServeHTTP(w, req)
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
 }

@@ -144,7 +144,7 @@ func (AdvisoryType) TableName() string {
 	return "advisory_type"
 }
 
-type AdvisoryPackageData map[string]string
+type AdvisoryPackageData []string
 
 type AdvisoryMetadata struct {
 	ID              int

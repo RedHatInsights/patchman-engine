@@ -4,18 +4,25 @@ import (
 	"app/docs"
 	"app/manager/controllers"
 	"app/manager/middlewares"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) {
+func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: funlen
 	api.Use(middlewares.RBAC())
 	api.Use(middlewares.PublicAuthenticator())
+	basePath := api.BasePath()
 
 	advisories := api.Group("/advisories")
 	advisories.GET("/", controllers.AdvisoriesListHandler)
 	controllers.PreloadAdvisoryCacheItems()
-	advisories.GET("/:advisory_id", controllers.AdvisoryDetailHandler)
+	switch {
+	case strings.Contains(basePath, "v1"):
+		advisories.GET("/:advisory_id", controllers.AdvisoryDetailHandlerV1)
+	case strings.Contains(basePath, "v2"):
+		advisories.GET("/:advisory_id", controllers.AdvisoryDetailHandlerV2)
+	}
 	advisories.GET("/:advisory_id/systems", controllers.AdvisorySystemsListHandler)
 
 	if config.EnableBaselines {
