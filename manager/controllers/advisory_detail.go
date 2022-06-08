@@ -27,16 +27,19 @@ type AdvisoryDetailResponseV2 struct {
 	Data AdvisoryDetailItemV2 `json:"data"`
 }
 
+type AdvisoryDetailItem struct {
+	ID   string `json:"id"`
+	Type string `json:"type"`
+}
+
 type AdvisoryDetailItemV1 struct {
+	AdvisoryDetailItem
 	Attributes AdvisoryDetailAttributesV1 `json:"attributes"`
-	ID         string                     `json:"id"`
-	Type       string                     `json:"type"`
 }
 
 type AdvisoryDetailItemV2 struct {
+	AdvisoryDetailItem
 	Attributes AdvisoryDetailAttributesV2 `json:"attributes"`
-	ID         string                     `json:"id"`
-	Type       string                     `json:"type"`
 }
 
 type AdvisoryDetailAttributes struct {
@@ -68,19 +71,9 @@ type AdvisoryDetailAttributesV2 struct {
 type packagesV1 map[string]string
 type packagesV2 []string
 
-// @Summary Show me details an advisory by given advisory name
-// @Description Show me details an advisory by given advisory name
-// @ID detailAdvisoryV1
-// @Security RhIdentity
-// @Accept   json
-// @Produce  json
-// @Param    advisory_id    path    string   true "Advisory ID"
-// @Success 200 {object} AdvisoryDetailResponseV1
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 404 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/advisories/{advisory_id} [get]
-// @Deprecated true
+// AdvisoryDetail handler for v1 API
+// Don't annotate it with swaggo/swag annotations
+// because we want to generated openapi.json only for v2 API
 func AdvisoryDetailHandlerV1(c *gin.Context) {
 	advisoryDetailHandler(c, "v1")
 }
@@ -96,7 +89,7 @@ func AdvisoryDetailHandlerV1(c *gin.Context) {
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v2/advisories/{advisory_id} [get]
+// @Router /advisories/{advisory_id} [get]
 func AdvisoryDetailHandlerV2(c *gin.Context) {
 	advisoryDetailHandler(c, "v2")
 }
@@ -186,12 +179,11 @@ func getAdvisoryFromDBV1(advisoryName string) (*AdvisoryDetailResponseV1, error)
 	}
 
 	var resp = AdvisoryDetailResponseV1{Data: AdvisoryDetailItemV1{
+		AdvisoryDetailItem: AdvisoryDetailItem{ID: advisory.Name, Type: "advisory"},
 		Attributes: AdvisoryDetailAttributesV1{
 			AdvisoryDetailAttributes: *ada,
 			Packages:                 pkgs,
 		},
-		ID:   advisory.Name,
-		Type: "advisory",
 	}}
 	return &resp, nil
 }
@@ -208,12 +200,11 @@ func getAdvisoryFromDBV2(advisoryName string) (*AdvisoryDetailResponseV2, error)
 	}
 
 	var resp = AdvisoryDetailResponseV2{Data: AdvisoryDetailItemV2{
+		AdvisoryDetailItem: AdvisoryDetailItem{ID: advisory.Name, Type: "advisory"},
 		Attributes: AdvisoryDetailAttributesV2{
 			AdvisoryDetailAttributes: *ada,
 			Packages:                 pkgs,
 		},
-		ID:   advisory.Name,
-		Type: "advisory",
 	}}
 	return &resp, nil
 }

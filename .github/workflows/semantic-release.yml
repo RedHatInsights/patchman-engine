@@ -14,7 +14,7 @@ jobs:
       run: |
         MANAGER_FILE=manager/manager.go
         METRICS_FILE=base/metrics/metrics.go
-        DOC_FILE=docs/openapi.json
+        DOC_FILE=docs/v2/openapi.json
         VERSION=$(awk '/^\/\/ @version/ {print $3}' $MANAGER_FILE)
         RELEASE_TYPE=$(git log -1 | tail -n1) # Check release type (/major, /minor, /patch (default))
         VERSION_NEXT=$(./scripts/increment_version.sh $VERSION $RELEASE_TYPE)

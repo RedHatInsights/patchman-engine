@@ -87,7 +87,7 @@ func packageSystemsQuery(acc int, packageName string, packageIDs []int) *gorm.DB
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/packages/{package_name}/systems [get]
+// @Router /packages/{package_name}/systems [get]
 func PackageSystemsListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	var filters map[string]FilterData

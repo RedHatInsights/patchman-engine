@@ -3,9 +3,10 @@ package controllers
 import (
 	"app/manager/middlewares"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 // @Summary Show me all installed packages across my systems
@@ -23,7 +24,7 @@ import (
 // @Success 200 {array} PackageItem
 // @Failure 415 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/export/packages [get]
+// @Router /export/packages [get]
 func PackagesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	filters, err := ParseTagsFilters(c)

@@ -29,6 +29,8 @@ import (
 // @securityDefinitions.apikey RhIdentity
 // @in header
 // @name x-rh-identity
+
+// @BasePath /api/patch/v2
 func RunManager() {
 	core.ConfigureApp()
 
@@ -46,8 +48,10 @@ func RunManager() {
 
 	// routes
 	core.InitProbes(app)
-	api := app.Group("/api/patch/v1")
-	routes.InitAPI(api, endpointsConfig)
+	apiV1 := app.Group("/api/patch/v1")
+	apiV2 := app.Group("/api/patch/v2")
+	routes.InitAPI(apiV1, endpointsConfig)
+	routes.InitAPI(apiV2, endpointsConfig)
 
 	go base.TryExposeOnMetricsPort(app)
 

@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 # Usage:
 # ./generate_docs.sh
@@ -13,4 +13,4 @@ swag init --output $DOCS_TMP_DIR --generalInfo manager/manager.go
 curl -X "POST" -H "accept: application/json" -H  "Content-Type: application/json" \
   -d @$DOCS_TMP_DIR/swagger.json $CONVERT_URL \
   | python3 -m json.tool \
-  > docs/openapi.json
+  > docs/v2/openapi.json

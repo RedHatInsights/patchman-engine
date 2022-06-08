@@ -101,7 +101,7 @@ func advisoriesSubtotal(tx *gorm.DB) (total int, subTotals map[string]int, err e
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/advisories [get]
+// @Router /advisories [get]
 func AdvisoriesListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	var query *gorm.DB

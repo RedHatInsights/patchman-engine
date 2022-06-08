@@ -29,7 +29,7 @@ type DeleteBaselineResponse struct {
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/baselines/{baseline_id} [delete]
+// @Router /baselines/{baseline_id} [delete]
 func BaselineDeleteHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 

@@ -6,10 +6,11 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 var BaselineSystemFields = database.MustGetQueryAttrs(&BaselineSystemsDBLookup{})
@@ -66,7 +67,7 @@ type BaselineSystemsResponse struct {
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/baselines/{baseline_id}/systems [get]
+// @Router /baselines/{baseline_id}/systems [get]
 func BaselineSystemsListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 

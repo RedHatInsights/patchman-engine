@@ -77,7 +77,7 @@ func systemPackageQuery(account int, inventoryID string) *gorm.DB {
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/systems/{inventory_id}/packages [get]
+// @Router /systems/{inventory_id}/packages [get]
 func SystemPackagesHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 

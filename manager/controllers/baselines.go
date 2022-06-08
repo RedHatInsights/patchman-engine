@@ -65,7 +65,7 @@ type BaselinesResponse struct {
 // @Success 200 {object} BaselinesResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/baselines [get]
+// @Router /baselines [get]
 func BaselinesListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	filters, err := ParseTagsFilters(c)

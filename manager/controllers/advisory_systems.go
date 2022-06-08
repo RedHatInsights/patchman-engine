@@ -74,7 +74,7 @@ var AdvisorySystemOpts = ListOpts{
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/advisories/{advisory_id}/systems [get]
+// @Router /advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 

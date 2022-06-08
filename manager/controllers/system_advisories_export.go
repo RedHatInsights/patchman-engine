@@ -33,7 +33,7 @@ import (
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 415 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/export/systems/{inventory_id}/advisories [get]
+// @Router /export/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 

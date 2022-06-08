@@ -43,7 +43,7 @@ type CreateBaselineResponse struct {
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/baselines [put]
+// @Router /baselines [put]
 func CreateBaselineHandler(c *gin.Context) {
 	accountID := c.GetInt(middlewares.KeyAccount)
 

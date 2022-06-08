@@ -12,8 +12,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Spec validation with OpenAPIv3 (docs/openapi.json)
-      run: docker run --rm -v ${PWD}/docs:/docs:Z openapitools/openapi-generator-cli:v5.0.1 validate -i /docs/openapi.json
+    - name: Spec validation with OpenAPIv3 (docs/v2/openapi.json)
+      run: docker run --rm -v ${PWD}/docs:/docs:Z openapitools/openapi-generator-cli:v5.0.1 validate -i /docs/v2/openapi.json
 
   gen_client:
     name: Generate Python Client
@@ -24,8 +24,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Generate Python client with OpenAPIv3 (docs/openapi.json)
-      run: docker run --rm -v ${PWD}/docs:/local:Z openapitools/openapi-generator-cli:v5.0.1 generate -i /local/openapi.json -g python -o /local/client
+    - name: Generate Python client with OpenAPIv3 (docs/v2/openapi.json)
+      run: docker run --rm -v ${PWD}/docs/v2:/local:Z openapitools/openapi-generator-cli:v5.0.1 generate -i /local/openapi.json -g python -o /local/client
     - uses: actions/upload-artifact@v2
       with:
         name: Python-Client

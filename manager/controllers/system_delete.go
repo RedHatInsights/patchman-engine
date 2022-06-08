@@ -6,8 +6,9 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"errors"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 // @Summary Delete system by inventory id
@@ -21,7 +22,7 @@ import (
 // @Failure 400 {object} 	utils.ErrorResponse
 // @Failure 404 {object} 	utils.ErrorResponse
 // @Failure 500 {object} 	utils.ErrorResponse
-// @Router /api/patch/v1/systems/{inventory_id} [delete]
+// @Router /systems/{inventory_id} [delete]
 func SystemDeleteHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 

@@ -246,7 +246,7 @@
             "get": {
                 "summary": "Show me details an advisory by given advisory name",
                 "description": "Show me details an advisory by given advisory name",
-                "operationId": "detailAdvisory",
+                "operationId": "detailAdvisoryV1",
                 "parameters": [
                     {
                         "name": "advisory_id",
@@ -264,7 +264,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.AdvisoryDetailResponse"
+                                    "$ref": "#/components/schemas/controllers.AdvisoryDetailResponseV1"
                                 }
                             }
                         }
@@ -300,6 +300,7 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "security": [
                     {
                         "RhIdentity": []
@@ -3831,7 +3832,7 @@
                     }
                 }
             },
-            "controllers.AdvisoryDetailAttributes": {
+            "controllers.AdvisoryDetailAttributesV1": {
                 "type": "object",
                 "properties": {
                     "advisory_type_name": {
@@ -3853,10 +3854,7 @@
                         "type": "string"
                     },
                     "packages": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/schemas/controllers.packagesV1"
                     },
                     "public_date": {
                         "type": "string"
@@ -3890,11 +3888,11 @@
                     }
                 }
             },
-            "controllers.AdvisoryDetailItem": {
+            "controllers.AdvisoryDetailItemV1": {
                 "type": "object",
                 "properties": {
                     "attributes": {
-                        "$ref": "#/components/schemas/controllers.AdvisoryDetailAttributes"
+                        "$ref": "#/components/schemas/controllers.AdvisoryDetailAttributesV1"
                     },
                     "id": {
                         "type": "string"
@@ -3904,11 +3902,11 @@
                     }
                 }
             },
-            "controllers.AdvisoryDetailResponse": {
+            "controllers.AdvisoryDetailResponseV1": {
                 "type": "object",
                 "properties": {
                     "data": {
-                        "$ref": "#/components/schemas/controllers.AdvisoryDetailItem"
+                        "$ref": "#/components/schemas/controllers.AdvisoryDetailItemV1"
                     }
                 }
             },
@@ -4917,6 +4915,12 @@
                         "description": "Updated baseline unique ID, it can not be changed",
                         "example": 1
                     }
+                }
+            },
+            "controllers.packagesV1": {
+                "type": "object",
+                "additionalProperties": {
+                    "type": "string"
                 }
             },
             "models.PackageUpdate": {

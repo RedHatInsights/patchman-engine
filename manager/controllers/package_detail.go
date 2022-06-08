@@ -4,8 +4,9 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func packageNameIsValid(packageName string) bool {
@@ -100,7 +101,7 @@ func packageEvraHandler(c *gin.Context, nevra *utils.Nevra) {
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/packages/{package_name} [get]
+// @Router /packages/{package_name} [get]
 func PackageDetailHandler(c *gin.Context) {
 	parameter := c.Param("package_name")
 	if parameter == "" {
