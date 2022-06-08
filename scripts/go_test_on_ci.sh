@@ -2,7 +2,7 @@
 
 set -e -o pipefail
 
-# Analyse generated docs/openapi.json
+# Analyse generated docs/v2/openapi.json
 ./scripts/check-openapi-docs.sh
 
 # Check dockerfiles and docker-composes consistency

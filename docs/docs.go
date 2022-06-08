@@ -2,30 +2,60 @@ package docs
 
 import (
 	"app/base/utils"
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"strings"
+
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/gin-gonic/gin"
 )
 
-const origOpenapiPath = "./docs/openapi.json"
-const exposedOpenapiPath = "/tmp/openapi.json"
-const OpenapiURL = "/api/patch/v1/openapi.json"
+const exposedOpenapiPathV1 = "/tmp/openapi.v1.json"
+const exposedOpenapiPathV2 = "/tmp/openapi.v2.json"
+
+var appVersions = map[string]openapiData{
+	"v1": {
+		in: "./docs/v1/openapi.json", out: exposedOpenapiPathV1,
+		url: "/api/patch/v1/openapi.json", handler: handleOpenapiV1Spec,
+	},
+	"v2": {
+		in: "./docs/v2/openapi.json", out: exposedOpenapiPathV2,
+		url: "/api/patch/v2/openapi.json", handler: handleOpenapiV2Spec,
+	},
+}
+
+type openapiData struct {
+	in      string
+	out     string
+	url     string
+	handler func(*gin.Context)
+}
 
 type EndpointsConfig struct {
 	EnableBaselines bool
 }
 
-func Init(app *gin.Engine, config EndpointsConfig) {
-	nRemovedPaths := filterOpenAPI(config, origOpenapiPath, exposedOpenapiPath)
-	utils.Log("nRemovedPaths", nRemovedPaths).Debug("Filtering endpoints paths from openapi.json")
-	app.GET(OpenapiURL, handleOpenapiSpec)
+func Init(app *gin.Engine, config EndpointsConfig) string {
+	var ver string
+	var data openapiData
+	for ver, data = range appVersions {
+		nRemovedPaths := filterOpenAPI(config, data.in, data.out)
+		utils.Log("nRemovedPaths", nRemovedPaths).Debug("Filtering endpoints paths from " + ver + "/openapi.json")
+		app.GET(data.url, data.handler)
+	}
+
+	return data.url
 }
 
-func handleOpenapiSpec(c *gin.Context) {
+func handleOpenapiV1Spec(c *gin.Context) {
 	c.Status(200)
 	c.Header("Content-Type", "application/json; charset=utf-8")
-	c.File(exposedOpenapiPath)
+	c.File(exposedOpenapiPathV1)
+}
+
+func handleOpenapiV2Spec(c *gin.Context) {
+	c.Status(200)
+	c.Header("Content-Type", "application/json; charset=utf-8")
+	c.File(exposedOpenapiPathV2)
 }
 
 func filterOpenAPI(config EndpointsConfig, inputOpenapiPath, outputOpenapiPath string) (removedPaths int) {
@@ -37,7 +67,7 @@ func filterOpenAPI(config EndpointsConfig, inputOpenapiPath, outputOpenapiPath s
 
 	filteredPaths := openapi3.Paths{}
 	for path := range sw.Paths {
-		if !config.EnableBaselines && strings.Contains(path, "v1/baselines") {
+		if !config.EnableBaselines && strings.Contains(path, "/baselines") {
 			removedPaths++
 			continue
 		}

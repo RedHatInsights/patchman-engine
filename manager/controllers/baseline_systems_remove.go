@@ -30,7 +30,7 @@ type BaselineSystemsRemoveRequest struct {
 // @Failure 400 {object} 	utils.ErrorResponse
 // @Failure 404 {object} 	utils.ErrorResponse
 // @Failure 500 {object} 	utils.ErrorResponse
-// @Router /api/patch/v1/baselines/systems/remove [POST]
+// @Router /baselines/systems/remove [POST]
 func BaselineSystemsRemoveHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 

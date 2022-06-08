@@ -5,9 +5,10 @@ import (
 	"app/manager/middlewares"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 // @Summary Show me all my systems which have a package installed
@@ -29,7 +30,7 @@ import (
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 415 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/export/packages/{package_name}/systems [get]
+// @Router /export/packages/{package_name}/systems [get]
 func PackageSystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 

@@ -3,9 +3,10 @@ package controllers
 import (
 	"app/base/database"
 	"app/manager/middlewares"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type AdvisoryName string
@@ -51,7 +52,7 @@ func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryNa
 // @Success 200 {object} SystemsAdvisoriesResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/views/systems/advisories [post]
+// @Router /views/systems/advisories [post]
 func PostSystemsAdvisories(c *gin.Context) {
 	var req SystemsAdvisoriesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -84,7 +85,7 @@ func PostSystemsAdvisories(c *gin.Context) {
 // @Success 200 {object} AdvisoriesSystemsResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/views/advisories/systems [post]
+// @Router /views/advisories/systems [post]
 func PostAdvisoriesSystems(c *gin.Context) {
 	var req SystemsAdvisoriesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

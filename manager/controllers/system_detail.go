@@ -5,9 +5,10 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"errors"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type SystemDetailResponse struct {
@@ -25,7 +26,7 @@ type SystemDetailResponse struct {
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/systems/{inventory_id} [get]
+// @Router /systems/{inventory_id} [get]
 func SystemDetailHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 

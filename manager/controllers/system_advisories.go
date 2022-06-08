@@ -88,7 +88,7 @@ func (v RelList) String() string {
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/systems/{inventory_id}/advisories [get]
+// @Router /systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 

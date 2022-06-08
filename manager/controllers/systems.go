@@ -167,7 +167,7 @@ func systemSubtotals(tx *gorm.DB) (total int, subTotals map[string]int, err erro
 // @Success 200 {object} SystemsResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/systems [get]
+// @Router /systems [get]
 func SystemsListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	query := querySystems(account)

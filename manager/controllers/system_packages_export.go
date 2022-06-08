@@ -7,10 +7,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type SystemPackageInline struct {
@@ -36,7 +37,7 @@ type SystemPackageInline struct {
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 415 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
-// @Router /api/patch/v1/export/systems/{inventory_id}/packages [get]
+// @Router /export/systems/{inventory_id}/packages [get]
 func SystemPackagesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 

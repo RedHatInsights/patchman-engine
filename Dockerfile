@@ -84,7 +84,8 @@ ADD --chown=insights:root database_admin/*.sh        /go/src/app/database_admin/
 ADD --chown=insights:root database_admin/*.sql       /go/src/app/database_admin/
 ADD --chown=insights:root database_admin/schema      /go/src/app/database_admin/schema
 ADD --chown=insights:root database_admin/migrations  /go/src/app/database_admin/migrations
-ADD --chown=insights:root docs/openapi.json          /go/src/app/docs/
+ADD --chown=insights:root docs/v1/openapi.json       /go/src/app/docs/v1/
+ADD --chown=insights:root docs/v2/openapi.json       /go/src/app/docs/v2/
 ADD --chown=insights:root vmaas_sync/entrypoint.sh   /go/src/app/vmaas_sync/
 
 COPY --from=buildimg /go/src/app/main /go/src/app/
