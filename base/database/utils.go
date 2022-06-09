@@ -125,6 +125,17 @@ func IsPgErrorCode(err error, pgCode string) bool {
 	}
 }
 
+func logAndWait(query string) {
+	utils.Log(
+		"host", utils.Cfg.DBHost,
+		"port", utils.Cfg.DBPort,
+		"user", utils.Cfg.DBUser,
+		"db_name", utils.Cfg.DBName,
+		"command", query,
+	).Info("PostgreSQL is unavailable - sleeping")
+	time.Sleep(time.Second)
+}
+
 // Wait for database service
 func DBWait(waitForDB string) {
 	var query string
@@ -143,21 +154,23 @@ func DBWait(waitForDB string) {
 		query = "SELECT * FROM schema_migrations;"
 	}
 
-	for {
-		db, _ := Db.DB()
-		if db != nil {
-			if _, err := db.Exec(query); err == nil {
-				log.Info("Everything is up - executing command")
-				return
+	dbDown := true
+	for dbDown {
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					logAndWait(query)
+				}
+			}()
+			db, _ := Db.DB()
+			if db != nil {
+				if _, err := db.Exec(query); err == nil {
+					log.Info("Everything is up - executing command")
+					dbDown = false
+					return
+				}
 			}
-		}
-		utils.Log(
-			"host", utils.Cfg.DBHost,
-			"port", utils.Cfg.DBPort,
-			"user", utils.Cfg.DBUser,
-			"db_name", utils.Cfg.DBName,
-			"command", query,
-		).Info("PostgreSQL is unavailable - sleeping")
-		time.Sleep(time.Second)
+			logAndWait(query)
+		}()
 	}
 }
