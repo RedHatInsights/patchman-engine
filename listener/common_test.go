@@ -76,10 +76,9 @@ func getOrCreateTestAccount(t *testing.T) int {
 }
 
 // nolint: unparam
-func createTestUploadEvent(rhAccountID, orgID, inventoryID, reporter string, packages bool) HostEvent {
+func createTestUploadEvent(rhAccountID, orgID, inventoryID, reporter string, packages, yum bool) HostEvent {
 	ev := HostEvent{
-		Type:             "created",
-		PlatformMetadata: nil,
+		Type: "created",
 		Host: Host{
 			ID:       inventoryID,
 			Account:  &rhAccountID,
@@ -94,6 +93,13 @@ func createTestUploadEvent(rhAccountID, orgID, inventoryID, reporter string, pac
 		Name:   "modName",
 		Stream: "modStream"}}
 	ev.Host.SystemProfile.YumRepos = &[]inventory.YumRepo{{ID: "repo1", Enabled: true}}
+	if yum {
+		ev.PlatformMetadata = HostPlatformMetadata{
+			CustomMetadata: HostCustomMetadata{
+				YumUpdates: []byte(`{"kernel-0.3": {}}`),
+			},
+		}
+	}
 	return ev
 }
 
