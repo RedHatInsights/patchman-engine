@@ -7,16 +7,92 @@ import (
 	"app/manager/middlewares"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"modernc.org/strutil"
-	"net/http"
-	"time"
 )
 
 var websockets []chan string
 var runUploadLoop = false
+
+const uploadEvent = `{
+		"type": "created",
+		"host": {
+			"id":       "00000000-0000-0000-0000-000000000100",
+			"account":  "TEST-0000",
+			"reporter": "puptoo",
+			"tags": {
+				{
+					"key":   "env",
+					"value": "prod",
+				},
+				{
+					"namespace": "satellite",
+					"key":       "organization",
+					"value":     "rh",
+				},
+			},
+			"system_profile": %s
+		},
+    "platform_metadata": {
+      "request_id": "ingress-service-5f79d54bf-q5jh6/iDl0gmf6Qw-071711",
+      "custom_metadata": {
+        "yum_updates": {
+          "releasever": "8",
+          "basearch": "x86_64",
+          "update_list": {
+            "bash-0:4.4.20-1.el8_4.x86_64": {
+              "available_updates": [
+                {
+                  "package": "bash-0:4.4.20-3.el8.x86_64",
+                  "repository": "rhel-8-for-x86_64-baseos-rpms",
+                  "basearch": "x86_64",
+                  "releasever": "8",
+                  "erratum": "RHBA-2022:1993"
+                },
+                {
+                  "package": "bash-0:4.4.20-3.el8.x86_64",
+                  "repository": "ubi-8-baseos",
+                  "basearch": "x86_64",
+                  "releasever": "8",
+                  "erratum": "RHBA-2022:1993"
+                },
+                {
+                  "package": "bash-0:4.4.23-1.fc28.x86_64",
+                  "repository": "local",
+                  "basearch": "x86_64",
+                  "releasever": "8"
+                }
+              ]
+            },
+            "curl-0:7.61.1-18.el8_4.2.x86_64": {
+              "available_updates": [
+                {
+                  "package": "curl-0:7.61.1-22.el8.x86_64",
+                  "repository": "rhel-8-for-x86_64-baseos-rpms",
+                  "basearch": "x86_64",
+                  "releasever": "8",
+                  "erratum": "RHSA-2021:4511"
+                },
+                {
+                  "package": "curl-0:7.61.1-22.el8.x86_64",
+                  "repository": "ubi-8-baseos",
+                  "basearch": "x86_64",
+                  "releasever": "8",
+                  "erratum": "RHSA-2021:4511"
+                }
+              ]
+            }
+          },
+          "metadata_time": "2022-05-30T14:00:25Z"
+        }
+      }
+    }
+	}`
 
 func addWebsocket() chan string {
 	ws := make(chan string, 100)
@@ -65,31 +141,13 @@ func mockIdentity() string {
 }
 
 func upload(randomPkgs bool) {
-	event := map[string]interface{}{
-		"type": "created",
-		"host": map[string]interface{}{
-			"id":       "00000000-0000-0000-0000-000000000100",
-			"account":  "TEST-0000",
-			"reporter": "puptoo",
-			"tags": []map[string]string{
-				{
-					"key":   "env",
-					"value": "prod",
-				},
-				{
-					"namespace": "satellite",
-					"key":       "organization",
-					"value":     "rh",
-				},
-			},
-			"system_profile": makeSystemProfile("TEST-0000", randomPkgs),
-		},
-	}
-	msg, err := json.Marshal(event)
+	packages := makeSystemProfile("TEST-0000", randomPkgs)
+	pkgJSON, err := json.Marshal(packages)
 	if err != nil {
 		panic(err)
 	}
-	sendMessageToTopic("platform.inventory.events", string(msg))
+	event := fmt.Sprintf(uploadEvent, pkgJSON)
+	sendMessageToTopic("platform.inventory.events", event)
 }
 
 func sendMessageToTopic(topic, message string) {
