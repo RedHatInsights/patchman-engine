@@ -19,7 +19,7 @@ type PlatformEvent struct {
 	B64Identity *string                `json:"b64_identity"`
 	URL         *string                `json:"url"`
 	SystemIDs   []string               `json:"system_ids,omitempty"`
-	RequestIDs  []string               `json:"request_id,omitempty"`
+	RequestIDs  []string               `json:"request_ids,omitempty"`
 }
 
 type InventoryAID struct {
