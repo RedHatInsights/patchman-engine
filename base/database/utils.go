@@ -3,7 +3,11 @@ package database
 import (
 	"app/base/models"
 	"app/base/utils"
+	"fmt"
 	"io/ioutil"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgconn"
@@ -136,6 +140,30 @@ func logAndWait(query string) {
 	time.Sleep(time.Second)
 }
 
+func findLatestMigration() int {
+	f, err := os.Open("./database_admin/migrations")
+	if err != nil {
+		panic("Can't open migration directory")
+	}
+	files, err := f.Readdir(0)
+	if err != nil {
+		panic("Can't read migration directory")
+	}
+
+	max := 0
+	for _, v := range files {
+		s := strings.Split(v.Name(), "_")
+		i, err := strconv.Atoi(s[0])
+		if err != nil {
+			panic("Migration file does not start with number")
+		}
+		if i > max {
+			max = i
+		}
+	}
+	return max
+}
+
 // Wait for database service
 func DBWait(waitForDB string) {
 	var query string
@@ -149,7 +177,9 @@ func DBWait(waitForDB string) {
 		query = ";" // Wait only for empty database.
 	case "full":
 		// Wait for full schema, all migrations, e.g. before tests (schema_migrations.dirty='f').
-		query = "SELECT 1/count(*) FROM schema_migrations WHERE dirty='f';"
+		latest := findLatestMigration()
+		log.Info("Waiting for schema version ", latest)
+		query = fmt.Sprintf("SELECT 1/count(*) FROM schema_migrations WHERE version = %d and dirty='f';", latest)
 	default:
 		query = "SELECT * FROM schema_migrations;"
 	}
