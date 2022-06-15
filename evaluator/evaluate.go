@@ -175,6 +175,14 @@ func tryGetVmaasRequest(tx *gorm.DB, accountID int, inventoryID string,
 		return nil, nil, nil
 	}
 
+	if system.VmaasJSON == "" {
+		evaluationCnt.WithLabelValues("error-parse-vmaas-json").Inc()
+		utils.Log("inventory_id", system.InventoryID).Warn("system with empty vmaas json")
+		// skip the system
+		// don't return error as it will cause panic of evaluator pod
+		return nil, nil, nil
+	}
+
 	updatesReq, err := parseVmaasJSON(system)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-parse-vmaas-json").Inc()
