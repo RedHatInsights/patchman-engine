@@ -102,7 +102,7 @@ func TestEvaluateYum(t *testing.T) {
 
 	mockWriter := mqueue.MockKafkaWriter{}
 	remediationsPublisher = &mockWriter
-	evalTopic = recalcTopic
+	evalLabel = recalcLabel
 
 	expectedAddedAdvisories := []string{"RH-1", "RH-2", "RHSA-2021:3801"}
 	expectedAdvisoryIDs := []int{1, 2, 14} // advisories expected to be paired to the system after evaluation
