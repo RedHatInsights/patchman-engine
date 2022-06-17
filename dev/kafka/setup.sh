@@ -1,5 +1,8 @@
 #!/bin/sh
 
+#wait until kafka is ready
+sleep 5
+
 # create topics with multiple partitions for scaling
 for topic in "platform.inventory.events" "patchman.evaluator.upload" \
              "patchman.evaluator.recalc" "platform.remediation-updates.patch" "test"
