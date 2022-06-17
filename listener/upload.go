@@ -162,7 +162,7 @@ func sendPayloadStatus(w mqueue.Writer, event mqueue.PayloadTrackerEvent, status
 }
 
 // accumulate events and create group PlatformEvents to save some resources
-const evalBufferSize = 5 * mqueue.BatchSize
+var evalBufferSize = 5 * mqueue.BatchSize
 
 var evalBuffer = make(mqueue.EvalDataSlice, 0, evalBufferSize+1)
 var ptBuffer = make(mqueue.PayloadTrackerEvents, 0, evalBufferSize+1)
