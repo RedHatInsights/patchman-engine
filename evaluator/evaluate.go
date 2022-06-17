@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	uploadTopic = "patchman.evaluator.upload"
-	recalcTopic = "patchman.evaluator.recalc"
+	uploadLabel = "upload"
+	recalcLabel = "recalc"
 )
 
 type SystemAdvisoryMap map[string]models.SystemAdvisories
@@ -100,7 +100,7 @@ func Evaluate(ctx context.Context, accountID int, inventoryID, accountName strin
 		return nil
 	}
 
-	system, vmaasData, err := evaluateInDatabase(ctx, accountID, inventoryID, accountName, requested)
+	system, vmaasData, err := evaluateInDatabase(ctx, accountID, inventoryID, accountName, requested, evaluationType)
 	if err != nil {
 		return errors.Wrap(err, "unable to evaluate in database")
 	}
@@ -117,7 +117,7 @@ func Evaluate(ctx context.Context, accountID int, inventoryID, accountName strin
 }
 
 func evaluateInDatabase(ctx context.Context, accountID int, inventoryID, accountName string,
-	requested *base.Rfc3339Timestamp) (*models.SystemPlatform, *vmaas.UpdatesV2Response, error) {
+	requested *base.Rfc3339Timestamp, evalType string) (*models.SystemPlatform, *vmaas.UpdatesV2Response, error) {
 	tx := database.Db.WithContext(base.Context).Begin()
 	// Don't allow requested TX to hang around locking the rows
 	defer tx.Rollback()
@@ -127,7 +127,7 @@ func evaluateInDatabase(ctx context.Context, accountID int, inventoryID, account
 		return nil, nil, nil
 	}
 
-	updatesData, err := getUpdatesData(ctx, tx, system)
+	updatesData, err := getUpdatesData(ctx, tx, system, evalType)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to get updates data")
 	}
@@ -184,7 +184,8 @@ func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV2Response,
 	return updatesData, nil
 }
 
-func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatform) (*vmaas.UpdatesV2Response, error) {
+func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatform, evalType string) (
+	*vmaas.UpdatesV2Response, error) {
 	var yumUpdates *vmaas.UpdatesV2Response
 	var yumErr error
 	if enableYumUpdatesEval {
@@ -195,7 +196,7 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 		}
 
 		// in evaluator-upload return just return YumUpdates
-		if yumUpdates != nil && evalTopic == uploadTopic {
+		if yumUpdates != nil && evalType == uploadLabel {
 			return yumUpdates, nil
 		}
 	}
