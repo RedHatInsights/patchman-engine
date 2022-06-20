@@ -84,7 +84,7 @@ func configure() {
 	enableRefreshAdvisoryCaches = utils.GetBoolEnvOrDefault("ENABLE_REFRESH_ADVISORY_CACHES", true)
 }
 
-type Handler func(data []byte, conn *websocket.Conn) error
+type Handler func(data []byte, conn *websocket.Conn)
 
 func runWebsocket(conn *websocket.Conn, handler Handler) error {
 	defer conn.Close()
@@ -105,11 +105,7 @@ func runWebsocket(conn *websocket.Conn, handler Handler) error {
 		utils.Log("messageType", typ).Info("websocket message received")
 
 		if typ == websocket.BinaryMessage || typ == websocket.TextMessage {
-			err = handler(msg, conn)
-			if err != nil {
-				messagesReceivedCnt.WithLabelValues("error-handled").Inc()
-				return err
-			}
+			go handler(msg, conn)
 			messagesReceivedCnt.WithLabelValues("handled").Inc()
 			continue
 		}
@@ -132,7 +128,7 @@ func runWebsocket(conn *websocket.Conn, handler Handler) error {
 	}
 }
 
-func websocketHandler(data []byte, _ *websocket.Conn) error {
+func websocketHandler(data []byte, _ *websocket.Conn) {
 	text := string(data)
 	utils.Log("data", string(data)).Info("Received VMaaS websocket message")
 
@@ -148,7 +144,6 @@ func websocketHandler(data []byte, _ *websocket.Conn) error {
 			utils.Log("err", err.Error()).Error("re-evaluation sending routine failed")
 		}
 	}
-	return nil
 }
 
 func getLastSyncIfNeeded() *string {
