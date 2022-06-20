@@ -244,13 +244,13 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	}
 
 	staleWarning := host.StaleWarningTimestamp.Time()
-
+	updatesReqJSONString := string(updatesReqJSON)
 	systemPlatform := models.SystemPlatform{
 		InventoryID:           inventoryID,
 		RhAccountID:           accountID,
 		DisplayName:           displayName,
-		VmaasJSON:             string(updatesReqJSON),
-		JSONChecksum:          jsonChecksum,
+		VmaasJSON:             utils.EmptyToNil(&updatesReqJSONString),
+		JSONChecksum:          utils.EmptyToNil(&jsonChecksum),
 		LastUpload:            &now,
 		StaleTimestamp:        host.StaleTimestamp.Time(),
 		StaleWarningTimestamp: host.StaleWarningTimestamp.Time(),

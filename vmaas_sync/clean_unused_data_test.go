@@ -65,7 +65,7 @@ func TestCleanUnusedAdvisories(t *testing.T) {
 		Description:    "Custom desc",
 		Synopsis:       "Custom syn",
 		Summary:        "Custom sum",
-		Solution:       "Custom sol",
+		Solution:       utils.PtrString("Custom sol"),
 		AdvisoryTypeID: 1,
 		RebootRequired: false,
 		Synced:         false,

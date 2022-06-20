@@ -162,9 +162,9 @@ type ErrataResponseErrataList struct {
 	ReferenceList     *[]string `json:"reference_list,omitempty"`
 	Issued            string    `json:"issued,omitempty"`
 	Description       string    `json:"description,omitempty"`
-	Solution          string    `json:"solution,omitempty"`
+	Solution          *string   `json:"solution,omitempty"`
 	Summary           string    `json:"summary,omitempty"`
-	URL               string    `json:"url,omitempty"`
+	URL               *string   `json:"url,omitempty"`
 	Synopsis          string    `json:"synopsis,omitempty"`
 	CveList           *[]string `json:"cve_list,omitempty"`
 	BugzillaList      *[]string `json:"bugzilla_list,omitempty"`
