@@ -77,3 +77,33 @@ func TestSchemaCompatiblity(t *testing.T) {
 	fmt.Print(diff)
 	assert.Equal(t, len(diff), 0)
 }
+
+func TestSchemaEmptyText(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	database.Configure()
+
+	var cols []string
+	query := `SELECT c.relname || '.' || a.attname AS "col"
+				FROM pg_catalog.pg_class c
+				JOIN pg_catalog.pg_attribute a ON a.attrelid = c.oid
+				JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+			   WHERE relkind in ( 'r', 'p')
+				 AND relispartition = false
+				 AND pg_catalog.pg_table_is_visible(c.oid)
+				 AND n.nspname = 'public'
+				 AND a.attnum > 0                           -- skip system columns
+				 AND NOT a.attisdropped                     -- skip dropped columns
+				 AND (a.atttypid = 1043 OR a.atttypid = 25) -- filter only varchars/text
+					 -- skip cols that already has this constraint
+				 AND NOT EXISTS ( SELECT 1
+									FROM pg_catalog.pg_constraint
+								   WHERE conname = c.relname || '_' || a.attname || '_check'
+								);`
+	err := database.Db.Raw(query).Find(&cols).Error
+	assert.NoError(t, err)
+	var msg string
+	for _, col := range cols {
+		msg += fmt.Sprintf("\nMissing empty() constraint on column '%s'", col)
+	}
+	assert.Empty(t, msg)
+}
