@@ -7,6 +7,7 @@ import (
 	ntf "app/base/notification"
 	"app/base/utils"
 	"encoding/json"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -85,7 +86,7 @@ func TestAdvisoriesNotificationMessage(t *testing.T) {
 		},
 	}
 
-	notification := ntf.MakeNotification(rhAccountID, inventoryID, NewAdvisoryEvent, events)
+	notification := ntf.MakeNotification(strconv.Itoa(rhAccountID), inventoryID, NewAdvisoryEvent, events)
 	msg, err := mqueue.MessageFromJSON(inventoryID, notification)
 	assert.Nil(t, err)
 	assert.Equal(t, inventoryID, string(msg.Key))
