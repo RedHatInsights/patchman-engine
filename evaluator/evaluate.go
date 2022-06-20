@@ -245,9 +245,9 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vma
 	}
 
 	// Send instant notification with new advisories
-	err = publishNewAdvisoriesNotification(system.InventoryID, system.RhAccountID, newSystemAdvisories)
+	err = publishNewAdvisoriesNotification(tx, system.InventoryID, system.RhAccountID, newSystemAdvisories)
 	if err != nil {
-		utils.Log("RHAccountID", system.RhAccountID, "newSystemAdvisories", newSystemAdvisories).
+		utils.Log("rhAccountID", system.RhAccountID, "newSystemAdvisories", newSystemAdvisories).
 			Error("publishing new advisories notification failed")
 	}
 

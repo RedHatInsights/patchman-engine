@@ -1,7 +1,6 @@
 package notification
 
 import (
-	"strconv"
 	"time"
 )
 
@@ -57,6 +56,8 @@ type Notification struct {
 	// Recipients settings - Applications can add extra email recipients by adding entries to this array.
 	// This setting extends whatever the Administrators configured in their Notifications settings (since v1.1.0).
 	Recipients []Recipient `json:"recipients,omitempty"`
+	// org_id as future replacement of the account_id.
+	OrgID string `json:"org_id,omitempty"`
 }
 
 type Advisory struct {
@@ -65,7 +66,7 @@ type Advisory struct {
 	Synopsis     string `json:"synopsis"`
 }
 
-func MakeNotification(accountID int, inventoryID string, eventType string, events []Event) *Notification {
+func MakeNotification(rhAccountName string, inventoryID string, eventType string, events []Event) *Notification {
 	return &Notification{
 		Version:     Version,
 		Bundle:      Bundle,
@@ -73,7 +74,7 @@ func MakeNotification(accountID int, inventoryID string, eventType string, event
 		EventType:   eventType,
 		// ISO-8601 formatted time
 		Timestamp: time.Now().Format(time.RFC3339),
-		AccountID: strconv.Itoa(accountID),
+		AccountID: rhAccountName,
 		Context:   Context{InventoryID: inventoryID},
 		Events:    events,
 	}
