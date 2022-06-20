@@ -9,12 +9,13 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"context"
-	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"os"
 	"testing"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 var msgs []mqueue.KafkaMessage
@@ -38,8 +39,7 @@ func TestSync(t *testing.T) {
 
 	evalWriter = &mockKafkaWriter{}
 
-	err := websocketHandler([]byte("webapps-refreshed"), nil)
-	assert.Nil(t, err)
+	websocketHandler([]byte("webapps-refreshed"), nil)
 
 	expected := []string{"RH-100"}
 	database.CheckAdvisoriesInDB(t, expected)
