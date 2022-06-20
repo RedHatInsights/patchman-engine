@@ -129,7 +129,7 @@ func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataRespons
 		CveList:         cvesData,
 		PublicDate:      issued,
 		ModifiedDate:    modified,
-		URL:             &vmaasData.URL,
+		URL:             vmaasData.URL,
 		PackageData:     packageData,
 		RebootRequired:  vmaasData.RequiresReboot,
 		ReleaseVersions: releaseVersionsData,

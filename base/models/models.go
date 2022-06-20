@@ -40,8 +40,8 @@ type SystemPlatform struct {
 	ID                    int    `gorm:"primary_key"`
 	InventoryID           string `sql:"unique" gorm:"unique"`
 	RhAccountID           int
-	VmaasJSON             string
-	JSONChecksum          string
+	VmaasJSON             *string
+	JSONChecksum          *string
 	LastUpdated           *time.Time `gorm:"default:null"`
 	UnchangedSince        *time.Time `gorm:"default:null"`
 	LastEvaluation        *time.Time `gorm:"default:null"`
@@ -152,7 +152,7 @@ type AdvisoryMetadata struct {
 	Description     string
 	Synopsis        string
 	Summary         string
-	Solution        string
+	Solution        *string
 	AdvisoryTypeID  int
 	PublicDate      time.Time
 	ModifiedDate    time.Time
