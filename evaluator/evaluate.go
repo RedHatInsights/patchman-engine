@@ -83,7 +83,7 @@ func configure() {
 	configureNotifications()
 }
 
-func Evaluate(ctx context.Context, accountID int, inventoryID string, requested *base.Rfc3339Timestamp,
+func Evaluate(ctx context.Context, accountID int, inventoryID, accountName string, requested *base.Rfc3339Timestamp,
 	evaluationType string) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationDuration.WithLabelValues(evaluationType))
@@ -93,7 +93,7 @@ func Evaluate(ctx context.Context, accountID int, inventoryID string, requested 
 		return nil
 	}
 
-	system, vmaasData, err := evaluateInDatabase(ctx, accountID, inventoryID, requested)
+	system, vmaasData, err := evaluateInDatabase(ctx, accountID, inventoryID, accountName, requested)
 	if err != nil {
 		return errors.Wrap(err, "unable to evaluate in database")
 	}
@@ -109,7 +109,7 @@ func Evaluate(ctx context.Context, accountID int, inventoryID string, requested 
 	return nil
 }
 
-func evaluateInDatabase(ctx context.Context, accountID int, inventoryID string,
+func evaluateInDatabase(ctx context.Context, accountID int, inventoryID, accountName string,
 	requested *base.Rfc3339Timestamp) (*models.SystemPlatform, *vmaas.UpdatesV2Response, error) {
 	tx := database.Db.WithContext(base.Context).Begin()
 	// Don't allow requested TX to hang around locking the rows
@@ -124,7 +124,7 @@ func evaluateInDatabase(ctx context.Context, accountID int, inventoryID string,
 		return nil, nil, nil
 	}
 
-	vmaasData, err := evaluateWithVmaas(ctx, tx, updatesReq, system)
+	vmaasData, err := evaluateWithVmaas(ctx, tx, updatesReq, system, accountName)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluation with vmaas failed")
 	}
@@ -132,7 +132,7 @@ func evaluateInDatabase(ctx context.Context, accountID int, inventoryID string,
 }
 
 func evaluateWithVmaas(ctx context.Context, tx *gorm.DB, updatesReq *vmaas.UpdatesV3Request,
-	system *models.SystemPlatform) (*vmaas.UpdatesV2Response, error) {
+	system *models.SystemPlatform, accountName string) (*vmaas.UpdatesV2Response, error) {
 	thirdParty, err := analyzeRepos(tx, system)
 	if err != nil {
 		return nil, errors.Wrap(err, "Repo analysis failed")
@@ -155,7 +155,7 @@ func evaluateWithVmaas(ctx context.Context, tx *gorm.DB, updatesReq *vmaas.Updat
 		}
 	}
 
-	err = evaluateAndStore(tx, system, vmaasData)
+	err = evaluateAndStore(tx, system, vmaasData, accountName)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to evaluate and store results")
 	}
@@ -219,7 +219,8 @@ func commitWithObserve(tx *gorm.DB) error {
 	return nil
 }
 
-func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) error {
+func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
+	vmaasData *vmaas.UpdatesV2Response, accountName string) error {
 	newSystemAdvisories, err := analyzeAdvisories(tx, system, vmaasData)
 	if err != nil {
 		return errors.Wrap(err, "Advisory analysis failed")
@@ -237,7 +238,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vma
 	}
 
 	// Send instant notification with new advisories
-	err = publishNewAdvisoriesNotification(tx, system.InventoryID, system.RhAccountID, newSystemAdvisories)
+	err = publishNewAdvisoriesNotification(system.InventoryID, accountName, newSystemAdvisories)
 	if err != nil {
 		utils.Log("rhAccountID", system.RhAccountID, "newSystemAdvisories", newSystemAdvisories).
 			Error("publishing new advisories notification failed")
@@ -385,7 +386,7 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 			if nRequestIDs > i {
 				ptEvent.RequestID = &event.RequestIDs[i]
 			}
-			err = Evaluate(base.Context, event.AccountID, id, event.Timestamp, evalLabel)
+			err = Evaluate(base.Context, event.AccountID, id, event.GetAccountName(), event.Timestamp, evalLabel)
 			if err != nil {
 				ptEvent.Status = "error"
 				ptEvents = append(ptEvents, ptEvent)
@@ -394,7 +395,7 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 			ptEvents = append(ptEvents, ptEvent)
 		}
 	} else {
-		err = Evaluate(base.Context, event.AccountID, event.ID, event.Timestamp, evalLabel)
+		err = Evaluate(base.Context, event.AccountID, event.ID, event.GetAccountName(), event.Timestamp, evalLabel)
 	}
 
 	if err != nil {
