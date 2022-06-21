@@ -54,6 +54,13 @@ func (event *PlatformEvent) createKafkaMessage() (KafkaMessage, error) {
 	return KafkaMessage{Value: data}, err
 }
 
+func (event *PlatformEvent) GetAccountName() string {
+	if event.Account == nil {
+		return ""
+	}
+	return *event.Account
+}
+
 func writePlatformEvents(ctx context.Context, w Writer, events ...PlatformEvent) error {
 	var err error
 	msgs := make([]KafkaMessage, len(events))

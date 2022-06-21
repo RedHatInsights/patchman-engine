@@ -66,7 +66,7 @@ type Advisory struct {
 	Synopsis     string `json:"synopsis"`
 }
 
-func MakeNotification(rhAccountName string, inventoryID string, eventType string, events []Event) *Notification {
+func MakeNotification(inventoryID, accountName, eventType string, events []Event) *Notification {
 	return &Notification{
 		Version:     Version,
 		Bundle:      Bundle,
@@ -74,7 +74,7 @@ func MakeNotification(rhAccountName string, inventoryID string, eventType string
 		EventType:   eventType,
 		// ISO-8601 formatted time
 		Timestamp: time.Now().Format(time.RFC3339),
-		AccountID: rhAccountName,
+		AccountID: accountName,
 		Context:   Context{InventoryID: inventoryID},
 		Events:    events,
 	}
