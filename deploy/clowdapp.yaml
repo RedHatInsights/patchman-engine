@@ -142,6 +142,7 @@ objects:
         - {name: VMAAS_CALL_USE_EXP_RETRY, value: '${VMAAS_CALL_USE_EXP_RETRY}'}
         - {name: VMAAS_CALL_USE_OPTIMISTIC_UPDATES, value: '${VMAAS_CALL_USE_OPTIMISTIC_UPDATES}'}
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
+        - {name: MAX_EVAL_GOROUTINES, value: '${MAX_EVAL_GOROUTINES_UPLOAD}'}
         resources:
           limits: {cpu: '${RES_CPU_EVALUATOR_UPLOAD}', memory: '${RES_MEM_EVALUATOR_UPLOAD}'}
           requests: {cpu: '${RES_CPU_EVALUATOR_UPLOAD}', memory: '${RES_MEM_EVALUATOR_UPLOAD}'}
@@ -196,6 +197,7 @@ objects:
         - {name: VMAAS_CALL_USE_EXP_RETRY, value: '${VMAAS_CALL_USE_EXP_RETRY}'}
         - {name: VMAAS_CALL_USE_OPTIMISTIC_UPDATES, value: '${VMAAS_CALL_USE_OPTIMISTIC_UPDATES}'}
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
+        - {name: MAX_EVAL_GOROUTINES, value: '${MAX_EVAL_GOROUTINES_RECALC}'}
         resources:
           limits: {cpu: '${RES_CPU_EVALUATOR_RECALC}', memory: '${RES_MEM_EVALUATOR_RECALC}'}
           requests: {cpu: '${RES_CPU_EVALUATOR_RECALC}', memory: '${RES_MEM_EVALUATOR_RECALC}'}
@@ -477,6 +479,7 @@ parameters:
 - {name: PRELOAD_PACKAGE_CACHE_EVALUATOR_UPLOAD, value: 'true'}
 - {name: RES_CPU_EVALUATOR_UPLOAD, value: 256m}
 - {name: RES_MEM_EVALUATOR_UPLOAD, value: 1024Mi}
+- {name: MAX_EVAL_GOROUTINES_UPLOAD, value: '1'}
 
 # Evaluator - recalc
 - {name: REPLICAS_EVALUATOR_RECALC, value: '1'}
@@ -496,6 +499,7 @@ parameters:
 - {name: PRELOAD_PACKAGE_CACHE_EVALUATOR_RECALC, value: 'true'}
 - {name: RES_CPU_EVALUATOR_RECALC, value: 256m}
 - {name: RES_MEM_EVALUATOR_RECALC, value: 1024Mi}
+- {name: MAX_EVAL_GOROUTINES_RECALC, value: '1'}
 
 # VMaaS sync
 - {name: REPLICAS_VMAAS_SYNC, value: '1'}

@@ -52,6 +52,7 @@ var (
 	vmaasCallUseExpRetry          bool
 	vmaasCallUseOptimisticUpdates bool
 	enableYumUpdatesEval          bool
+	nEvalGoroutines               int
 )
 
 const WarnPayloadTracker = "unable to send message to payload tracker"
@@ -86,6 +87,7 @@ func configure() {
 	vmaasCallUseExpRetry = utils.GetBoolEnvOrDefault("VMAAS_CALL_USE_EXP_RETRY", true)
 	vmaasCallUseOptimisticUpdates = utils.GetBoolEnvOrDefault("VMAAS_CALL_USE_OPTIMISTIC_UPDATES", true)
 	enableYumUpdatesEval = utils.GetBoolEnvOrDefault("ENABLE_YUM_UPDATES_EVAL", true)
+	nEvalGoroutines = utils.GetIntEnvOrDefault("MAX_EVAL_GOROUTINES", 1)
 	configureRemediations()
 	configureNotifications()
 }
@@ -114,6 +116,44 @@ func Evaluate(ctx context.Context, accountID int, inventoryID, accountName strin
 	evaluationCnt.WithLabelValues("success").Inc()
 	utils.Log("inventoryID", inventoryID, "evalLabel", evaluationType).Info("system evaluated successfully")
 	return nil
+}
+
+// Runs Evaluate method in Goroutines
+func runEvaluate(
+	ctx context.Context,
+	accountID int,
+	inventoryID,
+	accountName string,
+	requested *base.Rfc3339Timestamp,
+	evaluationType string,
+	ptEventIn mqueue.PayloadTrackerEvent,
+	wg *sync.WaitGroup,
+	guard chan struct{},
+) (ptEventOut mqueue.PayloadTrackerEvent, err error) {
+	errc := make(chan error, 1)
+	ptEventC := make(chan mqueue.PayloadTrackerEvent, 1)
+
+	guard <- struct{}{}
+	wg.Add(1)
+	ptEventC <- ptEventIn
+
+	go func() {
+		err := Evaluate(ctx, accountID, inventoryID, accountName, requested, evaluationType)
+		if err != nil {
+			event := <-ptEventC
+			event.Status = "error"
+			ptEventC <- event
+			utils.Log("err", err.Error(), "inventoryID", inventoryID, "evalLabel", evalLabel).
+				Error("Eval message handling")
+		}
+		errc <- err
+		<-guard
+		wg.Done()
+	}()
+
+	err = <-errc
+	ptEventOut = <-ptEventC
+	return ptEventOut, err
 }
 
 func evaluateInDatabase(ctx context.Context, accountID int, inventoryID, accountName string,
@@ -449,6 +489,9 @@ func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, erro
 
 func evaluateHandler(event mqueue.PlatformEvent) error {
 	var err error
+	var wg sync.WaitGroup
+	guard := make(chan struct{}, nEvalGoroutines)
+
 	nSystems := 1
 	if event.SystemIDs != nil {
 		nSystems = len(event.SystemIDs)
@@ -460,6 +503,7 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 		Status:    "success",
 		StatusMsg: "advisories evaluation",
 	}
+
 	if event.SystemIDs != nil {
 		// Evaluate in bulk
 		nRequestIDs := len(event.RequestIDs)
@@ -468,40 +512,26 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 			if nRequestIDs > i {
 				ptEvent.RequestID = &event.RequestIDs[i]
 			}
-			err = Evaluate(base.Context, event.AccountID, id, event.GetAccountName(), event.Timestamp, evalLabel)
-			if err != nil {
-				ptEvent.Status = "error"
-				ptEvents = append(ptEvents, ptEvent)
-				continue
-			}
+			ptEvent, err = runEvaluate(base.Context, event.AccountID, id, event.GetAccountName(),
+				event.Timestamp, evalLabel, ptEvent, &wg, guard)
 			ptEvents = append(ptEvents, ptEvent)
 		}
 	} else {
-		err = Evaluate(base.Context, event.AccountID, event.ID, event.GetAccountName(), event.Timestamp, evalLabel)
+		ptEvent, err = runEvaluate(base.Context, event.AccountID, event.ID, event.GetAccountName(),
+			event.Timestamp, evalLabel, ptEvent, &wg, guard)
+		ptEvents = append(ptEvents, ptEvent)
 	}
-
-	if err != nil {
-		utils.Log("err", err.Error(), "inventoryID", event.ID, "evalLabel", evalLabel).
-			Error("Eval message handling")
-		if event.SystemIDs == nil {
-			// this is an evaluator-recalc event, we don't need to send info to payload tracker
-			return err
-		}
-		// send kafka message to payload tracker
-		ptErr := mqueue.SendMessages(base.Context, ptWriter, &ptEvents)
-		if ptErr != nil {
-			utils.Log("err", err.Error()).Warn(WarnPayloadTracker)
-		}
-		return err
-	}
+	wg.Wait()
 
 	// send kafka message to payload tracker
-	err = mqueue.SendMessages(base.Context, ptWriter, &ptEvents)
-	if err != nil {
-		// don't fail with err, just log that we couldn't send msg to payload tracker
-		utils.Log("err", err.Error()).Warn(WarnPayloadTracker)
+	if evalLabel == uploadLabel {
+		ptErr := mqueue.SendMessages(base.Context, ptWriter, &ptEvents)
+		if ptErr != nil {
+			// don't fail with err, just log that we couldn't send msg to payload tracker
+			utils.Log("err", ptErr.Error()).Warn(WarnPayloadTracker)
+		}
 	}
-	return nil
+	return err
 }
 
 func loadCache() {
@@ -512,6 +542,7 @@ func loadCache() {
 func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 	utils.Log().Info("evaluator starting")
 	configure()
+	utils.Log("MAX_EVAL_GOROUTINES", nEvalGoroutines).Debug("evaluation running in goroutines")
 
 	go RunMetrics()
 
