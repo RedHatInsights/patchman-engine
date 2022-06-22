@@ -1,0 +1,1 @@
+ALTER TABLE advisory_account_data ADD COLUMN notified TIMESTAMP WITH TIME ZONE NULL;

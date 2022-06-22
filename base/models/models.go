@@ -193,6 +193,7 @@ type AdvisoryAccountData struct {
 	StatusID               int
 	SystemsAffected        int
 	SystemsStatusDivergent int
+	Notified               *time.Time
 }
 
 func (AdvisoryAccountData) TableName() string {
