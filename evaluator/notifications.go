@@ -25,7 +25,7 @@ func getNotificationAdvisories(newAdvisories SystemAdvisoryMap) []ntf.Advisory {
 	for _, a := range newAdvisories {
 		advisory := ntf.Advisory{
 			AdvisoryName: a.Advisory.Name,
-			AdvisoryType: database.AdvisoryTypes[a.AdvisoryID],
+			AdvisoryType: database.AdvisoryTypes[a.Advisory.AdvisoryTypeID],
 			Synopsis:     a.Advisory.Synopsis,
 		}
 

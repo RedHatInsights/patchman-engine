@@ -136,8 +136,8 @@ func loadAdditionalParamsFromDB() {
 
 	err = Db.Table("advisory_type").
 		Select("id, name").
-		Scan(&types).
-		Error
+		Scan(&types).Error
+	utils.Log("advisory_types", types).Debug("Advisory types loaded from DB")
 	if err != nil {
 		panic(err)
 	}

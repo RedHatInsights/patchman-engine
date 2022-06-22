@@ -248,7 +248,8 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
 	// Send instant notification with new advisories
 	err = publishNewAdvisoriesNotification(system.InventoryID, accountName, newSystemAdvisories)
 	if err != nil {
-		evaluationCnt.WithLabelValues("error-advisory-notification-publish").Inc()
+		evaluationCnt.WithLabelValues("error-advisory-notification").Inc()
+		utils.Log("err", err.Error()).Error("publishing new advisories notification failed")
 	}
 
 	return nil
