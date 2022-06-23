@@ -61,6 +61,7 @@ type Notification struct {
 }
 
 type Advisory struct {
+	AdvisoryID   int    `json:"advisory_id"`
 	AdvisoryName string `json:"advisory_name"`
 	AdvisoryType string `json:"advisory_type"`
 	Synopsis     string `json:"synopsis"`
