@@ -152,6 +152,21 @@ func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int
 	assert.Equal(t, systemsAffected*len(advisoryIDs), sum, "sum of systems_affected does not match")
 }
 
+func CheckAdvisoriesAccountDataNotified(t *testing.T, rhAccountID int, advisoryIDs []int, notified bool) {
+	var advisoryAccountData []models.AdvisoryAccountData
+	err := Db.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
+		Find(&advisoryAccountData).Error
+	assert.Nil(t, err)
+
+	for _, item := range advisoryAccountData {
+		if notified {
+			assert.NotNil(t, item.Notified)
+		} else {
+			assert.Nil(t, item.Notified)
+		}
+	}
+}
+
 func CheckSystemUpdatesCount(t *testing.T, accountID, systemID int) []int {
 	var cnt []int
 	assert.NoError(t, Db.Table("system_package spkg").

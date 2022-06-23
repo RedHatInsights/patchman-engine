@@ -55,6 +55,7 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 	database.CreateSystemAdvisories(t, rhAccountID, systemID, oldSystemAdvisoryIDs, nil)
 	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
 	database.CheckCachesValid(t)
+	database.CheckAdvisoriesAccountDataNotified(t, rhAccountID, oldSystemAdvisoryIDs, false)
 
 	// do evaluate the system
 	err := evaluateHandler(mqueue.PlatformEvent{
@@ -63,6 +64,7 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 		AccountID:  rhAccountID})
 	assert.NoError(t, err)
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
+	database.CheckAdvisoriesAccountDataNotified(t, rhAccountID, expectedAdvisoryIDs, true)
 
 	assert.Equal(t, 1, len(mockWriter.Messages))
 
@@ -86,7 +88,7 @@ func TestAdvisoriesNotificationMessage(t *testing.T) {
 		},
 	}
 
-	notification := ntf.MakeNotification(strconv.Itoa(rhAccountID), inventoryID, NewAdvisoryEvent, events)
+	notification := ntf.MakeNotification(inventoryID, strconv.Itoa(rhAccountID), NewAdvisoryEvent, events)
 	msg, err := mqueue.MessageFromJSON(inventoryID, notification)
 	assert.Nil(t, err)
 	assert.Equal(t, inventoryID, string(msg.Key))
