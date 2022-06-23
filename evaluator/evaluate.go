@@ -239,14 +239,6 @@ func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 	useOptimisticUpdates := thirdParty || vmaasCallUseOptimisticUpdates
 	updatesReq.OptimisticUpdates = utils.PtrBool(useOptimisticUpdates)
 
-	if system.VmaasJSON == "" {
-		evaluationCnt.WithLabelValues("error-parse-vmaas-json").Inc()
-		utils.Log("inventory_id", system.InventoryID).Warn("system with empty vmaas json")
-		// skip the system
-		// don't return error as it will cause panic of evaluator pod
-		return nil, nil
-	}
-
 	vmaasData, err := callVMaas(ctx, updatesReq)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-call-vmaas-updates").Inc()
@@ -257,6 +249,14 @@ func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 }
 
 func tryGetVmaasRequest(system *models.SystemPlatform) (*vmaas.UpdatesV3Request, error) {
+	if system == nil || system.VmaasJSON == "" {
+		evaluationCnt.WithLabelValues("error-parse-vmaas-json").Inc()
+		utils.Log("inventory_id", system.InventoryID).Warn("system with empty vmaas json")
+		// skip the system
+		// don't return error as it will cause panic of evaluator pod
+		return nil, nil
+	}
+
 	updatesReq, err := parseVmaasJSON(system)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-parse-vmaas-json").Inc()
