@@ -26,3 +26,10 @@ func PtrBoolNil() *bool {
 	var b *bool
 	return b
 }
+
+func EmptyToNil(s *string) *string {
+	if *s == "" {
+		return nil
+	}
+	return s
+}
