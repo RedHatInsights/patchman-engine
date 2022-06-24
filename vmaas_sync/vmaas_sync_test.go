@@ -87,7 +87,7 @@ func TestVMaaSErrataCall(t *testing.T) {
 	httpResp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasErratasURL, &req, &resp) // nolint: bodyclose
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
-	assert.Equal(t, 3, len(resp.ErrataList))
+	assert.Equal(t, 4, len(resp.ErrataList))
 }
 
 func TestVMaaSReposCall(t *testing.T) {
