@@ -3,8 +3,9 @@ package vmaas_sync //nolint:revive,stylecheck
 import (
 	"app/base/database"
 	"app/base/utils"
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 func refreshAdvisoryCaches() {
