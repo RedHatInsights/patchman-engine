@@ -96,6 +96,12 @@ func NewKafkaWriterFromEnv(topic string) Writer {
 		ErrorLogger:  kafka.LoggerFunc(createLoggerFunc(kafkaErrorWriteCnt)),
 		Dialer:       tryCreateSecuredDialerFromEnv(),
 		MaxAttempts:  maxAttempts,
+		// Messages can contain different number of systems for evalution. Use LeasBytes balancer
+		// to balance partitions more equally. This way each partition should have _same_ number of systems
+		// for evaluation.
+		// NOTE: LeastBytes balancer won't work when we start add more producers in listener.
+		// When using more producers, each producer have to create balanced messages.
+		Balancer: &kafka.LeastBytes{},
 	}
 	writer := &kafkaGoWriterImpl{kafka.NewWriter(config)}
 	return writer
