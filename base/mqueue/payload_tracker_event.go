@@ -34,24 +34,29 @@ func (event *PayloadTrackerEvent) write(ctx context.Context, w Writer) error {
 	return w.WriteMessages(ctx, msg)
 }
 
-func writePayloadTrackerEvents(ctx context.Context, w Writer, events ...PayloadTrackerEvent) error {
-	var err error
-	now := base.Rfc3339TimestampWithZ(time.Now())
-	for _, ev := range events {
-		if ev.RequestID != nil && (ev.Account != nil || ev.OrgID != nil) {
-			// Send only messages from listener and evaluator-upload
-			ev.Service = "patchman"
-			ev.Date = &now
-			err = ev.write(ctx, w)
-		}
+func writeEvent(ctx context.Context, w Writer, event *PayloadTrackerEvent,
+	timestamp *base.Rfc3339TimestampWithZ) (err error) {
+	if event.RequestID != nil && (event.Account != nil || event.OrgID != nil) {
+		// Send only messages from listener and evaluator-upload
+		event.Service = "patchman"
+		event.Date = timestamp
+		err = event.write(ctx, w)
 	}
 	return err
 }
 
 func (events *PayloadTrackerEvents) WriteEvents(ctx context.Context, w Writer) error {
-	return writePayloadTrackerEvents(ctx, w, *events...)
+	var err error
+	now := base.Rfc3339TimestampWithZ(time.Now())
+	for _, event := range *events {
+		event := event // necessary, G601: Implicit memory aliasing in for loop. (gosec)
+		err = writeEvent(ctx, w, &event, &now)
+	}
+	return err
 }
 
 func (event *PayloadTrackerEvent) WriteEvents(ctx context.Context, w Writer) error {
-	return writePayloadTrackerEvents(ctx, w, *event)
+	now := base.Rfc3339TimestampWithZ(time.Now())
+	err := writeEvent(ctx, w, event, &now)
+	return err
 }
