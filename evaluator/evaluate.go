@@ -92,8 +92,7 @@ func configure() {
 	configureNotifications()
 }
 
-func Evaluate(ctx context.Context, accountID int, inventoryID, accountName string, requested *base.Rfc3339Timestamp,
-	evaluationType string) error {
+func Evaluate(ctx context.Context, event *mqueue.PlatformEvent, inventoryID, evaluationType string) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationDuration.WithLabelValues(evaluationType))
 	if enableBypass {
@@ -102,7 +101,7 @@ func Evaluate(ctx context.Context, accountID int, inventoryID, accountName strin
 		return nil
 	}
 
-	system, vmaasData, err := evaluateInDatabase(ctx, accountID, inventoryID, accountName, requested, evaluationType)
+	system, vmaasData, err := evaluateInDatabase(ctx, event, inventoryID, evaluationType)
 	if err != nil {
 		return errors.Wrap(err, "unable to evaluate in database")
 	}
@@ -125,10 +124,8 @@ func Evaluate(ctx context.Context, accountID int, inventoryID, accountName strin
 // Runs Evaluate method in Goroutines
 func runEvaluate(
 	ctx context.Context,
-	accountID int,
-	inventoryID,
-	accountName string,
-	requested *base.Rfc3339Timestamp,
+	event mqueue.PlatformEvent, // makes a copy to avoid races
+	inventoryID string, // coming from loop
 	evaluationType string,
 	ptEventIn mqueue.PayloadTrackerEvent,
 	wg *sync.WaitGroup,
@@ -142,7 +139,7 @@ func runEvaluate(
 	ptEventC <- ptEventIn
 
 	go func() {
-		err := Evaluate(ctx, accountID, inventoryID, accountName, requested, evaluationType)
+		err := Evaluate(ctx, &event, inventoryID, evaluationType)
 		if err != nil {
 			event := <-ptEventC
 			event.Status = "error"
@@ -160,13 +157,13 @@ func runEvaluate(
 	return ptEventOut, err
 }
 
-func evaluateInDatabase(ctx context.Context, accountID int, inventoryID, accountName string,
-	requested *base.Rfc3339Timestamp, evalType string) (*models.SystemPlatform, *vmaas.UpdatesV2Response, error) {
+func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, inventoryID string, evalType string) (
+	*models.SystemPlatform, *vmaas.UpdatesV2Response, error) {
 	tx := database.Db.WithContext(base.Context).Begin()
 	// Don't allow requested TX to hang around locking the rows
 	defer tx.Rollback()
 
-	system := tryGetSystem(tx, accountID, inventoryID, requested)
+	system := tryGetSystem(tx, event.AccountID, inventoryID, event.Timestamp)
 	if system == nil {
 		return nil, nil, nil
 	}
@@ -179,7 +176,7 @@ func evaluateInDatabase(ctx context.Context, accountID int, inventoryID, account
 		return nil, nil, nil
 	}
 
-	vmaasData, err := evaluateWithVmaas(tx, updatesData, system, accountName)
+	vmaasData, err := evaluateWithVmaas(tx, updatesData, system, event.GetAccountName())
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluation with vmaas failed")
 	}
@@ -516,13 +513,11 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 			if nRequestIDs > i {
 				ptEvent.RequestID = &event.RequestIDs[i]
 			}
-			ptEvent, err = runEvaluate(base.Context, event.AccountID, id, event.GetAccountName(),
-				event.Timestamp, evalLabel, ptEvent, &wg, guard)
+			ptEvent, err = runEvaluate(base.Context, event, id, evalLabel, ptEvent, &wg, guard)
 			ptEvents = append(ptEvents, ptEvent)
 		}
 	} else {
-		ptEvent, err = runEvaluate(base.Context, event.AccountID, event.ID, event.GetAccountName(),
-			event.Timestamp, evalLabel, ptEvent, &wg, guard)
+		ptEvent, err = runEvaluate(base.Context, event, event.ID, evalLabel, ptEvent, &wg, guard)
 		ptEvents = append(ptEvents, ptEvent)
 	}
 	wg.Wait()
