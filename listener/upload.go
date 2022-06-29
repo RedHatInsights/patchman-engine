@@ -86,6 +86,7 @@ func HandleUpload(event HostEvent) error {
 	if _, ok := excludedReporters[event.Host.Reporter]; ok {
 		utils.Log("inventoryID", event.Host.ID, "reporter", event.Host.Reporter).Warn(WarnSkippingReporter)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedReporter).Inc()
+		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, WarnSkippingReporter)
 		return nil
 	}
@@ -93,6 +94,7 @@ func HandleUpload(event HostEvent) error {
 	if _, ok := excludedHostTypes[event.Host.SystemProfile.HostType]; ok {
 		utils.Log("inventoryID", event.Host.ID, "hostType", event.Host.SystemProfile.HostType).Warn(WarnSkippingHostType)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedHostType).Inc()
+		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, WarnSkippingHostType)
 		return nil
 	}
@@ -100,6 +102,7 @@ func HandleUpload(event HostEvent) error {
 	if (event.Host.Account == nil || *event.Host.Account == "") && (event.Host.OrgID == nil || *event.Host.OrgID == "") {
 		utils.Log("inventoryID", event.Host.ID).Error(ErrorNoAccountProvided)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
+		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, ErrorNoAccountProvided)
 		return nil
 	}
@@ -109,6 +112,7 @@ func HandleUpload(event HostEvent) error {
 	if len(event.Host.SystemProfile.GetInstalledPackages()) == 0 && yumUpdates == nil {
 		utils.Log("inventoryID", event.Host.ID).Warn(WarnSkippingNoPackages)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
+		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedWarnNoPackages))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, WarnSkippingNoPackages)
 		return nil
 	}
@@ -118,6 +122,7 @@ func HandleUpload(event HostEvent) error {
 	if err != nil {
 		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorProcessUpload)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
+		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedErrorProcessing))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, ErrorProcessUpload)
 		return errors.Wrap(err, "Could not process upload")
 	}
@@ -125,6 +130,7 @@ func HandleUpload(event HostEvent) error {
 	// Deleted system, return nil
 	if sys == nil {
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedDeleted).Inc()
+		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedDeleted))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, SuccessStatus, ReceivedDeleted)
 		return nil
 	}
@@ -133,6 +139,7 @@ func HandleUpload(event HostEvent) error {
 		if sys.UnchangedSince.Before(*sys.LastEvaluation) {
 			messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccessNoEval).Inc()
 			utils.Log("inventoryID", event.Host.ID).Info(UploadSuccessNoEval)
+			utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedSuccessNoEval))
 			sendPayloadStatus(ptWriter, payloadTrackerEvent, SuccessStatus, ReceivedSuccessNoEval)
 			return nil
 		}
@@ -142,10 +149,13 @@ func HandleUpload(event HostEvent) error {
 
 	messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
 	utils.Log("inventoryID", event.Host.ID).Info(UploadSuccess)
+	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedSuccess))
 	return nil
 }
 
 func sendPayloadStatus(w mqueue.Writer, event mqueue.PayloadTrackerEvent, status string, statusMsg string) {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("payload-tracker-status"))
 	if status != "" {
 		event.Status = status
 	}
@@ -169,6 +179,8 @@ var flushTimer = time.AfterFunc(87600*time.Hour, func() {
 
 // send events after full buffer or timeout
 func bufferEvalEvents(inventoryID string, rhAccountID int, ptEvent *mqueue.PayloadTrackerEvent) {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-eval-events"))
 	evalData := mqueue.EvalData{
 		InventoryID: inventoryID,
 		RhAccountID: rhAccountID,
@@ -188,14 +200,17 @@ func bufferEvalEvents(inventoryID string, rhAccountID int, ptEvent *mqueue.Paylo
 }
 
 func flushEvalEvents() {
+	tStart := time.Now()
 	err := mqueue.SendMessages(base.Context, evalWriter, &evalBuffer)
 	if err != nil {
 		utils.Log("err", err.Error()).Error(ErrorKafkaSend)
 	}
+	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-sent-evaluator"))
 	err = mqueue.SendMessages(base.Context, ptWriter, &ptBuffer)
 	if err != nil {
 		utils.Log("err", err.Error()).Warn(WarnPayloadTracker)
 	}
+	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-sent-payload-tracker"))
 	// empty buffer
 	evalBuffer = evalBuffer[:0]
 	ptBuffer = ptBuffer[:0]
@@ -214,6 +229,8 @@ func updateReporterCounter(reporter string) {
 // Stores or updates base system profile, returing internal system id
 func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *Host,
 	yumUpdates []byte, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("update-system-platform"))
 	updatesReqJSON, err := json.Marshal(updatesReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "Serializing vmaas request")
@@ -321,6 +338,8 @@ func fixEpelRepos(sys *inventory.SystemProfile, repos []string) []string {
 
 func updateRepos(tx *gorm.DB, profile inventory.SystemProfile, rhAccountID int,
 	systemID int, repos []string) (addedRepos int64, addedSysRepos int64, deletedSysRepos int64, err error) {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("update-repos"))
 	repos = fixEpelRepos(&profile, repos)
 	repoIDs, addedRepos, err := ensureReposInDB(tx, repos)
 	if err != nil {
@@ -437,6 +456,8 @@ func processModules(systemProfile *inventory.SystemProfile) *[]vmaas.UpdatesV3Re
 
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
 func processUpload(host *Host, yumUpdates []byte) (*models.SystemPlatform, error) {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("upload-processing"))
 	// Ensure we have account stored
 	var accountNumber string
 	var orgID string
