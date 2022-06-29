@@ -282,6 +282,7 @@ objects:
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
         - {name: RESET_SCHEMA, value: '${RESET_SCHEMA}'}
+        - {name: FORCE_SCHEMA_VERSION, value: '${FORCE_SCHEMA_VERSION}'}
         - {name: UPDATE_CYNDI_PASSWD, value: '${UPDATE_CYNDI_PASSWD}'}
         - {name: WAIT_FOR_DB, value: 'empty'}
         - {name: MANAGER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
@@ -531,6 +532,7 @@ parameters:
 - {name: DB_DEBUG_DATABASE_ADMIN, value: 'false'}
 - {name: SCHEMA_MIGRATION, value: '-1'} # Set specific database schema version or use the last schema version (-1)
 - {name: RESET_SCHEMA, value: 'false'} # Drop and recreate database schema, use SCHEMA_MIGRATION to create specific schema version
+- {name: FORCE_SCHEMA_VERSION, value: ''} # Reset the dirty flag to false and force set the specific version, it will follow up with the schema upgrade defined by SCHEMA_MIGRATION
 - {name: UPDATE_CYNDI_PASSWD, value: ''} # Do update cyndi database password, use "true" to enable it
 - {name: RES_CPU_DATABASE_ADMIN, value: 100m}
 - {name: RES_MEM_DATABASE_ADMIN, value: 128Mi}

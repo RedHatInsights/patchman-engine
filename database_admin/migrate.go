@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database"
@@ -42,11 +43,23 @@ func MigrateUp(conn database.Driver, sourceURL string) {
 
 	m.Log = logger{}
 
+	forceMigrationVersion := utils.Getenv("FORCE_SCHEMA_VERSION", "")
 	schemaMigration := utils.GetIntEnvOrDefault("SCHEMA_MIGRATION", -1)
-	if schemaMigration < 0 {
-		err = m.Up()
-	} else {
-		err = m.Migrate(uint(schemaMigration))
+	if forceMigrationVersion != "" {
+		// reset dirty flag and force set the current schema version
+		var ver int
+		ver, err = strconv.Atoi(forceMigrationVersion)
+		if err == nil {
+			err = m.Force(ver)
+		}
+	}
+
+	if err == nil {
+		if schemaMigration < 0 {
+			err = m.Up()
+		} else {
+			err = m.Migrate(uint(schemaMigration))
+		}
 	}
 
 	if err != nil && err.Error() == "no change" {
