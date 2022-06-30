@@ -2,6 +2,7 @@ package mqueue
 
 import (
 	"app/base"
+	"app/base/utils"
 	"encoding/json"
 	"time"
 
@@ -21,6 +22,8 @@ type PayloadTrackerEvent struct {
 }
 
 type PayloadTrackerEvents []PayloadTrackerEvent
+
+var enablePayloadTracker = utils.GetBoolEnvOrDefault("ENABLE_PAYLOAD_TRACKER", true)
 
 func (event *PayloadTrackerEvent) write(ctx context.Context, w Writer) error {
 	data, err := json.Marshal(event) //nolint:gosec
@@ -46,6 +49,9 @@ func writeEvent(ctx context.Context, w Writer, event *PayloadTrackerEvent,
 }
 
 func (events *PayloadTrackerEvents) WriteEvents(ctx context.Context, w Writer) error {
+	if !enablePayloadTracker {
+		return nil
+	}
 	var err error
 	now := base.Rfc3339TimestampWithZ(time.Now())
 	for _, event := range *events {
@@ -56,6 +62,9 @@ func (events *PayloadTrackerEvents) WriteEvents(ctx context.Context, w Writer) e
 }
 
 func (event *PayloadTrackerEvent) WriteEvents(ctx context.Context, w Writer) error {
+	if !enablePayloadTracker {
+		return nil
+	}
 	now := base.Rfc3339TimestampWithZ(time.Now())
 	err := writeEvent(ctx, w, event, &now)
 	return err
