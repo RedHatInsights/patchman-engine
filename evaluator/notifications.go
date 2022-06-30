@@ -69,7 +69,8 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, inventoryID, accountName stri
 	if err != nil {
 		return errors.Wrap(err, "getting unnotified advisories failed")
 	}
-	if advisories == nil {
+	// nolint:gosimple
+	if advisories == nil || len(advisories) == 0 {
 		return nil
 	}
 
