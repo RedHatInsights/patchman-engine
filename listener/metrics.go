@@ -64,7 +64,8 @@ var (
 )
 
 func RunMetrics() {
-	prometheus.MustRegister(messagesReceivedCnt, messageHandlingDuration, reposAddedCnt, receivedFromReporter)
+	prometheus.MustRegister(messagesReceivedCnt, messageHandlingDuration, reposAddedCnt, receivedFromReporter,
+		messagePartDuration)
 
 	// create web app
 	app := gin.New()
