@@ -145,6 +145,7 @@ objects:
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
         - {name: MAX_EVAL_GOROUTINES, value: '${MAX_EVAL_GOROUTINES_UPLOAD}'}
         - {name: ENABLE_PAYLOAD_TRACKER, value: '${ENABLE_PAYLOAD_TRACKER}'}
+        - {name: ENABLE_INSTANT_NOTIFICATIONS, value: '${ENABLE_INSTANT_NOTIFICATIONS}'}
         resources:
           limits: {cpu: '${RES_CPU_EVALUATOR_UPLOAD}', memory: '${RES_MEM_EVALUATOR_UPLOAD}'}
           requests: {cpu: '${RES_CPU_EVALUATOR_UPLOAD}', memory: '${RES_MEM_EVALUATOR_UPLOAD}'}
@@ -201,6 +202,7 @@ objects:
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
         - {name: MAX_EVAL_GOROUTINES, value: '${MAX_EVAL_GOROUTINES_RECALC}'}
         - {name: ENABLE_PAYLOAD_TRACKER, value: 'false'}  # we don't need to send payload tracker messages from recalc
+        - {name: ENABLE_INSTANT_NOTIFICATIONS, value: '${ENABLE_INSTANT_NOTIFICATIONS}'}
         resources:
           limits: {cpu: '${RES_CPU_EVALUATOR_RECALC}', memory: '${RES_MEM_EVALUATOR_RECALC}'}
           requests: {cpu: '${RES_CPU_EVALUATOR_RECALC}', memory: '${RES_MEM_EVALUATOR_RECALC}'}
@@ -444,6 +446,7 @@ parameters:
 - {name: RES_CPU_EVALUATOR_UPLOAD, value: 256m}
 - {name: RES_MEM_EVALUATOR_UPLOAD, value: 1024Mi}
 - {name: MAX_EVAL_GOROUTINES_UPLOAD, value: '1'}
+- {name: ENABLE_INSTANT_NOTIFICATIONS, value: 'true'}
 
 # Evaluator - recalc
 - {name: REPLICAS_EVALUATOR_RECALC, value: '1'}
@@ -464,6 +467,7 @@ parameters:
 - {name: RES_CPU_EVALUATOR_RECALC, value: 256m}
 - {name: RES_MEM_EVALUATOR_RECALC, value: 1024Mi}
 - {name: MAX_EVAL_GOROUTINES_RECALC, value: '1'}
+- {name: ENABLE_INSTANT_NOTIFICATIONS, value: 'true'}
 
 # VMaaS sync
 - {name: REPLICAS_VMAAS_SYNC, value: '1'}
