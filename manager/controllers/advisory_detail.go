@@ -73,14 +73,14 @@ type packagesV2 []string
 
 // AdvisoryDetail handler for v1 API
 // Don't annotate it with swaggo/swag annotations
-// because we want to generated openapi.json only for v2 API
+// because we want to generate openapi.json only for v2 API
 func AdvisoryDetailHandlerV1(c *gin.Context) {
 	advisoryDetailHandler(c, "v1")
 }
 
 // @Summary Show me details an advisory by given advisory name
 // @Description Show me details an advisory by given advisory name
-// @ID detailAdvisoryV2
+// @ID detailAdvisory
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
