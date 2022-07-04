@@ -242,6 +242,9 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 
 	hash := sha256.Sum256(updatesReqJSON)
 	jsonChecksum := hex.EncodeToString(hash[:])
+	hash = sha256.Sum256(yumUpdates)
+	yumChecksum := hex.EncodeToString(hash[:])
+
 	var colsToUpdate = []string{
 		"display_name",
 		"last_upload",
@@ -274,21 +277,26 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		YumUpdates:            yumUpdates,
 	}
 
-	var oldJSONChecksum []string
+	var oldChecksums map[string]string
 	// Lock the row for update & return checksum
 	tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 		Table("system_platform").
 		Where("inventory_id = ?::uuid", inventoryID).
 		Where("rh_account_id = ?", accountID).
-		Pluck("json_checksum", &oldJSONChecksum)
+		First("json_checksum, digest(yum_updates,'sha256') as yum_checksum", &oldChecksums)
 
 	shouldUpdateRepos := false
 	var addedRepos, addedSysRepos, deletedSysRepos int64
 
 	// Skip updating vmaas_json if the checksum haven't changed. Should reduce TOAST trashing
-	if len(oldJSONChecksum) == 0 || oldJSONChecksum[0] != jsonChecksum {
+	if oldChecksums["json_checksum"] != jsonChecksum {
 		colsToUpdate = append(colsToUpdate, "vmaas_json", "json_checksum", "reporter_id")
 		shouldUpdateRepos = true
+	}
+
+	// Skip updating yum_updates if the checksum haven't changed.
+	if oldChecksums["yum_checksum"] != yumChecksum {
+		colsToUpdate = append(colsToUpdate, "yum_updates")
 	}
 
 	if err := database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
