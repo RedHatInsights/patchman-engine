@@ -11,14 +11,9 @@ metadata:\n\
   annotations:\n\
     grafana-folder: /grafana-dashboard-definitions/Insights"
 
+json_reformat <$1 | \
 sed "1 i $PREFIX
      $ a $POSTFIX
-     s/^/    /
-     " $1
+     /^$/ ! s/^/    /
+     "
 
-exit 0
-{
-    echo "$PREFIX"
-    cat $1
-    echo "$POSTFIX"
-} 
