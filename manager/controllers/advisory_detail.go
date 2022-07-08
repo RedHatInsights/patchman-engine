@@ -216,7 +216,8 @@ func parsePackages(jsonb []byte) (packagesV1, packagesV2, error) {
 	}
 
 	pkgsV1 := make(packagesV1)
-	pkgsV2, err := parseJSONList(jsonb)
+	var pkgsV2 packagesV2
+	err := json.Unmarshal(jsonb, &pkgsV2)
 	if err != nil {
 		// HACK!
 		// Until vmaas-sync syncs new data, `jsonb` has '{"<name>": "<evra>"}' format
