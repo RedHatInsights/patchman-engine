@@ -53,9 +53,6 @@ type nameIDandEvra struct {
 }
 
 func stringPtr2Hash(str *string) *[]byte {
-	if str == nil || *str == "" {
-		return nil
-	}
 	bytes32 := sha256.Sum256([]byte(*str))
 	bytes := bytes32[:]
 	return &bytes
@@ -140,10 +137,7 @@ func storeStringsFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListItem) er
 		// iteration.
 		keySlice := make([]byte, 32)
 		copy(keySlice, key[:])
-		if v != "" {
-			// don't store empty strings
-			strings = append(strings, models.String{ID: keySlice, Value: v})
-		}
+		strings = append(strings, models.String{ID: keySlice, Value: v})
 	}
 
 	utils.Log("strings", len(strings)).Info("Created package strings to store")

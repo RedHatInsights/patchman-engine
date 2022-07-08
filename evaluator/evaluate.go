@@ -249,7 +249,7 @@ func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 }
 
 func tryGetVmaasRequest(system *models.SystemPlatform) (*vmaas.UpdatesV3Request, error) {
-	if system == nil || system.VmaasJSON == nil {
+	if system == nil || system.VmaasJSON == "" {
 		evaluationCnt.WithLabelValues("error-parse-vmaas-json").Inc()
 		utils.Log("inventory_id", system.InventoryID).Warn("system with empty vmaas json")
 		// skip the system
@@ -443,7 +443,7 @@ func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, erro
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("parse-vmaas-json"))
 
 	var updatesReq vmaas.UpdatesV3Request
-	err := json.Unmarshal([]byte(*system.VmaasJSON), &updatesReq)
+	err := json.Unmarshal([]byte(system.VmaasJSON), &updatesReq)
 	return updatesReq, err
 }
 
