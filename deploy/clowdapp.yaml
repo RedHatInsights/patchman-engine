@@ -141,7 +141,6 @@ objects:
         - {name: VMAAS_CALL_MAX_RETRIES, value: '${VMAAS_CALL_MAX_RETRIES}'}
         - {name: VMAAS_CALL_USE_EXP_RETRY, value: '${VMAAS_CALL_USE_EXP_RETRY}'}
         - {name: VMAAS_CALL_USE_OPTIMISTIC_UPDATES, value: '${VMAAS_CALL_USE_OPTIMISTIC_UPDATES}'}
-        - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
         resources:
           limits: {cpu: '${RES_CPU_EVALUATOR_UPLOAD}', memory: '${RES_MEM_EVALUATOR_UPLOAD}'}
           requests: {cpu: '${RES_CPU_EVALUATOR_UPLOAD}', memory: '${RES_MEM_EVALUATOR_UPLOAD}'}
@@ -195,7 +194,6 @@ objects:
         - {name: VMAAS_CALL_MAX_RETRIES, value: '${VMAAS_CALL_MAX_RETRIES}'}
         - {name: VMAAS_CALL_USE_EXP_RETRY, value: '${VMAAS_CALL_USE_EXP_RETRY}'}
         - {name: VMAAS_CALL_USE_OPTIMISTIC_UPDATES, value: '${VMAAS_CALL_USE_OPTIMISTIC_UPDATES}'}
-        - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
         resources:
           limits: {cpu: '${RES_CPU_EVALUATOR_RECALC}', memory: '${RES_MEM_EVALUATOR_RECALC}'}
           requests: {cpu: '${RES_CPU_EVALUATOR_RECALC}', memory: '${RES_MEM_EVALUATOR_RECALC}'}
@@ -251,7 +249,6 @@ objects:
         - {name: ENABLE_PACKAGES_COUNT_CHECK, value: '${ENABLE_PACKAGES_COUNT_CHECK}'}
         - {name: VMAAS_ADDRESS, value: '${VMAAS_ADDRESS}'}
         - {name: VMAAS_WS_ADDRESS, value: '${VMAAS_WS_ADDRESS}'}
-        - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
         resources:
           limits: {cpu: '${RES_CPU_VMAAS_SYNC}', memory: '${RES_MEM_VMAAS_SYNC}'}
           requests: {cpu: '${RES_CPU_VMAAS_SYNC}', memory: '${RES_MEM_VMAAS_SYNC}'}
@@ -551,7 +548,6 @@ parameters:
 - {name: VMAAS_CALL_MAX_RETRIES, value: '8'} # Limit of how many unsuccessful vmaas calls are allowed before panic.
 - {name: VMAAS_CALL_USE_EXP_RETRY, value: 'true'} # Use exponential retry policy for vmaas call.
 - {name: VMAAS_CALL_USE_OPTIMISTIC_UPDATES, value: 'true'} # Always use "optimistic_updates" in vmaas request (not only for third party usage).
-- {name: MSG_BATCH_SIZE, value: '4000'} # BatchSize for PlatformEvent message
 
 # Floorist parameters
 - {name: FLOORIST_SCHEDULE, value: '50 0 * * *', required: true} # Cronjob schedule definition
