@@ -75,8 +75,7 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, inventoryID, accountName stri
 
 	events := make([]ntf.Event, 0, len(advisories))
 	for _, advisory := range advisories {
-		// At least empty metadata required to avoid NPE further on at the time of writing.
-		events = append(events, ntf.Event{Payload: advisory, Metadata: ntf.Metadata{}})
+		events = append(events, ntf.Event{Payload: advisory})
 	}
 
 	msg, err := mqueue.MessageFromJSON(

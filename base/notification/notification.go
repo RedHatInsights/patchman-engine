@@ -14,11 +14,9 @@ type Context struct {
 	InventoryID string `json:"inventory_id"`
 }
 
-type Metadata struct{}
-
 type Event struct {
-	// Future-proof. Needs to be there and empty for now. Cannot be null.
-	Metadata Metadata `json:"metadata"`
+	// Future-proof. Needs to be there and empty for now.
+	Metadata interface{} `json:"metadata,omitempty"`
 	// Your application payload.
 	// All the data required by the app to compose the various messages (Email, webhook…​) after transformation.
 	Payload interface{} `json:"payload,omitempty"`
