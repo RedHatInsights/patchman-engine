@@ -31,7 +31,7 @@ func waitForSessionClosed(db *sql.DB) {
 	for {
 		session := ""
 		err := db.QueryRow(
-			"SELECT usename || ' ' || substring(query for 50) FROM pg_stat_activity WHERE " +
+			"SELECT usename, substring(query for 50) FROM pg_stat_activity WHERE " +
 				"usename IN ('evaluator', 'listener', 'vmaas_sync') LIMIT 30;",
 		).Scan(&session)
 		if err != nil {
