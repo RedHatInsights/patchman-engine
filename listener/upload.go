@@ -84,29 +84,29 @@ func HandleUpload(event HostEvent) error {
 		InventoryID: event.Host.ID,
 		Status:      "received",
 	}
+	sendPayloadStatus(ptWriter, payloadTrackerEvent, "", "")
 
 	if _, ok := excludedReporters[event.Host.Reporter]; ok {
 		utils.Log("inventoryID", event.Host.ID, "reporter", event.Host.Reporter).Warn(WarnSkippingReporter)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedReporter).Inc()
-		sendPayloadStatus(ptWriter, payloadTrackerEvent, "", WarnSkippingReporter)
+		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, WarnSkippingReporter)
 		return nil
 	}
 
 	if _, ok := excludedHostTypes[event.Host.SystemProfile.HostType]; ok {
 		utils.Log("inventoryID", event.Host.ID, "hostType", event.Host.SystemProfile.HostType).Warn(WarnSkippingHostType)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedHostType).Inc()
-		sendPayloadStatus(ptWriter, payloadTrackerEvent, "", WarnSkippingHostType)
+		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, WarnSkippingHostType)
 		return nil
 	}
 
 	if (event.Host.Account == nil || *event.Host.Account == "") && (event.Host.OrgID == nil || *event.Host.OrgID == "") {
 		utils.Log("inventoryID", event.Host.ID).Error(ErrorNoAccountProvided)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
-		sendPayloadStatus(ptWriter, payloadTrackerEvent, "", ErrorNoAccountProvided)
+		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, ErrorNoAccountProvided)
 		return nil
 	}
 
-	sendPayloadStatus(ptWriter, payloadTrackerEvent, "", "")
 	yumUpdates := getYumUpdates(event)
 	utils.Log("inventoryID", event.Host.ID, "yum_updates", yumUpdates).Trace()
 
