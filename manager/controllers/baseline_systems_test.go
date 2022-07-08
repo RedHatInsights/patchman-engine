@@ -36,8 +36,8 @@ func TestBaselineSystemsDefault(t *testing.T) {
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[1].Attributes.DisplayName)
 
 	// links
-	assert.Equal(t, "/api/patch/v1/baselines/1/systems?offset=0&limit=20&sort=-display_name", output.Links.First)
-	assert.Equal(t, "/api/patch/v1/baselines/1/systems?offset=0&limit=20&sort=-display_name", output.Links.Last)
+	assert.Equal(t, "/1/systems?offset=0&limit=20&sort=-display_name", output.Links.First)
+	assert.Equal(t, "/1/systems?offset=0&limit=20&sort=-display_name", output.Links.Last)
 	assert.Nil(t, output.Links.Next)
 	assert.Nil(t, output.Links.Previous)
 
@@ -52,8 +52,8 @@ func TestBaselinesystemsEmpty(t *testing.T) {
 
 	assert.Equal(t, 0, len(output.Data))
 	// links
-	assert.Equal(t, "/api/patch/v1/baselines/3/systems?offset=0&limit=20&sort=-display_name", output.Links.First)
-	assert.Equal(t, "/api/patch/v1/baselines/3/systems?offset=0&limit=20&sort=-display_name", output.Links.Last)
+	assert.Equal(t, "/3/systems?offset=0&limit=20&sort=-display_name", output.Links.First)
+	assert.Equal(t, "/3/systems?offset=0&limit=20&sort=-display_name", output.Links.Last)
 	assert.Nil(t, output.Links.Next)
 	assert.Nil(t, output.Links.Previous)
 
@@ -123,9 +123,9 @@ func TestBaselineSystemsSearch(t *testing.T) {
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].Attributes.DisplayName)
 
 	// links
-	assert.Equal(t, "/api/patch/v1/baselines/1/systems?offset=0&limit=20&sort=-display_name&search=00000000-0000-0000-0000-000000000001",
+	assert.Equal(t, "/1/systems?offset=0&limit=20&sort=-display_name&search=00000000-0000-0000-0000-000000000001",
 		output.Links.First)
-	assert.Equal(t, "/api/patch/v1/baselines/1/systems?offset=0&limit=20&sort=-display_name&search=00000000-0000-0000-0000-000000000001",
+	assert.Equal(t, "/1/systems?offset=0&limit=20&sort=-display_name&search=00000000-0000-0000-0000-000000000001",
 		output.Links.Last)
 	assert.Nil(t, output.Links.Next)
 	assert.Nil(t, output.Links.Previous)
