@@ -8,6 +8,7 @@ export COMPONENT_NAME="patchman"  # name of app-sre "resourceTemplate" in deploy
 export IMAGE="quay.io/cloudservices/patchman-engine-app"
 export DOCKERFILE="Dockerfile"
 export COMPONENTS_W_RESOURCES="vmaas"
+export QUAY_EXPIRE_TIME=never
 
 export IQE_PLUGINS="patchman"
 export IQE_MARKER_EXPRESSION="patch_smoke"
