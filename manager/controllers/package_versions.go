@@ -83,8 +83,7 @@ func PackageVersionsListHandler(c *gin.Context) {
 
 	query := packageVersionsQuery(account, packageNameIDs)
 	// we don't support tags and filters for this endpoint
-	packageEndpoint := fmt.Sprintf("/packages/%s/versions", packageName)
-	query, meta, links, err := ListCommon(query, c, nil, packageEndpoint, PackageVersionsOpts)
+	query, meta, links, err := ListCommon(query, c, nil, PackageVersionsOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself
