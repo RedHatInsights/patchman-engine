@@ -20,6 +20,8 @@ var advisoryDetailCacheSize = utils.GetIntEnvOrDefault("ADVISORY_DETAIL_CACHE_SI
 var advisoryDetailCacheV1 = initAdvisoryDetailCache()
 var advisoryDetailCacheV2 = initAdvisoryDetailCache()
 
+const logProgressDuration = 2 * time.Second
+
 type AdvisoryDetailResponseV1 struct {
 	Data AdvisoryDetailItemV1 `json:"data"`
 }
@@ -273,7 +275,9 @@ func PreloadAdvisoryCacheItems() {
 		panic(err)
 	}
 
-	for i, advisoryName := range advisoryNames {
+	progress, count := utils.LogProgress("Advisory detail cache preload", logProgressDuration, int64(len(advisoryNames)))
+
+	for _, advisoryName := range advisoryNames {
 		_, err = getAdvisoryV1(advisoryName)
 		if err != nil {
 			utils.Log("advisoryName", advisoryName, "err", err.Error()).Error("can not re-load item to cache - V1")
@@ -282,11 +286,9 @@ func PreloadAdvisoryCacheItems() {
 		if err != nil {
 			utils.Log("advisoryName", advisoryName, "err", err.Error()).Error("can not re-load item to cache - V2")
 		}
-		perc := 1000 * (i + 1) / len(advisoryNames)
-		if perc%10 == 0 { // log each 1% increment
-			utils.Log("percent", perc/10).Info("advisory detail cache loading")
-		}
+		*count++
 	}
+	progress.Stop()
 }
 
 func tryGetAdvisoryFromCacheV1(advisoryName string) *AdvisoryDetailResponseV1 {
