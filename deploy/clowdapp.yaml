@@ -332,6 +332,39 @@ objects:
           limits: {cpu: '${CPU_LIMIT_FLOO}', memory: '${MEMORY_LIMIT_FLOO}'}
           requests: {cpu: '${CPU_REQUEST_FLOO}', memory: '${MEMORY_REQUEST_FLOO}'}
 
+    - name: org-id-populator
+      podSpec:
+        image: quay.io/cloudservices/tenant-utils:latest
+        command:
+          - ./org-id-column-populator
+          - -C
+          - -a
+          - name
+          - -o
+          - org_id
+          - -t
+          - rh_account
+          - --ean-translator-addr
+          - http://${TENANT_TRANSLATOR_HOST}:${TENANT_TRANSLATOR_PORT}
+          - --prometheus-push-addr
+          - ${PROMETHEUS_PUSHGATEWAY}
+          - --ean-translator-timeout
+          - "120"
+          - --batch-size
+          - "20"
+        env:
+          - name: LOG_FORMAT
+            value: ${POPULATOR_LOG_FORMAT}
+          - name: LOG_BATCH_FREQUENCY
+            value: '1s'
+        resources:
+          limits:
+            cpu: 300m
+            memory: 1Gi
+          requests:
+            cpu: 50m
+            memory: 512Mi
+
     database:
       name: patchman
       version: 12
@@ -389,6 +422,15 @@ objects:
     evaluator-database-password: ZXZhbHVhdG9y # evaluator
     vmaas-sync-database-password: dm1hYXMtc3luYw== # vmaas-sync
     cyndi-database-password: Y3luZGk= # cyndi
+
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdJobInvocation
+  metadata:
+    name: populate-org-id-column-${POPULATOR_RUN_NUMBER}
+  spec:
+    appName: patchman
+    jobs:
+      - org-id-populator
 
 parameters:
 # Manager
@@ -530,3 +572,13 @@ parameters:
 - {name: CPU_REQUEST_FLOO, value: 50m}
 - {name: MEMORY_LIMIT_FLOO, value: 200Mi}
 - {name: MEMORY_REQUEST_FLOO, value: 100Mi}
+
+# OrgID populator
+- {name: TENANT_TRANSLATOR_HOST, required: true}
+- {name: TENANT_TRANSLATOR_PORT, value: '8892'}
+- {name: POPULATOR_LOG_FORMAT, value: cloudwatch}
+- {name: POPULATOR_IMAGE, value: quay.io/cloudservices/tenant-utils}
+- {name: POPULATOR_IMAGE_TAG, value: latest}
+  # in case the populator needs to be run more than once increment this parameter to get a new job
+- {name: POPULATOR_RUN_NUMBER, value: "1"}
+- {name: PROMETHEUS_PUSHGATEWAY, value: "localhost"}
