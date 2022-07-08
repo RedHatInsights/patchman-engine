@@ -28,16 +28,16 @@ func TestAnalyzePackages(t *testing.T) {
 		"firefox-0:12.0.1-1.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV2ResponseAvailableUpdates{{
 			Package: utils.PtrString("firefox-0:77.0.1-1.fc31.x86_64"),
 		}}},
-		// this custom-package will NOT be ignored
+		// this custom-package will be ignored
 		"custom-package-0:1.2.3-1.fc33.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV2ResponseAvailableUpdates{{}}}}}
 
 	installed, updatable, err := analyzePackages(database.Db, &system, &vmaasData)
 	assert.Nil(t, err)
-	assert.Equal(t, 3, installed)                                      // kernel, firefox, custom-package
-	assert.Equal(t, 2, updatable)                                      // firefox, custom-package have updates
+	assert.Equal(t, 2, installed)                                      // kernel, firefox
+	assert.Equal(t, 1, updatable)                                      // firefox has updates
 	database.CheckEVRAsInDBSynced(t, 1, false, "12.0.1-1.fc31.x86_64") // lazy added package
-	database.CheckEVRAsInDB(t, 1, "1.2.3-1.fc33.x86_64")               // custom package is not ignored
-	database.CheckSystemPackages(t, system.ID, 3)
+	database.CheckEVRAsInDB(t, 0, "1.2.3-1.fc33.x86_64")               // ignored custom package
+	database.CheckSystemPackages(t, system.ID, 2)
 	database.DeleteSystemPackages(t, system.ID)
 	database.DeleteNewlyAddedPackages(t)
 }
@@ -61,6 +61,6 @@ func TestLazySavePackages(t *testing.T) {
 	err := lazySavePackages(database.Db, &vmaasData)
 	assert.Nil(t, err)
 	database.CheckEVRAsInDBSynced(t, 2, false, evras[:2]...) // EVRAs were added
-	database.CheckEVRAsInDB(t, 1, evras[2:]...)              // EVRA for unknown package was added
+	database.CheckEVRAsInDB(t, 0, evras[2:]...)              // EVRA for unknown package was not added
 	database.DeleteNewlyAddedPackages(t)                     // delete testing added package items
 }
