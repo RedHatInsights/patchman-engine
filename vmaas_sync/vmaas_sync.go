@@ -183,10 +183,6 @@ func syncData() error {
 		}
 	}
 
-	// refresh caches
-	refreshAdvisoryCachesPerAccounts(0)
-	refreshLatestPackagesView()
-
 	database.UpdateTimestampKVValue(syncStart, LastSync)
 	utils.Log().Info("Data sync finished successfully")
 	return nil
