@@ -645,8 +645,14 @@ func parseJSONList(jsonb []byte) ([]string, error) {
 		return []string{}, nil
 	}
 
+	js := json.RawMessage(string(jsonb))
+	b, err := json.Marshal(js)
+	if err != nil {
+		return nil, err
+	}
+
 	var items []string
-	err := json.Unmarshal(jsonb, &items)
+	err = json.Unmarshal(b, &items)
 	if err != nil {
 		return nil, err
 	}
