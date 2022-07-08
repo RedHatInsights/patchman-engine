@@ -117,18 +117,6 @@ func erratasHandler(c *gin.Context) {
             "type": "bugfix",
             "updated": "2016-09-22T12:00:00+04:00",
             "url": "url2"
-        },
-        "EPEL-1234": {
-            "description": "epel-des",
-            "issued": "2016-09-22T12:00:00+04:00",
-            "reference_list": [],
-            "requires_reboot": false,
-            "summary": "epel-sum",
-            "synopsis": "epel-syn",
-            "type": "bugfix",
-            "updated": "2016-09-22T12:00:00+04:00",
-            "solution": "",
-            "url": ""
         }
     },
     "page": 0,
