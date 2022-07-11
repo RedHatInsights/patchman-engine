@@ -217,6 +217,7 @@ func parsePackages(jsonb []byte) (packagesV1, packagesV2, error) {
 		return packagesV1{}, packagesV2{}, nil
 	}
 
+	var err error
 	pkgsV1 := make(packagesV1)
 	pkgsV2, err := parseJSONList(jsonb)
 	if err != nil {
@@ -238,12 +239,14 @@ func parsePackages(jsonb []byte) (packagesV1, packagesV2, error) {
 	// assigning first pkg to packages map in api/v1
 	// it shows incorrect packages info
 	// but we need to maintain backward compatibility
-	if len(pkgsV2) > 0 {
-		nevra, err := utils.ParseNevra(pkgsV2[0])
+	for _, pkg := range pkgsV2 {
+		nevra, err := utils.ParseNevra(pkg)
 		if err != nil {
-			return nil, pkgsV2, errors.Wrapf(err, "Could not parse nevra %s", pkgsV2[0])
+			continue
 		}
-		pkgsV1[nevra.Name] = nevra.EVRAString()
+		if _, has := pkgsV1[nevra.Name]; !has {
+			pkgsV1[nevra.Name] = nevra.EVRAString()
+		}
 	}
 	return pkgsV1, pkgsV2, nil
 }
