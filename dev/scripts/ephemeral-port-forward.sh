@@ -11,7 +11,7 @@ fwd() {
 }
 
 fwd service/ingress-service 8000:8000
-fwd service/patchman-db 5432:5432
+fwd service/patchman-db 5433:5432
 fwd service/patchman-manager 8080:8000
 
 wait
