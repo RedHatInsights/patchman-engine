@@ -12,12 +12,8 @@ import (
 )
 
 func TestAdvisoryDetailDefault(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-9", nil)
-	core.InitRouterWithPath(AdvisoryDetailHandlerV1, "/:advisory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/RH-9", nil, nil, AdvisoryDetailHandlerV1, "/:advisory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var outputV1 AdvisoryDetailResponseV1
@@ -25,9 +21,7 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 	// data
 	outputV1.checkRH9Fields(t)
 
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", "/RH-9", nil)
-	core.InitRouterWithPath(AdvisoryDetailHandlerV2, "/:advisory_id").ServeHTTP(w, req)
+	w = CreateRequestRouterWithPath("GET", "/RH-9", nil, nil, AdvisoryDetailHandlerV2, "/:advisory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var outputV2 AdvisoryDetailResponseV2
@@ -72,12 +66,8 @@ func (r *AdvisoryDetailResponseV2) checkRH9Fields(t *testing.T) {
 }
 
 func TestAdvisoryDetailCVE(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-3", nil)
-	core.InitRouterWithPath(AdvisoryDetailHandlerV1, "/:advisory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/RH-3", nil, nil, AdvisoryDetailHandlerV1, "/:advisory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var outputV1 AdvisoryDetailResponseV1
@@ -86,9 +76,7 @@ func TestAdvisoryDetailCVE(t *testing.T) {
 	assert.Equal(t, "CVE-1", outputV1.Data.Attributes.Cves[0])
 	assert.Equal(t, "CVE-2", outputV1.Data.Attributes.Cves[1])
 
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", "/RH-3", nil)
-	core.InitRouterWithPath(AdvisoryDetailHandlerV2, "/:advisory_id").ServeHTTP(w, req)
+	w = CreateRequestRouterWithPath("GET", "/RH-3", nil, nil, AdvisoryDetailHandlerV2, "/:advisory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var outputV2 AdvisoryDetailResponseV2
@@ -99,57 +87,45 @@ func TestAdvisoryDetailCVE(t *testing.T) {
 }
 
 func TestAdvisoryNoIdProvided(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 
 	var errResp utils.ErrorResponse
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
-	core.InitRouter(AdvisoryDetailHandlerV1).ServeHTTP(w, req)
+	w := CreateRequest("GET", "/", nil, nil, AdvisoryDetailHandlerV1)
+
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "advisory_id param not found", errResp.Error)
 
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", "/", nil)
-	core.InitRouter(AdvisoryDetailHandlerV2).ServeHTTP(w, req)
+	w = CreateRequest("GET", "/", nil, nil, AdvisoryDetailHandlerV2)
+
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "advisory_id param not found", errResp.Error)
 }
 
 func TestAdvisoryNotFound(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 
 	var errResp utils.ErrorResponse
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/foo", nil)
-	core.InitRouterWithPath(AdvisoryDetailHandlerV1, "/:advisory_id").ServeHTTP(w, req)
+	w := CreateRequestRouterWithPath("GET", "/foo", nil, nil, AdvisoryDetailHandlerV1, "/:advisory_id")
+
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "advisory not found", errResp.Error)
 
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", "/foo", nil)
-	core.InitRouterWithPath(AdvisoryDetailHandlerV2, "/:advisory_id").ServeHTTP(w, req)
+	w = CreateRequestRouterWithPath("GET", "/foo", nil, nil, AdvisoryDetailHandlerV2, "/:advisory_id")
+
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, "advisory not found", errResp.Error)
 }
 
 func testReqV1() *httptest.ResponseRecorder {
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-9", nil)
-	core.InitRouterWithPath(AdvisoryDetailHandlerV1, "/:advisory_id").ServeHTTP(w, req)
-	return w
+	return CreateRequestRouterWithPath("GET", "/RH-9", nil, nil, AdvisoryDetailHandlerV1, "/:advisory_id")
 }
 
 func testReqV2() *httptest.ResponseRecorder {
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-9", nil)
-	core.InitRouterWithPath(AdvisoryDetailHandlerV2, "/:advisory_id").ServeHTTP(w, req)
-	return w
+	return CreateRequestRouterWithPath("GET", "/RH-9", nil, nil, AdvisoryDetailHandlerV2, "/:advisory_id")
 }
 
 func TestAdvisoryDetailCached(t *testing.T) {
@@ -179,8 +155,7 @@ func TestAdvisoryDetailCached(t *testing.T) {
 }
 
 func TestAdvisoryDetailCachePreloading(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 
 	advisoryDetailCacheV1.Purge()
 	advisoryDetailCacheV2.Purge()
@@ -198,19 +173,18 @@ func TestAdvisoryDetailCachePreloading(t *testing.T) {
 }
 
 func TestAdvisoryDetailFiltering(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 
 	var errResp utils.ErrorResponse
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-9?filter[filter]=abcd", nil)
-	core.InitRouterWithPath(AdvisoryDetailHandlerV1, "/:advisory_id").ServeHTTP(w, req)
+	w := CreateRequestRouterWithPath("GET", "/RH-9?filter[filter]=abcd", nil, nil, AdvisoryDetailHandlerV1,
+		"/:advisory_id")
+
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
 
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", "/RH-9?filter[filter]=abcd", nil)
-	core.InitRouterWithPath(AdvisoryDetailHandlerV2, "/:advisory_id").ServeHTTP(w, req)
+	w = CreateRequestRouterWithPath("GET", "/RH-9?filter[filter]=abcd", nil, nil, AdvisoryDetailHandlerV2,
+		"/:advisory_id")
+
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
 }

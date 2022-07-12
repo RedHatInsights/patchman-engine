@@ -1,23 +1,17 @@
 package controllers
 
 import (
-	"app/base/core"
-	"app/base/utils"
-	"github.com/stretchr/testify/assert"
 	"net/http"
-	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 //nolint: dupl
 func TestPackageVersions(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/firefox/versions", nil)
-	core.InitRouterWithParams(PackageVersionsListHandler, 3, "GET", "/:package_name/versions").
-		ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/firefox/versions", nil, nil, PackageVersionsListHandler, 3,
+		"GET", "/:package_name/versions")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageVersionsResponse
@@ -28,13 +22,9 @@ func TestPackageVersions(t *testing.T) {
 }
 
 func TestPackageVersionsInvalidName(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/not-existing/versions", nil)
-	core.InitRouterWithParams(PackageVersionsListHandler, 3, "GET", "/:package_name/versions").
-		ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/not-existing/versions", nil, nil, PackageVersionsListHandler, 3,
+		"GET", "/:package_name/versions")
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }

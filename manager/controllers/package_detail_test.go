@@ -1,23 +1,19 @@
 package controllers
 
 import (
-	"app/base/core"
 	"app/base/utils"
-	"github.com/stretchr/testify/assert"
 	"net/http"
-	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 //nolint: dupl
 func TestLatestPackage(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/packages/kernel", nil, nil, PackageDetailHandler, 3,
+		"GET", "/packages/:package_name")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/packages/kernel", nil)
-	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
-		ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageDetailResponse
 	ParseResponseBody(t, w.Body.Bytes(), &output)
@@ -32,13 +28,10 @@ func TestLatestPackage(t *testing.T) {
 
 //nolint: dupl
 func TestEvraPackage(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/packages/kernel-5.6.13-200.fc31.x86_64", nil, nil,
+		PackageDetailHandler, 3, "GET", "/packages/:package_name")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/packages/kernel-5.6.13-200.fc31.x86_64", nil)
-	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
-		ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageDetailResponse
 	ParseResponseBody(t, w.Body.Bytes(), &output)
@@ -52,13 +45,10 @@ func TestEvraPackage(t *testing.T) {
 }
 
 func TestNonExitentPackage(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/packages/python", nil, nil, PackageDetailHandler, 3,
+		"GET", "/packages/:package_name")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/packages/python", nil)
-	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
-		ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
@@ -66,13 +56,10 @@ func TestNonExitentPackage(t *testing.T) {
 }
 
 func TestNonExitentEvra(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/packages/kernel-5.6.13-202.fc31.x86_64", nil, nil,
+		PackageDetailHandler, 3, "GET", "/packages/:package_name")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/packages/kernel-5.6.13-202.fc31.x86_64", nil)
-	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
-		ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
@@ -80,12 +67,9 @@ func TestNonExitentEvra(t *testing.T) {
 }
 
 func TestPackageDetailNoPackage(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
+	w := CreateRequest("GET", "/", nil, nil, PackageDetailHandler)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
-	core.InitRouter(PackageDetailHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
@@ -93,13 +77,10 @@ func TestPackageDetailNoPackage(t *testing.T) {
 }
 
 func TestPackageDetailFiltering(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/packages/kernel-5.6.13-202.fc31.x86_64?filter[filter]=abcd",
+		nil, nil, PackageDetailHandler, 3, "GET", "/packages/:package_name")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/packages/kernel-5.6.13-202.fc31.x86_64?filter[filter]=abcd", nil)
-	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
-		ServeHTTP(w, req)
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)

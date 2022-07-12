@@ -1,11 +1,10 @@
 package controllers
 
 import (
-	"app/base/core"
 	"app/base/database"
-	"app/base/utils"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var testFilters = []string{
@@ -94,8 +93,7 @@ func TestFilterInvalidValue(t *testing.T) {
 }
 
 func TestFilterOtherAdvisoryTypes(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 	// Check the list is loaded from database correctly
 	assert.Equal(t, []string{"unknown", "unspecified"}, database.OtherAdvisoryTypes)
 }

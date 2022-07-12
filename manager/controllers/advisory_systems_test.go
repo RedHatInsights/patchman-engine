@@ -1,22 +1,17 @@
 package controllers
 
 import (
-	"app/base/core"
 	"app/base/utils"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"net/http"
-	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1", nil)
-	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, nil, AdvisorySystemsListHandler, "/:advisory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output AdvisorySystemsResponse
@@ -47,23 +42,16 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 }
 
 func TestAdvisorySystemsNotFound(t *testing.T) { //nolint:dupl
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/nonexistant/systems", nil)
-	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/nonexistant/systems", nil, nil, AdvisorySystemsListHandler, "/:advisory_id")
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1?offset=5&limit=3", nil)
-	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/RH-1?offset=5&limit=3", nil, nil, AdvisorySystemsListHandler,
+		"/:advisory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output AdvisorySystemsResponse
@@ -78,12 +66,9 @@ func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
 }
 
 func TestAdvisorySystemsOffsetOverflow(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1?offset=100&limit=3", nil)
-	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/RH-1?offset=100&limit=3", nil, nil, AdvisorySystemsListHandler,
+		"/:advisory_id")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
@@ -92,13 +77,11 @@ func TestAdvisorySystemsOffsetOverflow(t *testing.T) {
 }
 
 func TestAdvisorySystemsSorts(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 
 	for sort := range SystemsFields {
-		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", fmt.Sprintf("/RH-1?sort=%v", sort), nil)
-		core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+		w := CreateRequestRouterWithPath("GET", fmt.Sprintf("/RH-1?sort=%v", sort), nil, nil,
+			AdvisorySystemsListHandler, "/:advisory_id")
 
 		var output AdvisorySystemsResponse
 		ParseResponseBody(t, w.Body.Bytes(), &output)
@@ -110,23 +93,17 @@ func TestAdvisorySystemsSorts(t *testing.T) {
 }
 
 func TestAdvisorySystemsWrongSort(t *testing.T) { //nolint:dupl
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1?sort=unknown_key", nil)
-	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/RH-1?sort=unknown_key", nil, nil, AdvisorySystemsListHandler,
+		"/:advisory_id")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1?tags=ns1/k1=val1", nil)
-	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k1=val1", nil, nil, AdvisorySystemsListHandler,
+		"/:advisory_id")
 
 	var output AdvisorySystemsResponse
 	ParseResponseBody(t, w.Body.Bytes(), &output)
@@ -136,12 +113,9 @@ func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
 }
 
 func TestAdvisorySystemsTagsMultiple(t *testing.T) { //nolint:dupl
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1", nil)
-	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, nil,
+		AdvisorySystemsListHandler, "/:advisory_id")
 
 	var output AdvisorySystemsResponse
 	ParseResponseBody(t, w.Body.Bytes(), &output)
@@ -152,12 +126,9 @@ func TestAdvisorySystemsTagsMultiple(t *testing.T) { //nolint:dupl
 }
 
 func TestAdvisorySystemsTagsInvalid(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1?tags=ns1/k3=val4&tags=invalidTag", nil)
-	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=invalidTag", nil, nil,
+		AdvisorySystemsListHandler, "/:advisory_id")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
@@ -166,12 +137,9 @@ func TestAdvisorySystemsTagsInvalid(t *testing.T) {
 }
 
 func TestAdvisorySystemsTagsUnknown(t *testing.T) { //nolint:dupl
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=unk", nil)
-	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=unk", nil, nil,
+		AdvisorySystemsListHandler, "/:advisory_id")
 
 	var output AdvisorySystemsResponse
 	ParseResponseBody(t, w.Body.Bytes(), &output)
@@ -185,12 +153,9 @@ func TestAdvisorySystemsWrongOffset(t *testing.T) {
 }
 
 func TestAdvisorySystemsTagsInMetadata(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1", nil)
-	core.InitRouterWithPath(AdvisorySystemsListHandler, "/:advisory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, nil,
+		AdvisorySystemsListHandler, "/:advisory_id")
 
 	var output AdvisorySystemsResponse
 	ParseResponseBody(t, w.Body.Bytes(), &output)

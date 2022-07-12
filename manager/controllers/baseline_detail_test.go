@@ -1,12 +1,10 @@
 package controllers
 
 import (
-	"app/base/core"
 	"app/base/database"
 	"app/base/utils"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -14,12 +12,8 @@ import (
 )
 
 func testBaselineDetail(t *testing.T, url string, expectedStatus int, output interface{}) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", url, nil)
-	core.InitRouterWithPath(BaselineDetailHandler, "/:baseline_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", url, nil, nil, BaselineDetailHandler, "/:baseline_id")
 
 	assert.Equal(t, expectedStatus, w.Code)
 	ParseResponseBody(t, w.Body.Bytes(), &output)
@@ -49,8 +43,7 @@ func TestBaselineDetailInvalid(t *testing.T) {
 }
 
 func TestBaselineDetailEmptyConfig(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 	baselineID := database.CreateBaselineWithConfig(t, "", nil, nil)
 	var output BaselineDetailResponse
 	url := fmt.Sprintf("/%d", baselineID)

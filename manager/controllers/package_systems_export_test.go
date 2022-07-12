@@ -1,24 +1,18 @@
 package controllers
 
 import (
-	"app/base/core"
 	"app/base/utils"
-	"github.com/stretchr/testify/assert"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPackageSystemsExportHandlerJSON(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/kernel/systems?sort=id", nil)
-	req.Header.Add("Accept", "application/json")
-	core.InitRouterWithParams(PackageSystemsExportHandler, 3, "GET", "/:package_name/systems").
-		ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/kernel/systems?sort=id", nil, &contentTypeJSON,
+		PackageSystemsExportHandler, 3, "GET", "/:package_name/systems")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output []PackageSystemItem
@@ -33,14 +27,9 @@ func TestPackageSystemsExportHandlerJSON(t *testing.T) {
 }
 
 func TestPackageSystemsExportHandlerCSV(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/kernel/systems?sort=id", nil)
-	req.Header.Add("Accept", "text/csv")
-	core.InitRouterWithParams(PackageSystemsExportHandler, 3, "GET", "/:package_name/systems").
-		ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/kernel/systems?sort=id", nil, &contentTypeCSV,
+		PackageSystemsExportHandler, 3, "GET", "/:package_name/systems")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
@@ -57,14 +46,9 @@ func TestPackageSystemsExportHandlerCSV(t *testing.T) {
 }
 
 func TestPackageSystemsExportInvalidName(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/unknown_package/systems", nil)
-	req.Header.Add("Accept", "text/csv")
-	core.InitRouterWithParams(PackageSystemsExportHandler, 3, "GET", "/:package_name/systems").
-		ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/unknown_package/systems", nil, &contentTypeCSV,
+		PackageSystemsExportHandler, 3, "GET", "/:package_name/systems")
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }

@@ -1,21 +1,18 @@
 package controllers
 
 import (
-	"app/base/core"
-	"app/base/utils"
 	"bytes"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 func doTestView(t *testing.T, handler gin.HandlerFunc, checker func(w *httptest.ResponseRecorder)) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
+	SetupTest(t)
 	body := SystemsAdvisoriesRequest{
 		Systems:    []SystemID{"00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002"},
 		Advisories: []AdvisoryName{"RH-1", "RH-2"},
@@ -25,11 +22,7 @@ func doTestView(t *testing.T, handler gin.HandlerFunc, checker func(w *httptest.
 		panic(err)
 	}
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/", bytes.NewBuffer(bodyJSON))
-
-	core.InitRouterWithParams(handler, 1, "POST", "/").
-		ServeHTTP(w, req)
+	w := CreateRequestRouterWithParams("POST", "/", bytes.NewBuffer(bodyJSON), nil, handler, 1, "POST", "/")
 	checker(w)
 }
 

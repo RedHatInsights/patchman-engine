@@ -1,13 +1,12 @@
 package controllers
 
 import (
-	"app/base/core"
 	"app/base/utils"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"net/http"
-	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPackageSystems(t *testing.T) {
@@ -39,13 +38,9 @@ func TestPackageSystemsInvalidName(t *testing.T) {
 }
 
 func testPackageSystems(t *testing.T, url string, account int) PackageSystemsResponse {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", url, nil)
-	core.InitRouterWithParams(PackageSystemsListHandler, account, "GET", "/:package_name/systems").
-		ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", url, nil, nil, PackageSystemsListHandler, account, "GET",
+		"/:package_name/systems")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageSystemsResponse
@@ -54,13 +49,9 @@ func testPackageSystems(t *testing.T, url string, account int) PackageSystemsRes
 }
 
 func testPackageSystemsError(t *testing.T, url string, account int) (int, utils.ErrorResponse) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", url, nil)
-	core.InitRouterWithParams(PackageSystemsListHandler, account, "GET", "/:package_name/systems").
-		ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", url, nil, nil, PackageSystemsListHandler, account, "GET",
+		"/:package_name/systems")
 
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
@@ -68,13 +59,9 @@ func testPackageSystemsError(t *testing.T, url string, account int) (int, utils.
 }
 
 func TestPackageSystemsTagsInMetadata(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/kernel/systems?tags=ns1/k3=val4&tags=ns1/k1=val1", nil)
-	core.InitRouterWithParams(PackageSystemsListHandler, 3, "GET", "/:package_name/systems").
-		ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/kernel/systems?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, nil,
+		PackageSystemsListHandler, 3, "GET", "/:package_name/systems")
 
 	var output PackageSystemsResponse
 	ParseResponseBody(t, w.Body.Bytes(), &output)

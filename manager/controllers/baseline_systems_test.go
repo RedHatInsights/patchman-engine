@@ -4,19 +4,15 @@ import (
 	"app/base/core"
 	"app/base/utils"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func testBaselineSystems(t *testing.T, url string) BaselineSystemsResponse {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", url, nil)
-	core.InitRouterWithPath(BaselineSystemsListHandler, "/:baseline_id/systems").ServeHTTP(w, req)
+	w := CreateRequestRouterWithPath("GET", url, nil, nil, BaselineSystemsListHandler, "/:baseline_id/systems")
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	var output BaselineSystemsResponse
@@ -79,12 +75,10 @@ func TestBaselineSystemsUnlimited(t *testing.T) {
 }
 
 func TestBaselineSystemOffsetOverflow(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/1/systems?offset=10&limit=4", nil, nil, BaselineSystemsListHandler,
+		"/:baseline_id/systems")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/1/systems?offset=10&limit=4", nil)
-	core.InitRouterWithPath(BaselineSystemsListHandler, "/:baseline_id/systems").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
@@ -104,12 +98,9 @@ func TestBaselinesFilterTag(t *testing.T) {
 }
 
 func TestBaselineSystemsWrongSort(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/1/systems?sort=unknown_key", nil)
-	core.InitRouterWithPath(BaselineSystemsListHandler, "/:baseline_id/systems").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/1/systems?sort=unknown_key", nil, nil, BaselineSystemsListHandler,
+		"/:baseline_id/systems")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

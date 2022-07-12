@@ -1,13 +1,10 @@
 package controllers
 
 import (
-	"app/base/core"
 	"app/base/database"
-	"app/base/utils"
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,15 +16,14 @@ func testBaselineSystemsRemove(t *testing.T, body BaselineSystemsRemoveRequest) 
 		panic(err)
 	}
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/systems/remove", bytes.NewBuffer(bodyJSON))
-	core.InitRouterWithParams(BaselineSystemsRemoveHandler, 1, "POST", "/systems/remove").ServeHTTP(w, req)
+	w := CreateRequestRouterWithParams("POST", "/systems/remove", bytes.NewBuffer(bodyJSON), nil,
+		BaselineSystemsRemoveHandler, 1, "POST", "/systems/remove")
+
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestBaselineSystemsRemoveDefault(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 
 	var inventoryIDs = []string{
 		"00000000-0000-0000-0000-000000000004",

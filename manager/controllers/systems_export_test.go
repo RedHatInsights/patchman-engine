@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"app/base/core"
 	"app/base/utils"
 	"fmt"
 	"net/http"
@@ -12,19 +11,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testSetup(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-}
-
 func makeRequest(t *testing.T, path string, contentType string) *httptest.ResponseRecorder {
-	testSetup(t)
-
-	r := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", path, nil)
-	req.Header.Add("Accept", contentType)
-	core.InitRouter(SystemsExportHandler).ServeHTTP(r, req)
-	return r
+	SetupTest(t)
+	return CreateRequest("GET", path, nil, &contentType, SystemsExportHandler)
 }
 
 func TestSystemsExportJSON(t *testing.T) {

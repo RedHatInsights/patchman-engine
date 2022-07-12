@@ -1,12 +1,10 @@
 package controllers
 
 import (
-	"app/base/core"
 	"app/base/database"
 	"app/base/utils"
 	"bytes"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -14,8 +12,7 @@ import (
 )
 
 func TestCreateBaseline(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 	data := `{
 		"name": "my_baseline",
 		"inventory_ids": [
@@ -25,9 +22,7 @@ func TestCreateBaseline(t *testing.T) {
         "config": {"to_time": "2022-12-31T12:00:00-04:00"},
 		"description": "desc"
 	}`
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("PUT", "/", bytes.NewBufferString(data))
-	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
+	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var resp CreateBaselineResponse
@@ -40,12 +35,9 @@ func TestCreateBaseline(t *testing.T) {
 }
 
 func TestCreateBaselineNameOnly(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 	data := `{"name": "my_empty_baseline"}`
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("PUT", "/", bytes.NewBufferString(data))
-	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
+	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var resp CreateBaselineResponse
@@ -55,12 +47,9 @@ func TestCreateBaselineNameOnly(t *testing.T) {
 }
 
 func TestCreateBaselineNameEmptyString(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 	data := `{"name": ""}`
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("PUT", "/", bytes.NewBufferString(data))
-	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
+	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
@@ -69,12 +58,9 @@ func TestCreateBaselineNameEmptyString(t *testing.T) {
 }
 
 func TestCreateBaselineMissingName(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 	data := `{}`
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("PUT", "/", bytes.NewBufferString(data))
-	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
+	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
@@ -83,12 +69,9 @@ func TestCreateBaselineMissingName(t *testing.T) {
 }
 
 func TestCreateBaselineInvalidRequest(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 	data := `{"name": 0}`
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("PUT", "/", bytes.NewBufferString(data))
-	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
+	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
@@ -98,14 +81,11 @@ func TestCreateBaselineInvalidRequest(t *testing.T) {
 }
 
 func TestCreateBaselineDuplicatedName(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 	data := `{
 		"name": "baseline_1-1"
 	}`
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("PUT", "/", bytes.NewBufferString(data))
-	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
+	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse

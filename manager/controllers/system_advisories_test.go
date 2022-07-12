@@ -1,23 +1,18 @@
 package controllers
 
 import (
-	"app/base/core"
 	"app/base/utils"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSystemAdvisoriesDefault(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001", nil)
-	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil, nil,
+		SystemAdvisoriesHandler, "/:inventory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemAdvisoriesResponse
@@ -36,23 +31,16 @@ func TestSystemAdvisoriesDefault(t *testing.T) {
 }
 
 func TestSystemAdvisoriesNotFound(t *testing.T) { //nolint:dupl
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/nonexistant/advisories", nil)
-	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/nonexistant/advisories", nil, nil, SystemAdvisoriesHandler, "/:inventory_id")
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestSystemAdvisoriesOffsetLimit(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001?offset=4&limit=3", nil)
-	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?offset=4&limit=3", nil, nil,
+		SystemAdvisoriesHandler, "/:inventory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemAdvisoriesResponse
@@ -62,12 +50,9 @@ func TestSystemAdvisoriesOffsetLimit(t *testing.T) {
 }
 
 func TestSystemAdvisoriesOffsetOverflow(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001?offset=100&limit=3", nil)
-	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?offset=100&limit=3", nil, nil,
+		SystemAdvisoriesHandler, "/:inventory_id")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
@@ -76,17 +61,15 @@ func TestSystemAdvisoriesOffsetOverflow(t *testing.T) {
 }
 
 func TestSystemAdvisoriesPossibleSorts(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	SetupTest(t)
 
 	for sort := range SystemAdvisoriesFields {
 		if sort == "ReleaseVersions" {
 			// this fiesd is not sortable, skip it
 			continue
 		}
-		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", fmt.Sprintf("/00000000-0000-0000-0000-000000000001?sort=%v", sort), nil)
-		core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
+		w := CreateRequestRouterWithPath("GET", fmt.Sprintf("/00000000-0000-0000-0000-000000000001?sort=%v", sort),
+			nil, nil, SystemAdvisoriesHandler, "/:inventory_id")
 
 		var output SystemAdvisoriesResponse
 		ParseResponseBody(t, w.Body.Bytes(), &output)
@@ -97,23 +80,17 @@ func TestSystemAdvisoriesPossibleSorts(t *testing.T) {
 }
 
 func TestSystemAdvisoriesWrongSort(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001?sort=unknown_key", nil)
-	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?sort=unknown_key", nil, nil,
+		SystemAdvisoriesHandler, "/:inventory_id")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 func TestSystemAdvisoriesSearch(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001?search=h-3", nil)
-	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?search=h-3", nil, nil,
+		SystemAdvisoriesHandler, "/:inventory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemAdvisoriesResponse
@@ -133,12 +110,8 @@ func TestSystemAdvisoriesWrongOffset(t *testing.T) {
 }
 
 func TestSystemAdvisoriesExportUnknown(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/unknownsystem", nil)
-	core.InitRouterWithPath(SystemAdvisoriesHandler, "/:inventory_id").ServeHTTP(w, req)
+	SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/unknownsystem", nil, nil, SystemAdvisoriesHandler, "/:inventory_id")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
