@@ -213,6 +213,7 @@ func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV2Response,
 			return nil, errors.Wrap(err, "Failed to evaluate baseline")
 		}
 	}
+	utils.Log("data after baseline eval", *(updatesData.UpdateList)).Debug()
 
 	err := evaluateAndStore(tx, system, updatesData, accountName)
 	if err != nil {
@@ -240,11 +241,13 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 
 		// in evaluator-upload return just return YumUpdates
 		if yumUpdates != nil && evalType == uploadLabel {
+			utils.Log("yumUpdates", yumUpdates.GetUpdateList()).Debug()
 			return yumUpdates, nil
 		}
 	}
 
 	vmaasData, vmaasErr := getVmaasUpdates(ctx, tx, system)
+	utils.Log("vmaasData", *vmaasData).Debug()
 	if vmaasErr != nil {
 		// if there's no yum update fail hard otherwise only log warning and use yum data
 		if yumUpdates == nil {

@@ -21,6 +21,7 @@ func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaa
 		return 0, 0, nil
 	}
 
+	utils.Log("analyzing packages in vmaasData", vmaasData.GetUpdateList).Debug()
 	err = lazySavePackages(tx, vmaasData)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-lazy-pkg-save").Inc()
@@ -49,6 +50,7 @@ func lazySavePackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) error {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("lazy-package-save"))
 
 	missingPackages := getMissingPackages(tx, vmaasData)
+	utils.Log("missingPackages", missingPackages).Debug()
 	err := updatePackageDB(tx, &missingPackages)
 	if err != nil {
 		return errors.Wrap(err, "packages bulk insert failed")
@@ -75,6 +77,7 @@ func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) models.
 		}
 		latestName, found := memoryPackageCache.GetLatestByName(parsed.Name)
 		pkg := models.Package{EVRA: parsed.EVRAString()}
+		utils.Log("processing pkg", pkg).Debug()
 		if found {
 			// name is known, create missing package in db/cache
 			pkg.NameID = latestName.NameID
@@ -83,12 +86,14 @@ func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) models.
 		} else {
 			// name is unknown, insert into package_name
 			pkgName := models.PackageName{Name: parsed.Name}
+			utils.Log("storing to package_name", pkgName).Debug()
 			err := updatePackageNameDB(tx, &pkgName)
 			if err != nil {
 				utils.Log("err", err.Error(), "nevra", nevra).Error("unknown package name insert failed")
 			}
 			pkg.NameID = pkgName.ID
 			if pkg.NameID == 0 {
+				utils.Log("insert conflict package_name", pkgName).Debug()
 				// insert conflict, it did not return ID
 				// try to get ID from package_name table
 				tx.Where("name = ?", parsed.Name).First(&pkgName)
