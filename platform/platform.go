@@ -25,17 +25,17 @@ const uploadEvent = `{
 			"id":       "00000000-0000-0000-0000-000000000100",
 			"account":  "TEST-0000",
 			"reporter": "puptoo",
-			"tags": {
+			"tags": [
 				{
 					"key":   "env",
-					"value": "prod",
+					"value": "prod"
 				},
 				{
 					"namespace": "satellite",
 					"key":       "organization",
-					"value":     "rh",
-				},
-			},
+					"value":     "rh"
+				}
+			],
 			"system_profile": %s
 		},
     "platform_metadata": {
