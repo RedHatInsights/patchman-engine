@@ -33,7 +33,8 @@ func getUnnotifiedAdvisories(tx *gorm.DB, accountID int, newAdvs SystemAdvisoryM
 	err := tx.Table("advisory_account_data as acd").
 		Select("am.name").
 		Joins("inner join advisory_metadata am on am.id = acd.advisory_id").
-		Where("acd.rh_account_id = ? AND acd.advisory_id IN (?) AND acd.notified IS NULL", accountID, advIDs).
+		Where("acd.rh_account_id = ? AND acd.advisory_id IN (?)"+
+			"AND acd.notified IS NULL AND acd.systems_affected > 0", accountID, advIDs).
 		Scan(&advNames).Error
 	if err != nil {
 		return nil, errors.Wrap(err, "querying unnotified advisories from DB failed")
@@ -59,7 +60,7 @@ func getUnnotifiedAdvisories(tx *gorm.DB, accountID int, newAdvs SystemAdvisoryM
 	return unAdvs, nil
 }
 
-func publishNewAdvisoriesNotification(tx *gorm.DB, inventoryID, accountName string,
+func publishNewAdvisoriesNotification(tx *gorm.DB, inventoryID string, event *mqueue.PlatformEvent,
 	accountID int, newAdvisories SystemAdvisoryMap) error {
 	if notificationsPublisher == nil {
 		return nil
@@ -81,7 +82,7 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, inventoryID, accountName stri
 
 	msg, err := mqueue.MessageFromJSON(
 		inventoryID,
-		ntf.MakeNotification(inventoryID, accountName, NewAdvisoryEvent, events))
+		ntf.MakeNotification(inventoryID, event.GetAccountName(), event.GetOrgID(), NewAdvisoryEvent, events))
 	if err != nil {
 		return errors.Wrap(err, "creating message from notification failed")
 	}
