@@ -178,7 +178,7 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 		return nil, nil, nil
 	}
 
-	vmaasData, err := evaluateWithVmaas(tx, updatesData, system, event.GetAccountName())
+	vmaasData, err := evaluateWithVmaas(tx, updatesData, system, event)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluation with vmaas failed")
 	}
@@ -206,7 +206,7 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV2Response, 
 }
 
 func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV2Response,
-	system *models.SystemPlatform, accountName string) (*vmaas.UpdatesV2Response, error) {
+	system *models.SystemPlatform, event *mqueue.PlatformEvent) (*vmaas.UpdatesV2Response, error) {
 	if enableBaselineEval {
 		err := limitVmaasToBaseline(tx, system, updatesData)
 		if err != nil {
@@ -214,7 +214,7 @@ func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV2Response,
 		}
 	}
 
-	err := evaluateAndStore(tx, system, updatesData, accountName)
+	err := evaluateAndStore(tx, system, updatesData, event)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to evaluate and store results")
 	}
@@ -345,7 +345,7 @@ func commitWithObserve(tx *gorm.DB) error {
 }
 
 func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
-	vmaasData *vmaas.UpdatesV2Response, accountName string) error {
+	vmaasData *vmaas.UpdatesV2Response, event *mqueue.PlatformEvent) error {
 	newSystemAdvisories, err := analyzeAdvisories(tx, system, vmaasData)
 	if err != nil {
 		return errors.Wrap(err, "Advisory analysis failed")
@@ -364,7 +364,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
 
 	// Send instant notification with new advisories
 	if enableInstantNotifications {
-		err = publishNewAdvisoriesNotification(tx, system.InventoryID, accountName, system.RhAccountID, newSystemAdvisories)
+		err = publishNewAdvisoriesNotification(tx, system.InventoryID, event, system.RhAccountID, newSystemAdvisories)
 		if err != nil {
 			evaluationCnt.WithLabelValues("error-advisory-notification").Inc()
 			utils.Log("err", err.Error()).Error("publishing new advisories notification failed")
