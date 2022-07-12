@@ -79,7 +79,7 @@ func BaselinesListHandler(c *gin.Context) {
 		return
 	} // Error handled in method itself
 
-	query, meta, links, err := ListCommon(query, c, filters, "/api/patch/v1/baselines", BaselineOpts)
+	query, meta, links, err := ListCommon(query, c, filters, BaselineOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return

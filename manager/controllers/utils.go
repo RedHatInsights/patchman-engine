@@ -174,7 +174,7 @@ func CountRows(tx *gorm.DB) (total int, subTotals map[string]int, err error) {
 }
 
 //nolint: funlen, lll
-func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, path string, opts ListOpts, params ...string) (
+func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, opts ListOpts, params ...string) (
 	*gorm.DB, *ListMeta, *Links, error) {
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
@@ -232,6 +232,7 @@ func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, pa
 
 	tagQ := extractTagsQueryString(c)
 
+	path := c.Request.URL.Path
 	params = append(params, filters.ToQueryParams(), sortQ, tagQ, searchQ)
 	links := CreateLinks(path, offset, limit, total, params...)
 	mergeMaps(meta.Filter, tagFilter)
@@ -645,14 +646,8 @@ func parseJSONList(jsonb []byte) ([]string, error) {
 		return []string{}, nil
 	}
 
-	js := json.RawMessage(string(jsonb))
-	b, err := json.Marshal(js)
-	if err != nil {
-		return nil, err
-	}
-
 	var items []string
-	err = json.Unmarshal(b, &items)
+	err := json.Unmarshal(jsonb, &items)
 	if err != nil {
 		return nil, err
 	}

@@ -43,8 +43,8 @@ func TestAdvisoriesDefault(t *testing.T) {
 	assert.Equal(t, false, output.Data[0].Attributes.RebootRequired)
 
 	// links
-	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date", output.Links.First)
-	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date", output.Links.Last)
+	assert.Equal(t, "/?offset=0&limit=20&sort=-public_date", output.Links.First)
+	assert.Equal(t, "/?offset=0&limit=20&sort=-public_date", output.Links.Last)
 	assert.Nil(t, output.Links.Next)
 	assert.Nil(t, output.Links.Previous)
 
@@ -134,7 +134,7 @@ func TestAdvisoriesFilterTypeID1(t *testing.T) {
 	assert.Equal(t, "RH-7", output.Data[2].ID)
 	assert.Equal(t, FilterData{Values: []string{"enhancement"}, Operator: "eq"}, output.Meta.Filter["advisory_type_name"])
 	assert.Equal(t,
-		"/api/patch/v1/advisories?offset=0&limit=20&filter[advisory_type_name]=eq:enhancement&sort=id",
+		"/?offset=0&limit=20&filter[advisory_type_name]=eq:enhancement&sort=id",
 		output.Links.First)
 }
 
@@ -232,9 +232,9 @@ func TestAdvisoriesSearch(t *testing.T) {
 	assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
 
 	// links
-	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date&search=h-3",
+	assert.Equal(t, "/?offset=0&limit=20&sort=-public_date&search=h-3",
 		output.Links.First)
-	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=-public_date&search=h-3",
+	assert.Equal(t, "/?offset=0&limit=20&sort=-public_date&search=h-3",
 		output.Links.Last)
 	assert.Nil(t, output.Links.Next)
 	assert.Nil(t, output.Links.Previous)
@@ -261,7 +261,7 @@ func TestAdvisoriesTags(t *testing.T) {
 	output := testAdvisories(t, "/?sort=id&tags=ns1/k2=val2")
 	assert.Equal(t, 8, len(output.Data))
 	assert.Equal(t, 2, output.Data[0].Attributes.ApplicableSystems)
-	assert.Equal(t, "/api/patch/v1/advisories?offset=0&limit=20&sort=id&tags=ns1/k2=val2", output.Links.First)
+	assert.Equal(t, "/?offset=0&limit=20&sort=id&tags=ns1/k2=val2", output.Links.First)
 }
 
 func TestListAdvisoriesTagsInvalid(t *testing.T) {

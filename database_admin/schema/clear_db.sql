@@ -3,12 +3,13 @@ $$
     DECLARE
         stmt TEXT;
     BEGIN
+        EXECUTE 'DROP EXTENSION IF EXISTS pgcrypto';
+        EXECUTE 'DROP EXTENSION IF EXISTS "uuid-osp"';
         FOR stmt IN (SELECT 'DROP ' || case when prokind = 'f' then 'FUNCTION ' else 'PROCEDURE ' end
                             || ns.nspname || '.' || proname || '(' || oidvectortypes(proargtypes) || ') CASCADE;'
                      FROM pg_proc
                               INNER JOIN pg_namespace ns ON (pg_proc.pronamespace = ns.oid)
                      WHERE ns.nspname = 'public'
-                       AND proname not like 'uuid_%'
                      ORDER BY proname)
             LOOP
                 EXECUTE stmt;

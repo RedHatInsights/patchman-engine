@@ -5,6 +5,7 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -18,6 +19,8 @@ var enableAdvisoryDetailCache = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_DETAI
 var advisoryDetailCacheSize = utils.GetIntEnvOrDefault("ADVISORY_DETAIL_CACHE_SIZE", 100)
 var advisoryDetailCacheV1 = initAdvisoryDetailCache()
 var advisoryDetailCacheV2 = initAdvisoryDetailCache()
+
+const logProgressDuration = 2 * time.Second
 
 type AdvisoryDetailResponseV1 struct {
 	Data AdvisoryDetailItemV1 `json:"data"`
@@ -214,27 +217,36 @@ func parsePackages(jsonb []byte) (packagesV1, packagesV2, error) {
 		return packagesV1{}, packagesV2{}, nil
 	}
 
-	js := json.RawMessage(string(jsonb))
-	b, err := json.Marshal(js)
-	if err != nil {
-		return nil, nil, err
-	}
-
+	var err error
 	pkgsV1 := make(packagesV1)
-	var pkgsV2 packagesV2
-	err = json.Unmarshal(b, &pkgsV2)
+	pkgsV2, err := parseJSONList(jsonb)
 	if err != nil {
-		return nil, nil, err
+		// HACK!
+		// Until vmaas-sync syncs new data, `jsonb` has '{"<name>": "<evra>"}' format
+		// what we need for V2 api is ["<name>-<evra>", ...]
+		// 1. try to unmarshal to packagesV1 struct
+		var tmpPkgV1 packagesV1
+		if v1err := json.Unmarshal(jsonb, &tmpPkgV1); v1err != nil {
+			// cannot unmarshal to neither V1 nor V2
+			return nil, nil, err
+		}
+		// 2. create `packagesV2` from `packagesV1` data
+		for k, v := range tmpPkgV1 {
+			// NOTE: V2 now shows the same data as V1 api until vmaas is synced
+			pkgsV2 = append(pkgsV2, fmt.Sprintf("%s-%s", k, v))
+		}
 	}
 	// assigning first pkg to packages map in api/v1
 	// it shows incorrect packages info
 	// but we need to maintain backward compatibility
-	if len(pkgsV2) > 0 {
-		nevra, err := utils.ParseNevra(pkgsV2[0])
+	for _, pkg := range pkgsV2 {
+		nevra, err := utils.ParseNevra(pkg)
 		if err != nil {
-			return nil, pkgsV2, errors.Wrapf(err, "Could not parse nevra %s", pkgsV2[0])
+			continue
 		}
-		pkgsV1[nevra.Name] = nevra.EVRAString()
+		if _, has := pkgsV1[nevra.Name]; !has {
+			pkgsV1[nevra.Name] = nevra.EVRAString()
+		}
 	}
 	return pkgsV1, pkgsV2, nil
 }
@@ -266,7 +278,9 @@ func PreloadAdvisoryCacheItems() {
 		panic(err)
 	}
 
-	for i, advisoryName := range advisoryNames {
+	progress, count := utils.LogProgress("Advisory detail cache preload", logProgressDuration, int64(len(advisoryNames)))
+
+	for _, advisoryName := range advisoryNames {
 		_, err = getAdvisoryV1(advisoryName)
 		if err != nil {
 			utils.Log("advisoryName", advisoryName, "err", err.Error()).Error("can not re-load item to cache - V1")
@@ -275,11 +289,9 @@ func PreloadAdvisoryCacheItems() {
 		if err != nil {
 			utils.Log("advisoryName", advisoryName, "err", err.Error()).Error("can not re-load item to cache - V2")
 		}
-		perc := 1000 * (i + 1) / len(advisoryNames)
-		if perc%10 == 0 { // log each 1% increment
-			utils.Log("percent", perc/10).Info("advisory detail cache loading")
-		}
+		*count++
 	}
+	progress.Stop()
 }
 
 func tryGetAdvisoryFromCacheV1(advisoryName string) *AdvisoryDetailResponseV1 {

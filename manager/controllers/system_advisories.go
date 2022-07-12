@@ -5,7 +5,6 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -116,8 +115,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	}
 
 	query := buildSystemAdvisoriesQuery(account, inventoryID)
-	path := fmt.Sprintf("/api/patch/v1/systems/%v/advisories", inventoryID)
-	query, meta, links, err := ListCommon(query, c, nil, path, SystemAdvisoriesOpts)
+	query, meta, links, err := ListCommon(query, c, nil, SystemAdvisoriesOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return

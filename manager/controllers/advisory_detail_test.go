@@ -3,8 +3,10 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
@@ -187,4 +189,18 @@ func TestAdvisoryDetailFiltering(t *testing.T) {
 
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
+}
+
+func TestParsePackagesV1V2(t *testing.T) {
+	// test SPM-1619
+	inV1 := json.RawMessage("{\"pkg1\": \"1.0.0-1.el8.x86_64\", \"pkg2\": \"2.0.0-1.el8.x86_64\"}")
+	inV2 := json.RawMessage("[\"pkg1-1.0.0-1.el8.x86_64\", \"pkg2-2.0.0-1.el8.x86_64\"]")
+
+	p1InV1, p2InV1, errInV1 := parsePackages(inV1)
+	p1InV2, p2InV2, errInV2 := parsePackages(inV2)
+	sort.Strings(p2InV1)
+	assert.Nil(t, errInV1)
+	assert.Nil(t, errInV2)
+	assert.Equal(t, p1InV1, p1InV2)
+	assert.Equal(t, p2InV1, p2InV2)
 }

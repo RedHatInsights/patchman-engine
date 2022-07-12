@@ -5,7 +5,6 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -101,8 +100,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 		return
 	} // Error handled in method itself
 	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
-	path := fmt.Sprintf("/api/patch/v1/advisories/%v/systems", advisoryName)
-	query, meta, links, err := ListCommon(query, c, filters, path, AdvisorySystemOpts)
+	query, meta, links, err := ListCommon(query, c, filters, AdvisorySystemOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself
