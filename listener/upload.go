@@ -115,7 +115,7 @@ func HandleUpload(event HostEvent) error {
 		// don't fail, use vmaas evaluation
 		utils.Log("err", err).Error("Could not get yum updates")
 	}
-	utils.Log("inventoryID", event.Host.ID, "yum_updates", yumUpdates).Trace()
+	utils.Log("inventoryID", event.Host.ID, "yum_updates", string(yumUpdates)).Trace()
 
 	if len(event.Host.SystemProfile.GetInstalledPackages()) == 0 && yumUpdates == nil {
 		utils.Log("inventoryID", event.Host.ID).Warn(WarnSkippingNoPackages)
