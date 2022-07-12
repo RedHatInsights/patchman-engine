@@ -16,10 +16,9 @@ objects:
       webServices:
         public:
           enabled: true
+          apiPath: patch
         private:
           enabled: false
-        metrics:
-          enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG_MANAGER}
         command:
