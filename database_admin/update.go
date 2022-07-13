@@ -26,6 +26,16 @@ func execFromFile(db *sql.DB, filepath string) {
 	execOrPanic(db, string(query))
 }
 
+func getAdvisoryLock(db *sql.DB) {
+	log.Info("Getting advisory lock")
+	execOrPanic(db, "SELECT pg_advisory_lock(123)")
+}
+
+func releaseAdvisoryLock(db *sql.DB) {
+	log.Info("Releasing advisory lock")
+	execOrPanic(db, "SELECT pg_advisory_unlock(123)")
+}
+
 // Wait for closing of all "listener", "evaluator" and "vmaas_sync" database sessions.
 func waitForSessionClosed(db *sql.DB) {
 	for {
@@ -79,10 +89,14 @@ func UpdateDB(migrationFilesURL string) {
 	}
 	databaseURL := fmt.Sprintf("postgres://%s/%s?sslmode=%s", utils.Cfg.DBHost, utils.Cfg.DBName, sslModeCert)
 	setPgEnv()
+
 	conn, db, err := NewConn(databaseURL)
 	if err != nil {
 		panic(err)
 	}
+	getAdvisoryLock(db)
+	defer releaseAdvisoryLock(db)
+
 	if utils.GetBoolEnvOrDefault("RESET_SCHEMA", false) {
 		execOrPanic(db, "DROP SCHEMA IF EXISTS public CASCADE")
 		execOrPanic(db, "CREATE SCHEMA IF NOT EXISTS public")

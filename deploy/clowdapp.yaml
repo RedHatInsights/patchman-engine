@@ -21,6 +21,34 @@ objects:
           enabled: false
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG_MANAGER}
+        initContainers:
+          - name: db-migration
+            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            command:
+              - ./database_admin/entrypoint.sh
+            env:
+            - {name: LOG_LEVEL, value: '${LOG_LEVEL_DATABASE_ADMIN}'}
+            - {name: GODEBUG, value: '${GODEBUG_DATABASE_ADMIN}'}
+            - {name: DB_DEBUG, value: '${DB_DEBUG_DATABASE_ADMIN}'}
+            - {name: GIN_MODE, value: '${GIN_MODE}'}
+            - {name: SHOW_CLOWDER_VARS, value: ''}
+            - {name: CLOWDER_ENABLED, value: '${CLOWDER_ENABLED}'}
+            - {name: SHOW_CLOWDER_VARS, value: ''}
+            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+            - {name: RESET_SCHEMA, value: '${RESET_SCHEMA}'}
+            - {name: FORCE_SCHEMA_VERSION, value: '${FORCE_SCHEMA_VERSION}'}
+            - {name: UPDATE_CYNDI_PASSWD, value: '${UPDATE_CYNDI_PASSWD}'}
+            - {name: WAIT_FOR_DB, value: 'empty'}
+            - {name: MANAGER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                                  key: manager-database-password}}}
+            - {name: LISTENER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                                  key: listener-database-password}}}
+            - {name: EVALUATOR_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                                    key: evaluator-database-password}}}
+            - {name: VMAAS_SYNC_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                                    key: vmaas-sync-database-password}}}
+            - {name: CYNDI_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                                key: cyndi-database-password}}}
         command:
           - ./scripts/entrypoint.sh
           - manager
@@ -261,52 +289,6 @@ objects:
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_VMAAS_SYNC}', memory: '${RES_LIMIT_MEM_VMAAS_SYNC}'}
           requests: {cpu: '${RES_REQUEST_CPU_VMAAS_SYNC}', memory: '${RES_REQUEST_MEM_VMAAS_SYNC}'}
-
-    - name: database-admin
-      minReplicas: 1
-      webServices:
-        public:
-          enabled: false
-        private:
-          enabled: false
-        metrics:
-          enabled: false
-      podSpec:
-        image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
-        command:
-          - ./database_admin/entrypoint.sh
-        livenessProbe:
-          exec:
-            command: [echo]
-        readinessProbe:
-          exec:
-            command: [echo]
-        env:
-        - {name: LOG_LEVEL, value: '${LOG_LEVEL_DATABASE_ADMIN}'}
-        - {name: GODEBUG, value: '${GODEBUG_DATABASE_ADMIN}'}
-        - {name: DB_DEBUG, value: '${DB_DEBUG_DATABASE_ADMIN}'}
-        - {name: GIN_MODE, value: '${GIN_MODE}'}
-        - {name: SHOW_CLOWDER_VARS, value: ''}
-        - {name: CLOWDER_ENABLED, value: '${CLOWDER_ENABLED}'}
-        - {name: SHOW_CLOWDER_VARS, value: ''}
-        - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
-        - {name: RESET_SCHEMA, value: '${RESET_SCHEMA}'}
-        - {name: FORCE_SCHEMA_VERSION, value: '${FORCE_SCHEMA_VERSION}'}
-        - {name: UPDATE_CYNDI_PASSWD, value: '${UPDATE_CYNDI_PASSWD}'}
-        - {name: WAIT_FOR_DB, value: 'empty'}
-        - {name: MANAGER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                              key: manager-database-password}}}
-        - {name: LISTENER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                               key: listener-database-password}}}
-        - {name: EVALUATOR_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                                key: evaluator-database-password}}}
-        - {name: VMAAS_SYNC_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                                 key: vmaas-sync-database-password}}}
-        - {name: CYNDI_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                            key: cyndi-database-password}}}
-        resources:
-          limits: {cpu: '${RES_LIMIT_CPU_DATABASE_ADMIN}', memory: '${RES_LIMIT_MEM_DATABASE_ADMIN}'}
-          requests: {cpu: '${RES_REQUEST_CPU_DATABASE_ADMIN}', memory: '${RES_REQUEST_MEM_DATABASE_ADMIN}'}
 
     jobs:
     - name: floorist
