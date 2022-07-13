@@ -10,7 +10,7 @@ import (
 )
 
 func testBaselineSystems(t *testing.T, url string) BaselineSystemsResponse {
-	SetupTest(t)
+	core.SetupTest(t)
 
 	w := CreateRequestRouterWithPath("GET", url, nil, nil, BaselineSystemsListHandler, "/:baseline_id/systems")
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -75,7 +75,7 @@ func TestBaselineSystemsUnlimited(t *testing.T) {
 }
 
 func TestBaselineSystemOffsetOverflow(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/1/systems?offset=10&limit=4", nil, nil, BaselineSystemsListHandler,
 		"/:baseline_id/systems")
 
@@ -98,7 +98,7 @@ func TestBaselinesFilterTag(t *testing.T) {
 }
 
 func TestBaselineSystemsWrongSort(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/1/systems?sort=unknown_key", nil, nil, BaselineSystemsListHandler,
 		"/:baseline_id/systems")
 

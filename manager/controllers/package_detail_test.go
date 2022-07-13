@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"app/base/utils"
 	"net/http"
 	"testing"
@@ -10,7 +11,7 @@ import (
 
 //nolint: dupl
 func TestLatestPackage(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/packages/kernel", nil, nil, PackageDetailHandler, 3,
 		"GET", "/packages/:package_name")
 
@@ -28,7 +29,7 @@ func TestLatestPackage(t *testing.T) {
 
 //nolint: dupl
 func TestEvraPackage(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/packages/kernel-5.6.13-200.fc31.x86_64", nil, nil,
 		PackageDetailHandler, 3, "GET", "/packages/:package_name")
 
@@ -45,7 +46,7 @@ func TestEvraPackage(t *testing.T) {
 }
 
 func TestNonExitentPackage(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/packages/python", nil, nil, PackageDetailHandler, 3,
 		"GET", "/packages/:package_name")
 
@@ -56,7 +57,7 @@ func TestNonExitentPackage(t *testing.T) {
 }
 
 func TestNonExitentEvra(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/packages/kernel-5.6.13-202.fc31.x86_64", nil, nil,
 		PackageDetailHandler, 3, "GET", "/packages/:package_name")
 
@@ -67,7 +68,7 @@ func TestNonExitentEvra(t *testing.T) {
 }
 
 func TestPackageDetailNoPackage(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequest("GET", "/", nil, nil, PackageDetailHandler)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -77,7 +78,7 @@ func TestPackageDetailNoPackage(t *testing.T) {
 }
 
 func TestPackageDetailFiltering(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/packages/kernel-5.6.13-202.fc31.x86_64?filter[filter]=abcd",
 		nil, nil, PackageDetailHandler, 3, "GET", "/packages/:package_name")
 

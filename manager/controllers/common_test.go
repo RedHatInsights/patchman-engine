@@ -2,11 +2,9 @@ package controllers
 
 import (
 	"app/base/core"
-	"app/base/utils"
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"testing"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,12 +12,6 @@ import (
 // Content type variables
 var contentTypeCSV = "text/csv"
 var contentTypeJSON = "application/json"
-
-// Set up test environment
-func SetupTest(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-}
 
 // Init request
 func PrepareRequest(method string, url string, body io.Reader) (w *httptest.ResponseRecorder, req *http.Request) {

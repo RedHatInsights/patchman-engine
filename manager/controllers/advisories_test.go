@@ -6,7 +6,6 @@ import (
 	"app/base/utils"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -20,7 +19,7 @@ func TestInit(t *testing.T) {
 }
 
 func testAdvisories(t *testing.T, url string) AdvisoriesResponse {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequest("GET", url, nil, nil, AdvisoriesListHandler)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -78,12 +77,9 @@ func TestAdvisoriesOffset(t *testing.T) {
 }
 
 func TestAdvisoriesOffsetOverflow(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequest("GET", "/?offset=13&limit=4", nil, nil, AdvisoriesListHandler)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?offset=13&limit=4", nil)
-	core.InitRouter(AdvisoriesListHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
@@ -194,7 +190,7 @@ func TestAdvisoriesFilterApplicableSystems(t *testing.T) {
 }
 
 func TestAdvisoriesPossibleSorts(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 
 	for sort := range AdvisoriesFields {
 		if sort == "ReleaseVersions" {
@@ -214,7 +210,7 @@ func TestAdvisoriesPossibleSorts(t *testing.T) {
 }
 
 func TestAdvisoriesWrongSort(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequest("GET", "/?sort=unknown_key", nil, nil, AdvisoriesListHandler)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -265,7 +261,7 @@ func TestAdvisoriesTags(t *testing.T) {
 }
 
 func TestListAdvisoriesTagsInvalid(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil, nil, AdvisoriesListHandler, "/")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -275,7 +271,7 @@ func TestListAdvisoriesTagsInvalid(t *testing.T) {
 }
 
 func doTestWrongOffset(t *testing.T, path, q string, handler gin.HandlerFunc) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", q, nil, nil, handler, 3, "GET", path)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -289,7 +285,7 @@ func TestAdvisoriesWrongOffset(t *testing.T) {
 }
 
 func TestAdvisoryTagsInMetadata(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, nil, AdvisoriesListHandler,
 		"/:advisory_id")
 

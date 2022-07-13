@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -12,7 +13,7 @@ import (
 )
 
 func doTestView(t *testing.T, handler gin.HandlerFunc, checker func(w *httptest.ResponseRecorder)) {
-	SetupTest(t)
+	core.SetupTest(t)
 	body := SystemsAdvisoriesRequest{
 		Systems:    []SystemID{"00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002"},
 		Advisories: []AdvisoryName{"RH-1", "RH-2"},

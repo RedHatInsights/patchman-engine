@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"net/http"
 	"testing"
 
@@ -8,7 +9,7 @@ import (
 )
 
 func testAccountSystemCounts(t *testing.T, acc int, count int) {
-	SetupTest(t)
+	core.SetupTest(t)
 	var output SystemsResponse
 	w := CreateRequestRouterWithAccount("GET", "/", nil, nil, SystemsListHandler, "/", acc)
 

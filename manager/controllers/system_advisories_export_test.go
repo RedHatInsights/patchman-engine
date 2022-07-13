@@ -1,6 +1,7 @@
 package controllers // nolint: dupl
 
 import (
+	"app/base/core"
 	"net/http"
 	"strings"
 	"testing"
@@ -9,7 +10,7 @@ import (
 )
 
 func TestSystemAdvisoriesExportJSON(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil,
 		&contentTypeJSON, SystemAdvisoriesExportHandler, "/:inventory_id")
 
@@ -21,7 +22,7 @@ func TestSystemAdvisoriesExportJSON(t *testing.T) {
 }
 
 func TestSystemAdvisoriesExportCSV(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil,
 		&contentTypeCSV, SystemAdvisoriesExportHandler, "/:inventory_id")
 
@@ -36,7 +37,7 @@ func TestSystemAdvisoriesExportCSV(t *testing.T) {
 }
 
 func TestUnknownSystemAdvisoriesExport(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/unknownsystem", nil, &contentTypeCSV, SystemAdvisoriesExportHandler,
 		"/:inventory_id")
 

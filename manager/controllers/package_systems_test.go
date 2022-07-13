@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"app/base/utils"
 	"fmt"
 	"net/http"
@@ -38,7 +39,7 @@ func TestPackageSystemsInvalidName(t *testing.T) {
 }
 
 func testPackageSystems(t *testing.T, url string, account int) PackageSystemsResponse {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", url, nil, nil, PackageSystemsListHandler, account, "GET",
 		"/:package_name/systems")
 
@@ -49,7 +50,7 @@ func testPackageSystems(t *testing.T, url string, account int) PackageSystemsRes
 }
 
 func testPackageSystemsError(t *testing.T, url string, account int) (int, utils.ErrorResponse) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", url, nil, nil, PackageSystemsListHandler, account, "GET",
 		"/:package_name/systems")
 
@@ -59,7 +60,7 @@ func testPackageSystemsError(t *testing.T, url string, account int) (int, utils.
 }
 
 func TestPackageSystemsTagsInMetadata(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/kernel/systems?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, nil,
 		PackageSystemsListHandler, 3, "GET", "/:package_name/systems")
 

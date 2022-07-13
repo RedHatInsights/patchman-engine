@@ -11,7 +11,7 @@ import (
 )
 
 func testBaselines(t *testing.T, url string) BaselinesResponse {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequest("GET", url, nil, nil, BaselinesListHandler)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -22,7 +22,7 @@ func testBaselines(t *testing.T, url string) BaselinesResponse {
 }
 
 func testBaselinesError(t *testing.T, url string, expectedStatus int) utils.ErrorResponse {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequest("GET", url, nil, nil, BaselinesListHandler)
 
 	assert.Equal(t, expectedStatus, w.Code)
@@ -74,7 +74,7 @@ func TestBaselinesUnlimited(t *testing.T) {
 }
 
 func TestBaselinesOffsetOverflow(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequest("GET", "/?offset=10&limit=4", nil, nil, BaselinesListHandler)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -129,7 +129,7 @@ func TestBaselinesSort(t *testing.T) {
 }
 
 func TestBaselinesWrongSort(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequest("GET", "/?sort=unknown_key", nil, nil, AdvisoriesListHandler)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)

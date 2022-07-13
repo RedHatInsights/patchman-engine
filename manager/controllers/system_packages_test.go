@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"net/http"
 	"testing"
 
@@ -8,7 +9,7 @@ import (
 )
 
 func TestSystemPackages(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/00000000-0000-0000-0000-000000000013/packages",
 		nil, nil, SystemPackagesHandler, 3, "GET", "/:inventory_id/packages")
 
@@ -27,7 +28,7 @@ func TestSystemPackages(t *testing.T) {
 }
 
 func TestPackagesSearch(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/00000000-0000-0000-0000-000000000012/packages?search=kernel",
 		nil, nil, SystemPackagesHandler, 3, "GET", "/:inventory_id/packages")
 
@@ -39,7 +40,7 @@ func TestPackagesSearch(t *testing.T) {
 }
 
 func TestNoPackages(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/00000000-0000-0000-0000-000000000001/packages",
 		nil, nil, SystemPackagesHandler, 1, "GET", "/:inventory_id/packages")
 
@@ -47,7 +48,7 @@ func TestNoPackages(t *testing.T) {
 }
 
 func TestSystemPackagesUpdatableOnly(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/00000000-0000-0000-0000-000000000013/packages?filter[updatable]=true",
 		nil, nil, SystemPackagesHandler, 3, "GET", "/:inventory_id/packages")
 
@@ -59,7 +60,7 @@ func TestSystemPackagesUpdatableOnly(t *testing.T) {
 }
 
 func TestSystemPackagesNonUpdatableOnly(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET",
 		"/00000000-0000-0000-0000-000000000013/packages?filter[updatable]=false", nil, nil,
 		SystemPackagesHandler, 3, "GET", "/:inventory_id/packages")
@@ -79,7 +80,7 @@ func TestSystemPackagesWrongOffset(t *testing.T) {
 }
 
 func TestSystemPackagesUnknown(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/unknownsystem/packages", nil, nil,
 		SystemPackagesHandler, 3, "GET", "/:inventory_id/packages")
 

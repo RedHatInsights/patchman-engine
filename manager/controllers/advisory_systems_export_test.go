@@ -1,6 +1,7 @@
 package controllers // nolint: dupl
 
 import (
+	"app/base/core"
 	"net/http"
 	"strings"
 	"testing"
@@ -9,7 +10,7 @@ import (
 )
 
 func TestAdvisorySystemsExportJSON(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, &contentTypeJSON, AdvisorySystemsExportHandler, "/:advisory_id")
 
 	var output []SystemDBLookup
@@ -20,7 +21,7 @@ func TestAdvisorySystemsExportJSON(t *testing.T) {
 }
 
 func TestAdvisorySystemsExportCSV(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, &contentTypeCSV, AdvisorySystemsExportHandler, "/:advisory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)

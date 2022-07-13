@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"app/base/database"
 	"testing"
 
@@ -93,7 +94,7 @@ func TestFilterInvalidValue(t *testing.T) {
 }
 
 func TestFilterOtherAdvisoryTypes(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	// Check the list is loaded from database correctly
 	assert.Equal(t, []string{"unknown", "unspecified"}, database.OtherAdvisoryTypes)
 }

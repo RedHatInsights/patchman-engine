@@ -20,7 +20,7 @@ var testingInventoryIDs = []string{
 }
 
 func TestUpdateBaseline(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
 	data := `{
 		"name": "updated_name",
@@ -51,7 +51,7 @@ func TestUpdateBaseline(t *testing.T) {
 }
 
 func TestUpdateBaselineWithEmptyAssociations(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 
 	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
 	data := `{"inventory_ids": {}}`
@@ -75,7 +75,7 @@ func TestUpdateBaselineWithEmptyAssociations(t *testing.T) {
 }
 
 func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 
 	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
 	data := `{
@@ -100,7 +100,7 @@ func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
 }
 
 func TestUpdateBaselineInvalidPayload(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 
 	data := `{"name": 0}`
 	w := CreateRequestRouterWithParams("PUT", "/1", bytes.NewBufferString(data), nil, BaselineUpdateHandler, 1,
@@ -112,7 +112,7 @@ func TestUpdateBaselineInvalidPayload(t *testing.T) {
 }
 
 func TestUpdateBaselineInvalidSystem(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 
 	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
 	data := `{
@@ -135,7 +135,7 @@ func TestUpdateBaselineInvalidSystem(t *testing.T) {
 }
 
 func TestUpdateBaselineNullValues(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 
 	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
 	data := `{}`
@@ -165,7 +165,7 @@ func TestUpdateBaselineInvalidBaselineID(t *testing.T) {
 }
 
 func TestUpdateBaselineDuplicatedName(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	data := `{"name": "baseline_1-2"}`
 	w := CreateRequestRouterWithParams("PUT", "/1", bytes.NewBufferString(data), nil, BaselineUpdateHandler, 1,
 		"PUT", "/:baseline_id")

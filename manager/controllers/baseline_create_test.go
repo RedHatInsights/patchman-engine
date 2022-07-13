@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"app/base/database"
 	"app/base/utils"
 	"bytes"
@@ -12,7 +13,7 @@ import (
 )
 
 func TestCreateBaseline(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	data := `{
 		"name": "my_baseline",
 		"inventory_ids": [
@@ -35,7 +36,7 @@ func TestCreateBaseline(t *testing.T) {
 }
 
 func TestCreateBaselineNameOnly(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	data := `{"name": "my_empty_baseline"}`
 	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
 
@@ -47,7 +48,7 @@ func TestCreateBaselineNameOnly(t *testing.T) {
 }
 
 func TestCreateBaselineNameEmptyString(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	data := `{"name": ""}`
 	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
 
@@ -58,7 +59,7 @@ func TestCreateBaselineNameEmptyString(t *testing.T) {
 }
 
 func TestCreateBaselineMissingName(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	data := `{}`
 	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
 
@@ -69,7 +70,7 @@ func TestCreateBaselineMissingName(t *testing.T) {
 }
 
 func TestCreateBaselineInvalidRequest(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	data := `{"name": 0}`
 	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
 
@@ -81,7 +82,7 @@ func TestCreateBaselineInvalidRequest(t *testing.T) {
 }
 
 func TestCreateBaselineDuplicatedName(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	data := `{
 		"name": "baseline_1-1"
 	}`

@@ -12,7 +12,7 @@ import (
 )
 
 func TestBaselineDelete(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	var inventoryIDs = []string{
 		"00000000-0000-0000-0000-000000000005",
 		"00000000-0000-0000-0000-000000000006",
@@ -29,7 +29,7 @@ func TestBaselineDelete(t *testing.T) {
 }
 
 func TestBaselineDeleteNonExisting(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/88888", nil, nil, BaselineDeleteHandler, "/:baseline_id")
 
 	assert.Equal(t, http.StatusNotFound, w.Code)

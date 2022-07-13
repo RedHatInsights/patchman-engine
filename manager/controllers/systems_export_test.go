@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"app/base/utils"
 	"fmt"
 	"net/http"
@@ -12,7 +13,7 @@ import (
 )
 
 func makeRequest(t *testing.T, path string, contentType string) *httptest.ResponseRecorder {
-	SetupTest(t)
+	core.SetupTest(t)
 	return CreateRequest("GET", path, nil, &contentType, SystemsExportHandler)
 }
 

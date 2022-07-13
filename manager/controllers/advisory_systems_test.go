@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"app/base/utils"
 	"fmt"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 )
 
 func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, nil, AdvisorySystemsListHandler, "/:advisory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -42,14 +43,14 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 }
 
 func TestAdvisorySystemsNotFound(t *testing.T) { //nolint:dupl
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/nonexistant/systems", nil, nil, AdvisorySystemsListHandler, "/:advisory_id")
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?offset=5&limit=3", nil, nil, AdvisorySystemsListHandler,
 		"/:advisory_id")
 
@@ -66,7 +67,7 @@ func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
 }
 
 func TestAdvisorySystemsOffsetOverflow(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?offset=100&limit=3", nil, nil, AdvisorySystemsListHandler,
 		"/:advisory_id")
 
@@ -77,7 +78,7 @@ func TestAdvisorySystemsOffsetOverflow(t *testing.T) {
 }
 
 func TestAdvisorySystemsSorts(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 
 	for sort := range SystemsFields {
 		w := CreateRequestRouterWithPath("GET", fmt.Sprintf("/RH-1?sort=%v", sort), nil, nil,
@@ -93,7 +94,7 @@ func TestAdvisorySystemsSorts(t *testing.T) {
 }
 
 func TestAdvisorySystemsWrongSort(t *testing.T) { //nolint:dupl
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?sort=unknown_key", nil, nil, AdvisorySystemsListHandler,
 		"/:advisory_id")
 
@@ -101,7 +102,7 @@ func TestAdvisorySystemsWrongSort(t *testing.T) { //nolint:dupl
 }
 
 func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k1=val1", nil, nil, AdvisorySystemsListHandler,
 		"/:advisory_id")
 
@@ -113,7 +114,7 @@ func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
 }
 
 func TestAdvisorySystemsTagsMultiple(t *testing.T) { //nolint:dupl
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, nil,
 		AdvisorySystemsListHandler, "/:advisory_id")
 
@@ -126,7 +127,7 @@ func TestAdvisorySystemsTagsMultiple(t *testing.T) { //nolint:dupl
 }
 
 func TestAdvisorySystemsTagsInvalid(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=invalidTag", nil, nil,
 		AdvisorySystemsListHandler, "/:advisory_id")
 
@@ -137,7 +138,7 @@ func TestAdvisorySystemsTagsInvalid(t *testing.T) {
 }
 
 func TestAdvisorySystemsTagsUnknown(t *testing.T) { //nolint:dupl
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=unk", nil, nil,
 		AdvisorySystemsListHandler, "/:advisory_id")
 
@@ -153,7 +154,7 @@ func TestAdvisorySystemsWrongOffset(t *testing.T) {
 }
 
 func TestAdvisorySystemsTagsInMetadata(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, nil,
 		AdvisorySystemsListHandler, "/:advisory_id")
 

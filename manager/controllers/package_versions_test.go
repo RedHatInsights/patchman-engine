@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"net/http"
 	"testing"
 
@@ -9,7 +10,7 @@ import (
 
 //nolint: dupl
 func TestPackageVersions(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/firefox/versions", nil, nil, PackageVersionsListHandler, 3,
 		"GET", "/:package_name/versions")
 
@@ -22,7 +23,7 @@ func TestPackageVersions(t *testing.T) {
 }
 
 func TestPackageVersionsInvalidName(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/not-existing/versions", nil, nil, PackageVersionsListHandler, 3,
 		"GET", "/:package_name/versions")
 

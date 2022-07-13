@@ -14,7 +14,7 @@ import (
 )
 
 func TestAdvisoryDetailDefault(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-9", nil, nil, AdvisoryDetailHandlerV1, "/:advisory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -68,7 +68,7 @@ func (r *AdvisoryDetailResponseV2) checkRH9Fields(t *testing.T) {
 }
 
 func TestAdvisoryDetailCVE(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-3", nil, nil, AdvisoryDetailHandlerV1, "/:advisory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -89,7 +89,7 @@ func TestAdvisoryDetailCVE(t *testing.T) {
 }
 
 func TestAdvisoryNoIdProvided(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 
 	var errResp utils.ErrorResponse
 	w := CreateRequest("GET", "/", nil, nil, AdvisoryDetailHandlerV1)
@@ -106,7 +106,7 @@ func TestAdvisoryNoIdProvided(t *testing.T) {
 }
 
 func TestAdvisoryNotFound(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 
 	var errResp utils.ErrorResponse
 	w := CreateRequestRouterWithPath("GET", "/foo", nil, nil, AdvisoryDetailHandlerV1, "/:advisory_id")
@@ -131,8 +131,7 @@ func testReqV2() *httptest.ResponseRecorder {
 }
 
 func TestAdvisoryDetailCached(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
 
 	var hook = utils.NewTestLogHook()
 	log.AddHook(hook)
@@ -157,7 +156,7 @@ func TestAdvisoryDetailCached(t *testing.T) {
 }
 
 func TestAdvisoryDetailCachePreloading(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 
 	advisoryDetailCacheV1.Purge()
 	advisoryDetailCacheV2.Purge()
@@ -175,7 +174,7 @@ func TestAdvisoryDetailCachePreloading(t *testing.T) {
 }
 
 func TestAdvisoryDetailFiltering(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 
 	var errResp utils.ErrorResponse
 	w := CreateRequestRouterWithPath("GET", "/RH-9?filter[filter]=abcd", nil, nil, AdvisoryDetailHandlerV1,

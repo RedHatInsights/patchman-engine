@@ -218,7 +218,7 @@ func TestSystemsOrderOS(t *testing.T) {
 }
 
 func testSystems(t *testing.T, url string, account int) SystemsResponse {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithAccount("GET", url, nil, nil, SystemsListHandler, "/", account)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -228,7 +228,7 @@ func testSystems(t *testing.T, url string, account int) SystemsResponse {
 }
 
 func testSystemsError(t *testing.T, url string) (int, utils.ErrorResponse) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", url, nil, nil, SystemsListHandler, "/")
 
 	var errResp utils.ErrorResponse
@@ -237,7 +237,7 @@ func testSystemsError(t *testing.T, url string) (int, utils.ErrorResponse) {
 }
 
 func TestSystemsTagsInMetadata(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithAccount("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, nil, SystemsListHandler, "/", 3)
 
 	var output SystemsResponse

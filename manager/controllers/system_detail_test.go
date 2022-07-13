@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"app/base/utils"
 	"net/http"
 	"testing"
@@ -9,7 +10,7 @@ import (
 )
 
 func TestSystemDetailDefault1(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil, nil,
 		SystemDetailHandler, "/:inventory_id")
 
@@ -36,7 +37,7 @@ func TestSystemDetailDefault1(t *testing.T) {
 }
 
 func TestSystemDetailDefault2(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	// get system with some installable/updatable packages
 	w := CreateRequestRouterWithAccount("GET", "/00000000-0000-0000-0000-000000000012", nil, nil,
 		SystemDetailHandler, "/:inventory_id", 3)
@@ -49,7 +50,7 @@ func TestSystemDetailDefault2(t *testing.T) {
 }
 
 func TestSystemDetailNoIdProvided(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequest("GET", "/", nil, nil, SystemDetailHandler)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -59,7 +60,7 @@ func TestSystemDetailNoIdProvided(t *testing.T) {
 }
 
 func TestSystemDetailNotFound(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/ffffffff-ffff-ffff-ffff-ffffffffffff", nil, nil,
 		SystemDetailHandler, "/:inventory_id")
 
@@ -70,7 +71,7 @@ func TestSystemDetailNotFound(t *testing.T) {
 }
 
 func TestSystemsNoRHSM(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithAccount("GET", "/00000000-0000-0000-0000-000000000014", nil, nil,
 		SystemDetailHandler, "/:inventory_id", 3)
 
@@ -83,7 +84,7 @@ func TestSystemsNoRHSM(t *testing.T) {
 }
 
 func TestRHSMLessThanOS(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithAccount("GET", "/00000000-0000-0000-0000-000000000003", nil, nil,
 		SystemDetailHandler, "/:inventory_id", 1)
 
@@ -97,7 +98,7 @@ func TestRHSMLessThanOS(t *testing.T) {
 }
 
 func TestRHSMGreaterThanOS(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithAccount("GET", "/00000000-0000-0000-0000-000000000004", nil, nil,
 		SystemDetailHandler, "/:inventory_id", 1)
 
@@ -111,14 +112,14 @@ func TestRHSMGreaterThanOS(t *testing.T) {
 }
 
 func TestSystemUnknown(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithAccount("GET", "/unknownsystem", nil, nil, SystemDetailHandler, "/:inventory_id", 1)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 func TestSystemDetailFiltering(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithAccount("GET", "/00000000-0000-0000-0000-000000000001?filter[filter]=abcd",
 		nil, nil, SystemDetailHandler, "/:inventory_id", 1)
 

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"net/http"
 	"strings"
 	"testing"
@@ -9,7 +10,7 @@ import (
 )
 
 func TestPackageExportJSON(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/", nil, &contentTypeJSON, PackagesExportHandler, 3, "GET", "/")
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -21,7 +22,7 @@ func TestPackageExportJSON(t *testing.T) {
 }
 
 func TestPackageExportCSV(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/", nil, &contentTypeCSV, PackagesExportHandler, 3, "GET", "/")
 
 	assert.Equal(t, http.StatusOK, w.Code)

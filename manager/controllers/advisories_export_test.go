@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"app/base/utils"
 	"fmt"
 	"net/http"
@@ -11,7 +12,7 @@ import (
 )
 
 func TestAdvisoriesExportJSON(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequest("GET", "/", nil, &contentTypeJSON, AdvisoriesExportHandler)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -29,7 +30,7 @@ func TestAdvisoriesExportJSON(t *testing.T) {
 }
 
 func TestAdvisoriesExportCSV(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequest("GET", "/", nil, &contentTypeCSV, AdvisoriesExportHandler)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -41,7 +42,7 @@ func TestAdvisoriesExportCSV(t *testing.T) {
 }
 
 func TestAdvisoriesExportWrongFormat(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 
 	contentType := "test-format"
 	w := CreateRequest("GET", "/", nil, &contentType, AdvisoriesExportHandler)
@@ -53,7 +54,7 @@ func TestAdvisoriesExportWrongFormat(t *testing.T) {
 }
 
 func TestAdvisoriesExportCSVFilter(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequest("GET", "/?filter[id]=RH-1", nil, &contentTypeCSV, AdvisoriesExportHandler)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -66,7 +67,7 @@ func TestAdvisoriesExportCSVFilter(t *testing.T) {
 }
 
 func TestAdvisoriesExportTagsInvalid(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil, nil, AdvisoriesExportHandler, "/")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -76,7 +77,7 @@ func TestAdvisoriesExportTagsInvalid(t *testing.T) {
 }
 
 func TestAdvisoriesExportIncorrectFilter(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/?filter[filteriamnotexitst]=abcd", nil, &contentTypeCSV,
 		AdvisoriesExportHandler, "/")
 

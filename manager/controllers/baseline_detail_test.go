@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"app/base/database"
 	"app/base/utils"
 	"fmt"
@@ -12,7 +13,7 @@ import (
 )
 
 func testBaselineDetail(t *testing.T, url string, expectedStatus int, output interface{}) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", url, nil, nil, BaselineDetailHandler, "/:baseline_id")
 
 	assert.Equal(t, expectedStatus, w.Code)
@@ -43,7 +44,7 @@ func TestBaselineDetailInvalid(t *testing.T) {
 }
 
 func TestBaselineDetailEmptyConfig(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	baselineID := database.CreateBaselineWithConfig(t, "", nil, nil)
 	var output BaselineDetailResponse
 	url := fmt.Sprintf("/%d", baselineID)

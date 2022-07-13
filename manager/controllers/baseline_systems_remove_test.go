@@ -3,7 +3,6 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/database"
-	"app/base/utils"
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -25,7 +24,7 @@ func testBaselineSystemsRemove(t *testing.T, body BaselineSystemsRemoveRequest, 
 }
 
 func TestBaselineSystemsRemoveDefault(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 
 	var inventoryIDs = []string{
 		"00000000-0000-0000-0000-000000000004",
@@ -50,8 +49,7 @@ func TestBaselineSystemsRemoveDefault(t *testing.T) {
 }
 
 func TestBaselineSystemsRemoveInvalid(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
 
 	req1 := BaselineSystemsRemoveRequest{InventoryIDs: []string{}}
 	req2 := BaselineSystemsRemoveRequest{InventoryIDs: []string{"foo"}}

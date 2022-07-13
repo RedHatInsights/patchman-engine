@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/core"
 	"net/http"
 	"strings"
 	"testing"
@@ -9,7 +10,7 @@ import (
 )
 
 func TestSystemPackagesExportHandlerJSON(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/00000000-0000-0000-0000-000000000013/packages",
 		nil, &contentTypeJSON, SystemPackagesExportHandler, 3, "GET", "/:inventory_id/packages")
 
@@ -24,7 +25,7 @@ func TestSystemPackagesExportHandlerJSON(t *testing.T) {
 }
 
 func TestSystemPackagesExportHandlerCSV(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/00000000-0000-0000-0000-000000000013/packages",
 		nil, &contentTypeCSV, SystemPackagesExportHandler, 3, "GET", "/:inventory_id/packages")
 
@@ -42,7 +43,7 @@ func TestSystemPackagesExportHandlerCSV(t *testing.T) {
 }
 
 func TestSystemPackagesExportUnknown(t *testing.T) {
-	SetupTest(t)
+	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/unknownsystem/packages", nil, &contentTypeCSV,
 		SystemPackagesExportHandler, 3, "GET", "/:inventory_id/packages")
 
