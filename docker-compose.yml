@@ -90,6 +90,7 @@ services:
     image: patchman-engine-app
     env_file:
       - ./conf/platform.env
+      - ./conf/gorun.env
     command: ./scripts/entrypoint.sh platform
     restart: unless-stopped
     depends_on:
@@ -98,6 +99,10 @@ services:
       - patchimg
     ports:
       - 9001:9001
+    volumes:
+      - ./:/go/src/app
+    security_opt:
+      - label=disable
 
   manager:
     container_name: manager
