@@ -4,6 +4,7 @@ import (
 	"app/base"
 	"app/base/database"
 	"app/base/models"
+	"app/base/utils"
 	"app/manager/kafka"
 	"app/manager/middlewares"
 	"encoding/json"
@@ -57,6 +58,7 @@ func CreateBaselineHandler(c *gin.Context) {
 		LogAndRespBadRequest(c, errors.New(BaselineMissingNameErr), BaselineMissingNameErr)
 		return
 	}
+	request.Description = utils.EmptyToNil(request.Description)
 
 	missingIDs, err := checkInventoryIDs(accountID, request.InventoryIDs)
 	if err != nil {

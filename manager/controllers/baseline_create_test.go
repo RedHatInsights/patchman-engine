@@ -26,12 +26,12 @@ func TestCreateBaseline(t *testing.T) {
 	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
 
 	var resp CreateBaselineResponse
-	ParseResponse(t, w, http.StatusOK, &resp)
-
+	ParseResponseBody(t, w.Body.Bytes(), &resp)
+	desc := "desc"
 	database.CheckBaseline(t, resp.BaselineID, []string{
 		"00000000-0000-0000-0000-000000000005",
 		"00000000-0000-0000-0000-000000000006",
-	}, `{"to_time": "2022-12-31T12:00:00-04:00"}`, "my_baseline", "desc")
+	}, `{"to_time": "2022-12-31T12:00:00-04:00"}`, "my_baseline", &desc)
 	database.DeleteBaseline(t, resp.BaselineID)
 }
 
@@ -41,8 +41,8 @@ func TestCreateBaselineNameOnly(t *testing.T) {
 	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
 
 	var resp CreateBaselineResponse
-	ParseResponse(t, w, http.StatusOK, &resp)
-	database.CheckBaseline(t, resp.BaselineID, []string{}, "", "my_empty_baseline", "")
+	ParseResponseBody(t, w.Body.Bytes(), &resp)
+	database.CheckBaseline(t, resp.BaselineID, []string{}, "", "my_empty_baseline", nil)
 	database.DeleteBaseline(t, resp.BaselineID)
 }
 
@@ -87,4 +87,19 @@ func TestCreateBaselineDuplicatedName(t *testing.T) {
 	var errResp utils.ErrorResponse
 	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, "baseline name already exists", errResp.Error)
+}
+
+func TestCreateBaselineDescriptionEmptyString(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	data := `{"name": "baseline_empty_desc", "description": ""}`
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/", bytes.NewBufferString(data))
+	core.InitRouterWithParams(CreateBaselineHandler, 1, "PUT", "/").ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp CreateBaselineResponse
+	ParseResponseBody(t, w.Body.Bytes(), &resp)
+	database.CheckBaseline(t, resp.BaselineID, []string{}, "", "baseline_empty_desc", nil)
+	database.DeleteBaseline(t, resp.BaselineID)
 }

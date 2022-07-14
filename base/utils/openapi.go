@@ -28,7 +28,7 @@ func PtrBoolNil() *bool {
 }
 
 func EmptyToNil(s *string) *string {
-	if *s == "" {
+	if s != nil && *s == "" {
 		return nil
 	}
 	return s
