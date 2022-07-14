@@ -48,8 +48,8 @@ objects:
         - {name: EVAL_TOPIC, value: '${EVAL_TOPIC_MANAGER}'}
 
         resources:
-          limits: {cpu: '${RES_CPU_MANAGER}', memory: '${RES_MEM_MANAGER}'}
-          requests: {cpu: '${RES_CPU_MANAGER}', memory: '${RES_MEM_MANAGER}'}
+          limits: {cpu: '${RES_LIMIT_CPU_MANAGER}', memory: '${RES_LIMIT_MEM_MANAGER}'}
+          requests: {cpu: '${RES_REQUEST_CPU_MANAGER}', memory: '${RES_REQUEST_MEM_MANAGER}'}
 
     - name: listener
       minReplicas: ${{REPLICAS_LISTENER}}
@@ -89,8 +89,8 @@ objects:
         - {name: ENABLE_PAYLOAD_TRACKER, value: '${ENABLE_PAYLOAD_TRACKER}'}
 
         resources:
-          limits: {cpu: '${RES_CPU_LISTENER}', memory: '${RES_MEM_LISTENER}'}
-          requests: {cpu: '${RES_CPU_LISTENER}', memory: '${RES_MEM_LISTENER}'}
+          limits: {cpu: '${RES_LIMIT_CPU_LISTENER}', memory: '${RES_LIMIT_MEM_LISTENER}'}
+          requests: {cpu: '${RES_REQUEST_CPU_LISTENER}', memory: '${RES_REQUEST_MEM_LISTENER}'}
 
     - name: evaluator-upload
       minReplicas: ${{REPLICAS_EVALUATOR_UPLOAD}}
@@ -146,8 +146,8 @@ objects:
         - {name: ENABLE_PAYLOAD_TRACKER, value: '${ENABLE_PAYLOAD_TRACKER}'}
         - {name: ENABLE_INSTANT_NOTIFICATIONS, value: '${ENABLE_INSTANT_NOTIFICATIONS}'}
         resources:
-          limits: {cpu: '${RES_CPU_EVALUATOR_UPLOAD}', memory: '${RES_MEM_EVALUATOR_UPLOAD}'}
-          requests: {cpu: '${RES_CPU_EVALUATOR_UPLOAD}', memory: '${RES_MEM_EVALUATOR_UPLOAD}'}
+          limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_UPLOAD}', memory: '${RES_LIMIT_MEM_EVALUATOR_UPLOAD}'}
+          requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_UPLOAD}', memory: '${RES_REQUEST_MEM_EVALUATOR_UPLOAD}'}
 
     - name: evaluator-recalc
       minReplicas: ${{REPLICAS_EVALUATOR_RECALC}}
@@ -203,8 +203,8 @@ objects:
         - {name: ENABLE_PAYLOAD_TRACKER, value: 'false'}  # we don't need to send payload tracker messages from recalc
         - {name: ENABLE_INSTANT_NOTIFICATIONS, value: '${ENABLE_INSTANT_NOTIFICATIONS}'}
         resources:
-          limits: {cpu: '${RES_CPU_EVALUATOR_RECALC}', memory: '${RES_MEM_EVALUATOR_RECALC}'}
-          requests: {cpu: '${RES_CPU_EVALUATOR_RECALC}', memory: '${RES_MEM_EVALUATOR_RECALC}'}
+          limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_RECALC}', memory: '${RES_LIMIT_MEM_EVALUATOR_RECALC}'}
+          requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_RECALC}', memory: '${RES_REQUEST_MEM_EVALUATOR_RECALC}'}
 
     - name: vmaas-sync
       minReplicas: ${{REPLICAS_VMAAS_SYNC}}
@@ -259,8 +259,8 @@ objects:
         - {name: VMAAS_WS_ADDRESS, value: '${VMAAS_WS_ADDRESS}'}
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
         resources:
-          limits: {cpu: '${RES_CPU_VMAAS_SYNC}', memory: '${RES_MEM_VMAAS_SYNC}'}
-          requests: {cpu: '${RES_CPU_VMAAS_SYNC}', memory: '${RES_MEM_VMAAS_SYNC}'}
+          limits: {cpu: '${RES_LIMIT_CPU_VMAAS_SYNC}', memory: '${RES_LIMIT_MEM_VMAAS_SYNC}'}
+          requests: {cpu: '${RES_REQUEST_CPU_VMAAS_SYNC}', memory: '${RES_REQUEST_MEM_VMAAS_SYNC}'}
 
     - name: database-admin
       minReplicas: 1
@@ -305,8 +305,8 @@ objects:
         - {name: CYNDI_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                             key: cyndi-database-password}}}
         resources:
-          limits: {cpu: '${RES_CPU_DATABASE_ADMIN}', memory: '${RES_MEM_DATABASE_ADMIN}'}
-          requests: {cpu: '${RES_CPU_DATABASE_ADMIN}', memory: '${RES_MEM_DATABASE_ADMIN}'}
+          limits: {cpu: '${RES_LIMIT_CPU_DATABASE_ADMIN}', memory: '${RES_LIMIT_MEM_DATABASE_ADMIN}'}
+          requests: {cpu: '${RES_REQUEST_CPU_DATABASE_ADMIN}', memory: '${RES_REQUEST_MEM_DATABASE_ADMIN}'}
 
     jobs:
     - name: floorist
@@ -333,8 +333,8 @@ objects:
         volumes:
         - {name: floorplan-volume, configMap: {name: floorplan}}
         resources:
-          limits: {cpu: '${CPU_LIMIT_FLOO}', memory: '${MEMORY_LIMIT_FLOO}'}
-          requests: {cpu: '${CPU_REQUEST_FLOO}', memory: '${MEMORY_REQUEST_FLOO}'}
+          limits: {cpu: '${RES_LIMIT_CPU_FLOORIST}', memory: '${RES_LIMIT_MEM_FLOORIST}'}
+          requests: {cpu: '${RES_REQUEST_CPU_FLOORIST}', memory: '${RES_REQUEST_MEM_FLOORIST}'}
 
     database:
       name: patchman
@@ -410,8 +410,10 @@ parameters:
 - {name: ENABLE_BASELINES_API, value: 'true'} # Enable baselines API endpoints
 - {name: ENABLE_BASELINE_CHANGE_EVAL, value: 'true'} # Send Kafka eval messages on baseline update
 - {name: EVAL_TOPIC_MANAGER, value: patchman.evaluator.upload}
-- {name: RES_CPU_MANAGER, value: 200m}
-- {name: RES_MEM_MANAGER, value: 256Mi}
+- {name: RES_LIMIT_CPU_MANAGER, value: 200m}
+- {name: RES_LIMIT_MEM_MANAGER, value: 256Mi}
+- {name: RES_REQUEST_CPU_MANAGER, value: 200m}
+- {name: RES_REQUEST_MEM_MANAGER, value: 256Mi}
 
 # Listener
 - {name: REPLICAS_LISTENER, value: '1'}
@@ -423,8 +425,10 @@ parameters:
 - {name: ENABLE_BYPASS_LISTENER, value: 'false'} # Enable only bypass (fake) messages processing
 - {name: EXCLUDED_REPORTERS, value: 'yupana'} # Comma-separated list of reporters to exclude from processing
 - {name: EXCLUDED_HOST_TYPES, value: 'edge'} # Comma-separated list of host types to exclude from processing
-- {name: RES_CPU_LISTENER, value: 250m}
-- {name: RES_MEM_LISTENER, value: 256Mi}
+- {name: RES_LIMIT_CPU_LISTENER, value: 250m}
+- {name: RES_LIMIT_MEM_LISTENER, value: 256Mi}
+- {name: RES_REQUEST_CPU_LISTENER, value: 250m}
+- {name: RES_REQUEST_MEM_LISTENER, value: 256Mi}
 
 # Evaluator - upload
 - {name: REPLICAS_EVALUATOR_UPLOAD, value: '1'}
@@ -442,8 +446,10 @@ parameters:
 - {name: ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_UPLOAD, value: 'true'}
 - {name: ENABLE_PACKAGE_CACHE_EVALUATOR_UPLOAD, value: 'true'}
 - {name: PRELOAD_PACKAGE_CACHE_EVALUATOR_UPLOAD, value: 'true'}
-- {name: RES_CPU_EVALUATOR_UPLOAD, value: 256m}
-- {name: RES_MEM_EVALUATOR_UPLOAD, value: 1024Mi}
+- {name: RES_LIMIT_CPU_EVALUATOR_UPLOAD, value: 256m}
+- {name: RES_LIMIT_MEM_EVALUATOR_UPLOAD, value: 1024Mi}
+- {name: RES_REQUEST_CPU_EVALUATOR_UPLOAD, value: 256m}
+- {name: RES_REQUEST_MEM_EVALUATOR_UPLOAD, value: 1024Mi}
 - {name: MAX_EVAL_GOROUTINES_UPLOAD, value: '1'}
 - {name: ENABLE_INSTANT_NOTIFICATIONS, value: 'true'}
 
@@ -463,8 +469,10 @@ parameters:
 - {name: ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_RECALC, value: 'true'}
 - {name: ENABLE_PACKAGE_CACHE_EVALUATOR_RECALC, value: 'true'}
 - {name: PRELOAD_PACKAGE_CACHE_EVALUATOR_RECALC, value: 'true'}
-- {name: RES_CPU_EVALUATOR_RECALC, value: 256m}
-- {name: RES_MEM_EVALUATOR_RECALC, value: 1024Mi}
+- {name: RES_LIMIT_CPU_EVALUATOR_RECALC, value: 256m}
+- {name: RES_LIMIT_MEM_EVALUATOR_RECALC, value: 1024Mi}
+- {name: RES_REQUEST_CPU_EVALUATOR_RECALC, value: 256m}
+- {name: RES_REQUEST_MEM_EVALUATOR_RECALC, value: 1024Mi}
 - {name: MAX_EVAL_GOROUTINES_RECALC, value: '1'}
 - {name: ENABLE_INSTANT_NOTIFICATIONS, value: 'true'}
 
@@ -496,8 +504,10 @@ parameters:
 - {name: ENABLE_ADVISORIES_COUNT_CHECK, value: 'true'} # Check all advisories count after sync, re-sync all if needed
 - {name: ENABLE_PACKAGES_COUNT_CHECK, value: 'true'} # Check all packages count after sync, re-sync all if needed
 - {name: VMAAS_WS_ADDRESS, value: ''} # Use vmaas websocket address if it's not included in clowder config.
-- {name: RES_CPU_VMAAS_SYNC, value: 500m}
-- {name: RES_MEM_VMAAS_SYNC, value: 384Mi}
+- {name: RES_LIMIT_CPU_VMAAS_SYNC, value: 500m}
+- {name: RES_LIMIT_MEM_VMAAS_SYNC, value: 384Mi}
+- {name: RES_REQUEST_CPU_VMAAS_SYNC, value: 500m}
+- {name: RES_REQUEST_MEM_VMAAS_SYNC, value: 384Mi}
 
 # Database admin
 - {name: IMAGE_TAG_DATABASE_ADMIN, value: latest}
@@ -507,8 +517,10 @@ parameters:
 - {name: RESET_SCHEMA, value: 'false'} # Drop and recreate database schema, use SCHEMA_MIGRATION to create specific schema version
 - {name: FORCE_SCHEMA_VERSION, value: ''} # Reset the dirty flag to false and force set the specific version, it will follow up with the schema upgrade defined by SCHEMA_MIGRATION
 - {name: UPDATE_CYNDI_PASSWD, value: ''} # Do update cyndi database password, use "true" to enable it
-- {name: RES_CPU_DATABASE_ADMIN, value: 100m}
-- {name: RES_MEM_DATABASE_ADMIN, value: 128Mi}
+- {name: RES_LIMIT_CPU_DATABASE_ADMIN, value: 100m}
+- {name: RES_LIMIT_MEM_DATABASE_ADMIN, value: 128Mi}
+- {name: RES_REQUEST_CPU_DATABASE_ADMIN, value: 100m}
+- {name: RES_REQUEST_MEM_DATABASE_ADMIN, value: 128Mi}
 
 # Common parameters
 - {name: IMAGE, value: quay.io/cloudservices/patchman-engine-app}
@@ -533,7 +545,7 @@ parameters:
 - {name: FLOORIST_IMAGE_TAG, value: latest, required: true} # Floorist Image tag
 - {name: FLOORIST_BUCKET_SECRET_NAME, value: dummy-secret, required: true} # Bucket secret name
 - {name: FLOORIST_LOGLEVEL, value: INFO} # Floorist loglevel config
-- {name: CPU_LIMIT_FLOO, value: 100m}
-- {name: CPU_REQUEST_FLOO, value: 50m}
-- {name: MEMORY_LIMIT_FLOO, value: 200Mi}
-- {name: MEMORY_REQUEST_FLOO, value: 100Mi}
+- {name: RES_LIMIT_CPU_FLOORIST, value: 100m}
+- {name: RES_REQUEST_CPU_FLOORIST, value: 50m}
+- {name: RES_LIMIT_MEM_FLOORIST, value: 200Mi}
+- {name: RES_REQUEST_MEM_FLOORIST, value: 100Mi}
