@@ -14,9 +14,8 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, nil, AdvisorySystemsListHandler, "/:advisory_id")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output AdvisorySystemsResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 6, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 	assert.Equal(t, "00000000-0000-0000-0001-000000000001", output.Data[0].Attributes.InsightsID)
@@ -54,9 +53,8 @@ func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
 	w := CreateRequestRouterWithPath("GET", "/RH-1?offset=5&limit=3", nil, nil, AdvisorySystemsListHandler,
 		"/:advisory_id")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output AdvisorySystemsResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000006", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
@@ -71,9 +69,8 @@ func TestAdvisorySystemsOffsetOverflow(t *testing.T) {
 	w := CreateRequestRouterWithPath("GET", "/RH-1?offset=100&limit=3", nil, nil, AdvisorySystemsListHandler,
 		"/:advisory_id")
 
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
@@ -85,9 +82,7 @@ func TestAdvisorySystemsSorts(t *testing.T) {
 			AdvisorySystemsListHandler, "/:advisory_id")
 
 		var output AdvisorySystemsResponse
-		ParseResponseBody(t, w.Body.Bytes(), &output)
-
-		assert.Equal(t, http.StatusOK, w.Code)
+		ParseResponse(t, w, http.StatusOK, &output)
 		assert.Equal(t, 1, len(output.Meta.Sort))
 		assert.Equal(t, output.Meta.Sort[0], sort)
 	}
@@ -107,9 +102,7 @@ func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
 		"/:advisory_id")
 
 	var output AdvisorySystemsResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
-
-	assert.Equal(t, http.StatusOK, w.Code)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 5, len(output.Data))
 }
 
@@ -119,9 +112,7 @@ func TestAdvisorySystemsTagsMultiple(t *testing.T) { //nolint:dupl
 		AdvisorySystemsListHandler, "/:advisory_id")
 
 	var output AdvisorySystemsResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
-
-	assert.Equal(t, http.StatusOK, w.Code)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data[0].ID)
 }
@@ -131,9 +122,8 @@ func TestAdvisorySystemsTagsInvalid(t *testing.T) {
 	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=invalidTag", nil, nil,
 		AdvisorySystemsListHandler, "/:advisory_id")
 
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
@@ -143,9 +133,7 @@ func TestAdvisorySystemsTagsUnknown(t *testing.T) { //nolint:dupl
 		AdvisorySystemsListHandler, "/:advisory_id")
 
 	var output AdvisorySystemsResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
-
-	assert.Equal(t, http.StatusOK, w.Code)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 0, len(output.Data))
 }
 
@@ -159,7 +147,7 @@ func TestAdvisorySystemsTagsInMetadata(t *testing.T) {
 		AdvisorySystemsListHandler, "/:advisory_id")
 
 	var output AdvisorySystemsResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 
 	testMap := map[string]FilterData{
 		"ns1/k1": {"eq", []string{"val1"}},

@@ -14,10 +14,8 @@ func testBaselines(t *testing.T, url string) BaselinesResponse {
 	core.SetupTest(t)
 	w := CreateRequest("GET", url, nil, nil, BaselinesListHandler)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-
 	var output BaselinesResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	return output
 }
 
@@ -25,10 +23,8 @@ func testBaselinesError(t *testing.T, url string, expectedStatus int) utils.Erro
 	core.SetupTest(t)
 	w := CreateRequest("GET", url, nil, nil, BaselinesListHandler)
 
-	assert.Equal(t, expectedStatus, w.Code)
-
 	var output utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, expectedStatus, &output)
 	return output
 }
 
@@ -77,9 +73,8 @@ func TestBaselinesOffsetOverflow(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequest("GET", "/?offset=10&limit=4", nil, nil, BaselinesListHandler)
 
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 

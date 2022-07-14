@@ -15,9 +15,8 @@ func TestSystemAdvisoriesDefault(t *testing.T) {
 	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil, nil,
 		SystemAdvisoriesHandler, "/:inventory_id")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemAdvisoriesResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 8, len(output.Data))
 	assert.Equal(t, "RH-7", output.Data[0].ID)
 	assert.Equal(t, "advisory", output.Data[0].Type)
@@ -43,9 +42,8 @@ func TestSystemAdvisoriesOffsetLimit(t *testing.T) {
 	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?offset=4&limit=3", nil, nil,
 		SystemAdvisoriesHandler, "/:inventory_id")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemAdvisoriesResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 3, len(output.Data))
 	assert.Equal(t, "RH-1", output.Data[0].ID)
 }
@@ -55,9 +53,8 @@ func TestSystemAdvisoriesOffsetOverflow(t *testing.T) {
 	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?offset=100&limit=3", nil, nil,
 		SystemAdvisoriesHandler, "/:inventory_id")
 
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
@@ -66,16 +63,14 @@ func TestSystemAdvisoriesPossibleSorts(t *testing.T) {
 
 	for sort := range SystemAdvisoriesFields {
 		if sort == "ReleaseVersions" {
-			// this fiesd is not sortable, skip it
+			// this field is not sortable, skip it
 			continue
 		}
 		w := CreateRequestRouterWithPath("GET", fmt.Sprintf("/00000000-0000-0000-0000-000000000001?sort=%v", sort),
 			nil, nil, SystemAdvisoriesHandler, "/:inventory_id")
 
 		var output SystemAdvisoriesResponse
-		ParseResponseBody(t, w.Body.Bytes(), &output)
-
-		assert.Equal(t, http.StatusOK, w.Code)
+		ParseResponse(t, w, http.StatusOK, &output)
 		assert.Equal(t, output.Meta.Sort[0], sort)
 	}
 }
@@ -93,9 +88,8 @@ func TestSystemAdvisoriesSearch(t *testing.T) {
 	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?search=h-3", nil, nil,
 		SystemAdvisoriesHandler, "/:inventory_id")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemAdvisoriesResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "RH-3", output.Data[0].ID)
 	assert.Equal(t, "advisory", output.Data[0].Type)

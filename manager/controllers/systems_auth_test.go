@@ -12,9 +12,7 @@ func testAccountSystemCounts(t *testing.T, acc int, count int) {
 	core.SetupTest(t)
 	var output SystemsResponse
 	w := CreateRequestRouterWithAccount("GET", "/", nil, nil, SystemsListHandler, "/", acc)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	// data
 	assert.Equal(t, count, len(output.Data))
 }

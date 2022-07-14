@@ -17,17 +17,15 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-9", nil, nil, AdvisoryDetailHandlerV1, "/:advisory_id")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var outputV1 AdvisoryDetailResponseV1
-	ParseResponseBody(t, w.Body.Bytes(), &outputV1)
+	ParseResponse(t, w, http.StatusOK, &outputV1)
 	// data
 	outputV1.checkRH9Fields(t)
 
 	w = CreateRequestRouterWithPath("GET", "/RH-9", nil, nil, AdvisoryDetailHandlerV2, "/:advisory_id")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var outputV2 AdvisoryDetailResponseV2
-	ParseResponseBody(t, w.Body.Bytes(), &outputV2)
+	ParseResponse(t, w, http.StatusOK, &outputV2)
 	// data
 	outputV2.checkRH9Fields(t)
 }
@@ -71,18 +69,16 @@ func TestAdvisoryDetailCVE(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-3", nil, nil, AdvisoryDetailHandlerV1, "/:advisory_id")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var outputV1 AdvisoryDetailResponseV1
-	ParseResponseBody(t, w.Body.Bytes(), &outputV1)
+	ParseResponse(t, w, http.StatusOK, &outputV1)
 	assert.Equal(t, 2, len(outputV1.Data.Attributes.Cves))
 	assert.Equal(t, "CVE-1", outputV1.Data.Attributes.Cves[0])
 	assert.Equal(t, "CVE-2", outputV1.Data.Attributes.Cves[1])
 
 	w = CreateRequestRouterWithPath("GET", "/RH-3", nil, nil, AdvisoryDetailHandlerV2, "/:advisory_id")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var outputV2 AdvisoryDetailResponseV2
-	ParseResponseBody(t, w.Body.Bytes(), &outputV2)
+	ParseResponse(t, w, http.StatusOK, &outputV2)
 	assert.Equal(t, 2, len(outputV2.Data.Attributes.Cves))
 	assert.Equal(t, "CVE-1", outputV2.Data.Attributes.Cves[0])
 	assert.Equal(t, "CVE-2", outputV2.Data.Attributes.Cves[1])
@@ -90,18 +86,14 @@ func TestAdvisoryDetailCVE(t *testing.T) {
 
 func TestAdvisoryNoIdProvided(t *testing.T) {
 	core.SetupTest(t)
-
 	var errResp utils.ErrorResponse
 	w := CreateRequest("GET", "/", nil, nil, AdvisoryDetailHandlerV1)
 
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, "advisory_id param not found", errResp.Error)
 
 	w = CreateRequest("GET", "/", nil, nil, AdvisoryDetailHandlerV2)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, "advisory_id param not found", errResp.Error)
 }
 
@@ -111,14 +103,12 @@ func TestAdvisoryNotFound(t *testing.T) {
 	var errResp utils.ErrorResponse
 	w := CreateRequestRouterWithPath("GET", "/foo", nil, nil, AdvisoryDetailHandlerV1, "/:advisory_id")
 
-	assert.Equal(t, http.StatusNotFound, w.Code)
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusNotFound, &errResp)
 	assert.Equal(t, "advisory not found", errResp.Error)
 
 	w = CreateRequestRouterWithPath("GET", "/foo", nil, nil, AdvisoryDetailHandlerV2, "/:advisory_id")
 
-	assert.Equal(t, http.StatusNotFound, w.Code)
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusNotFound, &errResp)
 	assert.Equal(t, "advisory not found", errResp.Error)
 }
 
@@ -139,18 +129,16 @@ func TestAdvisoryDetailCached(t *testing.T) {
 	testReqV1()      // load from db and save to cache
 	w := testReqV1() // load from cache
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output AdvisoryDetailResponseV1
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	output.checkRH9Fields(t)
 	assert.Equal(t, "found in cache", hook.LogEntries[4].Message)
 
 	testReqV2()     // load from db and save to cache
 	w = testReqV2() // load from cache
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var outputV2 AdvisoryDetailResponseV2
-	ParseResponseBody(t, w.Body.Bytes(), &outputV2)
+	ParseResponse(t, w, http.StatusOK, &outputV2)
 	output.checkRH9Fields(t)
 	assert.Equal(t, "found in cache", hook.LogEntries[7].Message)
 }
@@ -180,13 +168,13 @@ func TestAdvisoryDetailFiltering(t *testing.T) {
 	w := CreateRequestRouterWithPath("GET", "/RH-9?filter[filter]=abcd", nil, nil, AdvisoryDetailHandlerV1,
 		"/:advisory_id")
 
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
 
 	w = CreateRequestRouterWithPath("GET", "/RH-9?filter[filter]=abcd", nil, nil, AdvisoryDetailHandlerV2,
 		"/:advisory_id")
 
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
 }
 

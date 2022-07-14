@@ -221,9 +221,8 @@ func testSystems(t *testing.T, url string, account int) SystemsResponse {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithAccount("GET", url, nil, nil, SystemsListHandler, "/", account)
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	return output
 }
 

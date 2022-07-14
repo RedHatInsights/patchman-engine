@@ -5,8 +5,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 // Content type variables
@@ -61,4 +63,10 @@ func CreateRequestRouterWithAccount(method string, url string, body io.Reader, c
 	CheckHeader(req, contentType)
 	core.InitRouterWithAccount(handler, routerPath, routerAccount).ServeHTTP(w, req)
 	return w
+}
+
+// Check status and parse response body
+func ParseResponse(t *testing.T, w *httptest.ResponseRecorder, expectedStatus int, output interface{}) {
+	assert.Equal(t, expectedStatus, w.Code)
+	ParseResponseBody(t, w.Body.Bytes(), &output)
 }

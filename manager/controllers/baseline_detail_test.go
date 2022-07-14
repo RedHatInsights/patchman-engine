@@ -15,9 +15,7 @@ import (
 func testBaselineDetail(t *testing.T, url string, expectedStatus int, output interface{}) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", url, nil, nil, BaselineDetailHandler, "/:baseline_id")
-
-	assert.Equal(t, expectedStatus, w.Code)
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, expectedStatus, &output)
 }
 
 func TestBaselineDetailDefault(t *testing.T) {

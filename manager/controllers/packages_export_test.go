@@ -13,10 +13,8 @@ func TestPackageExportJSON(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/", nil, &contentTypeJSON, PackagesExportHandler, 3, "GET", "/")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output []PackageItem
-
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 4, len(output))
 	assert.Equal(t, "kernel", output[0].Name)
 }

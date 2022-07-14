@@ -14,9 +14,8 @@ func TestSystemPackagesExportHandlerJSON(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/00000000-0000-0000-0000-000000000013/packages",
 		nil, &contentTypeJSON, SystemPackagesExportHandler, 3, "GET", "/:inventory_id/packages")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemPackageInline
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 4, len(output))
 	assert.Equal(t, output[0].Name, "kernel")
 	assert.Equal(t, output[0].EVRA, "5.6.13-200.fc31.x86_64")

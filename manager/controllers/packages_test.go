@@ -70,9 +70,8 @@ func TestPackageTagsInvalid(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil, nil,
 		PackagesListHandler, 3, "GET", "/")
 
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
@@ -86,7 +85,7 @@ func TestPackageTagsInMetadata(t *testing.T) {
 		PackagesListHandler, 3, "GET", "/")
 
 	var output PackagesResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 
 	testMap := map[string]FilterData{
 		"ns1/k1": {"eq", []string{"val1"}},

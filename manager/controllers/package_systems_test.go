@@ -43,9 +43,8 @@ func testPackageSystems(t *testing.T, url string, account int) PackageSystemsRes
 	w := CreateRequestRouterWithParams("GET", url, nil, nil, PackageSystemsListHandler, account, "GET",
 		"/:package_name/systems")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageSystemsResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	return output
 }
 

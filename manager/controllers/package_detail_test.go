@@ -15,9 +15,8 @@ func TestLatestPackage(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/packages/kernel", nil, nil, PackageDetailHandler, 3,
 		"GET", "/packages/:package_name")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageDetailResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, "kernel", output.Data.Attributes.Name)
 	assert.Equal(t, "The Linux kernel", output.Data.Attributes.Summary)
 	assert.Equal(t, "The kernel meta package", output.Data.Attributes.Description)
@@ -33,9 +32,8 @@ func TestEvraPackage(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/packages/kernel-5.6.13-200.fc31.x86_64", nil, nil,
 		PackageDetailHandler, 3, "GET", "/packages/:package_name")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageDetailResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, "kernel", output.Data.Attributes.Name)
 	assert.Equal(t, "The Linux kernel", output.Data.Attributes.Summary)
 	assert.Equal(t, "The kernel meta package", output.Data.Attributes.Description)
@@ -50,9 +48,8 @@ func TestNonExitentPackage(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/packages/python", nil, nil, PackageDetailHandler, 3,
 		"GET", "/packages/:package_name")
 
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, "invalid package name", errResp.Error)
 }
 
@@ -61,9 +58,8 @@ func TestNonExitentEvra(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/packages/kernel-5.6.13-202.fc31.x86_64", nil, nil,
 		PackageDetailHandler, 3, "GET", "/packages/:package_name")
 
-	assert.Equal(t, http.StatusNotFound, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusNotFound, &errResp)
 	assert.Equal(t, "package not found", errResp.Error)
 }
 
@@ -71,9 +67,8 @@ func TestPackageDetailNoPackage(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequest("GET", "/", nil, nil, PackageDetailHandler)
 
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, "package_param not found", errResp.Error)
 }
 
@@ -83,6 +78,6 @@ func TestPackageDetailFiltering(t *testing.T) {
 		nil, nil, PackageDetailHandler, 3, "GET", "/packages/:package_name")
 
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
 }

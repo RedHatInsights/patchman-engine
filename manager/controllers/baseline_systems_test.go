@@ -11,12 +11,10 @@ import (
 
 func testBaselineSystems(t *testing.T, url string) BaselineSystemsResponse {
 	core.SetupTest(t)
-
 	w := CreateRequestRouterWithPath("GET", url, nil, nil, BaselineSystemsListHandler, "/:baseline_id/systems")
-	assert.Equal(t, http.StatusOK, w.Code)
 
 	var output BaselineSystemsResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 
 	return output
 }
@@ -79,9 +77,8 @@ func TestBaselineSystemOffsetOverflow(t *testing.T) {
 	w := CreateRequestRouterWithPath("GET", "/1/systems?offset=10&limit=4", nil, nil, BaselineSystemsListHandler,
 		"/:baseline_id/systems")
 
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
