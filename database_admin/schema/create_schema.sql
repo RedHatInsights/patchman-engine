@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (84, false);
+VALUES (85, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -965,7 +965,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS package_latest_cache
 AS
 SELECT DISTINCT ON (p.name_id) p.name_id, p.id as package_id, sum.value as summary
 FROM package p
-         INNER JOIN strings sum on p.summary_hash = sum.id
+         LEFT JOIN strings sum on p.summary_hash = sum.id
          LEFT JOIN advisory_metadata am on p.advisory_id = am.id
 ORDER BY p.name_id, am.public_date DESC NULLS LAST, sum.value DESC NULLS LAST;
 
