@@ -196,10 +196,24 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV2Response, 
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to unmarshall yum updates")
 	}
-
-	if len(resp.GetUpdateList()) == 0 {
+	updatesMap := resp.GetUpdateList()
+	if len(updatesMap) == 0 {
 		// TODO: do we need evaluationCnt.WithLabelValues("error-no-yum-packages").Inc()?
 		return nil, nil
+	}
+
+	// we need to get all packages to show up-to-date packages
+	vmaasReq, err := tryGetVmaasRequest(system)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get vmaas request")
+	}
+	if vmaasReq != nil {
+		for _, pkg := range vmaasReq.PackageList {
+			if _, has := updatesMap[pkg]; !has {
+				updatesMap[pkg] = vmaas.UpdatesV2ResponseUpdateList{}
+			}
+		}
+		resp.UpdateList = &updatesMap
 	}
 
 	return &resp, nil

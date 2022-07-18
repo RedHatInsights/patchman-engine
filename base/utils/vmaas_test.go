@@ -73,6 +73,9 @@ func TestMergeVMaaSResponses(t *testing.T) {
 }
 
 func TestMergeVMaaSResponses2(t *testing.T) {
+	// keep only the latest package
+	// if a customer has 2 kernel versions installed
+	// we should display latest updates
 	compareResponseMerge(t, kernel3111, kernel3121, kernel3111AndKernel3121)
 	compareResponseMerge(t, kernel3121, kernel3111, kernel3111AndKernel3121)
 }

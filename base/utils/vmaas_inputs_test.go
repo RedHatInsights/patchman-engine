@@ -372,17 +372,6 @@ var kernel3121 = []byte(`
 var kernel3111AndKernel3121 = []byte(`
 	{
 		"update_list": {
-			"kernel-0:3.11.0-1160.42.2.el7.x86_64": {
-				"available_updates": [
-					{
-						"erratum": "RHSA-2022:0620",
-						"basearch": "x86_64",
-						"releasever": "7Server",
-						"repository": "rhel-7-server-rpms",
-						"package": "kernel-0:3.11.2-1160.42.2.el7.x86_64"
-					}
-				]
-			},
 			"kernel-0:3.12.0-1160.42.2.el7.x86_64": {
 				"available_updates": [
 					{
