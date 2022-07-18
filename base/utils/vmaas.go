@@ -28,7 +28,9 @@ func MergeVMaaSResponses(vmaasDataA *vmaas.UpdatesV2Response,
 	}
 
 	vmaasDataA.UpdateList = &mergedList
-
+	if err := removeNonLatestPackages(vmaasDataA); err != nil {
+		return nil, err
+	}
 	return vmaasDataA, nil
 }
 
@@ -74,4 +76,43 @@ func mergeUpdates(listA, listB vmaas.UpdatesV2ResponseUpdateList) (*vmaas.Update
 	return &vmaas.UpdatesV2ResponseUpdateList{
 		AvailableUpdates: &newUpdates,
 	}, nil
+}
+
+// Keep only updates for the latest package in update list
+func removeNonLatestPackages(updates *vmaas.UpdatesV2Response) error {
+	var toDel []string
+	type nevraStruct struct {
+		nameString string
+		nevra      *Nevra
+	}
+	nameMap := make(map[string]nevraStruct)
+	updateList := updates.GetUpdateList()
+	for k := range updateList {
+		nevra, err := ParseNevra(k)
+		if err != nil {
+			return err
+		}
+		if _, has := nameMap[nevra.Name]; has {
+			// mark older pkg for deletion
+			switch cmp := nameMap[nevra.Name].nevra.Cmp(nevra); cmp {
+			case -1:
+				// nevra is newer
+				toDel = append(toDel, nameMap[nevra.Name].nameString)
+			case 1:
+				// nameMap[nevra.Name] is newer
+				toDel = append(toDel, k)
+			default:
+				// should not happen after `mergeUpdates`
+				// but we don't need to fail because of that
+				continue
+			}
+		} else {
+			nameMap[nevra.Name] = nevraStruct{k, nevra}
+		}
+	}
+	for _, k := range toDel {
+		delete(updateList, k)
+	}
+	updates.UpdateList = &updateList
+	return nil
 }
