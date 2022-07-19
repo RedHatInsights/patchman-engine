@@ -48,7 +48,7 @@ type AdvisoryDetailAttributes struct {
 	PublicDate       time.Time `json:"public_date"`
 	Topic            string    `json:"topic"`
 	Synopsis         string    `json:"synopsis"`
-	Solution         *string   `json:"solution"`
+	Solution         string    `json:"solution"`
 	AdvisoryTypeName string    `json:"advisory_type_name"`
 	Severity         *int      `json:"severity"`
 	Fixes            *string   `json:"fixes"`

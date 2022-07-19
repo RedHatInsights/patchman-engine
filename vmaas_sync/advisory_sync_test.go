@@ -100,9 +100,9 @@ func TestParseAdvisories(t *testing.T) {
 			ReferenceList:     &[]string{},
 			Issued:            "2004-09-02T00:00:00+00:00",
 			Description:       "DESC",
-			Solution:          utils.PtrString("SOL"),
+			Solution:          "SOL",
 			Summary:           "SUM",
-			URL:               utils.PtrString("URL"),
+			URL:               "URL",
 			Synopsis:          "SYN",
 			CveList:           utils.PtrSliceString([]string{"CVE-1", "CVE-2", "CVE-3"}),
 			BugzillaList:      &[]string{},
@@ -125,7 +125,7 @@ func TestParseAdvisories(t *testing.T) {
 	assert.Equal(t, time, adv.PublicDate)
 	assert.Equal(t, time, adv.ModifiedDate)
 	assert.Equal(t, "DESC", adv.Description)
-	assert.Equal(t, "SOL", *adv.Solution)
+	assert.Equal(t, "SOL", adv.Solution)
 	assert.Equal(t, "SUM", adv.Summary)
 	assert.Equal(t, "URL", *adv.URL)
 	assert.Equal(t, "SYN", adv.Synopsis)
@@ -148,9 +148,8 @@ func TestSaveAdvisories(t *testing.T) {
 
 	assert.Nil(t, json.Unmarshal([]byte(testAdvisories), &data))
 	errataList := data.ErrataList
-	testString := "TEST"
 	for i, v := range errataList {
-		v.URL = &testString
+		v.URL = "TEST"
 		errataList[i] = v
 	}
 
@@ -200,7 +199,7 @@ func TestSyncAdvisoriesCheck(t *testing.T) {
 	assert.Equal(t, "adv-100-des", am.Description)
 	assert.Equal(t, "adv-100-sum", am.Summary)
 	assert.Equal(t, "adv-100-syn", am.Synopsis)
-	assert.Equal(t, "adv-100-sol", *am.Solution)
+	assert.Equal(t, "adv-100-sol", am.Solution)
 	assert.Equal(t, true, am.RebootRequired)
 	assert.Equal(t, 3, am.AdvisoryTypeID)
 	assert.Equal(t, "2020-01-02 08:04:05 +0000 UTC", am.PublicDate.String())
