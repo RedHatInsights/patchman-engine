@@ -1,7 +1,5 @@
 package vmaas
 
-import "strings"
-
 type UpdatesV3Request struct {
 	PackageList    []string                       `json:"package_list"`
 	RepositoryList *[]string                      `json:"repository_list,omitempty"`
@@ -93,46 +91,6 @@ func (o *UpdatesV2ResponseAvailableUpdates) GetErratum() string {
 		return ret
 	}
 	return *o.Erratum
-}
-
-func (o *UpdatesV2ResponseAvailableUpdates) GetBasearch() string {
-	if o == nil || o.Basearch == nil {
-		var ret string
-		return ret
-	}
-	return *o.Basearch
-}
-
-func (o *UpdatesV2ResponseAvailableUpdates) GetReleasever() string {
-	if o == nil || o.Releasever == nil {
-		var ret string
-		return ret
-	}
-	return *o.Releasever
-}
-
-func (o *UpdatesV2ResponseAvailableUpdates) GetRepository() string {
-	if o == nil || o.Repository == nil {
-		var ret string
-		return ret
-	}
-	return *o.Repository
-}
-
-func (o *UpdatesV2ResponseAvailableUpdates) Cmp(b *UpdatesV2ResponseAvailableUpdates) int {
-	if cmp := strings.Compare(o.GetPackage(), b.GetPackage()); cmp != 0 {
-		return cmp
-	}
-	if cmp := strings.Compare(o.GetErratum(), b.GetErratum()); cmp != 0 {
-		return cmp
-	}
-	if cmp := strings.Compare(o.GetRepository(), b.GetRepository()); cmp != 0 {
-		return cmp
-	}
-	if cmp := strings.Compare(o.GetBasearch(), b.GetBasearch()); cmp != 0 {
-		return cmp
-	}
-	return strings.Compare(o.GetReleasever(), b.GetReleasever())
 }
 
 type ErrataRequest struct {
