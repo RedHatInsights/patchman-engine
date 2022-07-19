@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"sort"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
@@ -224,7 +223,6 @@ func TestParsePackagesV1V2(t *testing.T) {
 
 	p1InV1, p2InV1, errInV1 := parsePackages(inV1)
 	p1InV2, p2InV2, errInV2 := parsePackages(inV2)
-	sort.Strings(p2InV1)
 	assert.Nil(t, errInV1)
 	assert.Nil(t, errInV2)
 	assert.Equal(t, p1InV1, p1InV2)
