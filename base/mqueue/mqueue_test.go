@@ -42,7 +42,7 @@ func TestRoundTripKafkaGo(t *testing.T) {
 	writer := NewKafkaWriterFromEnv("test")
 	eventIn := PlatformEvent{ID: someid}
 	assert.NoError(t, writePlatformEvents(context.Background(), writer, eventIn))
-	utils.AssertEqualWait(t, 10, func() (exp, act interface{}) {
+	utils.AssertEqualWait(t, 8, func() (exp, act interface{}) {
 		return eventIn.ID, eventOut.ID
 	})
 }
