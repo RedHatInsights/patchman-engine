@@ -388,12 +388,12 @@ func DeleteBaseline(t *testing.T, baselineID int) {
 	assert.Nil(t, err)
 }
 
-func CheckBaseline(t *testing.T, baselineID int, inventoryIDs []string, config, name string, description *string) {
+func CheckBaseline(t *testing.T, baselineID int, inventoryIDs []string, config, name, description string) {
 	type Baseline struct {
-		ID          int     `query:"bl.id" gorm:"column:id"`
-		Name        string  `json:"name" query:"bl.name" gorm:"column:name"`
-		Config      string  `json:"config" query:"bl.config" gorm:"column:config"`
-		Description *string `json:"description" query:"bl.description" gorm:"column:description"`
+		ID          int    `query:"bl.id" gorm:"column:id"`
+		Name        string `json:"name" query:"bl.name" gorm:"column:name"`
+		Config      string `json:"config" query:"bl.config" gorm:"column:config"`
+		Description string `json:"description" query:"bl.description" gorm:"column:description"`
 	}
 
 	type Associations struct {
@@ -418,11 +418,7 @@ func CheckBaseline(t *testing.T, baselineID int, inventoryIDs []string, config, 
 	assert.Equal(t, baselineID, baseline.ID)
 	assert.Equal(t, name, baseline.Name)
 	assert.Equal(t, config, baseline.Config)
-	if description == nil {
-		assert.Equal(t, description, baseline.Description)
-	} else {
-		assert.Equal(t, *description, *baseline.Description)
-	}
+	assert.Equal(t, description, baseline.Description)
 
 	if len(inventoryIDs) == 0 {
 		assert.Equal(t, len(associations), 0)

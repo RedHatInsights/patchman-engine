@@ -44,13 +44,12 @@ func TestUpdateBaseline(t *testing.T) {
 	var resp UpdateBaselineResponse
 	ParseResponseBody(t, w.Body.Bytes(), &resp)
 	assert.Equal(t, baselineID, resp.BaselineID)
-	desc := "desc"
 	database.CheckBaseline(t, baselineID, []string{
 		"00000000-0000-0000-0000-000000000004",
 		"00000000-0000-0000-0000-000000000006",
 		"00000000-0000-0000-0000-000000000007",
 		"00000000-0000-0000-0000-000000000008",
-	}, `{"to_time": "2022-12-31T12:00:00-04:00"}`, "updated_name", &desc)
+	}, `{"to_time": "2022-12-31T12:00:00-04:00"}`, "updated_name", "desc")
 	database.DeleteBaseline(t, baselineID)
 }
 
@@ -75,7 +74,7 @@ func TestUpdateBaselineWithEmptyAssociations(t *testing.T) {
 			"00000000-0000-0000-0000-000000000005",
 			"00000000-0000-0000-0000-000000000006",
 			"00000000-0000-0000-0000-000000000007",
-		}, `{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline", nil)
+		}, `{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline", "")
 
 	database.DeleteBaseline(t, baselineID)
 }
@@ -102,7 +101,7 @@ func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
 	ParseResponseBody(t, w.Body.Bytes(), &resp)
 	assert.Equal(t, baselineID, resp.BaselineID)
 	database.CheckBaseline(t, baselineID, []string{},
-		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline", nil)
+		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline", "")
 
 	database.DeleteBaseline(t, baselineID)
 }
@@ -162,7 +161,7 @@ func TestUpdateBaselineNullValues(t *testing.T) {
 	ParseResponseBody(t, w.Body.Bytes(), &resp)
 	assert.Equal(t, baselineID, resp.BaselineID)
 	database.CheckBaseline(t, baselineID, testingInventoryIDs, // do not change on null values
-		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline", nil)
+		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline", "")
 
 	database.DeleteBaseline(t, baselineID)
 }
