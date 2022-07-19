@@ -7,10 +7,9 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"encoding/json"
-	"testing"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 const notexistid = "99c0ffee-0000-0000-0000-999999999999"
@@ -27,7 +26,7 @@ func TestUpdateSystem(t *testing.T) {
 		DisplayName: id,
 	}).Error)
 
-	ev := createTestUploadEvent("1", "1", id, "puptoo", false, false)
+	ev := createTestUploadEvent("1", "1", id, "puptoo", false)
 	name := "TEST_NAME"
 	ev.Host.DisplayName = &name
 	ev.Host.SystemProfile.InstalledPackages = &[]string{"kernel"}
@@ -104,7 +103,7 @@ func TestUploadAfterDelete(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
-	uploadEvent := createTestUploadEvent("1", "1", id, "puptoo", true, false)
+	uploadEvent := createTestUploadEvent("1", "1", id, "puptoo", true)
 	err := HandleUpload(uploadEvent)
 	assert.NoError(t, err)
 	assertSystemNotInDB(t)
