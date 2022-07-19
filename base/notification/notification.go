@@ -66,7 +66,7 @@ type Advisory struct {
 	Synopsis     string `json:"synopsis"`
 }
 
-func MakeNotification(inventoryID, accountName, eventType string, events []Event) *Notification {
+func MakeNotification(inventoryID, accountName, orgID, eventType string, events []Event) *Notification {
 	return &Notification{
 		Version:     Version,
 		Bundle:      Bundle,
@@ -77,5 +77,6 @@ func MakeNotification(inventoryID, accountName, eventType string, events []Event
 		AccountID: accountName,
 		Context:   Context{InventoryID: inventoryID},
 		Events:    events,
+		OrgID:     orgID,
 	}
 }

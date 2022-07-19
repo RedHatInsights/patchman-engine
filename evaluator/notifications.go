@@ -35,7 +35,8 @@ func getNotificationAdvisories(newAdvisories SystemAdvisoryMap) []ntf.Advisory {
 	return advisories
 }
 
-func publishNewAdvisoriesNotification(inventoryID, accountName string, newAdvisories SystemAdvisoryMap) error {
+func publishNewAdvisoriesNotification(inventoryID string, event *mqueue.PlatformEvent,
+	newAdvisories SystemAdvisoryMap) error {
 	if notificationsPublisher == nil {
 		return nil
 	}
@@ -48,7 +49,7 @@ func publishNewAdvisoriesNotification(inventoryID, accountName string, newAdviso
 
 	msg, err := mqueue.MessageFromJSON(
 		inventoryID,
-		ntf.MakeNotification(inventoryID, accountName, NewAdvisoryEvent, events))
+		ntf.MakeNotification(inventoryID, event.GetAccountName(), event.GetOrgID(), NewAdvisoryEvent, events))
 	if err != nil {
 		return errors.Wrap(err, "creating message from notification failed")
 	}
