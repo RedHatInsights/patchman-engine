@@ -348,9 +348,7 @@ objects:
           - --prometheus-push-addr
           - ${PROMETHEUS_PUSHGATEWAY}
           - --ean-translator-timeout
-          - "120"
-          - --batch-size
-          - "20"
+          - "70"
         env:
           - name: LOG_FORMAT
             value: ${POPULATOR_LOG_FORMAT}
