@@ -53,7 +53,6 @@ var (
 	vmaasCallUseOptimisticUpdates bool
 	enableYumUpdatesEval          bool
 	nEvalGoroutines               int
-	enableInstantNotifications    bool
 )
 
 const WarnPayloadTracker = "unable to send message to payload tracker"
@@ -89,7 +88,6 @@ func configure() {
 	vmaasCallUseOptimisticUpdates = utils.GetBoolEnvOrDefault("VMAAS_CALL_USE_OPTIMISTIC_UPDATES", true)
 	enableYumUpdatesEval = utils.GetBoolEnvOrDefault("ENABLE_YUM_UPDATES_EVAL", true)
 	nEvalGoroutines = utils.GetIntEnvOrDefault("MAX_EVAL_GOROUTINES", 1)
-	enableInstantNotifications = utils.GetBoolEnvOrDefault("ENABLE_INSTANT_NOTIFICATIONS", true)
 	configureRemediations()
 	configureNotifications()
 }
@@ -363,12 +361,10 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
 	}
 
 	// Send instant notification with new advisories
-	if enableInstantNotifications {
-		err = publishNewAdvisoriesNotification(tx, system.InventoryID, accountName, system.RhAccountID, newSystemAdvisories)
-		if err != nil {
-			evaluationCnt.WithLabelValues("error-advisory-notification").Inc()
-			utils.Log("err", err.Error()).Error("publishing new advisories notification failed")
-		}
+	err = publishNewAdvisoriesNotification(tx, system.InventoryID, accountName, system.RhAccountID, newSystemAdvisories)
+	if err != nil {
+		evaluationCnt.WithLabelValues("error-advisory-notification").Inc()
+		utils.Log("err", err.Error()).Error("publishing new advisories notification failed")
 	}
 
 	return nil
