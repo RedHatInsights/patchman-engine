@@ -4,7 +4,6 @@ import (
 	"app/base"
 	"app/base/database"
 	"app/base/models"
-	"app/base/utils"
 	"app/manager/middlewares"
 	"net/http"
 
@@ -57,14 +56,6 @@ func BaselineSystemsRemoveHandler(c *gin.Context) {
 
 func buildBaselineSystemsRemoveQuery(inventoryIDs []string,
 	accountID int) error {
-	if len(inventoryIDs) == 0 {
-		return errors.New(InvalidInventoryIDsErr)
-	}
-	for _, invID := range inventoryIDs {
-		if !utils.IsValidUUID(invID) {
-			return errors.New(InvalidInventoryIDsErr)
-		}
-	}
 	tx := database.Db.WithContext(base.Context).Begin()
 	defer tx.Rollback()
 
