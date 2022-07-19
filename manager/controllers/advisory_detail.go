@@ -5,7 +5,6 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -225,20 +224,7 @@ func parsePackages(jsonb []byte) (packagesV1, packagesV2, error) {
 	var pkgsV2 packagesV2
 	err = json.Unmarshal(b, &pkgsV2)
 	if err != nil {
-		// HACK!
-		// Until vmaas-sync syncs new data, `jsonb` has '{"<name>": "<evra>"}' format
-		// what we need for V2 api is ["<name>-<evra>", ...]
-		// 1. try to unmarshal to packagesV1 struct
-		var tmpPkgV1 packagesV1
-		if v1err := json.Unmarshal(b, &tmpPkgV1); v1err != nil {
-			// cannot unmarshal to neither V1 nor V2
-			return nil, nil, err
-		}
-		// 2. create `packagesV2` from `packagesV1` data
-		for k, v := range tmpPkgV1 {
-			// NOTE: V2 now shows the same data as V1 api until vmaas is synced
-			pkgsV2 = append(pkgsV2, fmt.Sprintf("%s-%s", k, v))
-		}
+		return nil, nil, err
 	}
 	// assigning first pkg to packages map in api/v1
 	// it shows incorrect packages info
