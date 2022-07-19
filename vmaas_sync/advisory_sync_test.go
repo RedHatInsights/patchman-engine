@@ -132,8 +132,12 @@ func TestParseAdvisories(t *testing.T) {
 	assert.Equal(t, 2, adv.AdvisoryTypeID)
 	assert.Equal(t, 2, adv.AdvisoryTypeID)
 	assert.Equal(t, true, adv.RebootRequired)
-	assert.Equal(t, `["CVE-1","CVE-2","CVE-3"]`, string(adv.CveList))
-	assert.Equal(t, `["8.0","8.1"]`, string(adv.ReleaseVersions))
+	js := json.RawMessage(string(adv.CveList))
+	cves, _ := json.Marshal(js)
+	assert.Equal(t, string(cves), `["CVE-1","CVE-2","CVE-3"]`)
+	js = json.RawMessage(string(adv.ReleaseVersions))
+	relvers, _ := json.Marshal(js)
+	assert.Equal(t, string(relvers), `["8.0","8.1"]`)
 }
 
 func TestSaveAdvisories(t *testing.T) {
