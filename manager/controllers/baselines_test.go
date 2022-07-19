@@ -144,7 +144,7 @@ func TestBaselinesWrongSort(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/?sort=unknown_key", nil)
-	core.InitRouter(BaselinesListHandler).ServeHTTP(w, req)
+	core.InitRouter(AdvisoriesListHandler).ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
