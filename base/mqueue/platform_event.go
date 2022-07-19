@@ -61,13 +61,6 @@ func (event *PlatformEvent) GetAccountName() string {
 	return *event.Account
 }
 
-func (event *PlatformEvent) GetOrgID() string {
-	if event.OrgID == nil {
-		return ""
-	}
-	return *event.OrgID
-}
-
 func writePlatformEvents(ctx context.Context, w Writer, events ...PlatformEvent) error {
 	var err error
 	msgs := make([]KafkaMessage, len(events))
