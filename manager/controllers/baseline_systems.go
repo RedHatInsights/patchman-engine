@@ -5,6 +5,7 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -94,7 +95,8 @@ func BaselineSystemsListHandler(c *gin.Context) {
 	} // Error handled in method itself
 	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
 
-	query, meta, links, err := ListCommon(query, c, nil, BaselineSystemOpts)
+	path := fmt.Sprintf("/api/patch/v1/baselines/%v/systems", baselineID)
+	query, meta, links, err := ListCommon(query, c, nil, path, BaselineSystemOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return

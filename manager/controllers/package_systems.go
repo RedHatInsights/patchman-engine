@@ -5,6 +5,7 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -114,7 +115,8 @@ func PackageSystemsListHandler(c *gin.Context) {
 		return
 	} // Error handled in method itself
 	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
-	query, meta, links, err := ListCommon(query, c, filters, PackageSystemsOpts)
+	packageEndpoint := fmt.Sprintf("/packages/%s/systems", packageName)
+	query, meta, links, err := ListCommon(query, c, filters, packageEndpoint, PackageSystemsOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself

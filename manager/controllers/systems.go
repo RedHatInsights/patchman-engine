@@ -176,7 +176,7 @@ func SystemsListHandler(c *gin.Context) {
 		return
 	} // Error handled method itself
 	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
-	query, meta, links, err := ListCommon(query, c, filters, SystemOpts)
+	query, meta, links, err := ListCommon(query, c, filters, "/api/patch/v1/systems", SystemOpts)
 	if err != nil {
 		return
 	} // Error handled method itself

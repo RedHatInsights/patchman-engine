@@ -119,7 +119,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 		query = buildQueryAdvisories(account)
 	}
 
-	query, meta, links, err := ListCommon(query, c, filters, AdvisoriesOpts)
+	query, meta, links, err := ListCommon(query, c, filters, "/api/patch/v1/advisories", AdvisoriesOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return
