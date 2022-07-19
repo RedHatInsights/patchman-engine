@@ -54,8 +54,8 @@ func TestBaselinesDefault(t *testing.T) {
 	assert.Equal(t, 0, output.Data[2].Attributes.Systems)
 
 	// links
-	assert.Equal(t, "/?offset=0&limit=20&sort=-name", output.Links.First)
-	assert.Equal(t, "/?offset=0&limit=20&sort=-name", output.Links.Last)
+	assert.Equal(t, "/api/patch/v1/baselines?offset=0&limit=20&sort=-name", output.Links.First)
+	assert.Equal(t, "/api/patch/v1/baselines?offset=0&limit=20&sort=-name", output.Links.Last)
 	assert.Nil(t, output.Links.Next)
 	assert.Nil(t, output.Links.Previous)
 
@@ -100,7 +100,7 @@ func TestBaselinesFilterTypeID(t *testing.T) {
 	assert.Equal(t, "baseline_1-1", output.Data[0].Attributes.Name)
 
 	assert.Equal(t,
-		"/?offset=0&limit=20&filter[id]=eq:1&sort=-name",
+		"/api/patch/v1/baselines?offset=0&limit=20&filter[id]=eq:1&sort=-name",
 		output.Links.First)
 }
 
@@ -159,9 +159,9 @@ func TestBaselinesSearch(t *testing.T) {
 	assert.Equal(t, 2, output.Data[0].Attributes.Systems)
 
 	// links
-	assert.Equal(t, "/?offset=0&limit=20&sort=-name&search=baseline_1-1",
+	assert.Equal(t, "/api/patch/v1/baselines?offset=0&limit=20&sort=-name&search=baseline_1-1",
 		output.Links.First)
-	assert.Equal(t, "/?offset=0&limit=20&sort=-name&search=baseline_1-1",
+	assert.Equal(t, "/api/patch/v1/baselines?offset=0&limit=20&sort=-name&search=baseline_1-1",
 		output.Links.Last)
 	assert.Nil(t, output.Links.Next)
 	assert.Nil(t, output.Links.Previous)
