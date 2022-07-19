@@ -54,13 +54,6 @@ var (
 		Subsystem: "listener",
 		Name:      "received_from_reporter",
 	}, []string{"reporter"})
-
-	messagePartDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Help:      "How long particular listener part took",
-		Namespace: "patchman_engine",
-		Subsystem: "listener",
-		Name:      "kafka_message_part_duration_seconds",
-	}, []string{"part"})
 )
 
 func RunMetrics() {
