@@ -1,13 +1,11 @@
 package utils
 
 import (
-	"bytes"
 	"fmt"
 	"math"
 	"os"
 	"path"
 	"regexp"
-	"runtime"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -165,13 +163,4 @@ func SizeStr(size uint64) string {
 
 func IsValidUUID(uuid string) bool {
 	return uuidRegex.MatchString(uuid)
-}
-
-func GetGorutineID() uint64 {
-	b := make([]byte, 64)
-	b = b[:runtime.Stack(b, false)]
-	b = bytes.TrimPrefix(b, []byte("goroutine "))
-	b = b[:bytes.IndexByte(b, ' ')]
-	n, _ := strconv.ParseUint(string(b), 10, 64)
-	return n
 }

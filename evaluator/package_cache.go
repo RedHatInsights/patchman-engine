@@ -67,6 +67,13 @@ func NewPackageCache(enabled bool, preload bool, size int, nameSize int) *Packag
 	return nil
 }
 
+func logLoadProgress(t *time.Ticker, count *int64, total *int64) {
+	for range t.C {
+		pct := (*count) * 100 / (*total)
+		utils.Log("loaded %", pct).Info("PackageCache.Load")
+	}
+}
+
 func (c *PackageCache) Load() {
 	if !c.enabled || !c.preload {
 		return
@@ -91,7 +98,11 @@ func (c *PackageCache) Load() {
 	runtime.ReadMemStats(&mStart)
 	tStart := time.Now()
 
-	progressTicker, count := utils.LogProgress("PackageCache.Load", logProgressDuration, int64(c.size))
+	var count int64
+	total := int64(c.size)
+	progressTicker := time.NewTicker(logProgressDuration)
+	go logLoadProgress(progressTicker, &count, &total)
+
 	var columns PackageCacheMetadata
 	for rows.Next() {
 		err = tx.ScanRows(rows, &columns)
@@ -107,7 +118,7 @@ func (c *PackageCache) Load() {
 			SummaryHash:     columns.SummaryHash,
 		}
 		c.Add(&pkg)
-		*count++
+		count++
 	}
 	progressTicker.Stop()
 

@@ -62,18 +62,3 @@ func initJSONLogStyle() {
 		},
 	})
 }
-
-// LogProgress Show progress of the operation
-func LogProgress(msg string, duration time.Duration, total int64) (*time.Ticker, *int64) {
-	var count int64
-	timer := time.NewTicker(duration)
-	goID := GetGorutineID()
-
-	go func() {
-		for range timer.C {
-			pct := count * 100 / total
-			Log("gorutineID", goID, "progress %", pct).Info(msg)
-		}
-	}()
-	return timer, &count
-}
