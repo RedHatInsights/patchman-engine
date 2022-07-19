@@ -240,8 +240,11 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		return nil, errors.Wrap(err, "Serializing vmaas request")
 	}
 
-	hash := sha256.Sum256(updatesReqJSON)
-	jsonChecksum := hex.EncodeToString(hash[:])
+	hash := sha256.New()
+	// Never returns an error
+	hash.Write(updatesReqJSON) // nolint: errcheck
+
+	jsonChecksum := hex.EncodeToString(hash.Sum([]byte{}))
 	var colsToUpdate = []string{
 		"display_name",
 		"last_upload",
