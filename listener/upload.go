@@ -57,16 +57,13 @@ type HostMetadata struct {
 }
 
 type HostEvent struct {
-	Type             string               `json:"type"`
-	PlatformMetadata HostPlatformMetadata `json:"platform_metadata"`
-	Host             Host                 `json:"host"`
-	Metadata         HostMetadata         `json:"metadata"`
+	Type             string                 `json:"type"`
+	PlatformMetadata map[string]interface{} `json:"platform_metadata"`
+	Host             Host                   `json:"host"`
+	Metadata         HostMetadata           `json:"metadata"`
 }
 
-type HostPlatformMetadata struct {
-	CustomMetadata HostCustomMetadata `json:"custom_metadata,omitempty"`
-}
-type HostCustomMetadata struct {
+type CustomMetadata struct {
 	YumUpdates json.RawMessage `json:"yum_updates,omitempty"`
 }
 
@@ -107,7 +104,7 @@ func HandleUpload(event HostEvent) error {
 		return nil
 	}
 
-	yumUpdates := getYumUpdates(event)
+	yumUpdates := getCustomMetadata(event).getYumUpdates()
 	utils.Log("inventoryID", event.Host.ID, "yum_updates", yumUpdates).Trace()
 
 	if len(event.Host.SystemProfile.GetInstalledPackages()) == 0 && yumUpdates == nil {
@@ -501,7 +498,30 @@ func processUpload(host *Host, yumUpdates []byte) (*models.SystemPlatform, error
 	return sys, nil
 }
 
-func getYumUpdates(event HostEvent) []byte {
-	yumUpdates := event.PlatformMetadata.CustomMetadata.YumUpdates
-	return yumUpdates
+func getCustomMetadata(event HostEvent) *CustomMetadata {
+	customMetadata := event.PlatformMetadata["custom_metadata"]
+	if customMetadata == nil {
+		return nil
+	}
+
+	var res CustomMetadata
+	var err error
+	metadata, ok := customMetadata.([]byte)
+	if ok {
+		err = json.Unmarshal(metadata, &res)
+	}
+	if !ok || err != nil {
+		utils.Log("inventoryID", event.Host.ID).Error(ErrorUnmarshalMetadata)
+		return nil
+	}
+
+	return &res
+}
+
+func (cu *CustomMetadata) getYumUpdates() []byte {
+	if cu == nil {
+		return nil
+	}
+
+	return cu.YumUpdates
 }
