@@ -6,10 +6,7 @@ data:
             "list": [
                 {
                     "builtIn": 1,
-                    "datasource": {
-                        "type": "datasource",
-                        "uid": "grafana"
-                    },
+                    "datasource": "-- Grafana --",
                     "enable": true,
                     "hide": true,
                     "iconColor": "rgba(0, 211, 255, 1)",
@@ -17,9 +14,7 @@ data:
                     "target": {
                         "limit": 100,
                         "matchAny": false,
-                        "tags": [
-
-                        ],
+                        "tags": [],
                         "type": "dashboard"
                     },
                     "type": "dashboard"
@@ -28,396 +23,34 @@ data:
         },
         "editable": true,
         "fiscalYearStartMonth": 0,
+        "gnetId": null,
         "graphTooltip": 0,
-        "iteration": 1656583055008,
-        "links": [
-
-        ],
+        "id": 79,
+        "iteration": 1638888061333,
+        "links": [],
         "liveNow": false,
         "panels": [
             {
-                "datasource": {
-                    "uid": "$datasource"
-                },
-                "description": "Systems evaluated using component \"patchman.*-evaluator-upload\".",
-                "fieldConfig": {
-                    "defaults": {
-                        "color": {
-                            "mode": "thresholds"
-                        },
-                        "mappings": [
-                            {
-                                "options": {
-                                    "match": "null",
-                                    "result": {
-                                        "text": "N/A"
-                                    }
-                                },
-                                "type": "special"
-                            }
-                        ],
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "#299c46",
-                                    "value": null
-                                },
-                                {
-                                    "color": "rgba(237, 129, 40, 0.89)",
-                                    "value": 0.1
-                                },
-                                {
-                                    "color": "#d44a3a",
-                                    "value": 3
-                                }
-                            ]
-                        },
-                        "unit": "none"
-                    },
-                    "overrides": [
-
-                    ]
-                },
-                "gridPos": {
-                    "h": 3,
-                    "w": 3,
-                    "x": 12,
-                    "y": 0
-                },
-                "id": 49,
-                "links": [
-
-                ],
-                "maxDataPoints": 100,
-                "options": {
-                    "colorMode": "none",
-                    "graphMode": "none",
-                    "justifyMode": "auto",
-                    "orientation": "horizontal",
-                    "reduceOptions": {
-                        "calcs": [
-                            "delta"
-                        ],
-                        "fields": "",
-                        "values": false
-                    },
-                    "text": {
-
-                    },
-                    "textMode": "auto"
-                },
-                "pluginVersion": "9.0.1",
-                "targets": [
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "expr": "sum(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-upload-.*\", type=\"success\"})",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "refId": "A"
-                    }
-                ],
-                "title": "Evaluated uploads",
-                "type": "stat"
-            },
-            {
-                "datasource": {
-                    "uid": "$datasource"
-                },
-                "description": "Systems evaluated using component \"patchman.*-evaluator-recalc\".",
-                "fieldConfig": {
-                    "defaults": {
-                        "color": {
-                            "mode": "thresholds"
-                        },
-                        "mappings": [
-                            {
-                                "options": {
-                                    "match": "null",
-                                    "result": {
-                                        "text": "N/A"
-                                    }
-                                },
-                                "type": "special"
-                            }
-                        ],
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "#299c46",
-                                    "value": null
-                                },
-                                {
-                                    "color": "rgba(237, 129, 40, 0.89)",
-                                    "value": 0.1
-                                },
-                                {
-                                    "color": "#d44a3a",
-                                    "value": 3
-                                }
-                            ]
-                        },
-                        "unit": "none"
-                    },
-                    "overrides": [
-
-                    ]
-                },
-                "gridPos": {
-                    "h": 3,
-                    "w": 3,
-                    "x": 15,
-                    "y": 0
-                },
-                "id": 48,
-                "links": [
-
-                ],
-                "maxDataPoints": 100,
-                "options": {
-                    "colorMode": "none",
-                    "graphMode": "none",
-                    "justifyMode": "auto",
-                    "orientation": "horizontal",
-                    "reduceOptions": {
-                        "calcs": [
-                            "delta"
-                        ],
-                        "fields": "",
-                        "values": false
-                    },
-                    "text": {
-
-                    },
-                    "textMode": "auto"
-                },
-                "pluginVersion": "9.0.1",
-                "targets": [
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "expr": "sum(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-recalc-.*\", type=\"success\"})",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Evaluated recalcs",
-                "type": "stat"
-            },
-            {
-                "datasource": {
-                    "uid": "$datasource"
-                },
-                "description": "Messages processed using Listener",
-                "fieldConfig": {
-                    "defaults": {
-                        "color": {
-                            "mode": "thresholds"
-                        },
-                        "mappings": [
-                            {
-                                "options": {
-                                    "match": "null",
-                                    "result": {
-                                        "text": "N/A"
-                                    }
-                                },
-                                "type": "special"
-                            }
-                        ],
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "#299c46",
-                                    "value": null
-                                },
-                                {
-                                    "color": "rgba(237, 129, 40, 0.89)",
-                                    "value": 0.1
-                                },
-                                {
-                                    "color": "#d44a3a",
-                                    "value": 3
-                                }
-                            ]
-                        },
-                        "unit": "none"
-                    },
-                    "overrides": [
-
-                    ]
-                },
-                "gridPos": {
-                    "h": 3,
-                    "w": 3,
-                    "x": 18,
-                    "y": 0
-                },
-                "id": 50,
-                "links": [
-
-                ],
-                "maxDataPoints": 100,
-                "options": {
-                    "colorMode": "none",
-                    "graphMode": "none",
-                    "justifyMode": "auto",
-                    "orientation": "horizontal",
-                    "reduceOptions": {
-                        "calcs": [
-                            "delta"
-                        ],
-                        "fields": "",
-                        "values": false
-                    },
-                    "text": {
-
-                    },
-                    "textMode": "auto"
-                },
-                "pluginVersion": "9.0.1",
-                "targets": [
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "expr": "sum(patchman_engine_listener_kafka_message_received{event=~\"$event\"})",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Listener messages",
-                "type": "stat"
-            },
-            {
-                "datasource": {
-                    "uid": "$datasource"
-                },
-                "fieldConfig": {
-                    "defaults": {
-                        "color": {
-                            "mode": "thresholds"
-                        },
-                        "mappings": [
-                            {
-                                "options": {
-                                    "match": "null",
-                                    "result": {
-                                        "text": "N/A"
-                                    }
-                                },
-                                "type": "special"
-                            }
-                        ],
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "#d44a3a",
-                                    "value": null
-                                },
-                                {
-                                    "color": "rgba(237, 129, 40, 0.89)",
-                                    "value": 0.9
-                                },
-                                {
-                                    "color": "#299c46",
-                                    "value": 0.95
-                                }
-                            ]
-                        },
-                        "unit": "percentunit"
-                    },
-                    "overrides": [
-
-                    ]
-                },
-                "gridPos": {
-                    "h": 3,
-                    "w": 3,
-                    "x": 21,
-                    "y": 0
-                },
-                "id": 80,
-                "links": [
-
-                ],
-                "maxDataPoints": 100,
-                "options": {
-                    "colorMode": "background",
-                    "graphMode": "none",
-                    "justifyMode": "auto",
-                    "orientation": "horizontal",
-                    "reduceOptions": {
-                        "calcs": [
-                            "mean"
-                        ],
-                        "fields": "",
-                        "values": false
-                    },
-                    "text": {
-
-                    },
-                    "textMode": "auto"
-                },
-                "pluginVersion": "9.0.1",
-                "targets": [
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "expr": "avg_over_time(service:sli:latency_gt_2000:pctl10rate5m{exported_service=\"patch\"}[$__range])",
-                        "format": "time_series",
-                        "interval": "",
-                        "intervalFactor": 1,
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Latency uptime",
-                "type": "stat"
-            },
-            {
                 "collapsed": false,
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "tuHy3WB7z"
+                "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 3
+                    "y": 0
                 },
                 "id": 20,
-                "panels": [
-
-                ],
-                "targets": [
-                    {
-                        "datasource": {
-                            "type": "prometheus",
-                            "uid": "tuHy3WB7z"
-                        },
-                        "refId": "A"
-                    }
-                ],
+                "panels": [],
                 "title": "Current values",
                 "type": "row"
             },
             {
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "cacheTimeout": null,
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -453,20 +86,17 @@ data:
                         },
                         "unit": "none"
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 3,
                     "w": 3,
                     "x": 0,
-                    "y": 4
+                    "y": 1
                 },
                 "id": 8,
-                "links": [
-
-                ],
+                "interval": null,
+                "links": [],
                 "maxDataPoints": 100,
                 "options": {
                     "colorMode": "background",
@@ -480,17 +110,12 @@ data:
                         "fields": "",
                         "values": false
                     },
-                    "text": {
-
-                    },
+                    "text": {},
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\"}[$__range]))",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -502,9 +127,8 @@ data:
                 "type": "stat"
             },
             {
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "cacheTimeout": null,
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -541,20 +165,17 @@ data:
                         },
                         "unit": "percentunit"
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 3,
                     "w": 3,
                     "x": 3,
-                    "y": 4
+                    "y": 1
                 },
                 "id": 14,
-                "links": [
-
-                ],
+                "interval": null,
+                "links": [],
                 "maxDataPoints": 100,
                 "options": {
                     "colorMode": "background",
@@ -568,17 +189,12 @@ data:
                         "fields": "",
                         "values": false
                     },
-                    "text": {
-
-                    },
+                    "text": {},
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\", code=~\"2.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\"}[$__range]))",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -589,9 +205,8 @@ data:
                 "type": "stat"
             },
             {
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "cacheTimeout": null,
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -627,20 +242,17 @@ data:
                         },
                         "unit": "none"
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 3,
                     "w": 3,
                     "x": 6,
-                    "y": 4
+                    "y": 1
                 },
                 "id": 9,
-                "links": [
-
-                ],
+                "interval": null,
+                "links": [],
                 "maxDataPoints": 100,
                 "options": {
                     "colorMode": "background",
@@ -654,17 +266,12 @@ data:
                         "fields": "",
                         "values": false
                     },
-                    "text": {
-
-                    },
+                    "text": {},
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman.*-manager.*\"}))",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -675,9 +282,8 @@ data:
                 "type": "stat"
             },
             {
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "cacheTimeout": null,
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -713,20 +319,17 @@ data:
                         },
                         "unit": "none"
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 3,
                     "w": 3,
                     "x": 9,
-                    "y": 4
+                    "y": 1
                 },
                 "id": 24,
-                "links": [
-
-                ],
+                "interval": null,
+                "links": [],
                 "maxDataPoints": 100,
                 "options": {
                     "colorMode": "background",
@@ -740,17 +343,12 @@ data:
                         "fields": "",
                         "values": false
                     },
-                    "text": {
-
-                    },
+                    "text": {},
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman.*-listener.*\"}))",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -761,9 +359,8 @@ data:
                 "type": "stat"
             },
             {
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "cacheTimeout": null,
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -799,20 +396,17 @@ data:
                         },
                         "unit": "none"
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 3,
                     "w": 3,
                     "x": 12,
-                    "y": 4
+                    "y": 1
                 },
                 "id": 41,
-                "links": [
-
-                ],
+                "interval": null,
+                "links": [],
                 "maxDataPoints": 100,
                 "options": {
                     "colorMode": "background",
@@ -826,17 +420,12 @@ data:
                         "fields": "",
                         "values": false
                     },
-                    "text": {
-
-                    },
+                    "text": {},
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman.*-evaluator-upload.*\"}))",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -847,9 +436,8 @@ data:
                 "type": "stat"
             },
             {
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "cacheTimeout": null,
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -885,20 +473,17 @@ data:
                         },
                         "unit": "none"
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 3,
                     "w": 3,
                     "x": 15,
-                    "y": 4
+                    "y": 1
                 },
                 "id": 45,
-                "links": [
-
-                ],
+                "interval": null,
+                "links": [],
                 "maxDataPoints": 100,
                 "options": {
                     "colorMode": "background",
@@ -912,17 +497,12 @@ data:
                         "fields": "",
                         "values": false
                     },
-                    "text": {
-
-                    },
+                    "text": {},
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "max(sum(kube_pod_container_status_restarts_total{pod=~\"patchman.*-evaluator-recalc.*\"}))",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -933,9 +513,8 @@ data:
                 "type": "stat"
             },
             {
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "cacheTimeout": null,
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -971,20 +550,17 @@ data:
                         },
                         "unit": "none"
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 3,
                     "w": 3,
                     "x": 18,
-                    "y": 4
+                    "y": 1
                 },
                 "id": 32,
-                "links": [
-
-                ],
+                "interval": null,
+                "links": [],
                 "maxDataPoints": 100,
                 "options": {
                     "colorMode": "background",
@@ -998,17 +574,12 @@ data:
                         "fields": "",
                         "values": false
                     },
-                    "text": {
-
-                    },
+                    "text": {},
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "max(kube_pod_container_status_restarts_total{pod=~\"patchman.*-vmaas-sync.*\"})",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -1019,9 +590,8 @@ data:
                 "type": "stat"
             },
             {
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "cacheTimeout": null,
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -1057,20 +627,17 @@ data:
                         },
                         "unit": "percentunit"
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 3,
                     "w": 3,
                     "x": 21,
-                    "y": 4
+                    "y": 1
                 },
                 "id": 79,
-                "links": [
-
-                ],
+                "interval": null,
+                "links": [],
                 "maxDataPoints": 100,
                 "options": {
                     "colorMode": "background",
@@ -1084,17 +651,12 @@ data:
                         "fields": "",
                         "values": false
                     },
-                    "text": {
-
-                    },
+                    "text": {},
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "avg_over_time(service:sli:latency_gt_2000:pctl10rate5m{exported_service=\"patch\"}[30d])",
                         "format": "time_series",
                         "interval": "",
@@ -1107,9 +669,8 @@ data:
                 "type": "stat"
             },
             {
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "cacheTimeout": null,
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -1146,20 +707,17 @@ data:
                         },
                         "unit": "percentunit"
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 3,
                     "w": 3,
                     "x": 0,
-                    "y": 7
+                    "y": 4
                 },
                 "id": 25,
-                "links": [
-
-                ],
+                "interval": null,
+                "links": [],
                 "maxDataPoints": 100,
                 "options": {
                     "colorMode": "background",
@@ -1173,17 +731,12 @@ data:
                         "fields": "",
                         "values": false
                     },
-                    "text": {
-
-                    },
+                    "text": {},
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\", code=~\"5.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\"}[$__range]))",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -1194,9 +747,8 @@ data:
                 "type": "stat"
             },
             {
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "cacheTimeout": null,
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -1233,20 +785,17 @@ data:
                         },
                         "unit": "percentunit"
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 3,
                     "w": 3,
                     "x": 3,
-                    "y": 7
+                    "y": 4
                 },
                 "id": 28,
-                "links": [
-
-                ],
+                "interval": null,
+                "links": [],
                 "maxDataPoints": 100,
                 "options": {
                     "colorMode": "background",
@@ -1260,17 +809,12 @@ data:
                         "fields": "",
                         "values": false
                     },
-                    "text": {
-
-                    },
+                    "text": {},
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\", code=~\"4.*\"}[$__range])) / sum(increase(patchman_engine_requests_total{job=~\"patchman.*-manager\"}[$__range]))",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -1281,9 +825,8 @@ data:
                 "type": "stat"
             },
             {
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "cacheTimeout": null,
+                "datasource": "$datasource",
                 "description": "Build version running in this environment.",
                 "fieldConfig": {
                     "defaults": {
@@ -1321,20 +864,17 @@ data:
                         },
                         "unit": "percentunit"
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 3,
                     "w": 3,
                     "x": 6,
-                    "y": 7
+                    "y": 4
                 },
                 "id": 74,
-                "links": [
-
-                ],
+                "interval": null,
+                "links": [],
                 "maxDataPoints": 100,
                 "options": {
                     "colorMode": "background",
@@ -1348,17 +888,12 @@ data:
                         "fields": "/^version$/",
                         "values": false
                     },
-                    "text": {
-
-                    },
+                    "text": {},
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(patchman_engine_core_info{namespace=~\"patchman-engine$namespace\"}) by (version)",
                         "format": "table",
                         "interval": "",
@@ -1371,9 +906,8 @@ data:
                 "type": "stat"
             },
             {
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "cacheTimeout": null,
+                "datasource": "$datasource",
                 "description": "This is to ensure that all components are running in the same version.",
                 "fieldConfig": {
                     "defaults": {
@@ -1411,20 +945,17 @@ data:
                         },
                         "unit": "none"
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 3,
                     "w": 3,
                     "x": 9,
-                    "y": 7
+                    "y": 4
                 },
                 "id": 75,
-                "links": [
-
-                ],
+                "interval": null,
+                "links": [],
                 "maxDataPoints": 100,
                 "options": {
                     "colorMode": "background",
@@ -1438,17 +969,12 @@ data:
                         "fields": "",
                         "values": false
                     },
-                    "text": {
-
-                    },
+                    "text": {},
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "count(sum(patchman_engine_core_info{namespace=~\"patchman-engine$namespace\"}) by (version))",
                         "format": "table",
                         "interval": "",
@@ -1461,30 +987,335 @@ data:
                 "type": "stat"
             },
             {
+                "cacheTimeout": null,
+                "datasource": "$datasource",
+                "description": "Systems evaluated using component \"patchman.*-evaluator-upload\".",
+                "fieldConfig": {
+                    "defaults": {
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#299c46",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.1
+                                },
+                                {
+                                    "color": "#d44a3a",
+                                    "value": 3
+                                }
+                            ]
+                        },
+                        "unit": "none"
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 3,
+                    "w": 3,
+                    "x": 12,
+                    "y": 4
+                },
+                "id": 49,
+                "interval": null,
+                "links": [],
+                "maxDataPoints": 100,
+                "options": {
+                    "colorMode": "none",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "delta"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
+                },
+                "pluginVersion": "8.2.1",
+                "targets": [
+                    {
+                        "expr": "sum(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-upload-.*\", type=\"success\"})",
+                        "format": "time_series",
+                        "intervalFactor": 1,
+                        "refId": "A"
+                    }
+                ],
+                "title": "Evaluated uploads",
+                "type": "stat"
+            },
+            {
+                "cacheTimeout": null,
+                "datasource": "$datasource",
+                "description": "Systems evaluated using component \"patchman.*-evaluator-recalc\".",
+                "fieldConfig": {
+                    "defaults": {
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#299c46",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.1
+                                },
+                                {
+                                    "color": "#d44a3a",
+                                    "value": 3
+                                }
+                            ]
+                        },
+                        "unit": "none"
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 3,
+                    "w": 3,
+                    "x": 15,
+                    "y": 4
+                },
+                "id": 48,
+                "interval": null,
+                "links": [],
+                "maxDataPoints": 100,
+                "options": {
+                    "colorMode": "none",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "delta"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
+                },
+                "pluginVersion": "8.2.1",
+                "targets": [
+                    {
+                        "expr": "sum(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-recalc-.*\", type=\"success\"})",
+                        "format": "time_series",
+                        "intervalFactor": 1,
+                        "legendFormat": "",
+                        "refId": "A"
+                    }
+                ],
+                "title": "Evaluated recalcs",
+                "type": "stat"
+            },
+            {
+                "cacheTimeout": null,
+                "datasource": "$datasource",
+                "description": "Messages processed using Listener",
+                "fieldConfig": {
+                    "defaults": {
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#299c46",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.1
+                                },
+                                {
+                                    "color": "#d44a3a",
+                                    "value": 3
+                                }
+                            ]
+                        },
+                        "unit": "none"
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 3,
+                    "w": 3,
+                    "x": 18,
+                    "y": 4
+                },
+                "id": 50,
+                "interval": null,
+                "links": [],
+                "maxDataPoints": 100,
+                "options": {
+                    "colorMode": "none",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "delta"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
+                },
+                "pluginVersion": "8.2.1",
+                "targets": [
+                    {
+                        "expr": "sum(patchman_engine_listener_kafka_message_received{event=~\"$event\"})",
+                        "format": "time_series",
+                        "intervalFactor": 1,
+                        "legendFormat": "",
+                        "refId": "A"
+                    }
+                ],
+                "title": "Listener messages",
+                "type": "stat"
+            },
+            {
+                "cacheTimeout": null,
+                "datasource": "$datasource",
+                "fieldConfig": {
+                    "defaults": {
+                        "color": {
+                            "mode": "thresholds"
+                        },
+                        "mappings": [
+                            {
+                                "options": {
+                                    "match": "null",
+                                    "result": {
+                                        "text": "N/A"
+                                    }
+                                },
+                                "type": "special"
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "#d44a3a",
+                                    "value": null
+                                },
+                                {
+                                    "color": "rgba(237, 129, 40, 0.89)",
+                                    "value": 0.9
+                                },
+                                {
+                                    "color": "#299c46",
+                                    "value": 0.95
+                                }
+                            ]
+                        },
+                        "unit": "percentunit"
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 3,
+                    "w": 3,
+                    "x": 21,
+                    "y": 4
+                },
+                "id": 80,
+                "interval": null,
+                "links": [],
+                "maxDataPoints": 100,
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "reduceOptions": {
+                        "calcs": [
+                            "mean"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "text": {},
+                    "textMode": "auto"
+                },
+                "pluginVersion": "8.2.1",
+                "targets": [
+                    {
+                        "expr": "avg_over_time(service:sli:latency_gt_2000:pctl10rate5m{exported_service=\"patch\"}[$__range])",
+                        "format": "time_series",
+                        "interval": "",
+                        "intervalFactor": 1,
+                        "legendFormat": "",
+                        "refId": "A"
+                    }
+                ],
+                "title": "Latency uptime",
+                "type": "stat"
+            },
+            {
                 "collapsed": false,
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "tuHy3WB7z"
+                "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 10
+                    "y": 7
                 },
                 "id": 18,
-                "panels": [
-
-                ],
-                "targets": [
-                    {
-                        "datasource": {
-                            "type": "prometheus",
-                            "uid": "tuHy3WB7z"
-                        },
-                        "refId": "A"
-                    }
-                ],
+                "panels": [],
                 "title": "Golden signals",
                 "type": "row"
             },
@@ -1499,18 +1330,12 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -1518,7 +1343,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 11
+                    "y": 8
                 },
                 "hiddenSeries": false,
                 "id": 10,
@@ -1533,29 +1358,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(rate(patchman_engine_requests_total{}[$interval])) by (code)",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -1563,12 +1381,10 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Manager traffic",
                 "tooltip": {
                     "shared": true,
@@ -1577,47 +1393,46 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
-                "aliasColors": {
-
-                },
+                "aliasColors": {},
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -1625,7 +1440,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 11
+                    "y": 8
                 },
                 "hiddenSeries": false,
                 "id": 27,
@@ -1640,29 +1455,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "1000 * sum(rate(patchman_engine_request_duration_seconds_sum{}[$interval])) / sum(rate(patchman_engine_request_duration_seconds_count{}[$interval]))",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -1670,12 +1478,10 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Manager latency",
                 "tooltip": {
                     "shared": true,
@@ -1684,47 +1490,46 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "ms",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
-                "aliasColors": {
-
-                },
+                "aliasColors": {},
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -1732,7 +1537,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 17
+                    "y": 14
                 },
                 "hiddenSeries": false,
                 "id": 5,
@@ -1747,29 +1552,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(rate(container_cpu_usage_seconds_total{container=~\"patchman-.*\", namespace=~\"patchman-engine$namespace\"}[$interval])) by (container)/ sum(kube_pod_container_resource_limits{container=~\"patchman-.*\", namespace=~\"patchman-engine$namespace\", resource=\"cpu\"}) by (container)",
                         "format": "time_series",
                         "interval": "",
@@ -1778,12 +1576,10 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "CPU consumed",
                 "tooltip": {
                     "shared": true,
@@ -1792,48 +1588,46 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "percentunit",
+                        "label": null,
                         "logBase": 1,
                         "max": "1",
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
-                "aliasColors": {
-
-                },
+                "aliasColors": {},
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -1841,7 +1635,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 17
+                    "y": 14
                 },
                 "hiddenSeries": false,
                 "id": 4,
@@ -1856,29 +1650,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(container_memory_usage_bytes{container=~\"patchman-.*\", namespace=~\"patchman-engine$namespace\"}) by (container) / sum(kube_pod_container_resource_limits{container=~\"patchman-.*\", namespace=~\"patchman-engine$namespace\", resource=\"memory\"}) by (container)",
                         "format": "time_series",
                         "interval": "",
@@ -1887,12 +1674,10 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Memory consumed",
                 "tooltip": {
                     "shared": true,
@@ -1901,76 +1686,64 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "percentunit",
+                        "label": null,
                         "logBase": 1,
                         "max": "1",
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
                 "collapsed": false,
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "tuHy3WB7z"
+                "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 23
+                    "y": 20
                 },
                 "id": 61,
-                "panels": [
-
-                ],
-                "targets": [
-                    {
-                        "datasource": {
-                            "type": "prometheus",
-                            "uid": "tuHy3WB7z"
-                        },
-                        "refId": "A"
-                    }
-                ],
+                "panels": [],
                 "title": "Restarts & Kafka",
                 "type": "row"
             },
             {
-                "aliasColors": {
-
-                },
+                "aliasColors": {},
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -1978,7 +1751,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 24
+                    "y": 21
                 },
                 "hiddenSeries": false,
                 "id": 29,
@@ -1993,29 +1766,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(kube_pod_container_status_restarts_total{pod=~\"patchman.*-.*\", namespace=~\"patchman-engine$namespace\"}) by (container)",
                         "format": "time_series",
                         "interval": "",
@@ -2024,12 +1790,10 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Containers restarts",
                 "tooltip": {
                     "shared": true,
@@ -2038,47 +1802,46 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "none",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
-                "aliasColors": {
-
-                },
+                "aliasColors": {},
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -2086,7 +1849,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 24
+                    "y": 21
                 },
                 "hiddenSeries": false,
                 "id": 33,
@@ -2101,29 +1864,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(kafka_consumergroup_group_topic_sum_lag{group=\"patchman\"}) by (group, topic)",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -2131,12 +1887,10 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Kafka consumer lag",
                 "tooltip": {
                     "shared": true,
@@ -2145,53 +1899,50 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "none",
+                        "label": null,
                         "logBase": 2,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
                 "collapsed": false,
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "tuHy3WB7z"
+                "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 30
+                    "y": 27
                 },
                 "id": 63,
-                "panels": [
-
-                ],
-                "targets": [
-                    {
-                        "datasource": {
-                            "type": "prometheus",
-                            "uid": "tuHy3WB7z"
-                        },
-                        "refId": "A"
-                    }
-                ],
+                "panels": [],
                 "title": "Listener",
                 "type": "row"
             },
@@ -2205,18 +1956,12 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -2224,7 +1969,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 31
+                    "y": 28
                 },
                 "hiddenSeries": false,
                 "id": 56,
@@ -2239,29 +1984,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(rate(patchman_engine_listener_received_from_reporter[$interval])) by (reporter)",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -2269,12 +2007,10 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Listener processed messages by reporter",
                 "tooltip": {
                     "shared": true,
@@ -2283,26 +2019,33 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "none",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
@@ -2315,18 +2058,12 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -2334,7 +2071,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 31
+                    "y": 28
                 },
                 "hiddenSeries": false,
                 "id": 43,
@@ -2349,29 +2086,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(rate(patchman_engine_listener_kafka_message_received{event=~\"$event\"}[$interval])) by (type)",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -2379,12 +2109,10 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Listener processed messages by result",
                 "tooltip": {
                     "shared": true,
@@ -2393,169 +2121,50 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "none",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
-                }
-            },
-            {
-                "aliasColors": {
-                    "error-identity": "#890f02",
-                    "error-no-rows": "#58140c",
-                    "error-processing": "#bf1b00",
-                    "success": "#629e51"
-                },
-                "bars": false,
-                "dashLength": 10,
-                "dashes": false,
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "$datasource"
-                },
-                "fieldConfig": {
-                    "defaults": {
-                        "links": [
-
-                        ],
-                        "unit": "s"
-                    },
-                    "overrides": [
-
-                    ]
-                },
-                "fill": 1,
-                "fillGradient": 0,
-                "gridPos": {
-                    "h": 6,
-                    "w": 12,
-                    "x": 12,
-                    "y": 37
-                },
-                "hiddenSeries": false,
-                "id": 86,
-                "legend": {
-                    "avg": false,
-                    "current": false,
-                    "max": false,
-                    "min": false,
-                    "show": true,
-                    "total": false,
-                    "values": false
-                },
-                "lines": true,
-                "linewidth": 1,
-                "links": [
-
-                ],
-                "nullPointMode": "null",
-                "options": {
-                    "alertThreshold": true
-                },
-                "percentage": false,
-                "pluginVersion": "9.0.1",
-                "pointradius": 5,
-                "points": false,
-                "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
-                "spaceLength": 10,
-                "stack": false,
-                "steppedLine": false,
-                "targets": [
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "expr": "histogram_quantile(0.5, sum(rate(patchman_engine_listener_kafka_message_part_duration_seconds_bucket{job=~\"patchman.*-listener.*\"}[$interval])) by (part, le))",
-                        "format": "time_series",
-                        "hide": false,
-                        "intervalFactor": 1,
-                        "legendFormat": "{{type}}",
-                        "refId": "A"
-                    }
-                ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
-                "title": "Listener message processing part duration",
-                "tooltip": {
-                    "shared": true,
-                    "sort": 0,
-                    "value_type": "individual"
-                },
-                "type": "graph",
-                "xaxis": {
-                    "mode": "time",
-                    "show": true,
-                    "values": [
-
-                    ]
-                },
-                "yaxes": [
-                    {
-                        "$$hashKey": "object:500",
-                        "format": "s",
-                        "label": "Duration",
-                        "logBase": 1,
-                        "show": true
-                    },
-                    {
-                        "$$hashKey": "object:501",
-                        "format": "short",
-                        "logBase": 1,
-                        "show": true
-                    }
-                ],
-                "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
                 "collapsed": false,
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "tuHy3WB7z"
+                "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 43
+                    "y": 34
                 },
                 "id": 65,
-                "panels": [
-
-                ],
-                "targets": [
-                    {
-                        "datasource": {
-                            "type": "prometheus",
-                            "uid": "tuHy3WB7z"
-                        },
-                        "refId": "A"
-                    }
-                ],
+                "panels": [],
                 "title": "Evaluator",
                 "type": "row"
             },
@@ -2566,19 +2175,13 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ],
+                        "links": [],
                         "unit": "s"
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -2586,7 +2189,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 44
+                    "y": 35
                 },
                 "hiddenSeries": false,
                 "id": 81,
@@ -2601,29 +2204,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "exemplar": true,
                         "expr": "sum(rate(patchman_engine_evaluator_upload_evaluation_delay_seconds_sum{job=~\"patchman.*-evaluator-upload\"}[5m]))",
                         "format": "time_series",
@@ -2657,24 +2253,18 @@ data:
                                     "type": "field"
                                 },
                                 {
-                                    "params": [
-
-                                    ],
+                                    "params": [],
                                     "type": "mean"
                                 }
                             ]
                         ],
-                        "tags": [
-
-                        ]
+                        "tags": []
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Upload - evaluation delay",
                 "tooltip": {
                     "shared": true,
@@ -2683,28 +2273,35 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "$$hashKey": "object:227",
                         "format": "s",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "$$hashKey": "object:228",
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
@@ -2719,18 +2316,12 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -2738,7 +2329,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 44
+                    "y": 35
                 },
                 "hiddenSeries": false,
                 "id": 38,
@@ -2753,29 +2344,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(rate(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-$evaluator\"}[$interval])) by (type)",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -2783,12 +2367,10 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "System evaluations",
                 "tooltip": {
                     "shared": true,
@@ -2797,26 +2379,33 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "none",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
@@ -2826,20 +2415,14 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "description": "",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ],
+                        "links": [],
                         "unit": "s"
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -2847,7 +2430,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 50
+                    "y": 41
                 },
                 "hiddenSeries": false,
                 "id": 82,
@@ -2862,29 +2445,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "exemplar": true,
                         "expr": "sum(rate(patchman_engine_evaluator_evaluation_duration_seconds_sum{job=~\"patchman.*-evaluator-$evaluator\"}[$interval]))",
                         "format": "time_series",
@@ -2918,24 +2494,18 @@ data:
                                     "type": "field"
                                 },
                                 {
-                                    "params": [
-
-                                    ],
+                                    "params": [],
                                     "type": "mean"
                                 }
                             ]
                         ],
-                        "tags": [
-
-                        ]
+                        "tags": []
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "System evaluation duration",
                 "tooltip": {
                     "shared": true,
@@ -2944,56 +2514,50 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "$$hashKey": "object:227",
                         "format": "s",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "$$hashKey": "object:228",
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
                 "aliasColors": {
-                    "error-call-vmaas-updates": "#890f02",
-                    "error-db-read-inventory-data": "#58140c",
-                    "error-no-packages": "#99440a",
-                    "error-process-advisories": "#c15c17",
-                    "error-update-system-caches": "#bf1b00",
-                    "success": "#629e51"
+                    "unpatched": "#e24d42"
                 },
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ],
-                        "unit": "none"
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -3001,10 +2565,10 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 50
+                    "y": 41
                 },
                 "hiddenSeries": false,
-                "id": 84,
+                "id": 39,
                 "legend": {
                     "avg": false,
                     "current": false,
@@ -3016,46 +2580,34 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "editorMode": "code",
-                        "exemplar": false,
-                        "expr": "sum(rate(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-recalc.*\"}[$interval])) by (pod)",
+                        "expr": "sum(rate(patchman_engine_evaluator_updates{pod=~\"patchman.*-evaluator-$evaluator\"}[$interval])) by (type)",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "{{type}}",
-                        "range": true,
                         "refId": "A"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
-                "title": "System evaluations by pod - recalc",
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
+                "title": "System evaluations - patched/unpatched",
                 "tooltip": {
                     "shared": true,
                     "sort": 0,
@@ -3063,29 +2615,33 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:133",
                         "format": "none",
-                        "label": "Evalustions/s",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:134",
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
@@ -3095,19 +2651,13 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "description": "",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -3115,7 +2665,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 56
+                    "y": 47
                 },
                 "hiddenSeries": false,
                 "id": 83,
@@ -3130,29 +2680,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "exemplar": true,
                         "expr": "sum(rate(patchman_engine_evaluator_two_evaluations_interval_hours_sum{job=~\"patchman.*-evaluator-$evaluator\"}[$interval]))",
                         "format": "time_series",
@@ -3186,24 +2729,18 @@ data:
                                     "type": "field"
                                 },
                                 {
-                                    "params": [
-
-                                    ],
+                                    "params": [],
                                     "type": "mean"
                                 }
                             ]
                         ],
-                        "tags": [
-
-                        ]
+                        "tags": []
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Two evaluations interval",
                 "tooltip": {
                     "shared": true,
@@ -3212,55 +2749,48 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "$$hashKey": "object:227",
                         "format": "h",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "$$hashKey": "object:228",
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
-                "aliasColors": {
-                    "error-call-vmaas-updates": "#890f02",
-                    "error-db-read-inventory-data": "#58140c",
-                    "error-no-packages": "#99440a",
-                    "error-process-advisories": "#c15c17",
-                    "error-update-system-caches": "#bf1b00",
-                    "success": "#629e51"
-                },
+                "aliasColors": {},
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -3268,225 +2798,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 56
-                },
-                "hiddenSeries": false,
-                "id": 85,
-                "legend": {
-                    "avg": false,
-                    "current": false,
-                    "max": false,
-                    "min": false,
-                    "show": true,
-                    "total": false,
-                    "values": false
-                },
-                "lines": true,
-                "linewidth": 1,
-                "links": [
-
-                ],
-                "nullPointMode": "null",
-                "options": {
-                    "alertThreshold": true
-                },
-                "percentage": false,
-                "pluginVersion": "9.0.1",
-                "pointradius": 5,
-                "points": false,
-                "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
-                "spaceLength": 10,
-                "stack": false,
-                "steppedLine": false,
-                "targets": [
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "expr": "sum(rate(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-upload.*\"}[$interval])) by (pod)",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "legendFormat": "{{type}}",
-                        "refId": "A"
-                    }
-                ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
-                "title": "System evaluations by pod - upload",
-                "tooltip": {
-                    "shared": true,
-                    "sort": 0,
-                    "value_type": "individual"
-                },
-                "type": "graph",
-                "xaxis": {
-                    "mode": "time",
-                    "show": true,
-                    "values": [
-
-                    ]
-                },
-                "yaxes": [
-                    {
-                        "$$hashKey": "object:237",
-                        "format": "none",
-                        "label": "Evaluations/s",
-                        "logBase": 1,
-                        "show": true
-                    },
-                    {
-                        "$$hashKey": "object:238",
-                        "format": "short",
-                        "logBase": 1,
-                        "show": true
-                    }
-                ],
-                "yaxis": {
-                    "align": false
-                }
-            },
-            {
-                "aliasColors": {
-                    "unpatched": "#e24d42"
-                },
-                "bars": false,
-                "dashLength": 10,
-                "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
-                "fieldConfig": {
-                    "defaults": {
-                        "links": [
-
-                        ]
-                    },
-                    "overrides": [
-
-                    ]
-                },
-                "fill": 1,
-                "fillGradient": 0,
-                "gridPos": {
-                    "h": 6,
-                    "w": 12,
-                    "x": 0,
-                    "y": 62
-                },
-                "hiddenSeries": false,
-                "id": 39,
-                "legend": {
-                    "avg": false,
-                    "current": false,
-                    "max": false,
-                    "min": false,
-                    "show": true,
-                    "total": false,
-                    "values": false
-                },
-                "lines": true,
-                "linewidth": 1,
-                "links": [
-
-                ],
-                "nullPointMode": "null",
-                "options": {
-                    "alertThreshold": true
-                },
-                "percentage": false,
-                "pluginVersion": "9.0.1",
-                "pointradius": 5,
-                "points": false,
-                "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
-                "spaceLength": 10,
-                "stack": false,
-                "steppedLine": false,
-                "targets": [
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "expr": "sum(rate(patchman_engine_evaluator_updates{pod=~\"patchman.*-evaluator-$evaluator\"}[$interval])) by (type)",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "legendFormat": "{{type}}",
-                        "refId": "A"
-                    }
-                ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
-                "title": "System evaluations - patched/unpatched",
-                "tooltip": {
-                    "shared": true,
-                    "sort": 0,
-                    "value_type": "individual"
-                },
-                "type": "graph",
-                "xaxis": {
-                    "mode": "time",
-                    "show": true,
-                    "values": [
-
-                    ]
-                },
-                "yaxes": [
-                    {
-                        "format": "none",
-                        "logBase": 1,
-                        "show": true
-                    },
-                    {
-                        "format": "short",
-                        "logBase": 1,
-                        "show": true
-                    }
-                ],
-                "yaxis": {
-                    "align": false
-                }
-            },
-            {
-                "aliasColors": {
-
-                },
-                "bars": false,
-                "dashLength": 10,
-                "dashes": false,
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "$datasource"
-                },
-                "fieldConfig": {
-                    "defaults": {
-                        "links": [
-
-                        ]
-                    },
-                    "overrides": [
-
-                    ]
-                },
-                "fill": 1,
-                "fillGradient": 0,
-                "gridPos": {
-                    "h": 6,
-                    "w": 12,
-                    "x": 12,
-                    "y": 62
+                    "y": 47
                 },
                 "hiddenSeries": false,
                 "id": 47,
@@ -3501,29 +2813,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "exemplar": true,
                         "expr": "histogram_quantile(0.5, sum(rate(patchman_engine_evaluator_evaluation_part_duration_seconds_bucket{job=~\"patchman.*-evaluator-$evaluator\"}[$interval])) by (part, le))",
                         "format": "time_series",
@@ -3557,24 +2862,18 @@ data:
                                     "type": "field"
                                 },
                                 {
-                                    "params": [
-
-                                    ],
+                                    "params": [],
                                     "type": "mean"
                                 }
                             ]
                         ],
-                        "tags": [
-
-                        ]
+                        "tags": []
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Evaluation part duration median",
                 "tooltip": {
                     "shared": true,
@@ -3583,77 +2882,64 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:447",
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:448",
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
                 "collapsed": false,
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "tuHy3WB7z"
+                "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 68
+                    "y": 53
                 },
                 "id": 67,
-                "panels": [
-
-                ],
-                "targets": [
-                    {
-                        "datasource": {
-                            "type": "prometheus",
-                            "uid": "tuHy3WB7z"
-                        },
-                        "refId": "A"
-                    }
-                ],
+                "panels": [],
                 "title": "VMaaS sync",
                 "type": "row"
             },
             {
-                "aliasColors": {
-
-                },
+                "aliasColors": {},
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -3661,7 +2947,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 69
+                    "y": 54
                 },
                 "hiddenSeries": false,
                 "id": 76,
@@ -3676,29 +2962,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(increase(patchman_engine_vmaas_sync_deleted_culled_systems{}[$interval]))",
                         "format": "time_series",
                         "interval": "",
@@ -3707,9 +2986,6 @@ data:
                         "refId": "A"
                     },
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(increase(patchman_engine_vmaas_sync_stale_systems_marked{}[$interval]))",
                         "format": "time_series",
                         "interval": "",
@@ -3718,12 +2994,10 @@ data:
                         "refId": "B"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "System culling",
                 "tooltip": {
                     "shared": true,
@@ -3732,47 +3006,46 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "none",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
-                "aliasColors": {
-
-                },
+                "aliasColors": {},
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -3780,7 +3053,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 69
+                    "y": 54
                 },
                 "hiddenSeries": false,
                 "id": 40,
@@ -3795,29 +3068,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(increase(patchman_engine_vmaas_sync_vmaas_call{}[$interval])) by (type)",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -3825,9 +3091,6 @@ data:
                         "refId": "A"
                     },
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(increase(patchman_engine_manager_dependency_call{name=\"rbac\"}[$interval])) by (name, status)",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -3835,12 +3098,10 @@ data:
                         "refId": "B"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "External services",
                 "tooltip": {
                     "shared": true,
@@ -3849,26 +3110,33 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "none",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
@@ -3882,18 +3150,12 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -3901,7 +3163,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 75
+                    "y": 60
                 },
                 "hiddenSeries": false,
                 "id": 42,
@@ -3916,29 +3178,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(patchman_engine_vmaas_sync_advisories{}) by (type)",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -3946,9 +3201,6 @@ data:
                         "refId": "A"
                     },
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(patchman_engine_vmaas_sync_advisories{})",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -3956,12 +3208,10 @@ data:
                         "refId": "B"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Database items - advisories",
                 "tooltip": {
                     "shared": true,
@@ -3970,53 +3220,50 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "none",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
                 "collapsed": false,
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "tuHy3WB7z"
+                "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 81
+                    "y": 66
                 },
                 "id": 69,
-                "panels": [
-
-                ],
-                "targets": [
-                    {
-                        "datasource": {
-                            "type": "prometheus",
-                            "uid": "tuHy3WB7z"
-                        },
-                        "refId": "A"
-                    }
-                ],
+                "panels": [],
                 "title": "Database",
                 "type": "row"
             },
@@ -4031,18 +3278,12 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -4050,7 +3291,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 82
+                    "y": 67
                 },
                 "hiddenSeries": false,
                 "id": 51,
@@ -4065,29 +3306,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(patchman_engine_vmaas_sync_systems{last_upload=~\"last.*|all\"}) by (last_upload)",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -4095,9 +3329,6 @@ data:
                         "refId": "A"
                     },
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(patchman_engine_vmaas_sync_systems{last_upload=~\"last.*|all\"}) by (last_upload) - sum(label_replace(patchman_engine_vmaas_sync_cyndi_systems{type=~\"last.*|all\"}, \"last_upload\", \"$1\", \"type\", \"(.*)\")) by (last_upload)",
                         "format": "time_series",
                         "hide": false,
@@ -4106,12 +3337,10 @@ data:
                         "refId": "B"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Database items - systems",
                 "tooltip": {
                     "shared": true,
@@ -4120,26 +3349,33 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "none",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
@@ -4153,18 +3389,12 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -4172,7 +3402,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 82
+                    "y": 67
                 },
                 "hiddenSeries": false,
                 "id": 78,
@@ -4187,29 +3417,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(patchman_engine_vmaas_sync_packages{})",
                         "format": "time_series",
                         "interval": "",
@@ -4218,9 +3441,6 @@ data:
                         "refId": "A"
                     },
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(patchman_engine_vmaas_sync_package_names{})",
                         "format": "time_series",
                         "interval": "",
@@ -4229,12 +3449,10 @@ data:
                         "refId": "B"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Database items - packages",
                 "tooltip": {
                     "shared": true,
@@ -4243,26 +3461,33 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "none",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
@@ -4276,18 +3501,12 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -4295,7 +3514,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 88
+                    "y": 73
                 },
                 "hiddenSeries": false,
                 "id": 73,
@@ -4310,29 +3529,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(patchman_engine_vmaas_sync_cyndi_tags_count) by (type)",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -4340,12 +3552,10 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Database items - Cyndi data",
                 "tooltip": {
                     "shared": true,
@@ -4354,26 +3564,33 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "none",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
@@ -4387,18 +3604,12 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -4406,7 +3617,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 88
+                    "y": 73
                 },
                 "hiddenSeries": false,
                 "id": 59,
@@ -4421,29 +3632,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(patchman_engine_vmaas_sync_database_processes{}) by (usename)",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -4451,12 +3655,10 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Database processes",
                 "tooltip": {
                     "shared": true,
@@ -4465,26 +3667,33 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "none",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
@@ -4498,18 +3707,12 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
+                "datasource": "$datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -4517,7 +3720,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 94
+                    "y": 79
                 },
                 "hiddenSeries": false,
                 "id": 58,
@@ -4532,29 +3735,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(patchman_engine_vmaas_sync_database_size_bytes{}) by (table)",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -4562,9 +3758,6 @@ data:
                         "refId": "A"
                     },
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_advisories_.*\"})",
                         "format": "time_series",
                         "interval": "",
@@ -4573,9 +3766,6 @@ data:
                         "refId": "B"
                     },
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_package_.*\"})",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -4583,9 +3773,6 @@ data:
                         "refId": "C"
                     },
                     {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_platform_.*\"})",
                         "format": "time_series",
                         "interval": "",
@@ -4594,12 +3781,10 @@ data:
                         "refId": "D"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "Database size",
                 "tooltip": {
                     "shared": true,
@@ -4608,53 +3793,50 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "decbytes",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
                 "collapsed": false,
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "tuHy3WB7z"
+                "datasource": null,
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
                 },
                 "gridPos": {
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 100
+                    "y": 85
                 },
                 "id": 71,
-                "panels": [
-
-                ],
-                "targets": [
-                    {
-                        "datasource": {
-                            "type": "prometheus",
-                            "uid": "tuHy3WB7z"
-                        },
-                        "refId": "A"
-                    }
-                ],
+                "panels": [],
                 "title": "Database (RDS metrics)",
                 "type": "row"
             },
@@ -4670,18 +3852,12 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$rds_datasource"
-                },
+                "datasource": "$rds_datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -4689,7 +3865,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 101
+                    "y": 86
                 },
                 "hiddenSeries": false,
                 "id": 53,
@@ -4704,29 +3880,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$rds_datasource"
-                        },
                         "expr": "sum(rdsosmetrics_fileSys_usedPercent{exported_instance=~\"patchman-.*\"}) by (mount_point)",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -4734,12 +3903,10 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "RDS data capacity usage",
                 "tooltip": {
                     "shared": true,
@@ -4748,26 +3915,33 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "percent",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
@@ -4782,18 +3956,12 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$rds_datasource"
-                },
+                "datasource": "$rds_datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -4801,7 +3969,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 101
+                    "y": 86
                 },
                 "hiddenSeries": false,
                 "id": 52,
@@ -4816,29 +3984,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$rds_datasource"
-                        },
                         "expr": "sum(label_replace(rdsosmetrics_processList_cpuUsedPc{exported_instance=~\"patchman-.*\"}, \"db_user\", \"$1\", \"name\", \"postgres: ([^ ]+) .+\")) by (db_user)",
                         "format": "time_series",
                         "hide": false,
@@ -4847,9 +4008,6 @@ data:
                         "refId": "B"
                     },
                     {
-                        "datasource": {
-                            "uid": "$rds_datasource"
-                        },
                         "expr": "sum(rdsosmetrics_processList_cpuUsedPc{exported_instance=~\"patchman-.*\"})",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -4857,12 +4015,10 @@ data:
                         "refId": "A"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "RDS CPU usage",
                 "tooltip": {
                     "shared": true,
@@ -4871,26 +4027,33 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "none",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
@@ -4905,18 +4068,12 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$rds_datasource"
-                },
+                "datasource": "$rds_datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -4924,7 +4081,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 107
+                    "y": 92
                 },
                 "hiddenSeries": false,
                 "id": 54,
@@ -4939,29 +4096,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$rds_datasource"
-                        },
                         "expr": "sum(rdsosmetrics_memory_total{exported_instance=~\"patchman-.*\"})",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -4969,9 +4119,6 @@ data:
                         "refId": "A"
                     },
                     {
-                        "datasource": {
-                            "uid": "$rds_datasource"
-                        },
                         "expr": "sum(rdsosmetrics_memory_free{exported_instance=~\"patchman-.*\"})",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -4979,9 +4126,6 @@ data:
                         "refId": "B"
                     },
                     {
-                        "datasource": {
-                            "uid": "$rds_datasource"
-                        },
                         "expr": "sum(rdsosmetrics_memory_dirty{exported_instance=~\"patchman-.*\"})",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -4989,9 +4133,6 @@ data:
                         "refId": "C"
                     },
                     {
-                        "datasource": {
-                            "uid": "$rds_datasource"
-                        },
                         "expr": "sum(rdsosmetrics_memory_active{exported_instance=\"patchman-prod\"})",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -4999,12 +4140,10 @@ data:
                         "refId": "D"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "RDS memory",
                 "tooltip": {
                     "shared": true,
@@ -5013,26 +4152,33 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "deckbytes",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             },
             {
@@ -5047,18 +4193,12 @@ data:
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
-                "datasource": {
-                    "uid": "$rds_datasource"
-                },
+                "datasource": "$rds_datasource",
                 "fieldConfig": {
                     "defaults": {
-                        "links": [
-
-                        ]
+                        "links": []
                     },
-                    "overrides": [
-
-                    ]
+                    "overrides": []
                 },
                 "fill": 1,
                 "fillGradient": 0,
@@ -5066,7 +4206,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 107
+                    "y": 92
                 },
                 "hiddenSeries": false,
                 "id": 55,
@@ -5081,29 +4221,22 @@ data:
                 },
                 "lines": true,
                 "linewidth": 1,
-                "links": [
-
-                ],
+                "links": [],
                 "nullPointMode": "null",
                 "options": {
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.1",
+                "pluginVersion": "8.2.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
+                "seriesOverrides": [],
                 "spaceLength": 10,
                 "stack": false,
                 "steppedLine": false,
                 "targets": [
                     {
-                        "datasource": {
-                            "uid": "$rds_datasource"
-                        },
                         "expr": "sum(rdsosmetrics_loadAverageMinute_one{exported_instance=~\"patchman-.*\"})",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -5111,9 +4244,6 @@ data:
                         "refId": "A"
                     },
                     {
-                        "datasource": {
-                            "uid": "$rds_datasource"
-                        },
                         "expr": "sum(rdsosmetrics_loadAverageMinute_five{exported_instance=~\"patchman-.*\"})",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -5121,9 +4251,6 @@ data:
                         "refId": "B"
                     },
                     {
-                        "datasource": {
-                            "uid": "$rds_datasource"
-                        },
                         "expr": "sum(rdsosmetrics_loadAverageMinute_fifteen{exported_instance=~\"patchman-.*\"})",
                         "format": "time_series",
                         "intervalFactor": 1,
@@ -5131,12 +4258,10 @@ data:
                         "refId": "C"
                     }
                 ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
                 "title": "RDS load avg",
                 "tooltip": {
                     "shared": true,
@@ -5145,35 +4270,40 @@ data:
                 },
                 "type": "graph",
                 "xaxis": {
+                    "buckets": null,
                     "mode": "time",
+                    "name": null,
                     "show": true,
-                    "values": [
-
-                    ]
+                    "values": []
                 },
                 "yaxes": [
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     },
                     {
                         "format": "short",
+                        "label": null,
                         "logBase": 1,
+                        "max": null,
+                        "min": null,
                         "show": true
                     }
                 ],
                 "yaxis": {
-                    "align": false
+                    "align": false,
+                    "alignLevel": null
                 }
             }
         ],
         "refresh": false,
-        "schemaVersion": 36,
+        "schemaVersion": 31,
         "style": "dark",
-        "tags": [
-
-        ],
+        "tags": [],
         "templating": {
             "list": [
                 {
@@ -5185,7 +4315,10 @@ data:
                         "text": "5m",
                         "value": "5m"
                     },
+                    "description": null,
+                    "error": null,
                     "hide": 0,
+                    "label": null,
                     "name": "interval",
                     "options": [
                         {
@@ -5250,13 +4383,17 @@ data:
                     "type": "interval"
                 },
                 {
+                    "allValue": null,
                     "current": {
-                        "selected": false,
+                        "selected": true,
                         "text": ".*",
                         "value": ".*"
                     },
+                    "description": null,
+                    "error": null,
                     "hide": 0,
                     "includeAll": false,
+                    "label": null,
                     "multi": false,
                     "name": "evaluator",
                     "options": [
@@ -5282,11 +4419,14 @@ data:
                     "type": "custom"
                 },
                 {
+                    "allValue": null,
                     "current": {
-                        "selected": false,
+                        "selected": true,
                         "text": ".*",
                         "value": ".*"
                     },
+                    "description": null,
+                    "error": null,
                     "hide": 0,
                     "includeAll": false,
                     "label": "event",
@@ -5316,17 +4456,17 @@ data:
                 {
                     "current": {
                         "selected": true,
-                        "text": "crcs02ue1-prometheus",
-                        "value": "crcs02ue1-prometheus"
+                        "text": "crcp01ue1-prometheus",
+                        "value": "crcp01ue1-prometheus"
                     },
+                    "description": null,
+                    "error": null,
                     "hide": 0,
                     "includeAll": false,
                     "label": "datasource",
                     "multi": false,
                     "name": "datasource",
-                    "options": [
-
-                    ],
+                    "options": [],
                     "query": "prometheus",
                     "queryValue": "",
                     "refresh": 1,
@@ -5336,18 +4476,18 @@ data:
                 },
                 {
                     "current": {
-                        "selected": false,
-                        "text": "app-sre-stage-02-prometheus",
-                        "value": "app-sre-stage-02-prometheus"
+                        "selected": true,
+                        "text": "app-sre-prod-01-prometheus",
+                        "value": "app-sre-prod-01-prometheus"
                     },
+                    "description": null,
+                    "error": null,
                     "hide": 0,
                     "includeAll": false,
                     "label": "rds_datasource",
                     "multi": false,
                     "name": "rds_datasource",
-                    "options": [
-
-                    ],
+                    "options": [],
                     "query": "prometheus",
                     "queryValue": "",
                     "refresh": 1,
@@ -5356,13 +4496,17 @@ data:
                     "type": "datasource"
                 },
                 {
+                    "allValue": null,
                     "current": {
-                        "selected": false,
+                        "selected": true,
                         "text": ".*",
                         "value": ".*"
                     },
+                    "description": null,
+                    "error": null,
                     "hide": 0,
                     "includeAll": false,
+                    "label": null,
                     "multi": false,
                     "name": "namespace",
                     "options": [
@@ -5426,8 +4570,7 @@ data:
         "timezone": "",
         "title": "patchman-engine",
         "uid": "patch",
-        "version": 1,
-        "weekStart": ""
+        "version": 1
     }
 kind: ConfigMap
 metadata:
