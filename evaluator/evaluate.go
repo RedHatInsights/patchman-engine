@@ -113,11 +113,7 @@ func Evaluate(ctx context.Context, accountID int, inventoryID, accountName strin
 		return errors.Wrap(err, "remediations publish failed")
 	}
 
-	if system != nil {
-		// increment `success` metric only if the system exists
-		// don't count messages from `tryGetSystem` as success
-		evaluationCnt.WithLabelValues("success").Inc()
-	}
+	evaluationCnt.WithLabelValues("success").Inc()
 	utils.Log("inventoryID", inventoryID, "evalLabel", evaluationType).Info("system evaluated successfully")
 	return nil
 }
@@ -328,7 +324,7 @@ func tryGetSystem(tx *gorm.DB, accountID int, inventoryID string,
 	}
 
 	if requested != nil && system.LastEvaluation != nil && requested.Time().Before(*system.LastEvaluation) {
-		evaluationCnt.WithLabelValues("skip-old-msg").Inc()
+		evaluationCnt.WithLabelValues("error-old-msg").Inc()
 		return nil
 	}
 	return system
