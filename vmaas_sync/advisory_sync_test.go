@@ -210,32 +210,3 @@ func TestSyncAdvisoriesCheck(t *testing.T) {
 	database.DeleteNewlyAddedPackages(t)
 	database.DeleteNewlyAddedAdvisories(t)
 }
-
-func TestSyncEpelAdvisories(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-	configure()
-
-	modifiedSince := "2020-01-01T00:00:00+00:00"
-	err := syncAdvisories(time.Now(), &modifiedSince)
-	assert.NoError(t, err)
-
-	expected := []string{"EPEL-1234"}
-	database.CheckAdvisoriesInDB(t, expected)
-
-	var am models.AdvisoryMetadata
-	assert.Nil(t, database.Db.Model(&models.AdvisoryMetadata{}).Where("name in (?)", expected).Find(&am).Error)
-	assert.Equal(t, "epel-des", am.Description)
-	assert.Equal(t, "epel-sum", am.Summary)
-	assert.Equal(t, "epel-syn", am.Synopsis)
-	assert.Equal(t, false, am.RebootRequired)
-	assert.Equal(t, 2, am.AdvisoryTypeID)
-	assert.Equal(t, "2016-09-22 08:00:00 +0000 UTC", am.PublicDate.String())
-	assert.Equal(t, "2016-09-22 08:00:00 +0000 UTC", am.ModifiedDate.String())
-	assert.Equal(t, true, am.Synced)
-	assert.Nil(t, am.Solution) // EPEL advisories have no solution ;-)
-	assert.Nil(t, am.URL)      // and empty url
-
-	database.DeleteNewlyAddedPackages(t)
-	database.DeleteNewlyAddedAdvisories(t)
-}
