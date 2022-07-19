@@ -246,7 +246,7 @@
             "get": {
                 "summary": "Show me details an advisory by given advisory name",
                 "description": "Show me details an advisory by given advisory name",
-                "operationId": "detailAdvisory",
+                "operationId": "detailAdvisoryV2",
                 "parameters": [
                     {
                         "name": "advisory_id",
