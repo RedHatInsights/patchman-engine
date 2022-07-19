@@ -48,7 +48,7 @@ func lazySavePackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) error {
 	}
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("lazy-package-save"))
 
-	missingPackages := getMissingPackages(tx, vmaasData)
+	missingPackages := getMissingPackages(vmaasData)
 	err := updatePackageDB(tx, &missingPackages)
 	if err != nil {
 		return errors.Wrap(err, "packages bulk insert failed")
@@ -58,7 +58,7 @@ func lazySavePackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) error {
 }
 
 // Get packages with known name but version missing in db/cache
-func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) models.PackageSlice {
+func getMissingPackages(vmaasData *vmaas.UpdatesV2Response) models.PackageSlice {
 	updates := vmaasData.GetUpdateList()
 	packages := make(models.PackageSlice, 0, len(updates))
 	for nevra := range updates {
@@ -74,28 +74,16 @@ func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) models.
 			continue
 		}
 		latestName, found := memoryPackageCache.GetLatestByName(parsed.Name)
-		pkg := models.Package{EVRA: parsed.EVRAString()}
 		if found {
 			// name is known, create missing package in db/cache
-			pkg.NameID = latestName.NameID
-			pkg.SummaryHash = &latestName.SummaryHash
-			pkg.DescriptionHash = &latestName.DescriptionHash
-		} else {
-			// name is unknown, insert into package_name
-			pkgName := models.PackageName{Name: parsed.Name}
-			err := updatePackageNameDB(tx, &pkgName)
-			if err != nil {
-				utils.Log("err", err.Error(), "nevra", nevra).Error("unknown package name insert failed")
+			pkg := models.Package{
+				NameID:          latestName.NameID,
+				EVRA:            parsed.EVRAString(),
+				SummaryHash:     &latestName.SummaryHash,
+				DescriptionHash: &latestName.DescriptionHash,
 			}
-			pkg.NameID = pkgName.ID
-			if pkg.NameID == 0 {
-				// insert conflict, it did not return ID
-				// try to get ID from package_name table
-				tx.Where("name = ?", parsed.Name).First(&pkgName)
-				pkg.NameID = pkgName.ID
-			}
+			packages = append(packages, pkg)
 		}
-		packages = append(packages, pkg)
 	}
 	return packages
 }
@@ -111,38 +99,21 @@ func updatePackageDB(tx *gorm.DB, missing *models.PackageSlice) error {
 	return nil
 }
 
-func updatePackageNameDB(tx *gorm.DB, missing *models.PackageName) error {
-	// TODO: use generics once we start using go1.18
-	err := tx.Transaction(func(tx2 *gorm.DB) error {
-		return tx2.Clauses(clause.OnConflict{DoNothing: true}).Create(missing).Error
-	})
-	return err
-}
-
 func updatePackageCache(missing models.PackageSlice) {
 	utils.Log().Trace("updatePackageCache")
-	emptyByteSlice := make([]byte, 0)
 	for _, dbPkg := range missing {
 		name, ok := memoryPackageCache.GetNameByID(dbPkg.NameID)
 		if !ok {
 			utils.Log("name_id", dbPkg.NameID).Error("name_id missing in memoryPackageCache")
 			continue
 		}
-		descHash := emptyByteSlice
-		summaryHash := emptyByteSlice
-		if dbPkg.DescriptionHash != nil {
-			descHash = *dbPkg.DescriptionHash
-		}
-		if dbPkg.SummaryHash != nil {
-			summaryHash = *dbPkg.SummaryHash
-		}
 		pkg := PackageCacheMetadata{
 			ID:              dbPkg.ID,
 			NameID:          dbPkg.NameID,
 			Name:            name,
 			Evra:            dbPkg.EVRA,
-			DescriptionHash: descHash,
-			SummaryHash:     summaryHash,
+			DescriptionHash: *dbPkg.DescriptionHash,
+			SummaryHash:     *dbPkg.SummaryHash,
 		}
 		memoryPackageCache.Add(&pkg)
 	}

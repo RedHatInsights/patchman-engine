@@ -17,8 +17,8 @@ func TestGetPackageCache(t *testing.T) {
 	pc.Load()
 	assert.Equal(t, 11, pc.byID.Len())
 	assert.Equal(t, 11, pc.byNevra.Len())
-	assert.Equal(t, 11, pc.latestByName.Len())
-	assert.Equal(t, 11, pc.nameByID.Len())
+	assert.Equal(t, 10, pc.latestByName.Len())
+	assert.Equal(t, 10, pc.nameByID.Len())
 	// ask for a package not in cache
 	val, ok := pc.GetByID(1)
 	assert.True(t, ok)
@@ -78,10 +78,10 @@ func TestAddPackageCache(t *testing.T) {
 	pc := NewPackageCache(true, true, 100, 100)
 	assert.NotNil(t, pc)
 	pc.Load()
-	assert.Equal(t, 13, pc.byID.Len())
-	assert.Equal(t, 13, pc.byNevra.Len())
-	assert.Equal(t, 11, pc.latestByName.Len())
-	assert.Equal(t, 11, pc.nameByID.Len())
+	assert.Equal(t, 12, pc.byID.Len())
+	assert.Equal(t, 12, pc.byNevra.Len())
+	assert.Equal(t, 10, pc.latestByName.Len())
+	assert.Equal(t, 10, pc.nameByID.Len())
 
 	pkg := PackageCacheMetadata{
 		ID:              999,
@@ -92,10 +92,10 @@ func TestAddPackageCache(t *testing.T) {
 		SummaryHash:     []byte("4"),
 	}
 	pc.Add(&pkg)
-	assert.Equal(t, 14, pc.byID.Len())
-	assert.Equal(t, 14, pc.byNevra.Len())
-	assert.Equal(t, 11, pc.latestByName.Len())
-	assert.Equal(t, 11, pc.nameByID.Len())
+	assert.Equal(t, 13, pc.byID.Len())
+	assert.Equal(t, 13, pc.byNevra.Len())
+	assert.Equal(t, 10, pc.latestByName.Len())
+	assert.Equal(t, 10, pc.nameByID.Len())
 
 	val, ok := pc.GetByID(999)
 	assert.True(t, ok)
