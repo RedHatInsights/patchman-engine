@@ -6,3 +6,5 @@ MIGRATION_FILES=file://./database_admin/migrations
 
 echo "Running in $(pwd) as $(id)"
 ${GORUN:+go run} ./main${GORUN:+.go} migrate $MIGRATION_FILES
+
+exec sleep infinity

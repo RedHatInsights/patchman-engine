@@ -68,8 +68,8 @@ func MigrateUp(conn database.Driver, sourceURL string) {
 	}
 
 	if err != nil {
+		// Don't panic on error, Log and keep the container running so we can diagnose it
 		fmt.Fprintf(os.Stderr, "Error upgrading the database: %v", err.Error())
-		panic(err)
 	}
 }
 
