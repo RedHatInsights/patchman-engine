@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (84, false);
+VALUES (83, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -931,7 +931,6 @@ CREATE TABLE IF NOT EXISTS package_name
 );
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE package_name TO vmaas_sync;
-GRANT SELECT, INSERT, UPDATE ON TABLE package_name TO evaluator;
 
 CREATE TABLE IF NOT EXISTS strings
 (
