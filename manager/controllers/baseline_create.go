@@ -17,6 +17,7 @@ import (
 )
 
 const BaselineMissingNameErr = "missing required parameter 'name'"
+const DuplicateBaselineNameErr = "patch template name already exists"
 
 type CreateBaselineRequest struct {
 	// Baseline name
@@ -75,7 +76,7 @@ func CreateBaselineHandler(c *gin.Context) {
 	baselineID, err := buildCreateBaselineQuery(request, accountID)
 	if err != nil {
 		if database.IsPgErrorCode(err, database.PgErrorDuplicateKey) {
-			LogAndRespBadRequest(c, err, "baseline name already exists")
+			LogAndRespBadRequest(c, err, DuplicateBaselineNameErr)
 			return
 		}
 		LogAndRespError(c, err, "Database error")
