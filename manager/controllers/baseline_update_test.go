@@ -165,8 +165,8 @@ func TestUpdateBaselineDuplicatedName(t *testing.T) {
 		"PUT", "/:baseline_id")
 
 	var errResp utils.ErrorResponse
-	ParseResponse(t, w, http.StatusBadRequest, &errResp)
-	assert.Equal(t, "baseline name already exists", errResp.Error)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, DuplicateBaselineNameErr, errResp.Error)
 }
 
 func TestUpdateBaselineSystems(t *testing.T) {

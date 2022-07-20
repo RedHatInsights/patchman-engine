@@ -85,8 +85,8 @@ func TestCreateBaselineDuplicatedName(t *testing.T) {
 	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
 
 	var errResp utils.ErrorResponse
-	ParseResponse(t, w, http.StatusBadRequest, &errResp)
-	assert.Equal(t, "baseline name already exists", errResp.Error)
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	assert.Equal(t, DuplicateBaselineNameErr, errResp.Error)
 }
 
 func TestCreateBaselineDescriptionEmptyString(t *testing.T) {
