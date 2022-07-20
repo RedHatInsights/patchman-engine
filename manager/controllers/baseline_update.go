@@ -99,7 +99,7 @@ func BaselineUpdateHandler(c *gin.Context) {
 			return
 		}
 		if database.IsPgErrorCode(err, database.PgErrorDuplicateKey) {
-			LogAndRespBadRequest(c, err, "baseline name already exists")
+			LogAndRespBadRequest(c, err, DuplicateBaselineNameErr)
 			return
 		}
 		LogAndRespError(c, err, "Database error")

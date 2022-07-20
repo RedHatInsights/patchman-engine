@@ -111,7 +111,7 @@ func TestCreateBaselineDuplicatedName(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
-	assert.Equal(t, "baseline name already exists", errResp.Error)
+	assert.Equal(t, DuplicateBaselineNameErr, errResp.Error)
 }
 
 func TestCreateBaselineDescriptionEmptyString(t *testing.T) {
