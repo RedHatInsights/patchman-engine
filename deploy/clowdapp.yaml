@@ -39,6 +39,8 @@ objects:
             - {name: FORCE_SCHEMA_VERSION, value: '${FORCE_SCHEMA_VERSION}'}
             - {name: UPDATE_CYNDI_PASSWD, value: '${UPDATE_CYNDI_PASSWD}'}
             - {name: WAIT_FOR_DB, value: 'empty'}
+            - {name: UPDATE_USERS, value: '${UPDATE_USERS}'}
+            - {name: UPDATE_DB_CONFIG, value: '${UPDATE_DB_CONFIG}'}
             - {name: MANAGER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                                   key: manager-database-password}}}
             - {name: LISTENER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
@@ -90,6 +92,13 @@ objects:
           enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG_LISTENER}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
         command:
           - ./scripts/entrypoint.sh
           - listener
@@ -131,6 +140,13 @@ objects:
           enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG_EVALUATOR_UPLOAD}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
         command:
           - ./scripts/entrypoint.sh
           - evaluator
@@ -188,6 +204,13 @@ objects:
           enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG_EVALUATOR_RECALC}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
         command:
           - ./scripts/entrypoint.sh
           - evaluator
@@ -245,6 +268,13 @@ objects:
           enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG_VMAAS_SYNC}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
         command:
           - ./scripts/entrypoint.sh
           - vmaas_sync
@@ -503,6 +533,8 @@ parameters:
 - {name: RES_LIMIT_MEM_DATABASE_ADMIN, value: 128Mi}
 - {name: RES_REQUEST_CPU_DATABASE_ADMIN, value: 100m}
 - {name: RES_REQUEST_MEM_DATABASE_ADMIN, value: 128Mi}
+- {name: UPDATE_USERS, value: 'false'} # set to true if we need to change user or passwords
+- {name: UPDATE_DB_CONFIG, value: 'false'} # set to true if we need to load new './database_admin/config.sql'
 
 # Common parameters
 - {name: IMAGE, value: quay.io/cloudservices/patchman-engine-app}
