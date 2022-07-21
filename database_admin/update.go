@@ -81,8 +81,7 @@ func startMigration(conn database.Driver, db *sql.DB, migrationFilesURL string) 
 	execOrPanic(db, "ALTER USER vmaas_sync LOGIN")
 }
 
-func UpdateDB(migrationFilesURL string) {
-	var err error
+func dbConn() (database.Driver, *sql.DB) {
 	sslModeCert := utils.Cfg.DBSslMode
 	if utils.Cfg.DBSslRootCert != "" {
 		sslModeCert += "&sslrootcert=" + utils.Cfg.DBSslRootCert
@@ -94,6 +93,11 @@ func UpdateDB(migrationFilesURL string) {
 	if err != nil {
 		panic(err)
 	}
+	return conn, db
+}
+
+func UpdateDB(migrationFilesURL string) {
+	conn, db := dbConn()
 	getAdvisoryLock(db)
 	defer releaseAdvisoryLock(db)
 
@@ -104,23 +108,43 @@ func UpdateDB(migrationFilesURL string) {
 		execOrPanic(db, "GRANT ALL ON SCHEMA public TO public")
 	}
 
-	log.Info("Creating application components users")
-	execFromFile(db, "./database_admin/schema/create_users.sql")
-
-	log.Info("Migrating the database")
-	startMigration(conn, db, migrationFilesURL)
-
-	log.Info("Setting user passwords")
-	// Set specific password for each user. If the users are already created, change the password.
-	// This is performed on each startup in order to ensure users have latest pasword
-	execOrPanic(db, "ALTER USER listener WITH PASSWORD '"+utils.GetenvOrFail("LISTENER_PASSWORD")+"'")
-	execOrPanic(db, "ALTER USER evaluator WITH PASSWORD '"+utils.GetenvOrFail("EVALUATOR_PASSWORD")+"'")
-	execOrPanic(db, "ALTER USER manager WITH PASSWORD '"+utils.GetenvOrFail("MANAGER_PASSWORD")+"'")
-	execOrPanic(db, "ALTER USER vmaas_sync WITH PASSWORD '"+utils.GetenvOrFail("VMAAS_SYNC_PASSWORD")+"'")
-	if utils.GetBoolEnvOrDefault("UPDATE_CYNDI_PASSWD", false) {
-		execOrPanic(db, "ALTER USER cyndi WITH PASSWORD '"+utils.GetenvOrFail("CYNDI_PASSWORD")+"'")
+	if utils.GetBoolEnvOrDefault("UPDATE_USERS", false) {
+		log.Info("Creating application components users")
+		execFromFile(db, "./database_admin/schema/create_users.sql")
 	}
 
-	log.Info("Setting database config")
-	execFromFile(db, "./database_admin/config.sql")
+	if isUpgraded(conn, migrationFilesURL) {
+		log.Info("Skipping migration")
+	} else {
+		log.Info("Migrating the database")
+		startMigration(conn, db, migrationFilesURL)
+	}
+
+	if utils.GetBoolEnvOrDefault("UPDATE_USERS", false) {
+		log.Info("Setting user passwords")
+		// Set specific password for each user. If the users are already created, change the password.
+		// This is performed on each startup in order to ensure users have latest pasword
+		execOrPanic(db, "ALTER USER listener WITH PASSWORD '"+utils.GetenvOrFail("LISTENER_PASSWORD")+"'")
+		execOrPanic(db, "ALTER USER evaluator WITH PASSWORD '"+utils.GetenvOrFail("EVALUATOR_PASSWORD")+"'")
+		execOrPanic(db, "ALTER USER manager WITH PASSWORD '"+utils.GetenvOrFail("MANAGER_PASSWORD")+"'")
+		execOrPanic(db, "ALTER USER vmaas_sync WITH PASSWORD '"+utils.GetenvOrFail("VMAAS_SYNC_PASSWORD")+"'")
+		if utils.GetBoolEnvOrDefault("UPDATE_CYNDI_PASSWD", false) {
+			execOrPanic(db, "ALTER USER cyndi WITH PASSWORD '"+utils.GetenvOrFail("CYNDI_PASSWORD")+"'")
+		}
+	}
+
+	if utils.GetBoolEnvOrDefault("UPDATE_DB_CONFIG", false) {
+		log.Info("Setting database config")
+		execFromFile(db, "./database_admin/config.sql")
+	}
+}
+
+func CheckUpgraded(sourceURL string) {
+	conn, _ := dbConn()
+	for {
+		if isUpgraded(conn, sourceURL) {
+			return
+		}
+		time.Sleep(time.Second)
+	}
 }

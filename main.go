@@ -40,6 +40,9 @@ func main() {
 		case "print_clowder_params":
 			utils.PrintClowderParams()
 			return
+		case "check_upgraded":
+			database_admin.CheckUpgraded(os.Args[2])
+			return
 		}
 	}
 	log.Panic("You need to provide a command")
