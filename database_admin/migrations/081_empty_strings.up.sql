@@ -1,3 +1,7 @@
+BEGIN WORK;
+
+LOCK TABLE advisory_metadata, baseline, strings, system_package, system_platform IN ACCESS EXCLUSIVE MODE;
+
 ALTER TABLE advisory_metadata ALTER COLUMN solution DROP NOT NULL;
 
 UPDATE advisory_metadata SET solution = NULL WHERE empty(solution);
@@ -14,3 +18,5 @@ ALTER TABLE strings ADD CHECK (NOT empty(value));
 ALTER TABLE system_package ADD CHECK (NOT empty(latest_evra));
 ALTER TABLE system_platform ADD CHECK (NOT empty(json_checksum));
 ALTER TABLE system_platform ADD CHECK (NOT empty(vmaas_json));
+
+COMMIT WORK;
