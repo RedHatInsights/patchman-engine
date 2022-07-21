@@ -1,6 +1,8 @@
 package notification
 
 import (
+	"app/base/models"
+	"app/base/mqueue"
 	"time"
 )
 
@@ -12,6 +14,8 @@ const (
 
 type Context struct {
 	InventoryID string `json:"inventory_id"`
+	DisplayName string `json:"display_name"`
+	HostURL     string `json:"host_url"`
 }
 
 type Metadata struct{}
@@ -53,8 +57,8 @@ type Notification struct {
 	// Account id to address notification to.
 	AccountID string `json:"account_id"`
 	// Extra information that are common to all the events that are sent in this message.
-	Context interface{} `json:"context,omitempty"`
-	Events  []Event     `json:"events"`
+	Context Context `json:"context,omitempty"`
+	Events  []Event `json:"events"`
 	// Recipients settings - Applications can add extra email recipients by adding entries to this array.
 	// This setting extends whatever the Administrators configured in their Notifications settings (since v1.1.0).
 	Recipients []Recipient `json:"recipients,omitempty"`
@@ -69,7 +73,8 @@ type Advisory struct {
 	Synopsis     string `json:"synopsis"`
 }
 
-func MakeNotification(inventoryID, accountName, orgID, eventType string, events []Event) *Notification {
+func MakeNotification(system *models.SystemPlatform, event *mqueue.PlatformEvent,
+	eventType string, events []Event) *Notification {
 	return &Notification{
 		Version:     Version,
 		Bundle:      Bundle,
@@ -77,9 +82,13 @@ func MakeNotification(inventoryID, accountName, orgID, eventType string, events 
 		EventType:   eventType,
 		// ISO-8601 formatted time
 		Timestamp: time.Now().Format(time.RFC3339),
-		AccountID: accountName,
-		Context:   Context{InventoryID: inventoryID},
-		Events:    events,
-		OrgID:     orgID,
+		AccountID: event.GetAccountName(),
+		Context: Context{
+			InventoryID: system.InventoryID,
+			DisplayName: system.DisplayName,
+			HostURL:     event.GetURL(),
+		},
+		Events: events,
+		OrgID:  event.GetOrgID(),
 	}
 }

@@ -3,6 +3,7 @@ package evaluator
 import (
 	"app/base"
 	"app/base/database"
+	"app/base/models"
 	"app/base/mqueue"
 	ntf "app/base/notification"
 	"app/base/utils"
@@ -60,7 +61,7 @@ func getUnnotifiedAdvisories(tx *gorm.DB, accountID int, newAdvs SystemAdvisoryM
 	return unAdvs, nil
 }
 
-func publishNewAdvisoriesNotification(tx *gorm.DB, inventoryID string, event *mqueue.PlatformEvent,
+func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform, event *mqueue.PlatformEvent,
 	accountID int, newAdvisories SystemAdvisoryMap) error {
 	if notificationsPublisher == nil {
 		return nil
@@ -81,8 +82,8 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, inventoryID string, event *mq
 	}
 
 	msg, err := mqueue.MessageFromJSON(
-		inventoryID,
-		ntf.MakeNotification(inventoryID, event.GetAccountName(), event.GetOrgID(), NewAdvisoryEvent, events))
+		system.InventoryID,
+		ntf.MakeNotification(system, event, NewAdvisoryEvent, events))
 	if err != nil {
 		return errors.Wrap(err, "creating message from notification failed")
 	}
@@ -97,7 +98,7 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, inventoryID string, event *mq
 		advisoryIDs = append(advisoryIDs, a.AdvisoryID)
 	}
 
-	utils.Log("inventoryID", inventoryID, "advisoryIDs", advisoryIDs).Info("notification sent successfully")
+	utils.Log("inventoryID", system.InventoryID, "advisoryIDs", advisoryIDs).Info("notification sent successfully")
 
 	err = tx.Table("advisory_account_data").
 		Where("rh_account_id = ? AND advisory_id IN (?)", accountID, advisoryIDs).
