@@ -68,6 +68,13 @@ func (event *PlatformEvent) GetOrgID() string {
 	return *event.OrgID
 }
 
+func (event *PlatformEvent) GetURL() string {
+	if event.URL == nil {
+		return ""
+	}
+	return *event.URL
+}
+
 func writePlatformEvents(ctx context.Context, w Writer, events ...PlatformEvent) error {
 	var err error
 	msgs := make([]KafkaMessage, len(events))

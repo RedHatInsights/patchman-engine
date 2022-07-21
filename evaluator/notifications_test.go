@@ -3,11 +3,12 @@ package evaluator
 import (
 	"app/base/core"
 	"app/base/database"
+	"app/base/models"
 	"app/base/mqueue"
 	ntf "app/base/notification"
 	"app/base/utils"
 	"encoding/json"
-	"strconv"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -90,9 +91,25 @@ func TestAdvisoriesNotificationMessage(t *testing.T) {
 		},
 	}
 
+	displayName := "display-name"
+	system := &models.SystemPlatform{
+		InventoryID: inventoryID,
+		DisplayName: displayName,
+	}
+
 	orgID := "1234567"
-	notification := ntf.MakeNotification(inventoryID, strconv.Itoa(rhAccountID), orgID, NewAdvisoryEvent, events)
+	url := fmt.Sprintf("www.console.redhat.com/insights/inventory/%s", inventoryID)
+	event := &mqueue.PlatformEvent{
+		OrgID: &orgID,
+		URL:   &url,
+	}
+
+	notification := ntf.MakeNotification(system, event, NewAdvisoryEvent, events)
 	assert.Equal(t, orgID, notification.OrgID)
+	assert.Equal(t, url, notification.Context.HostURL)
+	assert.Equal(t, inventoryID, notification.Context.InventoryID)
+	assert.Equal(t, displayName, notification.Context.DisplayName)
+
 	msg, err := mqueue.MessageFromJSON(inventoryID, notification)
 	assert.Nil(t, err)
 	assert.Equal(t, inventoryID, string(msg.Key))
