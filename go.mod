@@ -28,7 +28,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_golang v1.7.0
 	github.com/redhatinsights/app-common-go v1.5.1
-	github.com/redhatinsights/platform-go-middlewares v0.16.1
+	github.com/redhatinsights/platform-go-middlewares v0.19.0
 	github.com/segmentio/kafka-go v0.4.16
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
