@@ -5,7 +5,6 @@ import (
 	"app/base/utils"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -219,38 +218,26 @@ func TestSystemsOrderOS(t *testing.T) {
 }
 
 func testSystems(t *testing.T, url string, account int) SystemsResponse {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithAccount("GET", url, nil, nil, SystemsListHandler, "/", account)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", url, nil)
-	core.InitRouterWithAccount(SystemsListHandler, "/", account).ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemsResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	return output
 }
 
 func testSystemsError(t *testing.T, url string) (int, utils.ErrorResponse) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", url, nil, nil, SystemsListHandler, "/")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", url, nil)
-	core.InitRouterWithPath(SystemsListHandler, "/").ServeHTTP(w, req)
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	return w.Code, errResp
 }
 
 func TestSystemsTagsInMetadata(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil)
-	core.InitRouterWithAccount(SystemsListHandler, "/", 3).ServeHTTP(w, req)
+	core.SetupTest(t)
+	w := CreateRequestRouterWithAccount("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, nil, SystemsListHandler, "/", 3)
 
 	var output SystemsResponse
 	ParseResponseBody(t, w.Body.Bytes(), &output)

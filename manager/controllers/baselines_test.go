@@ -5,37 +5,26 @@ import (
 	"app/base/utils"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func testBaselines(t *testing.T, url string) BaselinesResponse {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", url, nil)
-	core.InitRouter(BaselinesListHandler).ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
+	core.SetupTest(t)
+	w := CreateRequest("GET", url, nil, nil, BaselinesListHandler)
 
 	var output BaselinesResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	return output
 }
 
 func testBaselinesError(t *testing.T, url string, expectedStatus int) utils.ErrorResponse {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", url, nil)
-	core.InitRouter(BaselinesListHandler).ServeHTTP(w, req)
-	assert.Equal(t, expectedStatus, w.Code)
+	core.SetupTest(t)
+	w := CreateRequest("GET", url, nil, nil, BaselinesListHandler)
 
 	var output utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, expectedStatus, &output)
 	return output
 }
 
@@ -81,15 +70,11 @@ func TestBaselinesUnlimited(t *testing.T) {
 }
 
 func TestBaselinesOffsetOverflow(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequest("GET", "/?offset=10&limit=4", nil, nil, BaselinesListHandler)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?offset=10&limit=4", nil)
-	core.InitRouter(BaselinesListHandler).ServeHTTP(w, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
@@ -139,12 +124,8 @@ func TestBaselinesSort(t *testing.T) {
 }
 
 func TestBaselinesWrongSort(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?sort=unknown_key", nil)
-	core.InitRouter(BaselinesListHandler).ServeHTTP(w, req)
+	core.SetupTest(t)
+	w := CreateRequest("GET", "/?sort=unknown_key", nil, nil, AdvisoriesListHandler)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

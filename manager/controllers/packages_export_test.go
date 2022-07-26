@@ -2,39 +2,26 @@ package controllers
 
 import (
 	"app/base/core"
-	"app/base/utils"
-	"github.com/stretchr/testify/assert"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPackageExportJSON(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/", nil, &contentTypeJSON, PackagesExportHandler, 3, "GET", "/")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
-	req.Header.Add("Accept", "application/json")
-	core.InitRouterWithParams(PackagesExportHandler, 3, "GET", "/").ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output []PackageItem
-
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 4, len(output))
 	assert.Equal(t, "kernel", output[0].Name)
 }
 
 func TestPackageExportCSV(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
-	req.Header.Add("Accept", "text/csv")
-	core.InitRouterWithParams(PackagesExportHandler, 3, "GET", "/").ServeHTTP(w, req)
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/", nil, &contentTypeCSV, PackagesExportHandler, 3, "GET", "/")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()

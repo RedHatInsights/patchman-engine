@@ -6,7 +6,6 @@ import (
 	"app/base/utils"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -14,15 +13,9 @@ import (
 )
 
 func testBaselineDetail(t *testing.T, url string, expectedStatus int, output interface{}) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", url, nil)
-	core.InitRouterWithPath(BaselineDetailHandler, "/:baseline_id").ServeHTTP(w, req)
-
-	assert.Equal(t, expectedStatus, w.Code)
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", url, nil, nil, BaselineDetailHandler, "/:baseline_id")
+	ParseResponse(t, w, expectedStatus, &output)
 }
 
 func TestBaselineDetailDefault(t *testing.T) {
@@ -49,8 +42,7 @@ func TestBaselineDetailInvalid(t *testing.T) {
 }
 
 func TestBaselineDetailEmptyConfig(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
 	baselineID := database.CreateBaselineWithConfig(t, "", nil, nil)
 	var output BaselineDetailResponse
 	url := fmt.Sprintf("/%d", baselineID)

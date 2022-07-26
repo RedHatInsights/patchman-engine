@@ -2,9 +2,7 @@ package controllers // nolint: dupl
 
 import (
 	"app/base/core"
-	"app/base/utils"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -12,29 +10,20 @@ import (
 )
 
 func TestAdvisorySystemsExportJSON(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, &contentTypeJSON, AdvisorySystemsExportHandler, "/:advisory_id")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1", nil)
-	req.Header.Add("Accept", "application/json")
-	core.InitRouterWithPath(AdvisorySystemsExportHandler, "/:advisory_id").ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemDBLookup
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 6, len(output))
 	assert.Equal(t, output[0].ID, "00000000-0000-0000-0000-000000000001")
 	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output[0].SystemItemAttributes.Tags)
 }
 
 func TestAdvisorySystemsExportCSV(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, &contentTypeCSV, AdvisorySystemsExportHandler, "/:advisory_id")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1", nil)
-	req.Header.Add("Accept", "text/csv")
-	core.InitRouterWithPath(AdvisorySystemsExportHandler, "/:advisory_id").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
 	lines := strings.Split(body, "\n")

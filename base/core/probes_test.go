@@ -2,7 +2,6 @@ package core
 
 import (
 	"app/base/database"
-	"app/base/utils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,8 +17,7 @@ func TestLiveness(t *testing.T) {
 }
 
 func TestReadiness(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	SetupTestEnvironment()
+	SetupTest(t)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/", nil)
@@ -28,8 +26,7 @@ func TestReadiness(t *testing.T) {
 }
 
 func TestReadinessFail(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	SetupTestEnvironment()
+	SetupTest(t)
 
 	sqlDB, _ := database.Db.DB()
 	assert.Nil(t, sqlDB.Close())
