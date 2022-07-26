@@ -2,9 +2,7 @@ package controllers // nolint: dupl
 
 import (
 	"app/base/core"
-	"app/base/utils"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -12,28 +10,21 @@ import (
 )
 
 func TestSystemAdvisoriesExportJSON(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil,
+		&contentTypeJSON, SystemAdvisoriesExportHandler, "/:inventory_id")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001", nil)
-	req.Header.Add("Accept", "application/json")
-	core.InitRouterWithPath(SystemAdvisoriesExportHandler, "/:inventory_id").ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output []AdvisoryInlineItem
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 8, len(output))
 	assert.Equal(t, output[0].Description, "adv-1-des")
 }
 
 func TestSystemAdvisoriesExportCSV(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil,
+		&contentTypeCSV, SystemAdvisoriesExportHandler, "/:inventory_id")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001", nil)
-	req.Header.Add("Accept", "text/csv")
-	core.InitRouterWithPath(SystemAdvisoriesExportHandler, "/:inventory_id").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
 	lines := strings.Split(body, "\n")
@@ -45,12 +36,9 @@ func TestSystemAdvisoriesExportCSV(t *testing.T) {
 }
 
 func TestUnknownSystemAdvisoriesExport(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/unknownsystem", nil, &contentTypeCSV, SystemAdvisoriesExportHandler,
+		"/:inventory_id")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/unknownsystem", nil)
-	req.Header.Add("Accept", "text/csv")
-	core.InitRouterWithPath(SystemAdvisoriesExportHandler, "/:inventory_id").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

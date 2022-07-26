@@ -3,24 +3,20 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
-	"github.com/stretchr/testify/assert"
 	"net/http"
-	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 //nolint: dupl
 func TestLatestPackage(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/packages/kernel", nil, nil, PackageDetailHandler, 3,
+		"GET", "/packages/:package_name")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/packages/kernel", nil)
-	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
-		ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageDetailResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, "kernel", output.Data.Attributes.Name)
 	assert.Equal(t, "The Linux kernel", output.Data.Attributes.Summary)
 	assert.Equal(t, "The kernel meta package", output.Data.Attributes.Description)
@@ -32,16 +28,12 @@ func TestLatestPackage(t *testing.T) {
 
 //nolint: dupl
 func TestEvraPackage(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/packages/kernel-5.6.13-200.fc31.x86_64", nil, nil,
+		PackageDetailHandler, 3, "GET", "/packages/:package_name")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/packages/kernel-5.6.13-200.fc31.x86_64", nil)
-	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
-		ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output PackageDetailResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, "kernel", output.Data.Attributes.Name)
 	assert.Equal(t, "The Linux kernel", output.Data.Attributes.Summary)
 	assert.Equal(t, "The kernel meta package", output.Data.Attributes.Description)
@@ -52,55 +44,40 @@ func TestEvraPackage(t *testing.T) {
 }
 
 func TestNonExitentPackage(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/packages/python", nil, nil, PackageDetailHandler, 3,
+		"GET", "/packages/:package_name")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/packages/python", nil)
-	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
-		ServeHTTP(w, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, "invalid package name", errResp.Error)
 }
 
 func TestNonExitentEvra(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/packages/kernel-5.6.13-202.fc31.x86_64", nil, nil,
+		PackageDetailHandler, 3, "GET", "/packages/:package_name")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/packages/kernel-5.6.13-202.fc31.x86_64", nil)
-	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
-		ServeHTTP(w, req)
-	assert.Equal(t, http.StatusNotFound, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusNotFound, &errResp)
 	assert.Equal(t, "package not found", errResp.Error)
 }
 
 func TestPackageDetailNoPackage(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequest("GET", "/", nil, nil, PackageDetailHandler)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
-	core.InitRouter(PackageDetailHandler).ServeHTTP(w, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, "package_param not found", errResp.Error)
 }
 
 func TestPackageDetailFiltering(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/packages/kernel-5.6.13-202.fc31.x86_64?filter[filter]=abcd",
+		nil, nil, PackageDetailHandler, 3, "GET", "/packages/:package_name")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/packages/kernel-5.6.13-202.fc31.x86_64?filter[filter]=abcd", nil)
-	core.InitRouterWithParams(PackageDetailHandler, 3, "GET", "/packages/:package_name").
-		ServeHTTP(w, req)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
 }

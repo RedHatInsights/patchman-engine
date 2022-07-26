@@ -2,23 +2,17 @@ package controllers
 
 import (
 	"app/base/core"
-	"app/base/utils"
-	"github.com/stretchr/testify/assert"
 	"net/http"
-	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func testAccountSystemCounts(t *testing.T, acc int, count int) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
 	var output SystemsResponse
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
-	core.InitRouterWithAccount(SystemsListHandler, "/", acc).ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	w := CreateRequestRouterWithAccount("GET", "/", nil, nil, SystemsListHandler, "/", acc)
+	ParseResponse(t, w, http.StatusOK, &output)
 	// data
 	assert.Equal(t, count, len(output.Data))
 }

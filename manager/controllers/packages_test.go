@@ -4,20 +4,16 @@ import (
 	"app/base/core"
 	"app/base/utils"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"net/http"
-	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func doTestPackagesBytes(t *testing.T, q string) (resp []byte, status int) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", q, nil, nil, PackagesListHandler, 3, "GET", "/")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", q, nil)
-	core.InitRouterWithParams(PackagesListHandler, 3, "GET", "/").
-		ServeHTTP(w, req)
 	return w.Body.Bytes(), w.Code
 }
 
@@ -70,16 +66,12 @@ func TestSearchPackages(t *testing.T) {
 }
 
 func TestPackageTagsInvalid(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil, nil,
+		PackagesListHandler, 3, "GET", "/")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil)
-	core.InitRouterWithParams(PackagesListHandler, 3, "GET", "/").ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
@@ -88,15 +80,12 @@ func TestPackagesWrongOffset(t *testing.T) {
 }
 
 func TestPackageTagsInMetadata(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil)
-	core.InitRouterWithParams(PackagesListHandler, 3, "GET", "/").ServeHTTP(w, req)
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, nil,
+		PackagesListHandler, 3, "GET", "/")
 
 	var output PackagesResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 
 	testMap := map[string]FilterData{
 		"ns1/k1": {"eq", []string{"val1"}},

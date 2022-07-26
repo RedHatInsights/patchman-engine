@@ -6,7 +6,6 @@ import (
 	"app/base/utils"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -20,16 +19,11 @@ func TestInit(t *testing.T) {
 }
 
 func testAdvisories(t *testing.T, url string) AdvisoriesResponse {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", url, nil)
-	core.InitRouter(AdvisoriesListHandler).ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
+	core.SetupTest(t)
+	w := CreateRequest("GET", url, nil, nil, AdvisoriesListHandler)
 
 	var output AdvisoriesResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	return output
 }
 
@@ -81,15 +75,11 @@ func TestAdvisoriesOffset(t *testing.T) {
 }
 
 func TestAdvisoriesOffsetOverflow(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequest("GET", "/?offset=13&limit=4", nil, nil, AdvisoriesListHandler)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?offset=13&limit=4", nil)
-	core.InitRouter(AdvisoriesListHandler).ServeHTTP(w, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
@@ -197,35 +187,26 @@ func TestAdvisoriesFilterApplicableSystems(t *testing.T) {
 }
 
 func TestAdvisoriesPossibleSorts(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
 
 	for sort := range AdvisoriesFields {
 		if sort == "ReleaseVersions" {
 			// this fiesd is not sortable, skip it
 			continue
 		}
-		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", fmt.Sprintf("/?sort=%v", sort), nil)
-		core.InitRouter(AdvisoriesListHandler).ServeHTTP(w, req)
+
+		w := CreateRequest("GET", fmt.Sprintf("/?sort=%v", sort), nil, nil, AdvisoriesListHandler)
 
 		var output AdvisoriesResponse
-		ParseResponseBody(t, w.Body.Bytes(), &output)
-
-		assert.Equal(t, http.StatusOK, w.Code)
+		ParseResponse(t, w, http.StatusOK, &output)
 		assert.Equal(t, 1, len(output.Meta.Sort))
 		assert.Equal(t, output.Meta.Sort[0], sort)
 	}
 }
 
 func TestAdvisoriesWrongSort(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?sort=unknown_key", nil)
-	core.InitRouter(AdvisoriesListHandler).ServeHTTP(w, req)
-
+	core.SetupTest(t)
+	w := CreateRequest("GET", "/?sort=unknown_key", nil, nil, AdvisoriesListHandler)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
@@ -274,32 +255,20 @@ func TestAdvisoriesTags(t *testing.T) {
 }
 
 func TestListAdvisoriesTagsInvalid(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil, nil, AdvisoriesListHandler, "/")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil)
-	core.InitRouterWithPath(AdvisoriesListHandler, "/").ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
 func doTestWrongOffset(t *testing.T, path, q string, handler gin.HandlerFunc) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", q, nil, nil, handler, 3, "GET", path)
 
-	w := httptest.NewRecorder()
-
-	req, _ := http.NewRequest("GET", q, nil)
-	core.InitRouterWithParams(handler, 3, "GET", path).
-		ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
@@ -308,15 +277,12 @@ func TestAdvisoriesWrongOffset(t *testing.T) {
 }
 
 func TestAdvisoryTagsInMetadata(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1", nil)
-	core.InitRouterWithPath(AdvisoriesListHandler, "/:advisory_id").ServeHTTP(w, req)
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, nil, AdvisoriesListHandler,
+		"/:advisory_id")
 
 	var output AdvisoriesResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 
 	testMap := map[string]FilterData{
 		"ns1/k1": {"eq", []string{"val1"}},

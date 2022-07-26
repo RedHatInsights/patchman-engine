@@ -2,9 +2,7 @@ package controllers
 
 import (
 	"app/base/core"
-	"app/base/utils"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -12,17 +10,12 @@ import (
 )
 
 func TestSystemPackagesExportHandlerJSON(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/00000000-0000-0000-0000-000000000013/packages",
+		nil, &contentTypeJSON, SystemPackagesExportHandler, 3, "GET", "/:inventory_id/packages")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000013/packages", nil)
-	req.Header.Add("Accept", "application/json")
-	core.InitRouterWithParams(SystemPackagesExportHandler, 3, "GET", "/:inventory_id/packages").ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemPackageInline
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 4, len(output))
 	assert.Equal(t, output[0].Name, "kernel")
 	assert.Equal(t, output[0].EVRA, "5.6.13-200.fc31.x86_64")
@@ -31,13 +24,9 @@ func TestSystemPackagesExportHandlerJSON(t *testing.T) {
 }
 
 func TestSystemPackagesExportHandlerCSV(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000013/packages", nil)
-	req.Header.Add("Accept", "text/csv")
-	core.InitRouterWithParams(SystemPackagesExportHandler, 3, "GET", "/:inventory_id/packages").ServeHTTP(w, req)
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/00000000-0000-0000-0000-000000000013/packages",
+		nil, &contentTypeCSV, SystemPackagesExportHandler, 3, "GET", "/:inventory_id/packages")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
@@ -53,12 +42,9 @@ func TestSystemPackagesExportHandlerCSV(t *testing.T) {
 }
 
 func TestSystemPackagesExportUnknown(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/unknownsystem/packages", nil, &contentTypeCSV,
+		SystemPackagesExportHandler, 3, "GET", "/:inventory_id/packages")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/unknownsystem/packages", nil)
-	req.Header.Add("Accept", "text/csv")
-	core.InitRouterWithParams(SystemPackagesExportHandler, 3, "GET", "/:inventory_id/packages").ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

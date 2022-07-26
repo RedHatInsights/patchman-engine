@@ -3,23 +3,19 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
-	"github.com/stretchr/testify/assert"
 	"net/http"
-	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSystemDetailDefault1(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil, nil,
+		SystemDetailHandler, "/:inventory_id")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001", nil)
-	core.InitRouterWithPath(SystemDetailHandler, "/:inventory_id").ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemDetailResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data.ID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data.Attributes.DisplayName)
 	assert.Equal(t, "system", output.Data.Type)
@@ -40,74 +36,55 @@ func TestSystemDetailDefault1(t *testing.T) {
 }
 
 func TestSystemDetailDefault2(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
+	core.SetupTest(t)
 	// get system with some installable/updatable packages
-	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000012", nil)
-	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 3).ServeHTTP(w, req)
+	w := CreateRequestRouterWithAccount("GET", "/00000000-0000-0000-0000-000000000012", nil, nil,
+		SystemDetailHandler, "/:inventory_id", 3)
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemDetailResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, output.Data.Attributes.PackagesInstalled)
 	assert.Equal(t, 2, output.Data.Attributes.PackagesUpdatable)
 }
 
 func TestSystemDetailNoIdProvided(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequest("GET", "/", nil, nil, SystemDetailHandler)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
-	core.InitRouter(SystemDetailHandler).ServeHTTP(w, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, "inventory_id param not found", errResp.Error)
 }
 
 func TestSystemDetailNotFound(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/ffffffff-ffff-ffff-ffff-ffffffffffff", nil, nil,
+		SystemDetailHandler, "/:inventory_id")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/ffffffff-ffff-ffff-ffff-ffffffffffff", nil)
-	core.InitRouterWithPath(SystemDetailHandler, "/:inventory_id").ServeHTTP(w, req)
-	assert.Equal(t, http.StatusNotFound, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusNotFound, &errResp)
 	assert.Equal(t, "inventory not found", errResp.Error)
 }
 
 func TestSystemsNoRHSM(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithAccount("GET", "/00000000-0000-0000-0000-000000000014", nil, nil,
+		SystemDetailHandler, "/:inventory_id", 3)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000014", nil)
-	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 3).ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemDetailResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000014", output.Data.ID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000014", output.Data.Attributes.DisplayName)
 	assert.Equal(t, "", output.Data.Attributes.Rhsm)
 }
 
 func TestRHSMLessThanOS(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithAccount("GET", "/00000000-0000-0000-0000-000000000003", nil, nil,
+		SystemDetailHandler, "/:inventory_id", 1)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000003", nil)
-	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 1).ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemDetailResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data.ID)
 	assert.Equal(t, "8.0", output.Data.Attributes.Rhsm)
 	assert.Equal(t, "8", output.Data.Attributes.OSMajor)
@@ -115,16 +92,12 @@ func TestRHSMLessThanOS(t *testing.T) {
 }
 
 func TestRHSMGreaterThanOS(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithAccount("GET", "/00000000-0000-0000-0000-000000000004", nil, nil,
+		SystemDetailHandler, "/:inventory_id", 1)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000004", nil)
-	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 1).ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output SystemDetailResponse
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000004", output.Data.ID)
 	assert.Equal(t, "8.3", output.Data.Attributes.Rhsm)
 	assert.Equal(t, "8", output.Data.Attributes.OSMajor)
@@ -132,23 +105,16 @@ func TestRHSMGreaterThanOS(t *testing.T) {
 }
 
 func TestSystemUnknown(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/unknownsystem", nil)
-	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 1).ServeHTTP(w, req)
-
+	core.SetupTest(t)
+	w := CreateRequestRouterWithAccount("GET", "/unknownsystem", nil, nil, SystemDetailHandler, "/:inventory_id", 1)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 func TestSystemDetailFiltering(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithAccount("GET", "/00000000-0000-0000-0000-000000000001?filter[filter]=abcd",
+		nil, nil, SystemDetailHandler, "/:inventory_id", 1)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/00000000-0000-0000-0000-000000000001?filter[filter]=abcd", nil)
-	core.InitRouterWithAccount(SystemDetailHandler, "/:inventory_id", 1).ServeHTTP(w, req)
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)

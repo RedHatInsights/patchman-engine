@@ -5,7 +5,6 @@ import (
 	"app/base/utils"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -13,16 +12,12 @@ import (
 )
 
 func TestAdvisoriesExportJSON(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequest("GET", "/", nil, &contentTypeJSON, AdvisoriesExportHandler)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
-	req.Header.Add("Accept", "application/json")
-	core.InitRouter(AdvisoriesExportHandler).ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output []AdvisoryInlineItem
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
+
 	assert.Equal(t, 12, len(output))
 	assert.Equal(t, output[2].ID, "RH-1")
 	assert.Equal(t, output[2].Description, "adv-1-des")
@@ -35,13 +30,9 @@ func TestAdvisoriesExportJSON(t *testing.T) {
 }
 
 func TestAdvisoriesExportCSV(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequest("GET", "/", nil, &contentTypeCSV, AdvisoriesExportHandler)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
-	req.Header.Add("Accept", "text/csv")
-	core.InitRouter(AdvisoriesExportHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
 	lines := strings.Split(body, "\n")
@@ -51,13 +42,10 @@ func TestAdvisoriesExportCSV(t *testing.T) {
 }
 
 func TestAdvisoriesExportWrongFormat(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/", nil)
-	req.Header.Add("Accept", "test-format")
-	core.InitRouter(AdvisoriesExportHandler).ServeHTTP(w, req)
+	contentType := "test-format"
+	w := CreateRequest("GET", "/", nil, &contentType, AdvisoriesExportHandler)
 
 	assert.Equal(t, http.StatusUnsupportedMediaType, w.Code)
 	body := w.Body.String()
@@ -66,13 +54,9 @@ func TestAdvisoriesExportWrongFormat(t *testing.T) {
 }
 
 func TestAdvisoriesExportCSVFilter(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequest("GET", "/?filter[id]=RH-1", nil, &contentTypeCSV, AdvisoriesExportHandler)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?filter[id]=RH-1", nil)
-	req.Header.Add("Accept", "text/csv")
-	core.InitRouter(AdvisoriesExportHandler).ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
 	lines := strings.Split(body, "\n")
@@ -83,27 +67,18 @@ func TestAdvisoriesExportCSVFilter(t *testing.T) {
 }
 
 func TestAdvisoriesExportTagsInvalid(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil, nil, AdvisoriesExportHandler, "/")
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil)
-	core.InitRouterWithPath(AdvisoriesExportHandler, "/").ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
 func TestAdvisoriesExportIncorrectFilter(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/?filter[filteriamnotexitst]=abcd", nil)
-	req.Header.Add("Accept", "text/csv")
-	core.InitRouterWithPath(AdvisoriesExportHandler, "/").ServeHTTP(w, req)
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/?filter[filteriamnotexitst]=abcd", nil, &contentTypeCSV,
+		AdvisoriesExportHandler, "/")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

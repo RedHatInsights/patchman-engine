@@ -12,28 +12,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testSetup(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-}
-
 func makeRequest(t *testing.T, path string, contentType string) *httptest.ResponseRecorder {
-	testSetup(t)
-
-	r := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", path, nil)
-	req.Header.Add("Accept", contentType)
-	core.InitRouter(SystemsExportHandler).ServeHTTP(r, req)
-	return r
+	core.SetupTest(t)
+	return CreateRequest("GET", path, nil, &contentType, SystemsExportHandler)
 }
 
 func TestSystemsExportJSON(t *testing.T) {
 	w := makeRequest(t, "/", "application/json")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemDBLookup
-
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 8, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 	assert.Equal(t, 2, output[0].SystemItemAttributes.RhsaCount)
@@ -102,10 +90,8 @@ func TestSystemsExportCSVFilter(t *testing.T) {
 func TestExportSystemsTags(t *testing.T) {
 	w := makeRequest(t, "/?tags=ns1/k2=val2", "application/json")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemDBLookup
-
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 }
@@ -113,9 +99,8 @@ func TestExportSystemsTags(t *testing.T) {
 func TestExportSystemsTagsInvalid(t *testing.T) {
 	w := makeRequest(t, "/?tags=ns1/k3=val4&tags=invalidTag", "application/json")
 
-	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var errResp utils.ErrorResponse
-	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	ParseResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
@@ -126,10 +111,8 @@ func TestSystemsExportWorkloads(t *testing.T) {
 		"application/json",
 	)
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemDBLookup
-
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 }
@@ -137,9 +120,8 @@ func TestSystemsExportWorkloads(t *testing.T) {
 func TestSystemsExportBaselineFilter(t *testing.T) {
 	w := makeRequest(t, "/?filter[baseline_name]=baseline_1-1", "application/json")
 
-	assert.Equal(t, http.StatusOK, w.Code)
 	var output []SystemDBLookup
-	ParseResponseBody(t, w.Body.Bytes(), &output)
+	ParseResponse(t, w, http.StatusOK, &output)
 
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
