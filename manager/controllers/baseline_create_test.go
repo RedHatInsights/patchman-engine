@@ -6,6 +6,7 @@ import (
 	"app/base/utils"
 	"bytes"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -23,7 +24,7 @@ func TestCreateBaseline(t *testing.T) {
         "config": {"to_time": "2022-12-31T12:00:00-04:00"},
 		"description": "desc"
 	}`
-	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
+	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
 
 	var resp CreateBaselineResponse
 	ParseResponseBody(t, w.Body.Bytes(), &resp)
@@ -38,7 +39,7 @@ func TestCreateBaseline(t *testing.T) {
 func TestCreateBaselineNameOnly(t *testing.T) {
 	core.SetupTest(t)
 	data := `{"name": "my_empty_baseline"}`
-	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
+	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
 
 	var resp CreateBaselineResponse
 	ParseResponseBody(t, w.Body.Bytes(), &resp)
@@ -49,30 +50,30 @@ func TestCreateBaselineNameOnly(t *testing.T) {
 func TestCreateBaselineNameEmptyString(t *testing.T) {
 	core.SetupTest(t)
 	data := `{"name": ""}`
-	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
+	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
 
 	var errResp utils.ErrorResponse
-	ParseResponse(t, w, http.StatusBadRequest, &errResp)
+	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, BaselineMissingNameErr, errResp.Error)
 }
 
 func TestCreateBaselineMissingName(t *testing.T) {
 	core.SetupTest(t)
 	data := `{}`
-	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
+	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
 
 	var errResp utils.ErrorResponse
-	ParseResponse(t, w, http.StatusBadRequest, &errResp)
+	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, BaselineMissingNameErr, errResp.Error)
 }
 
 func TestCreateBaselineInvalidRequest(t *testing.T) {
 	core.SetupTest(t)
 	data := `{"name": 0}`
-	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
+	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
 
 	var errResp utils.ErrorResponse
-	ParseResponse(t, w, http.StatusBadRequest, &errResp)
+	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.True(t, strings.Contains(errResp.Error,
 		"cannot unmarshal number into Go struct field CreateBaselineRequest.name of type string"))
 }
@@ -82,7 +83,7 @@ func TestCreateBaselineDuplicatedName(t *testing.T) {
 	data := `{
 		"name": "baseline_1-1"
 	}`
-	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), nil, CreateBaselineHandler, 1, "PUT", "/")
+	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
 
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)

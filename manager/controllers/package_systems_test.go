@@ -40,17 +40,17 @@ func TestPackageSystemsInvalidName(t *testing.T) {
 
 func testPackageSystems(t *testing.T, url string, account int) PackageSystemsResponse {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", url, nil, nil, PackageSystemsListHandler, account, "GET",
+	w := CreateRequestRouterWithParams("GET", url, nil, "", PackageSystemsListHandler, account, "GET",
 		"/:package_name/systems")
 
 	var output PackageSystemsResponse
-	ParseResponse(t, w, http.StatusOK, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	return output
 }
 
 func testPackageSystemsError(t *testing.T, url string, account int) (int, utils.ErrorResponse) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", url, nil, nil, PackageSystemsListHandler, account, "GET",
+	w := CreateRequestRouterWithParams("GET", url, nil, "", PackageSystemsListHandler, account, "GET",
 		"/:package_name/systems")
 
 	var errResp utils.ErrorResponse
@@ -60,7 +60,7 @@ func testPackageSystemsError(t *testing.T, url string, account int) (int, utils.
 
 func TestPackageSystemsTagsInMetadata(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", "/kernel/systems?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, nil,
+	w := CreateRequestRouterWithParams("GET", "/kernel/systems?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "",
 		PackageSystemsListHandler, 3, "GET", "/:package_name/systems")
 
 	var output PackageSystemsResponse

@@ -11,10 +11,10 @@ import (
 
 func testBaselineSystems(t *testing.T, url string) BaselineSystemsResponse {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", url, nil, nil, BaselineSystemsListHandler, "/:baseline_id/systems")
+	w := CreateRequestRouterWithPath("GET", url, nil, "", BaselineSystemsListHandler, "/:baseline_id/systems")
 
 	var output BaselineSystemsResponse
-	ParseResponse(t, w, http.StatusOK, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 
 	return output
 }
@@ -74,11 +74,11 @@ func TestBaselineSystemsUnlimited(t *testing.T) {
 
 func TestBaselineSystemOffsetOverflow(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/1/systems?offset=10&limit=4", nil, nil, BaselineSystemsListHandler,
+	w := CreateRequestRouterWithPath("GET", "/1/systems?offset=10&limit=4", nil, "", BaselineSystemsListHandler,
 		"/:baseline_id/systems")
 
 	var errResp utils.ErrorResponse
-	ParseResponse(t, w, http.StatusBadRequest, &errResp)
+	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
@@ -96,7 +96,7 @@ func TestBaselinesFilterTag(t *testing.T) {
 
 func TestBaselineSystemsWrongSort(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/1/systems?sort=unknown_key", nil, nil, BaselineSystemsListHandler,
+	w := CreateRequestRouterWithPath("GET", "/1/systems?sort=unknown_key", nil, "", BaselineSystemsListHandler,
 		"/:baseline_id/systems")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)

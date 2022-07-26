@@ -14,14 +14,14 @@ import (
 
 func makeRequest(t *testing.T, path string, contentType string) *httptest.ResponseRecorder {
 	core.SetupTest(t)
-	return CreateRequest("GET", path, nil, &contentType, SystemsExportHandler)
+	return CreateRequest("GET", path, nil, contentType, SystemsExportHandler)
 }
 
 func TestSystemsExportJSON(t *testing.T) {
 	w := makeRequest(t, "/", "application/json")
 
 	var output []SystemDBLookup
-	ParseResponse(t, w, http.StatusOK, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 8, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 	assert.Equal(t, 2, output[0].SystemItemAttributes.RhsaCount)
@@ -91,7 +91,7 @@ func TestExportSystemsTags(t *testing.T) {
 	w := makeRequest(t, "/?tags=ns1/k2=val2", "application/json")
 
 	var output []SystemDBLookup
-	ParseResponse(t, w, http.StatusOK, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 }
@@ -100,7 +100,7 @@ func TestExportSystemsTagsInvalid(t *testing.T) {
 	w := makeRequest(t, "/?tags=ns1/k3=val4&tags=invalidTag", "application/json")
 
 	var errResp utils.ErrorResponse
-	ParseResponse(t, w, http.StatusBadRequest, &errResp)
+	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
@@ -112,7 +112,7 @@ func TestSystemsExportWorkloads(t *testing.T) {
 	)
 
 	var output []SystemDBLookup
-	ParseResponse(t, w, http.StatusOK, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 }
@@ -121,7 +121,7 @@ func TestSystemsExportBaselineFilter(t *testing.T) {
 	w := makeRequest(t, "/?filter[baseline_name]=baseline_1-1", "application/json")
 
 	var output []SystemDBLookup
-	ParseResponse(t, w, http.StatusOK, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
