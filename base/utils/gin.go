@@ -7,7 +7,11 @@ import (
 	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
+	"time"
 )
+
+// ReadHeaderTimeout same as nginx default
+const ReadHeaderTimeout = 60 * time.Second
 
 func LoadParamInt(c *gin.Context, param string, defaultValue int, query bool) (int, error) {
 	var valueStr string
@@ -56,7 +60,7 @@ type ErrorResponse struct {
 
 func RunServer(ctx context.Context, handler http.Handler, port int) error {
 	addr := fmt.Sprintf(":%d", port)
-	srv := http.Server{Addr: addr, Handler: handler}
+	srv := http.Server{Addr: addr, Handler: handler, ReadHeaderTimeout: ReadHeaderTimeout}
 	go func() {
 		<-ctx.Done()
 		err := srv.Shutdown(context.Background())
