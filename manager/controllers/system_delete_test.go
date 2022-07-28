@@ -27,28 +27,28 @@ func TestInitDelete(t *testing.T) {
 
 func TestSystemDelete(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("DELETE", "/"+del, nil, nil, SystemDeleteHandler, 1, "DELETE", "/:inventory_id")
+	w := CreateRequestRouterWithParams("DELETE", "/"+del, nil, "", SystemDeleteHandler, 1, "DELETE", "/:inventory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestSystemDeleteWrongAccount(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("DELETE", "/"+del, nil, nil, SystemDeleteHandler, 2, "DELETE", "/:inventory_id")
+	w := CreateRequestRouterWithParams("DELETE", "/"+del, nil, "", SystemDeleteHandler, 2, "DELETE", "/:inventory_id")
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestSystemDeleteNotFound(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("DELETE", "/"+del, nil, nil, SystemDeleteHandler, 1, "DELETE", "/:inventory_id")
+	w := CreateRequestRouterWithParams("DELETE", "/"+del, nil, "", SystemDeleteHandler, 1, "DELETE", "/:inventory_id")
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestSystemDeleteUnknown(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("DELETE", "/unknownsystem", nil, nil, SystemDeleteHandler, 1,
+	w := CreateRequestRouterWithParams("DELETE", "/unknownsystem", nil, "", SystemDeleteHandler, 1,
 		"DELETE", "/:inventory_id")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)

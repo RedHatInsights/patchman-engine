@@ -17,10 +17,10 @@ func testBaselineSystemsRemove(t *testing.T, body BaselineSystemsRemoveRequest, 
 		panic(err)
 	}
 
-	w := CreateRequestRouterWithParams("POST", "/systems/remove", bytes.NewBuffer(bodyJSON), nil,
+	w := CreateRequestRouterWithParams("POST", "/systems/remove", bytes.NewBuffer(bodyJSON), "",
 		BaselineSystemsRemoveHandler, 1, "POST", "/systems/remove")
 
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, status, w.Code)
 }
 
 func TestBaselineSystemsRemoveDefault(t *testing.T) {

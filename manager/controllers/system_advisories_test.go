@@ -12,11 +12,11 @@ import (
 
 func TestSystemAdvisoriesDefault(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil, nil,
+	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil, "",
 		SystemAdvisoriesHandler, "/:inventory_id")
 
 	var output SystemAdvisoriesResponse
-	ParseResponse(t, w, http.StatusOK, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 8, len(output.Data))
 	assert.Equal(t, "RH-7", output.Data[0].ID)
 	assert.Equal(t, "advisory", output.Data[0].Type)
@@ -32,29 +32,29 @@ func TestSystemAdvisoriesDefault(t *testing.T) {
 
 func TestSystemAdvisoriesNotFound(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/nonexistant/advisories", nil, nil, SystemAdvisoriesHandler, "/:inventory_id")
+	w := CreateRequestRouterWithPath("GET", "/nonexistant/advisories", nil, "", SystemAdvisoriesHandler, "/:inventory_id")
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestSystemAdvisoriesOffsetLimit(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?offset=4&limit=3", nil, nil,
+	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?offset=4&limit=3", nil, "",
 		SystemAdvisoriesHandler, "/:inventory_id")
 
 	var output SystemAdvisoriesResponse
-	ParseResponse(t, w, http.StatusOK, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 3, len(output.Data))
 	assert.Equal(t, "RH-1", output.Data[0].ID)
 }
 
 func TestSystemAdvisoriesOffsetOverflow(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?offset=100&limit=3", nil, nil,
+	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?offset=100&limit=3", nil, "",
 		SystemAdvisoriesHandler, "/:inventory_id")
 
 	var errResp utils.ErrorResponse
-	ParseResponse(t, w, http.StatusBadRequest, &errResp)
+	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
@@ -67,17 +67,17 @@ func TestSystemAdvisoriesPossibleSorts(t *testing.T) {
 			continue
 		}
 		w := CreateRequestRouterWithPath("GET", fmt.Sprintf("/00000000-0000-0000-0000-000000000001?sort=%v", sort),
-			nil, nil, SystemAdvisoriesHandler, "/:inventory_id")
+			nil, "", SystemAdvisoriesHandler, "/:inventory_id")
 
 		var output SystemAdvisoriesResponse
-		ParseResponse(t, w, http.StatusOK, &output)
+		CheckResponse(t, w, http.StatusOK, &output)
 		assert.Equal(t, output.Meta.Sort[0], sort)
 	}
 }
 
 func TestSystemAdvisoriesWrongSort(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?sort=unknown_key", nil, nil,
+	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?sort=unknown_key", nil, "",
 		SystemAdvisoriesHandler, "/:inventory_id")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -85,11 +85,11 @@ func TestSystemAdvisoriesWrongSort(t *testing.T) {
 
 func TestSystemAdvisoriesSearch(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?search=h-3", nil, nil,
+	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?search=h-3", nil, "",
 		SystemAdvisoriesHandler, "/:inventory_id")
 
 	var output SystemAdvisoriesResponse
-	ParseResponse(t, w, http.StatusOK, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "RH-3", output.Data[0].ID)
 	assert.Equal(t, "advisory", output.Data[0].Type)
@@ -106,7 +106,7 @@ func TestSystemAdvisoriesWrongOffset(t *testing.T) {
 
 func TestSystemAdvisoriesExportUnknown(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/unknownsystem", nil, nil, SystemAdvisoriesHandler, "/:inventory_id")
+	w := CreateRequestRouterWithPath("GET", "/unknownsystem", nil, "", SystemAdvisoriesHandler, "/:inventory_id")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

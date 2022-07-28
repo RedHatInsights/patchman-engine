@@ -12,11 +12,11 @@ import (
 
 func TestPackageSystemsExportHandlerJSON(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", "/kernel/systems?sort=id", nil, &contentTypeJSON,
+	w := CreateRequestRouterWithParams("GET", "/kernel/systems?sort=id", nil, "application/json",
 		PackageSystemsExportHandler, 3, "GET", "/:package_name/systems")
 
 	var output []PackageSystemItem
-	ParseResponse(t, w, http.StatusOK, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output[0].ID)
 	assert.Equal(t, "5.6.13-200.fc31.x86_64", output[0].InstalledEVRA)
@@ -28,7 +28,7 @@ func TestPackageSystemsExportHandlerJSON(t *testing.T) {
 
 func TestPackageSystemsExportHandlerCSV(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", "/kernel/systems?sort=id", nil, &contentTypeCSV,
+	w := CreateRequestRouterWithParams("GET", "/kernel/systems?sort=id", nil, "text/csv",
 		PackageSystemsExportHandler, 3, "GET", "/:package_name/systems")
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -47,7 +47,7 @@ func TestPackageSystemsExportHandlerCSV(t *testing.T) {
 
 func TestPackageSystemsExportInvalidName(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", "/unknown_package/systems", nil, &contentTypeCSV,
+	w := CreateRequestRouterWithParams("GET", "/unknown_package/systems", nil, "text/csv",
 		PackageSystemsExportHandler, 3, "GET", "/:package_name/systems")
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
