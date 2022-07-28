@@ -33,7 +33,7 @@ type UpdateBaselineRequest struct {
 }
 
 type UpdateBaselineResponse struct {
-	BaselineID int `json:"baseline_id" example:"1"` // Updated baseline unique ID, it can not be changed
+	BaselineID int64 `json:"baseline_id" example:"1"` // Updated baseline unique ID, it can not be changed
 }
 
 // nolint: funlen
@@ -51,7 +51,7 @@ type UpdateBaselineResponse struct {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines/{baseline_id} [put]
 func BaselineUpdateHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
+	account := c.GetInt64(middlewares.KeyAccount)
 
 	var req UpdateBaselineRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -60,7 +60,7 @@ func BaselineUpdateHandler(c *gin.Context) {
 	}
 
 	baselineIDstr := c.Param("baseline_id")
-	baselineID, err := strconv.Atoi(baselineIDstr)
+	baselineID, err := strconv.ParseInt(baselineIDstr, 10, 64)
 	if err != nil {
 		LogAndRespBadRequest(c, err, "Invalid baseline_id: "+baselineIDstr)
 		return
@@ -132,8 +132,8 @@ func sortInventoryIDs(inventoryIDs map[string]bool) (newIDs, obsoleteIDs []strin
 	return newIDs, obsoleteIDs
 }
 
-func updateSystemsBaselineID(tx *gorm.DB, rhAccountID int, inventoryIDs []string,
-	newBaselineID, oldBaselineID *int) error {
+func updateSystemsBaselineID(tx *gorm.DB, rhAccountID int64, inventoryIDs []string,
+	newBaselineID, oldBaselineID *int64) error {
 	updateFields := map[string]interface{}{"baseline_id": newBaselineID, "unchanged_since": time.Now()}
 	tx = tx.Model(models.SystemPlatform{}).
 		Where("rh_account_id = (?) AND inventory_id::text IN (?)", rhAccountID, inventoryIDs)
@@ -155,8 +155,8 @@ func updateSystemsBaselineID(tx *gorm.DB, rhAccountID int, inventoryIDs []string
 	return nil
 }
 
-func buildUpdateBaselineQuery(baselineID int, req UpdateBaselineRequest, newIDs, obsoleteIDs []string,
-	account int) error {
+func buildUpdateBaselineQuery(baselineID int64, req UpdateBaselineRequest, newIDs, obsoleteIDs []string,
+	account int64) error {
 	data := map[string]interface{}{}
 	if req.Name != nil {
 		data["name"] = req.Name

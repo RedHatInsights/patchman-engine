@@ -48,7 +48,7 @@ func syncPackages(syncStart time.Time, modifiedSince *string) error {
 }
 
 type nameIDandEvra struct {
-	ID   int
+	ID   int64
 	Evra string
 }
 
@@ -61,14 +61,14 @@ func stringPtr2Hash(str *string) *[]byte {
 	return &bytes
 }
 
-func getPackageNameMap(tx *gorm.DB, nameArr []string) (map[string]int, error) {
+func getPackageNameMap(tx *gorm.DB, nameArr []string) (map[string]int64, error) {
 	// Load all to get IDs
 	var pkgNamesLoaded []models.PackageName
 	err := tx.Where("name in (?)", nameArr).Find(&pkgNamesLoaded).Error
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to load package names data")
 	}
-	idByName := map[string]int{}
+	idByName := map[string]int64{}
 	for _, p := range pkgNamesLoaded {
 		idByName[p.Name] = p.ID
 	}
@@ -153,7 +153,7 @@ func storeStringsFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListItem) er
 	return tx.CreateInBatches(strings, chunkSize).Error
 }
 
-func storePackageNamesFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListItem) (map[string]int, error) {
+func storePackageNamesFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListItem) (map[string]int64, error) {
 	packageNames, packageNameModels := getPackageArraysFromPkgListItems(vmaasData)
 	utils.Log("names", len(packageNames)).Info("Got package names")
 	tx = tx.Clauses(clause.OnConflict{
@@ -194,7 +194,7 @@ func getPackageArraysFromPkgListItems(pkgListItems []vmaas.PkgListItem) ([]strin
 	return nameArr, pkgNames
 }
 
-func storePackageDetailsFrmPkgListItems(tx *gorm.DB, nameIDs map[string]int, pkgListItems []vmaas.PkgListItem) error {
+func storePackageDetailsFrmPkgListItems(tx *gorm.DB, nameIDs map[string]int64, pkgListItems []vmaas.PkgListItem) error {
 	var toStore []models.Package
 	var uniquePackages = make(map[nameIDandEvra]bool)
 	for _, pkgListItem := range pkgListItems {
@@ -224,7 +224,7 @@ func storePackageDetailsFrmPkgListItems(tx *gorm.DB, nameIDs map[string]int, pkg
 	return nil
 }
 
-func getPackageFromPkgListItem(pkgListItem vmaas.PkgListItem, nameIDs map[string]int) *models.Package {
+func getPackageFromPkgListItem(pkgListItem vmaas.PkgListItem, nameIDs map[string]int64) *models.Package {
 	nevraPtr, err := utils.ParseNevra(pkgListItem.Nevra)
 	if err != nil {
 		utils.Log("nevra", pkgListItem.Nevra).Error("Unable to parse nevra")

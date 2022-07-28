@@ -18,8 +18,8 @@ import (
 )
 
 var testDate, _ = time.Parse(time.RFC3339, "2020-01-01T01-01-01")
-var systemID = 12
-var rhAccountID = 3
+var systemID = int64(12)
+var rhAccountID = int64(3)
 
 func TestInit(t *testing.T) {
 	utils.TestLoadEnv("conf/evaluator_common.env", "conf/evaluator_upload.env")
@@ -37,11 +37,11 @@ func TestEvaluate(t *testing.T) {
 	remediationsPublisher = &mockWriter
 
 	expectedAddedAdvisories := []string{"RH-1", "RH-2"}
-	expectedAdvisoryIDs := []int{1, 2}       // advisories expected to be paired to the system after evaluation
-	oldSystemAdvisoryIDs := []int{1, 3, 4}   // old advisories paired with the system
-	patchingSystemAdvisoryIDs := []int{3, 4} // these advisories should be patched for the system
-	expectedPackageIDs := []int{1, 2}
-	systemRepoIDs := []int{1, 2}
+	expectedAdvisoryIDs := []int64{1, 2}       // advisories expected to be paired to the system after evaluation
+	oldSystemAdvisoryIDs := []int64{1, 3, 4}   // old advisories paired with the system
+	patchingSystemAdvisoryIDs := []int64{3, 4} // these advisories should be patched for the system
+	expectedPackageIDs := []int64{1, 2}
+	systemRepoIDs := []int64{1, 2}
 
 	database.DeleteSystemAdvisories(t, systemID, expectedAdvisoryIDs)
 	database.DeleteSystemAdvisories(t, systemID, patchingSystemAdvisoryIDs)
@@ -69,7 +69,7 @@ func TestEvaluate(t *testing.T) {
 	database.CheckCachesValid(t)
 
 	// test evaluation with third party repos
-	thirdPartySystemRepoIDs := []int{1, 2, 4}
+	thirdPartySystemRepoIDs := []int64{1, 2, 4}
 	database.DeleteSystemRepos(t, rhAccountID, systemID, systemRepoIDs)
 	database.CreateSystemRepos(t, rhAccountID, systemID, thirdPartySystemRepoIDs)
 	err = evaluateHandler(mqueue.PlatformEvent{
@@ -105,9 +105,9 @@ func TestEvaluateYum(t *testing.T) {
 	evalLabel = recalcLabel
 
 	expectedAddedAdvisories := []string{"RH-1", "RH-2", "RHSA-2021:3801"}
-	expectedAdvisoryIDs := []int{1, 2, 14} // advisories expected to be paired to the system after evaluation
-	oldSystemAdvisoryIDs := []int{1, 2}    // old advisories paired with the system
-	expectedPackageIDs := []int{1, 2}
+	expectedAdvisoryIDs := []int64{1, 2, 14} // advisories expected to be paired to the system after evaluation
+	oldSystemAdvisoryIDs := []int64{1, 2}    // old advisories paired with the system
+	expectedPackageIDs := []int64{1, 2}
 
 	database.DeleteSystemAdvisories(t, sysID, expectedAdvisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)

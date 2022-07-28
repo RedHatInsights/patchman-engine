@@ -48,8 +48,8 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 	notificationsPublisher = &mockWriter
 
 	expectedAddedAdvisories := []string{"RH-1", "RH-2"}
-	expectedAdvisoryIDs := []int{1, 2}     // advisories expected to be paired to the system after evaluation
-	oldSystemAdvisoryIDs := []int{1, 3, 4} // old advisories paired with the system
+	expectedAdvisoryIDs := []int64{1, 2}     // advisories expected to be paired to the system after evaluation
+	oldSystemAdvisoryIDs := []int64{1, 3, 4} // old advisories paired with the system
 
 	database.DeleteSystemAdvisories(t, systemID, expectedAdvisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)

@@ -22,10 +22,10 @@ func configureNotifications() {
 	}
 }
 
-func getUnnotifiedAdvisories(tx *gorm.DB, accountID int, newAdvs SystemAdvisoryMap) ([]ntf.Advisory, error) {
+func getUnnotifiedAdvisories(tx *gorm.DB, accountID int64, newAdvs SystemAdvisoryMap) ([]ntf.Advisory, error) {
 	unAdvs := make([]ntf.Advisory, 0, len(newAdvs))
 
-	advIDs := make([]int, 0, len(newAdvs))
+	advIDs := make([]int64, 0, len(newAdvs))
 	for _, a := range newAdvs {
 		advIDs = append(advIDs, a.AdvisoryID)
 	}
@@ -61,13 +61,13 @@ func getUnnotifiedAdvisories(tx *gorm.DB, accountID int, newAdvs SystemAdvisoryM
 	return unAdvs, nil
 }
 
-func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform, event *mqueue.PlatformEvent,
-	accountID int, newAdvisories SystemAdvisoryMap) error {
+func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform,
+	event *mqueue.PlatformEvent, newAdvisories SystemAdvisoryMap) error {
 	if notificationsPublisher == nil {
 		return nil
 	}
 
-	advisories, err := getUnnotifiedAdvisories(tx, accountID, newAdvisories)
+	advisories, err := getUnnotifiedAdvisories(tx, system.RhAccountID, newAdvisories)
 	if err != nil {
 		return errors.Wrap(err, "getting unnotified advisories failed")
 	}
@@ -96,7 +96,7 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 		return errors.Wrap(err, "writing message to notifications publisher failed")
 	}
 
-	advisoryIDs := make([]int, 0, len(advisories))
+	advisoryIDs := make([]int64, 0, len(advisories))
 	for _, a := range advisories {
 		advisoryIDs = append(advisoryIDs, a.AdvisoryID)
 	}
@@ -105,7 +105,7 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 		Info("notification sent successfully")
 
 	err = tx.Table("advisory_account_data").
-		Where("rh_account_id = ? AND advisory_id IN (?)", accountID, advisoryIDs).
+		Where("rh_account_id = ? AND advisory_id IN (?)", system.RhAccountID, advisoryIDs).
 		Update("notified", time.Now()).Error
 	if err != nil {
 		return errors.Wrap(err, "updating notified column failed")

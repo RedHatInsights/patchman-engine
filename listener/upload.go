@@ -186,7 +186,7 @@ var flushTimer = time.AfterFunc(87600*time.Hour, func() {
 })
 
 // send events after full buffer or timeout
-func bufferEvalEvents(inventoryID string, rhAccountID int, ptEvent *mqueue.PayloadTrackerEvent) {
+func bufferEvalEvents(inventoryID string, rhAccountID int64, ptEvent *mqueue.PayloadTrackerEvent) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-eval-events"))
 	evalData := mqueue.EvalData{
@@ -235,7 +235,7 @@ func updateReporterCounter(reporter string) {
 
 // nolint: funlen
 // Stores or updates base system profile, returing internal system id
-func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *Host,
+func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int64, host *Host,
 	yumUpdates []byte, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("update-system-platform"))
@@ -349,8 +349,8 @@ func fixEpelRepos(sys *inventory.SystemProfile, repos []string) []string {
 	return repos
 }
 
-func updateRepos(tx *gorm.DB, profile inventory.SystemProfile, rhAccountID int,
-	systemID int, repos []string) (addedRepos int64, addedSysRepos int64, deletedSysRepos int64, err error) {
+func updateRepos(tx *gorm.DB, profile inventory.SystemProfile, rhAccountID,
+	systemID int64, repos []string) (addedRepos int64, addedSysRepos int64, deletedSysRepos int64, err error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("update-repos"))
 	repos = fixEpelRepos(&profile, repos)
@@ -366,7 +366,7 @@ func updateRepos(tx *gorm.DB, profile inventory.SystemProfile, rhAccountID int,
 	return addedRepos, addedSysRepos, deletedSysRepos, nil
 }
 
-func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int, added int64, err error) {
+func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int64, added int64, err error) {
 	if len(repos) == 0 {
 		return repoIDs, 0, nil
 	}
@@ -394,7 +394,7 @@ func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int, added int64, e
 	return repoIDs, added, nil
 }
 
-func updateSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs []int) (
+func updateSystemRepos(tx *gorm.DB, rhAccountID, systemID int64, repoIDs []int64) (
 	nAdded int64, nDeleted int64, err error) {
 	repoSystemObjs := make(models.SystemRepoSlice, len(repoIDs))
 	for i, repoID := range repoIDs {
@@ -418,7 +418,7 @@ func updateSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs []int
 	return nAdded, nDeleted, nil
 }
 
-func deleteOtherSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs []int) (nDeleted int64, err error) {
+func deleteOtherSystemRepos(tx *gorm.DB, rhAccountID, systemID int64, repoIDs []int64) (nDeleted int64, err error) {
 	type result struct{ DeletedCount int64 }
 	var res result
 	if len(repoIDs) > 0 {

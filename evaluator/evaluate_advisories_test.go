@@ -68,7 +68,7 @@ func TestGetStoredAdvisoriesMap(t *testing.T) {
 }
 
 func TestGetNewAndUnpatchedAdvisories(t *testing.T) {
-	stored := database.CreateStoredAdvisories(map[int]*time.Time{1: &testDate, 2: nil, 3: nil})
+	stored := database.CreateStoredAdvisories(map[int64]*time.Time{1: &testDate, 2: nil, 3: nil})
 	reported := database.CreateReportedAdvisories("ER-1", "ER-3", "ER-4")
 	news, unpatched := getNewAndUnpatchedAdvisories(reported, stored)
 	assert.Equal(t, 1, len(news))
@@ -78,7 +78,7 @@ func TestGetNewAndUnpatchedAdvisories(t *testing.T) {
 }
 
 func TestGetPatchedAdvisories(t *testing.T) {
-	stored := database.CreateStoredAdvisories(map[int]*time.Time{1: &testDate, 2: nil, 3: nil})
+	stored := database.CreateStoredAdvisories(map[int64]*time.Time{1: &testDate, 2: nil, 3: nil})
 	reported := database.CreateReportedAdvisories("ER-3", "ER-4")
 	patched := getPatchedAdvisories(reported, stored)
 	assert.Equal(t, 1, len(patched))
@@ -90,12 +90,12 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	system := models.SystemPlatform{ID: 12, RhAccountID: 3}
-	advisoryIDs := []int{2, 3, 4}
+	advisoryIDs := []int64{2, 3, 4}
 	database.CreateSystemAdvisories(t, system.RhAccountID, system.ID, advisoryIDs, nil)
 	database.CreateAdvisoryAccountData(t, system.RhAccountID, advisoryIDs, 1)
 	database.UpdateSystemAdvisoriesWhenPatched(t, system.ID, system.RhAccountID, advisoryIDs, &testDate)
 	// Update as-if the advisories had become patched
-	err := updateAdvisoryAccountData(database.Db, &system, advisoryIDs, []int{})
+	err := updateAdvisoryAccountData(database.Db, &system, advisoryIDs, []int64{})
 	assert.NoError(t, err)
 
 	database.CheckSystemAdvisoriesWhenPatched(t, system.ID, advisoryIDs, &testDate)
@@ -103,7 +103,7 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	database.UpdateSystemAdvisoriesWhenPatched(t, system.ID, system.RhAccountID, advisoryIDs, nil)
 
 	// Update as-if the advisories had become unpatched
-	err = updateAdvisoryAccountData(database.Db, &system, []int{}, advisoryIDs)
+	err = updateAdvisoryAccountData(database.Db, &system, []int64{}, advisoryIDs)
 	assert.NoError(t, err)
 
 	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 1)
@@ -125,9 +125,9 @@ func TestEnsureSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	rhAccountID := 1
-	systemID := 2
-	advisoryIDs := []int{2, 3, 4}
+	rhAccountID := int64(1)
+	systemID := int64(2)
+	advisoryIDs := []int64{2, 3, 4}
 	err := ensureSystemAdvisories(database.Db, rhAccountID, systemID, advisoryIDs)
 	assert.Nil(t, err)
 	database.CheckSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)

@@ -182,10 +182,10 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform,
 	vmaasData *vmaas.UpdatesV2Response) ([]namedPackage, error) {
 	updates := vmaasData.GetUpdateList()
 	numUpdates := len(updates)
-	packageIDs := make([]int, 0, numUpdates)
+	packageIDs := make([]int64, 0, numUpdates)
 	packages := make([]namedPackage, 0, numUpdates)
-	id2index := map[int]int{}
-	i := 0
+	id2index := map[int64]int64{}
+	i := int64(0)
 	for nevra := range updates {
 		pkgMeta, ok := memoryPackageCache.GetByNevra(nevra)
 		if ok {
@@ -349,7 +349,7 @@ func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList)
 
 func deleteOldSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 	packagesByNEVRA *map[string]namedPackage) error {
-	pkgIds := make([]int, 0, len(*packagesByNEVRA))
+	pkgIds := make([]int64, 0, len(*packagesByNEVRA))
 	for _, pkg := range *packagesByNEVRA {
 		pkgIds = append(pkgIds, pkg.PackageID)
 	}
@@ -363,9 +363,9 @@ func deleteOldSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 }
 
 type namedPackage struct {
-	NameID     int
+	NameID     int64
 	Name       string
-	PackageID  int
+	PackageID  int64
 	EVRA       string
 	WasStored  bool
 	UpdateData []byte

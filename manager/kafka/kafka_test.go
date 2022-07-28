@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testEvaluateBaselineSystems(t *testing.T, baselineID *int, accountID int,
+func testEvaluateBaselineSystems(t *testing.T, baselineID *int64, accountID int64,
 	configUpdated bool, inventoryIDs []string) mqueue.PlatformEvent {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
@@ -30,7 +30,7 @@ func testEvaluateBaselineSystems(t *testing.T, baselineID *int, accountID int,
 
 // Evaluate all baseline systems - config was updated, nothing added
 func TestEvaluateBaselineSystemsDefault(t *testing.T) {
-	event := testEvaluateBaselineSystems(t, utils.PtrInt(1), 1, true, nil)
+	event := testEvaluateBaselineSystems(t, utils.PtrInt64(1), 1, true, nil)
 	assert.Equal(t, 2, len(event.SystemIDs))
 	assert.Equal(t, 1, event.AccountID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", event.SystemIDs[0])
@@ -40,7 +40,7 @@ func TestEvaluateBaselineSystemsDefault(t *testing.T) {
 // Evaluate just updated systems - config was not updated
 func TestEvaluateBaselineUpdatedSystems(t *testing.T) {
 	inventoryIDs := []string{"00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000004"}
-	event := testEvaluateBaselineSystems(t, utils.PtrInt(1), 1, false, inventoryIDs)
+	event := testEvaluateBaselineSystems(t, utils.PtrInt64(1), 1, false, inventoryIDs)
 	assert.Equal(t, 2, len(event.SystemIDs))
 	assert.Equal(t, 1, event.AccountID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", event.SystemIDs[0])
@@ -50,7 +50,7 @@ func TestEvaluateBaselineUpdatedSystems(t *testing.T) {
 // Evaluate both all baseline systems and added ones - config updated, systems added
 func TestEvaluateBaselineAllAndUpdatedSystems(t *testing.T) {
 	inventoryIDs := []string{"00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000004"}
-	event := testEvaluateBaselineSystems(t, utils.PtrInt(1), 1, true, inventoryIDs)
+	event := testEvaluateBaselineSystems(t, utils.PtrInt64(1), 1, true, inventoryIDs)
 	assert.Equal(t, 3, len(event.SystemIDs))
 	assert.Equal(t, 1, event.AccountID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", event.SystemIDs[0])
@@ -60,6 +60,6 @@ func TestEvaluateBaselineAllAndUpdatedSystems(t *testing.T) {
 
 // No systems needed to evaluate - e.g. just baseline name changed
 func TestEvaluateBaselineNoSystems(t *testing.T) {
-	inventoryAIDs := GetInventoryIDsToEvaluate(utils.PtrInt(1), 1, false, nil)
+	inventoryAIDs := GetInventoryIDsToEvaluate(utils.PtrInt64(1), 1, false, nil)
 	assert.Equal(t, 0, len(inventoryAIDs))
 }

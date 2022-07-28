@@ -14,12 +14,12 @@ import (
 const KeyAccount = "account"
 
 var AccountIDCache = struct {
-	Values map[string]int
+	Values map[string]int64
 	Lock   sync.Mutex
-}{Values: map[string]int{}, Lock: sync.Mutex{}}
+}{Values: map[string]int64{}, Lock: sync.Mutex{}}
 
 // Stores or updates the account data, returning the account id
-func GetOrCreateAccount(identity *utils.Identity) (int, error) {
+func GetOrCreateAccount(identity *utils.Identity) (int64, error) {
 	rhAccount := models.RhAccount{
 		Name:  identity.GetAccountNumber(),
 		OrgID: &identity.OrgID,

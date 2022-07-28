@@ -58,12 +58,12 @@ func SystemAdvisoriesByInventoryID(tx *gorm.DB, accountID int, inventoryID strin
 	return SystemAdvisories(tx, accountID).Where("sp.inventory_id = ?::uuid", inventoryID)
 }
 
-func SystemAdvisoriesBySystemID(tx *gorm.DB, accountID, systemID int) *gorm.DB {
+func SystemAdvisoriesBySystemID(tx *gorm.DB, accountID, systemID int64) *gorm.DB {
 	query := systemAdvisoriesQuery(tx, accountID).Where("sp.id = ?", systemID)
 	return query
 }
 
-func systemAdvisoriesQuery(tx *gorm.DB, accountID int) *gorm.DB {
+func systemAdvisoriesQuery(tx *gorm.DB, accountID int64) *gorm.DB {
 	query := tx.Table("system_advisories sa").Select("sa.*").
 		Joins("join system_platform sp ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id").
 		Where("sa.rh_account_id = ? AND sp.rh_account_id = ?", accountID, accountID)

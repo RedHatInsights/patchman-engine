@@ -36,11 +36,8 @@ func OnConflictDoUpdateExpr(db *gorm.DB, keys []string, updateExprs ...UpExpr) *
 	for _, key := range keys {
 		confilctColumns = append(confilctColumns, clause.Column{Name: key})
 	}
-	if updateColsValues != nil {
-		return db.Clauses(clause.OnConflict{
-			Columns:   confilctColumns,
-			DoUpdates: clause.Assignments(updateColsValues),
-		})
-	}
-	return db
+	return db.Clauses(clause.OnConflict{
+		Columns:   confilctColumns,
+		DoUpdates: clause.Assignments(updateColsValues),
+	})
 }

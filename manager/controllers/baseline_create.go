@@ -31,7 +31,7 @@ type CreateBaselineRequest struct {
 }
 
 type CreateBaselineResponse struct {
-	BaselineID int `json:"baseline_id" example:"1"` // Updated baseline unique ID, it can not be changed
+	BaselineID int64 `json:"baseline_id" example:"1"` // Updated baseline unique ID, it can not be changed
 }
 
 // @Summary Create a baseline for my set of systems
@@ -47,7 +47,7 @@ type CreateBaselineResponse struct {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines [put]
 func CreateBaselineHandler(c *gin.Context) {
-	accountID := c.GetInt(middlewares.KeyAccount)
+	accountID := c.GetInt64(middlewares.KeyAccount)
 
 	var request CreateBaselineRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -91,7 +91,7 @@ func CreateBaselineHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildCreateBaselineQuery(request CreateBaselineRequest, accountID int) (int, error) {
+func buildCreateBaselineQuery(request CreateBaselineRequest, accountID int64) (int64, error) {
 	tx := database.Db.WithContext(base.Context).Begin()
 	defer tx.Rollback()
 
@@ -124,7 +124,7 @@ func buildCreateBaselineQuery(request CreateBaselineRequest, accountID int) (int
 	return baseline.ID, err
 }
 
-func checkInventoryIDs(accountID int, inventoryIDs []string) (missingIDs []string, err error) {
+func checkInventoryIDs(accountID int64, inventoryIDs []string) (missingIDs []string, err error) {
 	var containingIDs []string
 	err = database.Db.Table("system_platform sp").
 		Where("rh_account_id = ? AND inventory_id::text IN (?)", accountID, inventoryIDs).

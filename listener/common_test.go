@@ -37,7 +37,7 @@ func deleteData(t *testing.T) {
 }
 
 // nolint: unparam
-func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int, reporterID *int) {
+func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int64, reporterID *int64) {
 	var system models.SystemPlatform
 	assert.NoError(t, database.Db.Where("inventory_id = ?::uuid", inventoryID).Find(&system).Error)
 	assert.Equal(t, system.InventoryID, inventoryID)
@@ -68,7 +68,7 @@ func assertSystemNotInDB(t *testing.T) {
 	assert.Equal(t, int(systemCount), 0)
 }
 
-func getOrCreateTestAccount(t *testing.T) int {
+func getOrCreateTestAccount(t *testing.T) int64 {
 	ident := utils.Identity{
 		OrgID: id,
 	}
@@ -121,7 +121,7 @@ func assertReposInDB(t *testing.T, repos []string) {
 	assert.Equal(t, len(repos), len(n))
 }
 
-func assertSystemReposInDB(t *testing.T, systemID int, repos []string) {
+func assertSystemReposInDB(t *testing.T, systemID int64, repos []string) {
 	var c int64
 
 	err := database.Db.Table("repo r").

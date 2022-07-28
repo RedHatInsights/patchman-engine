@@ -25,13 +25,13 @@ func DebugWithCachesCheck(part string, fun func()) {
 }
 
 type key struct {
-	AccountID  int
-	AdvisoryID int
+	AccountID  int64
+	AdvisoryID int64
 }
 
 type advisoryCount struct {
-	RhAccountID int
-	AdvisoryID  int
+	RhAccountID int64
+	AdvisoryID  int64
 	Count       int
 }
 
@@ -98,8 +98,8 @@ func CheckCachesValid(t *testing.T) {
 	assert.True(t, valid)
 }
 
-func CheckAdvisoriesInDB(t *testing.T, advisories []string) []int {
-	var advisoryIDs []int
+func CheckAdvisoriesInDB(t *testing.T, advisories []string) []int64 {
+	var advisoryIDs []int64
 	err := Db.Model(models.AdvisoryMetadata{}).Where("name IN (?)", advisories).
 		Pluck("id", &advisoryIDs).Error
 	assert.Nil(t, err)
@@ -138,7 +138,7 @@ func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug
 	assert.Equal(t, thirdParty, system.ThirdParty)
 }
 
-func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int, systemsAffected int) {
+func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int64, advisoryIDs []int64, systemsAffected int) {
 	var advisoryAccountData []models.AdvisoryAccountData
 	err := Db.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
 		Find(&advisoryAccountData).Error
@@ -152,7 +152,7 @@ func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int
 	assert.Equal(t, systemsAffected*len(advisoryIDs), sum, "sum of systems_affected does not match")
 }
 
-func CheckAdvisoriesAccountDataNotified(t *testing.T, rhAccountID int, advisoryIDs []int, notified bool) {
+func CheckAdvisoriesAccountDataNotified(t *testing.T, rhAccountID int64, advisoryIDs []int64, notified bool) {
 	var advisoryAccountData []models.AdvisoryAccountData
 	err := Db.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
 		Find(&advisoryAccountData).Error
@@ -167,7 +167,7 @@ func CheckAdvisoriesAccountDataNotified(t *testing.T, rhAccountID int, advisoryI
 	}
 }
 
-func CheckSystemUpdatesCount(t *testing.T, accountID, systemID int) []int {
+func CheckSystemUpdatesCount(t *testing.T, accountID, systemID int64) []int {
 	var cnt []int
 	assert.NoError(t, Db.Table("system_package spkg").
 		Select("json_array_length(spkg.update_data::json) as len").
@@ -185,17 +185,17 @@ func CreateReportedAdvisories(reportedAdvisories ...string) map[string]bool {
 	return reportedAdvisoriesMap
 }
 
-func CreateStoredAdvisories(advisoryPatched map[int]*time.Time) map[string]models.SystemAdvisories {
+func CreateStoredAdvisories(advisoryPatched map[int64]*time.Time) map[string]models.SystemAdvisories {
 	systemAdvisoriesMap := map[string]models.SystemAdvisories{}
 	for advisoryID, patched := range advisoryPatched {
-		systemAdvisoriesMap["ER-"+strconv.Itoa(advisoryID)] = models.SystemAdvisories{
+		systemAdvisoriesMap["ER-"+strconv.FormatInt(advisoryID, 10)] = models.SystemAdvisories{
 			WhenPatched: patched,
 			AdvisoryID:  advisoryID}
 	}
 	return systemAdvisoriesMap
 }
 
-func CreateSystemAdvisories(t *testing.T, rhAccountID int, systemID int, advisoryIDs []int,
+func CreateSystemAdvisories(t *testing.T, rhAccountID, systemID int64, advisoryIDs []int64,
 	whenPatched *time.Time) {
 	for _, advisoryID := range advisoryIDs {
 		err := Db.Create(&models.SystemAdvisories{
@@ -205,7 +205,7 @@ func CreateSystemAdvisories(t *testing.T, rhAccountID int, systemID int, advisor
 	CheckSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, whenPatched)
 }
 
-func CreateAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int,
+func CreateAdvisoryAccountData(t *testing.T, rhAccountID int64, advisoryIDs []int64,
 	systemsAffected int) {
 	for _, advisoryID := range advisoryIDs {
 		err := Db.Create(&models.AdvisoryAccountData{
@@ -215,14 +215,14 @@ func CreateAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int,
 	CheckAdvisoriesAccountData(t, rhAccountID, advisoryIDs, systemsAffected)
 }
 
-func CreateSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
+func CreateSystemRepos(t *testing.T, rhAccountID, systemID int64, repoIDs []int64) {
 	for _, repoID := range repoIDs {
 		assert.Nil(t, Db.Create(&models.SystemRepo{RhAccountID: rhAccountID, SystemID: systemID, RepoID: repoID}).Error)
 	}
 	CheckSystemRepos(t, rhAccountID, systemID, repoIDs)
 }
 
-func CheckSystemAdvisoriesWhenPatched(t *testing.T, systemID int, advisoryIDs []int,
+func CheckSystemAdvisoriesWhenPatched(t *testing.T, systemID int64, advisoryIDs []int64,
 	whenPatched *time.Time) {
 	var systemAdvisories []models.SystemAdvisories
 	err := Db.Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
@@ -254,7 +254,7 @@ func CheckEVRAsInDBSynced(t *testing.T, nExpected int, synced bool, evras ...str
 	}
 }
 
-func CheckSystemPackages(t *testing.T, systemID int, nExpected int, packageIDs ...int) {
+func CheckSystemPackages(t *testing.T, systemID int64, nExpected int, packageIDs ...int64) {
 	var systemPackages []models.SystemPackage
 	query := Db.Where("system_id = ?", systemID)
 	if len(packageIDs) > 0 {
@@ -264,7 +264,7 @@ func CheckSystemPackages(t *testing.T, systemID int, nExpected int, packageIDs .
 	assert.Equal(t, nExpected, len(systemPackages))
 }
 
-func CheckSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
+func CheckSystemRepos(t *testing.T, rhAccountID, systemID int64, repoIDs []int64) {
 	var systemRepos []models.SystemRepo
 	err := Db.Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)",
 		rhAccountID, systemID, repoIDs).
@@ -273,7 +273,7 @@ func CheckSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int
 	assert.Equal(t, len(repoIDs), len(systemRepos))
 }
 
-func DeleteSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int) {
+func DeleteSystemAdvisories(t *testing.T, systemID int64, advisoryIDs []int64) {
 	query := Db.Model(&models.SystemAdvisories{}).Where("system_id = ? AND advisory_id IN (?)",
 		systemID, advisoryIDs)
 	assert.Nil(t, query.Delete(&models.SystemAdvisories{}).Error)
@@ -284,7 +284,7 @@ func DeleteSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int) {
 	assert.Nil(t, Db.Exec("SELECT * FROM update_system_caches(?)", systemID).Error)
 }
 
-func DeleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int) {
+func DeleteAdvisoryAccountData(t *testing.T, rhAccountID int64, advisoryIDs []int64) {
 	query := Db.Model(&models.AdvisoryAccountData{}).Where("rh_account_id = ? AND advisory_id IN (?)",
 		rhAccountID, advisoryIDs)
 	assert.Nil(t, query.Delete(&models.AdvisoryAccountData{}).Error)
@@ -294,7 +294,7 @@ func DeleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int)
 	assert.Equal(t, int64(0), cnt)
 }
 
-func DeleteSystemPackages(t *testing.T, systemID int, pkgIDs ...int) {
+func DeleteSystemPackages(t *testing.T, systemID int64, pkgIDs ...int64) {
 	query := Db.Model(&models.SystemPackage{}).Where("system_id = ?", systemID)
 	if len(pkgIDs) > 0 {
 		query = query.Where("package_id in (?)", pkgIDs)
@@ -306,7 +306,7 @@ func DeleteSystemPackages(t *testing.T, systemID int, pkgIDs ...int) {
 	assert.Equal(t, int64(0), count)
 }
 
-func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
+func DeleteSystemRepos(t *testing.T, rhAccountID, systemID int64, repoIDs []int64) {
 	err := Db.Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)", rhAccountID, systemID, repoIDs).
 		Delete(&models.SystemRepo{}).Error
 	assert.Nil(t, err)
@@ -328,7 +328,7 @@ func DeleteNewlyAddedAdvisories(t *testing.T) {
 	assert.Equal(t, int64(0), cnt)
 }
 
-func UpdateSystemAdvisoriesWhenPatched(t *testing.T, systemID, accountID int, advisoryIDs []int,
+func UpdateSystemAdvisoriesWhenPatched(t *testing.T, systemID, accountID int64, advisoryIDs []int64,
 	whenPatched *time.Time) {
 	err := Db.Model(models.SystemAdvisories{}).
 		Where("system_id = ?", systemID).
@@ -338,7 +338,7 @@ func UpdateSystemAdvisoriesWhenPatched(t *testing.T, systemID, accountID int, ad
 	assert.Nil(t, err)
 }
 
-func CreateBaselineWithConfig(t *testing.T, name string, inventoryIDs []string, configBytes []byte) int {
+func CreateBaselineWithConfig(t *testing.T, name string, inventoryIDs []string, configBytes []byte) int64 {
 	if name == "" {
 		name = "temporary_baseline"
 	}
@@ -364,13 +364,13 @@ func CreateBaselineWithConfig(t *testing.T, name string, inventoryIDs []string, 
 	return temporaryBaseline.ID
 }
 
-func CreateBaseline(t *testing.T, name string, inventoryIDs []string) int {
+func CreateBaseline(t *testing.T, name string, inventoryIDs []string) int64 {
 	configBytes := []byte(`{"to_time": "2021-01-01T12:00:00-04:00"}`)
 	baselineID := CreateBaselineWithConfig(t, name, inventoryIDs, configBytes)
 	return baselineID
 }
 
-func DeleteBaseline(t *testing.T, baselineID int) {
+func DeleteBaseline(t *testing.T, baselineID int64) {
 	tx := Db.WithContext(base.Context).Begin()
 	defer tx.Rollback()
 
@@ -388,7 +388,7 @@ func DeleteBaseline(t *testing.T, baselineID int) {
 	assert.Nil(t, err)
 }
 
-func CheckBaseline(t *testing.T, baselineID int, inventoryIDs []string, config, name string, description *string) {
+func CheckBaseline(t *testing.T, baselineID int64, inventoryIDs []string, config, name string, description *string) {
 	type Baseline struct {
 		ID          int     `query:"bl.id" gorm:"column:id"`
 		Name        string  `json:"name" query:"bl.name" gorm:"column:name"`
@@ -433,7 +433,7 @@ func CheckBaseline(t *testing.T, baselineID int, inventoryIDs []string, config, 
 	}
 }
 
-func CheckBaselineDeleted(t *testing.T, baselineID int) {
+func CheckBaselineDeleted(t *testing.T, baselineID int64) {
 	var cntBaselines int64
 	assert.Nil(t, Db.Model(&models.Baseline{}).Where("id = ?", baselineID).Count(&cntBaselines).Error)
 	assert.Equal(t, 0, int(cntBaselines))

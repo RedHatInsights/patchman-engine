@@ -308,7 +308,7 @@ func tryGetVmaasRequest(system *models.SystemPlatform) (*vmaas.UpdatesV3Request,
 	return &updatesReq, nil
 }
 
-func tryGetSystem(tx *gorm.DB, accountID int, inventoryID string,
+func tryGetSystem(tx *gorm.DB, accountID int64, inventoryID string,
 	requested *base.Rfc3339Timestamp) *models.SystemPlatform {
 	system, err := loadSystemData(tx, accountID, inventoryID)
 	if err != nil || system.ID == 0 {
@@ -359,7 +359,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
 
 	// Send instant notification with new advisories
 	if enableInstantNotifications {
-		err = publishNewAdvisoriesNotification(tx, system, event, system.RhAccountID, newSystemAdvisories)
+		err = publishNewAdvisoriesNotification(tx, system, event, newSystemAdvisories)
 		if err != nil {
 			evaluationCnt.WithLabelValues("error-advisory-notification").Inc()
 			utils.Log("orgID", event.GetOrgID(), "inventoryID", system.InventoryID, "err", err.Error()).
@@ -465,7 +465,7 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 	return vmaasDataPtr.(*vmaas.UpdatesV2Response), nil
 }
 
-func loadSystemData(tx *gorm.DB, accountID int, inventoryID string) (*models.SystemPlatform, error) {
+func loadSystemData(tx *gorm.DB, accountID int64, inventoryID string) (*models.SystemPlatform, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("data-loading"))
 

@@ -20,7 +20,7 @@ type BaselineDetailResponse struct {
 
 type BaselineDetailItem struct {
 	Attributes BaselineDetailAttributes `json:"attributes"`              // Additional baseline attributes
-	ID         int                      `json:"id" example:"1"`          // Baseline ID
+	ID         int64                    `json:"id" example:"1"`          // Baseline ID
 	Type       string                   `json:"type" example:"baseline"` // Document type name
 }
 

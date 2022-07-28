@@ -17,8 +17,8 @@ var memoryPackageCache *PackageCache
 const logProgressDuration = 5 * time.Second
 
 type PackageCacheMetadata struct {
-	ID              int
-	NameID          int
+	ID              int64
+	NameID          int64
 	Name            string
 	Evra            string
 	SummaryHash     []byte
@@ -176,7 +176,7 @@ func (c *PackageCache) GetLatestByName(name string) (*PackageCacheMetadata, bool
 	return nil, false
 }
 
-func (c *PackageCache) GetNameByID(id int) (string, bool) {
+func (c *PackageCache) GetNameByID(id int64) (string, bool) {
 	if c.enabled {
 		val, ok := c.nameByID.Get(id)
 		if ok {
@@ -282,6 +282,6 @@ func (c *PackageCache) ReadLatestByName(name string) *PackageCacheMetadata {
 	return readPackageFromDB("pn.name = ?", "p.evra DESC", name)
 }
 
-func (c *PackageCache) ReadNameByID(id int) *PackageCacheMetadata {
+func (c *PackageCache) ReadNameByID(id int64) *PackageCacheMetadata {
 	return readPackageFromDB("pn.id = ?", "p.evra DESC", id)
 }

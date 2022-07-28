@@ -65,7 +65,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	sys1, err := updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(t), nil, &req)
 	assert.Nil(t, err)
 
-	reporterID1 := 1
+	reporterID1 := int64(1)
 	assertSystemInDB(t, id, &accountID1, &reporterID1)
 	assertReposInDB(t, req.GetRepositoryList())
 
@@ -75,7 +75,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	sys2, err := updateSystemPlatform(database.Db, id, accountID2, host2, nil, &req)
 	assert.Nil(t, err)
 
-	reporterID2 := 3
+	reporterID2 := int64(3)
 	assertSystemInDB(t, id, &accountID2, &reporterID2)
 
 	assert.Equal(t, sys1.ID, sys2.ID)
@@ -105,7 +105,7 @@ func TestUploadHandler(t *testing.T) {
 	err := HandleUpload(event)
 	assert.NoError(t, err)
 
-	reporterID := 1
+	reporterID := int64(1)
 	assertSystemInDB(t, id, nil, &reporterID)
 
 	var sys models.SystemPlatform
@@ -224,8 +224,8 @@ func TestUpdateSystemRepos1(t *testing.T) {
 	core.SetupTestEnvironment()
 	deleteData(t)
 
-	systemID := 5
-	rhAccountID := 1
+	systemID := int64(5)
+	rhAccountID := int64(1)
 	database.Db.Create(models.SystemRepo{RhAccountID: rhAccountID, SystemID: systemID, RepoID: 1})
 	database.Db.Create(models.SystemRepo{RhAccountID: rhAccountID, SystemID: systemID, RepoID: 2})
 
@@ -247,12 +247,12 @@ func TestUpdateSystemRepos2(t *testing.T) {
 	core.SetupTestEnvironment()
 	deleteData(t)
 
-	systemID := 5
-	rhAccountID := 1
+	systemID := int64(5)
+	rhAccountID := int64(1)
 	database.Db.Create(models.SystemRepo{RhAccountID: rhAccountID, SystemID: systemID, RepoID: 1})
 	database.Db.Create(models.SystemRepo{RhAccountID: rhAccountID, SystemID: systemID, RepoID: 2})
 
-	nAdded, nDeleted, err := updateSystemRepos(database.Db, rhAccountID, systemID, []int{})
+	nAdded, nDeleted, err := updateSystemRepos(database.Db, rhAccountID, systemID, []int64{})
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), nAdded)
 	assert.Equal(t, int64(2), nDeleted)
@@ -284,7 +284,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 	_, err = updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(t), yumUpdates, &req)
 	assert.Nil(t, err)
 
-	reporterID1 := 1
+	reporterID1 := int64(1)
 	assertSystemInDB(t, id, &accountID1, &reporterID1)
 	assertReposInDB(t, req.GetRepositoryList())
 	assertYumUpdatesInDB(t, id, yumUpdates)

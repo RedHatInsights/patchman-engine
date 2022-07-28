@@ -5,7 +5,7 @@ import (
 )
 
 type RhAccount struct {
-	ID    int
+	ID    int64
 	Name  *string
 	OrgID *string
 }
@@ -24,8 +24,8 @@ func (Reporter) TableName() string {
 }
 
 type Baseline struct {
-	ID          int
-	RhAccountID int
+	ID          int64
+	RhAccountID int64
 	Name        string
 	Config      []byte
 	Description *string
@@ -37,9 +37,9 @@ func (Baseline) TableName() string {
 
 // nolint: maligned
 type SystemPlatform struct {
-	ID                    int    `gorm:"primary_key"`
+	ID                    int64  `gorm:"primary_key"`
 	InventoryID           string `sql:"unique" gorm:"unique"`
-	RhAccountID           int
+	RhAccountID           int64
 	VmaasJSON             *string
 	JSONChecksum          *string
 	LastUpdated           *time.Time `gorm:"default:null"`
@@ -59,7 +59,7 @@ type SystemPlatform struct {
 	PackagesUpdatable     int
 	ThirdParty            bool
 	ReporterID            *int
-	BaselineID            *int
+	BaselineID            *int64
 	BaselineUpToDate      *bool  `gorm:"column:baseline_uptodate"`
 	YumUpdates            []byte `gorm:"column:yum_updates"`
 }
@@ -74,7 +74,7 @@ type String struct {
 }
 
 type PackageName struct {
-	ID   int `json:"id" gorm:"primary_key"`
+	ID   int64 `json:"id" gorm:"primary_key"`
 	Name string
 }
 
@@ -83,8 +83,8 @@ func (PackageName) TableName() string {
 }
 
 type Package struct {
-	ID              int `json:"id" gorm:"primary_key"`
-	NameID          int
+	ID              int64 `json:"id" gorm:"primary_key"`
+	NameID          int64
 	EVRA            string
 	DescriptionHash *[]byte
 	SummaryHash     *[]byte
@@ -99,12 +99,12 @@ func (Package) TableName() string {
 type PackageSlice []Package
 
 type SystemPackage struct {
-	RhAccountID int `gorm:"primary_key"`
-	SystemID    int `gorm:"primary_key"`
-	PackageID   int `gorm:"primary_key"`
+	RhAccountID int64 `gorm:"primary_key"`
+	SystemID    int64 `gorm:"primary_key"`
+	PackageID   int64 `gorm:"primary_key"`
 	// Will contain json in form of [{ "evra": "...", "advisory": "..."}]
 	UpdateData []byte
-	NameID     int `gorm:"primary_key"`
+	NameID     int64 `gorm:"primary_key"`
 }
 
 func (SystemPackage) TableName() string {
@@ -172,9 +172,9 @@ func (AdvisoryMetadata) TableName() string {
 type AdvisoryMetadataSlice []AdvisoryMetadata
 
 type SystemAdvisories struct {
-	RhAccountID   int `gorm:"primary_key"`
-	SystemID      int `gorm:"primary_key"`
-	AdvisoryID    int `gorm:"primary_key"`
+	RhAccountID   int64 `gorm:"primary_key"`
+	SystemID      int64 `gorm:"primary_key"`
+	AdvisoryID    int64 `gorm:"primary_key"`
 	Advisory      AdvisoryMetadata
 	FirstReported *time.Time
 	WhenPatched   *time.Time
@@ -188,8 +188,8 @@ func (SystemAdvisories) TableName() string {
 type SystemAdvisoriesSlice []SystemAdvisories
 
 type AdvisoryAccountData struct {
-	AdvisoryID             int
-	RhAccountID            int
+	AdvisoryID             int64
+	RhAccountID            int64
 	StatusID               int
 	SystemsAffected        int
 	SystemsStatusDivergent int
@@ -214,9 +214,9 @@ func (Repo) TableName() string {
 type RepoSlice []Repo
 
 type SystemRepo struct {
-	RhAccountID int
-	SystemID    int
-	RepoID      int
+	RhAccountID int64
+	SystemID    int64
+	RepoID      int64
 }
 
 func (SystemRepo) TableName() string {

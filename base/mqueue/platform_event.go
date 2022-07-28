@@ -14,7 +14,7 @@ type PlatformEvent struct {
 	Type        *string                `json:"type"`
 	Timestamp   *base.Rfc3339Timestamp `json:"timestamp"`
 	Account     *string                `json:"account"`
-	AccountID   int                    `json:"account_id"`
+	AccountID   int64                  `json:"account_id"`
 	OrgID       *string                `json:"org_id,omitempty"`
 	B64Identity *string                `json:"b64_identity"`
 	URL         *string                `json:"url"`
@@ -24,7 +24,7 @@ type PlatformEvent struct {
 
 type InventoryAID struct {
 	InventoryID string
-	RhAccountID int
+	RhAccountID int64
 }
 
 type AccountInfo struct {
@@ -33,7 +33,7 @@ type AccountInfo struct {
 }
 
 type EvalData struct {
-	RhAccountID int
+	RhAccountID int64
 	InventoryID string
 	RequestID   string
 	AccountInfo AccountInfo
@@ -43,8 +43,8 @@ type PlatformEvents []PlatformEvent
 type InventoryAIDs []InventoryAID
 type EvalDataSlice []EvalData
 
-type groupedData map[int][]string
-type groupedAccountInfo map[int]AccountInfo
+type groupedData map[int64][]string
+type groupedAccountInfo map[int64]AccountInfo
 
 func (event *PlatformEvent) createKafkaMessage() (KafkaMessage, error) {
 	data, err := json.Marshal(event) //nolint:gosec
