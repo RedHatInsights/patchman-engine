@@ -219,16 +219,16 @@ func TestSystemsOrderOS(t *testing.T) {
 
 func testSystems(t *testing.T, url string, account int) SystemsResponse {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithAccount("GET", url, nil, nil, SystemsListHandler, "/", account)
+	w := CreateRequestRouterWithAccount("GET", url, nil, "", SystemsListHandler, "/", account)
 
 	var output SystemsResponse
-	ParseResponse(t, w, http.StatusOK, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	return output
 }
 
 func testSystemsError(t *testing.T, url string) (int, utils.ErrorResponse) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", url, nil, nil, SystemsListHandler, "/")
+	w := CreateRequestRouterWithPath("GET", url, nil, "", SystemsListHandler, "/")
 
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
@@ -237,7 +237,7 @@ func testSystemsError(t *testing.T, url string) (int, utils.ErrorResponse) {
 
 func TestSystemsTagsInMetadata(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithAccount("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, nil, SystemsListHandler, "/", 3)
+	w := CreateRequestRouterWithAccount("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "", SystemsListHandler, "/", 3)
 
 	var output SystemsResponse
 	ParseResponseBody(t, w.Body.Bytes(), &output)

@@ -11,17 +11,17 @@ import (
 
 func TestPackageExportJSON(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", "/", nil, &contentTypeJSON, PackagesExportHandler, 3, "GET", "/")
+	w := CreateRequestRouterWithParams("GET", "/", nil, "application/json", PackagesExportHandler, 3, "GET", "/")
 
 	var output []PackageItem
-	ParseResponse(t, w, http.StatusOK, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 4, len(output))
 	assert.Equal(t, "kernel", output[0].Name)
 }
 
 func TestPackageExportCSV(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", "/", nil, &contentTypeCSV, PackagesExportHandler, 3, "GET", "/")
+	w := CreateRequestRouterWithParams("GET", "/", nil, "text/csv", PackagesExportHandler, 3, "GET", "/")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()

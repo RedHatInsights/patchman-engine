@@ -12,19 +12,19 @@ import (
 
 func testBaselines(t *testing.T, url string) BaselinesResponse {
 	core.SetupTest(t)
-	w := CreateRequest("GET", url, nil, nil, BaselinesListHandler)
+	w := CreateRequest("GET", url, nil, "", BaselinesListHandler)
 
 	var output BaselinesResponse
-	ParseResponse(t, w, http.StatusOK, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	return output
 }
 
 func testBaselinesError(t *testing.T, url string, expectedStatus int) utils.ErrorResponse {
 	core.SetupTest(t)
-	w := CreateRequest("GET", url, nil, nil, BaselinesListHandler)
+	w := CreateRequest("GET", url, nil, "", BaselinesListHandler)
 
 	var output utils.ErrorResponse
-	ParseResponse(t, w, expectedStatus, &output)
+	CheckResponse(t, w, expectedStatus, &output)
 	return output
 }
 
@@ -71,10 +71,10 @@ func TestBaselinesUnlimited(t *testing.T) {
 
 func TestBaselinesOffsetOverflow(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequest("GET", "/?offset=10&limit=4", nil, nil, BaselinesListHandler)
+	w := CreateRequest("GET", "/?offset=10&limit=4", nil, "", BaselinesListHandler)
 
 	var errResp utils.ErrorResponse
-	ParseResponse(t, w, http.StatusBadRequest, &errResp)
+	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, InvalidOffsetMsg, errResp.Error)
 }
 
@@ -125,8 +125,7 @@ func TestBaselinesSort(t *testing.T) {
 
 func TestBaselinesWrongSort(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequest("GET", "/?sort=unknown_key", nil, nil, AdvisoriesListHandler)
-
+	w := CreateRequest("GET", "/?sort=unknown_key", nil, "", BaselinesListHandler)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 

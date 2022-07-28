@@ -12,10 +12,10 @@ import (
 func TestSystemAdvisoriesExportJSON(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil,
-		&contentTypeJSON, SystemAdvisoriesExportHandler, "/:inventory_id")
+		"application/json", SystemAdvisoriesExportHandler, "/:inventory_id")
 
 	var output []AdvisoryInlineItem
-	ParseResponse(t, w, http.StatusOK, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 8, len(output))
 	assert.Equal(t, output[0].Description, "adv-1-des")
 }
@@ -23,7 +23,7 @@ func TestSystemAdvisoriesExportJSON(t *testing.T) {
 func TestSystemAdvisoriesExportCSV(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil,
-		&contentTypeCSV, SystemAdvisoriesExportHandler, "/:inventory_id")
+		"text/csv", SystemAdvisoriesExportHandler, "/:inventory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
@@ -37,7 +37,7 @@ func TestSystemAdvisoriesExportCSV(t *testing.T) {
 
 func TestUnknownSystemAdvisoriesExport(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/unknownsystem", nil, &contentTypeCSV, SystemAdvisoriesExportHandler,
+	w := CreateRequestRouterWithPath("GET", "/unknownsystem", nil, "text/csv", SystemAdvisoriesExportHandler,
 		"/:inventory_id")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)

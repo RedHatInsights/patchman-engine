@@ -34,11 +34,11 @@ func TestUpdateBaseline(t *testing.T) {
 	}`
 
 	path := fmt.Sprintf(`/%v`, baselineID)
-	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), nil, BaselineUpdateHandler, 1,
+	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
 		"PUT", "/:baseline_id")
 
 	var resp UpdateBaselineResponse
-	ParseResponse(t, w, http.StatusOK, &resp)
+	CheckResponse(t, w, http.StatusOK, &resp)
 	assert.Equal(t, baselineID, resp.BaselineID)
 	desc := "desc"
 	database.CheckBaseline(t, baselineID, []string{
@@ -56,11 +56,11 @@ func TestUpdateBaselineWithEmptyAssociations(t *testing.T) {
 	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
 	data := `{"inventory_ids": {}}`
 	path := fmt.Sprintf(`/%v`, baselineID)
-	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), nil, BaselineUpdateHandler, 1,
+	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
 		"PUT", "/:baseline_id")
 
 	var resp UpdateBaselineResponse
-	ParseResponse(t, w, http.StatusOK, &resp)
+	CheckResponse(t, w, http.StatusOK, &resp)
 	assert.Equal(t, baselineID, resp.BaselineID)
 	database.CheckBaseline(t,
 		baselineID,
@@ -85,11 +85,11 @@ func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
 		}
 	}`
 	path := fmt.Sprintf(`/%v`, baselineID)
-	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), nil, BaselineUpdateHandler, 1,
+	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
 		"PUT", "/:baseline_id")
 
 	var resp UpdateBaselineResponse
-	ParseResponse(t, w, http.StatusOK, &resp)
+	CheckResponse(t, w, http.StatusOK, &resp)
 	assert.Equal(t, baselineID, resp.BaselineID)
 	database.CheckBaseline(t, baselineID, []string{},
 		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline", nil)
@@ -101,10 +101,10 @@ func TestUpdateBaselineInvalidPayload(t *testing.T) {
 	core.SetupTest(t)
 
 	data := `{"name": 0}`
-	w := CreateRequestRouterWithParams("PUT", "/1", bytes.NewBufferString(data), nil, BaselineUpdateHandler, 1,
+	w := CreateRequestRouterWithParams("PUT", "/1", bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
 		"PUT", "/:baseline_id")
 	var errResp utils.ErrorResponse
-	ParseResponse(t, w, http.StatusBadRequest, &errResp)
+	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.True(t, strings.Contains(errResp.Error, "name of type string"))
 }
 
@@ -120,11 +120,11 @@ func TestUpdateBaselineInvalidSystem(t *testing.T) {
 		}
 	}`
 	path := fmt.Sprintf(`/%v`, baselineID)
-	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), nil, BaselineUpdateHandler, 1,
+	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
 		"PUT", "/:baseline_id")
 
 	var errResp utils.ErrorResponse
-	ParseResponse(t, w, http.StatusNotFound, &errResp)
+	CheckResponse(t, w, http.StatusNotFound, &errResp)
 	assert.Equal(t, "Missing inventory_ids: [00000000-0000-0000-0000-000000000009 incorrect_id]",
 		errResp.Error)
 	database.DeleteBaseline(t, baselineID)
@@ -136,11 +136,11 @@ func TestUpdateBaselineNullValues(t *testing.T) {
 	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
 	data := `{}`
 	path := fmt.Sprintf(`/%v`, baselineID)
-	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), nil, BaselineUpdateHandler, 1,
+	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
 		"PUT", "/:baseline_id")
 
 	var resp UpdateBaselineResponse
-	ParseResponse(t, w, http.StatusOK, &resp)
+	CheckResponse(t, w, http.StatusOK, &resp)
 	assert.Equal(t, baselineID, resp.BaselineID)
 	database.CheckBaseline(t, baselineID, testingInventoryIDs, // do not change on null values
 		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "temporary_baseline", nil)
@@ -150,18 +150,18 @@ func TestUpdateBaselineNullValues(t *testing.T) {
 
 func TestUpdateBaselineInvalidBaselineID(t *testing.T) {
 	core.SetupTestEnvironment()
-	w := CreateRequestRouterWithParams("PUT", "/invalidBaseline", bytes.NewBufferString("{}"), nil, BaselineUpdateHandler,
+	w := CreateRequestRouterWithParams("PUT", "/invalidBaseline", bytes.NewBufferString("{}"), "", BaselineUpdateHandler,
 		1, "PUT", "/:baseline_id")
 
 	var errResp utils.ErrorResponse
-	ParseResponse(t, w, http.StatusBadRequest, &errResp)
+	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, "Invalid baseline_id: invalidBaseline", errResp.Error)
 }
 
 func TestUpdateBaselineDuplicatedName(t *testing.T) {
 	core.SetupTest(t)
 	data := `{"name": "baseline_1-2"}`
-	w := CreateRequestRouterWithParams("PUT", "/1", bytes.NewBufferString(data), nil, BaselineUpdateHandler, 1,
+	w := CreateRequestRouterWithParams("PUT", "/1", bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
 		"PUT", "/:baseline_id")
 
 	var errResp utils.ErrorResponse
@@ -182,11 +182,11 @@ func TestUpdateBaselineSystems(t *testing.T) {
 			"00000000-0000-0000-0000-000000000002": true
 		}
 	}`
-	w := CreateRequestRouterWithParams("PUT", "/1", bytes.NewBufferString(data), nil, BaselineUpdateHandler, 1,
+	w := CreateRequestRouterWithParams("PUT", "/1", bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
 		"PUT", "/:baseline_id")
 
 	var resp UpdateBaselineResponse
-	ParseResponse(t, w, http.StatusOK, &resp)
+	CheckResponse(t, w, http.StatusOK, &resp)
 	assert.Equal(t, 1, resp.BaselineID)
 
 	database.DeleteBaseline(t, baselineID)
@@ -202,10 +202,10 @@ func TestUpdateBaselineSystemsInvalid(t *testing.T) {
 			"00000000-0000-0000-0000-000000000003": false
 		}
 	}`
-	w := CreateRequestRouterWithParams("PUT", "/1", bytes.NewBufferString(data), nil, BaselineUpdateHandler, 1,
+	w := CreateRequestRouterWithParams("PUT", "/1", bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
 		"PUT", "/:baseline_id")
 
 	var errResp utils.ErrorResponse
-	ParseResponse(t, w, http.StatusBadRequest, &errResp)
+	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, "Invalid inventory IDs: unable to update systems of another baseline", errResp.Error)
 }
