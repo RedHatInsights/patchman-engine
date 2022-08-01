@@ -28,7 +28,7 @@ func MergeVMaaSResponses(vmaasDataA *vmaas.UpdatesV2Response,
 	}
 
 	vmaasDataA.UpdateList = &mergedList
-	if err := removeNonLatestPackages(vmaasDataA); err != nil {
+	if err := RemoveNonLatestPackages(vmaasDataA); err != nil {
 		return nil, err
 	}
 	return vmaasDataA, nil
@@ -79,7 +79,7 @@ func mergeUpdates(listA, listB vmaas.UpdatesV2ResponseUpdateList) (*vmaas.Update
 }
 
 // Keep only updates for the latest package in update list
-func removeNonLatestPackages(updates *vmaas.UpdatesV2Response) error {
+func RemoveNonLatestPackages(updates *vmaas.UpdatesV2Response) error {
 	var toDel []string
 	type nevraStruct struct {
 		nameString string

@@ -276,11 +276,12 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 	accountID1 := getOrCreateTestAccount(t)
 
 	hostEvent := createTestUploadEvent("1", "1", id, "puptoo", false, true)
-	yumUpdates := getYumUpdates(hostEvent)
+	yumUpdates, err := getYumUpdates(hostEvent)
+	assert.Nil(t, err)
 
 	req := vmaas.UpdatesV3Request{}
 
-	_, err := updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(t), yumUpdates, &req)
+	_, err = updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(t), yumUpdates, &req)
 	assert.Nil(t, err)
 
 	reporterID1 := 1

@@ -6,7 +6,9 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+	"app/base/vmaas"
 	"app/manager/middlewares"
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -134,5 +136,11 @@ func assertYumUpdatesInDB(t *testing.T, inventoryID string, yumUpdates []byte) {
 	var system models.SystemPlatform
 	assert.NoError(t, database.Db.Where("inventory_id = ?::uuid", inventoryID).Find(&system).Error)
 	assert.Equal(t, system.InventoryID, inventoryID)
-	assert.Equal(t, system.YumUpdates, yumUpdates)
+	var systemYumUpdatesParsed vmaas.UpdatesV2Response
+	var yumUpdatesParsed vmaas.UpdatesV2Response
+	err := json.Unmarshal(system.YumUpdates, &systemYumUpdatesParsed)
+	assert.Nil(t, err)
+	err = json.Unmarshal(yumUpdates, &systemYumUpdatesParsed)
+	assert.Nil(t, err)
+	assert.Equal(t, systemYumUpdatesParsed, yumUpdatesParsed)
 }
