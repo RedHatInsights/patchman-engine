@@ -202,20 +202,6 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV2Response, 
 		return nil, nil
 	}
 
-	// we need to get all packages to show up-to-date packages
-	vmaasReq, err := tryGetVmaasRequest(system)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get vmaas request")
-	}
-	if vmaasReq != nil {
-		for _, pkg := range vmaasReq.PackageList {
-			if _, has := updatesMap[pkg]; !has {
-				updatesMap[pkg] = vmaas.UpdatesV2ResponseUpdateList{}
-			}
-		}
-		resp.UpdateList = &updatesMap
-	}
-
 	return &resp, nil
 }
 

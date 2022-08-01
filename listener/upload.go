@@ -110,7 +110,11 @@ func HandleUpload(event HostEvent) error {
 	}
 
 	sendPayloadStatus(ptWriter, payloadTrackerEvent, "", "")
-	yumUpdates := getYumUpdates(event)
+	yumUpdates, err := getYumUpdates(event)
+	if err != nil {
+		// don't fail, use vmaas evaluation
+		utils.Log("err", err).Error("Could not get yum updates")
+	}
 	utils.Log("inventoryID", event.Host.ID, "yum_updates", yumUpdates).Trace()
 
 	if len(event.Host.SystemProfile.GetInstalledPackages()) == 0 && yumUpdates == nil {
@@ -527,7 +531,35 @@ func processUpload(host *Host, yumUpdates []byte) (*models.SystemPlatform, error
 	return sys, nil
 }
 
-func getYumUpdates(event HostEvent) []byte {
+func getYumUpdates(event HostEvent) ([]byte, error) {
+	var parsed vmaas.UpdatesV2Response
 	yumUpdates := event.PlatformMetadata.CustomMetadata.YumUpdates
-	return yumUpdates
+
+	err := json.Unmarshal(yumUpdates, &parsed)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to unmarshall yum updates")
+	}
+
+	updatesMap := parsed.GetUpdateList()
+	if len(updatesMap) == 0 {
+		// system does not have any yum updates
+		return yumUpdates, nil
+	}
+	// we need to get all packages to show up-to-date packages
+	installedPkgs := event.Host.SystemProfile.GetInstalledPackages()
+	for _, pkg := range installedPkgs {
+		if _, has := updatesMap[pkg]; !has {
+			updatesMap[pkg] = vmaas.UpdatesV2ResponseUpdateList{}
+		}
+	}
+	parsed.UpdateList = &updatesMap
+
+	if err = utils.RemoveNonLatestPackages(&parsed); err != nil {
+		return nil, errors.Wrap(err, "couldn't remove non-latest packages")
+	}
+	yumUpdates, err = json.Marshal(parsed)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to marshall yum updates")
+	}
+	return yumUpdates, nil
 }
