@@ -35,10 +35,13 @@ func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryNa
 	query := database.SystemAdvisories(database.Db, acc).
 		Select(systemsAdvisoriesSelect).
 		Joins("join advisory_metadata am on am.id = sa.advisory_id").
-		Where("sp.inventory_id::text in (?)", systems).
-		Where("am.name in (?)", advisories).
 		Order("sp.inventory_id, am.id")
-
+	if len(systems) > 0 {
+		query = query.Where("sp.inventory_id::text in (?)", systems)
+	}
+	if len(advisories) > 0 {
+		query = query.Where("am.name in (?)", advisories)
+	}
 	return query
 }
 
