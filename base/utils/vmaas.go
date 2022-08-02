@@ -98,6 +98,8 @@ func RemoveNonLatestPackages(updates *vmaas.UpdatesV2Response) error {
 			case -1:
 				// nevra is newer
 				toDel = append(toDel, nameMap[nevra.Name].nameString)
+				// put latest to nameMap for future comparison
+				nameMap[nevra.Name] = nevraStruct{k, nevra}
 			case 1:
 				// nameMap[nevra.Name] is newer
 				toDel = append(toDel, k)
