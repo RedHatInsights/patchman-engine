@@ -104,7 +104,8 @@ func TestAdvisoriesNotificationMessage(t *testing.T) {
 		URL:   &url,
 	}
 
-	notification := ntf.MakeNotification(system, event, NewAdvisoryEvent, events)
+	notification, err := ntf.MakeNotification(system, event, NewAdvisoryEvent, events)
+	assert.Nil(t, err)
 	assert.Equal(t, orgID, notification.OrgID)
 	assert.Equal(t, url, notification.Context.HostURL)
 	assert.Equal(t, inventoryID, notification.Context.InventoryID)

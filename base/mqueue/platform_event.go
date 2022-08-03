@@ -54,13 +54,6 @@ func (event *PlatformEvent) createKafkaMessage() (KafkaMessage, error) {
 	return KafkaMessage{Value: data}, err
 }
 
-func (event *PlatformEvent) GetAccountName() string {
-	if event.Account == nil {
-		return ""
-	}
-	return *event.Account
-}
-
 func (event *PlatformEvent) GetOrgID() string {
 	if event.OrgID == nil {
 		return ""
