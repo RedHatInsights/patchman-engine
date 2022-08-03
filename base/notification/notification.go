@@ -3,6 +3,7 @@ package notification
 import (
 	"app/base/models"
 	"app/base/mqueue"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -55,7 +56,7 @@ type Notification struct {
 	// ISO-8601 formatted date (per platform convention when the message was sent).
 	Timestamp string `json:"timestamp"`
 	// Account id to address notification to.
-	AccountID string `json:"account_id"`
+	AccountID *string `json:"account_id"`
 	// Extra information that are common to all the events that are sent in this message.
 	Context Context `json:"context,omitempty"`
 	Events  []Event `json:"events"`
@@ -74,7 +75,12 @@ type Advisory struct {
 }
 
 func MakeNotification(system *models.SystemPlatform, event *mqueue.PlatformEvent,
-	eventType string, events []Event) *Notification {
+	eventType string, events []Event) (*Notification, error) {
+	orgID := event.GetOrgID()
+	if orgID == "" || orgID == "null" {
+		return nil, errors.New("invalid orgID")
+	}
+
 	return &Notification{
 		Version:     Version,
 		Bundle:      Bundle,
@@ -82,13 +88,13 @@ func MakeNotification(system *models.SystemPlatform, event *mqueue.PlatformEvent
 		EventType:   eventType,
 		// ISO-8601 formatted time
 		Timestamp: time.Now().Format(time.RFC3339),
-		AccountID: event.GetAccountName(),
+		AccountID: event.Account,
 		Context: Context{
 			InventoryID: system.InventoryID,
 			DisplayName: system.DisplayName,
 			HostURL:     event.GetURL(),
 		},
 		Events: events,
-		OrgID:  event.GetOrgID(),
-	}
+		OrgID:  orgID,
+	}, nil
 }

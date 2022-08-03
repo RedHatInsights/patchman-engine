@@ -81,9 +81,12 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 		events = append(events, ntf.Event{Payload: advisory, Metadata: ntf.Metadata{}})
 	}
 
-	msg, err := mqueue.MessageFromJSON(
-		system.InventoryID,
-		ntf.MakeNotification(system, event, NewAdvisoryEvent, events))
+	notif, err := ntf.MakeNotification(system, event, NewAdvisoryEvent, events)
+	if err != nil {
+		return errors.Wrap(err, "creating notification failed")
+	}
+
+	msg, err := mqueue.MessageFromJSON(system.InventoryID, notif)
 	if err != nil {
 		return errors.Wrap(err, "creating message from notification failed")
 	}
@@ -98,7 +101,8 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 		advisoryIDs = append(advisoryIDs, a.AdvisoryID)
 	}
 
-	utils.Log("inventoryID", system.InventoryID, "advisoryIDs", advisoryIDs).Info("notification sent successfully")
+	utils.Log("inventoryID", system.InventoryID, "advisoryIDs", advisoryIDs, "orgID", event.GetOrgID()).
+		Info("notification sent successfully")
 
 	err = tx.Table("advisory_account_data").
 		Where("rh_account_id = ? AND advisory_id IN (?)", accountID, advisoryIDs).
