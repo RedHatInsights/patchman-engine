@@ -103,7 +103,7 @@ func Evaluate(ctx context.Context, event *mqueue.PlatformEvent, inventoryID, eva
 		return nil
 	}
 
-	system, vmaasData, err := evaluateInDatabase(ctx, event, inventoryID, evaluationType)
+	system, vmaasData, err := evaluateInDatabase(ctx, event, inventoryID)
 	if err != nil {
 		return errors.Wrap(err, "unable to evaluate in database")
 	}
@@ -159,7 +159,7 @@ func runEvaluate(
 	return ptEventOut, err
 }
 
-func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, inventoryID string, evalType string) (
+func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, inventoryID string) (
 	*models.SystemPlatform, *vmaas.UpdatesV2Response, error) {
 	tx := database.Db.WithContext(base.Context).Begin()
 	// Don't allow requested TX to hang around locking the rows
@@ -170,7 +170,7 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 		return nil, nil, nil
 	}
 
-	updatesData, err := getUpdatesData(ctx, tx, system, evalType)
+	updatesData, err := getUpdatesData(ctx, tx, system)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to get updates data")
 	}
@@ -227,7 +227,7 @@ func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV2Response,
 	return updatesData, nil
 }
 
-func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatform, evalType string) (
+func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatform) (
 	*vmaas.UpdatesV2Response, error) {
 	var yumUpdates *vmaas.UpdatesV2Response
 	var yumErr error
@@ -236,11 +236,6 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 		if yumErr != nil {
 			// ignore broken yum updates
 			utils.Log("Can't parse yum_updates").Warn(yumErr.Error())
-		}
-
-		// in evaluator-upload return just return YumUpdates
-		if yumUpdates != nil && evalType == uploadLabel {
-			return yumUpdates, nil
 		}
 	}
 
@@ -253,7 +248,7 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 		utils.Log("Vmaas response error, continuing with yum updates only").Warn(vmaasErr.Error())
 	}
 
-	// Try to merge YumUpdates and VMaaS updates in recalc
+	// Try to merge YumUpdates and VMaaS updates
 	updatesData, err := utils.MergeVMaaSResponses(vmaasData, yumUpdates)
 	if err != nil {
 		return nil, err
