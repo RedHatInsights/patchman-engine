@@ -25,6 +25,14 @@ func TestNevraParse2(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestNevraParse3(t *testing.T) {
+	nevra, err := ParseNevra("connectwisecontrol-1330664eb22f9e21-0:21.14.5924.8013-.noarch")
+	assert.NoError(t, err)
+	assert.Equal(t, "connectwisecontrol-1330664eb22f9e21", nevra.Name)
+	assert.Equal(t, 0, nevra.Epoch)
+	assert.Equal(t, "", nevra.Release)
+}
+
 func TestNevraCmp(t *testing.T) {
 	ff0, err := ParseNevra("firefox-76.0.1-1.fc31.x86_64")
 	assert.NoError(t, err)

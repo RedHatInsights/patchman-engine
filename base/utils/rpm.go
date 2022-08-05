@@ -12,7 +12,7 @@ import (
 
 var (
 	nevraRegex = regexp.MustCompile(
-		`((?P<e1>[0-9]+):)?(?P<pn>[^:]+)-((?P<e2>[0-9]+):)?(?P<ver>[^-:]+)-(?P<rel>[^-:]+)\.(?P<arch>[a-z0-9_]+)`)
+		`((?P<e1>[0-9]+):)?(?P<pn>[^:]+)-((?P<e2>[0-9]+):)?(?P<ver>[^-:]*)-(?P<rel>[^-:]*)\.(?P<arch>[a-z0-9_]*)`)
 	nevraRegexIndices map[string]int
 )
 
