@@ -58,7 +58,7 @@ services:
       - label=disable
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:5.4.0
+    image: confluentinc/cp-zookeeper:7.0.5
     container_name: zookeeper
     env_file:
       - ./conf/zookeeper.env
