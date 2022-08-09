@@ -4274,6 +4274,10 @@
                         },
                         "description": "Used filters"
                     },
+                    "has_systems": {
+                        "type": "boolean",
+                        "description": "Show whether customer has some registered systems"
+                    },
                     "limit": {
                         "type": "integer",
                         "description": "Used response limit (page size) - pagination",

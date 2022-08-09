@@ -5,6 +5,7 @@ import (
 	"app/base/core"
 	"app/base/database"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -176,6 +177,7 @@ func CountRows(tx *gorm.DB) (total int, subTotals map[string]int, err error) {
 //nolint: funlen, lll
 func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, opts ListOpts, params ...string) (
 	*gorm.DB, *ListMeta, *Links, error) {
+	hasSystems := true
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
@@ -220,6 +222,10 @@ func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, op
 	if len(sortFields) > 0 {
 		sortQ = fmt.Sprintf("sort=%v", strings.Join(sortFields, ","))
 	}
+	if total == 0 {
+		account := c.GetInt(middlewares.KeyAccount)
+		tx.Raw("SELECT EXISTS (SELECT 1 FROM system_platform where rh_account_id = ?)", account).Scan(&hasSystems)
+	}
 	meta := ListMeta{
 		Limit:      limit,
 		Offset:     offset,
@@ -228,6 +234,7 @@ func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, op
 		Search:     base.RemoveInvalidChars(c.Query("search")),
 		TotalItems: total,
 		SubTotals:  subTotals,
+		HasSystems: &hasSystems,
 	}
 
 	tagQ := extractTagsQueryString(c)

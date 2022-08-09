@@ -28,4 +28,7 @@ type ListMeta struct {
 
 	// Some subtotals used by some endpoints
 	SubTotals map[string]int `json:"subtotals,omitempty"`
+
+	// Show whether customer has some registered systems
+	HasSystems *bool `json:"has_systems,omitempty"`
 }
