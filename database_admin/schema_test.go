@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"fmt"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -26,6 +27,7 @@ func setCmdAuth(cmd *exec.Cmd) {
 	cmd.Env = append(cmd.Env, fmt.Sprintf("PGPASSWORD=%v", utils.FailIfEmpty(utils.Cfg.DBPassword, "DB_PASSWD")))
 }
 
+// nolint: funlen
 func TestSchemaCompatiblity(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	cfg := postgres.Config{
@@ -73,6 +75,19 @@ func TestSchemaCompatiblity(t *testing.T) {
 
 	diff, err := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{A: migratedLines, B: scratchLines})
 	assert.NoError(t, err)
+
+	var name string
+	for i, b := range [][]byte{migrated, fromScratch} {
+		if i == 0 {
+			name = "./migrated"
+		} else {
+			name = "./fromScratch"
+		}
+		err = os.WriteFile(name, b, 0600)
+		if err != nil {
+			panic(err)
+		}
+	}
 
 	fmt.Print(diff)
 	assert.Equal(t, len(diff), 0)
