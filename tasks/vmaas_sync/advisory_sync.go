@@ -4,6 +4,7 @@ import (
 	"app/base"
 	"app/base/database"
 	"app/base/models"
+	"app/base/types"
 	"app/base/utils"
 	"app/base/vmaas"
 	"encoding/json"
@@ -104,7 +105,7 @@ func getSeverityID(vmaasData *vmaas.ErrataResponseErrataList, severities map[str
 
 func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataResponseErrataList,
 	severities, advisoryTypes map[string]int) (*models.AdvisoryMetadata, error) {
-	issued, err := time.Parse(base.Rfc3339NoTz, vmaasData.Issued)
+	issued, err := time.Parse(types.Rfc3339NoTz, vmaasData.Issued)
 	if err != nil {
 		return nil, errors.Wrap(err, "Invalid errata issued date")
 	}
@@ -140,7 +141,7 @@ func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataRespons
 
 func checkUpdatedSummaryDescription(errataName string, vmaasData vmaas.ErrataResponseErrataList) (
 	modified time.Time, success bool) {
-	modified, err := time.Parse(base.Rfc3339NoTz, vmaasData.Updated)
+	modified, err := time.Parse(types.Rfc3339NoTz, vmaasData.Updated)
 	if err != nil {
 		utils.Log("err", err.Error(), "erratum", errataName).Error("Invalid errata modified date")
 		return time.Time{}, false

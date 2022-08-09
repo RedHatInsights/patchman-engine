@@ -1,14 +1,15 @@
 package vmaas_sync //nolint:revive,stylecheck
 
 import (
-	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/mqueue"
+	"app/base/types"
 	"app/base/utils"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetCurrentRepoBasedInventoryIDs(t *testing.T) {
@@ -75,7 +76,7 @@ func TestGetUpdatedRepos(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
-	modifiedSince := time.Now().Format(base.Rfc3339NoTz)
+	modifiedSince := time.Now().Format(types.Rfc3339NoTz)
 	redhat, thirdparty, err := getUpdatedRepos(time.Now(), &modifiedSince)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(redhat))

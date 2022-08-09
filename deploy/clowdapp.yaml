@@ -28,11 +28,9 @@ objects:
               - ./database_admin/entrypoint.sh
             env:
             - {name: LOG_LEVEL, value: '${LOG_LEVEL_DATABASE_ADMIN}'}
-            - {name: GODEBUG, value: '${GODEBUG_DATABASE_ADMIN}'}
             - {name: DB_DEBUG, value: '${DB_DEBUG_DATABASE_ADMIN}'}
             - {name: GIN_MODE, value: '${GIN_MODE}'}
             - {name: SHOW_CLOWDER_VARS, value: ''}
-            - {name: CLOWDER_ENABLED, value: '${CLOWDER_ENABLED}'}
             - {name: SHOW_CLOWDER_VARS, value: ''}
             - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
             - {name: RESET_SCHEMA, value: '${RESET_SCHEMA}'}
@@ -56,10 +54,8 @@ objects:
           - manager
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_MANAGER}'}
-        - {name: GODEBUG, value: '${GODEBUG_MANAGER}'}
         - {name: GOMAXPROCS, value: '${GOMAXPROCS_MANAGER}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
-        - {name: CLOWDER_ENABLED, value: '${CLOWDER_ENABLED}'}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_MANAGER}'}
         - {name: DB_USER, value: manager}
@@ -76,6 +72,7 @@ objects:
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: '${EVAL_TOPIC_MANAGER}'}
+        - {name: ENABLE_TURNPIKE_AUTH, value: '${ENABLE_TURNPIKE_AUTH}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_MANAGER}', memory: '${RES_LIMIT_MEM_MANAGER}'}
@@ -104,10 +101,8 @@ objects:
           - listener
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_LISTENER}'}
-        - {name: GODEBUG, value: '${GODEBUG_LISTENER}'}
         - {name: GOMAXPROCS, value: '${GOMAXPROCS_LISTENER}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
-        - {name: CLOWDER_ENABLED, value: '${CLOWDER_ENABLED}'}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_LISTENER}'}
         - {name: DB_USER, value: listener}
@@ -152,10 +147,8 @@ objects:
           - evaluator
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_EVALUATOR_UPLOAD}'}
-        - {name: GODEBUG, value: '${GODEBUG_EVALUATOR_UPLOAD}'}
         - {name: GOMAXPROCS, value: '${GOMAXPROCS_EVALUATOR_UPLOAD}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
-        - {name: CLOWDER_ENABLED, value: '${CLOWDER_ENABLED}'}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_EVALUATOR_UPLOAD}'}
         - {name: DB_USER, value: evaluator}
@@ -216,10 +209,8 @@ objects:
           - evaluator
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_EVALUATOR_RECALC}'}
-        - {name: GODEBUG, value: '${GODEBUG_EVALUATOR_RECALC}'}
         - {name: GOMAXPROCS, value: '${GOMAXPROCS_EVALUATOR_RECALC}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
-        - {name: CLOWDER_ENABLED, value: '${CLOWDER_ENABLED}'}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_EVALUATOR_RECALC}'}
         - {name: DB_USER, value: evaluator}
@@ -257,69 +248,6 @@ objects:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_RECALC}', memory: '${RES_LIMIT_MEM_EVALUATOR_RECALC}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_RECALC}', memory: '${RES_REQUEST_MEM_EVALUATOR_RECALC}'}
 
-    - name: vmaas-sync
-      minReplicas: ${{REPLICAS_VMAAS_SYNC}}
-      webServices:
-        public:
-          enabled: true
-        private:
-          enabled: false
-        metrics:
-          enabled: true
-      podSpec:
-        image: ${IMAGE}:${IMAGE_TAG_VMAAS_SYNC}
-        initContainers:
-          - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
-            command:
-              - ./database_admin/check-upgraded.sh
-            env:
-            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
-        command:
-          - ./scripts/entrypoint.sh
-          - vmaas_sync
-        env:
-        - {name: LOG_LEVEL, value: '${LOG_LEVEL_VMAAS_SYNC}'}
-        - {name: GODEBUG, value: '${GODEBUG_VMAAS_SYNC}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_VMAAS_SYNC}'}
-        - {name: GIN_MODE, value: '${GIN_MODE}'}
-        - {name: CLOWDER_ENABLED, value: '${CLOWDER_ENABLED}'}
-        - {name: SHOW_CLOWDER_VARS, value: ''}
-        - {name: DB_DEBUG, value: '${DB_DEBUG_VMAAS_SYNC}'}
-        - {name: DB_USER, value: vmaas_sync}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                       key: vmaas-sync-database-password}}}
-        - {name: KAFKA_GROUP, value: patchman}
-        - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
-        - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
-        - {name: ENABLE_REPO_BASED_RE_EVALUATION, value: '${ENABLE_REPO_BASED_RE_EVALUATION}'}
-        - {name: ENABLE_RECALC_MESSAGES_SEND, value: '${ENABLE_RECALC_MESSAGES_SEND}'}
-        - {name: ENABLE_SYNC_ON_START, value: '${ENABLE_SYNC_ON_START}'}
-        - {name: ENABLE_RECALC_ON_START, value: '${ENABLE_RECALC_ON_START}'}
-        - {name: DELETE_UNUSED_DATA_LIMIT, value: '${DELETE_UNUSED_DATA_LIMIT}'}
-        - {name: ENABLE_UNUSED_DATA_DELETE, value: '${ENABLE_UNUSED_DATA_DELETE}'}
-        - {name: DELETE_CULLED_SYSTEMS_LIMIT, value: '${DELETE_CULLED_SYSTEMS_LIMIT}'}
-        - {name: ENABLE_CULLED_SYSTEM_DELETE, value: '${ENABLE_CULLED_SYSTEM_DELETE}'}
-        - {name: ENABLE_SYSTEM_STALING, value: '${ENABLE_SYSTEM_STALING}'}
-        - {name: ENABLE_REFRESH_PACKAGES_CACHE, value: '${ENABLE_REFRESH_PACKAGES_CACHE}'}
-        - {name: ENABLE_REFRESH_ADVISORY_CACHES, value: '${ENABLE_REFRESH_ADVISORY_CACHES}'}
-        - {name: ENABLE_TURNPIKE_AUTH, value: '${ENABLE_TURNPIKE_AUTH}'}
-        - {name: ENABLE_ADVISORIES_SYNC, value: '${ENABLE_ADVISORIES_SYNC}'}
-        - {name: ENABLE_PACKAGES_SYNC, value: '${ENABLE_PACKAGES_SYNC}'}
-        - {name: ENABLE_REPOS_SYNC, value: '${ENABLE_REPOS_SYNC}'}
-        - {name: ENABLE_MODIFIED_SINCE_SYNC, value: '${ENABLE_MODIFIED_SINCE_SYNC}'}
-        - {name: ERRATA_PAGE_SIZE, value: '${ERRATA_PAGE_SIZE}'}
-        - {name: PACKAGES_PAGE_SIZE, value: '${PACKAGES_PAGE_SIZE}'}
-        - {name: ENABLE_CYNDI_METRICS, value: '${ENABLE_CYNDI_METRICS}'}
-        - {name: ENABLE_ADVISORIES_COUNT_CHECK, value: '${ENABLE_ADVISORIES_COUNT_CHECK}'}
-        - {name: ENABLE_PACKAGES_COUNT_CHECK, value: '${ENABLE_PACKAGES_COUNT_CHECK}'}
-        - {name: VMAAS_ADDRESS, value: '${VMAAS_ADDRESS}'}
-        - {name: VMAAS_WS_ADDRESS, value: '${VMAAS_WS_ADDRESS}'}
-        - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
-        resources:
-          limits: {cpu: '${RES_LIMIT_CPU_VMAAS_SYNC}', memory: '${RES_LIMIT_MEM_VMAAS_SYNC}'}
-          requests: {cpu: '${RES_REQUEST_CPU_VMAAS_SYNC}', memory: '${RES_REQUEST_MEM_VMAAS_SYNC}'}
-
     jobs:
     - name: floorist
       schedule: ${FLOORIST_SCHEDULE}
@@ -347,6 +275,162 @@ objects:
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_FLOORIST}', memory: '${RES_LIMIT_MEM_FLOORIST}'}
           requests: {cpu: '${RES_REQUEST_CPU_FLOORIST}', memory: '${RES_REQUEST_MEM_FLOORIST}'}
+
+    - name: vmaas-sync
+      schedule: ${VMAAS_SYNC_SCHEDULE}
+      suspend: ${{VMAAS_SYNC_SUSPEND}}
+      concurrencyPolicy: Forbid
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG_JOBS}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+        command:
+          - ./scripts/entrypoint.sh
+          - job
+          - vmaas_sync
+        env:
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
+        - {name: GOMAXPROCS, value: '${GOMAXPROCS_JOBS}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SHOW_CLOWDER_VARS, value: ''}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
+        - {name: DB_USER, value: vmaas_sync}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                       key: vmaas-sync-database-password}}}
+        - {name: KAFKA_GROUP, value: patchman}
+        - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
+        - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
+        - {name: ENABLE_REPO_BASED_RE_EVALUATION, value: '${ENABLE_REPO_BASED_RE_EVALUATION}'}
+        - {name: ENABLE_RECALC_MESSAGES_SEND, value: '${ENABLE_RECALC_MESSAGES_SEND}'}
+        - {name: ENABLE_ADVISORIES_SYNC, value: '${ENABLE_ADVISORIES_SYNC}'}
+        - {name: ENABLE_PACKAGES_SYNC, value: '${ENABLE_PACKAGES_SYNC}'}
+        - {name: ENABLE_REPOS_SYNC, value: '${ENABLE_REPOS_SYNC}'}
+        - {name: ENABLE_MODIFIED_SINCE_SYNC, value: '${ENABLE_MODIFIED_SINCE_SYNC}'}
+        - {name: ERRATA_PAGE_SIZE, value: '${ERRATA_PAGE_SIZE}'}
+        - {name: PACKAGES_PAGE_SIZE, value: '${PACKAGES_PAGE_SIZE}'}
+        - {name: ENABLE_CYNDI_METRICS, value: '${ENABLE_CYNDI_METRICS}'}
+        - {name: ENABLE_ADVISORIES_COUNT_CHECK, value: '${ENABLE_ADVISORIES_COUNT_CHECK}'}
+        - {name: ENABLE_PACKAGES_COUNT_CHECK, value: '${ENABLE_PACKAGES_COUNT_CHECK}'}
+        - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
+        resources:
+          limits: {cpu: '${RES_LIMIT_CPU_VMAAS_SYNC}', memory: '${RES_LIMIT_MEM_VMAAS_SYNC}'}
+          requests: {cpu: '${RES_REQUEST_CPU_VMAAS_SYNC}', memory: '${RES_REQUEST_MEM_VMAAS_SYNC}'}
+
+    - name: system-culling
+      schedule: ${CULLING_SCHEDULE}
+      suspend: ${{CULLING_SUSPEND}}
+      concurrencyPolicy: Forbid
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG_JOBS}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+        command:
+          - ./scripts/entrypoint.sh
+          - job
+          - system_culling
+        env:
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
+        - {name: GOMAXPROCS, value: '${GOMAXPROCS_JOBS}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
+        - {name: DB_USER, value: vmaas_sync}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                      key: vmaas-sync-database-password}}}
+        - {name: DELETE_CULLED_SYSTEMS_LIMIT, value: '${DELETE_CULLED_SYSTEMS_LIMIT}'}
+        - {name: ENABLE_CULLED_SYSTEM_DELETE, value: '${ENABLE_CULLED_SYSTEM_DELETE}'}
+        - {name: ENABLE_SYSTEM_STALING, value: '${ENABLE_SYSTEM_STALING}'}
+
+    - name: package-refresh
+      schedule: ${PKG_REFRESH_SCHEDULE}
+      suspend: ${{PKG_REFRESH_SUSPEND}}
+      concurrencyPolicy: Forbid
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG_JOBS}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+        command:
+          - ./scripts/entrypoint.sh
+          - job
+          - packages_cache_refresh
+        env:
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
+        - {name: GOMAXPROCS, value: '${GOMAXPROCS_JOBS}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
+        - {name: DB_USER, value: vmaas_sync}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                      key: vmaas-sync-database-password}}}
+        - {name: ENABLE_REFRESH_PACKAGES_CACHE, value: '${ENABLE_REFRESH_PACKAGES_CACHE}'}
+
+    - name: advisory-refresh
+      schedule: ${ADVISORY_REFRESH_SCHEDULE}
+      suspend: ${{ADVISORY_REFRESH_SUSPEND}}
+      concurrencyPolicy: Forbid
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG_JOBS}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+        command:
+          - ./scripts/entrypoint.sh
+          - job
+          - advisory_cache_refresh
+        env:
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
+        - {name: GOMAXPROCS, value: '${GOMAXPROCS_JOBS}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
+        - {name: DB_USER, value: vmaas_sync}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                      key: vmaas-sync-database-password}}}
+        - {name: ENABLE_REFRESH_ADVISORY_CACHES, value: '${ENABLE_REFRESH_ADVISORY_CACHES}'}
+
+    - name: delete-unused
+      schedule: ${DELETE_UNUSED_SCHEDULE}
+      suspend: ${{DELETE_UNUSED_SUSPEND}}
+      concurrencyPolicy: Forbid
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG_JOBS}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+        command:
+          - ./scripts/entrypoint.sh
+          - job
+          - delete_unused
+        env:
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
+        - {name: GOMAXPROCS, value: '${GOMAXPROCS_JOBS}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
+        - {name: DB_USER, value: vmaas_sync}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                      key: vmaas-sync-database-password}}}
+        - {name: DELETE_UNUSED_DATA_LIMIT, value: '${DELETE_UNUSED_DATA_LIMIT}'}
+        - {name: ENABLE_UNUSED_DATA_DELETE, value: '${ENABLE_UNUSED_DATA_DELETE}'}
 
     database:
       name: patchman
@@ -488,24 +572,16 @@ parameters:
 - {name: MAX_EVAL_GOROUTINES_RECALC, value: '1'}
 - {name: ENABLE_INSTANT_NOTIFICATIONS, value: 'true'}
 
+# JOBS
+- {name: IMAGE_TAG_JOBS, value: latest}
+- {name: LOG_LEVEL_JOBS, value: debug}
+- {name: GOMAXPROCS_JOBS, value: '8'}
+- {name: DB_DEBUG_JOBS, value: 'false'}
 # VMaaS sync
-- {name: REPLICAS_VMAAS_SYNC, value: '1'}
-- {name: IMAGE_TAG_VMAAS_SYNC, value: latest}
-- {name: LOG_LEVEL_VMAAS_SYNC, value: debug}
-- {name: GOMAXPROCS_VMAAS_SYNC, value: '8'}
-- {name: DB_DEBUG_VMAAS_SYNC, value: 'false'}
+- {name: VMAAS_SYNC_SCHEDULE, value: '*/5 * * * *'} # Cronjob schedule definition
+- {name: VMAAS_SYNC_SUSPEND, value: 'false'} # Disable cronjob execution
 - {name: ENABLE_REPO_BASED_RE_EVALUATION, value: 'true'} # Optimize re-evaluation using repositories
 - {name: ENABLE_RECALC_MESSAGES_SEND, value: 'true'} # Send re-calc messages after sync
-- {name: ENABLE_SYNC_ON_START, value: 'false'} # Force advisories, packages and repos metadata sync on start
-- {name: ENABLE_RECALC_ON_START, value: 'false'} # Force recalc messages sending on start
-- {name: DELETE_UNUSED_DATA_LIMIT, value: '1000'}  # Unused data deletion limit
-- {name: ENABLE_UNUSED_DATA_DELETE, value: 'true'} # Unused data feature switch
-- {name: DELETE_CULLED_SYSTEMS_LIMIT, value: '1000'} # Culled systems deletion limit
-- {name: ENABLE_CULLED_SYSTEM_DELETE, value: 'true'} # Enable deleting part of culling method
-- {name: ENABLE_SYSTEM_STALING, value: 'true'} # Enable marking systems stale of culling method
-- {name: ENABLE_REFRESH_PACKAGES_CACHE, value: 'true'} # Enable periodic refresh of materialized view of the latest packages
-- {name: ENABLE_REFRESH_ADVISORY_CACHES, value: 'true'} # Enable periodic refresh of account advisory caches
-- {name: ENABLE_TURNPIKE_AUTH, value: 'false'} # Enable Turnpike authentication for internal API (manual sync, re-calc)
 - {name: ENABLE_ADVISORIES_SYNC, value: 'true'} # Enable advisories sync - part of sync process.
 - {name: ENABLE_PACKAGES_SYNC, value: 'true'} # Enable packages sync - part of sync process.
 - {name: ENABLE_REPOS_SYNC, value: 'true'} # Enable repos sync - part of sync process.
@@ -515,11 +591,28 @@ parameters:
 - {name: ENABLE_CYNDI_METRICS, value: 'true'} # Calculate and expose metrics about Cyndi data
 - {name: ENABLE_ADVISORIES_COUNT_CHECK, value: 'true'} # Check all advisories count after sync, re-sync all if needed
 - {name: ENABLE_PACKAGES_COUNT_CHECK, value: 'true'} # Check all packages count after sync, re-sync all if needed
-- {name: VMAAS_WS_ADDRESS, value: ''} # Use vmaas websocket address if it's not included in clowder config.
 - {name: RES_LIMIT_CPU_VMAAS_SYNC, value: 500m}
 - {name: RES_LIMIT_MEM_VMAAS_SYNC, value: 384Mi}
 - {name: RES_REQUEST_CPU_VMAAS_SYNC, value: 500m}
 - {name: RES_REQUEST_MEM_VMAAS_SYNC, value: 384Mi}
+# Delete unused data
+- {name: DELETE_UNUSED_SCHEDULE, value: '* */6 * * *'} # Cronjob schedule definition
+- {name: DELETE_UNUSED_SUSPEND, value: 'true'} # Disable cronjob execution
+- {name: DELETE_UNUSED_DATA_LIMIT, value: '1000'}  # Unused data deletion limit
+- {name: ENABLE_UNUSED_DATA_DELETE, value: 'true'} # Unused data feature switch
+# System culling
+- {name: CULLING_SCHEDULE, value: '*/10 * * * *'} # Cronjob schedule definition
+- {name: CULLING_SUSPEND, value: 'false'} # Disable cronjob execution
+- {name: DELETE_CULLED_SYSTEMS_LIMIT, value: '1000'} # Culled systems deletion limit
+- {name: ENABLE_CULLED_SYSTEM_DELETE, value: 'true'} # Enable deleting part of culling method
+- {name: ENABLE_SYSTEM_STALING, value: 'true'} # Enable marking systems stale of culling method
+# Cache refresh
+- {name: PKG_REFRESH_SCHEDULE, value: '*/10 * * * *'} # Cronjob schedule definition
+- {name: PKG_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
+- {name: ADVISORY_REFRESH_SCHEDULE, value: '*/15 * * * *'} # Cronjob schedule definition
+- {name: ADVISORY_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
+- {name: ENABLE_REFRESH_PACKAGES_CACHE, value: 'true'} # Enable periodic refresh of materialized view of the latest packages
+- {name: ENABLE_REFRESH_ADVISORY_CACHES, value: 'true'} # Enable periodic refresh of account advisory caches
 
 # Database admin
 - {name: IMAGE_TAG_DATABASE_ADMIN, value: latest}
@@ -540,7 +633,6 @@ parameters:
 - {name: IMAGE, value: quay.io/cloudservices/patchman-engine-app}
 - {name: ENV_NAME, required: false}
 - {name: GIN_MODE, value: 'release'} # Gin webframework running mode
-- {name: CLOWDER_ENABLED, value: 'true'} # Enable params reading from Clowder json config (ACG_CONFIG)
 - {name: VMAAS_ADDRESS, value: ''} # Use vmaas address if it's not included in clowder config.
 - {name: PACKAGE_CACHE_SIZE, value: '1000000'}
 - {name: PACKAGE_NAME_CACHE_SIZE, value: '60000'}
@@ -551,6 +643,8 @@ parameters:
 - {name: VMAAS_CALL_USE_OPTIMISTIC_UPDATES, value: 'true'} # Always use "optimistic_updates" in vmaas request (not only for third party usage).
 - {name: MSG_BATCH_SIZE, value: '4000'} # BatchSize for PlatformEvent message
 - {name: ENABLE_PAYLOAD_TRACKER, value: 'true'} # Send status messages to payload tracker
+# Turnpike
+- {name: ENABLE_TURNPIKE_AUTH, value: 'false'} # Enable Turnpike authentication for internal API (manual sync, re-calc)
 
 # Floorist parameters
 - {name: FLOORIST_SCHEDULE, value: '50 0 * * *', required: true} # Cronjob schedule definition

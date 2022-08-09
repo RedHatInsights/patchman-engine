@@ -1,4 +1,5 @@
 package vmaas_sync //nolint:revive,stylecheck
+
 import (
 	"app/base"
 	"app/base/database"

@@ -48,6 +48,8 @@ ADD --chown=insights:root manager                  /go/src/app/manager
 ADD --chown=insights:root platform                 /go/src/app/platform
 ADD --chown=insights:root scripts                  /go/src/app/scripts
 ADD --chown=insights:root vmaas_sync               /go/src/app/vmaas_sync
+ADD --chown=insights:root tasks                    /go/src/app/tasks
+ADD --chown=insights:root turnpike                 /go/src/app/turnpike
 ADD --chown=insights:root main.go                   /go/src/app/
 
 RUN go build -v main.go

@@ -8,6 +8,7 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"app/base/vmaas"
+	"app/tasks"
 	"context"
 	"net/http"
 	"os"
@@ -39,7 +40,7 @@ func TestSync(t *testing.T) {
 
 	evalWriter = &mockKafkaWriter{}
 
-	websocketHandler([]byte("webapps-refreshed"), nil)
+	runSync()
 
 	expected := []string{"RH-100"}
 	database.CheckAdvisoriesInDB(t, expected)
@@ -68,7 +69,7 @@ func TestHandleContextCancel(t *testing.T) {
 	var hook = utils.NewTestLogHook()
 	log.AddHook(hook)
 
-	handleContextCancel(func() {})
+	tasks.HandleContextCancel(func() {})
 	base.CancelContext()
 	utils.AssertEqualWait(t, 1, func() (exp, act interface{}) {
 		return 1, len(hook.LogEntries)
