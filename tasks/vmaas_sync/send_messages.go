@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func sendReevaluationMessages() error {
+func SendReevaluationMessages() error {
 	if !enableRecalcMessagesSend {
 		utils.Log().Info("Recalc messages sending disabled, skipping...")
 		return nil

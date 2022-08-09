@@ -1,12 +1,14 @@
-package vmaas_sync //nolint:revive,stylecheck
+package caches
 
 import (
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
-	"github.com/stretchr/testify/assert"
+	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRefreshAdvisoryCachesPerAccounts(t *testing.T) {
@@ -22,7 +24,9 @@ func TestRefreshAdvisoryCachesPerAccounts(t *testing.T) {
 	assert.Nil(t, database.Db.Model(&models.AdvisoryAccountData{}).
 		Where("advisory_id = 3 AND rh_account_id = 1").Update("systems_affected", 8).Error)
 
-	refreshAdvisoryCachesPerAccounts(0)
+	var wg sync.WaitGroup
+	refreshAdvisoryCachesPerAccounts(&wg)
+	wg.Wait()
 
 	assert.Equal(t, 2, database.PluckInt(database.Db.Table("advisory_account_data").
 		Where("advisory_id = 1 AND rh_account_id = 2"), "systems_affected"))

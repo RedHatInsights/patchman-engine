@@ -103,20 +103,6 @@ var (
 		Name:      "message_send_duration_seconds",
 	})
 
-	deletedCulledSystemsCnt = prometheus.NewCounter(prometheus.CounterOpts{
-		Help:      "How many culled systems were deleted",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
-		Name:      "deleted_culled_systems",
-	})
-
-	staleSystemsMarkedCnt = prometheus.NewCounter(prometheus.CounterOpts{
-		Help:      "How many systems were marked as stale",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
-		Name:      "stale_systems_marked",
-	})
-
 	advisoriesCountMismatch = prometheus.NewCounter(prometheus.CounterOpts{
 		Help:      "How many advisories were not synced after incremental sync",
 		Namespace: "patchman_engine",
@@ -129,8 +115,7 @@ var (
 
 func RunMetrics() {
 	prometheus.MustRegister(messagesReceivedCnt, vmaasCallCnt, storeAdvisoriesCnt, storePackagesCnt,
-		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration,
-		deletedCulledSystemsCnt, staleSystemsMarkedCnt, packageCnt, packageNameCnt,
+		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration, packageCnt, packageNameCnt,
 		databaseSizeBytesGaugeVec, databaseProcessesGaugeVec, cyndiSystemsCnt, cyndiTagsCnt,
 		advisoriesCountMismatch)
 

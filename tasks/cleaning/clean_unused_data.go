@@ -1,23 +1,27 @@
-package vmaas_sync //nolint:revive,stylecheck
+package cleaning
 
 import (
 	"app/base"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
-	"time"
 )
+
+var (
+	enableUnusedDataDelete bool
+	deleteUnusedDataLimit  int
+)
+
+func init() {
+	deleteUnusedDataLimit = utils.GetIntEnvOrDefault("DELETE_UNUSED_DATA_LIMIT", 1000)
+	enableUnusedDataDelete = utils.GetBoolEnvOrDefault("ENABLE_UNUSED_DATA_DELETE", true)
+}
 
 func RunDeleteUnusedData() {
 	defer utils.LogPanics(true)
 
-	ticker := time.NewTicker(time.Hour * 6)
-
-	for {
-		<-ticker.C
-		deleteUnusedPackages()
-		deleteUnusedAdvisories()
-	}
+	deleteUnusedPackages()
+	deleteUnusedAdvisories()
 }
 
 func deleteUnusedPackages() {

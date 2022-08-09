@@ -1,8 +1,10 @@
 package vmaas_sync //nolint:revive,stylecheck
+
 import (
 	"app/base/database"
-	"github.com/pkg/errors"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 func syncRepos(syncStart time.Time) error {

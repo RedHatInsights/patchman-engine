@@ -1,6 +1,9 @@
 package vmaas
 
-import "strings"
+import (
+	"app/base/types"
+	"strings"
+)
 
 type UpdatesV3Request struct {
 	PackageList    []string                       `json:"package_list"`
@@ -217,4 +220,20 @@ type ReposResponse struct {
 	Pages          int                                 `json:"pages,omitempty"`
 	RepositoryList map[string][]map[string]interface{} `json:"repository_list,omitempty"`
 	LastChange     *string                             `json:"last_change,omitempty"`
+}
+
+type DBChangeResponse struct {
+	ErrataChanges     *types.Rfc3339Timestamp `json:"errata_changes,omitempty"`
+	CVEChanges        *types.Rfc3339Timestamp `json:"cve_changes,omitempty"`
+	RepositoryChanges *types.Rfc3339Timestamp `json:"repository_changes,omitempty"`
+	LastChange        *types.Rfc3339Timestamp `json:"last_change,omitempty"`
+	Exported          *types.Rfc3339Timestamp `json:"exported,omitempty"`
+}
+
+func (o *DBChangeResponse) GetExported() types.Rfc3339Timestamp {
+	if o == nil || o.Exported == nil {
+		var ret types.Rfc3339Timestamp
+		return ret
+	}
+	return *o.Exported
 }

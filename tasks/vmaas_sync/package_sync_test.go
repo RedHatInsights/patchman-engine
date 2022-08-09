@@ -1,11 +1,13 @@
 package vmaas_sync //nolint:revive,stylecheck
+
 import (
 	"app/base/core"
 	"app/base/database"
 	"app/base/utils"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPkgListSyncPackages(t *testing.T) {

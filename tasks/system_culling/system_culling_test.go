@@ -1,18 +1,19 @@
-package vmaas_sync //nolint:revive,stylecheck
+package system_culling //nolint:revive,stylecheck
 
 import (
-	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
+	"app/base/types"
 	"app/base/utils"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
-var staleDate, _ = time.Parse(base.Rfc3339NoTz, "2006-01-02T15:04:05-07:00")
+var staleDate, _ = time.Parse(types.Rfc3339NoTz, "2006-01-02T15:04:05-07:00")
 
 func TestSingleSystemStale(t *testing.T) {
 	utils.SkipWithoutDB(t)
@@ -25,7 +26,7 @@ func TestSingleSystemStale(t *testing.T) {
 	database.DebugWithCachesCheck("stale-trigger", func() {
 		assert.NotNil(t, staleDate)
 		assert.NoError(t, database.Db.Find(&accountData, "systems_affected > 1 ").Order("systems_affected DESC").Error)
-		assert.NoError(t, database.Db.Find(&systems, "rh_account_id = ? AND stale = false",
+		assert.NoError(t, database.Db.Find(&systems, "rh_account_id = ? AND stale = false AND advisory_count_cache > 0",
 			accountData[0].RhAccountID).Order("id").Error)
 
 		systems[0].StaleTimestamp = &staleDate

@@ -1,10 +1,10 @@
 package vmaas_sync //nolint:revive,stylecheck
 
 import (
-	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
+	"app/base/types"
 	"app/base/utils"
 	"app/base/vmaas"
 	"encoding/json"
@@ -120,7 +120,7 @@ func TestParseAdvisories(t *testing.T) {
 	assert.Equal(t, len(res), 1)
 	adv := res[0]
 
-	time, err := time.Parse(base.Rfc3339NoTz, "2004-09-02T00:00:00+00:00")
+	time, err := time.Parse(types.Rfc3339NoTz, "2004-09-02T00:00:00+00:00")
 	assert.Nil(t, err)
 	assert.Equal(t, time, adv.PublicDate)
 	assert.Equal(t, time, adv.ModifiedDate)
