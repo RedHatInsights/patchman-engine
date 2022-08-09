@@ -1,7 +1,7 @@
 package mqueue
 
 import (
-	"app/base"
+	"app/base/types"
 	"encoding/json"
 	"time"
 
@@ -10,16 +10,16 @@ import (
 )
 
 type PlatformEvent struct {
-	ID          string                 `json:"id"`
-	Type        *string                `json:"type"`
-	Timestamp   *base.Rfc3339Timestamp `json:"timestamp"`
-	Account     *string                `json:"account"`
-	AccountID   int                    `json:"account_id"`
-	OrgID       *string                `json:"org_id,omitempty"`
-	B64Identity *string                `json:"b64_identity"`
-	URL         *string                `json:"url"`
-	SystemIDs   []string               `json:"system_ids,omitempty"`
-	RequestIDs  []string               `json:"request_ids,omitempty"`
+	ID          string                  `json:"id"`
+	Type        *string                 `json:"type"`
+	Timestamp   *types.Rfc3339Timestamp `json:"timestamp"`
+	Account     *string                 `json:"account"`
+	AccountID   int                     `json:"account_id"`
+	OrgID       *string                 `json:"org_id,omitempty"`
+	B64Identity *string                 `json:"b64_identity"`
+	URL         *string                 `json:"url"`
+	SystemIDs   []string                `json:"system_ids,omitempty"`
+	RequestIDs  []string                `json:"request_ids,omitempty"`
 }
 
 type InventoryAID struct {
@@ -116,7 +116,7 @@ func (data *EvalDataSlice) groupData() (int, *groupedData, *groupedData, *groupe
 func (data *InventoryAIDs) WriteEvents(ctx context.Context, w Writer) error {
 	batches, groupedSys := data.groupData()
 	// create events, per BatchSize of systems from one account
-	now := base.Rfc3339Timestamp(time.Now())
+	now := types.Rfc3339Timestamp(time.Now())
 	events := make(PlatformEvents, 0, batches)
 	for acc, ev := range *groupedSys {
 		for start := 0; start < len(ev); start += BatchSize {
@@ -147,7 +147,7 @@ func (data *EvalDataSlice) WriteEvents(ctx context.Context, w Writer) error {
 		groupedReqIDVal = *groupedReqID
 	}
 	// create events, per BatchSize of systems from one account
-	now := base.Rfc3339Timestamp(time.Now())
+	now := types.Rfc3339Timestamp(time.Now())
 	events := make(PlatformEvents, 0, batches)
 	for acc, accDetails := range *accountInfo {
 		nEvents := len(groupedSysVal[acc])

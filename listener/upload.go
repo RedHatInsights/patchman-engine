@@ -6,6 +6,7 @@ import (
 	"app/base/inventory"
 	"app/base/models"
 	"app/base/mqueue"
+	"app/base/types"
 	"app/base/utils"
 	"app/base/vmaas"
 	"app/manager/middlewares"
@@ -45,9 +46,9 @@ type Host struct {
 	DisplayName           *string                 `json:"display_name,omitempty"`
 	Account               *string                 `json:"account,omitempty"`
 	OrgID                 *string                 `json:"org_id,omitempty"`
-	StaleTimestamp        *base.Rfc3339Timestamp  `json:"stale_timestamp,omitempty"`
-	StaleWarningTimestamp *base.Rfc3339Timestamp  `json:"stale_warning_timestamp,omitempty"`
-	CulledTimestamp       *base.Rfc3339Timestamp  `json:"culled_timestamp,omitempty"`
+	StaleTimestamp        *types.Rfc3339Timestamp `json:"stale_timestamp,omitempty"`
+	StaleWarningTimestamp *types.Rfc3339Timestamp `json:"stale_warning_timestamp,omitempty"`
+	CulledTimestamp       *types.Rfc3339Timestamp `json:"culled_timestamp,omitempty"`
 	Reporter              string                  `json:"reporter,omitempty"`
 	SystemProfile         inventory.SystemProfile `json:"system_profile,omitempty"`
 }

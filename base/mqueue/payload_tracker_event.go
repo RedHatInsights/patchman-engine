@@ -1,7 +1,7 @@
 package mqueue
 
 import (
-	"app/base"
+	"app/base/types"
 	"app/base/utils"
 	"encoding/json"
 	"time"
@@ -11,14 +11,14 @@ import (
 )
 
 type PayloadTrackerEvent struct {
-	Service     string                      `json:"service"`
-	Account     *string                     `json:"account,omitempty"`
-	OrgID       *string                     `json:"org_id,omitempty"`
-	RequestID   *string                     `json:"request_id"`
-	InventoryID string                      `json:"inventory_id"`
-	Status      string                      `json:"status"`
-	StatusMsg   string                      `json:"status_msg,omitempty"`
-	Date        *base.Rfc3339TimestampWithZ `json:"date"`
+	Service     string                       `json:"service"`
+	Account     *string                      `json:"account,omitempty"`
+	OrgID       *string                      `json:"org_id,omitempty"`
+	RequestID   *string                      `json:"request_id"`
+	InventoryID string                       `json:"inventory_id"`
+	Status      string                       `json:"status"`
+	StatusMsg   string                       `json:"status_msg,omitempty"`
+	Date        *types.Rfc3339TimestampWithZ `json:"date"`
 }
 
 type PayloadTrackerEvents []PayloadTrackerEvent
@@ -38,7 +38,7 @@ func (event *PayloadTrackerEvent) write(ctx context.Context, w Writer) error {
 }
 
 func writeEvent(ctx context.Context, w Writer, event *PayloadTrackerEvent,
-	timestamp *base.Rfc3339TimestampWithZ) (err error) {
+	timestamp *types.Rfc3339TimestampWithZ) (err error) {
 	if event.RequestID != nil && (event.Account != nil || event.OrgID != nil) {
 		// Send only messages from listener and evaluator-upload
 		event.Service = "patchman"
@@ -53,7 +53,7 @@ func (events *PayloadTrackerEvents) WriteEvents(ctx context.Context, w Writer) e
 		return nil
 	}
 	var err error
-	now := base.Rfc3339TimestampWithZ(time.Now())
+	now := types.Rfc3339TimestampWithZ(time.Now())
 	for _, event := range *events {
 		event := event // necessary, G601: Implicit memory aliasing in for loop. (gosec)
 		err = writeEvent(ctx, w, &event, &now)
@@ -65,7 +65,7 @@ func (event *PayloadTrackerEvent) WriteEvents(ctx context.Context, w Writer) err
 	if !enablePayloadTracker {
 		return nil
 	}
-	now := base.Rfc3339TimestampWithZ(time.Now())
+	now := types.Rfc3339TimestampWithZ(time.Now())
 	err := writeEvent(ctx, w, event, &now)
 	return err
 }
