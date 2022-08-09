@@ -7,6 +7,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
+	"app/base/types"
 	"app/base/utils"
 	"app/base/vmaas"
 	"context"
@@ -314,7 +315,7 @@ func tryGetVmaasRequest(system *models.SystemPlatform) (*vmaas.UpdatesV3Request,
 }
 
 func tryGetSystem(tx *gorm.DB, accountID int, inventoryID string,
-	requested *base.Rfc3339Timestamp) *models.SystemPlatform {
+	requested *types.Rfc3339Timestamp) *models.SystemPlatform {
 	system, err := loadSystemData(tx, accountID, inventoryID)
 	if err != nil || system.ID == 0 {
 		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
