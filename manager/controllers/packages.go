@@ -15,7 +15,7 @@ var PackagesOpts = ListOpts{
 	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
 	DefaultFilters: map[string]FilterData{},
 	DefaultSort:    "name",
-	SearchFields:   []string{"pn.name", "latest.summary"},
+	SearchFields:   []string{"pn.name", "pn.summary"},
 	TotalFunc:      CountRows,
 }
 
@@ -24,7 +24,7 @@ type PackageItem struct {
 	Name             string `json:"name" csv:"name" query:"pn.name" gorm:"column:name"`
 	SystemsInstalled int    `json:"systems_installed" csv:"systems_installed" query:"res.systems_installed" gorm:"column:systems_installed"`
 	SystemsUpdatable int    `json:"systems_updatable" csv:"systems_updatable" query:"res.systems_updatable" gorm:"column:systems_updatable"`
-	Summary          string `json:"summary" csv:"summary" query:"latest.summary" gorm:"column:summary"`
+	Summary          string `json:"summary" csv:"summary" query:"pn.summary" gorm:"column:summary"`
 }
 
 type PackagesResponse struct {
@@ -57,9 +57,8 @@ func packagesQuery(filters map[string]FilterData, acc int) *gorm.DB {
 
 	return database.Db.
 		Select(PackagesSelect).
-		Table("package_latest_cache latest").
-		Joins("JOIN package_name pn ON pn.id = latest.name_id").
-		Joins("JOIN (?) res ON res.name_id = latest.name_id", subQ)
+		Table("package_name pn").
+		Joins("JOIN (?) res ON res.name_id = pn.id", subQ)
 }
 
 // @Summary Show me all installed packages across my systems
