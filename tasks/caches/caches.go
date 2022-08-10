@@ -21,6 +21,7 @@ func RunPackageRefresh() {
 	tasks.HandleContextCancel(tasks.WaitAndExit)
 	configure()
 	if enableRefreshPackagesCache {
+		utils.Log().Info("Refreshing package cache")
 		RefreshLatestPackagesView()
 	}
 }
@@ -28,5 +29,6 @@ func RunPackageRefresh() {
 func RunAdvisoryRefresh() {
 	tasks.HandleContextCancel(tasks.WaitAndExit)
 	configure()
+	utils.Log().Info("Refreshing advisory cache")
 	RefreshAdvisoryCaches()
 }

@@ -19,6 +19,7 @@ func init() {
 
 func RunDeleteUnusedData() {
 	defer utils.LogPanics(true)
+	utils.Log().Info("Deleting unused data")
 
 	deleteUnusedPackages()
 	deleteUnusedAdvisories()
