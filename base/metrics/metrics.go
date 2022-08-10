@@ -23,7 +23,7 @@ var (
 	}, []string{"version"})
 
 	// ENGINEVERSION - DO NOT EDIT this variable MANUALLY - it is modified by generate_docs.sh
-	ENGINEVERSION = "v2.1.0"
+	ENGINEVERSION = "v2.1.1"
 )
 
 func init() {
