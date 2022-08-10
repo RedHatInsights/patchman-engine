@@ -74,8 +74,9 @@ type String struct {
 }
 
 type PackageName struct {
-	ID   int `json:"id" gorm:"primary_key"`
-	Name string
+	ID      int `json:"id" gorm:"primary_key"`
+	Name    string
+	Summary *string
 }
 
 func (PackageName) TableName() string {

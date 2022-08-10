@@ -174,22 +174,23 @@ func storePackageNamesFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListIte
 }
 
 func getPackageArraysFromPkgListItems(pkgListItems []vmaas.PkgListItem) ([]string, []models.PackageName) {
-	// get unique package names
-	namesMap := map[string]*bool{}
+	// get unique package names and their summaries
+	namesMap := map[string]string{}
 	for _, pkgListItem := range pkgListItems {
 		nevra, err := utils.ParseNevra(pkgListItem.Nevra)
 		if err != nil {
 			utils.Log("nevra", pkgListItem.Nevra).Warn("Unable to parse package name")
 			continue
 		}
-		namesMap[nevra.Name] = nil
+		namesMap[nevra.Name] = pkgListItem.Summary
 	}
 
 	nameArr := make([]string, 0, len(namesMap))
 	pkgNames := make([]models.PackageName, 0, len(namesMap))
 	for n := range namesMap {
 		nameArr = append(nameArr, n)
-		pkgNames = append(pkgNames, models.PackageName{Name: n})
+		summary := namesMap[n]
+		pkgNames = append(pkgNames, models.PackageName{Name: n, Summary: utils.EmptyToNil(&summary)})
 	}
 	return nameArr, pkgNames
 }
