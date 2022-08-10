@@ -46,6 +46,7 @@ func main() {
 			return
 		case "job":
 			runJob(os.Args[2])
+			return
 		}
 	}
 	log.Panic("You need to provide a command")
@@ -55,18 +56,13 @@ func runJob(name string) {
 	switch name {
 	case "vmaas_sync":
 		vmaas_sync.RunVmaasSync()
-		return
 	case "system_culling":
 		system_culling.RunSystemCulling()
-		return
 	case "advisory_cache_refresh":
 		caches.RunAdvisoryRefresh()
-		return
 	case "packages_cache_refresh":
 		caches.RunPackageRefresh()
-		return
 	case "delete_unused":
 		cleaning.RunDeleteUnusedData()
-		return
 	}
 }
