@@ -164,7 +164,6 @@ func TestUploadHandlerError1(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
 	event := createTestUploadEvent("1", "1", id, "puptoo", true, false)
-	*event.Host.Account = ""
 	*event.Host.OrgID = ""
 	err := HandleUpload(event)
 	assert.NoError(t, err)

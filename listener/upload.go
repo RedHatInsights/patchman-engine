@@ -44,7 +44,6 @@ var DeletionThreshold = time.Hour * time.Duration(utils.GetIntEnvOrDefault("SYST
 type Host struct {
 	ID                    string                  `json:"id,omitempty"`
 	DisplayName           *string                 `json:"display_name,omitempty"`
-	Account               *string                 `json:"account,omitempty"`
 	OrgID                 *string                 `json:"org_id,omitempty"`
 	StaleTimestamp        *types.Rfc3339Timestamp `json:"stale_timestamp,omitempty"`
 	StaleWarningTimestamp *types.Rfc3339Timestamp `json:"stale_warning_timestamp,omitempty"`
@@ -79,7 +78,6 @@ func HandleUpload(event HostEvent) error {
 	updateReporterCounter(event.Host.Reporter)
 
 	payloadTrackerEvent := mqueue.PayloadTrackerEvent{
-		Account:     event.Host.Account,
 		OrgID:       event.Host.OrgID,
 		RequestID:   &event.Metadata.RequestID,
 		InventoryID: event.Host.ID,
@@ -102,7 +100,7 @@ func HandleUpload(event HostEvent) error {
 		return nil
 	}
 
-	if (event.Host.Account == nil || *event.Host.Account == "") && (event.Host.OrgID == nil || *event.Host.OrgID == "") {
+	if event.Host.OrgID == nil || *event.Host.OrgID == "" {
 		utils.Log("inventoryID", event.Host.ID).Error(ErrorNoAccountProvided)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
 		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
@@ -193,11 +191,8 @@ func bufferEvalEvents(inventoryID string, rhAccountID int, ptEvent *mqueue.Paylo
 	evalData := mqueue.EvalData{
 		InventoryID: inventoryID,
 		RhAccountID: rhAccountID,
-		AccountInfo: mqueue.AccountInfo{
-			AccountName: ptEvent.Account,
-			OrgID:       ptEvent.OrgID,
-		},
-		RequestID: *ptEvent.RequestID,
+		OrgID:       ptEvent.OrgID,
+		RequestID:   *ptEvent.RequestID,
 	}
 	evalBuffer = append(evalBuffer, evalData)
 	ptBuffer = append(ptBuffer, *ptEvent)
@@ -473,19 +468,7 @@ func processUpload(host *Host, yumUpdates []byte) (*models.SystemPlatform, error
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("upload-processing"))
 	// Ensure we have account stored
-	var accountNumber string
-	var orgID string
-	if host.Account != nil {
-		accountNumber = *host.Account
-	}
-	if host.OrgID != nil {
-		orgID = *host.OrgID
-	}
-	identity := utils.Identity{
-		AccountNumber: accountNumber,
-		OrgID:         orgID,
-	}
-	accountID, err := middlewares.GetOrCreateAccount(&identity)
+	accountID, err := middlewares.GetOrCreateAccount(host.GetOrgID())
 	if err != nil {
 		return nil, errors.Wrap(err, "saving account into the database")
 	}
@@ -563,4 +546,11 @@ func getYumUpdates(event HostEvent) ([]byte, error) {
 		return nil, errors.Wrap(err, "unable to marshall yum updates")
 	}
 	return yumUpdates, nil
+}
+
+func (host *Host) GetOrgID() string {
+	if host.OrgID == nil {
+		return ""
+	}
+	return *host.OrgID
 }

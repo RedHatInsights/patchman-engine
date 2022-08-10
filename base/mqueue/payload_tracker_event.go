@@ -12,7 +12,6 @@ import (
 
 type PayloadTrackerEvent struct {
 	Service     string                       `json:"service"`
-	Account     *string                      `json:"account,omitempty"`
 	OrgID       *string                      `json:"org_id,omitempty"`
 	RequestID   *string                      `json:"request_id"`
 	InventoryID string                       `json:"inventory_id"`
@@ -39,7 +38,7 @@ func (event *PayloadTrackerEvent) write(ctx context.Context, w Writer) error {
 
 func writeEvent(ctx context.Context, w Writer, event *PayloadTrackerEvent,
 	timestamp *types.Rfc3339TimestampWithZ) (err error) {
-	if event.RequestID != nil && (event.Account != nil || event.OrgID != nil) {
+	if event.RequestID != nil && event.OrgID != nil {
 		// Send only messages from listener and evaluator-upload
 		event.Service = "patchman"
 		event.Date = timestamp

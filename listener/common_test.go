@@ -69,10 +69,7 @@ func assertSystemNotInDB(t *testing.T) {
 }
 
 func getOrCreateTestAccount(t *testing.T) int {
-	ident := utils.Identity{
-		OrgID: id,
-	}
-	accountID, err := middlewares.GetOrCreateAccount(&ident)
+	accountID, err := middlewares.GetOrCreateAccount(id)
 	assert.Nil(t, err)
 	return accountID
 }
@@ -83,7 +80,6 @@ func createTestUploadEvent(rhAccountID, orgID, inventoryID, reporter string, pac
 		Type: "created",
 		Host: Host{
 			ID:       inventoryID,
-			Account:  &rhAccountID,
 			OrgID:    &orgID,
 			Reporter: reporter,
 		},

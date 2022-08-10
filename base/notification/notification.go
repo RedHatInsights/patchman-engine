@@ -3,8 +3,9 @@ package notification
 import (
 	"app/base/models"
 	"app/base/mqueue"
-	"github.com/pkg/errors"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -88,7 +89,6 @@ func MakeNotification(system *models.SystemPlatform, event *mqueue.PlatformEvent
 		EventType:   eventType,
 		// ISO-8601 formatted time
 		Timestamp: time.Now().Format(time.RFC3339),
-		AccountID: event.Account,
 		Context: Context{
 			InventoryID: system.InventoryID,
 			DisplayName: system.DisplayName,

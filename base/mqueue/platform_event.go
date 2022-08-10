@@ -13,7 +13,6 @@ type PlatformEvent struct {
 	ID          string                  `json:"id"`
 	Type        *string                 `json:"type"`
 	Timestamp   *types.Rfc3339Timestamp `json:"timestamp"`
-	Account     *string                 `json:"account"`
 	AccountID   int                     `json:"account_id"`
 	OrgID       *string                 `json:"org_id,omitempty"`
 	B64Identity *string                 `json:"b64_identity"`
@@ -27,16 +26,11 @@ type InventoryAID struct {
 	RhAccountID int
 }
 
-type AccountInfo struct {
-	AccountName *string
-	OrgID       *string
-}
-
 type EvalData struct {
 	RhAccountID int
 	InventoryID string
 	RequestID   string
-	AccountInfo AccountInfo
+	OrgID       *string
 }
 
 type PlatformEvents []PlatformEvent
@@ -44,7 +38,7 @@ type InventoryAIDs []InventoryAID
 type EvalDataSlice []EvalData
 
 type groupedData map[int][]string
-type groupedAccountInfo map[int]AccountInfo
+type orgIDMap map[int]*string
 
 func (event *PlatformEvent) createKafkaMessage() (KafkaMessage, error) {
 	data, err := json.Marshal(event) //nolint:gosec
@@ -98,19 +92,20 @@ func (data *InventoryAIDs) groupData() (int, *groupedData) {
 	return batchSize(grouped), &grouped
 }
 
-func (data *EvalDataSlice) groupData() (int, *groupedData, *groupedData, *groupedAccountInfo) {
+func (data *EvalDataSlice) groupData() (int, *groupedData, *groupedData, *orgIDMap) {
 	// group systems by account
 	groupedSys := groupedData{}
 	groupedReqID := groupedData{}
-	accountInfo := groupedAccountInfo{}
+	orgIDMap := orgIDMap{}
+	// accountInfo := groupedAccountInfo{}
 	for _, d := range *data {
 		groupedSys[d.RhAccountID] = append(groupedSys[d.RhAccountID], d.InventoryID)
 		groupedReqID[d.RhAccountID] = append(groupedReqID[d.RhAccountID], d.RequestID)
-		if _, has := accountInfo[d.RhAccountID]; !has {
-			accountInfo[d.RhAccountID] = d.AccountInfo
+		if _, has := orgIDMap[d.RhAccountID]; !has {
+			orgIDMap[d.RhAccountID] = d.OrgID
 		}
 	}
-	return batchSize(groupedSys), &groupedSys, &groupedReqID, &accountInfo
+	return batchSize(groupedSys), &groupedSys, &groupedReqID, &orgIDMap
 }
 
 func (data *InventoryAIDs) WriteEvents(ctx context.Context, w Writer) error {
@@ -137,7 +132,7 @@ func (data *InventoryAIDs) WriteEvents(ctx context.Context, w Writer) error {
 }
 
 func (data *EvalDataSlice) WriteEvents(ctx context.Context, w Writer) error {
-	batches, groupedSys, groupedReqID, accountInfo := data.groupData()
+	batches, groupedSys, groupedReqID, orgIDMap := data.groupData()
 	groupedSysVal := groupedData{}
 	groupedReqIDVal := groupedData{}
 	if groupedSys != nil {
@@ -149,7 +144,7 @@ func (data *EvalDataSlice) WriteEvents(ctx context.Context, w Writer) error {
 	// create events, per BatchSize of systems from one account
 	now := types.Rfc3339Timestamp(time.Now())
 	events := make(PlatformEvents, 0, batches)
-	for acc, accDetails := range *accountInfo {
+	for acc, orgID := range *orgIDMap {
 		nEvents := len(groupedSysVal[acc])
 		for start := 0; start < nEvents; start += BatchSize {
 			end := start + BatchSize
@@ -162,8 +157,7 @@ func (data *EvalDataSlice) WriteEvents(ctx context.Context, w Writer) error {
 					Timestamp:  &now,
 					AccountID:  acc,
 					SystemIDs:  groupedSysVal[acc][start:end],
-					Account:    accDetails.AccountName,
-					OrgID:      accDetails.OrgID,
+					OrgID:      orgID,
 					RequestIDs: groupedReqIDVal[acc][start:end],
 				},
 			)
