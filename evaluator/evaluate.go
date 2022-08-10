@@ -500,7 +500,6 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 	}
 	ptEvents := make(mqueue.PayloadTrackerEvents, 0, nSystems)
 	ptEvent := mqueue.PayloadTrackerEvent{
-		Account:   event.Account,
 		OrgID:     event.OrgID,
 		Status:    "success",
 		StatusMsg: "advisories evaluation",
