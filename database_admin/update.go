@@ -97,6 +97,13 @@ func dbConn() (database.Driver, *sql.DB) {
 }
 
 func UpdateDB(migrationFilesURL string) {
+	utils.ConfigureLogging()
+	migrationEnabled := utils.GetBoolEnvOrDefault("ENABLE_MIGRATION", false)
+	if !migrationEnabled {
+		utils.Log("ENABLE_MIGRATION", migrationEnabled).Info("Deployment blocked, enable migrations to proceed")
+		// sleep until next deployment
+		select {}
+	}
 	conn, db := dbConn()
 	getAdvisoryLock(db)
 	defer releaseAdvisoryLock(db)
