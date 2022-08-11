@@ -117,9 +117,13 @@ func CheckThirdPartyRepos(t *testing.T, repoNames []string, thirdParty bool) {
 	}
 }
 
-func CheckPackagesNamesInDB(t *testing.T, packageNames ...string) {
+func CheckPackagesNamesInDB(t *testing.T, filter string, packageNames ...string) {
 	var count int64
-	assert.Nil(t, Db.Model(&models.PackageName{}).Where("name in (?)", packageNames).Count(&count).Error)
+	query := Db.Model(&models.PackageName{}).Where("name in (?)", packageNames)
+	if filter != "" {
+		query = query.Where(filter)
+	}
+	assert.Nil(t, query.Count(&count).Error)
 	assert.Equal(t, int64(len(packageNames)), count)
 }
 

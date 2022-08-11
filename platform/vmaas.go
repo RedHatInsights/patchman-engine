@@ -141,7 +141,7 @@ func erratasHandler(c *gin.Context) {
 func pkgListHandler(c *gin.Context) {
 	data := `{
     "page": 0,
-    "page_size": 3,
+    "page_size": 8,
     "pages": 1,
     "package_list": [{
 			"nevra": "firefox-76.0.1-1.fc31.x86_64",
@@ -167,6 +167,14 @@ func pkgListHandler(c *gin.Context) {
 			"nevra": "kernel-5.7.13-200.fc31.src",
 			"summary": null,
 			"description": null
+		},{
+			"nevra": "curl-999-1.x86_64",
+			"summary": "curl newest summary",
+			"description": "curl newest description"
+		},{
+			"nevra": "bash-999-2.x86_64",
+			"summary": "bash newest summary",
+			"description": "bash newest description"
 		}
     ],
     "last_change": "2021-04-09T04:52:06.999732+00:00"}`
