@@ -121,7 +121,6 @@ func SyncData(lastSyncTS *string) error {
 
 	// refresh caches
 	caches.RefreshAdvisoryCaches()
-	caches.RefreshLatestPackagesView()
 
 	database.UpdateTimestampKVValue(syncStart, LastSync)
 	utils.Log().Info("Data sync finished successfully")

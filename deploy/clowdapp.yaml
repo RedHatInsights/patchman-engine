@@ -375,7 +375,6 @@ objects:
         - {name: DB_USER, value: vmaas_sync}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                       key: vmaas-sync-database-password}}}
-        - {name: ENABLE_REFRESH_PACKAGES_CACHE, value: '${ENABLE_REFRESH_PACKAGES_CACHE}'}
 
     - name: advisory-refresh
       schedule: ${ADVISORY_REFRESH_SCHEDULE}
@@ -611,7 +610,6 @@ parameters:
 - {name: PKG_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
 - {name: ADVISORY_REFRESH_SCHEDULE, value: '*/15 * * * *'} # Cronjob schedule definition
 - {name: ADVISORY_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
-- {name: ENABLE_REFRESH_PACKAGES_CACHE, value: 'true'} # Enable periodic refresh of materialized view of the latest packages
 - {name: ENABLE_REFRESH_ADVISORY_CACHES, value: 'true'} # Enable periodic refresh of account advisory caches
 
 # Database admin
