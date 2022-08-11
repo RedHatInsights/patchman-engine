@@ -105,17 +105,17 @@ INSERT INTO system_repo (rh_account_id, system_id, repo_id) VALUES
 (1, 2, 2);
 
 
-INSERT INTO package_name(id,name) VALUES
-(101, 'kernel'),
-(102, 'firefox'),
-(103, 'bash'),
-(104, 'curl'),
-(105, 'tar'),
-(106, 'systemd'),
-(107, 'sed'),
-(108, 'grep'),
-(109, 'which'),
-(110, 'passwd');
+INSERT INTO package_name(id, name, summary) VALUES
+(101, 'kernel', 'The Linux kernel'),
+(102, 'firefox', 'Mozilla Firefox Web browser'),
+(103, 'bash', 'The GNU Bourne Again shell'),
+(104, 'curl', 'A utility for getting files from remote servers...'),
+(105, 'tar', 'tar summary'),
+(106, 'systemd', 'systemd summary'),
+(107, 'sed', 'sed summary'),
+(108, 'grep', 'grep summary'),
+(109, 'which', 'which summary'),
+(110, 'passwd', 'passwd summary');
 
 INSERT INTO strings(id, value) VALUES
 ('1', 'The Linux kernel'), -- kernel summary
