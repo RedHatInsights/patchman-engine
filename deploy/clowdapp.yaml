@@ -39,6 +39,7 @@ objects:
             - {name: WAIT_FOR_DB, value: 'empty'}
             - {name: UPDATE_USERS, value: '${UPDATE_USERS}'}
             - {name: UPDATE_DB_CONFIG, value: '${UPDATE_DB_CONFIG}'}
+            - {name: ENABLE_MIGRATION, value: '${ENABLE_MIGRATION}'}
             - {name: MANAGER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                                   key: manager-database-password}}}
             - {name: LISTENER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
@@ -628,6 +629,7 @@ parameters:
 - {name: RES_REQUEST_MEM_DATABASE_ADMIN, value: 128Mi}
 - {name: UPDATE_USERS, value: 'false'} # set to true if we need to change user or passwords
 - {name: UPDATE_DB_CONFIG, value: 'false'} # set to true if we need to load new './database_admin/config.sql'
+- {name: ENABLE_MIGRATION, values: 'false'} # set to true to run mmigrations, used for auto-deploy without migrations
 
 # Common parameters
 - {name: IMAGE, value: quay.io/cloudservices/patchman-engine-app}
