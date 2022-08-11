@@ -60,8 +60,6 @@ func runJob(name string) {
 		system_culling.RunSystemCulling()
 	case "advisory_cache_refresh":
 		caches.RunAdvisoryRefresh()
-	case "packages_cache_refresh":
-		caches.RunPackageRefresh()
 	case "delete_unused":
 		cleaning.RunDeleteUnusedData()
 	}
