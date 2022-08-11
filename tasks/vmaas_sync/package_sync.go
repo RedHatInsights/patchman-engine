@@ -124,6 +124,10 @@ func storePkgListData(vmaasData []vmaas.PkgListItem) error {
 	if err = storePackageDetailsFrmPkgListItems(database.Db, packageNameIDMap, vmaasData); err != nil {
 		return errors.Wrap(err, "Storing package details failed")
 	}
+
+	if err = updatePackageNameSummary(database.Db, packageNameIDMap); err != nil {
+		return errors.Wrap(err, "Updating package name summaries failed")
+	}
 	return nil
 }
 
@@ -243,6 +247,28 @@ func getPackageFromPkgListItem(pkgListItem vmaas.PkgListItem, nameIDs map[string
 		Synced:          true,
 	}
 	return &pkg
+}
+
+func updatePackageNameSummary(tx *gorm.DB, nameIDs map[string]int) error {
+	pkgNameIDs := make([]int, 0, len(nameIDs))
+	for _, val := range nameIDs {
+		pkgNameIDs = append(pkgNameIDs, val)
+	}
+	err := tx.Exec(`UPDATE package_name pn
+			          SET summary = latest.summary
+					  FROM (SELECT DISTINCT ON (p.name_id) p.name_id, str.value as summary
+							  FROM package p
+							  JOIN strings str ON p.summary_hash = str.id
+							 WHERE p.name_id in (?)
+							 ORDER BY p.name_id, p.id desc) as latest
+					WHERE pn.id = latest.name_id
+					  AND latest.summary IS NOT NULL
+					  AND (latest.summary != pn.summary OR pn.summary IS NULL)`,
+		pkgNameIDs).Error
+	if err == nil {
+		utils.Log().Info("Package name summary updated")
+	}
+	return err
 }
 
 func checkPackagesCount() {
