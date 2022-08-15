@@ -7,4 +7,4 @@ if [ -z "$VMAAS_WS_ADDRESS" ]; then
 fi
 
 echo "Running in $(pwd) as $(id)"
-exec ./scripts/entrypoint.sh vmaas_sync
+exec ./scripts/entrypoint.sh job vmaas_sync
