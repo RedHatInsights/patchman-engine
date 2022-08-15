@@ -30,9 +30,29 @@ func TestSystemAdvisoriesDefault(t *testing.T) {
 	assert.Equal(t, false, output.Data[0].Attributes.RebootRequired)
 }
 
+func TestSystemAdvisoriesIDsDefault(t *testing.T) {
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil, "",
+		SystemAdvisoriesIDsHandler, "/:inventory_id")
+
+	var output IDsResponse
+	CheckResponse(t, w, http.StatusOK, &output)
+	assert.Equal(t, 8, len(output.IDs))
+	assert.Equal(t, "RH-7", output.IDs[0])
+}
+
 func TestSystemAdvisoriesNotFound(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/nonexistant/advisories", nil, "", SystemAdvisoriesHandler, "/:inventory_id")
+	w := CreateRequestRouterWithPath("GET", "/nonexistant/advisories", nil, "",
+		SystemAdvisoriesHandler, "/:inventory_id")
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
+
+func TestSystemAdvisoriesIDsNotFound(t *testing.T) { //nolint:dupl
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/nonexistant/advisories", nil, "",
+		SystemAdvisoriesIDsHandler, "/:inventory_id")
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
@@ -46,6 +66,17 @@ func TestSystemAdvisoriesOffsetLimit(t *testing.T) {
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 3, len(output.Data))
 	assert.Equal(t, "RH-1", output.Data[0].ID)
+}
+
+func TestSystemAdvisoriesIDsOffsetLimit(t *testing.T) {
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?offset=4&limit=3", nil, "",
+		SystemAdvisoriesIDsHandler, "/:inventory_id")
+
+	var output IDsResponse
+	CheckResponse(t, w, http.StatusOK, &output)
+	assert.Equal(t, 3, len(output.IDs))
+	assert.Equal(t, "RH-1", output.IDs[0])
 }
 
 func TestSystemAdvisoriesOffsetOverflow(t *testing.T) {

@@ -30,6 +30,10 @@ var SystemOpts = ListOpts{
 	TotalFunc:    systemSubtotals,
 }
 
+type SystemsID struct {
+	ID string `query:"sp.inventory_id" gorm:"column:id"`
+}
+
 type SystemDBLookup struct {
 	ID string `json:"id" csv:"id" query:"sp.inventory_id" gorm:"column:id"`
 
@@ -125,6 +129,20 @@ func systemSubtotals(tx *gorm.DB) (total int, subTotals map[string]int, err erro
 	return total, subTotals, err
 }
 
+func systemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
+	var err error
+	account := c.GetInt(middlewares.KeyAccount)
+	query := querySystems(account)
+	filters, err := ParseTagsFilters(c)
+	if err != nil {
+		return nil, nil, nil, err
+	} // Error handled method itself
+	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
+	query, meta, links, err := ListCommon(query, c, filters, SystemOpts)
+	// Error handled method itself
+	return query, meta, links, err
+}
+
 // nolint: lll
 // @Summary Show me all my systems
 // @Description Show me all my systems
@@ -169,17 +187,10 @@ func systemSubtotals(tx *gorm.DB) (total int, subTotals map[string]int, err erro
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /systems [get]
 func SystemsListHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
-	query := querySystems(account)
-	filters, err := ParseTagsFilters(c)
+	query, meta, links, err := systemsCommon(c)
 	if err != nil {
 		return
-	} // Error handled method itself
-	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
-	query, meta, links, err := ListCommon(query, c, filters, SystemOpts)
-	if err != nil {
-		return
-	} // Error handled method itself
+	} // Error handled in method itself
 
 	var systems []SystemDBLookup
 	err = query.Find(&systems).Error
@@ -194,6 +205,67 @@ func SystemsListHandler(c *gin.Context) {
 		Links: *links,
 		Meta:  *meta,
 	}
+	c.JSON(http.StatusOK, &resp)
+}
+
+// nolint: lll
+// @Summary Show me all my systems
+// @Description Show me all my systems
+// @ID listSystemsIDs
+// @Security RhIdentity
+// @Accept   json
+// @Produce  json
+// @Param    limit      query   int     false   "Limit for paging, set -1 to return all"
+// @Param    offset     query   int     false   "Offset for paging"
+// @Param    sort       query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale, packages_installed, packages_updatable)
+// @Param    search     query   string  false   "Find matching text"
+// @Param    filter[insights_id]            query   string  false   "Filter"
+// @Param    filter[id]                     query   string  false   "Filter"
+// @Param    filter[display_name]           query   string  false   "Filter"
+// @Param    filter[last_evaluation]        query   string  false   "Filter"
+// @Param    filter[last_upload]            query   string  false   "Filter"
+// @Param    filter[rhsa_count]             query   string  false   "Filter"
+// @Param    filter[rhba_count]             query   string  false   "Filter"
+// @Param    filter[rhea_count]             query   string  false   "Filter"
+// @Param    filter[other_count]            query   string  false   "Filter"
+// @Param    filter[stale]                  query   string  false   "Filter"
+// @Param    filter[packages_installed]     query   string  false   "Filter"
+// @Param    filter[packages_updatable]     query   string  false   "Filter"
+// @Param    filter[stale_timestamp]        query   string  false   "Filter"
+// @Param    filter[stale_warning_timestamp] query  string  false   "Filter"
+// @Param    filter[culled_timestamp]       query   string  false   "Filter"
+// @Param    filter[created]                query   string  false   "Filter"
+// @Param    filter[osname]                 query   string  false   "Filter"
+// @Param    filter[osminor]                query   string  false   "Filter"
+// @Param    filter[osmajor]                query   string  false   "Filter"
+// @Param    filter[baseline_name]          query   string  false   "Filter"
+// @Param    filter[os]                     query   string  false   "Filter OS version"
+// @Param    tags                           query   []string false  "Tag filter"
+// @Param    filter[system_profile][sap_system]                     query   string  false   "Filter only SAP systems"
+// @Param    filter[system_profile][sap_sids][in]                   query   []string false  "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][ansible]                        query   string  false   "Filter systems by ansible"
+// @Param    filter[system_profile][ansible][controller_version]    query   string  false   "Filter systems by ansible version"
+// @Param    filter[system_profile][mssql]                          query   string  false   "Filter systems by mssql version"
+// @Param    filter[system_profile][mssql][version]                 query   string  false   "Filter systems by mssql version"
+// @Success 200 {object} SystemsResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /ids/systems [get]
+func SystemsListIDsHandler(c *gin.Context) {
+	query, _, _, err := systemsCommon(c)
+	if err != nil {
+		return
+	} // Error handled in method itself
+
+	var sids []SystemsID
+
+	if err = query.Scan(&sids).Error; err != nil {
+		LogAndRespError(c, err, "db error")
+		return
+	}
+
+	ids := systemsIDs(sids)
+	var resp = IDsResponse{IDs: ids}
 	c.JSON(http.StatusOK, &resp)
 }
 

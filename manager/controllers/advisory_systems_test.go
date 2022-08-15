@@ -41,6 +41,16 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	assert.Equal(t, true, *output.Data[0].Attributes.BaselineUpToDate)
 }
 
+func TestAdvisorySystemsIDsDefault(t *testing.T) { //nolint:dupl
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, "", AdvisorySystemsListIDsHandler, "/:advisory_id")
+
+	var output IDsResponse
+	CheckResponse(t, w, http.StatusOK, &output)
+	assert.Equal(t, 6, len(output.IDs))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.IDs[0])
+}
+
 func TestAdvisorySystemsNotFound(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/nonexistant/systems", nil, "", AdvisorySystemsListHandler, "/:advisory_id")

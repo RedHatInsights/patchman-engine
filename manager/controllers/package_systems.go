@@ -4,10 +4,10 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"app/manager/middlewares"
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -65,6 +65,39 @@ func packageSystemsQuery(acc int, packageName string, packageIDs []int) *gorm.DB
 	return query
 }
 
+func packageSystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
+	account := c.GetInt(middlewares.KeyAccount)
+	var filters map[string]FilterData
+	var err error
+
+	packageName := c.Param("package_name")
+	if packageName == "" {
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "package_name param not found"})
+		return nil, nil, nil, errors.Wrap(err, "package_name param not found")
+	}
+
+	var packageIDs []int
+	if err := packagesByNameQuery(packageName).Pluck("p.id", &packageIDs).Error; err != nil {
+		LogAndRespError(c, err, "database error")
+		return nil, nil, nil, err
+	}
+
+	if len(packageIDs) == 0 {
+		LogAndRespNotFound(c, errors.New("not found"), "package not found")
+		return nil, nil, nil, errors.Wrap(err, "package not found")
+	}
+
+	query := packageSystemsQuery(account, packageName, packageIDs)
+	filters, err = ParseTagsFilters(c)
+	if err != nil {
+		return nil, nil, nil, err
+	} // Error handled in method itself
+	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
+	query, meta, links, err := ListCommon(query, c, filters, PackageSystemsOpts)
+	// Error handled in method itself
+	return query, meta, links, err
+}
+
 //nolint: dupl
 // @Summary Show me all my systems which have a package installed
 // @Description  Show me all my systems which have a package installed
@@ -88,33 +121,7 @@ func packageSystemsQuery(acc int, packageName string, packageIDs []int) *gorm.DB
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /packages/{package_name}/systems [get]
 func PackageSystemsListHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
-	var filters map[string]FilterData
-
-	packageName := c.Param("package_name")
-	if packageName == "" {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "package_name param not found"})
-		return
-	}
-
-	var packageIDs []int
-	if err := packagesByNameQuery(packageName).Pluck("p.id", &packageIDs).Error; err != nil {
-		LogAndRespError(c, err, "database error")
-		return
-	}
-
-	if len(packageIDs) == 0 {
-		LogAndRespNotFound(c, errors.New("not found"), "package not found")
-		return
-	}
-
-	query := packageSystemsQuery(account, packageName, packageIDs)
-	filters, err := ParseTagsFilters(c)
-	if err != nil {
-		return
-	} // Error handled in method itself
-	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
-	query, meta, links, err := ListCommon(query, c, filters, PackageSystemsOpts)
+	query, meta, links, err := packageSystemsCommon(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -132,6 +139,46 @@ func PackageSystemsListHandler(c *gin.Context) {
 		Links: *links,
 		Meta:  *meta,
 	})
+}
+
+//nolint: dupl
+// @Summary Show me all my systems which have a package installed
+// @Description  Show me all my systems which have a package installed
+// @ID packageSystemsIDs
+// @Security RhIdentity
+// @Accept   json
+// @Produce  json
+// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    offset         query   int     false   "Offset for paging"
+// @Param    package_name    path    string    true  "Package name"
+// @Param    tags            query   []string  false "Tag filter"
+// @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
+// @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
+// @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
+// @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
+// @Success 200 {object} PackageSystemsResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /ids/packages/{package_name}/systems [get]
+func PackageSystemsListIDsHandler(c *gin.Context) {
+	query, _, _, err := packageSystemsCommon(c)
+	if err != nil {
+		return
+	} // Error handled in method itself
+
+	var sids []SystemsID
+	err = query.Find(&sids).Error
+	if err != nil {
+		LogAndRespError(c, err, "database error")
+		return
+	}
+
+	ids := systemsIDs(sids)
+	var resp = IDsResponse{IDs: ids}
+	c.JSON(http.StatusOK, &resp)
 }
 
 func packageSystemDBLookups2PackageSystemItems(systems []PackageSystemDBLookup) []PackageSystemItem {
