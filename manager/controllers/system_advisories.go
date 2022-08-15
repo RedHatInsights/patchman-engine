@@ -64,6 +64,40 @@ func (v RelList) String() string {
 	return strings.Join(v, ",")
 }
 
+func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
+	var err error
+	account := c.GetInt(middlewares.KeyAccount)
+
+	inventoryID := c.Param("inventory_id")
+	if inventoryID == "" {
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
+		return nil, nil, nil, errors.Wrap(err, "inventory_id param not found")
+	}
+
+	if !utils.IsValidUUID(inventoryID) {
+		LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+		return nil, nil, nil, errors.Wrap(err, "incorrect inventory_id format")
+	}
+
+	var exists int64
+	err = database.Db.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid ", inventoryID).
+		Count(&exists).Error
+
+	if err != nil {
+		LogAndRespError(c, err, "database error")
+		return nil, nil, nil, err
+	}
+	if exists == 0 {
+		LogAndRespNotFound(c, errors.New("System not found"), "Systems not found")
+		return nil, nil, nil, errors.Wrap(err, "systems not found")
+	}
+
+	query := buildSystemAdvisoriesQuery(account, inventoryID)
+	query, meta, links, err := ListCommon(query, c, nil, SystemAdvisoriesOpts)
+	// Error handling and setting of result code & content is done in ListCommon
+	return query, meta, links, err
+}
+
 // nolint:lll
 // @Summary Show me advisories for a system by given inventory id
 // @Description Show me advisories for a system by given inventory id
@@ -89,37 +123,10 @@ func (v RelList) String() string {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
-
-	inventoryID := c.Param("inventory_id")
-	if inventoryID == "" {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
-		return
-	}
-
-	if !utils.IsValidUUID(inventoryID) {
-		LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
-		return
-	}
-
-	var exists int64
-	err := database.Db.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid ", inventoryID).
-		Count(&exists).Error
-
+	query, meta, links, err := systemAdvisoriesCommon(c)
 	if err != nil {
-		LogAndRespError(c, err, "database error")
-	}
-	if exists == 0 {
-		LogAndRespNotFound(c, errors.New("System not found"), "Systems not found")
 		return
-	}
-
-	query := buildSystemAdvisoriesQuery(account, inventoryID)
-	query, meta, links, err := ListCommon(query, c, nil, SystemAdvisoriesOpts)
-	if err != nil {
-		// Error handling and setting of result code & content is done in ListCommon
-		return
-	}
+	} // Error handled in method itself
 
 	var dbItems []SystemAdvisoriesDBLookup
 
@@ -134,6 +141,47 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		Links: *links,
 		Meta:  *meta,
 	}
+	c.JSON(http.StatusOK, &resp)
+}
+
+// nolint:lll
+// @Summary Show me advisories for a system by given inventory id
+// @Description Show me advisories for a system by given inventory id
+// @ID listSystemAdvisoriesIDs
+// @Security RhIdentity
+// @Accept   json
+// @Produce  json
+// @Param    inventory_id   path    string  true    "Inventory ID"
+// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    offset         query   int     false   "Offset for paging"
+// @Param    sort           query   string  false   "Sort field"    Enums(id,name,type,synopsis,public_date)
+// @Param    search         query   string  false   "Find matching text"
+// @Param    filter[id]                  query   string  false "Filter"
+// @Param    filter[description]         query   string  false "Filter"
+// @Param    filter[public_date]         query   string  false "Filter"
+// @Param    filter[synopsis]            query   string  false "Filter"
+// @Param    filter[advisory_type]       query   string  false "Filter"
+// @Param    filter[advisory_type_name]  query   string  false "Filter"
+// @Param    filter[severity]            query   string  false "Filter"
+// @Success 200 {object} SystemAdvisoriesResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /ids/systems/{inventory_id}/advisories [get]
+func SystemAdvisoriesIDsHandler(c *gin.Context) {
+	query, _, _, err := systemAdvisoriesCommon(c)
+	if err != nil {
+		return
+	} // Error handled in method itself
+
+	var aids []AdvisoriesID
+	err = query.Find(&aids).Error
+	if err != nil {
+		LogAndRespError(c, err, "db error")
+	}
+
+	ids := advisoriesIDs(aids)
+	var resp = IDsResponse{IDs: ids}
 	c.JSON(http.StatusOK, &resp)
 }
 

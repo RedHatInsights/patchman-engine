@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const sapABCFilter = "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][]=ABC"
+
 func TestSystemsDefault(t *testing.T) {
 	output := testSystems(t, `/`, 1)
 
@@ -124,7 +126,7 @@ func TestSystemsWorkloads1(t *testing.T) {
 }
 
 func TestSystemsWorkloads2(t *testing.T) {
-	url := "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][]=ABC"
+	url := sapABCFilter
 	output := testSystems(t, url, 1)
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
@@ -271,7 +273,7 @@ func TestSAPSystemMeta2(t *testing.T) {
 }
 
 func TestSAPSystemMeta3(t *testing.T) {
-	url := "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][]=ABC"
+	url := sapABCFilter
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
 		"sap_system": {"eq", []string{"true"}},

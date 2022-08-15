@@ -32,3 +32,7 @@ type ListMeta struct {
 	// Show whether customer has some registered systems
 	HasSystems *bool `json:"has_systems,omitempty"`
 }
+
+type IDsResponse struct {
+	IDs []string `json:"ids"`
+}

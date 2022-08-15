@@ -22,6 +22,12 @@ func TestPackageSystems(t *testing.T) {
 	assert.Equal(t, utils.PtrBoolNil(), output.Data[0].BaselineUpToDate)
 }
 
+func TestPackageIDsSystems(t *testing.T) {
+	output := testPackageIDsSystems(t, "/kernel/systems?sort=id", 3)
+	assert.Equal(t, 2, len(output.IDs))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output.IDs[0])
+}
+
 func TestPackageSystemsWrongOffset(t *testing.T) {
 	doTestWrongOffset(t, "/:package_name/systems", "/kernel/systems?offset=1000", PackageSystemsListHandler)
 }
@@ -44,6 +50,16 @@ func testPackageSystems(t *testing.T, url string, account int) PackageSystemsRes
 		"/:package_name/systems")
 
 	var output PackageSystemsResponse
+	CheckResponse(t, w, http.StatusOK, &output)
+	return output
+}
+
+func testPackageIDsSystems(t *testing.T, url string, account int) IDsResponse {
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", url, nil, "", PackageSystemsListIDsHandler, account, "GET",
+		"/:package_name/systems")
+
+	var output IDsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	return output
 }

@@ -626,6 +626,28 @@ func systemDBLookups2SystemItems(systems []SystemDBLookup) []SystemItem {
 	return data
 }
 
+func advisoriesIDs(advisories []AdvisoriesID) []string {
+	if advisories == nil {
+		return []string{}
+	}
+	ids := make([]string, len(advisories))
+	for i, x := range advisories {
+		ids[i] = x.ID
+	}
+	return ids
+}
+
+func systemsIDs(systems []SystemsID) []string {
+	if systems == nil {
+		return []string{}
+	}
+	ids := make([]string, len(systems))
+	for i, x := range systems {
+		ids[i] = x.ID
+	}
+	return ids
+}
+
 // Parse tags from TagsStr string attribute to Tags SystemTag array attribute.
 // It's used in /*systems endpoints as we can not map this attribute directly from database query result.
 func parseAndFillTags(systems *[]SystemDBLookup) {

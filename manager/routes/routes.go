@@ -64,6 +64,13 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	views.POST("/systems/advisories", controllers.PostSystemsAdvisories)
 	views.POST("/advisories/systems", controllers.PostAdvisoriesSystems)
 
+	ids := api.Group("/ids")
+	ids.GET("/advisories", controllers.AdvisoriesListIDsHandler)
+	ids.GET("/advisories/:advisory_id/systems", controllers.AdvisorySystemsListIDsHandler)
+	ids.GET("/packages/:package_name/systems", controllers.PackageSystemsListIDsHandler)
+	ids.GET("/systems", controllers.SystemsListIDsHandler)
+	ids.GET("/systems/:inventory_id/advisories", controllers.SystemAdvisoriesIDsHandler)
+
 	api.GET("/status", controllers.Status)
 	initAdmin(api.Group("/admin"))
 }
