@@ -275,6 +275,7 @@ func (c *PackageCache) ReadByNevra(nevraString string) *PackageCacheMetadata {
 		utils.Log("nevra", nevraString).Warn("PackageCache.ReadByNevra: cannot parse evra")
 		return nil
 	}
+	utils.Log("nevra.Name", nevra.Name, "nevra.EVRAString", nevra.EVRAString()).Trace("PackageCache.ReadByNevra")
 	return readPackageFromDB("pn.name = ? and p.evra = ?", "", nevra.Name, nevra.EVRAString())
 }
 
