@@ -16,7 +16,6 @@ import (
 	"modernc.org/strutil"
 )
 
-var websockets []chan string
 var runUploadLoop = false
 
 const uploadEvent = `{
@@ -94,12 +93,6 @@ const uploadEvent = `{
     }
 	}`
 
-func addWebsocket() chan string {
-	ws := make(chan string, 100)
-	websockets = append(websockets, ws)
-	return ws
-}
-
 func platformMock() {
 	utils.Log().Info("Platform mock starting")
 	app := gin.New()
@@ -111,20 +104,11 @@ func platformMock() {
 	// Control endpoint handler
 	app.POST("/control/upload", mockUploadHandler)
 	app.POST("/control/delete", mockDeleteHandler)
-	app.POST("/control/sync", mockSyncHandler)
 	app.POST("/control/toggle_upload", mockToggleUpload)
 
 	err := utils.RunServer(base.Context, app, 9001)
 	if err != nil {
 		panic(err)
-	}
-}
-
-func mockSyncHandler(_ *gin.Context) {
-	utils.Log().Info("Mocking VMaaS sync event")
-	// Force connected websocket clients to refresh
-	for _, ws := range websockets {
-		ws <- "sync"
 	}
 }
 

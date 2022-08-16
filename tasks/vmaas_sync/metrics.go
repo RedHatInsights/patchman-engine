@@ -24,13 +24,6 @@ const (
 )
 
 var (
-	messagesReceivedCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Help:      "How many websocket messages were received of which type",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
-		Name:      "websocket_msgs",
-	}, []string{"type"})
-
 	vmaasCallCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Help:      "How many times vmaas was called with which result",
 		Namespace: "patchman_engine",
@@ -114,7 +107,7 @@ var (
 )
 
 func RunMetrics() {
-	prometheus.MustRegister(messagesReceivedCnt, vmaasCallCnt, storeAdvisoriesCnt, storePackagesCnt,
+	prometheus.MustRegister(vmaasCallCnt, storeAdvisoriesCnt, storePackagesCnt,
 		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration, packageCnt, packageNameCnt,
 		databaseSizeBytesGaugeVec, databaseProcessesGaugeVec, cyndiSystemsCnt, cyndiTagsCnt,
 		advisoriesCountMismatch)

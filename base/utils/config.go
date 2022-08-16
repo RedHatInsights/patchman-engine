@@ -52,9 +52,8 @@ type Config struct {
 	NotificationsTopic     string
 
 	// services
-	VmaasAddress   string
-	RbacAddress    string
-	VmaasWsAddress string
+	VmaasAddress string
+	RbacAddress  string
 
 	// cloudwatch
 	CloudWatchAccessKeyID     string
@@ -125,7 +124,6 @@ func initKafkaFromEnv() {
 func initServicesFromEnv() {
 	Cfg.VmaasAddress = Getenv("VMAAS_ADDRESS", "")
 	Cfg.RbacAddress = Getenv("RBAC_ADDRESS", "")
-	Cfg.VmaasWsAddress = Getenv("VMAAS_WS_ADDRESS", "")
 }
 
 func initCloudwatchFromEnv() {
@@ -207,13 +205,6 @@ func initServicesFromClowder() {
 			Cfg.RbacAddress = fmt.Sprintf("http://%s:%d", endpoint.Hostname, endpoint.Port)
 		}
 	}
-	for _, endpoint := range clowder.LoadedConfig.PrivateEndpoints {
-		if endpoint.App == "vmaas" {
-			if strings.Contains(endpoint.Name, "websocket") {
-				Cfg.VmaasWsAddress = fmt.Sprintf("ws://%s:%d", endpoint.Hostname, endpoint.Port)
-			}
-		}
-	}
 }
 
 func initCloudwatchFromClowder() {
@@ -279,7 +270,6 @@ func printKafkaParams() {
 func printServicesParams() {
 	fmt.Printf("VMAAS_ADDRESS=http://%s\n", Cfg.VmaasAddress)
 	fmt.Printf("RBAC_ADDRESS=http://%s\n", Cfg.RbacAddress)
-	fmt.Printf("VMAAS_WS_ADDRESS=ws://%s\n", Cfg.VmaasWsAddress)
 }
 
 func printCloudwatchParams() {
