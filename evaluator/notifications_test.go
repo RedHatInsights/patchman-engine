@@ -58,8 +58,8 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 	database.CheckCachesValid(t)
 	database.CheckAdvisoriesAccountDataNotified(t, rhAccountID, oldSystemAdvisoryIDs, false)
 
-	orgID := "1234567"
 	// do evaluate the system
+	orgID := "1234567"
 	err := evaluateHandler(mqueue.PlatformEvent{
 		SystemIDs:  []string{"00000000-0000-0000-0000-000000000012"},
 		RequestIDs: []string{"request-2"},
@@ -97,14 +97,13 @@ func TestAdvisoriesNotificationMessage(t *testing.T) {
 		DisplayName: displayName,
 	}
 
-	orgID := "1234567"
 	url := fmt.Sprintf("www.console.redhat.com/insights/inventory/%s", inventoryID)
 	event := &mqueue.PlatformEvent{
-		OrgID: &orgID,
-		URL:   &url,
+		URL: &url,
 	}
 
-	notification, err := ntf.MakeNotification(system, event, NewAdvisoryEvent, events)
+	orgID := "1234567"
+	notification, err := ntf.MakeNotification(system, event, orgID, NewAdvisoryEvent, events)
 	assert.Nil(t, err)
 	assert.Equal(t, orgID, notification.OrgID)
 	assert.Equal(t, url, notification.Context.HostURL)

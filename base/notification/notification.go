@@ -75,9 +75,8 @@ type Advisory struct {
 	Synopsis     string `json:"synopsis"`
 }
 
-func MakeNotification(system *models.SystemPlatform, event *mqueue.PlatformEvent,
+func MakeNotification(system *models.SystemPlatform, event *mqueue.PlatformEvent, orgID,
 	eventType string, events []Event) (*Notification, error) {
-	orgID := event.GetOrgID()
 	if orgID == "" || orgID == "null" {
 		return nil, errors.New("invalid orgID")
 	}

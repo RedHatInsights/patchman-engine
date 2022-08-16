@@ -61,6 +61,7 @@ func getUnnotifiedAdvisories(tx *gorm.DB, accountID int, newAdvs SystemAdvisoryM
 	return unAdvs, nil
 }
 
+// nolint: funlen
 func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform, event *mqueue.PlatformEvent,
 	accountID int, newAdvisories SystemAdvisoryMap) error {
 	if notificationsPublisher == nil {
@@ -81,7 +82,21 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 		events = append(events, ntf.Event{Payload: advisory, Metadata: ntf.Metadata{}})
 	}
 
-	notif, err := ntf.MakeNotification(system, event, NewAdvisoryEvent, events)
+	var orgID string
+	// Handle inconsistency of eval input messages between upload and recalc.
+	if evalLabel == recalcLabel {
+		err = tx.Table("rh_account acc").Select("acc.org_id").
+			Joins("JOIN system_platform sp on sp.rh_account_id=acc.id").
+			Where("sp.inventory_id", system.InventoryID).
+			Take(&orgID).Error
+		if err != nil {
+			return errors.Wrap(err, "querying orgID failed")
+		}
+	} else {
+		orgID = event.GetOrgID()
+	}
+
+	notif, err := ntf.MakeNotification(system, event, orgID, NewAdvisoryEvent, events)
 	if err != nil {
 		return errors.Wrap(err, "creating notification failed")
 	}
