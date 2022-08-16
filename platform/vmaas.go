@@ -1,11 +1,9 @@
 package platform
 
 import (
-	"app/base/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 )
 
 func updatesHandler(c *gin.Context) {
@@ -194,25 +192,6 @@ func reposHandler(c *gin.Context) {
 	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
 }
 
-var upgrader = websocket.Upgrader{} // use default options
-func wshandler(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		utils.Log("err", err.Error()).Error("Failed to set websocket upgrade")
-		return
-	}
-	ws := addWebsocket()
-	for {
-		// Wait for someone to call /control/sync
-		<-ws
-		// Send refresh mesage to clients
-		err = conn.WriteMessage(websocket.TextMessage, []byte("webapps-refreshed"))
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
 func initVMaaS(app *gin.Engine) {
 	// Mock updates endpoint for VMaaS
 	app.POST("/api/v3/updates", updatesHandler)
@@ -220,8 +199,4 @@ func initVMaaS(app *gin.Engine) {
 	app.POST("/api/v3/errata", erratasHandler)
 	app.POST("/api/v3/repos", reposHandler)
 	app.POST("/api/v3/pkglist", pkgListHandler)
-	// Mock websocket endpoint for VMaaS
-	app.GET("/ws", func(context *gin.Context) {
-		wshandler(context.Writer, context.Request)
-	})
 }
