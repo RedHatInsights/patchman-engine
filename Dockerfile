@@ -43,7 +43,6 @@ ADD --chown=insights:root main.go                  /go/src/app/
 ADD --chown=insights:root turnpike                 /go/src/app/turnpike
 ADD --chown=insights:root platform                 /go/src/app/platform
 ADD --chown=insights:root scripts                  /go/src/app/scripts
-ADD --chown=insights:root vmaas_sync               /go/src/app/vmaas_sync
 ADD --chown=insights:root database_admin           /go/src/app/database_admin
 ADD --chown=insights:root docs                     /go/src/app/docs
 ADD --chown=insights:root evaluator                /go/src/app/evaluator
@@ -88,7 +87,6 @@ ADD --chown=insights:root database_admin/schema      /go/src/app/database_admin/
 ADD --chown=insights:root database_admin/migrations  /go/src/app/database_admin/migrations
 ADD --chown=insights:root docs/v1/openapi.json       /go/src/app/docs/v1/
 ADD --chown=insights:root docs/v2/openapi.json       /go/src/app/docs/v2/
-ADD --chown=insights:root vmaas_sync/entrypoint.sh   /go/src/app/vmaas_sync/
 
 COPY --from=buildimg /go/src/app/main /go/src/app/
 
