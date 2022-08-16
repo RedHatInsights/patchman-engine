@@ -193,12 +193,13 @@ services:
       - ./conf/common.env
       - ./conf/vmaas_sync.env
       - ./conf/gorun.env
-    command: ./vmaas_sync/entrypoint.sh
+    command: ./scripts/entrypoint.sh job vmaas_sync
     ports:
       - 8083:8083
     restart: on-failure
     depends_on:
       - db
+      - kafka
       - platform
       - patchimg
     volumes:
