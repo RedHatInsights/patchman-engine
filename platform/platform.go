@@ -147,10 +147,10 @@ func upload(randomPkgs bool) {
 		panic(err)
 	}
 	event := fmt.Sprintf(uploadEvent, pkgJSON)
-	sendMessageToTopic("platform.inventory.events", event)
+	SendMessageToTopic("platform.inventory.events", event)
 }
 
-func sendMessageToTopic(topic, message string) {
+func SendMessageToTopic(topic, message string) {
 	writer := mqueue.NewKafkaWriterFromEnv(topic)
 
 	err := writer.WriteMessages(base.Context, mqueue.KafkaMessage{
@@ -182,7 +182,7 @@ func mockDeleteHandler(c *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
-	sendMessageToTopic("platform.inventory.events", string(msg))
+	SendMessageToTopic("platform.inventory.events", string(msg))
 	c.Status(http.StatusOK)
 }
 
