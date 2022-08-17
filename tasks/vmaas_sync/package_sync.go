@@ -158,16 +158,18 @@ func storeStringsFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListItem) er
 }
 
 func storePackageNamesFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListItem) (map[string]int, error) {
-	packageNames, packageNameModels := getPackageArraysFromPkgListItems(vmaasData)
+	packageNames, packageNameModels := getPackageArraysFromPkgListItems(tx, vmaasData)
 	utils.Log("names", len(packageNames)).Info("Got package names")
-	tx = tx.Clauses(clause.OnConflict{
-		DoNothing: true,
-	}) // Insert missing
-	err := tx.CreateInBatches(packageNameModels, chunkSize).Error
-	if err != nil {
-		return nil, errors.Wrap(err, "Bulk insert of package names failed")
+	if len(packageNameModels) > 0 {
+		tx = tx.Clauses(clause.OnConflict{
+			DoNothing: true,
+		}) // Insert missing
+		err := tx.CreateInBatches(packageNameModels, chunkSize).Error
+		if err != nil {
+			return nil, errors.Wrap(err, "Bulk insert of package names failed")
+		}
+		utils.Log().Info("Package names stored")
 	}
-	utils.Log().Info("Package names stored")
 
 	packageNameIDMap, err := getPackageNameMap(tx, packageNames)
 	if err != nil {
@@ -177,7 +179,7 @@ func storePackageNamesFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListIte
 	return packageNameIDMap, nil
 }
 
-func getPackageArraysFromPkgListItems(pkgListItems []vmaas.PkgListItem) ([]string, []models.PackageName) {
+func getPackageArraysFromPkgListItems(tx *gorm.DB, pkgListItems []vmaas.PkgListItem) ([]string, []models.PackageName) {
 	// get unique package names and their summaries
 	namesMap := map[string]string{}
 	for _, pkgListItem := range pkgListItems {
@@ -189,10 +191,23 @@ func getPackageArraysFromPkgListItems(pkgListItems []vmaas.PkgListItem) ([]strin
 		namesMap[nevra.Name] = pkgListItem.Summary
 	}
 
+	var existingPkgsNames []models.PackageName
 	nameArr := make([]string, 0, len(namesMap))
-	pkgNames := make([]models.PackageName, 0, len(namesMap))
 	for n := range namesMap {
 		nameArr = append(nameArr, n)
+	}
+	// delete pkgs which exist in DB from namesMap
+	if err := tx.Table("package_name").
+		Where("name IN ?", nameArr).
+		Find(&existingPkgsNames).
+		Error; err != nil {
+		utils.Log("err", err).Error("error in finding existing package names")
+	}
+	for _, ep := range existingPkgsNames {
+		delete(namesMap, ep.Name)
+	}
+	pkgNames := make([]models.PackageName, 0, len(namesMap))
+	for n := range namesMap {
 		summary := namesMap[n]
 		pkgNames = append(pkgNames, models.PackageName{Name: n, Summary: utils.EmptyToNil(&summary)})
 	}
@@ -200,7 +215,7 @@ func getPackageArraysFromPkgListItems(pkgListItems []vmaas.PkgListItem) ([]strin
 }
 
 func storePackageDetailsFrmPkgListItems(tx *gorm.DB, nameIDs map[string]int, pkgListItems []vmaas.PkgListItem) error {
-	var toStore []models.Package
+	var toStore models.PackageSlice
 	var uniquePackages = make(map[nameIDandEvra]bool)
 	for _, pkgListItem := range pkgListItems {
 		packageModel := getPackageFromPkgListItem(pkgListItem, nameIDs)
@@ -218,15 +233,63 @@ func storePackageDetailsFrmPkgListItems(tx *gorm.DB, nameIDs map[string]int, pkg
 	}
 	utils.Log("packages", len(toStore)).Info("Collected packages to store")
 
+	err := storeOrUpdate(tx, toStore)
+	return err
+}
+
+//nolint:funlen
+func storeOrUpdate(tx *gorm.DB, pkgs models.PackageSlice) error {
+	var toUpdate models.PackageSlice
+
+	nameIDEVRAs := make([][]interface{}, 0, len(pkgs))
+	toStore := make(models.PackageSlice, 0, len(pkgs))
+	updateIDs := make(map[nameIDandEvra]int)
+	for _, pkg := range pkgs {
+		nameIDEVRAs = append(nameIDEVRAs, []interface{}{pkg.NameID, pkg.EVRA})
+	}
+
+	if err := tx.Where("(name_id, evra) IN ?", nameIDEVRAs).Find(&toUpdate).Error; err != nil {
+		utils.Log("err", err).Warn("couldn't find packages for update")
+	}
+	for _, u := range toUpdate {
+		updateIDs[nameIDandEvra{u.NameID, u.EVRA}] = u.ID
+	}
+
+	// set toUpdate and toStore
+	toUpdate = make(models.PackageSlice, 0, len(pkgs))
+	for _, p := range pkgs {
+		if id, has := updateIDs[nameIDandEvra{p.NameID, p.EVRA}]; has {
+			p.ID = id
+			toUpdate = append(toUpdate, p)
+		} else {
+			toStore = append(toStore, p)
+		}
+	}
+
+	// update packages
+	var updErr error
+	for _, u := range toUpdate {
+		updErr = tx.Table("package").Select("description_hash", "summary_hash", "advisory_id").Updates(u).Error
+	}
+	if updErr != nil {
+		storePackagesCnt.WithLabelValues("error").Add(float64(len(toUpdate)))
+		updErr = errors.Wrap(updErr, "Packages update failed")
+	}
+
+	// insert packages
 	tx = database.OnConflictUpdateMulti(tx, []string{"name_id", "evra"},
 		"description_hash", "summary_hash", "advisory_id")
 	if err := tx.CreateInBatches(toStore, chunkSize).Error; err != nil {
 		storePackagesCnt.WithLabelValues("error").Add(float64(len(toStore)))
 		return errors.Wrap(err, "Packages bulk insert failed")
 	}
-	storePackagesCnt.WithLabelValues("success").Add(float64(len(toStore)))
+	if updErr != nil {
+		storePackagesCnt.WithLabelValues("success").Add(float64(len(toStore)))
+	} else {
+		storePackagesCnt.WithLabelValues("success").Add(float64(len(pkgs)))
+	}
 	utils.Log().Info("Packages stored")
-	return nil
+	return updErr
 }
 
 func getPackageFromPkgListItem(pkgListItem vmaas.PkgListItem, nameIDs map[string]int) *models.Package {
