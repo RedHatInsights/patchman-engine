@@ -174,7 +174,7 @@ func CountRows(tx *gorm.DB) (total int, subTotals map[string]int, err error) {
 	return int(total64), subTotals, err
 }
 
-//nolint: funlen, lll
+// nolint: funlen, lll
 func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, opts ListOpts, params ...string) (
 	*gorm.DB, *ListMeta, *Links, error) {
 	hasSystems := true
@@ -626,7 +626,7 @@ func systemDBLookups2SystemItems(systems []SystemDBLookup) []SystemItem {
 	return data
 }
 
-func advisoriesIDs(advisories []AdvisoriesID) []string {
+func advisoriesIDs(advisories []AdvisoryID) []string {
 	if advisories == nil {
 		return []string{}
 	}

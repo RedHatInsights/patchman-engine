@@ -15,10 +15,17 @@ var (
 	Db                 *gorm.DB //nolint:stylecheck
 	OtherAdvisoryTypes []string
 	AdvisoryTypes      map[int]string
+	globalPgConfig     *PostgreSQLConfig
 )
 
 func InitDB() {
 	pgConfig := loadEnvPostgreSQLConfig()
+	if Db != nil && pgConfig == globalPgConfig {
+		// reuse connection
+		check(Db)
+		return
+	}
+	globalPgConfig = pgConfig
 	Db = openPostgreSQL(pgConfig)
 	check(Db)
 }

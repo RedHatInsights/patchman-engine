@@ -174,7 +174,7 @@ func SystemAdvisoriesIDsHandler(c *gin.Context) {
 		return
 	} // Error handled in method itself
 
-	var aids []AdvisoriesID
+	var aids []AdvisoryID
 	err = query.Find(&aids).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
