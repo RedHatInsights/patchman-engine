@@ -219,9 +219,10 @@ func CreateAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int,
 	CheckAdvisoriesAccountData(t, rhAccountID, advisoryIDs, systemsAffected)
 }
 
-func CreateSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
+func CreateSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int64) {
 	for _, repoID := range repoIDs {
-		assert.Nil(t, Db.Create(&models.SystemRepo{RhAccountID: rhAccountID, SystemID: systemID, RepoID: repoID}).Error)
+		assert.Nil(t, Db.Create(&models.SystemRepo{RhAccountID: int64(rhAccountID),
+			SystemID: int64(systemID), RepoID: repoID}).Error)
 	}
 	CheckSystemRepos(t, rhAccountID, systemID, repoIDs)
 }
@@ -268,7 +269,7 @@ func CheckSystemPackages(t *testing.T, systemID int, nExpected int, packageIDs .
 	assert.Equal(t, nExpected, len(systemPackages))
 }
 
-func CheckSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
+func CheckSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int64) {
 	var systemRepos []models.SystemRepo
 	err := Db.Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)",
 		rhAccountID, systemID, repoIDs).
@@ -310,7 +311,7 @@ func DeleteSystemPackages(t *testing.T, systemID int, pkgIDs ...int) {
 	assert.Equal(t, int64(0), count)
 }
 
-func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int) {
+func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int64) {
 	err := Db.Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)", rhAccountID, systemID, repoIDs).
 		Delete(&models.SystemRepo{}).Error
 	assert.Nil(t, err)

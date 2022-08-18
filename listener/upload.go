@@ -362,7 +362,7 @@ func updateRepos(tx *gorm.DB, profile inventory.SystemProfile, rhAccountID int,
 	return addedRepos, addedSysRepos, deletedSysRepos, nil
 }
 
-func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int, added int64, err error) {
+func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int64, added int64, err error) {
 	if len(repos) == 0 {
 		return repoIDs, 0, nil
 	}
@@ -390,11 +390,11 @@ func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int, added int64, e
 	return repoIDs, added, nil
 }
 
-func updateSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs []int) (
+func updateSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs []int64) (
 	nAdded int64, nDeleted int64, err error) {
 	repoSystemObjs := make(models.SystemRepoSlice, len(repoIDs))
 	for i, repoID := range repoIDs {
-		repoSystemObjs[i] = models.SystemRepo{RhAccountID: rhAccountID, SystemID: systemID, RepoID: repoID}
+		repoSystemObjs[i] = models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: int64(systemID), RepoID: repoID}
 	}
 
 	txOnConflict := tx.Clauses(clause.OnConflict{
@@ -414,7 +414,7 @@ func updateSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs []int
 	return nAdded, nDeleted, nil
 }
 
-func deleteOtherSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs []int) (nDeleted int64, err error) {
+func deleteOtherSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs []int64) (nDeleted int64, err error) {
 	type result struct{ DeletedCount int64 }
 	var res result
 	if len(repoIDs) > 0 {

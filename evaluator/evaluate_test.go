@@ -41,7 +41,7 @@ func TestEvaluate(t *testing.T) {
 	oldSystemAdvisoryIDs := []int{1, 3, 4}   // old advisories paired with the system
 	patchingSystemAdvisoryIDs := []int{3, 4} // these advisories should be patched for the system
 	expectedPackageIDs := []int{1, 2}
-	systemRepoIDs := []int{1, 2}
+	systemRepoIDs := []int64{1, 2}
 
 	database.DeleteSystemAdvisories(t, systemID, expectedAdvisoryIDs)
 	database.DeleteSystemAdvisories(t, systemID, patchingSystemAdvisoryIDs)
@@ -69,7 +69,7 @@ func TestEvaluate(t *testing.T) {
 	database.CheckCachesValid(t)
 
 	// test evaluation with third party repos
-	thirdPartySystemRepoIDs := []int{1, 2, 4}
+	thirdPartySystemRepoIDs := []int64{1, 2, 4}
 	database.DeleteSystemRepos(t, rhAccountID, systemID, systemRepoIDs)
 	database.CreateSystemRepos(t, rhAccountID, systemID, thirdPartySystemRepoIDs)
 	err = evaluateHandler(mqueue.PlatformEvent{
