@@ -9,6 +9,7 @@ import (
 
 var (
 	DefaultLimit = 20
+	testSetupRan = false
 )
 
 func ConfigureApp() {
@@ -24,6 +25,9 @@ func SetupTestEnvironment() {
 }
 
 func SetupTest(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	SetupTestEnvironment()
+	if !testSetupRan {
+		utils.SkipWithoutDB(t)
+		SetupTestEnvironment()
+		testSetupRan = true
+	}
 }
