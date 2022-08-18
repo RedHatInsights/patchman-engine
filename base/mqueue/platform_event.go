@@ -24,6 +24,7 @@ type PlatformEvent struct {
 type InventoryAID struct {
 	InventoryID string
 	RhAccountID int
+	OrgID       *string
 }
 
 type EvalData struct {
@@ -83,13 +84,17 @@ func batchSize(grouped groupedData) int {
 	return batches
 }
 
-func (data *InventoryAIDs) groupData() (int, *groupedData) {
+func (data *InventoryAIDs) groupData() (int, *groupedData, *orgIDMap) {
 	// group systems by account
 	grouped := groupedData{}
+	orgIDs := orgIDMap{}
 	for _, aid := range *data {
 		grouped[aid.RhAccountID] = append(grouped[aid.RhAccountID], aid.InventoryID)
+		if _, has := orgIDs[aid.RhAccountID]; !has {
+			orgIDs[aid.RhAccountID] = aid.OrgID
+		}
 	}
-	return batchSize(grouped), &grouped
+	return batchSize(grouped), &grouped, &orgIDs
 }
 
 func (data *EvalDataSlice) groupData() (int, *groupedData, *groupedData, *orgIDMap) {
@@ -109,7 +114,7 @@ func (data *EvalDataSlice) groupData() (int, *groupedData, *groupedData, *orgIDM
 }
 
 func (data *InventoryAIDs) WriteEvents(ctx context.Context, w Writer) error {
-	batches, groupedSys := data.groupData()
+	batches, groupedSys, orgIDs := data.groupData()
 	// create events, per BatchSize of systems from one account
 	now := types.Rfc3339Timestamp(time.Now())
 	events := make(PlatformEvents, 0, batches)
@@ -123,6 +128,7 @@ func (data *InventoryAIDs) WriteEvents(ctx context.Context, w Writer) error {
 				Timestamp: &now,
 				AccountID: acc,
 				SystemIDs: ev[start:end],
+				OrgID:     (*orgIDs)[acc],
 			})
 		}
 	}

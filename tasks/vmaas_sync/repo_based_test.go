@@ -17,11 +17,12 @@ func TestGetCurrentRepoBasedInventoryIDs(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
+	orgID := "org_1"
 	inventoryAIDs, err := getCurrentRepoBasedInventoryIDs()
 	assert.Nil(t, err)
 	assert.Equal(t, []mqueue.InventoryAID{
-		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1},
-		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1}},
+		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID},
+		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1, OrgID: &orgID}},
 		inventoryAIDs)
 	resetLastEvalTimestamp(t)
 }
@@ -53,12 +54,13 @@ func TestGetRepoBasedInventoryIDs(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
+	orgID := "org_1"
 	repos := []string{"repo1", "repo2"}
 	inventoryAIDs, err := getRepoBasedInventoryIDs(repos)
 	assert.Nil(t, err)
 	assert.Equal(t, []mqueue.InventoryAID{
-		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1},
-		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1}},
+		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID},
+		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1, OrgID: &orgID}},
 		inventoryAIDs)
 }
 

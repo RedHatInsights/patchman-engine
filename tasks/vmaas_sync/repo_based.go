@@ -47,9 +47,10 @@ func getRepoBasedInventoryIDs(repos []string) ([]mqueue.InventoryAID, error) {
 	err := database.Db.Table("system_repo sr").
 		Joins("JOIN repo ON repo.id = sr.repo_id").
 		Joins("JOIN system_platform sp ON  sp.rh_account_id = sr.rh_account_id AND sp.id = sr.system_id").
+		Joins("JOIN rh_account ra ON ra.id = sp.rh_account_id").
 		Where("repo.name IN (?)", repos).
 		Order("sp.rh_account_id").
-		Select("distinct sp.inventory_id, sp.rh_account_id").
+		Select("distinct sp.inventory_id, sp.rh_account_id, ra.org_id").
 		Scan(&ids).Error
 	if err != nil {
 		return nil, err
