@@ -203,7 +203,7 @@ func (AdvisoryAccountData) TableName() string {
 
 type AdvisoryAccountDataSlice []AdvisoryAccountData
 type Repo struct {
-	ID         int
+	ID         int64
 	Name       string
 	ThirdParty bool
 }
@@ -215,9 +215,9 @@ func (Repo) TableName() string {
 type RepoSlice []Repo
 
 type SystemRepo struct {
-	RhAccountID int
-	SystemID    int
-	RepoID      int
+	RhAccountID int64
+	SystemID    int64
+	RepoID      int64
 }
 
 func (SystemRepo) TableName() string {
