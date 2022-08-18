@@ -18,6 +18,20 @@ insert into _const values           -- counts in prod 2022/02
     ('packages_per_system', 1000),  -- 780      (580M system_packages)
     ('progress_pct', 10)   -- print progress message on every X% reached
     on conflict do nothing;
+/*
+insert into _const values           -- counts in prod 2022/08
+    ('accounts',           68000),
+    ('systems',          1040000),
+    ('advisories',         59000),
+    ('repos',              68000),
+    ('package_names',     239000),
+    ('packages',         2450000),
+    ('adv_per_system',        90),  -- 93M system_advisories
+    ('repo_per_system',        8),  -- 8.3M system_repo
+    ('packages_per_system', 1000),  -- 780      (580M system_packages)
+    ('progress_pct',          10)   -- print progress message on every X% reached
+    on conflict do nothing;
+*/
 
 -- prepare some pseudorandom vmaas jsons
 create table if not exists _json (
