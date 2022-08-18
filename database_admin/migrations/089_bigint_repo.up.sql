@@ -1,0 +1,4 @@
+ALTER TABLE repo ALTER COLUMN id TYPE BIGINT;
+
+ALTER TABLE system_repo ALTER COLUMN repo_id TYPE BIGINT,
+                        ALTER COLUMN system_id TYPE BIGINT;
