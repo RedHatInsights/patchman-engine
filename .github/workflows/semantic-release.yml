@@ -26,6 +26,7 @@ jobs:
         git config --global user.email ''
         git commit -am "${VERSION_NEXT} doc update"
         git push
+        sleep 5
         HEAD_TAG=$(git rev-parse --short HEAD)
         sed -i -E "s/\{name: IMAGE_TAG_(MANAGER|LISTENER|EVALUATOR_UPLOAD|EVALUATOR_RECALC|JOBS|DATABASE_ADMIN), value: .*\}/{name: IMAGE_TAG_\1, value: $HEAD_TAG}/" $CLOWDER_FILE
         git commit -am "${VERSION_NEXT}"
