@@ -15,6 +15,7 @@ jobs:
         MANAGER_FILE=manager/manager.go
         METRICS_FILE=base/metrics/metrics.go
         DOC_FILE=docs/v2/openapi.json
+        CLOWDER_FILE=deploy/clowdapp.yaml
         VERSION=$(awk '/^\/\/ @version/ {print $3}' $MANAGER_FILE)
         RELEASE_TYPE=$(git log -1 | tail -n1) # Check release type (/major, /minor, /patch (default))
         VERSION_NEXT=$(./scripts/increment_version.sh $VERSION $RELEASE_TYPE)
@@ -24,6 +25,9 @@ jobs:
         git config --global user.name 'semantic-release'
         git config --global user.email ''
         git commit -am "${VERSION_NEXT}"
+        HEAD_TAG=$(git rev-parse --short HEAD)
+        sed -i -E "s/\{name: IMAGE_TAG_(MANAGER|LISTENER|EVALUATOR_UPLOAD|EVALUATOR_RECALC|JOBS|DATABASE_ADMIN), value: .*\}/{name: IMAGE_TAG_\1, value: $HEAD_TAG}/" $CLOWDER_FILE
+        git commit -am "${VERSION_NEXT} image update"
         git push
         git tag ${VERSION_NEXT}
         git push origin ${VERSION_NEXT}
