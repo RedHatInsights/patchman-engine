@@ -22,13 +22,9 @@ jobs:
         sed -i "s|\(// @version \).*$|\1 $VERSION_NEXT|;" $MANAGER_FILE
         sed -i 's|\(ENGINEVERSION = "\)[^"]*\("\)$|'"\1$VERSION_NEXT\2|;" $METRICS_FILE
         sed -i 's|\("version": "\)[^"]*\("\)$|'"\1$VERSION_NEXT\2|;" $DOC_FILE
+        sed -i -E "s/\{name: IMAGE_TAG_(MANAGER|LISTENER|EVALUATOR_UPLOAD|EVALUATOR_RECALC|JOBS|DATABASE_ADMIN), value: .*\}/{name: IMAGE_TAG_\1, value: $VERSION_NEXT}/" $CLOWDER_FILE
         git config --global user.name 'semantic-release'
         git config --global user.email ''
-        git commit -am "${VERSION_NEXT} doc update"
-        git push
-        sleep 5
-        HEAD_TAG=$(git rev-parse --short HEAD)
-        sed -i -E "s/\{name: IMAGE_TAG_(MANAGER|LISTENER|EVALUATOR_UPLOAD|EVALUATOR_RECALC|JOBS|DATABASE_ADMIN), value: .*\}/{name: IMAGE_TAG_\1, value: $HEAD_TAG}/" $CLOWDER_FILE
         git commit -am "${VERSION_NEXT}"
         git push
         git tag ${VERSION_NEXT}
