@@ -76,7 +76,7 @@ $$
 
 
 -- generate systems
--- duration: 55s / 750k systems (on RDS)
+-- duration: 55s / 1M systems (on RDS)
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 alter sequence system_platform_id_seq restart with 1;
 do $$
@@ -120,7 +120,7 @@ $$
 ;
 
 -- generate advisory_metadata
--- duration: 2s / 32k advisories (on RDS)
+-- duration: 3s / 60k advisories (on RDS)
 alter sequence advisory_metadata_id_seq restart with 1;
 do $$
   declare
@@ -156,7 +156,7 @@ $$
 
 -- generate system_advisories
 -- duration: 325s (05:25) / 7.5M system_advisories (a.k.a. 750k systems with 10 adv in avg) (on RDS) 
--- Time: 7254938.008 ms (02:00:54.938)  for 75M system_advisories (RDS)
+-- Time: 7038416.860 ms (01:57:18.417)  for 93M system_advisories (RDS)
 do $$
   declare
     cnt int := 0;
@@ -166,12 +166,13 @@ do $$
     systems int;
     advs int;
     stat int;
-    patched_pct float := 0.80;
+    patched_pct int := 80;
     rnd float;
     rnd2 float;
     rnd_date1 timestamp with time zone;
     rnd_date2 timestamp with time zone;
     row record;
+    nextpct int := 0;
   begin
     select val into adv_per_system from _const where key = 'adv_per_system';
     select val * adv_per_system into wanted from _const where key = 'systems';
@@ -184,22 +185,24 @@ do $$
     loop
       -- assign random 0-2*adv_per_system advisories to system
       rnd := random() * 2 * adv_per_system;
-      --while cnt < wanted loop
-      for i in 0..rnd loop
-          rnd2 := random();
-          rnd_date1 := now() - make_interval(days => (rnd*365)::int);
-          rnd_date2 := rnd_date1 + make_interval(days => (rnd*100)::int);
-          insert into system_advisories
-              (rh_account_id, system_id, advisory_id, first_reported, when_patched, status_id)
-          values
-              (row.rh_account_id, row.id, trunc(advs*rnd2)+1, rnd_date1, case when random() < patched_pct then rnd_date2 else NULL end, trunc(stat*rnd2))
-          on conflict do nothing;
-          if mod(cnt, (wanted*progress/100)::int) = 0 then
-              raise notice 'created % system_advisories', cnt;
-          end if;
-          cnt := cnt + 1;
-          exit systems when cnt > wanted;
-      end loop;
+      rnd2 := random();
+      rnd_date1 := now() - make_interval(days => (rnd*365)::int);
+      rnd_date2 := rnd_date1 + make_interval(days => (rnd*100)::int);
+      insert into system_advisories
+        (rh_account_id, system_id, advisory_id, first_reported, when_patched, status_id)
+      (select
+        row.rh_account_id, row.id, am.id, rnd_date1 - make_interval(days => mod(am.id, 100)),
+        case when mod(am.id, 100) < patched_pct then rnd_date2 - make_interval(days => mod(am.id, 100)) else NULL end,
+        mod(row.id, stat)
+        from advisory_metadata am
+       limit rnd::int offset rnd2::int)
+      on conflict do nothing;
+      cnt := cnt + rnd::int;
+      if cnt > nextpct then
+          raise notice 'created % system_advisories', cnt;
+          nextpct := nextpct + (wanted*progress/100)::int;
+      end if;
+      exit systems when cnt > wanted;
     end loop;  -- <<systems>>
     raise notice 'created % system_advisories', wanted;
   end;
@@ -207,7 +210,7 @@ $$
 ;
 
 -- generate repos
--- duration: 2s / 35k advisories (on RDS)
+-- duration: 2s / 68k advisories (on RDS)
 alter sequence repo_id_seq restart with 1;
 do $$
   declare
@@ -229,7 +232,7 @@ $$
 ;
 
 -- generate system_repo
--- duration: 325s (05:25) / 7.5M system_repo (a.k.a. 750k systems with 10 repo in avg) (on RDS) 
+-- Time: 706303.429 ms (11:46.303)  8.3M system_repo (RDS)
 do $$
   declare
     cnt int := 0;
@@ -299,132 +302,48 @@ $$
 insert into strings(id, value) values ('0', 'testing string value')
 on conflict do nothing;
 
--- generate package
-alter sequence package_id_seq restart with 1;
-do $$
-  declare
-    cnt int := 0;
-    wanted int; n_names int; n_advisories int; id int; name_id int; advisory_id int; progress int;
-  begin
-    select val into wanted from _const where key = 'packages';
-    select val into progress from _const where key = 'progress_pct';
-    select count(*) into n_names from package_name;
-    select count(*) into n_advisories from advisory_metadata;
-    while cnt < wanted loop
-        id := nextval('package_id_seq');
-        name_id := id % n_names + 1;
-        advisory_id := id % n_advisories + 1;
-        insert into package(id, name_id, evra, description_hash, summary_hash, advisory_id)
-               values (id, name_id, id || '.' || id || '-1.el8.x86_64', '0', '0', advisory_id)
-               on conflict do nothing;
-        cnt := cnt + 1;
-        if mod(cnt, (wanted*progress/100)::int) = 0 then
-            raise notice 'created % packages', cnt;
-        end if;
-    end loop;
-    raise notice 'created packages %', wanted;
-  end;
-$$
-;
-
 -- generate system_packages
--- duration: 493s (8:13) for 9000000 system_packages
+-- Time: 40011193.334 ms (11:06:51.193) 1G system_packages (RDS)
 do $$
   declare
     cnt int := 0;
     wanted int;
     pkg_per_system int;
     progress int;
-    systems int;
     pkgs int;
-    pkg_names int;
-    -- patched_pct float := 0.80;
+    accounts int;
     update_data jsonb := '[{"evra": "5.10.13-200.fc31.x86_64", "advisory": "RH-100"}]'::jsonb;
     rnd float;
+    rnd1 float;
     rnd2 float;
     row record;
+    nextpct int := 0;
   begin
     select val into pkg_per_system from _const where key = 'packages_per_system';
-    select val * pkg_per_system into wanted from _const where key = 'systems';
     select val into progress from _const where key = 'progress_pct';
-    select count(*) into systems from system_platform;
     select count(*) into pkgs from package;
-    select count(*) into pkg_names from package_name;
-    <<systems>>
-    for row in select rh_account_id, id from system_platform
+    select count(*) into accounts from rh_account;
+    wanted := accounts;
+    for row in select id from rh_account
     loop
       -- assign random 0.8-1.2*pkg_per_system packages to system
-      rnd := (0.8 + random() * 0.4) * pkg_per_system;
-      for i in 0..rnd loop
-          rnd2 := random();
-          insert into system_package
-              (rh_account_id, system_id, package_id, update_data, name_id)
-          values
-              (row.rh_account_id, row.id, trunc(pkgs*rnd2)+1, update_data, trunc(pkg_names*rnd2)+1)
-          on conflict do nothing;
-          if mod(cnt, (wanted*progress/100)::int) = 0 then
-              raise notice 'created % system_packages', cnt;
-          end if;
-          cnt := cnt + 1;
-          exit systems when cnt > wanted;
-      end loop;
-    end loop;  -- <<systems>>
-    raise notice 'created % system_packages', wanted;
+      rnd := random();
+      rnd1 := (0.8 + rnd * 0.4) * pkg_per_system;
+      rnd2 := (pkgs-rnd-1) * rnd;
+
+      insert into system_package (rh_account_id, system_id, package_id, update_data,  name_id)
+        (select row.id, sp.id, p.id, update_data, p.name_id
+           from (select id, name_id from package limit rnd1::int offset rnd2::int) p,
+                (select id from system_platform where rh_account_id = row.id) sp
+        )
+        on conflict do nothing;
+      cnt := cnt + 1;
+      if cnt > nextpct then
+          raise notice 'created system_packages for % accounts', cnt;
+          nextpct := nextpct + (wanted*progress/100)::int;
+      end if;
+          exit when cnt > wanted;
+    end loop;
   end;
 $$
 ;
-
--- 58M rows system_packages, contains cca 5k rows with mod(advisory_id,300)=0
--- table size 11GB, total size 20GB
--- delete from package where id in 
---       (select id from package where mod(advisory_id,300)=0 and NOT EXISTS (SELECT 1 FROM system_package sp WHERE package.id = sp.package_id) limit 1000);
--- CREATE INDEX IF NOT EXISTS system_package_package_id_idx on system_package (package_id);
---  Time: 24545.275 ms (00:24.545)
---  index size 1.2GB
--- with index
---  Delete on package  (cost=538049.27..546012.32 rows=1000 width=34)
---   ->  Nested Loop  (cost=538049.27..546012.32 rows=1000 width=34)
---         ->  HashAggregate  (cost=538048.84..538058.84 rows=1000 width=32)
---               Group Key: "ANY_subquery".id
---               ->  Subquery Scan on "ANY_subquery"  (cost=0.42..538046.34 rows=1000 width=32)
---                     ->  Limit  (cost=0.42..538036.34 rows=1000 width=4)
---                           ->  Nested Loop Anti Join  (cost=0.42..2219398.58 rows=4125 width=4)
---                                 ->  Seq Scan on package package_1  (cost=0.00..46738.00 rows=8250 width=4)
---                                       Filter: (mod(advisory_id, 300) = 0)
---                                 ->  Append  (cost=0.42..510.77 rows=128 width=4)
---                                       ->  Index Only Scan using system_package_0_package_id_idx on system_package_0 sp  (cost=0.42..4.02 rows=1 width=4)
---                                             Index Cond: (package_id = package_1.id)
---                                        ...
---  Time: 320.596 ms
--- without index
---  Delete on package  (cost=3569900.96..3577864.01 rows=1000 width=34)
---   ->  Nested Loop  (cost=3569900.96..3577864.01 rows=1000 width=34)
---         ->  HashAggregate  (cost=3569900.53..3569910.53 rows=1000 width=32)
---               Group Key: "ANY_subquery".id
---               ->  Subquery Scan on "ANY_subquery"  (cost=3299748.63..3569898.03 rows=1000 width=32)
---                     ->  Limit  (cost=3299748.63..3569888.03 rows=1000 width=4)
---                           ->  Hash Anti Join  (cost=3299748.63..4414073.67 rows=4125 width=4)
---                                 Hash Cond: (package_1.id = sp.package_id)
---                                 ->  Seq Scan on package package_1  (cost=0.00..46738.00 rows=8250 width=4)
---                                       Filter: (mod(advisory_id, 300) = 0)
---                                 ->  Hash  (cost=2340004.62..2340004.62 rows=58498641 width=4)
---                                       ->  Append  (cost=0.00..2340004.62 rows=58498641 width=4)
---                                             ->  Seq Scan on system_package_0 sp  (cost=0.00..16412.07 rows=468907 width=4)
---                                             ...
---  Time: 24448.174 ms (00:24.448)
-
-
--- 233M rows 44GB table, 78GB total
---  Delete on package  (cost=13636342.85..13644305.90 rows=1000 width=34) Time: 163558.425 ms (02:43.558)
--- CREATE INDEX Time: 182975.788 ms (03:02.976)
---  Delete on package  (cost=1309087.93..1317050.98 rows=1000 width=34) Time: 1757.323 ms (00:01.757)
-
--- 584M rows, 111GB table, 216GB total
---  Delete on package  (cost=33763897.37..33771860.41 rows=1000 width=34) Time: 1498463.270 ms (24:58.463)
--- CREATE INDEX Time: 624372.198 ms (10:24.372)
---  Delete on package  (cost=1199882.97..1207846.02 rows=1000 width=34) Time: 3678.649 ms (00:03.679)
-
--- delete from system_package sp where sp.package_id in (select id from package p where mod(p.advisory_id,301)=0 limit 1000);
--- DELETE 355104 Time: 248567.674 ms (04:08.568)
--- delete from package where id in (select id from package where mod(advisory_id,301)=0 and NOT EXISTS (SELECT 1 FROM system_package sp WHERE package.id = sp.package_id) limit 1000);
--- DELETE 1000 Time: 17861.151 ms (00:17.861)
