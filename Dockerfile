@@ -39,18 +39,18 @@ RUN if [ "$INSTALL_TOOLS" == "yes" ] ; then \
 
 ADD --chown=insights:root dev/kafka/secrets/ca.crt /opt/kafka/
 ADD --chown=insights:root dev/database/secrets/pgca.crt /opt/postgresql/
-ADD --chown=insights:root base                     /go/src/app/base
+ADD --chown=insights:root main.go                  /go/src/app/
+ADD --chown=insights:root turnpike                 /go/src/app/turnpike
+ADD --chown=insights:root platform                 /go/src/app/platform
+ADD --chown=insights:root scripts                  /go/src/app/scripts
+ADD --chown=insights:root vmaas_sync               /go/src/app/vmaas_sync
 ADD --chown=insights:root database_admin           /go/src/app/database_admin
 ADD --chown=insights:root docs                     /go/src/app/docs
 ADD --chown=insights:root evaluator                /go/src/app/evaluator
 ADD --chown=insights:root listener                 /go/src/app/listener
-ADD --chown=insights:root manager                  /go/src/app/manager
-ADD --chown=insights:root platform                 /go/src/app/platform
-ADD --chown=insights:root scripts                  /go/src/app/scripts
-ADD --chown=insights:root vmaas_sync               /go/src/app/vmaas_sync
 ADD --chown=insights:root tasks                    /go/src/app/tasks
-ADD --chown=insights:root turnpike                 /go/src/app/turnpike
-ADD --chown=insights:root main.go                   /go/src/app/
+ADD --chown=insights:root base                     /go/src/app/base
+ADD --chown=insights:root manager                  /go/src/app/manager
 
 RUN go build -v main.go
 
