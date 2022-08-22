@@ -278,6 +278,7 @@ objects:
           requests: {cpu: '${RES_REQUEST_CPU_FLOORIST}', memory: '${RES_REQUEST_MEM_FLOORIST}'}
 
     - name: vmaas-sync
+      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
       schedule: ${VMAAS_SYNC_SCHEDULE}
       suspend: ${{VMAAS_SYNC_SUSPEND}}
       concurrencyPolicy: Forbid
@@ -323,6 +324,7 @@ objects:
           requests: {cpu: '${RES_REQUEST_CPU_VMAAS_SYNC}', memory: '${RES_REQUEST_MEM_VMAAS_SYNC}'}
 
     - name: system-culling
+      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
       schedule: ${CULLING_SCHEDULE}
       suspend: ${{CULLING_SUSPEND}}
       concurrencyPolicy: Forbid
@@ -352,6 +354,7 @@ objects:
         - {name: ENABLE_SYSTEM_STALING, value: '${ENABLE_SYSTEM_STALING}'}
 
     - name: package-refresh
+      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
       schedule: ${PKG_REFRESH_SCHEDULE}
       suspend: ${{PKG_REFRESH_SUSPEND}}
       concurrencyPolicy: Forbid
@@ -378,6 +381,7 @@ objects:
                                                       key: vmaas-sync-database-password}}}
 
     - name: advisory-refresh
+      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
       schedule: ${ADVISORY_REFRESH_SCHEDULE}
       suspend: ${{ADVISORY_REFRESH_SUSPEND}}
       concurrencyPolicy: Forbid
@@ -405,6 +409,7 @@ objects:
         - {name: ENABLE_REFRESH_ADVISORY_CACHES, value: '${ENABLE_REFRESH_ADVISORY_CACHES}'}
 
     - name: delete-unused
+      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
       schedule: ${DELETE_UNUSED_SCHEDULE}
       suspend: ${{DELETE_UNUSED_SUSPEND}}
       concurrencyPolicy: Forbid
@@ -577,6 +582,7 @@ parameters:
 - {name: LOG_LEVEL_JOBS, value: debug}
 - {name: GOMAXPROCS_JOBS, value: '8'}
 - {name: DB_DEBUG_JOBS, value: 'false'}
+- {name: JOBS_TIMEOUT, value: '1800'}  # 30 min timeout for jobs
 # VMaaS sync
 - {name: VMAAS_SYNC_SCHEDULE, value: '*/5 * * * *'} # Cronjob schedule definition
 - {name: VMAAS_SYNC_SUSPEND, value: 'false'} # Disable cronjob execution
