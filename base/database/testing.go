@@ -446,3 +446,8 @@ func CheckBaselineDeleted(t *testing.T, baselineID int) {
 	assert.Nil(t, Db.Model(&models.SystemPlatform{}).Where("baseline_id = ?", baselineID).Count(&cntSystems).Error)
 	assert.Equal(t, 0, int(cntSystems))
 }
+
+func GetAllSystems(t *testing.T) (systems []*models.SystemPlatform) {
+	assert.Nil(t, Db.Model(&models.SystemPlatform{}).Order("rh_account_id").Scan(&systems).Error)
+	return systems
+}

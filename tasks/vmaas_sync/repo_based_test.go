@@ -20,11 +20,27 @@ func TestGetCurrentRepoBasedInventoryIDs(t *testing.T) {
 	orgID := "org_1"
 	inventoryAIDs, err := getCurrentRepoBasedInventoryIDs()
 	assert.Nil(t, err)
-	assert.Equal(t, []mqueue.InventoryAID{
+	assert.Equal(t, []mqueue.EvalData{
 		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID},
 		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1, OrgID: &orgID}},
 		inventoryAIDs)
 	resetLastEvalTimestamp(t)
+}
+
+func TestGetAllInventoryIDs(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	inventoryAIDs, err := getAllInventoryIDs()
+	systems := database.GetAllSystems(t)
+	assert.Nil(t, err)
+	assert.Equal(t, len(inventoryAIDs), len(systems))
+	for i, inv := range inventoryAIDs {
+		assert.NotNil(t, inv.OrgID)
+		assert.Equal(t, systems[i].InventoryID, inv.InventoryID)
+		assert.Equal(t, systems[i].RhAccountID, inv.RhAccountID)
+	}
 }
 
 func TestGetLastRepobasedEvalTms(t *testing.T) {
@@ -58,7 +74,7 @@ func TestGetRepoBasedInventoryIDs(t *testing.T) {
 	repos := []string{"repo1", "repo2"}
 	inventoryAIDs, err := getRepoBasedInventoryIDs(repos)
 	assert.Nil(t, err)
-	assert.Equal(t, []mqueue.InventoryAID{
+	assert.Equal(t, []mqueue.EvalData{
 		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID},
 		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1, OrgID: &orgID}},
 		inventoryAIDs)

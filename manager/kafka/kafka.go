@@ -15,7 +15,7 @@ var (
 )
 
 type inventoryIDsBatch struct {
-	InventoryIDs []mqueue.InventoryAID
+	InventoryIDs []mqueue.EvalData
 }
 
 func TryStartEvalQueue(createWriter mqueue.CreateWriter) {
@@ -36,7 +36,7 @@ func runBaselineRecalcLoop() {
 }
 
 func GetInventoryIDsToEvaluate(baselineID *int, accountID int,
-	configUpdated bool, updatedInventoryIDs []string) []mqueue.InventoryAID {
+	configUpdated bool, updatedInventoryIDs []string) []mqueue.EvalData {
 	if !enableBaselineChangeEval {
 		return nil
 	}
@@ -45,7 +45,7 @@ func GetInventoryIDsToEvaluate(baselineID *int, accountID int,
 		return nil // no evaluation needed for no config and inventory IDs updates
 	}
 
-	var inventoryAIDs []mqueue.InventoryAID
+	var inventoryAIDs []mqueue.EvalData
 	if !configUpdated { // we just need to evaluate updated inventory IDs
 		inventoryAIDs = inventoryIDs2InventoryAIDs(accountID, updatedInventoryIDs)
 	} else { // config updated - we need to update all baseline inventory IDs and the added ones too
@@ -57,16 +57,16 @@ func GetInventoryIDsToEvaluate(baselineID *int, accountID int,
 	return inventoryAIDs
 }
 
-func inventoryIDs2InventoryAIDs(accountID int, inventoryIDs []string) []mqueue.InventoryAID {
-	inventoryAIDs := make([]mqueue.InventoryAID, 0, len(inventoryIDs))
+func inventoryIDs2InventoryAIDs(accountID int, inventoryIDs []string) []mqueue.EvalData {
+	inventoryAIDs := make([]mqueue.EvalData, 0, len(inventoryIDs))
 	for _, v := range inventoryIDs {
-		inventoryAIDs = append(inventoryAIDs, mqueue.InventoryAID{InventoryID: v, RhAccountID: accountID})
+		inventoryAIDs = append(inventoryAIDs, mqueue.EvalData{InventoryID: v, RhAccountID: accountID})
 	}
 	return inventoryAIDs
 }
 
-func getInventoryIDs(baselineID *int, accountID int, inventoryIDs []string) []mqueue.InventoryAID {
-	var inventoryAIDs []mqueue.InventoryAID
+func getInventoryIDs(baselineID *int, accountID int, inventoryIDs []string) []mqueue.EvalData {
+	var inventoryAIDs []mqueue.EvalData
 	query := database.Db.Model(&models.SystemPlatform{}).
 		Select("inventory_id, rh_account_id").
 		Where(map[string]interface{}{"rh_account_id": accountID, "baseline_id": baselineID})
@@ -84,7 +84,7 @@ func getInventoryIDs(baselineID *int, accountID int, inventoryIDs []string) []mq
 	return inventoryAIDs
 }
 
-func sendInventoryIDs(inventoryIDs mqueue.InventoryAIDs) {
+func sendInventoryIDs(inventoryIDs mqueue.EvalDataSlice) {
 	if len(inventoryIDs) == 0 {
 		return
 	}
@@ -98,7 +98,7 @@ func sendInventoryIDs(inventoryIDs mqueue.InventoryAIDs) {
 
 // Send all account systems of given baseline to evaluation.
 // Evaluate all account systems with no baseline if baselineID is nil (used for deleted baseline).
-func EvaluateBaselineSystems(inventoryAIDs []mqueue.InventoryAID) {
+func EvaluateBaselineSystems(inventoryAIDs []mqueue.EvalData) {
 	if !enableBaselineChangeEval {
 		return
 	}
