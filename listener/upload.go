@@ -388,26 +388,42 @@ func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int64, added int64,
 	if len(repos) == 0 {
 		return repoIDs, 0, nil
 	}
-	repoObjs := make(models.RepoSlice, len(repos))
-	for i, repo := range repos {
-		repoObjs[i] = models.Repo{Name: repo}
+	repoIDs = make([]int, 0, len(repos))
+
+	var existingRepos models.RepoSlice
+	err = tx.Model(&models.Repo{}).Where("name IN (?)", repos).Find(&existingRepos).Error
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "unable to load repos")
 	}
 
-	txOnConflict := tx.Clauses(clause.OnConflict{
-		DoNothing: true,
-	})
-	err = txOnConflict.Create(repoObjs).Error
-	if err != nil {
-		return nil, 0, errors.Wrap(err, "unable to update repos")
+	inDBIDs := make(map[string]int)
+	for _, er := range existingRepos {
+		inDBIDs[er.Name] = er.ID
 	}
-	added = txOnConflict.RowsAffected
+
+	toStore := make(models.RepoSlice, 0, len(repos))
+	for _, repo := range repos {
+		if id, has := inDBIDs[repo]; has {
+			repoIDs = append(repoIDs, id)
+		} else {
+			toStore = append(toStore, models.Repo{Name: repo})
+		}
+	}
+
+	if len(toStore) > 0 {
+		txOnConflict := tx.Clauses(clause.OnConflict{
+			DoNothing: true,
+		})
+		err = txOnConflict.Create(&toStore).Error
+		if err != nil {
+			return nil, 0, errors.Wrap(err, "unable to update repos")
+		}
+		added = txOnConflict.RowsAffected
+		for _, repo := range toStore {
+			repoIDs = append(repoIDs, repo.ID)
+		}
+	}
 	reposAddedCnt.Add(float64(added))
-
-	err = tx.Model(&models.Repo{}).Where("name IN (?)", repos).
-		Pluck("id", &repoIDs).Error
-	if err != nil {
-		return nil, 0, errors.Wrap(err, "unable to load repos IDs")
-	}
 
 	return repoIDs, added, nil
 }
