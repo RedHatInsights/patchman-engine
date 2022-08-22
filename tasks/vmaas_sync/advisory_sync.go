@@ -224,7 +224,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 		return errors.WithMessage(err, "Parsing advisories")
 	}
 
-	if advisories == nil || len(advisories) == 0 {
+	if len(advisories) == 0 {
 		return nil
 	}
 
