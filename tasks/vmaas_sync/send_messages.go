@@ -14,7 +14,7 @@ func SendReevaluationMessages() error {
 		return nil
 	}
 
-	var inventoryAIDs mqueue.InventoryAIDs
+	var inventoryAIDs mqueue.EvalDataSlice
 	var err error
 
 	if enabledRepoBasedReeval {
@@ -36,8 +36,8 @@ func SendReevaluationMessages() error {
 	return nil
 }
 
-func getAllInventoryIDs() ([]mqueue.InventoryAID, error) {
-	var inventoryAIDs []mqueue.InventoryAID
+func getAllInventoryIDs() ([]mqueue.EvalData, error) {
+	var inventoryAIDs []mqueue.EvalData
 	err := database.Db.Table("system_platform sp").
 		Select("sp.inventory_id, sp.rh_account_id, ra.org_id").
 		Joins("JOIN rh_account ra on ra.id = sp.rh_account_id").

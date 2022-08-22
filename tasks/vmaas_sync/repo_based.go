@@ -14,7 +14,7 @@ const LastEvalRepoBased = "last_eval_repo_based"
 const LastSync = "last_sync"
 
 // nolint: gocritic
-func getCurrentRepoBasedInventoryIDs() ([]mqueue.InventoryAID, error) {
+func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {
 	lastRepoBaseEval, err := database.GetTimestampKVValueStr(LastEvalRepoBased)
 	if err != nil {
 		return nil, err
@@ -38,8 +38,8 @@ func getCurrentRepoBasedInventoryIDs() ([]mqueue.InventoryAID, error) {
 	return inventoryAIDs, nil
 }
 
-func getRepoBasedInventoryIDs(repos []string) ([]mqueue.InventoryAID, error) {
-	var ids []mqueue.InventoryAID
+func getRepoBasedInventoryIDs(repos []string) ([]mqueue.EvalData, error) {
+	var ids []mqueue.EvalData
 	if len(repos) == 0 {
 		return ids, nil
 	}

@@ -21,25 +21,19 @@ type PlatformEvent struct {
 	RequestIDs  []string                `json:"request_ids,omitempty"`
 }
 
-type InventoryAID struct {
-	InventoryID string
-	RhAccountID int
-	OrgID       *string
-}
-
 type EvalData struct {
-	RhAccountID int
 	InventoryID string
+	RhAccountID int
 	RequestID   string
 	OrgID       *string
 }
 
 type PlatformEvents []PlatformEvent
-type InventoryAIDs []InventoryAID
 type EvalDataSlice []EvalData
 
-type groupedData map[int][]string
-type orgIDMap map[int]*string
+type accountInventories map[int][]string
+type accountRequests map[int][]string
+type orgIDs map[int]*string
 
 func (event *PlatformEvent) createKafkaMessage() (KafkaMessage, error) {
 	data, err := json.Marshal(event) //nolint:gosec
@@ -75,7 +69,7 @@ func writePlatformEvents(ctx context.Context, w Writer, events ...PlatformEvent)
 	return w.WriteMessages(ctx, msgs...)
 }
 
-func batchSize(grouped groupedData) int {
+func batchSize(grouped map[int][]string) int {
 	// compute how many batches we will create
 	var batches = 0
 	for _, ev := range grouped {
@@ -84,89 +78,39 @@ func batchSize(grouped groupedData) int {
 	return batches
 }
 
-func (data *InventoryAIDs) groupData() (int, *groupedData, *orgIDMap) {
+func (evals *EvalDataSlice) getAccountEvalData() (int, accountInventories, accountRequests, orgIDs) {
 	// group systems by account
-	grouped := groupedData{}
-	orgIDs := orgIDMap{}
-	for _, aid := range *data {
-		grouped[aid.RhAccountID] = append(grouped[aid.RhAccountID], aid.InventoryID)
-		if _, has := orgIDs[aid.RhAccountID]; !has {
-			orgIDs[aid.RhAccountID] = aid.OrgID
+	invs := accountInventories{}
+	reqs := accountRequests{}
+	orgs := orgIDs{}
+	for _, e := range *evals {
+		invs[e.RhAccountID] = append(invs[e.RhAccountID], e.InventoryID)
+		reqs[e.RhAccountID] = append(reqs[e.RhAccountID], e.RequestID)
+		if _, has := orgs[e.RhAccountID]; !has {
+			orgs[e.RhAccountID] = e.OrgID
 		}
 	}
-	return batchSize(grouped), &grouped, &orgIDs
+	return batchSize(invs), invs, reqs, orgs
 }
 
-func (data *EvalDataSlice) groupData() (int, *groupedData, *groupedData, *orgIDMap) {
-	// group systems by account
-	groupedSys := groupedData{}
-	groupedReqID := groupedData{}
-	orgIDMap := orgIDMap{}
-	// accountInfo := groupedAccountInfo{}
-	for _, d := range *data {
-		groupedSys[d.RhAccountID] = append(groupedSys[d.RhAccountID], d.InventoryID)
-		groupedReqID[d.RhAccountID] = append(groupedReqID[d.RhAccountID], d.RequestID)
-		if _, has := orgIDMap[d.RhAccountID]; !has {
-			orgIDMap[d.RhAccountID] = d.OrgID
-		}
-	}
-	return batchSize(groupedSys), &groupedSys, &groupedReqID, &orgIDMap
-}
-
-func (data *InventoryAIDs) WriteEvents(ctx context.Context, w Writer) error {
-	batches, groupedSys, orgIDs := data.groupData()
+func (evals *EvalDataSlice) WriteEvents(ctx context.Context, w Writer) error {
+	batches, accInvs, reqs, orgs := evals.getAccountEvalData()
 	// create events, per BatchSize of systems from one account
 	now := types.Rfc3339Timestamp(time.Now())
 	events := make(PlatformEvents, 0, batches)
-	for acc, ev := range *groupedSys {
-		for start := 0; start < len(ev); start += BatchSize {
+	for acc, invs := range accInvs {
+		for start := 0; start < len(invs); start += BatchSize {
 			end := start + BatchSize
-			if end > len(ev) {
-				end = len(ev)
+			if end > len(invs) {
+				end = len(invs)
 			}
 			events = append(events, PlatformEvent{
-				Timestamp: &now,
-				AccountID: acc,
-				SystemIDs: ev[start:end],
-				OrgID:     (*orgIDs)[acc],
+				Timestamp:  &now,
+				AccountID:  acc,
+				SystemIDs:  invs[start:end],
+				RequestIDs: reqs[acc][start:end],
+				OrgID:      orgs[acc],
 			})
-		}
-	}
-	// write events to queue
-	err := writePlatformEvents(ctx, w, events...)
-	return err
-}
-
-func (data *EvalDataSlice) WriteEvents(ctx context.Context, w Writer) error {
-	batches, groupedSys, groupedReqID, orgIDMap := data.groupData()
-	groupedSysVal := groupedData{}
-	groupedReqIDVal := groupedData{}
-	if groupedSys != nil {
-		groupedSysVal = *groupedSys
-	}
-	if groupedReqID != nil {
-		groupedReqIDVal = *groupedReqID
-	}
-	// create events, per BatchSize of systems from one account
-	now := types.Rfc3339Timestamp(time.Now())
-	events := make(PlatformEvents, 0, batches)
-	for acc, orgID := range *orgIDMap {
-		nEvents := len(groupedSysVal[acc])
-		for start := 0; start < nEvents; start += BatchSize {
-			end := start + BatchSize
-			if end > nEvents {
-				end = nEvents
-			}
-			events = append(
-				events,
-				PlatformEvent{
-					Timestamp:  &now,
-					AccountID:  acc,
-					SystemIDs:  groupedSysVal[acc][start:end],
-					OrgID:      orgID,
-					RequestIDs: groupedReqIDVal[acc][start:end],
-				},
-			)
 		}
 	}
 	// write events to queue
