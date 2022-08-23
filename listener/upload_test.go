@@ -296,3 +296,65 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 
 	deleteData(t)
 }
+
+// nolint: funlen
+func TestStoreOrUpdateSysPlatform(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	var oldCount, newCount int
+	var nextval, currval int
+	database.Db.Model(&models.SystemPlatform{}).Select("count(*)").Find(&oldCount)
+	database.Db.Raw("select nextval('system_platform_id_seq')").Find(&nextval)
+
+	colsToUpdate := []string{"vmaas_json", "json_checksum", "reporter_id"}
+	json := "this_is_json"
+	inStore := models.SystemPlatform{
+		InventoryID: "99990000-0000-0000-0000-000000000001",
+		RhAccountID: 1,
+		VmaasJSON:   &json,
+		DisplayName: "display_name",
+	}
+	// insert new row
+	err := storeOrUpdateSysPlatform(database.Db, &inStore, colsToUpdate)
+	assert.Nil(t, err)
+
+	var outStore models.SystemPlatform
+	database.Db.Model(models.SystemPlatform{}).Find(&outStore, inStore.ID)
+	defer database.Db.Model(models.SystemPlatform{}).Delete(outStore)
+
+	assert.Equal(t, inStore.InventoryID, outStore.InventoryID)
+	assert.Equal(t, inStore.RhAccountID, outStore.RhAccountID)
+	assert.Equal(t, *inStore.VmaasJSON, *outStore.VmaasJSON)
+
+	updateJSON := "updated_json"
+	reporter := 2
+	inUpdate := outStore
+	inUpdate.VmaasJSON = &updateJSON
+	inUpdate.JSONChecksum = &updateJSON
+	inUpdate.ReporterID = &reporter
+	inUpdate.DisplayName = "should_not_be_updated"
+	// update row
+	err = storeOrUpdateSysPlatform(database.Db, &inUpdate, colsToUpdate)
+	assert.Nil(t, err)
+
+	var outUpdate models.SystemPlatform
+	database.Db.Model(models.SystemPlatform{}).Find(&outUpdate, inUpdate.ID)
+	assert.Equal(t, inUpdate.InventoryID, outUpdate.InventoryID)
+	assert.Equal(t, inUpdate.RhAccountID, outUpdate.RhAccountID)
+	assert.Equal(t, *inUpdate.VmaasJSON, *outUpdate.VmaasJSON)
+	assert.Equal(t, *inUpdate.JSONChecksum, *outUpdate.JSONChecksum)
+	assert.Equal(t, *inUpdate.ReporterID, *outUpdate.ReporterID)
+	// it should update the row
+	assert.Equal(t, outStore.ID, outUpdate.ID)
+	// DisplayName is not in colsToUpdate, it should not be updated
+	assert.Equal(t, outStore.DisplayName, outUpdate.DisplayName)
+
+	// make sure we are not creating gaps in id sequences
+	database.Db.Model(&models.SystemPlatform{}).Select("count(*)").Find(&newCount)
+	database.Db.Raw("select currval('system_platform_id_seq')").Find(&currval)
+	countInc := newCount - oldCount
+	maxInc := currval - nextval
+	assert.Equal(t, countInc, maxInc)
+}

@@ -304,6 +304,10 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		return nil, errors.Wrap(err, "Unable to save or update system in database")
 	}
 
+	if err := storeOrUpdateSysPlatform(tx, &systemPlatform, colsToUpdate); err != nil {
+		return nil, errors.Wrap(err, "Unable to save or update system in database")
+	}
+
 	if shouldUpdateRepos {
 		// We also don't need to update repos if vmaas_json haven't changed
 		addedRepos, addedSysRepos, deletedSysRepos, err = updateRepos(tx, host.SystemProfile, accountID,
@@ -320,6 +324,24 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		"addedRepos", addedRepos, "addedSysRepos", addedSysRepos, "deletedSysRepos", deletedSysRepos).
 		Info("System created or updated successfully")
 	return &systemPlatform, nil
+}
+
+func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsToUpdate []string) error {
+	var err error
+	if errSelect := tx.Where("rh_account_id = ? AND inventory_id = ?", system.RhAccountID, system.InventoryID).
+		Select("id").Find(system).Error; err != nil {
+		utils.Log("err", errSelect).Warn("couldn't find system for update")
+	}
+
+	if system.ID != 0 {
+		// update system
+		err = tx.Select(colsToUpdate).Updates(system).Error
+		return errors.Wrap(err, "unable to update system_platform")
+	}
+	// insert system
+	err = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
+		Save(system).Error
+	return errors.Wrap(err, "unable to insert to system_platform")
 }
 
 func getReporterID(reporter string) *int {
