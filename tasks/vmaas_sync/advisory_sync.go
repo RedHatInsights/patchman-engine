@@ -228,11 +228,44 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 		return nil
 	}
 
-	tx := database.OnConflictUpdate(database.Db, "name", "description", "synopsis", "summary", "solution",
-		"public_date", "modified_date", "url", "advisory_type_id", "severity_id", "cve_list", "package_data",
-		"reboot_required", "release_versions", "synced")
+	var existingAdvisories models.AdvisoryMetadataSlice
+	names := make([]string, 0, len(advisories))
+	for _, a := range advisories {
+		names = append(names, a.Name)
+	}
 
-	err = tx.CreateInBatches(&advisories, SyncBatchSize).Error
+	updateCols := []string{"description", "synopsis", "summary", "solution",
+		"public_date", "modified_date", "url", "advisory_type_id", "severity_id", "cve_list", "package_data",
+		"reboot_required", "release_versions", "synced"}
+
+	tx := database.Db.Table("advisory_metadata")
+	errSelect := tx.Where("name IN ?", names).Find(&existingAdvisories).Error
+	if errSelect != nil {
+		utils.Log("err", errSelect).Warn("couldn't find advisory_metadata for update")
+	}
+
+	inDBIDs := make(map[string]int, len(existingAdvisories))
+	for _, ea := range existingAdvisories {
+		inDBIDs[ea.Name] = ea.ID
+	}
+	toUpdate := make(models.AdvisoryMetadataSlice, 0, len(existingAdvisories))
+	toStore := make(models.AdvisoryMetadataSlice, 0, len(advisories)-len(existingAdvisories))
+	for _, a := range advisories {
+		if id, has := inDBIDs[a.Name]; has {
+			a.ID = id
+			toUpdate = append(toUpdate, a)
+		} else {
+			toStore = append(toStore, a)
+		}
+	}
+	if len(toUpdate) > 0 {
+		if err := tx.Updates(toUpdate).Error; err != nil {
+			utils.Log("err", err).Error("couldn't update advisory_metadata")
+		}
+	}
+
+	tx = database.OnConflictUpdate(database.Db, "name", updateCols...)
+	err = tx.CreateInBatches(&toStore, SyncBatchSize).Error
 	if err != nil {
 		return errors.WithMessage(err, "Storing advisories")
 	}
