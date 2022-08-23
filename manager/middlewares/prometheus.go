@@ -15,9 +15,17 @@ var serviceErrorCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Name:      "dependency_call",
 }, []string{"name", "status"})
 
+var requestDurations = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	Help:      "Request Durations",
+	Namespace: "patchman_engine",
+	Subsystem: "manager",
+	Name:      "request_durations",
+	Buckets:   []float64{1, 1.5, 1.75, 2, 2.5, 3, 3.5, 4},
+}, []string{"endpoint"})
+
 // Create and configure Prometheus middleware to expose metrics
 func Prometheus() *ginprometheus.Prometheus {
-	prometheus.MustRegister(serviceErrorCnt)
+	prometheus.MustRegister(serviceErrorCnt, requestDurations)
 
 	p := ginprometheus.NewPrometheus("patchman_engine")
 	p.MetricsPath = utils.Cfg.MetricsPath

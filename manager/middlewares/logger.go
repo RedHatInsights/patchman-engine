@@ -36,5 +36,7 @@ func RequestResponseLogger() gin.HandlerFunc {
 		} else {
 			utils.Log(fields...).Error("request")
 		}
+
+		utils.ObserveSecondsSince(tStart, requestDurations.WithLabelValues(c.Request.Method+c.Request.URL.String()))
 	}
 }
