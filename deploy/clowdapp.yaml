@@ -250,33 +250,6 @@ objects:
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_RECALC}', memory: '${RES_REQUEST_MEM_EVALUATOR_RECALC}'}
 
     jobs:
-    - name: floorist
-      schedule: ${FLOORIST_SCHEDULE}
-      suspend: ${{FLOORIST_SUSPEND}}
-      concurrencyPolicy: Forbid
-      podSpec:
-        image: ${FLOORIST_IMAGE}:${FLOORIST_IMAGE_TAG}
-        env:
-        - {name: AWS_BUCKET, valueFrom: {secretKeyRef: {name: '${FLOORIST_BUCKET_SECRET_NAME}',
-                                                        key: bucket}}}
-        - {name: AWS_REGION, valueFrom: {secretKeyRef: {name: '${FLOORIST_BUCKET_SECRET_NAME}',
-                                                        key: aws_region}}}
-        - {name: AWS_ENDPOINT, valueFrom: {secretKeyRef: {name: '${FLOORIST_BUCKET_SECRET_NAME}',
-                                                          key: endpoint}}}
-        - {name: AWS_ACCESS_KEY_ID, valueFrom: {secretKeyRef: {name: '${FLOORIST_BUCKET_SECRET_NAME}',
-                                                               key: aws_access_key_id}}}
-        - {name: AWS_SECRET_ACCESS_KEY, valueFrom: {secretKeyRef: {name: '${FLOORIST_BUCKET_SECRET_NAME}',
-                                                                   key: aws_secret_access_key}}}
-        - {name: FLOORPLAN_FILE, value: '/tmp/floorplan/floorplan.yaml'}
-        - {name: LOGLEVEL, value: '${FLOORIST_LOGLEVEL}'}
-        volumeMounts:
-        - {name: floorplan-volume, mountPath: '/tmp/floorplan'}
-        volumes:
-        - {name: floorplan-volume, configMap: {name: floorplan}}
-        resources:
-          limits: {cpu: '${RES_LIMIT_CPU_FLOORIST}', memory: '${RES_LIMIT_MEM_FLOORIST}'}
-          requests: {cpu: '${RES_REQUEST_CPU_FLOORIST}', memory: '${RES_REQUEST_MEM_FLOORIST}'}
-
     - name: vmaas-sync
       schedule: ${VMAAS_SYNC_SCHEDULE}
       suspend: ${{VMAAS_SYNC_SUSPEND}}
@@ -457,12 +430,18 @@ objects:
     testing:
       iqePlugin: patchman
 
-- apiVersion: v1
-  kind: ConfigMap
+- apiVersion: metrics.console.redhat.com/v1alpha1
+  kind: FloorPlan
   metadata:
-    name: floorplan
-  data:
-    floorplan.yaml: |
+    name: patchman
+  spec:
+    database:
+      secretName: ${FLOORIST_DB_SECRET_NAME}
+    objectStore:
+      secretName: ${FLOORIST_BUCKET_SECRET_NAME}
+    suspend: ${{FLOORIST_SUSPEND}}
+    logLevel: ${FLOORIST_LOGLEVEL}
+    queries:
       - prefix: insights/patch/advisories
         query: >-
           SELECT ra.name AS rh_account_id, am.name AS advisory_name, at.name AS advisory_type,
@@ -647,13 +626,7 @@ parameters:
 - {name: ENABLE_TURNPIKE_AUTH, value: 'false'} # Enable Turnpike authentication for internal API (manual sync, re-calc)
 
 # Floorist parameters
-- {name: FLOORIST_SCHEDULE, value: '50 0 * * *', required: true} # Cronjob schedule definition
 - {name: FLOORIST_SUSPEND, value: 'true', required: true} # Disable Floorist cronjob execution
-- {name: FLOORIST_IMAGE, value: quay.io/cloudservices/floorist} # Floorist image name
-- {name: FLOORIST_IMAGE_TAG, value: latest, required: true} # Floorist Image tag
 - {name: FLOORIST_BUCKET_SECRET_NAME, value: dummy-secret, required: true} # Bucket secret name
+- {name: FLOORIST_DB_SECRET_NAME, value: patchman-db} # DB secret name
 - {name: FLOORIST_LOGLEVEL, value: INFO} # Floorist loglevel config
-- {name: RES_LIMIT_CPU_FLOORIST, value: 100m}
-- {name: RES_REQUEST_CPU_FLOORIST, value: 50m}
-- {name: RES_LIMIT_MEM_FLOORIST, value: 200Mi}
-- {name: RES_REQUEST_MEM_FLOORIST, value: 100Mi}
