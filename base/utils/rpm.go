@@ -99,10 +99,21 @@ func (n Nevra) EVRAString() string {
 	return n.EVRAStringE(false)
 }
 
+func (n Nevra) EVRACmp(other *Nevra) int {
+	ret := rpm.LabelCompare(
+		&rpm.EVR{Epoch: fmt.Sprint(n.Epoch), Version: n.Version, Release: n.Release},
+		&rpm.EVR{Epoch: fmt.Sprint(other.Epoch), Version: other.Version, Release: other.Release},
+	)
+	if ret == 0 {
+		ret = strings.Compare(n.Arch, other.Arch)
+	}
+	return ret
+}
+
 func (n Nevra) Cmp(other *Nevra) int {
 	ret := strings.Compare(n.Name, other.Name)
 	if ret != 0 {
 		return ret
 	}
-	return rpm.Vercmp(n.EVRAStringE(true), other.EVRAStringE(true))
+	return n.EVRACmp(other)
 }
