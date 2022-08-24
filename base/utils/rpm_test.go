@@ -33,6 +33,25 @@ func TestNevraParse3(t *testing.T) {
 	assert.Equal(t, "", nevra.Release)
 }
 
+func TestNevraParse4(t *testing.T) {
+	nevra1, err := ParseNevra("rh-ruby24-rubygems-2.6.14.4-92.el7.noarch")
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "rh-ruby24-rubygems", nevra1.Name)
+	assert.Equal(t, "2.6.14.4", nevra1.Version)
+	assert.Equal(t, 0, nevra1.Epoch)
+	assert.Equal(t, "92.el7", nevra1.Release)
+
+	nevra2, err := ParseNevra("rh-ruby24-rubygems-2.6.14-90.el7.noarch")
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "rh-ruby24-rubygems", nevra2.Name)
+	assert.Equal(t, "2.6.14", nevra2.Version)
+	assert.Equal(t, 0, nevra2.Epoch)
+	assert.Equal(t, "90.el7", nevra2.Release)
+
+	cmp := nevra1.Cmp(nevra2)
+	assert.Equal(t, 1, cmp)
+}
+
 func TestNevraCmp(t *testing.T) {
 	ff0, err := ParseNevra("firefox-76.0.1-1.fc31.x86_64")
 	assert.NoError(t, err)
