@@ -48,7 +48,7 @@ func syncPackages(syncStart time.Time, modifiedSince *string) error {
 }
 
 type nameIDandEvra struct {
-	ID   int
+	ID   int64
 	Evra string
 }
 
@@ -243,7 +243,7 @@ func storeOrUpdate(tx *gorm.DB, pkgs models.PackageSlice) error {
 
 	nameIDEVRAs := make([][]interface{}, 0, len(pkgs))
 	toStore := make(models.PackageSlice, 0, len(pkgs))
-	updateIDs := make(map[nameIDandEvra]int)
+	updateIDs := make(map[nameIDandEvra]int64)
 	for _, pkg := range pkgs {
 		nameIDEVRAs = append(nameIDEVRAs, []interface{}{pkg.NameID, pkg.EVRA})
 	}
@@ -302,7 +302,7 @@ func getPackageFromPkgListItem(pkgListItem vmaas.PkgListItem, nameIDs map[string
 	descriptionStr := pkgListItem.Description
 	summaryStr := pkgListItem.Summary
 	pkg := models.Package{
-		NameID:          nameIDs[nevraPtr.Name],
+		NameID:          int64(nameIDs[nevraPtr.Name]),
 		EVRA:            nevraPtr.EVRAString(),
 		DescriptionHash: stringPtr2Hash(&descriptionStr),
 		SummaryHash:     stringPtr2Hash(&summaryStr),

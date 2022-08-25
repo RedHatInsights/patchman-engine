@@ -87,12 +87,12 @@ func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) models.
 			if err != nil {
 				utils.Log("err", err.Error(), "nevra", nevra).Error("unknown package name insert failed")
 			}
-			pkg.NameID = pkgName.ID
+			pkg.NameID = int64(pkgName.ID)
 			if pkg.NameID == 0 {
 				// insert conflict, it did not return ID
 				// try to get ID from package_name table
 				tx.Where("name = ?", parsed.Name).First(&pkgName)
-				pkg.NameID = pkgName.ID
+				pkg.NameID = int64(pkgName.ID)
 			}
 		}
 		packages = append(packages, pkg)
@@ -182,9 +182,9 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform,
 	vmaasData *vmaas.UpdatesV2Response) ([]namedPackage, error) {
 	updates := vmaasData.GetUpdateList()
 	numUpdates := len(updates)
-	packageIDs := make([]int, 0, numUpdates)
+	packageIDs := make([]int64, 0, numUpdates)
 	packages := make([]namedPackage, 0, numUpdates)
-	id2index := map[int]int{}
+	id2index := map[int64]int{}
 	i := 0
 	for nevra := range updates {
 		pkgMeta, ok := memoryPackageCache.GetByNevra(nevra)
@@ -274,7 +274,7 @@ func createSystemPackage(nevra string,
 
 	systemPackage := models.SystemPackage{
 		RhAccountID: system.RhAccountID,
-		SystemID:    system.ID,
+		SystemID:    int64(system.ID),
 		PackageID:   currentNamedPackage.PackageID,
 		UpdateData:  updateDataJSON,
 		NameID:      currentNamedPackage.NameID,
@@ -349,7 +349,7 @@ func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList)
 
 func deleteOldSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 	packagesByNEVRA *map[string]namedPackage) error {
-	pkgIds := make([]int, 0, len(*packagesByNEVRA))
+	pkgIds := make([]int64, 0, len(*packagesByNEVRA))
 	for _, pkg := range *packagesByNEVRA {
 		pkgIds = append(pkgIds, pkg.PackageID)
 	}
@@ -363,9 +363,9 @@ func deleteOldSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 }
 
 type namedPackage struct {
-	NameID     int
+	NameID     int64
 	Name       string
-	PackageID  int
+	PackageID  int64
 	EVRA       string
 	WasStored  bool
 	UpdateData []byte

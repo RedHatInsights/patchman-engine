@@ -84,12 +84,12 @@ func (PackageName) TableName() string {
 }
 
 type Package struct {
-	ID              int `json:"id" gorm:"primary_key"`
-	NameID          int
+	ID              int64 `json:"id" gorm:"primary_key"`
+	NameID          int64
 	EVRA            string
 	DescriptionHash *[]byte
 	SummaryHash     *[]byte
-	AdvisoryID      *int
+	AdvisoryID      *int64
 	Synced          bool
 }
 
@@ -100,12 +100,12 @@ func (Package) TableName() string {
 type PackageSlice []Package
 
 type SystemPackage struct {
-	RhAccountID int `gorm:"primary_key"`
-	SystemID    int `gorm:"primary_key"`
-	PackageID   int `gorm:"primary_key"`
+	RhAccountID int   `gorm:"primary_key"`
+	SystemID    int64 `gorm:"primary_key"`
+	PackageID   int64 `gorm:"primary_key"`
 	// Will contain json in form of [{ "evra": "...", "advisory": "..."}]
 	UpdateData []byte
-	NameID     int `gorm:"primary_key"`
+	NameID     int64 `gorm:"primary_key"`
 }
 
 func (SystemPackage) TableName() string {
