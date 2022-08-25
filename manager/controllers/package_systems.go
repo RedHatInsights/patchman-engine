@@ -18,6 +18,7 @@ var PackageSystemsOpts = ListOpts{
 	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
 	DefaultFilters: map[string]FilterData{},
 	DefaultSort:    "id",
+	StableSort:     "id",
 	SearchFields:   []string{"sp.display_name"},
 	TotalFunc:      CountRows,
 }
@@ -98,7 +99,7 @@ func packageSystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
 	return query, meta, links, err
 }
 
-//nolint: dupl
+// nolint: dupl
 // @Summary Show me all my systems which have a package installed
 // @Description  Show me all my systems which have a package installed
 // @ID packageSystems
@@ -141,7 +142,7 @@ func PackageSystemsListHandler(c *gin.Context) {
 	})
 }
 
-//nolint: dupl
+// nolint: dupl
 // @Summary Show me all my systems which have a package installed
 // @Description  Show me all my systems which have a package installed
 // @ID packageSystemsIDs

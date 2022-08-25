@@ -18,6 +18,7 @@ var BaselineSystemOpts = ListOpts{
 	Fields:         BaselineSystemFields,
 	DefaultFilters: map[string]FilterData{},
 	DefaultSort:    "-display_name",
+	StableSort:     "id",
 	SearchFields:   []string{"sp.display_name"},
 	TotalFunc:      CountRows,
 }

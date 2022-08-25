@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-//nolint: lll
+// nolint: lll
 type SystemPackagesAttrs struct {
 	Name        string `json:"name" csv:"name" query:"pn.name" gorm:"column:name"`
 	EVRA        string `json:"evra" csv:"evra" query:"p.evra" gorm:"column:evra"`
@@ -39,6 +39,7 @@ var SystemPackagesOpts = ListOpts{
 	Fields:         SystemPackagesFields,
 	DefaultFilters: nil,
 	DefaultSort:    "name",
+	StableSort:     "package_id",
 	SearchFields:   []string{"pn.name", "sum.value"},
 	TotalFunc:      CountRows,
 }

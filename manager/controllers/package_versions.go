@@ -19,12 +19,14 @@ var PackageVersionsOpts = ListOpts{
 	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
 	DefaultFilters: map[string]FilterData{},
 	DefaultSort:    "evra",
+	StableSort:     "advisory_id", // can't use p.id or p.name_id since api shows all evras for single pkg
 	SearchFields:   []string{"p.evra"},
 	TotalFunc:      CountRows,
 }
 
 type PackageVersionItem struct {
-	Evra string `json:"evra" csv:"evra" query:"evra" gorm:"column:evra"`
+	AdvisoryID int    `json:"-" csv:"-" gorm:"column:advisory_id"` // needed for stable sort
+	Evra       string `json:"evra" csv:"evra" query:"evra" gorm:"column:evra"`
 }
 
 type PackageVersionsResponse struct {
@@ -40,8 +42,7 @@ func packagesNameID(pkgName string) *gorm.DB {
 
 func packageVersionsQuery(acc int, packageNameIDs []int) *gorm.DB {
 	query := database.SystemPackages(database.Db, acc).
-		Select(PackageVersionSelect).
-		Distinct("p.evra").
+		Distinct(PackageVersionSelect).
 		Where("sp.stale = false").
 		Where("spkg.name_id in (?)", packageNameIDs)
 	return query

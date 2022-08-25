@@ -28,6 +28,7 @@ var AdvisorySystemOpts = ListOpts{
 		},
 	},
 	DefaultSort:  "-last_upload",
+	StableSort:   "sp.id",
 	SearchFields: []string{"sp.display_name"},
 	TotalFunc:    CountRows,
 }

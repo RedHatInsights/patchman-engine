@@ -21,6 +21,7 @@ var SystemAdvisoriesOpts = ListOpts{
 	Fields:         SystemAdvisoriesFields,
 	DefaultFilters: nil,
 	DefaultSort:    "-public_date",
+	StableSort:     "id",
 	SearchFields:   []string{"am.name", "am.synopsis"},
 	TotalFunc:      CountRows,
 }
