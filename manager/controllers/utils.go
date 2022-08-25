@@ -54,7 +54,7 @@ func LogAndRespNotFound(c *gin.Context, err error, respMsg string) {
 
 // nolint: prealloc
 func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
-	defaultSort string) (*gorm.DB, []string, error) {
+	defaultSort, stableSort string) (*gorm.DB, []string, error) {
 	query := c.DefaultQuery("sort", defaultSort)
 	fields := strings.Split(query, ",")
 	var appliedFields []string
@@ -78,6 +78,7 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 		}
 		appliedFields = append(appliedFields, enteredField)
 	}
+	tx.Order(stableSort + " ASC")
 	return tx, appliedFields, nil
 }
 
@@ -134,6 +135,7 @@ type ListOpts struct {
 	Fields         database.AttrMap
 	DefaultFilters map[string]FilterData
 	DefaultSort    string
+	StableSort     string
 	SearchFields   []string
 	TotalFunc      totalFuncType
 }
@@ -213,7 +215,7 @@ func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, op
 		return nil, nil, nil, err
 	}
 
-	tx, sortFields, err := ApplySort(c, tx, opts.Fields, opts.DefaultSort)
+	tx, sortFields, err := ApplySort(c, tx, opts.Fields, opts.DefaultSort, opts.StableSort)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
 		return nil, nil, nil, errors.Wrap(err, "invalid sort")

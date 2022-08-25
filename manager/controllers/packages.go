@@ -15,6 +15,7 @@ var PackagesOpts = ListOpts{
 	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
 	DefaultFilters: map[string]FilterData{},
 	DefaultSort:    "name",
+	StableSort:     "pn.id",
 	SearchFields:   []string{"pn.name", "pn.summary"},
 	TotalFunc:      CountRows,
 }

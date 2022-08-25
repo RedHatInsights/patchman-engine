@@ -16,6 +16,7 @@ var AdvisoriesOpts = ListOpts{
 	Fields:         AdvisoriesFields,
 	DefaultFilters: nil,
 	DefaultSort:    "-public_date",
+	StableSort:     "id",
 	SearchFields:   []string{"am.name", "am.cve_list", "synopsis"},
 	TotalFunc:      advisoriesSubtotal,
 }

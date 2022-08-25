@@ -15,6 +15,7 @@ var BaselineOpts = ListOpts{
 	Fields:         BaselineFields,
 	DefaultFilters: nil,
 	DefaultSort:    "-name",
+	StableSort:     "id",
 	SearchFields:   []string{"bl.name"},
 	TotalFunc:      CountRows,
 }
