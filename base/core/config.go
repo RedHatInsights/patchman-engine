@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	DefaultLimit = 20
-	testSetupRan = false
+	DefaultLimit  = 20
+	DefaultOffset = 0
+	testSetupRan  = false
 )
 
 func ConfigureApp() {

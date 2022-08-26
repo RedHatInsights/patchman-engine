@@ -3,11 +3,12 @@ package utils
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
 // ReadHeaderTimeout same as nginx default
@@ -38,20 +39,26 @@ func LoadLimitOffset(c *gin.Context, defaultLimit int) (int, int, error) {
 		return 0, 0, err
 	}
 
-	if offset < 0 {
-		return 0, 0, errors.New("offset must not be negative")
-	}
-
 	limit, err := LoadParamInt(c, "limit", defaultLimit, true)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	if limit < 1 && limit != -1 {
-		return 0, 0, errors.New("limit must not be less than 1, or should be -1 to return all items")
+	if err := CheckLimitOffset(limit, offset); err != nil {
+		return 0, 0, err
 	}
 
 	return limit, offset, nil
+}
+
+func CheckLimitOffset(limit int, offset int) error {
+	if offset < 0 {
+		return errors.New("offset must not be negative")
+	}
+	if limit < 1 && limit != -1 {
+		return errors.New("limit must not be less than 1, or should be -1 to return all items")
+	}
+	return nil
 }
 
 type ErrorResponse struct {
