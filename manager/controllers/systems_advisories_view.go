@@ -15,6 +15,8 @@ type SystemID string
 type SystemsAdvisoriesRequest struct {
 	Systems    []SystemID     `json:"systems"`
 	Advisories []AdvisoryName `json:"advisories"`
+	Limit      *int           `json:"limit,omitempty"`
+	Offset     *int           `json:"offset,omitempty"`
 }
 
 type SystemsAdvisoriesResponse struct {
@@ -45,6 +47,28 @@ func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryNa
 	return query
 }
 
+func systemsAdvisories(c *gin.Context) ([]systemsAdvisoriesDBLoad, error) {
+	var req SystemsAdvisoriesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		LogAndRespBadRequest(c, err, "Invalid request body")
+		return nil, err
+	}
+	acc := c.GetInt(middlewares.KeyAccount)
+	q := systemsAdvisoriesQuery(acc, req.Systems, req.Advisories)
+	q, err := Paginate(q, req.Limit, req.Offset)
+	if err != nil {
+		LogAndRespBadRequest(c, err, err.Error())
+		return nil, err
+	}
+
+	var data []systemsAdvisoriesDBLoad
+	if err := q.Find(&data).Error; err != nil {
+		LogAndRespError(c, err, "Database error")
+		return nil, err
+	}
+	return data, nil
+}
+
 // @Summary View system-advisory pairs for selected systems and advisories
 // @Description View system-advisory pairs for selected systems and advisories
 // @ID viewSystemsAdvisories
@@ -57,15 +81,9 @@ func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryNa
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /views/systems/advisories [post]
 func PostSystemsAdvisories(c *gin.Context) {
-	var req SystemsAdvisoriesRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		LogAndRespBadRequest(c, err, "Invalid request body")
-	}
-	acc := c.GetInt(middlewares.KeyAccount)
-	q := systemsAdvisoriesQuery(acc, req.Systems, req.Advisories)
-	var data []systemsAdvisoriesDBLoad
-	if err := q.Find(&data).Error; err != nil {
-		LogAndRespError(c, err, "Database error")
+	data, err := systemsAdvisories(c)
+	if err != nil {
+		return
 	}
 
 	response := SystemsAdvisoriesResponse{
@@ -90,15 +108,9 @@ func PostSystemsAdvisories(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /views/advisories/systems [post]
 func PostAdvisoriesSystems(c *gin.Context) {
-	var req SystemsAdvisoriesRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		LogAndRespBadRequest(c, err, "Invalid request body")
-	}
-	acc := c.GetInt(middlewares.KeyAccount)
-	q := systemsAdvisoriesQuery(acc, req.Systems, req.Advisories)
-	var data []systemsAdvisoriesDBLoad
-	if err := q.Find(&data).Error; err != nil {
-		LogAndRespError(c, err, "Database error")
+	data, err := systemsAdvisories(c)
+	if err != nil {
+		return
 	}
 
 	response := AdvisoriesSystemsResponse{

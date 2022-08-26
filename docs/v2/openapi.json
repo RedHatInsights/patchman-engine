@@ -6026,6 +6026,12 @@
                             "type": "string"
                         }
                     },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "offset": {
+                        "type": "integer"
+                    },
                     "systems": {
                         "type": "array",
                         "items": {
