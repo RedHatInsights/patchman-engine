@@ -60,6 +60,9 @@ type Config struct {
 	CloudWatchSecretAccesskey string
 	CloudWatchRegion          string
 	CloudWatchLogGroup        string
+
+	// prometheus pushgateway
+	PrometheusPushGateway string
 }
 
 func init() {
@@ -68,6 +71,7 @@ func init() {
 	initKafkaFromEnv()
 	initServicesFromEnv()
 	initCloudwatchFromEnv()
+	initPrometheusPushGatewayFromEnv()
 	if clowder.IsClowderEnabled() {
 		initDBFromClowder()
 		initAPIromClowder()
@@ -215,6 +219,10 @@ func initCloudwatchFromClowder() {
 		Cfg.CloudWatchRegion = cwCfg.Region
 		Cfg.CloudWatchLogGroup = cwCfg.LogGroup
 	}
+}
+
+func initPrometheusPushGatewayFromEnv() {
+	Cfg.PrometheusPushGateway = Getenv("PROMETHEUS_PUSHGATEWAY", "pushgateway")
 }
 
 // PrintClowderParams Print Clowder params to export environment variables.

@@ -131,6 +131,8 @@ func RunVmaasSync() {
 	tasks.HandleContextCancel(tasks.WaitAndExit)
 	configure()
 
-	go RunMetrics()
 	runSync()
+	if err := Metrics().Add(); err != nil {
+		utils.Log("err", err).Info("Could not push to pushgateway")
+	}
 }
