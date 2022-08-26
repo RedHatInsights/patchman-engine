@@ -1,13 +1,10 @@
 package system_culling //nolint:revive,stylecheck
 
 import (
-	"app/base"
-	"app/base/core"
 	"app/base/utils"
-	"app/manager/middlewares"
 
-	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/push"
 )
 
 var (
@@ -25,20 +22,9 @@ var (
 	})
 )
 
-func RunMetrics() {
-	prometheus.MustRegister(deletedCulledSystemsCnt, staleSystemsMarkedCnt)
-
-	// create web app
-	app := gin.New()
-	core.InitProbes(app)
-	middlewares.Prometheus().Use(app)
-
-	go base.TryExposeOnMetricsPort(app)
-
-	port := utils.Cfg.PublicPort
-	err := utils.RunServer(base.Context, app, port)
-	if err != nil {
-		utils.Log("err", err.Error()).Error()
-		panic(err)
-	}
+func Metrics() *push.Pusher {
+	registry := prometheus.NewRegistry()
+	registry.MustRegister(deletedCulledSystemsCnt, staleSystemsMarkedCnt)
+	pusher := push.New(utils.Cfg.PrometheusPushGateway, "system_culling").Gatherer(registry)
+	return pusher
 }

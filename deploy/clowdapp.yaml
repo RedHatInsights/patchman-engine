@@ -292,6 +292,7 @@ objects:
         - {name: ENABLE_ADVISORIES_COUNT_CHECK, value: '${ENABLE_ADVISORIES_COUNT_CHECK}'}
         - {name: ENABLE_PACKAGES_COUNT_CHECK, value: '${ENABLE_PACKAGES_COUNT_CHECK}'}
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
+        - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_VMAAS_SYNC}', memory: '${RES_LIMIT_MEM_VMAAS_SYNC}'}
           requests: {cpu: '${RES_REQUEST_CPU_VMAAS_SYNC}', memory: '${RES_REQUEST_MEM_VMAAS_SYNC}'}
@@ -325,6 +326,7 @@ objects:
         - {name: DELETE_CULLED_SYSTEMS_LIMIT, value: '${DELETE_CULLED_SYSTEMS_LIMIT}'}
         - {name: ENABLE_CULLED_SYSTEM_DELETE, value: '${ENABLE_CULLED_SYSTEM_DELETE}'}
         - {name: ENABLE_SYSTEM_STALING, value: '${ENABLE_SYSTEM_STALING}'}
+        - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
 
     - name: package-refresh
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}

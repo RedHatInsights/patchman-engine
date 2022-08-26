@@ -1,17 +1,13 @@
 package vmaas_sync //nolint:revive,stylecheck
 
 import (
-	"app/base"
-	"app/base/core"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
-	"app/manager/middlewares"
-	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/push"
 )
 
 const (
@@ -44,8 +40,6 @@ var (
 		Subsystem: "vmaas_sync",
 		Name:      "store_packages",
 	}, []string{"type"})
-
-	updateInterval = time.Second * 20
 
 	systemsCnt = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Help:      "How many systems are stored and how up-to-date they are",
@@ -106,37 +100,17 @@ var (
 	enableCyndiMetrics = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_METRICS", true)
 )
 
-func RunMetrics() {
-	prometheus.MustRegister(vmaasCallCnt, storeAdvisoriesCnt, storePackagesCnt,
+func Metrics() *push.Pusher {
+	registry := prometheus.NewRegistry()
+	registry.MustRegister(vmaasCallCnt, storeAdvisoriesCnt, storePackagesCnt,
 		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration, packageCnt, packageNameCnt,
 		databaseSizeBytesGaugeVec, databaseProcessesGaugeVec, cyndiSystemsCnt, cyndiTagsCnt,
 		advisoriesCountMismatch)
 
-	go runAdvancedMetricsUpdating()
-
-	// create web app
-	app := gin.New()
-	core.InitProbes(app)
-	middlewares.Prometheus().Use(app)
-
-	go base.TryExposeOnMetricsPort(app)
-
-	port := utils.Cfg.PublicPort
-	err := utils.RunServer(base.Context, app, port)
-	if err != nil {
-		utils.Log("err", err.Error()).Error()
-		panic(err)
-	}
-}
-
-func runAdvancedMetricsUpdating() {
-	defer utils.LogPanics(true)
-
-	utils.Log().Info("started advanced metrics updating")
-	for {
-		update()
-		time.Sleep(updateInterval)
-	}
+	// update advanced metrics
+	update()
+	pusher := push.New(utils.Cfg.PrometheusPushGateway, "vmaas_sync").Gatherer(registry)
+	return pusher
 }
 
 func update() {
