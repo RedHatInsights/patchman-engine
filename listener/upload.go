@@ -388,7 +388,7 @@ func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int64, added int64,
 	if len(repos) == 0 {
 		return repoIDs, 0, nil
 	}
-	repoIDs = make([]int, 0, len(repos))
+	repoIDs = make([]int64, 0, len(repos))
 
 	var existingRepos models.RepoSlice
 	err = tx.Model(&models.Repo{}).Where("name IN (?)", repos).Find(&existingRepos).Error
@@ -396,7 +396,7 @@ func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int64, added int64,
 		return nil, 0, errors.Wrap(err, "unable to load repos")
 	}
 
-	inDBIDs := make(map[string]int)
+	inDBIDs := make(map[string]int64)
 	for _, er := range existingRepos {
 		inDBIDs[er.Name] = er.ID
 	}
