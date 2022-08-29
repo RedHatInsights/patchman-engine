@@ -5,6 +5,7 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -14,6 +15,9 @@ import (
 )
 
 const KeyAccount = "account"
+const UIReferer = "console.redhat.com"
+const APISource = "API"
+const UISource = "UI"
 
 var AccountIDCache = struct {
 	Values map[string]int
@@ -91,6 +95,20 @@ func headerAuthenticator() gin.HandlerFunc {
 		}
 		if findAccount(c, ident.OrgID) {
 			c.Next()
+		}
+	}
+}
+
+// Check referer type and identify caller source
+func CheckReferer() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ref := c.GetHeader("Referer")
+		account := strconv.Itoa(c.GetInt(KeyAccount))
+
+		if strings.Contains(ref, UIReferer) {
+			callerSourceCnt.WithLabelValues(UISource, account).Inc()
+		} else {
+			callerSourceCnt.WithLabelValues(APISource, account).Inc()
 		}
 	}
 }
