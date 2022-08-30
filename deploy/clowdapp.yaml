@@ -564,6 +564,8 @@ parameters:
 - {name: GOMAXPROCS_JOBS, value: '8'}
 - {name: DB_DEBUG_JOBS, value: 'false'}
 - {name: JOBS_TIMEOUT, value: '1800'}  # 30 min timeout for jobs
+- {name: PROMETHEUS_PUSHGATEWAY, required: true, value: "pushgateway"}
+
 # VMaaS sync
 - {name: VMAAS_SYNC_SCHEDULE, value: '*/5 * * * *'} # Cronjob schedule definition
 - {name: VMAAS_SYNC_SUSPEND, value: 'false'} # Disable cronjob execution
