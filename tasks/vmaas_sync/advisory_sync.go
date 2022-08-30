@@ -258,8 +258,8 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 			toStore = append(toStore, a)
 		}
 	}
-	if len(toUpdate) > 0 {
-		if err := tx.Updates(toUpdate).Error; err != nil {
+	for _, u := range toUpdate {
+		if err := tx.Updates(u).Error; err != nil {
 			utils.Log("err", err).Error("couldn't update advisory_metadata")
 		}
 	}
