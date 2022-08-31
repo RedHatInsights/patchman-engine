@@ -5,7 +5,6 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,9 +23,7 @@ func TestRefreshAdvisoryCachesPerAccounts(t *testing.T) {
 	assert.Nil(t, database.Db.Model(&models.AdvisoryAccountData{}).
 		Where("advisory_id = 3 AND rh_account_id = 1").Update("systems_affected", 8).Error)
 
-	var wg sync.WaitGroup
-	refreshAdvisoryCachesPerAccounts(&wg)
-	wg.Wait()
+	refreshAdvisoryCachesPerAccounts()
 
 	assert.Equal(t, 2, database.PluckInt(database.Db.Table("advisory_account_data").
 		Where("advisory_id = 1 AND rh_account_id = 2"), "systems_affected"))
