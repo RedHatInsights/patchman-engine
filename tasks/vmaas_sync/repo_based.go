@@ -12,6 +12,7 @@ import (
 
 const LastEvalRepoBased = "last_eval_repo_based"
 const LastSync = "last_sync"
+const LastFullSync = "last_full_sync"
 
 // nolint: gocritic
 func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {

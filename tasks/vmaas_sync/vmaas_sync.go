@@ -6,6 +6,7 @@ import (
 	"app/base/core"
 	"app/base/database"
 	"app/base/mqueue"
+	"app/base/types"
 	"app/base/utils"
 	"app/tasks"
 	"app/tasks/caches"
@@ -34,6 +35,7 @@ var (
 	enableModifiedSinceSync  bool
 	vmaasCallExpRetry        bool
 	vmaasCallMaxRetries      int
+	fullSyncCadence          int
 )
 
 func configure() {
@@ -63,14 +65,17 @@ func configure() {
 
 	vmaasCallMaxRetries = utils.GetIntEnvOrDefault("VMAAS_CALL_MAX_RETRIES", 0)  // 0 - retry forever
 	vmaasCallExpRetry = utils.GetBoolEnvOrDefault("VMAAS_CALL_EXP_RETRY", false) // false - retry periodically
+
+	fullSyncCadence = utils.GetIntEnvOrDefault("FULL_SYNC_CADENCE", 24*7) // run full sync once in 7 days by default
 }
 
 func runSync() {
 	utils.Log().Info("Starting vmaas-sync job")
 	lastSyncTS := getLastSyncIfNeeded()
+	lastFullSyncTS := getLastSync(LastFullSync)
 
-	if isSyncNeeded(lastSyncTS) {
-		err := SyncData(lastSyncTS)
+	if isSyncNeeded() {
+		err := SyncData(lastSyncTS, lastFullSyncTS) // respect ENABLE_MODIFIED_SINCE_SYNC
 		if err != nil {
 			// This probably means programming error, better to exit with nonzero error code, so the error is noticed
 			utils.Log("err", err.Error()).Fatal("vmaas data sync failed")
@@ -87,19 +92,30 @@ func getLastSyncIfNeeded() *string {
 	if !enableModifiedSinceSync {
 		return nil
 	}
-
-	lastSync, err := database.GetTimestampKVValueStr(LastSync)
-	if err != nil {
-		utils.Log("err", err).Error("Unable to load last sync timestamp")
-		return nil
-	}
-	return lastSync
+	ts := getLastSync(LastSync)
+	return database.Timestamp2Str(ts)
 }
 
-func SyncData(lastSyncTS *string) error {
+func getLastSync(key string) *types.Rfc3339TimestampWithZ {
+	ts, err := database.GetTimestampKVValue(key)
+	if err != nil {
+		utils.Log("ts", ts, "key", key).Info("Unable to load last sync timestamp")
+		return nil
+	}
+	return ts
+}
+
+func SyncData(lastSyncTS *string, lastFullSyncTS *types.Rfc3339TimestampWithZ) error {
 	utils.Log().Info("Data sync started")
 	syncStart := time.Now()
 	defer utils.ObserveSecondsSince(syncStart, syncDuration)
+
+	if lastFullSyncTS != nil {
+		nextFullSync := lastFullSyncTS.Time().Add(time.Duration(fullSyncCadence) * time.Hour)
+		if syncStart.After(nextFullSync) {
+			lastSyncTS = nil // set last sync to `nil` to do a full vmaas sync
+		}
+	}
 
 	if enableAdvisoriesSync {
 		if err := syncAdvisories(syncStart, lastSyncTS); err != nil {
@@ -123,6 +139,9 @@ func SyncData(lastSyncTS *string) error {
 	caches.RefreshAdvisoryCaches()
 
 	database.UpdateTimestampKVValue(syncStart, LastSync)
+	if lastSyncTS == nil {
+		database.UpdateTimestampKVValue(syncStart, LastFullSync)
+	}
 	utils.Log().Info("Data sync finished successfully")
 	return nil
 }

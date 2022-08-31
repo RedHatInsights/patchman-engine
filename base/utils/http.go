@@ -3,11 +3,12 @@ package utils
 import (
 	"context"
 	"fmt"
-	"github.com/lestrrat-go/backoff"
-	"github.com/pkg/errors"
 	"net/http"
 	"net/http/httputil"
 	"time"
+
+	"github.com/lestrrat-go/backoff"
+	"github.com/pkg/errors"
 )
 
 func HTTPCallRetry(ctx context.Context, httpCallFun func() (outputDataPtr interface{}, resp *http.Response, err error),

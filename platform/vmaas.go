@@ -192,6 +192,19 @@ func reposHandler(c *gin.Context) {
 	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
 }
 
+func dbchangeHandler(c *gin.Context) {
+	data := `{
+        "dbchange": {
+            "errata_changes": "2222-04-16 20:07:58.500192+00",
+            "cve_changes": "2222-04-16 20:06:47.214266+00",
+            "repository_changes": "2222-04-16 20:07:55.01395+00",
+            "last_change": "2222-04-16 20:07:58.500192+00",
+            "exported": "2222-04-16 20:07:59.235962+00"
+        }
+    }`
+	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
+}
+
 func initVMaaS(app *gin.Engine) {
 	// Mock updates endpoint for VMaaS
 	app.POST("/api/v3/updates", updatesHandler)
@@ -199,4 +212,5 @@ func initVMaaS(app *gin.Engine) {
 	app.POST("/api/v3/errata", erratasHandler)
 	app.POST("/api/v3/repos", reposHandler)
 	app.POST("/api/v3/pkglist", pkgListHandler)
+	app.GET("/api/v3/dbchange", dbchangeHandler)
 }

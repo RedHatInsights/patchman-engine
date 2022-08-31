@@ -8,7 +8,6 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"encoding/json"
-	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -43,14 +42,6 @@ func syncAdvisories(syncStart time.Time, modifiedSince *string) error {
 			"advisories_sync_duration", utils.SinceStr(advSyncStart, time.Second)).
 			Info("Downloaded advisories")
 		iPage++
-	}
-
-	advisoryCheckEnabled := utils.GetBoolEnvOrDefault("ENABLE_ADVISORIES_COUNT_CHECK", true)
-	if modifiedSince != nil && advisoryCheckEnabled {
-		err := checkAdvisoriesCount()
-		if err != nil {
-			return errors.Wrap(err, "Advisories check failed")
-		}
 	}
 
 	utils.Log("modified_since", modifiedSince).Info("Advisories synced successfully")
@@ -309,29 +300,4 @@ func vmaasErrataRequest(iPage int, modifiedSince *string, pageSize int) (*vmaas.
 	}
 	vmaasCallCnt.WithLabelValues("success").Inc()
 	return vmaasDataPtr.(*vmaas.ErrataResponse), nil
-}
-
-func checkAdvisoriesCount() error {
-	var databaseAdvisoriesCount int64
-	err := database.Db.Table("advisory_metadata").Count(&databaseAdvisoriesCount).Error
-	if err != nil {
-		return errors.Wrap(err, "Advisories check failed on db query")
-	}
-
-	errataResponse, err := vmaasErrataRequest(0, nil, 1)
-	if err != nil {
-		return errors.Wrap(err, "Advisories check failed on vmaas request")
-	}
-
-	errataCount := int64(errataResponse.Pages + 1)
-	if databaseAdvisoriesCount != errataCount {
-		mismatch := errataCount - databaseAdvisoriesCount
-		advisoriesCountMismatch.Add(math.Abs(float64(mismatch)))
-		utils.Log("mismatch", mismatch).Warning("Incremental advisories sync mismatch found!")
-		err = syncAdvisories(time.Now(), nil)
-		if err != nil {
-			return errors.Wrap(err, "Full advisories sync failed")
-		}
-	}
-	return nil
 }
