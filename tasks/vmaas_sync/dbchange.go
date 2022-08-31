@@ -2,30 +2,27 @@ package vmaas_sync //nolint:revive,stylecheck
 
 import (
 	"app/base"
+	"app/base/database"
 	"app/base/types"
 	"app/base/utils"
 	"app/base/vmaas"
 	"net/http"
-	"time"
 
 	"github.com/pkg/errors"
 )
 
-func isSyncNeeded(lastSyncTS *string) bool {
+func isSyncNeeded() bool {
 	if vmaasClient == nil {
 		panic("VMaaS client is nil")
 	}
-	if lastSyncTS == nil {
-		utils.Log("lastSyncTS", lastSyncTS).Info("Last sync disabled - sync needed")
+
+	ts, err := database.GetTimestampKVValue(LastSync)
+	if err != nil || ts == nil {
+		utils.Log("ts", ts).Info("Last sync disabled - sync needed")
 		return true
 	}
 
 	var emptyTS types.Rfc3339Timestamp
-	ts, err := time.Parse(types.Rfc3339NoTz, *lastSyncTS)
-	if err != nil {
-		utils.Log("err", err).Error("Couldn't parse `lastSyncTS` timestamp")
-		return true
-	}
 	dbchange, err := vmaasDBChangeRequest()
 	if err != nil {
 		utils.Log("err", err).Error("Could'n query vmaas dbchange")
@@ -38,7 +35,7 @@ func isSyncNeeded(lastSyncTS *string) bool {
 	switch {
 	case exported == emptyTS:
 		return true
-	case ts.Before(*exported.Time()):
+	case ts.Time().Before(*exported.Time()):
 		return true
 	default:
 		utils.Log().Info("No need to sync vmaas")

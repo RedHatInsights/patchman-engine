@@ -293,6 +293,7 @@ objects:
         - {name: ENABLE_PACKAGES_COUNT_CHECK, value: '${ENABLE_PACKAGES_COUNT_CHECK}'}
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
+        - {name: FULL_SYNC_CADENCE,value: '${FULL_SYNC_CADENCE}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_VMAAS_SYNC}', memory: '${RES_LIMIT_MEM_VMAAS_SYNC}'}
           requests: {cpu: '${RES_REQUEST_CPU_VMAAS_SYNC}', memory: '${RES_REQUEST_MEM_VMAAS_SYNC}'}
@@ -584,6 +585,7 @@ parameters:
 - {name: RES_LIMIT_MEM_VMAAS_SYNC, value: 384Mi}
 - {name: RES_REQUEST_CPU_VMAAS_SYNC, value: 500m}
 - {name: RES_REQUEST_MEM_VMAAS_SYNC, value: 384Mi}
+- {name: FULL_SYNC_CADENCE, value: '168'}  # run full vmaas sync (default: 168h)
 # Delete unused data
 - {name: DELETE_UNUSED_SCHEDULE, value: '* */6 * * *'} # Cronjob schedule definition
 - {name: DELETE_UNUSED_SUSPEND, value: 'true'} # Disable cronjob execution

@@ -38,7 +38,7 @@ func RunAdminAPI() {
 
 func syncapi(c *gin.Context) {
 	utils.Log().Info("manual syncing called...")
-	err := sync.SyncData(nil)
+	err := sync.SyncData(nil, nil)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("manual called syncing failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})

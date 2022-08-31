@@ -2,6 +2,7 @@ package database
 
 import (
 	"app/base/models"
+	"app/base/types"
 	"app/base/utils"
 	"fmt"
 	"io/ioutil"
@@ -70,20 +71,36 @@ func systemAdvisoriesQuery(tx *gorm.DB, accountID int) *gorm.DB {
 	return query
 }
 
+func Timestamp2Str(ts *types.Rfc3339TimestampWithZ) *string {
+	if ts == nil {
+		return nil
+	}
+	ret := ts.Time().Format(time.RFC3339)
+	return &ret
+}
+
 func GetTimestampKVValueStr(key string) (*string, error) {
-	var timestrings []*string
+	ts, err := GetTimestampKVValue(key)
+	if err != nil {
+		return nil, err
+	}
+	return Timestamp2Str(ts), nil
+}
+
+func GetTimestampKVValue(key string) (*types.Rfc3339TimestampWithZ, error) {
+	var timestamps []*types.Rfc3339TimestampWithZ
 	err := Db.Model(&models.TimestampKV{}).
 		Where("name = ?", key).
-		Pluck("value", &timestrings).Error
+		Pluck("value", &timestamps).Error
 	if err != nil {
 		return nil, err
 	}
 
-	if len(timestrings) == 0 {
+	if len(timestamps) == 0 {
 		return nil, nil
 	}
 
-	return timestrings[0], nil
+	return timestamps[0], nil
 }
 
 func UpdateTimestampKVValue(value time.Time, key string) {
