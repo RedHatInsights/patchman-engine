@@ -166,7 +166,7 @@ func initKafkaFromClowder() {
 		kafkaPort := *clowder.LoadedConfig.Kafka.Brokers[0].Port
 		Cfg.KafkaAddress = fmt.Sprintf("%s:%d", kafkaHost, kafkaPort)
 		brokerCfg := clowder.LoadedConfig.Kafka.Brokers[0]
-		if brokerCfg.Cacert != nil {
+		if brokerCfg.Cacert != nil && len(*brokerCfg.Cacert) > 0 {
 			Cfg.KafkaSslEnabled = true
 			certPath, err := clowder.LoadedConfig.KafkaCa(brokerCfg)
 			if err != nil {
