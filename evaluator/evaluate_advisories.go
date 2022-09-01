@@ -42,7 +42,7 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))
 
 	reported := getReportedAdvisories(vmaasData)
-	oldSystemAdvisories, err := getStoredAdvisoriesMap(tx, system.RhAccountID, system.ID)
+	oldSystemAdvisories, err := getStoredAdvisoriesMap(tx, system.RhAccountID, int(system.ID))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Unable to get system stored advisories")
 	}
@@ -145,11 +145,11 @@ func getAdvisoriesFromDB(tx *gorm.DB, advisories []string) ([]int, error) {
 	return advisoryIDs, nil
 }
 
-func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int, advisoryIDs []int) error {
+func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int64, advisoryIDs []int) error {
 	advisoriesObjs := models.SystemAdvisoriesSlice{}
 	for _, advisoryID := range advisoryIDs {
 		advisoriesObjs = append(advisoriesObjs,
-			models.SystemAdvisories{RhAccountID: rhAccountID, SystemID: systemID, AdvisoryID: advisoryID})
+			models.SystemAdvisories{RhAccountID: rhAccountID, SystemID: int(systemID), AdvisoryID: advisoryID})
 	}
 
 	txOnConflict := tx.Clauses(clause.OnConflict{
@@ -213,7 +213,7 @@ func deleteOldSystemAdvisories(tx *gorm.DB, accountID, systemID int, patched []i
 func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
 	patched, unpatched []int) (SystemAdvisoryMap, error) {
 	// this will remove many many old items from our "system_advisories" table
-	err := deleteOldSystemAdvisories(tx, system.RhAccountID, system.ID, patched)
+	err := deleteOldSystemAdvisories(tx, system.RhAccountID, int(system.ID), patched)
 	if err != nil {
 		return nil, err
 	}

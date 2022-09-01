@@ -368,7 +368,7 @@ func fixEpelRepos(sys *inventory.SystemProfile, repos []string) []string {
 }
 
 func updateRepos(tx *gorm.DB, profile inventory.SystemProfile, rhAccountID int,
-	systemID int, repos []string) (addedRepos int64, addedSysRepos int64, deletedSysRepos int64, err error) {
+	systemID int64, repos []string) (addedRepos int64, addedSysRepos int64, deletedSysRepos int64, err error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("update-repos"))
 	repos = fixEpelRepos(&profile, repos)
@@ -428,11 +428,11 @@ func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int64, added int64,
 	return repoIDs, added, nil
 }
 
-func updateSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs []int64) (
+func updateSystemRepos(tx *gorm.DB, rhAccountID int, systemID int64, repoIDs []int64) (
 	nAdded int64, nDeleted int64, err error) {
 	repoSystemObjs := make(models.SystemRepoSlice, len(repoIDs))
 	for i, repoID := range repoIDs {
-		repoSystemObjs[i] = models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: int64(systemID), RepoID: repoID}
+		repoSystemObjs[i] = models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: repoID}
 	}
 
 	txOnConflict := tx.Clauses(clause.OnConflict{
@@ -452,7 +452,7 @@ func updateSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs []int
 	return nAdded, nDeleted, nil
 }
 
-func deleteOtherSystemRepos(tx *gorm.DB, rhAccountID int, systemID int, repoIDs []int64) (nDeleted int64, err error) {
+func deleteOtherSystemRepos(tx *gorm.DB, rhAccountID int, systemID int64, repoIDs []int64) (nDeleted int64, err error) {
 	type result struct{ DeletedCount int64 }
 	var res result
 	if len(repoIDs) > 0 {

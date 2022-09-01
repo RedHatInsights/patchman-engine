@@ -171,7 +171,7 @@ func CheckAdvisoriesAccountDataNotified(t *testing.T, rhAccountID int, advisoryI
 	}
 }
 
-func CheckSystemUpdatesCount(t *testing.T, accountID, systemID int) []int {
+func CheckSystemUpdatesCount(t *testing.T, accountID int, systemID int64) []int {
 	var cnt []int
 	assert.NoError(t, Db.Table("system_package spkg").
 		Select("json_array_length(spkg.update_data::json) as len").
@@ -199,11 +199,11 @@ func CreateStoredAdvisories(advisoryPatched map[int]*time.Time) map[string]model
 	return systemAdvisoriesMap
 }
 
-func CreateSystemAdvisories(t *testing.T, rhAccountID int, systemID int, advisoryIDs []int,
+func CreateSystemAdvisories(t *testing.T, rhAccountID int, systemID int64, advisoryIDs []int,
 	whenPatched *time.Time) {
 	for _, advisoryID := range advisoryIDs {
 		err := Db.Create(&models.SystemAdvisories{
-			RhAccountID: rhAccountID, SystemID: systemID, AdvisoryID: advisoryID, WhenPatched: whenPatched}).Error
+			RhAccountID: rhAccountID, SystemID: int(systemID), AdvisoryID: advisoryID, WhenPatched: whenPatched}).Error
 		assert.Nil(t, err)
 	}
 	CheckSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, whenPatched)
@@ -219,15 +219,15 @@ func CreateAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int,
 	CheckAdvisoriesAccountData(t, rhAccountID, advisoryIDs, systemsAffected)
 }
 
-func CreateSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int64) {
+func CreateSystemRepos(t *testing.T, rhAccountID int, systemID int64, repoIDs []int64) {
 	for _, repoID := range repoIDs {
 		assert.Nil(t, Db.Create(&models.SystemRepo{RhAccountID: int64(rhAccountID),
-			SystemID: int64(systemID), RepoID: repoID}).Error)
+			SystemID: systemID, RepoID: repoID}).Error)
 	}
 	CheckSystemRepos(t, rhAccountID, systemID, repoIDs)
 }
 
-func CheckSystemAdvisoriesWhenPatched(t *testing.T, systemID int, advisoryIDs []int,
+func CheckSystemAdvisoriesWhenPatched(t *testing.T, systemID int64, advisoryIDs []int,
 	whenPatched *time.Time) {
 	var systemAdvisories []models.SystemAdvisories
 	err := Db.Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
@@ -259,7 +259,7 @@ func CheckEVRAsInDBSynced(t *testing.T, nExpected int, synced bool, evras ...str
 	}
 }
 
-func CheckSystemPackages(t *testing.T, systemID int, nExpected int, packageIDs ...int) {
+func CheckSystemPackages(t *testing.T, systemID int64, nExpected int, packageIDs ...int64) {
 	var systemPackages []models.SystemPackage
 	query := Db.Where("system_id = ?", systemID)
 	if len(packageIDs) > 0 {
@@ -269,7 +269,7 @@ func CheckSystemPackages(t *testing.T, systemID int, nExpected int, packageIDs .
 	assert.Equal(t, nExpected, len(systemPackages))
 }
 
-func CheckSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int64) {
+func CheckSystemRepos(t *testing.T, rhAccountID int, systemID int64, repoIDs []int64) {
 	var systemRepos []models.SystemRepo
 	err := Db.Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)",
 		rhAccountID, systemID, repoIDs).
@@ -278,7 +278,7 @@ func CheckSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int
 	assert.Equal(t, len(repoIDs), len(systemRepos))
 }
 
-func DeleteSystemAdvisories(t *testing.T, systemID int, advisoryIDs []int) {
+func DeleteSystemAdvisories(t *testing.T, systemID int64, advisoryIDs []int) {
 	query := Db.Model(&models.SystemAdvisories{}).Where("system_id = ? AND advisory_id IN (?)",
 		systemID, advisoryIDs)
 	assert.Nil(t, query.Delete(&models.SystemAdvisories{}).Error)
@@ -299,7 +299,7 @@ func DeleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int)
 	assert.Equal(t, int64(0), cnt)
 }
 
-func DeleteSystemPackages(t *testing.T, systemID int, pkgIDs ...int) {
+func DeleteSystemPackages(t *testing.T, systemID int64, pkgIDs ...int64) {
 	query := Db.Model(&models.SystemPackage{}).Where("system_id = ?", systemID)
 	if len(pkgIDs) > 0 {
 		query = query.Where("package_id in (?)", pkgIDs)
@@ -311,7 +311,7 @@ func DeleteSystemPackages(t *testing.T, systemID int, pkgIDs ...int) {
 	assert.Equal(t, int64(0), count)
 }
 
-func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int, repoIDs []int64) {
+func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int64, repoIDs []int64) {
 	err := Db.Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)", rhAccountID, systemID, repoIDs).
 		Delete(&models.SystemRepo{}).Error
 	assert.Nil(t, err)
