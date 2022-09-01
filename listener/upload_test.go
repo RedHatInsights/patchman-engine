@@ -223,10 +223,10 @@ func TestUpdateSystemRepos1(t *testing.T) {
 	core.SetupTestEnvironment()
 	deleteData(t)
 
-	systemID := 5
+	systemID := int64(5)
 	rhAccountID := 1
-	database.Db.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: int64(systemID), RepoID: 1})
-	database.Db.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: int64(systemID), RepoID: 2})
+	database.Db.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 1})
+	database.Db.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 2})
 
 	repos := []string{"repo1", "repo10", "repo20"}
 	repoIDs, nReposAdded, err := ensureReposInDB(database.Db, repos)
@@ -246,10 +246,10 @@ func TestUpdateSystemRepos2(t *testing.T) {
 	core.SetupTestEnvironment()
 	deleteData(t)
 
-	systemID := 5
+	systemID := int64(5)
 	rhAccountID := 1
-	database.Db.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: int64(systemID), RepoID: 1})
-	database.Db.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: int64(systemID), RepoID: 2})
+	database.Db.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 1})
+	database.Db.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 2})
 
 	nAdded, nDeleted, err := updateSystemRepos(database.Db, rhAccountID, systemID, []int64{})
 	assert.Nil(t, err)

@@ -7,11 +7,12 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"context"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestVMaaSGetUpdates(t *testing.T) {
@@ -93,14 +94,14 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	advisoryIDs := []int{2, 3, 4}
 	database.CreateSystemAdvisories(t, system.RhAccountID, system.ID, advisoryIDs, nil)
 	database.CreateAdvisoryAccountData(t, system.RhAccountID, advisoryIDs, 1)
-	database.UpdateSystemAdvisoriesWhenPatched(t, system.ID, system.RhAccountID, advisoryIDs, &testDate)
+	database.UpdateSystemAdvisoriesWhenPatched(t, int(system.ID), system.RhAccountID, advisoryIDs, &testDate)
 	// Update as-if the advisories had become patched
 	err := updateAdvisoryAccountData(database.Db, &system, advisoryIDs, []int{})
 	assert.NoError(t, err)
 
 	database.CheckSystemAdvisoriesWhenPatched(t, system.ID, advisoryIDs, &testDate)
 	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 0)
-	database.UpdateSystemAdvisoriesWhenPatched(t, system.ID, system.RhAccountID, advisoryIDs, nil)
+	database.UpdateSystemAdvisoriesWhenPatched(t, int(system.ID), system.RhAccountID, advisoryIDs, nil)
 
 	// Update as-if the advisories had become unpatched
 	err = updateAdvisoryAccountData(database.Db, &system, []int{}, advisoryIDs)
@@ -126,7 +127,7 @@ func TestEnsureSystemAdvisories(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	rhAccountID := 1
-	systemID := 2
+	systemID := int64(2)
 	advisoryIDs := []int{2, 3, 4}
 	err := ensureSystemAdvisories(database.Db, rhAccountID, systemID, advisoryIDs)
 	assert.Nil(t, err)

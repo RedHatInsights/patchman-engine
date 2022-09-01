@@ -117,7 +117,7 @@ func assertReposInDB(t *testing.T, repos []string) {
 	assert.Equal(t, len(repos), len(n))
 }
 
-func assertSystemReposInDB(t *testing.T, systemID int, repos []string) {
+func assertSystemReposInDB(t *testing.T, systemID int64, repos []string) {
 	var c int64
 
 	err := database.Db.Table("repo r").

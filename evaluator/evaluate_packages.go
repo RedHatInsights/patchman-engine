@@ -274,7 +274,7 @@ func createSystemPackage(nevra string,
 
 	systemPackage := models.SystemPackage{
 		RhAccountID: system.RhAccountID,
-		SystemID:    int64(system.ID),
+		SystemID:    system.ID,
 		PackageID:   currentNamedPackage.PackageID,
 		UpdateData:  updateDataJSON,
 		NameID:      currentNamedPackage.NameID,

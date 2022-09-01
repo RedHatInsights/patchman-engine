@@ -37,7 +37,7 @@ func (Baseline) TableName() string {
 
 // nolint: maligned
 type SystemPlatform struct {
-	ID                    int    `gorm:"primary_key"`
+	ID                    int64  `gorm:"primary_key"`
 	InventoryID           string `sql:"unique" gorm:"unique"`
 	RhAccountID           int
 	VmaasJSON             *string
@@ -59,7 +59,7 @@ type SystemPlatform struct {
 	PackagesUpdatable     int
 	ThirdParty            bool
 	ReporterID            *int
-	BaselineID            *int
+	BaselineID            *int64
 	BaselineUpToDate      *bool  `gorm:"column:baseline_uptodate"`
 	YumUpdates            []byte `gorm:"column:yum_updates"`
 }

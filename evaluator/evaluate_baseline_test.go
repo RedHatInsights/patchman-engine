@@ -27,13 +27,13 @@ func TestLimitVmaasToBaseline(t *testing.T) {
 	assert.Equal(t, originalVmaasData, vmaasData)
 
 	// a system with baseline but nothing filtered out
-	system = models.SystemPlatform{ID: 3, RhAccountID: 1, BaselineID: utils.PtrInt(2)}
+	system = models.SystemPlatform{ID: 3, RhAccountID: 1, BaselineID: utils.PtrInt64(2)}
 	err = limitVmaasToBaseline(database.Db, &system, &vmaasData)
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"RH-1", "RH-100", "RH-2"}, errataInVmaasData(vmaasData))
 
 	// a system with baseline and filtered errata
-	system = models.SystemPlatform{ID: 1, RhAccountID: 1, BaselineID: utils.PtrInt(1)}
+	system = models.SystemPlatform{ID: 1, RhAccountID: 1, BaselineID: utils.PtrInt64(1)}
 	vmaasData = getVMaaSUpdates(t)
 	err = limitVmaasToBaseline(database.Db, &system, &vmaasData)
 	assert.Nil(t, err)

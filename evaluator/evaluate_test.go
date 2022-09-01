@@ -18,7 +18,7 @@ import (
 )
 
 var testDate, _ = time.Parse(time.RFC3339, "2020-01-01T01-01-01")
-var systemID = 12
+var systemID = int64(12)
 var rhAccountID = 3
 
 func TestInit(t *testing.T) {
@@ -40,7 +40,7 @@ func TestEvaluate(t *testing.T) {
 	expectedAdvisoryIDs := []int{1, 2}       // advisories expected to be paired to the system after evaluation
 	oldSystemAdvisoryIDs := []int{1, 3, 4}   // old advisories paired with the system
 	patchingSystemAdvisoryIDs := []int{3, 4} // these advisories should be patched for the system
-	expectedPackageIDs := []int{1, 2}
+	expectedPackageIDs := []int64{1, 2}
 	systemRepoIDs := []int64{1, 2}
 
 	database.DeleteSystemAdvisories(t, systemID, expectedAdvisoryIDs)
@@ -107,7 +107,7 @@ func TestEvaluateYum(t *testing.T) {
 	expectedAddedAdvisories := []string{"RH-1", "RH-2", "RHSA-2021:3801"}
 	expectedAdvisoryIDs := []int{1, 2, 14} // advisories expected to be paired to the system after evaluation
 	oldSystemAdvisoryIDs := []int{1, 2}    // old advisories paired with the system
-	expectedPackageIDs := []int{1, 2}
+	expectedPackageIDs := []int64{1, 2}
 
 	database.DeleteSystemAdvisories(t, sysID, expectedAdvisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
