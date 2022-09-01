@@ -137,7 +137,7 @@ func TestEvaluatePruneUpdates(t *testing.T) {
 	defer os.Setenv("PRUNE_UPDATES_LATEST_ONLY", "false")
 
 	TestEvaluate(t)
-	count := database.CheckSystemUpdatesCount(t, systemID, rhAccountID)
+	count := database.CheckSystemUpdatesCount(t, rhAccountID, systemID)
 	for _, c := range count {
 		assert.LessOrEqual(t, c, 1, "All packages should only have single update stored")
 	}
