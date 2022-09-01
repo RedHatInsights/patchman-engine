@@ -56,8 +56,6 @@ type Notification struct {
 	EventType string `json:"event_type"`
 	// ISO-8601 formatted date (per platform convention when the message was sent).
 	Timestamp string `json:"timestamp"`
-	// Account id to address notification to.
-	AccountID *string `json:"account_id"`
 	// Extra information that are common to all the events that are sent in this message.
 	Context Context `json:"context,omitempty"`
 	Events  []Event `json:"events"`
