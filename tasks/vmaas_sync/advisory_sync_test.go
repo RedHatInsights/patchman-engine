@@ -175,6 +175,10 @@ func TestSyncAdvisories(t *testing.T) {
 	expected := []string{"RH-100"}
 	database.CheckAdvisoriesInDB(t, expected)
 
+	// sync advisories again to catch issues with updates
+	err = syncAdvisories(time.Now(), nil)
+	assert.NoError(t, err)
+
 	database.DeleteNewlyAddedPackages(t)
 	database.DeleteNewlyAddedAdvisories(t)
 }

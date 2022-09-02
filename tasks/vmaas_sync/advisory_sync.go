@@ -259,7 +259,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 		}
 	}
 	for _, u := range toUpdate {
-		if err := tx.Updates(u).Error; err != nil {
+		if err := database.Db.Table("advisory_metadata").Select(updateCols).Updates(u).Error; err != nil {
 			utils.Log("err", err).Error("couldn't update advisory_metadata")
 		}
 	}
