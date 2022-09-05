@@ -131,12 +131,15 @@ func tryCreateSecuredDialerFromEnv() *kafka.Dialer {
 }
 
 func getSaslMechanism() sasl.Mechanism {
+	if utils.Cfg.KafkaSaslType == nil {
+		return nil
+	}
 	kafkaUsername := utils.Cfg.KafkaUsername
 	if kafkaUsername == "" {
 		return nil
 	}
 	kafkaPassword := utils.FailIfEmpty(utils.Cfg.KafkaPassword, "KAFKA_PASSWORD")
-	saslType := utils.Cfg.KafkaSaslType
+	saslType := *utils.Cfg.KafkaSaslType
 	switch saslType {
 	case "scram":
 		mechanism, err := kafkaScram.Mechanism(kafkaScram.SHA512, kafkaUsername, kafkaPassword)

@@ -37,7 +37,7 @@ type Config struct {
 	KafkaSslEnabled        bool
 	KafkaSslCert           string
 	KafkaSslSkipVerify     bool
-	KafkaSaslType          string
+	KafkaSaslType          *string
 	KafkaUsername          string
 	KafkaPassword          string
 	KafkaGroup             string
@@ -110,7 +110,8 @@ func initKafkaFromEnv() {
 	Cfg.KafkaSslEnabled = GetBoolEnvOrDefault("ENABLE_KAFKA_SSL", false)
 	Cfg.KafkaSslCert = Getenv("KAFKA_SSL_CERT", "")
 	Cfg.KafkaSslSkipVerify = GetBoolEnvOrDefault("KAFKA_SSL_SKIP_VERIFY", false)
-	Cfg.KafkaSaslType = Getenv("KAFKA_SASL_TYPE", "scram")
+	saslType := Getenv("KAFKA_SASL_TYPE", "scram")
+	Cfg.KafkaSaslType = &saslType
 	Cfg.KafkaUsername = Getenv("KAFKA_USERNAME", "")
 	Cfg.KafkaPassword = Getenv("KAFKA_PASSWORD", "")
 	Cfg.KafkaGroup = Getenv("KAFKA_GROUP", "")
@@ -162,6 +163,7 @@ func initAPIromClowder() {
 
 func initKafkaFromClowder() {
 	if len(clowder.LoadedConfig.Kafka.Brokers) > 0 {
+		Cfg.KafkaSaslType = nil
 		kafkaHost := clowder.LoadedConfig.Kafka.Brokers[0].Hostname
 		kafkaPort := *clowder.LoadedConfig.Kafka.Brokers[0].Port
 		Cfg.KafkaAddress = fmt.Sprintf("%s:%d", kafkaHost, kafkaPort)
@@ -176,6 +178,7 @@ func initKafkaFromClowder() {
 			if brokerCfg.Sasl.Username != nil {
 				Cfg.KafkaUsername = *brokerCfg.Sasl.Username
 				Cfg.KafkaPassword = *brokerCfg.Sasl.Password
+				Cfg.KafkaSaslType = brokerCfg.Sasl.SaslMechanism
 			}
 		}
 
