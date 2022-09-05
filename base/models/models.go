@@ -148,7 +148,7 @@ func (AdvisoryType) TableName() string {
 type AdvisoryPackageData []string
 
 type AdvisoryMetadata struct {
-	ID              int
+	ID              int64
 	Name            string
 	Description     string
 	Synopsis        string
@@ -173,9 +173,9 @@ func (AdvisoryMetadata) TableName() string {
 type AdvisoryMetadataSlice []AdvisoryMetadata
 
 type SystemAdvisories struct {
-	RhAccountID   int `gorm:"primary_key"`
-	SystemID      int `gorm:"primary_key"`
-	AdvisoryID    int `gorm:"primary_key"`
+	RhAccountID   int   `gorm:"primary_key"`
+	SystemID      int64 `gorm:"primary_key"`
+	AdvisoryID    int64 `gorm:"primary_key"`
 	Advisory      AdvisoryMetadata
 	FirstReported *time.Time
 	WhenPatched   *time.Time
@@ -189,7 +189,7 @@ func (SystemAdvisories) TableName() string {
 type SystemAdvisoriesSlice []SystemAdvisories
 
 type AdvisoryAccountData struct {
-	AdvisoryID             int
+	AdvisoryID             int64
 	RhAccountID            int
 	StatusID               int
 	SystemsAffected        int

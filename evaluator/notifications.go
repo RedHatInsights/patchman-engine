@@ -7,9 +7,10 @@ import (
 	"app/base/mqueue"
 	ntf "app/base/notification"
 	"app/base/utils"
+	"time"
+
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"time"
 )
 
 const NewAdvisoryEvent = "new-advisory"
@@ -25,7 +26,7 @@ func configureNotifications() {
 func getUnnotifiedAdvisories(tx *gorm.DB, accountID int, newAdvs SystemAdvisoryMap) ([]ntf.Advisory, error) {
 	unAdvs := make([]ntf.Advisory, 0, len(newAdvs))
 
-	advIDs := make([]int, 0, len(newAdvs))
+	advIDs := make([]int64, 0, len(newAdvs))
 	for _, a := range newAdvs {
 		advIDs = append(advIDs, a.AdvisoryID)
 	}
@@ -97,7 +98,7 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 		return errors.Wrap(err, "writing message to notifications publisher failed")
 	}
 
-	advisoryIDs := make([]int, 0, len(advisories))
+	advisoryIDs := make([]int64, 0, len(advisories))
 	for _, a := range advisories {
 		advisoryIDs = append(advisoryIDs, a.AdvisoryID)
 	}

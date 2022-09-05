@@ -37,7 +37,7 @@ func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vm
 // Before this methods stores the entries into the system_advisories table, it locks
 // advisory_account_data table, so other evaluations don't interfere with this one
 func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) (
-	patched []int, unpatched []int, err error) {
+	patched []int64, unpatched []int64, err error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))
 
@@ -71,7 +71,7 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 }
 
 func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform,
-	patched, unpatched []int) (SystemAdvisoryMap, error) {
+	patched, unpatched []int64) (SystemAdvisoryMap, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("advisories-store"))
 	newSystemAdvisories, err := updateSystemAdvisories(tx, system, patched, unpatched)
 	if err != nil {
@@ -100,9 +100,9 @@ func getStoredAdvisoriesMap(tx *gorm.DB, accountID, systemID int) (map[string]mo
 }
 
 func getNewAndUnpatchedAdvisories(reported map[string]bool, stored map[string]models.SystemAdvisories) (
-	[]string, []int) {
+	[]string, []int64) {
 	newAdvisories := []string{}
-	unpatchedAdvisories := []int{}
+	unpatchedAdvisories := []int64{}
 	for reportedAdvisory := range reported {
 		if storedAdvisory, found := stored[reportedAdvisory]; found {
 			if storedAdvisory.WhenPatched != nil { // this advisory was already patched and now is un-patched again
@@ -115,8 +115,8 @@ func getNewAndUnpatchedAdvisories(reported map[string]bool, stored map[string]mo
 	return newAdvisories, unpatchedAdvisories
 }
 
-func getPatchedAdvisories(reported map[string]bool, stored map[string]models.SystemAdvisories) []int {
-	patchedAdvisories := make([]int, 0, len(stored))
+func getPatchedAdvisories(reported map[string]bool, stored map[string]models.SystemAdvisories) []int64 {
+	patchedAdvisories := make([]int64, 0, len(stored))
 	for storedAdvisory, storedAdvisoryObj := range stored {
 		if _, found := reported[storedAdvisory]; found {
 			continue
@@ -135,8 +135,8 @@ func getPatchedAdvisories(reported map[string]bool, stored map[string]models.Sys
 }
 
 // Return advisory IDs, created advisories count, error
-func getAdvisoriesFromDB(tx *gorm.DB, advisories []string) ([]int, error) {
-	var advisoryIDs []int
+func getAdvisoriesFromDB(tx *gorm.DB, advisories []string) ([]int64, error) {
+	var advisoryIDs []int64
 	err := tx.Model(&models.AdvisoryMetadata{}).Where("name IN (?)", advisories).
 		Pluck("id", &advisoryIDs).Error
 	if err != nil {
@@ -145,11 +145,11 @@ func getAdvisoriesFromDB(tx *gorm.DB, advisories []string) ([]int, error) {
 	return advisoryIDs, nil
 }
 
-func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int64, advisoryIDs []int) error {
+func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int64, advisoryIDs []int64) error {
 	advisoriesObjs := models.SystemAdvisoriesSlice{}
 	for _, advisoryID := range advisoryIDs {
 		advisoriesObjs = append(advisoriesObjs,
-			models.SystemAdvisories{RhAccountID: rhAccountID, SystemID: int(systemID), AdvisoryID: advisoryID})
+			models.SystemAdvisories{RhAccountID: rhAccountID, SystemID: systemID, AdvisoryID: advisoryID})
 	}
 
 	txOnConflict := tx.Clauses(clause.OnConflict{
@@ -159,7 +159,7 @@ func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int64, adviso
 	return err
 }
 
-func lockAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int) error {
+func lockAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int64) error {
 	// Lock advisory-account data, so it's not changed by other concurrent queries
 	var aads []models.AdvisoryAccountData
 	err := tx.Clauses(clause.Locking{
@@ -172,12 +172,12 @@ func lockAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, patched
 	return err
 }
 
-func calcAdvisoryChanges(system *models.SystemPlatform, patched, unpatched []int) []models.AdvisoryAccountData {
+func calcAdvisoryChanges(system *models.SystemPlatform, patched, unpatched []int64) []models.AdvisoryAccountData {
 	// If system is stale, we won't change any rows  in advisory_account_data
 	if system.Stale {
 		return []models.AdvisoryAccountData{}
 	}
-	aadMap := map[int]models.AdvisoryAccountData{}
+	aadMap := map[int64]models.AdvisoryAccountData{}
 
 	for _, id := range unpatched {
 		aadMap[id] = models.AdvisoryAccountData{
@@ -202,7 +202,7 @@ func calcAdvisoryChanges(system *models.SystemPlatform, patched, unpatched []int
 	return deltas
 }
 
-func deleteOldSystemAdvisories(tx *gorm.DB, accountID, systemID int, patched []int) error {
+func deleteOldSystemAdvisories(tx *gorm.DB, accountID int, systemID int64, patched []int64) error {
 	err := tx.Where("rh_account_id = ? ", accountID).
 		Where("system_id = ?", systemID).
 		Where("when_patched IS NOT NULL or advisory_id in (?)", patched).
@@ -211,9 +211,9 @@ func deleteOldSystemAdvisories(tx *gorm.DB, accountID, systemID int, patched []i
 }
 
 func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
-	patched, unpatched []int) (SystemAdvisoryMap, error) {
+	patched, unpatched []int64) (SystemAdvisoryMap, error) {
 	// this will remove many many old items from our "system_advisories" table
-	err := deleteOldSystemAdvisories(tx, system.RhAccountID, int(system.ID), patched)
+	err := deleteOldSystemAdvisories(tx, system.RhAccountID, system.ID, patched)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +238,7 @@ func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
 	return newSystemAdvisories, nil
 }
 
-func updateAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int) error {
+func updateAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, patched, unpatched []int64) error {
 	err := lockAdvisoryAccountData(tx, system, patched, unpatched)
 	if err != nil {
 		return err
