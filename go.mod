@@ -26,11 +26,11 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_golang v1.7.0
-	github.com/redhatinsights/app-common-go v1.5.1
+	github.com/redhatinsights/app-common-go v1.6.3
 	github.com/redhatinsights/platform-go-middlewares v0.19.0
 	github.com/segmentio/kafka-go v0.4.16
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.8.0
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/ugorji/go v1.2.6 // indirect
@@ -39,7 +39,6 @@ require (
 	golang.org/x/tools v0.0.0-20200825202427-b303f430e36d // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	gorm.io/driver/postgres v1.3.1
 	gorm.io/gorm v1.23.1
 	modernc.org/strutil v1.1.0
