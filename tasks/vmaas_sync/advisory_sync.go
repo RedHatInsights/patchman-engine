@@ -235,7 +235,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 		utils.Log("err", errSelect).Warn("couldn't find advisory_metadata for update")
 	}
 
-	inDBIDs := make(map[string]int, len(existingAdvisories))
+	inDBIDs := make(map[string]int64, len(existingAdvisories))
 	for _, ea := range existingAdvisories {
 		inDBIDs[ea.Name] = ea.ID
 	}

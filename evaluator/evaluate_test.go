@@ -37,9 +37,9 @@ func TestEvaluate(t *testing.T) {
 	remediationsPublisher = &mockWriter
 
 	expectedAddedAdvisories := []string{"RH-1", "RH-2"}
-	expectedAdvisoryIDs := []int{1, 2}       // advisories expected to be paired to the system after evaluation
-	oldSystemAdvisoryIDs := []int{1, 3, 4}   // old advisories paired with the system
-	patchingSystemAdvisoryIDs := []int{3, 4} // these advisories should be patched for the system
+	expectedAdvisoryIDs := []int64{1, 2}       // advisories expected to be paired to the system after evaluation
+	oldSystemAdvisoryIDs := []int64{1, 3, 4}   // old advisories paired with the system
+	patchingSystemAdvisoryIDs := []int64{3, 4} // these advisories should be patched for the system
 	expectedPackageIDs := []int64{1, 2}
 	systemRepoIDs := []int64{1, 2}
 
@@ -105,8 +105,8 @@ func TestEvaluateYum(t *testing.T) {
 	evalLabel = recalcLabel
 
 	expectedAddedAdvisories := []string{"RH-1", "RH-2", "RHSA-2021:3801"}
-	expectedAdvisoryIDs := []int{1, 2, 14} // advisories expected to be paired to the system after evaluation
-	oldSystemAdvisoryIDs := []int{1, 2}    // old advisories paired with the system
+	expectedAdvisoryIDs := []int64{1, 2, 14} // advisories expected to be paired to the system after evaluation
+	oldSystemAdvisoryIDs := []int64{1, 2}    // old advisories paired with the system
 	expectedPackageIDs := []int64{1, 2}
 
 	database.DeleteSystemAdvisories(t, sysID, expectedAdvisoryIDs)
