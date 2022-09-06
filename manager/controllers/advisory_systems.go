@@ -133,7 +133,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 // nolint: lll
 // @Summary Show me systems on which the given advisory is applicable
 // @Description Show me systems on which the given advisory is applicable
-// @ID listAdvisorySystemsIDs
+// @ID listAdvisorySystemsIds
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
@@ -167,7 +167,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
-// @Success 200 {object} AdvisorySystemsResponse
+// @Success 200 {object} IDsResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse

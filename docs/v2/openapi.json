@@ -2468,7 +2468,7 @@
             "get": {
                 "summary": "Show me all applicable advisories for all my systems",
                 "description": "Show me all applicable advisories for all my systems",
-                "operationId": "list",
+                "operationId": "listAdvisoriesIds",
                 "parameters": [
                     {
                         "name": "limit",
@@ -2647,7 +2647,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.AdvisoriesResponse"
+                                    "$ref": "#/components/schemas/controllers.IDsResponse"
                                 }
                             }
                         }
@@ -2694,7 +2694,7 @@
             "get": {
                 "summary": "Show me systems on which the given advisory is applicable",
                 "description": "Show me systems on which the given advisory is applicable",
-                "operationId": "listAdvisorySystemsIDs",
+                "operationId": "listAdvisorySystemsIds",
                 "parameters": [
                     {
                         "name": "advisory_id",
@@ -2965,7 +2965,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.AdvisorySystemsResponse"
+                                    "$ref": "#/components/schemas/controllers.IDsResponse"
                                 }
                             }
                         }
@@ -3012,7 +3012,7 @@
             "get": {
                 "summary": "Show me all my systems which have a package installed",
                 "description": "Show me all my systems which have a package installed",
-                "operationId": "packageSystemsIDs",
+                "operationId": "packageSystemsIds",
                 "parameters": [
                     {
                         "name": "limit",
@@ -3112,7 +3112,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.PackageSystemsResponse"
+                                    "$ref": "#/components/schemas/controllers.IDsResponse"
                                 }
                             }
                         }
@@ -3159,7 +3159,7 @@
             "get": {
                 "summary": "Show me all my systems",
                 "description": "Show me all my systems",
-                "operationId": "listSystemsIDs",
+                "operationId": "listSystemsIds",
                 "parameters": [
                     {
                         "name": "limit",
@@ -3447,7 +3447,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.SystemsResponse"
+                                    "$ref": "#/components/schemas/controllers.IDsResponse"
                                 }
                             }
                         }
@@ -3484,7 +3484,7 @@
             "get": {
                 "summary": "Show me advisories for a system by given inventory id",
                 "description": "Show me advisories for a system by given inventory id",
-                "operationId": "listSystemAdvisoriesIDs",
+                "operationId": "listSystemAdvisoriesIds",
                 "parameters": [
                     {
                         "name": "inventory_id",
@@ -3597,7 +3597,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.SystemAdvisoriesResponse"
+                                    "$ref": "#/components/schemas/controllers.IDsResponse"
                                 }
                             }
                         }
@@ -5412,6 +5412,17 @@
                         "type": "string"
                     },
                     "values": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "controllers.IDsResponse": {
+                "type": "object",
+                "properties": {
+                    "ids": {
                         "type": "array",
                         "items": {
                             "type": "string"

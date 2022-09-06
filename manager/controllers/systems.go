@@ -212,7 +212,7 @@ func SystemsListHandler(c *gin.Context) {
 // nolint: lll
 // @Summary Show me all my systems
 // @Description Show me all my systems
-// @ID listSystemsIDs
+// @ID listSystemsIds
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
@@ -248,7 +248,7 @@ func SystemsListHandler(c *gin.Context) {
 // @Param    filter[system_profile][ansible][controller_version]    query   string  false   "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]                          query   string  false   "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]                 query   string  false   "Filter systems by mssql version"
-// @Success 200 {object} SystemsResponse
+// @Success 200 {object} IDsResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/systems [get]
