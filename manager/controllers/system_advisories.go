@@ -148,7 +148,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 // nolint:lll
 // @Summary Show me advisories for a system by given inventory id
 // @Description Show me advisories for a system by given inventory id
-// @ID listSystemAdvisoriesIDs
+// @ID listSystemAdvisoriesIds
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
@@ -164,7 +164,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 // @Param    filter[advisory_type]       query   string  false "Filter"
 // @Param    filter[advisory_type_name]  query   string  false "Filter"
 // @Param    filter[severity]            query   string  false "Filter"
-// @Success 200 {object} SystemAdvisoriesResponse
+// @Success 200 {object} IDsResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
