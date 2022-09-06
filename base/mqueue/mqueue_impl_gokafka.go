@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -139,7 +140,7 @@ func getSaslMechanism() sasl.Mechanism {
 		return nil
 	}
 	kafkaPassword := utils.FailIfEmpty(utils.Cfg.KafkaPassword, "KAFKA_PASSWORD")
-	saslType := *utils.Cfg.KafkaSaslType
+	saslType := strings.ToLower(*utils.Cfg.KafkaSaslType)
 	switch saslType {
 	case "scram":
 		mechanism, err := kafkaScram.Mechanism(kafkaScram.SHA512, kafkaUsername, kafkaPassword)
