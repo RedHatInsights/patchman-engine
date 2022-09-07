@@ -1,0 +1,1 @@
+ALTER TABLE baseline ALTER COLUMN id TYPE INT;
