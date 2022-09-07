@@ -343,7 +343,7 @@ func UpdateSystemAdvisoriesWhenPatched(t *testing.T, systemID, accountID int, ad
 	assert.Nil(t, err)
 }
 
-func CreateBaselineWithConfig(t *testing.T, name string, inventoryIDs []string, configBytes []byte) int {
+func CreateBaselineWithConfig(t *testing.T, name string, inventoryIDs []string, configBytes []byte) int64 {
 	if name == "" {
 		name = "temporary_baseline"
 	}
@@ -369,13 +369,13 @@ func CreateBaselineWithConfig(t *testing.T, name string, inventoryIDs []string, 
 	return temporaryBaseline.ID
 }
 
-func CreateBaseline(t *testing.T, name string, inventoryIDs []string) int {
+func CreateBaseline(t *testing.T, name string, inventoryIDs []string) int64 {
 	configBytes := []byte(`{"to_time": "2021-01-01T12:00:00-04:00"}`)
 	baselineID := CreateBaselineWithConfig(t, name, inventoryIDs, configBytes)
 	return baselineID
 }
 
-func DeleteBaseline(t *testing.T, baselineID int) {
+func DeleteBaseline(t *testing.T, baselineID int64) {
 	tx := Db.WithContext(base.Context).Begin()
 	defer tx.Rollback()
 
@@ -393,9 +393,9 @@ func DeleteBaseline(t *testing.T, baselineID int) {
 	assert.Nil(t, err)
 }
 
-func CheckBaseline(t *testing.T, baselineID int, inventoryIDs []string, config, name string, description *string) {
+func CheckBaseline(t *testing.T, baselineID int64, inventoryIDs []string, config, name string, description *string) {
 	type Baseline struct {
-		ID          int     `query:"bl.id" gorm:"column:id"`
+		ID          int64   `query:"bl.id" gorm:"column:id"`
 		Name        string  `json:"name" query:"bl.name" gorm:"column:name"`
 		Config      string  `json:"config" query:"bl.config" gorm:"column:config"`
 		Description *string `json:"description" query:"bl.description" gorm:"column:description"`
@@ -438,7 +438,7 @@ func CheckBaseline(t *testing.T, baselineID int, inventoryIDs []string, config, 
 	}
 }
 
-func CheckBaselineDeleted(t *testing.T, baselineID int) {
+func CheckBaselineDeleted(t *testing.T, baselineID int64) {
 	var cntBaselines int64
 	assert.Nil(t, Db.Model(&models.Baseline{}).Where("id = ?", baselineID).Count(&cntBaselines).Error)
 	assert.Equal(t, 0, int(cntBaselines))

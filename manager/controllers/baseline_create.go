@@ -31,7 +31,7 @@ type CreateBaselineRequest struct {
 }
 
 type CreateBaselineResponse struct {
-	BaselineID int `json:"baseline_id" example:"1"` // Updated baseline unique ID, it can not be changed
+	BaselineID int64 `json:"baseline_id" example:"1"` // Updated baseline unique ID, it can not be changed
 }
 
 // @Summary Create a baseline for my set of systems
@@ -91,7 +91,7 @@ func CreateBaselineHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildCreateBaselineQuery(request CreateBaselineRequest, accountID int) (int, error) {
+func buildCreateBaselineQuery(request CreateBaselineRequest, accountID int) (int64, error) {
 	tx := database.Db.WithContext(base.Context).Begin()
 	defer tx.Rollback()
 

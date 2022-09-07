@@ -21,7 +21,7 @@ func testBaselineDetail(t *testing.T, url string, expectedStatus int, output int
 func TestBaselineDetailDefault(t *testing.T) {
 	var output BaselineDetailResponse
 	testBaselineDetail(t, "/1", http.StatusOK, &output)
-	assert.Equal(t, 1, output.Data.ID)
+	assert.Equal(t, int64(1), output.Data.ID)
 	assert.Equal(t, "baseline", output.Data.Type)
 	assert.Equal(t, "baseline_1-1", output.Data.Attributes.Name)
 	assert.Equal(t, "2010-09-22T00:00:00Z",
