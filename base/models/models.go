@@ -24,7 +24,7 @@ func (Reporter) TableName() string {
 }
 
 type Baseline struct {
-	ID          int
+	ID          int64
 	RhAccountID int
 	Name        string
 	Config      []byte

@@ -187,7 +187,7 @@ func TestUpdateBaselineSystems(t *testing.T) {
 
 	var resp UpdateBaselineResponse
 	CheckResponse(t, w, http.StatusOK, &resp)
-	assert.Equal(t, 1, resp.BaselineID)
+	assert.Equal(t, int64(1), resp.BaselineID)
 
 	database.DeleteBaseline(t, baselineID)
 }

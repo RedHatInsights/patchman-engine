@@ -55,7 +55,7 @@ func TestFilterToSql(t *testing.T) {
 		filter, err := ParseFilterValue(f)
 		assert.Equal(t, nil, err)
 
-		attrMap := database.AttrMap{"test": {"test", "test", dummyParser}}
+		attrMap := database.AttrMap{"test": {DataQuery: "test", OrderQuery: "test", Parser: dummyParser}}
 		query, _, err := filter.ToWhere("test", attrMap)
 		assert.Equal(t, nil, err)
 		assert.Equal(t, queries[i], query)
@@ -75,7 +75,7 @@ func TestFilterToSqlAdvanced(t *testing.T) {
 	for i, f := range testFilters {
 		filter, err := ParseFilterValue(f)
 		assert.Equal(t, nil, err)
-		attrMap := database.AttrMap{"test": {"(NOT test)", "(NOT test)", dummyParser}}
+		attrMap := database.AttrMap{"test": {DataQuery: "(NOT test)", OrderQuery: "(NOT test)", Parser: dummyParser}}
 		query, _, err := filter.ToWhere("test", attrMap)
 		assert.Equal(t, nil, err)
 		assert.Equal(t, queries[i], query)

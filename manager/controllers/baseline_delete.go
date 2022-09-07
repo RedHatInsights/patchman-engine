@@ -15,7 +15,7 @@ import (
 )
 
 type DeleteBaselineResponse struct {
-	BaselineID int `json:"baseline_id" example:"1"` // Updated baseline unique ID, it can not be changed
+	BaselineID int64 `json:"baseline_id" example:"1"` // Updated baseline unique ID, it can not be changed
 }
 
 // @Summary Delete a baseline
@@ -34,7 +34,7 @@ func BaselineDeleteHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 
 	baselineIDstr := c.Param("baseline_id")
-	baselineID, err := strconv.Atoi(baselineIDstr)
+	baselineID, err := strconv.ParseInt(baselineIDstr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "Invalid baseline_id: " + baselineIDstr})
 		return

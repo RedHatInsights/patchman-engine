@@ -35,7 +35,7 @@ func runBaselineRecalcLoop() {
 	}
 }
 
-func GetInventoryIDsToEvaluate(baselineID *int, accountID int,
+func GetInventoryIDsToEvaluate(baselineID *int64, accountID int,
 	configUpdated bool, updatedInventoryIDs []string) []mqueue.EvalData {
 	if !enableBaselineChangeEval {
 		return nil
@@ -65,7 +65,7 @@ func inventoryIDs2InventoryAIDs(accountID int, inventoryIDs []string) []mqueue.E
 	return inventoryAIDs
 }
 
-func getInventoryIDs(baselineID *int, accountID int, inventoryIDs []string) []mqueue.EvalData {
+func getInventoryIDs(baselineID *int64, accountID int, inventoryIDs []string) []mqueue.EvalData {
 	var inventoryAIDs []mqueue.EvalData
 	query := database.Db.Model(&models.SystemPlatform{}).
 		Select("inventory_id, rh_account_id").
