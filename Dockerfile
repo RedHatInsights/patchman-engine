@@ -87,6 +87,7 @@ ADD --chown=insights:root database_admin/schema      /go/src/app/database_admin/
 ADD --chown=insights:root database_admin/migrations  /go/src/app/database_admin/migrations
 ADD --chown=insights:root docs/v1/openapi.json       /go/src/app/docs/v1/
 ADD --chown=insights:root docs/v2/openapi.json       /go/src/app/docs/v2/
+ADD --chown=insights:root docs/admin/openapi.json    /go/src/app/docs/admin/
 
 COPY --from=buildimg /go/src/app/main /go/src/app/
 

@@ -12,17 +12,21 @@ import (
 	"app/tasks/cleaning"
 	"app/tasks/system_culling"
 	"app/tasks/vmaas_sync"
+	"app/turnpike"
 	"log"
 	"os"
 )
 
-//nolint: funlen
+// nolint: funlen
 func main() {
 	base.HandleSignals()
 
 	defer utils.LogPanics(true)
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
+		case "admin":
+			turnpike.RunAdminAPI()
+			return
 		case "manager":
 			manager.RunManager()
 			return

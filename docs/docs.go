@@ -11,6 +11,7 @@ import (
 
 const exposedOpenapiPathV1 = "/tmp/openapi.v1.json"
 const exposedOpenapiPathV2 = "/tmp/openapi.v2.json"
+const exposedOpenapiPathAdmin = "/tmp/openapi.admin.json"
 
 var appVersions = map[string]openapiData{
 	"v1": {
@@ -21,6 +22,10 @@ var appVersions = map[string]openapiData{
 		in: "./docs/v2/openapi.json", out: exposedOpenapiPathV2,
 		url: "/api/patch/v2/openapi.json", handler: handleOpenapiV2Spec,
 	},
+}
+var adminAPI = openapiData{
+	in: "./docs/admin/openapi.json", out: exposedOpenapiPathAdmin,
+	url: "/api/patch/admin/openapi.json", handler: handleOpenapiAdminSpec,
 }
 
 type openapiData struct {
@@ -46,6 +51,14 @@ func Init(app *gin.Engine, config EndpointsConfig) string {
 	return data.url
 }
 
+func InitAdminAPI(app *gin.Engine) string {
+	cfg := EndpointsConfig{}
+	// used to create file with openapi.json
+	filterOpenAPI(cfg, adminAPI.in, adminAPI.out)
+	app.GET(adminAPI.url, adminAPI.handler)
+	return adminAPI.url
+}
+
 func handleOpenapiV1Spec(c *gin.Context) {
 	c.Status(200)
 	c.Header("Content-Type", "application/json; charset=utf-8")
@@ -56,6 +69,12 @@ func handleOpenapiV2Spec(c *gin.Context) {
 	c.Status(200)
 	c.Header("Content-Type", "application/json; charset=utf-8")
 	c.File(exposedOpenapiPathV2)
+}
+
+func handleOpenapiAdminSpec(c *gin.Context) {
+	c.Status(200)
+	c.Header("Content-Type", "application/json; charset=utf-8")
+	c.File(exposedOpenapiPathAdmin)
 }
 
 func filterOpenAPI(config EndpointsConfig, inputOpenapiPath, outputOpenapiPath string) (removedPaths int) {

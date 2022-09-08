@@ -11,6 +11,50 @@ objects:
   spec:
     envName: ${ENV_NAME}
     deployments:
+    - name: admin
+      minReplicas: ${{REPLICAS_ADMIN}}
+      webServices:
+        public:
+          enabled: true
+          apiPath: patch
+        private:
+          enabled: false
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG_ADMIN}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+        command:
+          - ./scripts/entrypoint.sh
+          - admin
+        env:
+        - {name: GOMAXPROCS, value: '${GOMAXPROCS_ADMIN}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: DB_USER, value: vmaas_sync}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                      key: vmaas-sync-database-password}}}
+        - {name: KAFKA_GROUP, value: patchman}
+        - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
+        - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
+        - {name: ENABLE_REPO_BASED_RE_EVALUATION, value: '${ENABLE_REPO_BASED_RE_EVALUATION}'}
+        - {name: ENABLE_RECALC_MESSAGES_SEND, value: '${ENABLE_RECALC_MESSAGES_SEND}'}
+        - {name: ENABLE_ADVISORIES_SYNC, value: '${ENABLE_ADVISORIES_SYNC}'}
+        - {name: ENABLE_PACKAGES_SYNC, value: '${ENABLE_PACKAGES_SYNC}'}
+        - {name: ENABLE_REPOS_SYNC, value: '${ENABLE_REPOS_SYNC}'}
+        - {name: ENABLE_MODIFIED_SINCE_SYNC, value: '${ENABLE_MODIFIED_SINCE_SYNC}'}
+        - {name: ERRATA_PAGE_SIZE, value: '${ERRATA_PAGE_SIZE}'}
+        - {name: PACKAGES_PAGE_SIZE, value: '${PACKAGES_PAGE_SIZE}'}
+        - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
+        - {name: ENABLE_TURNPIKE_AUTH, value: '${ENABLE_TURNPIKE_AUTH}'}
+
+        resources:
+          limits: {cpu: '${RES_LIMIT_CPU_ADMIN}', memory: '${RES_LIMIT_MEM_ADMIN}'}
+          requests: {cpu: '${RES_REQUEST_CPU_ADMIN}', memory: '${RES_REQUEST_MEM_ADMIN}'}
+
     - name: manager
       minReplicas: ${{REPLICAS_MANAGER}}
       webServices:
@@ -73,7 +117,6 @@ objects:
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: '${EVAL_TOPIC_MANAGER}'}
-        - {name: ENABLE_TURNPIKE_AUTH, value: '${ENABLE_TURNPIKE_AUTH}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_MANAGER}', memory: '${RES_LIMIT_MEM_MANAGER}'}
@@ -289,8 +332,6 @@ objects:
         - {name: ERRATA_PAGE_SIZE, value: '${ERRATA_PAGE_SIZE}'}
         - {name: PACKAGES_PAGE_SIZE, value: '${PACKAGES_PAGE_SIZE}'}
         - {name: ENABLE_CYNDI_METRICS, value: '${ENABLE_CYNDI_METRICS}'}
-        - {name: ENABLE_ADVISORIES_COUNT_CHECK, value: '${ENABLE_ADVISORIES_COUNT_CHECK}'}
-        - {name: ENABLE_PACKAGES_COUNT_CHECK, value: '${ENABLE_PACKAGES_COUNT_CHECK}'}
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
         - {name: FULL_SYNC_CADENCE,value: '${FULL_SYNC_CADENCE}'}
@@ -579,8 +620,6 @@ parameters:
 - {name: ERRATA_PAGE_SIZE, value: '500'} # Requested Vmaas response page size for advisories sync
 - {name: PACKAGES_PAGE_SIZE, value: '5'} # Requested Vmaas response page size for packages sync
 - {name: ENABLE_CYNDI_METRICS, value: 'true'} # Calculate and expose metrics about Cyndi data
-- {name: ENABLE_ADVISORIES_COUNT_CHECK, value: 'true'} # Check all advisories count after sync, re-sync all if needed
-- {name: ENABLE_PACKAGES_COUNT_CHECK, value: 'true'} # Check all packages count after sync, re-sync all if needed
 - {name: RES_LIMIT_CPU_VMAAS_SYNC, value: 500m}
 - {name: RES_LIMIT_MEM_VMAAS_SYNC, value: 384Mi}
 - {name: RES_REQUEST_CPU_VMAAS_SYNC, value: 500m}
@@ -634,8 +673,15 @@ parameters:
 - {name: VMAAS_CALL_USE_OPTIMISTIC_UPDATES, value: 'true'} # Always use "optimistic_updates" in vmaas request (not only for third party usage).
 - {name: MSG_BATCH_SIZE, value: '4000'} # BatchSize for PlatformEvent message
 - {name: ENABLE_PAYLOAD_TRACKER, value: 'true'} # Send status messages to payload tracker
+
 # Turnpike
-- {name: ENABLE_TURNPIKE_AUTH, value: 'false'} # Enable Turnpike authentication for internal API (manual sync, re-calc)
+- {name: IMAGE_TAG_ADMIN, value: v2.3.1}
+- {name: ENABLE_TURNPIKE_AUTH, value: 'true'} # Enable Turnpike authentication for internal API (manual sync, re-calc)
+- {name: REPLICAS_ADMIN, value: '1'}
+- {name: RES_LIMIT_CPU_ADMIN, value: 100m}
+- {name: RES_LIMIT_MEM_ADMIN, value: 256Mi}
+- {name: RES_REQUEST_CPU_ADMIN, value: 50m}
+- {name: RES_REQUEST_MEM_ADMIN, value: 128Mi}
 
 # Floorist parameters
 - {name: FLOORIST_SUSPEND, value: 'true', required: true} # Disable Floorist cronjob execution

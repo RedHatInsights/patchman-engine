@@ -9,7 +9,6 @@ import (
 	"app/manager/kafka"
 	"app/manager/middlewares"
 	"app/manager/routes"
-	"app/turnpike"
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
@@ -57,8 +56,6 @@ func RunManager() {
 	go base.TryExposeOnMetricsPort(app)
 
 	kafka.TryStartEvalQueue(mqueue.NewKafkaWriterFromEnv)
-
-	go turnpike.RunAdminAPI()
 
 	port := utils.Cfg.PublicPort
 	err := utils.RunServer(base.Context, app, port)
