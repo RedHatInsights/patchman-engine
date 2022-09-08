@@ -74,7 +74,7 @@ type String struct {
 }
 
 type PackageName struct {
-	ID      int `json:"id" gorm:"primary_key"`
+	ID      int64 `json:"id" gorm:"primary_key"`
 	Name    string
 	Summary *string
 }
