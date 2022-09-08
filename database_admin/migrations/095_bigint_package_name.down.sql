@@ -1,0 +1,1 @@
+ALTER TABLE package_name ALTER COLUMN id TYPE INT;
