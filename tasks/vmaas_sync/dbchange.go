@@ -18,11 +18,11 @@ func isSyncNeeded() bool {
 
 	ts, err := database.GetTimestampKVValue(LastSync)
 	if err != nil || ts == nil {
-		utils.Log("ts", ts).Info("Last sync disabled - sync needed")
+		utils.Log("ts", ts, "err", err).Info("Last sync disabled - sync needed")
 		return true
 	}
 
-	var emptyTS types.Rfc3339Timestamp
+	var emptyTS types.Rfc3339TimestampNoT
 	dbchange, err := vmaasDBChangeRequest()
 	if err != nil {
 		utils.Log("err", err).Error("Could'n query vmaas dbchange")
@@ -45,8 +45,9 @@ func isSyncNeeded() bool {
 
 func vmaasDBChangeRequest() (*vmaas.DBChangeResponse, error) {
 	vmaasCallFunc := func() (interface{}, *http.Response, error) {
-		resp, err := vmaasClient.Request(&base.Context, http.MethodGet, vmaasDBChangeURL, nil, nil)
-		return nil, resp, err
+		response := vmaas.DBChangeResponse{}
+		resp, err := vmaasClient.Request(&base.Context, http.MethodGet, vmaasDBChangeURL, nil, &response)
+		return &response, resp, err
 	}
 
 	vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc, vmaasCallExpRetry, vmaasCallMaxRetries)
