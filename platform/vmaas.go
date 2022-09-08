@@ -197,7 +197,7 @@ func dbchangeHandler(c *gin.Context) {
         "dbchange": {
             "errata_changes": "2222-04-16 20:07:58.500192+00",
             "cve_changes": "2222-04-16 20:06:47.214266+00",
-            "repository_changes": "2222-04-16 20:07:55.01395+00",
+            "repository_changes": "2222-04-16 20:07:55.214266+00",
             "last_change": "2222-04-16 20:07:58.500192+00",
             "exported": "2222-04-16 20:07:59.235962+00"
         }

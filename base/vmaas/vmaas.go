@@ -223,17 +223,21 @@ type ReposResponse struct {
 }
 
 type DBChangeResponse struct {
-	ErrataChanges     *types.Rfc3339Timestamp `json:"errata_changes,omitempty"`
-	CVEChanges        *types.Rfc3339Timestamp `json:"cve_changes,omitempty"`
-	RepositoryChanges *types.Rfc3339Timestamp `json:"repository_changes,omitempty"`
-	LastChange        *types.Rfc3339Timestamp `json:"last_change,omitempty"`
-	Exported          *types.Rfc3339Timestamp `json:"exported,omitempty"`
+	DBChange dbChange `json:"dbchange,omitempty"`
 }
 
-func (o *DBChangeResponse) GetExported() types.Rfc3339Timestamp {
-	if o == nil || o.Exported == nil {
-		var ret types.Rfc3339Timestamp
+type dbChange struct {
+	ErrataChanges     *types.Rfc3339TimestampNoT `json:"errata_changes,omitempty"`
+	CVEChanges        *types.Rfc3339TimestampNoT `json:"cve_changes,omitempty"`
+	RepositoryChanges *types.Rfc3339TimestampNoT `json:"repository_changes,omitempty"`
+	LastChange        *types.Rfc3339TimestampNoT `json:"last_change,omitempty"`
+	Exported          *types.Rfc3339TimestampNoT `json:"exported,omitempty"`
+}
+
+func (o *DBChangeResponse) GetExported() types.Rfc3339TimestampNoT {
+	if o == nil || o.DBChange.Exported == nil {
+		var ret types.Rfc3339TimestampNoT
 		return ret
 	}
-	return *o.Exported
+	return *o.DBChange.Exported
 }

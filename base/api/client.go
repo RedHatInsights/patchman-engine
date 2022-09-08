@@ -5,9 +5,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 type Client struct {
