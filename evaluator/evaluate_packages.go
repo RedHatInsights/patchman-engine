@@ -87,12 +87,12 @@ func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) models.
 			if err != nil {
 				utils.Log("err", err.Error(), "nevra", nevra).Error("unknown package name insert failed")
 			}
-			pkg.NameID = int64(pkgName.ID)
+			pkg.NameID = pkgName.ID
 			if pkg.NameID == 0 {
 				// insert conflict, it did not return ID
 				// try to get ID from package_name table
 				tx.Where("name = ?", parsed.Name).First(&pkgName)
-				pkg.NameID = int64(pkgName.ID)
+				pkg.NameID = pkgName.ID
 			}
 		}
 		packages = append(packages, pkg)

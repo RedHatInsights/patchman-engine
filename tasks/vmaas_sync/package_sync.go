@@ -57,14 +57,14 @@ func stringPtr2Hash(str *string) *[]byte {
 	return &bytes
 }
 
-func getPackageNameMap(tx *gorm.DB, nameArr []string) (map[string]int, error) {
+func getPackageNameMap(tx *gorm.DB, nameArr []string) (map[string]int64, error) {
 	// Load all to get IDs
 	var pkgNamesLoaded []models.PackageName
 	err := tx.Where("name in (?)", nameArr).Find(&pkgNamesLoaded).Error
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to load package names data")
 	}
-	idByName := map[string]int{}
+	idByName := map[string]int64{}
 	for _, p := range pkgNamesLoaded {
 		idByName[p.Name] = p.ID
 	}
@@ -153,7 +153,7 @@ func storeStringsFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListItem) er
 	return tx.CreateInBatches(strings, chunkSize).Error
 }
 
-func storePackageNamesFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListItem) (map[string]int, error) {
+func storePackageNamesFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListItem) (map[string]int64, error) {
 	packageNames, packageNameModels := getPackageArraysFromPkgListItems(tx, vmaasData)
 	utils.Log("names", len(packageNames)).Info("Got package names")
 	if len(packageNameModels) > 0 {
@@ -210,7 +210,7 @@ func getPackageArraysFromPkgListItems(tx *gorm.DB, pkgListItems []vmaas.PkgListI
 	return nameArr, pkgNames
 }
 
-func storePackageDetailsFrmPkgListItems(tx *gorm.DB, nameIDs map[string]int, pkgListItems []vmaas.PkgListItem) error {
+func storePackageDetailsFrmPkgListItems(tx *gorm.DB, nameIDs map[string]int64, pkgListItems []vmaas.PkgListItem) error {
 	var toStore models.PackageSlice
 	var uniquePackages = make(map[nameIDandEvra]bool)
 	for _, pkgListItem := range pkgListItems {
@@ -288,7 +288,7 @@ func storeOrUpdate(tx *gorm.DB, pkgs models.PackageSlice) error {
 	return updErr
 }
 
-func getPackageFromPkgListItem(pkgListItem vmaas.PkgListItem, nameIDs map[string]int) *models.Package {
+func getPackageFromPkgListItem(pkgListItem vmaas.PkgListItem, nameIDs map[string]int64) *models.Package {
 	nevraPtr, err := utils.ParseNevra(pkgListItem.Nevra)
 	if err != nil {
 		utils.Log("nevra", pkgListItem.Nevra).Error("Unable to parse nevra")
@@ -298,7 +298,7 @@ func getPackageFromPkgListItem(pkgListItem vmaas.PkgListItem, nameIDs map[string
 	descriptionStr := pkgListItem.Description
 	summaryStr := pkgListItem.Summary
 	pkg := models.Package{
-		NameID:          int64(nameIDs[nevraPtr.Name]),
+		NameID:          nameIDs[nevraPtr.Name],
 		EVRA:            nevraPtr.EVRAString(),
 		DescriptionHash: stringPtr2Hash(&descriptionStr),
 		SummaryHash:     stringPtr2Hash(&summaryStr),
@@ -308,8 +308,8 @@ func getPackageFromPkgListItem(pkgListItem vmaas.PkgListItem, nameIDs map[string
 	return &pkg
 }
 
-func updatePackageNameSummary(tx *gorm.DB, nameIDs map[string]int) error {
-	pkgNameIDs := make([]int, 0, len(nameIDs))
+func updatePackageNameSummary(tx *gorm.DB, nameIDs map[string]int64) error {
+	pkgNameIDs := make([]int64, 0, len(nameIDs))
 	for _, val := range nameIDs {
 		pkgNameIDs = append(pkgNameIDs, val)
 	}
