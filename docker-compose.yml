@@ -207,5 +207,25 @@ services:
     security_opt:
       - label=disable
 
+  admin:
+    container_name: admin
+    image: patchman-engine-app
+    env_file:
+      - ./conf/common.env
+      - ./conf/vmaas_sync.env
+      - ./conf/gorun.env
+    command: ./scripts/entrypoint.sh admin
+    ports:
+      - 8085:8083
+    depends_on:
+      - db
+      - kafka
+      - platform
+      - patchimg
+    volumes:
+      - ./:/go/src/app
+    security_opt:
+      - label=disable
+
 volumes:
   db-data:

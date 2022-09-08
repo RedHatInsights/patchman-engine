@@ -1,0 +1,150 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "Patch Admin API",
+        "description": "Admin API of the Patch application on [internal.console.redhat.com](https://internal.console.redhat.com)",
+        "contact": {},
+        "license": {
+            "name": "GPLv3",
+            "url": "https://www.gnu.org/licenses/gpl-3.0.en.html"
+        },
+        "version": "v2.3.1"
+    },
+    "servers": [
+        {
+            "url": "/api/patch/admin"
+        }
+    ],
+    "paths": {
+        "/check-caches": {
+            "get": {
+                "summary": "Check cached counts",
+                "description": "Check cached counts",
+                "operationId": "checkCaches",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
+        "/re-calc": {
+            "get": {
+                "summary": "Re-evaluate systems",
+                "description": "Re-evaluate systems",
+                "operationId": "recalc",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
+        "/sync": {
+            "get": {
+                "summary": "Sync data from VMaaS",
+                "description": "Sync data from VMaaS",
+                "operationId": "sync",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "RhIdentity": {
+                "type": "apiKey",
+                "name": "x-rh-identity",
+                "in": "header"
+            }
+        }
+    }
+}

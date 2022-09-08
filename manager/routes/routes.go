@@ -1,9 +1,11 @@
 package routes
 
 import (
+	"app/base/utils"
 	"app/docs"
 	"app/manager/controllers"
 	"app/manager/middlewares"
+	admin "app/turnpike/controllers"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -73,9 +75,17 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	ids.GET("/systems/:inventory_id/advisories", controllers.SystemAdvisoriesIDsHandler)
 
 	api.GET("/status", controllers.Status)
-	initAdmin(api.Group("/admin"))
 }
 
-func initAdmin(group *gin.RouterGroup) {
+func InitAdmin(app *gin.Engine) {
+	enableTurnpikeAuth := utils.GetBoolEnvOrDefault("ENABLE_TURNPIKE_AUTH", false)
 
+	api := app.Group("/api/patch/admin")
+	if enableTurnpikeAuth {
+		api.Use(middlewares.TurnpikeAuthenticator())
+	}
+
+	api.GET("/sync", admin.Syncapi)
+	api.GET("/re-calc", admin.Recalc)
+	api.GET("/check-caches", admin.CheckCaches)
 }

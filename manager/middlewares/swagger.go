@@ -17,3 +17,11 @@ func SetSwagger(app *gin.Engine, config docs.EndpointsConfig) {
 	url := ginSwagger.URL(openapiURL)
 	app.GET("/openapi/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 }
+
+func SetAdminSwagger(app *gin.Engine) {
+	oaURL := docs.InitAdminAPI((app))
+
+	url := ginSwagger.URL(oaURL)
+	api := app.Group("/api/patch/admin")
+	api.GET("/openapi/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
+}
