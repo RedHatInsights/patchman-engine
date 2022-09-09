@@ -76,6 +76,11 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 	checkNotificationPayload(t, notificationSent, "RH-1", "enhancement", "adv-1-syn")
 	checkNotificationPayload(t, notificationSent, "RH-2", "bugfix", "adv-2-syn")
 
+	events := notificationSent.Events
+	// Assert is sorted ASC
+	assert.True(t, events[0].Payload.(map[string]interface{})["advisory_name"].(string) <
+		events[1].Payload.(map[string]interface{})["advisory_name"].(string))
+
 	database.DeleteSystemAdvisories(t, systemID, advisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs)
