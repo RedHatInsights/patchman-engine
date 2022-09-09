@@ -17,6 +17,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	BLOCK    = 1
+	CONTINUE = 2
+	MIGRATE  = 3
+)
+
 func NewConn(databaseURL string) (database.Driver, *sql.DB, error) {
 	baseConn, err := pq.NewConnector(databaseURL)
 	if err != nil {
@@ -76,7 +82,7 @@ func latestSchemaMigrationFileVersion(sourceURL string) (int, error) {
 	dir := sourceURL[len("file://"):]
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return 0, errors.Wrap(err, fmt.Sprintf("Error reading migration files %s in %s: %v\n", files, dir))
+		return 0, errors.Wrap(err, fmt.Sprintf("Error reading migration files %s in %s", files, dir))
 	}
 	for _, f := range files {
 		ver, _, _ := cut(f.Name(), '_')
@@ -94,6 +100,10 @@ func latestSchemaMigrationFileVersion(sourceURL string) (int, error) {
 func dbSchemaVersion(conn database.Driver, sourceURL string) (int, error) {
 	m := createMigrate(conn, sourceURL)
 	curVersion, dirty, err := m.Version()
+	if err == migrate.ErrNilVersion {
+		// no schema yet
+		return 0, nil
+	}
 	if err != nil {
 		return 0, errors.Wrap(err, "Error getting current DB version")
 	}
@@ -103,27 +113,37 @@ func dbSchemaVersion(conn database.Driver, sourceURL string) (int, error) {
 	return int(curVersion), nil
 }
 
-func isUpgraded(conn database.Driver, sourceURL string) bool {
+func migrateAction(conn database.Driver, sourceURL string) int {
 	expectedSchema := utils.GetIntEnvOrDefault("SCHEMA_MIGRATION", -1)
 	fmt.Printf("DB migration in progress, waiting for schema=%d\n", expectedSchema)
-
-	curVersion, err := dbSchemaVersion(conn, sourceURL)
+	dbSchema, err := dbSchemaVersion(conn, sourceURL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error getting current DB version: %v\n", err.Error())
-		return false
+		return BLOCK
 	}
-	if int(curVersion) == expectedSchema {
-		fmt.Println("DB is upgraded")
-		return true
-	}
-
-	maxVer, err := latestSchemaMigrationFileVersion(sourceURL)
+	migrationSchema, err := latestSchemaMigrationFileVersion(sourceURL)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err.Error())
-		return false
+		return BLOCK
 	}
-	fmt.Printf("current version: %d, expected: %d\n", curVersion, maxVer)
-	return curVersion == maxVer
+
+	if migrationSchema < expectedSchema || migrationSchema < dbSchema {
+		// some migration files are missing
+		fmt.Fprintf(os.Stderr, "Missing migration files for schema %d and newer\n", migrationSchema)
+		return BLOCK
+	}
+	if dbSchema == expectedSchema && migrationSchema > dbSchema {
+		// schema can be upgraded but is intentionaly blocked by SCHEMA_MIGRATION
+		fmt.Println("Deployment blocked, enable migrations to proceed")
+		return BLOCK
+	}
+	if dbSchema == migrationSchema &&
+		(dbSchema == expectedSchema || expectedSchema == -1) {
+		fmt.Println("DB is upgraded")
+		return CONTINUE
+	}
+	fmt.Printf("current version: %d, expected: %d\n", dbSchema, expectedSchema)
+	return MIGRATE
 }
 
 type logger struct{}

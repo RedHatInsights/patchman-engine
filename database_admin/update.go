@@ -98,18 +98,7 @@ func dbConn() (database.Driver, *sql.DB) {
 
 func UpdateDB(migrationFilesURL string) {
 	utils.ConfigureLogging()
-	migrationEnabled := utils.GetBoolEnvOrDefault("ENABLE_MIGRATION", false)
-
 	conn, db := dbConn()
-
-	if !migrationEnabled {
-		if isUpgraded(conn, migrationFilesURL) {
-			return
-		}
-		utils.Log("ENABLE_MIGRATION", migrationEnabled).Info("Deployment blocked, enable migrations to proceed")
-		// sleep until next deployment
-		select {}
-	}
 
 	getAdvisoryLock(db)
 	defer releaseAdvisoryLock(db)
@@ -126,9 +115,14 @@ func UpdateDB(migrationFilesURL string) {
 		execFromFile(db, "./database_admin/schema/create_users.sql")
 	}
 
-	if isUpgraded(conn, migrationFilesURL) {
+	switch action := migrateAction(conn, migrationFilesURL); action {
+	case BLOCK:
+		// sleep until next deployment
+		releaseAdvisoryLock(db)
+		select {}
+	case CONTINUE:
 		log.Info("Skipping migration")
-	} else {
+	case MIGRATE:
 		log.Info("Migrating the database")
 		startMigration(conn, db, migrationFilesURL)
 	}
@@ -155,7 +149,8 @@ func UpdateDB(migrationFilesURL string) {
 func CheckUpgraded(sourceURL string) {
 	conn, _ := dbConn()
 	for {
-		if isUpgraded(conn, sourceURL) {
+		action := migrateAction(conn, sourceURL)
+		if action == CONTINUE {
 			return
 		}
 		time.Sleep(time.Second)
