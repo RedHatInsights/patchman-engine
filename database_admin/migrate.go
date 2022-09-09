@@ -14,6 +14,7 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // we load migrations from local folder
 	"github.com/lib/pq"
+	"github.com/pkg/errors"
 )
 
 func NewConn(databaseURL string) (database.Driver, *sql.DB, error) {
@@ -70,18 +71,45 @@ func MigrateUp(conn database.Driver, sourceURL string) {
 	}
 }
 
-func isUpgraded(conn database.Driver, sourceURL string) bool {
+func latestSchemaMigrationFileVersion(sourceURL string) (int, error) {
+	latestVer := 0
+	dir := sourceURL[len("file://"):]
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return 0, errors.Wrap(err, fmt.Sprintf("Error reading migration files %s in %s: %v\n", files, dir))
+	}
+	for _, f := range files {
+		ver, _, _ := cut(f.Name(), '_')
+		intVer, err := strconv.Atoi(ver)
+		if err != nil {
+			return 0, errors.Wrap(err, fmt.Sprintf("Can't convert %s to integer: %v\n", ver, err))
+		}
+		if intVer > latestVer {
+			latestVer = intVer
+		}
+	}
+	return latestVer, nil
+}
+
+func dbSchemaVersion(conn database.Driver, sourceURL string) (int, error) {
 	m := createMigrate(conn, sourceURL)
+	curVersion, dirty, err := m.Version()
+	if err != nil {
+		return 0, errors.Wrap(err, "Error getting current DB version")
+	}
+	if dirty {
+		return 0, errors.New("Previous migration failed - dirty=true")
+	}
+	return int(curVersion), nil
+}
+
+func isUpgraded(conn database.Driver, sourceURL string) bool {
 	expectedSchema := utils.GetIntEnvOrDefault("SCHEMA_MIGRATION", -1)
 	fmt.Printf("DB migration in progress, waiting for schema=%d\n", expectedSchema)
 
-	curVersion, dirty, err := m.Version()
+	curVersion, err := dbSchemaVersion(conn, sourceURL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error getting current DB version: %v\n", err.Error())
-		return false
-	}
-	if dirty {
-		fmt.Fprintln(os.Stderr, "Previous migration failed - dirty=true")
 		return false
 	}
 	if int(curVersion) == expectedSchema {
@@ -89,27 +117,13 @@ func isUpgraded(conn database.Driver, sourceURL string) bool {
 		return true
 	}
 
-	maxVer := 0
-	dir := sourceURL[len("file://"):]
-	files, err := ioutil.ReadDir(dir)
+	maxVer, err := latestSchemaMigrationFileVersion(sourceURL)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error reading migration files %s in %s: %v\n", files, dir, err.Error())
+		fmt.Fprint(os.Stderr, err.Error())
 		return false
 	}
-	for _, f := range files {
-		ver, _, _ := cut(f.Name(), '_')
-		intVer, err := strconv.Atoi(ver)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Can't convert %s to integer: %v\n", ver, err)
-			return false
-		}
-		if intVer > maxVer {
-			maxVer = intVer
-		}
-	}
-
 	fmt.Printf("current version: %d, expected: %d\n", curVersion, maxVer)
-	return int(curVersion) == maxVer
+	return curVersion == maxVer
 }
 
 type logger struct{}
