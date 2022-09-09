@@ -29,14 +29,13 @@ func GetOrCreateAccount(orgID string) (int, error) {
 	rhAccount := models.RhAccount{
 		OrgID: &orgID,
 	}
-	var err error
 	if rhAccount.OrgID == nil || *rhAccount.OrgID == "" {
 		// missing OrgID in msg from Inventory
-		return 0, errors.Wrap(err, "missing org_id")
+		return 0, errors.New("missing org_id")
 	}
 
 	// Find account by OrgID
-	err = database.Db.Where("org_id = ?", *rhAccount.OrgID).Find(&rhAccount).Error
+	err := database.Db.Where("org_id = ?", *rhAccount.OrgID).Find(&rhAccount).Error
 	if err != nil {
 		utils.Log("err", err, "org_id", *rhAccount.OrgID).Warn("Error in finding account")
 	}

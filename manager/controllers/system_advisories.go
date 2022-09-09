@@ -66,22 +66,21 @@ func (v RelList) String() string {
 }
 
 func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
-	var err error
 	account := c.GetInt(middlewares.KeyAccount)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
-		return nil, nil, nil, errors.Wrap(err, "inventory_id param not found")
+		return nil, nil, nil, errors.New("inventory_id param not found")
 	}
 
 	if !utils.IsValidUUID(inventoryID) {
 		LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
-		return nil, nil, nil, errors.Wrap(err, "incorrect inventory_id format")
+		return nil, nil, nil, errors.New("incorrect inventory_id format")
 	}
 
 	var exists int64
-	err = database.Db.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid ", inventoryID).
+	err := database.Db.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid ", inventoryID).
 		Count(&exists).Error
 
 	if err != nil {
@@ -89,8 +88,9 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error)
 		return nil, nil, nil, err
 	}
 	if exists == 0 {
-		LogAndRespNotFound(c, errors.New("System not found"), "Systems not found")
-		return nil, nil, nil, errors.Wrap(err, "systems not found")
+		err = errors.New("system not found")
+		LogAndRespNotFound(c, err, "Systems not found")
+		return nil, nil, nil, err
 	}
 
 	query := buildSystemAdvisoriesQuery(account, inventoryID)

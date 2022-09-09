@@ -34,25 +34,25 @@ var AdvisorySystemOpts = ListOpts{
 }
 
 func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
-	var err error
 	account := c.GetInt(middlewares.KeyAccount)
 
 	advisoryName := c.Param("advisory_id")
 	if advisoryName == "" {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "advisory_id param not found"})
-		return nil, nil, nil, errors.Wrap(err, "advisory_id param not found")
+		return nil, nil, nil, errors.New("advisory_id param not found")
 	}
 
 	var exists int64
-	err = database.Db.Model(&models.AdvisoryMetadata{}).
+	err := database.Db.Model(&models.AdvisoryMetadata{}).
 		Where("name = ? ", advisoryName).Count(&exists).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")
 		return nil, nil, nil, err
 	}
 	if exists == 0 {
-		LogAndRespNotFound(c, errors.New("Advisory not found"), "Advisory not found")
-		return nil, nil, nil, errors.Wrap(err, "advisory not found")
+		err = errors.New("advisory not found")
+		LogAndRespNotFound(c, err, "Advisory not found")
+		return nil, nil, nil, err
 	}
 
 	query := buildAdvisorySystemsQuery(account, advisoryName)

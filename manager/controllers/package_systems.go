@@ -69,12 +69,11 @@ func packageSystemsQuery(acc int, packageName string, packageIDs []int) *gorm.DB
 func packageSystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
 	account := c.GetInt(middlewares.KeyAccount)
 	var filters map[string]FilterData
-	var err error
 
 	packageName := c.Param("package_name")
 	if packageName == "" {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "package_name param not found"})
-		return nil, nil, nil, errors.Wrap(err, "package_name param not found")
+		return nil, nil, nil, errors.New("package_name param not found")
 	}
 
 	var packageIDs []int
@@ -85,11 +84,11 @@ func packageSystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
 
 	if len(packageIDs) == 0 {
 		LogAndRespNotFound(c, errors.New("not found"), "package not found")
-		return nil, nil, nil, errors.Wrap(err, "package not found")
+		return nil, nil, nil, errors.New("package not found")
 	}
 
 	query := packageSystemsQuery(account, packageName, packageIDs)
-	filters, err = ParseTagsFilters(c)
+	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled in method itself
