@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"fmt"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -106,4 +107,48 @@ func TestSchemaEmptyText(t *testing.T) {
 		msg += fmt.Sprintf("\nMissing empty() constraint on column '%s'", col)
 	}
 	assert.Empty(t, msg)
+}
+
+func TestMigrateAction(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	database.Configure()
+	conn, _ := dbConn()
+	sourceURL := "file://migrations"
+	update := "UPDATE schema_migrations SET version = ?"
+	origDBSchema, err := dbSchemaVersion(conn, sourceURL)
+	assert.Nil(t, err)
+	origMigrationSchema, err := latestSchemaMigrationFileVersion(sourceURL)
+	assert.Nil(t, err)
+	origSchemaMigration := os.Getenv("SCHEMA_MIGRATION")
+	// db has higher version then migration files
+
+	os.Setenv("SCHEMA_MIGRATION", fmt.Sprint(origMigrationSchema+100))
+	what := migrateAction(conn, sourceURL)
+	assert.Equal(t, BLOCK, what)
+
+	// db is actual but there are new migrations
+	os.Setenv("SCHEMA_MIGRATION", "1")
+	assert.Nil(t, database.Db.Exec(update, 1).Error)
+	what = migrateAction(conn, sourceURL)
+	assert.Equal(t, BLOCK, what)
+
+	// db is actual
+	os.Setenv("SCHEMA_MIGRATION", "-1")
+	assert.Nil(t, database.Db.Exec(update, origMigrationSchema).Error)
+	what = migrateAction(conn, sourceURL)
+	assert.Equal(t, CONTINUE, what)
+	// db is actual
+	os.Setenv("SCHEMA_MIGRATION", fmt.Sprint(origMigrationSchema))
+	what = migrateAction(conn, sourceURL)
+	assert.Equal(t, CONTINUE, what)
+
+	// db is actual
+	os.Setenv("SCHEMA_MIGRATION", fmt.Sprint(origMigrationSchema))
+	assert.Nil(t, database.Db.Exec(update, origMigrationSchema-1).Error)
+	what = migrateAction(conn, sourceURL)
+	assert.Equal(t, MIGRATE, what)
+
+	// cleanup
+	os.Setenv("SCHEMA_MIGRATION", origSchemaMigration)
+	assert.Nil(t, database.Db.Exec(update, origDBSchema).Error)
 }
