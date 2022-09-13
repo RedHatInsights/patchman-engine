@@ -18,6 +18,8 @@ import (
 
 const id = "99c0ffee-0000-0000-0000-0000c0ffee99"
 
+var s3URL = "http://platform:9001/yum_updates"
+
 func TestInit(t *testing.T) {
 	utils.TestLoadEnv("conf/listener.env")
 }
@@ -94,7 +96,8 @@ func createTestUploadEvent(rhAccountID, orgID, inventoryID, reporter string, pac
 	if yum {
 		ev.PlatformMetadata = HostPlatformMetadata{
 			CustomMetadata: HostCustomMetadata{
-				YumUpdates: []byte(`{"kernel-0.3": {}}`),
+				YumUpdates:      []byte(`{"kernel-0.3": {}}`),
+				YumUpdatesS3URL: &s3URL,
 			},
 		}
 	}
@@ -136,7 +139,7 @@ func assertYumUpdatesInDB(t *testing.T, inventoryID string, yumUpdates []byte) {
 	var yumUpdatesParsed vmaas.UpdatesV2Response
 	err := json.Unmarshal(system.YumUpdates, &systemYumUpdatesParsed)
 	assert.Nil(t, err)
-	err = json.Unmarshal(yumUpdates, &systemYumUpdatesParsed)
+	err = json.Unmarshal(yumUpdates, &yumUpdatesParsed)
 	assert.Nil(t, err)
 	assert.Equal(t, systemYumUpdatesParsed, yumUpdatesParsed)
 }

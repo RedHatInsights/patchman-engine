@@ -4,6 +4,7 @@ import (
 	"app/base"
 	"app/base/mqueue"
 	"app/base/utils"
+	"app/base/vmaas"
 	"app/manager/middlewares"
 	"encoding/json"
 	"fmt"
@@ -40,6 +41,7 @@ const uploadEvent = `{
     "platform_metadata": {
       "request_id": "ingress-service-5f79d54bf-q5jh6/iDl0gmf6Qw-071711",
       "custom_metadata": {
+		"yum_updates_s3_url": "http://platform:9001/yum_updates",
         "yum_updates": {
           "releasever": "8",
           "basearch": "x86_64",
@@ -93,6 +95,56 @@ const uploadEvent = `{
     }
 	}`
 
+var yumUpdates = `{
+	"releasever": "8",
+	"basearch": "x86_64",
+	"update_list": {
+		"bash-0:4.4.20-1.el8_4.x86_64": {
+			"available_updates": [
+			{
+				"package": "bash-0:4.4.20-3.el8.x86_64",
+				"repository": "rhel-8-for-x86_64-baseos-rpms",
+				"basearch": "x86_64",
+				"releasever": "8",
+				"erratum": "RHBA-2022:1993"
+			},
+			{
+				"package": "bash-0:4.4.20-3.el8.x86_64",
+				"repository": "ubi-8-baseos",
+				"basearch": "x86_64",
+				"releasever": "8",
+				"erratum": "RHBA-2022:1993"
+			},
+			{
+				"package": "bash-0:4.4.23-1.fc28.x86_64",
+				"repository": "local",
+				"basearch": "x86_64",
+				"releasever": "8"
+			}
+			]
+		},
+		"curl-0:7.61.1-18.el8_4.2.x86_64": {
+			"available_updates": [
+			{
+				"package": "curl-0:7.61.1-22.el8.x86_64",
+				"repository": "rhel-8-for-x86_64-baseos-rpms",
+				"basearch": "x86_64",
+				"releasever": "8",
+				"erratum": "RHSA-2021:4511"
+			},
+			{
+				"package": "curl-0:7.61.1-22.el8.x86_64",
+				"repository": "ubi-8-baseos",
+				"basearch": "x86_64",
+				"releasever": "8",
+				"erratum": "RHSA-2021:4511"
+			}
+			]
+		}
+	},
+	"metadata_time": "2022-05-30T14:00:25Z"
+}`
+
 func platformMock() {
 	utils.Log().Info("Platform mock starting")
 	app := gin.New()
@@ -105,6 +157,9 @@ func platformMock() {
 	app.POST("/control/upload", mockUploadHandler)
 	app.POST("/control/delete", mockDeleteHandler)
 	app.POST("/control/toggle_upload", mockToggleUpload)
+
+	// Mock yum_updates_s3
+	app.GET("/yum_updates", mockYumUpdatesS3)
 
 	err := utils.RunServer(base.Context, app, 9001)
 	if err != nil {
@@ -173,6 +228,16 @@ func mockDeleteHandler(c *gin.Context) {
 func mockToggleUpload(c *gin.Context) {
 	runUploadLoop = !runUploadLoop
 	c.JSON(http.StatusOK, fmt.Sprintf("%v", runUploadLoop))
+}
+
+func mockYumUpdatesS3(c *gin.Context) {
+	utils.Log().Info("Mocking S3 for providing yum updates")
+	updates := vmaas.UpdatesV2Response{}
+	if err := json.Unmarshal([]byte(yumUpdates), &updates); err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, &updates)
 }
 
 func uploader() {
