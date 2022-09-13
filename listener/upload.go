@@ -2,6 +2,7 @@ package listener
 
 import (
 	"app/base"
+	"app/base/api"
 	"app/base/database"
 	"app/base/inventory"
 	"app/base/models"
@@ -14,6 +15,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -39,7 +41,10 @@ const (
 	SuccessStatus          = "success"
 )
 
-var DeletionThreshold = time.Hour * time.Duration(utils.GetIntEnvOrDefault("SYSTEM_DELETE_HRS", 4))
+var (
+	DeletionThreshold = time.Hour * time.Duration(utils.GetIntEnvOrDefault("SYSTEM_DELETE_HRS", 4))
+	httpClient        *api.Client
+)
 
 type Host struct {
 	ID                    string                  `json:"id,omitempty"`
@@ -67,7 +72,8 @@ type HostPlatformMetadata struct {
 	CustomMetadata HostCustomMetadata `json:"custom_metadata,omitempty"`
 }
 type HostCustomMetadata struct {
-	YumUpdates json.RawMessage `json:"yum_updates,omitempty"`
+	YumUpdates      json.RawMessage `json:"yum_updates,omitempty"`
+	YumUpdatesS3URL *string         `json:"yum_updates_s3_url,omitempty"`
 }
 
 //nolint:funlen
@@ -75,6 +81,11 @@ func HandleUpload(event HostEvent) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventUpload))
 
+	useTraceLevel := strings.ToLower(utils.Getenv("LOG_LEVEL", "INFO")) == "trace"
+	httpClient = &api.Client{
+		HTTPClient: &http.Client{},
+		Debug:      useTraceLevel,
+	}
 	updateReporterCounter(event.Host.Reporter)
 
 	payloadTrackerEvent := mqueue.PayloadTrackerEvent{
@@ -109,7 +120,7 @@ func HandleUpload(event HostEvent) error {
 	}
 
 	sendPayloadStatus(ptWriter, payloadTrackerEvent, "", "")
-	yumUpdates, err := getYumUpdates(event)
+	yumUpdates, err := getYumUpdates(event, httpClient)
 	if err != nil {
 		// don't fail, use vmaas evaluation
 		utils.Log("err", err).Error("Could not get yum updates")
@@ -553,13 +564,27 @@ func processUpload(host *Host, yumUpdates []byte) (*models.SystemPlatform, error
 	return sys, nil
 }
 
-func getYumUpdates(event HostEvent) ([]byte, error) {
+func getYumUpdates(event HostEvent, client *api.Client) ([]byte, error) {
 	var parsed vmaas.UpdatesV2Response
 	yumUpdates := event.PlatformMetadata.CustomMetadata.YumUpdates
+	yumUpdatesURL := event.PlatformMetadata.CustomMetadata.YumUpdatesS3URL
 
-	err := json.Unmarshal(yumUpdates, &parsed)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to unmarshall yum updates")
+	if yumUpdatesURL != nil && *yumUpdatesURL != "" {
+		resp, err := client.Request(&base.Context, http.MethodGet, *yumUpdatesURL, nil, &parsed)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to get yum updates from S3")
+		}
+		if err := resp.Body.Close(); err != nil {
+			return nil, errors.Wrap(err, "response error for yum updates from S3")
+		}
+	}
+
+	if (parsed == vmaas.UpdatesV2Response{}) {
+		utils.Log("yum_updates_s3_url", yumUpdatesURL).Warn("No yum updates on S3, getting legacy yum_updates field")
+		err := json.Unmarshal(yumUpdates, &parsed)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to unmarshall yum updates")
+		}
 	}
 
 	updatesMap := parsed.GetUpdateList()
@@ -576,10 +601,10 @@ func getYumUpdates(event HostEvent) ([]byte, error) {
 	}
 	parsed.UpdateList = &updatesMap
 
-	if err = utils.RemoveNonLatestPackages(&parsed); err != nil {
+	if err := utils.RemoveNonLatestPackages(&parsed); err != nil {
 		return nil, errors.Wrap(err, "couldn't remove non-latest packages")
 	}
-	yumUpdates, err = json.Marshal(parsed)
+	yumUpdates, err := json.Marshal(parsed)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to marshall yum updates")
 	}

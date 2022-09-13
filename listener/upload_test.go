@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"app/base/api"
 	"app/base/core"
 	"app/base/database"
 	"app/base/inventory"
@@ -12,6 +13,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -274,8 +276,12 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 
 	accountID1 := getOrCreateTestAccount(t)
 
+	httpClient = &api.Client{
+		HTTPClient: &http.Client{},
+		Debug:      true,
+	}
 	hostEvent := createTestUploadEvent("1", "1", id, "puptoo", false, true)
-	yumUpdates, err := getYumUpdates(hostEvent)
+	yumUpdates, err := getYumUpdates(hostEvent, httpClient)
 	assert.Nil(t, err)
 
 	req := vmaas.UpdatesV3Request{}

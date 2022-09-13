@@ -23,20 +23,20 @@ func (o *Client) Request(ctx *context.Context, method, url string,
 	if requestPtr != nil {
 		err := json.NewEncoder(body).Encode(requestPtr)
 		if err != nil {
-			return nil, errors.Wrap(err, "UpdatesV3Request json encoding failed")
+			return nil, errors.Wrap(err, "JSON encoding failed")
 		}
 	}
 
 	httpReq, err := http.NewRequestWithContext(*ctx, method, url, body)
 	if err != nil {
-		return nil, errors.Wrap(err, "Updates request making failed")
+		return nil, errors.Wrap(err, "Request failed")
 	}
 	httpReq.Header.Add("Content-Type", "application/json")
 	addHeaders(httpReq, o.DefaultHeaders)
 
 	httpResp, err := utils.CallAPI(o.HTTPClient, httpReq, o.Debug)
 	if err != nil {
-		return nil, errors.Wrap(err, "Updates request making failed")
+		return nil, errors.Wrap(err, "Request failed")
 	}
 
 	bodyBytes, err := ioutil.ReadAll(httpResp.Body)
