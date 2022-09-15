@@ -67,7 +67,7 @@ type ErrorResponse struct {
 
 func RunServer(ctx context.Context, handler http.Handler, port int) error {
 	addr := fmt.Sprintf(":%d", port)
-	srv := http.Server{Addr: addr, Handler: handler, ReadHeaderTimeout: ReadHeaderTimeout}
+	srv := http.Server{Addr: addr, Handler: handler, ReadHeaderTimeout: ReadHeaderTimeout, MaxHeaderBytes: 65535}
 	go func() {
 		<-ctx.Done()
 		err := srv.Shutdown(context.Background())
