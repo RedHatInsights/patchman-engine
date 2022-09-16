@@ -98,12 +98,6 @@ type SystemSums struct {
 	Stale     int64 `query:"count(*) filter (where sp.stale = true)" gorm:"column:stale"`
 }
 
-type SystemTag struct {
-	Key       string `json:"key"`
-	Namespace string `json:"namespace"`
-	Value     string `json:"value"`
-}
-
 type SystemItem struct {
 	Attributes SystemItemAttributes `json:"attributes"`
 	ID         string               `json:"id"`
