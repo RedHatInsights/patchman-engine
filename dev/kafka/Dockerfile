@@ -1,4 +1,4 @@
-FROM confluentinc/cp-enterprise-kafka:7.0.5
+FROM docker.io/confluentinc/cp-enterprise-kafka:7.0.5
 
 ADD /dev/kafka/entrypoint.sh /app/entrypoint.sh
 ADD /dev/kafka/setup.sh      /app/setup.sh
