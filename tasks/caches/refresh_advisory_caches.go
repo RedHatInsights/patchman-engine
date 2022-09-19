@@ -15,7 +15,6 @@ func RefreshAdvisoryCaches() {
 }
 
 func refreshAdvisoryCachesPerAccounts() {
-	utils.Log().Info("Refreshing advisory cache")
 	err := tasks.WithTx(func(tx *gorm.DB) error {
 		return tx.Exec("select refresh_advisory_caches(NULL, NULL)").Error
 	})
