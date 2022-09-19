@@ -66,5 +66,7 @@ func runJob(name string) {
 		caches.RunAdvisoryRefresh()
 	case "delete_unused":
 		cleaning.RunDeleteUnusedData()
+	case "packages_cache_refresh":
+		caches.RunPackageRefresh()
 	}
 }
