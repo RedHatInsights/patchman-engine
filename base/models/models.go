@@ -5,9 +5,10 @@ import (
 )
 
 type RhAccount struct {
-	ID    int
-	Name  *string
-	OrgID *string
+	ID                int
+	Name              *string
+	OrgID             *string
+	ValidPackageCache bool
 }
 
 func (RhAccount) TableName() string {
