@@ -100,6 +100,100 @@
                 ]
             }
         },
+        "/refresh-packages": {
+            "put": {
+                "summary": "Refresh package caches",
+                "description": "Refresh package caches for all accounts with invalidated cache",
+                "operationId": "refreshPackagesCaches",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
+        "/refresh-packages/{account}": {
+            "put": {
+                "summary": "Refresh package caches per account",
+                "description": "Refresh package caches for specified account by internal account id",
+                "operationId": "refreshPackagesAccountCaches",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
         "/sync": {
             "get": {
                 "summary": "Sync data from VMaaS",

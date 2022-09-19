@@ -3,8 +3,10 @@ package controllers
 import (
 	"app/base/database"
 	"app/base/utils"
+	"app/tasks/caches"
 	sync "app/tasks/vmaas_sync"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -76,4 +78,56 @@ func CheckCaches(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, "caches counts OK")
+}
+
+// @Summary Refresh package caches
+// @Description Refresh package caches for all accounts with invalidated cache
+// @ID refreshPackagesCaches
+// @Security RhIdentity
+// @Accept   json
+// @Produce  json
+// @Success 200 {object} string
+// @Failure 409 {object} string
+// @Failure 500 {object} map[string]interface{}
+// @Router /refresh-packages [put]
+func RefreshPackagesHandler(c *gin.Context) {
+	err := caches.RefreshPackagesCaches(nil)
+	if err != nil {
+		utils.Log("error", err).Error("Could not refresh package caches")
+		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, "refreshing package caches")
+}
+
+// @Summary Refresh package caches per account
+// @Description Refresh package caches for specified account by internal account id
+// @ID refreshPackagesAccountCaches
+// @Security RhIdentity
+// @Accept   json
+// @Produce  json
+// @Success 200 {object} string
+// @Failure 409 {object} string
+// @Failure 500 {object} map[string]interface{}
+// @Router /refresh-packages/{account} [put]
+func RefreshPackagesAccountHandler(c *gin.Context) {
+	param := c.Param("account")
+	if param == "" {
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "account_param not found"})
+		return
+	}
+	accID, err := strconv.Atoi(param)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "invalid account_param"})
+		return
+	}
+	err = caches.RefreshPackagesCaches(&accID)
+	if err != nil {
+		utils.Log("error", err.Error()).Error("Could not refresh package caches")
+		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, "refreshing package caches")
 }
