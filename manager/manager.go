@@ -33,7 +33,8 @@ import (
 func RunManager() {
 	core.ConfigureApp()
 
-	utils.Log().Info("Manager starting")
+	port := utils.Cfg.PublicPort
+	utils.Log().Infof("Manager starting at port %d", port)
 	// create web app
 	app := gin.New()
 
@@ -56,7 +57,6 @@ func RunManager() {
 
 	kafka.TryStartEvalQueue(mqueue.NewKafkaWriterFromEnv)
 
-	port := utils.Cfg.PublicPort
 	err := utils.RunServer(base.Context, app, port)
 	if err != nil {
 		utils.Log("err", err.Error()).Fatal("server listening failed")
