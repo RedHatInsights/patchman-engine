@@ -27,6 +27,15 @@ var tagRegex = regexp.MustCompile(`([^/=]+)/([^/=]+)(=([^/=]+))?`)
 var enableCyndiTags = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_TAGS", false)
 var disableCachedCounts = utils.GetBoolEnvOrDefault("DISABLE_CACHE_COUNTS", false)
 
+var validFilters = map[string]bool{
+	"sap_sids":                    true,
+	"sap_system":                  true,
+	"mssql":                       true,
+	"mssql->version":              true,
+	"ansible":                     true,
+	"ansible->controller_version": true,
+}
+
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	utils.Log("err", err.Error()).Error(respMsg)
 	c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{Error: respMsg})
@@ -410,31 +419,33 @@ func parseFiltersFromCtx(c *gin.Context, filters Filters) {
 	})
 }
 
-// Filter systems by tags,
+// Filter systems by tags with subquery
 func ApplyTagsFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
 	if !enableCyndiTags {
 		return tx, false
-	}
-
-	var applied bool
-	validFilters := map[string]bool{
-		"sap_sids":                    true,
-		"sap_system":                  true,
-		"mssql":                       true,
-		"mssql->version":              true,
-		"ansible":                     true,
-		"ansible->controller_version": true,
 	}
 
 	subq := database.Db.
 		Table("inventory.hosts ih").
 		Select("ih.id")
 
+	subq, applied := ApplyTagsWhere(filters, subq)
+
+	// Don't add the subquery if we don't have to
+	if !applied {
+		return tx, false
+	}
+	return tx.Where(fmt.Sprintf("%s::uuid in (?)", systemIDExpr), subq), true
+}
+
+// Apply Where clause with tags filter
+func ApplyTagsWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, bool) {
+	applied := false
 	for key, val := range filters {
 		if strings.Contains(key, "/") {
 			tagString := key + "=" + strings.Join(val.Values, ",")
 			tag, _ := ParseTag(tagString)
-			subq = tag.ApplyTag(subq)
+			tx = tag.ApplyTag(tx)
 			applied = true
 			continue
 		}
@@ -449,20 +460,15 @@ func ApplyTagsFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr st
 			}
 
 			if values == "not_nil" {
-				subq = subq.Where(q)
+				tx = tx.Where(q)
 			} else {
-				subq = subq.Where(q, values)
+				tx = tx.Where(q, values)
 			}
 
 			applied = true
 		}
 	}
-
-	// Don't add the subquery if we don't have to
-	if !applied {
-		return tx, false
-	}
-	return tx.Where(fmt.Sprintf("%s::uuid in (?)", systemIDExpr), subq), true
+	return tx, applied
 }
 
 // Builds system_profile sub query in generic way.
