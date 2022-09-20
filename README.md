@@ -61,6 +61,16 @@ export DB_SSLROOTCERT=$(pwd)/dev/database/secrets/pgca.crt # set db certificate
 go test -count=1 -v ./evaluator -run TestEvaluate # run "TestEvaluate" test from "evaluator" component
 ~~~
 
+### Run tests in VS Code
+
+Prerequisite is to have [Go Extension](https://marketplace.visualstudio.com/items?itemName=golang.Go)
+installed.
+
+To set it up copy the example settings from `.vscode/settings.example.json`:
+```
+cp .vscode/settings.example.json .vscode/settings.json
+```
+
 ### OpenAPI docs
 Our REST API is documented using OpenAPI v3. On a local instance it can be accessed on <http://localhost:8080/openapi/index.html>.
 
