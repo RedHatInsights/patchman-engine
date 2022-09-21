@@ -74,7 +74,7 @@ func runSync() {
 
 	var lastModified *types.Rfc3339TimestampWithZ
 	if enableModifiedSinceSync {
-		lastModified = getLastSync(VmaasExported)
+		lastModified = GetLastSync(VmaasExported)
 	}
 	vmaasExportedTS := VmaasDBExported()
 	if isSyncNeeded(lastModified, vmaasExportedTS) {
@@ -91,7 +91,7 @@ func runSync() {
 	}
 }
 
-func getLastSync(key string) *types.Rfc3339TimestampWithZ {
+func GetLastSync(key string) *types.Rfc3339TimestampWithZ {
 	ts, err := database.GetTimestampKVValue(key)
 	if err != nil {
 		utils.Log("ts", ts, "key", key).Info("Unable to load last sync timestamp")
@@ -104,7 +104,7 @@ func SyncData(lastModifiedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *type
 	utils.Log().Info("Data sync started")
 	syncStart := time.Now()
 	defer utils.ObserveSecondsSince(syncStart, syncDuration)
-	lastFullSyncTS := getLastSync(LastFullSync)
+	lastFullSyncTS := GetLastSync(LastFullSync)
 
 	lastModified := database.Timestamp2Str(lastModifiedTS)
 	if lastFullSyncTS != nil {

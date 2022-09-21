@@ -35,12 +35,12 @@ func TestSyncDates(t *testing.T) {
 	evalWriter = &mockKafkaWriter{}
 
 	// there's no timestamp before first sync
-	ts := getLastSync(VmaasExported)
+	ts := GetLastSync(VmaasExported)
 	assert.Nil(t, ts)
 
 	runSync()
 
-	ts = getLastSync(VmaasExported)
+	ts = GetLastSync(VmaasExported)
 	assert.Equal(t, "2222-04-16 20:07:59 +0000 UTC", ts.Time().String())
 	database.DeleteNewlyAddedPackages(t)
 	database.DeleteNewlyAddedAdvisories(t)

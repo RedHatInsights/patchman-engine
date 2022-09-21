@@ -49,6 +49,9 @@ var (
 	preloadPackageCache           bool
 	packageCacheSize              int
 	packageNameCacheSize          int
+	enableVmaasCache              bool
+	vmaasCacheSize                int
+	vmaasCacheCheckDuration       time.Duration
 	vmaasCallMaxRetries           int
 	vmaasCallUseExpRetry          bool
 	vmaasCallUseOptimisticUpdates bool
@@ -85,6 +88,9 @@ func configure() {
 	preloadPackageCache = utils.GetBoolEnvOrDefault("PRELOAD_PACKAGE_CACHE", true)
 	packageCacheSize = utils.GetIntEnvOrDefault("PACKAGE_CACHE_SIZE", 1000000)
 	packageNameCacheSize = utils.GetIntEnvOrDefault("PACKAGE_NAME_CACHE_SIZE", 60000)
+	enableVmaasCache = utils.GetBoolEnvOrDefault("ENABLE_VMAAS_CACHE", true)
+	vmaasCacheSize = utils.GetIntEnvOrDefault("VMAAS_CACHE_SIZE", 10000)
+	vmaasCacheCheckDuration = time.Duration(utils.GetIntEnvOrDefault("VMAAS_CACHE_CHECK_DURATION_SEC", 60)) * time.Second
 	vmaasCallMaxRetries = utils.GetIntEnvOrDefault("VMAAS_CALL_MAX_RETRIES", 8)
 	vmaasCallUseExpRetry = utils.GetBoolEnvOrDefault("VMAAS_CALL_USE_EXP_RETRY", true)
 	vmaasCallUseOptimisticUpdates = utils.GetBoolEnvOrDefault("VMAAS_CALL_USE_OPTIMISTIC_UPDATES", true)
@@ -260,6 +266,11 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 
 func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 	system *models.SystemPlatform) (*vmaas.UpdatesV2Response, error) {
+	// first check if we have data in cache
+	vmaasData, ok := memoryVmaasCache.Get(system.JSONChecksum)
+	if ok {
+		return vmaasData, nil
+	}
 	updatesReq, err := tryGetVmaasRequest(system)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get vmaas request")
@@ -278,12 +289,13 @@ func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 	useOptimisticUpdates := thirdParty || vmaasCallUseOptimisticUpdates
 	updatesReq.OptimisticUpdates = utils.PtrBool(useOptimisticUpdates)
 
-	vmaasData, err := callVMaas(ctx, updatesReq)
+	vmaasData, err = callVMaas(ctx, updatesReq)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-call-vmaas-updates").Inc()
 		return nil, errors.Wrap(err, "vmaas API call failed")
 	}
 
+	memoryVmaasCache.Add(system.JSONChecksum, vmaasData)
 	return vmaasData, nil
 }
 
@@ -548,6 +560,8 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 func loadCache() {
 	memoryPackageCache = NewPackageCache(enablePackageCache, preloadPackageCache, packageCacheSize, packageNameCacheSize)
 	memoryPackageCache.Load()
+	memoryVmaasCache = NewVmaasPackageCache(enableVmaasCache, vmaasCacheSize, vmaasCacheCheckDuration)
+	go memoryVmaasCache.CheckValidity()
 }
 
 func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
