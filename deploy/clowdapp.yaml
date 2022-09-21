@@ -215,6 +215,8 @@ objects:
         - {name: PRELOAD_PACKAGE_CACHE, value: '${PRELOAD_PACKAGE_CACHE_EVALUATOR_UPLOAD}'}
         - {name: PACKAGE_CACHE_SIZE, value: '${PACKAGE_CACHE_SIZE}'}
         - {name: PACKAGE_NAME_CACHE_SIZE, value: '${PACKAGE_NAME_CACHE_SIZE}'}
+        - {name: ENABLE_VMAAS_CACHE, value: '${ENABLE_VMAAS_CACHE_EVALUATOR_UPLOAD}'}
+        - {name: VMAAS_CACHE_SIZE, value: '${VMAAS_CACHE_SIZE}'}
         - {name: VMAAS_ADDRESS, value: '${VMAAS_ADDRESS}'}
         - {name: VMAAS_CALL_MAX_RETRIES, value: '${VMAAS_CALL_MAX_RETRIES}'}
         - {name: VMAAS_CALL_USE_EXP_RETRY, value: '${VMAAS_CALL_USE_EXP_RETRY}'}
@@ -277,6 +279,8 @@ objects:
         - {name: PRELOAD_PACKAGE_CACHE, value: '${PRELOAD_PACKAGE_CACHE_EVALUATOR_RECALC}'}
         - {name: PACKAGE_CACHE_SIZE, value: '${PACKAGE_CACHE_SIZE}'}
         - {name: PACKAGE_NAME_CACHE_SIZE, value: '${PACKAGE_NAME_CACHE_SIZE}'}
+        - {name: ENABLE_VMAAS_CACHE, value: '${ENABLE_VMAAS_CACHE_EVALUATOR_RECALC}'}
+        - {name: VMAAS_CACHE_SIZE, value: '${VMAAS_CACHE_SIZE}'}
         - {name: VMAAS_ADDRESS, value: '${VMAAS_ADDRESS}'}
         - {name: VMAAS_CALL_MAX_RETRIES, value: '${VMAAS_CALL_MAX_RETRIES}'}
         - {name: VMAAS_CALL_USE_EXP_RETRY, value: '${VMAAS_CALL_USE_EXP_RETRY}'}
