@@ -47,7 +47,12 @@ type queryItem struct {
 var queryItemSelect = database.MustGetSelect(&queryItem{})
 
 func packagesQuery(filters map[string]FilterData, acc int) *gorm.DB {
-	if len(filters) == 0 && enabledPackageCache {
+	var validCache bool
+	err := database.Db.Table("rh_account").
+		Select("valid_package_cache").
+		Where("id = ?", acc).
+		Scan(&validCache).Error
+	if err == nil && validCache && len(filters) == 0 && enabledPackageCache {
 		// use cache only when tag filter is not used
 		q := database.Db.Table("package_account_data res").
 			Select(PackagesSelect).
