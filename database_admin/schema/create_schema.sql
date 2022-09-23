@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (96, false);
+VALUES (97, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -295,6 +295,8 @@ BEGIN
             ON sp.id = spkg.system_id AND sp.rh_account_id = spkg.rh_account_id
           JOIN rh_account acc
             ON sp.rh_account_id = acc.id
+          JOIN inventory.hosts ih
+            ON sp.inventory_id = ih.id
         WHERE sp.packages_installed > 0 AND sp.stale = FALSE
           AND (sp.rh_account_id = rh_account_id_in OR (rh_account_id_in IS NULL AND acc.valid_package_cache = FALSE))
         GROUP BY sp.rh_account_id, spkg.name_id
