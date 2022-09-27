@@ -12,14 +12,19 @@ jobs:
     - uses: actions/checkout@v2
     - name: increment version, commit, push
       run: |
-        DOC_FILE="docs/v2/openapi.json docs/admin/openapi.json"
+        MANAGER_FILE=manager/manager.go
+        METRICS_FILE=base/metrics/metrics.go
+        DOC_FILE=docs/v2/openapi.json
         CLOWDER_FILE=deploy/clowdapp.yaml
-        VERSION=$(cat VERSION)
+        TURNPIKE_FILE=turnpike/admin_api.go
+        VERSION=$(awk '/^\/\/ @version/ {print $3}' $MANAGER_FILE)
         RELEASE_TYPE=$(git log -1 | tail -n1) # Check release type (/major, /minor, /patch (default))
         VERSION_NEXT=$(./scripts/increment_version.sh $VERSION $RELEASE_TYPE)
+        sed -i "s|\(// @version \).*$|\1 $VERSION_NEXT|;" $MANAGER_FILE
+        sed -i "s|\(// @version \).*$|\1 $VERSION_NEXT|;" $TURNPIKE_FILE
+        sed -i 's|\(ENGINEVERSION = "\)[^"]*\("\)$|'"\1$VERSION_NEXT\2|;" $METRICS_FILE
         sed -i 's|\("version": "\)[^"]*\("\)$|'"\1$VERSION_NEXT\2|;" $DOC_FILE
         sed -i -E "s/\{name: IMAGE_TAG_(MANAGER|LISTENER|EVALUATOR_UPLOAD|EVALUATOR_RECALC|JOBS|DATABASE_ADMIN|ADMIN), value: .*\}/{name: IMAGE_TAG_\1, value: $VERSION_NEXT}/" $CLOWDER_FILE
-        echo $VERSION_NEXT >VERSION
         git config --global user.name 'semantic-release'
         git config --global user.email ''
         git commit -am "${VERSION_NEXT}"

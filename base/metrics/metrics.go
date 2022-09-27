@@ -3,7 +3,6 @@ package metrics
 import (
 	"app/base/mqueue"
 	"app/base/utils"
-	"os"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -32,8 +31,7 @@ func init() {
 		prometheus.MustRegister(KafkaConnectionErrorCnt)
 	}
 	prometheus.MustRegister(EngineVersion)
-	engineVersion, _ := os.ReadFile("VERSION")
-	EngineVersion.WithLabelValues(string(engineVersion)).Set(1)
+	EngineVersion.WithLabelValues(ENGINEVERSION).Set(1)
 }
 
 func Configure() {

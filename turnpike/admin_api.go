@@ -12,7 +12,8 @@ import (
 
 // nolint: lll
 // @title Patch Admin API
-// @version  {{.Version}}
+// DO NOT EDIT version MANUALLY - this variable is modified by generate_docs.sh
+// @version  v2.3.10
 // @description Admin API of the Patch application on [internal.console.redhat.com](https://internal.console.redhat.com)
 
 // @license.name GPLv3
