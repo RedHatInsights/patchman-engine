@@ -4866,36 +4866,6 @@
                 "summary": "Show me systems tags applicable to this application",
                 "description": "Show me systems tags applicable to this application",
                 "operationId": "listSystemTags",
-                "parameters": [
-                    {
-                        "name": "sort",
-                        "in": "query",
-                        "description": "Sort field",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "tag",
-                                "count"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "offset",
-                        "in": "query",
-                        "description": "Offset for paging",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
