@@ -4861,50 +4861,6 @@
                 ]
             }
         },
-        "/tags": {
-            "get": {
-                "summary": "Show me systems tags applicable to this application",
-                "description": "Show me systems tags applicable to this application",
-                "operationId": "listSystemTags",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/controllers.SystemTagsResponse"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/utils.ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/utils.ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "RhIdentity": []
-                    }
-                ]
-            }
-        },
         "/views/advisories/systems": {
             "post": {
                 "summary": "View advisory-system pairs for selected systems and advisories",
@@ -6069,34 +6025,6 @@
                     },
                     "value": {
                         "type": "string"
-                    }
-                }
-            },
-            "controllers.SystemTagItem": {
-                "type": "object",
-                "properties": {
-                    "count": {
-                        "type": "integer"
-                    },
-                    "tag": {
-                        "$ref": "#/components/schemas/controllers.SystemTag"
-                    }
-                }
-            },
-            "controllers.SystemTagsResponse": {
-                "type": "object",
-                "properties": {
-                    "data": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/controllers.SystemTagItem"
-                        }
-                    },
-                    "links": {
-                        "$ref": "#/components/schemas/controllers.Links"
-                    },
-                    "meta": {
-                        "$ref": "#/components/schemas/controllers.ListMeta"
                     }
                 }
             },

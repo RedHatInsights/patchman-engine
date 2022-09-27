@@ -46,8 +46,6 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	systems.GET("/:inventory_id/packages", controllers.SystemPackagesHandler)
 	systems.DELETE("/:inventory_id", controllers.SystemDeleteHandler)
 
-	api.GET("/tags", controllers.SystemTagListHandler)
-
 	packages := api.Group("/packages")
 	packages.GET("/", controllers.PackagesListHandler)
 	packages.GET("/:package_name/systems", controllers.PackageSystemsListHandler)
