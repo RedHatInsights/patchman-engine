@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"app/base/database"
-	"app/base/utils"
 	"app/manager/middlewares"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +19,6 @@ var PackagesOpts = ListOpts{
 	SearchFields:   []string{"pn.name", "pn.summary"},
 	TotalFunc:      CountRows,
 }
-var enabledPackageCache = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_CACHE", false)
 
 //nolint:lll
 type PackageItem struct {
@@ -47,14 +45,6 @@ type queryItem struct {
 var queryItemSelect = database.MustGetSelect(&queryItem{})
 
 func packagesQuery(filters map[string]FilterData, acc int) *gorm.DB {
-	if len(filters) == 0 && enabledPackageCache {
-		// use cache only when tag filter is not used
-		q := database.Db.Table("package_account_data res").
-			Select(PackagesSelect).
-			Joins("JOIN package_name pn ON res.package_name_id = pn.id").
-			Where("rh_account_id = ?", acc)
-		return q
-	}
 	systemsWithPkgsInstalledQ := database.Systems(database.Db, acc).
 		Select("id").
 		Where("sp.stale = false AND sp.packages_installed > 0")
