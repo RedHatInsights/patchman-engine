@@ -88,6 +88,4 @@ func InitAdmin(app *gin.Engine) {
 	api.GET("/sync", admin.Syncapi)
 	api.GET("/re-calc", admin.Recalc)
 	api.GET("/check-caches", admin.CheckCaches)
-	api.PUT("/refresh-packages", admin.RefreshPackagesHandler)
-	api.PUT("/refresh-packages/:account", admin.RefreshPackagesAccountHandler)
 }
