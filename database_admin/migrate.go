@@ -138,8 +138,8 @@ func migrateAction(conn database.Driver, sourceURL string) int {
 	}
 	if dbSchema == expectedSchema && migrationSchema > dbSchema {
 		// schema can be upgraded but is intentionaly blocked by SCHEMA_MIGRATION
-		fmt.Println("Deployment blocked, enable migrations to proceed")
-		return BLOCK
+		//	fmt.Println("Deployment blocked, enable migrations to proceed")
+		return CONTINUE
 	}
 	if dbSchema == migrationSchema &&
 		(dbSchema == expectedSchema || expectedSchema == -1) {
