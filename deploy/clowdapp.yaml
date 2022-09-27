@@ -636,7 +636,7 @@ parameters:
 - {name: ENABLE_CULLED_SYSTEM_DELETE, value: 'true'} # Enable deleting part of culling method
 - {name: ENABLE_SYSTEM_STALING, value: 'true'} # Enable marking systems stale of culling method
 # Cache refresh
-- {name: PKG_REFRESH_SCHEDULE, value: '*/5 * * * *'} # Cronjob schedule definition
+- {name: PKG_REFRESH_SCHEDULE, value: '*/10 * * * *'} # Cronjob schedule definition
 - {name: PKG_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
 - {name: ADVISORY_REFRESH_SCHEDULE, value: '*/15 * * * *'} # Cronjob schedule definition
 - {name: ADVISORY_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
