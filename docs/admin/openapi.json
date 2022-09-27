@@ -152,17 +152,6 @@
                 "summary": "Refresh package caches per account",
                 "description": "Refresh package caches for specified account by internal account id",
                 "operationId": "refreshPackagesAccountCaches",
-                "parameters": [
-                    {
-                        "name": "account",
-                        "in": "path",
-                        "description": "Internal account ID",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",

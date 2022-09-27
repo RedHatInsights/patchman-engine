@@ -107,7 +107,6 @@ func RefreshPackagesHandler(c *gin.Context) {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    account    path    string   true "Internal account ID"
 // @Success 200 {object} string
 // @Failure 409 {object} string
 // @Failure 500 {object} map[string]interface{}
