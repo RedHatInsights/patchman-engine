@@ -164,6 +164,55 @@ INSERT INTO system_package (rh_account_id, system_id, package_id, name_id, updat
 INSERT INTO timestamp_kv (name, value) VALUES
 ('last_eval_repo_based', '2018-04-05T01:23:45+02:00');
 
+SELECT refresh_all_cached_counts();
+
+ALTER TABLE advisory_metadata ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE system_platform ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE rh_account ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE repo ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE package ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE package_name ALTER COLUMN id RESTART WITH 150;
+ALTER TABLE baseline ALTER COLUMN id RESTART WITH 100;
+
+-- Create "inventory.hosts" for testing purposes. In deployment it's created by remote Cyndi service.
+
+CREATE TABLE IF NOT EXISTS inventory.hosts_v1_0 (
+    id uuid NOT NULL,
+    insights_id uuid,
+    account character varying(10) NOT NULL,
+    display_name character varying(200) NOT NULL,
+    tags jsonb NOT NULL,
+    updated timestamp with time zone NOT NULL,
+    created timestamp with time zone NOT NULL,
+    stale_timestamp timestamp with time zone NOT NULL,
+    system_profile jsonb NOT NULL,
+    PRIMARY KEY (id)
+);
+
+DELETE FROM inventory.hosts_v1_0;
+
+CREATE INDEX IF NOT EXISTS hosts_v1_0_account_index ON inventory.hosts_v1_0 USING btree (account);
+CREATE INDEX IF NOT EXISTS hosts_v1_0_display_name_index ON inventory.hosts_v1_0 USING btree (display_name);
+CREATE INDEX IF NOT EXISTS hosts_v1_0_stale_timestamp_index ON inventory.hosts_v1_0 USING btree (stale_timestamp);
+CREATE INDEX IF NOT EXISTS hosts_v1_0_system_profile_index ON inventory.hosts_v1_0 USING gin (system_profile jsonb_path_ops);
+CREATE INDEX IF NOT EXISTS hosts_v1_0_tags_index ON inventory.hosts_v1_0 USING gin (tags jsonb_path_ops);
+
+CREATE OR REPLACE VIEW inventory.hosts AS
+ SELECT hosts_v1_0.id,
+    hosts_v1_0.insights_id,
+    hosts_v1_0.account,
+    hosts_v1_0.display_name,
+    hosts_v1_0.created,
+    hosts_v1_0.updated,
+    hosts_v1_0.stale_timestamp,
+    (hosts_v1_0.stale_timestamp + ('1 day'::interval day * '7'::double precision)) AS stale_warning_timestamp,
+    (hosts_v1_0.stale_timestamp + ('1 day'::interval day * '14'::double precision)) AS culled_timestamp,
+    hosts_v1_0.tags,
+    hosts_v1_0.system_profile
+ FROM inventory.hosts_v1_0;
+
+GRANT SELECT ON TABLE inventory.hosts TO cyndi_reader;
+
 INSERT INTO inventory.hosts_v1_0 (id, insights_id, account, display_name, tags, updated, created, stale_timestamp, system_profile) VALUES
 ('00000000000000000000000000000001', '00000000-0000-0000-0001-000000000001', '1', '00000000-0000-0000-0000-000000000001', '[{"key": "k1", "value": "val1", "namespace": "ns1"},{"key": "k2", "value": "val2", "namespace": "ns1"}]',
 '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "sap_sids": ["ABC", "DEF", "GHI"], "operating_system": {"name": "RHEL", "major": 8, "minor": 10}, "rhsm": {"version": "8.10"}}'),
@@ -200,13 +249,3 @@ INSERT INTO inventory.hosts_v1_0 (id, insights_id, account, display_name, tags, 
 ('00000000000000000000000000000017', '00000000-0000-0000-0017-000000000001', '3', '00000000-0000-0000-0000-000000000017', '[]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04',
  '{"rhsm": {"version": "8.1"}, "operating_system": {"name": "RHEL", "major": 8, "minor": 1}, "ansible": {"controller_version": "1.0", "hub_version": "3.4.1", "catalog_worker_version": "100.387.9846.12", "sso_version": "1.28.3.52641.10000513168495123"}, "mssql": { "version": "15.3.0"}}');
-
-SELECT refresh_all_cached_counts();
-
-ALTER TABLE advisory_metadata ALTER COLUMN id RESTART WITH 100;
-ALTER TABLE system_platform ALTER COLUMN id RESTART WITH 100;
-ALTER TABLE rh_account ALTER COLUMN id RESTART WITH 100;
-ALTER TABLE repo ALTER COLUMN id RESTART WITH 100;
-ALTER TABLE package ALTER COLUMN id RESTART WITH 100;
-ALTER TABLE package_name ALTER COLUMN id RESTART WITH 150;
-ALTER TABLE baseline ALTER COLUMN id RESTART WITH 100;
