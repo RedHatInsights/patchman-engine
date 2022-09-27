@@ -108,16 +108,20 @@ func dbSchemaVersion(conn database.Driver, sourceURL string) (int, error) {
 		return 0, errors.Wrap(err, "Error getting current DB version")
 	}
 	if dirty {
-		return 0, errors.New("Previous migration failed - dirty=true")
+		return 0, migrate.ErrDirty{Version: int(curVersion)}
 	}
 	return int(curVersion), nil
 }
 
 func migrateAction(conn database.Driver, sourceURL string) int {
+	forceMigrationVersion := utils.Getenv("FORCE_SCHEMA_VERSION", "")
 	expectedSchema := utils.GetIntEnvOrDefault("SCHEMA_MIGRATION", -1)
 	fmt.Printf("DB migration in progress, waiting for schema=%d\n", expectedSchema)
 	dbSchema, err := dbSchemaVersion(conn, sourceURL)
 	if err != nil {
+		if errors.Is(err, migrate.ErrDirty{}) && forceMigrationVersion != "" {
+			return MIGRATE
+		}
 		fmt.Fprintf(os.Stderr, "Error getting current DB version: %v\n", err.Error())
 		return BLOCK
 	}
