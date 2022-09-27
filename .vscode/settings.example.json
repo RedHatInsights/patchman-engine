@@ -1,6 +1,0 @@
-{
-    "go.testEnvFile": "${workspaceFolder}/conf/local.env",
-    "go.testEnvVars": {
-        "DB_SSLROOTCERT": "${workspaceFolder}/dev/database/secrets/pgca.crt"
-    }
-}
