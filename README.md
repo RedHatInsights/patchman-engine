@@ -71,19 +71,6 @@ To set it up copy the example settings from `.vscode/settings.example.json`:
 cp .vscode/settings.example.json .vscode/settings.json
 ```
 
-### Access to dev/test database
-
-When a podman compose (either dev or test one) is running, then the database can
-be access directly by executing
-```
-podman exec -it db psql -d patchman -U admin
-```
-
-or locally using `psql` with:
-```
-export $(cat conf/local.env conf/database_admin.env | xargs ) 2>/dev/null; ./dev/scripts/psql.sh
-```
-
 ### OpenAPI docs
 Our REST API is documented using OpenAPI v3. On a local instance it can be accessed on <http://localhost:8080/openapi/index.html>.
 
