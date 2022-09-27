@@ -334,7 +334,7 @@ func (t *Tag) ApplyTag(tx *gorm.DB) *gorm.DB {
 	}
 
 	query := fmt.Sprintf(`[{%s "key": "%s" %s}]`, ns, t.Key, v)
-	return tx.Where("ih.tags @> ?::jsonb", query)
+	return tx.Where("h.tags @> ?::jsonb", query)
 }
 
 func ParseTagsFilters(c *gin.Context) (map[string]FilterData, error) {
@@ -427,8 +427,8 @@ func ApplyTagsFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr st
 	}
 
 	subq := database.Db.
-		Table("inventory.hosts ih").
-		Select("ih.id")
+		Table("inventory.hosts h").
+		Select("h.id")
 
 	for key, val := range filters {
 		if strings.Contains(key, "/") {
@@ -468,7 +468,7 @@ func ApplyTagsFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr st
 // Builds system_profile sub query in generic way.
 // Example:
 // buildQuery("mssql->version", "1.0")
-// returns "(ih.system_profile -> 'mssql' ->> 'version')::text = 1.0"
+// returns "(h.system_profile -> 'mssql' ->> 'version')::text = 1.0"
 func buildQuery(key string, val string) string {
 	var cmp string
 
@@ -483,7 +483,7 @@ func buildQuery(key string, val string) string {
 		cmp = " is not null"
 	}
 
-	subq := "(ih.system_profile"
+	subq := "(h.system_profile"
 	sbkeys := strings.Split(key, "->")
 	for i, sbkey := range sbkeys {
 		sbkey = fmt.Sprintf("'%s'", sbkey)
