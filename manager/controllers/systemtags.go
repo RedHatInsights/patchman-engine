@@ -43,8 +43,9 @@ var SystemTagsOpts = ListOpts{
 }
 
 func systemTagsSubtotals(tx *gorm.DB) (total int, subTotals map[string]int, err error) {
-	// Use direct COUNT() to avoid ORM magic
-	err = tx.Select("COUNT(*)").Scan(&total).Error
+	var count int64
+	err = database.Db.Table("(?) AS cq", tx.Select("1")).Count(&count).Error
+	total = int(count)
 	return
 }
 

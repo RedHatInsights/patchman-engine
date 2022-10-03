@@ -42,6 +42,16 @@ func TestSystemTagsListPagination(t *testing.T) {
 	assert.Equal(t, "val2", output.Data[0].Tag.Value)
 }
 
+func TestSystemTagsTotalItems(t *testing.T) {
+	core.SetupTest(t)
+
+	w := CreateRequestRouterWithAccount("GET", "/", nil, "", SystemTagListHandler, "/", 1)
+
+	var output SystemTagsResponse
+	CheckResponse(t, w, 200, &output)
+	assert.Equal(t, 4, output.Meta.TotalItems)
+}
+
 func TestSystemTagsListSort(t *testing.T) {
 	core.SetupTest(t)
 
