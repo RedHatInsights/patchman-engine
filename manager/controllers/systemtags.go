@@ -70,7 +70,7 @@ func SystemTagListHandler(c *gin.Context) {
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Select("jsonb_array_elements(ih.tags) AS tag")
 
-	query := database.Db.Table("(?) AS sq", sq.Debug()).
+	query := database.Db.Table("(?) AS sq", sq).
 		Select("COUNT(sq.tag) AS count, sq.tag AS tag").
 		Group("sq.tag")
 
