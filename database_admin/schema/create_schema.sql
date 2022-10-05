@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (97, false);
+VALUES (98, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -284,6 +284,7 @@ BEGIN
         JOIN rh_account acc
           ON acc.id = pad.rh_account_id
         WHERE (pad.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
+        ORDER BY pad.rh_account_id
             FOR UPDATE OF pad, acc;
 
     WITH pkg_system_counts AS (
