@@ -152,6 +152,11 @@ func initDBFromClowder() {
 	}
 	Cfg.DBAdminUser = clowder.LoadedConfig.Database.AdminUsername
 	Cfg.DBAdminPassword = clowder.LoadedConfig.Database.AdminPassword
+	if Cfg.DBUser == "UNSET" || Cfg.DBPassword == "UNSET" {
+		Log().Info("Using Admin DB user")
+		Cfg.DBUser = Cfg.DBAdminUser
+		Cfg.DBPassword = Cfg.DBAdminPassword
+	}
 }
 
 func initAPIromClowder() {
