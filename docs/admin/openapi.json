@@ -205,6 +205,125 @@
                 ]
             }
         },
+        "/sessions/{pid}": {
+            "delete": {
+                "summary": "Terminate db session",
+                "description": "Terminate db session",
+                "operationId": "TerminateSession",
+                "parameters": [
+                    {
+                        "name": "pid",
+                        "in": "path",
+                        "description": "pid",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
+        "/sessions/{search}": {
+            "get": {
+                "summary": "Get active db sessions",
+                "description": "Get active db sessions",
+                "operationId": "getSessions",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "path",
+                        "description": "Search string",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/controllers.Session"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
         "/sync": {
             "get": {
                 "summary": "Sync data from VMaaS",
@@ -244,6 +363,19 @@
         }
     },
     "components": {
+        "schemas": {
+            "controllers.Session": {
+                "type": "object",
+                "properties": {
+                    "pid": {
+                        "type": "integer"
+                    },
+                    "query": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "securitySchemes": {
             "RhIdentity": {
                 "type": "apiKey",

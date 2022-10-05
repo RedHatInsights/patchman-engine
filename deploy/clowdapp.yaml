@@ -34,9 +34,6 @@ objects:
         env:
         - {name: GOMAXPROCS, value: '${GOMAXPROCS_ADMIN}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
-        - {name: DB_USER, value: vmaas_sync}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                      key: vmaas-sync-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}

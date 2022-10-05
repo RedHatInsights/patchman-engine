@@ -218,10 +218,10 @@ services:
     image: patchman-engine-app
     env_file:
       - ./conf/common.env
-      - ./conf/vmaas_sync.env
+      - ./conf/admin_api.env
     command: ./scripts/entrypoint.sh admin
     ports:
-      - 8085:8083
+      - 8085:8085
     depends_on:
       - db
       - kafka

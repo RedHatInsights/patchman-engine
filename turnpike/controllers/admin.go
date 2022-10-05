@@ -5,11 +5,17 @@ import (
 	"app/base/utils"
 	"app/tasks/caches"
 	sync "app/tasks/vmaas_sync"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
+
+type Session struct {
+	Pid   int
+	Query string
+}
 
 // @Summary Sync data from VMaaS
 // @Description Sync data from VMaaS
@@ -131,4 +137,59 @@ func RefreshPackagesAccountHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, "refreshing package caches")
+}
+
+// @Summary Get active db sessions
+// @Description Get active db sessions
+// @ID getSessions
+// @Security RhIdentity
+// @Accept   json
+// @Produce  json
+// @Param    search path string false "Search string" SchemaExample(refresh_package)
+// @Success 200 {object} []Session
+// @Failure 409 {object} string
+// @Failure 500 {object} map[string]interface{}
+// @Router /sessions/{search} [get]
+func GetActiveSessionsHandler(c *gin.Context) {
+	param := c.Param("search")
+	data := make([]Session, 0)
+	q := database.Db.Table("pg_stat_activity").Select("pid, query")
+	if param != "" {
+		q.Where("query like ?", fmt.Sprint("%", param, "%"))
+	}
+	err := q.Find(&data).Error
+	if err != nil {
+		utils.Log("error", err).Error("DB query failed")
+		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, &data)
+}
+
+// @Summary Terminate db session
+// @Description Terminate db session
+// @ID TerminateSession
+// @Security RhIdentity
+// @Accept   json
+// @Produce  json
+// @Param    pid path int true "pid"
+// @Success 200 {object} string
+// @Failure 409 {object} string
+// @Failure 500 {object} map[string]interface{}
+// @Router /sessions/{pid} [delete]
+func TerminateSessionHandler(c *gin.Context) {
+	param := c.Param("pid")
+	if param == "" {
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "pid param not found"})
+		return
+	}
+	err := database.Db.Exec("select pg_terminate_backend(?)", param).Error
+	if err != nil {
+		utils.Log("error", err).Error("DB query failed")
+		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, fmt.Sprintf("pid: %s terminated", param))
 }
