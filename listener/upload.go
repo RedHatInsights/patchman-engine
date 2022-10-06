@@ -482,9 +482,16 @@ func deleteOtherSystemRepos(tx *gorm.DB, rhAccountID int, systemID int64, repoID
 }
 
 func processRepos(systemProfile *inventory.SystemProfile) *[]string {
-	repos := make([]string, 0, len(systemProfile.GetYumRepos()))
-	for _, r := range systemProfile.GetYumRepos() {
+	yumRepos := systemProfile.GetYumRepos()
+	seen := make(map[string]bool, len(yumRepos))
+	repos := make([]string, 0, len(yumRepos))
+	for _, r := range yumRepos {
 		rID := r.ID
+		if seen[rID] {
+			// remove duplicate repos
+			continue
+		}
+		seen[rID] = true
 		if len(strings.TrimSpace(rID)) == 0 {
 			utils.Log("repo", rID).Warn("removed repo with invalid name")
 			continue
