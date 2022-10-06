@@ -235,3 +235,14 @@ type TimestampKV struct {
 func (TimestampKV) TableName() string {
 	return "timestamp_kv"
 }
+
+type PackageAccountData struct {
+	AccID        int   `gorm:"column:rh_account_id"`
+	PkgNameID    int64 `gorm:"column:package_name_id"`
+	SysInstalled int   `gorm:"column:systems_installed"`
+	SysUpdatable int   `gorm:"column:systems_updatable"`
+}
+
+func (PackageAccountData) TableName() string {
+	return "package_account_data"
+}
