@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"app/base/rbac"
+	"app/base/types/rbac"
 	"net/http"
 	"net/http/httptest"
 	"testing"

@@ -1,7 +1,7 @@
 package platform
 
 import (
-	"app/base/inventory"
+	"app/base/types/inventory"
 	"app/base/utils"
 	"math/rand"
 )

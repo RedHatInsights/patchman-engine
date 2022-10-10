@@ -4,8 +4,8 @@ import (
 	"app/base"
 	"app/base/models"
 	"app/base/mqueue"
+	"app/base/types/vmaas"
 	"app/base/utils"
-	"app/base/vmaas"
 	"fmt"
 	"sort"
 

@@ -2,11 +2,11 @@ package listener
 
 import (
 	"app/base/database"
-	"app/base/inventory"
 	"app/base/models"
 	"app/base/mqueue"
+	"app/base/types/inventory"
+	"app/base/types/vmaas"
 	"app/base/utils"
-	"app/base/vmaas"
 	"app/manager/middlewares"
 	"encoding/json"
 	"fmt"

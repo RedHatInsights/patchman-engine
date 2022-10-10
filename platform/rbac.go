@@ -1,7 +1,7 @@
 package platform
 
 import (
-	"app/base/rbac"
+	"app/base/types/rbac"
 	"app/base/utils"
 	"net/http"
 

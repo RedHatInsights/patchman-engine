@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"app/base/vmaas"
+	"app/base/types/vmaas"
 )
 
 // Merge update data from vmaasDataB into vmaasDataA without duplicating.

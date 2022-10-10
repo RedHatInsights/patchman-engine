@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"app/base"
-	"app/base/rbac"
+	"app/base/types/rbac"
 	"app/base/utils"
 	"fmt"
 	"net/http"

@@ -3,7 +3,7 @@ package evaluator
 import (
 	"app/base/database"
 	"app/base/models"
-	"app/base/vmaas"
+	"app/base/types/vmaas"
 	"time"
 
 	"gorm.io/gorm"

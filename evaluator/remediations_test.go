@@ -1,8 +1,8 @@
 package evaluator
 
 import (
+	"app/base/types/vmaas"
 	"app/base/utils"
-	"app/base/vmaas"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

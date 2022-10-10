@@ -4,8 +4,8 @@ import (
 	"app/base"
 	"app/base/database"
 	"app/base/types"
+	"app/base/types/vmaas"
 	"app/base/utils"
-	"app/base/vmaas"
 	"net/http"
 
 	"github.com/pkg/errors"

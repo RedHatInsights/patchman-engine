@@ -4,8 +4,8 @@ import (
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
+	"app/base/types/vmaas"
 	"app/base/utils"
-	"app/base/vmaas"
 	"fmt"
 	"testing"
 

@@ -3,8 +3,8 @@ package platform
 import (
 	"app/base"
 	"app/base/mqueue"
+	"app/base/types/vmaas"
 	"app/base/utils"
-	"app/base/vmaas"
 	"app/manager/middlewares"
 	"encoding/json"
 	"fmt"
