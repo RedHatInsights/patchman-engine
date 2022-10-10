@@ -52,8 +52,9 @@ type Config struct {
 	NotificationsTopic     string
 
 	// services
-	VmaasAddress string
-	RbacAddress  string
+	VmaasAddress        string
+	RbacAddress         string
+	EntitlementsAddress string
 
 	// cloudwatch
 	CloudWatchAccessKeyID     string
@@ -129,6 +130,7 @@ func initKafkaFromEnv() {
 func initServicesFromEnv() {
 	Cfg.VmaasAddress = Getenv("VMAAS_ADDRESS", "")
 	Cfg.RbacAddress = Getenv("RBAC_ADDRESS", "")
+	Cfg.EntitlementsAddress = Getenv("ENTITLEMENTS_ADDRESS", "")
 }
 
 func initCloudwatchFromEnv() {
@@ -215,6 +217,8 @@ func initServicesFromClowder() {
 			}
 		case "rbac":
 			Cfg.RbacAddress = fmt.Sprintf("http://%s:%d", endpoint.Hostname, endpoint.Port)
+		case "entitlements-api-go":
+			Cfg.EntitlementsAddress = fmt.Sprintf("http://%s:%d", endpoint.Hostname, endpoint.Port)
 		}
 	}
 }

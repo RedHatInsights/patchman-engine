@@ -1,0 +1,161 @@
+#!/usr/bin/env python3
+"""
+Mock 3scale header
+copied from https://github.com/RedHatInsights/vulnerability-engine/blob/master/scripts/3scale-mock
+"""
+
+import os
+import sys
+import json
+import base64
+import argparse
+from uuid import UUID
+
+
+DEFAULT_IDENTITY_FILE = os.environ['HOME'] + "/.3scale-mock"
+DEFAULT_IDENTITY = """
+{
+  "identity" : { 
+    "account_number" : "0",
+    "org_id" : "org_1",
+    "type" : "User",
+    "auth_type": "basic-auth",
+    "user" : {
+      "username" : "jdoe@acme.com",
+      "email" : "jdoe@acme.com",
+      "first_name" : "john",
+      "last_name" : "doe",
+      "is_active" : true,
+      "is_org_admin" : false,
+      "is_internal" : false,
+      "locale" : "en_US"
+    },
+    "system": {},
+    "internal" : {
+      "org_id" : "0",
+      "auth_type" : "basic-auth",
+      "auth_time" : 6300
+    }
+  },
+  "entitlements" : {
+    "insights" : {
+      "is_entitled" : true
+    }
+  }
+}
+"""
+
+debug = False
+
+def load_identity(filepath):
+    if os.path.isfile(filepath):
+        if debug:
+            print('Attempting to load identity from %s' % filepath)
+        with open(filepath, 'r') as identity_file:
+            return json.load(identity_file)
+    if filepath == DEFAULT_IDENTITY_FILE:
+        if debug:
+            print('Using default identity, no identity file %s' % filepath)
+        return json.loads(DEFAULT_IDENTITY)
+    return None
+
+def save_identity(identity, filepath):
+    if debug:
+        print('Saving identity to file %s' % filepath)
+    with open(filepath, 'w') as identity_file:
+        identity_file.write(json.dumps(identity))
+
+def is_valid_uuid(uuid_to_test, version=4):
+    try:
+        uuid_obj = UUID(uuid_to_test, version=version)
+    except ValueError:
+        return False
+    return str(uuid_obj) == uuid_to_test
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-f', '--file', dest='input_file',
+                        default=DEFAULT_IDENTITY_FILE,
+                        help='file containing identity to use [default: %s]' % DEFAULT_IDENTITY_FILE)
+    parser.add_argument('-o', '--org_id',
+                        help='ord_id to use in identity')
+    parser.add_argument('-a', '--account_number',
+                        help='rh account to use in identity')
+    parser.add_argument('-u', '--username',
+                        help='username to use in identity')
+    parser.add_argument('-i', '--internal', action='store_true',
+                        help='user is internal')
+    parser.add_argument('-d', '--debug', action='store_true',
+                        help='output additional information and details')
+    parser.add_argument('-n', '--no-insights-entitlement', action='store_true',
+                        help='user does not have insights entitlement')
+    parser.add_argument('-c', '--cluster-id',
+                        help='set system cluster UUID in identity')
+    subparsers = parser.add_subparsers(help='commands', dest='command')
+    parser_save = subparsers.add_parser('save', help='save identity')
+    parser_save.add_argument('output_file', nargs='?',
+                             default=DEFAULT_IDENTITY_FILE,
+                             help='file to save [default: %s]' % DEFAULT_IDENTITY_FILE)
+
+    parser_print = subparsers.add_parser('print', help='print base64 encoded identity')
+
+    parser_curl = subparsers.add_parser('curl', help='issue curl command')
+
+    options, remaining = parser.parse_known_args()
+    if options.debug:
+        debug = True
+
+    identity = load_identity(options.input_file)
+    if not identity:
+        print('Unable to load identity from file %s' % options.input_file)
+        sys.exit(1)
+
+    if options.org_id:
+        identity['identity']['org_id'] = options.org_id
+        identity['identity']['internal']['org_id'] = options.org_id
+    if options.account_number:
+        identity['identity']['account_number'] = options.account_number
+    if options.username:
+        identity['identity']['user']['username'] = options.username
+    if options.internal:
+        identity['identity']['user']['is_internal'] = True
+    if options.no_insights_entitlement:
+        identity['entitlements']['insights']['is_entitled'] = False
+    if options.cluster_id:
+        if not is_valid_uuid(options.cluster_id):
+            print('Invalid cluster UUID: %s' % options.cluster_id)
+            sys.exit(1)
+        identity['identity']['system']['cluster_id'] = options.cluster_id
+
+    if options.command == 'save':
+        if remaining:
+            print('Unexpected args %s' % remaining)
+            sys.exit(1)
+        save_identity(identity, options.output_file)
+        print('Identity saved to file %s' % options.output_file)
+        sys.exit(0)
+
+    encoded_identity = base64.b64encode(json.dumps(identity).encode('utf-8')).decode('utf-8')
+
+    if options.command == 'print':
+        if remaining:
+            print('Unexpected args %s' % remaining)
+            sys.exit(1)        
+        print(encoded_identity)
+        sys.exit(0)
+
+    if options.command == 'curl':
+        if remaining:
+            args = remaining
+        else:
+            args = []
+        curl_command = 'curl'
+        curl_command += ' -H "x-rh-identity: %s"' % encoded_identity
+        curl_command += ' %s' % ' '.join('%s' % s if not True in [ c.isspace() or c in [';', '&'] for c in s ] else "'%s'" % s for s in args)
+
+        if debug:
+            print('Issuing the following curl command:')
+            print(curl_command)
+        os.system(curl_command)
+

@@ -13,6 +13,7 @@ import (
 
 const VMaaSAPIPrefix = "/api/v3"
 const RBACApiPrefix = "/api/rbac/v1"
+const EntitlementsAPIPrefix = "/api/entitlements/v1"
 
 var Context context.Context
 var CancelContext context.CancelFunc

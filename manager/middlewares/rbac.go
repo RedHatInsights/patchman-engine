@@ -2,24 +2,20 @@ package middlewares
 
 import (
 	"app/base"
-	"app/base/api"
 	"app/base/rbac"
 	"app/base/utils"
+	"fmt"
 	"net/http"
-	"os"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	rbacURL      = ""
-	debugRequest = os.Getenv("LOG_LEVEL") == "trace"
-	httpClient   = &http.Client{}
+var rbacURL = fmt.Sprintf(
+	"%s%s/access/?application=patch",
+	utils.FailIfEmpty(utils.Cfg.RbacAddress, "RBAC_ADDRESS"),
+	base.RBACApiPrefix,
 )
-
-const xRHIdentity = "x-rh-identity"
 
 var allPerms = "patch:*:*"
 var readPerms = map[string]bool{allPerms: true, "patch:*:read": true}
@@ -36,19 +32,6 @@ var granularPerms = map[string]struct {
 	"BaselineDeleteHandler":        {"patch:template:write", false, true},
 	"BaselineSystemsRemoveHandler": {"patch:template:write", false, true},
 	"SystemDeleteHandler":          {"patch:system:write", false, true},
-}
-
-// Make RBAC client on demand, with specified identity
-func makeClient(identity string) *api.Client {
-	client := api.Client{
-		HTTPClient:     httpClient,
-		Debug:          debugRequest,
-		DefaultHeaders: map[string]string{xRHIdentity: identity},
-	}
-	if rbacURL == "" {
-		rbacURL = utils.FailIfEmpty(utils.Cfg.RbacAddress, "RBAC_ADDRESS") + base.RBACApiPrefix + "/access/?application=patch"
-	}
-	return &client
 }
 
 func checkPermissions(access *rbac.AccessPagination, handlerName, method string) bool {
@@ -93,18 +76,8 @@ func checkPermissions(access *rbac.AccessPagination, handlerName, method string)
 func isAccessGranted(c *gin.Context) bool {
 	client := makeClient(c.GetHeader("x-rh-identity"))
 	access := rbac.AccessPagination{}
-	res, err := client.Request(&base.Context, http.MethodGet, rbacURL, nil, &access)
-	if res != nil && res.Body != nil {
-		defer res.Body.Close()
-	}
-
+	err := makeRequest(client, &base.Context, rbacURL, "RBAC", &access)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Call to RBAC svc failed")
-		status := http.StatusInternalServerError
-		if res != nil {
-			status = res.StatusCode
-		}
-		serviceErrorCnt.WithLabelValues("rbac", strconv.Itoa(status)).Inc()
 		return false
 	}
 	nameSplitted := strings.Split(c.HandlerName(), ".")

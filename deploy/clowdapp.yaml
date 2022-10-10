@@ -114,6 +114,7 @@ objects:
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: '${EVAL_TOPIC_MANAGER}'}
         - {name: ENABLE_PACKAGE_CACHE, value: '${ENABLE_PACKAGE_CACHE_MANAGER}'}
+        - {name: ENTITLEMENT_CACHE_VALIDITY, value: '${ENTITLEMENT_CACHE_VALIDITY}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_MANAGER}', memory: '${RES_LIMIT_MEM_MANAGER}'}
@@ -469,6 +470,7 @@ objects:
     - vmaas
     - ingress
     - puptoo
+    - entitlements-api-go
     cyndi:
       enabled: true
       appName: patch
@@ -531,6 +533,7 @@ parameters:
 - {name: ENABLE_BASELINES_API, value: 'true'} # Enable baselines API endpoints
 - {name: ENABLE_BASELINE_CHANGE_EVAL, value: 'true'} # Send Kafka eval messages on baseline update
 - {name: ENABLE_PACKAGE_CACHE_MANAGER, value: 'false'} # Enable caching for /packages endpoint
+- {name: ENTITLEMENT_CACHE_VALIDITY, value: '1800'}
 - {name: EVAL_TOPIC_MANAGER, value: patchman.evaluator.upload}
 - {name: RES_LIMIT_CPU_MANAGER, value: 200m}
 - {name: RES_LIMIT_MEM_MANAGER, value: 256Mi}

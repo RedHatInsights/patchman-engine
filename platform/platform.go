@@ -152,6 +152,7 @@ func platformMock() {
 	app.Use(gzip.Gzip(gzip.DefaultCompression))
 	initVMaaS(app)
 	initRbac(app)
+	initEntitlements(app)
 
 	// Control endpoint handler
 	app.POST("/control/upload", mockUploadHandler)
