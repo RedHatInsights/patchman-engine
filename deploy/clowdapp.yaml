@@ -470,7 +470,7 @@ objects:
     - vmaas
     - ingress
     - puptoo
-    - entitlements-api-go
+    - entitlements
     cyndi:
       enabled: true
       appName: patch

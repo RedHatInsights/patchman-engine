@@ -217,7 +217,7 @@ func initServicesFromClowder() {
 			}
 		case "rbac":
 			Cfg.RbacAddress = fmt.Sprintf("http://%s:%d", endpoint.Hostname, endpoint.Port)
-		case "entitlements-api-go":
+		case "entitlements":
 			Cfg.EntitlementsAddress = fmt.Sprintf("http://%s:%d", endpoint.Hostname, endpoint.Port)
 		}
 	}
