@@ -93,7 +93,7 @@ services:
     env_file:
       - ./conf/platform.env
       - ./conf/gorun.env
-    command: ./scripts/entrypoint.sh platform
+    command: ./dev/scripts/docker-compose-entrypoint.sh platform
     restart: unless-stopped
     depends_on:
       - db
@@ -113,7 +113,7 @@ services:
       - ./conf/common.env
       - ./conf/manager.env
       - ./conf/gorun.env
-    command: ./scripts/entrypoint.sh manager
+    command: ./dev/scripts/docker-compose-entrypoint.sh manager
     ports:
       - 8080:8080
       - 9080:9080 # metrics
@@ -133,7 +133,7 @@ services:
       - ./conf/common.env
       - ./conf/listener.env
       - ./conf/gorun.env
-    command: ./scripts/entrypoint.sh listener
+    command: ./dev/scripts/docker-compose-entrypoint.sh listener
     ports:
       - 8081:8081
       - 9081:9081 # metrics
@@ -154,7 +154,7 @@ services:
       - ./conf/evaluator_common.env
       - ./conf/evaluator_upload.env
       - ./conf/gorun.env
-    command: ./scripts/entrypoint.sh evaluator
+    command: ./dev/scripts/docker-compose-entrypoint.sh evaluator
     ports:
       - 8082:8082
     depends_on:
@@ -174,7 +174,7 @@ services:
       - ./conf/evaluator_common.env
       - ./conf/evaluator_recalc.env
       - ./conf/gorun.env
-    command: ./scripts/entrypoint.sh evaluator
+    command: ./dev/scripts/docker-compose-entrypoint.sh evaluator
     ports:
       - 8084:8084
     depends_on:
@@ -193,7 +193,7 @@ services:
       - ./conf/common.env
       - ./conf/vmaas_sync.env
       - ./conf/gorun.env
-    command: ./scripts/entrypoint.sh job vmaas_sync
+    command: ./dev/scripts/docker-compose-entrypoint.sh job vmaas_sync
     ports:
       - 8083:8083
     restart: on-failure
@@ -214,7 +214,7 @@ services:
       - ./conf/common.env
       - ./conf/admin_api.env
       - ./conf/gorun.env
-    command: ./scripts/entrypoint.sh admin
+    command: ./dev/scripts/docker-compose-entrypoint.sh admin
     ports:
       - 8085:8085
     depends_on:
