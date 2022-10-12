@@ -84,6 +84,7 @@ services:
       - 29093:29093
       - 9092:9092
       - 9093:9093
+      - 9099:9099
     security_opt:
       - label=disable
     # https://github.com/wurstmeister/kafka-docker/issues/389#issuecomment-875428899
