@@ -19,7 +19,10 @@ services:
       - ./conf/zookeeper.env
     ports:
       - 2181:2181
-    command: sh -c "echo 'admin.enableServer=false' >> /etc/confluent/docker/zookeeper.properties.template && /etc/confluent/docker/run"
+    command: sh -c "
+        echo 'admin.enableServer=false' >> /etc/confluent/docker/zookeeper.properties.template &&
+        echo '4lw.commands.whitelist=*' >> /etc/confluent/docker/zookeeper.properties.template &&
+        /etc/confluent/docker/run"
 
   kafka:
     container_name: kafka
@@ -39,6 +42,7 @@ services:
       - 29093:29093
       - 9092:9092
       - 9093:9093
+      - 9099:9099
     security_opt:
       - label=disable
     # https://github.com/wurstmeister/kafka-docker/issues/389#issuecomment-875428899
@@ -55,7 +59,7 @@ services:
     image: patchman-engine-app
     env_file:
       - ./conf/platform.env
-    command: ./scripts/entrypoint.sh platform
+    command: ./dev/scripts/docker-compose-entrypoint.sh platform
     restart: unless-stopped
     ports:
       - 9001:9001

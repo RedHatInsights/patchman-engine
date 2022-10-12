@@ -64,7 +64,10 @@ services:
       - ./conf/zookeeper.env
     ports:
       - 2181:2181
-    command: sh -c "echo 'admin.enableServer=false' >> /etc/confluent/docker/zookeeper.properties.template && /etc/confluent/docker/run"
+    command: sh -c "
+        echo 'admin.enableServer=false' >> /etc/confluent/docker/zookeeper.properties.template &&
+        echo '4lw.commands.whitelist=*' >> /etc/confluent/docker/zookeeper.properties.template &&
+        /etc/confluent/docker/run"
 
   kafka:
     container_name: kafka
