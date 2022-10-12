@@ -39,6 +39,7 @@ RUN if [ "$INSTALL_TOOLS" == "yes" ] ; then \
 
 ADD --chown=insights:root dev/kafka/secrets/ca.crt /opt/kafka/
 ADD --chown=insights:root dev/database/secrets/pgca.crt /opt/postgresql/
+ADD --chown=insights:root dev/scripts              /go/src/app/dev/scripts
 ADD --chown=insights:root main.go                  /go/src/app/
 ADD --chown=insights:root turnpike                 /go/src/app/turnpike
 ADD --chown=insights:root platform                 /go/src/app/platform
