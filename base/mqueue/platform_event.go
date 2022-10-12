@@ -78,12 +78,12 @@ func batchSize(grouped map[int][]string) int {
 	return batches
 }
 
-func (evals *EvalDataSlice) getAccountEvalData() (int, accountInventories, accountRequests, orgIDs) {
+func (evals EvalDataSlice) getAccountEvalData() (int, accountInventories, accountRequests, orgIDs) {
 	// group systems by account
 	invs := accountInventories{}
 	reqs := accountRequests{}
 	orgs := orgIDs{}
-	for _, e := range *evals {
+	for _, e := range evals {
 		invs[e.RhAccountID] = append(invs[e.RhAccountID], e.InventoryID)
 		reqs[e.RhAccountID] = append(reqs[e.RhAccountID], e.RequestID)
 		if _, has := orgs[e.RhAccountID]; !has {
@@ -93,7 +93,7 @@ func (evals *EvalDataSlice) getAccountEvalData() (int, accountInventories, accou
 	return batchSize(invs), invs, reqs, orgs
 }
 
-func (evals *EvalDataSlice) WriteEvents(ctx context.Context, w Writer) error {
+func (evals EvalDataSlice) WriteEvents(ctx context.Context, w Writer) error {
 	batches, accInvs, reqs, orgs := evals.getAccountEvalData()
 	// create events, per BatchSize of systems from one account
 	now := types.Rfc3339Timestamp(time.Now())

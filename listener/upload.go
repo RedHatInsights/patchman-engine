@@ -216,12 +216,12 @@ func bufferEvalEvents(inventoryID string, rhAccountID int, ptEvent *mqueue.Paylo
 
 func flushEvalEvents() {
 	tStart := time.Now()
-	err := mqueue.SendMessages(base.Context, evalWriter, &evalBuffer)
+	err := mqueue.SendMessages(base.Context, evalWriter, evalBuffer)
 	if err != nil {
 		utils.Log("err", err.Error()).Error(ErrorKafkaSend)
 	}
 	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-sent-evaluator"))
-	err = mqueue.SendMessages(base.Context, ptWriter, &ptBuffer)
+	err = mqueue.SendMessages(base.Context, ptWriter, ptBuffer)
 	if err != nil {
 		utils.Log("err", err.Error()).Warn(WarnPayloadTracker)
 	}
