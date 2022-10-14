@@ -5078,6 +5078,9 @@
                                 "type": "string"
                             }
                         }
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/controllers.ListMeta"
                     }
                 }
             },
@@ -6164,6 +6167,9 @@
                                 "type": "string"
                             }
                         }
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/controllers.ListMeta"
                     }
                 }
             },

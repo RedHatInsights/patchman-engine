@@ -718,7 +718,7 @@ func appendFilterData(filters Filters, key string, op, val string) {
 }
 
 // Pagination query for handlers where ListCommon is not used
-func Paginate(tx *gorm.DB, limit *int, offset *int) error {
+func Paginate(tx *gorm.DB, limit *int, offset *int) (int, int, error) {
 	var total int64
 	if limit == nil {
 		limit = &core.DefaultLimit
@@ -727,17 +727,17 @@ func Paginate(tx *gorm.DB, limit *int, offset *int) error {
 		offset = &core.DefaultOffset
 	}
 	if err := utils.CheckLimitOffset(*limit, *offset); err != nil {
-		return err
+		return *limit, *offset, err
 	}
 
 	tx.Count(&total)
 	if total < int64(*offset) {
-		return errors.New(InvalidOffsetMsg)
+		return *limit, *offset, errors.New(InvalidOffsetMsg)
 	}
 	if *limit != -1 {
 		// consistency with ListCommon
 		tx.Limit(*limit)
 	}
 	tx.Offset(*offset)
-	return nil
+	return *limit, *offset, nil
 }
