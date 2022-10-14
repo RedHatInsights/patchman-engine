@@ -22,9 +22,11 @@ type SystemsAdvisoriesRequest struct {
 
 type SystemsAdvisoriesResponse struct {
 	Data map[SystemID][]AdvisoryName `json:"data"`
+	Meta ListMeta                    `json:"meta"`
 }
 type AdvisoriesSystemsResponse struct {
 	Data map[AdvisoryName][]SystemID `json:"data"`
+	Meta ListMeta                    `json:"meta"`
 }
 
 type systemsAdvisoriesDBLoad struct {
@@ -34,8 +36,14 @@ type systemsAdvisoriesDBLoad struct {
 
 var systemsAdvisoriesSelect = database.MustGetSelect(&systemsAdvisoriesDBLoad{})
 
+func totalItems(tx *gorm.DB, cols string) (int, error) {
+	var count int64
+	err := database.Db.Table("(?) AS cq", tx.Select(cols)).Count(&count).Error
+	return int(count), err
+}
+
 func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryName,
-	limit, offset *int) (*gorm.DB, error) {
+	limit, offset *int) (*gorm.DB, int, int, int, error) {
 	sysq := database.Systems(database.Db, acc).
 		Distinct("sp.rh_account_id, sp.id, sp.inventory_id").
 		// we need to join system_advisories to make `limit` work properly
@@ -48,69 +56,85 @@ func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryNa
 		sysq = sysq.Where("sp.inventory_id::text in (?)", systems)
 	}
 
-	err := Paginate(sysq, limit, offset)
+	total, err := totalItems(sysq, "sp.rh_account_id, sp.id, sp.inventory_id")
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, 0, err
 	}
+
+	lim, off, err := Paginate(sysq, limit, offset)
+	if err != nil {
+		return nil, total, lim, off, err
+	}
+
 	query := database.Db.Table("(?) as sp", sysq).
 		Select(systemsAdvisoriesSelect).
 		Joins(`JOIN system_advisories sa ON sa.system_id = sp.id
-			AND sa.rh_account_id = sp.rh_account_id AND sa.rh_account_id = ?`, acc).
-		Joins("JOIN advisory_metadata am ON am.id = sa.advisory_id").
-		Where("when_patched IS NULL").
-		Order("sp.inventory_id, am.id")
+			AND sa.rh_account_id = sp.rh_account_id AND sa.rh_account_id = ?`, acc)
 	if len(advisories) > 0 {
-		query = query.Where("am.name in (?)", advisories)
+		query = query.Joins("LEFT JOIN advisory_metadata am ON am.id = sa.advisory_id AND am.name in (?)", advisories)
+	} else {
+		query = query.Joins("LEFT JOIN advisory_metadata am ON am.id = sa.advisory_id")
 	}
+	query = query.Where("when_patched IS NULL").Order("sp.inventory_id, am.id")
 
-	return query, nil
+	return query, total, lim, off, nil
 }
 
 func advisoriesSystemsQuery(acc int, systems []SystemID, advisories []AdvisoryName,
-	limit, offset *int) (*gorm.DB, error) {
+	limit, offset *int) (*gorm.DB, int, int, int, error) {
 	advq := database.Db.Table("advisory_metadata am").
 		Distinct("am.id, am.name").
 		// we need to join system_advisories to make `limit` work properly
 		// without this join it can happen that we display less items on some pages
 		Joins("JOIN system_advisories sa ON am.id = sa.advisory_id AND sa.rh_account_id = ?", acc).
 		Where("when_patched IS NULL").
-		Order("am.id")
+		Order("am.name, am.id")
 	if len(advisories) > 0 {
 		advq = advq.Where("am.name in (?)", advisories)
 	}
 
-	err := Paginate(advq, limit, offset)
+	total, err := totalItems(advq, "am.id, am.name")
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, 0, err
 	}
+
+	lim, off, err := Paginate(advq, limit, offset)
+	if err != nil {
+		return nil, total, lim, off, err
+	}
+
+	spJoin := "LEFT JOIN system_platform sp ON sp.id = sa.system_id AND sa.rh_account_id = sp.rh_account_id"
 	query := database.Db.Table("(?) as am", advq).
-		Select(systemsAdvisoriesSelect).
-		Joins("JOIN system_advisories sa ON am.id = sa.advisory_id AND sa.rh_account_id = ?", acc).
-		Joins("JOIN system_platform sp ON sp.id = sa.system_id AND sa.rh_account_id = sp.rh_account_id").
-		Where("when_patched IS NULL").
-		Order("am.id, sp.inventory_id")
+		Distinct(systemsAdvisoriesSelect).
+		Joins("JOIN system_advisories sa ON am.id = sa.advisory_id AND sa.rh_account_id = ?", acc)
 	if len(systems) > 0 {
-		query = query.Where("sp.inventory_id::text in (?)", systems)
+		query = query.Joins(fmt.Sprintf("%s AND sp.inventory_id::text in (?)", spJoin), systems)
+	} else {
+		query = query.Joins(spJoin)
 	}
-	return query, nil
+	query = query.Where("when_patched IS NULL").Order("am.name, sp.inventory_id")
+	return query, total, lim, off, nil
 }
 
-func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, error) {
+func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListMeta, error) {
 	var req SystemsAdvisoriesRequest
 	var q *gorm.DB
 	var err error
+	var total int
+	var limit int
+	var offset int
 	if err := c.ShouldBindJSON(&req); err != nil {
 		LogAndRespBadRequest(c, err, "Invalid request body")
-		return nil, err
+		return nil, nil, err
 	}
 	acc := c.GetInt(middlewares.KeyAccount)
 	switch endpoint {
 	case "SystemsAdvisories":
-		q, err = systemsAdvisoriesQuery(acc, req.Systems, req.Advisories, req.Limit, req.Offset)
+		q, total, limit, offset, err = systemsAdvisoriesQuery(acc, req.Systems, req.Advisories, req.Limit, req.Offset)
 	case "AdvisoriesSystems":
-		q, err = advisoriesSystemsQuery(acc, req.Systems, req.Advisories, req.Limit, req.Offset)
+		q, total, limit, offset, err = advisoriesSystemsQuery(acc, req.Systems, req.Advisories, req.Limit, req.Offset)
 	default:
-		return nil, fmt.Errorf("unknown endpoint '%s'", endpoint)
+		return nil, nil, fmt.Errorf("unknown endpoint '%s'", endpoint)
 	}
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
@@ -119,9 +143,14 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, error)
 	var data []systemsAdvisoriesDBLoad
 	if err := q.Find(&data).Error; err != nil {
 		LogAndRespError(c, err, "Database error")
-		return nil, err
+		return nil, nil, err
 	}
-	return data, nil
+	meta := ListMeta{
+		Limit:      limit,
+		Offset:     offset,
+		TotalItems: total,
+	}
+	return data, &meta, nil
 }
 
 // @Summary View system-advisory pairs for selected systems and advisories
@@ -136,16 +165,21 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, error)
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /views/systems/advisories [post]
 func PostSystemsAdvisories(c *gin.Context) {
-	data, err := queryDB(c, "SystemsAdvisories")
+	data, meta, err := queryDB(c, "SystemsAdvisories")
 	if err != nil {
 		return
 	}
 
 	response := SystemsAdvisoriesResponse{
 		Data: map[SystemID][]AdvisoryName{},
+		Meta: *meta,
 	}
 
 	for _, i := range data {
+		if _, has := response.Data[i.SystemID]; has && i.AdvisoryID == "" {
+			// don't append empty values to slices with len > 1
+			continue
+		}
 		response.Data[i.SystemID] = append(response.Data[i.SystemID], i.AdvisoryID)
 	}
 	c.JSON(http.StatusOK, response)
@@ -163,16 +197,21 @@ func PostSystemsAdvisories(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /views/advisories/systems [post]
 func PostAdvisoriesSystems(c *gin.Context) {
-	data, err := queryDB(c, "AdvisoriesSystems")
+	data, meta, err := queryDB(c, "AdvisoriesSystems")
 	if err != nil {
 		return
 	}
 
 	response := AdvisoriesSystemsResponse{
 		Data: map[AdvisoryName][]SystemID{},
+		Meta: *meta,
 	}
 
 	for _, i := range data {
+		if _, has := response.Data[i.AdvisoryID]; has && i.SystemID == "" {
+			// don't append empty values to slices with len > 1
+			continue
+		}
 		response.Data[i.AdvisoryID] = append(response.Data[i.AdvisoryID], i.SystemID)
 	}
 	c.JSON(http.StatusOK, response)
