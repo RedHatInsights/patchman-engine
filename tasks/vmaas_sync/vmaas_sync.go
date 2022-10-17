@@ -151,7 +151,7 @@ func RunVmaasSync() {
 	configure()
 
 	runSync()
-	if err := Metrics().Add(); err != nil {
+	if err := Metrics().Push(); err != nil {
 		utils.Log("err", err).Info("Could not push to pushgateway")
 	}
 }
