@@ -81,7 +81,7 @@ func filterOpenAPI(config EndpointsConfig, inputOpenapiPath, outputOpenapiPath s
 	doc, err := ioutil.ReadFile(inputOpenapiPath)
 	panicErr(err)
 
-	sw, err := openapi3.NewSwaggerLoader().LoadSwaggerFromData(doc)
+	sw, err := openapi3.NewLoader().LoadFromData(doc)
 	panicErr(err)
 
 	filteredPaths := openapi3.Paths{}
