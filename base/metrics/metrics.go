@@ -4,6 +4,7 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"os"
+	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -22,9 +23,6 @@ var (
 		Subsystem: "core",
 		Name:      "info",
 	}, []string{"version"})
-
-	// ENGINEVERSION - DO NOT EDIT this variable MANUALLY - it is modified by generate_docs.sh
-	ENGINEVERSION = "v2.3.10"
 )
 
 func init() {
@@ -33,7 +31,7 @@ func init() {
 	}
 	prometheus.MustRegister(EngineVersion)
 	engineVersion, _ := os.ReadFile("VERSION")
-	EngineVersion.WithLabelValues(string(engineVersion)).Set(1)
+	EngineVersion.WithLabelValues(strings.TrimSuffix(string(engineVersion), "\n")).Set(1)
 }
 
 func Configure() {
