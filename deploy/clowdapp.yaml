@@ -518,7 +518,7 @@ objects:
 parameters:
 # Manager
 - {name: REPLICAS_MANAGER, value: '1'}
-- {name: IMAGE_TAG_MANAGER, value: v2.3.34}
+- {name: IMAGE_TAG_MANAGER, value: v2.3.35}
 - {name: LOG_LEVEL_MANAGER, value: debug}
 - {name: GOMAXPROCS_MANAGER, value: '8'}
 - {name: DB_DEBUG_MANAGER, value: 'false'} # Log database queries if enabled
@@ -539,7 +539,7 @@ parameters:
 
 # Listener
 - {name: REPLICAS_LISTENER, value: '1'}
-- {name: IMAGE_TAG_LISTENER, value: v2.3.34}
+- {name: IMAGE_TAG_LISTENER, value: v2.3.35}
 - {name: LOG_LEVEL_LISTENER, value: debug}
 - {name: GOMAXPROCS_LISTENER, value: '8'}
 - {name: DB_DEBUG_LISTENER, value: 'false'}
@@ -554,7 +554,7 @@ parameters:
 
 # Evaluator - upload
 - {name: REPLICAS_EVALUATOR_UPLOAD, value: '1'}
-- {name: IMAGE_TAG_EVALUATOR_UPLOAD, value: v2.3.34}
+- {name: IMAGE_TAG_EVALUATOR_UPLOAD, value: v2.3.35}
 - {name: LOG_LEVEL_EVALUATOR_UPLOAD, value: debug}
 - {name: GOMAXPROCS_EVALUATOR_UPLOAD, value: '8'}
 - {name: DB_DEBUG_EVALUATOR_UPLOAD, value: 'false'}
@@ -577,7 +577,7 @@ parameters:
 
 # Evaluator - recalc
 - {name: REPLICAS_EVALUATOR_RECALC, value: '1'}
-- {name: IMAGE_TAG_EVALUATOR_RECALC, value: v2.3.34}
+- {name: IMAGE_TAG_EVALUATOR_RECALC, value: v2.3.35}
 - {name: LOG_LEVEL_EVALUATOR_RECALC, value: debug}
 - {name: GOMAXPROCS_EVALUATOR_RECALC, value: '8'}
 - {name: DB_DEBUG_EVALUATOR_RECALC, value: 'false'}
@@ -599,7 +599,7 @@ parameters:
 - {name: ENABLE_INSTANT_NOTIFICATIONS, value: 'true'}
 
 # JOBS
-- {name: IMAGE_TAG_JOBS, value: v2.3.34}
+- {name: IMAGE_TAG_JOBS, value: v2.3.35}
 - {name: LOG_LEVEL_JOBS, value: debug}
 - {name: GOMAXPROCS_JOBS, value: '8'}
 - {name: DB_DEBUG_JOBS, value: 'false'}
@@ -642,7 +642,7 @@ parameters:
 - {name: ENABLE_REFRESH_ADVISORY_CACHES, value: 'true'} # Enable periodic refresh of account advisory caches
 
 # Database admin
-- {name: IMAGE_TAG_DATABASE_ADMIN, value: v2.3.34}
+- {name: IMAGE_TAG_DATABASE_ADMIN, value: v2.3.35}
 - {name: LOG_LEVEL_DATABASE_ADMIN, value: debug}
 - {name: DB_DEBUG_DATABASE_ADMIN, value: 'false'}
 - {name: SCHEMA_MIGRATION, value: '-1'} # Set specific database schema version or use the last schema version (-1)
@@ -672,7 +672,7 @@ parameters:
 - {name: ENABLE_PAYLOAD_TRACKER, value: 'true'} # Send status messages to payload tracker
 
 # Turnpike
-- {name: IMAGE_TAG_ADMIN, value: v2.3.34}
+- {name: IMAGE_TAG_ADMIN, value: v2.3.35}
 - {name: ENABLE_TURNPIKE_AUTH, value: 'true'} # Enable Turnpike authentication for internal API (manual sync, re-calc)
 - {name: REPLICAS_ADMIN, value: '1'}
 - {name: RES_LIMIT_CPU_ADMIN, value: 100m}
