@@ -3,6 +3,7 @@ package middlewares
 import (
 	"app/base/utils"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -37,6 +38,22 @@ func RequestResponseLogger() gin.HandlerFunc {
 			utils.Log(fields...).Error("request")
 		}
 
-		utils.ObserveSecondsSince(tStart, requestDurations.WithLabelValues(c.Request.Method+c.Request.URL.String()))
+		utils.ObserveSecondsSince(tStart, requestDurations.
+			WithLabelValues(c.Request.Method+getPlainURL(c.Request.URL.String())))
 	}
+}
+
+func getPlainURL(addr string) string {
+	// split query string
+	if strings.Contains(addr, "?") {
+		addrArr := strings.SplitN(addr, "?", 2)
+		addr = addrArr[0]
+	}
+
+	// if last character is "/" -> split it
+	if (addr[len(addr)-1:]) == "/" {
+		addr = addr[:len(addr)-1]
+	}
+
+	return addr
 }
