@@ -4531,6 +4531,17 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
+                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"baseline_.*\"}) by (pod))",
+                        "format": "time_series",
+                        "interval": "",
+                        "intervalFactor": 1,
+                        "legendFormat": "baseline_sum",
+                        "refId": "E"
+                    },
+                    {
+                        "datasource": {
+                            "uid": "$datasource"
+                        },
                         "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_advisories_.*\"}) by (pod))",
                         "format": "time_series",
                         "interval": "",
@@ -4552,7 +4563,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_platform_.*\"}) by (pod)",
+                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_platform_.*\"}) by (pod))",
                         "format": "time_series",
                         "interval": "",
                         "intervalFactor": 1,
