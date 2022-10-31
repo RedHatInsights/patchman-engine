@@ -4037,7 +4037,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_systems{last_upload=~"last.*|all"}) by (last_upload, pod)) by (last_upload) - avg(sum(label_replace(patchman_engine_vmaas_sync_cyndi_systems{type=~"last.*|all"}, "last_upload", "$1", "type", "(.*)")) by (last_upload, pod)) by (last_upload)",
+                        "expr": "avg(sum(patchman_engine_vmaas_sync_systems{last_upload=~\"last.*|all\"}) by (last_upload, pod)) by (last_upload) - avg(sum(label_replace(patchman_engine_vmaas_sync_cyndi_systems{type=~\"last.*|all\"}, \"last_upload\", \"$1\", \"type\", \"(.*)\")) by (last_upload, pod)) by (last_upload)",
                         "format": "time_series",
                         "hide": false,
                         "intervalFactor": 1,
