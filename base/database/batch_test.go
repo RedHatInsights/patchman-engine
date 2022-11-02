@@ -2,9 +2,8 @@ package database
 
 import (
 	"app/base/utils"
-	"testing"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 var defaultValues = TestTableSlice{
@@ -17,7 +16,7 @@ var defaultValues = TestTableSlice{
 	{Name: "M", Email: "N"},
 }
 
-// nolint: errcheck
+//nolint: errcheck
 func TestBatchInsert(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()

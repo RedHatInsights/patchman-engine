@@ -13,7 +13,7 @@ const openAPIPath = "v2/openapi.json"
 func TestValidateOpenAPI3DocStr(t *testing.T) {
 	doc, err := ioutil.ReadFile(openAPIPath)
 	assert.Nil(t, err)
-	_, err = openapi3.NewLoader().LoadFromData(doc)
+	_, err = openapi3.NewSwaggerLoader().LoadSwaggerFromData(doc)
 	assert.Nil(t, err)
 }
 
