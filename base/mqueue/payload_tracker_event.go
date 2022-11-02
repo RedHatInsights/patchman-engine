@@ -47,14 +47,15 @@ func writeEvent(ctx context.Context, w Writer, event *PayloadTrackerEvent,
 	return err
 }
 
-func (events PayloadTrackerEvents) WriteEvents(ctx context.Context, w Writer) error {
+func (events *PayloadTrackerEvents) WriteEvents(ctx context.Context, w Writer) error {
 	if !enablePayloadTracker {
 		return nil
 	}
 	var err error
 	now := types.Rfc3339TimestampWithZ(time.Now())
-	for i := range events {
-		err = writeEvent(ctx, w, &events[i], &now)
+	for _, event := range *events {
+		event := event // necessary, G601: Implicit memory aliasing in for loop. (gosec)
+		err = writeEvent(ctx, w, &event, &now)
 	}
 	return err
 }
