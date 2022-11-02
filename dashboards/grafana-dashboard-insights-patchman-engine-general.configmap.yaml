@@ -4027,7 +4027,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_systems{last_upload=~\"last.*|all\"}) by (last_upload, pod)) by (last_upload)",
+                        "expr": "sum(patchman_engine_vmaas_sync_systems{last_upload=~\"last.*|all\"}) by (last_upload)",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "{{last_upload}}",
@@ -4037,7 +4037,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_systems{last_upload=~"last.*|all"}) by (last_upload, pod)) by (last_upload) - avg(sum(label_replace(patchman_engine_vmaas_sync_cyndi_systems{type=~"last.*|all"}, "last_upload", "$1", "type", "(.*)")) by (last_upload, pod)) by (last_upload)",
+                        "expr": "sum(patchman_engine_vmaas_sync_systems{last_upload=~\"last.*|all\"}) by (last_upload) - sum(label_replace(patchman_engine_vmaas_sync_cyndi_systems{type=~\"last.*|all\"}, \"last_upload\", \"$1\", \"type\", \"(.*)\")) by (last_upload)",
                         "format": "time_series",
                         "hide": false,
                         "intervalFactor": 1,
@@ -4153,7 +4153,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_advisories{}) by (type, pod)) by (type)",
+                        "expr": "sum(patchman_engine_vmaas_sync_advisories{}) by (type)",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "{{type}}",
@@ -4163,7 +4163,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_advisories{}) by (pod))",
+                        "expr": "sum(patchman_engine_vmaas_sync_advisories{})",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "all",
@@ -4279,7 +4279,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_cyndi_tags_count) by (type, pod)) by (type)",
+                        "expr": "sum(patchman_engine_vmaas_sync_cyndi_tags_count) by (type)",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "{{type}}",
@@ -4394,7 +4394,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_packages{}) by (pod))",
+                        "expr": "sum(patchman_engine_vmaas_sync_packages{})",
                         "format": "time_series",
                         "interval": "",
                         "intervalFactor": 1,
@@ -4405,7 +4405,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_package_names{}) by (pod))",
+                        "expr": "sum(patchman_engine_vmaas_sync_package_names{})",
                         "format": "time_series",
                         "interval": "",
                         "intervalFactor": 1,
@@ -4521,7 +4521,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{}) by (table, pod)) by (table)",
+                        "expr": "sum(patchman_engine_vmaas_sync_database_size_bytes{}) by (table)",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "{{table}}",
@@ -4531,7 +4531,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_advisories_.*\"}) by (pod))",
+                        "expr": "sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_advisories_.*\"})",
                         "format": "time_series",
                         "interval": "",
                         "intervalFactor": 1,
@@ -4542,7 +4542,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_package_.*\"}) by (pod))",
+                        "expr": "sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_package_.*\"})",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "system_package_sum",
@@ -4552,7 +4552,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_platform_.*\"}) by (pod)",
+                        "expr": "sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_platform_.*\"})",
                         "format": "time_series",
                         "interval": "",
                         "intervalFactor": 1,
@@ -4668,7 +4668,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_processes{}) by (usename, pod)) by (usename)",
+                        "expr": "sum(patchman_engine_vmaas_sync_database_processes{}) by (usename)",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "{{usename}}",
