@@ -15,7 +15,3 @@ do
     done
     echo "Topic $topic created successfully"
 done
-# start simple http server so other components can check that kafka has fully started
-while : ; do
-    nc -l -p 9099 -c 'echo -e "HTTP/1.1 200 OK\n\nTOPICS READY"';
-done
