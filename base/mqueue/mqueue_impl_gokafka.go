@@ -142,14 +142,8 @@ func getSaslMechanism() sasl.Mechanism {
 	kafkaPassword := utils.FailIfEmpty(utils.Cfg.KafkaPassword, "KAFKA_PASSWORD")
 	saslType := strings.ToLower(*utils.Cfg.KafkaSaslType)
 	switch saslType {
-	case "scram", "scram-sha-512":
+	case "scram":
 		mechanism, err := kafkaScram.Mechanism(kafkaScram.SHA512, kafkaUsername, kafkaPassword)
-		if err != nil {
-			panic(err)
-		}
-		return mechanism
-	case "scram-sha-256":
-		mechanism, err := kafkaScram.Mechanism(kafkaScram.SHA256, kafkaUsername, kafkaPassword)
 		if err != nil {
 			panic(err)
 		}
@@ -158,7 +152,7 @@ func getSaslMechanism() sasl.Mechanism {
 		mechanism := kafkaPlain.Mechanism{Username: kafkaUsername, Password: kafkaPassword}
 		return mechanism
 	}
-	panic(fmt.Sprintf("Unknown sasl type '%s', options: {scram, scram-sha-256, scram-sha-512, plain}", saslType))
+	panic(fmt.Sprintf("Unknown sasl type '%s', options: {scram, plain}", saslType))
 }
 
 func caCertTLSConfigFromEnv() *tls.Config {
