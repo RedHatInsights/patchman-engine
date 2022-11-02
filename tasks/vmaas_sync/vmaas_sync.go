@@ -38,7 +38,7 @@ var (
 	fullSyncCadence          int
 )
 
-func configure() {
+func Configure() {
 	core.ConfigureApp()
 	useTraceLevel := strings.ToLower(utils.Getenv("LOG_LEVEL", "INFO")) == "trace"
 	vmaasClient = &api.Client{
@@ -148,7 +148,7 @@ func SyncData(lastSyncTS *string, lastFullSyncTS *types.Rfc3339TimestampWithZ) e
 
 func RunVmaasSync() {
 	tasks.HandleContextCancel(tasks.WaitAndExit)
-	configure()
+	Configure()
 
 	runSync()
 	if err := Metrics().Add(); err != nil {
