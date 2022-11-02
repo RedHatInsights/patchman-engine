@@ -29,7 +29,7 @@ data:
         "editable": true,
         "fiscalYearStartMonth": 0,
         "graphTooltip": 0,
-        "iteration": 1665646145811,
+        "iteration": 1656583055008,
         "links": [
 
         ],
@@ -107,7 +107,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -194,7 +194,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -214,7 +214,7 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of messages processed using Listener.",
+                "description": "Messages processed using Listener",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -282,7 +282,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -369,7 +369,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -418,7 +418,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of Manager requests.",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -486,7 +485,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -574,7 +573,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -593,7 +592,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of Manager restarts.",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -661,7 +659,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -680,7 +678,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of Listener restarts.",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -748,7 +745,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -767,7 +764,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of Evaluator-upload restarts.",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -835,7 +831,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -854,7 +850,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of Evaluator-recalc restarts.",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -922,7 +917,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -941,7 +936,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of VMaaS-sync restarts.",
                 "fieldConfig": {
                     "defaults": {
                         "color": {
@@ -1009,7 +1003,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -1095,7 +1089,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -1184,7 +1178,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -1271,7 +1265,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -1359,7 +1353,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -1449,7 +1443,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "targets": [
                     {
                         "datasource": {
@@ -1508,7 +1502,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of requests per second in Manager.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -1548,7 +1541,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -1592,14 +1585,11 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:61",
                         "format": "short",
-                        "label": "Requests/s",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:62",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -1619,7 +1609,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "Calculation of latency for Manager.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -1659,7 +1648,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -1703,14 +1692,11 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:114",
                         "format": "ms",
-                        "label": "Latency",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:115",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -1730,7 +1716,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The percentage of CPU usage for each container.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -1770,7 +1755,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -1815,14 +1800,12 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:167",
                         "format": "percentunit",
                         "logBase": 1,
                         "max": "1",
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:168",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -1842,7 +1825,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The percentage of memory usage for each container.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -1882,7 +1864,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -1927,14 +1909,12 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:220",
                         "format": "percentunit",
                         "logBase": 1,
                         "max": "1",
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:221",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -1982,7 +1962,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of restarts for each container.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -2022,7 +2001,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2067,14 +2046,11 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:285",
                         "format": "none",
-                        "label": "Restarts",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:286",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -2094,7 +2070,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "Kafka consumer lag by each topic.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -2134,7 +2109,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2178,13 +2153,11 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:362",
                         "format": "none",
                         "logBase": 2,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:363",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -2235,7 +2208,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of messages per second received by each reporter in Listener.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -2275,7 +2247,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2303,7 +2275,7 @@ data:
                 "timeRegions": [
 
                 ],
-                "title": "Processed messages by reporter",
+                "title": "Listener processed messages by reporter",
                 "tooltip": {
                     "shared": true,
                     "sort": 0,
@@ -2319,14 +2291,11 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:415",
                         "format": "none",
-                        "label": "Messages/s",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:416",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -2349,7 +2318,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of messages per second received by result in Listener.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -2389,7 +2357,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2417,7 +2385,7 @@ data:
                 "timeRegions": [
 
                 ],
-                "title": "Processed messages by result",
+                "title": "Listener processed messages by result",
                 "tooltip": {
                     "shared": true,
                     "sort": 0,
@@ -2433,14 +2401,11 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:468",
                         "format": "none",
-                        "label": "Messages/s",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:469",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -2464,7 +2429,6 @@ data:
                     "type": "prometheus",
                     "uid": "$datasource"
                 },
-                "description": "The duration of particular part in Listener.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -2505,7 +2469,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2534,7 +2498,7 @@ data:
                 "timeRegions": [
 
                 ],
-                "title": "Message processing part duration",
+                "title": "Listener message processing part duration",
                 "tooltip": {
                     "shared": true,
                     "sort": 0,
@@ -2605,7 +2569,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The delay from upload to evaluation.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -2646,7 +2609,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2730,7 +2693,6 @@ data:
                     {
                         "$$hashKey": "object:227",
                         "format": "s",
-                        "label": "Delay",
                         "logBase": 1,
                         "show": true
                     },
@@ -2760,7 +2722,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of systems per second evaluated by type.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -2800,7 +2761,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2844,252 +2805,11 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:679",
                         "format": "none",
-                        "label": "Systems/s",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:680",
-                        "format": "short",
-                        "logBase": 1,
-                        "show": true
-                    }
-                ],
-                "yaxis": {
-                    "align": false
-                }
-            },
-            {
-                "aliasColors": {
-                    "error-call-vmaas-updates": "#890f02",
-                    "error-db-read-inventory-data": "#58140c",
-                    "error-no-packages": "#99440a",
-                    "error-process-advisories": "#c15c17",
-                    "error-update-system-caches": "#bf1b00",
-                    "success": "#629e51"
-                },
-                "bars": false,
-                "dashLength": 10,
-                "dashes": false,
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "$datasource"
-                },
-                "description": "The number of evaluations per second evaluated by \"patchman.*-evaluator-recalc\".",
-                "fieldConfig": {
-                    "defaults": {
-                        "links": [
-
-                        ],
-                        "unit": "none"
-                    },
-                    "overrides": [
-
-                    ]
-                },
-                "fill": 1,
-                "fillGradient": 0,
-                "gridPos": {
-                    "h": 6,
-                    "w": 12,
-                    "x": 0,
-                    "y": 50
-                },
-                "hiddenSeries": false,
-                "id": 84,
-                "legend": {
-                    "avg": false,
-                    "current": false,
-                    "max": false,
-                    "min": false,
-                    "show": true,
-                    "total": false,
-                    "values": false
-                },
-                "lines": true,
-                "linewidth": 1,
-                "links": [
-
-                ],
-                "nullPointMode": "null",
-                "options": {
-                    "alertThreshold": true
-                },
-                "percentage": false,
-                "pluginVersion": "9.0.3",
-                "pointradius": 5,
-                "points": false,
-                "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
-                "spaceLength": 10,
-                "stack": false,
-                "steppedLine": false,
-                "targets": [
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "editorMode": "code",
-                        "exemplar": false,
-                        "expr": "sum(rate(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-recalc.*\"}[$interval])) by (pod)",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "legendFormat": "{{type}}",
-                        "range": true,
-                        "refId": "A"
-                    }
-                ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
-                "title": "System evaluations by pod - recalc",
-                "tooltip": {
-                    "shared": true,
-                    "sort": 0,
-                    "value_type": "individual"
-                },
-                "type": "graph",
-                "xaxis": {
-                    "mode": "time",
-                    "show": true,
-                    "values": [
-
-                    ]
-                },
-                "yaxes": [
-                    {
-                        "$$hashKey": "object:133",
-                        "format": "none",
-                        "label": "Evaluations/s",
-                        "logBase": 1,
-                        "show": true
-                    },
-                    {
-                        "$$hashKey": "object:134",
-                        "format": "short",
-                        "logBase": 1,
-                        "show": true
-                    }
-                ],
-                "yaxis": {
-                    "align": false
-                }
-            },
-            {
-                "aliasColors": {
-                    "error-call-vmaas-updates": "#890f02",
-                    "error-db-read-inventory-data": "#58140c",
-                    "error-no-packages": "#99440a",
-                    "error-process-advisories": "#c15c17",
-                    "error-update-system-caches": "#bf1b00",
-                    "success": "#629e51"
-                },
-                "bars": false,
-                "dashLength": 10,
-                "dashes": false,
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "$datasource"
-                },
-                "description": "The number of evaluations per second evaluated by \"patchman.*-evaluator-upload\".",
-                "fieldConfig": {
-                    "defaults": {
-                        "links": [
-
-                        ]
-                    },
-                    "overrides": [
-
-                    ]
-                },
-                "fill": 1,
-                "fillGradient": 0,
-                "gridPos": {
-                    "h": 6,
-                    "w": 12,
-                    "x": 12,
-                    "y": 50
-                },
-                "hiddenSeries": false,
-                "id": 85,
-                "legend": {
-                    "avg": false,
-                    "current": false,
-                    "max": false,
-                    "min": false,
-                    "show": true,
-                    "total": false,
-                    "values": false
-                },
-                "lines": true,
-                "linewidth": 1,
-                "links": [
-
-                ],
-                "nullPointMode": "null",
-                "options": {
-                    "alertThreshold": true
-                },
-                "percentage": false,
-                "pluginVersion": "9.0.3",
-                "pointradius": 5,
-                "points": false,
-                "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
-                "spaceLength": 10,
-                "stack": false,
-                "steppedLine": false,
-                "targets": [
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "expr": "sum(rate(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-upload.*\"}[$interval])) by (pod)",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "legendFormat": "{{type}}",
-                        "refId": "A"
-                    }
-                ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
-                "title": "System evaluations by pod - upload",
-                "tooltip": {
-                    "shared": true,
-                    "sort": 0,
-                    "value_type": "individual"
-                },
-                "type": "graph",
-                "xaxis": {
-                    "mode": "time",
-                    "show": true,
-                    "values": [
-
-                    ]
-                },
-                "yaxes": [
-                    {
-                        "$$hashKey": "object:237",
-                        "format": "none",
-                        "label": "Evaluations/s",
-                        "logBase": 1,
-                        "show": true
-                    },
-                    {
-                        "$$hashKey": "object:238",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -3109,7 +2829,7 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The duration of system evaluation.",
+                "description": "",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -3127,7 +2847,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 56
+                    "y": 50
                 },
                 "hiddenSeries": false,
                 "id": 82,
@@ -3150,7 +2870,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3234,7 +2954,6 @@ data:
                     {
                         "$$hashKey": "object:227",
                         "format": "s",
-                        "label": "Duration",
                         "logBase": 1,
                         "show": true
                     },
@@ -3251,7 +2970,12 @@ data:
             },
             {
                 "aliasColors": {
-
+                    "error-call-vmaas-updates": "#890f02",
+                    "error-db-read-inventory-data": "#58140c",
+                    "error-no-packages": "#99440a",
+                    "error-process-advisories": "#c15c17",
+                    "error-update-system-caches": "#bf1b00",
+                    "success": "#629e51"
                 },
                 "bars": false,
                 "dashLength": 10,
@@ -3260,12 +2984,12 @@ data:
                     "type": "prometheus",
                     "uid": "$datasource"
                 },
-                "description": "The median value of duration of particular evaluation part.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
 
-                        ]
+                        ],
+                        "unit": "none"
                     },
                     "overrides": [
 
@@ -3277,10 +3001,10 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 56
+                    "y": 50
                 },
                 "hiddenSeries": false,
-                "id": 47,
+                "id": 84,
                 "legend": {
                     "avg": false,
                     "current": false,
@@ -3300,7 +3024,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3315,49 +3039,14 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "exemplar": true,
-                        "expr": "histogram_quantile(0.5, sum(rate(patchman_engine_evaluator_evaluation_part_duration_seconds_bucket{job=~\"patchman.*-evaluator-$evaluator\"}[$interval])) by (part, le))",
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "sum(rate(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-recalc.*\"}[$interval])) by (pod)",
                         "format": "time_series",
-                        "groupBy": [
-                            {
-                                "params": [
-                                    "$__interval"
-                                ],
-                                "type": "time"
-                            },
-                            {
-                                "params": [
-                                    "null"
-                                ],
-                                "type": "fill"
-                            }
-                        ],
-                        "interval": "",
                         "intervalFactor": 1,
-                        "legendFormat": "{{part}}",
-                        "orderByTime": "ASC",
-                        "policy": "default",
-                        "refId": "A",
-                        "resultFormat": "time_series",
-                        "select": [
-                            [
-                                {
-                                    "params": [
-                                        "value"
-                                    ],
-                                    "type": "field"
-                                },
-                                {
-                                    "params": [
-
-                                    ],
-                                    "type": "mean"
-                                }
-                            ]
-                        ],
-                        "tags": [
-
-                        ]
+                        "legendFormat": "{{type}}",
+                        "range": true,
+                        "refId": "A"
                     }
                 ],
                 "thresholds": [
@@ -3366,7 +3055,7 @@ data:
                 "timeRegions": [
 
                 ],
-                "title": "Evaluation part duration median",
+                "title": "System evaluations by pod - recalc",
                 "tooltip": {
                     "shared": true,
                     "sort": 0,
@@ -3382,14 +3071,14 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:447",
-                        "format": "short",
-                        "label": "Median of duration",
+                        "$$hashKey": "object:133",
+                        "format": "none",
+                        "label": "Evalustions/s",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:448",
+                        "$$hashKey": "object:134",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -3409,7 +3098,7 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The time interval between two evaluations.",
+                "description": "",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -3426,7 +3115,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 62
+                    "y": 56
                 },
                 "hiddenSeries": false,
                 "id": 83,
@@ -3449,7 +3138,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3549,15 +3238,20 @@ data:
             },
             {
                 "aliasColors": {
-                    "unpatched": "#e24d42"
+                    "error-call-vmaas-updates": "#890f02",
+                    "error-db-read-inventory-data": "#58140c",
+                    "error-no-packages": "#99440a",
+                    "error-process-advisories": "#c15c17",
+                    "error-update-system-caches": "#bf1b00",
+                    "success": "#629e51"
                 },
                 "bars": false,
                 "dashLength": 10,
                 "dashes": false,
                 "datasource": {
+                    "type": "prometheus",
                     "uid": "$datasource"
                 },
-                "description": "The number of system evaluations by type.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -3574,6 +3268,116 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
+                    "y": 56
+                },
+                "hiddenSeries": false,
+                "id": 85,
+                "legend": {
+                    "avg": false,
+                    "current": false,
+                    "max": false,
+                    "min": false,
+                    "show": true,
+                    "total": false,
+                    "values": false
+                },
+                "lines": true,
+                "linewidth": 1,
+                "links": [
+
+                ],
+                "nullPointMode": "null",
+                "options": {
+                    "alertThreshold": true
+                },
+                "percentage": false,
+                "pluginVersion": "9.0.1",
+                "pointradius": 5,
+                "points": false,
+                "renderer": "flot",
+                "seriesOverrides": [
+
+                ],
+                "spaceLength": 10,
+                "stack": false,
+                "steppedLine": false,
+                "targets": [
+                    {
+                        "datasource": {
+                            "uid": "$datasource"
+                        },
+                        "expr": "sum(rate(patchman_engine_evaluator_evaluation{pod=~\"patchman.*-evaluator-upload.*\"}[$interval])) by (pod)",
+                        "format": "time_series",
+                        "intervalFactor": 1,
+                        "legendFormat": "{{type}}",
+                        "refId": "A"
+                    }
+                ],
+                "thresholds": [
+
+                ],
+                "timeRegions": [
+
+                ],
+                "title": "System evaluations by pod - upload",
+                "tooltip": {
+                    "shared": true,
+                    "sort": 0,
+                    "value_type": "individual"
+                },
+                "type": "graph",
+                "xaxis": {
+                    "mode": "time",
+                    "show": true,
+                    "values": [
+
+                    ]
+                },
+                "yaxes": [
+                    {
+                        "$$hashKey": "object:237",
+                        "format": "none",
+                        "label": "Evaluations/s",
+                        "logBase": 1,
+                        "show": true
+                    },
+                    {
+                        "$$hashKey": "object:238",
+                        "format": "short",
+                        "logBase": 1,
+                        "show": true
+                    }
+                ],
+                "yaxis": {
+                    "align": false
+                }
+            },
+            {
+                "aliasColors": {
+                    "unpatched": "#e24d42"
+                },
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
+                "datasource": {
+                    "uid": "$datasource"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "links": [
+
+                        ]
+                    },
+                    "overrides": [
+
+                    ]
+                },
+                "fill": 1,
+                "fillGradient": 0,
+                "gridPos": {
+                    "h": 6,
+                    "w": 12,
+                    "x": 0,
                     "y": 62
                 },
                 "hiddenSeries": false,
@@ -3597,7 +3401,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3641,14 +3445,159 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:1191",
                         "format": "none",
-                        "label": "Evaluations/s",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:1192",
+                        "format": "short",
+                        "logBase": 1,
+                        "show": true
+                    }
+                ],
+                "yaxis": {
+                    "align": false
+                }
+            },
+            {
+                "aliasColors": {
+
+                },
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "$datasource"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "links": [
+
+                        ]
+                    },
+                    "overrides": [
+
+                    ]
+                },
+                "fill": 1,
+                "fillGradient": 0,
+                "gridPos": {
+                    "h": 6,
+                    "w": 12,
+                    "x": 12,
+                    "y": 62
+                },
+                "hiddenSeries": false,
+                "id": 47,
+                "legend": {
+                    "avg": false,
+                    "current": false,
+                    "max": false,
+                    "min": false,
+                    "show": true,
+                    "total": false,
+                    "values": false
+                },
+                "lines": true,
+                "linewidth": 1,
+                "links": [
+
+                ],
+                "nullPointMode": "null",
+                "options": {
+                    "alertThreshold": true
+                },
+                "percentage": false,
+                "pluginVersion": "9.0.1",
+                "pointradius": 5,
+                "points": false,
+                "renderer": "flot",
+                "seriesOverrides": [
+
+                ],
+                "spaceLength": 10,
+                "stack": false,
+                "steppedLine": false,
+                "targets": [
+                    {
+                        "datasource": {
+                            "uid": "$datasource"
+                        },
+                        "exemplar": true,
+                        "expr": "histogram_quantile(0.5, sum(rate(patchman_engine_evaluator_evaluation_part_duration_seconds_bucket{job=~\"patchman.*-evaluator-$evaluator\"}[$interval])) by (part, le))",
+                        "format": "time_series",
+                        "groupBy": [
+                            {
+                                "params": [
+                                    "$__interval"
+                                ],
+                                "type": "time"
+                            },
+                            {
+                                "params": [
+                                    "null"
+                                ],
+                                "type": "fill"
+                            }
+                        ],
+                        "interval": "",
+                        "intervalFactor": 1,
+                        "legendFormat": "{{part}}",
+                        "orderByTime": "ASC",
+                        "policy": "default",
+                        "refId": "A",
+                        "resultFormat": "time_series",
+                        "select": [
+                            [
+                                {
+                                    "params": [
+                                        "value"
+                                    ],
+                                    "type": "field"
+                                },
+                                {
+                                    "params": [
+
+                                    ],
+                                    "type": "mean"
+                                }
+                            ]
+                        ],
+                        "tags": [
+
+                        ]
+                    }
+                ],
+                "thresholds": [
+
+                ],
+                "timeRegions": [
+
+                ],
+                "title": "Evaluation part duration median",
+                "tooltip": {
+                    "shared": true,
+                    "sort": 0,
+                    "value_type": "individual"
+                },
+                "type": "graph",
+                "xaxis": {
+                    "mode": "time",
+                    "show": true,
+                    "values": [
+
+                    ]
+                },
+                "yaxes": [
+                    {
+                        "$$hashKey": "object:447",
+                        "format": "short",
+                        "logBase": 1,
+                        "show": true
+                    },
+                    {
+                        "$$hashKey": "object:448",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -3696,7 +3645,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of culled systems per second which were deleted.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -3736,7 +3684,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3792,14 +3740,11 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:1244",
                         "format": "none",
-                        "label": "Systems/s",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:1245",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -3819,7 +3764,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of external services calls and their result.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -3859,7 +3803,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3913,14 +3857,132 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:1297",
                         "format": "none",
-                        "label": "Calls/s",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:1298",
+                        "format": "short",
+                        "logBase": 1,
+                        "show": true
+                    }
+                ],
+                "yaxis": {
+                    "align": false
+                }
+            },
+            {
+                "aliasColors": {
+                    "all": "#ba43a9",
+                    "bugfix": "#ef843c",
+                    "enhancement": "#9ac48a",
+                    "security": "#e24d42",
+                    "unknown": "#fce2de"
+                },
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
+                "datasource": {
+                    "uid": "$datasource"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "links": [
+
+                        ]
+                    },
+                    "overrides": [
+
+                    ]
+                },
+                "fill": 1,
+                "fillGradient": 0,
+                "gridPos": {
+                    "h": 6,
+                    "w": 12,
+                    "x": 12,
+                    "y": 75
+                },
+                "hiddenSeries": false,
+                "id": 42,
+                "legend": {
+                    "avg": false,
+                    "current": false,
+                    "max": false,
+                    "min": false,
+                    "show": true,
+                    "total": false,
+                    "values": false
+                },
+                "lines": true,
+                "linewidth": 1,
+                "links": [
+
+                ],
+                "nullPointMode": "null",
+                "options": {
+                    "alertThreshold": true
+                },
+                "percentage": false,
+                "pluginVersion": "9.0.1",
+                "pointradius": 5,
+                "points": false,
+                "renderer": "flot",
+                "seriesOverrides": [
+
+                ],
+                "spaceLength": 10,
+                "stack": false,
+                "steppedLine": false,
+                "targets": [
+                    {
+                        "datasource": {
+                            "uid": "$datasource"
+                        },
+                        "expr": "sum(patchman_engine_vmaas_sync_advisories{}) by (type)",
+                        "format": "time_series",
+                        "intervalFactor": 1,
+                        "legendFormat": "{{type}}",
+                        "refId": "A"
+                    },
+                    {
+                        "datasource": {
+                            "uid": "$datasource"
+                        },
+                        "expr": "sum(patchman_engine_vmaas_sync_advisories{})",
+                        "format": "time_series",
+                        "intervalFactor": 1,
+                        "legendFormat": "all",
+                        "refId": "B"
+                    }
+                ],
+                "thresholds": [
+
+                ],
+                "timeRegions": [
+
+                ],
+                "title": "Database items - advisories",
+                "tooltip": {
+                    "shared": true,
+                    "sort": 0,
+                    "value_type": "individual"
+                },
+                "type": "graph",
+                "xaxis": {
+                    "mode": "time",
+                    "show": true,
+                    "values": [
+
+                    ]
+                },
+                "yaxes": [
+                    {
+                        "format": "none",
+                        "logBase": 1,
+                        "show": true
+                    },
+                    {
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -3940,7 +4002,7 @@ data:
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 75
+                    "y": 81
                 },
                 "id": 69,
                 "panels": [
@@ -3972,7 +4034,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of stored systems by their last upload.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -3989,7 +4050,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 76
+                    "y": 82
                 },
                 "hiddenSeries": false,
                 "id": 51,
@@ -4012,7 +4073,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -4067,14 +4128,11 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:1350",
                         "format": "none",
-                        "label": "System",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:1351",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -4098,248 +4156,6 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The number of advisories stored by each type and total.",
-                "fieldConfig": {
-                    "defaults": {
-                        "links": [
-
-                        ]
-                    },
-                    "overrides": [
-
-                    ]
-                },
-                "fill": 1,
-                "fillGradient": 0,
-                "gridPos": {
-                    "h": 6,
-                    "w": 12,
-                    "x": 12,
-                    "y": 76
-                },
-                "hiddenSeries": false,
-                "id": 42,
-                "legend": {
-                    "avg": false,
-                    "current": false,
-                    "max": false,
-                    "min": false,
-                    "show": true,
-                    "total": false,
-                    "values": false
-                },
-                "lines": true,
-                "linewidth": 1,
-                "links": [
-
-                ],
-                "nullPointMode": "null",
-                "options": {
-                    "alertThreshold": true
-                },
-                "percentage": false,
-                "pluginVersion": "9.0.3",
-                "pointradius": 5,
-                "points": false,
-                "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
-                "spaceLength": 10,
-                "stack": false,
-                "steppedLine": false,
-                "targets": [
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "expr": "sum(patchman_engine_vmaas_sync_advisories{}) by (type)",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "legendFormat": "{{type}}",
-                        "refId": "A"
-                    },
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "expr": "sum(patchman_engine_vmaas_sync_advisories{})",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "legendFormat": "all",
-                        "refId": "B"
-                    }
-                ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
-                "title": "Database items - advisories",
-                "tooltip": {
-                    "shared": true,
-                    "sort": 0,
-                    "value_type": "individual"
-                },
-                "type": "graph",
-                "xaxis": {
-                    "mode": "time",
-                    "show": true,
-                    "values": [
-
-                    ]
-                },
-                "yaxes": [
-                    {
-                        "$$hashKey": "object:1403",
-                        "format": "none",
-                        "label": "Advisories",
-                        "logBase": 1,
-                        "show": true
-                    },
-                    {
-                        "$$hashKey": "object:1404",
-                        "format": "short",
-                        "logBase": 1,
-                        "show": true
-                    }
-                ],
-                "yaxis": {
-                    "align": false
-                }
-            },
-            {
-                "aliasColors": {
-                    "all": "#ba43a9",
-                    "last_upload: all": "#ba43a9",
-                    "last_upload: last1D": "#7eb26d",
-                    "last_upload: last30D": "#967302",
-                    "last_upload: last7D": "#cca300"
-                },
-                "bars": false,
-                "dashLength": 10,
-                "dashes": false,
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "$datasource"
-                },
-                "description": "The number of inventory hosts by type.",
-                "fieldConfig": {
-                    "defaults": {
-                        "links": [
-
-                        ]
-                    },
-                    "overrides": [
-
-                    ]
-                },
-                "fill": 1,
-                "fillGradient": 0,
-                "gridPos": {
-                    "h": 6,
-                    "w": 12,
-                    "x": 0,
-                    "y": 82
-                },
-                "hiddenSeries": false,
-                "id": 73,
-                "legend": {
-                    "avg": false,
-                    "current": false,
-                    "max": false,
-                    "min": false,
-                    "show": true,
-                    "total": false,
-                    "values": false
-                },
-                "lines": true,
-                "linewidth": 1,
-                "links": [
-
-                ],
-                "nullPointMode": "null",
-                "options": {
-                    "alertThreshold": true
-                },
-                "percentage": false,
-                "pluginVersion": "9.0.3",
-                "pointradius": 5,
-                "points": false,
-                "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
-                "spaceLength": 10,
-                "stack": false,
-                "steppedLine": false,
-                "targets": [
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "expr": "sum(patchman_engine_vmaas_sync_cyndi_tags_count) by (type)",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "legendFormat": "{{type}}",
-                        "refId": "A"
-                    }
-                ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
-                "title": "Database items - Cyndi data",
-                "tooltip": {
-                    "shared": true,
-                    "sort": 0,
-                    "value_type": "individual"
-                },
-                "type": "graph",
-                "xaxis": {
-                    "mode": "time",
-                    "show": true,
-                    "values": [
-
-                    ]
-                },
-                "yaxes": [
-                    {
-                        "$$hashKey": "object:1456",
-                        "format": "none",
-                        "label": "Systems",
-                        "logBase": 1,
-                        "show": true
-                    },
-                    {
-                        "$$hashKey": "object:1457",
-                        "format": "short",
-                        "logBase": 1,
-                        "show": true
-                    }
-                ],
-                "yaxis": {
-                    "align": false
-                }
-            },
-            {
-                "aliasColors": {
-                    "all": "#ba43a9",
-                    "bugfix": "#ef843c",
-                    "enhancement": "#9ac48a",
-                    "security": "#e24d42",
-                    "unknown": "#fce2de"
-                },
-                "bars": false,
-                "dashLength": 10,
-                "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
-                "description": "The number of stored packages and packages names.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -4379,7 +4195,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -4435,14 +4251,122 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:1509",
                         "format": "none",
-                        "label": "Packages",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:1510",
+                        "format": "short",
+                        "logBase": 1,
+                        "show": true
+                    }
+                ],
+                "yaxis": {
+                    "align": false
+                }
+            },
+            {
+                "aliasColors": {
+                    "all": "#ba43a9",
+                    "last_upload: all": "#ba43a9",
+                    "last_upload: last1D": "#7eb26d",
+                    "last_upload: last30D": "#967302",
+                    "last_upload: last7D": "#cca300"
+                },
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
+                "datasource": {
+                    "uid": "$datasource"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "links": [
+
+                        ]
+                    },
+                    "overrides": [
+
+                    ]
+                },
+                "fill": 1,
+                "fillGradient": 0,
+                "gridPos": {
+                    "h": 6,
+                    "w": 12,
+                    "x": 0,
+                    "y": 88
+                },
+                "hiddenSeries": false,
+                "id": 73,
+                "legend": {
+                    "avg": false,
+                    "current": false,
+                    "max": false,
+                    "min": false,
+                    "show": true,
+                    "total": false,
+                    "values": false
+                },
+                "lines": true,
+                "linewidth": 1,
+                "links": [
+
+                ],
+                "nullPointMode": "null",
+                "options": {
+                    "alertThreshold": true
+                },
+                "percentage": false,
+                "pluginVersion": "9.0.1",
+                "pointradius": 5,
+                "points": false,
+                "renderer": "flot",
+                "seriesOverrides": [
+
+                ],
+                "spaceLength": 10,
+                "stack": false,
+                "steppedLine": false,
+                "targets": [
+                    {
+                        "datasource": {
+                            "uid": "$datasource"
+                        },
+                        "expr": "sum(patchman_engine_vmaas_sync_cyndi_tags_count) by (type)",
+                        "format": "time_series",
+                        "intervalFactor": 1,
+                        "legendFormat": "{{type}}",
+                        "refId": "A"
+                    }
+                ],
+                "thresholds": [
+
+                ],
+                "timeRegions": [
+
+                ],
+                "title": "Database items - Cyndi data",
+                "tooltip": {
+                    "shared": true,
+                    "sort": 0,
+                    "value_type": "individual"
+                },
+                "type": "graph",
+                "xaxis": {
+                    "mode": "time",
+                    "show": true,
+                    "values": [
+
+                    ]
+                },
+                "yaxes": [
+                    {
+                        "format": "none",
+                        "logBase": 1,
+                        "show": true
+                    },
+                    {
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -4466,7 +4390,117 @@ data:
                 "datasource": {
                     "uid": "$datasource"
                 },
-                "description": "The current database size and tables sizes.",
+                "fieldConfig": {
+                    "defaults": {
+                        "links": [
+
+                        ]
+                    },
+                    "overrides": [
+
+                    ]
+                },
+                "fill": 1,
+                "fillGradient": 0,
+                "gridPos": {
+                    "h": 6,
+                    "w": 12,
+                    "x": 12,
+                    "y": 88
+                },
+                "hiddenSeries": false,
+                "id": 59,
+                "legend": {
+                    "avg": false,
+                    "current": false,
+                    "max": false,
+                    "min": false,
+                    "show": true,
+                    "total": false,
+                    "values": false
+                },
+                "lines": true,
+                "linewidth": 1,
+                "links": [
+
+                ],
+                "nullPointMode": "null",
+                "options": {
+                    "alertThreshold": true
+                },
+                "percentage": false,
+                "pluginVersion": "9.0.1",
+                "pointradius": 5,
+                "points": false,
+                "renderer": "flot",
+                "seriesOverrides": [
+
+                ],
+                "spaceLength": 10,
+                "stack": false,
+                "steppedLine": false,
+                "targets": [
+                    {
+                        "datasource": {
+                            "uid": "$datasource"
+                        },
+                        "expr": "sum(patchman_engine_vmaas_sync_database_processes{}) by (usename)",
+                        "format": "time_series",
+                        "intervalFactor": 1,
+                        "legendFormat": "{{usename}}",
+                        "refId": "A"
+                    }
+                ],
+                "thresholds": [
+
+                ],
+                "timeRegions": [
+
+                ],
+                "title": "Database processes",
+                "tooltip": {
+                    "shared": true,
+                    "sort": 0,
+                    "value_type": "individual"
+                },
+                "type": "graph",
+                "xaxis": {
+                    "mode": "time",
+                    "show": true,
+                    "values": [
+
+                    ]
+                },
+                "yaxes": [
+                    {
+                        "format": "none",
+                        "logBase": 1,
+                        "show": true
+                    },
+                    {
+                        "format": "short",
+                        "logBase": 1,
+                        "show": true
+                    }
+                ],
+                "yaxis": {
+                    "align": false
+                }
+            },
+            {
+                "aliasColors": {
+                    "all": "#ba43a9",
+                    "bugfix": "#ef843c",
+                    "enhancement": "#9ac48a",
+                    "security": "#e24d42",
+                    "unknown": "#fce2de"
+                },
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
+                "datasource": {
+                    "uid": "$datasource"
+                },
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -4483,7 +4517,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 88
+                    "y": 94
                 },
                 "hiddenSeries": false,
                 "id": 58,
@@ -4506,7 +4540,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -4582,129 +4616,11 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:1562",
                         "format": "decbytes",
-                        "label": "Size",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:1563",
-                        "format": "short",
-                        "logBase": 1,
-                        "show": true
-                    }
-                ],
-                "yaxis": {
-                    "align": false
-                }
-            },
-            {
-                "aliasColors": {
-                    "all": "#ba43a9",
-                    "bugfix": "#ef843c",
-                    "enhancement": "#9ac48a",
-                    "security": "#e24d42",
-                    "unknown": "#fce2de"
-                },
-                "bars": false,
-                "dashLength": 10,
-                "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
-                "description": "The number of database processes by their use.",
-                "fieldConfig": {
-                    "defaults": {
-                        "links": [
-
-                        ]
-                    },
-                    "overrides": [
-
-                    ]
-                },
-                "fill": 1,
-                "fillGradient": 0,
-                "gridPos": {
-                    "h": 6,
-                    "w": 12,
-                    "x": 12,
-                    "y": 88
-                },
-                "hiddenSeries": false,
-                "id": 59,
-                "legend": {
-                    "avg": false,
-                    "current": false,
-                    "max": false,
-                    "min": false,
-                    "show": true,
-                    "total": false,
-                    "values": false
-                },
-                "lines": true,
-                "linewidth": 1,
-                "links": [
-
-                ],
-                "nullPointMode": "null",
-                "options": {
-                    "alertThreshold": true
-                },
-                "percentage": false,
-                "pluginVersion": "9.0.3",
-                "pointradius": 5,
-                "points": false,
-                "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
-                "spaceLength": 10,
-                "stack": false,
-                "steppedLine": false,
-                "targets": [
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "expr": "sum(patchman_engine_vmaas_sync_database_processes{}) by (usename)",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "legendFormat": "{{usename}}",
-                        "refId": "A"
-                    }
-                ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
-                "title": "Database processes",
-                "tooltip": {
-                    "shared": true,
-                    "sort": 0,
-                    "value_type": "individual"
-                },
-                "type": "graph",
-                "xaxis": {
-                    "mode": "time",
-                    "show": true,
-                    "values": [
-
-                    ]
-                },
-                "yaxes": [
-                    {
-                        "$$hashKey": "object:1615",
-                        "format": "none",
-                        "label": "Processes",
-                        "logBase": 1,
-                        "show": true
-                    },
-                    {
-                        "$$hashKey": "object:1616",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -4724,7 +4640,7 @@ data:
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 94
+                    "y": 100
                 },
                 "id": 71,
                 "panels": [
@@ -4755,10 +4671,8 @@ data:
                 "dashLength": 10,
                 "dashes": false,
                 "datasource": {
-                    "type": "prometheus",
                     "uid": "$rds_datasource"
                 },
-                "description": "The percentage of available files in use by mount point.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -4775,7 +4689,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 95
+                    "y": 101
                 },
                 "hiddenSeries": false,
                 "id": 53,
@@ -4798,7 +4712,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -4826,7 +4740,7 @@ data:
                 "timeRegions": [
 
                 ],
-                "title": "RDS - data capacity usage",
+                "title": "RDS data capacity usage",
                 "tooltip": {
                     "shared": true,
                     "sort": 0,
@@ -4842,13 +4756,11 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:1668",
                         "format": "percent",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:1669",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -4871,10 +4783,8 @@ data:
                 "dashLength": 10,
                 "dashes": false,
                 "datasource": {
-                    "type": "prometheus",
                     "uid": "$rds_datasource"
                 },
-                "description": "The percentage of CPU used by the process.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -4891,7 +4801,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 95
+                    "y": 101
                 },
                 "hiddenSeries": false,
                 "id": 52,
@@ -4914,7 +4824,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -4953,7 +4863,7 @@ data:
                 "timeRegions": [
 
                 ],
-                "title": "RDS - CPU usage",
+                "title": "RDS CPU usage",
                 "tooltip": {
                     "shared": true,
                     "sort": 0,
@@ -4969,13 +4879,11 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:1721",
-                        "format": "percent",
+                        "format": "none",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:1722",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -5000,7 +4908,6 @@ data:
                 "datasource": {
                     "uid": "$rds_datasource"
                 },
-                "description": "The total memory, free memory and dirty memory.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -5017,7 +4924,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 101
+                    "y": 107
                 },
                 "hiddenSeries": false,
                 "id": 54,
@@ -5040,7 +4947,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -5098,7 +5005,7 @@ data:
                 "timeRegions": [
 
                 ],
-                "title": "RDS - memory",
+                "title": "RDS memory",
                 "tooltip": {
                     "shared": true,
                     "sort": 0,
@@ -5114,14 +5021,11 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:2439",
                         "format": "deckbytes",
-                        "label": "Size",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:2440",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -5146,7 +5050,6 @@ data:
                 "datasource": {
                     "uid": "$rds_datasource"
                 },
-                "description": "The number of processes requesting CPU time over the last 1/5/15 minutes.",
                 "fieldConfig": {
                     "defaults": {
                         "links": [
@@ -5163,7 +5066,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 101
+                    "y": 107
                 },
                 "hiddenSeries": false,
                 "id": 55,
@@ -5186,7 +5089,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.0.3",
+                "pluginVersion": "9.0.1",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -5234,7 +5137,7 @@ data:
                 "timeRegions": [
 
                 ],
-                "title": "RDS - load average minute",
+                "title": "RDS load avg",
                 "tooltip": {
                     "shared": true,
                     "sort": 0,
@@ -5250,13 +5153,11 @@ data:
                 },
                 "yaxes": [
                     {
-                        "$$hashKey": "object:1774",
                         "format": "short",
                         "logBase": 1,
                         "show": true
                     },
                     {
-                        "$$hashKey": "object:1775",
                         "format": "short",
                         "logBase": 1,
                         "show": true
@@ -5344,7 +5245,6 @@ data:
                         }
                     ],
                     "query": "1m,5m,10m,30m,1h,6h,12h,1d,7d,14d,30d",
-                    "queryValue": "",
                     "refresh": 2,
                     "skipUrlSync": false,
                     "type": "interval"
@@ -5415,9 +5315,9 @@ data:
                 },
                 {
                     "current": {
-                        "selected": false,
-                        "text": "crcp01ue1-prometheus",
-                        "value": "crcp01ue1-prometheus"
+                        "selected": true,
+                        "text": "crcs02ue1-prometheus",
+                        "value": "crcs02ue1-prometheus"
                     },
                     "hide": 0,
                     "includeAll": false,
@@ -5436,9 +5336,9 @@ data:
                 },
                 {
                     "current": {
-                        "selected": true,
-                        "text": "app-sre-stage-01-prometheus",
-                        "value": "app-sre-stage-01-prometheus"
+                        "selected": false,
+                        "text": "app-sre-stage-02-prometheus",
+                        "value": "app-sre-stage-02-prometheus"
                     },
                     "hide": 0,
                     "includeAll": false,
@@ -5526,7 +5426,7 @@ data:
         "timezone": "",
         "title": "patchman-engine",
         "uid": "patch",
-        "version": 2,
+        "version": 1,
         "weekStart": ""
     }
 kind: ConfigMap
