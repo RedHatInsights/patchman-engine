@@ -28,6 +28,7 @@ type Session struct {
 // @Router /sync [get]
 func Syncapi(c *gin.Context) {
 	utils.Log().Info("manual syncing called...")
+	sync.Configure()
 	err := sync.SyncData(nil, nil)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("manual called syncing failed")

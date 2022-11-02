@@ -31,7 +31,7 @@ func (t mockKafkaWriter) WriteMessages(_ context.Context, ev ...mqueue.KafkaMess
 func TestSync(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	configure()
+	Configure()
 
 	// ensure all repos to be marked "third_party" = true
 	assert.NoError(t, database.Db.Table("repo").Where("name IN (?)", []string{"repo1", "repo2", "repo3"}).
@@ -80,7 +80,7 @@ func TestHandleContextCancel(t *testing.T) {
 func TestVMaaSErrataCall(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 	core.SetupTestEnvironment()
-	configure()
+	Configure()
 
 	req := vmaas.ErrataRequest{PageSize: 10, ErrataList: []string{".*"}}
 	resp := vmaas.ErrataResponse{}
@@ -94,7 +94,7 @@ func TestVMaaSErrataCall(t *testing.T) {
 func TestVMaaSReposCall(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 	core.SetupTestEnvironment()
-	configure()
+	Configure()
 
 	req := vmaas.ReposRequest{PageSize: 10, RepositoryList: []string{".*"}}
 	resp := vmaas.ReposResponse{}

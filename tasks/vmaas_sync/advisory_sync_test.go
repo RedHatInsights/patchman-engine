@@ -167,7 +167,7 @@ func TestSaveAdvisories(t *testing.T) {
 func TestSyncAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	configure()
+	Configure()
 
 	err := syncAdvisories(time.Now(), nil)
 	assert.NoError(t, err)
@@ -186,7 +186,7 @@ func TestSyncAdvisories(t *testing.T) {
 func TestSyncAdvisoriesCheck(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	configure()
+	Configure()
 
 	modifiedSince := "2020-01-01T00:00:00+00:00"
 	err := syncAdvisories(time.Now(), &modifiedSince)
@@ -214,7 +214,7 @@ func TestSyncAdvisoriesCheck(t *testing.T) {
 func TestSyncEpelAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	configure()
+	Configure()
 
 	modifiedSince := "2020-01-01T00:00:00+00:00"
 	err := syncAdvisories(time.Now(), &modifiedSince)

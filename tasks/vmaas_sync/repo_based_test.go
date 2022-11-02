@@ -15,7 +15,7 @@ import (
 func TestGetCurrentRepoBasedInventoryIDs(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	configure()
+	Configure()
 
 	orgID := "org_1"
 	inventoryAIDs, err := getCurrentRepoBasedInventoryIDs()
@@ -30,7 +30,7 @@ func TestGetCurrentRepoBasedInventoryIDs(t *testing.T) {
 func TestGetAllInventoryIDs(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	configure()
+	Configure()
 
 	inventoryAIDs, err := getAllInventoryIDs()
 	systems := database.GetAllSystems(t)
@@ -92,7 +92,7 @@ func TestGetRepoBasedInventoryIDsEmpty(t *testing.T) {
 
 func TestGetUpdatedRepos(t *testing.T) {
 	core.SetupTestEnvironment()
-	configure()
+	Configure()
 
 	modifiedSince := time.Now().Format(types.Rfc3339NoTz)
 	redhat, thirdparty, err := getUpdatedRepos(time.Now(), &modifiedSince)
