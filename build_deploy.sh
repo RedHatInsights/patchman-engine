@@ -2,9 +2,6 @@
 
 set -exv
 
-# no space left on jenkins
-export TMPDIR=/var/lib/jenkins
-
 IMAGE="quay.io/cloudservices/patchman-engine-app"
 IMAGE_TAG=$(git rev-parse --short=7 HEAD)
 IMAGE_VERSION=$(git tag --points-at $IMAGE_TAG)
