@@ -94,7 +94,7 @@ services:
     image: patchman-engine-app
     env_file:
       - ./conf/platform.env
-    command: ./dev/scripts/docker-compose-entrypoint.sh platform
+    command: ./scripts/entrypoint.sh platform
     restart: unless-stopped
     depends_on:
       - db
@@ -113,7 +113,7 @@ services:
     env_file:
       - ./conf/common.env
       - ./conf/manager.env
-    command: ./dev/scripts/docker-compose-entrypoint.sh manager
+    command: ./scripts/entrypoint.sh manager
     ports:
       - 8080:8080
       - 9080:9080 # metrics
@@ -134,7 +134,7 @@ services:
     env_file:
       - ./conf/common.env
       - ./conf/listener.env
-    command: ./dev/scripts/docker-compose-entrypoint.sh listener
+    command: ./scripts/entrypoint.sh listener
     ports:
       - 8081:8081
       - 9081:9081 # metrics
@@ -156,7 +156,7 @@ services:
       - ./conf/common.env
       - ./conf/evaluator_common.env
       - ./conf/evaluator_upload.env
-    command: ./dev/scripts/docker-compose-entrypoint.sh evaluator
+    command: ./scripts/entrypoint.sh evaluator
     ports:
       - 8082:8082
     depends_on:
@@ -177,7 +177,7 @@ services:
       - ./conf/common.env
       - ./conf/evaluator_common.env
       - ./conf/evaluator_recalc.env
-    command: ./dev/scripts/docker-compose-entrypoint.sh evaluator
+    command: ./scripts/entrypoint.sh evaluator
     ports:
       - 8084:8084
     depends_on:
@@ -197,7 +197,7 @@ services:
     env_file:
       - ./conf/common.env
       - ./conf/vmaas_sync.env
-    command: ./dev/scripts/docker-compose-entrypoint.sh job vmaas_sync
+    command: ./scripts/entrypoint.sh job vmaas_sync
     ports:
       - 8083:8083
     restart: on-failure
@@ -219,7 +219,7 @@ services:
     env_file:
       - ./conf/common.env
       - ./conf/admin_api.env
-    command: ./dev/scripts/docker-compose-entrypoint.sh admin
+    command: ./scripts/entrypoint.sh admin
     ports:
       - 8085:8085
     depends_on:
