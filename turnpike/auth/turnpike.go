@@ -2,9 +2,8 @@ package auth
 
 import (
 	"app/base/utils"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 func TurnpikeAuthenticator() gin.HandlerFunc {
@@ -16,13 +15,13 @@ func TurnpikeAuthenticator() gin.HandlerFunc {
 		}
 		utils.Log("ident", identStr).Trace("Identity retrieved")
 
-		xrhid, err := utils.ParseXRHID(identStr)
+		ident, err := utils.ParseIdentity(identStr)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Invalid x-rh-identity header"})
 			return
 		}
 
-		if xrhid.Identity.Type != "associate" {
+		if ident.Type != "associate" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Invalid x-rh-identity header"})
 			return
 		}

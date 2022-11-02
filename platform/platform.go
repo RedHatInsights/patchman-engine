@@ -13,7 +13,7 @@ import (
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
-	"github.com/redhatinsights/identity"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"modernc.org/strutil"
 )
 

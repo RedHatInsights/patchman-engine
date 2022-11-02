@@ -37,9 +37,6 @@ encode <<IDENTITY
     "entitlements": {
         "insights": {
             "is_entitled": true
-        },
-        "smart_management": {
-            "is_entitled": true
         }
     }
 }
