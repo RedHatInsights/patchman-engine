@@ -14,8 +14,6 @@ export IQE_MARKER_EXPRESSION="patch_smoke"
 export IQE_FILTER_EXPRESSION=""
 export IQE_CJI_TIMEOUT="30m"
 
-
-export TMPDIR=/var/lib/jenkins
 # Heavily inspired by project-koku pr_check
 # https://github.com/project-koku/koku/blob/main/pr_check.sh
 LABELS_DIR="$WORKSPACE/github_labels"
