@@ -14,7 +14,7 @@ import (
 func TestPkgListSyncPackages(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	configure()
+	Configure()
 
 	var oldNameCount, oldPkgCount, newNameCount, newPkgCount int
 	var pkgNextval, nameNextval, pkgCurrval, nameCurrval int
