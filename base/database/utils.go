@@ -103,15 +103,15 @@ func GetTimestampKVValue(key string) (*types.Rfc3339TimestampWithZ, error) {
 	return timestamps[0], nil
 }
 
-func UpdateTimestampKVValue(value time.Time, key string) {
+func UpdateTimestampKVValue(key string, value time.Time) {
 	ts := value.Format(time.RFC3339)
-	err := UpdateTimestampKVValueStr(ts, key)
+	err := UpdateTimestampKVValueStr(key, ts)
 	if err != nil {
 		utils.Log("err", err.Error(), "key", key).Error("Unable to updated timestamp KV value")
 	}
 }
 
-func UpdateTimestampKVValueStr(value, key string) error {
+func UpdateTimestampKVValueStr(key, value string) error {
 	err := Db.Exec("INSERT INTO timestamp_kv (name, value) values (?, ?)"+
 		"ON CONFLICT (name) DO UPDATE SET value = ?", key, value, value).Error
 	return err

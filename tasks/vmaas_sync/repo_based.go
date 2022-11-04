@@ -35,7 +35,7 @@ func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {
 		return nil, err
 	}
 
-	database.UpdateTimestampKVValue(now, LastEvalRepoBased)
+	database.UpdateTimestampKVValue(LastEvalRepoBased, now)
 
 	return inventoryAIDs, nil
 }
