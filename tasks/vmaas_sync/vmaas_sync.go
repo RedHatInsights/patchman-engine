@@ -71,11 +71,14 @@ func Configure() {
 
 func runSync() {
 	utils.Log().Info("Starting vmaas-sync job")
-	lastSyncTS := getLastSyncIfNeeded()
-	lastFullSyncTS := getLastSync(LastFullSync)
 
-	if isSyncNeeded() {
-		err := SyncData(lastSyncTS, lastFullSyncTS) // respect ENABLE_MODIFIED_SINCE_SYNC
+	var lastModified *types.Rfc3339TimestampWithZ
+	if enableModifiedSinceSync {
+		lastModified = getLastSync(VmaasExported)
+	}
+	vmaasExportedTS := VmaasDBExported()
+	if isSyncNeeded(lastModified, vmaasExportedTS) {
+		err := SyncData(lastModified, vmaasExportedTS)
 		if err != nil {
 			// This probably means programming error, better to exit with nonzero error code, so the error is noticed
 			utils.Log("err", err.Error()).Fatal("vmaas data sync failed")
@@ -88,14 +91,6 @@ func runSync() {
 	}
 }
 
-func getLastSyncIfNeeded() *string {
-	if !enableModifiedSinceSync {
-		return nil
-	}
-	ts := getLastSync(LastSync)
-	return database.Timestamp2Str(ts)
-}
-
 func getLastSync(key string) *types.Rfc3339TimestampWithZ {
 	ts, err := database.GetTimestampKVValue(key)
 	if err != nil {
@@ -105,26 +100,28 @@ func getLastSync(key string) *types.Rfc3339TimestampWithZ {
 	return ts
 }
 
-func SyncData(lastSyncTS *string, lastFullSyncTS *types.Rfc3339TimestampWithZ) error {
+func SyncData(lastModifiedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *types.Rfc3339TimestampNoT) error {
 	utils.Log().Info("Data sync started")
 	syncStart := time.Now()
 	defer utils.ObserveSecondsSince(syncStart, syncDuration)
+	lastFullSyncTS := getLastSync(LastFullSync)
 
+	lastModified := database.Timestamp2Str(lastModifiedTS)
 	if lastFullSyncTS != nil {
 		nextFullSync := lastFullSyncTS.Time().Add(time.Duration(fullSyncCadence) * time.Hour)
 		if syncStart.After(nextFullSync) {
-			lastSyncTS = nil // set last sync to `nil` to do a full vmaas sync
+			lastModified = nil // set to `nil` to do a full vmaas sync
 		}
 	}
 
 	if enableAdvisoriesSync {
-		if err := syncAdvisories(syncStart, lastSyncTS); err != nil {
+		if err := syncAdvisories(syncStart, lastModified); err != nil {
 			return errors.Wrap(err, "Failed to sync advisories")
 		}
 	}
 
 	if enablePackagesSync {
-		if err := syncPackages(syncStart, lastSyncTS); err != nil {
+		if err := syncPackages(syncStart, lastModified); err != nil {
 			return errors.Wrap(err, "Failed to sync packages")
 		}
 	}
@@ -139,8 +136,11 @@ func SyncData(lastSyncTS *string, lastFullSyncTS *types.Rfc3339TimestampWithZ) e
 	caches.RefreshAdvisoryCaches()
 
 	database.UpdateTimestampKVValue(syncStart, LastSync)
-	if lastSyncTS == nil {
+	if lastModified == nil {
 		database.UpdateTimestampKVValue(syncStart, LastFullSync)
+	}
+	if vmaasExportedTS != nil {
+		database.UpdateTimestampKVValue(*vmaasExportedTS.Time(), VmaasExported)
 	}
 	utils.Log().Info("Data sync finished successfully")
 	return nil

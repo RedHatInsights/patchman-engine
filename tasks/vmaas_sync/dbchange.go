@@ -2,7 +2,6 @@ package vmaas_sync //nolint:revive,stylecheck
 
 import (
 	"app/base"
-	"app/base/database"
 	"app/base/types"
 	"app/base/utils"
 	"app/base/vmaas"
@@ -11,39 +10,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-func isSyncNeeded() bool {
+func isSyncNeeded(dbExportedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *types.Rfc3339TimestampNoT) bool {
+	if dbExportedTS == nil || vmaasExportedTS == nil {
+		return true
+	}
+	utils.Log("last sync", dbExportedTS.Time(), "dbchange.exported", vmaasExportedTS.Time()).Info()
+	return dbExportedTS.Time().Before(*vmaasExportedTS.Time())
+}
+
+func vmaasDBChangeRequest() (*vmaas.DBChangeResponse, error) {
 	if vmaasClient == nil {
 		panic("VMaaS client is nil")
 	}
 
-	ts, err := database.GetTimestampKVValue(LastSync)
-	if err != nil || ts == nil {
-		utils.Log("ts", ts, "err", err).Info("Last sync disabled - sync needed")
-		return true
-	}
-
-	var emptyTS types.Rfc3339TimestampNoT
-	dbchange, err := vmaasDBChangeRequest()
-	if err != nil {
-		utils.Log("err", err).Error("Could'n query vmaas dbchange")
-		return true
-	}
-	// check only `exported` timestamp
-	// we can possibly check each timestamp to reduce syncing of CVEs, errata, and repos
-	exported := dbchange.GetExported()
-	utils.Log("last sync", ts, "dbchange.exported", exported).Info()
-	switch {
-	case exported == emptyTS:
-		return true
-	case ts.Time().Before(*exported.Time()):
-		return true
-	default:
-		utils.Log().Info("No need to sync vmaas")
-		return false
-	}
-}
-
-func vmaasDBChangeRequest() (*vmaas.DBChangeResponse, error) {
 	vmaasCallFunc := func() (interface{}, *http.Response, error) {
 		response := vmaas.DBChangeResponse{}
 		resp, err := vmaasClient.Request(&base.Context, http.MethodGet, vmaasDBChangeURL, nil, &response)
@@ -57,4 +36,13 @@ func vmaasDBChangeRequest() (*vmaas.DBChangeResponse, error) {
 	}
 	vmaasCallCnt.WithLabelValues("success").Inc()
 	return vmaasDataPtr.(*vmaas.DBChangeResponse), nil
+}
+
+func VmaasDBExported() *types.Rfc3339TimestampNoT {
+	dbchange, err := vmaasDBChangeRequest()
+	if err != nil {
+		utils.Log("err", err).Error("Could'n query vmaas dbchange")
+		return nil
+	}
+	return dbchange.GetExported()
 }
