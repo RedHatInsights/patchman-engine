@@ -29,7 +29,8 @@ type Session struct {
 func Syncapi(c *gin.Context) {
 	utils.Log().Info("manual syncing called...")
 	sync.Configure()
-	err := sync.SyncData(nil, nil)
+	vmaasExportedTS := sync.VmaasDBExported()
+	err := sync.SyncData(nil, vmaasExportedTS)
 	if err != nil {
 		utils.Log("err", err.Error()).Error("manual called syncing failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})

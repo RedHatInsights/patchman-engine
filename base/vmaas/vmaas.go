@@ -234,10 +234,9 @@ type dbChange struct {
 	Exported          *types.Rfc3339TimestampNoT `json:"exported,omitempty"`
 }
 
-func (o *DBChangeResponse) GetExported() types.Rfc3339TimestampNoT {
-	if o == nil || o.DBChange.Exported == nil {
-		var ret types.Rfc3339TimestampNoT
-		return ret
+func (o *DBChangeResponse) GetExported() *types.Rfc3339TimestampNoT {
+	if o == nil {
+		return nil
 	}
-	return *o.DBChange.Exported
+	return o.DBChange.Exported
 }
