@@ -57,7 +57,7 @@ func TestUpdateRepoBaseEvalTimestamp(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	now := "2021-04-01T23:23:45Z"
-	assert.Nil(t, database.UpdateTimestampKVValueStr(now, LastEvalRepoBased))
+	assert.Nil(t, database.UpdateTimestampKVValueStr(LastEvalRepoBased, now))
 
 	ts, err := database.GetTimestampKVValueStr(LastEvalRepoBased)
 	assert.Nil(t, err)
@@ -102,6 +102,6 @@ func TestGetUpdatedRepos(t *testing.T) {
 }
 
 func resetLastEvalTimestamp(t *testing.T) {
-	err := database.UpdateTimestampKVValueStr("2018-04-05T01:23:45+02:00", LastEvalRepoBased)
+	err := database.UpdateTimestampKVValueStr(LastEvalRepoBased, "2018-04-05T01:23:45+02:00")
 	assert.Nil(t, err)
 }
