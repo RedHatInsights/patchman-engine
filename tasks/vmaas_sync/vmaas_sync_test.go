@@ -28,6 +28,25 @@ func (t mockKafkaWriter) WriteMessages(_ context.Context, ev ...mqueue.KafkaMess
 	return nil
 }
 
+func TestSyncDates(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	Configure()
+	evalWriter = &mockKafkaWriter{}
+
+	// there's no timestamp before first sync
+	ts := getLastSync(VmaasExported)
+	assert.Nil(t, ts)
+
+	runSync()
+
+	ts = getLastSync(VmaasExported)
+	assert.Equal(t, "2222-04-16 20:07:59 +0000 UTC", ts.Time().String())
+	database.DeleteNewlyAddedPackages(t)
+	database.DeleteNewlyAddedAdvisories(t)
+	msgs = nil
+}
+
 func TestSync(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
