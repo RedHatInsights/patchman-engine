@@ -3,6 +3,7 @@ package caches
 import (
 	"app/base/database"
 	"app/base/models"
+	"app/base/utils"
 	"app/tasks"
 
 	"github.com/pkg/errors"
@@ -12,22 +13,52 @@ import (
 
 func RefreshPackagesCaches(accID *int) error {
 	var err error
+	var accs []int
 	pkgSysCounts := make([]models.PackageAccountData, 0)
 
-	if err = getCounts(&pkgSysCounts, accID); err != nil {
-		return err
+	if accID == nil {
+		accs, err = accountsWithoutCache()
+		if err != nil {
+			return err
+		}
+	} else {
+		accs = append(accs, *accID)
 	}
 
-	if err = updatePackageAccountData(pkgSysCounts); err != nil {
-		return err
+	utils.Log("count", len(accs)).Info("Refreshing accounts")
+	for i, acc := range accs {
+		acc := acc
+		utils.Log("account", acc, "#", i).Info("Refreshing account")
+		if err = getCounts(&pkgSysCounts, &acc); err != nil {
+			utils.Log(err, err.Error()).Error("Refresh failed")
+			continue
+		}
+
+		if err = updatePackageAccountData(pkgSysCounts); err != nil {
+			utils.Log(err, err.Error()).Error("Refresh failed")
+			continue
+		}
+
+		if err = deleteOldCache(pkgSysCounts, &acc); err != nil {
+			utils.Log(err, err.Error()).Error("Refresh failed")
+			continue
+		}
+
+		if err = updateCacheValidity(&acc); err != nil {
+			utils.Log(err, err.Error()).Error("Refresh failed")
+			continue
+		}
 	}
 
-	if err = deleteOldCache(pkgSysCounts, accID); err != nil {
-		return err
-	}
-
-	err = updateCacheValidity(accID)
 	return err
+}
+
+func accountsWithoutCache() ([]int, error) {
+	accs := []int{}
+	err := tasks.WithTx(func(tx *gorm.DB) error {
+		return tx.Table("rh_account").Select("id").Where("valid_package_cache = FALSE").Find(&accs).Error
+	})
+	return accs, errors.Wrap(err, "failed to get accounts without cache")
 }
 
 func getCounts(pkgSysCounts *[]models.PackageAccountData, accID *int) error {
