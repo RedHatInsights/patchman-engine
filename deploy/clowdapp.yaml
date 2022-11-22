@@ -387,7 +387,7 @@ objects:
           - packages_cache_refresh
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_JOBS}'}
+        - {name: GOMAXPROCS, value: '${GOMAXPROCS_PKG_REFRESH}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
@@ -602,6 +602,7 @@ parameters:
 - {name: IMAGE_TAG_JOBS, value: v2.3.41}
 - {name: LOG_LEVEL_JOBS, value: debug}
 - {name: GOMAXPROCS_JOBS, value: '8'}
+- {name: GOMAXPROCS_PKG_REFRESH, value: '1'}
 - {name: DB_DEBUG_JOBS, value: 'false'}
 - {name: JOBS_TIMEOUT, value: '1800'}  # 30 min timeout for jobs
 - {name: PROMETHEUS_PUSHGATEWAY, required: true, value: "pushgateway"}
