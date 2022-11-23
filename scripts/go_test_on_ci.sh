@@ -8,6 +8,9 @@ set -e -o pipefail
 # Check dockerfiles and docker-composes consistency
 ./scripts/check-dockercomposes.sh
 
+# Check if all env variables have defined value
+./scripts/check-deploy-envs.sh
+
 # Analyse code using lint
 golangci-lint run --timeout 5m
 echo "Go code analysed successfully."

@@ -572,12 +572,14 @@ parameters:
 - {name: ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_UPLOAD, value: 'true'}
 - {name: ENABLE_PACKAGE_CACHE_EVALUATOR_UPLOAD, value: 'true'}
 - {name: PRELOAD_PACKAGE_CACHE_EVALUATOR_UPLOAD, value: 'true'}
+- {name: ENABLE_VMAAS_CACHE_EVALUATOR_UPLOAD, value: 'true'}
 - {name: RES_LIMIT_CPU_EVALUATOR_UPLOAD, value: 256m}
 - {name: RES_LIMIT_MEM_EVALUATOR_UPLOAD, value: 1024Mi}
 - {name: RES_REQUEST_CPU_EVALUATOR_UPLOAD, value: 256m}
 - {name: RES_REQUEST_MEM_EVALUATOR_UPLOAD, value: 1024Mi}
 - {name: MAX_EVAL_GOROUTINES_UPLOAD, value: '1'}
 - {name: ENABLE_INSTANT_NOTIFICATIONS, value: 'true'}
+- {name: VMAAS_CACHE_SIZE, value: '10000'}
 
 # Evaluator - recalc
 - {name: REPLICAS_EVALUATOR_RECALC, value: '1'}
@@ -595,6 +597,7 @@ parameters:
 - {name: ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_RECALC, value: 'true'}
 - {name: ENABLE_PACKAGE_CACHE_EVALUATOR_RECALC, value: 'true'}
 - {name: PRELOAD_PACKAGE_CACHE_EVALUATOR_RECALC, value: 'true'}
+- {name: ENABLE_VMAAS_CACHE_EVALUATOR_RECALC, value: 'true'}
 - {name: RES_LIMIT_CPU_EVALUATOR_RECALC, value: 256m}
 - {name: RES_LIMIT_MEM_EVALUATOR_RECALC, value: 1024Mi}
 - {name: RES_REQUEST_CPU_EVALUATOR_RECALC, value: 256m}
@@ -647,6 +650,7 @@ parameters:
 - {name: ENABLE_REFRESH_ADVISORY_CACHES, value: 'true'} # Enable periodic refresh of account advisory caches
 
 # Database admin
+- {name: GOMAXPROCS_ADMIN, value: '8'}
 - {name: IMAGE_TAG_DATABASE_ADMIN, value: v2.3.43}
 - {name: LOG_LEVEL_DATABASE_ADMIN, value: debug}
 - {name: DB_DEBUG_DATABASE_ADMIN, value: 'false'}
