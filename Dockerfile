@@ -32,7 +32,7 @@ ADD --chown=insights:root go.mod go.sum     /go/src/app/
 RUN go mod download
 
 RUN if [ "$INSTALL_TOOLS" == "yes" ] ; then \
-        go install github.com/swaggo/swag/cmd/swag@latest && \
+        go install github.com/swaggo/swag/cmd/swag@v1.8.7 && \
         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
         | sh -s -- -b $(go env GOPATH)/bin v1.50.0 ; \
     fi
