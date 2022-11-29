@@ -71,6 +71,7 @@ services:
     container_name: test
     image: patchman-engine-app
     env_file:
+      - ./conf/common.env
       - ./conf/test.env
       - ./conf/database.env
       - ./conf/database_admin.env

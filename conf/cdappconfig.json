@@ -1,0 +1,74 @@
+{
+    "database": {
+        "hostname": "db",
+        "name": "patchman",
+        "port": 5432,
+        "sslMode": "verify-full",
+        "rdsCa": "/opt/postgresql/pgca.crt",
+        "adminPassword": "passwd",
+        "adminUsername": "admin",
+        "username": "UNSET",
+        "password": "UNSET"
+    },
+    "publicPort": 8080,
+    "privatePort": 9000,
+    "metricsPort": 9080,
+    "metricsPath": "/metrics",
+    "kafka": {
+        "brokers": [
+            {
+                "hostname": "kafka",
+                "port": 9093,
+                "cacert": "/opt/kafka/ca.crt",
+                "authtype": "sasl",
+                "sasl": {
+                    "username": "",
+                    "password": "",
+                    "securityProtocol": "",
+                    "saslMechanism": "scram"
+                }
+            }
+        ],
+        "topics": [
+            {
+                "requestedName": "platform.inventory.events",
+                "name": "platform.inventory.events"
+            },
+            {
+                "requestedName": "platform.payload-status",
+                "name": "platform.payload-status"
+            },
+            {
+                "requestedName": "platform.remediation-updates.patch",
+                "name": "platform.remediation-updates.patch"
+            },
+            {
+                "requestedName": "platform.notifications.ingress",
+                "name": "platform.notifications.ingress"
+            }
+        ]
+    },
+    "endpoints": [
+        {
+            "app": "vmaas",
+            "hostname": "platform",
+            "name": "webapp",
+            "port": 9001
+        },
+        {
+            "app": "rbac",
+            "hostname": "platform",
+            "name": "",
+            "port": 9001
+        }
+    ],
+    "logging": {
+        "cloudwatch": {
+            "accessKeyId": "",
+            "logGroup": "",
+            "region": "",
+            "secretAccessKey": ""
+        },
+        "type": "null"
+    }
+}
