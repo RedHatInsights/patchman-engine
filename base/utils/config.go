@@ -66,12 +66,8 @@ type Config struct {
 }
 
 func init() {
-	initDBFromEnv()
-	initAPIFromEnv()
-	initKafkaFromEnv()
-	initServicesFromEnv()
-	initCloudwatchFromEnv()
-	initPrometheusPushGatewayFromEnv()
+	// topics have to be set first, they may be translated via clowder
+	initTopicsFromEnv()
 	if clowder.IsClowderEnabled() {
 		initDBFromClowder()
 		initAPIromClowder()
@@ -79,18 +75,19 @@ func init() {
 		initServicesFromClowder()
 		initCloudwatchFromClowder()
 	}
+	// init non-clowder setting and allow local overwrites
+	initDBFromEnv()
+	initKafkaFromEnv()
+	initServicesFromEnv()
+	initPrometheusPushGatewayFromEnv()
 }
 
 func initDBFromEnv() {
-	Cfg.DBHost = Getenv("DB_HOST", "UNSET")
-	Cfg.DBName = Getenv("DB_NAME", "UNSET")
-	Cfg.DBPort = GetIntEnvOrDefault("DB_PORT", -1)
-	Cfg.DBSslMode = Getenv("DB_SSLMODE", "UNSET")
-	Cfg.DBSslRootCert = Getenv("DB_SSLROOTCERT", "")
-	Cfg.DBAdminUser = Getenv("DB_ADMIN_USER", "")
-	Cfg.DBAdminPassword = Getenv("DB_ADMIN_PASSWD", "")
-	Cfg.DBUser = Getenv("DB_USER", "UNSET")
-	Cfg.DBPassword = Getenv("DB_PASSWD", "UNSET")
+	Cfg.DBHost = Getenv("DB_HOST", Cfg.DBHost)
+	Cfg.DBPort = GetIntEnvOrDefault("DB_PORT", Cfg.DBPort)
+	Cfg.DBSslRootCert = Getenv("DB_SSLROOTCERT", Cfg.DBSslRootCert)
+	Cfg.DBUser = Getenv("DB_USER", Cfg.DBUser)
+	Cfg.DBPassword = Getenv("DB_PASSWD", Cfg.DBPassword)
 	Cfg.DBDebug = GetBoolEnvOrDefault("DB_DEBUG", false)
 	Cfg.DBStatementTimeoutMs = GetIntEnvOrDefault("DB_STATEMENT_TIMEOUT_MS", 0)
 	Cfg.DBMaxConnections = GetIntEnvOrDefault("DB_MAX_CONNECTIONS", 250)
@@ -98,27 +95,19 @@ func initDBFromEnv() {
 	Cfg.DBMaxConnectionLifetimeS = GetIntEnvOrDefault("DB_MAX_CONNECTION_LIFETIME_S", 60)
 }
 
-func initAPIFromEnv() {
-	Cfg.PublicPort = GetIntEnvOrDefault("PUBLIC_PORT", -1)
-	Cfg.PrivatePort = GetIntEnvOrDefault("PRIVATE_PORT", -1)
-	Cfg.MetricsPort = GetIntEnvOrDefault("METRICS_PORT", -1)
-	Cfg.MetricsPath = Getenv("METRICS_PATH", "/metrics")
-}
-
 func initKafkaFromEnv() {
-	Cfg.KafkaAddress = Getenv("KAFKA_ADDRESS", "")
-	Cfg.KafkaSslEnabled = GetBoolEnvOrDefault("ENABLE_KAFKA_SSL", false)
-	Cfg.KafkaSslCert = Getenv("KAFKA_SSL_CERT", "")
+	Cfg.KafkaSslCert = Getenv("KAFKA_SSL_CERT", Cfg.KafkaSslCert)
 	Cfg.KafkaSslSkipVerify = GetBoolEnvOrDefault("KAFKA_SSL_SKIP_VERIFY", false)
-	saslType := Getenv("KAFKA_SASL_TYPE", "scram")
-	Cfg.KafkaSaslType = &saslType
-	Cfg.KafkaUsername = Getenv("KAFKA_USERNAME", "")
-	Cfg.KafkaPassword = Getenv("KAFKA_PASSWORD", "")
+	Cfg.KafkaUsername = Getenv("KAFKA_USERNAME", Cfg.KafkaUsername)
+	Cfg.KafkaPassword = Getenv("KAFKA_PASSWORD", Cfg.KafkaPassword)
 	Cfg.KafkaGroup = Getenv("KAFKA_GROUP", "")
 	Cfg.KafkaReaderMinBytes = GetIntEnvOrDefault("KAFKA_READER_MIN_BYTES", 1)
 	Cfg.KafkaReaderMaxBytes = GetIntEnvOrDefault("KAFKA_READER_MAX_BYTES", 1e6)
 	Cfg.KafkaReaderMaxAttempts = GetIntEnvOrDefault("KAFKA_READER_MAX_ATTEMPTS", 3)
 	Cfg.KafkaWriterMaxAttempts = GetIntEnvOrDefault("KAFKA_WRITER_MAX_ATTEMPTS", 10)
+}
+
+func initTopicsFromEnv() {
 	Cfg.EventsTopic = Getenv("EVENTS_TOPIC", "")
 	Cfg.EvalTopic = Getenv("EVAL_TOPIC", "")
 	Cfg.PayloadTrackerTopic = Getenv("PAYLOAD_TRACKER_TOPIC", "")
@@ -127,15 +116,8 @@ func initKafkaFromEnv() {
 }
 
 func initServicesFromEnv() {
-	Cfg.VmaasAddress = Getenv("VMAAS_ADDRESS", "")
-	Cfg.RbacAddress = Getenv("RBAC_ADDRESS", "")
-}
-
-func initCloudwatchFromEnv() {
-	Cfg.CloudWatchAccessKeyID = Getenv("CW_AWS_ACCESS_KEY_ID", "")
-	Cfg.CloudWatchSecretAccesskey = Getenv("CW_AWS_SECRET_ACCESS_KEY", "")
-	Cfg.CloudWatchRegion = Getenv("CW_AWS_REGION", "us-east-1")
-	Cfg.CloudWatchLogGroup = Getenv("CW_AWS_LOG_GROUP", "platform-dev")
+	Cfg.VmaasAddress = Getenv("VMAAS_ADDRESS", Cfg.VmaasAddress)
+	Cfg.RbacAddress = Getenv("RBAC_ADDRESS", Cfg.RbacAddress)
 }
 
 func initDBFromClowder() {
@@ -144,19 +126,20 @@ func initDBFromClowder() {
 	Cfg.DBPort = clowder.LoadedConfig.Database.Port
 	Cfg.DBSslMode = clowder.LoadedConfig.Database.SslMode
 	if clowder.LoadedConfig.Database.RdsCa != nil {
-		certPath, err := clowder.LoadedConfig.RdsCa()
-		if err != nil {
-			panic(err)
+		if strings.HasPrefix(*clowder.LoadedConfig.Database.RdsCa, "-----BEGIN CERTIFICATE-----") {
+			certPath, err := clowder.LoadedConfig.RdsCa()
+			if err != nil {
+				panic(err)
+			}
+			Cfg.DBSslRootCert = certPath
+		} else {
+			Cfg.DBSslRootCert = *clowder.LoadedConfig.Database.RdsCa
 		}
-		Cfg.DBSslRootCert = certPath
 	}
 	Cfg.DBAdminUser = clowder.LoadedConfig.Database.AdminUsername
 	Cfg.DBAdminPassword = clowder.LoadedConfig.Database.AdminPassword
-	if Cfg.DBUser == "UNSET" || Cfg.DBPassword == "UNSET" {
-		Log().Info("Using Admin DB user")
-		Cfg.DBUser = Cfg.DBAdminUser
-		Cfg.DBPassword = Cfg.DBAdminPassword
-	}
+	Cfg.DBUser = clowder.LoadedConfig.Database.Username
+	Cfg.DBPassword = clowder.LoadedConfig.Database.Password
 }
 
 func initAPIromClowder() {
@@ -169,17 +152,21 @@ func initAPIromClowder() {
 func initKafkaFromClowder() {
 	if len(clowder.LoadedConfig.Kafka.Brokers) > 0 {
 		Cfg.KafkaSaslType = nil
-		kafkaHost := clowder.LoadedConfig.Kafka.Brokers[0].Hostname
-		kafkaPort := *clowder.LoadedConfig.Kafka.Brokers[0].Port
-		Cfg.KafkaAddress = fmt.Sprintf("%s:%d", kafkaHost, kafkaPort)
 		brokerCfg := clowder.LoadedConfig.Kafka.Brokers[0]
+		kafkaHost := brokerCfg.Hostname
+		kafkaPort := *brokerCfg.Port
+		Cfg.KafkaAddress = fmt.Sprintf("%s:%d", kafkaHost, kafkaPort)
 		if brokerCfg.Cacert != nil && len(*brokerCfg.Cacert) > 0 {
 			Cfg.KafkaSslEnabled = true
-			certPath, err := clowder.LoadedConfig.KafkaCa(brokerCfg)
-			if err != nil {
-				panic(err)
+			if strings.HasPrefix(*brokerCfg.Cacert, "-----BEGIN CERTIFICATE-----") {
+				certPath, err := clowder.LoadedConfig.KafkaCa(brokerCfg)
+				if err != nil {
+					panic(err)
+				}
+				Cfg.KafkaSslCert = certPath
+			} else {
+				Cfg.KafkaSslCert = *brokerCfg.Cacert
 			}
-			Cfg.KafkaSslCert = certPath
 			if brokerCfg.Sasl.Username != nil {
 				Cfg.KafkaUsername = *brokerCfg.Sasl.Username
 				Cfg.KafkaPassword = *brokerCfg.Sasl.Password

@@ -139,8 +139,8 @@ services:
       - ./conf/gorun.env
     command: ./dev/scripts/docker-compose-entrypoint.sh listener
     ports:
-      - 8081:8081
-      - 9081:9081 # metrics
+      - 8081:8080
+      - 9081:9080 # metrics
     depends_on:
       - db
       - platform
@@ -160,7 +160,7 @@ services:
       - ./conf/gorun.env
     command: ./dev/scripts/docker-compose-entrypoint.sh evaluator
     ports:
-      - 8082:8082
+      - 8082:8080
     depends_on:
       - db
       - platform
@@ -180,7 +180,7 @@ services:
       - ./conf/gorun.env
     command: ./dev/scripts/docker-compose-entrypoint.sh evaluator
     ports:
-      - 8084:8084
+      - 8084:8080
     depends_on:
       - db
       - platform
@@ -199,7 +199,7 @@ services:
       - ./conf/gorun.env
     command: ./dev/scripts/docker-compose-entrypoint.sh job vmaas_sync
     ports:
-      - 8083:8083
+      - 8083:8080
     restart: on-failure
     depends_on:
       - db
@@ -220,7 +220,7 @@ services:
       - ./conf/gorun.env
     command: ./dev/scripts/docker-compose-entrypoint.sh admin
     ports:
-      - 8085:8085
+      - 8085:8080
     depends_on:
       - db
       - kafka
