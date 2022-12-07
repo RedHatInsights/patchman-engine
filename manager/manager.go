@@ -39,6 +39,7 @@ func RunManager() {
 	app := gin.New()
 
 	// middlewares
+	app.Use(gin.Recovery())
 	middlewares.Prometheus().Use(app)
 	app.Use(middlewares.RequestResponseLogger())
 	app.Use(gzip.Gzip(gzip.DefaultCompression))
