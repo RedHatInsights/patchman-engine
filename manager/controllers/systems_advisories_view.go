@@ -48,7 +48,7 @@ func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryNa
 		Distinct("sp.rh_account_id, sp.id, sp.inventory_id").
 		// we need to join system_advisories to make `limit` work properly
 		// without this join it can happen that we display less items on some pages
-		Joins(`JOIN system_advisories sa ON sa.system_id = sp.id
+		Joins(`LEFT JOIN system_advisories sa ON sa.system_id = sp.id
 			AND sa.rh_account_id = sp.rh_account_id AND sa.rh_account_id = ?`, acc).
 		Where("when_patched IS NULL").
 		Order("sp.inventory_id")
@@ -68,7 +68,7 @@ func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryNa
 
 	query := database.Db.Table("(?) as sp", sysq).
 		Select(systemsAdvisoriesSelect).
-		Joins(`JOIN system_advisories sa ON sa.system_id = sp.id
+		Joins(`LEFT JOIN system_advisories sa ON sa.system_id = sp.id
 			AND sa.rh_account_id = sp.rh_account_id AND sa.rh_account_id = ?`, acc)
 	if len(advisories) > 0 {
 		query = query.Joins("LEFT JOIN advisory_metadata am ON am.id = sa.advisory_id AND am.name in (?)", advisories)
@@ -180,6 +180,10 @@ func PostSystemsAdvisories(c *gin.Context) {
 			// don't append empty values to slices with len > 1
 			continue
 		}
+		if _, has := response.Data[i.SystemID]; !has && i.AdvisoryID == "" {
+			response.Data[i.SystemID] = []AdvisoryName{}
+			continue
+		}
 		response.Data[i.SystemID] = append(response.Data[i.SystemID], i.AdvisoryID)
 	}
 	c.JSON(http.StatusOK, response)
@@ -210,6 +214,10 @@ func PostAdvisoriesSystems(c *gin.Context) {
 	for _, i := range data {
 		if _, has := response.Data[i.AdvisoryID]; has && i.SystemID == "" {
 			// don't append empty values to slices with len > 1
+			continue
+		}
+		if _, has := response.Data[i.AdvisoryID]; !has && i.SystemID == "" {
+			response.Data[i.AdvisoryID] = []SystemID{}
 			continue
 		}
 		response.Data[i.AdvisoryID] = append(response.Data[i.AdvisoryID], i.SystemID)
