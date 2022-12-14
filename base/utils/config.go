@@ -175,21 +175,11 @@ func initKafkaFromClowder() {
 		}
 
 		// translate kafka topic names
-		if Cfg.EventsTopic != "" {
-			Cfg.EventsTopic = clowder.KafkaTopics[Cfg.EventsTopic].Name
-		}
-		if Cfg.EvalTopic != "" {
-			Cfg.EvalTopic = clowder.KafkaTopics[Cfg.EvalTopic].Name
-		}
-		if Cfg.PayloadTrackerTopic != "" {
-			Cfg.PayloadTrackerTopic = clowder.KafkaTopics[Cfg.PayloadTrackerTopic].Name
-		}
-		if Cfg.RemediationUpdateTopic != "" {
-			Cfg.RemediationUpdateTopic = clowder.KafkaTopics[Cfg.RemediationUpdateTopic].Name
-		}
-		if Cfg.NotificationsTopic != "" {
-			Cfg.NotificationsTopic = clowder.KafkaTopics[Cfg.NotificationsTopic].Name
-		}
+		translateTopic(&Cfg.EventsTopic)
+		translateTopic(&Cfg.EvalTopic)
+		translateTopic(&Cfg.PayloadTrackerTopic)
+		translateTopic(&Cfg.RemediationUpdateTopic)
+		translateTopic(&Cfg.NotificationsTopic)
 	}
 }
 
@@ -285,4 +275,10 @@ func printCloudwatchParams() {
 	fmt.Printf("CW_AWS_SECRET_ACCESS_KEY=%s\n", Cfg.CloudWatchSecretAccesskey)
 	fmt.Printf("CW_AWS_REGION=%s\n", Cfg.CloudWatchRegion)
 	fmt.Printf("CW_AWS_LOG_GROUP=%s\n", Cfg.CloudWatchLogGroup)
+}
+
+func translateTopic(topic *string) {
+	if v, ok := clowder.KafkaTopics[*topic]; ok {
+		*topic = v.Name
+	}
 }
