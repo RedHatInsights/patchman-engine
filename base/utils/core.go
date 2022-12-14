@@ -45,19 +45,19 @@ func FailIfEmpty(value string, varName string) string {
 	return value
 }
 
-// GetBoolEnvOrFail Parse bool value from env variable
-func GetBoolEnvOrFail(envname string) bool {
-	value := os.Getenv(envname)
-	if value == "" {
-		panic(fmt.Sprintf("Set %s env variable!", envname))
-	}
-
+// parseBoolOrFail Convert string to bool or panic if not possible
+func parseBoolOrFail(value string) bool {
 	parsedBool, err := strconv.ParseBool(value)
 	if err != nil {
 		panic(err)
 	}
-
 	return parsedBool
+}
+
+// GetBoolEnvOrFail Parse bool value from env variable
+func GetBoolEnvOrFail(envname string) bool {
+	value := GetenvOrFail(envname)
+	return parseBoolOrFail(value)
 }
 
 // GetBoolEnvOrDefault Parse bool value from env variable
@@ -66,28 +66,22 @@ func GetBoolEnvOrDefault(envname string, defval bool) bool {
 	if value == "" {
 		return defval
 	}
-
-	parsedBool, err := strconv.ParseBool(value)
-	if err != nil {
-		panic(err)
-	}
-
-	return parsedBool
+	return parseBoolOrFail(value)
 }
 
-// GetIntEnvOrFail Load int environment variable or fail
-func GetIntEnvOrFail(envname string) int {
-	valueStr := os.Getenv(envname)
-	if valueStr == "" {
-		panic(fmt.Sprintf("Set %s env variable!", envname))
-	}
-
+// parseIntOrFail Convert string to int or panic if not possible
+func parseIntOrFail(envname, valueStr string) int {
 	value, err := strconv.Atoi(valueStr)
 	if err != nil {
 		panic(fmt.Sprintf("Unable convert '%s' env var '%s' to int!", envname, valueStr))
 	}
-
 	return value
+}
+
+// GetIntEnvOrFail Load int environment variable or fail
+func GetIntEnvOrFail(envname string) int {
+	valueStr := GetenvOrFail(envname)
+	return parseIntOrFail(envname, valueStr)
 }
 
 // GetIntEnvOrDefault Load int environment variable or load default
@@ -96,13 +90,7 @@ func GetIntEnvOrDefault(envname string, defval int) int {
 	if valueStr == "" {
 		return defval
 	}
-
-	value, err := strconv.Atoi(valueStr)
-	if err != nil {
-		panic(fmt.Sprintf("Unable convert '%s' env var '%s' to int!", envname, valueStr))
-	}
-
-	return value
+	return parseIntOrFail(envname, valueStr)
 }
 
 // SetDefaultEnvOrFail Set environment variable if not already or fail
