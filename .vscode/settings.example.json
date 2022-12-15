@@ -1,6 +1,8 @@
 {
     "go.testEnvFile": "${workspaceFolder}/conf/local.env",
     "go.testEnvVars": {
-        "DB_SSLROOTCERT": "${workspaceFolder}/dev/database/secrets/pgca.crt"
+        "ACG_CONFIG": "${workspaceFolder}/conf/cdappconfig.json",
+        "DB_SSLROOTCERT": "${workspaceFolder}/dev/database/secrets/pgca.crt",
+        "KAFKA_SSL_CERT": "${workspaceFolder}/dev/kafka/secrets/ca.crt"
     }
 }

@@ -55,9 +55,8 @@ podman-compose -f docker-compose.test.yml up --build --abort-on-container-exit
 After running all test suit, testing platform components are still running (kafka, platform, db). This is especially useful when fixing some test or adding a new one. You need to have golang installed.
 ~~~bash
 podman-compose -f docker-compose.test.yml up --build --no-start # build images
-podman-compose -f docker-compose.test.yml start db platform test # start containers
-export $(xargs < conf/local.env) # setup needed env variables for tests
-export DB_SSLROOTCERT=$(pwd)/dev/database/secrets/pgca.crt # set db certificate
+podman-compose -f docker-compose.test.yml start db platform zookeeper kafka # start containers
+. scripts/export_local_env.sh # setup needed env variables for tests
 go test -count=1 -v ./evaluator -run TestEvaluate # run "TestEvaluate" test from "evaluator" component
 ~~~
 
