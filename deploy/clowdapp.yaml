@@ -146,8 +146,8 @@ objects:
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_LISTENER}'}
         - {name: DB_USER, value: listener}
-        - {name: DB_PASSWD, valueFrom: { secretKeyRef: { name: patchman-engine-database-passwords,
-                                                           key: listener-database-password}}}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                        key: listener-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
@@ -216,7 +216,6 @@ objects:
         - {name: PACKAGE_NAME_CACHE_SIZE, value: '${PACKAGE_NAME_CACHE_SIZE}'}
         - {name: ENABLE_VMAAS_CACHE, value: '${ENABLE_VMAAS_CACHE_EVALUATOR_UPLOAD}'}
         - {name: VMAAS_CACHE_SIZE, value: '${VMAAS_CACHE_SIZE}'}
-        - {name: VMAAS_ADDRESS, value: '${VMAAS_ADDRESS}'}
         - {name: VMAAS_CALL_MAX_RETRIES, value: '${VMAAS_CALL_MAX_RETRIES}'}
         - {name: VMAAS_CALL_USE_EXP_RETRY, value: '${VMAAS_CALL_USE_EXP_RETRY}'}
         - {name: VMAAS_CALL_USE_OPTIMISTIC_UPDATES, value: '${VMAAS_CALL_USE_OPTIMISTIC_UPDATES}'}
@@ -280,7 +279,6 @@ objects:
         - {name: PACKAGE_NAME_CACHE_SIZE, value: '${PACKAGE_NAME_CACHE_SIZE}'}
         - {name: ENABLE_VMAAS_CACHE, value: '${ENABLE_VMAAS_CACHE_EVALUATOR_RECALC}'}
         - {name: VMAAS_CACHE_SIZE, value: '${VMAAS_CACHE_SIZE}'}
-        - {name: VMAAS_ADDRESS, value: '${VMAAS_ADDRESS}'}
         - {name: VMAAS_CALL_MAX_RETRIES, value: '${VMAAS_CALL_MAX_RETRIES}'}
         - {name: VMAAS_CALL_USE_EXP_RETRY, value: '${VMAAS_CALL_USE_EXP_RETRY}'}
         - {name: VMAAS_CALL_USE_OPTIMISTIC_UPDATES, value: '${VMAAS_CALL_USE_OPTIMISTIC_UPDATES}'}
@@ -668,7 +666,6 @@ parameters:
 - {name: IMAGE, value: quay.io/cloudservices/patchman-engine-app}
 - {name: ENV_NAME, required: false}
 - {name: GIN_MODE, value: 'release'} # Gin webframework running mode
-- {name: VMAAS_ADDRESS, value: ''} # Use vmaas address if it's not included in clowder config.
 - {name: PACKAGE_CACHE_SIZE, value: '1000000'}
 - {name: PACKAGE_NAME_CACHE_SIZE, value: '60000'}
 - {name: KAFKA_READER_MAX_ATTEMPTS, value: '3'} # Limit of how many attempts will be made before kafka read error.
