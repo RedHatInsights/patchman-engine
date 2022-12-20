@@ -3,6 +3,7 @@ package docs
 import (
 	"app/base/utils"
 	"io/ioutil"
+	"net/http"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -60,19 +61,19 @@ func InitAdminAPI(app *gin.Engine) string {
 }
 
 func handleOpenapiV1Spec(c *gin.Context) {
-	c.Status(200)
+	c.Status(http.StatusOK)
 	c.Header("Content-Type", "application/json; charset=utf-8")
 	c.File(exposedOpenapiPathV1)
 }
 
 func handleOpenapiV2Spec(c *gin.Context) {
-	c.Status(200)
+	c.Status(http.StatusOK)
 	c.Header("Content-Type", "application/json; charset=utf-8")
 	c.File(exposedOpenapiPathV2)
 }
 
 func handleOpenapiAdminSpec(c *gin.Context) {
-	c.Status(200)
+	c.Status(http.StatusOK)
 	c.Header("Content-Type", "application/json; charset=utf-8")
 	c.File(exposedOpenapiPathAdmin)
 }

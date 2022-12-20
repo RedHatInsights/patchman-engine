@@ -97,7 +97,7 @@ func PackageVersionsListHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, PackageVersionsResponse{
+	c.JSON(http.StatusOK, PackageVersionsResponse{
 		Data:  systems,
 		Links: *links,
 		Meta:  *meta,

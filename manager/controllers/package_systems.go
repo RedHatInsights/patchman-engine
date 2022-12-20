@@ -134,7 +134,7 @@ func PackageSystemsListHandler(c *gin.Context) {
 	}
 
 	outputItems := packageSystemDBLookups2PackageSystemItems(systems)
-	c.JSON(200, PackageSystemsResponse{
+	c.JSON(http.StatusOK, PackageSystemsResponse{
 		Data:  outputItems,
 		Links: *links,
 		Meta:  *meta,

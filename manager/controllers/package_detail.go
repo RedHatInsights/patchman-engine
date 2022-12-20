@@ -58,7 +58,7 @@ func packageLatestHandler(c *gin.Context, packageName string) {
 
 	nevra := packageName + "-" + pkg.EVRA
 
-	c.JSON(200, PackageDetailResponse{
+	c.JSON(http.StatusOK, PackageDetailResponse{
 		Data: PackageDetailItem{
 			Attributes: pkg,
 			ID:         nevra,
@@ -81,7 +81,7 @@ func packageEvraHandler(c *gin.Context, nevra *utils.Nevra) {
 		return
 	}
 
-	c.JSON(200, PackageDetailResponse{
+	c.JSON(http.StatusOK, PackageDetailResponse{
 		Data: PackageDetailItem{
 			Attributes: pkg,
 			ID:         nevra.String(),
