@@ -126,5 +126,5 @@ func SystemPackagesHandler(c *gin.Context) {
 		}
 	}
 
-	c.JSON(200, response)
+	c.JSON(http.StatusOK, response)
 }

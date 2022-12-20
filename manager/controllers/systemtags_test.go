@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"app/base/core"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,7 +15,7 @@ func TestSystemTagsListDefault(t *testing.T) {
 	w := CreateRequestRouterWithAccount("GET", "/", nil, "", SystemTagListHandler, "/", 1)
 
 	var output SystemTagsResponse
-	CheckResponse(t, w, 200, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	if !assert.Equal(t, 4, len(output.Data)) {
 		return
 	}
@@ -31,7 +32,7 @@ func TestSystemTagsListPagination(t *testing.T) {
 	w := CreateRequestRouterWithAccount("GET", "/?offset=1&limit=1", nil, "", SystemTagListHandler, "/", 1)
 
 	var output SystemTagsResponse
-	CheckResponse(t, w, 200, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	if !assert.Equal(t, 1, len(output.Data)) {
 		return
 	}
@@ -48,7 +49,7 @@ func TestSystemTagsTotalItems(t *testing.T) {
 	w := CreateRequestRouterWithAccount("GET", "/", nil, "", SystemTagListHandler, "/", 1)
 
 	var output SystemTagsResponse
-	CheckResponse(t, w, 200, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 4, output.Meta.TotalItems)
 }
 
@@ -58,7 +59,7 @@ func TestSystemTagsListSort(t *testing.T) {
 	w := CreateRequestRouterWithAccount("GET", "/?sort=count", nil, "", SystemTagListHandler, "/", 1)
 
 	var output SystemTagsResponse
-	CheckResponse(t, w, 200, &output)
+	CheckResponse(t, w, http.StatusOK, &output)
 	if !assert.Equal(t, 4, len(output.Data)) {
 		return
 	}

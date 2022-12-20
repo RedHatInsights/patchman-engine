@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -127,7 +128,7 @@ func PackagesListHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, PackagesResponse{
+	c.JSON(http.StatusOK, PackagesResponse{
 		Data:  packages,
 		Links: *links,
 		Meta:  *meta,
