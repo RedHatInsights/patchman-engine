@@ -6,9 +6,7 @@ import (
 	"app/manager/middlewares"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -72,15 +70,7 @@ func SystemPackagesExportHandler(c *gin.Context) {
 	}
 
 	data := convertToOutputArray(&loaded)
-	accept := c.GetHeader("Accept")
-	if strings.Contains(accept, "application/json") { // nolint: gocritic
-		c.JSON(http.StatusOK, data)
-	} else if strings.Contains(accept, "text/csv") {
-		Csv(c, 200, data)
-	} else {
-		LogWarnAndResp(c, http.StatusUnsupportedMediaType,
-			fmt.Sprintf("Invalid content type '%s', use 'application/json' or 'text/csv'", accept))
-	}
+	OutputExportData(c, data)
 }
 
 func convertToOutputArray(inArr *[]SystemPackageDBLoad) *[]SystemPackageInline {

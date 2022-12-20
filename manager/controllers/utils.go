@@ -617,6 +617,18 @@ func Csv(ctx *gin.Context, code int, res interface{}) {
 	}
 }
 
+func OutputExportData(c *gin.Context, data interface{}) {
+	accept := c.GetHeader("Accept")
+	if strings.Contains(accept, "application/json") {
+		c.JSON(http.StatusOK, data)
+	} else if strings.Contains(accept, "text/csv") {
+		Csv(c, http.StatusOK, data)
+	} else {
+		LogWarnAndResp(c, http.StatusUnsupportedMediaType,
+			fmt.Sprintf("Invalid content type '%s', use 'application/json' or 'text/csv'", accept))
+	}
+}
+
 func systemDBLookups2SystemItems(systems []SystemDBLookup) []SystemItem {
 	data := make([]SystemItem, len(systems))
 	var err error

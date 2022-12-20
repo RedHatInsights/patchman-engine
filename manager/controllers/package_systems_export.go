@@ -4,9 +4,7 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"errors"
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -70,14 +68,5 @@ func PackageSystemsExportHandler(c *gin.Context) {
 	}
 
 	outputItems := packageSystemDBLookups2PackageSystemItems(systems)
-
-	accept := c.GetHeader("Accept")
-	if strings.Contains(accept, "application/json") { // nolint: gocritic
-		c.JSON(http.StatusOK, outputItems)
-	} else if strings.Contains(accept, "text/csv") {
-		Csv(c, 200, outputItems)
-	} else {
-		LogWarnAndResp(c, http.StatusUnsupportedMediaType,
-			fmt.Sprintf("Invalid content type '%s', use 'application/json' or 'text/csv'", accept))
-	}
+	OutputExportData(c, outputItems)
 }
