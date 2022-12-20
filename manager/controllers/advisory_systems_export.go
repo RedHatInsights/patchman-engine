@@ -6,9 +6,7 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"errors"
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -89,14 +87,6 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	accept := c.GetHeader("Accept")
 	parseAndFillTags(&systems)
-	if strings.Contains(accept, "application/json") { // nolint: gocritic
-		c.JSON(http.StatusOK, systems)
-	} else if strings.Contains(accept, "text/csv") {
-		Csv(c, 200, systems)
-	} else {
-		LogWarnAndResp(c, http.StatusUnsupportedMediaType,
-			fmt.Sprintf("Invalid content type '%s', use 'application/json' or 'text/csv'", accept))
-	}
+	OutputExportData(c, systems)
 }

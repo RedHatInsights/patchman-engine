@@ -2,9 +2,6 @@ package controllers
 
 import (
 	"app/manager/middlewares"
-	"fmt"
-	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -67,13 +64,6 @@ func AdvisoriesExportHandler(c *gin.Context) {
 		v.SystemAdvisoryItemAttributes = systemAdvisoryItemAttributeParse(v.SystemAdvisoryItemAttributes)
 		data[i] = AdvisoryInlineItem(v)
 	}
-	accept := c.GetHeader("Accept")
-	if strings.Contains(accept, "application/json") { // nolint: gocritic
-		c.JSON(http.StatusOK, data)
-	} else if strings.Contains(accept, "text/csv") {
-		Csv(c, http.StatusOK, data)
-	} else {
-		LogWarnAndResp(c, http.StatusUnsupportedMediaType,
-			fmt.Sprintf("Invalid content type '%s', use 'application/json' or 'text/csv'", accept))
-	}
+
+	OutputExportData(c, data)
 }
