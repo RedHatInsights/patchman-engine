@@ -73,7 +73,7 @@ type HostPlatformMetadata struct {
 }
 type HostCustomMetadata struct {
 	YumUpdates      json.RawMessage `json:"yum_updates,omitempty"`
-	YumUpdatesS3URL *string         `json:"yum_updates_s3_url,omitempty"`
+	YumUpdatesS3URL *string         `json:"yum_updates_s3url,omitempty"`
 }
 
 //nolint:funlen
@@ -587,7 +587,7 @@ func getYumUpdates(event HostEvent, client *api.Client) ([]byte, error) {
 	}
 
 	if (parsed == vmaas.UpdatesV2Response{}) {
-		utils.Log("yum_updates_s3_url", yumUpdatesURL).Warn("No yum updates on S3, getting legacy yum_updates field")
+		utils.Log("yum_updates_s3url", yumUpdatesURL).Warn("No yum updates on S3, getting legacy yum_updates field")
 		err := json.Unmarshal(yumUpdates, &parsed)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to unmarshall yum updates")

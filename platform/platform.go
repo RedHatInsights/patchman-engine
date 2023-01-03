@@ -41,7 +41,7 @@ const uploadEvent = `{
     "platform_metadata": {
       "request_id": "ingress-service-5f79d54bf-q5jh6/iDl0gmf6Qw-071711",
       "custom_metadata": {
-		"yum_updates_s3_url": "http://platform:9001/yum_updates",
+		"yum_updates_s3url": "http://platform:9001/yum_updates",
         "yum_updates": {
           "releasever": "8",
           "basearch": "x86_64",
