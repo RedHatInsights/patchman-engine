@@ -16,7 +16,6 @@ objects:
       webServices:
         public:
           enabled: true
-          apiPath: patch
         private:
           enabled: false
       podSpec:
