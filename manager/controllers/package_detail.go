@@ -4,14 +4,16 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func packageNameIsValid(packageName string) bool {
+func packageNameIsValid(db *gorm.DB, packageName string) bool {
 	var packageNames []models.PackageName
-	err := database.Db.Table("package_name").
+	err := db.Table("package_name").
 		Where("name = ?", packageName).
 		Find(&packageNames).Error
 	if err != nil {
@@ -41,12 +43,13 @@ type PackageDetailAttributes struct {
 var PackageSelect = database.MustGetSelect(&PackageDetailAttributes{})
 
 func packageLatestHandler(c *gin.Context, packageName string) {
-	if !packageNameIsValid(packageName) {
+	db := middlewares.DBFromContext(c)
+	if !packageNameIsValid(db, packageName) {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "invalid package name"})
 		return
 	}
 
-	query := database.PackageByName(database.Db, packageName)
+	query := database.PackageByName(db, packageName)
 	var pkg PackageDetailAttributes
 	// Perform 'soft-filtering' by ordering on boolean column first
 	err := query.Select(PackageSelect).
@@ -68,12 +71,13 @@ func packageLatestHandler(c *gin.Context, packageName string) {
 }
 
 func packageEvraHandler(c *gin.Context, nevra *utils.Nevra) {
-	if !packageNameIsValid(nevra.Name) {
+	db := middlewares.DBFromContext(c)
+	if !packageNameIsValid(db, nevra.Name) {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "invalid package name"})
 		return
 	}
 
-	query := database.PackageByName(database.Db, nevra.Name)
+	query := database.PackageByName(db, nevra.Name)
 	var pkg PackageDetailAttributes
 	err := query.Select(PackageSelect).Where("p.evra = ?", nevra.EVRAString()).Take(&pkg).Error
 	if err != nil {
