@@ -1,7 +1,9 @@
 package core
 
 import (
+	"app/base/database"
 	"app/manager/middlewares"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,6 +15,9 @@ func InitRouterWithParams(handler gin.HandlerFunc, account int, method, path str
 	router := gin.Default()
 	router.Use(middlewares.RequestResponseLogger())
 	router.Use(middlewares.MockAuthenticator(account))
+	if database.Db != nil {
+		router.Use(middlewares.DatabaseWithContext())
+	}
 	router.Handle(method, path, handler)
 	return router
 }

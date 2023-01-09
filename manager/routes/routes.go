@@ -15,6 +15,7 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	api.Use(middlewares.RBAC())
 	api.Use(middlewares.PublicAuthenticator())
 	api.Use(middlewares.CheckReferer())
+	api.Use(middlewares.DatabaseWithContext())
 	basePath := api.BasePath()
 
 	advisories := api.Group("/advisories")
