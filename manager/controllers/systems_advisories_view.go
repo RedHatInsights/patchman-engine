@@ -42,9 +42,9 @@ func totalItems(tx *gorm.DB, cols string) (int, error) {
 	return int(count), err
 }
 
-func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryName,
+func systemsAdvisoriesQuery(db *gorm.DB, acc int, systems []SystemID, advisories []AdvisoryName,
 	limit, offset *int) (*gorm.DB, int, int, int, error) {
-	sysq := database.Systems(database.Db, acc).
+	sysq := database.Systems(db, acc).
 		Distinct("sp.rh_account_id, sp.id, sp.inventory_id").
 		// we need to join system_advisories to make `limit` work properly
 		// without this join it can happen that we display less items on some pages
@@ -66,7 +66,7 @@ func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryNa
 		return nil, total, lim, off, err
 	}
 
-	query := database.Db.Table("(?) as sp", sysq).
+	query := db.Table("(?) as sp", sysq).
 		Select(systemsAdvisoriesSelect).
 		Joins(`LEFT JOIN system_advisories sa ON sa.system_id = sp.id
 			AND sa.rh_account_id = sp.rh_account_id AND sa.rh_account_id = ?`, acc)
@@ -80,9 +80,9 @@ func systemsAdvisoriesQuery(acc int, systems []SystemID, advisories []AdvisoryNa
 	return query, total, lim, off, nil
 }
 
-func advisoriesSystemsQuery(acc int, systems []SystemID, advisories []AdvisoryName,
+func advisoriesSystemsQuery(db *gorm.DB, acc int, systems []SystemID, advisories []AdvisoryName,
 	limit, offset *int) (*gorm.DB, int, int, int, error) {
-	advq := database.Db.Table("advisory_metadata am").
+	advq := db.Table("advisory_metadata am").
 		Distinct("am.id, am.name").
 		// we need to join system_advisories to make `limit` work properly
 		// without this join it can happen that we display less items on some pages
@@ -104,7 +104,7 @@ func advisoriesSystemsQuery(acc int, systems []SystemID, advisories []AdvisoryNa
 	}
 
 	spJoin := "LEFT JOIN system_platform sp ON sp.id = sa.system_id AND sa.rh_account_id = sp.rh_account_id"
-	query := database.Db.Table("(?) as am", advq).
+	query := db.Table("(?) as am", advq).
 		Distinct(systemsAdvisoriesSelect).
 		Joins("JOIN system_advisories sa ON am.id = sa.advisory_id AND sa.rh_account_id = ?", acc)
 	if len(systems) > 0 {
@@ -128,11 +128,12 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListM
 		return nil, nil, err
 	}
 	acc := c.GetInt(middlewares.KeyAccount)
+	db := middlewares.DBFromContext(c)
 	switch endpoint {
 	case "SystemsAdvisories":
-		q, total, limit, offset, err = systemsAdvisoriesQuery(acc, req.Systems, req.Advisories, req.Limit, req.Offset)
+		q, total, limit, offset, err = systemsAdvisoriesQuery(db, acc, req.Systems, req.Advisories, req.Limit, req.Offset)
 	case "AdvisoriesSystems":
-		q, total, limit, offset, err = advisoriesSystemsQuery(acc, req.Systems, req.Advisories, req.Limit, req.Offset)
+		q, total, limit, offset, err = advisoriesSystemsQuery(db, acc, req.Systems, req.Advisories, req.Limit, req.Offset)
 	default:
 		return nil, nil, fmt.Errorf("unknown endpoint '%s'", endpoint)
 	}
