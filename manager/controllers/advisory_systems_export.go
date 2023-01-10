@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
@@ -55,8 +54,9 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 		return
 	}
 
+	db := middlewares.DBFromContext(c)
 	var exists int64
-	err := database.Db.Model(&models.AdvisoryMetadata{}).
+	err := db.Model(&models.AdvisoryMetadata{}).
 		Where("name = ? ", advisoryName).Count(&exists).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")
@@ -66,7 +66,7 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	query := buildAdvisorySystemsQuery(account, advisoryName)
+	query := buildAdvisorySystemsQuery(db, account, advisoryName)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return

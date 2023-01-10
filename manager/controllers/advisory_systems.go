@@ -42,8 +42,9 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) 
 		return nil, nil, nil, errors.New("advisory_id param not found")
 	}
 
+	db := middlewares.DBFromContext(c)
 	var exists int64
-	err := database.Db.Model(&models.AdvisoryMetadata{}).
+	err := db.Model(&models.AdvisoryMetadata{}).
 		Where("name = ? ", advisoryName).Count(&exists).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")
@@ -55,7 +56,7 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) 
 		return nil, nil, nil, err
 	}
 
-	query := buildAdvisorySystemsQuery(account, advisoryName)
+	query := buildAdvisorySystemsQuery(db, account, advisoryName)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return nil, nil, nil, err
@@ -190,8 +191,8 @@ func AdvisorySystemsListIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildAdvisorySystemsQuery(account int, advisoryName string) *gorm.DB {
-	query := database.SystemAdvisories(database.Db, account).
+func buildAdvisorySystemsQuery(db *gorm.DB, account int, advisoryName string) *gorm.DB {
+	query := database.SystemAdvisories(db, account).
 		Select(SystemsSelect).
 		Joins("JOIN advisory_metadata am ON am.id = sa.advisory_id").
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
