@@ -79,8 +79,9 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error)
 		return nil, nil, nil, errors.New("incorrect inventory_id format")
 	}
 
+	db := middlewares.DBFromContext(c)
 	var exists int64
-	err := database.Db.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid ", inventoryID).
+	err := db.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid ", inventoryID).
 		Count(&exists).Error
 
 	if err != nil {
@@ -93,7 +94,7 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error)
 		return nil, nil, nil, err
 	}
 
-	query := buildSystemAdvisoriesQuery(account, inventoryID)
+	query := buildSystemAdvisoriesQuery(db, account, inventoryID)
 	query, meta, links, err := ListCommon(query, c, nil, SystemAdvisoriesOpts)
 	// Error handling and setting of result code & content is done in ListCommon
 	return query, meta, links, err
@@ -186,8 +187,8 @@ func SystemAdvisoriesIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildSystemAdvisoriesQuery(account int, inventoryID string) *gorm.DB {
-	query := database.SystemAdvisoriesByInventoryID(database.Db, account, inventoryID).
+func buildSystemAdvisoriesQuery(db *gorm.DB, account int, inventoryID string) *gorm.DB {
+	query := database.SystemAdvisoriesByInventoryID(db, account, inventoryID).
 		Joins("JOIN advisory_metadata am on am.id = sa.advisory_id").
 		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
 		Select(SystemAdvisoriesSelect)
