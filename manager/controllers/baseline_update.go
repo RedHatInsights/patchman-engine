@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"app/base"
 	"app/base/database"
 	"app/base/models"
 	"app/manager/kafka"
@@ -66,8 +65,9 @@ func BaselineUpdateHandler(c *gin.Context) {
 		return
 	}
 
+	db := middlewares.DBFromContext(c)
 	var exists int64
-	err = database.Db.Model(&models.Baseline{}).
+	err = db.Model(&models.Baseline{}).
 		Where("id = ? AND rh_account_id = ?", baselineID, account).Count(&exists).Error
 	if err != nil {
 		LogAndRespError(c, err, "Database error")
@@ -79,7 +79,7 @@ func BaselineUpdateHandler(c *gin.Context) {
 	}
 
 	inventoryIDsList := map2list(req.InventoryIDs)
-	missingIDs, err := checkInventoryIDs(account, inventoryIDsList)
+	missingIDs, err := checkInventoryIDs(db, account, inventoryIDsList)
 	if err != nil {
 		LogAndRespError(c, err, "Database error")
 		return
@@ -92,7 +92,7 @@ func BaselineUpdateHandler(c *gin.Context) {
 	}
 
 	newAssociations, obsoleteAssociations := sortInventoryIDs(req.InventoryIDs)
-	err = buildUpdateBaselineQuery(baselineID, req, newAssociations, obsoleteAssociations, account)
+	err = buildUpdateBaselineQuery(db, baselineID, req, newAssociations, obsoleteAssociations, account)
 	if err != nil {
 		if e := err.Error(); e == ForeignBaselineViolationErr {
 			LogAndRespBadRequest(c, err, "Invalid inventory IDs: "+e)
@@ -155,7 +155,7 @@ func updateSystemsBaselineID(tx *gorm.DB, rhAccountID int, inventoryIDs []string
 	return nil
 }
 
-func buildUpdateBaselineQuery(baselineID int64, req UpdateBaselineRequest, newIDs, obsoleteIDs []string,
+func buildUpdateBaselineQuery(db *gorm.DB, baselineID int64, req UpdateBaselineRequest, newIDs, obsoleteIDs []string,
 	account int) error {
 	data := map[string]interface{}{}
 	if req.Name != nil {
@@ -174,7 +174,7 @@ func buildUpdateBaselineQuery(baselineID int64, req UpdateBaselineRequest, newID
 		data["description"] = req.Description
 	}
 
-	tx := database.Db.WithContext(base.Context).Begin()
+	tx := db.Begin()
 	defer tx.Rollback()
 
 	if req.Name != nil || req.Config != nil || req.Description != nil {

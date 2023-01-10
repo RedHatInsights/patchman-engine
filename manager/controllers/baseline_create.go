@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"app/base"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
@@ -14,6 +13,7 @@ import (
 	"sort"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 const BaselineMissingNameErr = "missing required parameter 'name'"
@@ -61,7 +61,8 @@ func CreateBaselineHandler(c *gin.Context) {
 	}
 	request.Description = utils.EmptyToNil(request.Description)
 
-	missingIDs, err := checkInventoryIDs(accountID, request.InventoryIDs)
+	db := middlewares.DBFromContext(c)
+	missingIDs, err := checkInventoryIDs(db, accountID, request.InventoryIDs)
 	if err != nil {
 		LogAndRespError(c, err, "Database error")
 		return
@@ -73,7 +74,7 @@ func CreateBaselineHandler(c *gin.Context) {
 		return
 	}
 
-	baselineID, err := buildCreateBaselineQuery(request, accountID)
+	baselineID, err := buildCreateBaselineQuery(db, request, accountID)
 	if err != nil {
 		if database.IsPgErrorCode(err, database.PgErrorDuplicateKey) {
 			LogAndRespBadRequest(c, err, DuplicateBaselineNameErr)
@@ -91,8 +92,8 @@ func CreateBaselineHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildCreateBaselineQuery(request CreateBaselineRequest, accountID int) (int64, error) {
-	tx := database.Db.WithContext(base.Context).Begin()
+func buildCreateBaselineQuery(db *gorm.DB, request CreateBaselineRequest, accountID int) (int64, error) {
+	tx := db.Begin()
 	defer tx.Rollback()
 
 	baseline := models.Baseline{
@@ -124,9 +125,9 @@ func buildCreateBaselineQuery(request CreateBaselineRequest, accountID int) (int
 	return baseline.ID, err
 }
 
-func checkInventoryIDs(accountID int, inventoryIDs []string) (missingIDs []string, err error) {
+func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string) (missingIDs []string, err error) {
 	var containingIDs []string
-	err = database.Db.Table("system_platform sp").
+	err = db.Table("system_platform sp").
 		Where("rh_account_id = ? AND inventory_id::text IN (?)", accountID, inventoryIDs).
 		Pluck("sp.inventory_id", &containingIDs).Error
 	if err != nil {
