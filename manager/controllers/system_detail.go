@@ -46,7 +46,8 @@ func SystemDetailHandler(c *gin.Context) {
 	}
 
 	var systemItemAttributes SystemItemAttributes
-	query := database.Systems(database.Db, account).
+	db := middlewares.DBFromContext(c)
+	query := database.Systems(db, account).
 		Select(database.MustGetSelect(&systemItemAttributes)).
 		Joins("JOIN inventory.hosts ih ON ih.id = inventory_id").
 		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").

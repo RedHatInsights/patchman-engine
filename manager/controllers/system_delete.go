@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"app/base"
-	"app/base/database"
 	"app/base/utils"
 	"app/manager/middlewares"
 	"errors"
@@ -38,7 +36,8 @@ func SystemDeleteHandler(c *gin.Context) {
 	}
 
 	var systemInventoryID []string
-	tx := database.Db.WithContext(base.Context).Begin()
+	db := middlewares.DBFromContext(c)
+	tx := db.Begin()
 
 	defer tx.Rollback()
 
