@@ -76,7 +76,7 @@ func advisoriesSubtotal(tx *gorm.DB) (total int, subTotals map[string]int, err e
 	return total, subTotals, err
 }
 
-func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
+func advisoriesCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
 	account := c.GetInt(middlewares.KeyAccount)
 	var query *gorm.DB
 	filters, err := ParseTagsFilters(c)
@@ -85,12 +85,12 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
 	}
 	if disableCachedCounts || HasTags(c) {
 		var err error
-		query = buildQueryAdvisoriesTagged(filters, account)
+		query = buildQueryAdvisoriesTagged(db, filters, account)
 		if err != nil {
 			return nil, nil, nil, err
 		} // Error handled in method itself
 	} else {
-		query = buildQueryAdvisories(account)
+		query = buildQueryAdvisories(db, account)
 	}
 
 	query, meta, links, err := ListCommon(query, c, filters, AdvisoriesOpts)
@@ -130,7 +130,8 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /advisories [get]
 func AdvisoriesListHandler(c *gin.Context) {
-	query, meta, links, err := advisoriesCommon(c)
+	db := middlewares.DBFromContext(c)
+	query, meta, links, err := advisoriesCommon(db, c)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -181,7 +182,8 @@ func AdvisoriesListHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/advisories [get]
 func AdvisoriesListIDsHandler(c *gin.Context) {
-	query, _, _, err := advisoriesCommon(c)
+	db := middlewares.DBFromContext(c)
+	query, _, _, err := advisoriesCommon(db, c)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -196,8 +198,8 @@ func AdvisoriesListIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildQueryAdvisories(account int) *gorm.DB {
-	query := database.Db.Table("advisory_metadata am").
+func buildQueryAdvisories(db *gorm.DB, account int) *gorm.DB {
+	query := db.Table("advisory_metadata am").
 		Select(AdvisoriesSelect).
 		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id and aad.systems_affected > 0").
 		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
@@ -205,8 +207,8 @@ func buildQueryAdvisories(account int) *gorm.DB {
 	return query
 }
 
-func buildAdvisoryAccountDataQuery(account int) *gorm.DB {
-	query := database.SystemAdvisories(database.Db, account).
+func buildAdvisoryAccountDataQuery(db *gorm.DB, account int) *gorm.DB {
+	query := database.SystemAdvisories(db, account).
 		Select("sa.advisory_id, sp.rh_account_id as rh_account_id, 0 as status_id, count(sp.id) as systems_affected, " +
 			"0 as systems_status_divergent").
 		Where("sp.stale = false").
@@ -215,11 +217,11 @@ func buildAdvisoryAccountDataQuery(account int) *gorm.DB {
 	return query
 }
 
-func buildQueryAdvisoriesTagged(filters map[string]FilterData, account int) *gorm.DB {
-	subq := buildAdvisoryAccountDataQuery(account)
+func buildQueryAdvisoriesTagged(db *gorm.DB, filters map[string]FilterData, account int) *gorm.DB {
+	subq := buildAdvisoryAccountDataQuery(db, account)
 	subq, _ = ApplyTagsFilter(filters, subq, "sp.inventory_id")
 
-	query := database.Db.Table("advisory_metadata am").
+	query := db.Table("advisory_metadata am").
 		Select(AdvisoriesSelect).
 		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
 		Joins("JOIN (?) aad ON am.id = aad.advisory_id and aad.systems_affected > 0", subq)
