@@ -32,15 +32,16 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	if err != nil {
 		return
 	}
+	db := middlewares.DBFromContext(c)
 	var query *gorm.DB
 	if disableCachedCounts || HasTags(c) {
 		var err error
-		query = buildQueryAdvisoriesTagged(filters, account)
+		query = buildQueryAdvisoriesTagged(db, filters, account)
 		if err != nil {
 			return
 		} // Error handled in method itself
 	} else {
-		query = buildQueryAdvisories(account)
+		query = buildQueryAdvisories(db, account)
 	}
 
 	var advisories []AdvisoriesDBLookup
