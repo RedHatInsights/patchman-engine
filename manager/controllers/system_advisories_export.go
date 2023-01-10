@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
@@ -46,8 +45,9 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 		return
 	}
 
+	db := middlewares.DBFromContext(c)
 	var exists int64
-	err := database.Db.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid ", inventoryID).
+	err := db.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid ", inventoryID).
 		Count(&exists).Error
 
 	if err != nil {
@@ -58,7 +58,7 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 		return
 	}
 
-	query := buildSystemAdvisoriesQuery(account, inventoryID)
+	query := buildSystemAdvisoriesQuery(db, account, inventoryID)
 	query = query.Order("id")
 	query, err = ExportListCommon(query, c, AdvisoriesOpts)
 	if err != nil {
