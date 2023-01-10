@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"app/base/core"
+	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
 	"encoding/json"
@@ -18,7 +19,7 @@ func testEvaluateBaselineSystems(t *testing.T, baselineID *int64, accountID int,
 
 	writerMock := mqueue.MockKafkaWriter{}
 	TryStartEvalQueue(mqueue.MockCreateKafkaWriter(&writerMock))
-	inventoryAIDs := GetInventoryIDsToEvaluate(baselineID, accountID, configUpdated, inventoryIDs)
+	inventoryAIDs := GetInventoryIDsToEvaluate(database.Db, baselineID, accountID, configUpdated, inventoryIDs)
 	EvaluateBaselineSystems(inventoryAIDs)
 	utils.AssertEqualWait(t, 1, func() (exp, act interface{}) {
 		return 1, len(writerMock.Messages)
@@ -60,6 +61,6 @@ func TestEvaluateBaselineAllAndUpdatedSystems(t *testing.T) {
 
 // No systems needed to evaluate - e.g. just baseline name changed
 func TestEvaluateBaselineNoSystems(t *testing.T) {
-	inventoryAIDs := GetInventoryIDsToEvaluate(utils.PtrInt64(1), 1, false, nil)
+	inventoryAIDs := GetInventoryIDsToEvaluate(database.Db, utils.PtrInt64(1), 1, false, nil)
 	assert.Equal(t, 0, len(inventoryAIDs))
 }

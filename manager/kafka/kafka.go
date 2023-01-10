@@ -2,10 +2,11 @@ package kafka
 
 import (
 	"app/base"
-	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+
+	"gorm.io/gorm"
 )
 
 var (
@@ -35,7 +36,7 @@ func runBaselineRecalcLoop() {
 	}
 }
 
-func GetInventoryIDsToEvaluate(baselineID *int64, accountID int,
+func GetInventoryIDsToEvaluate(db *gorm.DB, baselineID *int64, accountID int,
 	configUpdated bool, updatedInventoryIDs []string) []mqueue.EvalData {
 	if !enableBaselineChangeEval {
 		return nil
@@ -49,7 +50,7 @@ func GetInventoryIDsToEvaluate(baselineID *int64, accountID int,
 	if !configUpdated { // we just need to evaluate updated inventory IDs
 		inventoryAIDs = inventoryIDs2InventoryAIDs(accountID, updatedInventoryIDs)
 	} else { // config updated - we need to update all baseline inventory IDs and the added ones too
-		inventoryAIDs = getInventoryIDs(baselineID, accountID, updatedInventoryIDs)
+		inventoryAIDs = getInventoryIDs(db, baselineID, accountID, updatedInventoryIDs)
 	}
 
 	utils.Log("nInventoryIDs", len(inventoryAIDs), "accountID", accountID).
@@ -65,9 +66,9 @@ func inventoryIDs2InventoryAIDs(accountID int, inventoryIDs []string) []mqueue.E
 	return inventoryAIDs
 }
 
-func getInventoryIDs(baselineID *int64, accountID int, inventoryIDs []string) []mqueue.EvalData {
+func getInventoryIDs(db *gorm.DB, baselineID *int64, accountID int, inventoryIDs []string) []mqueue.EvalData {
 	var inventoryAIDs []mqueue.EvalData
-	query := database.Db.Model(&models.SystemPlatform{}).
+	query := db.Model(&models.SystemPlatform{}).
 		Select("inventory_id, rh_account_id").
 		Where(map[string]interface{}{"rh_account_id": accountID, "baseline_id": baselineID})
 

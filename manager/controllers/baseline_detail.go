@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
@@ -52,7 +51,8 @@ func BaselineDetailHandler(c *gin.Context) {
 		return
 	}
 
-	respItem, err := getBaseline(account, baselineID)
+	db := middlewares.DBFromContext(c)
+	respItem, err := getBaseline(db, account, baselineID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			LogAndRespNotFound(c, err, "baseline not found")
@@ -66,9 +66,9 @@ func BaselineDetailHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func getBaseline(accountID, baselineID int) (*BaselineDetailItem, error) {
+func getBaseline(db *gorm.DB, accountID, baselineID int) (*BaselineDetailItem, error) {
 	var baseline models.Baseline
-	err := database.Db.Model(&models.Baseline{}).
+	err := db.Model(&models.Baseline{}).
 		Where("rh_account_id = ? AND id = ?", accountID, baselineID).
 		First(&baseline).Error
 	if err != nil {

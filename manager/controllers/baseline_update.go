@@ -106,7 +106,7 @@ func BaselineUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	inventoryAIDs := kafka.GetInventoryIDsToEvaluate(&baselineID, account, req.Config != nil, inventoryIDsList)
+	inventoryAIDs := kafka.GetInventoryIDsToEvaluate(db, &baselineID, account, req.Config != nil, inventoryIDsList)
 	kafka.EvaluateBaselineSystems(inventoryAIDs)
 
 	resp := UpdateBaselineResponse{BaselineID: baselineID}
