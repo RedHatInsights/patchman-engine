@@ -28,7 +28,9 @@ func PackagesExportHandler(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	query := packagesQuery(filters, account)
+
+	db := middlewares.DBFromContext(c)
+	query := packagesQuery(db, filters, account)
 	if err != nil {
 		return
 	}
