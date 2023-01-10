@@ -74,8 +74,8 @@ func BaselinesListHandler(c *gin.Context) {
 		return
 	}
 
-	var query *gorm.DB
-	query = buildQueryBaselines(filters, account)
+	db := middlewares.DBFromContext(c)
+	query := buildQueryBaselines(db, filters, account)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -101,8 +101,8 @@ func BaselinesListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildQueryBaselines(filters map[string]FilterData, account int) *gorm.DB {
-	subq := database.Db.Table("system_platform sp").
+func buildQueryBaselines(db *gorm.DB, filters map[string]FilterData, account int) *gorm.DB {
+	subq := db.Table("system_platform sp").
 		Select("sp.baseline_id, count(sp.inventory_id) as systems").
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Where("sp.rh_account_id = ?", account).
@@ -111,7 +111,7 @@ func buildQueryBaselines(filters map[string]FilterData, account int) *gorm.DB {
 
 	subq, _ = ApplyTagsFilter(filters, subq, "sp.inventory_id")
 
-	query := database.Db.Table("baseline as bl").
+	query := db.Table("baseline as bl").
 		Select(BaselineSelect).
 		Joins("LEFT JOIN (?) sp ON sp.baseline_id = bl.id", subq).
 		Where("bl.rh_account_id = ?", account).Order("bl.name asc")
