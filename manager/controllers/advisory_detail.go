@@ -18,7 +18,6 @@ import (
 
 var enableAdvisoryDetailCache = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_DETAIL_CACHE", true)
 var advisoryDetailCacheSize = utils.GetIntEnvOrDefault("ADVISORY_DETAIL_CACHE_SIZE", 100)
-var advisoryDetailCacheV1 = initAdvisoryDetailCache()
 var advisoryDetailCacheV2 = initAdvisoryDetailCache()
 
 const logProgressDuration = 2 * time.Second
@@ -110,15 +109,9 @@ func advisoryDetailHandler(c *gin.Context, apiver string) {
 	}
 
 	var err error
-	var respV1 *AdvisoryDetailResponseV1
 	var respV2 *AdvisoryDetailResponseV2
 	db := middlewares.DBFromContext(c)
-	switch apiver {
-	case "v1":
-		respV1, err = getAdvisoryV1(db, advisoryName)
-	case "v2":
-		respV2, err = getAdvisoryV2(db, advisoryName)
-	}
+	respV2, err = getAdvisoryV2(db, advisoryName)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			LogAndRespNotFound(c, err, "advisory not found")
@@ -130,6 +123,7 @@ func advisoryDetailHandler(c *gin.Context, apiver string) {
 
 	switch apiver {
 	case "v1":
+		respV1 := advisoryRespV2toV1(respV2)
 		c.JSON(http.StatusOK, respV1)
 	case "v2":
 		c.JSON(http.StatusOK, respV2)
@@ -172,25 +166,20 @@ func getAdvisoryFromDB(db *gorm.DB, advisoryName string) (*models.AdvisoryMetada
 	return &advisory, &ada, err
 }
 
-func getAdvisoryFromDBV1(db *gorm.DB, advisoryName string) (*AdvisoryDetailResponseV1, error) {
-	advisory, ada, err := getAdvisoryFromDB(db, advisoryName)
-	if err != nil {
-		return nil, err
-	}
-
-	pkgs, _, err := parsePackages(advisory.PackageData)
-	if err != nil {
-		return nil, errors.Wrap(err, "packages parsing error")
-	}
-
-	var resp = AdvisoryDetailResponseV1{Data: AdvisoryDetailItemV1{
-		AdvisoryDetailItem: AdvisoryDetailItem{ID: advisory.Name, Type: "advisory"},
-		Attributes: AdvisoryDetailAttributesV1{
-			AdvisoryDetailAttributes: *ada,
-			Packages:                 pkgs,
-		},
-	}}
-	return &resp, nil
+func advisoryRespV2toV1(respV2 *AdvisoryDetailResponseV2) *AdvisoryDetailResponseV1 {
+	pkgsV1 := pkgsV2topkgsV1(respV2.Data.Attributes.Packages)
+	respV1 := AdvisoryDetailResponseV1{
+		Data: AdvisoryDetailItemV1{
+			AdvisoryDetailItem: AdvisoryDetailItem{
+				ID:   respV2.Data.ID,
+				Type: "advisory",
+			},
+			Attributes: AdvisoryDetailAttributesV1{
+				AdvisoryDetailAttributes: respV2.Data.Attributes.AdvisoryDetailAttributes,
+				Packages:                 pkgsV1,
+			},
+		}}
+	return &respV1
 }
 
 func getAdvisoryFromDBV2(db *gorm.DB, advisoryName string) (*AdvisoryDetailResponseV2, error) {
@@ -199,7 +188,7 @@ func getAdvisoryFromDBV2(db *gorm.DB, advisoryName string) (*AdvisoryDetailRespo
 		return nil, err
 	}
 
-	_, pkgs, err := parsePackages(advisory.PackageData)
+	pkgs, err := parsePackages(advisory.PackageData)
 	if err != nil {
 		return nil, errors.Wrap(err, "packages parsing error")
 	}
@@ -214,13 +203,12 @@ func getAdvisoryFromDBV2(db *gorm.DB, advisoryName string) (*AdvisoryDetailRespo
 	return &resp, nil
 }
 
-func parsePackages(jsonb []byte) (packagesV1, packagesV2, error) {
+func parsePackages(jsonb []byte) (packagesV2, error) {
 	if jsonb == nil {
-		return packagesV1{}, packagesV2{}, nil
+		return packagesV2{}, nil
 	}
 
 	var err error
-	pkgsV1 := make(packagesV1)
 	pkgsV2, err := parseJSONList(jsonb)
 	if err != nil {
 		// HACK!
@@ -230,7 +218,7 @@ func parsePackages(jsonb []byte) (packagesV1, packagesV2, error) {
 		var tmpPkgV1 packagesV1
 		if v1err := json.Unmarshal(jsonb, &tmpPkgV1); v1err != nil {
 			// cannot unmarshal to neither V1 nor V2
-			return nil, nil, err
+			return nil, err
 		}
 		// 2. create `packagesV2` from `packagesV1` data
 		for k, v := range tmpPkgV1 {
@@ -238,9 +226,14 @@ func parsePackages(jsonb []byte) (packagesV1, packagesV2, error) {
 			pkgsV2 = append(pkgsV2, fmt.Sprintf("%s-%s", k, v))
 		}
 	}
+	return pkgsV2, nil
+}
+
+func pkgsV2topkgsV1(pkgsV2 packagesV2) packagesV1 {
 	// assigning first pkg to packages map in api/v1
 	// it shows incorrect packages info
 	// but we need to maintain backward compatibility
+	pkgsV1 := make(packagesV1)
 	for _, pkg := range pkgsV2 {
 		nevra, err := utils.ParseNevra(pkg)
 		if err != nil {
@@ -250,7 +243,7 @@ func parsePackages(jsonb []byte) (packagesV1, packagesV2, error) {
 			pkgsV1[nevra.Name] = nevra.EVRAString()
 		}
 	}
-	return pkgsV1, pkgsV2, nil
+	return pkgsV1
 }
 
 func initAdvisoryDetailCache() *lru.Cache {
@@ -283,10 +276,6 @@ func PreloadAdvisoryCacheItems() {
 	progress, count := utils.LogProgress("Advisory detail cache preload", logProgressDuration, int64(len(advisoryNames)))
 
 	for _, advisoryName := range advisoryNames {
-		_, err = getAdvisoryV1(database.Db, advisoryName)
-		if err != nil {
-			utils.Log("advisoryName", advisoryName, "err", err.Error()).Error("can not re-load item to cache - V1")
-		}
 		_, err = getAdvisoryV2(database.Db, advisoryName)
 		if err != nil {
 			utils.Log("advisoryName", advisoryName, "err", err.Error()).Error("can not re-load item to cache - V2")
@@ -294,19 +283,6 @@ func PreloadAdvisoryCacheItems() {
 		*count++
 	}
 	progress.Stop()
-}
-
-func tryGetAdvisoryFromCacheV1(advisoryName string) *AdvisoryDetailResponseV1 {
-	if advisoryDetailCacheV1 == nil {
-		return nil
-	}
-
-	val, ok := advisoryDetailCacheV1.Get(advisoryName)
-	if !ok {
-		return nil
-	}
-	resp := val.(AdvisoryDetailResponseV1)
-	return &resp
 }
 
 func tryGetAdvisoryFromCacheV2(advisoryName string) *AdvisoryDetailResponseV2 {
@@ -322,36 +298,12 @@ func tryGetAdvisoryFromCacheV2(advisoryName string) *AdvisoryDetailResponseV2 {
 	return &resp
 }
 
-func tryAddAdvisoryToCacheV1(advisoryName string, resp *AdvisoryDetailResponseV1) {
-	if advisoryDetailCacheV1 == nil {
-		return
-	}
-	evicted := advisoryDetailCacheV1.Add(advisoryName, *resp)
-	utils.Log("evictedV1", evicted, "advisoryName", advisoryName).Debug("saved to cache")
-}
-
 func tryAddAdvisoryToCacheV2(advisoryName string, resp *AdvisoryDetailResponseV2) {
 	if advisoryDetailCacheV2 == nil {
 		return
 	}
 	evicted := advisoryDetailCacheV2.Add(advisoryName, *resp)
 	utils.Log("evictedV2", evicted, "advisoryName", advisoryName).Debug("saved to cache")
-}
-
-func getAdvisoryV1(db *gorm.DB, advisoryName string) (*AdvisoryDetailResponseV1, error) {
-	resp := tryGetAdvisoryFromCacheV1(advisoryName)
-	if resp != nil {
-		utils.Log("advisoryName", advisoryName).Debug("found in cache")
-		return resp, nil // return data found in cache
-	}
-
-	resp, err := getAdvisoryFromDBV1(db, advisoryName) // search for data in database
-	if err != nil {
-		return nil, err
-	}
-
-	tryAddAdvisoryToCacheV1(advisoryName, resp) // save data to cache if initialized
-	return resp, nil
 }
 
 func getAdvisoryV2(db *gorm.DB, advisoryName string) (*AdvisoryDetailResponseV2, error) {

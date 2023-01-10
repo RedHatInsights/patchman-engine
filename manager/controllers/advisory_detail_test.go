@@ -146,17 +146,13 @@ func TestAdvisoryDetailCached(t *testing.T) {
 func TestAdvisoryDetailCachePreloading(t *testing.T) {
 	core.SetupTest(t)
 
-	advisoryDetailCacheV1.Purge()
 	advisoryDetailCacheV2.Purge()
 	var hook = utils.NewTestLogHook()
 	log.AddHook(hook)
 
 	PreloadAdvisoryCacheItems()
 
-	_, ok := advisoryDetailCacheV1.Get("RH-8") // ensure some advisory in cache
-	assert.True(t, ok)
-	advisoryDetailCacheV1.Purge()
-	_, ok = advisoryDetailCacheV2.Get("RH-8") // ensure some advisory in cache
+	_, ok := advisoryDetailCacheV2.Get("RH-8") // ensure some advisory in cache
 	assert.True(t, ok)
 	advisoryDetailCacheV2.Purge()
 }
@@ -183,11 +179,13 @@ func TestParsePackagesV1V2(t *testing.T) {
 	inV1 := json.RawMessage("{\"pkg1\": \"1.0.0-1.el8.x86_64\", \"pkg2\": \"2.0.0-1.el8.x86_64\"}")
 	inV2 := json.RawMessage("[\"pkg1-1.0.0-1.el8.x86_64\", \"pkg2-2.0.0-1.el8.x86_64\"]")
 
-	p1InV1, p2InV1, errInV1 := parsePackages(inV1)
-	p1InV2, p2InV2, errInV2 := parsePackages(inV2)
+	p2InV1, errInV1 := parsePackages(inV1)
+	p2InV2, errInV2 := parsePackages(inV2)
 	sort.Strings(p2InV1)
 	assert.Nil(t, errInV1)
 	assert.Nil(t, errInV2)
+	p1InV1 := pkgsV2topkgsV1(p2InV1)
+	p1InV2 := pkgsV2topkgsV1(p2InV2)
 	assert.Equal(t, p1InV1, p1InV2)
 	assert.Equal(t, p2InV1, p2InV2)
 }
