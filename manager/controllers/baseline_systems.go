@@ -77,8 +77,9 @@ func BaselineSystemsListHandler(c *gin.Context) {
 		return
 	}
 
+	db := middlewares.DBFromContext(c)
 	var exists int64
-	err := database.Db.Model(&models.Baseline{}).
+	err := db.Model(&models.Baseline{}).
 		Where("id = ? ", baselineID).Count(&exists).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")
@@ -88,7 +89,7 @@ func BaselineSystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	query := buildQueryBaselineSystems(account, baselineID)
+	query := buildQueryBaselineSystems(db, account, baselineID)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return
@@ -116,8 +117,8 @@ func BaselineSystemsListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildQueryBaselineSystems(account int, baselineID string) *gorm.DB {
-	query := database.Db.Table("system_platform AS sp").Select(BaselineSystemSelect).
+func buildQueryBaselineSystems(db *gorm.DB, account int, baselineID string) *gorm.DB {
+	query := db.Table("system_platform AS sp").Select(BaselineSystemSelect).
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Where("sp.rh_account_id = ? AND sp.baseline_id = ?", account, baselineID).
 		Where("sp.stale = false")
