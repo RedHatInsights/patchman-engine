@@ -65,12 +65,13 @@ func SystemTagListHandler(c *gin.Context) {
 	var err error
 	account := c.GetInt(middlewares.KeyAccount)
 
+	db := middlewares.DBFromContext(c)
 	// https://stackoverflow.com/questions/33474778/how-to-group-result-by-array-column-in-postgres
-	sq := database.Systems(database.Db, account).
+	sq := database.Systems(db, account).
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Select("jsonb_array_elements(ih.tags) AS tag")
 
-	query := database.Db.Table("(?) AS sq", sq).
+	query := db.Table("(?) AS sq", sq).
 		Select("COUNT(sq.tag) AS count, sq.tag AS tag").
 		Group("sq.tag")
 
