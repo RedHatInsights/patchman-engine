@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -111,11 +112,12 @@ func advisoryDetailHandler(c *gin.Context, apiver string) {
 	var err error
 	var respV1 *AdvisoryDetailResponseV1
 	var respV2 *AdvisoryDetailResponseV2
+	db := middlewares.DBFromContext(c)
 	switch apiver {
 	case "v1":
-		respV1, err = getAdvisoryV1(advisoryName)
+		respV1, err = getAdvisoryV1(db, advisoryName)
 	case "v2":
-		respV2, err = getAdvisoryV2(advisoryName)
+		respV2, err = getAdvisoryV2(db, advisoryName)
 	}
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -134,9 +136,9 @@ func advisoryDetailHandler(c *gin.Context, apiver string) {
 	}
 }
 
-func getAdvisoryFromDB(advisoryName string) (*models.AdvisoryMetadata, *AdvisoryDetailAttributes, error) {
+func getAdvisoryFromDB(db *gorm.DB, advisoryName string) (*models.AdvisoryMetadata, *AdvisoryDetailAttributes, error) {
 	var advisory models.AdvisoryMetadata
-	err := database.Db.Table(advisory.TableName()).
+	err := db.Table(advisory.TableName()).
 		Take(&advisory, "name = ?", advisoryName).Error
 	if err != nil {
 		return nil, nil, err
@@ -170,8 +172,8 @@ func getAdvisoryFromDB(advisoryName string) (*models.AdvisoryMetadata, *Advisory
 	return &advisory, &ada, err
 }
 
-func getAdvisoryFromDBV1(advisoryName string) (*AdvisoryDetailResponseV1, error) {
-	advisory, ada, err := getAdvisoryFromDB(advisoryName)
+func getAdvisoryFromDBV1(db *gorm.DB, advisoryName string) (*AdvisoryDetailResponseV1, error) {
+	advisory, ada, err := getAdvisoryFromDB(db, advisoryName)
 	if err != nil {
 		return nil, err
 	}
@@ -191,8 +193,8 @@ func getAdvisoryFromDBV1(advisoryName string) (*AdvisoryDetailResponseV1, error)
 	return &resp, nil
 }
 
-func getAdvisoryFromDBV2(advisoryName string) (*AdvisoryDetailResponseV2, error) {
-	advisory, ada, err := getAdvisoryFromDB(advisoryName)
+func getAdvisoryFromDBV2(db *gorm.DB, advisoryName string) (*AdvisoryDetailResponseV2, error) {
+	advisory, ada, err := getAdvisoryFromDB(db, advisoryName)
 	if err != nil {
 		return nil, err
 	}
@@ -281,11 +283,11 @@ func PreloadAdvisoryCacheItems() {
 	progress, count := utils.LogProgress("Advisory detail cache preload", logProgressDuration, int64(len(advisoryNames)))
 
 	for _, advisoryName := range advisoryNames {
-		_, err = getAdvisoryV1(advisoryName)
+		_, err = getAdvisoryV1(database.Db, advisoryName)
 		if err != nil {
 			utils.Log("advisoryName", advisoryName, "err", err.Error()).Error("can not re-load item to cache - V1")
 		}
-		_, err = getAdvisoryV2(advisoryName)
+		_, err = getAdvisoryV2(database.Db, advisoryName)
 		if err != nil {
 			utils.Log("advisoryName", advisoryName, "err", err.Error()).Error("can not re-load item to cache - V2")
 		}
@@ -336,14 +338,14 @@ func tryAddAdvisoryToCacheV2(advisoryName string, resp *AdvisoryDetailResponseV2
 	utils.Log("evictedV2", evicted, "advisoryName", advisoryName).Debug("saved to cache")
 }
 
-func getAdvisoryV1(advisoryName string) (*AdvisoryDetailResponseV1, error) {
+func getAdvisoryV1(db *gorm.DB, advisoryName string) (*AdvisoryDetailResponseV1, error) {
 	resp := tryGetAdvisoryFromCacheV1(advisoryName)
 	if resp != nil {
 		utils.Log("advisoryName", advisoryName).Debug("found in cache")
 		return resp, nil // return data found in cache
 	}
 
-	resp, err := getAdvisoryFromDBV1(advisoryName) // search for data in database
+	resp, err := getAdvisoryFromDBV1(db, advisoryName) // search for data in database
 	if err != nil {
 		return nil, err
 	}
@@ -352,14 +354,14 @@ func getAdvisoryV1(advisoryName string) (*AdvisoryDetailResponseV1, error) {
 	return resp, nil
 }
 
-func getAdvisoryV2(advisoryName string) (*AdvisoryDetailResponseV2, error) {
+func getAdvisoryV2(db *gorm.DB, advisoryName string) (*AdvisoryDetailResponseV2, error) {
 	resp := tryGetAdvisoryFromCacheV2(advisoryName)
 	if resp != nil {
 		utils.Log("advisoryName", advisoryName).Debug("found in cache")
 		return resp, nil // return data found in cache
 	}
 
-	resp, err := getAdvisoryFromDBV2(advisoryName) // search for data in database
+	resp, err := getAdvisoryFromDBV2(db, advisoryName) // search for data in database
 	if err != nil {
 		return nil, err
 	}
