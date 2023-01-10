@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"app/base"
-	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/kafka"
@@ -40,7 +38,7 @@ func BaselineDeleteHandler(c *gin.Context) {
 		return
 	}
 
-	tx := database.Db.WithContext(base.Context).Begin()
+	tx := middlewares.DBFromContext(c).Begin()
 	defer tx.Rollback()
 
 	err = tx.Model(models.SystemPlatform{}).
@@ -53,7 +51,7 @@ func BaselineDeleteHandler(c *gin.Context) {
 		return
 	}
 
-	inventoryAIDs := kafka.GetInventoryIDsToEvaluate(&baselineID, account, true, nil)
+	inventoryAIDs := kafka.GetInventoryIDsToEvaluate(tx, &baselineID, account, true, nil)
 	deleteQuery := tx.Where("rh_account_id = ? AND id = ?", account, baselineID).
 		Delete(&models.Baseline{})
 	err = deleteQuery.Error
