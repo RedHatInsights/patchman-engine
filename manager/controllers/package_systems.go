@@ -48,14 +48,14 @@ type PackageSystemsResponse struct {
 	Meta  ListMeta            `json:"meta"`
 }
 
-func packagesByNameQuery(pkgName string) *gorm.DB {
-	return database.Db.Table("package p").
+func packagesByNameQuery(db *gorm.DB, pkgName string) *gorm.DB {
+	return db.Table("package p").
 		Joins("INNER JOIN package_name pn ON p.name_id = pn.id").
 		Where("pn.name = ?", pkgName)
 }
 
-func packageSystemsQuery(acc int, packageName string, packageIDs []int) *gorm.DB {
-	query := database.SystemPackages(database.Db, acc).
+func packageSystemsQuery(db *gorm.DB, acc int, packageName string, packageIDs []int) *gorm.DB {
+	query := database.SystemPackages(db, acc).
 		Select(PackageSystemsSelect).
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
@@ -66,7 +66,7 @@ func packageSystemsQuery(acc int, packageName string, packageIDs []int) *gorm.DB
 	return query
 }
 
-func packageSystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
+func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
 	account := c.GetInt(middlewares.KeyAccount)
 	var filters map[string]FilterData
 
@@ -77,7 +77,7 @@ func packageSystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
 	}
 
 	var packageIDs []int
-	if err := packagesByNameQuery(packageName).Pluck("p.id", &packageIDs).Error; err != nil {
+	if err := packagesByNameQuery(db, packageName).Pluck("p.id", &packageIDs).Error; err != nil {
 		LogAndRespError(c, err, "database error")
 		return nil, nil, nil, err
 	}
@@ -87,7 +87,7 @@ func packageSystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
 		return nil, nil, nil, errors.New("package not found")
 	}
 
-	query := packageSystemsQuery(account, packageName, packageIDs)
+	query := packageSystemsQuery(db, account, packageName, packageIDs)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return nil, nil, nil, err
@@ -121,7 +121,8 @@ func packageSystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /packages/{package_name}/systems [get]
 func PackageSystemsListHandler(c *gin.Context) {
-	query, meta, links, err := packageSystemsCommon(c)
+	db := middlewares.DBFromContext(c)
+	query, meta, links, err := packageSystemsCommon(db, c)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -164,7 +165,8 @@ func PackageSystemsListHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/packages/{package_name}/systems [get]
 func PackageSystemsListIDsHandler(c *gin.Context) {
-	query, _, _, err := packageSystemsCommon(c)
+	db := middlewares.DBFromContext(c)
+	query, _, _, err := packageSystemsCommon(db, c)
 	if err != nil {
 		return
 	} // Error handled in method itself

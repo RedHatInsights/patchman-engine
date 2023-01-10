@@ -38,8 +38,9 @@ func PackageSystemsExportHandler(c *gin.Context) {
 		return
 	}
 
+	db := middlewares.DBFromContext(c)
 	var packageIDs []int
-	if err := packagesByNameQuery(packageName).Pluck("p.id", &packageIDs).Error; err != nil {
+	if err := packagesByNameQuery(db, packageName).Pluck("p.id", &packageIDs).Error; err != nil {
 		LogAndRespError(c, err, "database error")
 		return
 	}
@@ -49,7 +50,7 @@ func PackageSystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	query := packageSystemsQuery(account, packageName, packageIDs)
+	query := packageSystemsQuery(db, account, packageName, packageIDs)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return
