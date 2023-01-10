@@ -1,10 +1,9 @@
 package cleaning
 
 import (
-	"app/base"
-	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/tasks"
 )
 
 var (
@@ -29,7 +28,7 @@ func deleteUnusedPackages() {
 	if !enableUnusedDataDelete {
 		return
 	}
-	tx := database.Db.WithContext(base.Context).Begin()
+	tx := tasks.CancelableDB().Begin()
 	defer tx.Rollback()
 
 	// remove unused packages not synced from vmaas
@@ -54,7 +53,7 @@ func deleteUnusedAdvisories() {
 	if !enableUnusedDataDelete {
 		return
 	}
-	tx := database.Db.WithContext(base.Context).Begin()
+	tx := tasks.CancelableDB().Begin()
 	defer tx.Rollback()
 
 	// remove unused advisories not synced from vmaas

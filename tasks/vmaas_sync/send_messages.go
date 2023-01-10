@@ -2,9 +2,9 @@ package vmaas_sync //nolint:revive,stylecheck
 
 import (
 	"app/base"
-	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
+	"app/tasks"
 	"time"
 )
 
@@ -38,7 +38,7 @@ func SendReevaluationMessages() error {
 
 func getAllInventoryIDs() ([]mqueue.EvalData, error) {
 	var inventoryAIDs []mqueue.EvalData
-	err := database.Db.Table("system_platform sp").
+	err := tasks.CancelableDB().Table("system_platform sp").
 		Select("sp.inventory_id, sp.rh_account_id, ra.org_id").
 		Joins("JOIN rh_account ra on ra.id = sp.rh_account_id").
 		Order("ra.id").

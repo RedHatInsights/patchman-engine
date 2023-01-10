@@ -24,9 +24,15 @@ func WaitAndExit() {
 	os.Exit(0)
 }
 
+// return database handler with base context
+// which will be properly cancled in case of service shutdown
+func CancelableDB() *gorm.DB {
+	return database.Db.WithContext(base.Context)
+}
+
 // Need to run code within a function, because defer can't be used in loops
 func WithTx(do func(db *gorm.DB) error) error {
-	tx := database.Db.WithContext(base.Context).Begin()
+	tx := CancelableDB().Begin()
 	defer tx.Rollback()
 	if err := do(tx); err != nil {
 		return err
