@@ -49,8 +49,8 @@ type SystemPackageDBLoad struct {
 	Updates []byte `json:"updates" query:"spkg.update_data" gorm:"column:updates"`
 }
 
-func systemPackageQuery(account int, inventoryID string) *gorm.DB {
-	query := database.SystemPackages(database.Db, account).
+func systemPackageQuery(db *gorm.DB, account int, inventoryID string) *gorm.DB {
+	query := database.SystemPackages(db, account).
 		Joins("LEFT JOIN strings AS descr ON p.description_hash = descr.id").
 		Joins("LEFT JOIN strings AS sum ON p.summary_hash = sum.id").
 		Select(SystemPackagesSelect).
@@ -94,7 +94,8 @@ func SystemPackagesHandler(c *gin.Context) {
 	}
 
 	var loaded []SystemPackageDBLoad
-	q := systemPackageQuery(account, inventoryID)
+	db := middlewares.DBFromContext(c)
+	q := systemPackageQuery(db, account, inventoryID)
 	q, meta, links, err := ListCommon(q, c, nil, SystemPackagesOpts)
 	if err != nil {
 		return
