@@ -47,32 +47,32 @@ type queryItem struct {
 
 var queryItemSelect = database.MustGetSelect(&queryItem{})
 
-func packagesQuery(filters map[string]FilterData, acc int) *gorm.DB {
+func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int) *gorm.DB {
 	var validCache bool
-	err := database.Db.Table("rh_account").
+	err := db.Table("rh_account").
 		Select("valid_package_cache").
 		Where("id = ?", acc).
 		Scan(&validCache).Error
 	if err == nil && validCache && len(filters) == 0 && enabledPackageCache {
 		// use cache only when tag filter is not used
-		q := database.Db.Table("package_account_data res").
+		q := db.Table("package_account_data res").
 			Select(PackagesSelect).
 			Joins("JOIN package_name pn ON res.package_name_id = pn.id").
 			Where("rh_account_id = ?", acc)
 		return q
 	}
-	systemsWithPkgsInstalledQ := database.Systems(database.Db, acc).
+	systemsWithPkgsInstalledQ := database.Systems(db, acc).
 		Select("id").
 		Where("sp.stale = false AND sp.packages_installed > 0")
 
 	// We need to apply tag filtering on subquery
 	systemsWithPkgsInstalledQ, _ = ApplyTagsFilter(filters, systemsWithPkgsInstalledQ, "sp.inventory_id")
-	subQ := database.SystemPackagesShort(database.Db, acc).
+	subQ := database.SystemPackagesShort(db, acc).
 		Select(queryItemSelect).
 		Where("spkg.system_id IN (?)", systemsWithPkgsInstalledQ).
 		Group("spkg.name_id")
 
-	return database.Db.
+	return db.
 		Select(PackagesSelect).
 		Table("package_name pn").
 		Joins("JOIN (?) res ON res.name_id = pn.id", subQ)
@@ -112,7 +112,9 @@ func PackagesListHandler(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	query := packagesQuery(filters, account)
+
+	db := middlewares.DBFromContext(c)
+	query := packagesQuery(db, filters, account)
 	if err != nil {
 		return
 	} // Error handled in method itself
