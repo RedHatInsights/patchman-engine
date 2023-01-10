@@ -35,13 +35,13 @@ type PackageVersionsResponse struct {
 	Meta  ListMeta             `json:"meta"`
 }
 
-func packagesNameID(pkgName string) *gorm.DB {
-	return database.Db.Table("package_name pn").
+func packagesNameID(db *gorm.DB, pkgName string) *gorm.DB {
+	return db.Table("package_name pn").
 		Where("pn.name = ?", pkgName)
 }
 
-func packageVersionsQuery(acc int, packageNameIDs []int) *gorm.DB {
-	query := database.SystemPackages(database.Db, acc).
+func packageVersionsQuery(db *gorm.DB, acc int, packageNameIDs []int) *gorm.DB {
+	query := database.SystemPackages(db, acc).
 		Distinct(PackageVersionSelect).
 		Where("sp.stale = false").
 		Where("spkg.name_id in (?)", packageNameIDs)
@@ -71,8 +71,9 @@ func PackageVersionsListHandler(c *gin.Context) {
 		return
 	}
 
+	db := middlewares.DBFromContext(c)
 	var packageNameIDs []int
-	if err := packagesNameID(packageName).Pluck("pn.id", &packageNameIDs).Error; err != nil {
+	if err := packagesNameID(db, packageName).Pluck("pn.id", &packageNameIDs).Error; err != nil {
 		LogAndRespError(c, err, "database error")
 		return
 	}
@@ -82,7 +83,7 @@ func PackageVersionsListHandler(c *gin.Context) {
 		return
 	}
 
-	query := packageVersionsQuery(account, packageNameIDs)
+	query := packageVersionsQuery(db, account, packageNameIDs)
 	// we don't support tags and filters for this endpoint
 	query, meta, links, err := ListCommon(query, c, nil, PackageVersionsOpts)
 	if err != nil {
