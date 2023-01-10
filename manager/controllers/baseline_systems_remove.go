@@ -1,14 +1,13 @@
 package controllers
 
 import (
-	"app/base"
-	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
 	"net/http"
 
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -41,7 +40,8 @@ func BaselineSystemsRemoveHandler(c *gin.Context) {
 		return
 	}
 
-	err := buildBaselineSystemsRemoveQuery(req.InventoryIDs, account)
+	db := middlewares.DBFromContext(c)
+	err := buildBaselineSystemsRemoveQuery(db, req.InventoryIDs, account)
 	if err != nil {
 		switch e := err.Error(); e {
 		case InvalidInventoryIDsErr:
@@ -55,7 +55,7 @@ func BaselineSystemsRemoveHandler(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func buildBaselineSystemsRemoveQuery(inventoryIDs []string,
+func buildBaselineSystemsRemoveQuery(db *gorm.DB, inventoryIDs []string,
 	accountID int) error {
 	if len(inventoryIDs) == 0 {
 		return errors.New(InvalidInventoryIDsErr)
@@ -65,7 +65,7 @@ func buildBaselineSystemsRemoveQuery(inventoryIDs []string,
 			return errors.New(InvalidInventoryIDsErr)
 		}
 	}
-	tx := database.Db.WithContext(base.Context).Begin()
+	tx := db.Begin()
 	defer tx.Rollback()
 
 	tx = tx.Model(models.SystemPlatform{}).
