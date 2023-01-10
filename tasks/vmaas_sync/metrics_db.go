@@ -1,8 +1,8 @@
 package vmaas_sync //nolint:revive,stylecheck
 
 import (
-	"app/base/database"
 	"app/base/utils"
+	"app/tasks"
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -51,7 +51,7 @@ func updateMetricsWithState(items []keyValue, metrics *prometheus.GaugeVec) {
 
 func getTableSizes() []keyValue {
 	var tableSizes []keyValue
-	err := database.Db.Raw(`select tablename as key, pg_total_relation_size(quote_ident(tablename)) as value
+	err := tasks.CancelableDB().Raw(`select tablename as key, pg_total_relation_size(quote_ident(tablename)) as value
         from (select * from pg_catalog.pg_tables where schemaname = 'public') t;`).
 		Find(&tableSizes).Error
 	if err != nil {
@@ -63,7 +63,7 @@ func getTableSizes() []keyValue {
 func getDatabaseSize() []keyValue {
 	dbName := utils.Cfg.DBName
 	var dbSize []keyValue
-	err := database.Db.Raw(
+	err := tasks.CancelableDB().Raw(
 		fmt.Sprintf(`SELECT 'database' as key, pg_database_size('%s') as value;`, dbName)).
 		Find(&dbSize).Error
 	if err != nil {
@@ -75,7 +75,7 @@ func getDatabaseSize() []keyValue {
 
 func getDatabaseProcesses() []keyValue {
 	var usenameCounts []keyValue
-	err := database.Db.Table("pg_stat_activity").
+	err := tasks.CancelableDB().Table("pg_stat_activity").
 		Select("COALESCE(usename, '-') as key, COUNT(*) as value, COALESCE(state, '-') state").
 		Group("key, state").Find(&usenameCounts).Error
 	if err != nil {

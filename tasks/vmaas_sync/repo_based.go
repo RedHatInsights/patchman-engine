@@ -6,6 +6,7 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"app/base/vmaas"
+	"app/tasks"
 	"net/http"
 	"time"
 )
@@ -46,7 +47,7 @@ func getRepoBasedInventoryIDs(repos []string) ([]mqueue.EvalData, error) {
 		return ids, nil
 	}
 
-	err := database.Db.Table("system_repo sr").
+	err := tasks.CancelableDB().Table("system_repo sr").
 		Joins("JOIN repo ON repo.id = sr.repo_id").
 		Joins("JOIN system_platform sp ON  sp.rh_account_id = sr.rh_account_id AND sp.id = sr.system_id").
 		Joins("JOIN rh_account ra ON ra.id = sp.rh_account_id").

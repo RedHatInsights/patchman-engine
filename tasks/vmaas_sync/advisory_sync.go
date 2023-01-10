@@ -7,6 +7,7 @@ import (
 	"app/base/types"
 	"app/base/utils"
 	"app/base/vmaas"
+	"app/tasks"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -52,7 +53,7 @@ func getAdvisoryTypes() (map[string]int, error) {
 	var advisoryTypesArr []models.AdvisoryType
 	advisoryTypes := map[string]int{}
 
-	err := database.Db.Find(&advisoryTypesArr).Error
+	err := tasks.CancelableDB().Find(&advisoryTypesArr).Error
 	if err != nil {
 		return nil, errors.WithMessage(err, "Loading advisory types")
 	}
@@ -72,7 +73,7 @@ func getAdvisorySeverities() (map[string]int, error) {
 	var severitiesArr []models.AdvisorySeverity
 	severities := map[string]int{}
 
-	err := database.Db.Find(&severitiesArr).Error
+	err := tasks.CancelableDB().Find(&severitiesArr).Error
 	if err != nil {
 		return nil, errors.WithMessage(err, "Loading advisory types")
 	}
@@ -229,7 +230,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 		"public_date", "modified_date", "url", "advisory_type_id", "severity_id", "cve_list", "package_data",
 		"reboot_required", "release_versions", "synced"}
 
-	tx := database.Db.Table("advisory_metadata")
+	tx := tasks.CancelableDB().Table("advisory_metadata")
 	errSelect := tx.Where("name IN ?", names).Find(&existingAdvisories).Error
 	if errSelect != nil {
 		utils.Log("err", errSelect).Warn("couldn't find advisory_metadata for update")
@@ -249,13 +250,15 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 			toStore = append(toStore, a)
 		}
 	}
+
+	db := tasks.CancelableDB()
 	for _, u := range toUpdate {
-		if err := database.Db.Table("advisory_metadata").Select(updateCols).Updates(u).Error; err != nil {
+		if err := db.Table("advisory_metadata").Select(updateCols).Updates(u).Error; err != nil {
 			utils.Log("err", err).Error("couldn't update advisory_metadata")
 		}
 	}
 
-	tx = database.OnConflictUpdate(database.Db, "name", updateCols...)
+	tx = database.OnConflictUpdate(db, "name", updateCols...)
 	err = tx.CreateInBatches(&toStore, SyncBatchSize).Error
 	if err != nil {
 		return errors.WithMessage(err, "Storing advisories")

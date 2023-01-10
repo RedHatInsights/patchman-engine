@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/tasks"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -161,7 +162,7 @@ var querySystemCountColumns = database.MustGetSelect(&systemCountColumns{})
 // Result is loaded into the map {"stale_on:last1D": 12, "stale_off:last1D": 3, ...}.
 func getSystemCounts() (map[systemsCntLabels]int, error) {
 	var row systemCountColumns
-	err := database.Db.Model(&models.SystemPlatform{}).
+	err := tasks.CancelableDB().Model(&models.SystemPlatform{}).
 		Select(querySystemCountColumns).Take(&row).Error
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to load systems count metrics")
@@ -216,7 +217,7 @@ var queryAdvisoryColumns = database.MustGetSelect(&advisoryColumns{})
 
 func getAdvisoryCounts() (other, enh, bug, sec int64, err error) {
 	var row advisoryColumns
-	err = database.Db.Model(&models.AdvisoryMetadata{}).
+	err = tasks.CancelableDB().Model(&models.AdvisoryMetadata{}).
 		Select(queryAdvisoryColumns).Take(&row).Error
 	if err != nil {
 		return 0, 0, 0, 0, errors.Wrap(err, "unable to get advisory type counts")
@@ -226,7 +227,7 @@ func getAdvisoryCounts() (other, enh, bug, sec int64, err error) {
 }
 
 func getPackageCounts() (count int64, err error) {
-	err = database.Db.Model(&models.Package{}).Count(&count).Error
+	err = tasks.CancelableDB().Model(&models.Package{}).Count(&count).Error
 	if err != nil {
 		return 0, errors.Wrap(err, "Unable to get package table items count")
 	}
@@ -234,7 +235,7 @@ func getPackageCounts() (count int64, err error) {
 }
 
 func getPackageNameCounts() (count int64, err error) {
-	err = database.Db.Model(&models.PackageName{}).Count(&count).Error
+	err = tasks.CancelableDB().Model(&models.PackageName{}).Count(&count).Error
 	if err != nil {
 		return 0, errors.Wrap(err, "Unable to get package_name table items count")
 	}
@@ -262,7 +263,7 @@ type SystemAdvisoryStats struct {
 
 // Old query was inserting ORDER BY "system_platform"."max_all" AND max_all
 func getSystemAdvisorieStats() (stats SystemAdvisoryStats, err error) {
-	err = database.Db.Raw("SELECT MAX(advisory_count_cache) as max_all, " +
+	err = tasks.CancelableDB().Raw("SELECT MAX(advisory_count_cache) as max_all, " +
 		"MAX(advisory_enh_count_cache) as max_enh,MAX(advisory_bug_count_cache) " +
 		"as max_bug, MAX(advisory_sec_count_cache) as max_sec FROM " +
 		"system_platform ORDER BY max_all LIMIT 1").Scan(&stats).Error

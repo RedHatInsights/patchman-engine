@@ -3,6 +3,7 @@ package vmaas_sync //nolint:revive,stylecheck
 import (
 	"app/base/database"
 	"app/base/utils"
+	"app/tasks"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -57,7 +58,7 @@ func updateCyndiData() {
 
 func getCyndiData() (tagStats map[string]int64, systemStats map[string]int64, err error) {
 	var row cyndiMetricColumns
-	err = database.Db.Table("inventory.hosts").
+	err = tasks.CancelableDB().Table("inventory.hosts").
 		Select(queryCyndiMetricColumns).Take(&row).Error
 	if err != nil {
 		utils.Log("err", err.Error()).Error("unable to update cyndi metrics")

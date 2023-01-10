@@ -6,6 +6,7 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/base/vmaas"
+	"app/tasks"
 	"crypto/sha256"
 	"net/http"
 	"time"
@@ -108,20 +109,20 @@ func vmaasPkgListRequest(iPage int, modifiedSince *string) (*vmaas.PkgListRespon
 }
 
 func storePkgListData(vmaasData []vmaas.PkgListItem) error {
-	if err := storeStringsFromPkgListItems(database.Db, vmaasData); err != nil {
+	if err := storeStringsFromPkgListItems(tasks.CancelableDB(), vmaasData); err != nil {
 		return errors.Wrap(err, "Storing package strings failed")
 	}
 
-	packageNameIDMap, err := storePackageNamesFromPkgListItems(database.Db, vmaasData)
+	packageNameIDMap, err := storePackageNamesFromPkgListItems(tasks.CancelableDB(), vmaasData)
 	if err != nil {
 		return errors.Wrap(err, "Storing package names failed")
 	}
 
-	if err = storePackageDetailsFrmPkgListItems(database.Db, packageNameIDMap, vmaasData); err != nil {
+	if err = storePackageDetailsFrmPkgListItems(tasks.CancelableDB(), packageNameIDMap, vmaasData); err != nil {
 		return errors.Wrap(err, "Storing package details failed")
 	}
 
-	if err = updatePackageNameSummary(database.Db, packageNameIDMap); err != nil {
+	if err = updatePackageNameSummary(tasks.CancelableDB(), packageNameIDMap); err != nil {
 		return errors.Wrap(err, "Updating package name summaries failed")
 	}
 	return nil

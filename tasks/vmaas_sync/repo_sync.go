@@ -1,7 +1,7 @@
 package vmaas_sync //nolint:revive,stylecheck
 
 import (
-	"app/base/database"
+	"app/tasks"
 	"time"
 
 	"github.com/pkg/errors"
@@ -18,12 +18,12 @@ func syncRepos(syncStart time.Time) error {
 		return nil
 	}
 
-	err = database.Db.Exec("UPDATE repo SET third_party = false WHERE name in (?)", redhatRepos).Error
+	err = tasks.CancelableDB().Exec("UPDATE repo SET third_party = false WHERE name in (?)", redhatRepos).Error
 	if err != nil {
 		return errors.WithMessage(err, "Updating repo third_party flag for redhat content")
 	}
 
-	err = database.Db.Exec("UPDATE repo SET third_party = true WHERE name NOT IN (?)", redhatRepos).Error
+	err = tasks.CancelableDB().Exec("UPDATE repo SET third_party = true WHERE name NOT IN (?)", redhatRepos).Error
 	if err != nil {
 		return errors.WithMessage(err, "Updating repo third_party flag for third party content")
 	}
