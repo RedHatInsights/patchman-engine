@@ -42,7 +42,8 @@ import (
 // @Router /export/systems [get]
 func SystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
-	query := querySystems(account)
+	db := middlewares.DBFromContext(c)
+	query := querySystems(db, account)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return

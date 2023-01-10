@@ -127,7 +127,8 @@ func systemSubtotals(tx *gorm.DB) (total int, subTotals map[string]int, err erro
 func systemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
 	var err error
 	account := c.GetInt(middlewares.KeyAccount)
-	query := querySystems(account)
+	db := middlewares.DBFromContext(c)
+	query := querySystems(db, account)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return nil, nil, nil, err
@@ -264,8 +265,8 @@ func SystemsListIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func querySystems(account int) *gorm.DB {
-	return database.Systems(database.Db, account).
+func querySystems(db *gorm.DB, account int) *gorm.DB {
+	return database.Systems(db, account).
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
 		Select(SystemsSelect)
