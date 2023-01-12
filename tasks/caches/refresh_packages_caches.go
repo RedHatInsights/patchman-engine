@@ -55,8 +55,14 @@ func RefreshPackagesCaches(accID *int) error {
 
 func accountsWithoutCache() ([]int, error) {
 	accs := []int{}
+	// order account ids by partition number in system_package (128 partitions)
+	// so that we read data sequentially and not jump from one partition to another and back
 	err := tasks.WithTx(func(tx *gorm.DB) error {
-		return tx.Table("rh_account").Select("id").Where("valid_package_cache = FALSE").Find(&accs).Error
+		return tx.Table("rh_account").
+			Select("id").
+			Where("valid_package_cache = FALSE").
+			Order("hash_partition_id(id, 128), id").
+			Find(&accs).Error
 	})
 	return accs, errors.Wrap(err, "failed to get accounts without cache")
 }
