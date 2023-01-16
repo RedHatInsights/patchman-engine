@@ -50,7 +50,6 @@ func systemsAdvisoriesQuery(db *gorm.DB, acc int, systems []SystemID, advisories
 		// without this join it can happen that we display less items on some pages
 		Joins(`LEFT JOIN system_advisories sa ON sa.system_id = sp.id
 			AND sa.rh_account_id = sp.rh_account_id AND sa.rh_account_id = ?`, acc).
-		Where("when_patched IS NULL").
 		Order("sp.inventory_id")
 	if len(systems) > 0 {
 		sysq = sysq.Where("sp.inventory_id::text in (?)", systems)
@@ -75,7 +74,7 @@ func systemsAdvisoriesQuery(db *gorm.DB, acc int, systems []SystemID, advisories
 	} else {
 		query = query.Joins("LEFT JOIN advisory_metadata am ON am.id = sa.advisory_id")
 	}
-	query = query.Where("when_patched IS NULL").Order("sp.inventory_id, am.id")
+	query = query.Order("sp.inventory_id, am.id")
 
 	return query, total, lim, off, nil
 }
@@ -87,7 +86,6 @@ func advisoriesSystemsQuery(db *gorm.DB, acc int, systems []SystemID, advisories
 		// we need to join system_advisories to make `limit` work properly
 		// without this join it can happen that we display less items on some pages
 		Joins("JOIN system_advisories sa ON am.id = sa.advisory_id AND sa.rh_account_id = ?", acc).
-		Where("when_patched IS NULL").
 		Order("am.name, am.id")
 	if len(advisories) > 0 {
 		advq = advq.Where("am.name in (?)", advisories)
@@ -112,7 +110,7 @@ func advisoriesSystemsQuery(db *gorm.DB, acc int, systems []SystemID, advisories
 	} else {
 		query = query.Joins(spJoin)
 	}
-	query = query.Where("when_patched IS NULL").Order("am.name, sp.inventory_id")
+	query = query.Order("am.name, sp.inventory_id")
 	return query, total, lim, off, nil
 }
 

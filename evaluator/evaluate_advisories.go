@@ -104,11 +104,7 @@ func getNewAndUnpatchedAdvisories(reported map[string]bool, stored map[string]mo
 	newAdvisories := []string{}
 	unpatchedAdvisories := []int64{}
 	for reportedAdvisory := range reported {
-		if storedAdvisory, found := stored[reportedAdvisory]; found {
-			if storedAdvisory.WhenPatched != nil { // this advisory was already patched and now is un-patched again
-				unpatchedAdvisories = append(unpatchedAdvisories, storedAdvisory.AdvisoryID)
-			}
-		} else {
+		if _, found := stored[reportedAdvisory]; !found {
 			newAdvisories = append(newAdvisories, reportedAdvisory)
 		}
 	}
@@ -119,12 +115,6 @@ func getPatchedAdvisories(reported map[string]bool, stored map[string]models.Sys
 	patchedAdvisories := make([]int64, 0, len(stored))
 	for storedAdvisory, storedAdvisoryObj := range stored {
 		if _, found := reported[storedAdvisory]; found {
-			continue
-		}
-
-		// advisory contained in reported - it's patched
-		if storedAdvisoryObj.WhenPatched != nil {
-			// it's already marked as patched
 			continue
 		}
 
@@ -205,7 +195,7 @@ func calcAdvisoryChanges(system *models.SystemPlatform, patched, unpatched []int
 func deleteOldSystemAdvisories(tx *gorm.DB, accountID int, systemID int64, patched []int64) error {
 	err := tx.Where("rh_account_id = ? ", accountID).
 		Where("system_id = ?", systemID).
-		Where("when_patched IS NOT NULL or advisory_id in (?)", patched).
+		Where("advisory_id in (?)", patched).
 		Delete(&models.SystemAdvisories{}).Error
 	return err
 }

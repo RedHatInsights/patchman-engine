@@ -12,12 +12,10 @@ import (
 	"os"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
-var testDate, _ = time.Parse(time.RFC3339, "2020-01-01T01-01-01")
 var systemID = int64(12)
 var rhAccountID = 3
 
@@ -49,7 +47,7 @@ func TestEvaluate(t *testing.T) {
 	database.DeleteAdvisoryAccountData(t, rhAccountID, patchingSystemAdvisoryIDs)
 	database.DeleteSystemPackages(t, systemID, expectedPackageIDs...)
 	database.DeleteSystemRepos(t, rhAccountID, systemID, systemRepoIDs)
-	database.CreateSystemAdvisories(t, rhAccountID, systemID, oldSystemAdvisoryIDs, nil)
+	database.CreateSystemAdvisories(t, rhAccountID, systemID, oldSystemAdvisoryIDs)
 	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
 	database.CreateSystemRepos(t, rhAccountID, systemID, systemRepoIDs)
 	database.CheckCachesValid(t)
@@ -62,7 +60,7 @@ func TestEvaluate(t *testing.T) {
 	assert.NoError(t, err)
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
-	database.CheckSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
+	database.CheckSystemAdvisories(t, systemID, advisoryIDs)
 	database.CheckSystemPackages(t, systemID, len(expectedPackageIDs), expectedPackageIDs...)
 	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 2, 1, 1,
 		0, 2, 2, false)
@@ -111,7 +109,7 @@ func TestEvaluateYum(t *testing.T) {
 
 	database.DeleteSystemAdvisories(t, sysID, expectedAdvisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
-	database.CreateSystemAdvisories(t, rhAccountID, sysID, oldSystemAdvisoryIDs, nil)
+	database.CreateSystemAdvisories(t, rhAccountID, sysID, oldSystemAdvisoryIDs)
 	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
 	database.CheckCachesValid(t)
 

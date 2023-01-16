@@ -189,10 +189,9 @@ do $$
       rnd_date1 := now() - make_interval(days => (rnd*365)::int);
       rnd_date2 := rnd_date1 + make_interval(days => (rnd*100)::int);
       insert into system_advisories
-        (rh_account_id, system_id, advisory_id, first_reported, when_patched, status_id)
+        (rh_account_id, system_id, advisory_id, first_reported, status_id)
       (select
         row.rh_account_id, row.id, am.id, rnd_date1 - make_interval(days => mod(am.id, 100)),
-        case when mod(am.id, 100) < patched_pct then rnd_date2 - make_interval(days => mod(am.id, 100)) else NULL end,
         mod(row.id, stat)
         from advisory_metadata am
        limit rnd::int offset rnd2::int)

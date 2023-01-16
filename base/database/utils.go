@@ -26,8 +26,7 @@ func Systems(tx *gorm.DB, accountID int) *gorm.DB {
 
 func SystemAdvisories(tx *gorm.DB, accountID int) *gorm.DB {
 	return Systems(tx, accountID).
-		Joins("JOIN system_advisories sa on sa.system_id = sp.id AND sa.rh_account_id = ?", accountID).
-		Where("when_patched IS NULL")
+		Joins("JOIN system_advisories sa on sa.system_id = sp.id AND sa.rh_account_id = ?", accountID)
 }
 
 func SystemPackagesShort(tx *gorm.DB, accountID int) *gorm.DB {

@@ -51,7 +51,7 @@ func CheckCachesValidRet() (bool, error) {
 	err = tx.Select("sp.rh_account_id, sa.advisory_id, count(*)").
 		Table("system_advisories sa").
 		Joins("JOIN system_platform sp ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id").
-		Where("sa.when_patched IS NULL AND sp.stale = false AND sp.last_evaluation IS NOT NULL").
+		Where("sp.stale = false AND sp.last_evaluation IS NOT NULL").
 		Order("sp.rh_account_id, sa.advisory_id").
 		Group("sp.rh_account_id, sa.advisory_id").
 		Find(&counts).Error
@@ -189,24 +189,22 @@ func CreateReportedAdvisories(reportedAdvisories ...string) map[string]bool {
 	return reportedAdvisoriesMap
 }
 
-func CreateStoredAdvisories(advisoryPatched map[int64]*time.Time) map[string]models.SystemAdvisories {
+func CreateStoredAdvisories(advisoryPatched []int64) map[string]models.SystemAdvisories {
 	systemAdvisoriesMap := map[string]models.SystemAdvisories{}
-	for advisoryID, patched := range advisoryPatched {
+	for _, advisoryID := range advisoryPatched {
 		systemAdvisoriesMap["ER-"+strconv.FormatInt(advisoryID, 10)] = models.SystemAdvisories{
-			WhenPatched: patched,
-			AdvisoryID:  advisoryID}
+			AdvisoryID: advisoryID}
 	}
 	return systemAdvisoriesMap
 }
 
-func CreateSystemAdvisories(t *testing.T, rhAccountID int, systemID int64, advisoryIDs []int64,
-	whenPatched *time.Time) {
+func CreateSystemAdvisories(t *testing.T, rhAccountID int, systemID int64, advisoryIDs []int64) {
 	for _, advisoryID := range advisoryIDs {
 		err := Db.Create(&models.SystemAdvisories{
-			RhAccountID: rhAccountID, SystemID: systemID, AdvisoryID: advisoryID, WhenPatched: whenPatched}).Error
+			RhAccountID: rhAccountID, SystemID: systemID, AdvisoryID: advisoryID}).Error
 		assert.Nil(t, err)
 	}
-	CheckSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, whenPatched)
+	CheckSystemAdvisories(t, systemID, advisoryIDs)
 }
 
 func CreateAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int64,
@@ -227,8 +225,7 @@ func CreateSystemRepos(t *testing.T, rhAccountID int, systemID int64, repoIDs []
 	CheckSystemRepos(t, rhAccountID, systemID, repoIDs)
 }
 
-func CheckSystemAdvisoriesWhenPatched(t *testing.T, systemID int64, advisoryIDs []int64,
-	whenPatched *time.Time) {
+func CheckSystemAdvisories(t *testing.T, systemID int64, advisoryIDs []int64) {
 	var systemAdvisories []models.SystemAdvisories
 	err := Db.Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
 		Find(&systemAdvisories).Error
@@ -236,11 +233,6 @@ func CheckSystemAdvisoriesWhenPatched(t *testing.T, systemID int64, advisoryIDs 
 	assert.Equal(t, len(advisoryIDs), len(systemAdvisories))
 	for _, systemAdvisory := range systemAdvisories {
 		assert.NotNil(t, systemAdvisory.FirstReported)
-		if whenPatched == nil {
-			assert.Nil(t, systemAdvisory.WhenPatched)
-		} else {
-			assert.Equal(t, systemAdvisory.WhenPatched.String(), whenPatched.String())
-		}
 	}
 }
 
@@ -331,16 +323,6 @@ func DeleteNewlyAddedAdvisories(t *testing.T) {
 	var cnt int64
 	assert.Nil(t, query.Count(&cnt).Error)
 	assert.Equal(t, int64(0), cnt)
-}
-
-func UpdateSystemAdvisoriesWhenPatched(t *testing.T, systemID, accountID int, advisoryIDs []int64,
-	whenPatched *time.Time) {
-	err := Db.Model(models.SystemAdvisories{}).
-		Where("system_id = ?", systemID).
-		Where("rh_account_id = ?", accountID).
-		Where("advisory_id IN (?)", advisoryIDs).
-		Update("when_patched", whenPatched).Error
-	assert.Nil(t, err)
 }
 
 func CreateBaselineWithConfig(t *testing.T, name string, inventoryIDs []string, configBytes []byte) int64 {

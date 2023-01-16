@@ -179,7 +179,6 @@ type SystemAdvisories struct {
 	AdvisoryID    int64 `gorm:"primary_key"`
 	Advisory      AdvisoryMetadata
 	FirstReported *time.Time
-	WhenPatched   *time.Time
 	StatusID      *int
 }
 

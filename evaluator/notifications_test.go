@@ -53,7 +53,7 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 
 	database.DeleteSystemAdvisories(t, systemID, expectedAdvisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
-	database.CreateSystemAdvisories(t, rhAccountID, systemID, oldSystemAdvisoryIDs, nil)
+	database.CreateSystemAdvisories(t, rhAccountID, systemID, oldSystemAdvisoryIDs)
 	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
 	database.CheckCachesValid(t)
 	database.CheckAdvisoriesAccountDataNotified(t, rhAccountID, oldSystemAdvisoryIDs, false)
