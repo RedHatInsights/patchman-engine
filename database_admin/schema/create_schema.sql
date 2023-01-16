@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (99, false);
+VALUES (100, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -117,7 +117,6 @@ BEGIN
              -- Filter advisory_account_data only for advisories affectign this system & belonging to system account
         WHERE aad.rh_account_id = NEW.rh_account_id
           AND sa.system_id = NEW.id AND sa.rh_account_id = NEW.rh_account_id
-          AND sa.when_patched IS NULL
         ORDER BY aad.advisory_id FOR UPDATE OF aad),
          -- Where count > 0, update existing rows
          update AS (
@@ -144,7 +143,6 @@ BEGIN
     SELECT sa.advisory_id, NEW.rh_account_id, 1
     FROM system_advisories sa
     WHERE sa.system_id = NEW.id AND sa.rh_account_id = NEW.rh_account_id
-      AND sa.when_patched IS NULL
       AND change > 0
       -- We system_advisory pairs which don't already have rows in to_update_advisories
       AND (NEW.rh_account_id, sa.advisory_id) NOT IN (
@@ -168,7 +166,6 @@ BEGIN
              JOIN advisory_metadata am ON sa.advisory_id = am.id
     WHERE (am.advisory_type_id = advisory_type_id_in OR advisory_type_id_in IS NULL)
       AND sa.system_id = system_id_in
-      AND sa.when_patched IS NULL
     INTO result_cnt;
     RETURN result_cnt;
 END;
@@ -193,7 +190,6 @@ BEGIN
            ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id
         WHERE sp.last_evaluation IS NOT NULL
           AND sp.stale = FALSE
-          AND sa.when_patched IS NULL
           AND (sa.advisory_id = ANY (advisory_ids_in) OR advisory_ids_in IS NULL)
           AND (sp.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
         GROUP BY sa.advisory_id, sp.rh_account_id
@@ -241,7 +237,7 @@ BEGIN
                COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 3) as security
           FROM system_platform asp  -- this table ensures even systems without any system_advisories are in results
           LEFT JOIN system_advisories sa
-            ON asp.rh_account_id = sa.rh_account_id AND asp.id = sa.system_id and sa.when_patched IS NULL
+            ON asp.rh_account_id = sa.rh_account_id AND asp.id = sa.system_id
           LEFT JOIN advisory_metadata am
             ON sa.advisory_id = am.id
          WHERE (asp.id = system_id_in OR system_id_in IS NULL)
@@ -836,7 +832,6 @@ CREATE TABLE IF NOT EXISTS system_advisories
     system_id      BIGINT                   NOT NULL,
     advisory_id    BIGINT                   NOT NULL,
     first_reported TIMESTAMP WITH TIME ZONE NOT NULL,
-    when_patched   TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     status_id      INT                      DEFAULT 0,
     PRIMARY KEY (rh_account_id, system_id, advisory_id),
     CONSTRAINT advisory_metadata_id
