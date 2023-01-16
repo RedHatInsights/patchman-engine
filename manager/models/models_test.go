@@ -5,8 +5,9 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // test association SystemAdvisories.Advisory
@@ -18,6 +19,6 @@ func TestSystemAdvisories(t *testing.T) {
 	err := database.Db.Model(models.SystemAdvisories{}).Preload("Advisory").
 		Where("system_id = ?", 1).Find(&systemAdvisories).Error
 	assert.Nil(t, err)
-	assert.Equal(t, 9, len(systemAdvisories))
+	assert.Equal(t, 8, len(systemAdvisories))
 	assert.Equal(t, "RH-1", systemAdvisories[0].Advisory.Name)
 }

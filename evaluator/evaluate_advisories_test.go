@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -62,28 +61,28 @@ func TestGetStoredAdvisoriesMap(t *testing.T) {
 	systemAdvisories, err := getStoredAdvisoriesMap(database.Db, 1, 1)
 	assert.Nil(t, err)
 	assert.NotNil(t, systemAdvisories)
-	assert.Equal(t, 9, len(systemAdvisories))
+	assert.Equal(t, 8, len(systemAdvisories))
 	assert.Equal(t, "RH-1", (systemAdvisories)["RH-1"].Advisory.Name)
 	assert.Equal(t, "adv-1-des", (systemAdvisories)["RH-1"].Advisory.Description)
 	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", (systemAdvisories)["RH-1"].Advisory.PublicDate.String())
 }
 
 func TestGetNewAndUnpatchedAdvisories(t *testing.T) {
-	stored := database.CreateStoredAdvisories(map[int64]*time.Time{1: &testDate, 2: nil, 3: nil})
+	stored := database.CreateStoredAdvisories([]int64{1, 2, 3})
 	reported := database.CreateReportedAdvisories("ER-1", "ER-3", "ER-4")
 	news, unpatched := getNewAndUnpatchedAdvisories(reported, stored)
 	assert.Equal(t, 1, len(news))
 	assert.Equal(t, "ER-4", news[0])
-	assert.Equal(t, 1, len(unpatched))
-	assert.Equal(t, int64(1), unpatched[0])
+	assert.Equal(t, 0, len(unpatched))
 }
 
 func TestGetPatchedAdvisories(t *testing.T) {
-	stored := database.CreateStoredAdvisories(map[int64]*time.Time{1: &testDate, 2: nil, 3: nil})
+	stored := database.CreateStoredAdvisories([]int64{1, 2, 3})
 	reported := database.CreateReportedAdvisories("ER-3", "ER-4")
 	patched := getPatchedAdvisories(reported, stored)
-	assert.Equal(t, 1, len(patched))
-	assert.Equal(t, int64(2), patched[0])
+	assert.Equal(t, 2, len(patched))
+	assert.Equal(t, int64(1), patched[0])
+	assert.Equal(t, int64(2), patched[1])
 }
 
 func TestUpdatePatchedSystemAdvisories(t *testing.T) {
@@ -92,16 +91,14 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 
 	system := models.SystemPlatform{ID: 12, RhAccountID: 3}
 	advisoryIDs := []int64{2, 3, 4}
-	database.CreateSystemAdvisories(t, system.RhAccountID, system.ID, advisoryIDs, nil)
+	database.CreateSystemAdvisories(t, system.RhAccountID, system.ID, advisoryIDs)
 	database.CreateAdvisoryAccountData(t, system.RhAccountID, advisoryIDs, 1)
-	database.UpdateSystemAdvisoriesWhenPatched(t, int(system.ID), system.RhAccountID, advisoryIDs, &testDate)
 	// Update as-if the advisories had become patched
 	err := updateAdvisoryAccountData(database.Db, &system, advisoryIDs, []int64{})
 	assert.NoError(t, err)
 
-	database.CheckSystemAdvisoriesWhenPatched(t, system.ID, advisoryIDs, &testDate)
+	database.CheckSystemAdvisories(t, system.ID, advisoryIDs)
 	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 0)
-	database.UpdateSystemAdvisoriesWhenPatched(t, int(system.ID), system.RhAccountID, advisoryIDs, nil)
 
 	// Update as-if the advisories had become unpatched
 	err = updateAdvisoryAccountData(database.Db, &system, []int64{}, advisoryIDs)
@@ -131,7 +128,7 @@ func TestEnsureSystemAdvisories(t *testing.T) {
 	advisoryIDs := []int64{2, 3, 4}
 	err := ensureSystemAdvisories(database.Db, rhAccountID, systemID, advisoryIDs)
 	assert.Nil(t, err)
-	database.CheckSystemAdvisoriesWhenPatched(t, systemID, advisoryIDs, nil)
+	database.CheckSystemAdvisories(t, systemID, advisoryIDs)
 	database.DeleteSystemAdvisories(t, systemID, advisoryIDs)
 }
 
