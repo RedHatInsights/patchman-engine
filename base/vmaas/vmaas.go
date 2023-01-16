@@ -2,6 +2,7 @@ package vmaas
 
 import (
 	"app/base/types"
+	"sort"
 	"strings"
 )
 
@@ -71,7 +72,23 @@ func (o *UpdatesV2ResponseUpdateList) GetAvailableUpdates() []UpdatesV2ResponseA
 		var ret []UpdatesV2ResponseAvailableUpdates
 		return ret
 	}
-	return *o.AvailableUpdates
+	updates := *o.AvailableUpdates
+	sort.Slice(updates, func(i, j int) bool {
+		// `less` function
+		updatesI := updates[i]
+		updatesJ := updates[j]
+		if updatesI.Package == nil && updatesJ.Package != nil {
+			return true
+		}
+		if updatesJ.Package == nil && updatesI.Package != nil {
+			return false
+		}
+		if updatesJ.Package == nil && updatesI.Package == nil {
+			return true
+		}
+		return *updatesI.Package < *updatesJ.Package
+	})
+	return updates
 }
 
 type UpdatesV2ResponseAvailableUpdates struct {

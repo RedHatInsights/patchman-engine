@@ -223,6 +223,7 @@ objects:
         - {name: MAX_EVAL_GOROUTINES, value: '${MAX_EVAL_GOROUTINES_UPLOAD}'}
         - {name: ENABLE_PAYLOAD_TRACKER, value: '${ENABLE_PAYLOAD_TRACKER}'}
         - {name: ENABLE_INSTANT_NOTIFICATIONS, value: '${ENABLE_INSTANT_NOTIFICATIONS}'}
+        - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_UPLOAD}', memory: '${RES_LIMIT_MEM_EVALUATOR_UPLOAD}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_UPLOAD}', memory: '${RES_REQUEST_MEM_EVALUATOR_UPLOAD}'}
@@ -286,6 +287,7 @@ objects:
         - {name: MAX_EVAL_GOROUTINES, value: '${MAX_EVAL_GOROUTINES_RECALC}'}
         - {name: ENABLE_PAYLOAD_TRACKER, value: 'false'}  # we don't need to send payload tracker messages from recalc
         - {name: ENABLE_INSTANT_NOTIFICATIONS, value: '${ENABLE_INSTANT_NOTIFICATIONS}'}
+        - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_RECALC}', memory: '${RES_LIMIT_MEM_EVALUATOR_RECALC}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_RECALC}', memory: '${RES_REQUEST_MEM_EVALUATOR_RECALC}'}
@@ -552,6 +554,9 @@ parameters:
 - {name: RES_LIMIT_MEM_LISTENER, value: 256Mi}
 - {name: RES_REQUEST_CPU_LISTENER, value: 250m}
 - {name: RES_REQUEST_MEM_LISTENER, value: 256Mi}
+
+# Evaluator
+- {name: USE_VMAAS_GO, value: 'false'}
 
 # Evaluator - upload
 - {name: REPLICAS_EVALUATOR_UPLOAD, value: '1'}

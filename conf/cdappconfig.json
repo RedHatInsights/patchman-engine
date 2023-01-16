@@ -52,7 +52,13 @@
         {
             "app": "vmaas",
             "hostname": "platform",
-            "name": "webapp",
+            "name": "webapp-service",
+            "port": 9001
+        },
+        {
+            "app": "vmaas",
+            "hostname": "platform",
+            "name": "webapp-go",
             "port": 9001
         },
         {
