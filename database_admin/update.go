@@ -4,7 +4,6 @@ import (
 	"app/base/utils"
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -19,7 +18,7 @@ func execOrPanic(db *sql.DB, query string, args ...interface{}) {
 }
 
 func execFromFile(db *sql.DB, filepath string) {
-	query, err := ioutil.ReadFile(filepath)
+	query, err := os.ReadFile(filepath)
 	if err != nil {
 		panic(err)
 	}

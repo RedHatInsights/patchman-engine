@@ -2,8 +2,8 @@ package docs
 
 import (
 	"app/base/utils"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -79,7 +79,7 @@ func handleOpenapiAdminSpec(c *gin.Context) {
 }
 
 func filterOpenAPI(config EndpointsConfig, inputOpenapiPath, outputOpenapiPath string) (removedPaths int) {
-	doc, err := ioutil.ReadFile(inputOpenapiPath)
+	doc, err := os.ReadFile(inputOpenapiPath)
 	panicErr(err)
 
 	sw, err := openapi3.NewLoader().LoadFromData(doc)
@@ -98,7 +98,7 @@ func filterOpenAPI(config EndpointsConfig, inputOpenapiPath, outputOpenapiPath s
 	outputBytes, err := sw.MarshalJSON()
 	panicErr(err)
 
-	err = ioutil.WriteFile(outputOpenapiPath, outputBytes, 0600)
+	err = os.WriteFile(outputOpenapiPath, outputBytes, 0600)
 	panicErr(err)
 	return removedPaths
 }

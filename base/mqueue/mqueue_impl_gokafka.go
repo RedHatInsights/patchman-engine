@@ -7,7 +7,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -163,7 +163,7 @@ func getSaslMechanism() sasl.Mechanism {
 
 func caCertTLSConfigFromEnv() *tls.Config {
 	caCertPath := utils.FailIfEmpty(utils.Cfg.KafkaSslCert, "KAFKA_SSL_CERT")
-	caCert, err := ioutil.ReadFile(caCertPath)
+	caCert, err := os.ReadFile(caCertPath)
 	if err != nil {
 		panic(err)
 	}

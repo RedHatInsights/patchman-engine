@@ -5,7 +5,6 @@ import (
 	"app/base/types"
 	"app/base/utils"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -127,7 +126,7 @@ func PluckInt(tx *gorm.DB, columnName string) int {
 }
 
 func ExecFile(filename string) error {
-	sql, err := ioutil.ReadFile(filename)
+	sql, err := os.ReadFile(filename)
 	if err != nil {
 		panic(err)
 	}
