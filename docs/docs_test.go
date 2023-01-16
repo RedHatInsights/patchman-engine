@@ -1,7 +1,7 @@
 package docs
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -11,7 +11,7 @@ import (
 const openAPIPath = "v2/openapi.json"
 
 func TestValidateOpenAPI3DocStr(t *testing.T) {
-	doc, err := ioutil.ReadFile(openAPIPath)
+	doc, err := os.ReadFile(openAPIPath)
 	assert.Nil(t, err)
 	_, err = openapi3.NewLoader().LoadFromData(doc)
 	assert.Nil(t, err)

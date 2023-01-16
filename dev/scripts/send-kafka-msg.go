@@ -3,7 +3,7 @@ package main
 import (
 	"app/platform"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 )
 
@@ -20,7 +20,7 @@ func main() {
 	topic := os.Args[1]
 
 	// read input json
-	message, err := ioutil.ReadAll(os.Stdin)
+	message, err := io.ReadAll(os.Stdin)
 
 	if err != nil {
 		panic(err)

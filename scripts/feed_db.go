@@ -2,7 +2,6 @@ package main
 
 import (
 	"app/base/database"
-	"io/ioutil"
 	"os"
 )
 
@@ -25,7 +24,7 @@ func main() {
 
 func createInventoryHosts() {
 	database.DBWait("empty")
-	query, err := ioutil.ReadFile("./dev/create_inventory_hosts.sql")
+	query, err := os.ReadFile("./dev/create_inventory_hosts.sql")
 	if err != nil {
 		panic(err)
 	}
@@ -37,7 +36,7 @@ func createInventoryHosts() {
 
 func feed() {
 	database.DBWait("full")
-	query, err := ioutil.ReadFile("./dev/test_data.sql")
+	query, err := os.ReadFile("./dev/test_data.sql")
 	if err != nil {
 		panic(err)
 	}

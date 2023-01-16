@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -39,7 +39,7 @@ func (o *Client) Request(ctx *context.Context, method, url string,
 		return nil, errors.Wrap(err, "Request failed")
 	}
 
-	bodyBytes, err := ioutil.ReadAll(httpResp.Body)
+	bodyBytes, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return httpResp, errors.Wrap(err, "Response body reading failed")
 	}
