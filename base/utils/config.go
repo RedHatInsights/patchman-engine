@@ -184,10 +184,14 @@ func initKafkaFromClowder() {
 }
 
 func initServicesFromClowder() {
+	webappName := "webapp-service"
+	if GetBoolEnvOrDefault("USE_VMAAS_GO", false) {
+		webappName = "webapp-go"
+	}
 	for _, endpoint := range clowder.LoadedConfig.Endpoints {
 		switch endpoint.App {
 		case "vmaas":
-			if strings.Contains(endpoint.Name, "webapp") {
+			if strings.Contains(endpoint.Name, webappName) {
 				Cfg.VmaasAddress = fmt.Sprintf("http://%s:%d", endpoint.Hostname, endpoint.Port)
 			}
 		case "rbac":
