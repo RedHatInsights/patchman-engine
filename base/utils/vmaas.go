@@ -15,6 +15,9 @@ func MergeVMaaSResponses(vmaasDataA *vmaas.UpdatesV2Response,
 		return vmaasDataA, nil
 	}
 	mergedList := vmaasDataA.GetUpdateList()
+	if mergedList == nil {
+		return vmaasDataB, nil
+	}
 	for nevraB, updateListB := range vmaasDataB.GetUpdateList() {
 		if updateListA, ok := mergedList[nevraB]; ok {
 			merged, err := mergeUpdates(updateListA, updateListB)
