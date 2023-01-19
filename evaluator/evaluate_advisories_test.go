@@ -67,22 +67,14 @@ func TestGetStoredAdvisoriesMap(t *testing.T) {
 	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", (systemAdvisories)["RH-1"].Advisory.PublicDate.String())
 }
 
-func TestGetNewAndUnpatchedAdvisories(t *testing.T) {
+func TestAdvisoryChanges(t *testing.T) {
 	stored := database.CreateStoredAdvisories([]int64{1, 2, 3})
 	reported := database.CreateReportedAdvisories("ER-1", "ER-3", "ER-4")
-	news, unpatched := getNewAndUnpatchedAdvisories(reported, stored)
-	assert.Equal(t, 1, len(news))
-	assert.Equal(t, "ER-4", news[0])
-	assert.Equal(t, 0, len(unpatched))
-}
-
-func TestGetPatchedAdvisories(t *testing.T) {
-	stored := database.CreateStoredAdvisories([]int64{1, 2, 3})
-	reported := database.CreateReportedAdvisories("ER-3", "ER-4")
-	patched := getPatchedAdvisories(reported, stored)
-	assert.Equal(t, 2, len(patched))
-	assert.Equal(t, int64(1), patched[0])
-	assert.Equal(t, int64(2), patched[1])
+	patchedAIDs, newNames := getAdvisoryChanges(reported, stored)
+	assert.Equal(t, 1, len(newNames))
+	assert.Equal(t, "ER-4", newNames[0])
+	assert.Equal(t, 1, len(patchedAIDs))
+	assert.Equal(t, int64(2), patchedAIDs[0])
 }
 
 func TestUpdatePatchedSystemAdvisories(t *testing.T) {
