@@ -113,6 +113,7 @@ objects:
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: '${EVAL_TOPIC_MANAGER}'}
         - {name: ENABLE_PACKAGE_CACHE, value: '${ENABLE_PACKAGE_CACHE_MANAGER}'}
+        - {name: RESPONSE_TIMEOUT, value: '${RESPONSE_TIMEOUT}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_MANAGER}', memory: '${RES_LIMIT_MEM_MANAGER}'}
@@ -539,6 +540,7 @@ parameters:
 - {name: RES_LIMIT_MEM_MANAGER, value: 256Mi}
 - {name: RES_REQUEST_CPU_MANAGER, value: 200m}
 - {name: RES_REQUEST_MEM_MANAGER, value: 256Mi}
+- {name: RESPONSE_TIMEOUT, value: '60'}
 
 # Listener
 - {name: REPLICAS_LISTENER, value: '1'}

@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 )
@@ -27,10 +28,11 @@ type Config struct {
 	DBMaxConnectionLifetimeS int
 
 	// API
-	PublicPort  int
-	PrivatePort int
-	MetricsPort int
-	MetricsPath string
+	PublicPort      int
+	PrivatePort     int
+	MetricsPort     int
+	MetricsPath     string
+	ResponseTimeout time.Duration
 
 	// kafka
 	KafkaAddress           string
@@ -147,6 +149,7 @@ func initAPIromClowder() {
 	Cfg.PrivatePort = *clowder.LoadedConfig.PrivatePort
 	Cfg.MetricsPort = clowder.LoadedConfig.MetricsPort
 	Cfg.MetricsPath = clowder.LoadedConfig.MetricsPath
+	Cfg.ResponseTimeout = time.Duration(GetIntEnvOrDefault("RESPONSE_TIMEOUT", 60))
 }
 
 func initKafkaFromClowder() {
