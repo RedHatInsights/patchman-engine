@@ -147,11 +147,13 @@ func UpdateDB(migrationFilesURL string) {
 
 func CheckUpgraded(sourceURL string) {
 	conn, _ := dbConn()
-	for {
+	for i := 0; i < 60; i++ {
 		action := migrateAction(conn, sourceURL)
 		if action == CONTINUE {
 			return
 		}
-		time.Sleep(time.Second)
+		time.Sleep(5 * time.Second)
 	}
+	fmt.Fprintln(os.Stderr, "Upgrade check aborted")
+	os.Exit(1)
 }
