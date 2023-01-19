@@ -7,6 +7,7 @@ require (
 	github.com/ezamriy/gorpm v0.0.0-20160905202458-25f7273cbf51
 	github.com/getkin/kin-openapi v0.106.0
 	github.com/gin-contrib/gzip v0.0.6
+	github.com/gin-contrib/timeout v0.0.3
 	github.com/gin-gonic/gin v1.8.1
 	github.com/gocarina/gocsv v0.0.0-20200330101823-46266ca37bd3 // newer version skips some columns
 	github.com/golang-migrate/migrate/v4 v4.15.2
