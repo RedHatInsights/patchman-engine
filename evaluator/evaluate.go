@@ -318,6 +318,12 @@ func tryGetVmaasRequest(system *models.SystemPlatform) (*vmaas.UpdatesV3Request,
 		evaluationCnt.WithLabelValues("error-no-packages").Inc()
 		return nil, nil
 	}
+
+	if len(updatesReq.RepositoryList) == 0 {
+		// system without any repositories won't have any advisories evaluated by vmaas
+		evaluationCnt.WithLabelValues("error-no-repositories").Inc()
+		return nil, nil
+	}
 	return &updatesReq, nil
 }
 
