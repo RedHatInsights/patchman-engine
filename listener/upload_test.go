@@ -58,7 +58,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	modulesList := []vmaas.UpdatesV3RequestModulesList{}
 	req := vmaas.UpdatesV3Request{
 		PackageList:    []string{"package0"},
-		RepositoryList: utils.PtrSliceString([]string{"repo1", "repo2", "repo3"}),
+		RepositoryList: []string{"repo1", "repo2", "repo3"},
 		ModulesList:    &modulesList,
 		Releasever:     utils.PtrString("7Server"),
 		Basearch:       utils.PtrString("x86_64"),
@@ -69,7 +69,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 
 	reporterID1 := 1
 	assertSystemInDB(t, id, &accountID1, &reporterID1)
-	assertReposInDB(t, req.GetRepositoryList())
+	assertReposInDB(t, req.RepositoryList)
 
 	host2 := createTestInvHost(t)
 	host2.Reporter = "yupana"
@@ -291,7 +291,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 
 	reporterID1 := 1
 	assertSystemInDB(t, id, &accountID1, &reporterID1)
-	assertReposInDB(t, req.GetRepositoryList())
+	assertReposInDB(t, req.RepositoryList)
 	assertYumUpdatesInDB(t, id, yumUpdates)
 
 	// check that yumUpdates has been updated

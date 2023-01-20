@@ -322,7 +322,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	if shouldUpdateRepos {
 		// We also don't need to update repos if vmaas_json haven't changed
 		addedRepos, addedSysRepos, deletedSysRepos, err = updateRepos(tx, host.SystemProfile, accountID,
-			systemPlatform.ID, updatesReq.GetRepositoryList())
+			systemPlatform.ID, updatesReq.RepositoryList)
 		if err != nil {
 			utils.Log("repository_list", updatesReq.RepositoryList, "inventoryID", systemPlatform.ID).
 				Error("repos failed to insert")
@@ -331,7 +331,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	}
 
 	utils.Log("inventoryID", inventoryID, "packages", len(updatesReq.PackageList), "repos",
-		len(updatesReq.GetRepositoryList()), "modules", len(updatesReq.GetModulesList()),
+		len(updatesReq.RepositoryList), "modules", len(updatesReq.GetModulesList()),
 		"addedRepos", addedRepos, "addedSysRepos", addedSysRepos, "deletedSysRepos", deletedSysRepos).
 		Info("System created or updated successfully")
 	return &systemPlatform, nil
@@ -481,7 +481,7 @@ func deleteOtherSystemRepos(tx *gorm.DB, rhAccountID int, systemID int64, repoID
 	return res.DeletedCount, nil
 }
 
-func processRepos(systemProfile *inventory.SystemProfile) *[]string {
+func processRepos(systemProfile *inventory.SystemProfile) []string {
 	yumRepos := systemProfile.GetYumRepos()
 	seen := make(map[string]bool, len(yumRepos))
 	repos := make([]string, 0, len(yumRepos))
@@ -502,7 +502,7 @@ func processRepos(systemProfile *inventory.SystemProfile) *[]string {
 		}
 	}
 	fixEpelRepos(systemProfile, repos)
-	return &repos
+	return repos
 }
 
 func processModules(systemProfile *inventory.SystemProfile) *[]vmaas.UpdatesV3RequestModulesList {
