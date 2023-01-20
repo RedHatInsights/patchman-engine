@@ -8,7 +8,7 @@ import (
 
 type UpdatesV3Request struct {
 	PackageList    []string                       `json:"package_list"`
-	RepositoryList *[]string                      `json:"repository_list,omitempty"`
+	RepositoryList []string                       `json:"repository_list"`
 	ModulesList    *[]UpdatesV3RequestModulesList `json:"modules_list,omitempty"`
 	Releasever     *string                        `json:"releasever,omitempty"`
 	Basearch       *string                        `json:"basearch,omitempty"`
@@ -23,14 +23,6 @@ type UpdatesV3Request struct {
 type UpdatesV3RequestModulesList struct {
 	ModuleName   string `json:"module_name"`
 	ModuleStream string `json:"module_stream"`
-}
-
-func (o *UpdatesV3Request) GetRepositoryList() []string {
-	if o == nil || o.RepositoryList == nil {
-		var ret []string
-		return ret
-	}
-	return *o.RepositoryList
 }
 
 func (o *UpdatesV3Request) GetModulesList() []UpdatesV3RequestModulesList {
