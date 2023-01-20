@@ -636,7 +636,7 @@ parameters:
 - {name: RES_REQUEST_MEM_VMAAS_SYNC, value: 384Mi}
 - {name: FULL_SYNC_CADENCE, value: '168'}  # run full vmaas sync (default: 168h)
 # Delete unused data
-- {name: DELETE_UNUSED_SCHEDULE, value: '* */6 * * *'} # Cronjob schedule definition
+- {name: DELETE_UNUSED_SCHEDULE, value: '10 */6 * * *'} # Cronjob schedule definition
 - {name: DELETE_UNUSED_SUSPEND, value: 'true'} # Disable cronjob execution
 - {name: DELETE_UNUSED_DATA_LIMIT, value: '1000'}  # Unused data deletion limit
 - {name: ENABLE_UNUSED_DATA_DELETE, value: 'true'} # Unused data feature switch
@@ -647,7 +647,7 @@ parameters:
 - {name: ENABLE_CULLED_SYSTEM_DELETE, value: 'true'} # Enable deleting part of culling method
 - {name: ENABLE_SYSTEM_STALING, value: 'true'} # Enable marking systems stale of culling method
 # Cache refresh
-- {name: PKG_REFRESH_SCHEDULE, value: '*/5 * * * *'} # Cronjob schedule definition
+- {name: PKG_REFRESH_SCHEDULE, value: '5 * * * *'} # Cronjob schedule definition
 - {name: PKG_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
 - {name: ADVISORY_REFRESH_SCHEDULE, value: '*/15 * * * *'} # Cronjob schedule definition
 - {name: ADVISORY_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
