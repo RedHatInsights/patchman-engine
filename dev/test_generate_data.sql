@@ -191,7 +191,7 @@ do $$
       insert into system_advisories
         (rh_account_id, system_id, advisory_id, first_reported, status_id)
       (select
-        row.rh_account_id, row.id, am.id, rnd_date1 - make_interval(days => mod(am.id, 100)),
+        row.rh_account_id, row.id, am.id, rnd_date1 - make_interval(days => mod(am.id, 100)::int),
         mod(row.id, stat)
         from advisory_metadata am
        limit rnd::int offset rnd2::int)
@@ -300,6 +300,34 @@ $$
 -- add fake strings item to use as summary and description in packages
 insert into strings(id, value) values ('0', 'testing string value')
 on conflict do nothing;
+
+-- generate package
+alter sequence package_id_seq restart with 1;
+do $$
+  declare
+    cnt int := 0;
+    wanted int; n_names int; n_advisories int; id int; name_id int; advisory_id int; progress int;
+  begin
+    select val into wanted from _const where key = 'packages';
+    select val into progress from _const where key = 'progress_pct';
+    select count(*) into n_names from package_name;
+    select count(*) into n_advisories from advisory_metadata;
+    while cnt < wanted loop
+        id := nextval('package_id_seq');
+        name_id := id % n_names + 1;
+        advisory_id := id % n_advisories + 1;
+        insert into package(id, name_id, evra, description_hash, summary_hash, advisory_id)
+               values (id, name_id, id || '.' || id || '-1.el8.x86_64', '0', '0', advisory_id)
+               on conflict do nothing;
+        cnt := cnt + 1;
+        if mod(cnt, (wanted*progress/100)::int) = 0 then
+            raise notice 'created % packages', cnt;
+        end if;
+    end loop;
+    raise notice 'created packages %', wanted;
+  end;
+$$
+;
 
 -- generate system_packages
 -- Time: 40011193.334 ms (11:06:51.193) 1G system_packages (RDS)
