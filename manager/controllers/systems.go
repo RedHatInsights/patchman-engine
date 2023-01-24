@@ -35,11 +35,17 @@ type SystemsID struct {
 	ID string `query:"sp.inventory_id" gorm:"column:id"`
 }
 
+// nolint: lll
 type SystemDBLookup struct {
 	ID string `json:"id" csv:"id" query:"sp.inventory_id" gorm:"column:id"`
 
 	// Just helper field to get tags from db in plain string, then parsed to "Tags" attr., excluded from output data.
 	TagsStr string `json:"-" csv:"-" query:"ih.tags" gorm:"column:tags_str"`
+	// a helper to get total number of systems
+	Total          int `json:"-" csv:"-" query:"count(sp.id) over ()" gorm:"column:total"`
+	TotalPatched   int `json:"-" csv:"-" query:"count(sp.id) filter (where sp.stale = false and sp.packages_updatable = 0) over ()" gorm:"column:total_patched"`
+	TotalUnpatched int `json:"-" csv:"-" query:"count(sp.id) filter (where sp.stale = false and sp.packages_updatable > 0) over ()" gorm:"column:total_unpatched"`
+	TotalStale     int `json:"-" csv:"-" query:"count(sp.id) filter (where sp.stale = true) over ()" gorm:"column:total_stale"`
 
 	SystemItemAttributes
 }
@@ -124,7 +130,7 @@ func systemSubtotals(tx *gorm.DB) (total int, subTotals map[string]int, err erro
 	return total, subTotals, err
 }
 
-func systemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
+func systemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	var err error
 	account := c.GetInt(middlewares.KeyAccount)
 	db := middlewares.DBFromContext(c)
@@ -134,9 +140,9 @@ func systemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
 		return nil, nil, nil, err
 	} // Error handled method itself
 	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
-	query, meta, links, err := ListCommon(query, c, filters, SystemOpts)
+	query, meta, params, err := ListCommonWithoutCount(query, c, filters, SystemOpts)
 	// Error handled method itself
-	return query, meta, links, err
+	return query, meta, params, err
 }
 
 // nolint: lll
@@ -183,7 +189,7 @@ func systemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /systems [get]
 func SystemsListHandler(c *gin.Context) {
-	query, meta, links, err := systemsCommon(c)
+	query, meta, params, err := systemsCommon(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -195,7 +201,11 @@ func SystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	data := systemDBLookups2SystemItems(systems)
+	data, total, subtotals := systemDBLookups2SystemItems(systems)
+	meta, links, err := UpdateMetaLinks(c, meta, total, subtotals, params...)
+	if err != nil {
+		return // Error handled in method itself
+	}
 	resp := SystemsResponse{
 		Data:  data,
 		Links: *links,

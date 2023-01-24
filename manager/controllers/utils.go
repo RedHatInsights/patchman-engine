@@ -16,6 +16,7 @@ import (
 	"github.com/gocarina/gocsv"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const InvalidOffsetMsg = "Invalid offset"
@@ -186,8 +187,8 @@ func CountRows(tx *gorm.DB) (total int, subTotals map[string]int, err error) {
 }
 
 // nolint: funlen, lll
-func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, opts ListOpts, params ...string) (
-	*gorm.DB, *ListMeta, *Links, error) {
+func ListCommonWithoutCount(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, opts ListOpts, params ...string) (
+	*gorm.DB, *ListMeta, []string, error) {
 	hasSystems := true
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
@@ -210,20 +211,6 @@ func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, op
 		return nil, nil, nil, errors.Wrap(err, "filters applying failed")
 	}
 
-	origSelects := tx.Statement.Selects // save original selected columns...
-	total, subTotals, err := opts.TotalFunc(tx)
-	if err != nil {
-		LogAndRespError(c, err, "Database connection error")
-		return nil, nil, nil, err
-	}
-	tx = tx.Select(origSelects) // ... and after counts calculation set it back
-
-	if offset > total {
-		err = errors.New("Offset")
-		LogAndRespBadRequest(c, err, InvalidOffsetMsg)
-		return nil, nil, nil, err
-	}
-
 	tx, sortFields, err := ApplySort(c, tx, opts.Fields, opts.DefaultSort, opts.StableSort)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
@@ -233,33 +220,79 @@ func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, op
 	if len(sortFields) > 0 {
 		sortQ = fmt.Sprintf("sort=%v", strings.Join(sortFields, ","))
 	}
-	if total == 0 {
-		account := c.GetInt(middlewares.KeyAccount)
-		tx.Raw("SELECT EXISTS (SELECT 1 FROM system_platform where rh_account_id = ?)", account).Scan(&hasSystems)
-	}
+
 	meta := ListMeta{
-		Limit:      limit,
-		Offset:     offset,
-		Filter:     filters,
-		Sort:       sortFields,
-		Search:     base.RemoveInvalidChars(c.Query("search")),
-		TotalItems: total,
-		SubTotals:  subTotals,
+		Limit:  limit,
+		Offset: offset,
+		Filter: filters,
+		Sort:   sortFields,
+		Search: base.RemoveInvalidChars(c.Query("search")),
+		// TotalItems: will be updated later in UpdateMetaLinks
+		// SubTotals:  will be updated later in UpdateMetaLinks
 		HasSystems: &hasSystems,
 	}
 
 	tagQ := extractTagsQueryString(c)
 
-	path := c.Request.URL.Path
 	params = append(params, filters.ToQueryParams(), sortQ, tagQ, searchQ)
-	links := CreateLinks(path, offset, limit, total, params...)
 	mergeMaps(meta.Filter, tagFilter)
 
 	if limit != -1 {
 		tx = tx.Limit(limit)
 	}
 	tx = tx.Offset(offset)
-	return tx, &meta, &links, nil
+	return tx, &meta, params, nil
+}
+
+func UpdateMetaLinks(c *gin.Context, meta *ListMeta, total int, subTotals map[string]int, params ...string) (
+	*ListMeta, *Links, error) {
+	if meta.Offset > total {
+		err := errors.New("Offset")
+		LogAndRespBadRequest(c, err, InvalidOffsetMsg)
+		return nil, nil, err
+	}
+	path := c.Request.URL.Path
+	links := CreateLinks(path, meta.Offset, meta.Limit, total, params...)
+	meta.TotalItems = total
+	meta.SubTotals = subTotals
+	if total == 0 {
+		var hasSystems bool
+		account := c.GetInt(middlewares.KeyAccount)
+		db := middlewares.DBFromContext(c)
+		db.Raw("SELECT EXISTS (SELECT 1 FROM system_platform where rh_account_id = ?)", account).Scan(&hasSystems)
+		meta.HasSystems = &hasSystems
+	}
+	return meta, &links, nil
+}
+
+// nolint: funlen, lll
+func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, opts ListOpts, params ...string) (
+	*gorm.DB, *ListMeta, *Links, error) {
+	tx, meta, params, err := ListCommonWithoutCount(tx, c, tagFilter, opts, params...)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	origSelects := tx.Statement.Selects                // save original selected columns...
+	origOrder := tx.Statement.Clauses["ORDER BY"]      // order by
+	origLimit := tx.Statement.Clauses["LIMIT"]         // and limit
+	tx.Statement.Clauses["ORDER BY"] = clause.Clause{} // clear order by
+	tx.Statement.Clauses["LIMIT"] = clause.Clause{}    // clear limit
+	total, subTotals, err := opts.TotalFunc(tx)
+	if err != nil {
+		LogAndRespError(c, err, "Database connection error")
+		return nil, nil, nil, err
+	}
+	tx = tx.Select(origSelects) // ... and after counts calculation set it back
+	tx.Statement.Clauses["ORDER BY"] = origOrder
+	tx.Statement.Clauses["LIMIT"] = origLimit
+
+	meta, links, err := UpdateMetaLinks(c, meta, total, subTotals, params...)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return tx, meta, links, nil
 }
 
 func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) (*gorm.DB, string) {
@@ -630,9 +663,22 @@ func OutputExportData(c *gin.Context, data interface{}) {
 	}
 }
 
-func systemDBLookups2SystemItems(systems []SystemDBLookup) []SystemItem {
+func systemDBLookups2SystemItems(systems []SystemDBLookup) ([]SystemItem, int, map[string]int) {
 	data := make([]SystemItem, len(systems))
 	var err error
+	var total int
+	subtotals := map[string]int{
+		"patched":   0,
+		"unpatched": 0,
+		"stale":     0,
+	}
+	if len(systems) > 0 {
+		total = systems[0].Total
+		subtotals["patched"] = systems[0].TotalPatched
+		subtotals["unpatched"] = systems[0].TotalUnpatched
+		subtotals["stale"] = systems[0].TotalStale
+	}
+
 	for i, system := range systems {
 		system.Tags, err = parseSystemTags(system.TagsStr)
 		if err != nil {
@@ -644,7 +690,7 @@ func systemDBLookups2SystemItems(systems []SystemDBLookup) []SystemItem {
 			Type:       "system",
 		}
 	}
-	return data
+	return data, total, subtotals
 }
 
 func advisoriesIDs(advisories []AdvisoryID) []string {
