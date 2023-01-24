@@ -33,7 +33,7 @@ var AdvisorySystemOpts = ListOpts{
 	TotalFunc:    CountRows,
 }
 
-func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
+func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(middlewares.KeyAccount)
 
 	advisoryName := c.Param("advisory_id")
@@ -62,9 +62,9 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) 
 		return nil, nil, nil, err
 	} // Error handled in method itself
 	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
-	query, meta, links, err := ListCommon(query, c, filters, AdvisorySystemOpts)
+	query, meta, params, err := ListCommonWithoutCount(query, c, filters, AdvisorySystemOpts)
 	// Error handled in method itself
-	return query, meta, links, err
+	return query, meta, params, err
 }
 
 // nolint: lll
@@ -110,7 +110,7 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) 
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListHandler(c *gin.Context) {
-	query, meta, links, err := advisorySystemsCommon(c)
+	query, meta, params, err := advisorySystemsCommon(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -122,7 +122,12 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	data := systemDBLookups2SystemItems(dbItems)
+	data, total, subtotals := systemDBLookups2SystemItems(dbItems)
+
+	meta, links, err := UpdateMetaLinks(c, meta, total, subtotals, params...)
+	if err != nil {
+		return // Error handled in method itself
+	}
 	var resp = AdvisorySystemsResponse{
 		Data:  data,
 		Links: *links,
