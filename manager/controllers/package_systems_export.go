@@ -68,6 +68,6 @@ func PackageSystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	outputItems := packageSystemDBLookups2PackageSystemItems(systems)
+	outputItems, _ := packageSystemDBLookups2PackageSystemItems(systems)
 	OutputExportData(c, outputItems)
 }
