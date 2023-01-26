@@ -30,6 +30,9 @@ type RelList []string
 
 type SystemAdvisoriesDBLookup struct {
 	ID string `json:"id" csv:"id" query:"am.name" gorm:"column:id"`
+	// a helper to get total number of systems
+	Total int `json:"-" csv:"-" query:"count(am.id) over ()" gorm:"column:total"`
+
 	SystemAdvisoryItemAttributes
 }
 
@@ -65,7 +68,7 @@ func (v RelList) String() string {
 	return strings.Join(v, ",")
 }
 
-func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
+func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(middlewares.KeyAccount)
 
 	inventoryID := c.Param("inventory_id")
@@ -95,9 +98,9 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error)
 	}
 
 	query := buildSystemAdvisoriesQuery(db, account, inventoryID)
-	query, meta, links, err := ListCommon(query, c, nil, SystemAdvisoriesOpts)
+	query, meta, params, err := ListCommonWithoutCount(query, c, nil, SystemAdvisoriesOpts)
 	// Error handling and setting of result code & content is done in ListCommon
-	return query, meta, links, err
+	return query, meta, params, err
 }
 
 // nolint:lll
@@ -125,7 +128,7 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, *Links, error)
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesHandler(c *gin.Context) {
-	query, meta, links, err := systemAdvisoriesCommon(c)
+	query, meta, params, err := systemAdvisoriesCommon(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -137,7 +140,11 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		return
 	}
 
-	data := buildSystemAdvisoriesData(dbItems)
+	data, total := buildSystemAdvisoriesData(dbItems)
+	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
+	if err != nil {
+		return // Error handled in method itself
+	}
 	var resp = SystemAdvisoriesResponse{
 		Data:  data,
 		Links: *links,
@@ -195,7 +202,11 @@ func buildSystemAdvisoriesQuery(db *gorm.DB, account int, inventoryID string) *g
 	return query
 }
 
-func buildSystemAdvisoriesData(models []SystemAdvisoriesDBLookup) []SystemAdvisoryItem {
+func buildSystemAdvisoriesData(models []SystemAdvisoriesDBLookup) ([]SystemAdvisoryItem, int) {
+	var total int
+	if len(models) > 0 {
+		total = models[0].Total
+	}
 	data := make([]SystemAdvisoryItem, len(models))
 	for i, advisory := range models {
 		advisory.SystemAdvisoryItemAttributes = systemAdvisoryItemAttributeParse(advisory.SystemAdvisoryItemAttributes)
@@ -206,5 +217,5 @@ func buildSystemAdvisoriesData(models []SystemAdvisoriesDBLookup) []SystemAdviso
 		}
 		data[i] = item
 	}
-	return data
+	return data, total
 }
