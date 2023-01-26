@@ -10,8 +10,8 @@ import (
 	"gorm.io/gorm"
 )
 
-var PackagesFields = database.MustGetQueryAttrs(&PackageItem{})
-var PackagesSelect = database.MustGetSelect(&PackageItem{})
+var PackagesFields = database.MustGetQueryAttrs(&PackageDBLookup{})
+var PackagesSelect = database.MustGetSelect(&PackageDBLookup{})
 var PackagesOpts = ListOpts{
 	Fields: PackagesFields,
 	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
@@ -22,6 +22,13 @@ var PackagesOpts = ListOpts{
 	TotalFunc:      CountRows,
 }
 var enabledPackageCache = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_CACHE", false)
+
+type PackageDBLookup struct {
+	// a helper to get total number of systems
+	Total int `json:"-" csv:"-" query:"count(pn.id) over ()" gorm:"column:total"`
+
+	PackageItem
+}
 
 //nolint:lll
 type PackageItem struct {
@@ -118,21 +125,39 @@ func PackagesListHandler(c *gin.Context) {
 	if err != nil {
 		return
 	} // Error handled in method itself
-	query, meta, links, err := ListCommon(query, c, filters, PackagesOpts)
+	query, meta, params, err := ListCommonWithoutCount(query, c, filters, PackagesOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself
 
-	var packages = make([]PackageItem, 0)
+	var packages []PackageDBLookup
 	err = query.Scan(&packages).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")
 		return
 	}
 
+	data, total := PackageDBLookup2Item(packages)
+	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
+	if err != nil {
+		return // Error handled in method itself
+	}
+
 	c.JSON(http.StatusOK, PackagesResponse{
-		Data:  packages,
+		Data:  data,
 		Links: *links,
 		Meta:  *meta,
 	})
+}
+
+func PackageDBLookup2Item(packages []PackageDBLookup) ([]PackageItem, int) {
+	var total int
+	if len(packages) > 0 {
+		total = packages[0].Total
+	}
+	data := make([]PackageItem, len(packages))
+	for i, v := range packages {
+		data[i] = v.PackageItem
+	}
+	return data, total
 }
