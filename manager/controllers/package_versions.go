@@ -5,15 +5,14 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-var PackageVersionFields = database.MustGetQueryAttrs(&PackageVersionItem{})
-var PackageVersionSelect = database.MustGetSelect(&PackageVersionItem{})
+var PackageVersionFields = database.MustGetQueryAttrs(&PackageVersionDBLookup{})
+var PackageVersionSelect = database.MustGetSelect(&PackageVersionDBLookup{})
 var PackageVersionsOpts = ListOpts{
 	Fields: PackageVersionFields,
 	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
@@ -24,9 +23,16 @@ var PackageVersionsOpts = ListOpts{
 	TotalFunc:      CountRows,
 }
 
+type PackageVersionDBLookup struct {
+	AdvisoryID int `json:"-" csv:"-" gorm:"column:advisory_id"` // needed for stable sort
+	// a helper to get total number of systems
+	Total int `json:"-" csv:"-" query:"count(sp.id) over ()" gorm:"column:total"`
+
+	PackageVersionItem
+}
+
 type PackageVersionItem struct {
-	AdvisoryID int    `json:"-" csv:"-" gorm:"column:advisory_id"` // needed for stable sort
-	Evra       string `json:"evra" csv:"evra" query:"evra" gorm:"column:evra"`
+	Evra string `json:"evra" csv:"evra" query:"evra" gorm:"column:evra"`
 }
 
 type PackageVersionsResponse struct {
@@ -85,21 +91,35 @@ func PackageVersionsListHandler(c *gin.Context) {
 
 	query := packageVersionsQuery(db, account, packageNameIDs)
 	// we don't support tags and filters for this endpoint
-	query, meta, links, err := ListCommon(query, c, nil, PackageVersionsOpts)
+	query, meta, params, err := ListCommonWithoutCount(query, c, nil, PackageVersionsOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself
 
-	var systems []PackageVersionItem
-	err = query.Find(&systems).Error
-	fmt.Println(systems)
+	var versions []PackageVersionDBLookup
+	err = query.Find(&versions).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")
 		return
 	}
 
+	var total int
+	if len(versions) > 0 {
+		total = versions[0].Total
+	}
+	data := make([]PackageVersionItem, len(versions))
+	for i, v := range versions {
+		data[i] = PackageVersionItem{
+			Evra: v.Evra,
+		}
+	}
+	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
+	if err != nil {
+		return // Error handled in method itself
+	}
+
 	c.JSON(http.StatusOK, PackageVersionsResponse{
-		Data:  systems,
+		Data:  data,
 		Links: *links,
 		Meta:  *meta,
 	})
