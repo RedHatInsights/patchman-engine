@@ -179,7 +179,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListIDsHandler(c *gin.Context) {
-	query, _, _, err := advisorySystemsCommon(c)
+	query, meta, _, err := advisorySystemsCommon(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -191,7 +191,10 @@ func AdvisorySystemsListIDsHandler(c *gin.Context) {
 		return
 	}
 
-	ids := systemsIDs(sids)
+	ids, err := systemsIDs(c, sids, meta)
+	if err != nil {
+		return // Error handled in method itself
+	}
 	var resp = IDsResponse{IDs: ids}
 	c.JSON(http.StatusOK, &resp)
 }

@@ -166,7 +166,7 @@ func PackageSystemsListHandler(c *gin.Context) {
 // @Router /ids/packages/{package_name}/systems [get]
 func PackageSystemsListIDsHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
-	query, _, _, err := packageSystemsCommon(db, c)
+	query, meta, _, err := packageSystemsCommon(db, c)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -178,7 +178,10 @@ func PackageSystemsListIDsHandler(c *gin.Context) {
 		return
 	}
 
-	ids := systemsIDs(sids)
+	ids, err := systemsIDs(c, sids, meta)
+	if err != nil {
+		return // Error handled in method itself
+	}
 	var resp = IDsResponse{IDs: ids}
 	c.JSON(http.StatusOK, &resp)
 }

@@ -33,6 +33,8 @@ var SystemOpts = ListOpts{
 
 type SystemsID struct {
 	ID string `query:"sp.inventory_id" gorm:"column:id"`
+	// a helper to get total number of systems
+	Total int `json:"-" csv:"-" query:"count(sp.id) over()" gorm:"column:total"`
 }
 
 // nolint: lll
@@ -258,7 +260,7 @@ func SystemsListHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/systems [get]
 func SystemsListIDsHandler(c *gin.Context) {
-	query, _, _, err := systemsCommon(c)
+	query, meta, _, err := systemsCommon(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -270,7 +272,10 @@ func SystemsListIDsHandler(c *gin.Context) {
 		return
 	}
 
-	ids := systemsIDs(sids)
+	ids, err := systemsIDs(c, sids, meta)
+	if err != nil {
+		return // Error handled in method itself
+	}
 	var resp = IDsResponse{IDs: ids}
 	c.JSON(http.StatusOK, &resp)
 }
