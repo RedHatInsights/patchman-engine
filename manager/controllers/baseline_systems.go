@@ -25,6 +25,8 @@ var BaselineSystemOpts = ListOpts{
 
 type BaselineSystemsDBLookup struct {
 	ID string `json:"id" csv:"id" query:"sp.inventory_id" gorm:"column:id"`
+	// a helper to get total number of systems
+	Total int `json:"-" csv:"-" query:"count(sp.id) over ()" gorm:"column:total"`
 	BaselineSystemAttributes
 }
 
@@ -96,7 +98,7 @@ func BaselineSystemsListHandler(c *gin.Context) {
 	} // Error handled in method itself
 	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
 
-	query, meta, links, err := ListCommon(query, c, nil, BaselineSystemOpts)
+	query, meta, params, err := ListCommonWithoutCount(query, c, nil, BaselineSystemOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return
@@ -108,7 +110,11 @@ func BaselineSystemsListHandler(c *gin.Context) {
 		LogAndRespError(c, err, err.Error())
 	}
 
-	data := buildBaselineSystemData(baselineSystems)
+	data, total := buildBaselineSystemData(baselineSystems)
+	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
+	if err != nil {
+		return // Error handled in method itself
+	}
 	var resp = BaselineSystemsResponse{
 		Data:  data,
 		Links: *links,
@@ -125,7 +131,11 @@ func buildQueryBaselineSystems(db *gorm.DB, account int, baselineID string) *gor
 	return query
 }
 
-func buildBaselineSystemData(baselineSystems []BaselineSystemsDBLookup) []BaselineSystemItem {
+func buildBaselineSystemData(baselineSystems []BaselineSystemsDBLookup) ([]BaselineSystemItem, int) {
+	var total int
+	if len(baselineSystems) > 0 {
+		total = baselineSystems[0].Total
+	}
 	data := make([]BaselineSystemItem, len(baselineSystems))
 	for i := 0; i < len(baselineSystems); i++ {
 		baselineSystemDB := baselineSystems[i]
@@ -137,5 +147,5 @@ func buildBaselineSystemData(baselineSystems []BaselineSystemsDBLookup) []Baseli
 			Type:        "baseline_system",
 		}
 	}
-	return data
+	return data, total
 }
