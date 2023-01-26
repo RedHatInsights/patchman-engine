@@ -22,6 +22,9 @@ var BaselineOpts = ListOpts{
 
 type BaselinesDBLookup struct {
 	ID int `query:"bl.id" gorm:"column:id"`
+	// a helper to get total number of systems
+	Total int `json:"-" csv:"-" query:"count(bl.id) over ()" gorm:"column:total"`
+
 	BaselineItemAttributes
 }
 
@@ -80,7 +83,7 @@ func BaselinesListHandler(c *gin.Context) {
 		return
 	} // Error handled in method itself
 
-	query, meta, links, err := ListCommon(query, c, filters, BaselineOpts)
+	query, meta, params, err := ListCommonWithoutCount(query, c, filters, BaselineOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return
@@ -92,7 +95,11 @@ func BaselinesListHandler(c *gin.Context) {
 		LogAndRespError(c, err, err.Error())
 	}
 
-	data := buildBaselinesData(baselines)
+	data, total := buildBaselinesData(baselines)
+	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
+	if err != nil {
+		return // Error handled in method itself
+	}
 	var resp = BaselinesResponse{
 		Data:  data,
 		Links: *links,
@@ -119,7 +126,11 @@ func buildQueryBaselines(db *gorm.DB, filters map[string]FilterData, account int
 	return query
 }
 
-func buildBaselinesData(baselines []BaselinesDBLookup) []BaselineItem {
+func buildBaselinesData(baselines []BaselinesDBLookup) ([]BaselineItem, int) {
+	var total int
+	if len(baselines) > 0 {
+		total = baselines[0].Total
+	}
 	data := make([]BaselineItem, len(baselines))
 	for i := 0; i < len(baselines); i++ {
 		baseline := baselines[i]
@@ -132,5 +143,5 @@ func buildBaselinesData(baselines []BaselinesDBLookup) []BaselineItem {
 			Type: "baseline",
 		}
 	}
-	return data
+	return data, total
 }
