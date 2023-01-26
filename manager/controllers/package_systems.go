@@ -38,6 +38,8 @@ type PackageSystemItem struct {
 type PackageSystemDBLookup struct {
 	// Just helper field to get tags from db in plain string, then parsed to "Tags" attr., excluded from output data.
 	TagsStr string `json:"-" csv:"-" query:"ih.tags" gorm:"column:tags_str"`
+	// a helper to get total number of systems
+	Total int `json:"-" csv:"-" query:"count(sp.id) over ()" gorm:"column:total"`
 
 	PackageSystemItem
 }
@@ -66,7 +68,7 @@ func packageSystemsQuery(db *gorm.DB, acc int, packageName string, packageIDs []
 	return query
 }
 
-func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
+func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(middlewares.KeyAccount)
 	var filters map[string]FilterData
 
@@ -93,9 +95,9 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, *Li
 		return nil, nil, nil, err
 	} // Error handled in method itself
 	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
-	query, meta, links, err := ListCommon(query, c, filters, PackageSystemsOpts)
+	query, meta, params, err := ListCommonWithoutCount(query, c, filters, PackageSystemsOpts)
 	// Error handled in method itself
-	return query, meta, links, err
+	return query, meta, params, err
 }
 
 // nolint: dupl
@@ -122,7 +124,7 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, *Li
 // @Router /packages/{package_name}/systems [get]
 func PackageSystemsListHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
-	query, meta, links, err := packageSystemsCommon(db, c)
+	query, meta, params, err := packageSystemsCommon(db, c)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -134,7 +136,12 @@ func PackageSystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	outputItems := packageSystemDBLookups2PackageSystemItems(systems)
+	outputItems, total := packageSystemDBLookups2PackageSystemItems(systems)
+
+	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
+	if err != nil {
+		return // Error handled in method itself
+	}
 	c.JSON(http.StatusOK, PackageSystemsResponse{
 		Data:  outputItems,
 		Links: *links,
@@ -186,7 +193,11 @@ func PackageSystemsListIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func packageSystemDBLookups2PackageSystemItems(systems []PackageSystemDBLookup) []PackageSystemItem {
+func packageSystemDBLookups2PackageSystemItems(systems []PackageSystemDBLookup) ([]PackageSystemItem, int) {
+	var total int
+	if len(systems) > 0 {
+		total = systems[0].Total
+	}
 	data := make([]PackageSystemItem, len(systems))
 	var err error
 	for i, system := range systems {
@@ -196,5 +207,5 @@ func packageSystemDBLookups2PackageSystemItems(systems []PackageSystemDBLookup) 
 		}
 		data[i] = system.PackageSystemItem
 	}
-	return data
+	return data, total
 }
