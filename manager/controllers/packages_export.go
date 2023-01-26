@@ -36,17 +36,18 @@ func PackagesExportHandler(c *gin.Context) {
 	}
 
 	query, err = ExportListCommon(query, c, PackagesOpts)
-	var data []PackageItem
+	var data []PackageDBLookup
 
 	if err != nil {
 		return
 	} // Error handled in method itself
 
 	err = query.Find(&data).Error
+	items, _ := PackageDBLookup2Item(data)
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return
 	}
 
-	OutputExportData(c, data)
+	OutputExportData(c, items)
 }
