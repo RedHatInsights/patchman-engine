@@ -704,15 +704,24 @@ func advisoriesIDs(advisories []AdvisoryID) []string {
 	return ids
 }
 
-func systemsIDs(systems []SystemsID) []string {
+func systemsIDs(c *gin.Context, systems []SystemsID, meta *ListMeta) ([]string, error) {
+	var total int
+	if len(systems) > 0 {
+		total = systems[0].Total
+	}
+	if meta.Offset > total {
+		err := errors.New("Offset")
+		LogAndRespBadRequest(c, err, InvalidOffsetMsg)
+		return []string{}, err
+	}
 	if systems == nil {
-		return []string{}
+		return []string{}, nil
 	}
 	ids := make([]string, len(systems))
 	for i, x := range systems {
 		ids[i] = x.ID
 	}
-	return ids
+	return ids, nil
 }
 
 // Parse tags from TagsStr string attribute to Tags SystemTag array attribute.
