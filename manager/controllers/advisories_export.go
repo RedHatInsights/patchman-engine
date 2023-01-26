@@ -63,7 +63,10 @@ func AdvisoriesExportHandler(c *gin.Context) {
 
 	for i, v := range advisories {
 		v.SystemAdvisoryItemAttributes = systemAdvisoryItemAttributeParse(v.SystemAdvisoryItemAttributes)
-		data[i] = AdvisoryInlineItem(v)
+		data[i] = AdvisoryInlineItem{
+			ID:                     v.ID,
+			AdvisoryItemAttributes: v.AdvisoryItemAttributes,
+		}
 	}
 
 	OutputExportData(c, data)

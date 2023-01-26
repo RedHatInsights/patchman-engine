@@ -25,8 +25,16 @@ type AdvisoryID struct {
 	ID string `query:"am.name" gorm:"column:id"`
 }
 
+// nolint: lll
 type AdvisoriesDBLookup struct {
 	ID string `query:"am.name" gorm:"column:id"`
+	// a helper to get total number of systems
+	Total            int `json:"-" csv:"-" query:"count(am.id) over ()" gorm:"column:total"`
+	TotalOther       int `json:"-" csv:"-" query:"count(am.id) filter (where am.advisory_type_id not in (1,2,3)) over ()" gorm:"column:total_other"`
+	TotalEnhancement int `json:"-" csv:"-" query:"count(am.id) filter (where am.advisory_type_id = 1) over ()" gorm:"column:total_enhancement"`
+	TotalBugfix      int `json:"-" csv:"-" query:"count(am.id) filter (where am.advisory_type_id = 2) over ()" gorm:"column:total_bugfix"`
+	TotalSecurty     int `json:"-" csv:"-" query:"count(am.id) filter (where am.advisory_type_id = 3) over ()" gorm:"column:total_security"`
+
 	AdvisoryItemAttributes
 }
 
@@ -76,7 +84,7 @@ func advisoriesSubtotal(tx *gorm.DB) (total int, subTotals map[string]int, err e
 	return total, subTotals, err
 }
 
-func advisoriesCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, *Links, error) {
+func advisoriesCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(middlewares.KeyAccount)
 	var query *gorm.DB
 	filters, err := ParseTagsFilters(c)
@@ -93,9 +101,9 @@ func advisoriesCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, *Links,
 		query = buildQueryAdvisories(db, account)
 	}
 
-	query, meta, links, err := ListCommon(query, c, filters, AdvisoriesOpts)
+	query, meta, params, err := ListCommonWithoutCount(query, c, filters, AdvisoriesOpts)
 	// Error handling and setting of result code & content is done in ListCommon
-	return query, meta, links, err
+	return query, meta, params, err
 }
 
 // nolint:lll
@@ -131,7 +139,7 @@ func advisoriesCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, *Links,
 // @Router /advisories [get]
 func AdvisoriesListHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
-	query, meta, links, err := advisoriesCommon(db, c)
+	query, meta, params, err := advisoriesCommon(db, c)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -141,7 +149,11 @@ func AdvisoriesListHandler(c *gin.Context) {
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 	}
-	data := buildAdvisoriesData(advisories)
+	data, total, subtotals := buildAdvisoriesData(advisories)
+	meta, links, err := UpdateMetaLinks(c, meta, total, subtotals, params...)
+	if err != nil {
+		return // Error handled in method itself
+	}
 	var resp = AdvisoriesResponse{
 		Data:  data,
 		Links: *links,
@@ -229,7 +241,21 @@ func buildQueryAdvisoriesTagged(db *gorm.DB, filters map[string]FilterData, acco
 	return query
 }
 
-func buildAdvisoriesData(advisories []AdvisoriesDBLookup) []AdvisoryItem {
+func buildAdvisoriesData(advisories []AdvisoriesDBLookup) ([]AdvisoryItem, int, map[string]int) {
+	var total int
+	subtotals := map[string]int{
+		"other":       0,
+		"enhancement": 0,
+		"bugfix":      0,
+		"security":    0,
+	}
+	if len(advisories) > 0 {
+		total = advisories[0].Total
+		subtotals["other"] = advisories[0].TotalOther
+		subtotals["enhancement"] = advisories[0].TotalEnhancement
+		subtotals["bugfix"] = advisories[0].TotalBugfix
+		subtotals["security"] = advisories[0].TotalSecurty
+	}
 	data := make([]AdvisoryItem, len(advisories))
 	for i := 0; i < len(advisories); i++ {
 		advisory := (advisories)[i]
@@ -243,5 +269,5 @@ func buildAdvisoriesData(advisories []AdvisoriesDBLookup) []AdvisoryItem {
 			Type: "advisory",
 		}
 	}
-	return data
+	return data, total, subtotals
 }
