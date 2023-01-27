@@ -47,6 +47,8 @@ var SystemPackagesOpts = ListOpts{
 type SystemPackageDBLoad struct {
 	SystemPackagesAttrs
 	Updates []byte `json:"updates" query:"spkg.update_data" gorm:"column:updates"`
+	// a helper to get total number of systems
+	Total int `json:"-" csv:"-" query:"count(*) over ()" gorm:"column:total"`
 }
 
 func systemPackageQuery(db *gorm.DB, account int, inventoryID string) *gorm.DB {
@@ -96,7 +98,7 @@ func SystemPackagesHandler(c *gin.Context) {
 	var loaded []SystemPackageDBLoad
 	db := middlewares.DBFromContext(c)
 	q := systemPackageQuery(db, account, inventoryID)
-	q, meta, links, err := ListCommon(q, c, nil, SystemPackagesOpts)
+	q, meta, params, err := ListCommonWithoutCount(q, c, nil, SystemPackagesOpts)
 	if err != nil {
 		return
 	}
@@ -112,19 +114,28 @@ func SystemPackagesHandler(c *gin.Context) {
 		return
 	}
 
-	response := SystemPackageResponse{
-		Data:  make([]SystemPackageData, len(loaded)),
-		Meta:  *meta,
-		Links: *links,
+	var total int
+	if len(loaded) > 0 {
+		total = loaded[0].Total
 	}
+	data := make([]SystemPackageData, len(loaded))
 	for i, sp := range loaded {
-		response.Data[i].SystemPackagesAttrs = sp.SystemPackagesAttrs
+		data[i].SystemPackagesAttrs = sp.SystemPackagesAttrs
 		if sp.Updates == nil {
 			continue
 		}
-		if err := json.Unmarshal(sp.Updates, &response.Data[i].Updates); err != nil {
+		if err := json.Unmarshal(sp.Updates, &data[i].Updates); err != nil {
 			panic(err)
 		}
+	}
+	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
+	if err != nil {
+		return // Error handled in method itself
+	}
+	response := SystemPackageResponse{
+		Data:  data,
+		Meta:  *meta,
+		Links: *links,
 	}
 
 	c.JSON(http.StatusOK, response)
