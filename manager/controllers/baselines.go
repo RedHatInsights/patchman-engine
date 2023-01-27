@@ -17,7 +17,6 @@ var BaselineOpts = ListOpts{
 	DefaultSort:    "-name",
 	StableSort:     "id",
 	SearchFields:   []string{"bl.name"},
-	TotalFunc:      CountRows,
 }
 
 type BaselinesDBLookup struct {

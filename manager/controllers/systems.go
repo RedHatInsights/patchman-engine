@@ -15,7 +15,6 @@ import (
 
 var SystemsFields = database.MustGetQueryAttrs(&SystemDBLookup{})
 var SystemsSelect = database.MustGetSelect(&SystemDBLookup{})
-var SystemsSumFields = database.MustGetSelect(&SystemSums{})
 var SystemOpts = ListOpts{
 	Fields: SystemsFields,
 	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
@@ -28,7 +27,6 @@ var SystemOpts = ListOpts{
 	DefaultSort:  "-last_upload",
 	StableSort:   "id",
 	SearchFields: []string{"sp.display_name"},
-	TotalFunc:    systemSubtotals,
 }
 
 type SystemsID struct {
@@ -98,14 +96,6 @@ func (v SystemTagsList) String() string {
 	return replacedQuotes
 }
 
-// nolint: lll
-type SystemSums struct {
-	Total     int64 `query:"count(*)" gorm:"column:total"`
-	Patched   int64 `query:"count(*) filter (where sp.stale = false and sp.packages_updatable = 0)" gorm:"column:patched"`
-	Unpatched int64 `query:"count(*) filter (where sp.stale = false and sp.packages_updatable > 0)" gorm:"column:unpatched"`
-	Stale     int64 `query:"count(*) filter (where sp.stale = true)" gorm:"column:stale"`
-}
-
 type SystemItem struct {
 	Attributes SystemItemAttributes `json:"attributes"`
 	ID         string               `json:"id"`
@@ -116,20 +106,6 @@ type SystemsResponse struct {
 	Data  []SystemItem `json:"data"`
 	Links Links        `json:"links"`
 	Meta  ListMeta     `json:"meta"`
-}
-
-func systemSubtotals(tx *gorm.DB) (total int, subTotals map[string]int, err error) {
-	var sums SystemSums
-	err = tx.Select(SystemsSumFields).Scan(&sums).Error
-	if err == nil {
-		total = int(sums.Total)
-		subTotals = map[string]int{
-			"patched":   int(sums.Patched),
-			"unpatched": int(sums.Unpatched),
-			"stale":     int(sums.Stale),
-		}
-	}
-	return total, subTotals, err
 }
 
 func systemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {

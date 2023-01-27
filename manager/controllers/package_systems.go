@@ -20,7 +20,6 @@ var PackageSystemsOpts = ListOpts{
 	DefaultSort:    "id",
 	StableSort:     "id",
 	SearchFields:   []string{"sp.display_name"},
-	TotalFunc:      CountRows,
 }
 
 //nolint:lll

@@ -19,8 +19,8 @@ var PackagesOpts = ListOpts{
 	DefaultSort:    "name",
 	StableSort:     "pn.id",
 	SearchFields:   []string{"pn.name", "pn.summary"},
-	TotalFunc:      CountRows,
 }
+
 var enabledPackageCache = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_CACHE", false)
 
 type PackageDBLookup struct {

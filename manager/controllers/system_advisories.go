@@ -23,7 +23,6 @@ var SystemAdvisoriesOpts = ListOpts{
 	DefaultSort:    "-public_date",
 	StableSort:     "id",
 	SearchFields:   []string{"am.name", "am.synopsis"},
-	TotalFunc:      CountRows,
 }
 
 type RelList []string
