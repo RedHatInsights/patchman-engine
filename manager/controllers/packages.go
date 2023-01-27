@@ -25,7 +25,7 @@ var enabledPackageCache = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_CACHE", fals
 
 type PackageDBLookup struct {
 	// a helper to get total number of systems
-	Total int `json:"-" csv:"-" query:"count(pn.id) over ()" gorm:"column:total"`
+	Total int `json:"-" csv:"-" query:"count(*) over ()" gorm:"column:total"`
 
 	PackageItem
 }
@@ -48,8 +48,8 @@ type PackagesResponse struct {
 // Used as a for subquery performing the actual calculation which is joined with latest summaries
 type queryItem struct {
 	NameID           int `query:"spkg.name_id" gorm:"column:name_id"`
-	SystemsInstalled int `json:"systems_installed" query:"count(spkg.system_id)" gorm:"column:systems_installed"`
-	SystemsUpdatable int `json:"systems_updatable" query:"count(spkg.system_id) filter (where spkg.latest_evra IS NOT NULL)" gorm:"column:systems_updatable"`
+	SystemsInstalled int `json:"systems_installed" query:"count(*)" gorm:"column:systems_installed"`
+	SystemsUpdatable int `json:"systems_updatable" query:"count(*) filter (where spkg.latest_evra IS NOT NULL)" gorm:"column:systems_updatable"`
 }
 
 var queryItemSelect = database.MustGetSelect(&queryItem{})
