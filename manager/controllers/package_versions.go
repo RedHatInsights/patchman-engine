@@ -20,7 +20,6 @@ var PackageVersionsOpts = ListOpts{
 	DefaultSort:    "evra",
 	StableSort:     "advisory_id", // can't use p.id or p.name_id since api shows all evras for single pkg
 	SearchFields:   []string{"p.evra"},
-	TotalFunc:      CountRows,
 }
 
 type PackageVersionDBLookup struct {

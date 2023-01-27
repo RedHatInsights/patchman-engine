@@ -41,7 +41,6 @@ var SystemPackagesOpts = ListOpts{
 	DefaultSort:    "name",
 	StableSort:     "package_id",
 	SearchFields:   []string{"pn.name", "sum.value"},
-	TotalFunc:      CountRows,
 }
 
 type SystemPackageDBLoad struct {

@@ -16,7 +16,6 @@ import (
 	"github.com/gocarina/gocsv"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 const InvalidOffsetMsg = "Invalid offset"
@@ -147,7 +146,6 @@ type ListOpts struct {
 	DefaultSort    string
 	StableSort     string
 	SearchFields   []string
-	TotalFunc      totalFuncType
 }
 
 func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, error) {
@@ -174,16 +172,6 @@ func extractTagsQueryString(c *gin.Context) string {
 		tagQ = fmt.Sprintf("tags=%s&%s", t, tagQ)
 	}
 	return strings.TrimSuffix(tagQ, "&")
-}
-
-// function type to return subtotals
-type totalFuncType func(tx *gorm.DB) (int, map[string]int, error)
-
-// generic function to return only total number of rows
-func CountRows(tx *gorm.DB) (total int, subTotals map[string]int, err error) {
-	var total64 int64
-	err = tx.Count(&total64).Error
-	return int(total64), subTotals, err
 }
 
 // nolint: funlen, lll
@@ -263,36 +251,6 @@ func UpdateMetaLinks(c *gin.Context, meta *ListMeta, total int, subTotals map[st
 		meta.HasSystems = &hasSystems
 	}
 	return meta, &links, nil
-}
-
-// nolint: funlen, lll
-func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, opts ListOpts, params ...string) (
-	*gorm.DB, *ListMeta, *Links, error) {
-	tx, meta, params, err := ListCommonWithoutCount(tx, c, tagFilter, opts, params...)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	origSelects := tx.Statement.Selects                // save original selected columns...
-	origOrder := tx.Statement.Clauses["ORDER BY"]      // order by
-	origLimit := tx.Statement.Clauses["LIMIT"]         // and limit
-	tx.Statement.Clauses["ORDER BY"] = clause.Clause{} // clear order by
-	tx.Statement.Clauses["LIMIT"] = clause.Clause{}    // clear limit
-	total, subTotals, err := opts.TotalFunc(tx)
-	if err != nil {
-		LogAndRespError(c, err, "Database connection error")
-		return nil, nil, nil, err
-	}
-	tx = tx.Select(origSelects) // ... and after counts calculation set it back
-	tx.Statement.Clauses["ORDER BY"] = origOrder
-	tx.Statement.Clauses["LIMIT"] = origLimit
-
-	meta, links, err := UpdateMetaLinks(c, meta, total, subTotals, params...)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	return tx, meta, links, nil
 }
 
 func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) (*gorm.DB, string) {

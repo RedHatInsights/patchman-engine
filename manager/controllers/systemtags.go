@@ -8,7 +8,6 @@ import (
 	"app/manager/middlewares"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type SystemTag struct {
@@ -48,14 +47,6 @@ var SystemTagsOpts = ListOpts{
 	},
 	StableSort:  "tag",
 	DefaultSort: "tag",
-	TotalFunc:   systemTagsSubtotals,
-}
-
-func systemTagsSubtotals(tx *gorm.DB) (total int, subTotals map[string]int, err error) {
-	var count int64
-	err = database.Db.Table("(?) AS cq", tx.Select("1")).Count(&count).Error
-	total = int(count)
-	return
 }
 
 // @Summary Show me systems tags applicable to this application

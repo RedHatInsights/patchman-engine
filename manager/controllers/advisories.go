@@ -11,14 +11,12 @@ import (
 
 var AdvisoriesFields = database.MustGetQueryAttrs(&AdvisoriesDBLookup{})
 var AdvisoriesSelect = database.MustGetSelect(&AdvisoriesDBLookup{})
-var AdvisoriesSumFields = database.MustGetSelect(&AdvisoriesSums{})
 var AdvisoriesOpts = ListOpts{
 	Fields:         AdvisoriesFields,
 	DefaultFilters: nil,
 	DefaultSort:    "-public_date",
 	StableSort:     "id",
 	SearchFields:   []string{"am.name", "am.cve_list", "synopsis"},
-	TotalFunc:      advisoriesSubtotal,
 }
 
 type AdvisoryID struct {
@@ -55,33 +53,10 @@ type AdvisoryInlineItem struct {
 	AdvisoryItemAttributes
 }
 
-type AdvisoriesSums struct {
-	Total       int64 `query:"count(*)" gorm:"column:total"`
-	Other       int64 `query:"count(*) filter (where am.advisory_type_id not in (1,2,3))" gorm:"column:other"`
-	Enhancement int64 `query:"count(*) filter (where am.advisory_type_id = 1)" gorm:"column:enhancement"`
-	Bugfix      int64 `query:"count(*) filter (where am.advisory_type_id = 2)" gorm:"column:bugfix"`
-	Security    int64 `query:"count(*) filter (where am.advisory_type_id = 3)" gorm:"column:security"`
-}
-
 type AdvisoriesResponse struct {
 	Data  []AdvisoryItem `json:"data"`
 	Links Links          `json:"links"`
 	Meta  ListMeta       `json:"meta"`
-}
-
-func advisoriesSubtotal(tx *gorm.DB) (total int, subTotals map[string]int, err error) {
-	var sums AdvisoriesSums
-	err = tx.Select(AdvisoriesSumFields).Scan(&sums).Error
-	if err == nil {
-		total = int(sums.Total)
-		subTotals = map[string]int{
-			"other":       int(sums.Other),
-			"enhancement": int(sums.Enhancement),
-			"bugfix":      int(sums.Bugfix),
-			"security":    int(sums.Security),
-		}
-	}
-	return total, subTotals, err
 }
 
 func advisoriesCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {

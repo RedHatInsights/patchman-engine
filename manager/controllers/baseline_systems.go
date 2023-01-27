@@ -20,7 +20,6 @@ var BaselineSystemOpts = ListOpts{
 	DefaultSort:    "-display_name",
 	StableSort:     "id",
 	SearchFields:   []string{"sp.display_name"},
-	TotalFunc:      CountRows,
 }
 
 type BaselineSystemsDBLookup struct {
