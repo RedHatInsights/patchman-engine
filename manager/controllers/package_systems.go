@@ -94,7 +94,7 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 		return nil, nil, nil, err
 	} // Error handled in method itself
 	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
-	query, meta, params, err := ListCommonWithoutCount(query, c, filters, PackageSystemsOpts)
+	query, meta, params, err := ListCommon(query, c, filters, PackageSystemsOpts)
 	// Error handled in method itself
 	return query, meta, params, err
 }

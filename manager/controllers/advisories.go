@@ -76,7 +76,7 @@ func advisoriesCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []strin
 		query = buildQueryAdvisories(db, account)
 	}
 
-	query, meta, params, err := ListCommonWithoutCount(query, c, filters, AdvisoriesOpts)
+	query, meta, params, err := ListCommon(query, c, filters, AdvisoriesOpts)
 	// Error handling and setting of result code & content is done in ListCommon
 	return query, meta, params, err
 }

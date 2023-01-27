@@ -97,7 +97,7 @@ func SystemPackagesHandler(c *gin.Context) {
 	var loaded []SystemPackageDBLoad
 	db := middlewares.DBFromContext(c)
 	q := systemPackageQuery(db, account, inventoryID)
-	q, meta, params, err := ListCommonWithoutCount(q, c, nil, SystemPackagesOpts)
+	q, meta, params, err := ListCommon(q, c, nil, SystemPackagesOpts)
 	if err != nil {
 		return
 	}

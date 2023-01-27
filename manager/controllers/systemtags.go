@@ -75,7 +75,7 @@ func SystemTagListHandler(c *gin.Context) {
 		Select(SystemTagSelect).
 		Group("sq.tag")
 
-	tx, meta, params, err := ListCommonWithoutCount(query, c, nil, SystemTagsOpts)
+	tx, meta, params, err := ListCommon(query, c, nil, SystemTagsOpts)
 	if !checkSortMeta(meta.Sort) {
 		LogAndRespBadRequest(c, errors.New("invalid sort field(s)"), "invalid sort")
 		return
