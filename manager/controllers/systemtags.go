@@ -17,9 +17,18 @@ type SystemTag struct {
 	Value     string `json:"value"`
 }
 
+var SystemTagSelect = database.MustGetSelect(&SystemTagDBLookup{})
+
+type SystemTagDBLookup struct {
+	// a helper to get total number of systems
+	Total int `json:"-" csv:"-" query:"count(*) over ()" gorm:"column:total"`
+
+	SystemTagItem
+}
+
 type SystemTagItem struct {
-	Count int       `json:"count"`
-	Tag   SystemTag `json:"tag" gorm:"serializer:json"`
+	Count int       `json:"count" query:"count(sq.tag)" gorm:"column:cnt"`
+	Tag   SystemTag `json:"tag" query:"sq.tag" gorm:"serializer:json;column:tag"`
 }
 
 type SystemTagsResponse struct {
@@ -72,10 +81,10 @@ func SystemTagListHandler(c *gin.Context) {
 		Select("jsonb_array_elements(ih.tags) AS tag")
 
 	query := db.Table("(?) AS sq", sq).
-		Select("COUNT(sq.tag) AS count, sq.tag AS tag").
+		Select(SystemTagSelect).
 		Group("sq.tag")
 
-	tx, meta, links, err := ListCommon(query, c, nil, SystemTagsOpts)
+	tx, meta, params, err := ListCommonWithoutCount(query, c, nil, SystemTagsOpts)
 	if !checkSortMeta(meta.Sort) {
 		LogAndRespBadRequest(c, errors.New("invalid sort field(s)"), "invalid sort")
 		return
@@ -85,15 +94,26 @@ func SystemTagListHandler(c *gin.Context) {
 		return
 	}
 
-	var tagsWithCount []SystemTagItem
+	var tagsWithCount []SystemTagDBLookup
 	tx = tx.Scan(&tagsWithCount)
 	if tx.Error != nil {
 		LogAndRespError(c, tx.Error, "unable to get tags")
 		return
 	}
-
+	var total int
+	if len(tagsWithCount) > 0 {
+		total = tagsWithCount[0].Total
+	}
+	data := make([]SystemTagItem, len(tagsWithCount))
+	for i, sp := range tagsWithCount {
+		data[i] = sp.SystemTagItem
+	}
+	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
+	if err != nil {
+		return // Error handled in method itself
+	}
 	resp := SystemTagsResponse{
-		Data:  tagsWithCount,
+		Data:  data,
 		Meta:  *meta,
 		Links: *links,
 	}
