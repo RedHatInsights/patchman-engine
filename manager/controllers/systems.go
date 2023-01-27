@@ -32,7 +32,7 @@ var SystemOpts = ListOpts{
 type SystemsID struct {
 	ID string `query:"sp.inventory_id" gorm:"column:id"`
 	// a helper to get total number of systems
-	Total int `json:"-" csv:"-" query:"count(sp.id) over()" gorm:"column:total"`
+	Total int `json:"-" csv:"-" query:"count(*) over()" gorm:"column:total"`
 }
 
 // nolint: lll
@@ -42,10 +42,10 @@ type SystemDBLookup struct {
 	// Just helper field to get tags from db in plain string, then parsed to "Tags" attr., excluded from output data.
 	TagsStr string `json:"-" csv:"-" query:"ih.tags" gorm:"column:tags_str"`
 	// a helper to get total number of systems
-	Total          int `json:"-" csv:"-" query:"count(sp.id) over ()" gorm:"column:total"`
-	TotalPatched   int `json:"-" csv:"-" query:"count(sp.id) filter (where sp.stale = false and sp.packages_updatable = 0) over ()" gorm:"column:total_patched"`
-	TotalUnpatched int `json:"-" csv:"-" query:"count(sp.id) filter (where sp.stale = false and sp.packages_updatable > 0) over ()" gorm:"column:total_unpatched"`
-	TotalStale     int `json:"-" csv:"-" query:"count(sp.id) filter (where sp.stale = true) over ()" gorm:"column:total_stale"`
+	Total          int `json:"-" csv:"-" query:"count(*) over ()" gorm:"column:total"`
+	TotalPatched   int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_updatable = 0) over ()" gorm:"column:total_patched"`
+	TotalUnpatched int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_updatable > 0) over ()" gorm:"column:total_unpatched"`
+	TotalStale     int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = true) over ()" gorm:"column:total_stale"`
 
 	SystemItemAttributes
 }

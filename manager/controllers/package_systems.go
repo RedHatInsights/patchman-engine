@@ -38,7 +38,7 @@ type PackageSystemDBLookup struct {
 	// Just helper field to get tags from db in plain string, then parsed to "Tags" attr., excluded from output data.
 	TagsStr string `json:"-" csv:"-" query:"ih.tags" gorm:"column:tags_str"`
 	// a helper to get total number of systems
-	Total int `json:"-" csv:"-" query:"count(sp.id) over ()" gorm:"column:total"`
+	Total int `json:"-" csv:"-" query:"count(*) over ()" gorm:"column:total"`
 
 	PackageSystemItem
 }

@@ -22,7 +22,7 @@ var BaselineOpts = ListOpts{
 type BaselinesDBLookup struct {
 	ID int `query:"bl.id" gorm:"column:id"`
 	// a helper to get total number of systems
-	Total int `json:"-" csv:"-" query:"count(bl.id) over ()" gorm:"column:total"`
+	Total int `json:"-" csv:"-" query:"count(*) over ()" gorm:"column:total"`
 
 	BaselineItemAttributes
 }
