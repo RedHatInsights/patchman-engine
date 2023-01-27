@@ -90,7 +90,7 @@ func PackageVersionsListHandler(c *gin.Context) {
 
 	query := packageVersionsQuery(db, account, packageNameIDs)
 	// we don't support tags and filters for this endpoint
-	query, meta, params, err := ListCommonWithoutCount(query, c, nil, PackageVersionsOpts)
+	query, meta, params, err := ListCommon(query, c, nil, PackageVersionsOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself

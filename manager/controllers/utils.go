@@ -175,7 +175,7 @@ func extractTagsQueryString(c *gin.Context) string {
 }
 
 // nolint: funlen, lll
-func ListCommonWithoutCount(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, opts ListOpts, params ...string) (
+func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, opts ListOpts, params ...string) (
 	*gorm.DB, *ListMeta, []string, error) {
 	hasSystems := true
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)

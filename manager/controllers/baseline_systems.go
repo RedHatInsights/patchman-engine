@@ -97,7 +97,7 @@ func BaselineSystemsListHandler(c *gin.Context) {
 	} // Error handled in method itself
 	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
 
-	query, meta, params, err := ListCommonWithoutCount(query, c, nil, BaselineSystemOpts)
+	query, meta, params, err := ListCommon(query, c, nil, BaselineSystemOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return
