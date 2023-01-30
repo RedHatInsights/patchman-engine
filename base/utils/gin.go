@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -59,6 +60,25 @@ func CheckLimitOffset(limit int, offset int) error {
 		return errors.New("limit must not be less than 1, or should be -1 to return all items")
 	}
 	return nil
+}
+
+func IsParamValid(param *string, nullable, emptyAllowed bool) bool {
+	if param == nil && !nullable {
+		return false
+	}
+
+	if param != nil {
+		if *param == "" && !emptyAllowed {
+			return false
+		}
+		// string containing only whitespaces is not allowed by empty check in DB
+		match, err := regexp.MatchString(`^\s+$`, *param)
+		if err != nil || match {
+			return false
+		}
+	}
+
+	return true
 }
 
 type ErrorResponse struct {
