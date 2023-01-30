@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/database"
 	"app/base/models"
+	"app/base/utils"
 	"app/manager/kafka"
 	"app/manager/middlewares"
 	"encoding/json"
@@ -55,6 +56,16 @@ func BaselineUpdateHandler(c *gin.Context) {
 	var req UpdateBaselineRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		LogAndRespBadRequest(c, err, "Invalid request body: "+err.Error())
+		return
+	}
+
+	if !utils.IsParamValid(req.Description, true, true) {
+		LogAndRespBadRequest(c, errors.New(InvalidDescription), InvalidDescription)
+		return
+	}
+
+	if !utils.IsParamValid(req.Name, true, false) {
+		LogAndRespBadRequest(c, errors.New(BaselineMissingNameErr), BaselineMissingNameErr)
 		return
 	}
 
@@ -171,7 +182,8 @@ func buildUpdateBaselineQuery(db *gorm.DB, baselineID int64, req UpdateBaselineR
 	}
 
 	if req.Description != nil {
-		data["description"] = req.Description
+		//  empty string is a special case when we need to store NULL value to DB
+		data["description"] = utils.EmptyToNil(req.Description)
 	}
 
 	tx := db.Begin()

@@ -21,7 +21,7 @@ var testingInventoryIDs = []string{
 
 func TestUpdateBaseline(t *testing.T) {
 	core.SetupTest(t)
-	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
+	baselineID := database.CreateBaseline(t, "", testingInventoryIDs, nil)
 	data := `{
 		"name": "updated_name",
 		"inventory_ids": {
@@ -53,7 +53,7 @@ func TestUpdateBaseline(t *testing.T) {
 func TestUpdateBaselineWithEmptyAssociations(t *testing.T) {
 	core.SetupTest(t)
 
-	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
+	baselineID := database.CreateBaseline(t, "", testingInventoryIDs, nil)
 	data := `{"inventory_ids": {}}`
 	path := fmt.Sprintf(`/%v`, baselineID)
 	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
@@ -76,7 +76,7 @@ func TestUpdateBaselineWithEmptyAssociations(t *testing.T) {
 func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
 	core.SetupTest(t)
 
-	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
+	baselineID := database.CreateBaseline(t, "", testingInventoryIDs, nil)
 	data := `{
 		"inventory_ids": {
 			"00000000-0000-0000-0000-000000000005": false,
@@ -111,7 +111,7 @@ func TestUpdateBaselineInvalidPayload(t *testing.T) {
 func TestUpdateBaselineInvalidSystem(t *testing.T) {
 	core.SetupTest(t)
 
-	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
+	baselineID := database.CreateBaseline(t, "", testingInventoryIDs, nil)
 	data := `{
 		"inventory_ids": {
 			"00000000-0000-0000-0000-000000000005": false,
@@ -133,7 +133,7 @@ func TestUpdateBaselineInvalidSystem(t *testing.T) {
 func TestUpdateBaselineNullValues(t *testing.T) {
 	core.SetupTest(t)
 
-	baselineID := database.CreateBaseline(t, "", testingInventoryIDs)
+	baselineID := database.CreateBaseline(t, "", testingInventoryIDs, nil)
 	data := `{}`
 	path := fmt.Sprintf(`/%v`, baselineID)
 	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
@@ -173,7 +173,7 @@ func TestUpdateBaselineSystems(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	// Assign inventory ID used by baseline 1 to check if it can be reassigned back during update
-	baselineID := database.CreateBaseline(t, "test_baseline", []string{"00000000-0000-0000-0000-000000000002"})
+	baselineID := database.CreateBaseline(t, "test_baseline", []string{"00000000-0000-0000-0000-000000000002"}, nil)
 
 	// Reassigning inventory IDs of another baselines is allowed
 	data := `{
@@ -208,4 +208,64 @@ func TestUpdateBaselineSystemsInvalid(t *testing.T) {
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, "Invalid inventory IDs: unable to update systems of another baseline", errResp.Error)
+}
+
+func TestUpdateBaselineEmptyDescription(t *testing.T) {
+	core.SetupTestEnvironment()
+
+	desc := "empty_update_description"
+	baselineID := database.CreateBaseline(t, desc, testingInventoryIDs, &desc)
+	defer database.DeleteBaseline(t, baselineID)
+
+	data := `{"description": ""}`
+	w := CreateRequestRouterWithParams("PUT", fmt.Sprintf(`/%v`, baselineID), bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1, "PUT", "/:baseline_id")
+
+	var resp UpdateBaselineResponse
+	CheckResponse(t, w, http.StatusOK, &resp)
+	assert.Equal(t, baselineID, resp.BaselineID)
+	database.CheckBaseline(t, resp.BaselineID, testingInventoryIDs, `{"to_time": "2021-01-01T12:00:00-04:00"}`, desc, nil)
+}
+
+func TestUpdateBaselineNilDescription(t *testing.T) {
+	core.SetupTestEnvironment()
+
+	desc := "nil_update_description"
+	baselineID := database.CreateBaseline(t, desc, testingInventoryIDs, &desc)
+	defer database.DeleteBaseline(t, baselineID)
+
+	data := `{"name": "new_name", "description": null}`
+	w := CreateRequestRouterWithParams("PUT", fmt.Sprintf(`/%v`, baselineID), bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1, "PUT", "/:baseline_id")
+
+	var resp UpdateBaselineResponse
+	CheckResponse(t, w, http.StatusOK, &resp)
+	assert.Equal(t, baselineID, resp.BaselineID)
+	database.CheckBaseline(t, resp.BaselineID, testingInventoryIDs,
+		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "new_name", &desc)
+
+	// missing description
+	data = `{"name": "new_name"}`
+	w = CreateRequestRouterWithParams("PUT", fmt.Sprintf(`/%v`, baselineID), bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1, "PUT", "/:baseline_id")
+
+	CheckResponse(t, w, http.StatusOK, &resp)
+	assert.Equal(t, baselineID, resp.BaselineID)
+	database.CheckBaseline(t, resp.BaselineID, testingInventoryIDs,
+		`{"to_time": "2021-01-01T12:00:00-04:00"}`, "new_name", &desc)
+}
+
+func TestUpdateBaselineSpacesDescription(t *testing.T) {
+	core.SetupTestEnvironment()
+
+	desc := "spaces_update_description"
+	baselineID := database.CreateBaseline(t, desc, testingInventoryIDs, &desc)
+	defer database.DeleteBaseline(t, baselineID)
+
+	data := `{"description": "   "}`
+	w := CreateRequestRouterWithParams("PUT", fmt.Sprintf(`/%v`, baselineID), bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1, "PUT", "/:baseline_id")
+
+	var err utils.ErrorResponse
+	CheckResponse(t, w, http.StatusBadRequest, &err)
 }

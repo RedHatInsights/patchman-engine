@@ -30,12 +30,12 @@ func TestBaselineSystemsRemoveDefault(t *testing.T) {
 		"00000000-0000-0000-0000-000000000004",
 		"00000000-0000-0000-0000-000000000005",
 	}
-	baselineID := database.CreateBaseline(t, "temporary_baseline_1", inventoryIDs)
+	baselineID := database.CreateBaseline(t, "temporary_baseline_1", inventoryIDs, nil)
 
 	var inventoryIDs2 = []string{
 		"00000000-0000-0000-0000-000000000006",
 	}
-	baselineID2 := database.CreateBaseline(t, "temporary_baseline_2", inventoryIDs2)
+	baselineID2 := database.CreateBaseline(t, "temporary_baseline_2", inventoryIDs2, nil)
 
 	req := BaselineSystemsRemoveRequest{
 		InventoryIDs: append(inventoryIDs, inventoryIDs2...),

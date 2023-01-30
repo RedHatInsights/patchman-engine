@@ -16,8 +16,9 @@ import (
 	"gorm.io/gorm"
 )
 
-const BaselineMissingNameErr = "missing required parameter 'name'"
+const BaselineMissingNameErr = "missing or invalid required parameter 'name'"
 const DuplicateBaselineNameErr = "patch template name already exists"
+const InvalidDescription = "invalid 'description'"
 
 type CreateBaselineRequest struct {
 	// Baseline name
@@ -55,8 +56,12 @@ func CreateBaselineHandler(c *gin.Context) {
 		return
 	}
 
-	if request.Name == "" {
+	if !utils.IsParamValid(&request.Name, false, false) {
 		LogAndRespBadRequest(c, errors.New(BaselineMissingNameErr), BaselineMissingNameErr)
+		return
+	}
+	if !utils.IsParamValid(request.Description, true, true) {
+		LogAndRespBadRequest(c, errors.New(InvalidDescription), InvalidDescription)
 		return
 	}
 	request.Description = utils.EmptyToNil(request.Description)

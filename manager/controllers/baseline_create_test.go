@@ -99,3 +99,12 @@ func TestCreateBaselineDescriptionEmptyString(t *testing.T) {
 	database.CheckBaseline(t, resp.BaselineID, []string{}, "", "baseline_empty_desc", nil)
 	database.DeleteBaseline(t, resp.BaselineID)
 }
+
+func TestCreateBaselineDescriptionSpaces(t *testing.T) {
+	core.SetupTest(t)
+	data := `{"name": "baseline_spaces_desc", "description": "   "}`
+	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
+
+	var err utils.ErrorResponse
+	CheckResponse(t, w, http.StatusBadRequest, &err)
+}

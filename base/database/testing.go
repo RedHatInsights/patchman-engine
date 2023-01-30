@@ -325,13 +325,14 @@ func DeleteNewlyAddedAdvisories(t *testing.T) {
 	assert.Equal(t, int64(0), cnt)
 }
 
-func CreateBaselineWithConfig(t *testing.T, name string, inventoryIDs []string, configBytes []byte) int64 {
+func CreateBaselineWithConfig(t *testing.T, name string, inventoryIDs []string,
+	configBytes []byte, description *string) int64 {
 	if name == "" {
 		name = "temporary_baseline"
 	}
 
 	temporaryBaseline := &models.Baseline{
-		RhAccountID: 1, Name: name, Config: configBytes,
+		RhAccountID: 1, Name: name, Config: configBytes, Description: description,
 	}
 
 	tx := Db.WithContext(base.Context).Begin()
@@ -351,9 +352,9 @@ func CreateBaselineWithConfig(t *testing.T, name string, inventoryIDs []string, 
 	return temporaryBaseline.ID
 }
 
-func CreateBaseline(t *testing.T, name string, inventoryIDs []string) int64 {
+func CreateBaseline(t *testing.T, name string, inventoryIDs []string, description *string) int64 {
 	configBytes := []byte(`{"to_time": "2021-01-01T12:00:00-04:00"}`)
-	baselineID := CreateBaselineWithConfig(t, name, inventoryIDs, configBytes)
+	baselineID := CreateBaselineWithConfig(t, name, inventoryIDs, configBytes, description)
 	return baselineID
 }
 
