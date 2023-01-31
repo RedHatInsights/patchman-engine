@@ -24,6 +24,7 @@ func TestSystemPackages(t *testing.T) {
 	assert.Equal(t, len(output.Data[2].Updates), 2)
 	assert.Equal(t, output.Data[3].Name, "kernel")
 	assert.Equal(t, len(output.Data[3].Updates), 0)
+	assert.Equal(t, output.Meta.TotalItems, 4)
 }
 
 func TestPackagesSearch(t *testing.T) {
