@@ -106,7 +106,7 @@ func Evaluate(ctx context.Context, event *mqueue.PlatformEvent, inventoryID, eva
 	defer utils.ObserveSecondsSince(tStart, evaluationDuration.WithLabelValues(evaluationType))
 	if enableBypass {
 		evaluationCnt.WithLabelValues("bypassed").Inc()
-		utils.Log("inventoryID", inventoryID).Info("Evaluation bypassed")
+		utils.LogInfo("inventoryID", inventoryID, "Evaluation bypassed")
 		return nil
 	}
 
@@ -126,7 +126,7 @@ func Evaluate(ctx context.Context, event *mqueue.PlatformEvent, inventoryID, eva
 		// don't count messages from `tryGetSystem` as success
 		evaluationCnt.WithLabelValues("success").Inc()
 	}
-	utils.Log("inventoryID", inventoryID, "evalLabel", evaluationType).Info("system evaluated successfully")
+	utils.LogInfo("inventoryID", inventoryID, "evalLabel", evaluationType, "system evaluated successfully")
 	return nil
 }
 
@@ -153,8 +153,8 @@ func runEvaluate(
 			event := <-ptEventC
 			event.Status = "error"
 			ptEventC <- event
-			utils.Log("err", err.Error(), "inventoryID", inventoryID, "evalLabel", evalLabel).
-				Error("Eval message handling")
+			utils.LogError("err", err.Error(), "inventoryID", inventoryID, "evalLabel", evalLabel,
+				"Eval message handling")
 		}
 		errc <- err
 		<-guard
@@ -242,7 +242,7 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 		yumUpdates, yumErr = tryGetYumUpdates(system)
 		if yumErr != nil {
 			// ignore broken yum updates
-			utils.Log("Can't parse yum_updates").Warn(yumErr.Error())
+			utils.LogWarn("Can't parse yum_updates", yumErr.Error())
 		}
 	}
 
@@ -252,7 +252,7 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 		if yumUpdates == nil {
 			return nil, errors.Wrap(vmaasErr, vmaasErr.Error())
 		}
-		utils.Log("Vmaas response error, continuing with yum updates only").Warn(vmaasErr.Error())
+		utils.LogWarn("Vmaas response error, continuing with yum updates only", vmaasErr.Error())
 	}
 
 	// Try to merge YumUpdates and VMaaS updates
@@ -302,7 +302,7 @@ func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 func tryGetVmaasRequest(system *models.SystemPlatform) (*vmaas.UpdatesV3Request, error) {
 	if system == nil || system.VmaasJSON == nil {
 		evaluationCnt.WithLabelValues("error-parse-vmaas-json").Inc()
-		utils.Log("inventory_id", system.InventoryID).Warn("system with empty vmaas json")
+		utils.LogWarn("inventory_id", system.InventoryID, "system with empty vmaas json")
 		// skip the system
 		// don't return error as it will cause panic of evaluator pod
 		return nil, nil
@@ -381,8 +381,8 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
 		err = publishNewAdvisoriesNotification(tx, system, event, system.RhAccountID, newSystemAdvisories)
 		if err != nil {
 			evaluationCnt.WithLabelValues("error-advisory-notification").Inc()
-			utils.Log("orgID", event.GetOrgID(), "inventoryID", system.InventoryID, "err", err.Error()).
-				Error("publishing new advisories notification failed")
+			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.InventoryID, "err", err.Error(),
+				"publishing new advisories notification failed")
 		}
 	}
 
@@ -392,7 +392,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
 func analyzeRepos(tx *gorm.DB, system *models.SystemPlatform) (
 	thirdParty bool, err error) {
 	if !enableRepoAnalysis {
-		utils.Log().Info("repo analysis disabled, skipping")
+		utils.LogInfo("repo analysis disabled, skipping")
 		return false, nil
 	}
 
@@ -406,8 +406,8 @@ func analyzeRepos(tx *gorm.DB, system *models.SystemPlatform) (
 		Where("r.third_party = true").
 		Count(&thirdPartyCount).Error
 	if err != nil {
-		utils.Log("err", err.Error(), "accountID", system.RhAccountID, "systemID", system.ID).
-			Warn("counting third party repos")
+		utils.LogWarn("err", err.Error(), "accountID", system.RhAccountID, "systemID", system.ID,
+			"counting third party repos")
 		return false, err
 	}
 	thirdParty = thirdPartyCount > 0
@@ -468,11 +468,11 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("vmaas-updates-call"))
 
 	vmaasCallFunc := func() (interface{}, *http.Response, error) {
-		utils.Log("request", *request).Trace("vmaas /updates request")
+		utils.LogTrace("request", *request, "vmaas /updates request")
 		vmaasData := vmaas.UpdatesV2Response{}
 		resp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasUpdatesURL, request, &vmaasData)
-		utils.Log("status_code", utils.TryGetStatusCode(resp)).Debug("vmaas /updates call")
-		utils.Log("response", resp).Trace("vmaas /updates response")
+		utils.LogDebug("status_code", utils.TryGetStatusCode(resp), "vmaas /updates call")
+		utils.LogTrace("response", resp, "vmaas /updates response")
 		return &vmaasData, resp, err
 	}
 
@@ -549,7 +549,7 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 	wg.Wait()
 
 	if cacheErr := invalidatePkgCache(event.GetOrgID()); cacheErr != nil {
-		utils.Log("err", err.Error(), "org_id", event.GetOrgID()).Error("Couldn't invalidate pkg cache")
+		utils.LogError("err", err.Error(), "org_id", event.GetOrgID(), "Couldn't invalidate pkg cache")
 	}
 
 	// send kafka message to payload tracker
@@ -557,7 +557,7 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 		ptErr := mqueue.SendMessages(base.Context, ptWriter, &ptEvents)
 		if ptErr != nil {
 			// don't fail with err, just log that we couldn't send msg to payload tracker
-			utils.Log("err", ptErr.Error()).Warn(WarnPayloadTracker)
+			utils.LogWarn("err", ptErr.Error(), WarnPayloadTracker)
 		}
 	}
 	return err
@@ -571,9 +571,9 @@ func loadCache() {
 }
 
 func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
-	utils.Log().Info("evaluator starting")
+	utils.LogInfo("evaluator starting")
 	configure()
-	utils.Log("MAX_EVAL_GOROUTINES", nEvalGoroutines).Debug("evaluation running in goroutines")
+	utils.LogDebug("MAX_EVAL_GOROUTINES", nEvalGoroutines, "evaluation running in goroutines")
 
 	go RunMetrics()
 
@@ -591,5 +591,5 @@ func RunEvaluator() {
 	var wg sync.WaitGroup
 	run(&wg, mqueue.NewKafkaReaderFromEnv)
 	wg.Wait()
-	utils.Log().Info("evaluator completed")
+	utils.LogInfo("evaluator completed")
 }

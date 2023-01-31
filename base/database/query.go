@@ -67,7 +67,7 @@ func parserForType(v reflect.Type) (AttrParser, error) {
 		}
 		fallthrough
 	default:
-		utils.Log("attribute", v.Name()).Debug("No query parser found")
+		utils.LogDebug("attribute", v.Name(), "No query parser found")
 		return nil, nil
 	}
 }

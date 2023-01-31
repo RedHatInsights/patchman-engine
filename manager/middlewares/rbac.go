@@ -99,7 +99,7 @@ func isAccessGranted(c *gin.Context) bool {
 	}
 
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Call to RBAC svc failed")
+		utils.LogError("err", err.Error(), "Call to RBAC svc failed")
 		status := http.StatusInternalServerError
 		if res != nil {
 			status = res.StatusCode

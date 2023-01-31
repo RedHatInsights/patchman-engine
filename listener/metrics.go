@@ -77,7 +77,7 @@ func RunMetrics() {
 	publicPort := utils.Cfg.PublicPort
 	err := utils.RunServer(base.Context, app, publicPort)
 	if err != nil {
-		utils.Log("err", err.Error()).Error()
+		utils.LogError("err", err.Error())
 		panic(err)
 	}
 }

@@ -25,6 +25,6 @@ func RunSystemCulling() {
 
 	runSystemCulling()
 	if err := Metrics().Add(); err != nil {
-		utils.Log("err", err).Info("Could not push to pushgateway")
+		utils.LogInfo("err", err, "Could not push to pushgateway")
 	}
 }

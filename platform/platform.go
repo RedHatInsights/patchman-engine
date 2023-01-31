@@ -146,7 +146,7 @@ var yumUpdates = `{
 }`
 
 func platformMock() {
-	utils.Log().Info("Platform mock starting")
+	utils.LogInfo("Platform mock starting")
 	app := gin.New()
 	app.Use(middlewares.RequestResponseLogger())
 	app.Use(gzip.Gzip(gzip.DefaultCompression))
@@ -203,13 +203,13 @@ func SendMessageToTopic(topic, message string) {
 }
 
 func mockUploadHandler(c *gin.Context) {
-	utils.Log().Info("Mocking platform upload event")
+	utils.LogInfo("Mocking platform upload event")
 	upload(false)
 	c.Status(http.StatusOK)
 }
 
 func mockDeleteHandler(c *gin.Context) {
-	utils.Log().Info("Mocking platform delete event")
+	utils.LogInfo("Mocking platform delete event")
 
 	identity := mockIdentity()
 	event := map[string]interface{}{
@@ -231,7 +231,7 @@ func mockToggleUpload(c *gin.Context) {
 }
 
 func mockYumUpdatesS3(c *gin.Context) {
-	utils.Log().Info("Mocking S3 for providing yum updates")
+	utils.LogInfo("Mocking S3 for providing yum updates")
 	updates := vmaas.UpdatesV2Response{}
 	if err := json.Unmarshal([]byte(yumUpdates), &updates); err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
@@ -246,7 +246,7 @@ func uploader() {
 		if runUploadLoop {
 			upload(true)
 			i++
-			utils.Log("iteration", i).Info("upload loop running")
+			utils.LogInfo("iteration", i, "upload loop running")
 			time.Sleep(time.Millisecond * 10)
 		} else {
 			i = 0

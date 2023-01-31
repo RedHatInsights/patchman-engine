@@ -67,10 +67,10 @@ func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) models.
 			// package is already in db/cache, nothing needed
 			continue
 		}
-		utils.Log("missing nevra", nevra).Trace("getMissingPackages")
+		utils.LogTrace("missing nevra", nevra, "getMissingPackages")
 		parsed, err := utils.ParseNevra(nevra)
 		if err != nil {
-			utils.Log("err", err.Error(), "nevra", nevra).Warn("Unable to parse nevra")
+			utils.LogWarn("err", err.Error(), "nevra", nevra, "Unable to parse nevra")
 			continue
 		}
 		latestName, found := memoryPackageCache.GetLatestByName(parsed.Name)
@@ -85,7 +85,7 @@ func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) models.
 			pkgName := models.PackageName{Name: parsed.Name}
 			err := updatePackageNameDB(tx, &pkgName)
 			if err != nil {
-				utils.Log("err", err.Error(), "nevra", nevra).Error("unknown package name insert failed")
+				utils.LogError("err", err.Error(), "nevra", nevra, "unknown package name insert failed")
 			}
 			pkg.NameID = pkgName.ID
 			if pkg.NameID == 0 {
@@ -120,12 +120,12 @@ func updatePackageNameDB(tx *gorm.DB, missing *models.PackageName) error {
 }
 
 func updatePackageCache(missing models.PackageSlice) {
-	utils.Log().Trace("updatePackageCache")
+	utils.LogTrace("updatePackageCache")
 	emptyByteSlice := make([]byte, 0)
 	for _, dbPkg := range missing {
 		name, ok := memoryPackageCache.GetNameByID(dbPkg.NameID)
 		if !ok {
-			utils.Log("name_id", dbPkg.NameID).Error("name_id missing in memoryPackageCache")
+			utils.LogError("name_id", dbPkg.NameID, "name_id missing in memoryPackageCache")
 			continue
 		}
 		descHash := emptyByteSlice
@@ -168,8 +168,8 @@ func packages2NevraMap(packages []namedPackage) map[string]namedPackage {
 		// make sure nevra contains epoch even if epoch==0
 		nevra, err := utils.ParseNameEVRA(p.Name, p.EVRA)
 		if err != nil {
-			utils.Log("package_id", p.PackageID, "name_id", p.NameID, "name", p.Name, "evra", p.EVRA).
-				Warn("packages2NevraMap: cannot parse evra")
+			utils.LogWarn("package_id", p.PackageID, "name_id", p.NameID, "name", p.Name, "evra", p.EVRA,
+				"packages2NevraMap: cannot parse evra")
 			continue
 		}
 		nevraString := nevra.StringE(true)
@@ -221,7 +221,7 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform,
 		packages[index].WasStored = true
 		packages[index].UpdateData = columns.UpdateData
 	}
-	utils.Log("inventoryID", system.InventoryID, "packages", numUpdates, "already stored", len(packages)).Info()
+	utils.LogInfo("inventoryID", system.InventoryID, "packages", numUpdates, "already stored", len(packages))
 	return packages, err
 }
 
@@ -234,7 +234,7 @@ func isValidNevra(nevra string, packagesByNEVRA *map[string]namedPackage) bool {
 	// Check whether we have that NEVRA in DB
 	currentNamedPackage := (*packagesByNEVRA)[nevra]
 	if currentNamedPackage.PackageID == 0 {
-		utils.Log("nevra", nevra).Trace("Unknown package")
+		utils.LogTrace("nevra", nevra, "Unknown package")
 		return false
 	}
 	return true
@@ -262,7 +262,7 @@ func createSystemPackage(nevra string,
 	packagesByNEVRA *map[string]namedPackage) (systemPackagePtr *models.SystemPackage, updatesChanged bool) {
 	updateDataJSON, err := vmaasResponse2UpdateDataJSON(&updateData)
 	if err != nil {
-		utils.Log("nevra", nevra).Error("VMaaS updates response parsing failed")
+		utils.LogError("nevra", nevra, "VMaaS updates response parsing failed")
 		return nil, false
 	}
 
@@ -319,7 +319,7 @@ func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList)
 		upNevra, err := utils.ParseNevra(upData.GetPackage())
 		// Skip invalid nevras in updates list
 		if err != nil {
-			utils.Log("nevra", upData.Package).Warn("Invalid nevra")
+			utils.LogWarn("nevra", upData.Package, "Invalid nevra")
 			continue
 		}
 		// Keep only unique entries for each update in the list

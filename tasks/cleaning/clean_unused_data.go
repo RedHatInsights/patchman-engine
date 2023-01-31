@@ -18,7 +18,7 @@ func init() {
 
 func RunDeleteUnusedData() {
 	defer utils.LogPanics(true)
-	utils.Log().Info("Deleting unused data")
+	utils.LogInfo("Deleting unused data")
 
 	deleteUnusedPackages()
 	deleteUnusedAdvisories()
@@ -41,12 +41,12 @@ func deleteUnusedPackages() {
 	err := tx.Delete(&models.Package{}, "id IN (?)", subq).Error
 
 	if err != nil {
-		utils.Log("err", err.Error()).Error("DeleteUnusedPackages")
+		utils.LogError("err", err.Error(), "DeleteUnusedPackages")
 		return
 	}
 
 	tx.Commit()
-	utils.Log().Info("DeleteUnusedPackages tasks performed successfully")
+	utils.LogInfo("DeleteUnusedPackages tasks performed successfully")
 }
 
 func deleteUnusedAdvisories() {
@@ -69,10 +69,10 @@ func deleteUnusedAdvisories() {
 	err := tx.Delete(&models.AdvisoryMetadata{}, "id IN (?)", subq).Error
 
 	if err != nil {
-		utils.Log("err", err.Error()).Error("DeleteUnusedAdvisories")
+		utils.LogError("err", err.Error(), "DeleteUnusedAdvisories")
 		return
 	}
 
 	tx.Commit()
-	utils.Log().Info("DeleteUnusedAdvisories tasks performed successfully")
+	utils.LogInfo("DeleteUnusedAdvisories tasks performed successfully")
 }

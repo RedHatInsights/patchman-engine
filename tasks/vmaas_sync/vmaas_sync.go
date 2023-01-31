@@ -70,7 +70,7 @@ func Configure() {
 }
 
 func runSync() {
-	utils.Log().Info("Starting vmaas-sync job")
+	utils.LogInfo("Starting vmaas-sync job")
 
 	var lastModified *types.Rfc3339TimestampWithZ
 	if enableModifiedSinceSync {
@@ -81,12 +81,12 @@ func runSync() {
 		err := SyncData(lastModified, vmaasExportedTS)
 		if err != nil {
 			// This probably means programming error, better to exit with nonzero error code, so the error is noticed
-			utils.Log("err", err.Error()).Fatal("vmaas data sync failed")
+			utils.LogFatal("err", err.Error(), "vmaas data sync failed")
 		}
 
 		err = SendReevaluationMessages()
 		if err != nil {
-			utils.Log("err", err.Error()).Error("re-evaluation sending routine failed")
+			utils.LogError("err", err.Error(), "re-evaluation sending routine failed")
 		}
 	}
 }
@@ -94,14 +94,14 @@ func runSync() {
 func GetLastSync(key string) *types.Rfc3339TimestampWithZ {
 	ts, err := database.GetTimestampKVValue(key)
 	if err != nil {
-		utils.Log("ts", ts, "key", key).Info("Unable to load last sync timestamp")
+		utils.LogInfo("ts", ts, "key", key, "Unable to load last sync timestamp")
 		return nil
 	}
 	return ts
 }
 
 func SyncData(lastModifiedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *types.Rfc3339TimestampNoT) error {
-	utils.Log().Info("Data sync started")
+	utils.LogInfo("Data sync started")
 	syncStart := time.Now()
 	defer utils.ObserveSecondsSince(syncStart, syncDuration)
 	lastFullSyncTS := GetLastSync(LastFullSync)
@@ -142,7 +142,7 @@ func SyncData(lastModifiedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *type
 	if vmaasExportedTS != nil {
 		database.UpdateTimestampKVValue(VmaasExported, *vmaasExportedTS.Time())
 	}
-	utils.Log().Info("Data sync finished successfully")
+	utils.LogInfo("Data sync finished successfully")
 	return nil
 }
 
@@ -152,6 +152,6 @@ func RunVmaasSync() {
 
 	runSync()
 	if err := Metrics().Add(); err != nil {
-		utils.Log("err", err).Info("Could not push to pushgateway")
+		utils.LogInfo("err", err, "Could not push to pushgateway")
 	}
 }

@@ -27,16 +27,16 @@ type Session struct {
 // @Failure 500 {object} map[string]interface{}
 // @Router /sync [get]
 func Syncapi(c *gin.Context) {
-	utils.Log().Info("manual syncing called...")
+	utils.LogInfo("manual syncing called...")
 	sync.Configure()
 	vmaasExportedTS := sync.VmaasDBExported()
 	err := sync.SyncData(nil, vmaasExportedTS)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("manual called syncing failed")
+		utils.LogError("err", err.Error(), "manual called syncing failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
 	}
-	utils.Log().Info("manual syncing finished successfully")
+	utils.LogInfo("manual syncing finished successfully")
 	c.JSON(http.StatusOK, "OK")
 }
 
@@ -50,14 +50,14 @@ func Syncapi(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{}
 // @Router /re-calc [get]
 func Recalc(c *gin.Context) {
-	utils.Log().Info("manual re-calc messages sending called...")
+	utils.LogInfo("manual re-calc messages sending called...")
 	err := sync.SendReevaluationMessages()
 	if err != nil {
-		utils.Log("err", err.Error()).Error("manual re-calc msgs sending failed")
+		utils.LogError("err", err.Error(), "manual re-calc msgs sending failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
 	}
-	utils.Log().Info("manual re-calc messages sent successfully")
+	utils.LogInfo("manual re-calc messages sent successfully")
 	c.JSON(http.StatusOK, "OK")
 }
 
@@ -74,13 +74,13 @@ func Recalc(c *gin.Context) {
 func CheckCaches(c *gin.Context) {
 	valid, err := database.CheckCachesValidRet()
 	if err != nil {
-		utils.Log("error", err).Error("Could not check validity of caches")
+		utils.LogError("error", err, "Could not check validity of caches")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
 	}
 
 	if !valid {
-		utils.Log().Error("Cache mismatch found")
+		utils.LogError("Cache mismatch found")
 		c.JSON(http.StatusConflict, "conflict")
 		return
 	}
@@ -101,7 +101,7 @@ func CheckCaches(c *gin.Context) {
 func RefreshPackagesHandler(c *gin.Context) {
 	err := caches.RefreshPackagesCaches(nil)
 	if err != nil {
-		utils.Log("error", err).Error("Could not refresh package caches")
+		utils.LogError("error", err, "Could not refresh package caches")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
 	}
@@ -133,7 +133,7 @@ func RefreshPackagesAccountHandler(c *gin.Context) {
 	}
 	err = caches.RefreshPackagesCaches(&accID)
 	if err != nil {
-		utils.Log("error", err.Error()).Error("Could not refresh package caches")
+		utils.LogError("error", err.Error(), "Could not refresh package caches")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
 	}
@@ -161,7 +161,7 @@ func GetActiveSessionsHandler(c *gin.Context) {
 	}
 	err := q.Find(&data).Error
 	if err != nil {
-		utils.Log("error", err).Error("DB query failed")
+		utils.LogError("error", err, "DB query failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
 	}
@@ -188,7 +188,7 @@ func TerminateSessionHandler(c *gin.Context) {
 	}
 	err := database.Db.Exec("select pg_terminate_backend(?)", param).Error
 	if err != nil {
-		utils.Log("error", err).Error("DB query failed")
+		utils.LogError("error", err, "DB query failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
 	}

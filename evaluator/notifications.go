@@ -103,8 +103,8 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 		advisoryIDs = append(advisoryIDs, a.AdvisoryID)
 	}
 
-	utils.Log("inventoryID", system.InventoryID, "advisoryIDs", advisoryIDs, "orgID", event.GetOrgID()).
-		Info("notification sent successfully")
+	utils.LogInfo("inventoryID", system.InventoryID, "advisoryIDs", advisoryIDs, "orgID", event.GetOrgID(),
+		"notification sent successfully")
 
 	err = tx.Table("advisory_account_data").
 		Where("rh_account_id = ? AND advisory_id IN (?)", accountID, advisoryIDs).

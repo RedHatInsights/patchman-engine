@@ -5,6 +5,7 @@ import (
 	"app/base"
 	"app/base/utils"
 	"context"
+	format "fmt"
 	"io"
 	"strings"
 	"sync"
@@ -31,9 +32,9 @@ func createLoggerFunc(counter Counter) func(fmt string, args ...interface{}) {
 
 	fn := func(fmt string, args ...interface{}) {
 		counter.Inc()
-		utils.Log("type", "kafka").Errorf(fmt, args...)
+		utils.LogError("type", "kafka", format.Sprintf(fmt, args...))
 		if strings.Contains(fmt, "Group Load In Progress") {
-			utils.Log().Panic("Kafka client stuck detected!!!")
+			utils.LogPanic("Kafka client stuck detected!!!")
 		}
 	}
 	return fn
@@ -57,7 +58,7 @@ func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 			if err = handler(message); err == nil {
 				return nil
 			}
-			utils.Log("err", err.Error(), "attempt", attempt).Error("Try failed")
+			utils.LogError("err", err.Error(), "attempt", attempt, "Try failed")
 			attempt++
 		}
 		return err

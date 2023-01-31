@@ -265,7 +265,7 @@ func PreloadAdvisoryCacheItems() {
 		return
 	}
 
-	utils.Log("cacheSize", advisoryDetailCacheSize).Info("loading items to advisory detail cache...")
+	utils.LogInfo("cacheSize", advisoryDetailCacheSize, "loading items to advisory detail cache...")
 	var advisoryNames []string
 	err := database.Db.Table("advisory_metadata").Limit(advisoryDetailCacheSize).Order("public_date DESC").
 		Pluck("name", &advisoryNames).Error // preload first N most recent advisories to cache
@@ -278,7 +278,7 @@ func PreloadAdvisoryCacheItems() {
 	for _, advisoryName := range advisoryNames {
 		_, err = getAdvisoryV2(database.Db, advisoryName)
 		if err != nil {
-			utils.Log("advisoryName", advisoryName, "err", err.Error()).Error("can not re-load item to cache - V2")
+			utils.LogError("advisoryName", advisoryName, "err", err.Error(), "can not re-load item to cache - V2")
 		}
 		*count++
 	}
@@ -303,13 +303,13 @@ func tryAddAdvisoryToCacheV2(advisoryName string, resp *AdvisoryDetailResponseV2
 		return
 	}
 	evicted := advisoryDetailCacheV2.Add(advisoryName, *resp)
-	utils.Log("evictedV2", evicted, "advisoryName", advisoryName).Debug("saved to cache")
+	utils.LogDebug("evictedV2", evicted, "advisoryName", advisoryName, "saved to cache")
 }
 
 func getAdvisoryV2(db *gorm.DB, advisoryName string) (*AdvisoryDetailResponseV2, error) {
 	resp := tryGetAdvisoryFromCacheV2(advisoryName)
 	if resp != nil {
-		utils.Log("advisoryName", advisoryName).Debug("found in cache")
+		utils.LogDebug("advisoryName", advisoryName, "found in cache")
 		return resp, nil // return data found in cache
 	}
 

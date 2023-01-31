@@ -14,7 +14,7 @@ func isSyncNeeded(dbExportedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *ty
 	if dbExportedTS == nil || vmaasExportedTS == nil {
 		return true
 	}
-	utils.Log("last sync", dbExportedTS.Time(), "dbchange.exported", vmaasExportedTS.Time()).Info()
+	utils.LogInfo("last sync", dbExportedTS.Time(), "dbchange.exported", vmaasExportedTS.Time())
 	return dbExportedTS.Time().Before(*vmaasExportedTS.Time())
 }
 
@@ -41,7 +41,7 @@ func vmaasDBChangeRequest() (*vmaas.DBChangeResponse, error) {
 func VmaasDBExported() *types.Rfc3339TimestampNoT {
 	dbchange, err := vmaasDBChangeRequest()
 	if err != nil {
-		utils.Log("err", err).Error("Could'n query vmaas dbchange")
+		utils.LogError("err", err, "Could'n query vmaas dbchange")
 		return nil
 	}
 	return dbchange.GetExported()

@@ -38,14 +38,14 @@ func syncAdvisories(syncStart time.Time, modifiedSince *string) error {
 		}
 
 		iPageMax = errataResponse.Pages
-		utils.Log("page", iPage, "pages", errataResponse.Pages, "count", len(errataResponse.ErrataList),
+		utils.LogInfo("page", iPage, "pages", errataResponse.Pages, "count", len(errataResponse.ErrataList),
 			"sync_duration", utils.SinceStr(syncStart, time.Second),
-			"advisories_sync_duration", utils.SinceStr(advSyncStart, time.Second)).
-			Info("Downloaded advisories")
+			"advisories_sync_duration", utils.SinceStr(advSyncStart, time.Second),
+			"Downloaded advisories")
 		iPage++
 	}
 
-	utils.Log("modified_since", modifiedSince).Info("Advisories synced successfully")
+	utils.LogInfo("modified_since", modifiedSince, "Advisories synced successfully")
 	return nil
 }
 
@@ -135,12 +135,12 @@ func checkUpdatedSummaryDescription(errataName string, vmaasData vmaas.ErrataRes
 	modified time.Time, success bool) {
 	modified, err := time.Parse(types.Rfc3339NoTz, vmaasData.Updated)
 	if err != nil {
-		utils.Log("err", err.Error(), "erratum", errataName).Error("Invalid errata modified date")
+		utils.LogError("err", err.Error(), "erratum", errataName, "Invalid errata modified date")
 		return time.Time{}, false
 	}
 
 	if vmaasData.Description == "" || vmaasData.Summary == "" {
-		utils.Log("name", errataName).Error("An advisory without description or summary")
+		utils.LogError("name", errataName, "An advisory without description or summary")
 		return time.Time{}, false
 	}
 	return modified, true
@@ -233,7 +233,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 	tx := tasks.CancelableDB().Table("advisory_metadata")
 	errSelect := tx.Where("name IN ?", names).Find(&existingAdvisories).Error
 	if errSelect != nil {
-		utils.Log("err", errSelect).Warn("couldn't find advisory_metadata for update")
+		utils.LogWarn("err", errSelect, "couldn't find advisory_metadata for update")
 	}
 
 	inDBIDs := make(map[string]int64, len(existingAdvisories))
@@ -254,7 +254,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 	db := tasks.CancelableDB()
 	for _, u := range toUpdate {
 		if err := db.Table("advisory_metadata").Select(updateCols).Updates(u).Error; err != nil {
-			utils.Log("err", err).Error("couldn't update advisory_metadata")
+			utils.LogError("err", err, "couldn't update advisory_metadata")
 		}
 	}
 

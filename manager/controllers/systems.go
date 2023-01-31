@@ -90,7 +90,7 @@ type SystemTagsList []SystemTag
 func (v SystemTagsList) String() string {
 	b, err := json.Marshal(v)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Unable to convert tags struct to json")
+		utils.LogError("err", err.Error(), "Unable to convert tags struct to json")
 	}
 	replacedQuotes := strings.ReplaceAll(string(b), `"`, `'`) // use the same way as "vulnerability app"
 	return replacedQuotes

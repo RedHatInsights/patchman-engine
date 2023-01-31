@@ -202,7 +202,7 @@ func packageSystemDBLookups2PackageSystemItems(systems []PackageSystemDBLookup) 
 	for i, system := range systems {
 		system.PackageSystemItem.Tags, err = parseSystemTags(system.TagsStr)
 		if err != nil {
-			utils.Log("err", err.Error(), "inventory_id", system.ID).Debug("system tags parsing failed")
+			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system tags parsing failed")
 		}
 		data[i] = system.PackageSystemItem
 	}

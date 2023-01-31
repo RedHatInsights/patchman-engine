@@ -27,7 +27,7 @@ func HandleSignals() {
 	go func() {
 		<-c
 		CancelContext()
-		utils.Log().Info("SIGTERM/SIGINT handled")
+		utils.LogInfo("SIGTERM/SIGINT handled")
 	}()
 }
 
@@ -52,7 +52,7 @@ func TryExposeOnMetricsPort(app *gin.Engine) {
 	}
 	err := utils.RunServer(Context, app, metricsPort)
 	if err != nil {
-		utils.Log("err", err.Error()).Error()
+		utils.LogError("err", err.Error())
 		panic(err)
 	}
 }

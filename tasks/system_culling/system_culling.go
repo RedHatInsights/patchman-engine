@@ -17,7 +17,7 @@ func runSystemCulling() {
 			if err != nil {
 				return errors.Wrap(err, "Delete culled")
 			}
-			utils.Log("nDeleted", nDeleted).Info("Culled systems deleted")
+			utils.LogInfo("nDeleted", nDeleted, "Culled systems deleted")
 			deletedCulledSystemsCnt.Add(float64(nDeleted))
 		}
 
@@ -27,7 +27,7 @@ func runSystemCulling() {
 			if err != nil {
 				return errors.Wrap(err, "Mark stale")
 			}
-			utils.Log("nMarked", nMarked).Info("Stale systems marked")
+			utils.LogInfo("nMarked", nMarked, "Stale systems marked")
 			staleSystemsMarkedCnt.Add(float64(nMarked))
 		}
 
@@ -35,9 +35,9 @@ func runSystemCulling() {
 	})
 
 	if err != nil {
-		utils.Log("err", err.Error()).Error("System culling")
+		utils.LogError("err", err.Error(), "System culling")
 	} else {
-		utils.Log().Info("System culling tasks performed successfully")
+		utils.LogInfo("System culling tasks performed successfully")
 	}
 }
 
