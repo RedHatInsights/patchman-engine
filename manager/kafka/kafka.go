@@ -53,8 +53,8 @@ func GetInventoryIDsToEvaluate(db *gorm.DB, baselineID *int64, accountID int,
 		inventoryAIDs = getInventoryIDs(db, baselineID, accountID, updatedInventoryIDs)
 	}
 
-	utils.Log("nInventoryIDs", len(inventoryAIDs), "accountID", accountID).
-		Debug("Loaded inventory IDs to evaluate")
+	utils.LogDebug("nInventoryIDs", len(inventoryAIDs), "accountID", accountID,
+		"Loaded inventory IDs to evaluate")
 	return inventoryAIDs
 }
 
@@ -79,8 +79,8 @@ func getInventoryIDs(db *gorm.DB, baselineID *int64, accountID int, inventoryIDs
 	err := query.Order("inventory_id").
 		Scan(&inventoryAIDs).Error
 	if err != nil {
-		utils.Log("err", err.Error()).
-			Error("Unable to load inventory IDs for baseline")
+		utils.LogError("err", err.Error(),
+			"Unable to load inventory IDs for baseline")
 	}
 	return inventoryAIDs
 }
@@ -92,8 +92,8 @@ func sendInventoryIDs(inventoryIDs mqueue.EvalDataSlice) {
 
 	err := mqueue.SendMessages(base.Context, evalWriter, &inventoryIDs)
 	if err != nil {
-		utils.Log("nInventoryIDs", len(inventoryIDs), "err", err.Error()).
-			Error("Inventory IDs sending failed")
+		utils.LogError("nInventoryIDs", len(inventoryIDs), "err", err.Error(),
+			"Inventory IDs sending failed")
 	}
 }
 

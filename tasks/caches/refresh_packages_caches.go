@@ -25,27 +25,27 @@ func RefreshPackagesCaches(accID *int) error {
 		accs = append(accs, *accID)
 	}
 
-	utils.Log("count", len(accs)).Info("Refreshing accounts")
+	utils.LogInfo("count", len(accs), "Refreshing accounts")
 	for i, acc := range accs {
 		acc := acc
-		utils.Log("account", acc, "#", i).Info("Refreshing account")
+		utils.LogInfo("account", acc, "#", i, "Refreshing account")
 		if err = getCounts(&pkgSysCounts, &acc); err != nil {
-			utils.Log("err", err.Error()).Error("Refresh failed")
+			utils.LogError("err", err.Error(), "Refresh failed")
 			continue
 		}
 
 		if err = updatePackageAccountData(pkgSysCounts); err != nil {
-			utils.Log("err", err.Error()).Error("Refresh failed")
+			utils.LogError("err", err.Error(), "Refresh failed")
 			continue
 		}
 
 		if err = deleteOldCache(pkgSysCounts, &acc); err != nil {
-			utils.Log("err", err.Error()).Error("Refresh failed")
+			utils.LogError("err", err.Error(), "Refresh failed")
 			continue
 		}
 
 		if err = updateCacheValidity(&acc); err != nil {
-			utils.Log("err", err.Error()).Error("Refresh failed")
+			utils.LogError("err", err.Error(), "Refresh failed")
 			continue
 		}
 	}

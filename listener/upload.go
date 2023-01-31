@@ -96,7 +96,7 @@ func HandleUpload(event HostEvent) error {
 	}
 
 	if _, ok := excludedReporters[event.Host.Reporter]; ok {
-		utils.Log("inventoryID", event.Host.ID, "reporter", event.Host.Reporter).Warn(WarnSkippingReporter)
+		utils.LogWarn("inventoryID", event.Host.ID, "reporter", event.Host.Reporter, WarnSkippingReporter)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedReporter).Inc()
 		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, "", WarnSkippingReporter)
@@ -104,7 +104,7 @@ func HandleUpload(event HostEvent) error {
 	}
 
 	if _, ok := excludedHostTypes[event.Host.SystemProfile.HostType]; ok {
-		utils.Log("inventoryID", event.Host.ID, "hostType", event.Host.SystemProfile.HostType).Warn(WarnSkippingHostType)
+		utils.LogWarn("inventoryID", event.Host.ID, "hostType", event.Host.SystemProfile.HostType, WarnSkippingHostType)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedHostType).Inc()
 		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, "", WarnSkippingHostType)
@@ -112,7 +112,7 @@ func HandleUpload(event HostEvent) error {
 	}
 
 	if event.Host.OrgID == nil || *event.Host.OrgID == "" {
-		utils.Log("inventoryID", event.Host.ID).Error(ErrorNoAccountProvided)
+		utils.LogError("inventoryID", event.Host.ID, ErrorNoAccountProvided)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
 		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, "", ErrorNoAccountProvided)
@@ -123,12 +123,12 @@ func HandleUpload(event HostEvent) error {
 	yumUpdates, err := getYumUpdates(event, httpClient)
 	if err != nil {
 		// don't fail, use vmaas evaluation
-		utils.Log("err", err).Error("Could not get yum updates")
+		utils.LogError("err", err, "Could not get yum updates")
 	}
-	utils.Log("inventoryID", event.Host.ID, "yum_updates", string(yumUpdates)).Trace()
+	utils.LogTrace("inventoryID", event.Host.ID, "yum_updates", string(yumUpdates))
 
 	if len(event.Host.SystemProfile.GetInstalledPackages()) == 0 && yumUpdates == nil {
-		utils.Log("inventoryID", event.Host.ID).Warn(WarnSkippingNoPackages)
+		utils.LogWarn("inventoryID", event.Host.ID, WarnSkippingNoPackages)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
 		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedWarnNoPackages))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, WarnSkippingNoPackages)
@@ -138,7 +138,7 @@ func HandleUpload(event HostEvent) error {
 	sys, err := processUpload(&event.Host, yumUpdates)
 
 	if err != nil {
-		utils.Log("inventoryID", event.Host.ID, "err", err.Error()).Error(ErrorProcessUpload)
+		utils.LogError("inventoryID", event.Host.ID, "err", err.Error(), ErrorProcessUpload)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
 		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedErrorProcessing))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, ErrorProcessUpload)
@@ -156,7 +156,7 @@ func HandleUpload(event HostEvent) error {
 	if sys.UnchangedSince != nil && sys.LastEvaluation != nil {
 		if sys.UnchangedSince.Before(*sys.LastEvaluation) {
 			messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccessNoEval).Inc()
-			utils.Log("inventoryID", event.Host.ID).Info(UploadSuccessNoEval)
+			utils.LogInfo("inventoryID", event.Host.ID, UploadSuccessNoEval)
 			utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedSuccessNoEval))
 			sendPayloadStatus(ptWriter, payloadTrackerEvent, SuccessStatus, ReceivedSuccessNoEval)
 			return nil
@@ -166,7 +166,7 @@ func HandleUpload(event HostEvent) error {
 	bufferEvalEvents(sys.InventoryID, sys.RhAccountID, &payloadTrackerEvent)
 
 	messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
-	utils.Log("inventoryID", event.Host.ID).Info(UploadSuccess)
+	utils.LogInfo("inventoryID", event.Host.ID, UploadSuccess)
 	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedSuccess))
 	return nil
 }
@@ -181,7 +181,7 @@ func sendPayloadStatus(w mqueue.Writer, event mqueue.PayloadTrackerEvent, status
 		event.StatusMsg = statusMsg
 	}
 	if err := mqueue.SendMessages(base.Context, w, &event); err != nil {
-		utils.Log("err", err.Error()).Warn(WarnPayloadTracker)
+		utils.LogWarn("err", err.Error(), WarnPayloadTracker)
 	}
 }
 
@@ -191,7 +191,7 @@ var evalBufferSize = 5 * mqueue.BatchSize
 var evalBuffer = make(mqueue.EvalDataSlice, 0, evalBufferSize+1)
 var ptBuffer = make(mqueue.PayloadTrackerEvents, 0, evalBufferSize+1)
 var flushTimer = time.AfterFunc(87600*time.Hour, func() {
-	utils.Log().Info(FlushedTimeoutBuffer)
+	utils.LogInfo(FlushedTimeoutBuffer)
 	flushEvalEvents()
 })
 
@@ -209,7 +209,7 @@ func bufferEvalEvents(inventoryID string, rhAccountID int, ptEvent *mqueue.Paylo
 	ptBuffer = append(ptBuffer, *ptEvent)
 	flushTimer.Reset(uploadEvalTimeout)
 	if len(evalBuffer) >= evalBufferSize {
-		utils.Log().Info(FlushedFullBuffer)
+		utils.LogInfo(FlushedFullBuffer)
 		flushEvalEvents()
 	}
 }
@@ -218,12 +218,12 @@ func flushEvalEvents() {
 	tStart := time.Now()
 	err := mqueue.SendMessages(base.Context, evalWriter, evalBuffer)
 	if err != nil {
-		utils.Log("err", err.Error()).Error(ErrorKafkaSend)
+		utils.LogError("err", err.Error(), ErrorKafkaSend)
 	}
 	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-sent-evaluator"))
 	err = mqueue.SendMessages(base.Context, ptWriter, ptBuffer)
 	if err != nil {
-		utils.Log("err", err.Error()).Warn(WarnPayloadTracker)
+		utils.LogWarn("err", err.Error(), WarnPayloadTracker)
 	}
 	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-sent-payload-tracker"))
 	// empty buffer
@@ -236,7 +236,7 @@ func updateReporterCounter(reporter string) {
 		receivedFromReporter.WithLabelValues(reporter).Inc()
 	} else {
 		receivedFromReporter.WithLabelValues("unknown").Inc()
-		utils.Log("reporter", reporter).Warn("unknown reporter")
+		utils.LogWarn("reporter", reporter, "unknown reporter")
 	}
 }
 
@@ -324,16 +324,16 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		addedRepos, addedSysRepos, deletedSysRepos, err = updateRepos(tx, host.SystemProfile, accountID,
 			systemPlatform.ID, updatesReq.RepositoryList)
 		if err != nil {
-			utils.Log("repository_list", updatesReq.RepositoryList, "inventoryID", systemPlatform.ID).
-				Error("repos failed to insert")
+			utils.LogError("repository_list", updatesReq.RepositoryList, "inventoryID", systemPlatform.ID,
+				"repos failed to insert")
 			return nil, errors.Wrap(err, "unable to update system repos")
 		}
 	}
 
-	utils.Log("inventoryID", inventoryID, "packages", len(updatesReq.PackageList), "repos",
+	utils.LogInfo("inventoryID", inventoryID, "packages", len(updatesReq.PackageList), "repos",
 		len(updatesReq.RepositoryList), "modules", len(updatesReq.GetModulesList()),
-		"addedRepos", addedRepos, "addedSysRepos", addedSysRepos, "deletedSysRepos", deletedSysRepos).
-		Info("System created or updated successfully")
+		"addedRepos", addedRepos, "addedSysRepos", addedSysRepos, "deletedSysRepos", deletedSysRepos,
+		"System created or updated successfully")
 	return &systemPlatform, nil
 }
 
@@ -341,7 +341,7 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 	var err error
 	if errSelect := tx.Where("rh_account_id = ? AND inventory_id = ?", system.RhAccountID, system.InventoryID).
 		Select("id").Find(system).Error; err != nil {
-		utils.Log("err", errSelect).Warn("couldn't find system for update")
+		utils.LogWarn("err", errSelect, "couldn't find system for update")
 	}
 
 	if system.ID != 0 {
@@ -359,7 +359,7 @@ func getReporterID(reporter string) *int {
 	if id, ok := validReporters[reporter]; ok {
 		return &id
 	}
-	utils.Log("reporter", reporter).Warn("no reporter id found, returning nil")
+	utils.LogWarn("reporter", reporter, "no reporter id found, returning nil")
 	return nil
 }
 
@@ -493,7 +493,7 @@ func processRepos(systemProfile *inventory.SystemProfile) []string {
 		}
 		seen[rID] = true
 		if len(strings.TrimSpace(rID)) == 0 {
-			utils.Log("repo", rID).Warn("removed repo with invalid name")
+			utils.LogWarn("repo", rID, "removed repo with invalid name")
 			continue
 		}
 
@@ -557,7 +557,7 @@ func processUpload(host *Host, yumUpdates []byte) (*models.SystemPlatform, error
 
 	// If the system was deleted in last hour, don't register this upload
 	if deleted.InventoryID != "" && deleted.WhenDeleted.After(time.Now().Add(-DeletionThreshold)) {
-		utils.Log("inventoryID", host.ID).Info("Received recently deleted system")
+		utils.LogInfo("inventoryID", host.ID, "Received recently deleted system")
 		return nil, nil
 	}
 	sys, err := updateSystemPlatform(tx, host.ID, accountID, host, yumUpdates, &updatesReq)
@@ -587,7 +587,7 @@ func getYumUpdates(event HostEvent, client *api.Client) ([]byte, error) {
 	}
 
 	if (parsed == vmaas.UpdatesV2Response{}) {
-		utils.Log("yum_updates_s3url", yumUpdatesURL).Warn("No yum updates on S3, getting legacy yum_updates field")
+		utils.LogWarn("yum_updates_s3url", yumUpdatesURL, "No yum updates on S3, getting legacy yum_updates field")
 		err := json.Unmarshal(yumUpdates, &parsed)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to unmarshall yum updates")

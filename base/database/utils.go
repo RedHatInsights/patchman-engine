@@ -105,7 +105,7 @@ func UpdateTimestampKVValue(key string, value time.Time) {
 	ts := value.Format(time.RFC3339)
 	err := UpdateTimestampKVValueStr(key, ts)
 	if err != nil {
-		utils.Log("err", err.Error(), "key", key).Error("Unable to updated timestamp KV value")
+		utils.LogError("err", err.Error(), "key", key, "Unable to updated timestamp KV value")
 	}
 }
 
@@ -145,13 +145,13 @@ func IsPgErrorCode(err error, pgCode string) bool {
 }
 
 func logAndWait(query string) {
-	utils.Log(
+	utils.LogInfo(
 		"host", utils.Cfg.DBHost,
 		"port", utils.Cfg.DBPort,
 		"user", utils.Cfg.DBUser,
 		"db_name", utils.Cfg.DBName,
 		"command", query,
-	).Info("PostgreSQL is unavailable - sleeping")
+		"PostgreSQL is unavailable - sleeping")
 	time.Sleep(time.Second)
 }
 

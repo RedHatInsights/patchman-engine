@@ -133,7 +133,7 @@ func loadAdditionalParamsFromDB() {
 		Where("name NOT IN ('enhancement', 'bugfix', 'security')").
 		Order("name").
 		Pluck("name", &OtherAdvisoryTypes).Error
-	utils.Log("other_advisory_types", OtherAdvisoryTypes).Debug("Other advisory types loaded from DB")
+	utils.LogDebug("other_advisory_types", OtherAdvisoryTypes, "Other advisory types loaded from DB")
 	if err != nil {
 		panic(err)
 	}
@@ -144,7 +144,7 @@ func loadAdditionalParamsFromDB() {
 	err = Db.Table("advisory_type").
 		Select("id, name").
 		Scan(&types).Error
-	utils.Log("advisory_types", types).Debug("Advisory types loaded from DB")
+	utils.LogDebug("advisory_types", types, "Advisory types loaded from DB")
 	if err != nil {
 		panic(err)
 	}

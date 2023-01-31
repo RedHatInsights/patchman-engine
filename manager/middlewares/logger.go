@@ -30,11 +30,12 @@ func RequestResponseLogger() gin.HandlerFunc {
 		for _, param := range c.Params {
 			fields = append(fields, "param_"+param.Key, param.Value)
 		}
+		fields = append(fields, "request")
 
 		if c.Writer.Status() < http.StatusInternalServerError {
-			utils.Log(fields...).Info("request")
+			utils.LogInfo(fields...)
 		} else {
-			utils.Log(fields...).Error("request")
+			utils.LogError(fields...)
 		}
 
 		utils.ObserveSecondsSince(tStart, requestDurations.

@@ -34,7 +34,7 @@ func RunManager() {
 	core.ConfigureApp()
 
 	port := utils.Cfg.PublicPort
-	utils.Log().Infof("Manager starting at port %d", port)
+	utils.LogInfo("port", port, "Manager starting at port")
 	// create web app
 	app := gin.New()
 
@@ -61,10 +61,10 @@ func RunManager() {
 
 	err := utils.RunServer(base.Context, app, port)
 	if err != nil {
-		utils.Log("err", err.Error()).Fatal("server listening failed")
+		utils.LogFatal("err", err.Error(), "server listening failed")
 		panic(err)
 	}
-	utils.Log().Info("manager completed")
+	utils.LogInfo("manager completed")
 }
 
 func getEndpointsConfig() docs.EndpointsConfig {

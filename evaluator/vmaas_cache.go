@@ -43,7 +43,7 @@ func (c *VmaasCache) Get(checksum *string) (*vmaas.UpdatesV2Response, bool) {
 	if c.enabled && checksum != nil {
 		val, ok := c.data.Get(checksum)
 		if ok {
-			utils.Log("checksum", checksum).Trace("VmaasCache.Get cache hit")
+			utils.LogTrace("checksum", checksum, "VmaasCache.Get cache hit")
 			response := val.(*vmaas.UpdatesV2Response)
 			return response, true
 		}

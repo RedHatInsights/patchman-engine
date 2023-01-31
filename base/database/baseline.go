@@ -24,21 +24,21 @@ func GetBaselineConfig(tx *gorm.DB, system *models.SystemPlatform) *BaselineConf
 		Where("id = ? and rh_account_id = ?", system.BaselineID, system.RhAccountID).
 		Pluck("config", &jsonb).Error
 	if err != nil {
-		utils.Log("baseline_id", system.BaselineID, "err", err.Error()).
-			Error("Unable to load baseline config from db")
+		utils.LogError("baseline_id", system.BaselineID, "err", err.Error(),
+			"Unable to load baseline config from db")
 		return nil
 	}
 
 	var config BaselineConfig
 	if len(jsonb[0]) == 0 {
-		utils.Log("baseline_id", system.BaselineID).Debug("Empty baseline config found")
+		utils.LogDebug("baseline_id", system.BaselineID, "Empty baseline config found")
 		return nil
 	}
 
 	err = json.Unmarshal(jsonb[0], &config)
 	if err != nil {
-		utils.Log("err", err.Error(), "baseline_id", system.BaselineID,
-			"config", string(jsonb[0])).Error("Can't parse baseline")
+		utils.LogError("err", err.Error(), "baseline_id", system.BaselineID,
+			"config", string(jsonb[0]), "Can't parse baseline")
 		return nil
 	}
 	return &config

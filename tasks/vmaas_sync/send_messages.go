@@ -10,7 +10,7 @@ import (
 
 func SendReevaluationMessages() error {
 	if !enableRecalcMessagesSend {
-		utils.Log().Info("Recalc messages sending disabled, skipping...")
+		utils.LogInfo("Recalc messages sending disabled, skipping...")
 		return nil
 	}
 
@@ -30,9 +30,9 @@ func SendReevaluationMessages() error {
 	defer utils.ObserveSecondsSince(tStart, messageSendDuration)
 	err = mqueue.SendMessages(base.Context, evalWriter, &inventoryAIDs)
 	if err != nil {
-		utils.Log("err", err.Error()).Error("sending to re-evaluate failed")
+		utils.LogError("err", err.Error(), "sending to re-evaluate failed")
 	}
-	utils.Log("count", len(inventoryAIDs)).Info("systems sent to re-calc")
+	utils.LogInfo("count", len(inventoryAIDs), "systems sent to re-calc")
 	return nil
 }
 

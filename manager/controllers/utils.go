@@ -37,27 +37,27 @@ var validFilters = map[string]bool{
 }
 
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
-	utils.Log("err", err.Error()).Error(respMsg)
+	utils.LogError("err", err.Error(), respMsg)
 	c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{Error: respMsg})
 }
 
 func LogWarnAndResp(c *gin.Context, code int, respMsg string) {
-	utils.Log().Warn(respMsg)
+	utils.LogWarn(respMsg)
 	c.AbortWithStatusJSON(code, utils.ErrorResponse{Error: respMsg})
 }
 
 func LogAndRespStatusError(c *gin.Context, code int, err error, msg string) {
-	utils.Log("err", err.Error()).Error(msg)
+	utils.LogError("err", err.Error(), msg)
 	c.AbortWithStatusJSON(code, utils.ErrorResponse{Error: msg})
 }
 
 func LogAndRespBadRequest(c *gin.Context, err error, respMsg string) {
-	utils.Log("err", err.Error()).Warn(respMsg)
+	utils.LogWarn("err", err.Error(), respMsg)
 	c.AbortWithStatusJSON(http.StatusBadRequest, utils.ErrorResponse{Error: respMsg})
 }
 
 func LogAndRespNotFound(c *gin.Context, err error, respMsg string) {
-	utils.Log("err", err.Error()).Warn(respMsg)
+	utils.LogWarn("err", err.Error(), respMsg)
 	c.AbortWithStatusJSON(http.StatusNotFound, utils.ErrorResponse{Error: respMsg})
 }
 
@@ -640,7 +640,7 @@ func systemDBLookups2SystemItems(systems []SystemDBLookup) ([]SystemItem, int, m
 	for i, system := range systems {
 		system.Tags, err = parseSystemTags(system.TagsStr)
 		if err != nil {
-			utils.Log("err", err.Error(), "inventory_id", system.ID).Debug("system tags parsing failed")
+			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system tags parsing failed")
 		}
 		data[i] = SystemItem{
 			Attributes: system.SystemItemAttributes,
@@ -689,7 +689,7 @@ func parseAndFillTags(systems *[]SystemDBLookup) {
 	for i, system := range *systems {
 		(*systems)[i].Tags, err = parseSystemTags(system.TagsStr)
 		if err != nil {
-			utils.Log("err", err.Error(), "inventory_id", system.ID).Debug("system tags to export parsing failed")
+			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system tags to export parsing failed")
 		}
 	}
 }
@@ -699,7 +699,7 @@ func systemAdvisoryItemAttributeParse(advisory SystemAdvisoryItemAttributes) Sys
 	var err error
 	advisory.ReleaseVersions, err = parseJSONList(advisory.ReleaseVersionsJSONB)
 	if err != nil {
-		utils.Log("err", err.Error(), "json", advisory.ReleaseVersionsJSONB).Warn("Unable to parse json list")
+		utils.LogWarn("err", err.Error(), "json", advisory.ReleaseVersionsJSONB, "Unable to parse json list")
 	}
 	return advisory
 }

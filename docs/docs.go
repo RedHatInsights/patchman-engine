@@ -45,7 +45,7 @@ func Init(app *gin.Engine, config EndpointsConfig) string {
 	var data openapiData
 	for ver, data = range appVersions {
 		nRemovedPaths := filterOpenAPI(config, data.in, data.out)
-		utils.Log("nRemovedPaths", nRemovedPaths).Debug("Filtering endpoints paths from " + ver + "/openapi.json")
+		utils.LogDebug("nRemovedPaths", nRemovedPaths, "Filtering endpoints paths from "+ver+"/openapi.json")
 		app.GET(data.url, data.handler)
 	}
 

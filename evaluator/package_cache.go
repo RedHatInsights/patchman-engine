@@ -72,7 +72,7 @@ func (c *PackageCache) Load() {
 		return
 	}
 
-	utils.Log("size", c.size).Info("PackageCache.Load")
+	utils.LogInfo("size", c.size, "PackageCache.Load")
 	tx := database.Db.Begin()
 	defer tx.Rollback()
 
@@ -112,15 +112,15 @@ func (c *PackageCache) Load() {
 	progressTicker.Stop()
 
 	runtime.ReadMemStats(&mEnd)
-	utils.Log("rows", c.byID.Len(), "allocated-size", utils.SizeStr(mEnd.TotalAlloc-mStart.TotalAlloc),
-		"duration", utils.SinceStr(tStart, time.Millisecond)).Info("PackageCache.Load")
+	utils.LogInfo("rows", c.byID.Len(), "allocated-size", utils.SizeStr(mEnd.TotalAlloc-mStart.TotalAlloc),
+		"duration", utils.SinceStr(tStart, time.Millisecond), "PackageCache.Load")
 }
 
 func (c *PackageCache) GetByID(id int64) (*PackageCacheMetadata, bool) {
 	if c.enabled {
 		val, ok := c.byID.Get(id)
 		if ok {
-			utils.Log("id", id).Trace("PackageCache.GetByID cache hit")
+			utils.LogTrace("id", id, "PackageCache.GetByID cache hit")
 			metadata := val.(*PackageCacheMetadata)
 			return metadata, true
 		}
@@ -129,10 +129,10 @@ func (c *PackageCache) GetByID(id int64) (*PackageCacheMetadata, bool) {
 	metadata := c.ReadByID(id)
 	if c.enabled && metadata != nil {
 		c.Add(metadata)
-		utils.Log("id", id).Trace("PackageCache.GetByID read from db")
+		utils.LogTrace("id", id, "PackageCache.GetByID read from db")
 		return metadata, true
 	}
-	utils.Log("id", id).Trace("PackageCache.GetByID not found")
+	utils.LogTrace("id", id, "PackageCache.GetByID not found")
 	return nil, false
 }
 
@@ -140,7 +140,7 @@ func (c *PackageCache) GetByNevra(nevra string) (*PackageCacheMetadata, bool) {
 	if c.enabled {
 		val, ok := c.byNevra.Get(nevra)
 		if ok {
-			utils.Log("nevra", nevra).Trace("PackageCache.GetByNevra cache hit")
+			utils.LogTrace("nevra", nevra, "PackageCache.GetByNevra cache hit")
 			metadata := val.(*PackageCacheMetadata)
 			return metadata, true
 		}
@@ -149,10 +149,10 @@ func (c *PackageCache) GetByNevra(nevra string) (*PackageCacheMetadata, bool) {
 	metadata := c.ReadByNevra(nevra)
 	if c.enabled && metadata != nil {
 		c.Add(metadata)
-		utils.Log("nevra", nevra).Trace("PackageCache.GetByNevra read from db")
+		utils.LogTrace("nevra", nevra, "PackageCache.GetByNevra read from db")
 		return metadata, true
 	}
-	utils.Log("nevra", nevra).Trace("PackageCache.GetByNevra not found")
+	utils.LogTrace("nevra", nevra, "PackageCache.GetByNevra not found")
 	return nil, false
 }
 
@@ -160,7 +160,7 @@ func (c *PackageCache) GetLatestByName(name string) (*PackageCacheMetadata, bool
 	if c.enabled {
 		val, ok := c.latestByName.Get(name)
 		if ok {
-			utils.Log("name", name).Trace("PackageCache.GetLatestByName cache hit")
+			utils.LogTrace("name", name, "PackageCache.GetLatestByName cache hit")
 			metadata := val.(*PackageCacheMetadata)
 			return metadata, true
 		}
@@ -169,10 +169,10 @@ func (c *PackageCache) GetLatestByName(name string) (*PackageCacheMetadata, bool
 	metadata := c.ReadLatestByName(name)
 	if c.enabled && metadata != nil {
 		c.Add(metadata)
-		utils.Log("name", name).Trace("PackageCache.GetLatestByName read from db")
+		utils.LogTrace("name", name, "PackageCache.GetLatestByName read from db")
 		return metadata, true
 	}
-	utils.Log("name", name).Trace("PackageCache.GetLatestByName not found")
+	utils.LogTrace("name", name, "PackageCache.GetLatestByName not found")
 	return nil, false
 }
 
@@ -180,7 +180,7 @@ func (c *PackageCache) GetNameByID(id int64) (string, bool) {
 	if c.enabled {
 		val, ok := c.nameByID.Get(id)
 		if ok {
-			utils.Log("id", id).Trace("PackageCache.GetNameByID cache hit")
+			utils.LogTrace("id", id, "PackageCache.GetNameByID cache hit")
 			metadata := val.(*PackageCacheMetadata)
 			return metadata.Name, true
 		}
@@ -189,10 +189,10 @@ func (c *PackageCache) GetNameByID(id int64) (string, bool) {
 	metadata := c.ReadNameByID(id)
 	if c.enabled && metadata != nil {
 		c.Add(metadata)
-		utils.Log("id", id).Trace("PackageCache.GetNameByID read from db")
+		utils.LogTrace("id", id, "PackageCache.GetNameByID read from db")
 		return metadata.Name, true
 	}
-	utils.Log("id", id).Trace("PackageCache.GetNameByID not found")
+	utils.LogTrace("id", id, "PackageCache.GetNameByID not found")
 	return "", false
 }
 
@@ -205,20 +205,20 @@ func (c *PackageCache) Add(pkg *PackageCacheMetadata) {
 
 func (c *PackageCache) addByID(pkg *PackageCacheMetadata) {
 	evicted := c.byID.Add(pkg.ID, pkg)
-	utils.Log("byID", pkg.ID, "evicted", evicted).Trace("PackageCache.addByID")
+	utils.LogTrace("byID", pkg.ID, "evicted", evicted, "PackageCache.addByID")
 }
 
 func (c *PackageCache) addByNevra(pkg *PackageCacheMetadata) {
 	// make sure nevra contains epoch even if epoch==0
 	nevra, err := utils.ParseNameEVRA(pkg.Name, pkg.Evra)
 	if err != nil {
-		utils.Log("id", pkg.ID, "name_id", pkg.NameID, "name", pkg.Name, "evra", pkg.Evra).
-			Warn("PackageCache.addByNevra: cannot parse evra")
+		utils.LogWarn("id", pkg.ID, "name_id", pkg.NameID, "name", pkg.Name, "evra", pkg.Evra,
+			"PackageCache.addByNevra: cannot parse evra")
 		return
 	}
 	nevraString := nevra.StringE(true)
 	evicted := c.byNevra.Add(nevraString, pkg)
-	utils.Log("byNevra", nevraString, "evicted", evicted).Trace("PackageCache.addByNevra")
+	utils.LogTrace("byNevra", nevraString, "evicted", evicted, "PackageCache.addByNevra")
 }
 
 func (c *PackageCache) addLatestByName(pkg *PackageCacheMetadata) {
@@ -231,7 +231,7 @@ func (c *PackageCache) addLatestByName(pkg *PackageCacheMetadata) {
 		// if there is no record yet
 		// or it has older EVR we have to replace it
 		evicted := c.latestByName.Add(pkg.Name, pkg)
-		utils.Log("latestByName", pkg.Name, "evicted", evicted).Trace("PackageCache.addLatestByName")
+		utils.LogTrace("latestByName", pkg.Name, "evicted", evicted, "PackageCache.addLatestByName")
 	}
 }
 
@@ -239,7 +239,7 @@ func (c *PackageCache) addNameByID(pkg *PackageCacheMetadata) {
 	ok, evicted := c.nameByID.ContainsOrAdd(pkg.NameID, pkg)
 	if !ok {
 		// name was not there and we've added it
-		utils.Log("nameByID", pkg.NameID, "evicted", evicted).Trace("PackageCache.addNameByID")
+		utils.LogTrace("nameByID", pkg.NameID, "evicted", evicted, "PackageCache.addNameByID")
 	}
 }
 
@@ -272,10 +272,10 @@ func (c *PackageCache) ReadByID(id int64) *PackageCacheMetadata {
 func (c *PackageCache) ReadByNevra(nevraString string) *PackageCacheMetadata {
 	nevra, err := utils.ParseNevra(nevraString)
 	if err != nil {
-		utils.Log("nevra", nevraString).Warn("PackageCache.ReadByNevra: cannot parse evra")
+		utils.LogWarn("nevra", nevraString, "PackageCache.ReadByNevra: cannot parse evra")
 		return nil
 	}
-	utils.Log("nevra.Name", nevra.Name, "nevra.EVRAString", nevra.EVRAString()).Trace("PackageCache.ReadByNevra")
+	utils.LogTrace("nevra.Name", nevra.Name, "nevra.EVRAString", nevra.EVRAString(), "PackageCache.ReadByNevra")
 	return readPackageFromDB("pn.name = ? and p.evra = ?", "", nevra.Name, nevra.EVRAString())
 }
 

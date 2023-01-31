@@ -70,7 +70,7 @@ func loadValidReporters() map[string]int {
 }
 
 func runReaders(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
-	utils.Log().Info("listener starting")
+	utils.LogInfo("listener starting")
 
 	// Start a web server for handling metrics so that readiness probe works
 	go RunMetrics()
@@ -88,5 +88,5 @@ func RunListener() {
 	var wg sync.WaitGroup
 	runReaders(&wg, mqueue.NewKafkaReaderFromEnv)
 	wg.Wait()
-	utils.Log().Info("listener completed")
+	utils.LogInfo("listener completed")
 }

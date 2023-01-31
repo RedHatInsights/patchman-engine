@@ -79,10 +79,10 @@ func TestSchemaCompatiblity(t *testing.T) {
 	if len(diff) > 0 {
 		fmt.Print(diff)
 		if err := os.WriteFile("/tmp/schema-1-migrated.dump", migrated, 0600); err != nil {
-			utils.Log(err)
+			utils.LogError(err)
 		}
 		if err := os.WriteFile("/tmp/schema-2-fromscratch.dump", fromScratch, 0600); err != nil {
-			utils.Log(err)
+			utils.LogError(err)
 		}
 	}
 	assert.Equal(t, len(diff), 0)

@@ -120,7 +120,7 @@ func LogProgress(msg string, duration time.Duration, total int64) (*time.Ticker,
 	go func() {
 		for range timer.C {
 			pct := count * 100 / total
-			Log("gorutineID", goID, "progress %", pct).Info(msg)
+			LogInfo("gorutineID", goID, "progress %", pct, msg)
 		}
 	}()
 	return timer, &count

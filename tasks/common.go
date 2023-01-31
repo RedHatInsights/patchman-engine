@@ -14,7 +14,7 @@ import (
 func HandleContextCancel(fn func()) {
 	go func() {
 		<-base.Context.Done()
-		utils.Log().Info("stopping vmaas_sync")
+		utils.LogInfo("stopping vmaas_sync")
 		fn()
 	}()
 }

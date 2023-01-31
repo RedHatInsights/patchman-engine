@@ -14,7 +14,7 @@ func TurnpikeAuthenticator() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Missing x-rh-identity header"})
 			return
 		}
-		utils.Log("ident", identStr).Trace("Identity retrieved")
+		utils.LogTrace("ident", identStr, "Identity retrieved")
 
 		xrhid, err := utils.ParseXRHID(identStr)
 		if err != nil {

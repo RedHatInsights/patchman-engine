@@ -50,7 +50,7 @@ func waitForSessionClosed(db *sql.DB) {
 			log.Info("No 'listener', 'evaluator', 'vmaas_sync' sessions found")
 			return
 		}
-		utils.Log("session:", session).Info("Session found")
+		utils.LogInfo("session:", session, "Session found")
 		time.Sleep(time.Second)
 	}
 }

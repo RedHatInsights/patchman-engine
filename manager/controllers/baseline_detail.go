@@ -102,7 +102,7 @@ func tryParseBaselineConfig(configBytes []byte) *BaselineConfig {
 	var baselineConfig BaselineConfig
 	err := json.Unmarshal(configBytes, &baselineConfig)
 	if err != nil {
-		utils.Log("err", err.Error()).Warn("Unable to parse baseline config json")
+		utils.LogWarn("err", err.Error(), "Unable to parse baseline config json")
 		return nil
 	}
 	return &baselineConfig

@@ -33,14 +33,14 @@ func syncPackages(syncStart time.Time, modifiedSince *string) error {
 			return errors.Wrap(err, "PkgList page download and process failed")
 		}
 		iPageMax = pkgListResponse.Pages
-		utils.Log("page", iPage, "pages", iPageMax, "count", len(pkgListResponse.PackageList),
+		utils.LogInfo("page", iPage, "pages", iPageMax, "count", len(pkgListResponse.PackageList),
 			"sync_duration", utils.SinceStr(syncStart, time.Second),
-			"packages_sync_duration", utils.SinceStr(pkgSyncStart, time.Second)).
-			Info("Downloaded packages")
+			"packages_sync_duration", utils.SinceStr(pkgSyncStart, time.Second),
+			"Downloaded packages")
 		iPage++
 	}
 
-	utils.Log("modified_since", modifiedSince).Info("Packages synced successfully")
+	utils.LogInfo("modified_since", modifiedSince, "Packages synced successfully")
 	return nil
 }
 
@@ -147,7 +147,7 @@ func storeStringsFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListItem) er
 		}
 	}
 
-	utils.Log("strings", len(strings)).Info("Created package strings to store")
+	utils.LogInfo("strings", len(strings), "Created package strings to store")
 	tx = tx.Clauses(clause.OnConflict{
 		DoNothing: true,
 	})
@@ -156,7 +156,7 @@ func storeStringsFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListItem) er
 
 func storePackageNamesFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListItem) (map[string]int64, error) {
 	packageNames, packageNameModels := getPackageArraysFromPkgListItems(tx, vmaasData)
-	utils.Log("names", len(packageNames)).Info("Got package names")
+	utils.LogInfo("names", len(packageNames), "Got package names")
 	if len(packageNameModels) > 0 {
 		tx = tx.Clauses(clause.OnConflict{
 			DoNothing: true,
@@ -165,14 +165,14 @@ func storePackageNamesFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListIte
 		if err != nil {
 			return nil, errors.Wrap(err, "Bulk insert of package names failed")
 		}
-		utils.Log().Info("Package names stored")
+		utils.LogInfo("Package names stored")
 	}
 
 	packageNameIDMap, err := getPackageNameMap(tx, packageNames)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to get package name map")
 	}
-	utils.Log("names", len(packageNameIDMap)).Info("Package names map loaded")
+	utils.LogInfo("names", len(packageNameIDMap), "Package names map loaded")
 	return packageNameIDMap, nil
 }
 
@@ -182,7 +182,7 @@ func getPackageArraysFromPkgListItems(tx *gorm.DB, pkgListItems []vmaas.PkgListI
 	for _, pkgListItem := range pkgListItems {
 		nevra, err := utils.ParseNevra(pkgListItem.Nevra)
 		if err != nil {
-			utils.Log("nevra", pkgListItem.Nevra).Warn("Unable to parse package name")
+			utils.LogWarn("nevra", pkgListItem.Nevra, "Unable to parse package name")
 			continue
 		}
 		namesMap[nevra.Name] = pkgListItem.Summary
@@ -198,7 +198,7 @@ func getPackageArraysFromPkgListItems(tx *gorm.DB, pkgListItems []vmaas.PkgListI
 		Where("name IN ?", nameArr).
 		Find(&existingPkgsNames).
 		Error; err != nil {
-		utils.Log("err", err).Error("error in finding existing package names")
+		utils.LogError("err", err, "error in finding existing package names")
 	}
 	for _, ep := range existingPkgsNames {
 		delete(namesMap, ep.Name)
@@ -225,10 +225,10 @@ func storePackageDetailsFrmPkgListItems(tx *gorm.DB, nameIDs map[string]int64, p
 			toStore = append(toStore, *packageModel)
 			uniquePackages[key] = true
 		} else {
-			utils.Log("nevra", pkgListItem.Nevra).Warn("Duplicit nevra found")
+			utils.LogWarn("nevra", pkgListItem.Nevra, "Duplicit nevra found")
 		}
 	}
-	utils.Log("packages", len(toStore)).Info("Collected packages to store")
+	utils.LogInfo("packages", len(toStore), "Collected packages to store")
 
 	err := storeOrUpdate(tx, toStore)
 	return err
@@ -246,7 +246,7 @@ func storeOrUpdate(tx *gorm.DB, pkgs models.PackageSlice) error {
 	}
 
 	if err := tx.Where("(name_id, evra) IN ?", nameIDEVRAs).Find(&toUpdate).Error; err != nil {
-		utils.Log("err", err).Warn("couldn't find packages for update")
+		utils.LogWarn("err", err, "couldn't find packages for update")
 	}
 	for _, u := range toUpdate {
 		updateIDs[nameIDandEvra{u.NameID, u.EVRA}] = u.ID
@@ -285,14 +285,14 @@ func storeOrUpdate(tx *gorm.DB, pkgs models.PackageSlice) error {
 	} else {
 		storePackagesCnt.WithLabelValues("success").Add(float64(len(pkgs)))
 	}
-	utils.Log().Info("Packages stored")
+	utils.LogInfo("Packages stored")
 	return updErr
 }
 
 func getPackageFromPkgListItem(pkgListItem vmaas.PkgListItem, nameIDs map[string]int64) *models.Package {
 	nevraPtr, err := utils.ParseNevra(pkgListItem.Nevra)
 	if err != nil {
-		utils.Log("nevra", pkgListItem.Nevra).Error("Unable to parse nevra")
+		utils.LogError("nevra", pkgListItem.Nevra, "Unable to parse nevra")
 		return nil
 	}
 
@@ -326,7 +326,7 @@ func updatePackageNameSummary(tx *gorm.DB, nameIDs map[string]int64) error {
 					  AND (latest.summary != pn.summary OR pn.summary IS NULL)`,
 		pkgNameIDs).Error
 	if err == nil {
-		utils.Log().Info("Package name summary updated")
+		utils.LogInfo("Package name summary updated")
 	}
 	return err
 }

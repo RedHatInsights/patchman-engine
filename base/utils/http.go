@@ -20,8 +20,8 @@ func HTTPCallRetry(ctx context.Context, httpCallFun func() (outputDataPtr interf
 		attempt++
 		outDataPtr, resp, callErr := httpCallFun()
 		if statusCodeFound(resp, codesToRetry) {
-			Log("attempt", attempt, "status_code", TryGetStatusCode(resp)).
-				Warn("HTTP call ended with wrong status code")
+			LogWarn("attempt", attempt, "status_code", TryGetStatusCode(resp),
+				"HTTP call ended with wrong status code")
 			continue
 		}
 
@@ -30,7 +30,7 @@ func HTTPCallRetry(ctx context.Context, httpCallFun func() (outputDataPtr interf
 		}
 
 		if len(codesToRetry) == 0 { // no "retry" codes specified, continue always
-			Log("attempt", attempt, "err", callErr.Error()).Warn("HTTP call failed, trying again")
+			LogWarn("attempt", attempt, "err", callErr.Error(), "HTTP call failed, trying again")
 			continue
 		}
 
@@ -46,7 +46,7 @@ func CallAPI(client *http.Client, request *http.Request, debugEnabled bool) (*ht
 		if err != nil {
 			return nil, err
 		}
-		Log("dump", fmt.Sprintf("\n%s\n", string(dump))).Debug("http call")
+		LogDebug("dump", fmt.Sprintf("\n%s\n", string(dump)), "http call")
 	}
 
 	resp, err := client.Do(request)
@@ -59,7 +59,7 @@ func CallAPI(client *http.Client, request *http.Request, debugEnabled bool) (*ht
 		if err != nil {
 			return resp, err
 		}
-		Log("dump", fmt.Sprintf("\n%s\n", string(dump))).Debug("http response")
+		LogDebug("dump", fmt.Sprintf("\n%s\n", string(dump)), "http response")
 	}
 	return resp, err
 }

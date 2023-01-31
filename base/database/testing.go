@@ -16,11 +16,11 @@ func DebugWithCachesCheck(part string, fun func()) {
 	fun()
 	validAfter, err := CheckCachesValidRet()
 	if err != nil {
-		utils.Log("error", err).Panic("Could not check validity of caches")
+		utils.LogPanic("error", err, "Could not check validity of caches")
 	}
 
 	if !validAfter {
-		utils.Log("part", part).Panic("Cache mismatch created")
+		utils.LogPanic("part", part, "Cache mismatch created")
 	}
 }
 
@@ -73,8 +73,8 @@ func CheckCachesValidRet() (bool, error) {
 		calcCount := calculated[key]
 
 		if cachedCount != calcCount {
-			utils.Log("advisory_id", key.AdvisoryID, "account_id", key.AccountID,
-				"cached", cachedCount, "calculated", calcCount).Error("Cached counts mismatch")
+			utils.LogError("advisory_id", key.AdvisoryID, "account_id", key.AccountID,
+				"cached", cachedCount, "calculated", calcCount, "Cached counts mismatch")
 			valid = false
 		}
 	}
@@ -83,8 +83,8 @@ func CheckCachesValidRet() (bool, error) {
 		cachedCount := calculated[key]
 
 		if cachedCount != calcCount {
-			utils.Log("advisory_id", key.AdvisoryID, "account_id", key.AccountID,
-				"cached", cachedCount, "calculated", calcCount).Error("Cached counts mismatch")
+			utils.LogError("advisory_id", key.AdvisoryID, "account_id", key.AccountID,
+				"cached", cachedCount, "calculated", calcCount, "Cached counts mismatch")
 			valid = false
 		}
 	}

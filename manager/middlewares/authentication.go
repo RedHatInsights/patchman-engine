@@ -40,7 +40,7 @@ func GetOrCreateAccount(orgID string) (int, error) {
 	// Find account by OrgID
 	err := database.Db.Where("org_id = ?", *rhAccount.OrgID).Find(&rhAccount).Error
 	if err != nil {
-		utils.Log("err", err, "org_id", *rhAccount.OrgID).Warn("Error in finding account")
+		utils.LogWarn("err", err, "org_id", *rhAccount.OrgID, "Error in finding account")
 	}
 	if rhAccount.ID != 0 {
 		return rhAccount.ID, nil
@@ -49,7 +49,7 @@ func GetOrCreateAccount(orgID string) (int, error) {
 	// create new rhAccount with OrgID
 	err = database.OnConflictUpdate(database.Db, "org_id", "org_id").Select("org_id").Create(&rhAccount).Error
 	if err != nil {
-		utils.Log("err", err, "org_id", *rhAccount.OrgID).Warn("Error creating account")
+		utils.LogWarn("err", err, "org_id", *rhAccount.OrgID, "Error creating account")
 	}
 	return rhAccount.ID, err
 }
@@ -116,7 +116,7 @@ func TurnpikeAuthenticator() gin.HandlerFunc {
 
 func MockAuthenticator(account int) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		utils.Log("account_id", account).Warn("using mocking account id")
+		utils.LogWarn("account_id", account, "using mocking account id")
 		c.Set(KeyAccount, account)
 		c.Next()
 	}
@@ -145,7 +145,7 @@ func (c *ginContext) GetXRHID() *identity.XRHID {
 			http.StatusUnauthorized, utils.ErrorResponse{Error: "Missing x-rh-identity header"})
 		return nil
 	}
-	utils.Log("ident", identStr).Trace("Identity retrieved")
+	utils.LogTrace("ident", identStr, "Identity retrieved")
 
 	xrhid, err := utils.ParseXRHID(identStr)
 	if err != nil {

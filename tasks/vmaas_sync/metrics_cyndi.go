@@ -45,7 +45,7 @@ var queryCyndiMetricColumns = database.MustGetSelect(&cyndiMetricColumns{})
 func updateCyndiData() {
 	tagStats, systemStats, err := getCyndiData()
 	if err != nil {
-		utils.Log("err", err.Error()).Error("unable to update cyndi metrics")
+		utils.LogError("err", err.Error(), "unable to update cyndi metrics")
 	}
 
 	for label, count := range tagStats {
@@ -61,7 +61,7 @@ func getCyndiData() (tagStats map[string]int64, systemStats map[string]int64, er
 	err = tasks.CancelableDB().Table("inventory.hosts").
 		Select(queryCyndiMetricColumns).Take(&row).Error
 	if err != nil {
-		utils.Log("err", err.Error()).Error("unable to update cyndi metrics")
+		utils.LogError("err", err.Error(), "unable to update cyndi metrics")
 		return tagStats, systemStats, err
 	}
 	tagStats = map[string]int64{

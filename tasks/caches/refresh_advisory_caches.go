@@ -19,8 +19,8 @@ func refreshAdvisoryCachesPerAccounts() {
 		return tx.Exec("select refresh_advisory_caches(NULL, NULL)").Error
 	})
 	if err != nil {
-		utils.Log("err", err.Error()).Error("Refreshed account advisory caches")
+		utils.LogError("err", err.Error(), "Refreshed account advisory caches")
 	} else {
-		utils.Log().Info("Refreshed account advisory caches")
+		utils.LogInfo("Refreshed account advisory caches")
 	}
 }

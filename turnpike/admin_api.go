@@ -27,7 +27,7 @@ import (
 func RunAdminAPI() {
 	core.ConfigureApp()
 
-	utils.Log("port", utils.Cfg.PublicPort).Info("Manager-admin starting")
+	utils.LogInfo("port", utils.Cfg.PublicPort, "Manager-admin starting")
 	app := gin.New()
 	app.Use(middlewares.RequestResponseLogger())
 	middlewares.SetAdminSwagger(app)
@@ -37,7 +37,7 @@ func RunAdminAPI() {
 
 	err := utils.RunServer(base.Context, app, utils.Cfg.PublicPort)
 	if err != nil {
-		utils.Log("err", err.Error()).Error()
+		utils.LogError("err", err.Error())
 		panic(err)
 	}
 }
