@@ -7,7 +7,6 @@ import (
 	"app/manager/middlewares"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -33,7 +32,7 @@ type SystemPackageResponse struct {
 	Links Links               `json:"links"`
 }
 
-var SystemPackagesSelect = fmt.Sprintf("%s,spkg.update_data as updates", database.MustGetSelect(&SystemPackagesAttrs{}))
+var SystemPackagesSelect = database.MustGetSelect(&SystemPackageDBLoad{})
 var SystemPackagesFields = database.MustGetQueryAttrs(&SystemPackagesAttrs{})
 var SystemPackagesOpts = ListOpts{
 	Fields:         SystemPackagesFields,
