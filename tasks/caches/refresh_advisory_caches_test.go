@@ -17,18 +17,18 @@ func TestRefreshAdvisoryCachesPerAccounts(t *testing.T) {
 
 	// set wrong numbers of caches
 	assert.Nil(t, database.Db.Model(&models.AdvisoryAccountData{}).
-		Where("advisory_id = 1 AND rh_account_id = 2").Update("systems_affected", 5).Error)
+		Where("advisory_id = 1 AND rh_account_id = 2").Update("systems_installable", 5).Error)
 	assert.Nil(t, database.Db.Model(&models.AdvisoryAccountData{}).
-		Where("advisory_id = 2 AND rh_account_id = 1").Update("systems_affected", 3).Error)
+		Where("advisory_id = 2 AND rh_account_id = 1").Update("systems_installable", 3).Error)
 	assert.Nil(t, database.Db.Model(&models.AdvisoryAccountData{}).
-		Where("advisory_id = 3 AND rh_account_id = 1").Update("systems_affected", 8).Error)
+		Where("advisory_id = 3 AND rh_account_id = 1").Update("systems_installable", 8).Error)
 
 	refreshAdvisoryCachesPerAccounts()
 
 	assert.Equal(t, 2, database.PluckInt(database.Db.Table("advisory_account_data").
-		Where("advisory_id = 1 AND rh_account_id = 2"), "systems_affected"))
+		Where("advisory_id = 1 AND rh_account_id = 2"), "systems_installable"))
 	assert.Equal(t, 1, database.PluckInt(database.Db.Table("advisory_account_data").
-		Where("advisory_id = 2 AND rh_account_id = 1"), "systems_affected"))
+		Where("advisory_id = 2 AND rh_account_id = 1"), "systems_installable"))
 	assert.Equal(t, 1, database.PluckInt(database.Db.Table("advisory_account_data").
-		Where("advisory_id = 3 AND rh_account_id = 1"), "systems_affected"))
+		Where("advisory_id = 3 AND rh_account_id = 1"), "systems_installable"))
 }

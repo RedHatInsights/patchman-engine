@@ -182,7 +182,7 @@ type SystemAdvisories struct {
 	AdvisoryID    int64 `gorm:"primary_key"`
 	Advisory      AdvisoryMetadata
 	FirstReported *time.Time
-	StatusID      *int
+	StatusID      int
 }
 
 func (SystemAdvisories) TableName() string {
@@ -192,11 +192,11 @@ func (SystemAdvisories) TableName() string {
 type SystemAdvisoriesSlice []SystemAdvisories
 
 type AdvisoryAccountData struct {
-	AdvisoryID      int64
-	RhAccountID     int
-	StatusID        int
-	SystemsAffected int
-	Notified        *time.Time
+	AdvisoryID         int64
+	RhAccountID        int
+	SystemsApplicable  int
+	SystemsInstallable int
+	Notified           *time.Time
 }
 
 func (AdvisoryAccountData) TableName() string {

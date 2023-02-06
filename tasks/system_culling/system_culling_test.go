@@ -25,7 +25,7 @@ func TestSingleSystemStale(t *testing.T) {
 
 	database.DebugWithCachesCheck("stale-trigger", func() {
 		assert.NotNil(t, staleDate)
-		assert.NoError(t, database.Db.Find(&accountData, "systems_affected > 1 ").Order("systems_affected DESC").Error)
+		assert.NoError(t, database.Db.Find(&accountData, "systems_installable > 1 ").Order("systems_installable DESC").Error)
 		assert.NoError(t, database.Db.Find(&systems, "rh_account_id = ? AND stale = false AND advisory_count_cache > 0",
 			accountData[0].RhAccountID).Order("id").Error)
 
@@ -41,11 +41,11 @@ func TestSingleSystemStale(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, 1, nMarked)
 
-		oldAffected = accountData[0].SystemsAffected
+		oldAffected = accountData[0].SystemsInstallable
 		assert.NoError(t, database.Db.Find(&accountData, "rh_account_id = ? AND advisory_id = ?",
 			accountData[0].RhAccountID, accountData[0].AdvisoryID).Error)
 
-		assert.Equal(t, oldAffected-1, accountData[0].SystemsAffected,
+		assert.Equal(t, oldAffected-1, accountData[0].SystemsInstallable,
 			"Systems affected should be decremented by one")
 	})
 
@@ -57,7 +57,7 @@ func TestSingleSystemStale(t *testing.T) {
 		assert.NoError(t, database.Db.Find(&accountData, "rh_account_id = ? AND advisory_id = ?",
 			accountData[0].RhAccountID, accountData[0].AdvisoryID).Error)
 
-		assert.Equal(t, oldAffected, accountData[0].SystemsAffected,
+		assert.Equal(t, oldAffected, accountData[0].SystemsInstallable,
 			"Systems affected should be changed to match value at the start of the test case")
 	})
 }
@@ -82,7 +82,7 @@ func TestMarkSystemsStale(t *testing.T) {
 
 	assert.True(t, len(accountData) > 0, "We should have some systems affected by advisories")
 	for _, a := range accountData {
-		assert.True(t, a.SystemsAffected > 0, "We should have some systems affected")
+		assert.True(t, a.SystemsInstallable > 0, "We should have some systems affected")
 	}
 	for i := range systems {
 		assert.NoError(t, database.Db.Save(&systems[i]).Error)
@@ -103,7 +103,7 @@ func TestMarkSystemsStale(t *testing.T) {
 	assert.NoError(t, database.Db.Find(&accountData).Error)
 	sumAffected := 0
 	for _, a := range accountData {
-		sumAffected += a.SystemsAffected
+		sumAffected += a.SystemsInstallable
 	}
 	assert.True(t, sumAffected == 0, "all advisory_data should be deleted", sumAffected)
 }
@@ -131,7 +131,7 @@ func TestMarkSystemsNotStale(t *testing.T) {
 	assert.NoError(t, database.Db.Find(&accountData).Error)
 	assert.True(t, len(accountData) > 0, "We should have some systems affected by advisories")
 	for _, a := range accountData {
-		assert.True(t, a.SystemsAffected > 0, "We should have some systems affected")
+		assert.True(t, a.SystemsInstallable > 0, "We should have some systems affected")
 	}
 }
 
