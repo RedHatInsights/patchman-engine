@@ -196,8 +196,7 @@ func buildQueryAdvisories(db *gorm.DB, account int) *gorm.DB {
 
 func buildAdvisoryAccountDataQuery(db *gorm.DB, account int) *gorm.DB {
 	query := database.SystemAdvisories(db, account).
-		Select("sa.advisory_id, sp.rh_account_id as rh_account_id, 0 as status_id, count(sp.id) as systems_affected, " +
-			"0 as systems_status_divergent").
+		Select("sa.advisory_id, sp.rh_account_id as rh_account_id, 0 as status_id, count(sp.id) as systems_affected").
 		Where("sp.stale = false").
 		Group("sp.rh_account_id, sa.advisory_id")
 
