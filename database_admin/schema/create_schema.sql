@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (101, false);
+VALUES (102, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -109,9 +109,7 @@ BEGIN
         SELECT aad.advisory_id,
                aad.rh_account_id,
                -- Desired count depends on old count + change
-               aad.systems_affected + change                                                    as systems_affected_dst,
-               -- Divergent count is the same, only depends on advisory_account_data status being different
-               aad.systems_status_divergent + ternary(aad.status_id != sa.status_id, change, 0) as divergent
+               aad.systems_affected + change as systems_affected_dst
         FROM advisory_account_data aad
                  INNER JOIN system_advisories sa ON aad.advisory_id = sa.advisory_id
              -- Filter advisory_account_data only for advisories affectign this system & belonging to system account
@@ -121,8 +119,7 @@ BEGIN
          -- Where count > 0, update existing rows
          update AS (
              UPDATE advisory_account_data aad
-                 SET systems_affected = ta.systems_affected_dst,
-                     systems_status_divergent = ta.divergent
+                 SET systems_affected = ta.systems_affected_dst
                  FROM to_update_advisories ta
                  WHERE aad.advisory_id = ta.advisory_id
                      AND aad.rh_account_id = NEW.rh_account_id
@@ -867,7 +864,6 @@ CREATE TABLE IF NOT EXISTS advisory_account_data
     rh_account_id            INT NOT NULL,
     status_id                INT NOT NULL DEFAULT 0,
     systems_affected         INT NOT NULL DEFAULT 0,
-    systems_status_divergent INT NOT NULL DEFAULT 0,
     notified                 TIMESTAMP WITH TIME ZONE NULL,
     CONSTRAINT advisory_metadata_id
         FOREIGN KEY (advisory_id)

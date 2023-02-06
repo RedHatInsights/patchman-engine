@@ -192,12 +192,11 @@ func (SystemAdvisories) TableName() string {
 type SystemAdvisoriesSlice []SystemAdvisories
 
 type AdvisoryAccountData struct {
-	AdvisoryID             int64
-	RhAccountID            int
-	StatusID               int
-	SystemsAffected        int
-	SystemsStatusDivergent int
-	Notified               *time.Time
+	AdvisoryID      int64
+	RhAccountID     int
+	StatusID        int
+	SystemsAffected int
+	Notified        *time.Time
 }
 
 func (AdvisoryAccountData) TableName() string {
