@@ -161,17 +161,17 @@ func calcAdvisoryChanges(system *models.SystemPlatform, deleteAIDs, addAIDs []in
 
 	for _, id := range addAIDs {
 		aadMap[id] = models.AdvisoryAccountData{
-			AdvisoryID:      id,
-			RhAccountID:     system.RhAccountID,
-			SystemsAffected: 1,
+			AdvisoryID:         id,
+			RhAccountID:        system.RhAccountID,
+			SystemsInstallable: 1,
 		}
 	}
 
 	for _, id := range deleteAIDs {
 		aadMap[id] = models.AdvisoryAccountData{
-			AdvisoryID:      id,
-			RhAccountID:     system.RhAccountID,
-			SystemsAffected: -1,
+			AdvisoryID:         id,
+			RhAccountID:        system.RhAccountID,
+			SystemsInstallable: -1,
 		}
 	}
 
@@ -231,7 +231,8 @@ func updateAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, delet
 	}
 
 	txOnConflict := database.OnConflictDoUpdateExpr(tx, []string{"rh_account_id", "advisory_id"},
-		database.UpExpr{Name: "systems_affected", Expr: "advisory_account_data.systems_affected + excluded.systems_affected"})
+		database.UpExpr{Name: "systems_installable",
+			Expr: "advisory_account_data.systems_installable + excluded.systems_installable"})
 
 	return database.BulkInsert(txOnConflict, changes)
 }

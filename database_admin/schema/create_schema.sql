@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (102, false);
+VALUES (103, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -109,7 +109,7 @@ BEGIN
         SELECT aad.advisory_id,
                aad.rh_account_id,
                -- Desired count depends on old count + change
-               aad.systems_affected + change as systems_affected_dst
+               aad.systems_installable + change as systems_installable_dst
         FROM advisory_account_data aad
                  INNER JOIN system_advisories sa ON aad.advisory_id = sa.advisory_id
              -- Filter advisory_account_data only for advisories affectign this system & belonging to system account
@@ -119,11 +119,11 @@ BEGIN
          -- Where count > 0, update existing rows
          update AS (
              UPDATE advisory_account_data aad
-                 SET systems_affected = ta.systems_affected_dst
+                 SET systems_installable = ta.systems_installable_dst
                  FROM to_update_advisories ta
                  WHERE aad.advisory_id = ta.advisory_id
                      AND aad.rh_account_id = NEW.rh_account_id
-                     AND ta.systems_affected_dst > 0
+                     AND ta.systems_installable_dst > 0
          ),
          -- Where count = 0, delete existing rows
          delete AS (
@@ -132,11 +132,11 @@ BEGIN
                      USING to_update_advisories ta
                      WHERE aad.rh_account_id = ta.rh_account_id
                          AND aad.advisory_id = ta.advisory_id
-                         AND ta.systems_affected_dst <= 0
+                         AND ta.systems_installable_dst <= 0
          )
          -- If we have system affected && no exisiting advisory_account_data entry, we insert new rows
     INSERT
-    INTO advisory_account_data (advisory_id, rh_account_id, systems_affected)
+    INTO advisory_account_data (advisory_id, rh_account_id, systems_installable)
     SELECT sa.advisory_id, NEW.rh_account_id, 1
     FROM system_advisories sa
     WHERE sa.system_id = NEW.id AND sa.rh_account_id = NEW.rh_account_id
@@ -146,7 +146,7 @@ BEGIN
         SELECT ta.rh_account_id, ta.advisory_id
         FROM to_update_advisories ta
     )
-    ON CONFLICT (advisory_id, rh_account_id) DO UPDATE SET systems_affected = advisory_account_data.systems_affected + EXCLUDED.systems_affected;
+    ON CONFLICT (advisory_id, rh_account_id) DO UPDATE SET systems_installable = advisory_account_data.systems_installable + EXCLUDED.systems_installable;
     RETURN NEW;
 END;
 $system_update$ LANGUAGE plpgsql;
@@ -181,7 +181,7 @@ BEGIN
         FOR UPDATE OF aad;
 
     WITH current_counts AS (
-        SELECT sa.advisory_id, sp.rh_account_id, count(sa.system_id) as systems_affected
+        SELECT sa.advisory_id, sp.rh_account_id, count(sa.system_id) as systems_installable
         FROM system_advisories sa
         INNER JOIN system_platform sp
            ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id
@@ -192,11 +192,11 @@ BEGIN
         GROUP BY sa.advisory_id, sp.rh_account_id
     ),
          upserted AS (
-             INSERT INTO advisory_account_data (advisory_id, rh_account_id, systems_affected)
-                 SELECT advisory_id, rh_account_id, systems_affected
+             INSERT INTO advisory_account_data (advisory_id, rh_account_id, systems_installable)
+                 SELECT advisory_id, rh_account_id, systems_installable
                  FROM current_counts
                  ON CONFLICT (advisory_id, rh_account_id) DO UPDATE SET
-                     systems_affected = EXCLUDED.systems_affected
+                     systems_installable = EXCLUDED.systems_installable
          )
     DELETE
     FROM advisory_account_data
@@ -816,12 +816,8 @@ CREATE TABLE IF NOT EXISTS status
 ) TABLESPACE pg_default;
 
 INSERT INTO status (id, name)
-VALUES (0, 'Not Reviewed'),
-       (1, 'In-Review'),
-       (2, 'On-Hold'),
-       (3, 'Scheduled for Patch'),
-       (4, 'Resolved'),
-       (5, 'No Action')
+VALUES (0, 'Installable'),
+       (1, 'Applicable')
 ON CONFLICT DO NOTHING;
 
 
@@ -832,7 +828,7 @@ CREATE TABLE IF NOT EXISTS system_advisories
     system_id      BIGINT                   NOT NULL,
     advisory_id    BIGINT                   NOT NULL,
     first_reported TIMESTAMP WITH TIME ZONE NOT NULL,
-    status_id      INT                      DEFAULT 0,
+    status_id      INT                      NOT NULL,
     PRIMARY KEY (rh_account_id, system_id, advisory_id),
     CONSTRAINT advisory_metadata_id
         FOREIGN KEY (advisory_id)
@@ -862,8 +858,8 @@ CREATE TABLE IF NOT EXISTS advisory_account_data
 (
     advisory_id              BIGINT NOT NULL,
     rh_account_id            INT NOT NULL,
-    status_id                INT NOT NULL DEFAULT 0,
-    systems_affected         INT NOT NULL DEFAULT 0,
+    systems_applicable       INT NOT NULL DEFAULT 0,
+    systems_installable      INT NOT NULL DEFAULT 0,
     notified                 TIMESTAMP WITH TIME ZONE NULL,
     CONSTRAINT advisory_metadata_id
         FOREIGN KEY (advisory_id)
@@ -871,9 +867,6 @@ CREATE TABLE IF NOT EXISTS advisory_account_data
     CONSTRAINT rh_account_id
         FOREIGN KEY (rh_account_id)
             REFERENCES rh_account (id),
-    CONSTRAINT status_id
-        FOREIGN KEY (status_id)
-            REFERENCES status (id),
     UNIQUE (advisory_id, rh_account_id),
     PRIMARY KEY (rh_account_id, advisory_id)
 ) WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')

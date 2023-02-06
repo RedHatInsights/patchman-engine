@@ -36,7 +36,7 @@ func getUnnotifiedAdvisories(tx *gorm.DB, accountID int, newAdvs SystemAdvisoryM
 		Select("am.name").
 		Joins("inner join advisory_metadata am on am.id = acd.advisory_id").
 		Where("acd.rh_account_id = ? AND acd.advisory_id IN (?)"+
-			"AND acd.notified IS NULL AND acd.systems_affected > 0", accountID, advIDs).
+			"AND acd.notified IS NULL AND acd.systems_installable > 0", accountID, advIDs).
 		Order("am.name ASC").
 		Scan(&advNames).Error
 	if err != nil {

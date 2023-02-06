@@ -39,7 +39,7 @@ type AdvisoriesDBLookup struct {
 // nolint: lll
 type AdvisoryItemAttributes struct {
 	SystemAdvisoryItemAttributes
-	ApplicableSystems int `json:"applicable_systems" query:"COALESCE(aad.systems_affected, 0)" csv:"applicable_systems" gorm:"column:applicable_systems"`
+	ApplicableSystems int `json:"applicable_systems" query:"COALESCE(aad.systems_installable, 0)" csv:"applicable_systems" gorm:"column:applicable_systems"`
 }
 
 type AdvisoryItem struct {
@@ -188,7 +188,7 @@ func AdvisoriesListIDsHandler(c *gin.Context) {
 func buildQueryAdvisories(db *gorm.DB, account int) *gorm.DB {
 	query := db.Table("advisory_metadata am").
 		Select(AdvisoriesSelect).
-		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id and aad.systems_affected > 0").
+		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id and aad.systems_installable > 0").
 		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
 		Where("aad.rh_account_id = ?", account)
 	return query
@@ -196,7 +196,7 @@ func buildQueryAdvisories(db *gorm.DB, account int) *gorm.DB {
 
 func buildAdvisoryAccountDataQuery(db *gorm.DB, account int) *gorm.DB {
 	query := database.SystemAdvisories(db, account).
-		Select("sa.advisory_id, sp.rh_account_id as rh_account_id, 0 as status_id, count(sp.id) as systems_affected").
+		Select("sa.advisory_id, sp.rh_account_id as rh_account_id, count(sp.id) as systems_installable").
 		Where("sp.stale = false").
 		Group("sp.rh_account_id, sa.advisory_id")
 
@@ -210,7 +210,7 @@ func buildQueryAdvisoriesTagged(db *gorm.DB, filters map[string]FilterData, acco
 	query := db.Table("advisory_metadata am").
 		Select(AdvisoriesSelect).
 		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
-		Joins("JOIN (?) aad ON am.id = aad.advisory_id and aad.systems_affected > 0", subq)
+		Joins("JOIN (?) aad ON am.id = aad.advisory_id and aad.systems_installable > 0", subq)
 
 	return query
 }

@@ -63,7 +63,7 @@ func CheckCachesValidRet() (bool, error) {
 	calculated := make(map[key]int, len(counts))
 
 	for _, val := range aad {
-		cached[key{val.RhAccountID, val.AdvisoryID}] = val.SystemsAffected
+		cached[key{val.RhAccountID, val.AdvisoryID}] = val.SystemsInstallable
 	}
 	for _, val := range counts {
 		calculated[key{val.RhAccountID, val.AdvisoryID}] = val.Count
@@ -142,7 +142,7 @@ func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug
 	assert.Equal(t, thirdParty, system.ThirdParty)
 }
 
-func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int64, systemsAffected int) {
+func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int64, systemsInstallable int) {
 	var advisoryAccountData []models.AdvisoryAccountData
 	err := Db.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
 		Find(&advisoryAccountData).Error
@@ -150,10 +150,10 @@ func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int
 
 	sum := 0
 	for _, item := range advisoryAccountData {
-		sum += item.SystemsAffected
+		sum += item.SystemsInstallable
 	}
-	// covers both cases, when we have advisory_account_data stored with 0 systems_affected, and when we delete it
-	assert.Equal(t, systemsAffected*len(advisoryIDs), sum, "sum of systems_affected does not match")
+	// covers both cases, when we have advisory_account_data stored with 0 systems_installable, and when we delete it
+	assert.Equal(t, systemsInstallable*len(advisoryIDs), sum, "sum of systems_installable does not match")
 }
 
 func CheckAdvisoriesAccountDataNotified(t *testing.T, rhAccountID int, advisoryIDs []int64, notified bool) {
@@ -201,20 +201,20 @@ func CreateStoredAdvisories(advisoryPatched []int64) map[string]models.SystemAdv
 func CreateSystemAdvisories(t *testing.T, rhAccountID int, systemID int64, advisoryIDs []int64) {
 	for _, advisoryID := range advisoryIDs {
 		err := Db.Create(&models.SystemAdvisories{
-			RhAccountID: rhAccountID, SystemID: systemID, AdvisoryID: advisoryID}).Error
+			RhAccountID: rhAccountID, SystemID: systemID, AdvisoryID: advisoryID, StatusID: 0}).Error
 		assert.Nil(t, err)
 	}
 	CheckSystemAdvisories(t, systemID, advisoryIDs)
 }
 
 func CreateAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int64,
-	systemsAffected int) {
+	systemsInstallable int) {
 	for _, advisoryID := range advisoryIDs {
 		err := Db.Create(&models.AdvisoryAccountData{
-			AdvisoryID: advisoryID, RhAccountID: rhAccountID, SystemsAffected: systemsAffected}).Error
+			AdvisoryID: advisoryID, RhAccountID: rhAccountID, SystemsInstallable: systemsInstallable}).Error
 		assert.Nil(t, err)
 	}
-	CheckAdvisoriesAccountData(t, rhAccountID, advisoryIDs, systemsAffected)
+	CheckAdvisoriesAccountData(t, rhAccountID, advisoryIDs, systemsInstallable)
 }
 
 func CreateSystemRepos(t *testing.T, rhAccountID int, systemID int64, repoIDs []int64) {
