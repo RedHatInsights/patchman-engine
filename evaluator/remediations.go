@@ -41,12 +41,12 @@ func createRemediationsStateMsg(id string, response *vmaas.UpdatesV2Response) *R
 	return &state
 }
 
-func getReportedAdvisories(vmaasData *vmaas.UpdatesV2Response) map[string]bool {
+func getReportedAdvisories(vmaasData *vmaas.UpdatesV2Response) map[string]int {
 	updateList := vmaasData.GetUpdateList()
-	advisories := make(map[string]bool, len(updateList))
+	advisories := make(map[string]int, len(updateList))
 	for _, updates := range updateList {
 		for _, u := range updates.GetAvailableUpdates() {
-			advisories[u.GetErratum()] = true
+			advisories[u.GetErratum()] = u.StatusID
 		}
 	}
 	return advisories

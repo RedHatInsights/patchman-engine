@@ -69,10 +69,12 @@ func TestGetStoredAdvisoriesMap(t *testing.T) {
 
 func TestAdvisoryChanges(t *testing.T) {
 	stored := database.CreateStoredAdvisories([]int64{1, 2, 3})
-	reported := database.CreateReportedAdvisories("ER-1", "ER-3", "ER-4")
-	patchedAIDs, newNames := getAdvisoryChanges(reported, stored)
-	assert.Equal(t, 1, len(newNames))
-	assert.Equal(t, "ER-4", newNames[0])
+	reported := database.CreateReportedAdvisories([]string{"ER-1", "ER-3", "ER-4"},
+		[]int{INSTALLABLE, INSTALLABLE, INSTALLABLE})
+	patchedAIDs, installableNames, applicableNames := getAdvisoryChanges(reported, stored)
+	assert.Equal(t, 1, len(installableNames))
+	assert.Equal(t, "ER-4", installableNames[0])
+	assert.Equal(t, 0, len(applicableNames))
 	assert.Equal(t, 1, len(patchedAIDs))
 	assert.Equal(t, int64(2), patchedAIDs[0])
 }
@@ -86,14 +88,14 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	database.CreateSystemAdvisories(t, system.RhAccountID, system.ID, advisoryIDs)
 	database.CreateAdvisoryAccountData(t, system.RhAccountID, advisoryIDs, 1)
 	// Update as-if the advisories had become patched
-	err := updateAdvisoryAccountData(database.Db, &system, advisoryIDs, []int64{})
+	err := updateAdvisoryAccountData(database.Db, &system, advisoryIDs, []int64{}, []int64{})
 	assert.NoError(t, err)
 
 	database.CheckSystemAdvisories(t, system.ID, advisoryIDs)
 	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 0)
 
 	// Update as-if the advisories had become unpatched
-	err = updateAdvisoryAccountData(database.Db, &system, []int64{}, advisoryIDs)
+	err = updateAdvisoryAccountData(database.Db, &system, []int64{}, advisoryIDs, []int64{})
 	assert.NoError(t, err)
 
 	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 1)
@@ -118,7 +120,7 @@ func TestEnsureSystemAdvisories(t *testing.T) {
 	rhAccountID := 1
 	systemID := int64(2)
 	advisoryIDs := []int64{2, 3, 4}
-	err := ensureSystemAdvisories(database.Db, rhAccountID, systemID, advisoryIDs)
+	err := ensureSystemAdvisories(database.Db, rhAccountID, systemID, advisoryIDs, []int64{})
 	assert.Nil(t, err)
 	database.CheckSystemAdvisories(t, systemID, advisoryIDs)
 	database.DeleteSystemAdvisories(t, systemID, advisoryIDs)

@@ -181,10 +181,10 @@ func CheckSystemUpdatesCount(t *testing.T, accountID int, systemID int64) []int 
 	return cnt
 }
 
-func CreateReportedAdvisories(reportedAdvisories ...string) map[string]bool {
-	reportedAdvisoriesMap := make(map[string]bool, len(reportedAdvisories))
-	for _, adv := range reportedAdvisories {
-		reportedAdvisoriesMap[adv] = true
+func CreateReportedAdvisories(reportedAdvisories []string, status []int) map[string]int {
+	reportedAdvisoriesMap := make(map[string]int, len(reportedAdvisories))
+	for i, adv := range reportedAdvisories {
+		reportedAdvisoriesMap[adv] = status[i]
 	}
 	return reportedAdvisoriesMap
 }

@@ -89,6 +89,8 @@ type UpdatesV2ResponseAvailableUpdates struct {
 	Basearch   *string `json:"basearch,omitempty"`
 	Erratum    *string `json:"erratum,omitempty"`
 	Package    *string `json:"package,omitempty"`
+	// helper column to diferentiate installable/applicable
+	StatusID int `json:"-"`
 }
 
 func (o *UpdatesV2ResponseAvailableUpdates) GetPackage() string {

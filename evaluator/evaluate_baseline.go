@@ -35,17 +35,16 @@ func limitVmaasToBaseline(tx *gorm.DB, system *models.SystemPlatform, vmaasData 
 		filterOutNamesSet[i] = struct{}{}
 	}
 
-	for pkg, updates := range vmaasData.GetUpdateList() {
+	for _, updates := range vmaasData.GetUpdateList() {
 		availableUpdates := updates.GetAvailableUpdates()
-		filteredUpdates := make([]vmaas.UpdatesV2ResponseAvailableUpdates, 0, len(availableUpdates))
-		for _, u := range availableUpdates {
-			advisoryName := u.GetErratum()
-			if _, ok := filterOutNamesSet[advisoryName]; !ok {
-				filteredUpdates = append(filteredUpdates, u)
+		for i := range availableUpdates {
+			advisoryName := availableUpdates[i].GetErratum()
+			if _, ok := filterOutNamesSet[advisoryName]; ok {
+				availableUpdates[i].StatusID = APPLICABLE
+			} else {
+				availableUpdates[i].StatusID = INSTALLABLE
 			}
 		}
-		updates.AvailableUpdates = &filteredUpdates
-		(*vmaasData.UpdateList)[pkg] = updates
 	}
 
 	return nil
