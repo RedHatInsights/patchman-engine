@@ -12,6 +12,11 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+const (
+	INSTALLABLE = 0
+	APPLICABLE  = 1
+)
+
 func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) (
 	SystemAdvisoryMap, error) {
 	if !enableAdvisoryAnalysis {
@@ -19,13 +24,13 @@ func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vm
 		return nil, nil
 	}
 
-	deleteAIDs, addAIDs, err := processSystemAdvisories(tx, system, vmaasData)
+	deleteIDs, installableIDs, applicableIDs, err := processSystemAdvisories(tx, system, vmaasData)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-process-advisories").Inc()
 		return nil, errors.Wrap(err, "Unable to process system advisories")
 	}
 
-	newSystemAdvisories, err := storeAdvisoryData(tx, system, deleteAIDs, addAIDs)
+	newSystemAdvisories, err := storeAdvisoryData(tx, system, deleteIDs, installableIDs, applicableIDs)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-store-advisories").Inc()
 		return nil, errors.Wrap(err, "Unable to store advisory data")
@@ -37,45 +42,56 @@ func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vm
 // Before this methods stores the entries into the system_advisories table, it locks
 // advisory_account_data table, so other evaluations don't interfere with this one
 func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) (
-	deleteAIDs []int64, addAIDs []int64, err error) {
+	[]int64, []int64, []int64, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))
 
 	reported := getReportedAdvisories(vmaasData)
 	oldSystemAdvisories, err := getStoredAdvisoriesMap(tx, system.RhAccountID, int(system.ID))
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "Unable to get system stored advisories")
+		return nil, nil, nil, errors.Wrap(err, "Unable to get system stored advisories")
 	}
 
-	deleteAIDs, newAdvisoryNames := getAdvisoryChanges(reported, oldSystemAdvisories)
-	updatesCnt.WithLabelValues("patched").Add(float64(len(deleteAIDs)))
-	utils.LogInfo("inventoryID", system.InventoryID, "patched", len(deleteAIDs), "patched advisories")
-	utils.LogInfo("inventoryID", system.InventoryID, "newAdvisories", len(newAdvisoryNames), "new advisories")
+	deleteIDs, installableNames, applicableNames := getAdvisoryChanges(reported, oldSystemAdvisories)
+	updatesCnt.WithLabelValues("patched").Add(float64(len(deleteIDs)))
+	utils.LogInfo("inventoryID", system.InventoryID, "fixed", len(deleteIDs), "fixed advisories")
 
-	addAIDs, err = getAdvisoriesFromDB(tx, newAdvisoryNames)
+	installableIDs, err := getAdvisoriesFromDB(tx, installableNames)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "Unable to ensure new system advisories in db")
+		return nil, nil, nil, errors.Wrap(err, "Unable to ensure new installable system advisories in db")
 	}
-	nUnknown := len(newAdvisoryNames) - len(addAIDs)
+	nUnknown := len(installableNames) - len(installableIDs)
 	if nUnknown > 0 {
-		utils.LogInfo("inventoryID", system.InventoryID, "unknown", nUnknown, "unknown advisories - ignored")
+		utils.LogInfo("inventoryID", system.InventoryID, "unknown", nUnknown, "unknown installable advisories - ignored")
 		updatesCnt.WithLabelValues("unknown").Add(float64(nUnknown))
 	}
+	updatesCnt.WithLabelValues("installable").Add(float64(len(installableIDs)))
+	utils.LogInfo("inventoryID", system.InventoryID, "installable", len(installableIDs), "installable advisories")
 
-	updatesCnt.WithLabelValues("unpatched").Add(float64(len(addAIDs)))
-	utils.LogInfo("inventoryID", system.InventoryID, "unpatched", len(addAIDs), "patched advisories")
-	return deleteAIDs, addAIDs, nil
+	applicableIDs, err := getAdvisoriesFromDB(tx, applicableNames)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "Unable to ensure new applicable system advisories in db")
+	}
+	nUnknown = len(applicableNames) - len(applicableIDs)
+	if nUnknown > 0 {
+		utils.LogInfo("inventoryID", system.InventoryID, "unknown", nUnknown, "unknown applicable advisories - ignored")
+		updatesCnt.WithLabelValues("unknown").Add(float64(nUnknown))
+	}
+	updatesCnt.WithLabelValues("applicable").Add(float64(len(applicableIDs)))
+	utils.LogInfo("inventoryID", system.InventoryID, "applicable", len(applicableIDs), "applicable advisories")
+
+	return deleteIDs, installableIDs, applicableIDs, nil
 }
 
 func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform,
-	deleteAIDs, addAIDs []int64) (SystemAdvisoryMap, error) {
+	deleteIDs, installableIDs, applicableIDs []int64) (SystemAdvisoryMap, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("advisories-store"))
-	newSystemAdvisories, err := updateSystemAdvisories(tx, system, deleteAIDs, addAIDs)
+	newSystemAdvisories, err := updateSystemAdvisories(tx, system, deleteIDs, installableIDs, applicableIDs)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to update system advisories")
 	}
 
-	err = updateAdvisoryAccountData(tx, system, deleteAIDs, addAIDs)
+	err = updateAdvisoryAccountData(tx, system, deleteIDs, installableIDs, applicableIDs)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to update advisory_account_data caches")
 	}
@@ -96,22 +112,27 @@ func getStoredAdvisoriesMap(tx *gorm.DB, accountID, systemID int) (map[string]mo
 	return advisoriesMap, nil
 }
 
-func getAdvisoryChanges(reported map[string]bool, stored map[string]models.SystemAdvisories) (
-	[]int64, []string) {
-	newAdvisoryNames := make([]string, 0, len(reported))
-	deleteAIDs := make([]int64, 0, len(stored))
-	for reportedAdvisory := range reported {
+func getAdvisoryChanges(reported map[string]int, stored map[string]models.SystemAdvisories) (
+	[]int64, []string, []string) {
+	installableNames := make([]string, 0, len(reported))
+	applicableNames := make([]string, 0, len(reported))
+	deleteIDs := make([]int64, 0, len(stored))
+	for reportedAdvisory, statusID := range reported {
 		if _, found := stored[reportedAdvisory]; !found {
-			newAdvisoryNames = append(newAdvisoryNames, reportedAdvisory)
+			if statusID == INSTALLABLE {
+				installableNames = append(installableNames, reportedAdvisory)
+			} else {
+				applicableNames = append(applicableNames, reportedAdvisory)
+			}
 		}
 	}
 	for storedAdvisory, storedAdvisoryObj := range stored {
 		if _, found := reported[storedAdvisory]; !found {
 			// advisory was patched from last evaluation,let's remove it
-			deleteAIDs = append(deleteAIDs, storedAdvisoryObj.AdvisoryID)
+			deleteIDs = append(deleteIDs, storedAdvisoryObj.AdvisoryID)
 		}
 	}
-	return deleteAIDs, newAdvisoryNames
+	return deleteIDs, installableNames, applicableNames
 }
 
 // Return advisory IDs, created advisories count, error
@@ -125,11 +146,22 @@ func getAdvisoriesFromDB(tx *gorm.DB, advisories []string) ([]int64, error) {
 	return advisoryIDs, nil
 }
 
-func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int64, advisoryIDs []int64) error {
-	advisoriesObjs := models.SystemAdvisoriesSlice{}
-	for _, advisoryID := range advisoryIDs {
+func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int64, installableIDs,
+	applicableIDs []int64) error {
+	advisoriesObjs := make(models.SystemAdvisoriesSlice, 0, len(installableIDs)+len(applicableIDs))
+	for _, advisoryID := range installableIDs {
 		advisoriesObjs = append(advisoriesObjs,
-			models.SystemAdvisories{RhAccountID: rhAccountID, SystemID: systemID, AdvisoryID: advisoryID})
+			models.SystemAdvisories{RhAccountID: rhAccountID,
+				SystemID:   systemID,
+				AdvisoryID: advisoryID,
+				StatusID:   INSTALLABLE})
+	}
+	for _, advisoryID := range applicableIDs {
+		advisoriesObjs = append(advisoriesObjs,
+			models.SystemAdvisories{RhAccountID: rhAccountID,
+				SystemID:   systemID,
+				AdvisoryID: advisoryID,
+				StatusID:   APPLICABLE})
 	}
 
 	txOnConflict := tx.Clauses(clause.OnConflict{
@@ -139,27 +171,30 @@ func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int64, adviso
 	return err
 }
 
-func lockAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, deleteAIDs, addAIDs []int64) error {
+func lockAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, deleteIDs, installableIDs,
+	applicableIDs []int64) error {
 	// Lock advisory-account data, so it's not changed by other concurrent queries
 	var aads []models.AdvisoryAccountData
 	err := tx.Clauses(clause.Locking{
 		Strength: "UPDATE",
 		Table:    clause.Table{Name: clause.CurrentTable},
 	}).Order("advisory_id").
-		Find(&aads, "rh_account_id = ? AND (advisory_id in (?) OR advisory_id in (?))",
-			system.RhAccountID, deleteAIDs, addAIDs).Error
+		Find(&aads, "rh_account_id = ? AND (advisory_id in (?) OR advisory_id in (?) OR advisory_id in (?))",
+			system.RhAccountID, deleteIDs, installableIDs, applicableIDs).Error
 
 	return err
 }
 
-func calcAdvisoryChanges(system *models.SystemPlatform, deleteAIDs, addAIDs []int64) []models.AdvisoryAccountData {
+// nolint: unparam
+func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs, installableIDs,
+	applicableIDs []int64) []models.AdvisoryAccountData {
 	// If system is stale, we won't change any rows  in advisory_account_data
 	if system.Stale {
 		return []models.AdvisoryAccountData{}
 	}
-	aadMap := make(map[int64]models.AdvisoryAccountData, len(addAIDs))
+	aadMap := make(map[int64]models.AdvisoryAccountData, len(installableIDs))
 
-	for _, id := range addAIDs {
+	for _, id := range installableIDs {
 		aadMap[id] = models.AdvisoryAccountData{
 			AdvisoryID:         id,
 			RhAccountID:        system.RhAccountID,
@@ -167,7 +202,7 @@ func calcAdvisoryChanges(system *models.SystemPlatform, deleteAIDs, addAIDs []in
 		}
 	}
 
-	for _, id := range deleteAIDs {
+	for _, id := range deleteIDs {
 		aadMap[id] = models.AdvisoryAccountData{
 			AdvisoryID:         id,
 			RhAccountID:        system.RhAccountID,
@@ -175,7 +210,7 @@ func calcAdvisoryChanges(system *models.SystemPlatform, deleteAIDs, addAIDs []in
 		}
 	}
 
-	deltas := make([]models.AdvisoryAccountData, 0, len(deleteAIDs)+len(addAIDs))
+	deltas := make([]models.AdvisoryAccountData, 0, len(deleteIDs)+len(installableIDs))
 	for _, aad := range aadMap {
 		deltas = append(deltas, aad)
 	}
@@ -191,14 +226,14 @@ func deleteOldSystemAdvisories(tx *gorm.DB, accountID int, systemID int64, patch
 }
 
 func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
-	deleteAIDs, addAIDs []int64) (SystemAdvisoryMap, error) {
+	deleteIDs, installableIDs, applicableIDs []int64) (SystemAdvisoryMap, error) {
 	// this will remove many many old items from our "system_advisories" table
-	err := deleteOldSystemAdvisories(tx, system.RhAccountID, system.ID, deleteAIDs)
+	err := deleteOldSystemAdvisories(tx, system.RhAccountID, system.ID, deleteIDs)
 	if err != nil {
 		return nil, err
 	}
 
-	err = ensureSystemAdvisories(tx, system.RhAccountID, system.ID, addAIDs)
+	err = ensureSystemAdvisories(tx, system.RhAccountID, system.ID, installableIDs, applicableIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -218,13 +253,14 @@ func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
 	return newSystemAdvisories, nil
 }
 
-func updateAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, deleteAIDs, addAIDs []int64) error {
-	err := lockAdvisoryAccountData(tx, system, deleteAIDs, addAIDs)
+func updateAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, deleteIDs, installableIDs,
+	applicableIDs []int64) error {
+	err := lockAdvisoryAccountData(tx, system, deleteIDs, installableIDs, applicableIDs)
 	if err != nil {
 		return err
 	}
 
-	changes := calcAdvisoryChanges(system, deleteAIDs, addAIDs)
+	changes := calcAdvisoryChanges(system, deleteIDs, installableIDs, applicableIDs)
 
 	if len(changes) == 0 {
 		return nil
