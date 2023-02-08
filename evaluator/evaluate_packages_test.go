@@ -51,7 +51,7 @@ func TestLazySavePackages(t *testing.T) {
 
 	names := []string{"kernel", "firefox", "custom-package"}
 	evras := []string{"1-0.el7.x86_64", "1-1.1.el7.x86_64", "11-1.el7.x86_64"}
-	updateList := map[string]vmaas.UpdatesV2ResponseUpdateList{}
+	updateList := make(map[string]vmaas.UpdatesV2ResponseUpdateList, len(names))
 	for i, name := range names {
 		nevra := fmt.Sprintf("%s-%s", name, evras[i])
 		updateList[nevra] = vmaas.UpdatesV2ResponseUpdateList{}

@@ -143,7 +143,7 @@ func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string) (missi
 		return []string{}, nil // all inventoryIDs found in database
 	}
 
-	containingIDsMap := map[string]bool{}
+	containingIDsMap := make(map[string]bool, len(containingIDs))
 	for _, containingID := range containingIDs {
 		containingIDsMap[containingID] = true
 	}

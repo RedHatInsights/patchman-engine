@@ -70,7 +70,7 @@ func getInventoryIDs(db *gorm.DB, baselineID *int64, accountID int, inventoryIDs
 	var inventoryAIDs []mqueue.EvalData
 	query := db.Model(&models.SystemPlatform{}).
 		Select("inventory_id, rh_account_id").
-		Where(map[string]interface{}{"rh_account_id": accountID, "baseline_id": baselineID})
+		Where("rh_account_id = ? AND baseline_id = ?", accountID, baselineID)
 
 	if len(inventoryIDs) > 0 {
 		query = query.Or("inventory_id IN (?) AND rh_account_id = ?", inventoryIDs, accountID)

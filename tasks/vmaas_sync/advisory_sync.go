@@ -51,13 +51,13 @@ func syncAdvisories(syncStart time.Time, modifiedSince *string) error {
 
 func getAdvisoryTypes() (map[string]int, error) {
 	var advisoryTypesArr []models.AdvisoryType
-	advisoryTypes := map[string]int{}
 
 	err := tasks.CancelableDB().Find(&advisoryTypesArr).Error
 	if err != nil {
 		return nil, errors.WithMessage(err, "Loading advisory types")
 	}
 
+	advisoryTypes := make(map[string]int, len(advisoryTypesArr))
 	for _, t := range advisoryTypesArr {
 		advisoryTypes[strings.ToLower(t.Name)] = t.ID
 	}
@@ -71,13 +71,13 @@ func getAdvisoryTypes() (map[string]int, error) {
 
 func getAdvisorySeverities() (map[string]int, error) {
 	var severitiesArr []models.AdvisorySeverity
-	severities := map[string]int{}
 
 	err := tasks.CancelableDB().Find(&severitiesArr).Error
 	if err != nil {
 		return nil, errors.WithMessage(err, "Loading advisory types")
 	}
 
+	severities := make(map[string]int, len(severitiesArr))
 	for _, t := range severitiesArr {
 		severities[strings.ToLower(t.Name)] = t.ID
 	}
