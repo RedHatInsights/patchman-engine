@@ -65,7 +65,7 @@ func getPackageNameMap(tx *gorm.DB, nameArr []string) (map[string]int64, error) 
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to load package names data")
 	}
-	idByName := map[string]int64{}
+	idByName := make(map[string]int64, len(pkgNamesLoaded))
 	for _, p := range pkgNamesLoaded {
 		idByName[p.Name] = p.ID
 	}
@@ -129,7 +129,7 @@ func storePkgListData(vmaasData []vmaas.PkgListItem) error {
 }
 
 func storeStringsFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListItem) error {
-	stringMap := map[[32]byte]string{}
+	stringMap := make(map[[32]byte]string, len(vmaasData))
 	for _, pkgListItem := range vmaasData {
 		stringMap[sha256.Sum256([]byte(pkgListItem.Description))] = pkgListItem.Description
 		stringMap[sha256.Sum256([]byte(pkgListItem.Summary))] = pkgListItem.Summary
@@ -178,7 +178,7 @@ func storePackageNamesFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListIte
 
 func getPackageArraysFromPkgListItems(tx *gorm.DB, pkgListItems []vmaas.PkgListItem) ([]string, []models.PackageName) {
 	// get unique package names and their summaries
-	namesMap := map[string]string{}
+	namesMap := make(map[string]string, len(pkgListItems))
 	for _, pkgListItem := range pkgListItems {
 		nevra, err := utils.ParseNevra(pkgListItem.Nevra)
 		if err != nil {

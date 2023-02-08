@@ -163,7 +163,7 @@ func loadPackages(tx *gorm.DB, system *models.SystemPlatform,
 }
 
 func packages2NevraMap(packages []namedPackage) map[string]namedPackage {
-	pkgByNevra := map[string]namedPackage{}
+	pkgByNevra := make(map[string]namedPackage, len(packages))
 	for _, p := range packages {
 		// make sure nevra contains epoch even if epoch==0
 		nevra, err := utils.ParseNameEVRA(p.Name, p.EVRA)
@@ -184,7 +184,7 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform,
 	numUpdates := len(updates)
 	packageIDs := make([]int64, 0, numUpdates)
 	packages := make([]namedPackage, 0, numUpdates)
-	id2index := map[int64]int{}
+	id2index := make(map[int64]int, numUpdates)
 	i := 0
 	for nevra := range updates {
 		pkgMeta, ok := memoryPackageCache.GetByNevra(nevra)

@@ -13,7 +13,7 @@ func TestTableSizes(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	tableSizes := getTableSizes()
-	uniqueTables := map[string]bool{}
+	uniqueTables := make(map[string]bool, len(tableSizes))
 	for _, item := range tableSizes {
 		uniqueTables[item.Key] = true
 	}

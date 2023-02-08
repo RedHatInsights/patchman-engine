@@ -59,8 +59,8 @@ func CheckCachesValidRet() (bool, error) {
 		return false, err
 	}
 
-	cached := map[key]int{}
-	calculated := map[key]int{}
+	cached := make(map[key]int, len(aad))
+	calculated := make(map[key]int, len(counts))
 
 	for _, val := range aad {
 		cached[key{val.RhAccountID, val.AdvisoryID}] = val.SystemsAffected
@@ -182,7 +182,7 @@ func CheckSystemUpdatesCount(t *testing.T, accountID int, systemID int64) []int 
 }
 
 func CreateReportedAdvisories(reportedAdvisories ...string) map[string]bool {
-	reportedAdvisoriesMap := map[string]bool{}
+	reportedAdvisoriesMap := make(map[string]bool, len(reportedAdvisories))
 	for _, adv := range reportedAdvisories {
 		reportedAdvisoriesMap[adv] = true
 	}
@@ -190,7 +190,7 @@ func CreateReportedAdvisories(reportedAdvisories ...string) map[string]bool {
 }
 
 func CreateStoredAdvisories(advisoryPatched []int64) map[string]models.SystemAdvisories {
-	systemAdvisoriesMap := map[string]models.SystemAdvisories{}
+	systemAdvisoriesMap := make(map[string]models.SystemAdvisories, len(advisoryPatched))
 	for _, advisoryID := range advisoryPatched {
 		systemAdvisoriesMap["ER-"+strconv.FormatInt(advisoryID, 10)] = models.SystemAdvisories{
 			AdvisoryID: advisoryID}

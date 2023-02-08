@@ -75,9 +75,8 @@ func statementFromObjects(db *gorm.DB, objects reflect.Value) (*gorm.Statement, 
 	if err != nil {
 		return nil, err
 	}
-	var (
-		statement = gorm.Statement{DB: db, Schema: schema, Clauses: db.Statement.Clauses}
-	)
+
+	statement := gorm.Statement{DB: db, Schema: schema, Clauses: db.Statement.Clauses}
 
 	// Ensure we set the correct time and reset it after we're done.
 	bulkNow = db.NowFunc()
@@ -143,9 +142,7 @@ func buildColumnsAndPlaceholders(firstObjectFields map[string]interface{}) ([]st
 }
 
 func insertFunc(db *gorm.DB, quotedTableName string, columnNames, groups []string) string {
-	var (
-		extraOptions string
-	)
+	var extraOptions string
 	if clauseOnConflict, ok := db.Statement.Clauses["ON CONFLICT"]; ok {
 		// Add the extra insert option
 		extraOptions = parseClause(clauseOnConflict.Expression)
@@ -194,8 +191,8 @@ func parseClause(clauseOnConflict clause.Expression) string {
 // objectToMap takes any object of type <T> and returns a map with the gorm
 // field DB name as key and the value as value
 func objectToMap(db *gorm.DB, object interface{}) (map[string]interface{}, error) {
-	var attributes = map[string]interface{}{}
-	var now = bulkNow
+	attributes := make(map[string]interface{})
+	now := bulkNow
 
 	// De-reference pointers (and it's values)
 	rv := reflect.ValueOf(object)

@@ -89,7 +89,7 @@ func getStoredAdvisoriesMap(tx *gorm.DB, accountID, systemID int) (map[string]mo
 		return nil, err
 	}
 
-	advisoriesMap := map[string]models.SystemAdvisories{}
+	advisoriesMap := make(map[string]models.SystemAdvisories, len(advisories))
 	for _, advisory := range advisories {
 		advisoriesMap[advisory.Advisory.Name] = advisory
 	}
@@ -157,7 +157,7 @@ func calcAdvisoryChanges(system *models.SystemPlatform, deleteAIDs, addAIDs []in
 	if system.Stale {
 		return []models.AdvisoryAccountData{}
 	}
-	aadMap := map[int64]models.AdvisoryAccountData{}
+	aadMap := make(map[int64]models.AdvisoryAccountData, len(addAIDs))
 
 	for _, id := range addAIDs {
 		aadMap[id] = models.AdvisoryAccountData{

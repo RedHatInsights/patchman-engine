@@ -423,7 +423,7 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 		defer utils.ObserveHoursSince(*system.LastEvaluation, twoEvaluationsInterval)
 	}
 
-	data := map[string]interface{}{}
+	data := make(map[string]interface{}, 8)
 	data["last_evaluation"] = time.Now()
 
 	if enableAdvisoryAnalysis {
