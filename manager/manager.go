@@ -45,9 +45,9 @@ func RunManager() {
 	middlewares.Prometheus().Use(app)
 	app.Use(middlewares.RequestResponseLogger())
 	app.Use(gzip.Gzip(gzip.DefaultCompression))
-	app.Use(middlewares.WithTimeout(utils.Cfg.ResponseTimeout))
 	endpointsConfig := getEndpointsConfig()
 	middlewares.SetSwagger(app, endpointsConfig)
+	app.Use(middlewares.WithTimeout(utils.Cfg.ResponseTimeout))
 	app.HandleMethodNotAllowed = true
 
 	// routes
