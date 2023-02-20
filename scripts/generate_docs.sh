@@ -21,7 +21,7 @@ convert_doc() {
 }
 
 # Perform conversion
-convert_doc swagger.json docs/v2/openapi.json
+convert_doc swagger.json docs/v3/openapi.json
 
 # Convert admin spec
 convert_doc admin/swagger.json docs/admin/openapi.json

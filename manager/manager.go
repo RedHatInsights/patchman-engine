@@ -14,6 +14,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var basepaths = []string{"/api/patch/v1", "/api/patch/v2", "/api/patch/v3"}
+
 // nolint: lll
 // @title Patchman-engine API
 // @version  {{.Version}}
@@ -29,7 +31,7 @@ import (
 // @in header
 // @name x-rh-identity
 
-// @BasePath /api/patch/v2
+// @BasePath /api/patch/v3
 func RunManager() {
 	core.ConfigureApp()
 
@@ -50,10 +52,10 @@ func RunManager() {
 
 	// routes
 	core.InitProbes(app)
-	apiV1 := app.Group("/api/patch/v1")
-	apiV2 := app.Group("/api/patch/v2")
-	routes.InitAPI(apiV1, endpointsConfig)
-	routes.InitAPI(apiV2, endpointsConfig)
+	for _, path := range basepaths {
+		api := app.Group(path)
+		routes.InitAPI(api, endpointsConfig)
+	}
 
 	go base.TryExposeOnMetricsPort(app)
 
