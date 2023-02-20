@@ -74,13 +74,6 @@ type AdvisoryDetailAttributesV2 struct {
 type packagesV1 map[string]string
 type packagesV2 []string
 
-// AdvisoryDetail handler for v1 API
-// Don't annotate it with swaggo/swag annotations
-// because we want to generate openapi.json only for v2 API
-func AdvisoryDetailHandlerV1(c *gin.Context) {
-	advisoryDetailHandler(c, "v1")
-}
-
 // @Summary Show me details an advisory by given advisory name
 // @Description Show me details an advisory by given advisory name
 // @ID detailAdvisory
@@ -93,11 +86,7 @@ func AdvisoryDetailHandlerV1(c *gin.Context) {
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /advisories/{advisory_id} [get]
-func AdvisoryDetailHandlerV2(c *gin.Context) {
-	advisoryDetailHandler(c, "v2")
-}
-
-func advisoryDetailHandler(c *gin.Context, apiver string) {
+func AdvisoryDetailHandler(c *gin.Context) {
 	advisoryName := c.Param("advisory_id")
 	if advisoryName == "" {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "advisory_id param not found"})
@@ -121,11 +110,10 @@ func advisoryDetailHandler(c *gin.Context, apiver string) {
 		return
 	}
 
-	switch apiver {
-	case "v1":
+	if c.GetInt(middlewares.KeyApiver) < 2 {
 		respV1 := advisoryRespV2toV1(respV2)
 		c.JSON(http.StatusOK, respV1)
-	case "v2":
+	} else {
 		c.JSON(http.StatusOK, respV2)
 	}
 }

@@ -27,34 +27,37 @@ func prepareRequest(method string, url string, body io.Reader, ct string) (w *ht
 }
 
 // Create simple request
-func CreateRequest(method string, url string, body io.Reader, contentType string, handler gin.HandlerFunc) (
+func CreateRequest(method string, url string, body io.Reader, contentType string, handler gin.HandlerFunc,
+	contextKVs ...core.ContextKV) (
 	w *httptest.ResponseRecorder) {
 	w, req := prepareRequest(method, url, body, contentType)
-	core.InitRouter(handler).ServeHTTP(w, req)
+	core.InitRouter(handler, contextKVs...).ServeHTTP(w, req)
 	return w
 }
 
 // Create request and initialize router with params
 func CreateRequestRouterWithParams(method string, url string, body io.Reader, contentType string,
-	handler gin.HandlerFunc, routerAccount int, routerMethod string, routerPath string) (w *httptest.ResponseRecorder) {
+	handler gin.HandlerFunc, routerAccount int, routerMethod string, routerPath string,
+	contextKVs ...core.ContextKV) (w *httptest.ResponseRecorder) {
 	w, req := prepareRequest(method, url, body, contentType)
-	core.InitRouterWithParams(handler, routerAccount, routerMethod, routerPath).ServeHTTP(w, req)
+	core.InitRouterWithParams(handler, routerAccount, routerMethod, routerPath, contextKVs...).ServeHTTP(w, req)
 	return w
 }
 
 // Create request and initialize router with path
 func CreateRequestRouterWithPath(method string, url string, body io.Reader, contentType string,
-	handler gin.HandlerFunc, routerPath string) (w *httptest.ResponseRecorder) {
+	handler gin.HandlerFunc, routerPath string, contextKVs ...core.ContextKV) (w *httptest.ResponseRecorder) {
 	w, req := prepareRequest(method, url, body, contentType)
-	core.InitRouterWithPath(handler, routerPath).ServeHTTP(w, req)
+	core.InitRouterWithPath(handler, routerPath, contextKVs...).ServeHTTP(w, req)
 	return w
 }
 
 // Create request and initialize router with account
 func CreateRequestRouterWithAccount(method string, url string, body io.Reader, contentType string,
-	handler gin.HandlerFunc, routerPath string, routerAccount int) (w *httptest.ResponseRecorder) {
+	handler gin.HandlerFunc, routerPath string, routerAccount int,
+	contextKVs ...core.ContextKV) (w *httptest.ResponseRecorder) {
 	w, req := prepareRequest(method, url, body, contentType)
-	core.InitRouterWithAccount(handler, routerPath, routerAccount).ServeHTTP(w, req)
+	core.InitRouterWithAccount(handler, routerPath, routerAccount, contextKVs...).ServeHTTP(w, req)
 	return w
 }
 

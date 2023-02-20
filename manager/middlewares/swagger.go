@@ -2,6 +2,8 @@ package middlewares
 
 import (
 	"app/docs"
+	"regexp"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -9,6 +11,21 @@ import (
 
 	swaggerFiles "github.com/swaggo/files"
 )
+
+const KeyApiver = "apiver"
+
+var apiRegexp = regexp.MustCompile(`/v(\d)/`)
+
+func apiver(path string) int {
+	match := apiRegexp.FindStringSubmatch(path)
+	if len(match) > 1 {
+		i, err := strconv.Atoi(match[1])
+		if err == nil {
+			return i
+		}
+	}
+	return 1
+}
 
 func SetSwagger(app *gin.Engine, config docs.EndpointsConfig) {
 	// Serving openapi docs
@@ -24,4 +41,10 @@ func SetAdminSwagger(app *gin.Engine) {
 	url := ginSwagger.URL(oaURL)
 	api := app.Group("/api/patch/admin")
 	api.GET("/openapi/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
+}
+
+func SetAPIVersion(basePath string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set(KeyApiver, apiver(basePath))
+	}
 }

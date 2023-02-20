@@ -6,7 +6,6 @@ import (
 	"app/manager/controllers"
 	"app/manager/middlewares"
 	admin "app/turnpike/controllers"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,17 +15,12 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	api.Use(middlewares.PublicAuthenticator())
 	api.Use(middlewares.CheckReferer())
 	api.Use(middlewares.DatabaseWithContext())
-	basePath := api.BasePath()
+	api.Use(middlewares.SetAPIVersion(api.BasePath()))
 
 	advisories := api.Group("/advisories")
 	advisories.GET("/", controllers.AdvisoriesListHandler)
 	go controllers.PreloadAdvisoryCacheItems()
-	switch {
-	case strings.Contains(basePath, "v1"):
-		advisories.GET("/:advisory_id", controllers.AdvisoryDetailHandlerV1)
-	case strings.Contains(basePath, "v2"):
-		advisories.GET("/:advisory_id", controllers.AdvisoryDetailHandlerV2)
-	}
+	advisories.GET("/:advisory_id", controllers.AdvisoryDetailHandler)
 	advisories.GET("/:advisory_id/systems", controllers.AdvisorySystemsListHandler)
 
 	if config.EnableBaselines {
