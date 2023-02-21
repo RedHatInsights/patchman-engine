@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -29,6 +30,8 @@ type CreateBaselineRequest struct {
 	Config *BaselineConfig `json:"config"`
 	// Description of the baseline (optional).
 	Description *string `json:"description"`
+	// Creator of the template
+	Creator *string `json:"-"`
 }
 
 type CreateBaselineResponse struct {
@@ -49,11 +52,15 @@ type CreateBaselineResponse struct {
 // @Router /baselines [put]
 func CreateBaselineHandler(c *gin.Context) {
 	accountID := c.GetInt(middlewares.KeyAccount)
+	creator := c.GetString(middlewares.KeyUser)
 
 	var request CreateBaselineRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		LogAndRespBadRequest(c, err, "Invalid request body: "+err.Error())
+		LogAndRespBadRequest(c, err, fmt.Sprintf("Invalid request body: %s", err.Error()))
 		return
+	}
+	if len(creator) > 0 {
+		request.Creator = &creator
 	}
 
 	if !utils.IsParamValid(&request.Name, false, false) {
@@ -101,10 +108,14 @@ func buildCreateBaselineQuery(db *gorm.DB, request CreateBaselineRequest, accoun
 	tx := db.Begin()
 	defer tx.Rollback()
 
+	now := time.Now()
 	baseline := models.Baseline{
 		RhAccountID: accountID,
 		Name:        request.Name,
 		Description: request.Description,
+		Creator:     request.Creator,
+		Published:   &now,
+		LastEdited:  &now,
 	}
 
 	if request.Config != nil {

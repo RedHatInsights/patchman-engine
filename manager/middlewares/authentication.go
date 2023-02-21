@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -19,6 +20,7 @@ const KeyAccount = "account"
 const UIReferer = "console.redhat.com"
 const APISource = "API"
 const UISource = "UI"
+const KeyUser = "user"
 
 var AccountIDCache = struct {
 	Values map[string]int
@@ -80,6 +82,7 @@ func PublicAuthenticator() gin.HandlerFunc {
 			return
 		}
 		if findAccount(c, xrhid.Identity.OrgID) {
+			c.Set(KeyUser, fmt.Sprintf("%s %s", xrhid.Identity.User.FirstName, xrhid.Identity.User.LastName))
 			c.Next()
 		}
 	}
