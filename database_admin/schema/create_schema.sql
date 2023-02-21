@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (100, false);
+VALUES (101, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -641,6 +641,9 @@ CREATE TABLE IF NOT EXISTS baseline
     name          TEXT              NOT NULL CHECK (not empty(name)),
     config        JSONB,
     description   TEXT              CHECK (NOT empty(description)),
+    creator       TEXT              CHECK (NOT empty(creator)),
+    published     TIMESTAMP WITH TIME ZONE,
+    last_edited   TIMESTAMP WITH TIME ZONE,
     PRIMARY KEY (rh_account_id, id),
     UNIQUE(rh_account_id, name)
 ) PARTITION BY HASH (rh_account_id);

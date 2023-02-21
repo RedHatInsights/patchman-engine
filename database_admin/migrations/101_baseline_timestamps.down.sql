@@ -1,0 +1,3 @@
+ALTER TABLE baseline DROP COLUMN IF EXISTS creator;
+ALTER TABLE baseline DROP COLUMN IF EXISTS published;
+ALTER TABLE baseline DROP COLUMN IF EXISTS last_edited;
