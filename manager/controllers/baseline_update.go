@@ -169,6 +169,7 @@ func updateSystemsBaselineID(tx *gorm.DB, rhAccountID int, inventoryIDs []string
 func buildUpdateBaselineQuery(db *gorm.DB, baselineID int64, req UpdateBaselineRequest, newIDs, obsoleteIDs []string,
 	account int) error {
 	data := map[string]interface{}{}
+	data["last_edited"] = time.Now()
 	if req.Name != nil {
 		data["name"] = req.Name
 	}

@@ -30,6 +30,9 @@ type Baseline struct {
 	Name        string
 	Config      []byte
 	Description *string
+	Creator     *string // pointer for compatibility with previous API versions
+	Published   *time.Time
+	LastEdited  *time.Time
 }
 
 func (Baseline) TableName() string {
