@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/manager/middlewares"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -32,6 +33,10 @@ type BaselineItemAttributes struct {
 	Name string `json:"name" csv:"name" query:"bl.name" gorm:"column:name" example:"my-baseline"`
 	// Count of the systems associated with the baseline
 	Systems int `json:"systems" csv:"systems" query:"systems" gorm:"column:systems" example:"22"`
+	// Created and updated dates
+	Published  *time.Time `json:"published,omitempty" csv:"published" query:"published" gorm:"column:published"`
+	LastEdited *time.Time `json:"last_edited,omitempty" csv:"last_edited" query:"last_edited" gorm:"column:last_edited"`
+	Creator    *string    `json:"creator,omitempty" csv:"creator" query:"creator" gorm:"column:creator"`
 }
 
 type BaselineItem struct {
@@ -71,6 +76,7 @@ type BaselinesResponse struct {
 // @Router /baselines [get]
 func BaselinesListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
+	apiver := c.GetInt(middlewares.KeyApiver)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return
@@ -94,7 +100,7 @@ func BaselinesListHandler(c *gin.Context) {
 		LogAndRespError(c, err, err.Error())
 	}
 
-	data, total := buildBaselinesData(baselines)
+	data, total := buildBaselinesData(baselines, apiver)
 	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
 	if err != nil {
 		return // Error handled in method itself
@@ -125,7 +131,7 @@ func buildQueryBaselines(db *gorm.DB, filters map[string]FilterData, account int
 	return query
 }
 
-func buildBaselinesData(baselines []BaselinesDBLookup) ([]BaselineItem, int) {
+func buildBaselinesData(baselines []BaselinesDBLookup, apiver int) ([]BaselineItem, int) {
 	var total int
 	if len(baselines) > 0 {
 		total = baselines[0].Total
@@ -135,8 +141,11 @@ func buildBaselinesData(baselines []BaselinesDBLookup) ([]BaselineItem, int) {
 		baseline := baselines[i]
 		data[i] = BaselineItem{
 			Attributes: BaselineItemAttributes{
-				Name:    baseline.Name,
-				Systems: baseline.Systems,
+				Name:       baseline.Name,
+				Systems:    baseline.Systems,
+				Published:  APIV3Compat(baseline.Published, apiver),
+				LastEdited: APIV3Compat(baseline.LastEdited, apiver),
+				Creator:    APIV3Compat(baseline.Creator, apiver),
 			},
 			ID:   baseline.ID,
 			Type: "baseline",
