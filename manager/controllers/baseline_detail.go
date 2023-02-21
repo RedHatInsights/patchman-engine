@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -27,6 +28,9 @@ type BaselineDetailAttributes struct {
 	Name        string          `json:"name" example:"my_baseline"` // Baseline name
 	Config      *BaselineConfig `json:"config"`                     // Baseline config
 	Description string          `json:"description"`
+	Published   *time.Time      `json:"published,omitempty"`
+	LastEdited  *time.Time      `json:"last_edited,omitempty"`
+	Creator     *string         `json:"creator,omitempty"`
 }
 
 // @Summary Show baseline detail by given baseline ID
@@ -43,6 +47,7 @@ type BaselineDetailAttributes struct {
 // @Router /baselines/{baseline_id} [get]
 func BaselineDetailHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
+	apiver := c.GetInt(middlewares.KeyApiver)
 
 	baselineIDstr := c.Param("baseline_id")
 	baselineID, err := strconv.Atoi(baselineIDstr)
@@ -52,7 +57,7 @@ func BaselineDetailHandler(c *gin.Context) {
 	}
 
 	db := middlewares.DBFromContext(c)
-	respItem, err := getBaseline(db, account, baselineID)
+	respItem, err := getBaseline(db, account, baselineID, apiver)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			LogAndRespNotFound(c, err, "baseline not found")
@@ -66,7 +71,7 @@ func BaselineDetailHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func getBaseline(db *gorm.DB, accountID, baselineID int) (*BaselineDetailItem, error) {
+func getBaseline(db *gorm.DB, accountID, baselineID, apiver int) (*BaselineDetailItem, error) {
 	var baseline models.Baseline
 	err := db.Model(&models.Baseline{}).
 		Where("rh_account_id = ? AND id = ?", accountID, baselineID).
@@ -87,6 +92,9 @@ func getBaseline(db *gorm.DB, accountID, baselineID int) (*BaselineDetailItem, e
 			Name:        baseline.Name,
 			Config:      config,
 			Description: description,
+			Published:   APIV3Compat(baseline.Published, apiver),
+			LastEdited:  APIV3Compat(baseline.LastEdited, apiver),
+			Creator:     APIV3Compat(baseline.Creator, apiver),
 		},
 		Type: "baseline",
 	}
