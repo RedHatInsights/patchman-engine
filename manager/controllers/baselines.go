@@ -15,7 +15,7 @@ var BaselineSelect = database.MustGetSelect(&BaselinesDBLookup{})
 var BaselineOpts = ListOpts{
 	Fields:         BaselineFields,
 	DefaultFilters: nil,
-	DefaultSort:    "-name",
+	DefaultSort:    "name",
 	StableSort:     "id",
 	SearchFields:   []string{"bl.name"},
 }
@@ -64,7 +64,7 @@ type BaselinesResponse struct {
 // @Produce  json
 // @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field"    Enums(id,name,config)
+// @Param    sort           query   string  false   "Sort field"    Enums(id,name,systems,published,last_edited,creator)
 // @Param    search         query   string  false   "Find matching text"
 // @Param    filter[id]           query   string  false "Filter "
 // @Param    filter[name]         query   string  false "Filter"
@@ -126,7 +126,7 @@ func buildQueryBaselines(db *gorm.DB, filters map[string]FilterData, account int
 	query := db.Table("baseline as bl").
 		Select(BaselineSelect).
 		Joins("LEFT JOIN (?) sp ON sp.baseline_id = bl.id", subq).
-		Where("bl.rh_account_id = ?", account).Order("bl.name asc")
+		Where("bl.rh_account_id = ?", account)
 
 	return query
 }
