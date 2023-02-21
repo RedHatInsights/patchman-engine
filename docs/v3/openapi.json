@@ -656,7 +656,10 @@
                             "enum": [
                                 "id",
                                 "name",
-                                "config"
+                                "systems",
+                                "published",
+                                "last_edited",
+                                "creator"
                             ]
                         }
                     },
@@ -5295,13 +5298,22 @@
                     "config": {
                         "$ref": "#/components/schemas/controllers.BaselineConfig"
                     },
+                    "creator": {
+                        "type": "string"
+                    },
                     "description": {
+                        "type": "string"
+                    },
+                    "last_edited": {
                         "type": "string"
                     },
                     "name": {
                         "type": "string",
                         "description": "Baseline name",
                         "example": "my_baseline"
+                    },
+                    "published": {
+                        "type": "string"
                     }
                 }
             },
@@ -5352,10 +5364,20 @@
             "controllers.BaselineItemAttributes": {
                 "type": "object",
                 "properties": {
+                    "creator": {
+                        "type": "string"
+                    },
+                    "last_edited": {
+                        "type": "string"
+                    },
                     "name": {
                         "type": "string",
                         "description": "Baseline name",
                         "example": "my-baseline"
+                    },
+                    "published": {
+                        "type": "string",
+                        "description": "Created and updated dates"
                     },
                     "systems": {
                         "type": "integer",
