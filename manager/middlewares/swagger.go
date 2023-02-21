@@ -14,7 +14,7 @@ import (
 
 const KeyApiver = "apiver"
 
-var apiRegexp = regexp.MustCompile(`/v(\d)/`)
+var apiRegexp = regexp.MustCompile(`/v(\d)`)
 
 func apiver(path string) int {
 	match := apiRegexp.FindStringSubmatch(path)
