@@ -20,7 +20,7 @@ var SystemTagSelect = database.MustGetSelect(&SystemTagDBLookup{})
 
 type SystemTagDBLookup struct {
 	// a helper to get total number of systems
-	Total int `json:"-" csv:"-" query:"count(*) over ()" gorm:"column:total"`
+	MetaTotalHelper
 
 	SystemTagItem
 }

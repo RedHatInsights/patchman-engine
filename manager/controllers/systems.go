@@ -31,22 +31,16 @@ var SystemOpts = ListOpts{
 
 type SystemsID struct {
 	ID string `query:"sp.inventory_id" gorm:"column:id"`
-	// a helper to get total number of systems
-	Total int `json:"-" csv:"-" query:"count(*) over()" gorm:"column:total"`
+	MetaTotalHelper
 }
 
 // nolint: lll
 type SystemDBLookup struct {
-	ID string `json:"id" csv:"id" query:"sp.inventory_id" gorm:"column:id"`
-
-	// Just helper field to get tags from db in plain string, then parsed to "Tags" attr., excluded from output data.
-	TagsStr string `json:"-" csv:"-" query:"ih.tags" gorm:"column:tags_str"`
-	// a helper to get total number of systems
-	Total          int `json:"-" csv:"-" query:"count(*) over ()" gorm:"column:total"`
+	SystemIDAttribute
+	SystemsMetaTagTotal
 	TotalPatched   int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_updatable = 0) over ()" gorm:"column:total_patched"`
 	TotalUnpatched int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_updatable > 0) over ()" gorm:"column:total_unpatched"`
 	TotalStale     int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = true) over ()" gorm:"column:total_stale"`
-
 	SystemItemAttributes
 }
 
@@ -54,16 +48,18 @@ type SystemInlineItem SystemDBLookup
 
 // nolint: lll
 type SystemItemAttributes struct {
-	DisplayName    string     `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name"`
+	SystemDisplayName
 	LastEvaluation *time.Time `json:"last_evaluation" csv:"last_evaluation" query:"sp.last_evaluation" gorm:"column:last_evaluation"`
-	LastUpload     *time.Time `json:"last_upload" csv:"last_upload" query:"sp.last_upload" gorm:"column:last_upload"`
-	RhsaCount      int        `json:"rhsa_count" csv:"rhsa_count" query:"sp.advisory_sec_count_cache" gorm:"column:rhsa_count"`
-	RhbaCount      int        `json:"rhba_count" csv:"rhba_count" query:"sp.advisory_bug_count_cache" gorm:"column:rhba_count"`
-	RheaCount      int        `json:"rhea_count" csv:"rhea_count" query:"sp.advisory_enh_count_cache" gorm:"column:rhea_count"`
-	OtherCount     int        `json:"other_count" csv:"other_count" query:"(sp.advisory_count_cache - sp.advisory_sec_count_cache - sp.advisory_bug_count_cache - sp.advisory_enh_count_cache)" gorm:"column:other_count"`
-	Stale          bool       `json:"stale" csv:"stale" query:"sp.stale" gorm:"column:stale"`
-	ThirdParty     bool       `json:"third_party" csv:"third_party" query:"sp.third_party" gorm:"column:third_party"`
-	InsightsID     string     `json:"insights_id" csv:"insights_id" query:"ih.insights_id" gorm:"column:insights_id"`
+	SystemLastUpload
+
+	RhsaCount  int `json:"rhsa_count" csv:"rhsa_count" query:"sp.advisory_sec_count_cache" gorm:"column:rhsa_count"`
+	RhbaCount  int `json:"rhba_count" csv:"rhba_count" query:"sp.advisory_bug_count_cache" gorm:"column:rhba_count"`
+	RheaCount  int `json:"rhea_count" csv:"rhea_count" query:"sp.advisory_enh_count_cache" gorm:"column:rhea_count"`
+	OtherCount int `json:"other_count" csv:"other_count" query:"(sp.advisory_count_cache - sp.advisory_sec_count_cache - sp.advisory_bug_count_cache - sp.advisory_enh_count_cache)" gorm:"column:other_count"`
+
+	SystemStale
+	ThirdParty bool   `json:"third_party" csv:"third_party" query:"sp.third_party" gorm:"column:third_party"`
+	InsightsID string `json:"insights_id" csv:"insights_id" query:"ih.insights_id" gorm:"column:insights_id"`
 
 	PackagesInstalled int `json:"packages_installed" csv:"packages_installed" query:"sp.packages_installed" gorm:"column:packages_installed"`
 	PackagesUpdatable int `json:"packages_updatable" csv:"packages_updatable" query:"sp.packages_updatable" gorm:"column:packages_updatable"`
@@ -71,18 +67,11 @@ type SystemItemAttributes struct {
 	OSName  string `json:"os_name" csv:"os_name" query:"ih.system_profile->'operating_system'->>'name'" gorm:"column:osname"`
 	OSMajor string `json:"os_major" csv:"os_major" query:"ih.system_profile->'operating_system'->>'major'" gorm:"column:osmajor"`
 	OSMinor string `json:"os_minor" csv:"os_minor" query:"ih.system_profile->'operating_system'->>'minor'" gorm:"column:osminor"`
-	OS      string `json:"os" csv:"os" query:"ih.system_profile->'operating_system'->>'name' || ' ' || coalesce(ih.system_profile->'operating_system'->>'major' || '.' || (ih.system_profile->'operating_system'->>'minor'), '')" order_query:"ih.system_profile->'operating_system'->>'name',cast(substring(ih.system_profile->'operating_system'->>'major','^\\d+') as int),cast(substring(ih.system_profile->'operating_system'->>'minor','^\\d+') as int)" gorm:"column:os"`
-	Rhsm    string `json:"rhsm" csv:"rhsm" query:"ih.system_profile->'rhsm'->>'version'" gorm:"column:rhsm"`
+	OSAttributes
 
-	StaleTimestamp        *time.Time `json:"stale_timestamp" csv:"stale_timestamp" query:"ih.stale_timestamp" gorm:"column:stale_timestamp"`
-	StaleWarningTimestamp *time.Time `json:"stale_warning_timestamp" csv:"stale_warning_timestamp" query:"ih.stale_warning_timestamp" gorm:"column:stale_warning_timestamp"`
-	CulledTimestamp       *time.Time `json:"culled_timestamp" csv:"culled_timestamp" query:"ih.culled_timestamp" gorm:"column:culled_timestamp"`
-	Created               *time.Time `json:"created" csv:"created" query:"ih.created" gorm:"column:created"`
-
-	Tags SystemTagsList `json:"tags" csv:"tags" gorm:"-"`
-
-	BaselineName     string `json:"baseline_name" csv:"baseline_name" query:"bl.name" gorm:"column:baseline_name"`
-	BaselineUpToDate *bool  `json:"baseline_uptodate" csv:"baseline_uptodate" query:"sp.baseline_uptodate" gorm:"column:baseline_uptodate"`
+	SystemTimestamps
+	SystemTags
+	BaselineAttributes
 }
 
 type SystemTagsList []SystemTag

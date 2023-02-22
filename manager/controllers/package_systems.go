@@ -24,21 +24,17 @@ var PackageSystemsOpts = ListOpts{
 
 //nolint:lll
 type PackageSystemItem struct {
-	ID               string         `json:"id" csv:"id" query:"sp.inventory_id" gorm:"column:id"`
-	DisplayName      string         `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name"`
-	InstalledEVRA    string         `json:"installed_evra" csv:"installed_evra" query:"p.evra" gorm:"column:installed_evra"`
-	AvailableEVRA    string         `json:"available_evra" csv:"available_evra" query:"spkg.latest_evra" gorm:"column:available_evra"`
-	Updatable        bool           `json:"updatable" csv:"updatable" query:"spkg.latest_evra IS NOT NULL" gorm:"column:updatable"`
-	Tags             SystemTagsList `json:"tags" csv:"tags" query:"null" gorm:"-"`
-	BaselineName     string         `json:"baseline_name" csv:"baseline_name" query:"bl.name" gorm:"column:baseline_name"`
-	BaselineUpToDate *bool          `json:"baseline_uptodate" csv:"baseline_uptodate" query:"sp.baseline_uptodate" gorm:"column:baseline_uptodate"`
+	SystemIDAttribute
+	SystemDisplayName
+	InstalledEVRA string         `json:"installed_evra" csv:"installed_evra" query:"p.evra" gorm:"column:installed_evra"`
+	AvailableEVRA string         `json:"available_evra" csv:"available_evra" query:"spkg.latest_evra" gorm:"column:available_evra"`
+	Updatable     bool           `json:"updatable" csv:"updatable" query:"spkg.latest_evra IS NOT NULL" gorm:"column:updatable"`
+	Tags          SystemTagsList `json:"tags" csv:"tags" query:"null" gorm:"-"`
+	BaselineAttributes
 }
 
 type PackageSystemDBLookup struct {
-	// Just helper field to get tags from db in plain string, then parsed to "Tags" attr., excluded from output data.
-	TagsStr string `json:"-" csv:"-" query:"ih.tags" gorm:"column:tags_str"`
-	// a helper to get total number of systems
-	Total int `json:"-" csv:"-" query:"count(*) over ()" gorm:"column:total"`
+	SystemsMetaTagTotal
 
 	PackageSystemItem
 }
