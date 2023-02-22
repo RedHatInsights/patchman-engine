@@ -23,9 +23,9 @@ var BaselineSystemOpts = ListOpts{
 }
 
 type BaselineSystemsDBLookup struct {
-	ID string `json:"id" csv:"id" query:"sp.inventory_id" gorm:"column:id"`
+	SystemIDAttribute
 	// a helper to get total number of systems
-	Total int `json:"-" csv:"-" query:"count(*) over ()" gorm:"column:total"`
+	MetaTotalHelper
 	BaselineSystemAttributes
 }
 

@@ -25,7 +25,7 @@ var enabledPackageCache = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_CACHE", fals
 
 type PackageDBLookup struct {
 	// a helper to get total number of systems
-	Total int `json:"-" csv:"-" query:"count(*) over ()" gorm:"column:total"`
+	MetaTotalHelper
 
 	PackageItem
 }

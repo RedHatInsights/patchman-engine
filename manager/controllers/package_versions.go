@@ -25,7 +25,7 @@ var PackageVersionsOpts = ListOpts{
 type PackageVersionDBLookup struct {
 	AdvisoryID int `json:"-" csv:"-" gorm:"column:advisory_id"` // needed for stable sort
 	// a helper to get total number of systems
-	Total int `json:"-" csv:"-" query:"count(*) over ()" gorm:"column:total"`
+	MetaTotalHelper
 
 	PackageVersionItem
 }

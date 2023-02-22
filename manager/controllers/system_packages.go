@@ -46,7 +46,7 @@ type SystemPackageDBLoad struct {
 	SystemPackagesAttrs
 	Updates []byte `json:"updates" query:"spkg.update_data" gorm:"column:updates"`
 	// a helper to get total number of systems
-	Total int `json:"-" csv:"-" query:"count(*) over ()" gorm:"column:total"`
+	MetaTotalHelper
 }
 
 func systemPackageQuery(db *gorm.DB, account int, inventoryID string) *gorm.DB {

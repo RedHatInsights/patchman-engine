@@ -30,7 +30,7 @@ type RelList []string
 type SystemAdvisoriesDBLookup struct {
 	ID string `json:"id" csv:"id" query:"am.name" gorm:"column:id"`
 	// a helper to get total number of systems
-	Total int `json:"-" csv:"-" query:"count(*) over ()" gorm:"column:total"`
+	MetaTotalHelper
 
 	SystemAdvisoryItemAttributes
 }
