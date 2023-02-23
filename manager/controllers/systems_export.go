@@ -50,7 +50,7 @@ func SystemsExportHandler(c *gin.Context) {
 	} // Error handled in method itself
 	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
 
-	var systems []SystemDBLookup
+	var systems SystemDBLookupSlice
 
 	query = query.Order("sp.id")
 	query, err = ExportListCommon(query, c, SystemOpts)
@@ -64,6 +64,6 @@ func SystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	parseAndFillTags(&systems)
+	systems.ParseAndFillTags()
 	OutputExportData(c, systems)
 }
