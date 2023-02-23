@@ -349,11 +349,9 @@
                                 "display_name",
                                 "last_evaluation",
                                 "last_upload",
-                                "rhsa_count",
-                                "rhba_count",
-                                "rhea_count",
-                                "other_count",
-                                "stale"
+                                "stale",
+                                "status",
+                                "template"
                             ]
                         }
                     },
@@ -374,63 +372,7 @@
                         }
                     },
                     {
-                        "name": "filter[insights_id]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "filter[display_name]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[last_evaluation]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[last_upload]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[rhsa_count]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[rhba_count]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[rhea_count]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[other_count]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -446,7 +388,7 @@
                         }
                     },
                     {
-                        "name": "filter[stale_timestamp]",
+                        "name": "filter[status]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -454,47 +396,7 @@
                         }
                     },
                     {
-                        "name": "filter[stale_warning_timestamp]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[culled_timestamp]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[created]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[osname]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[osminor]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[osmajor]",
+                        "name": "filter[template]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -582,7 +484,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.AdvisorySystemsResponse"
+                                    "$ref": "#/components/schemas/controllers.AdvisorySystemsResponseV3"
                                 }
                             }
                         }
@@ -1377,71 +1279,7 @@
                         }
                     },
                     {
-                        "name": "filter[last_evaluation]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[last_upload]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[rhsa_count]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[rhba_count]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[rhea_count]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[other_count]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "filter[stale]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[packages_installed]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[packages_updatable]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -1497,30 +1335,6 @@
                         "name": "filter[system_profile][mssql][version]",
                         "in": "query",
                         "description": "Filter systems by mssql version",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[osname]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[osminor]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[osmajor]",
-                        "in": "query",
-                        "description": "Filter",
                         "schema": {
                             "type": "string"
                         }
@@ -5265,13 +5079,71 @@
                     }
                 }
             },
-            "controllers.AdvisorySystemsResponse": {
+            "controllers.AdvisorySystemItem": {
+                "type": "object",
+                "properties": {
+                    "attributes": {
+                        "$ref": "#/components/schemas/controllers.AdvisorySystemItemAttributes"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "controllers.AdvisorySystemItemAttributes": {
+                "type": "object",
+                "properties": {
+                    "baseline_name": {
+                        "type": "string"
+                    },
+                    "created": {
+                        "type": "string"
+                    },
+                    "culled_timestamp": {
+                        "type": "string"
+                    },
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "last_upload": {
+                        "type": "string"
+                    },
+                    "os": {
+                        "type": "string"
+                    },
+                    "rhsm": {
+                        "type": "string"
+                    },
+                    "stale": {
+                        "type": "boolean"
+                    },
+                    "stale_timestamp": {
+                        "type": "string"
+                    },
+                    "stale_warning_timestamp": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemTag"
+                        }
+                    }
+                }
+            },
+            "controllers.AdvisorySystemsResponseV3": {
                 "type": "object",
                 "properties": {
                     "data": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/controllers.SystemItem"
+                            "$ref": "#/components/schemas/controllers.AdvisorySystemItem"
                         }
                     },
                     "links": {
