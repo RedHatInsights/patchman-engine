@@ -38,6 +38,7 @@ type AdvisorySystemItemAttributes struct {
 	OSAttributes
 	SystemTimestamps
 	SystemTags
+	BaselineIDAttr
 	BaselineNameAttr
 	SystemAdvisoryStatus
 }

@@ -39,6 +39,10 @@ type BaselineNameAttr struct {
 	BaselineName string `json:"baseline_name" csv:"baseline_name" query:"bl.name" gorm:"column:baseline_name"`
 }
 
+type BaselineIDAttr struct {
+	BaselineID int64 `json:"baseline_id" csv:"baseline_id" query:"bl.id" gorm:"column:baseline_id"`
+}
+
 type SystemDisplayName struct {
 	DisplayName string `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name"`
 }
