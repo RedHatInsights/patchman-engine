@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -366,7 +367,12 @@ func parseTagsFromCtx(c *gin.Context, filters Filters) error {
 
 		var value []string
 		if value = []string{}; tag.Value != nil {
-			value = strings.Split(*tag.Value, ",")
+			var val string
+			val, err := strconv.Unquote(*tag.Value)
+			if err != nil {
+				val = *tag.Value
+			}
+			value = strings.Split(val, ",")
 		}
 		filters[key] = FilterData{
 			Operator: "eq",
