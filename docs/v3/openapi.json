@@ -5096,6 +5096,9 @@
             "controllers.AdvisorySystemItemAttributes": {
                 "type": "object",
                 "properties": {
+                    "baseline_id": {
+                        "type": "integer"
+                    },
                     "baseline_name": {
                         "type": "string"
                     },
