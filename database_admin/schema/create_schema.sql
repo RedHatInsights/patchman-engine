@@ -151,23 +151,6 @@ BEGIN
 END;
 $system_update$ LANGUAGE plpgsql;
 
--- count system advisories according to advisory type
-CREATE OR REPLACE FUNCTION system_advisories_count(system_id_in BIGINT, advisory_type_id_in INT DEFAULT NULL)
-    RETURNS INT AS
-$system_advisories_count$
-DECLARE
-    result_cnt INT;
-BEGIN
-    SELECT COUNT(advisory_id)
-    FROM system_advisories sa
-             JOIN advisory_metadata am ON sa.advisory_id = am.id
-    WHERE (am.advisory_type_id = advisory_type_id_in OR advisory_type_id_in IS NULL)
-      AND sa.system_id = system_id_in
-    INTO result_cnt;
-    RETURN result_cnt;
-END;
-$system_advisories_count$ LANGUAGE 'plpgsql';
-
 CREATE OR REPLACE FUNCTION refresh_advisory_caches_multi(advisory_ids_in INTEGER[] DEFAULT NULL,
                                                          rh_account_id_in INTEGER DEFAULT NULL)
     RETURNS VOID AS
