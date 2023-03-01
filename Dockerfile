@@ -37,6 +37,15 @@ RUN if [ "$INSTALL_TOOLS" == "yes" ] ; then \
 
 RUN go build -v main.go
 
+# libs to be copied into runtime
+RUN mkdir -p /go/lib64 && \
+
+    ldd /go/src/app/main \
+    | awk '/=>/ {print $3}' \
+    | sort -u \
+    | while read lib ; do \
+        ln -v -t /go/lib64/ -s $lib ; \
+    done
 
 # ---------------------------------------
 # runtime image with only necessary stuff
