@@ -46,4 +46,6 @@ COPY --from=buildimg /go/src/app/main /go/src/app/
 
 WORKDIR /go/src/app
 
+COPY . .
+
 EXPOSE 8080
