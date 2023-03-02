@@ -13,7 +13,7 @@ RUN FULL_RHEL=$(dnf repolist rhel-8-for-x86_64-baseos-rpms --enabled -q) ; \
     fi
 
 RUN dnf module -y enable postgresql:12 && \
-    dnf install -y openssl go-toolset postgresql git-core diffutils rpm-devel && \
+    dnf install -y go-toolset postgresql git-core diffutils rpm-devel && \
     ln -s /usr/libexec/platform-python /usr/bin/python3
 
 RUN mkdir -p /mnt/rootfs && \
@@ -61,7 +61,7 @@ RUN go build -v main.go
 
 # libs to be copied into runtime
 RUN mkdir -p /go/lib64 && \
-    ldd /go/src/app/main /usr/bin/openssl \
+    ldd /go/src/app/main \
     | awk '/=>/ {print $3}' \
     | sort -u \
     | while read lib ; do \
@@ -86,7 +86,6 @@ COPY --from=buildimg /etc/pki/tls/certs/ca-bundle.crt /etc/pki/tls/certs/
 
 # copy libs needed by main
 COPY --from=buildimg /go/lib64/* /lib64/
-COPY --from=buildimg /usr/bin/openssl /usr/bin/
 
 ADD --chown=insights:root go.sum                     /go/src/app/
 ADD --chown=insights:root scripts                    /go/src/app/scripts
