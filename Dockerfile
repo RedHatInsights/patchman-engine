@@ -80,6 +80,7 @@ COPY --from=buildimg /etc/pki/tls/certs/ca-bundle.crt /etc/pki/tls/certs/
 
 # copy libs needed by main
 COPY --from=buildimg /go/lib64/* /lib64/
+COPY --from=buildimg /usr/bin/openssl /usr/bin/
 
 ADD --chown=insights:root go.sum                     /go/src/app/
 ADD --chown=insights:root scripts                    /go/src/app/scripts
