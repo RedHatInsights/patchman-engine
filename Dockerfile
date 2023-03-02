@@ -16,6 +16,10 @@ RUN dnf module -y enable postgresql:12 && \
     dnf install -y openssl go-toolset postgresql git-core diffutils rpm-devel && \
     ln -s /usr/libexec/platform-python /usr/bin/python3
 
+RUN mkdir -p /mnt/rootfs && \
+    dnf install --installroot /mnt/rootfs --releasever 8 --setopt install_weak_deps=false --nodocs -y openssl && \
+    rm -rf /mnt/rootfs/var/cache/*
+
 ENV GOPATH=/go \
     GO111MODULE=on \
     GOPROXY=https://proxy.golang.org \
@@ -69,6 +73,8 @@ EXPOSE 8080
 # ---------------------------------------
 # runtime image with only necessary stuff
 FROM ${RUNIMG} as runtimeimg
+
+COPY --from=buildimg /mnt/rootfs/ /
 
 # create insights user
 RUN echo "insights:x:1000:0::/go:/bin/bash" >>/etc/passwd && \
