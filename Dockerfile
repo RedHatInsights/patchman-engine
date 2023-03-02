@@ -13,12 +13,8 @@ RUN FULL_RHEL=$(dnf repolist rhel-8-for-x86_64-baseos-rpms --enabled -q) ; \
     fi
 
 RUN dnf module -y enable postgresql:12 && \
-    dnf install -y go-toolset postgresql git-core diffutils rpm-devel && \
+    dnf install -y openssl go-toolset postgresql git-core diffutils rpm-devel && \
     ln -s /usr/libexec/platform-python /usr/bin/python3
-
-RUN mkdir -p /mnt/rootfs && \
-    dnf install --installroot /mnt/rootfs --releasever 8 --setopt install_weak_deps=false --nodocs -y openssl && \
-    rm -rf /mnt/rootfs/var/cache/*
 
 ENV GOPATH=/go \
     GO111MODULE=on \
@@ -68,13 +64,18 @@ RUN mkdir -p /go/lib64 && \
         ln -v -t /go/lib64/ -s $lib ; \
     done
 
+RUN ldd /usr/bin/openssl \
+    | awk '/=>/ {print $3}' \
+    | sort -u \
+    | while read lib ; do \
+        ln -v -f -t /go/lib64/ -s $lib ; \
+    done
+
 EXPOSE 8080
 
 # ---------------------------------------
 # runtime image with only necessary stuff
 FROM ${RUNIMG} as runtimeimg
-
-COPY --from=buildimg /mnt/rootfs/ /
 
 # create insights user
 RUN echo "insights:x:1000:0::/go:/bin/bash" >>/etc/passwd && \
