@@ -295,8 +295,19 @@ func HasTags(c *gin.Context) bool {
 	return hasTags
 }
 
+func trimQuotes(s string) string {
+	if len(s) >= 2 && s[0] == s[len(s)-1] && (s[0] == '"' || s[0] == '\'') {
+		return s[1 : len(s)-1]
+	}
+	return s
+}
+
 func ParseTag(tag string) (*Tag, error) {
-	matches := tagRegex.FindStringSubmatch(tag)
+	// trim leading and trailing quote, otherwise we can end up with
+	// e.g. namespace='"insights-client", key="key", val="val'"
+	// when query is tags='insights-client/key=val' which is invalid
+	trimmed := trimQuotes(tag)
+	matches := tagRegex.FindStringSubmatch(trimmed)
 	if len(matches) < 5 {
 		// We received an invalid tag
 		err := errors.Errorf(InvalidTagMsg, tag)
