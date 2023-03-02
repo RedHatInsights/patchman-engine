@@ -25,9 +25,9 @@ func TestRefreshAdvisoryCachesPerAccounts(t *testing.T) {
 
 	refreshAdvisoryCachesPerAccounts()
 
-	assert.Equal(t, 2, database.PluckInt(database.Db.Table("advisory_account_data").
-		Where("advisory_id = 1 AND rh_account_id = 2"), "systems_installable"))
 	assert.Equal(t, 1, database.PluckInt(database.Db.Table("advisory_account_data").
+		Where("advisory_id = 1 AND rh_account_id = 2"), "systems_installable"))
+	assert.Equal(t, 0, database.PluckInt(database.Db.Table("advisory_account_data").
 		Where("advisory_id = 2 AND rh_account_id = 1"), "systems_installable"))
 	assert.Equal(t, 1, database.PluckInt(database.Db.Table("advisory_account_data").
 		Where("advisory_id = 3 AND rh_account_id = 1"), "systems_installable"))

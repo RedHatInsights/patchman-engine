@@ -30,9 +30,10 @@ type key struct {
 }
 
 type advisoryCount struct {
-	RhAccountID int
-	AdvisoryID  int64
-	Count       int
+	RhAccountID        int
+	AdvisoryID         int64
+	SystemsInstallable int
+	SystemsApplicable  int
 }
 
 func CheckCachesValidRet() (bool, error) {
@@ -48,7 +49,9 @@ func CheckCachesValidRet() (bool, error) {
 	}
 	var counts []advisoryCount
 
-	err = tx.Select("sp.rh_account_id, sa.advisory_id, count(*)").
+	err = tx.Select("sp.rh_account_id, sa.advisory_id," +
+		"count(*) filter (where sa.status_id = 0) as systems_installable," +
+		"count(*) filter (where sa.status_id = 1) as systems_applicable").
 		Table("system_advisories sa").
 		Joins("JOIN system_platform sp ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id").
 		Where("sp.stale = false AND sp.last_evaluation IS NOT NULL").
@@ -59,35 +62,34 @@ func CheckCachesValidRet() (bool, error) {
 		return false, err
 	}
 
-	cached := make(map[key]int, len(aad))
-	calculated := make(map[key]int, len(counts))
+	cached := make(map[key][]int, len(aad))
+	calculated := make(map[key][]int, len(counts))
 
 	for _, val := range aad {
-		cached[key{val.RhAccountID, val.AdvisoryID}] = val.SystemsInstallable
+		cached[key{val.RhAccountID, val.AdvisoryID}] = []int{val.SystemsInstallable, val.SystemsApplicable}
 	}
 	for _, val := range counts {
-		calculated[key{val.RhAccountID, val.AdvisoryID}] = val.Count
+		calculated[key{val.RhAccountID, val.AdvisoryID}] = []int{val.SystemsInstallable, val.SystemsApplicable}
 	}
 
-	for key, cachedCount := range cached {
-		calcCount := calculated[key]
-
-		if cachedCount != calcCount {
-			utils.LogError("advisory_id", key.AdvisoryID, "account_id", key.AccountID,
-				"cached", cachedCount, "calculated", calcCount, "Cached counts mismatch")
-			valid = false
+	crossCheckCache := func(a, b map[key][]int) {
+		for key, aCounts := range a {
+			bCounts := b[key]
+			if len(bCounts) == 0 {
+				bCounts = []int{0, 0}
+			}
+			for i, msg := range []string{"installable", "applicable"} {
+				if aCounts[i] != bCounts[i] {
+					utils.LogError("advisory_id", key.AdvisoryID, "account_id", key.AccountID,
+						"cached", aCounts[i], "calculated", bCounts[i], fmt.Sprintf("Cached %s counts mismatch", msg))
+					valid = false
+				}
+			}
 		}
 	}
+	crossCheckCache(cached, calculated)
+	crossCheckCache(calculated, cached)
 
-	for key, calcCount := range calculated {
-		cachedCount := calculated[key]
-
-		if cachedCount != calcCount {
-			utils.LogError("advisory_id", key.AdvisoryID, "account_id", key.AccountID,
-				"cached", cachedCount, "calculated", calcCount, "Cached counts mismatch")
-			valid = false
-		}
-	}
 	tx.Commit()
 	return valid, nil
 }
