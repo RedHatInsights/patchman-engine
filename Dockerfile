@@ -57,18 +57,11 @@ RUN go build -v main.go
 
 # libs to be copied into runtime
 RUN mkdir -p /go/lib64 && \
-    ldd /go/src/app/main \
+    ldd /go/src/app/main /usr/bin/openssl \
     | awk '/=>/ {print $3}' \
     | sort -u \
     | while read lib ; do \
         ln -v -t /go/lib64/ -s $lib ; \
-    done
-
-RUN ldd /usr/bin/openssl \
-    | awk '/=>/ {print $3}' \
-    | sort -u \
-    | while read lib ; do \
-        ln -v -f -t /go/lib64/ -s $lib ; \
     done
 
 EXPOSE 8080
