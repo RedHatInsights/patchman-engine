@@ -82,7 +82,7 @@ func TestMarkSystemsStale(t *testing.T) {
 
 	assert.True(t, len(accountData) > 0, "We should have some systems affected by advisories")
 	for _, a := range accountData {
-		assert.True(t, a.SystemsInstallable > 0, "We should have some systems affected")
+		assert.True(t, a.SystemsInstallable+a.SystemsApplicable > 0, "We should have some systems affected")
 	}
 	for i := range systems {
 		assert.NoError(t, database.Db.Save(&systems[i]).Error)
@@ -103,7 +103,7 @@ func TestMarkSystemsStale(t *testing.T) {
 	assert.NoError(t, database.Db.Find(&accountData).Error)
 	sumAffected := 0
 	for _, a := range accountData {
-		sumAffected += a.SystemsInstallable
+		sumAffected += a.SystemsInstallable + a.SystemsApplicable
 	}
 	assert.True(t, sumAffected == 0, "all advisory_data should be deleted", sumAffected)
 }
@@ -131,7 +131,7 @@ func TestMarkSystemsNotStale(t *testing.T) {
 	assert.NoError(t, database.Db.Find(&accountData).Error)
 	assert.True(t, len(accountData) > 0, "We should have some systems affected by advisories")
 	for _, a := range accountData {
-		assert.True(t, a.SystemsInstallable > 0, "We should have some systems affected")
+		assert.True(t, a.SystemsInstallable+a.SystemsApplicable > 0, "We should have some systems affected")
 	}
 }
 

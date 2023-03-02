@@ -40,13 +40,13 @@ func testAdvisoriesIDs(t *testing.T, url string) IDsResponse {
 func TestAdvisoriesDefault(t *testing.T) {
 	output := testAdvisories(t, "/")
 	assert.Equal(t, 12, len(output.Data))
-	assert.Equal(t, "RH-7", output.Data[0].ID, output.Data[0])
-	assert.Equal(t, "advisory", output.Data[0].Type)
-	assert.Equal(t, "2017-09-22 19:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
-	assert.Equal(t, "adv-7-des", output.Data[0].Attributes.Description)
-	assert.Equal(t, "adv-7-syn", output.Data[0].Attributes.Synopsis)
-	assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
-	assert.Equal(t, false, output.Data[0].Attributes.RebootRequired)
+	assert.Equal(t, "RH-8", output.Data[3].ID, output.Data[3])
+	assert.Equal(t, "advisory", output.Data[3].Type)
+	assert.Equal(t, "2016-09-22 20:00:00 +0000 UTC", output.Data[3].Attributes.PublicDate.String())
+	assert.Equal(t, "adv-8-des", output.Data[3].Attributes.Description)
+	assert.Equal(t, "adv-8-syn", output.Data[3].Attributes.Synopsis)
+	assert.Equal(t, 1, output.Data[3].Attributes.ApplicableSystems)
+	assert.Equal(t, false, output.Data[3].Attributes.RebootRequired)
 
 	// links
 	assert.Equal(t, "/?offset=0&limit=20&sort=-public_date", output.Links.First)
@@ -107,12 +107,12 @@ func TestAdvisoriesOrderDate(t *testing.T) {
 	output := testAdvisories(t, "/?sort=-public_date")
 	// Advisory RH-7 has latest public date
 	assert.Equal(t, 12, len(output.Data))
-	assert.Equal(t, "RH-7", output.Data[0].ID)
-	assert.Equal(t, "advisory", output.Data[0].Type)
-	assert.Equal(t, "2017-09-22 19:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
-	assert.Equal(t, "adv-7-des", output.Data[0].Attributes.Description)
-	assert.Equal(t, "adv-7-syn", output.Data[0].Attributes.Synopsis)
-	assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
+	assert.Equal(t, "RH-8", output.Data[3].ID)
+	assert.Equal(t, "advisory", output.Data[3].Type)
+	assert.Equal(t, "2016-09-22 20:00:00 +0000 UTC", output.Data[3].Attributes.PublicDate.String())
+	assert.Equal(t, "adv-8-des", output.Data[3].Attributes.Description)
+	assert.Equal(t, "adv-8-syn", output.Data[3].Attributes.Synopsis)
+	assert.Equal(t, 1, output.Data[3].Attributes.ApplicableSystems)
 }
 
 func TestAdvisoriesIDsOrderDate(t *testing.T) {
@@ -143,7 +143,7 @@ func TestAdvisoriesPatchedMissing(t *testing.T) {
 	output := testAdvisories(t, "/?sort=id")
 	assert.Equal(t, 12, len(output.Data))
 	assert.Equal(t, "RH-1", output.Data[2].ID)
-	assert.Equal(t, 6, output.Data[2].Attributes.ApplicableSystems)
+	assert.Equal(t, 4, output.Data[2].Attributes.ApplicableSystems)
 }
 
 func TestAdvisoriesFilterTypeID1(t *testing.T) {

@@ -26,7 +26,7 @@ func TestAdvisoriesExportJSON(t *testing.T) {
 	assert.Equal(t, output[2].CveCount, 0)
 	assert.Equal(t, output[2].RebootRequired, false)
 	assert.Equal(t, output[2].ReleaseVersions, RelList{"7.0", "7Server"})
-	assert.Equal(t, output[2].ApplicableSystems, 6)
+	assert.Equal(t, output[2].ApplicableSystems, 4)
 }
 
 func TestAdvisoriesExportCSV(t *testing.T) {
@@ -38,7 +38,7 @@ func TestAdvisoriesExportCSV(t *testing.T) {
 	lines := strings.Split(body, "\n")
 
 	assert.Equal(t, 14, len(lines))
-	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,enhancement,,0,false,\"7.0,7Server\",6", lines[3])
+	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,enhancement,,0,false,\"7.0,7Server\",4", lines[3])
 }
 
 func TestAdvisoriesExportWrongFormat(t *testing.T) {
@@ -60,7 +60,7 @@ func TestAdvisoriesExportCSVFilter(t *testing.T) {
 	lines := strings.Split(body, "\n")
 
 	assert.Equal(t, 3, len(lines))
-	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,enhancement,,0,false,\"7.0,7Server\",6", lines[1])
+	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,enhancement,,0,false,\"7.0,7Server\",4", lines[1])
 	assert.Equal(t, "", lines[2])
 }
 
