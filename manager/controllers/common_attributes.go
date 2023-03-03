@@ -62,3 +62,19 @@ type SystemIDAttribute struct {
 type SystemAdvisoryStatus struct {
 	Status string `json:"status" csv:"status" query:"st.name" gorm:"column:name"`
 }
+
+// nolint: lll
+type InstallableAdvisories struct {
+	InstallableRhsaCount  int `json:"installable_rhsa_count" csv:"installable_rhsa_count" query:"sp.installable_advisory_sec_count_cache" gorm:"column:installable_rhsa_count"`
+	InstallableRhbaCount  int `json:"installable_rhba_count" csv:"installable_rhba_count" query:"sp.installable_advisory_bug_count_cache" gorm:"column:installable_rhba_count"`
+	InstallableRheaCount  int `json:"installable_rhea_count" csv:"installable_rhea_count" query:"sp.installable_advisory_enh_count_cache" gorm:"column:installable_rhea_count"`
+	InstallableOtherCount int `json:"installable_other_count" csv:"installable_other_count" query:"(sp.installable_advisory_count_cache - sp.installable_advisory_sec_count_cache - sp.installable_advisory_bug_count_cache - sp.installable_advisory_enh_count_cache)" gorm:"column:installable_other_count"`
+}
+
+// nolint: lll
+type ApplicableAdvisories struct {
+	ApplicableRhsaCount  int `json:"applicable_rhsa_count" csv:"applicable_rhsa_count" query:"sp.applicable_advisory_sec_count_cache" gorm:"column:applicable_rhsa_count"`
+	ApplicableRhbaCount  int `json:"applicable_rhba_count" csv:"applicable_rhba_count" query:"sp.applicable_advisory_bug_count_cache" gorm:"column:applicable_rhba_count"`
+	ApplicableRheaCount  int `json:"applicable_rhea_count" csv:"applicable_rhea_count" query:"sp.applicable_advisory_enh_count_cache" gorm:"column:applicable_rhea_count"`
+	ApplicableOtherCount int `json:"applicable_other_count" csv:"applicable_other_count" query:"(sp.applicable_advisory_count_cache - sp.applicable_advisory_sec_count_cache - sp.applicable_advisory_bug_count_cache - sp.applicable_advisory_enh_count_cache)" gorm:"column:applicable_other_count"`
+}
