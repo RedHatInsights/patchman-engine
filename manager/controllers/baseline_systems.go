@@ -14,6 +14,7 @@ import (
 
 var BaselineSystemFields = database.MustGetQueryAttrs(&BaselineSystemsDBLookup{})
 var BaselineSystemSelect = database.MustGetSelect(&BaselineSystemsDBLookup{})
+var BaselineSystemSelectV2 = database.MustGetSelect(&BaselineSystemsDBLookupV2{})
 var BaselineSystemOpts = ListOpts{
 	Fields:         BaselineSystemFields,
 	DefaultFilters: map[string]FilterData{},
@@ -22,28 +23,59 @@ var BaselineSystemOpts = ListOpts{
 	SearchFields:   []string{"sp.display_name"},
 }
 
-type BaselineSystemsDBLookup struct {
+type BaselineSystemsDBLookupV2 struct {
 	SystemIDAttribute
 	// a helper to get total number of systems
 	MetaTotalHelper
+	BaselineSystemAttributesV2
+}
+
+type BaselineSystemsDBLookup struct {
+	SystemIDAttribute
+	// a helper to get total number of systems
+	SystemsMetaTagTotal
 	BaselineSystemAttributes
 }
 
-type BaselineSystemAttributes struct {
+type BaselineSystemAttributesV2 struct {
 	// Baseline system display name
 	DisplayName string `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name" example:"my-baselined-system"` // nolint: lll
 }
 
-type BaselineSystemItem struct {
-	// Additional baseline system attributes
-	Attributes BaselineSystemAttributes `json:"attributes"`
+// nolint: lll
+type BaselineSystemAttributes struct {
+	BaselineSystemAttributesV2
+	OSAttributes
+	InstallableAdvisories
+	ApplicableAdvisories
+	SystemTags
+	SystemLastUpload
+}
+
+type BaselineSystemItemCommon struct {
 	// Baseline system inventory ID (uuid format)
 	InventoryID string `json:"inventory_id" example:"00000000-0000-0000-0000-000000000001"`
 	// Document type name
 	Type string `json:"type" example:"baseline_system"`
 }
 
-type BaselineSystemInlineItem BaselineSystemsDBLookup
+type BaselineSystemItem struct {
+	// Additional baseline system attributes
+	Attributes BaselineSystemAttributes `json:"attributes"`
+	BaselineSystemItemCommon
+}
+
+type BaselineSystemItemV2 struct {
+	// Additional baseline system attributes
+	Attributes BaselineSystemAttributesV2 `json:"attributes"`
+	BaselineSystemItemCommon
+}
+
+type BaselineSystemsResponseV2 struct {
+	Data  []BaselineSystemItemV2 `json:"data"`
+	Links Links                  `json:"links"`
+	Meta  ListMeta               `json:"meta"`
+}
 
 type BaselineSystemsResponse struct {
 	Data  []BaselineSystemItem `json:"data"`
@@ -51,6 +83,7 @@ type BaselineSystemsResponse struct {
 	Meta  ListMeta             `json:"meta"`
 }
 
+// nolint: lll
 // @Summary Show me all systems belonging to a baseline
 // @Description  Show me all systems applicable to a baseline
 // @ID listBaselineSystems
@@ -60,9 +93,10 @@ type BaselineSystemsResponse struct {
 // @Param    baseline_id    path    int     true    "Baseline ID"
 // @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field"    Enums(id,name,config)
+// @Param    sort           query   string  false   "Sort field"    Enums(id,display_name,os,installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count,applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count,last_upload)
 // @Param    search         query   string  false   "Find matching text"
 // @Param    filter[display_name]           query   string  false "Filter"
+// @Param    filter[os]           			query   string  false "Filter"
 // @Param    tags           query   []string  false "Tag filter"
 // @Success 200 {object} BaselineSystemsResponse
 // @Failure 400 {object} utils.ErrorResponse
@@ -71,6 +105,7 @@ type BaselineSystemsResponse struct {
 // @Router /baselines/{baseline_id}/systems [get]
 func BaselineSystemsListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
+	apiver := c.GetInt(middlewares.KeyApiver)
 
 	baselineID := c.Param("baseline_id")
 	if baselineID == "" {
@@ -84,13 +119,14 @@ func BaselineSystemsListHandler(c *gin.Context) {
 		Where("id = ? ", baselineID).Count(&exists).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")
+		return
 	}
 	if exists == 0 {
 		LogAndRespNotFound(c, errors.New("Baseline not found"), "Baseline not found")
 		return
 	}
 
-	query := buildQueryBaselineSystems(db, account, baselineID)
+	query := buildQueryBaselineSystems(db, account, baselineID, apiver)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return
@@ -107,6 +143,7 @@ func BaselineSystemsListHandler(c *gin.Context) {
 	err = query.Find(&baselineSystems).Error
 	if err != nil {
 		LogAndRespError(c, err, err.Error())
+		return
 	}
 
 	data, total := buildBaselineSystemData(baselineSystems)
@@ -119,32 +156,62 @@ func BaselineSystemsListHandler(c *gin.Context) {
 		Links: *links,
 		Meta:  *meta,
 	}
+	if apiver < 3 {
+		respV2 := baselineSystemResponse2V2(&resp)
+		c.JSON(http.StatusOK, respV2)
+		return
+	}
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildQueryBaselineSystems(db *gorm.DB, account int, baselineID string) *gorm.DB {
-	query := db.Table("system_platform AS sp").Select(BaselineSystemSelect).
+func buildQueryBaselineSystems(db *gorm.DB, account int, baselineID string, apiver int) *gorm.DB {
+	query := db.Table("system_platform AS sp").
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Where("sp.rh_account_id = ? AND sp.baseline_id = ?", account, baselineID).
 		Where("sp.stale = false")
+	if apiver < 3 {
+		query.Select(BaselineSystemSelectV2)
+	} else {
+		query.Select(BaselineSystemSelect)
+	}
 	return query
 }
 
 func buildBaselineSystemData(baselineSystems []BaselineSystemsDBLookup) ([]BaselineSystemItem, int) {
 	var total int
+	var err error
 	if len(baselineSystems) > 0 {
 		total = baselineSystems[0].Total
 	}
 	data := make([]BaselineSystemItem, len(baselineSystems))
 	for i := 0; i < len(baselineSystems); i++ {
-		baselineSystemDB := baselineSystems[i]
+		baselineSystems[i].Tags, err = parseSystemTags(baselineSystems[i].TagsStr)
+		if err != nil {
+			utils.LogDebug("err", err.Error(), "inventory_id", baselineSystems[i].ID, "system tags parsing failed")
+		}
 		data[i] = BaselineSystemItem{
-			Attributes: BaselineSystemAttributes{
-				DisplayName: baselineSystemDB.BaselineSystemAttributes.DisplayName,
+			Attributes: baselineSystems[i].BaselineSystemAttributes,
+			BaselineSystemItemCommon: BaselineSystemItemCommon{
+				InventoryID: baselineSystems[i].ID,
+				Type:        "baseline_system",
 			},
-			InventoryID: baselineSystemDB.ID,
-			Type:        "baseline_system",
 		}
 	}
 	return data, total
+}
+
+func baselineSystemResponse2V2(resp *BaselineSystemsResponse) *BaselineSystemsResponseV2 {
+	v2Items := make([]BaselineSystemItemV2, 0, len(resp.Data))
+	for _, v := range resp.Data {
+		v2Items = append(v2Items, BaselineSystemItemV2{
+			Attributes:               v.Attributes.BaselineSystemAttributesV2,
+			BaselineSystemItemCommon: v.BaselineSystemItemCommon,
+		})
+	}
+	respV2 := BaselineSystemsResponseV2{
+		Data:  v2Items,
+		Links: resp.Links,
+		Meta:  resp.Meta,
+	}
+	return &respV2
 }

@@ -1016,8 +1016,17 @@
                             "type": "string",
                             "enum": [
                                 "id",
-                                "name",
-                                "config"
+                                "display_name",
+                                "os",
+                                "installable_rhsa_count",
+                                "installable_rhba_count",
+                                "installable_rhea_count",
+                                "installable_other_count",
+                                "applicable_rhsa_count",
+                                "applicable_rhba_count",
+                                "applicable_rhea_count",
+                                "applicable_other_count",
+                                "last_upload"
                             ]
                         }
                     },
@@ -1031,6 +1040,14 @@
                     },
                     {
                         "name": "filter[display_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[os]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -5264,10 +5281,49 @@
             "controllers.BaselineSystemAttributes": {
                 "type": "object",
                 "properties": {
+                    "applicable_other_count": {
+                        "type": "integer"
+                    },
+                    "applicable_rhba_count": {
+                        "type": "integer"
+                    },
+                    "applicable_rhea_count": {
+                        "type": "integer"
+                    },
+                    "applicable_rhsa_count": {
+                        "type": "integer"
+                    },
                     "display_name": {
                         "type": "string",
                         "description": "Baseline system display name",
                         "example": "my-baselined-system"
+                    },
+                    "installable_other_count": {
+                        "type": "integer"
+                    },
+                    "installable_rhba_count": {
+                        "type": "integer"
+                    },
+                    "installable_rhea_count": {
+                        "type": "integer"
+                    },
+                    "installable_rhsa_count": {
+                        "type": "integer"
+                    },
+                    "last_upload": {
+                        "type": "string"
+                    },
+                    "os": {
+                        "type": "string"
+                    },
+                    "rhsm": {
+                        "type": "string"
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemTag"
+                        }
                     }
                 }
             },
