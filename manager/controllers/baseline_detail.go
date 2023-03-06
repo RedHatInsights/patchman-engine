@@ -50,7 +50,7 @@ func BaselineDetailHandler(c *gin.Context) {
 	apiver := c.GetInt(middlewares.KeyApiver)
 
 	baselineIDstr := c.Param("baseline_id")
-	baselineID, err := strconv.Atoi(baselineIDstr)
+	baselineID, err := strconv.ParseInt(baselineIDstr, 10, 64)
 	if err != nil {
 		LogAndRespBadRequest(c, err, "Invalid baseline_id: "+baselineIDstr)
 		return
@@ -71,7 +71,7 @@ func BaselineDetailHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func getBaseline(db *gorm.DB, accountID, baselineID, apiver int) (*BaselineDetailItem, error) {
+func getBaseline(db *gorm.DB, accountID int, baselineID int64, apiver int) (*BaselineDetailItem, error) {
 	var baseline models.Baseline
 	err := db.Model(&models.Baseline{}).
 		Where("rh_account_id = ? AND id = ?", accountID, baselineID).
