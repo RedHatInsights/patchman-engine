@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"app/base/database"
+	"app/base/utils"
 	"app/manager/middlewares"
 	"net/http"
 	"time"
@@ -50,10 +51,15 @@ type BaselineInlineItem struct {
 	BaselineItemAttributes
 }
 
+type BaselinesMeta struct {
+	ListMeta
+	Creators []*string `json:"creators,omitempty"`
+}
+
 type BaselinesResponse struct {
 	Data  []BaselineItem `json:"data"`  // Baseline items
 	Links Links          `json:"links"` // Pagination links
-	Meta  ListMeta       `json:"meta"`  // Generic response fields (pagination params, filters etc.)
+	Meta  BaselinesMeta  `json:"meta"`  // Generic response fields (pagination params, filters etc.)
 }
 
 // @Summary Show me all baselines for all my systems
@@ -98,6 +104,13 @@ func BaselinesListHandler(c *gin.Context) {
 	err = query.Find(&baselines).Error
 	if err != nil {
 		LogAndRespError(c, err, err.Error())
+		return
+	}
+
+	baselinesMeta, err := creatorsMeta(c, db, account)
+	if err != nil {
+		LogAndRespError(c, err, err.Error())
+		return
 	}
 
 	data, total := buildBaselinesData(baselines, apiver)
@@ -105,10 +118,12 @@ func BaselinesListHandler(c *gin.Context) {
 	if err != nil {
 		return // Error handled in method itself
 	}
+
+	baselinesMeta.ListMeta = *meta
 	var resp = BaselinesResponse{
 		Data:  data,
 		Links: *links,
-		Meta:  *meta,
+		Meta:  baselinesMeta,
 	}
 	c.JSON(http.StatusOK, &resp)
 }
@@ -152,4 +167,32 @@ func buildBaselinesData(baselines []BaselinesDBLookup, apiver int) ([]BaselineIt
 		}
 	}
 	return data, total
+}
+
+func creatorsMeta(c *gin.Context, db *gorm.DB, account int) (BaselinesMeta, error) {
+	apiver := c.GetInt(middlewares.KeyApiver)
+	// list of creators for account
+	baselinesMeta := BaselinesMeta{}
+	err := db.Table("baseline bl").
+		Distinct("COALESCE(creator, '')").
+		Joins("JOIN rh_account acc ON bl.rh_account_id = acc.id").
+		Where("bl.rh_account_id = ?", account).
+		Scan(&baselinesMeta.Creators).Error
+	if err != nil {
+		return baselinesMeta, err
+	}
+
+	// remove "" from baselinesMeta.Creators
+	creators := make([]*string, 0, len(baselinesMeta.Creators))
+	for _, c := range baselinesMeta.Creators {
+		creators = append(creators, utils.EmptyToNil(c))
+	}
+	if len(creators) == 1 && creators[0] == nil {
+		creators = []*string{}
+	}
+	baselinesMeta.Creators = creators
+	if apiver < 3 {
+		baselinesMeta.Creators = nil
+	}
+	return baselinesMeta, nil
 }
