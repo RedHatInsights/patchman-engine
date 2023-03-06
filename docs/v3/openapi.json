@@ -5318,6 +5318,65 @@
                     }
                 }
             },
+            "controllers.BaselinesMeta": {
+                "type": "object",
+                "properties": {
+                    "creators": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "filter": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/controllers.FilterData"
+                        },
+                        "description": "Used filters"
+                    },
+                    "has_systems": {
+                        "type": "boolean",
+                        "description": "Show whether customer has some registered systems"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Used response limit (page size) - pagination",
+                        "example": 20
+                    },
+                    "offset": {
+                        "type": "integer",
+                        "description": "Used response offset - pagination",
+                        "example": 0
+                    },
+                    "search": {
+                        "type": "string",
+                        "description": "Used search terms",
+                        "example": "kernel"
+                    },
+                    "sort": {
+                        "type": "array",
+                        "description": "Used sorting fields",
+                        "example": [
+                            "name"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "subtotals": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer"
+                        },
+                        "description": "Some subtotals used by some endpoints"
+                    },
+                    "total_items": {
+                        "type": "integer",
+                        "description": "Total items count to return",
+                        "example": 1000
+                    }
+                }
+            },
             "controllers.BaselinesResponse": {
                 "type": "object",
                 "properties": {
@@ -5332,7 +5391,7 @@
                         "$ref": "#/components/schemas/controllers.Links"
                     },
                     "meta": {
-                        "$ref": "#/components/schemas/controllers.ListMeta"
+                        "$ref": "#/components/schemas/controllers.BaselinesMeta"
                     }
                 }
             },
