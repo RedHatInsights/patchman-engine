@@ -5,7 +5,9 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -108,15 +110,16 @@ func BaselineSystemsListHandler(c *gin.Context) {
 	apiver := c.GetInt(middlewares.KeyApiver)
 
 	baselineID := c.Param("baseline_id")
-	if baselineID == "" {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "baseline_id param not found"})
+	id, err := strconv.ParseInt(baselineID, 10, 64)
+	if err != nil {
+		LogAndRespBadRequest(c, err, fmt.Sprintf("Invalid baseline_id: %s", baselineID))
 		return
 	}
 
 	db := middlewares.DBFromContext(c)
 	var exists int64
-	err := db.Model(&models.Baseline{}).
-		Where("id = ? ", baselineID).Count(&exists).Error
+	err = db.Model(&models.Baseline{}).
+		Where("id = ? ", id).Count(&exists).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")
 		return
@@ -126,7 +129,7 @@ func BaselineSystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	query := buildQueryBaselineSystems(db, account, baselineID, apiver)
+	query := buildQueryBaselineSystems(db, account, id, apiver)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return
@@ -164,7 +167,7 @@ func BaselineSystemsListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildQueryBaselineSystems(db *gorm.DB, account int, baselineID string, apiver int) *gorm.DB {
+func buildQueryBaselineSystems(db *gorm.DB, account int, baselineID int64, apiver int) *gorm.DB {
 	query := db.Table("system_platform AS sp").
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Where("sp.rh_account_id = ? AND sp.baseline_id = ?", account, baselineID).
