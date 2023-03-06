@@ -414,6 +414,7 @@ func analyzeRepos(tx *gorm.DB, system *models.SystemPlatform) (
 	return thirdParty, nil
 }
 
+// nolint: funlen
 func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 	new SystemAdvisoryMap, installed, updatable int) error {
 	tStart := time.Now()
@@ -430,25 +431,48 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 		if new == nil {
 			return errors.New("Invalid args")
 		}
-		count := 0
-		enhCount := 0
-		bugCount := 0
-		secCount := 0
+		installableCount := 0
+		installableEnhCount := 0
+		installableBugCount := 0
+		installableSecCount := 0
+		applicableCount := 0
+		applicableEnhCount := 0
+		applicableBugCount := 0
+		applicableSecCount := 0
 		for _, sa := range new {
-			switch sa.Advisory.AdvisoryTypeID {
-			case 1:
-				enhCount++
-			case 2:
-				bugCount++
-			case 3:
-				secCount++
+			switch sa.StatusID {
+			case INSTALLABLE:
+				switch sa.Advisory.AdvisoryTypeID {
+				case 1:
+					installableEnhCount++
+				case 2:
+					installableBugCount++
+				case 3:
+					installableSecCount++
+				}
+				installableCount++
+			case APPLICABLE:
+				switch sa.Advisory.AdvisoryTypeID {
+				case 1:
+					applicableEnhCount++
+				case 2:
+					applicableBugCount++
+				case 3:
+					applicableSecCount++
+				}
+				applicableCount++
 			}
-			count++
 		}
-		data["advisory_count_cache"] = count
-		data["advisory_enh_count_cache"] = enhCount
-		data["advisory_bug_count_cache"] = bugCount
-		data["advisory_sec_count_cache"] = secCount
+
+		data["installable_advisory_count_cache"] = installableCount
+		data["installable_advisory_enh_count_cache"] = installableEnhCount
+		data["installable_advisory_bug_count_cache"] = installableBugCount
+		data["installable_advisory_sec_count_cache"] = installableSecCount
+
+		data["applicable_advisory_count_cache"] = applicableCount
+		data["applicable_advisory_enh_count_cache"] = applicableEnhCount
+		data["applicable_advisory_bug_count_cache"] = applicableBugCount
+		data["applicable_advisory_sec_count_cache"] = applicableSecCount
 	}
 
 	if enablePackageAnalysis {
