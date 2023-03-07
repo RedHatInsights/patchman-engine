@@ -49,10 +49,10 @@ type SystemPlatform struct {
 	LastUpdated           *time.Time `gorm:"default:null"`
 	UnchangedSince        *time.Time `gorm:"default:null"`
 	LastEvaluation        *time.Time `gorm:"default:null"`
-	AdvisoryCountCache    int
-	AdvisoryEnhCountCache int
-	AdvisoryBugCountCache int
-	AdvisorySecCountCache int
+	AdvisoryCountCache    int        `gorm:"column:installable_advisory_count_cache"`
+	AdvisoryEnhCountCache int        `gorm:"column:installable_advisory_enh_count_cache"`
+	AdvisoryBugCountCache int        `gorm:"column:installable_advisory_bug_count_cache"`
+	AdvisorySecCountCache int        `gorm:"column:installable_advisory_sec_count_cache"`
 	LastUpload            *time.Time `gorm:"default:null"`
 	StaleTimestamp        *time.Time
 	StaleWarningTimestamp *time.Time

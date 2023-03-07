@@ -23,10 +23,11 @@ func TestSingleSystemStale(t *testing.T) {
 	var systems []models.SystemPlatform
 	var accountData []models.AdvisoryAccountData
 
+	// nolint: lll
 	database.DebugWithCachesCheck("stale-trigger", func() {
 		assert.NotNil(t, staleDate)
 		assert.NoError(t, database.Db.Find(&accountData, "systems_installable > 1 ").Order("systems_installable DESC").Error)
-		assert.NoError(t, database.Db.Find(&systems, "rh_account_id = ? AND stale = false AND advisory_count_cache > 0",
+		assert.NoError(t, database.Db.Find(&systems, "rh_account_id = ? AND stale = false AND installable_advisory_count_cache > 0",
 			accountData[0].RhAccountID).Order("id").Error)
 
 		systems[0].StaleTimestamp = &staleDate

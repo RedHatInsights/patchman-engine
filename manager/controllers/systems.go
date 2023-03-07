@@ -52,10 +52,10 @@ type SystemItemAttributes struct {
 	LastEvaluation *time.Time `json:"last_evaluation" csv:"last_evaluation" query:"sp.last_evaluation" gorm:"column:last_evaluation"`
 	SystemLastUpload
 
-	RhsaCount  int `json:"rhsa_count" csv:"rhsa_count" query:"sp.advisory_sec_count_cache" gorm:"column:rhsa_count"`
-	RhbaCount  int `json:"rhba_count" csv:"rhba_count" query:"sp.advisory_bug_count_cache" gorm:"column:rhba_count"`
-	RheaCount  int `json:"rhea_count" csv:"rhea_count" query:"sp.advisory_enh_count_cache" gorm:"column:rhea_count"`
-	OtherCount int `json:"other_count" csv:"other_count" query:"(sp.advisory_count_cache - sp.advisory_sec_count_cache - sp.advisory_bug_count_cache - sp.advisory_enh_count_cache)" gorm:"column:other_count"`
+	RhsaCount  int `json:"rhsa_count" csv:"rhsa_count" query:"sp.installable_advisory_sec_count_cache" gorm:"column:rhsa_count"`
+	RhbaCount  int `json:"rhba_count" csv:"rhba_count" query:"sp.installable_advisory_bug_count_cache" gorm:"column:rhba_count"`
+	RheaCount  int `json:"rhea_count" csv:"rhea_count" query:"sp.installable_advisory_enh_count_cache" gorm:"column:rhea_count"`
+	OtherCount int `json:"other_count" csv:"other_count" query:"(sp.installable_advisory_count_cache - sp.installable_advisory_sec_count_cache - sp.installable_advisory_bug_count_cache - sp.installable_advisory_enh_count_cache)" gorm:"column:other_count"`
 
 	SystemStale
 	ThirdParty bool   `json:"third_party" csv:"third_party" query:"sp.third_party" gorm:"column:third_party"`

@@ -263,9 +263,9 @@ type SystemAdvisoryStats struct {
 
 // Old query was inserting ORDER BY "system_platform"."max_all" AND max_all
 func getSystemAdvisorieStats() (stats SystemAdvisoryStats, err error) {
-	err = tasks.CancelableDB().Raw("SELECT MAX(advisory_count_cache) as max_all, " +
-		"MAX(advisory_enh_count_cache) as max_enh,MAX(advisory_bug_count_cache) " +
-		"as max_bug, MAX(advisory_sec_count_cache) as max_sec FROM " +
+	err = tasks.CancelableDB().Raw("SELECT MAX(installable_advisory_count_cache) as max_all, " +
+		"MAX(installable_advisory_enh_count_cache) as max_enh,MAX(installable_advisory_bug_count_cache) " +
+		"as max_bug, MAX(installable_advisory_sec_count_cache) as max_sec FROM " +
 		"system_platform ORDER BY max_all LIMIT 1").Scan(&stats).Error
 	if err != nil {
 		return stats, errors.Wrap(err, "unable to get system advisory stats from db")
