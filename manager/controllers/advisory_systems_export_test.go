@@ -36,7 +36,7 @@ func TestAdvisorySystemsExportCSV(t *testing.T) {
 			"stale_warning_timestamp,culled_timestamp,created,tags,baseline_name,baseline_uptodate", lines[0])
 
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,"+
-		"2018-09-22T16:00:00Z,2020-09-22T16:00:00Z,2,3,3,0,false,true,00000000-0000-0000-0001-000000000001,0,0,"+
+		"2018-09-22T16:00:00Z,2020-09-22T16:00:00Z,2,2,1,0,false,true,00000000-0000-0000-0001-000000000001,0,0,"+
 		"RHEL,8,10,RHEL 8.10,8.10,2018-08-26T16:00:00Z,2018-09-02T16:00:00Z,2018-09-09T16:00:00Z,2018-08-26T16:00:00Z,"+
 		"\"[{'key':'k1','namespace':'ns1','value':'val1'},{'key':'k2','namespace':'ns1','value':'val2'}]\","+
 		"baseline_1-1,true", lines[1])

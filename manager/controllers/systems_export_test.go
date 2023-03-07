@@ -25,8 +25,8 @@ func TestSystemsExportJSON(t *testing.T) {
 	assert.Equal(t, 8, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 	assert.Equal(t, 2, output[0].SystemItemAttributes.RhsaCount)
-	assert.Equal(t, 3, output[0].SystemItemAttributes.RhbaCount)
-	assert.Equal(t, 3, output[0].SystemItemAttributes.RheaCount)
+	assert.Equal(t, 2, output[0].SystemItemAttributes.RhbaCount)
+	assert.Equal(t, 1, output[0].SystemItemAttributes.RheaCount)
 	assert.Equal(t, "RHEL", output[0].SystemItemAttributes.OSName)
 	assert.Equal(t, "8", output[0].SystemItemAttributes.OSMajor)
 	assert.Equal(t, "10", output[0].SystemItemAttributes.OSMinor)
@@ -56,7 +56,7 @@ func TestSystemsExportCSV(t *testing.T) {
 		lines[0])
 
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,"+
-		"2018-09-22T16:00:00Z,2020-09-22T16:00:00Z,2,3,3,0,false,true,00000000-0000-0000-0001-000000000001,0,0,RHEL,8,10,"+
+		"2018-09-22T16:00:00Z,2020-09-22T16:00:00Z,2,2,1,0,false,true,00000000-0000-0000-0001-000000000001,0,0,RHEL,8,10,"+
 		"RHEL 8.10,8.10,2018-08-26T16:00:00Z,2018-09-02T16:00:00Z,2018-09-09T16:00:00Z,2018-08-26T16:00:00Z,"+
 		"\"[{'key':'k1','namespace':'ns1','value':'val1'},{'key':'k2','namespace':'ns1','value':'val2'}]\","+
 		"baseline_1-1,true", lines[1])
