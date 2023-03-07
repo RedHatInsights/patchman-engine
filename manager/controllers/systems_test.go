@@ -22,8 +22,8 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2020-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastEvaluation.String())
-	assert.Equal(t, 3, output.Data[0].Attributes.RheaCount)
-	assert.Equal(t, 3, output.Data[0].Attributes.RhbaCount)
+	assert.Equal(t, 1, output.Data[0].Attributes.RheaCount)
+	assert.Equal(t, 2, output.Data[0].Attributes.RhbaCount)
 	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
 	assert.Equal(t, 0, output.Data[0].Attributes.PackagesInstalled)
 	assert.Equal(t, 0, output.Data[0].Attributes.PackagesUpdatable)
@@ -148,15 +148,15 @@ func TestSystemsPackagesCount(t *testing.T) {
 }
 
 func TestSystemsFilterAdvCount1(t *testing.T) {
-	output := testSystems(t, "/?filter[rhba_count]=3", 1)
+	output := testSystems(t, "/?filter[rhba_count]=2", 1)
 	assert.Equal(t, 1, len(output.Data))
-	assert.Equal(t, 3, output.Data[0].Attributes.RhbaCount)
+	assert.Equal(t, 2, output.Data[0].Attributes.RhbaCount)
 }
 
 func TestSystemsFilterAdvCount2(t *testing.T) {
-	output := testSystems(t, "/?filter[rhea_count]=3", 1)
-	assert.Equal(t, 1, len(output.Data))
-	assert.Equal(t, 3, output.Data[0].Attributes.RheaCount)
+	output := testSystems(t, "/?filter[rhea_count]=1", 1)
+	assert.Equal(t, 4, len(output.Data))
+	assert.Equal(t, 1, output.Data[0].Attributes.RheaCount)
 }
 
 func TestSystemsFilterAdvCount3(t *testing.T) {

@@ -74,8 +74,8 @@ func TestSystemAdvisoriesStats(t *testing.T) {
 
 	stats, err := getSystemAdvisorieStats()
 	assert.Nil(t, err)
-	assert.Equal(t, 8, stats.MaxAll)
-	assert.Equal(t, 3, stats.MaxEnh)
-	assert.Equal(t, 3, stats.MaxBug)
+	assert.Equal(t, 5, stats.MaxAll)
+	assert.Equal(t, 1, stats.MaxEnh)
+	assert.Equal(t, 2, stats.MaxBug)
 	assert.Equal(t, 2, stats.MaxSec)
 }

@@ -99,16 +99,16 @@ func TestSystemsIDsPackagesCount(t *testing.T) {
 }
 
 func TestSystemsIDsFilterAdvCount1(t *testing.T) {
-	outputIDs := testSystemsIDs(t, "/?filter[rhba_count]=3", 1)
-	output := testSystems(t, "/?filter[rhba_count]=3", 1)
+	outputIDs := testSystemsIDs(t, "/?filter[rhba_count]=2", 1)
+	output := testSystems(t, "/?filter[rhba_count]=2", 1)
 	assert.Equal(t, 1, len(outputIDs.IDs))
 	assert.Equal(t, output.Data[0].ID, outputIDs.IDs[0])
 }
 
 func TestSystemsIDsFilterAdvCount2(t *testing.T) {
-	outputIDs := testSystemsIDs(t, "/?filter[rhea_count]=3", 1)
-	output := testSystems(t, "/?filter[rhea_count]=3", 1)
-	assert.Equal(t, 1, len(outputIDs.IDs))
+	outputIDs := testSystemsIDs(t, "/?filter[rhea_count]=1", 1)
+	output := testSystems(t, "/?filter[rhea_count]=1", 1)
+	assert.Equal(t, 4, len(outputIDs.IDs))
 	assert.Equal(t, output.Data[0].ID, outputIDs.IDs[0])
 }
 
