@@ -12,10 +12,10 @@ import (
 	"gorm.io/gorm"
 )
 
-type AdvisorySystemsResponse struct {
-	Data  []SystemItem `json:"data"`
-	Links Links        `json:"links"`
-	Meta  ListMeta     `json:"meta"`
+type AdvisorySystemsResponseV2 struct {
+	Data  []SystemItemV2 `json:"data"`
+	Links Links          `json:"links"`
+	Meta  ListMeta       `json:"meta"`
 }
 
 var AdvisorySystemOpts = ListOpts{
@@ -125,8 +125,9 @@ func advisorySystemsListHandler(c *gin.Context) {
 	if err != nil {
 		return // Error handled in method itself
 	}
-	var resp = AdvisorySystemsResponse{
-		Data:  data,
+	dataV2 := systemItems2SystemItemsV2(data)
+	var resp = AdvisorySystemsResponseV2{
+		Data:  dataV2,
 		Links: *links,
 		Meta:  *meta,
 	}
@@ -199,7 +200,7 @@ func AdvisorySystemsListIDsHandler(c *gin.Context) {
 func buildAdvisorySystemsQuery(db *gorm.DB, account int, advisoryName string, apiver int) *gorm.DB {
 	selectQuery := AdvisorySystemsSelect
 	if apiver < 3 {
-		selectQuery = SystemsSelect
+		selectQuery = SystemsSelectV2
 	}
 	query := database.SystemAdvisories(db, account).
 		Select(selectQuery).

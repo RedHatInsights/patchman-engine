@@ -12,7 +12,7 @@ import (
 )
 
 type SystemDetailResponse struct {
-	Data SystemItem `json:"data"`
+	Data SystemItemV2 `json:"data"`
 }
 
 // @Summary Show me details about a system by given inventory id
@@ -45,7 +45,7 @@ func SystemDetailHandler(c *gin.Context) {
 		return
 	}
 
-	var systemItemAttributes SystemItemAttributes
+	var systemItemAttributes SystemItemAttributesV2
 	db := middlewares.DBFromContext(c)
 	query := database.Systems(db, account).
 		Select(database.MustGetSelect(&systemItemAttributes)).
@@ -65,7 +65,7 @@ func SystemDetailHandler(c *gin.Context) {
 	}
 
 	var resp = SystemDetailResponse{
-		Data: SystemItem{
+		Data: SystemItemV2{
 			Attributes: systemItemAttributes,
 			ID:         inventoryID,
 			Type:       "system",
