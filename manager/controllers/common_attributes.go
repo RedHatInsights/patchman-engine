@@ -32,6 +32,10 @@ type SystemTags struct {
 
 type BaselineAttributes struct {
 	BaselineNameAttr
+	BaselineUpToDateAttr
+}
+
+type BaselineUpToDateAttr struct {
 	BaselineUpToDate *bool `json:"baseline_uptodate" csv:"baseline_uptodate" query:"sp.baseline_uptodate" gorm:"column:baseline_uptodate"`
 }
 

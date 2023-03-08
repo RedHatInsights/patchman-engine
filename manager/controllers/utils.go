@@ -660,12 +660,40 @@ func systemDBLookups2SystemItems(systems []SystemDBLookup) ([]SystemItem, int, m
 			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system tags parsing failed")
 		}
 		data[i] = SystemItem{
-			Attributes: system.SystemItemAttributes,
+			Attributes: system.SystemItemAttributesAll,
 			ID:         system.ID,
 			Type:       "system",
 		}
 	}
 	return data, total, subtotals
+}
+
+func systemItems2SystemItemsV2(items []SystemItem) []SystemItemV2 {
+	res := make([]SystemItemV2, 0, len(items))
+	for _, x := range items {
+		res = append(res, SystemItemV2{
+			Attributes: SystemItemAttributesV2{
+				x.Attributes.SystemItemAttributesCommon, x.Attributes.SystemItemAttributesV2Only,
+			},
+			ID:   x.ID,
+			Type: x.Type,
+		})
+	}
+	return res
+}
+
+func systemItems2SystemItemsV3(items []SystemItem) []SystemItemV3 {
+	res := make([]SystemItemV3, 0, len(items))
+	for _, x := range items {
+		res = append(res, SystemItemV3{
+			Attributes: SystemItemAttributesV3{
+				x.Attributes.SystemItemAttributesCommon, x.Attributes.SystemItemAttributesV3Only,
+			},
+			ID:   x.ID,
+			Type: x.Type,
+		})
+	}
+	return res
 }
 
 func advisoriesIDs(advisories []AdvisoryID) []string {
