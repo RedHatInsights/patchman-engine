@@ -30,7 +30,7 @@ import (
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Param    filter[os]              query   string    false "Filter OS version"
 // @Param    tags                    query   []string  false "Tag filter"
-// @Success 200 {array} SystemInlineItem
+// @Success 200 {array} SystemDBLookupV3
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 415 {object} utils.ErrorResponse
@@ -86,7 +86,7 @@ func outputExportData(c *gin.Context, query *gorm.DB) {
 	}
 
 	systems.ParseAndFillTags()
-	OutputExportData(c, systems)
+	OutputExportData(c, systemDBLookups2SystemDBLookupsV2(systems))
 }
 
 func outputExportDataV3(c *gin.Context, query *gorm.DB) {
