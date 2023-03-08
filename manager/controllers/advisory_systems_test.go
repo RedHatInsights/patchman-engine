@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"fmt"
 	"net/http"
 	"testing"
@@ -12,24 +13,16 @@ import (
 
 func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, "", AdvisorySystemsListHandler, "/:advisory_id")
+	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, "", AdvisorySystemsListHandler, "/:advisory_id",
+		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
-	var output AdvisorySystemsResponse
+	var output AdvisorySystemsResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 6, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
-	assert.Equal(t, "00000000-0000-0000-0001-000000000001", output.Data[0].Attributes.InsightsID)
 	assert.Equal(t, "system", output.Data[0].Type)
-	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastEvaluation.String())
 	assert.Equal(t, "2020-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
 	assert.False(t, output.Data[0].Attributes.Stale)
-	assert.True(t, output.Data[0].Attributes.ThirdParty)
-	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
-	assert.Equal(t, 2, output.Data[0].Attributes.RhbaCount)
-	assert.Equal(t, 1, output.Data[0].Attributes.RheaCount)
-	assert.Equal(t, "RHEL", output.Data[0].Attributes.OSName)
-	assert.Equal(t, "8", output.Data[0].Attributes.OSMajor)
-	assert.Equal(t, "10", output.Data[0].Attributes.OSMinor)
 	assert.Equal(t, "RHEL 8.10", output.Data[0].Attributes.OS)
 	assert.Equal(t, "8.10", output.Data[0].Attributes.Rhsm)
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.StaleTimestamp.String())
@@ -38,12 +31,13 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.Created.String())
 	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output.Data[0].Attributes.Tags)
 	assert.Equal(t, "baseline_1-1", output.Data[0].Attributes.BaselineName)
-	assert.Equal(t, true, *output.Data[0].Attributes.BaselineUpToDate)
+	assert.Equal(t, int64(1), output.Data[0].Attributes.BaselineID)
 }
 
 func TestAdvisorySystemsIDsDefault(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, "", AdvisorySystemsListIDsHandler, "/:advisory_id")
+	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, "", AdvisorySystemsListIDsHandler, "/:advisory_id",
+		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
 	var output IDsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -53,7 +47,8 @@ func TestAdvisorySystemsIDsDefault(t *testing.T) { //nolint:dupl
 
 func TestAdvisorySystemsNotFound(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/nonexistant/systems", nil, "", AdvisorySystemsListHandler, "/:advisory_id")
+	w := CreateRequestRouterWithPath("GET", "/nonexistant/systems", nil, "", AdvisorySystemsListHandler, "/:advisory_id",
+		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
@@ -61,23 +56,20 @@ func TestAdvisorySystemsNotFound(t *testing.T) { //nolint:dupl
 func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?offset=5&limit=3", nil, "", AdvisorySystemsListHandler,
-		"/:advisory_id")
+		"/:advisory_id", core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
-	var output AdvisorySystemsResponse
+	var output AdvisorySystemsResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000006", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
-	assert.Equal(t, 0, output.Data[0].Attributes.RhsaCount)
-	assert.Equal(t, 1, output.Data[0].Attributes.RheaCount)
-	assert.Equal(t, 0, output.Data[0].Attributes.RhbaCount)
 }
 
 func TestAdvisorySystemsOffsetOverflow(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?offset=100&limit=3", nil, "", AdvisorySystemsListHandler,
-		"/:advisory_id")
+		"/:advisory_id", core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -89,9 +81,9 @@ func TestAdvisorySystemsSorts(t *testing.T) {
 
 	for sort := range SystemsFields {
 		w := CreateRequestRouterWithPath("GET", fmt.Sprintf("/RH-1?sort=%v", sort), nil, "",
-			AdvisorySystemsListHandler, "/:advisory_id")
+			AdvisorySystemsListHandler, "/:advisory_id", core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
-		var output AdvisorySystemsResponse
+		var output AdvisorySystemsResponseV3
 		CheckResponse(t, w, http.StatusOK, &output)
 		assert.Equal(t, 1, len(output.Meta.Sort))
 		assert.Equal(t, output.Meta.Sort[0], sort)
@@ -101,7 +93,7 @@ func TestAdvisorySystemsSorts(t *testing.T) {
 func TestAdvisorySystemsWrongSort(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?sort=unknown_key", nil, "", AdvisorySystemsListHandler,
-		"/:advisory_id")
+		"/:advisory_id", core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
@@ -109,9 +101,9 @@ func TestAdvisorySystemsWrongSort(t *testing.T) { //nolint:dupl
 func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k1=val1", nil, "", AdvisorySystemsListHandler,
-		"/:advisory_id")
+		"/:advisory_id", core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
-	var output AdvisorySystemsResponse
+	var output AdvisorySystemsResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 5, len(output.Data))
 }
@@ -119,9 +111,9 @@ func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
 func TestAdvisorySystemsTagsMultiple(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "",
-		AdvisorySystemsListHandler, "/:advisory_id")
+		AdvisorySystemsListHandler, "/:advisory_id", core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
-	var output AdvisorySystemsResponse
+	var output AdvisorySystemsResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data[0].ID)
@@ -130,7 +122,7 @@ func TestAdvisorySystemsTagsMultiple(t *testing.T) { //nolint:dupl
 func TestAdvisorySystemsTagsInvalid(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=invalidTag", nil, "",
-		AdvisorySystemsListHandler, "/:advisory_id")
+		AdvisorySystemsListHandler, "/:advisory_id", core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -140,9 +132,9 @@ func TestAdvisorySystemsTagsInvalid(t *testing.T) {
 func TestAdvisorySystemsTagsUnknown(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=unk", nil, "",
-		AdvisorySystemsListHandler, "/:advisory_id")
+		AdvisorySystemsListHandler, "/:advisory_id", core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
-	var output AdvisorySystemsResponse
+	var output AdvisorySystemsResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 0, len(output.Data))
 }
@@ -154,9 +146,9 @@ func TestAdvisorySystemsWrongOffset(t *testing.T) {
 func TestAdvisorySystemsTagsInMetadata(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "",
-		AdvisorySystemsListHandler, "/:advisory_id")
+		AdvisorySystemsListHandler, "/:advisory_id", core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
-	var output AdvisorySystemsResponse
+	var output AdvisorySystemsResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	testMap := map[string]FilterData{

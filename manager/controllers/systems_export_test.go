@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -14,31 +15,29 @@ import (
 
 func makeRequest(t *testing.T, path string, contentType string) *httptest.ResponseRecorder {
 	core.SetupTest(t)
-	return CreateRequest("GET", path, nil, contentType, SystemsExportHandler)
+	return CreateRequest("GET", path, nil, contentType, SystemsExportHandler,
+		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 }
 
 func TestSystemsExportJSON(t *testing.T) {
 	w := makeRequest(t, "/", "application/json")
 
-	var output []SystemDBLookup
+	var output []SystemDBLookupV3
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 8, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
-	assert.Equal(t, 2, output[0].SystemItemAttributes.RhsaCount)
-	assert.Equal(t, 2, output[0].SystemItemAttributes.RhbaCount)
-	assert.Equal(t, 1, output[0].SystemItemAttributes.RheaCount)
-	assert.Equal(t, "RHEL", output[0].SystemItemAttributes.OSName)
-	assert.Equal(t, "8", output[0].SystemItemAttributes.OSMajor)
-	assert.Equal(t, "10", output[0].SystemItemAttributes.OSMinor)
-	assert.Equal(t, "RHEL 8.10", output[0].SystemItemAttributes.OS)
-	assert.Equal(t, "8.10", output[0].SystemItemAttributes.Rhsm)
-	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output[0].SystemItemAttributes.StaleTimestamp.String())
-	assert.Equal(t, "2018-09-02 16:00:00 +0000 UTC", output[0].SystemItemAttributes.StaleWarningTimestamp.String())
-	assert.Equal(t, "2018-09-09 16:00:00 +0000 UTC", output[0].SystemItemAttributes.CulledTimestamp.String())
-	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output[0].SystemItemAttributes.Created.String())
-	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output[0].SystemItemAttributes.Tags)
-	assert.Equal(t, "baseline_1-1", output[0].SystemItemAttributes.BaselineName)
-	assert.Equal(t, true, *output[0].SystemItemAttributes.BaselineUpToDate)
+	assert.Equal(t, 2, output[0].SystemItemAttributesCommon.RhsaCount)
+	assert.Equal(t, 2, output[0].SystemItemAttributesCommon.RhbaCount)
+	assert.Equal(t, 1, output[0].SystemItemAttributesCommon.RheaCount)
+	assert.Equal(t, "RHEL 8.10", output[0].SystemItemAttributesCommon.OS)
+	assert.Equal(t, "8.10", output[0].SystemItemAttributesCommon.Rhsm)
+	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output[0].SystemItemAttributesCommon.StaleTimestamp.String())
+	assert.Equal(t, "2018-09-02 16:00:00 +0000 UTC", output[0].SystemItemAttributesCommon.StaleWarningTimestamp.String())
+	assert.Equal(t, "2018-09-09 16:00:00 +0000 UTC", output[0].SystemItemAttributesCommon.CulledTimestamp.String())
+	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output[0].SystemItemAttributesCommon.Created.String())
+	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output[0].SystemItemAttributesCommon.Tags) // nolint: lll
+	assert.Equal(t, "baseline_1-1", output[0].SystemItemAttributesCommon.BaselineName)
+	assert.Equal(t, int64(1), output[0].SystemItemAttributesV3Only.BaselineID)
 }
 
 func TestSystemsExportCSV(t *testing.T) {
@@ -50,16 +49,15 @@ func TestSystemsExportCSV(t *testing.T) {
 
 	assert.Equal(t, 10, len(lines))
 	assert.Equal(t,
-		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale,"+
-			"third_party,insights_id,packages_installed,packages_updatable,os_name,os_major,os_minor,os,"+
-			"rhsm,stale_timestamp,stale_warning_timestamp,culled_timestamp,created,tags,baseline_name,baseline_uptodate",
+		"id,display_name,os,rhsm,tags,rhsa_count,rhba_count,rhea_count,other_count,packages_installed,baseline_name,"+
+			"last_upload,stale_timestamp,stale_warning_timestamp,culled_timestamp,created,stale,baseline_id",
 		lines[0])
 
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,"+
-		"2018-09-22T16:00:00Z,2020-09-22T16:00:00Z,2,2,1,0,false,true,00000000-0000-0000-0001-000000000001,0,0,RHEL,8,10,"+
-		"RHEL 8.10,8.10,2018-08-26T16:00:00Z,2018-09-02T16:00:00Z,2018-09-09T16:00:00Z,2018-08-26T16:00:00Z,"+
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,RHEL 8.10,8.10,"+
 		"\"[{'key':'k1','namespace':'ns1','value':'val1'},{'key':'k2','namespace':'ns1','value':'val2'}]\","+
-		"baseline_1-1,true", lines[1])
+		"2,2,1,0,0,baseline_1-1,2020-09-22T16:00:00Z,2018-08-26T16:00:00Z,2018-09-02T16:00:00Z,2018-09-09T16:00:00Z,"+
+		"2018-08-26T16:00:00Z,false,1",
+		lines[1])
 }
 
 func TestSystemsExportWrongFormat(t *testing.T) {
@@ -80,9 +78,8 @@ func TestSystemsExportCSVFilter(t *testing.T) {
 
 	assert.Equal(t, 2, len(lines))
 	assert.Equal(t,
-		"id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale,"+
-			"third_party,insights_id,packages_installed,packages_updatable,os_name,os_major,os_minor,os,rhsm,"+
-			"stale_timestamp,stale_warning_timestamp,culled_timestamp,created,tags,baseline_name,baseline_uptodate",
+		"id,display_name,os,rhsm,tags,rhsa_count,rhba_count,rhea_count,other_count,packages_installed,baseline_name,"+
+			"last_upload,stale_timestamp,stale_warning_timestamp,culled_timestamp,created,stale,baseline_id",
 		lines[0])
 	assert.Equal(t, "", lines[1])
 }
@@ -90,7 +87,7 @@ func TestSystemsExportCSVFilter(t *testing.T) {
 func TestExportSystemsTags(t *testing.T) {
 	w := makeRequest(t, "/?tags=ns1/k2=val2", "application/json")
 
-	var output []SystemDBLookup
+	var output []SystemDBLookupV3
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
@@ -111,7 +108,7 @@ func TestSystemsExportWorkloads(t *testing.T) {
 		"application/json",
 	)
 
-	var output []SystemDBLookup
+	var output []SystemDBLookupV3
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
@@ -120,7 +117,7 @@ func TestSystemsExportWorkloads(t *testing.T) {
 func TestSystemsExportBaselineFilter(t *testing.T) {
 	w := makeRequest(t, "/?filter[baseline_name]=baseline_1-1", "application/json")
 
-	var output []SystemDBLookup
+	var output []SystemDBLookupV3
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	assert.Equal(t, 2, len(output))
