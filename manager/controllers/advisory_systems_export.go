@@ -30,7 +30,7 @@ import (
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Param    filter[os]              query   string    false "Filter OS version"
 // @Param    tags                    query   []string  false "Tag filter"
-// @Success 200 {array} SystemDBLookupV3
+// @Success 200 {array} AdvisorySystemDBLookup
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 415 {object} utils.ErrorResponse

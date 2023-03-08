@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"fmt"
 	"net/http"
 	"testing"
@@ -18,18 +19,12 @@ func TestSystemsDefault(t *testing.T) {
 	// data
 	assert.Equal(t, 8, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
-	assert.Equal(t, "00000000-0000-0000-0001-000000000001", output.Data[0].Attributes.InsightsID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2020-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
-	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastEvaluation.String())
 	assert.Equal(t, 1, output.Data[0].Attributes.RheaCount)
 	assert.Equal(t, 2, output.Data[0].Attributes.RhbaCount)
 	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
 	assert.Equal(t, 0, output.Data[0].Attributes.PackagesInstalled)
-	assert.Equal(t, 0, output.Data[0].Attributes.PackagesUpdatable)
-	assert.Equal(t, "RHEL", output.Data[0].Attributes.OSName)
-	assert.Equal(t, "8", output.Data[0].Attributes.OSMajor)
-	assert.Equal(t, "10", output.Data[0].Attributes.OSMinor)
 	assert.Equal(t, "RHEL 8.10", output.Data[0].Attributes.OS)
 	assert.Equal(t, "8.10", output.Data[0].Attributes.Rhsm)
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.StaleTimestamp.String())
@@ -38,7 +33,7 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.Created.String())
 	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output.Data[0].Attributes.Tags)
 	assert.Equal(t, "baseline_1-1", output.Data[0].Attributes.BaselineName)
-	assert.Equal(t, true, *output.Data[0].Attributes.BaselineUpToDate)
+	assert.Equal(t, int64(1), output.Data[0].Attributes.BaselineID)
 
 	// links
 	assert.Equal(t, "/?offset=0&limit=20&filter[stale]=eq:false&sort=-last_upload", output.Links.First)
@@ -144,7 +139,6 @@ func TestSystemsPackagesCount(t *testing.T) {
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output.Data[0].Attributes.DisplayName)
 	assert.Equal(t, 2, output.Data[0].Attributes.PackagesInstalled)
-	assert.Equal(t, 2, output.Data[0].Attributes.PackagesUpdatable)
 }
 
 func TestSystemsFilterAdvCount1(t *testing.T) {
@@ -184,15 +178,6 @@ func TestSystemsFilterNotExisting(t *testing.T) {
 	assert.Equal(t, "Invalid filter field: not-existing", errResp.Error)
 }
 
-func TestSystemsFilterPartialOS(t *testing.T) {
-	output := testSystems(t, "/?filter[osname]=RHEL&filter[osmajor]=8&filter[osminor]=1", 1)
-	assert.Equal(t, 2, len(output.Data))
-	assert.Equal(t, "RHEL 8.1", fmt.Sprintf("%s %s.%s", output.Data[0].Attributes.OSName,
-		output.Data[0].Attributes.OSMajor, output.Data[0].Attributes.OSMinor))
-	assert.Equal(t, "RHEL 8.1", fmt.Sprintf("%s %s.%s", output.Data[1].Attributes.OSName,
-		output.Data[1].Attributes.OSMajor, output.Data[1].Attributes.OSMinor))
-}
-
 func TestSystemsFilterOS(t *testing.T) {
 	output := testSystems(t, `/?filter[os]=in:RHEL 8.1,RHEL 7.3&sort=os`, 1)
 	assert.Equal(t, 3, len(output.Data))
@@ -219,11 +204,12 @@ func TestSystemsOrderOS(t *testing.T) {
 	assert.Equal(t, "RHEL 8.10", output.Data[7].Attributes.OS)
 }
 
-func testSystems(t *testing.T, url string, account int) SystemsResponse {
+func testSystems(t *testing.T, url string, account int) SystemsResponseV3 {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithAccount("GET", url, nil, "", SystemsListHandler, "/", account)
+	w := CreateRequestRouterWithAccount("GET", url, nil, "", SystemsListHandler, "/", account,
+		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
-	var output SystemsResponse
+	var output SystemsResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
 	return output
 }
@@ -239,9 +225,10 @@ func testSystemsError(t *testing.T, url string) (int, utils.ErrorResponse) {
 
 func TestSystemsTagsInMetadata(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithAccount("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "", SystemsListHandler, "/", 3)
+	w := CreateRequestRouterWithAccount("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "", SystemsListHandler, "/", 3,
+		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
-	var output SystemsResponse
+	var output SystemsResponseV3
 	ParseResponseBody(t, w.Body.Bytes(), &output)
 
 	testMap := map[string]FilterData{
