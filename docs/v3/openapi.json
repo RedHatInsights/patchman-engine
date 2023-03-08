@@ -1386,7 +1386,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.SystemInlineItem"
+                                        "$ref": "#/components/schemas/controllers.AdvisorySystemDBLookup"
                                     }
                                 }
                             },
@@ -1394,7 +1394,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.SystemInlineItem"
+                                        "$ref": "#/components/schemas/controllers.AdvisorySystemDBLookup"
                                     }
                                 }
                             }
@@ -1764,14 +1764,6 @@
                         }
                     },
                     {
-                        "name": "filter[last_evaluation]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "filter[last_upload]",
                         "in": "query",
                         "description": "Filter",
@@ -1821,14 +1813,6 @@
                     },
                     {
                         "name": "filter[packages_installed]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[packages_updatable]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -1889,30 +1873,6 @@
                         }
                     },
                     {
-                        "name": "filter[osname]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[osminor]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[osmajor]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "filter[baseline_name]",
                         "in": "query",
                         "description": "Filter",
@@ -1950,7 +1910,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.SystemInlineItem"
+                                        "$ref": "#/components/schemas/controllers.SystemDBLookupV3"
                                     }
                                 }
                             },
@@ -1958,7 +1918,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.SystemInlineItem"
+                                        "$ref": "#/components/schemas/controllers.SystemDBLookupV3"
                                     }
                                 }
                             }
@@ -3020,7 +2980,6 @@
                             "enum": [
                                 "id",
                                 "display_name",
-                                "last_evaluation",
                                 "last_upload",
                                 "rhsa_count",
                                 "rhba_count",
@@ -3028,7 +2987,7 @@
                                 "other_count",
                                 "stale",
                                 "packages_installed",
-                                "packages_updatable"
+                                "baseline_name"
                             ]
                         }
                     },
@@ -3036,14 +2995,6 @@
                         "name": "search",
                         "in": "query",
                         "description": "Find matching text",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[insights_id]",
-                        "in": "query",
-                        "description": "Filter",
                         "schema": {
                             "type": "string"
                         }
@@ -3058,14 +3009,6 @@
                     },
                     {
                         "name": "filter[display_name]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[last_evaluation]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -3129,14 +3072,6 @@
                         }
                     },
                     {
-                        "name": "filter[packages_updatable]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "filter[stale_timestamp]",
                         "in": "query",
                         "description": "Filter",
@@ -3162,30 +3097,6 @@
                     },
                     {
                         "name": "filter[created]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[osname]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[osminor]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[osmajor]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -3990,7 +3901,6 @@
                             "enum": [
                                 "id",
                                 "display_name",
-                                "last_evaluation",
                                 "last_upload",
                                 "rhsa_count",
                                 "rhba_count",
@@ -3998,7 +3908,7 @@
                                 "other_count",
                                 "stale",
                                 "packages_installed",
-                                "packages_updatable"
+                                "baseline_name"
                             ]
                         }
                     },
@@ -4006,14 +3916,6 @@
                         "name": "search",
                         "in": "query",
                         "description": "Find matching text",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[insights_id]",
-                        "in": "query",
-                        "description": "Filter",
                         "schema": {
                             "type": "string"
                         }
@@ -4028,14 +3930,6 @@
                     },
                     {
                         "name": "filter[display_name]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[last_evaluation]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -4099,14 +3993,6 @@
                         }
                     },
                     {
-                        "name": "filter[packages_updatable]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "filter[stale_timestamp]",
                         "in": "query",
                         "description": "Filter",
@@ -4132,30 +4018,6 @@
                     },
                     {
                         "name": "filter[created]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[osname]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[osminor]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[osmajor]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -4251,7 +4113,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.SystemsResponse"
+                                    "$ref": "#/components/schemas/controllers.SystemsResponseV3"
                                 }
                             }
                         }
@@ -5096,6 +4958,56 @@
                     }
                 }
             },
+            "controllers.AdvisorySystemDBLookup": {
+                "type": "object",
+                "properties": {
+                    "baseline_id": {
+                        "type": "integer"
+                    },
+                    "baseline_name": {
+                        "type": "string"
+                    },
+                    "created": {
+                        "type": "string"
+                    },
+                    "culled_timestamp": {
+                        "type": "string"
+                    },
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "last_upload": {
+                        "type": "string"
+                    },
+                    "os": {
+                        "type": "string"
+                    },
+                    "rhsm": {
+                        "type": "string"
+                    },
+                    "stale": {
+                        "type": "boolean"
+                    },
+                    "stale_timestamp": {
+                        "type": "string"
+                    },
+                    "stale_warning_timestamp": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemTag"
+                        }
+                    }
+                }
+            },
             "controllers.AdvisorySystemItem": {
                 "type": "object",
                 "properties": {
@@ -5852,15 +5764,77 @@
                     }
                 }
             },
+            "controllers.SystemDBLookupV3": {
+                "type": "object",
+                "properties": {
+                    "baseline_id": {
+                        "type": "integer"
+                    },
+                    "baseline_name": {
+                        "type": "string"
+                    },
+                    "created": {
+                        "type": "string"
+                    },
+                    "culled_timestamp": {
+                        "type": "string"
+                    },
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "last_upload": {
+                        "type": "string"
+                    },
+                    "os": {
+                        "type": "string"
+                    },
+                    "other_count": {
+                        "type": "integer"
+                    },
+                    "packages_installed": {
+                        "type": "integer"
+                    },
+                    "rhba_count": {
+                        "type": "integer"
+                    },
+                    "rhea_count": {
+                        "type": "integer"
+                    },
+                    "rhsa_count": {
+                        "type": "integer"
+                    },
+                    "rhsm": {
+                        "type": "string"
+                    },
+                    "stale": {
+                        "type": "boolean"
+                    },
+                    "stale_timestamp": {
+                        "type": "string"
+                    },
+                    "stale_warning_timestamp": {
+                        "type": "string"
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemTag"
+                        }
+                    }
+                }
+            },
             "controllers.SystemDetailResponse": {
                 "type": "object",
                 "properties": {
                     "data": {
-                        "$ref": "#/components/schemas/controllers.SystemItem"
+                        "$ref": "#/components/schemas/controllers.SystemItemV2"
                     }
                 }
             },
-            "controllers.SystemInlineItem": {
+            "controllers.SystemItemAttributesV2": {
                 "type": "object",
                 "properties": {
                     "baseline_name": {
@@ -5876,9 +5850,6 @@
                         "type": "string"
                     },
                     "display_name": {
-                        "type": "string"
-                    },
-                    "id": {
                         "type": "string"
                     },
                     "insights_id": {
@@ -5943,11 +5914,70 @@
                     }
                 }
             },
-            "controllers.SystemItem": {
+            "controllers.SystemItemAttributesV3": {
+                "type": "object",
+                "properties": {
+                    "baseline_id": {
+                        "type": "integer"
+                    },
+                    "baseline_name": {
+                        "type": "string"
+                    },
+                    "created": {
+                        "type": "string"
+                    },
+                    "culled_timestamp": {
+                        "type": "string"
+                    },
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "last_upload": {
+                        "type": "string"
+                    },
+                    "os": {
+                        "type": "string"
+                    },
+                    "other_count": {
+                        "type": "integer"
+                    },
+                    "packages_installed": {
+                        "type": "integer"
+                    },
+                    "rhba_count": {
+                        "type": "integer"
+                    },
+                    "rhea_count": {
+                        "type": "integer"
+                    },
+                    "rhsa_count": {
+                        "type": "integer"
+                    },
+                    "rhsm": {
+                        "type": "string"
+                    },
+                    "stale": {
+                        "type": "boolean"
+                    },
+                    "stale_timestamp": {
+                        "type": "string"
+                    },
+                    "stale_warning_timestamp": {
+                        "type": "string"
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemTag"
+                        }
+                    }
+                }
+            },
+            "controllers.SystemItemV2": {
                 "type": "object",
                 "properties": {
                     "attributes": {
-                        "$ref": "#/components/schemas/controllers.SystemItemAttributes"
+                        "$ref": "#/components/schemas/controllers.SystemItemAttributesV2"
                     },
                     "id": {
                         "type": "string"
@@ -5957,83 +5987,17 @@
                     }
                 }
             },
-            "controllers.SystemItemAttributes": {
+            "controllers.SystemItemV3": {
                 "type": "object",
                 "properties": {
-                    "baseline_name": {
+                    "attributes": {
+                        "$ref": "#/components/schemas/controllers.SystemItemAttributesV3"
+                    },
+                    "id": {
                         "type": "string"
                     },
-                    "baseline_uptodate": {
-                        "type": "boolean"
-                    },
-                    "created": {
+                    "type": {
                         "type": "string"
-                    },
-                    "culled_timestamp": {
-                        "type": "string"
-                    },
-                    "display_name": {
-                        "type": "string"
-                    },
-                    "insights_id": {
-                        "type": "string"
-                    },
-                    "last_evaluation": {
-                        "type": "string"
-                    },
-                    "last_upload": {
-                        "type": "string"
-                    },
-                    "os": {
-                        "type": "string"
-                    },
-                    "os_major": {
-                        "type": "string"
-                    },
-                    "os_minor": {
-                        "type": "string"
-                    },
-                    "os_name": {
-                        "type": "string"
-                    },
-                    "other_count": {
-                        "type": "integer"
-                    },
-                    "packages_installed": {
-                        "type": "integer"
-                    },
-                    "packages_updatable": {
-                        "type": "integer"
-                    },
-                    "rhba_count": {
-                        "type": "integer"
-                    },
-                    "rhea_count": {
-                        "type": "integer"
-                    },
-                    "rhsa_count": {
-                        "type": "integer"
-                    },
-                    "rhsm": {
-                        "type": "string"
-                    },
-                    "stale": {
-                        "type": "boolean"
-                    },
-                    "stale_timestamp": {
-                        "type": "string"
-                    },
-                    "stale_warning_timestamp": {
-                        "type": "string"
-                    },
-                    "tags": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/controllers.SystemTag"
-                        }
-                    },
-                    "third_party": {
-                        "type": "boolean"
                     }
                 }
             },
@@ -6185,13 +6149,13 @@
                     }
                 }
             },
-            "controllers.SystemsResponse": {
+            "controllers.SystemsResponseV3": {
                 "type": "object",
                 "properties": {
                     "data": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/controllers.SystemItem"
+                            "$ref": "#/components/schemas/controllers.SystemItemV3"
                         }
                     },
                     "links": {
