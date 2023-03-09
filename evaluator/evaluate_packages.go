@@ -309,7 +309,13 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 		}
 	}
 	tx = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "system_id", "package_id"}, "update_data")
-	return installed, updatable, errors.Wrap(database.BulkInsert(tx, toStore), "Storing system packages")
+	// return installed, updatable, errors.Wrap(database.BulkInsert(tx, toStore), "Storing system packages")
+	return installed, updatable, errors.Wrap(
+		database.UnnestInsert(tx,
+			"INSERT INTO system_package (rh_account_id, system_id, package_id, update_data, name_id)"+
+				" (select * from unnest($1::int[], $2::bigint[], $3::bigint[], $4::jsonb[], $5::bigint[]))"+
+				" ON CONFLICT (rh_account_id, system_id, package_id) DO UPDATE SET update_data = EXCLUDED.update_data", toStore),
+		"Storing system packages")
 }
 
 func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList) ([]byte, error) {
