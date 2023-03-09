@@ -25,6 +25,25 @@ import (
 // nolint: gochecknoglobals
 var bulkNow time.Time
 
+func UnnestInsert(db *gorm.DB, query string, objects interface{}) error {
+	// transpose values from
+	// rows := [{1 2} {3 4} {5 6}]
+	// to columns := [[1 3 5] [2 4 6]]
+	var column []interface{}
+	objSlice := reflect.ValueOf(objects)
+	for j := 0; j < objSlice.Len(); j++ {
+		inSlice := objSlice.Index(j)
+		for i := 0; i < inSlice.NumField(); i++ {
+			if len(column) <= i {
+				column = append(column, []interface{}{})
+			}
+			column[i] = append(column[i].([]interface{}), inSlice.Field(i).Interface())
+		}
+	}
+
+	return db.Exec(query, column...).Error
+}
+
 func BulkInsert(db *gorm.DB, objects interface{}) error {
 	if reflect.TypeOf(objects).Kind() != reflect.Slice {
 		return errors.New("This method only works on slices")
