@@ -31,6 +31,9 @@ func UnnestInsert(db *gorm.DB, query string, objects interface{}) error {
 	// to columns := [[1 3 5] [2 4 6]]
 	var column []interface{}
 	objSlice := reflect.ValueOf(objects)
+	if objSlice.Len() == 0 {
+		return nil
+	}
 	for j := 0; j < objSlice.Len(); j++ {
 		inSlice := objSlice.Index(j)
 		for i := 0; i < inSlice.NumField(); i++ {
