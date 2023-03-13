@@ -15,7 +15,7 @@ func TestAdvisoriesExportJSON(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequest("GET", "/", nil, "application/json", AdvisoriesExportHandler)
 
-	var output []AdvisoryInlineItem
+	var output []AdvisoryInlineItemV3
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	assert.Equal(t, 12, len(output))
@@ -26,7 +26,8 @@ func TestAdvisoriesExportJSON(t *testing.T) {
 	assert.Equal(t, output[2].CveCount, 0)
 	assert.Equal(t, output[2].RebootRequired, false)
 	assert.Equal(t, output[2].ReleaseVersions, RelList{"7.0", "7Server"})
-	assert.Equal(t, output[2].ApplicableSystems, 4)
+	assert.Equal(t, output[2].InstallableSystems, 4)
+	assert.Equal(t, output[2].ApplicableSystems, 0)
 }
 
 func TestAdvisoriesExportCSV(t *testing.T) {
