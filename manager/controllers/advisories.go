@@ -20,18 +20,22 @@ var AdvisoriesOpts = ListOpts{
 }
 
 type AdvisoryID struct {
-	ID string `query:"am.name" gorm:"column:id"`
+	ID string `json:"id" csv:"id" query:"am.name" gorm:"column:id"`
 }
 
 // nolint: lll
-type AdvisoriesDBLookup struct {
-	ID string `query:"am.name" gorm:"column:id"`
-	// a helper to get total number of systems
+type AdvisoryMetaTotalHelper struct {
 	MetaTotalHelper
 	TotalOther       int `json:"-" csv:"-" query:"count(*) filter (where am.advisory_type_id not in (1,2,3)) over ()" gorm:"column:total_other"`
 	TotalEnhancement int `json:"-" csv:"-" query:"count(*) filter (where am.advisory_type_id = 1) over ()" gorm:"column:total_enhancement"`
 	TotalBugfix      int `json:"-" csv:"-" query:"count(*) filter (where am.advisory_type_id = 2) over ()" gorm:"column:total_bugfix"`
 	TotalSecurty     int `json:"-" csv:"-" query:"count(*) filter (where am.advisory_type_id = 3) over ()" gorm:"column:total_security"`
+}
+
+type AdvisoriesDBLookup struct {
+	AdvisoryID
+	// a helper to get total number of systems
+	AdvisoryMetaTotalHelper
 
 	AdvisoryItemAttributes
 }
@@ -44,12 +48,12 @@ type AdvisoryItemAttributes struct {
 
 type AdvisoryItem struct {
 	Attributes AdvisoryItemAttributes `json:"attributes"`
-	ID         string                 `json:"id"`
-	Type       string                 `json:"type"`
+	AdvisoryID
+	Type string `json:"type"`
 }
 
 type AdvisoryInlineItem struct {
-	ID string `json:"id" csv:"id"`
+	AdvisoryID
 	AdvisoryItemAttributes
 }
 
@@ -239,8 +243,8 @@ func buildAdvisoriesData(advisories []AdvisoriesDBLookup) ([]AdvisoryItem, int, 
 				SystemAdvisoryItemAttributes: advisory.SystemAdvisoryItemAttributes,
 				ApplicableSystems:            advisory.ApplicableSystems,
 			},
-			ID:   advisory.ID,
-			Type: "advisory",
+			AdvisoryID: advisory.AdvisoryID,
+			Type:       "advisory",
 		}
 	}
 	return data, total, subtotals
