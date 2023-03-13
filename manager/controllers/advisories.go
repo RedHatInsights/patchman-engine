@@ -9,8 +9,9 @@ import (
 	"gorm.io/gorm"
 )
 
-var AdvisoriesFields = database.MustGetQueryAttrs(&AdvisoriesDBLookup{})
-var AdvisoriesSelect = database.MustGetSelect(&AdvisoriesDBLookup{})
+var AdvisoriesFields = database.MustGetQueryAttrs(&AdvisoriesDBLookupV3{})
+var AdvisoriesSelectV2 = database.MustGetSelect(&AdvisoriesDBLookupV2{})
+var AdvisoriesSelectV3 = database.MustGetSelect(&AdvisoriesDBLookupV3{})
 var AdvisoriesOpts = ListOpts{
 	Fields:         AdvisoriesFields,
 	DefaultFilters: nil,
@@ -32,38 +33,80 @@ type AdvisoryMetaTotalHelper struct {
 	TotalSecurty     int `json:"-" csv:"-" query:"count(*) filter (where am.advisory_type_id = 3) over ()" gorm:"column:total_security"`
 }
 
-type AdvisoriesDBLookup struct {
+type AdvisoriesDBLookupCommon struct {
 	AdvisoryID
 	// a helper to get total number of systems
 	AdvisoryMetaTotalHelper
+}
 
-	AdvisoryItemAttributes
+type AdvisoriesDBLookupV2 struct {
+	AdvisoriesDBLookupCommon
+	AdvisoryItemAttributesV2
+}
+
+type AdvisoriesDBLookupV3 struct {
+	AdvisoriesDBLookupCommon
+	AdvisoryItemAttributesV3
 }
 
 // nolint: lll
-type AdvisoryItemAttributes struct {
-	SystemAdvisoryItemAttributes
-	ApplicableSystems int `json:"applicable_systems" query:"COALESCE(aad.systems_installable, 0)" csv:"applicable_systems" gorm:"column:applicable_systems"`
+type AdvisoryItemAttributesV2Only struct {
+	// this is not typo, v2 applicable_systems are instalable systems in v3
+	ApplicableSystems int `json:"applicable_systems" query:"COALESCE(aad.systems_installable, 0)" csv:"applicable_systems" gorm:"column:installable_systems"`
 }
 
-type AdvisoryItem struct {
-	Attributes AdvisoryItemAttributes `json:"attributes"`
+// nolint: lll
+type AdvisoryItemAttributesV3Only struct {
+	InstallableSystems int `json:"installable_systems" query:"COALESCE(aad.systems_installable, 0)" csv:"installable_systems" gorm:"column:installable_systems"`
+	ApplicableSystems  int `json:"applicable_systems" query:"COALESCE(aad.systems_applicable, 0)" csv:"applicable_systems" gorm:"column:applicable_systems"`
+}
+
+type AdvisoryItemAttributesV2 struct {
+	SystemAdvisoryItemAttributes
+	AdvisoryItemAttributesV2Only
+}
+
+type AdvisoryItemAttributesV3 struct {
+	SystemAdvisoryItemAttributes
+	AdvisoryItemAttributesV3Only
+}
+
+type AdvisoryItemV2 struct {
+	Attributes AdvisoryItemAttributesV2 `json:"attributes"`
 	AdvisoryID
 	Type string `json:"type"`
 }
 
-type AdvisoryInlineItem struct {
+type AdvisoryItemV3 struct {
+	Attributes AdvisoryItemAttributesV3 `json:"attributes"`
 	AdvisoryID
-	AdvisoryItemAttributes
+	Type string `json:"type"`
 }
 
-type AdvisoriesResponse struct {
-	Data  []AdvisoryItem `json:"data"`
-	Links Links          `json:"links"`
-	Meta  ListMeta       `json:"meta"`
+type AdvisoryInlineItemV2 struct {
+	AdvisoryID
+	AdvisoryItemAttributesV2
 }
 
-func advisoriesCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
+type AdvisoryInlineItemV3 struct {
+	AdvisoryID
+	AdvisoryItemAttributesV3
+}
+
+type AdvisoriesResponseV2 struct {
+	Data  []AdvisoryItemV2 `json:"data"`
+	Links Links            `json:"links"`
+	Meta  ListMeta         `json:"meta"`
+}
+
+type AdvisoriesResponseV3 struct {
+	Data  []AdvisoryItemV3 `json:"data"`
+	Links Links            `json:"links"`
+	Meta  ListMeta         `json:"meta"`
+}
+
+func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
+	db := middlewares.DBFromContext(c)
 	account := c.GetInt(middlewares.KeyAccount)
 	var query *gorm.DB
 	filters, err := ParseTagsFilters(c)
@@ -103,6 +146,7 @@ func advisoriesCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []strin
 // @Param    filter[advisory_type]       query   string  false "Filter"
 // @Param    filter[advisory_type_name]  query   string  false "Filter"
 // @Param    filter[severity]            query   string  false "Filter"
+// @Param    filter[installable_systems] query   string  false "Filter"
 // @Param    filter[applicable_systems]  query   string  false "Filter"
 // @Param    tags                        query   []string  false "Tag filter"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
@@ -111,19 +155,19 @@ func advisoriesCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []strin
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
-// @Success 200 {object} AdvisoriesResponse
+// @Success 200 {object} AdvisoriesResponseV3
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /advisories [get]
 func AdvisoriesListHandler(c *gin.Context) {
-	db := middlewares.DBFromContext(c)
-	query, meta, params, err := advisoriesCommon(db, c)
+	apiver := c.GetInt(middlewares.KeyApiver)
+	query, meta, params, err := advisoriesCommon(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
 
-	var advisories []AdvisoriesDBLookup
+	var advisories []AdvisoriesDBLookupV3
 	err = query.Find(&advisories).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
@@ -133,7 +177,17 @@ func AdvisoriesListHandler(c *gin.Context) {
 	if err != nil {
 		return // Error handled in method itself
 	}
-	var resp = AdvisoriesResponse{
+	if apiver < 3 {
+		dataV2 := advisoryItemV3toV2(data)
+		var resp = AdvisoriesResponseV2{
+			Data:  dataV2,
+			Links: *links,
+			Meta:  *meta,
+		}
+		c.JSON(http.StatusOK, &resp)
+		return
+	}
+	var resp = AdvisoriesResponseV3{
 		Data:  data,
 		Links: *links,
 		Meta:  *meta,
@@ -159,6 +213,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 // @Param    filter[advisory_type]       query   string  false "Filter"
 // @Param    filter[advisory_type_name]  query   string  false "Filter"
 // @Param    filter[severity]            query   string  false "Filter"
+// @Param    filter[installable_systems] query   string  false "Filter"
 // @Param    filter[applicable_systems]  query   string  false "Filter"
 // @Param    tags                        query   []string  false "Tag filter"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
@@ -173,8 +228,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/advisories [get]
 func AdvisoriesListIDsHandler(c *gin.Context) {
-	db := middlewares.DBFromContext(c)
-	query, _, _, err := advisoriesCommon(db, c)
+	query, _, _, err := advisoriesCommon(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -191,7 +245,7 @@ func AdvisoriesListIDsHandler(c *gin.Context) {
 
 func buildQueryAdvisories(db *gorm.DB, account int) *gorm.DB {
 	query := db.Table("advisory_metadata am").
-		Select(AdvisoriesSelect).
+		Select(AdvisoriesSelectV3).
 		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id").
 		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
 		Where("aad.rh_account_id = ?", account)
@@ -200,7 +254,9 @@ func buildQueryAdvisories(db *gorm.DB, account int) *gorm.DB {
 
 func buildAdvisoryAccountDataQuery(db *gorm.DB, account int) *gorm.DB {
 	query := database.SystemAdvisories(db, account).
-		Select("sa.advisory_id, sp.rh_account_id as rh_account_id, count(sp.id) as systems_installable").
+		Select(`sa.advisory_id, sp.rh_account_id as rh_account_id,
+		        count(sp.*) filter (where sa.status_id = 0) as systems_installable,
+		        count(sp.*) filter (where sa.status_id = 1) as systems_applicable`).
 		Where("sp.stale = false").
 		Group("sp.rh_account_id, sa.advisory_id")
 
@@ -212,14 +268,14 @@ func buildQueryAdvisoriesTagged(db *gorm.DB, filters map[string]FilterData, acco
 	subq, _ = ApplyTagsFilter(filters, subq, "sp.inventory_id")
 
 	query := db.Table("advisory_metadata am").
-		Select(AdvisoriesSelect).
+		Select(AdvisoriesSelectV3).
 		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
-		Joins("JOIN (?) aad ON am.id = aad.advisory_id and aad.systems_installable > 0", subq)
+		Joins("JOIN (?) aad ON am.id = aad.advisory_id", subq)
 
 	return query
 }
 
-func buildAdvisoriesData(advisories []AdvisoriesDBLookup) ([]AdvisoryItem, int, map[string]int) {
+func buildAdvisoriesData(advisories []AdvisoriesDBLookupV3) ([]AdvisoryItemV3, int, map[string]int) {
 	var total int
 	subtotals := map[string]int{
 		"other":       0,
@@ -234,18 +290,40 @@ func buildAdvisoriesData(advisories []AdvisoriesDBLookup) ([]AdvisoryItem, int, 
 		subtotals["bugfix"] = advisories[0].TotalBugfix
 		subtotals["security"] = advisories[0].TotalSecurty
 	}
-	data := make([]AdvisoryItem, len(advisories))
+	data := make([]AdvisoryItemV3, len(advisories))
 	for i := 0; i < len(advisories); i++ {
 		advisory := (advisories)[i]
 		advisory.SystemAdvisoryItemAttributes = systemAdvisoryItemAttributeParse(advisory.SystemAdvisoryItemAttributes)
-		data[i] = AdvisoryItem{
-			Attributes: AdvisoryItemAttributes{
+		data[i] = AdvisoryItemV3{
+			Attributes: AdvisoryItemAttributesV3{
 				SystemAdvisoryItemAttributes: advisory.SystemAdvisoryItemAttributes,
-				ApplicableSystems:            advisory.ApplicableSystems,
+				AdvisoryItemAttributesV3Only: AdvisoryItemAttributesV3Only{
+					InstallableSystems: advisory.InstallableSystems,
+					ApplicableSystems:  advisory.ApplicableSystems,
+				},
 			},
 			AdvisoryID: advisory.AdvisoryID,
 			Type:       "advisory",
 		}
 	}
 	return data, total, subtotals
+}
+
+func advisoryItemV3toV2(items []AdvisoryItemV3) []AdvisoryItemV2 {
+	nItems := len(items)
+	itemsV2 := make([]AdvisoryItemV2, nItems)
+	for i := 0; i < nItems; i++ {
+		itemsV2[i] = AdvisoryItemV2{
+			Attributes: AdvisoryItemAttributesV2{
+				SystemAdvisoryItemAttributes: items[i].Attributes.SystemAdvisoryItemAttributes,
+				AdvisoryItemAttributesV2Only: AdvisoryItemAttributesV2Only{
+					// this is not typo, v2 applicable_systems are instalable systems in v3
+					ApplicableSystems: items[i].Attributes.InstallableSystems,
+				},
+			},
+			AdvisoryID: items[i].AdvisoryID,
+			Type:       items[i].Type,
+		}
+	}
+	return itemsV2
 }
