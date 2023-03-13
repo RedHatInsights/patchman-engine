@@ -22,7 +22,7 @@ import (
 // @Param    filter[advisory_type_name] query   string  false "Filter"
 // @Param    filter[severity]           query   string  false "Filter"
 // @Param    filter[applicable_systems] query   string  false "Filter"
-// @Success 200 {array} AdvisoryInlineItem
+// @Success 200 {array} AdvisoryInlineItemV3
 // @Failure 415 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /export/advisories [get]
@@ -44,7 +44,7 @@ func AdvisoriesExportHandler(c *gin.Context) {
 		query = buildQueryAdvisories(db, account)
 	}
 
-	var advisories []AdvisoriesDBLookup
+	var advisories []AdvisoriesDBLookupV3
 
 	query = query.Order("id")
 	query, err = ExportListCommon(query, c, AdvisoriesOpts)
@@ -59,15 +59,39 @@ func AdvisoriesExportHandler(c *gin.Context) {
 		return
 	}
 
-	data := make([]AdvisoryInlineItem, len(advisories))
+	apiver := c.GetInt(middlewares.KeyApiver)
+	if apiver < 3 {
+		dataV2 := makeAdvisoryInlineItemV2(advisories)
+		OutputExportData(c, dataV2)
+		return
+	}
 
+	data := make([]AdvisoryInlineItemV3, len(advisories))
 	for i, v := range advisories {
 		v.SystemAdvisoryItemAttributes = systemAdvisoryItemAttributeParse(v.SystemAdvisoryItemAttributes)
-		data[i] = AdvisoryInlineItem{
-			AdvisoryID:             v.AdvisoryID,
-			AdvisoryItemAttributes: v.AdvisoryItemAttributes,
+		data[i] = AdvisoryInlineItemV3{
+			AdvisoryID:               v.AdvisoryID,
+			AdvisoryItemAttributesV3: v.AdvisoryItemAttributesV3,
 		}
 	}
 
 	OutputExportData(c, data)
+}
+
+func makeAdvisoryInlineItemV2(advisories []AdvisoriesDBLookupV3) []AdvisoryInlineItemV2 {
+	dataV2 := make([]AdvisoryInlineItemV2, len(advisories))
+	for i, v := range advisories {
+		v.SystemAdvisoryItemAttributes = systemAdvisoryItemAttributeParse(v.SystemAdvisoryItemAttributes)
+		dataV2[i] = AdvisoryInlineItemV2{
+			AdvisoryID: v.AdvisoryID,
+			AdvisoryItemAttributesV2: AdvisoryItemAttributesV2{
+				SystemAdvisoryItemAttributes: v.SystemAdvisoryItemAttributes,
+				AdvisoryItemAttributesV2Only: AdvisoryItemAttributesV2Only{
+					// this is not typo, v2 applicable_systems are instalable systems in v3
+					ApplicableSystems: v.InstallableSystems,
+				},
+			},
+		}
+	}
+	return dataV2
 }
