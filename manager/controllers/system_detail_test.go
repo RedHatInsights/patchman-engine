@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"net/http"
 	"testing"
 
@@ -12,7 +13,7 @@ import (
 func TestSystemDetailDefault1(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil, "",
-		SystemDetailHandler, "/:inventory_id")
+		SystemDetailHandler, "/:inventory_id", core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
 	var output SystemDetailResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -33,6 +34,7 @@ func TestSystemDetailDefault1(t *testing.T) {
 	assert.Equal(t, "RHEL 8.10", output.Data.Attributes.OS)
 	assert.Equal(t, "baseline_1-1", output.Data.Attributes.BaselineName)
 	assert.Equal(t, true, *output.Data.Attributes.BaselineUpToDate)
+	assert.Equal(t, int64(1), output.Data.Attributes.BaselineID)
 }
 
 func TestSystemDetailDefault2(t *testing.T) {
