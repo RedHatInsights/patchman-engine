@@ -11,8 +11,13 @@ import (
 	"gorm.io/gorm"
 )
 
-type SystemDetailResponse struct {
+type SystemDetailResponseV2 struct {
 	Data SystemItemV2 `json:"data"`
+}
+
+type SystemDetailResponse struct {
+	// use SystemItem not SystemItemV3 to display more info about system
+	Data SystemItem `json:"data"`
 }
 
 // @Summary Show me details about a system by given inventory id
@@ -29,6 +34,7 @@ type SystemDetailResponse struct {
 // @Router /systems/{inventory_id} [get]
 func SystemDetailHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
+	apiver := c.GetInt(middlewares.KeyApiver)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {
@@ -45,7 +51,7 @@ func SystemDetailHandler(c *gin.Context) {
 		return
 	}
 
-	var systemItemAttributes SystemItemAttributesV2
+	var systemItemAttributes SystemItemAttributesAll
 	db := middlewares.DBFromContext(c)
 	query := database.Systems(db, account).
 		Select(database.MustGetSelect(&systemItemAttributes)).
@@ -64,8 +70,21 @@ func SystemDetailHandler(c *gin.Context) {
 		return
 	}
 
-	var resp = SystemDetailResponse{
-		Data: SystemItemV2{
+	if apiver < 3 {
+		resp := SystemDetailResponseV2{
+			Data: SystemItemV2{
+				Attributes: SystemItemAttributesV2{
+					systemItemAttributes.SystemItemAttributesCommon,
+					systemItemAttributes.SystemItemAttributesV2Only,
+				},
+				ID:   inventoryID,
+				Type: "system",
+			}}
+		c.JSON(http.StatusOK, &resp)
+		return
+	}
+	resp := SystemDetailResponse{
+		Data: SystemItem{
 			Attributes: systemItemAttributes,
 			ID:         inventoryID,
 			Type:       "system",
