@@ -5830,13 +5830,30 @@
                 "type": "object",
                 "properties": {
                     "data": {
-                        "$ref": "#/components/schemas/controllers.SystemItemV2"
+                        "$ref": "#/components/schemas/controllers.SystemItem"
                     }
                 }
             },
-            "controllers.SystemItemAttributesV2": {
+            "controllers.SystemItem": {
                 "type": "object",
                 "properties": {
+                    "attributes": {
+                        "$ref": "#/components/schemas/controllers.SystemItemAttributesAll"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "controllers.SystemItemAttributesAll": {
+                "type": "object",
+                "properties": {
+                    "baseline_id": {
+                        "type": "integer"
+                    },
                     "baseline_name": {
                         "type": "string"
                     },
@@ -5970,20 +5987,6 @@
                         "items": {
                             "$ref": "#/components/schemas/controllers.SystemTag"
                         }
-                    }
-                }
-            },
-            "controllers.SystemItemV2": {
-                "type": "object",
-                "properties": {
-                    "attributes": {
-                        "$ref": "#/components/schemas/controllers.SystemItemAttributesV2"
-                    },
-                    "id": {
-                        "type": "string"
-                    },
-                    "type": {
-                        "type": "string"
                     }
                 }
             },
