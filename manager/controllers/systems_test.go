@@ -210,13 +210,13 @@ func TestSystemsFilterInvalidSyntax(t *testing.T) {
 func TestSystemsOrderOS(t *testing.T) {
 	output := testSystems(t, `/?sort=os`, 1)
 	assert.Equal(t, "RHEL 7.3", output.Data[0].Attributes.OS)
-	assert.Equal(t, "RHEL 8.x", output.Data[1].Attributes.OS) // yes, we should be robust against this
+	assert.Equal(t, "RHEL 8.1", output.Data[1].Attributes.OS)
 	assert.Equal(t, "RHEL 8.1", output.Data[2].Attributes.OS)
-	assert.Equal(t, "RHEL 8.1", output.Data[3].Attributes.OS)
-	assert.Equal(t, "RHEL 8.2", output.Data[4].Attributes.OS)
+	assert.Equal(t, "RHEL 8.2", output.Data[3].Attributes.OS)
+	assert.Equal(t, "RHEL 8.3", output.Data[4].Attributes.OS)
 	assert.Equal(t, "RHEL 8.3", output.Data[5].Attributes.OS)
-	assert.Equal(t, "RHEL 8.3", output.Data[6].Attributes.OS)
-	assert.Equal(t, "RHEL 8.10", output.Data[7].Attributes.OS)
+	assert.Equal(t, "RHEL 8.10", output.Data[6].Attributes.OS)
+	assert.Equal(t, "RHEL 8.x", output.Data[7].Attributes.OS) // yes, we should be robust against this
 }
 
 func testSystems(t *testing.T, url string, account int) SystemsResponse {

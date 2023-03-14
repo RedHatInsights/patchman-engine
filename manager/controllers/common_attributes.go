@@ -15,7 +15,7 @@ type MetaTotalHelper struct {
 }
 
 type OSAttributes struct {
-	OS   string `json:"os" csv:"os" query:"ih.system_profile->'operating_system'->>'name' || ' ' || coalesce(ih.system_profile->'operating_system'->>'major' || '.' || (ih.system_profile->'operating_system'->>'minor'), '')" order_query:"ih.system_profile->'operating_system'->>'name',cast(substring(ih.system_profile->'operating_system'->>'major','^\\d+') as int),cast(substring(ih.system_profile->'operating_system'->>'minor','^\\d+') as int)" gorm:"column:os"`
+	OS   string `json:"os" csv:"os" query:"ih.system_profile->'operating_system'->>'name' || ' ' || coalesce(ih.system_profile->'operating_system'->>'major' || '.' || (ih.system_profile->'operating_system'->>'minor'), '')" order_query:"ih.system_profile->'operating_system'->>'name' || ' ' || coalesce(ih.system_profile->'operating_system'->>'major' || '.' || (ih.system_profile->'operating_system'->>'minor'), '') collate numeric" gorm:"column:os"`
 	Rhsm string `json:"rhsm" csv:"rhsm" query:"ih.system_profile->'rhsm'->>'version'" gorm:"column:rhsm"`
 }
 

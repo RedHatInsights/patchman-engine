@@ -7,13 +7,15 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (105, false);
+VALUES (106, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
 -- ---------------------------------------------------------------------------
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE COLLATION IF NOT EXISTS numeric (provider = icu, locale = 'en-u-kn-true');
 
 -- empty
 CREATE OR REPLACE FUNCTION empty(t TEXT)
