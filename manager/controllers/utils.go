@@ -81,7 +81,7 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 		if strings.HasPrefix(enteredField, "-") && allowedFieldSet[enteredField[1:]] { //nolint:gocritic
 			tx = tx.Order(fmt.Sprintf("%s DESC NULLS LAST", fieldExprs[enteredField[1:]].OrderQuery))
 		} else if allowedFieldSet[enteredField] {
-			tx = tx.Order(fmt.Sprintf("%s ASC NULLS FIRST", fieldExprs[enteredField].OrderQuery))
+			tx = tx.Order(fmt.Sprintf("%s ASC NULLS LAST", fieldExprs[enteredField].OrderQuery))
 		} else {
 			// We have not found any matches in allowed fields, return an error
 			return nil, nil, errors.Errorf("Invalid sort field: %v", enteredField)
