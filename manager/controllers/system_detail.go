@@ -20,6 +20,12 @@ type SystemDetailResponse struct {
 	Data SystemItem `json:"data"`
 }
 
+type SystemDetailLookup struct {
+	SystemItemAttributesAll
+	TagsStrHelper
+}
+
+// nolint: funlen
 // @Summary Show me details about a system by given inventory id
 // @Description Show me details about a system by given inventory id
 // @ID detailSystem
@@ -51,15 +57,15 @@ func SystemDetailHandler(c *gin.Context) {
 		return
 	}
 
-	var systemItemAttributes SystemItemAttributesAll
+	var systemDetail SystemDetailLookup
 	db := middlewares.DBFromContext(c)
 	query := database.Systems(db, account).
-		Select(database.MustGetSelect(&systemItemAttributes)).
+		Select(database.MustGetSelect(&systemDetail)).
 		Joins("JOIN inventory.hosts ih ON ih.id = inventory_id").
 		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
 		Where("sp.inventory_id = ?::uuid", inventoryID)
 
-	err := query.Take(&systemItemAttributes).Error
+	err := query.Take(&systemDetail).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		LogAndRespNotFound(c, err, "inventory not found")
 		return
@@ -70,12 +76,17 @@ func SystemDetailHandler(c *gin.Context) {
 		return
 	}
 
+	systemDetail.Tags, err = parseSystemTags(systemDetail.TagsStr)
+	if err != nil {
+		utils.LogDebug("err", err.Error(), "inventory_id", inventoryID, "system tags parsing failed")
+	}
+
 	if apiver < 3 {
 		resp := SystemDetailResponseV2{
 			Data: SystemItemV2{
 				Attributes: SystemItemAttributesV2{
-					systemItemAttributes.SystemItemAttributesCommon,
-					systemItemAttributes.SystemItemAttributesV2Only,
+					systemDetail.SystemItemAttributesCommon,
+					systemDetail.SystemItemAttributesV2Only,
 				},
 				ID:   inventoryID,
 				Type: "system",
@@ -85,7 +96,7 @@ func SystemDetailHandler(c *gin.Context) {
 	}
 	resp := SystemDetailResponse{
 		Data: SystemItem{
-			Attributes: systemItemAttributes,
+			Attributes: systemDetail.SystemItemAttributesAll,
 			ID:         inventoryID,
 			Type:       "system",
 		}}
