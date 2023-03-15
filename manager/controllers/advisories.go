@@ -83,16 +83,6 @@ type AdvisoryItemV3 struct {
 	Type string `json:"type"`
 }
 
-type AdvisoryInlineItemV2 struct {
-	AdvisoryID
-	AdvisoryItemAttributesV2
-}
-
-type AdvisoryInlineItemV3 struct {
-	AdvisoryID
-	AdvisoryItemAttributesV3
-}
-
 type AdvisoriesResponseV2 struct {
 	Data  []AdvisoryItemV2 `json:"data"`
 	Links Links            `json:"links"`

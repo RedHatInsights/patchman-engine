@@ -17,7 +17,7 @@ func TestAdvisoriesExportJSON(t *testing.T) {
 	w := CreateRequest("GET", "/", nil, "application/json", AdvisoriesExportHandler,
 		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
 
-	var output []AdvisoryInlineItemV3
+	var output []AdvisoriesDBLookupV3
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	assert.Equal(t, 12, len(output))
