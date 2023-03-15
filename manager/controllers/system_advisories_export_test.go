@@ -14,7 +14,7 @@ func TestSystemAdvisoriesExportJSON(t *testing.T) {
 	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil,
 		"application/json", SystemAdvisoriesExportHandler, "/:inventory_id")
 
-	var output []AdvisoryInlineItemV3
+	var output []AdvisoriesDBLookupV3
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 8, len(output))
 	assert.Equal(t, output[0].Description, "adv-1-des")

@@ -1212,7 +1212,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.AdvisoryInlineItemV3"
+                                        "$ref": "#/components/schemas/controllers.AdvisoriesDBLookupV3"
                                     }
                                 }
                             },
@@ -1220,7 +1220,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.AdvisoryInlineItemV3"
+                                        "$ref": "#/components/schemas/controllers.AdvisoriesDBLookupV3"
                                     }
                                 }
                             }
@@ -4762,6 +4762,52 @@
     },
     "components": {
         "schemas": {
+            "controllers.AdvisoriesDBLookupV3": {
+                "type": "object",
+                "properties": {
+                    "advisory_type": {
+                        "type": "integer",
+                        "description": "Deprecated, not useful database ID (0 - unknown, 1 -, enhancement, 2 - bugfix, 3 - security, 4 - unspecified)"
+                    },
+                    "advisory_type_name": {
+                        "type": "string",
+                        "description": "Advisory type name, proper ordering ensured (unknown, unspecified, other, enhancement, bugfix, security)"
+                    },
+                    "applicable_systems": {
+                        "type": "integer"
+                    },
+                    "cve_count": {
+                        "type": "integer"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "installable_systems": {
+                        "type": "integer"
+                    },
+                    "public_date": {
+                        "type": "string"
+                    },
+                    "reboot_required": {
+                        "type": "boolean"
+                    },
+                    "release_versions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "severity": {
+                        "type": "integer"
+                    },
+                    "synopsis": {
+                        "type": "string"
+                    }
+                }
+            },
             "controllers.AdvisoriesResponseV3": {
                 "type": "object",
                 "properties": {
@@ -4874,52 +4920,6 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/controllers.AdvisoryDetailItemV2"
-                    }
-                }
-            },
-            "controllers.AdvisoryInlineItemV3": {
-                "type": "object",
-                "properties": {
-                    "advisory_type": {
-                        "type": "integer",
-                        "description": "Deprecated, not useful database ID (0 - unknown, 1 -, enhancement, 2 - bugfix, 3 - security, 4 - unspecified)"
-                    },
-                    "advisory_type_name": {
-                        "type": "string",
-                        "description": "Advisory type name, proper ordering ensured (unknown, unspecified, other, enhancement, bugfix, security)"
-                    },
-                    "applicable_systems": {
-                        "type": "integer"
-                    },
-                    "cve_count": {
-                        "type": "integer"
-                    },
-                    "description": {
-                        "type": "string"
-                    },
-                    "id": {
-                        "type": "string"
-                    },
-                    "installable_systems": {
-                        "type": "integer"
-                    },
-                    "public_date": {
-                        "type": "string"
-                    },
-                    "reboot_required": {
-                        "type": "boolean"
-                    },
-                    "release_versions": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "severity": {
-                        "type": "integer"
-                    },
-                    "synopsis": {
-                        "type": "string"
                     }
                 }
             },
