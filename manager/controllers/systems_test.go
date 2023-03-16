@@ -3,7 +3,6 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
-	"app/manager/middlewares"
 	"fmt"
 	"net/http"
 	"testing"
@@ -206,8 +205,7 @@ func TestSystemsOrderOS(t *testing.T) {
 
 func testSystems(t *testing.T, url string, account int) SystemsResponseV3 {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithAccount("GET", url, nil, "", SystemsListHandler, "/", account,
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	w := CreateRequestRouterWithAccount("GET", url, nil, "", SystemsListHandler, "/", account)
 
 	var output SystemsResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -225,8 +223,7 @@ func testSystemsError(t *testing.T, url string) (int, utils.ErrorResponse) {
 
 func TestSystemsTagsInMetadata(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithAccount("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "", SystemsListHandler, "/", 3,
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	w := CreateRequestRouterWithAccount("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "", SystemsListHandler, "/", 3)
 
 	var output SystemsResponseV3
 	ParseResponseBody(t, w.Body.Bytes(), &output)

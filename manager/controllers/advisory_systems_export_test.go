@@ -2,7 +2,6 @@ package controllers // nolint: dupl
 
 import (
 	"app/base/core"
-	"app/manager/middlewares"
 	"net/http"
 	"strings"
 	"testing"
@@ -13,7 +12,7 @@ import (
 func TestAdvisorySystemsExportJSON(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, "application/json", AdvisorySystemsExportHandler,
-		"/:advisory_id", core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+		"/:advisory_id")
 
 	var output []SystemDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -24,8 +23,7 @@ func TestAdvisorySystemsExportJSON(t *testing.T) {
 
 func TestAdvisorySystemsExportCSV(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, "text/csv", AdvisorySystemsExportHandler, "/:advisory_id",
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, "text/csv", AdvisorySystemsExportHandler, "/:advisory_id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()

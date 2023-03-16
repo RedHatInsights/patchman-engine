@@ -3,7 +3,6 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
-	"app/manager/middlewares"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -15,8 +14,7 @@ import (
 
 func makeRequest(t *testing.T, path string, contentType string) *httptest.ResponseRecorder {
 	core.SetupTest(t)
-	return CreateRequest("GET", path, nil, contentType, SystemsExportHandler,
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	return CreateRequest("GET", path, nil, contentType, SystemsExportHandler)
 }
 
 func TestSystemsExportJSON(t *testing.T) {

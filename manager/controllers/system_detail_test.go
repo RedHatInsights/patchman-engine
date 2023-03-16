@@ -3,7 +3,6 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
-	"app/manager/middlewares"
 	"net/http"
 	"testing"
 
@@ -13,7 +12,7 @@ import (
 func TestSystemDetailDefault1(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil, "",
-		SystemDetailHandler, "/:inventory_id", core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+		SystemDetailHandler, "/:inventory_id")
 
 	var output SystemDetailResponse
 	CheckResponse(t, w, http.StatusOK, &output)

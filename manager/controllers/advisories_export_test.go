@@ -3,7 +3,6 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
-	"app/manager/middlewares"
 	"fmt"
 	"net/http"
 	"strings"
@@ -14,8 +13,7 @@ import (
 
 func TestAdvisoriesExportJSON(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequest("GET", "/", nil, "application/json", AdvisoriesExportHandler,
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	w := CreateRequest("GET", "/", nil, "application/json", AdvisoriesExportHandler)
 
 	var output []AdvisoriesDBLookupV3
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -34,8 +32,7 @@ func TestAdvisoriesExportJSON(t *testing.T) {
 
 func TestAdvisoriesExportCSV(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequest("GET", "/", nil, "text/csv", AdvisoriesExportHandler,
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	w := CreateRequest("GET", "/", nil, "text/csv", AdvisoriesExportHandler)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
@@ -47,8 +44,7 @@ func TestAdvisoriesExportCSV(t *testing.T) {
 
 func TestAdvisoriesExportWrongFormat(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequest("GET", "/", nil, "test-format", AdvisoriesExportHandler,
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	w := CreateRequest("GET", "/", nil, "test-format", AdvisoriesExportHandler)
 
 	assert.Equal(t, http.StatusUnsupportedMediaType, w.Code)
 	body := w.Body.String()
@@ -58,8 +54,7 @@ func TestAdvisoriesExportWrongFormat(t *testing.T) {
 
 func TestAdvisoriesExportCSVFilter(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequest("GET", "/?filter[id]=RH-1", nil, "text/csv", AdvisoriesExportHandler,
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	w := CreateRequest("GET", "/?filter[id]=RH-1", nil, "text/csv", AdvisoriesExportHandler)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
@@ -72,8 +67,7 @@ func TestAdvisoriesExportCSVFilter(t *testing.T) {
 
 func TestAdvisoriesExportTagsInvalid(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil, "", AdvisoriesExportHandler, "/",
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	w := CreateRequestRouterWithPath("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil, "", AdvisoriesExportHandler, "/")
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -83,7 +77,7 @@ func TestAdvisoriesExportTagsInvalid(t *testing.T) {
 func TestAdvisoriesExportIncorrectFilter(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/?filter[filteriamnotexitst]=abcd", nil, "text/csv",
-		AdvisoriesExportHandler, "/", core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+		AdvisoriesExportHandler, "/")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

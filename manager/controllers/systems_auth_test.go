@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"app/base/core"
-	"app/manager/middlewares"
 	"net/http"
 	"testing"
 
@@ -12,8 +11,7 @@ import (
 func testAccountSystemCounts(t *testing.T, acc int, count int) {
 	core.SetupTest(t)
 	var output SystemsResponseV3
-	w := CreateRequestRouterWithAccount("GET", "/", nil, "", SystemsListHandler, "/", acc,
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	w := CreateRequestRouterWithAccount("GET", "/", nil, "", SystemsListHandler, "/", acc)
 	CheckResponse(t, w, http.StatusOK, &output)
 	// data
 	assert.Equal(t, count, len(output.Data))
