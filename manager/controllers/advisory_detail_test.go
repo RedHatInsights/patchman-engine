@@ -3,7 +3,6 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
-	"app/manager/middlewares"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -17,7 +16,7 @@ import (
 func TestAdvisoryDetailDefault(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-9", nil, "", AdvisoryDetailHandler, "/:advisory_id",
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 1})
+		core.V1APICtx)
 
 	var outputV1 AdvisoryDetailResponseV1
 	CheckResponse(t, w, http.StatusOK, &outputV1)
@@ -25,7 +24,7 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 	outputV1.checkRH9Fields(t)
 
 	w = CreateRequestRouterWithPath("GET", "/RH-9", nil, "", AdvisoryDetailHandler, "/:advisory_id",
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 2})
+		core.V2APICtx)
 
 	var outputV2 AdvisoryDetailResponseV2
 	CheckResponse(t, w, http.StatusOK, &outputV2)
@@ -71,7 +70,7 @@ func (r *AdvisoryDetailResponseV2) checkRH9Fields(t *testing.T) {
 func TestAdvisoryDetailCVE(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-3", nil, "", AdvisoryDetailHandler, "/:advisory_id",
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 1})
+		core.V1APICtx)
 
 	var outputV1 AdvisoryDetailResponseV1
 	CheckResponse(t, w, http.StatusOK, &outputV1)
@@ -80,7 +79,7 @@ func TestAdvisoryDetailCVE(t *testing.T) {
 	assert.Equal(t, "CVE-2", outputV1.Data.Attributes.Cves[1])
 
 	w = CreateRequestRouterWithPath("GET", "/RH-3", nil, "", AdvisoryDetailHandler, "/:advisory_id",
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 2})
+		core.V2APICtx)
 
 	var outputV2 AdvisoryDetailResponseV2
 	CheckResponse(t, w, http.StatusOK, &outputV2)
@@ -93,13 +92,13 @@ func TestAdvisoryNoIdProvided(t *testing.T) {
 	core.SetupTest(t)
 	var errResp utils.ErrorResponse
 	w := CreateRequest("GET", "/", nil, "", AdvisoryDetailHandler,
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 1})
+		core.V1APICtx)
 
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, "advisory_id param not found", errResp.Error)
 
 	w = CreateRequest("GET", "/", nil, "", AdvisoryDetailHandler,
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 2})
+		core.V2APICtx)
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, "advisory_id param not found", errResp.Error)
 }
@@ -109,13 +108,13 @@ func TestAdvisoryNotFound(t *testing.T) {
 
 	var errResp utils.ErrorResponse
 	w := CreateRequestRouterWithPath("GET", "/foo", nil, "", AdvisoryDetailHandler, "/:advisory_id",
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 1})
+		core.V1APICtx)
 
 	CheckResponse(t, w, http.StatusNotFound, &errResp)
 	assert.Equal(t, "advisory not found", errResp.Error)
 
 	w = CreateRequestRouterWithPath("GET", "/foo", nil, "", AdvisoryDetailHandler, "/:advisory_id",
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 2})
+		core.V2APICtx)
 
 	CheckResponse(t, w, http.StatusNotFound, &errResp)
 	assert.Equal(t, "advisory not found", errResp.Error)
@@ -123,12 +122,12 @@ func TestAdvisoryNotFound(t *testing.T) {
 
 func testReqV1() *httptest.ResponseRecorder {
 	return CreateRequestRouterWithPath("GET", "/RH-9", nil, "", AdvisoryDetailHandler, "/:advisory_id",
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 1})
+		core.V1APICtx)
 }
 
 func testReqV2() *httptest.ResponseRecorder {
 	return CreateRequestRouterWithPath("GET", "/RH-9", nil, "", AdvisoryDetailHandler, "/:advisory_id",
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 2})
+		core.V2APICtx)
 }
 
 func TestAdvisoryDetailCached(t *testing.T) {
@@ -173,13 +172,13 @@ func TestAdvisoryDetailFiltering(t *testing.T) {
 
 	var errResp utils.ErrorResponse
 	w := CreateRequestRouterWithPath("GET", "/RH-9?filter[filter]=abcd", nil, "", AdvisoryDetailHandler,
-		"/:advisory_id", core.ContextKV{Key: middlewares.KeyApiver, Value: 1})
+		"/:advisory_id", core.V1APICtx)
 
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
 
 	w = CreateRequestRouterWithPath("GET", "/RH-9?filter[filter]=abcd", nil, "", AdvisoryDetailHandler,
-		"/:advisory_id", core.ContextKV{Key: middlewares.KeyApiver, Value: 2})
+		"/:advisory_id", core.V2APICtx)
 
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)

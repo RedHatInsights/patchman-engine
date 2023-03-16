@@ -7,10 +7,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const LatestAPIVersion = 3
+
 type ContextKV struct {
 	Key   string
 	Value any
 }
+
+var V1APICtx = ContextKV{Key: middlewares.KeyApiver, Value: 1}
+var V2APICtx = ContextKV{Key: middlewares.KeyApiver, Value: 2}
 
 func InitRouter(handler gin.HandlerFunc, contextKVs ...ContextKV) *gin.Engine {
 	return InitRouterWithPath(handler, "/", contextKVs...)
@@ -25,6 +30,8 @@ func InitRouterWithParams(handler gin.HandlerFunc, account int, method, path str
 		router.Use(middlewares.DatabaseWithContext())
 	}
 	router.Use(func(c *gin.Context) {
+		// set default api version for tests to latest
+		c.Set(middlewares.KeyApiver, 3)
 		for _, kv := range contextKVs {
 			c.Set(kv.Key, kv.Value)
 		}

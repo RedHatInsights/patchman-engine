@@ -4,7 +4,6 @@ import (
 	"app/base/core"
 	"app/base/database"
 	"app/base/utils"
-	"app/manager/middlewares"
 	"fmt"
 	"net/http"
 	"testing"
@@ -21,8 +20,7 @@ func TestInit(t *testing.T) {
 
 func testAdvisories(t *testing.T, url string) AdvisoriesResponseV3 {
 	core.SetupTest(t)
-	w := CreateRequest("GET", url, nil, "", AdvisoriesListHandler,
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	w := CreateRequest("GET", url, nil, "", AdvisoriesListHandler)
 
 	var output AdvisoriesResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -31,8 +29,7 @@ func testAdvisories(t *testing.T, url string) AdvisoriesResponseV3 {
 
 func testAdvisoriesIDs(t *testing.T, url string) IDsResponse {
 	core.SetupTest(t)
-	w := CreateRequest("GET", url, nil, "", AdvisoriesListIDsHandler,
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	w := CreateRequest("GET", url, nil, "", AdvisoriesListIDsHandler)
 
 	var output IDsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -100,8 +97,7 @@ func TestAdvisoriesOffset(t *testing.T) {
 
 func TestAdvisoriesOffsetOverflow(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequest("GET", "/?offset=13&limit=4", nil, "", AdvisoriesListHandler,
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	w := CreateRequest("GET", "/?offset=13&limit=4", nil, "", AdvisoriesListHandler)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -229,8 +225,7 @@ func TestAdvisoriesPossibleSorts(t *testing.T) {
 			continue
 		}
 
-		w := CreateRequest("GET", fmt.Sprintf("/?sort=%v", sort), nil, "", AdvisoriesListHandler,
-			core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+		w := CreateRequest("GET", fmt.Sprintf("/?sort=%v", sort), nil, "", AdvisoriesListHandler)
 
 		var output AdvisoriesResponseV3
 		CheckResponse(t, w, http.StatusOK, &output)
@@ -241,8 +236,7 @@ func TestAdvisoriesPossibleSorts(t *testing.T) {
 
 func TestAdvisoriesWrongSort(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequest("GET", "/?sort=unknown_key", nil, "", AdvisoriesListHandler,
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	w := CreateRequest("GET", "/?sort=unknown_key", nil, "", AdvisoriesListHandler)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
@@ -294,8 +288,7 @@ func TestAdvisoriesTags(t *testing.T) {
 
 func TestListAdvisoriesTagsInvalid(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil, "", AdvisoriesListHandler, "/",
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	w := CreateRequestRouterWithPath("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil, "", AdvisoriesListHandler, "/")
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -304,8 +297,7 @@ func TestListAdvisoriesTagsInvalid(t *testing.T) {
 
 func doTestWrongOffset(t *testing.T, path, q string, handler gin.HandlerFunc) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", q, nil, "", handler, 3, "GET", path,
-		core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+	w := CreateRequestRouterWithParams("GET", q, nil, "", handler, 3, "GET", path)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -319,7 +311,7 @@ func TestAdvisoriesWrongOffset(t *testing.T) {
 func TestAdvisoryTagsInMetadata(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "", AdvisoriesListHandler,
-		"/:advisory_id", core.ContextKV{Key: middlewares.KeyApiver, Value: 3})
+		"/:advisory_id")
 
 	var output AdvisoriesResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
