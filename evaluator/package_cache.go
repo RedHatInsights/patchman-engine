@@ -44,6 +44,11 @@ func NewPackageCache(enabled bool, preload bool, size int, nameSize int) *Packag
 	c.size = size
 	c.nameSize = nameSize
 
+	packageCacheGauge.WithLabelValues("id").Set(0)
+	packageCacheGauge.WithLabelValues("nevra").Set(0)
+	packageCacheGauge.WithLabelValues("name").Set(0)
+	packageCacheGauge.WithLabelValues("nameByID").Set(0)
+
 	if c.enabled {
 		var err error
 		c.byID, err = lru.New(c.size)
@@ -120,6 +125,7 @@ func (c *PackageCache) GetByID(id int64) (*PackageCacheMetadata, bool) {
 	if c.enabled {
 		val, ok := c.byID.Get(id)
 		if ok {
+			packageCacheCnt.WithLabelValues("hit", "id").Inc()
 			utils.LogTrace("id", id, "PackageCache.GetByID cache hit")
 			metadata := val.(*PackageCacheMetadata)
 			return metadata, true
@@ -132,6 +138,7 @@ func (c *PackageCache) GetByID(id int64) (*PackageCacheMetadata, bool) {
 		utils.LogTrace("id", id, "PackageCache.GetByID read from db")
 		return metadata, true
 	}
+	packageCacheCnt.WithLabelValues("miss", "id").Inc()
 	utils.LogTrace("id", id, "PackageCache.GetByID not found")
 	return nil, false
 }
@@ -140,6 +147,7 @@ func (c *PackageCache) GetByNevra(nevra string) (*PackageCacheMetadata, bool) {
 	if c.enabled {
 		val, ok := c.byNevra.Get(nevra)
 		if ok {
+			packageCacheCnt.WithLabelValues("hit", "nevra").Inc()
 			utils.LogTrace("nevra", nevra, "PackageCache.GetByNevra cache hit")
 			metadata := val.(*PackageCacheMetadata)
 			return metadata, true
@@ -152,6 +160,7 @@ func (c *PackageCache) GetByNevra(nevra string) (*PackageCacheMetadata, bool) {
 		utils.LogTrace("nevra", nevra, "PackageCache.GetByNevra read from db")
 		return metadata, true
 	}
+	packageCacheCnt.WithLabelValues("miss", "nevra").Inc()
 	utils.LogTrace("nevra", nevra, "PackageCache.GetByNevra not found")
 	return nil, false
 }
@@ -160,6 +169,7 @@ func (c *PackageCache) GetLatestByName(name string) (*PackageCacheMetadata, bool
 	if c.enabled {
 		val, ok := c.latestByName.Get(name)
 		if ok {
+			packageCacheCnt.WithLabelValues("hit", "name").Inc()
 			utils.LogTrace("name", name, "PackageCache.GetLatestByName cache hit")
 			metadata := val.(*PackageCacheMetadata)
 			return metadata, true
@@ -172,6 +182,7 @@ func (c *PackageCache) GetLatestByName(name string) (*PackageCacheMetadata, bool
 		utils.LogTrace("name", name, "PackageCache.GetLatestByName read from db")
 		return metadata, true
 	}
+	packageCacheCnt.WithLabelValues("miss", "name").Inc()
 	utils.LogTrace("name", name, "PackageCache.GetLatestByName not found")
 	return nil, false
 }
@@ -180,6 +191,7 @@ func (c *PackageCache) GetNameByID(id int64) (string, bool) {
 	if c.enabled {
 		val, ok := c.nameByID.Get(id)
 		if ok {
+			packageCacheCnt.WithLabelValues("hit", "nameByID").Inc()
 			utils.LogTrace("id", id, "PackageCache.GetNameByID cache hit")
 			metadata := val.(*PackageCacheMetadata)
 			return metadata.Name, true
@@ -192,6 +204,7 @@ func (c *PackageCache) GetNameByID(id int64) (string, bool) {
 		utils.LogTrace("id", id, "PackageCache.GetNameByID read from db")
 		return metadata.Name, true
 	}
+	packageCacheCnt.WithLabelValues("miss", "nameByID").Inc()
 	utils.LogTrace("id", id, "PackageCache.GetNameByID not found")
 	return "", false
 }
@@ -205,6 +218,7 @@ func (c *PackageCache) Add(pkg *PackageCacheMetadata) {
 
 func (c *PackageCache) addByID(pkg *PackageCacheMetadata) {
 	evicted := c.byID.Add(pkg.ID, pkg)
+	packageCacheGauge.WithLabelValues("id").Inc()
 	utils.LogTrace("byID", pkg.ID, "evicted", evicted, "PackageCache.addByID")
 }
 
@@ -218,6 +232,7 @@ func (c *PackageCache) addByNevra(pkg *PackageCacheMetadata) {
 	}
 	nevraString := nevra.StringE(true)
 	evicted := c.byNevra.Add(nevraString, pkg)
+	packageCacheGauge.WithLabelValues("nevra").Inc()
 	utils.LogTrace("byNevra", nevraString, "evicted", evicted, "PackageCache.addByNevra")
 }
 
@@ -231,6 +246,7 @@ func (c *PackageCache) addLatestByName(pkg *PackageCacheMetadata) {
 		// if there is no record yet
 		// or it has older EVR we have to replace it
 		evicted := c.latestByName.Add(pkg.Name, pkg)
+		packageCacheGauge.WithLabelValues("name").Inc()
 		utils.LogTrace("latestByName", pkg.Name, "evicted", evicted, "PackageCache.addLatestByName")
 	}
 }
@@ -239,6 +255,7 @@ func (c *PackageCache) addNameByID(pkg *PackageCacheMetadata) {
 	ok, evicted := c.nameByID.ContainsOrAdd(pkg.NameID, pkg)
 	if !ok {
 		// name was not there and we've added it
+		packageCacheGauge.WithLabelValues("nameByID").Inc()
 		utils.LogTrace("nameByID", pkg.NameID, "evicted", evicted, "PackageCache.addNameByID")
 	}
 }
