@@ -54,11 +54,40 @@ var (
 		Name:      "two_evaluations_interval_hours",
 		Buckets:   []float64{1, 2, 6, 24, 72, 168},
 	})
+
+	packageCacheCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help:      "How many packages hit/miss package cache",
+		Namespace: "patchman_engine",
+		Subsystem: "evaluator",
+		Name:      "package_cache",
+	}, []string{"type", "by"})
+
+	packageCacheGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Help:      "Package cache size",
+		Namespace: "patchman_engine",
+		Subsystem: "evaluator",
+		Name:      "package_cache_size",
+	}, []string{"by"})
+
+	vmaasCacheCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help:      "How many vmaas checksums hit/miss cache",
+		Namespace: "patchman_engine",
+		Subsystem: "evaluator",
+		Name:      "vmaas_cache",
+	}, []string{"type"})
+
+	vmaasCacheGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+		Help:      "VMaaS cache size",
+		Namespace: "patchman_engine",
+		Subsystem: "evaluator",
+		Name:      "vmaas_cache_size",
+	})
 )
 
 func RunMetrics() {
 	prometheus.MustRegister(evaluationCnt, updatesCnt, evaluationDuration, evaluationPartDuration,
-		uploadEvaluationDelay, twoEvaluationsInterval)
+		uploadEvaluationDelay, twoEvaluationsInterval, packageCacheCnt, packageCacheGauge,
+		vmaasCacheCnt, vmaasCacheGauge)
 
 	// create web app
 	app := gin.New()

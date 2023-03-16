@@ -27,6 +27,7 @@ func NewVmaasPackageCache(enabled bool, size int, checkDuration time.Duration) *
 	c.size = size
 	c.validity = vmaas_sync.GetLastSync(vmaas_sync.VmaasExported)
 	c.checkDuration = checkDuration
+	vmaasCacheGauge.Set(0)
 
 	if c.enabled {
 		var err error
@@ -43,16 +44,19 @@ func (c *VmaasCache) Get(checksum *string) (*vmaas.UpdatesV2Response, bool) {
 	if c.enabled && checksum != nil {
 		val, ok := c.data.Get(checksum)
 		if ok {
+			vmaasCacheCnt.WithLabelValues("hit").Inc()
 			utils.LogTrace("checksum", checksum, "VmaasCache.Get cache hit")
 			response := val.(*vmaas.UpdatesV2Response)
 			return response, true
 		}
 	}
+	vmaasCacheCnt.WithLabelValues("miss").Inc()
 	return nil, false
 }
 
 func (c *VmaasCache) Add(checksum *string, response *vmaas.UpdatesV2Response) {
 	if c.enabled && checksum != nil {
+		vmaasCacheGauge.Inc()
 		c.data.Add(checksum, response)
 	}
 }
@@ -60,6 +64,7 @@ func (c *VmaasCache) Add(checksum *string, response *vmaas.UpdatesV2Response) {
 func (c *VmaasCache) Reset(ts *types.Rfc3339TimestampWithZ) {
 	c.data.Purge()
 	c.validity = ts
+	vmaasCacheGauge.Set(0)
 }
 
 func (c *VmaasCache) CheckValidity() {

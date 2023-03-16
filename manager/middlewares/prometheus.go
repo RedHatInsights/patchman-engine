@@ -29,9 +29,24 @@ var callerSourceCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Name:      "caller_source",
 }, []string{"source", "account"})
 
+var AdvisoryDetailCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Help:      "How many advisories hit/miss cache",
+	Namespace: "patchman_engine",
+	Subsystem: "manager",
+	Name:      "advisory_detail_cache",
+}, []string{"type"})
+
+var AdvisoryDetailGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+	Help:      "Advisory detail cache size",
+	Namespace: "patchman_engine",
+	Subsystem: "manager",
+	Name:      "advisory_detail_cache_size",
+})
+
 // Create and configure Prometheus middleware to expose metrics
 func Prometheus() *ginprometheus.Prometheus {
-	prometheus.MustRegister(serviceErrorCnt, requestDurations, callerSourceCnt)
+	prometheus.MustRegister(serviceErrorCnt, requestDurations, callerSourceCnt,
+		AdvisoryDetailCnt, AdvisoryDetailGauge)
 
 	p := ginprometheus.NewPrometheus("patchman_engine")
 	p.MetricsPath = utils.Cfg.MetricsPath

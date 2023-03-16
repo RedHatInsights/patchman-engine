@@ -235,6 +235,7 @@ func pkgsV2topkgsV1(pkgsV2 packagesV2) packagesV1 {
 }
 
 func initAdvisoryDetailCache() *lru.Cache {
+	middlewares.AdvisoryDetailGauge.Set(0)
 	if !enableAdvisoryDetailCache {
 		return nil
 	}
@@ -280,9 +281,11 @@ func tryGetAdvisoryFromCacheV2(advisoryName string) *AdvisoryDetailResponseV2 {
 
 	val, ok := advisoryDetailCacheV2.Get(advisoryName)
 	if !ok {
+		middlewares.AdvisoryDetailCnt.WithLabelValues("miss").Inc()
 		return nil
 	}
 	resp := val.(AdvisoryDetailResponseV2)
+	middlewares.AdvisoryDetailCnt.WithLabelValues("hit").Inc()
 	return &resp
 }
 
@@ -291,6 +294,7 @@ func tryAddAdvisoryToCacheV2(advisoryName string, resp *AdvisoryDetailResponseV2
 		return
 	}
 	evicted := advisoryDetailCacheV2.Add(advisoryName, *resp)
+	middlewares.AdvisoryDetailGauge.Inc()
 	utils.LogDebug("evictedV2", evicted, "advisoryName", advisoryName, "saved to cache")
 }
 
