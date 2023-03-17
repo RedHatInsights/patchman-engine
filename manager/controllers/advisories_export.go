@@ -61,8 +61,8 @@ func AdvisoriesExportHandler(c *gin.Context) {
 
 	// update release_version field
 	for i := range advisories {
-		advisories[i].SystemAdvisoryItemAttributes =
-			systemAdvisoryItemAttributeParse(advisories[i].SystemAdvisoryItemAttributes)
+		advisories[i].AdvisoryItemAttributesCommon =
+			fillAdvisoryItemAttributeReleaseVersion(advisories[i].AdvisoryItemAttributesCommon)
 	}
 
 	apiver := c.GetInt(middlewares.KeyApiver)
@@ -81,7 +81,7 @@ func advisoriesDBLookupV3toV2(advisories []AdvisoriesDBLookupV3) []AdvisoriesDBL
 		dataV2[i] = AdvisoriesDBLookupV2{
 			AdvisoriesDBLookupCommon: v.AdvisoriesDBLookupCommon,
 			AdvisoryItemAttributesV2: AdvisoryItemAttributesV2{
-				SystemAdvisoryItemAttributes: v.SystemAdvisoryItemAttributes,
+				AdvisoryItemAttributesCommon: v.AdvisoryItemAttributesCommon,
 				AdvisoryItemAttributesV2Only: AdvisoryItemAttributesV2Only{
 					// this is not typo, v2 applicable_systems are instalable systems in v3
 					ApplicableSystems: v.InstallableSystems,
