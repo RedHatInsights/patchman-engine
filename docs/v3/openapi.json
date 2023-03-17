@@ -4765,10 +4765,6 @@
             "controllers.AdvisoriesDBLookupV3": {
                 "type": "object",
                 "properties": {
-                    "advisory_type": {
-                        "type": "integer",
-                        "description": "Deprecated, not useful database ID (0 - unknown, 1 -, enhancement, 2 - bugfix, 3 - security, 4 - unspecified)"
-                    },
                     "advisory_type_name": {
                         "type": "string",
                         "description": "Advisory type name, proper ordering ensured (unknown, unspecified, other, enhancement, bugfix, security)"
@@ -4926,10 +4922,6 @@
             "controllers.AdvisoryItemAttributesV3": {
                 "type": "object",
                 "properties": {
-                    "advisory_type": {
-                        "type": "integer",
-                        "description": "Deprecated, not useful database ID (0 - unknown, 1 -, enhancement, 2 - bugfix, 3 - security, 4 - unspecified)"
-                    },
                     "advisory_type_name": {
                         "type": "string",
                         "description": "Advisory type name, proper ordering ensured (unknown, unspecified, other, enhancement, bugfix, security)"
@@ -5680,10 +5672,6 @@
             "controllers.SystemAdvisoriesDBLookup": {
                 "type": "object",
                 "properties": {
-                    "advisory_type": {
-                        "type": "integer",
-                        "description": "Deprecated, not useful database ID (0 - unknown, 1 -, enhancement, 2 - bugfix, 3 - security, 4 - unspecified)"
-                    },
                     "advisory_type_name": {
                         "type": "string",
                         "description": "Advisory type name, proper ordering ensured (unknown, unspecified, other, enhancement, bugfix, security)"
@@ -5711,6 +5699,9 @@
                     },
                     "severity": {
                         "type": "integer"
+                    },
+                    "status": {
+                        "type": "string"
                     },
                     "synopsis": {
                         "type": "string"
@@ -5752,10 +5743,6 @@
             "controllers.SystemAdvisoryItemAttributes": {
                 "type": "object",
                 "properties": {
-                    "advisory_type": {
-                        "type": "integer",
-                        "description": "Deprecated, not useful database ID (0 - unknown, 1 -, enhancement, 2 - bugfix, 3 - security, 4 - unspecified)"
-                    },
                     "advisory_type_name": {
                         "type": "string",
                         "description": "Advisory type name, proper ordering ensured (unknown, unspecified, other, enhancement, bugfix, security)"
@@ -5780,6 +5767,9 @@
                     },
                     "severity": {
                         "type": "integer"
+                    },
+                    "status": {
+                        "type": "string"
                     },
                     "synopsis": {
                         "type": "string"
