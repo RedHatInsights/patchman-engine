@@ -22,7 +22,6 @@ func TestSystemAdvisoriesDefault(t *testing.T) {
 	assert.Equal(t, "advisory", output.Data[0].Type)
 	assert.Equal(t, "adv-7-des", output.Data[0].Attributes.Description)
 	assert.Equal(t, "adv-7-syn", output.Data[0].Attributes.Synopsis)
-	assert.Equal(t, 1, output.Data[0].Attributes.AdvisoryType)
 	assert.Equal(t, "enhancement", output.Data[0].Attributes.AdvisoryTypeName)
 	assert.Equal(t, "2017-09-22 19:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
 	assert.Equal(t, "2017-09-22 19:00:00 +0000 UTC", output.Data[0].Attributes.PublicDate.String())
