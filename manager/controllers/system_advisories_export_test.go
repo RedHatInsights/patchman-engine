@@ -30,9 +30,9 @@ func TestSystemAdvisoriesExportCSV(t *testing.T) {
 	lines := strings.Split(body, "\n")
 
 	assert.Equal(t, 10, len(lines))
-	assert.Equal(t, "id,description,public_date,synopsis,advisory_type,advisory_type_name,severity,cve_count,"+
+	assert.Equal(t, "id,description,public_date,synopsis,advisory_type_name,severity,cve_count,"+
 		"reboot_required,release_versions", lines[0])
-	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,1,enhancement,,0,false,\"7.0,7Server\"", lines[1])
+	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,enhancement,,0,false,\"7.0,7Server\"", lines[1])
 }
 
 func TestUnknownSystemAdvisoriesExport(t *testing.T) {
