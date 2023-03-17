@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/manager/middlewares"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -49,6 +50,22 @@ type AdvisoriesDBLookupV3 struct {
 	AdvisoryItemAttributesV3
 }
 
+// nolint:lll
+type AdvisoryItemAttributesCommon struct {
+	Description      string    `json:"description" csv:"description" query:"am.description" gorm:"column:description"`
+	PublicDate       time.Time `json:"public_date" csv:"public_date" query:"am.public_date" gorm:"column:public_date"`
+	Synopsis         string    `json:"synopsis" csv:"synopsis" query:"am.synopsis" gorm:"column:synopsis"`
+	AdvisoryType     int       `json:"advisory_type" csv:"advisory_type" query:"am.advisory_type_id" gorm:"column:advisory_type"`                                // Deprecated, not useful database ID (0 - unknown, 1 -, enhancement, 2 - bugfix, 3 - security, 4 - unspecified)
+	AdvisoryTypeName string    `json:"advisory_type_name" csv:"advisory_type_name" query:"at.name" order_query:"at.preference" gorm:"column:advisory_type_name"` // Advisory type name, proper ordering ensured (unknown, unspecified, other, enhancement, bugfix, security)
+	Severity         *int      `json:"severity,omitempty" csv:"severity" query:"am.severity_id" gorm:"column:severity"`
+	CveCount         int       `json:"cve_count" csv:"cve_count" query:"CASE WHEN jsonb_typeof(am.cve_list) = 'array' THEN jsonb_array_length(am.cve_list) ELSE 0 END" gorm:"column:cve_count"`
+	RebootRequired   bool      `json:"reboot_required" csv:"reboot_required" query:"am.reboot_required" gorm:"column:reboot_required"`
+	ReleaseVersions  RelList   `json:"release_versions" csv:"release_versions" query:"null" gorm:"-"`
+
+	// helper field to get release_version json from db and parse it to ReleaseVersions field
+	ReleaseVersionsJSONB []byte `json:"-" csv:"-" query:"am.release_versions" gorm:"column:release_versions_json"`
+}
+
 // nolint: lll
 type AdvisoryItemAttributesV2Only struct {
 	// this is not typo, v2 applicable_systems are instalable systems in v3
@@ -62,12 +79,12 @@ type AdvisoryItemAttributesV3Only struct {
 }
 
 type AdvisoryItemAttributesV2 struct {
-	SystemAdvisoryItemAttributes
+	AdvisoryItemAttributesCommon
 	AdvisoryItemAttributesV2Only
 }
 
 type AdvisoryItemAttributesV3 struct {
-	SystemAdvisoryItemAttributes
+	AdvisoryItemAttributesCommon
 	AdvisoryItemAttributesV3Only
 }
 
@@ -283,10 +300,10 @@ func buildAdvisoriesData(advisories []AdvisoriesDBLookupV3) ([]AdvisoryItemV3, i
 	data := make([]AdvisoryItemV3, len(advisories))
 	for i := 0; i < len(advisories); i++ {
 		advisory := (advisories)[i]
-		advisory.SystemAdvisoryItemAttributes = systemAdvisoryItemAttributeParse(advisory.SystemAdvisoryItemAttributes)
+		advisory.AdvisoryItemAttributesCommon = fillAdvisoryItemAttributeReleaseVersion(advisory.AdvisoryItemAttributesCommon)
 		data[i] = AdvisoryItemV3{
 			Attributes: AdvisoryItemAttributesV3{
-				SystemAdvisoryItemAttributes: advisory.SystemAdvisoryItemAttributes,
+				AdvisoryItemAttributesCommon: advisory.AdvisoryItemAttributesCommon,
 				AdvisoryItemAttributesV3Only: AdvisoryItemAttributesV3Only{
 					InstallableSystems: advisory.InstallableSystems,
 					ApplicableSystems:  advisory.ApplicableSystems,
@@ -305,7 +322,7 @@ func advisoryItemV3toV2(items []AdvisoryItemV3) []AdvisoryItemV2 {
 	for i := 0; i < nItems; i++ {
 		itemsV2[i] = AdvisoryItemV2{
 			Attributes: AdvisoryItemAttributesV2{
-				SystemAdvisoryItemAttributes: items[i].Attributes.SystemAdvisoryItemAttributes,
+				AdvisoryItemAttributesCommon: items[i].Attributes.AdvisoryItemAttributesCommon,
 				AdvisoryItemAttributesV2Only: AdvisoryItemAttributesV2Only{
 					// this is not typo, v2 applicable_systems are instalable systems in v3
 					ApplicableSystems: items[i].Attributes.InstallableSystems,

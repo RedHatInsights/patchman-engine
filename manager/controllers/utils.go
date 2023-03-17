@@ -754,7 +754,7 @@ func (s *AdvisorySystemDBLookupSlice) ParseAndFillTags() {
 	}
 }
 
-func systemAdvisoryItemAttributeParse(advisory SystemAdvisoryItemAttributes) SystemAdvisoryItemAttributes {
+func fillAdvisoryItemAttributeReleaseVersion(advisory AdvisoryItemAttributesCommon) AdvisoryItemAttributesCommon {
 	// parse release version from json to []strings
 	var err error
 	advisory.ReleaseVersions, err = parseJSONList(advisory.ReleaseVersionsJSONB)
