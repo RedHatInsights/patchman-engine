@@ -403,7 +403,7 @@ func parseFiltersFromCtx(c *gin.Context, filters Filters) {
 	filter.Visit(func(path []string, val string) {
 		// Specific filter keys
 		if len(path) >= 1 && path[0] == "sap_sids" {
-			val = fmt.Sprintf(`"%s"`, val)
+			val = strconv.Quote(val)
 			var op string
 			if op = "eq"; len(path) > 1 {
 				op = path[1]
