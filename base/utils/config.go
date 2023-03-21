@@ -186,21 +186,38 @@ func initKafkaFromClowder() {
 	}
 }
 
+type Endpoint clowder.DependencyEndpoint
+
 func initServicesFromClowder() {
 	webappName := "webapp-service"
 	if GetBoolEnvOrDefault("USE_VMAAS_GO", false) {
 		webappName = "webapp-go"
 	}
 	for _, endpoint := range clowder.LoadedConfig.Endpoints {
+		endpoint := endpoint
 		switch endpoint.App {
 		case "vmaas":
 			if strings.Contains(endpoint.Name, webappName) {
-				Cfg.VmaasAddress = fmt.Sprintf("http://%s:%d", endpoint.Hostname, endpoint.Port)
+				Cfg.VmaasAddress = (*Endpoint)(&endpoint).buildURL("http")
 			}
 		case "rbac":
-			Cfg.RbacAddress = fmt.Sprintf("http://%s:%d", endpoint.Hostname, endpoint.Port)
+			Cfg.RbacAddress = (*Endpoint)(&endpoint).buildURL("http")
 		}
 	}
+}
+
+func (e *Endpoint) buildURL(scheme string) string {
+	return buildURL(scheme, e.Hostname, e.Port, e.TlsPort)
+}
+
+func buildURL(scheme, host string, port int, tlsPort *int) string {
+	if clowder.LoadedConfig.TlsCAPath != nil {
+		scheme += "s"
+		if tlsPort != nil {
+			port = *tlsPort
+		}
+	}
+	return fmt.Sprintf("%s://%s:%d", scheme, host, port)
 }
 
 func initCloudwatchFromClowder() {
