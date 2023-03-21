@@ -114,6 +114,7 @@ objects:
         - {name: EVAL_TOPIC, value: '${EVAL_TOPIC_MANAGER}'}
         - {name: ENABLE_PACKAGE_CACHE, value: '${ENABLE_PACKAGE_CACHE_MANAGER}'}
         - {name: RESPONSE_TIMEOUT, value: '${RESPONSE_TIMEOUT}'}
+        - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_MANAGER}', memory: '${RES_LIMIT_MEM_MANAGER}'}
@@ -225,6 +226,7 @@ objects:
         - {name: ENABLE_PAYLOAD_TRACKER, value: '${ENABLE_PAYLOAD_TRACKER}'}
         - {name: ENABLE_INSTANT_NOTIFICATIONS, value: '${ENABLE_INSTANT_NOTIFICATIONS}'}
         - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
+        - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_UPLOAD}', memory: '${RES_LIMIT_MEM_EVALUATOR_UPLOAD}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_UPLOAD}', memory: '${RES_REQUEST_MEM_EVALUATOR_UPLOAD}'}
@@ -289,6 +291,7 @@ objects:
         - {name: ENABLE_PAYLOAD_TRACKER, value: 'false'}  # we don't need to send payload tracker messages from recalc
         - {name: ENABLE_INSTANT_NOTIFICATIONS, value: '${ENABLE_INSTANT_NOTIFICATIONS}'}
         - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
+        - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_RECALC}', memory: '${RES_LIMIT_MEM_EVALUATOR_RECALC}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_RECALC}', memory: '${RES_REQUEST_MEM_EVALUATOR_RECALC}'}
@@ -336,6 +339,7 @@ objects:
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
         - {name: FULL_SYNC_CADENCE,value: '${FULL_SYNC_CADENCE}'}
+        - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_VMAAS_SYNC}', memory: '${RES_LIMIT_MEM_VMAAS_SYNC}'}
           requests: {cpu: '${RES_REQUEST_CPU_VMAAS_SYNC}', memory: '${RES_REQUEST_MEM_VMAAS_SYNC}'}
@@ -682,6 +686,7 @@ parameters:
 - {name: VMAAS_CALL_USE_OPTIMISTIC_UPDATES, value: 'true'} # Always use "optimistic_updates" in vmaas request (not only for third party usage).
 - {name: MSG_BATCH_SIZE, value: '4000'} # BatchSize for PlatformEvent message
 - {name: ENABLE_PAYLOAD_TRACKER, value: 'true'} # Send status messages to payload tracker
+- {name: SSL_CERT_DIR, value: '/etc/ssl/certs:/etc/pki/tls/certs:/system/etc/security/cacerts:/cdapp/certs'}
 
 # Turnpike
 - {name: IMAGE_TAG_ADMIN, value: v3.1.20}
