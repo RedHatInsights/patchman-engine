@@ -18,7 +18,7 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	api.Use(middlewares.SetAPIVersion(api.BasePath()))
 
 	advisories := api.Group("/advisories")
-	advisories.GET("/", controllers.AdvisoriesListHandler)
+	advisories.GET("", controllers.AdvisoriesListHandler)
 	go controllers.PreloadAdvisoryCacheItems()
 	advisories.GET("/:advisory_id", controllers.AdvisoryDetailHandler)
 	advisories.GET("/:advisory_id/systems", controllers.AdvisorySystemsListHandler)
@@ -26,7 +26,7 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	if config.EnableBaselines {
 		baselines := api.Group("/baselines")
 		baselines.Use(middlewares.EntitlementsAuthenticator())
-		baselines.GET("/", controllers.BaselinesListHandler)
+		baselines.GET("", controllers.BaselinesListHandler)
 		baselines.GET("/:baseline_id", controllers.BaselineDetailHandler)
 		baselines.GET("/:baseline_id/systems", controllers.BaselineSystemsListHandler)
 		baselines.PUT("/", controllers.CreateBaselineHandler)
@@ -36,7 +36,7 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	}
 
 	systems := api.Group("/systems")
-	systems.GET("/", controllers.SystemsListHandler)
+	systems.GET("", controllers.SystemsListHandler)
 	systems.GET("/:inventory_id", controllers.SystemDetailHandler)
 	systems.GET("/:inventory_id/advisories", controllers.SystemAdvisoriesHandler)
 	systems.GET("/:inventory_id/packages", controllers.SystemPackagesHandler)
@@ -45,7 +45,7 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	api.GET("/tags", controllers.SystemTagListHandler)
 
 	packages := api.Group("/packages")
-	packages.GET("/", controllers.PackagesListHandler)
+	packages.GET("", controllers.PackagesListHandler)
 	packages.GET("/:package_name/systems", controllers.PackageSystemsListHandler)
 	packages.GET("/:package_name/versions", controllers.PackageVersionsListHandler)
 	packages.GET("/:package_name", controllers.PackageDetailHandler)
