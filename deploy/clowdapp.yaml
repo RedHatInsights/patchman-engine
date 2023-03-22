@@ -101,6 +101,11 @@ objects:
         - {name: DB_USER, value: manager}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                        key: manager-database-password}}}
+        - {name: DB_HOST_READ_REPLICA, valueFrom: {secretKeyRef: {key: db.host,
+                                                                  name: patchman-db-readonly}}}
+        - {name: DB_PORT_READ_REPLICA, valueFrom: {secretKeyRef: {key: db.port,
+                                                                  name: patchman-db-readonly}}}
+        - {name: DB_READ_REPLICA_ENABLED, value: '${DB_READ_REPLICA_ENABLED}'}
         - {name: ENABLE_CYNDI_TAGS, value: '${ENABLE_CYNDI_TAGS}'}
         - {name: ENABLE_RBAC, value: '${ENABLE_RBAC}'}
         - {name: DISABLE_CACHE_COUNTS, value: '${DISABLE_CACHE_COUNTS}'}
@@ -523,6 +528,16 @@ objects:
     vmaas-sync-database-password: dm1hYXMtc3luYw== # vmaas-sync
     cyndi-database-password: Y3luZGk= # cyndi
 
+- apiVersion: v1
+  data:
+    db.host: ""
+    db.port: "MA=="
+  kind: Secret
+  metadata:
+    name: patchman-db-readonly
+    namespace: test  # namespace is overwritten by bonfire
+  type: Opaque
+
 parameters:
 # Manager
 - {name: REPLICAS_MANAGER, value: '1'}
@@ -545,6 +560,7 @@ parameters:
 - {name: RES_REQUEST_CPU_MANAGER, value: 200m}
 - {name: RES_REQUEST_MEM_MANAGER, value: 256Mi}
 - {name: RESPONSE_TIMEOUT, value: '60'}
+- {name: DB_READ_REPLICA_ENABLED, value: 'TRUE'}
 
 # Listener
 - {name: REPLICAS_LISTENER, value: '1'}
