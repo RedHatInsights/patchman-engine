@@ -219,3 +219,7 @@ func DBWait(waitForDB string) {
 		}()
 	}
 }
+
+func ReadReplicaConfigured() bool {
+	return len(utils.Cfg.DBReadReplicaHost) > 0 && utils.Cfg.DBReadReplicaPort != 0
+}

@@ -13,13 +13,14 @@ import (
 
 var (
 	Db                 *gorm.DB //nolint:stylecheck
+	DbReadReplica      *gorm.DB //nolint:stylecheck
 	OtherAdvisoryTypes []string
 	AdvisoryTypes      map[int]string
 	globalPgConfig     *PostgreSQLConfig
 )
 
 func InitDB() {
-	pgConfig := loadEnvPostgreSQLConfig()
+	pgConfig := loadEnvPostgreSQLConfig(false)
 	if Db != nil && pgConfig == globalPgConfig {
 		// reuse connection
 		check(Db)
@@ -28,6 +29,11 @@ func InitDB() {
 	globalPgConfig = pgConfig
 	Db = openPostgreSQL(pgConfig)
 	check(Db)
+	if utils.Cfg.DBReadReplicaEnabled {
+		pgConfig := loadEnvPostgreSQLConfig(ReadReplicaConfigured())
+		DbReadReplica = openPostgreSQL(pgConfig)
+		check(DbReadReplica)
+	}
 }
 
 // Configure Configure database, PostgreSQL or SQLite connection
@@ -98,11 +104,17 @@ func check(db *gorm.DB) {
 }
 
 // load database config from environment vars using inserted prefix
-func loadEnvPostgreSQLConfig() *PostgreSQLConfig {
+func loadEnvPostgreSQLConfig(useReadReplica bool) *PostgreSQLConfig {
+	host := utils.Cfg.DBHost
+	port := utils.Cfg.DBPort
+	if useReadReplica {
+		host = utils.Cfg.DBReadReplicaHost
+		port = utils.Cfg.DBReadReplicaPort
+	}
 	config := PostgreSQLConfig{
 		User:                   utils.Cfg.DBUser,
-		Host:                   utils.Cfg.DBHost,
-		Port:                   utils.Cfg.DBPort,
+		Host:                   host,
+		Port:                   port,
 		Database:               utils.Cfg.DBName,
 		Passwd:                 utils.Cfg.DBPassword,
 		SSLMode:                utils.Cfg.DBSslMode,

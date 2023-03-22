@@ -26,6 +26,9 @@ type Config struct {
 	DBMaxConnections         int
 	DBMaxIdleConnections     int
 	DBMaxConnectionLifetimeS int
+	DBReadReplicaHost        string
+	DBReadReplicaPort        int
+	DBReadReplicaEnabled     bool
 
 	// API
 	PublicPort      int
@@ -95,6 +98,11 @@ func initDBFromEnv() {
 	Cfg.DBMaxConnections = GetIntEnvOrDefault("DB_MAX_CONNECTIONS", 250)
 	Cfg.DBMaxIdleConnections = GetIntEnvOrDefault("DB_MAX_IDLE_CONNECTIONS", 50)
 	Cfg.DBMaxConnectionLifetimeS = GetIntEnvOrDefault("DB_MAX_CONNECTION_LIFETIME_S", 60)
+	Cfg.DBReadReplicaEnabled = GetBoolEnvOrDefault("DB_READ_REPLICA_ENABLED", false)
+	if Cfg.DBReadReplicaEnabled {
+		Cfg.DBReadReplicaHost = Getenv("DB_HOST_READ_REPLICA", "")
+		Cfg.DBReadReplicaPort = GetIntEnvOrDefault("DB_PORT_READ_REPLICA", 0)
+	}
 }
 
 func initKafkaFromEnv() {
