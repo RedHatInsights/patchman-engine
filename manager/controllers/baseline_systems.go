@@ -170,8 +170,7 @@ func BaselineSystemsListHandler(c *gin.Context) {
 func buildQueryBaselineSystems(db *gorm.DB, account int, baselineID int64, apiver int) *gorm.DB {
 	query := db.Table("system_platform AS sp").
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
-		Where("sp.rh_account_id = ? AND sp.baseline_id = ?", account, baselineID).
-		Where("sp.stale = false")
+		Where("sp.rh_account_id = ? AND sp.baseline_id = ?", account, baselineID)
 	if apiver < 3 {
 		query.Select(BaselineSystemSelectV2)
 	} else {

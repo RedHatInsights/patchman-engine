@@ -133,7 +133,6 @@ func buildQueryBaselines(db *gorm.DB, filters map[string]FilterData, account int
 		Select("sp.baseline_id, count(sp.inventory_id) as systems").
 		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Where("sp.rh_account_id = ?", account).
-		Where("sp.stale = false").
 		Group("sp.baseline_id")
 
 	subq, _ = ApplyTagsFilter(filters, subq, "sp.inventory_id")
