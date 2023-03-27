@@ -43,7 +43,7 @@ func TestAdvisoriesDefault(t *testing.T) {
 	assert.Equal(t, "adv-8-des", output.Data[3].Attributes.Description)
 	assert.Equal(t, "adv-8-syn", output.Data[3].Attributes.Synopsis)
 	assert.Equal(t, 1, output.Data[3].Attributes.InstallableSystems)
-	assert.Equal(t, 0, output.Data[3].Attributes.ApplicableSystems)
+	assert.Equal(t, 1, output.Data[3].Attributes.ApplicableSystems)
 	assert.Equal(t, false, output.Data[3].Attributes.RebootRequired)
 
 	// links
@@ -111,7 +111,7 @@ func TestAdvisoriesOrderDate(t *testing.T) {
 	assert.Equal(t, "adv-8-des", output.Data[3].Attributes.Description)
 	assert.Equal(t, "adv-8-syn", output.Data[3].Attributes.Synopsis)
 	assert.Equal(t, 1, output.Data[3].Attributes.InstallableSystems)
-	assert.Equal(t, 0, output.Data[3].Attributes.ApplicableSystems)
+	assert.Equal(t, 1, output.Data[3].Attributes.ApplicableSystems)
 }
 
 func TestAdvisoriesIDsOrderDate(t *testing.T) {
@@ -143,7 +143,7 @@ func TestAdvisoriesPatchedMissing(t *testing.T) {
 	assert.Equal(t, 12, len(output.Data))
 	assert.Equal(t, "RH-1", output.Data[2].ID)
 	assert.Equal(t, 4, output.Data[2].Attributes.InstallableSystems)
-	assert.Equal(t, 2, output.Data[2].Attributes.ApplicableSystems)
+	assert.Equal(t, 6, output.Data[2].Attributes.ApplicableSystems)
 }
 
 func TestAdvisoriesFilterTypeID1(t *testing.T) {
@@ -247,7 +247,7 @@ func TestAdvisoriesSearch(t *testing.T) {
 	assert.Equal(t, "adv-3-des", output.Data[0].Attributes.Description)
 	assert.Equal(t, "adv-3-syn", output.Data[0].Attributes.Synopsis)
 	assert.Equal(t, 1, output.Data[0].Attributes.InstallableSystems)
-	assert.Equal(t, 0, output.Data[0].Attributes.ApplicableSystems)
+	assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
 
 	// links
 	assert.Equal(t, "/?offset=0&limit=20&sort=-public_date&search=h-3",
@@ -279,7 +279,7 @@ func TestAdvisoriesTags(t *testing.T) {
 	output := testAdvisories(t, "/?sort=id&tags=ns1/k2=val2")
 	assert.Equal(t, 8, len(output.Data))
 	assert.Equal(t, 1, output.Data[0].Attributes.InstallableSystems)
-	assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
+	assert.Equal(t, 2, output.Data[0].Attributes.ApplicableSystems)
 	assert.Equal(t, "/?offset=0&limit=20&sort=id&tags=ns1/k2=val2", output.Links.First)
 }
 

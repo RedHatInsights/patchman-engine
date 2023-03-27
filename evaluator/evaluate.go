@@ -440,8 +440,7 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 		applicableBugCount := 0
 		applicableSecCount := 0
 		for _, sa := range new {
-			switch sa.StatusID {
-			case INSTALLABLE:
+			if sa.StatusID == INSTALLABLE {
 				switch sa.Advisory.AdvisoryTypeID {
 				case 1:
 					installableEnhCount++
@@ -451,17 +450,16 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 					installableSecCount++
 				}
 				installableCount++
-			case APPLICABLE:
-				switch sa.Advisory.AdvisoryTypeID {
-				case 1:
-					applicableEnhCount++
-				case 2:
-					applicableBugCount++
-				case 3:
-					applicableSecCount++
-				}
-				applicableCount++
 			}
+			switch sa.Advisory.AdvisoryTypeID {
+			case 1:
+				applicableEnhCount++
+			case 2:
+				applicableBugCount++
+			case 3:
+				applicableSecCount++
+			}
+			applicableCount++
 		}
 
 		data["installable_advisory_count_cache"] = installableCount

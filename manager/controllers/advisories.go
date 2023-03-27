@@ -262,7 +262,7 @@ func buildAdvisoryAccountDataQuery(db *gorm.DB, account int) *gorm.DB {
 	query := database.SystemAdvisories(db, account).
 		Select(`sa.advisory_id, sp.rh_account_id as rh_account_id,
 		        count(sp.*) filter (where sa.status_id = 0) as systems_installable,
-		        count(sp.*) filter (where sa.status_id = 1) as systems_applicable`).
+		        count(sp.*) as systems_applicable`).
 		Where("sp.stale = false").
 		Group("sp.rh_account_id, sa.advisory_id")
 
