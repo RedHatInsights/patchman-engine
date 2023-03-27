@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (106, false);
+VALUES (107, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -113,7 +113,7 @@ BEGIN
                aad.rh_account_id,
                -- Desired count depends on old count + change
                aad.systems_installable + case when sa.status_id = 0 then change else 0 end as systems_installable_dst,
-               aad.systems_applicable + case when sa.status_id = 1 then change else 0 end as systems_applicable_dst
+               aad.systems_applicable + change as systems_applicable_dst
           FROM advisory_account_data aad
           JOIN system_advisories sa ON aad.advisory_id = sa.advisory_id
           -- Filter advisory_account_data only for advisories affectign this system & belonging to system account
@@ -145,7 +145,7 @@ BEGIN
       INTO advisory_account_data (advisory_id, rh_account_id, systems_installable, systems_applicable)
     SELECT sa.advisory_id, NEW.rh_account_id,
            case when sa.status_id = 0 then 1 else 0 end as systems_installable,
-           case when sa.status_id = 1 then 1 else 0 end as systems_applicable
+           1 as systems_applicable
     FROM system_advisories sa
     WHERE sa.system_id = NEW.id AND sa.rh_account_id = NEW.rh_account_id
       AND change > 0
@@ -176,7 +176,7 @@ BEGIN
     WITH current_counts AS (
         SELECT sa.advisory_id, sa.rh_account_id,
                count(sa.*) filter (where sa.status_id = 0) as systems_installable,
-               count(sa.*) filter (where sa.status_id = 1) as systems_applicable
+               count(sa.*) as systems_applicable
           FROM system_advisories sa
           JOIN system_platform sp
             ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id
@@ -227,10 +227,10 @@ BEGIN
                COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 1 AND sa.status_id = 0) AS installable_enhancement,
                COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 2 AND sa.status_id = 0) AS installable_bugfix,
                COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 3 AND sa.status_id = 0) as installable_security,
-               COUNT(advisory_id) FILTER (WHERE sa.status_id = 1) as applicable_total,
-               COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 1 AND sa.status_id = 1) AS applicable_enhancement,
-               COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 2 AND sa.status_id = 1) AS applicable_bugfix,
-               COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 3 AND sa.status_id = 1) as applicable_security
+               COUNT(advisory_id) as applicable_total,
+               COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 1) AS applicable_enhancement,
+               COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 2) AS applicable_bugfix,
+               COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 3) as applicable_security
           FROM system_platform asp  -- this table ensures even systems without any system_advisories are in results
           LEFT JOIN system_advisories sa
             ON asp.rh_account_id = sa.rh_account_id AND asp.id = sa.system_id

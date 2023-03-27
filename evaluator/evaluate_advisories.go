@@ -185,13 +185,18 @@ func lockAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, deleteI
 	return err
 }
 
-// nolint: unparam
 func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs, installableIDs,
 	applicableIDs []int64) []models.AdvisoryAccountData {
 	// If system is stale, we won't change any rows  in advisory_account_data
 	if system.Stale {
 		return []models.AdvisoryAccountData{}
 	}
+
+	isApplicable := make(map[int64]bool, len(applicableIDs))
+	for _, id := range applicableIDs {
+		isApplicable[id] = true
+	}
+
 	aadMap := make(map[int64]models.AdvisoryAccountData, len(installableIDs))
 
 	for _, id := range installableIDs {
@@ -199,6 +204,8 @@ func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs, installableID
 			AdvisoryID:         id,
 			RhAccountID:        system.RhAccountID,
 			SystemsInstallable: 1,
+			// every installable advisory is also applicable advisory
+			SystemsApplicable: 1,
 		}
 	}
 
@@ -207,6 +214,12 @@ func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs, installableID
 			AdvisoryID:         id,
 			RhAccountID:        system.RhAccountID,
 			SystemsInstallable: -1,
+		}
+		if !isApplicable[id] {
+			// advisory is no longer applicable
+			aad := aadMap[id]
+			aad.SystemsApplicable = -1
+			aadMap[id] = aad
 		}
 	}
 
@@ -268,7 +281,9 @@ func updateAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, delet
 
 	txOnConflict := database.OnConflictDoUpdateExpr(tx, []string{"rh_account_id", "advisory_id"},
 		database.UpExpr{Name: "systems_installable",
-			Expr: "advisory_account_data.systems_installable + excluded.systems_installable"})
+			Expr: "advisory_account_data.systems_installable + excluded.systems_installable"},
+		database.UpExpr{Name: "systems_applicable",
+			Expr: "advisory_account_data.systems_applicable + excluded.systems_applicable"})
 
 	return database.BulkInsert(txOnConflict, changes)
 }

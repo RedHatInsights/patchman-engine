@@ -51,7 +51,7 @@ func CheckCachesValidRet() (bool, error) {
 
 	err = tx.Select("sp.rh_account_id, sa.advisory_id," +
 		"count(*) filter (where sa.status_id = 0) as systems_installable," +
-		"count(*) filter (where sa.status_id = 1) as systems_applicable").
+		"count(*) as systems_applicable").
 		Table("system_advisories sa").
 		Joins("JOIN system_platform sp ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id").
 		Where("sp.stale = false AND sp.last_evaluation IS NOT NULL").
@@ -213,7 +213,9 @@ func CreateAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int6
 	systemsInstallable int) {
 	for _, advisoryID := range advisoryIDs {
 		err := Db.Create(&models.AdvisoryAccountData{
-			AdvisoryID: advisoryID, RhAccountID: rhAccountID, SystemsInstallable: systemsInstallable}).Error
+			AdvisoryID: advisoryID, RhAccountID: rhAccountID, SystemsInstallable: systemsInstallable,
+			// create same number of applicable and installable systems because installable is subset of applicable
+			SystemsApplicable: systemsInstallable}).Error
 		assert.Nil(t, err)
 	}
 	CheckAdvisoriesAccountData(t, rhAccountID, advisoryIDs, systemsInstallable)
