@@ -79,6 +79,7 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 
 	// We sort by a column expression and not the column name. The column expression is retrieved from fieldExprs
 	for _, enteredField := range fields {
+		origEnteredField := enteredField // needed for showing correct info in `meta` section
 		if apiver < 3 && strings.Contains(enteredField, "applicable_systems") {
 			// `applicable_systems` is used in v1 and v2 API for consistency, in fact it is installable_systems
 			// therefore, if user wants to sort by `applicable_systems`, we need to sort `installable_systems` in DB
@@ -92,7 +93,7 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 			// We have not found any matches in allowed fields, return an error
 			return nil, nil, errors.Errorf("Invalid sort field: %v", enteredField)
 		}
-		appliedFields = append(appliedFields, enteredField)
+		appliedFields = append(appliedFields, origEnteredField)
 	}
 	tx.Order(stableSort + " ASC")
 	return tx, appliedFields, nil
