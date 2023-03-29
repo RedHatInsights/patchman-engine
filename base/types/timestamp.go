@@ -32,6 +32,10 @@ func (d Rfc3339Timestamp) MarshalJSON() ([]byte, error) {
 
 func (d *Rfc3339Timestamp) UnmarshalJSON(data []byte) error {
 	t, err := unmarshalTimestamp(data, Rfc3339NoTz)
+	if err != nil {
+		// parsing fail, try to parse timestamp without T
+		t, err = unmarshalTimestamp(data, Rfc3339NoT)
+	}
 	*d = Rfc3339Timestamp(t)
 	return err
 }
@@ -58,16 +62,6 @@ func (d *Rfc3339TimestampWithZ) Time() *time.Time {
 		return nil
 	}
 	return (*time.Time)(d)
-}
-
-func (d Rfc3339TimestampNoT) MarshalJSON() ([]byte, error) {
-	return json.Marshal(d.Time().Format(Rfc3339NoT))
-}
-
-func (d *Rfc3339TimestampNoT) UnmarshalJSON(data []byte) error {
-	t, err := unmarshalTimestamp(data, Rfc3339NoT)
-	*d = Rfc3339TimestampNoT(t)
-	return err
 }
 
 func (d *Rfc3339TimestampNoT) Time() *time.Time {

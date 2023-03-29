@@ -194,13 +194,11 @@ func reposHandler(c *gin.Context) {
 
 func dbchangeHandler(c *gin.Context) {
 	data := `{
-        "dbchange": {
-            "errata_changes": "2222-04-16 20:07:58.500192+00",
-            "cve_changes": "2222-04-16 20:06:47.214266+00",
-            "repository_changes": "2222-04-16 20:07:55.214266+00",
-            "last_change": "2222-04-16 20:07:58.500192+00",
-            "exported": "2222-04-16 20:07:59.235962+00"
-        }
+        "errata_changes": "2222-04-16 20:07:58.500192+00",
+        "cve_changes": "2222-04-16 20:06:47.214266+00",
+        "repository_changes": "2222-04-16 20:07:55.214266+00",
+        "last_change": "2222-04-16 20:07:58.500192+00",
+        "exported": "2222-04-16 20:07:59.235962+00"
     }`
 	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
 }
