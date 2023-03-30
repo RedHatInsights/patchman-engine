@@ -589,7 +589,7 @@ parameters:
 - {name: CONSUMER_COUNT_EVALUATOR_UPLOAD, value: '8'}
 - {name: ENABLE_BYPASS_EVALUATOR_UPLOAD, value: 'false'} # Enable only bypass (fake) messages processing
 - {name: ENABLE_LAZY_PACKAGE_SAVE_EVALUATOR_UPLOAD, value: 'false'} # Enable unknown EVRAs saving during the evaluation
-- {name: ENABLE_BASELINE_EVAL_EVALUATOR_UPLOAD, value: 'false'} # Take baselines into account during the evaluation
+- {name: ENABLE_BASELINE_EVAL_EVALUATOR_UPLOAD, value: 'true'} # Take baselines into account during the evaluation
 - {name: ENABLE_ADVISORY_ANALYSIS_SAVE_EVALUATOR_UPLOAD, value: 'true'}
 - {name: ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_UPLOAD, value: 'true'}
 - {name: ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_UPLOAD, value: 'true'}
@@ -614,7 +614,7 @@ parameters:
 - {name: CONSUMER_COUNT_EVALUATOR_RECALC, value: '8'}
 - {name: ENABLE_BYPASS_EVALUATOR_RECALC, value: 'false'} # Enable only bypass (fake) messages processing
 - {name: ENABLE_LAZY_PACKAGE_SAVE_EVALUATOR_RECALC, value: 'false'} # Enable unknown EVRAs saving during the evaluation
-- {name: ENABLE_BASELINE_EVAL_EVALUATOR_RECALC, value: 'false'} # Take baselines into account during the evaluation
+- {name: ENABLE_BASELINE_EVAL_EVALUATOR_RECALC, value: 'true'} # Take baselines into account during the evaluation
 - {name: ENABLE_ADVISORY_ANALYSIS_SAVE_EVALUATOR_RECALC, value: 'true'}
 - {name: ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_RECALC, value: 'true'}
 - {name: ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_RECALC, value: 'true'}
