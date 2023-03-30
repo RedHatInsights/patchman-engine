@@ -118,7 +118,7 @@ func getAdvisoryChanges(reported map[string]int, stored map[string]models.System
 	applicableNames := make([]string, 0, len(reported))
 	deleteIDs := make([]int64, 0, len(stored))
 	for reportedAdvisory, statusID := range reported {
-		if _, found := stored[reportedAdvisory]; !found {
+		if advisory, found := stored[reportedAdvisory]; !found || advisory.StatusID != statusID {
 			if statusID == INSTALLABLE {
 				installableNames = append(installableNames, reportedAdvisory)
 			} else {
@@ -164,10 +164,8 @@ func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int64, instal
 				StatusID:   APPLICABLE})
 	}
 
-	txOnConflict := tx.Clauses(clause.OnConflict{
-		DoNothing: true,
-	})
-	err := database.BulkInsert(txOnConflict, advisoriesObjs)
+	tx = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "system_id", "advisory_id"}, "status_id")
+	err := database.BulkInsert(tx, advisoriesObjs)
 	return err
 }
 
