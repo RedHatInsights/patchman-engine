@@ -42,10 +42,10 @@ func NewVmaasPackageCache(enabled bool, size int, checkDuration time.Duration) *
 
 func (c *VmaasCache) Get(checksum *string) (*vmaas.UpdatesV2Response, bool) {
 	if c.enabled && checksum != nil {
-		val, ok := c.data.Get(checksum)
+		val, ok := c.data.Get(*checksum)
 		if ok {
 			vmaasCacheCnt.WithLabelValues("hit").Inc()
-			utils.LogTrace("checksum", checksum, "VmaasCache.Get cache hit")
+			utils.LogTrace("checksum", *checksum, "VmaasCache.Get cache hit")
 			response := val.(*vmaas.UpdatesV2Response)
 			return response, true
 		}
@@ -57,7 +57,7 @@ func (c *VmaasCache) Get(checksum *string) (*vmaas.UpdatesV2Response, bool) {
 func (c *VmaasCache) Add(checksum *string, response *vmaas.UpdatesV2Response) {
 	if c.enabled && checksum != nil {
 		vmaasCacheGauge.Inc()
-		c.data.Add(checksum, response)
+		c.data.Add(*checksum, response)
 	}
 }
 
