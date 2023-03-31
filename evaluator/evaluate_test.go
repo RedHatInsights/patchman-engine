@@ -28,6 +28,10 @@ func TestEvaluate(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	utils.SkipWithoutPlatform(t)
 	core.SetupTestEnvironment()
+	// don't use vmaas-cache since tests here are not using vmaas_json
+	// so it will always get the same result from cache for empty vmaas_json
+	os.Setenv("ENABLE_VMAAS_CACHE", "false")
+	defer os.Setenv("ENABLE_VMAAS_CACHE", "true")
 
 	configure()
 	loadCache()

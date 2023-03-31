@@ -69,7 +69,7 @@ func NewPackageCache(enabled bool, preload bool, size int, nameSize int) *Packag
 		}
 		return c
 	}
-	return nil
+	return c
 }
 
 func (c *PackageCache) Load() {
