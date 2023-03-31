@@ -37,7 +37,7 @@ func NewVmaasPackageCache(enabled bool, size int, checkDuration time.Duration) *
 		}
 		return c
 	}
-	return nil
+	return c
 }
 
 func (c *VmaasCache) Get(checksum *string) (*vmaas.UpdatesV2Response, bool) {
