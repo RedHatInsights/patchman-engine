@@ -11,7 +11,7 @@ require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/gocarina/gocsv v0.0.0-20200330101823-46266ca37bd3 // newer version skips some columns
 	github.com/golang-migrate/migrate/v4 v4.15.2
-	github.com/hashicorp/golang-lru v0.5.4
+	github.com/hashicorp/golang-lru/v2 v2.0.2
 	github.com/jackc/pgconn v1.13.0
 	github.com/joho/godotenv v1.4.0
 	github.com/lestrrat-go/backoff v1.0.1
