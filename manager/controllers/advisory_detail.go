@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -234,13 +234,13 @@ func pkgsV2topkgsV1(pkgsV2 packagesV2) packagesV1 {
 	return pkgsV1
 }
 
-func initAdvisoryDetailCache() *lru.Cache {
+func initAdvisoryDetailCache() *lru.Cache[string, AdvisoryDetailResponseV2] {
 	middlewares.AdvisoryDetailGauge.Set(0)
 	if !enableAdvisoryDetailCache {
 		return nil
 	}
 
-	cache, err := lru.New(advisoryDetailCacheSize)
+	cache, err := lru.New[string, AdvisoryDetailResponseV2](advisoryDetailCacheSize)
 	if err != nil {
 		panic(err)
 	}
@@ -284,9 +284,8 @@ func tryGetAdvisoryFromCacheV2(advisoryName string) *AdvisoryDetailResponseV2 {
 		middlewares.AdvisoryDetailCnt.WithLabelValues("miss").Inc()
 		return nil
 	}
-	resp := val.(AdvisoryDetailResponseV2)
 	middlewares.AdvisoryDetailCnt.WithLabelValues("hit").Inc()
-	return &resp
+	return &val
 }
 
 func tryAddAdvisoryToCacheV2(advisoryName string, resp *AdvisoryDetailResponseV2) {
@@ -294,7 +293,9 @@ func tryAddAdvisoryToCacheV2(advisoryName string, resp *AdvisoryDetailResponseV2
 		return
 	}
 	evicted := advisoryDetailCacheV2.Add(advisoryName, *resp)
-	middlewares.AdvisoryDetailGauge.Inc()
+	if !evicted {
+		middlewares.AdvisoryDetailGauge.Inc()
+	}
 	utils.LogDebug("evictedV2", evicted, "advisoryName", advisoryName, "saved to cache")
 }
 

@@ -7,7 +7,7 @@ import (
 	"app/tasks/vmaas_sync"
 	"time"
 
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2"
 )
 
 var memoryVmaasCache *VmaasCache
@@ -17,7 +17,7 @@ type VmaasCache struct {
 	size          int
 	validity      *types.Rfc3339TimestampWithZ
 	checkDuration time.Duration
-	data          *lru.TwoQueueCache
+	data          *lru.TwoQueueCache[string, *vmaas.UpdatesV2Response]
 }
 
 func NewVmaasPackageCache(enabled bool, size int, checkDuration time.Duration) *VmaasCache {
@@ -31,7 +31,7 @@ func NewVmaasPackageCache(enabled bool, size int, checkDuration time.Duration) *
 
 	if c.enabled {
 		var err error
-		c.data, err = lru.New2Q(c.size)
+		c.data, err = lru.New2Q[string, *vmaas.UpdatesV2Response](c.size)
 		if err != nil {
 			panic(err)
 		}
@@ -46,8 +46,7 @@ func (c *VmaasCache) Get(checksum *string) (*vmaas.UpdatesV2Response, bool) {
 		if ok {
 			vmaasCacheCnt.WithLabelValues("hit").Inc()
 			utils.LogTrace("checksum", *checksum, "VmaasCache.Get cache hit")
-			response := val.(*vmaas.UpdatesV2Response)
-			return response, true
+			return val, true
 		}
 	}
 	vmaasCacheCnt.WithLabelValues("miss").Inc()
