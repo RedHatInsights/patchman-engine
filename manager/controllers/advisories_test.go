@@ -47,8 +47,8 @@ func TestAdvisoriesDefault(t *testing.T) {
 	assert.Equal(t, false, output.Data[3].Attributes.RebootRequired)
 
 	// links
-	assert.Equal(t, "/?offset=0&limit=20&sort=-public_date", output.Links.First)
-	assert.Equal(t, "/?offset=0&limit=20&sort=-public_date", output.Links.Last)
+	assert.Equal(t, "/?offset=0&limit=20&filter[applicable_systems]=gt:0&sort=-public_date", output.Links.First)
+	assert.Equal(t, "/?offset=0&limit=20&filter[applicable_systems]=gt:0&sort=-public_date", output.Links.Last)
 	assert.Nil(t, output.Links.Next)
 	assert.Nil(t, output.Links.Previous)
 
@@ -153,9 +153,11 @@ func TestAdvisoriesFilterTypeID1(t *testing.T) {
 	assert.Equal(t, "RH-4", output.Data[1].ID)
 	assert.Equal(t, "RH-7", output.Data[2].ID)
 	assert.Equal(t, FilterData{Values: []string{"enhancement"}, Operator: "eq"}, output.Meta.Filter["advisory_type_name"])
-	assert.Equal(t,
-		"/?offset=0&limit=20&filter[advisory_type_name]=eq:enhancement&sort=id",
-		output.Links.First)
+	assert.Equal(t, 101, len(output.Links.First))
+	assert.Contains(t, output.Links.First, "?offset=0&limit=20")
+	assert.Contains(t, output.Links.First, "filter[advisory_type_name]=eq:enhancement")
+	assert.Contains(t, output.Links.First, "filter[applicable_systems]=gt:0")
+	assert.Contains(t, output.Links.First, "sort=id")
 }
 
 func TestAdvisoriesFilterTypeID2(t *testing.T) {
@@ -250,9 +252,9 @@ func TestAdvisoriesSearch(t *testing.T) {
 	assert.Equal(t, 1, output.Data[0].Attributes.ApplicableSystems)
 
 	// links
-	assert.Equal(t, "/?offset=0&limit=20&sort=-public_date&search=h-3",
+	assert.Equal(t, "/?offset=0&limit=20&filter[applicable_systems]=gt:0&sort=-public_date&search=h-3",
 		output.Links.First)
-	assert.Equal(t, "/?offset=0&limit=20&sort=-public_date&search=h-3",
+	assert.Equal(t, "/?offset=0&limit=20&filter[applicable_systems]=gt:0&sort=-public_date&search=h-3",
 		output.Links.Last)
 	assert.Nil(t, output.Links.Next)
 	assert.Nil(t, output.Links.Previous)
@@ -280,7 +282,7 @@ func TestAdvisoriesTags(t *testing.T) {
 	assert.Equal(t, 8, len(output.Data))
 	assert.Equal(t, 1, output.Data[0].Attributes.InstallableSystems)
 	assert.Equal(t, 2, output.Data[0].Attributes.ApplicableSystems)
-	assert.Equal(t, "/?offset=0&limit=20&sort=id&tags=ns1/k2=val2", output.Links.First)
+	assert.Equal(t, "/?offset=0&limit=20&filter[applicable_systems]=gt:0&sort=id&tags=ns1/k2=val2", output.Links.First)
 }
 
 func TestListAdvisoriesTagsInvalid(t *testing.T) {
@@ -314,8 +316,9 @@ func TestAdvisoryTagsInMetadata(t *testing.T) {
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	testMap := map[string]FilterData{
-		"ns1/k1": {"eq", []string{"val1"}},
-		"ns1/k3": {"eq", []string{"val4"}},
+		"ns1/k1":             {"eq", []string{"val1"}},
+		"ns1/k3":             {"eq", []string{"val4"}},
+		"applicable_systems": {"gt", []string{"0"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }

@@ -113,7 +113,7 @@ func validateFilters(q QueryMap, allowedFields database.AttrMap) error {
 }
 
 func ParseFilters(q QueryMap, allowedFields database.AttrMap,
-	defaultFilters map[string]FilterData) (Filters, error) {
+	defaultFilters map[string]FilterData, apiver int) (Filters, error) {
 	filters := Filters{}
 	var err error
 
@@ -145,6 +145,15 @@ func ParseFilters(q QueryMap, allowedFields database.AttrMap,
 		}
 	}
 
+	// backward compatibility for v2 api and applicable_systems filter
+	if apiver < 3 {
+		if _, ok := filters["applicable_systems"]; ok {
+			// replace with `installable_systems`
+			filters["installable_systems"] = filters["applicable_systems"]
+			delete(filters, "applicable_systems")
+		}
+	}
+
 	return filters, err
 }
 
@@ -158,7 +167,8 @@ type ListOpts struct {
 
 func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, error) {
 	query := NestedQueryMap(c, "filter")
-	filters, err := ParseFilters(query, opts.Fields, opts.DefaultFilters)
+	apiver := c.GetInt(middlewares.KeyApiver)
+	filters, err := ParseFilters(query, opts.Fields, opts.DefaultFilters, apiver)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
 		return nil, errors.Wrap(err, "filters parsing failed")
@@ -186,6 +196,7 @@ func extractTagsQueryString(c *gin.Context) string {
 func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, opts ListOpts, params ...string) (
 	*gorm.DB, *ListMeta, []string, error) {
 	hasSystems := true
+	apiver := c.GetInt(middlewares.KeyApiver)
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
@@ -195,7 +206,7 @@ func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, op
 
 	query := NestedQueryMap(c, "filter")
 
-	filters, err := ParseFilters(query, opts.Fields, opts.DefaultFilters)
+	filters, err := ParseFilters(query, opts.Fields, opts.DefaultFilters, apiver)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
 		return nil, nil, nil, errors.Wrap(err, "filters parsing failed")
