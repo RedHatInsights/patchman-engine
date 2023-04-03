@@ -60,7 +60,7 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 
 	query := buildSystemAdvisoriesQuery(db, account, inventoryID)
 	query = query.Order("id")
-	query, err = ExportListCommon(query, c, AdvisoriesOpts)
+	query, err = ExportListCommon(query, c, SystemAdvisoriesOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return

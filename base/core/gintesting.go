@@ -31,7 +31,7 @@ func InitRouterWithParams(handler gin.HandlerFunc, account int, method, path str
 	}
 	router.Use(func(c *gin.Context) {
 		// set default api version for tests to latest
-		c.Set(middlewares.KeyApiver, 3)
+		c.Set(middlewares.KeyApiver, LatestAPIVersion)
 		for _, kv := range contextKVs {
 			c.Set(kv.Key, kv.Value)
 		}

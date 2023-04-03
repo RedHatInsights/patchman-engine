@@ -14,11 +14,16 @@ var AdvisoriesFields = database.MustGetQueryAttrs(&AdvisoriesDBLookupV3{})
 var AdvisoriesSelectV2 = database.MustGetSelect(&AdvisoriesDBLookupV2{})
 var AdvisoriesSelectV3 = database.MustGetSelect(&AdvisoriesDBLookupV3{})
 var AdvisoriesOpts = ListOpts{
-	Fields:         AdvisoriesFields,
-	DefaultFilters: nil,
-	DefaultSort:    "-public_date",
-	StableSort:     "id",
-	SearchFields:   []string{"am.name", "am.cve_list", "synopsis"},
+	Fields: AdvisoriesFields,
+	DefaultFilters: map[string]FilterData{
+		"applicable_systems": {
+			Operator: "gt",
+			Values:   []string{"0"},
+		},
+	},
+	DefaultSort:  "-public_date",
+	StableSort:   "id",
+	SearchFields: []string{"am.name", "am.cve_list", "synopsis"},
 }
 
 type AdvisoryID struct {
