@@ -190,11 +190,6 @@ func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs, installableID
 		return []models.AdvisoryAccountData{}
 	}
 
-	isApplicable := make(map[int64]bool, len(applicableIDs))
-	for _, id := range applicableIDs {
-		isApplicable[id] = true
-	}
-
 	aadMap := make(map[int64]models.AdvisoryAccountData, len(installableIDs))
 
 	for _, id := range installableIDs {
@@ -204,6 +199,19 @@ func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs, installableID
 			SystemsInstallable: 1,
 			// every installable advisory is also applicable advisory
 			SystemsApplicable: 1,
+		}
+	}
+
+	isApplicable := make(map[int64]bool, len(applicableIDs))
+	for _, id := range applicableIDs {
+		isApplicable[id] = true
+		// add advisories which are only applicable and not installable to aad
+		if _, ok := aadMap[id]; !ok {
+			aadMap[id] = models.AdvisoryAccountData{
+				AdvisoryID:        id,
+				RhAccountID:       system.RhAccountID,
+				SystemsApplicable: 1,
+			}
 		}
 	}
 
@@ -221,7 +229,7 @@ func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs, installableID
 		}
 	}
 
-	deltas := make([]models.AdvisoryAccountData, 0, len(deleteIDs)+len(installableIDs))
+	deltas := make([]models.AdvisoryAccountData, 0, len(deleteIDs)+len(installableIDs)+len(applicableIDs))
 	for _, aad := range aadMap {
 		deltas = append(deltas, aad)
 	}
