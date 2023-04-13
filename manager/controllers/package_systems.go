@@ -112,6 +112,7 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
+// @Param    filter[updatable]       								query   bool    false "Filter"
 // @Success 200 {object} PackageSystemsResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
