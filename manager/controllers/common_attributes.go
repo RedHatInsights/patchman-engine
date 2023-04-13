@@ -68,7 +68,7 @@ type SystemIDAttribute struct {
 }
 
 type SystemAdvisoryStatus struct {
-	Status string `json:"status" csv:"status" query:"st.name" gorm:"column:name"`
+	Status string `json:"status" csv:"status" query:"st.name" gorm:"column:status"`
 }
 
 // nolint: lll

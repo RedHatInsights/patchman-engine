@@ -75,7 +75,7 @@ func TestAdvisorySystemsOffsetOverflow(t *testing.T) {
 func TestAdvisorySystemsSorts(t *testing.T) {
 	core.SetupTest(t)
 
-	for sort := range SystemsFields {
+	for sort := range AdvisorySystemsFields {
 		w := CreateRequestRouterWithPath("GET", fmt.Sprintf("/RH-1?sort=%v", sort), nil, "",
 			AdvisorySystemsListHandler, "/:advisory_id")
 
