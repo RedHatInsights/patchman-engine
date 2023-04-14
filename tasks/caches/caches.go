@@ -8,11 +8,13 @@ import (
 
 var (
 	enableRefreshAdvisoryCaches bool
+	skipNAccountsRefresh        int
 )
 
 func configure() {
 	core.ConfigureApp()
 	enableRefreshAdvisoryCaches = utils.GetBoolEnvOrDefault("ENABLE_REFRESH_ADVISORY_CACHES", false)
+	skipNAccountsRefresh = utils.GetIntEnvOrDefault("SKIP_N_ACCOUNTS_REFRESH", 0)
 }
 
 func RunAdvisoryRefresh() {

@@ -434,6 +434,7 @@ objects:
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                       key: vmaas-sync-database-password}}}
         - {name: ENABLE_REFRESH_ADVISORY_CACHES, value: '${ENABLE_REFRESH_ADVISORY_CACHES}'}
+        - {name: SKIP_N_ACCOUNTS_REFRESH, value: '${SKIP_N_ACCOUNTS_REFRESH}'}
 
     - name: delete-unused
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -672,6 +673,7 @@ parameters:
 - {name: ADVISORY_REFRESH_SCHEDULE, value: '*/15 * * * *'} # Cronjob schedule definition
 - {name: ADVISORY_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
 - {name: ENABLE_REFRESH_ADVISORY_CACHES, value: 'true'} # Enable periodic refresh of account advisory caches
+- {name: SKIP_N_ACCOUNTS_REFRESH, value: '0'} # Skip advisory cache refresh for N first accounts in case the previous refresh didn't finish
 
 # Database admin
 - {name: GOMAXPROCS_ADMIN, value: '8'}
