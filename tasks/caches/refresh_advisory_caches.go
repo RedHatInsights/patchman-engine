@@ -21,7 +21,7 @@ func RefreshAdvisoryCaches() {
 
 func refreshAdvisoryCachesPerAccounts(wg *sync.WaitGroup) {
 	var rhAccountIDs []int
-	err := database.Db.Table("rh_account").Order("id").Pluck("id", &rhAccountIDs).Error
+	err := database.Db.Table("rh_account").Order("hash_partition_id(id, 32), id").Pluck("id", &rhAccountIDs).Error
 	if skipNAccountsRefresh > 0 {
 		utils.LogInfo("n", skipNAccountsRefresh, "Skipping refresh of first N accounts")
 		rhAccountIDs = rhAccountIDs[skipNAccountsRefresh:]
