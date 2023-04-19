@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (107, false);
+VALUES (108, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -630,7 +630,8 @@ CREATE TABLE reporter
 INSERT INTO reporter (id, name)
 VALUES (1, 'puptoo'),
        (2, 'rhsm-conduit'),
-       (3, 'yupana')
+       (3, 'yupana'),
+       (4, 'rhsm-system-profile-bridge')
 ON CONFLICT DO NOTHING;
 
 -- baseline
