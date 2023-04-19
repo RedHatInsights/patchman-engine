@@ -57,7 +57,7 @@ func SystemAdvisoriesByInventoryID(tx *gorm.DB, accountID int, inventoryID strin
 	return SystemAdvisories(tx, accountID).Where("sp.inventory_id = ?::uuid", inventoryID)
 }
 
-func SystemAdvisoriesBySystemID(tx *gorm.DB, accountID, systemID int) *gorm.DB {
+func SystemAdvisoriesBySystemID(tx *gorm.DB, accountID int, systemID int64) *gorm.DB {
 	query := systemAdvisoriesQuery(tx, accountID).Where("sp.id = ?", systemID)
 	return query
 }
