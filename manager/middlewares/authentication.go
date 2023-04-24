@@ -125,21 +125,6 @@ func MockAuthenticator(account int) gin.HandlerFunc {
 	}
 }
 
-func EntitlementsAuthenticator() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		xrhid := (*ginContext)(c).GetXRHID()
-		if xrhid == nil {
-			// aborted by GetXRHID
-			return
-		}
-		if !xrhid.Entitlements["smart_management"].IsEntitled {
-			c.AbortWithStatusJSON(
-				http.StatusUnauthorized, utils.ErrorResponse{Error: "Missing smart management entitlement"},
-			)
-		}
-	}
-}
-
 // Get identity header from gin.Context
 func (c *ginContext) GetXRHID() *identity.XRHID {
 	identStr := (*gin.Context)(c).GetHeader("x-rh-identity")
