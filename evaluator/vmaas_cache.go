@@ -18,6 +18,7 @@ type VmaasCache struct {
 	validity      *types.Rfc3339TimestampWithZ
 	checkDuration time.Duration
 	data          *lru.TwoQueueCache[string, *vmaas.UpdatesV2Response]
+	currentSize   int
 }
 
 func NewVmaasPackageCache(enabled bool, size int, checkDuration time.Duration) *VmaasCache {
@@ -27,6 +28,7 @@ func NewVmaasPackageCache(enabled bool, size int, checkDuration time.Duration) *
 	c.size = size
 	c.validity = vmaas_sync.GetLastSync(vmaas_sync.VmaasExported)
 	c.checkDuration = checkDuration
+	c.currentSize = 0
 	vmaasCacheGauge.Set(0)
 
 	if c.enabled {
@@ -55,7 +57,10 @@ func (c *VmaasCache) Get(checksum *string) (*vmaas.UpdatesV2Response, bool) {
 
 func (c *VmaasCache) Add(checksum *string, response *vmaas.UpdatesV2Response) {
 	if c.enabled && checksum != nil {
-		vmaasCacheGauge.Inc()
+		if c.currentSize < c.size {
+			c.currentSize++
+			vmaasCacheGauge.Inc()
+		}
 		c.data.Add(*checksum, response)
 	}
 }
