@@ -267,9 +267,9 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 	system *models.SystemPlatform) (*vmaas.UpdatesV2Response, error) {
 	// first check if we have data in cache
-	vmaasData, ok := memoryVmaasCache.Get(system.JSONChecksum)
+	vmaasDataCache, ok := memoryVmaasCache.Get(system.JSONChecksum)
 	if ok {
-		return vmaasData, nil
+		return &vmaasDataCache, nil
 	}
 	updatesReq, err := tryGetVmaasRequest(system)
 	if err != nil {
@@ -289,13 +289,13 @@ func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 	useOptimisticUpdates := thirdParty || vmaasCallUseOptimisticUpdates
 	updatesReq.OptimisticUpdates = utils.PtrBool(useOptimisticUpdates)
 
-	vmaasData, err = callVMaas(ctx, updatesReq)
+	vmaasData, err := callVMaas(ctx, updatesReq)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-call-vmaas-updates").Inc()
 		return nil, errors.Wrap(err, "vmaas API call failed")
 	}
 
-	memoryVmaasCache.Add(system.JSONChecksum, vmaasData)
+	memoryVmaasCache.Add(system.JSONChecksum, *vmaasData)
 	return vmaasData, nil
 }
 
