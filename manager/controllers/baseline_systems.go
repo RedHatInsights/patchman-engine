@@ -85,6 +85,43 @@ type BaselineSystemsResponse struct {
 	Meta  ListMeta             `json:"meta"`
 }
 
+func baselineSystemsCommon(c *gin.Context, account, apiver int) (*gorm.DB, *ListMeta, []string, error) {
+	baselineID := c.Param("baseline_id")
+	id, err := strconv.ParseInt(baselineID, 10, 64)
+	if err != nil {
+		LogAndRespBadRequest(c, err, fmt.Sprintf("Invalid baseline_id: %s", baselineID))
+		return nil, nil, nil, err
+	}
+
+	db := middlewares.DBFromContext(c)
+	var exists int64
+	err = db.Model(&models.Baseline{}).
+		Where("id = ? ", id).Count(&exists).Error
+	if err != nil {
+		LogAndRespError(c, err, "database error")
+		return nil, nil, nil, err
+	}
+	if exists == 0 {
+		LogAndRespNotFound(c, errors.New("Baseline not found"), "Baseline not found")
+		return nil, nil, nil, err
+	}
+
+	query := buildQueryBaselineSystems(db, account, id, apiver)
+	filters, err := ParseTagsFilters(c)
+	if err != nil {
+		return nil, nil, nil, err
+	} // Error handled in method itself
+	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
+
+	query, meta, params, err := ListCommon(query, c, nil, BaselineSystemOpts)
+	if err != nil {
+		// Error handling and setting of result code & content is done in ListCommon
+		return nil, nil, nil, err
+	}
+
+	return query, meta, params, err
+}
+
 // nolint: lll
 // @Summary Show me all systems belonging to a baseline
 // @Description  Show me all systems applicable to a baseline
@@ -109,38 +146,10 @@ func BaselineSystemsListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
 
-	baselineID := c.Param("baseline_id")
-	id, err := strconv.ParseInt(baselineID, 10, 64)
-	if err != nil {
-		LogAndRespBadRequest(c, err, fmt.Sprintf("Invalid baseline_id: %s", baselineID))
-		return
-	}
-
-	db := middlewares.DBFromContext(c)
-	var exists int64
-	err = db.Model(&models.Baseline{}).
-		Where("id = ? ", id).Count(&exists).Error
-	if err != nil {
-		LogAndRespError(c, err, "database error")
-		return
-	}
-	if exists == 0 {
-		LogAndRespNotFound(c, errors.New("Baseline not found"), "Baseline not found")
-		return
-	}
-
-	query := buildQueryBaselineSystems(db, account, id, apiver)
-	filters, err := ParseTagsFilters(c)
+	query, meta, params, err := baselineSystemsCommon(c, account, apiver)
 	if err != nil {
 		return
 	} // Error handled in method itself
-	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
-
-	query, meta, params, err := ListCommon(query, c, nil, BaselineSystemOpts)
-	if err != nil {
-		// Error handling and setting of result code & content is done in ListCommon
-		return
-	}
 
 	var baselineSystems []BaselineSystemsDBLookup
 	err = query.Find(&baselineSystems).Error
@@ -164,6 +173,54 @@ func BaselineSystemsListHandler(c *gin.Context) {
 		c.JSON(http.StatusOK, respV2)
 		return
 	}
+	c.JSON(http.StatusOK, &resp)
+}
+
+// nolint: lll
+// @Summary Show me all systems belonging to a baseline
+// @Description  Show me all systems applicable to a baseline
+// @ID listBaselineSystemsIds
+// @Security RhIdentity
+// @Accept   json
+// @Produce  json
+// @Param    baseline_id    path    int     true    "Baseline ID"
+// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    offset         query   int     false   "Offset for paging"
+// @Param    sort           query   string  false   "Sort field"    Enums(id,display_name,os,installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count,applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count,last_upload)
+// @Param    search         query   string  false   "Find matching text"
+// @Param    filter[display_name]           query   string  false "Filter"
+// @Param    filter[os]           			query   string  false "Filter"
+// @Param    tags           query   []string  false "Tag filter"
+// @Success 200 {object} IDsResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /ids/baselines/{baseline_id}/systems [get]
+func BaselineSystemsListIDsHandler(c *gin.Context) {
+	account := c.GetInt(middlewares.KeyAccount)
+	apiver := c.GetInt(middlewares.KeyApiver)
+	if apiver < 3 {
+		c.AbortWithStatus(404)
+		return
+	}
+
+	query, meta, _, err := baselineSystemsCommon(c, account, apiver)
+	if err != nil {
+		return
+	} // Error handled in method itself
+
+	var sids []SystemsID
+
+	if err = query.Scan(&sids).Error; err != nil {
+		LogAndRespError(c, err, "db error")
+		return
+	}
+
+	ids, err := systemsIDs(c, sids, meta)
+	if err != nil {
+		return // Error handled in method itself
+	}
+	var resp = IDsResponse{IDs: ids}
 	c.JSON(http.StatusOK, &resp)
 }
 

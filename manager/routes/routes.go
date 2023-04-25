@@ -70,6 +70,9 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	ids.GET("/packages/:package_name/systems", controllers.PackageSystemsListIDsHandler)
 	ids.GET("/systems", controllers.SystemsListIDsHandler)
 	ids.GET("/systems/:inventory_id/advisories", controllers.SystemAdvisoriesIDsHandler)
+	if config.EnableBaselines {
+		ids.GET("/baselines/:baseline_id/systems", controllers.BaselineSystemsListIDsHandler)
+	}
 
 	api.GET("/status", controllers.Status)
 }
