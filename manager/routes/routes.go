@@ -19,7 +19,6 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 
 	advisories := api.Group("/advisories")
 	advisories.GET("", controllers.AdvisoriesListHandler)
-	go controllers.PreloadAdvisoryCacheItems()
 	advisories.GET("/:advisory_id", controllers.AdvisoryDetailHandler)
 	advisories.GET("/:advisory_id/systems", controllers.AdvisorySystemsListHandler)
 

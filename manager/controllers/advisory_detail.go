@@ -100,7 +100,7 @@ func AdvisoryDetailHandler(c *gin.Context) {
 	var err error
 	var respV2 *AdvisoryDetailResponseV2
 	db := middlewares.DBFromContext(c)
-	respV2, err = getAdvisoryV2(db, advisoryName)
+	respV2, err = getAdvisoryV2(db, advisoryName, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			LogAndRespNotFound(c, err, "advisory not found")
@@ -265,7 +265,7 @@ func PreloadAdvisoryCacheItems() {
 	progress, count := utils.LogProgress("Advisory detail cache preload", logProgressDuration, int64(len(advisoryNames)))
 
 	for _, advisoryName := range advisoryNames {
-		_, err = getAdvisoryV2(database.Db, advisoryName)
+		_, err = getAdvisoryV2(database.Db, advisoryName, true)
 		if err != nil {
 			utils.LogError("advisoryName", advisoryName, "err", err.Error(), "can not re-load item to cache - V2")
 		}
@@ -299,11 +299,13 @@ func tryAddAdvisoryToCacheV2(advisoryName string, resp *AdvisoryDetailResponseV2
 	utils.LogDebug("evictedV2", evicted, "advisoryName", advisoryName, "saved to cache")
 }
 
-func getAdvisoryV2(db *gorm.DB, advisoryName string) (*AdvisoryDetailResponseV2, error) {
-	resp := tryGetAdvisoryFromCacheV2(advisoryName)
-	if resp != nil {
-		utils.LogDebug("advisoryName", advisoryName, "found in cache")
-		return resp, nil // return data found in cache
+func getAdvisoryV2(db *gorm.DB, advisoryName string, isPreload bool) (*AdvisoryDetailResponseV2, error) {
+	if !isPreload {
+		resp := tryGetAdvisoryFromCacheV2(advisoryName)
+		if resp != nil {
+			utils.LogDebug("advisoryName", advisoryName, "found in cache")
+			return resp, nil // return data found in cache
+		}
 	}
 
 	resp, err := getAdvisoryFromDBV2(db, advisoryName) // search for data in database
