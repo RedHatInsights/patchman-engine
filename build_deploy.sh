@@ -8,6 +8,7 @@ export TMPDIR=/var/lib/jenkins
 IMAGE="quay.io/cloudservices/patchman-engine-app"
 IMAGE_TAG=$(git rev-parse --short=7 HEAD)
 IMAGE_VERSION=$(git tag --points-at $IMAGE_TAG)
+SECURITY_COMPLIANCE_TAG="sc-$(date +%Y%m%d)"
 
 if [[ -z "$QUAY_USER" || -z "$QUAY_TOKEN" ]]; then
     echo "QUAY_USER and QUAY_TOKEN must be set"
@@ -26,9 +27,15 @@ podman login -u="$QUAY_USER" -p="$QUAY_TOKEN" quay.io
 podman login -u="$RH_REGISTRY_USER" -p="$RH_REGISTRY_TOKEN" registry.redhat.io
 podman build -f Dockerfile -t "${IMAGE}:${IMAGE_TAG}" .
 podman push "${IMAGE}:${IMAGE_TAG}"
-podman tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:latest"
-podman push "${IMAGE}:latest"
-if [[ -n "$IMAGE_VERSION" ]]; then
-    podman tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:${IMAGE_VERSION}"
-    podman push "${IMAGE}:${IMAGE_VERSION}"
+
+if [[ $GIT_BRANCH == *"security-compliance"* ]]; then
+    docker --config="$DOCKER_CONF" tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:${SECURITY_COMPLIANCE_TAG}"
+    docker --config="$DOCKER_CONF" push "${IMAGE}:${SECURITY_COMPLIANCE_TAG}"
+else
+    podman tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:latest"
+    podman push "${IMAGE}:latest"
+    if [[ -n "$IMAGE_VERSION" ]]; then
+        podman tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:${IMAGE_VERSION}"
+        podman push "${IMAGE}:${IMAGE_VERSION}"
+    fi
 fi
