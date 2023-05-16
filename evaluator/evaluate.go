@@ -280,6 +280,16 @@ func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 		return nil, nil
 	}
 
+	if len(updatesReq.PackageList) > 0 {
+		nevra, err := utils.ParseNevra(updatesReq.PackageList[0])
+		if err != nil {
+			utils.LogWarn("err", err.Error(), "Couldn't parse first package in package_list")
+		}
+		if nevra != nil && nevra.Epoch < 0 {
+			return nil, errors.New("package_list without epochs - RHINENG-390")
+		}
+	}
+
 	thirdParty, err := analyzeRepos(tx, system)
 	if err != nil {
 		return nil, errors.Wrap(err, "Repo analysis failed")

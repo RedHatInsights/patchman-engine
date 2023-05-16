@@ -530,6 +530,17 @@ func processUpload(host *Host, yumUpdates []byte) (*models.SystemPlatform, error
 	}
 
 	systemProfile := host.SystemProfile
+	packageList := systemProfile.GetInstalledPackages()
+	if len(packageList) > 0 {
+		nevra, err := utils.ParseNevra(packageList[0])
+		if err != nil {
+			utils.LogWarn("err", err.Error(), "Couldn't parse first package in package_list")
+		}
+		if nevra != nil && nevra.Epoch < 0 {
+			return nil, errors.New("package_list without epochs - RHINENG-390")
+		}
+	}
+
 	// Prepare VMaaS request
 	updatesReq := vmaas.UpdatesV3Request{
 		PackageList:    systemProfile.GetInstalledPackages(),

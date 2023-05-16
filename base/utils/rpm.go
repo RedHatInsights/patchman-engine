@@ -40,7 +40,7 @@ func ParseNevra(nevra string) (*Nevra, error) {
 		return nil, errors.Errorf("unable to parse (%s)", nevra)
 	}
 	var err error
-	epoch := 0
+	epoch := -1
 	if parsed[2] != "" {
 		epoch, err = strconv.Atoi(parsed[2])
 		if err != nil {
@@ -74,7 +74,7 @@ func (n Nevra) StringE(showEpoch bool) string {
 }
 
 func (n Nevra) String() string {
-	return n.StringE(false)
+	return n.StringE(true)
 }
 
 func (n Nevra) EVRStringE(showEpoch bool) string {
@@ -85,7 +85,7 @@ func (n Nevra) EVRStringE(showEpoch bool) string {
 }
 
 func (n Nevra) EVRString() string {
-	return n.EVRStringE(false)
+	return n.EVRStringE(true)
 }
 
 func (n Nevra) EVRAStringE(showEpoch bool) string {
@@ -96,7 +96,7 @@ func (n Nevra) EVRAStringE(showEpoch bool) string {
 }
 
 func (n Nevra) EVRAString() string {
-	return n.EVRAStringE(false)
+	return n.EVRAStringE(true)
 }
 
 func (n Nevra) EVRACmp(other *Nevra) int {
