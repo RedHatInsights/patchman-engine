@@ -18,7 +18,7 @@ func TestPackageVersions(t *testing.T) {
 	assert.Greater(t, len(w.Body.Bytes()), 0)
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 1, len(output.Data))
-	assert.Equal(t, "76.0.1-1.fc31.x86_64", output.Data[0].Evra)
+	assert.Equal(t, "0:76.0.1-1.fc31.x86_64", output.Data[0].Evra)
 }
 
 func TestPackageVersionsInvalidName(t *testing.T) {

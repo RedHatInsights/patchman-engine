@@ -88,7 +88,7 @@ func erratasHandler(c *gin.Context) {
             "description": "adv-100-des",
             "issued": "2020-01-02T15:04:05+07:00",
             "package_list": [
-                "kernel-5.10.13-200.fc31.x86_64"
+                "kernel-0:5.10.13-200.fc31.x86_64"
             ],
             "reference_list": [],
             "requires_reboot": true,
@@ -142,11 +142,11 @@ func pkgListHandler(c *gin.Context) {
     "page_size": 8,
     "pages": 1,
     "package_list": [{
-			"nevra": "firefox-76.0.1-1.fc31.x86_64",
+			"nevra": "firefox-0:76.0.1-1.fc31.x86_64",
 			"summary": "Mozilla Firefox Web browser",
 			"description": "Mozilla Firefox is an open-source web browser..."
         },{
-			"nevra": "kernel-5.6.13-200.fc31.x86_64",
+			"nevra": "kernel-0:5.6.13-200.fc31.x86_64",
 			"summary": "The Linux kernel",
 			"description": "The kernel meta package"		
         },{
@@ -154,7 +154,7 @@ func pkgListHandler(c *gin.Context) {
 			"summary": "Mozilla Firefox Web browser",
 			"description": "Mozilla Firefox is an open-source web browser..."
 		},{
-			"nevra": "kernel-5.7.13-200.fc31.x86_64",
+			"nevra": "kernel-0:5.7.13-200.fc31.x86_64",
 			"summary": "The Linux kernel",
 			"description": "The kernel meta package"
 		},{
@@ -162,15 +162,15 @@ func pkgListHandler(c *gin.Context) {
 			"summary": null,
 			"description": null
 		},{
-			"nevra": "kernel-5.7.13-200.fc31.src",
+			"nevra": "kernel-0:5.7.13-200.fc31.src",
 			"summary": null,
 			"description": null
 		},{
-			"nevra": "curl-999-1.x86_64",
+			"nevra": "curl-0:999-1.x86_64",
 			"summary": "curl newest summary",
 			"description": "curl newest description"
 		},{
-			"nevra": "bash-999-2.x86_64",
+			"nevra": "bash-0:999-2.x86_64",
 			"summary": "bash newest summary",
 			"description": "bash newest description"
 		}

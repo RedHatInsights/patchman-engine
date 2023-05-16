@@ -20,7 +20,7 @@ func TestAnalyzePackages(t *testing.T) {
 
 	system := models.SystemPlatform{ID: 11, RhAccountID: 2}
 	database.CheckSystemPackages(t, system.ID, 0)
-	database.CheckEVRAsInDB(t, 0, "12.0.1-1.fc31.x86_64") // lazy added package
+	database.CheckEVRAsInDB(t, 0, "0:12.0.1-1.fc31.x86_64") // lazy added package
 	// we send request with zero epoch and expect response with zero epoch
 	// so we have to test with zero epoch
 	vmaasData := vmaas.UpdatesV2Response{UpdateList: &map[string]vmaas.UpdatesV2ResponseUpdateList{
@@ -33,10 +33,10 @@ func TestAnalyzePackages(t *testing.T) {
 
 	installed, updatable, err := analyzePackages(database.Db, &system, &vmaasData)
 	assert.Nil(t, err)
-	assert.Equal(t, 3, installed)                                      // kernel, firefox, custom-package
-	assert.Equal(t, 2, updatable)                                      // firefox, custom-package have updates
-	database.CheckEVRAsInDBSynced(t, 1, false, "12.0.1-1.fc31.x86_64") // lazy added package
-	database.CheckEVRAsInDB(t, 1, "1.2.3-1.fc33.x86_64")               // custom package is not ignored
+	assert.Equal(t, 3, installed)                                        // kernel, firefox, custom-package
+	assert.Equal(t, 2, updatable)                                        // firefox, custom-package have updates
+	database.CheckEVRAsInDBSynced(t, 1, false, "0:12.0.1-1.fc31.x86_64") // lazy added package
+	database.CheckEVRAsInDB(t, 1, "0:1.2.3-1.fc33.x86_64")               // custom package is not ignored
 	database.CheckSystemPackages(t, system.ID, 3)
 	database.DeleteSystemPackages(t, system.ID)
 	database.DeleteNewlyAddedPackages(t)
@@ -50,7 +50,7 @@ func TestLazySavePackages(t *testing.T) {
 	loadCache()
 
 	names := []string{"kernel", "firefox", "custom-package"}
-	evras := []string{"1-0.el7.x86_64", "1-1.1.el7.x86_64", "11-1.el7.x86_64"}
+	evras := []string{"0:1-0.el7.x86_64", "0:1-1.1.el7.x86_64", "0:11-1.el7.x86_64"}
 	updateList := make(map[string]vmaas.UpdatesV2ResponseUpdateList, len(names))
 	for i, name := range names {
 		nevra := fmt.Sprintf("%s-%s", name, evras[i])

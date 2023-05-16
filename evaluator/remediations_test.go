@@ -16,13 +16,13 @@ var testFfUpdates = []vmaas.UpdatesV2ResponseAvailableUpdates{
 }
 var testKUpdates = []vmaas.UpdatesV2ResponseAvailableUpdates{
 	{Repository: utils.PtrString("repo1"), Releasever: utils.PtrString("ser1"), Basearch: utils.PtrString("i686"),
-		Erratum: utils.PtrString("RH-100"), Package: utils.PtrString("kernel-5.10.13-200.fc31.x86_64")},
+		Erratum: utils.PtrString("RH-100"), Package: utils.PtrString("kernel-0:5.10.13-200.fc31.x86_64")},
 }
 var testUpdateList = map[string]vmaas.UpdatesV2ResponseUpdateList{
-	"firefox-76.0.1-1.fc31.x86_64": {
+	"firefox-0:76.0.1-1.fc31.x86_64": {
 		AvailableUpdates: &testFfUpdates,
 	},
-	"kernel-5.6.13-200.fc31.x86_64": {
+	"kernel-0:5.6.13-200.fc31.x86_64": {
 		AvailableUpdates: &testKUpdates,
 	},
 }
@@ -42,5 +42,5 @@ func TestCreateRemediationsState(t *testing.T) {
 	assert.Equal(t, state.HostID, id)
 	assert.Equal(t, state.Issues, []string{"patch:RH-1", "patch:RH-100", "patch:RH-2",
 		"patch:firefox-0:77.0.1-1.fc31.x86_64", "patch:firefox-1:76.0.1-1.fc31.x86_64",
-		"patch:kernel-5.10.13-200.fc31.x86_64"})
+		"patch:kernel-0:5.10.13-200.fc31.x86_64"})
 }

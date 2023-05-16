@@ -42,7 +42,7 @@ func (r *AdvisoryDetailResponseV1) checkRH9Fields(t *testing.T) {
 	assert.Equal(t, "2016-09-22 20:00:00 +0000 UTC", r.Data.Attributes.PublicDate.String())
 	assert.Equal(t, "2018-09-22 20:00:00 +0000 UTC", r.Data.Attributes.ModifiedDate.String())
 	assert.Equal(t, 1, len(r.Data.Attributes.Packages))
-	assert.Equal(t, "77.0.1-1.fc31.x86_64", r.Data.Attributes.Packages["firefox"])
+	assert.Equal(t, "0:77.0.1-1.fc31.x86_64", r.Data.Attributes.Packages["firefox"])
 	assert.Equal(t, false, r.Data.Attributes.RebootRequired)
 	assert.Equal(t, []string{"8.2", "8.4"}, r.Data.Attributes.ReleaseVersions)
 	assert.Nil(t, r.Data.Attributes.Severity)
@@ -59,7 +59,7 @@ func (r *AdvisoryDetailResponseV2) checkRH9Fields(t *testing.T) {
 	assert.Equal(t, "2018-09-22 20:00:00 +0000 UTC", r.Data.Attributes.ModifiedDate.String())
 	assert.Equal(t, 2, len(r.Data.Attributes.Packages))
 	assert.Equal(
-		t, packagesV2{"firefox-77.0.1-1.fc31.x86_64", "firefox-77.0.1-1.fc31.s390"},
+		t, packagesV2{"firefox-0:77.0.1-1.fc31.x86_64", "firefox-0:77.0.1-1.fc31.s390"},
 		r.Data.Attributes.Packages,
 	)
 	assert.Equal(t, false, r.Data.Attributes.RebootRequired)

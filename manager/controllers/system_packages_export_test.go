@@ -18,8 +18,8 @@ func TestSystemPackagesExportHandlerJSON(t *testing.T) {
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 4, len(output))
 	assert.Equal(t, output[0].Name, "kernel")
-	assert.Equal(t, output[0].EVRA, "5.6.13-200.fc31.x86_64")
-	assert.Equal(t, output[0].LatestEVRA, "5.6.13-200.fc31.x86_64")
+	assert.Equal(t, output[0].EVRA, "0:5.6.13-200.fc31.x86_64")
+	assert.Equal(t, output[0].LatestEVRA, "0:5.6.13-200.fc31.x86_64")
 	assert.Equal(t, output[0].Summary, "The Linux kernel")
 }
 
@@ -35,10 +35,10 @@ func TestSystemPackagesExportHandlerCSV(t *testing.T) {
 	assert.Equal(t, 6, len(lines))
 	assert.Equal(t, "name,evra,summary,description,updatable,latest_evra", lines[0])
 
-	assert.Equal(t, "kernel,5.6.13-200.fc31.x86_64,The Linux kernel,The kernel meta package,false,"+
-		"5.6.13-200.fc31.x86_64", lines[1])
-	assert.Equal(t, "firefox,76.0.1-1.fc31.x86_64,Mozilla Firefox Web browser,Mozilla Firefox is an "+
-		"open-source web browser...,true,76.0.1-1.fc31.x86_64", lines[2])
+	assert.Equal(t, "kernel,0:5.6.13-200.fc31.x86_64,The Linux kernel,The kernel meta package,false,"+
+		"0:5.6.13-200.fc31.x86_64", lines[1])
+	assert.Equal(t, "firefox,0:76.0.1-1.fc31.x86_64,Mozilla Firefox Web browser,Mozilla Firefox is an "+
+		"open-source web browser...,true,0:76.0.1-1.fc31.x86_64", lines[2])
 }
 
 func TestSystemPackagesExportUnknown(t *testing.T) {
