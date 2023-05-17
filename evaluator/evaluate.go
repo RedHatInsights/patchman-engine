@@ -288,6 +288,7 @@ func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 	updatesReq.ThirdParty = utils.PtrBool(thirdParty) // enable "third_party" updates in VMaaS if needed
 	useOptimisticUpdates := thirdParty || vmaasCallUseOptimisticUpdates
 	updatesReq.OptimisticUpdates = utils.PtrBool(useOptimisticUpdates)
+	updatesReq.EpochRequired = utils.PtrBool(true)
 
 	vmaasData, err = callVMaas(ctx, updatesReq)
 	if err != nil {
