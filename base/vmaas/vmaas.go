@@ -18,6 +18,8 @@ type UpdatesV3Request struct {
 	ThirdParty *bool `json:"third_party,omitempty"`
 	// Search for updates of unknown package EVRAs.
 	OptimisticUpdates *bool `json:"optimistic_updates,omitempty"`
+	// VMaaS will check package_list and return error if we provide package_list without epochs
+	EpochRequired *bool `json:"epoch_required,omitempty"`
 }
 
 type UpdatesV3RequestModulesList struct {
