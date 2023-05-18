@@ -4797,8 +4797,8 @@
         },
         "/views/advisories/systems": {
             "post": {
-                "summary": "View advisory-system pairs for selected systems and advisories",
-                "description": "View advisory-system pairs for selected systems and advisories",
+                "summary": "View advisory-system pairs for selected systems and installable advisories",
+                "description": "View advisory-system pairs for selected systems and installable advisories",
                 "operationId": "viewAdvisoriesSystems",
                 "requestBody": {
                     "description": "Request body",
@@ -4853,8 +4853,8 @@
         },
         "/views/systems/advisories": {
             "post": {
-                "summary": "View system-advisory pairs for selected systems and advisories",
-                "description": "View system-advisory pairs for selected systems and advisories",
+                "summary": "View system-advisory pairs for selected systems and installable advisories",
+                "description": "View system-advisory pairs for selected systems and installable advisories",
                 "operationId": "viewSystemsAdvisories",
                 "requestBody": {
                     "description": "Request body",

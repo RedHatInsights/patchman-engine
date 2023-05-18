@@ -17,7 +17,7 @@ func doTestView(t *testing.T, handler gin.HandlerFunc, limit, offset *int, check
 	core.SetupTest(t)
 	body := SystemsAdvisoriesRequest{
 		Systems:    []SystemID{"00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002"},
-		Advisories: []AdvisoryName{"RH-1", "RH-2"},
+		Advisories: []AdvisoryName{"RH-1", "RH-3"},
 		Limit:      limit,
 		Offset:     offset,
 	}
@@ -35,8 +35,8 @@ func TestSystemsAdvisoriesView(t *testing.T) {
 		var output SystemsAdvisoriesResponse
 		CheckResponse(t, w, http.StatusOK, &output)
 		assert.Equal(t, output.Data["00000000-0000-0000-0000-000000000001"][0], AdvisoryName("RH-1"))
-		assert.Equal(t, output.Data["00000000-0000-0000-0000-000000000001"][1], AdvisoryName("RH-2"))
-		assert.Equal(t, output.Data["00000000-0000-0000-0000-000000000002"][0], AdvisoryName("RH-1"))
+		assert.Equal(t, output.Data["00000000-0000-0000-0000-000000000001"][1], AdvisoryName("RH-3"))
+		assert.Equal(t, 0, len(output.Data["00000000-0000-0000-0000-000000000002"]))
 	})
 }
 
@@ -45,8 +45,7 @@ func TestAdvisoriesSystemsView(t *testing.T) {
 		var output AdvisoriesSystemsResponse
 		CheckResponse(t, w, http.StatusOK, &output)
 		assert.Equal(t, output.Data["RH-1"][0], SystemID("00000000-0000-0000-0000-000000000001"))
-		assert.Equal(t, output.Data["RH-1"][1], SystemID("00000000-0000-0000-0000-000000000002"))
-		assert.Equal(t, output.Data["RH-2"][0], SystemID("00000000-0000-0000-0000-000000000001"))
+		assert.Equal(t, output.Data["RH-3"][0], SystemID("00000000-0000-0000-0000-000000000001"))
 	})
 }
 
