@@ -119,6 +119,7 @@ func (SystemPackage) TableName() string {
 type PackageUpdate struct {
 	EVRA     string `json:"evra"`
 	Advisory string `json:"advisory"`
+	Status   string `json:"status"`
 }
 
 type DeletedSystem struct {
