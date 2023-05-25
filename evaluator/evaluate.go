@@ -99,6 +99,7 @@ func configure() {
 	enableInstantNotifications = utils.GetBoolEnvOrDefault("ENABLE_INSTANT_NOTIFICATIONS", true)
 	configureRemediations()
 	configureNotifications()
+	configureStatus()
 }
 
 func Evaluate(ctx context.Context, event *mqueue.PlatformEvent, inventoryID, evaluationType string) error {
