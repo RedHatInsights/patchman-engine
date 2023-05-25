@@ -12,11 +12,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-const (
-	INSTALLABLE = 0
-	APPLICABLE  = 1
-)
-
 func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) (
 	SystemAdvisoryMap, error) {
 	if !enableAdvisoryAnalysis {
