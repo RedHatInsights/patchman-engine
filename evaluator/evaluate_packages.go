@@ -319,6 +319,8 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 }
 
 func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList) ([]byte, error) {
+	var latestInstallable models.PackageUpdate
+	var latestApplicable models.PackageUpdate
 	uniqUpdates := make(map[models.PackageUpdate]bool)
 	pkgUpdates := make([]models.PackageUpdate, 0, len(updateData.GetAvailableUpdates()))
 	for _, upData := range updateData.GetAvailableUpdates() {
@@ -330,16 +332,28 @@ func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList)
 		}
 		// Keep only unique entries for each update in the list
 		pkgUpdate := models.PackageUpdate{
-			EVRA: upNevra.EVRAString(), Advisory: upData.GetErratum(),
+			EVRA: upNevra.EVRAString(), Advisory: upData.GetErratum(), Status: STATUS[upData.StatusID],
 		}
 		if !uniqUpdates[pkgUpdate] {
 			pkgUpdates = append(pkgUpdates, pkgUpdate)
 			uniqUpdates[pkgUpdate] = true
+			switch upData.StatusID {
+			case INSTALLABLE:
+				latestInstallable = pkgUpdate
+			case APPLICABLE:
+				latestApplicable = pkgUpdate
+			}
 		}
 	}
 
 	if prunePackageLatestOnly && len(pkgUpdates) > 1 {
-		pkgUpdates = pkgUpdates[len(pkgUpdates)-1:]
+		pkgUpdates = make([]models.PackageUpdate, 0, 2)
+		if latestInstallable.EVRA != "" {
+			pkgUpdates = append(pkgUpdates, latestInstallable)
+		}
+		if latestApplicable.EVRA != "" {
+			pkgUpdates = append(pkgUpdates, latestApplicable)
+		}
 	}
 
 	var updateDataJSON []byte
