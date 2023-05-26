@@ -85,12 +85,12 @@ type BaselineSystemsResponse struct {
 	Meta  ListMeta             `json:"meta"`
 }
 
-func baselineSystemsCommon(c *gin.Context, account, apiver int) (*gorm.DB, *ListMeta, []string, error) {
+func queryBaselineSystems(c *gin.Context, account, apiver int) (*gorm.DB, error) {
 	baselineID := c.Param("baseline_id")
 	id, err := strconv.ParseInt(baselineID, 10, 64)
 	if err != nil {
 		LogAndRespBadRequest(c, err, fmt.Sprintf("Invalid baseline_id: %s", baselineID))
-		return nil, nil, nil, err
+		return nil, err
 	}
 
 	db := middlewares.DBFromContext(c)
@@ -99,19 +99,27 @@ func baselineSystemsCommon(c *gin.Context, account, apiver int) (*gorm.DB, *List
 		Where("id = ? ", id).Count(&exists).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")
-		return nil, nil, nil, err
+		return nil, err
 	}
 	if exists == 0 {
 		LogAndRespNotFound(c, errors.New("Baseline not found"), "Baseline not found")
-		return nil, nil, nil, err
+		return nil, err
 	}
 
 	query := buildQueryBaselineSystems(db, account, id, apiver)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, err
 	} // Error handled in method itself
 	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
+	return query, nil
+}
+
+func baselineSystemsCommon(c *gin.Context, account, apiver int) (*gorm.DB, *ListMeta, []string, error) {
+	query, err := queryBaselineSystems(c, account, apiver)
+	if err != nil {
+		return nil, nil, nil, err
+	} // Error handled in method itself
 
 	query, meta, params, err := ListCommon(query, c, nil, BaselineSystemOpts)
 	if err != nil {
@@ -137,6 +145,12 @@ func baselineSystemsCommon(c *gin.Context, account, apiver int) (*gorm.DB, *List
 // @Param    filter[display_name]           query   string  false "Filter"
 // @Param    filter[os]           			query   string  false "Filter"
 // @Param    tags           query   []string  false "Tag filter"
+// @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
+// @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
+// @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
+// @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Success 200 {object} BaselineSystemsResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
