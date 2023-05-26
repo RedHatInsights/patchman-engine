@@ -747,6 +747,7 @@ func systemsIDs(c *gin.Context, systems []SystemsID, meta *ListMeta) ([]string, 
 
 type SystemDBLookupSlice []SystemDBLookup
 type AdvisorySystemDBLookupSlice []AdvisorySystemDBLookup
+type BaselineSystemsDBLookupSlice []BaselineSystemsDBLookup
 
 // Parse tags from TagsStr string attribute to Tags SystemTag array attribute.
 // It's used in /*systems endpoints as we can not map this attribute directly from database query result.
@@ -763,6 +764,18 @@ func (s *SystemDBLookupSlice) ParseAndFillTags() {
 // Parse tags from TagsStr string attribute to Tags SystemTag array attribute.
 // It's used in /*systems endpoints as we can not map this attribute directly from database query result.
 func (s *AdvisorySystemDBLookupSlice) ParseAndFillTags() {
+	var err error
+	for i, system := range *s {
+		(*s)[i].Tags, err = parseSystemTags(system.TagsStr)
+		if err != nil {
+			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system tags to export parsing failed")
+		}
+	}
+}
+
+// Parse tags from TagsStr string attribute to Tags SystemTag array attribute.
+// It's used in /*systems endpoints as we can not map this attribute directly from database query result.
+func (s *BaselineSystemsDBLookupSlice) ParseAndFillTags() {
 	var err error
 	for i, system := range *s {
 		(*s)[i].Tags, err = parseSystemTags(system.TagsStr)
