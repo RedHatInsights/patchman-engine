@@ -13,7 +13,7 @@ import (
 )
 
 type SystemPackageInline struct {
-	SystemPackagesAttrs
+	SystemPackagesAttrsV3
 	LatestEVRA string `json:"latest_evra" csv:"latest_evra"`
 }
 
@@ -77,9 +77,9 @@ func SystemPackagesExportHandler(c *gin.Context) {
 func convertToOutputArray(inArr *[]SystemPackageDBLoad) *[]SystemPackageInline {
 	outData := make([]SystemPackageInline, len(*inArr))
 	for i, v := range *inArr {
-		outData[i].SystemPackagesAttrs = v.SystemPackagesAttrs
+		outData[i].SystemPackagesAttrsV3 = v.SystemPackagesAttrsV3
 		if v.Updates == nil {
-			outData[i].LatestEVRA = v.SystemPackagesAttrs.EVRA
+			outData[i].LatestEVRA = v.SystemPackagesAttrsV3.EVRA
 			continue
 		}
 		var updates []models.PackageUpdate

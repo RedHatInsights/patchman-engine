@@ -6504,6 +6504,9 @@
                     "updatable": {
                         "type": "boolean"
                     },
+                    "update_status": {
+                        "type": "string"
+                    },
                     "updates": {
                         "type": "array",
                         "items": {
@@ -6532,6 +6535,9 @@
                     },
                     "updatable": {
                         "type": "boolean"
+                    },
+                    "update_status": {
+                        "type": "string"
                     }
                 }
             },

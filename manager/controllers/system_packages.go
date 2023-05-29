@@ -14,16 +14,26 @@ import (
 )
 
 // nolint: lll
-type SystemPackagesAttrs struct {
+type SystemPackagesAttrsCommon struct {
 	Name        string `json:"name" csv:"name" query:"pn.name" gorm:"column:name"`
 	EVRA        string `json:"evra" csv:"evra" query:"p.evra" gorm:"column:evra"`
 	Summary     string `json:"summary" csv:"summary" query:"sum.value" gorm:"column:summary"`
 	Description string `json:"description" csv:"description" query:"descr.value" gorm:"column:description"`
-	Updatable   bool   `json:"updatable" csv:"updatable" query:"(COALESCE(json_array_length(spkg.update_data::json),0) > 0)" gorm:"column:updatable"`
+	Updatable   bool   `json:"updatable" csv:"updatable" query:"(COALESCE(jsonb_array_length(spkg.update_data),0) > 0)" gorm:"column:updatable"`
+}
+
+type SystemPackagesAttrsV2 struct {
+	SystemPackagesAttrsCommon
+}
+
+// nolint: lll
+type SystemPackagesAttrsV3 struct {
+	SystemPackagesAttrsCommon
+	UpdateStatus string `json:"update_status" csv:"update_status" query:"update_status(spkg.update_data)" gorm:"column:update_status"`
 }
 
 type SystemPackageData struct {
-	SystemPackagesAttrs
+	SystemPackagesAttrsV3
 	Updates []models.PackageUpdate `json:"updates"`
 }
 type SystemPackageResponse struct {
@@ -33,7 +43,7 @@ type SystemPackageResponse struct {
 }
 
 var SystemPackagesSelect = database.MustGetSelect(&SystemPackageDBLoad{})
-var SystemPackagesFields = database.MustGetQueryAttrs(&SystemPackagesAttrs{})
+var SystemPackagesFields = database.MustGetQueryAttrs(&SystemPackagesAttrsV3{})
 var SystemPackagesOpts = ListOpts{
 	Fields:         SystemPackagesFields,
 	DefaultFilters: nil,
@@ -43,7 +53,7 @@ var SystemPackagesOpts = ListOpts{
 }
 
 type SystemPackageDBLoad struct {
-	SystemPackagesAttrs
+	SystemPackagesAttrsV3
 	Updates []byte `json:"updates" query:"spkg.update_data" gorm:"column:updates"`
 	// a helper to get total number of systems
 	MetaTotalHelper
@@ -118,7 +128,7 @@ func SystemPackagesHandler(c *gin.Context) {
 	}
 	data := make([]SystemPackageData, len(loaded))
 	for i, sp := range loaded {
-		data[i].SystemPackagesAttrs = sp.SystemPackagesAttrs
+		data[i].SystemPackagesAttrsV3 = sp.SystemPackagesAttrsV3
 		if sp.Updates == nil {
 			continue
 		}
