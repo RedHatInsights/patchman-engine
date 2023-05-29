@@ -63,8 +63,7 @@ func TestSystemsExportWrongFormat(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnsupportedMediaType, w.Code)
 	body := w.Body.String()
-	exp := `{"error":"Invalid content type 'test-format', use 'application/json' or 'text/csv'"}`
-	assert.Equal(t, exp, body)
+	assert.Equal(t, InvalidContentTypeErr, body)
 }
 
 func TestSystemsExportCSVFilter(t *testing.T) {
