@@ -148,13 +148,12 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 // @Produce  json
 // @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field"    Enums(id,name,advisory_type,synopsis,public_date,applicable_systems)
+// @Param    sort           query   string  false   "Sort field"    Enums(id,advisory_type_name,synopsis,public_date,severity,installable_systems,applicable_systems)
 // @Param    search         query   string  false   "Find matching text"
 // @Param    filter[id]                  query   string  false "Filter "
 // @Param    filter[description]         query   string  false "Filter"
 // @Param    filter[public_date]         query   string  false "Filter"
 // @Param    filter[synopsis]            query   string  false "Filter"
-// @Param    filter[advisory_type]       query   string  false "Filter"
 // @Param    filter[advisory_type_name]  query   string  false "Filter"
 // @Param    filter[severity]            query   string  false "Filter"
 // @Param    filter[installable_systems] query   string  false "Filter"
