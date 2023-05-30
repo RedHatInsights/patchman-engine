@@ -58,6 +58,9 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 
 	export.GET("/packages", controllers.PackagesExportHandler)
 	export.GET("/packages/:package_name/systems", controllers.PackageSystemsExportHandler)
+	if config.EnableBaselines {
+		export.GET("/baselines/:baseline_id/systems", controllers.BaselineSystemsExportHandler)
+	}
 
 	views := api.Group("/views")
 	views.POST("/systems/advisories", controllers.PostSystemsAdvisories)
