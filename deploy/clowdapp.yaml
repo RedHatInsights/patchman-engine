@@ -345,6 +345,7 @@ objects:
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
         - {name: FULL_SYNC_CADENCE,value: '${FULL_SYNC_CADENCE}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
+        - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_VMAAS_SYNC}', memory: '${RES_LIMIT_MEM_VMAAS_SYNC}'}
           requests: {cpu: '${RES_REQUEST_CPU_VMAAS_SYNC}', memory: '${RES_REQUEST_MEM_VMAAS_SYNC}'}
