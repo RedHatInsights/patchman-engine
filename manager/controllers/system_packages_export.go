@@ -12,9 +12,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type SystemPackageInline struct {
-	SystemPackagesAttrsV3
+type SystemPackageInlineV2 struct {
+	SystemPackagesAttrsV2
 	LatestEVRA string `json:"latest_evra" csv:"latest_evra"`
+}
+
+type SystemPackageInlineV3 struct {
+	SystemPackagesAttrsV3
+	LatestInstallable string `json:"latest_installable" csv:"latest_installable"`
+	LatestApplicable  string `json:"latest_applicable" csv:"latest_applicable"`
 }
 
 // @Summary Show me details about a system packages by given inventory id
@@ -30,7 +36,7 @@ type SystemPackageInline struct {
 // @Param    filter[evra]            query   string  false "Filter"
 // @Param    filter[summary]         query   string  false "Filter"
 // @Param    filter[updatable]       query   bool    false "Filter"
-// @Success 200 {array} SystemPackageInline
+// @Success 200 {array} SystemPackageInlineV3
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 415 {object} utils.ErrorResponse
@@ -38,6 +44,7 @@ type SystemPackageInline struct {
 // @Router /export/systems/{inventory_id}/packages [get]
 func SystemPackagesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
+	apiver := c.GetInt(middlewares.KeyApiver)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {
@@ -70,25 +77,52 @@ func SystemPackagesExportHandler(c *gin.Context) {
 		return
 	}
 
-	data := convertToOutputArray(&loaded)
+	if apiver < 3 {
+		data := buildSystemPackageInlineV2(loaded)
+		OutputExportData(c, data)
+		return
+	}
+	data := buildSystemPackageInlineV3(loaded)
 	OutputExportData(c, data)
 }
 
-func convertToOutputArray(inArr *[]SystemPackageDBLoad) *[]SystemPackageInline {
-	outData := make([]SystemPackageInline, len(*inArr))
-	for i, v := range *inArr {
-		outData[i].SystemPackagesAttrsV3 = v.SystemPackagesAttrsV3
-		if v.Updates == nil {
-			outData[i].LatestEVRA = v.SystemPackagesAttrsV3.EVRA
-			continue
-		}
-		var updates []models.PackageUpdate
-		if err := json.Unmarshal(v.Updates, &updates); err != nil {
-			panic(err)
-		}
-		if len(updates) > 0 {
-			outData[i].LatestEVRA = updates[len(updates)-1].EVRA
+func findLatestEVRA(pkg SystemPackageDBLoad) (installable string, applicable string) {
+	installable = pkg.SystemPackagesAttrsV3.EVRA
+	applicable = pkg.SystemPackagesAttrsV3.EVRA
+	if pkg.Updates == nil {
+		return
+	}
+	var updates []models.PackageUpdate
+	if err := json.Unmarshal(pkg.Updates, &updates); err != nil {
+		panic(err)
+	}
+	nUpdates := len(updates)
+	if nUpdates > 0 {
+		applicable = updates[nUpdates-1].EVRA
+		for i := nUpdates - 1; i >= 0; i-- {
+			if updates[i].Status == "Installable" {
+				installable = updates[i].EVRA
+				break
+			}
 		}
 	}
-	return &outData
+	return
+}
+
+func buildSystemPackageInlineV2(pkgs []SystemPackageDBLoad) []SystemPackageInlineV2 {
+	data := make([]SystemPackageInlineV2, len(pkgs))
+	for i, v := range pkgs {
+		data[i].SystemPackagesAttrsCommon = v.SystemPackagesAttrsCommon
+		data[i].LatestEVRA, _ = findLatestEVRA(v)
+	}
+	return data
+}
+
+func buildSystemPackageInlineV3(pkgs []SystemPackageDBLoad) []SystemPackageInlineV3 {
+	data := make([]SystemPackageInlineV3, len(pkgs))
+	for i, v := range pkgs {
+		data[i].SystemPackagesAttrsV3 = v.SystemPackagesAttrsV3
+		data[i].LatestInstallable, data[i].LatestApplicable = findLatestEVRA(v)
+	}
+	return data
 }
