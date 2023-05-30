@@ -2454,7 +2454,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.SystemPackageInline"
+                                        "$ref": "#/components/schemas/controllers.SystemPackageInlineV3"
                                     }
                                 }
                             }
@@ -6515,7 +6515,7 @@
                     }
                 }
             },
-            "controllers.SystemPackageInline": {
+            "controllers.SystemPackageInlineV3": {
                 "type": "object",
                 "properties": {
                     "description": {
@@ -6524,7 +6524,10 @@
                     "evra": {
                         "type": "string"
                     },
-                    "latest_evra": {
+                    "latest_applicable": {
+                        "type": "string"
+                    },
+                    "latest_installable": {
                         "type": "string"
                     },
                     "name": {
