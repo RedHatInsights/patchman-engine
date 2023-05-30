@@ -4920,7 +4920,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.SystemPackageResponse"
+                                    "$ref": "#/components/schemas/controllers.SystemPackageResponseV3"
                                 }
                             }
                         }
@@ -6486,7 +6486,7 @@
                     }
                 }
             },
-            "controllers.SystemPackageData": {
+            "controllers.SystemPackageDataV3": {
                 "type": "object",
                 "properties": {
                     "description": {
@@ -6541,13 +6541,13 @@
                     }
                 }
             },
-            "controllers.SystemPackageResponse": {
+            "controllers.SystemPackageResponseV3": {
                 "type": "object",
                 "properties": {
                     "data": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/controllers.SystemPackageData"
+                            "$ref": "#/components/schemas/controllers.SystemPackageDataV3"
                         }
                     },
                     "links": {

@@ -13,7 +13,7 @@ func TestSystemPackages(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/00000000-0000-0000-0000-000000000013/packages",
 		nil, "", SystemPackagesHandler, 3, "GET", "/:inventory_id/packages")
 
-	var output SystemPackageResponse
+	var output SystemPackageResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Len(t, output.Data, 4)
 	assert.Equal(t, output.Data[0].Name, "bash")
@@ -32,7 +32,7 @@ func TestPackagesSearch(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/00000000-0000-0000-0000-000000000012/packages?search=kernel",
 		nil, "", SystemPackagesHandler, 3, "GET", "/:inventory_id/packages")
 
-	var output SystemPackageResponse
+	var output SystemPackageResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Len(t, output.Data, 1)
 	assert.Equal(t, output.Data[0].Name, "kernel")
@@ -51,7 +51,7 @@ func TestSystemPackagesUpdatableOnly(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/00000000-0000-0000-0000-000000000013/packages?filter[updatable]=true",
 		nil, "", SystemPackagesHandler, 3, "GET", "/:inventory_id/packages")
 
-	var output SystemPackageResponse
+	var output SystemPackageResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Len(t, output.Data, 1)
 	assert.Equal(t, output.Data[0].Name, "firefox")
@@ -63,7 +63,7 @@ func TestSystemPackagesNonUpdatableOnly(t *testing.T) {
 		"/00000000-0000-0000-0000-000000000013/packages?filter[updatable]=false", nil, "",
 		SystemPackagesHandler, 3, "GET", "/:inventory_id/packages")
 
-	var output SystemPackageResponse
+	var output SystemPackageResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Len(t, output.Data, 3)
 	assert.Equal(t, output.Data[0].Name, "bash")

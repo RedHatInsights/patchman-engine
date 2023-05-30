@@ -22,6 +22,10 @@ type SystemPackagesAttrsCommon struct {
 	Updatable   bool   `json:"updatable" csv:"updatable" query:"(COALESCE(jsonb_array_length(spkg.update_data),0) > 0)" gorm:"column:updatable"`
 }
 
+type SystemPackageUpdates struct {
+	Updates []models.PackageUpdate `json:"updates"`
+}
+
 type SystemPackagesAttrsV2 struct {
 	SystemPackagesAttrsCommon
 }
@@ -32,14 +36,23 @@ type SystemPackagesAttrsV3 struct {
 	UpdateStatus string `json:"update_status" csv:"update_status" query:"update_status(spkg.update_data)" gorm:"column:update_status"`
 }
 
-type SystemPackageData struct {
-	SystemPackagesAttrsV3
-	Updates []models.PackageUpdate `json:"updates"`
+type SystemPackageDataV2 struct {
+	SystemPackagesAttrsV2
+	SystemPackageUpdates
 }
-type SystemPackageResponse struct {
-	Data  []SystemPackageData `json:"data"`
-	Meta  ListMeta            `json:"meta"`
-	Links Links               `json:"links"`
+type SystemPackageDataV3 struct {
+	SystemPackagesAttrsV3
+	SystemPackageUpdates
+}
+type SystemPackageResponseV2 struct {
+	Data  []SystemPackageDataV2 `json:"data"`
+	Meta  ListMeta              `json:"meta"`
+	Links Links                 `json:"links"`
+}
+type SystemPackageResponseV3 struct {
+	Data  []SystemPackageDataV3 `json:"data"`
+	Meta  ListMeta              `json:"meta"`
+	Links Links                 `json:"links"`
 }
 
 var SystemPackagesSelect = database.MustGetSelect(&SystemPackageDBLoad{})
@@ -84,13 +97,14 @@ func systemPackageQuery(db *gorm.DB, account int, inventoryID string) *gorm.DB {
 // @Param    filter[evra]            query   string  false "Filter"
 // @Param    filter[summary]         query   string  false "Filter"
 // @Param    filter[updatable]       query   bool    false "Filter"
-// @Success 200 {object} SystemPackageResponse
+// @Success 200 {object} SystemPackageResponseV3
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /systems/{inventory_id}/packages [get]
 func SystemPackagesHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
+	apiver := c.GetInt(middlewares.KeyApiver)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {
@@ -122,11 +136,36 @@ func SystemPackagesHandler(c *gin.Context) {
 		return
 	}
 
+	total, data := buildSystemPackageData(loaded)
+	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
+	if err != nil {
+		return // Error handled in method itself
+	}
+	if apiver < 3 {
+		dataV2 := systemPackageV3toV2(data)
+		var resp = SystemPackageResponseV2{
+			Data:  dataV2,
+			Links: *links,
+			Meta:  *meta,
+		}
+		c.JSON(http.StatusOK, &resp)
+		return
+	}
+	response := SystemPackageResponseV3{
+		Data:  data,
+		Meta:  *meta,
+		Links: *links,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func buildSystemPackageData(loaded []SystemPackageDBLoad) (int, []SystemPackageDataV3) {
 	var total int
 	if len(loaded) > 0 {
 		total = loaded[0].Total
 	}
-	data := make([]SystemPackageData, len(loaded))
+	data := make([]SystemPackageDataV3, len(loaded))
 	for i, sp := range loaded {
 		data[i].SystemPackagesAttrsV3 = sp.SystemPackagesAttrsV3
 		if sp.Updates == nil {
@@ -136,15 +175,19 @@ func SystemPackagesHandler(c *gin.Context) {
 			panic(err)
 		}
 	}
-	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
-	if err != nil {
-		return // Error handled in method itself
-	}
-	response := SystemPackageResponse{
-		Data:  data,
-		Meta:  *meta,
-		Links: *links,
-	}
+	return total, data
+}
 
-	c.JSON(http.StatusOK, response)
+func systemPackageV3toV2(pkgs []SystemPackageDataV3) []SystemPackageDataV2 {
+	nPkgs := len(pkgs)
+	pkgsV2 := make([]SystemPackageDataV2, nPkgs)
+	for i := 0; i < nPkgs; i++ {
+		pkgsV2[i] = SystemPackageDataV2{
+			SystemPackagesAttrsV2: SystemPackagesAttrsV2{
+				SystemPackagesAttrsCommon: pkgs[i].SystemPackagesAttrsCommon,
+			},
+			SystemPackageUpdates: pkgs[i].SystemPackageUpdates,
+		}
+	}
+	return pkgsV2
 }
