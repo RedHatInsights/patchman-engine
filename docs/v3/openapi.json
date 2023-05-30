@@ -46,10 +46,11 @@
                             "type": "string",
                             "enum": [
                                 "id",
-                                "name",
-                                "advisory_type",
+                                "advisory_type_name",
                                 "synopsis",
                                 "public_date",
+                                "severity",
+                                "installable_systems",
                                 "applicable_systems"
                             ]
                         }
@@ -88,14 +89,6 @@
                     },
                     {
                         "name": "filter[synopsis]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[advisory_type]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
