@@ -232,6 +232,7 @@ objects:
         - {name: ENABLE_INSTANT_NOTIFICATIONS, value: '${ENABLE_INSTANT_NOTIFICATIONS}'}
         - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
+        - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_UPLOAD}', memory: '${RES_LIMIT_MEM_EVALUATOR_UPLOAD}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_UPLOAD}', memory: '${RES_REQUEST_MEM_EVALUATOR_UPLOAD}'}
@@ -297,6 +298,7 @@ objects:
         - {name: ENABLE_INSTANT_NOTIFICATIONS, value: '${ENABLE_INSTANT_NOTIFICATIONS}'}
         - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
+        - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_RECALC}', memory: '${RES_LIMIT_MEM_EVALUATOR_RECALC}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_RECALC}', memory: '${RES_REQUEST_MEM_EVALUATOR_RECALC}'}
@@ -580,6 +582,7 @@ parameters:
 
 # Evaluator
 - {name: USE_VMAAS_GO, value: 'false'}
+- {name: GOGC, value: '25'}
 
 # Evaluator - upload
 - {name: REPLICAS_EVALUATOR_UPLOAD, value: '1'}
