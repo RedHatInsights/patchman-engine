@@ -3017,7 +3017,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.IDsResponse"
+                                    "$ref": "#/components/schemas/controllers.IDsStatusResponse"
                                 }
                             }
                         }
@@ -3740,7 +3740,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.IDsResponse"
+                                    "$ref": "#/components/schemas/controllers.IDsStatusResponse"
                                 }
                             }
                         }
@@ -5876,9 +5876,37 @@
                     }
                 }
             },
+            "controllers.IDStatus": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                }
+            },
             "controllers.IDsResponse": {
                 "type": "object",
                 "properties": {
+                    "ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "controllers.IDsStatusResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.IDStatus"
+                        }
+                    },
                     "ids": {
                         "type": "array",
                         "items": {

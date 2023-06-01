@@ -52,6 +52,11 @@ type SystemAdvisoriesResponse struct {
 	Meta  ListMeta             `json:"meta"`
 }
 
+type AdvisoryStatusID struct {
+	AdvisoryID
+	SystemAdvisoryStatus
+}
+
 func (v RelList) String() string {
 	return strings.Join(v, ",")
 }
@@ -161,25 +166,29 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 // @Param    filter[advisory_type]       query   string  false "Filter"
 // @Param    filter[advisory_type_name]  query   string  false "Filter"
 // @Param    filter[severity]            query   string  false "Filter"
-// @Success 200 {object} IDsResponse
+// @Success 200 {object} IDsStatusResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesIDsHandler(c *gin.Context) {
+	apiver := c.GetInt(middlewares.KeyApiver)
 	query, _, _, err := systemAdvisoriesCommon(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
 
-	var aids []AdvisoryID
+	var aids []AdvisoryStatusID
 	err = query.Find(&aids).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 	}
 
-	ids := advisoriesIDs(aids)
-	var resp = IDsResponse{IDs: ids}
+	resp := advisoriesStatusIDs(aids)
+	if apiver < 3 {
+		c.JSON(http.StatusOK, &resp.IDsResponse)
+		return
+	}
 	c.JSON(http.StatusOK, &resp)
 }
 
