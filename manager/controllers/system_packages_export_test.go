@@ -39,7 +39,7 @@ func TestSystemPackagesExportHandlerCSV(t *testing.T) {
 	assert.Equal(t, "kernel,5.6.13-200.fc31.x86_64,The Linux kernel,The kernel meta package,false,"+
 		"None,5.6.13-200.fc31.x86_64,5.6.13-200.fc31.x86_64", lines[1])
 	assert.Equal(t, "firefox,76.0.1-1.fc31.x86_64,Mozilla Firefox Web browser,Mozilla Firefox is an "+
-		"open-source web browser...,true,Applicable,76.0.1-1.fc31.x86_64,76.0.1-1.fc31.x86_64", lines[2])
+		"open-source web browser...,true,Installable,76.0.1-1.fc31.x86_64,77.0.1-1.fc31.x86_64", lines[2])
 }
 
 func TestSystemPackagesExportUnknown(t *testing.T) {

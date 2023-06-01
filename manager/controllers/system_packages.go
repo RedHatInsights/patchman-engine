@@ -19,7 +19,7 @@ type SystemPackagesAttrsCommon struct {
 	EVRA        string `json:"evra" csv:"evra" query:"p.evra" gorm:"column:evra"`
 	Summary     string `json:"summary" csv:"summary" query:"sum.value" gorm:"column:summary"`
 	Description string `json:"description" csv:"description" query:"descr.value" gorm:"column:description"`
-	Updatable   bool   `json:"updatable" csv:"updatable" query:"(COALESCE(jsonb_array_length(spkg.update_data),0) > 0)" gorm:"column:updatable"`
+	Updatable   bool   `json:"updatable" csv:"updatable" query:"(update_status(spkg.update_data) = 'Installable')" gorm:"column:updatable"`
 }
 
 type SystemPackageUpdates struct {

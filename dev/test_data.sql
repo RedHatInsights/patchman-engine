@@ -150,10 +150,10 @@ INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_
 (12, 102, '76.0.1-2.fc31.x86_64', '22', '2', null, true); -- firefox
 
 INSERT INTO system_package (rh_account_id, system_id, package_id, name_id, update_data) VALUES
-(3, 12, 1, 101, '[{"evra": "5.10.13-200.fc31.x86_64", "advisory": "RH-100"}]'),
-(3, 12, 2, 102, '[{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31.x86_64", "advisory": "RH-2"}]'),
+(3, 12, 1, 101, '[{"evra": "5.10.13-200.fc31.x86_64", "advisory": "RH-100", "status": "Installable"}]'),
+(3, 12, 2, 102, '[{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1", "status": "Installable"}, {"evra": "76.0.1-1.fc31.x86_64", "advisory": "RH-2", "status": "Installable"}]'),
 (3, 13, 1, 101, null),
-(3, 13, 2, 102, '[{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31.x86_64", "advisory": "RH-2"}]'),
+(3, 13, 2, 102, '[{"evra": "76.0.1-1.fc31.x86_64", "advisory": "RH-2", "status": "Installable"},{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1", "status": "Applicable"}]'),
 (3, 13, 3, 103, null),
 (3, 13, 4, 104, null);
 
