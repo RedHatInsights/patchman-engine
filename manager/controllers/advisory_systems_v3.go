@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
 var AdvisorySystemsFields = database.MustGetQueryAttrs(&AdvisorySystemDBLookup{})
@@ -40,6 +41,11 @@ type AdvisorySystemItemAttributes struct {
 	SystemTags
 	BaselineIDAttr
 	BaselineNameAttr
+	SystemAdvisoryStatus
+}
+
+type SystemsStatusID struct {
+	SystemsID
 	SystemAdvisoryStatus
 }
 
@@ -103,4 +109,29 @@ func buildAdvisorySystemsData(fields []AdvisorySystemDBLookup) ([]AdvisorySystem
 		}
 	}
 	return data, total
+}
+
+func systemsIDsStatus(c *gin.Context, systems []SystemsStatusID, meta *ListMeta) (IDsStatusResponse, error) {
+	var total int
+	resp := IDsStatusResponse{}
+	if len(systems) > 0 {
+		total = systems[0].Total
+	}
+	if meta.Offset > total {
+		err := errors.New("Offset")
+		LogAndRespBadRequest(c, err, InvalidOffsetMsg)
+		return resp, err
+	}
+	if systems == nil {
+		return resp, nil
+	}
+	ids := make([]string, len(systems))
+	data := make([]IDStatus, len(systems))
+	for i, x := range systems {
+		ids[i] = x.ID
+		data[i] = IDStatus{x.ID, x.Status}
+	}
+	resp.IDs = ids
+	resp.Data = data
+	return resp, nil
 }

@@ -36,3 +36,15 @@ type ListMeta struct {
 type IDsResponse struct {
 	IDs []string `json:"ids"`
 }
+
+type IDStatus struct {
+	ID     string `json:"id"`
+	Status string `json:"status"`
+}
+
+type IDsStatusResponse struct {
+	Data []IDStatus `json:"data"`
+	// backward compatibility
+	// TODO: delete later once UI is using only the new `data` field
+	IDsResponse
+}

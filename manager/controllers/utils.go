@@ -725,6 +725,22 @@ func advisoriesIDs(advisories []AdvisoryID) []string {
 	return ids
 }
 
+func advisoriesStatusIDs(advisories []AdvisoryStatusID) IDsStatusResponse {
+	resp := IDsStatusResponse{}
+	if advisories == nil {
+		return resp
+	}
+	ids := make([]string, len(advisories))
+	data := make([]IDStatus, len(advisories))
+	for i, x := range advisories {
+		ids[i] = x.ID
+		data[i] = IDStatus{x.ID, x.Status}
+	}
+	resp.IDs = ids
+	resp.Data = data
+	return resp
+}
+
 func systemsIDs(c *gin.Context, systems []SystemsID, meta *ListMeta) ([]string, error) {
 	var total int
 	if len(systems) > 0 {

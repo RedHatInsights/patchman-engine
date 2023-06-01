@@ -36,10 +36,13 @@ func TestSystemAdvisoriesIDsDefault(t *testing.T) {
 	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil, "",
 		SystemAdvisoriesIDsHandler, "/:inventory_id")
 
-	var output IDsResponse
+	var output IDsStatusResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 8, len(output.IDs))
 	assert.Equal(t, "RH-7", output.IDs[0])
+	assert.Equal(t, 8, len(output.Data))
+	assert.Equal(t, "RH-7", output.Data[0].ID)
+	assert.Equal(t, "Applicable", output.Data[0].Status)
 }
 
 func TestSystemAdvisoriesNotFound(t *testing.T) { //nolint:dupl
@@ -74,10 +77,13 @@ func TestSystemAdvisoriesIDsOffsetLimit(t *testing.T) {
 	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?offset=4&limit=3", nil, "",
 		SystemAdvisoriesIDsHandler, "/:inventory_id")
 
-	var output IDsResponse
+	var output IDsStatusResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 3, len(output.IDs))
 	assert.Equal(t, "RH-1", output.IDs[0])
+	assert.Equal(t, 3, len(output.Data))
+	assert.Equal(t, "RH-1", output.Data[0].ID)
+	assert.Equal(t, "Installable", output.Data[0].Status)
 }
 
 func TestSystemAdvisoriesOffsetOverflow(t *testing.T) {
