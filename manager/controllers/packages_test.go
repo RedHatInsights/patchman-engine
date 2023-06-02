@@ -38,8 +38,13 @@ func TestPackagesEmptyResponse(t *testing.T) {
 	assert.Equal(t, "{\"data\":[]", respStr[:10])
 }
 
-func TestPackagesFilterUpdatable(t *testing.T) {
-	output := doTestPackages(t, "/?filter[systems_updatable]=4")
+func TestPackagesFilterInstallable(t *testing.T) {
+	output := doTestPackages(t, "/?filter[systems_installable]=4")
+	assert.Equal(t, 0, len(output.Data))
+}
+
+func TestPackagesFilterApplicable(t *testing.T) {
+	output := doTestPackages(t, "/?filter[systems_applicable]=4")
 	assert.Equal(t, 0, len(output.Data))
 }
 
@@ -48,7 +53,8 @@ func TestPackagesFilterSummary(t *testing.T) {
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "firefox", output.Data[0].Name)
 	assert.Equal(t, 2, output.Data[0].SystemsInstalled)
-	assert.Equal(t, 2, output.Data[0].SystemsUpdatable)
+	assert.Equal(t, 2, output.Data[0].SystemsInstallable)
+	assert.Equal(t, 2, output.Data[0].SystemsApplicable)
 }
 
 func TestPackagesFilterSAP(t *testing.T) {
@@ -56,7 +62,8 @@ func TestPackagesFilterSAP(t *testing.T) {
 	assert.Equal(t, 4, len(output.Data))
 	assert.Equal(t, "kernel", output.Data[3].Name)
 	assert.Equal(t, 2, output.Data[3].SystemsInstalled)
-	assert.Equal(t, 1, output.Data[3].SystemsUpdatable)
+	assert.Equal(t, 1, output.Data[3].SystemsInstallable)
+	assert.Equal(t, 1, output.Data[3].SystemsApplicable)
 }
 
 func TestSearchPackages(t *testing.T) {
