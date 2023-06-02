@@ -30,12 +30,29 @@ type PackageDBLookup struct {
 	PackageItem
 }
 
-//nolint:lll
-type PackageItem struct {
+// nolint: lll
+type PackageItemCommon struct {
 	Name             string `json:"name" csv:"name" query:"pn.name" gorm:"column:name"`
-	SystemsInstalled int    `json:"systems_installed" csv:"systems_installed" query:"res.systems_installed" gorm:"column:systems_installed"`
-	SystemsUpdatable int    `json:"systems_updatable" csv:"systems_updatable" query:"res.systems_updatable" gorm:"column:systems_updatable"`
 	Summary          string `json:"summary" csv:"summary" query:"pn.summary" gorm:"column:summary"`
+	SystemsInstalled int    `json:"systems_installed" csv:"systems_installed" query:"res.systems_installed" gorm:"column:systems_installed"`
+}
+
+// nolint: lll
+type PackageItem struct {
+	PackageItemCommon
+	SystemsInstallable int `json:"systems_installable" csv:"systems_installable" query:"res.systems_installable" gorm:"column:systems_installable"`
+	SystemsApplicable  int `json:"systems_applicable" csv:"systems_applicable" query:"res.systems_applicable" gorm:"column:systems_applicable"`
+}
+
+type PackageItemV2 struct {
+	PackageItemCommon
+	SystemsUpdatable int `json:"systems_updatable" csv:"systems_updatable"`
+}
+
+type PackagesResponseV2 struct {
+	Data  []PackageItemV2 `json:"data"`
+	Links Links           `json:"links"`
+	Meta  ListMeta        `json:"meta"`
 }
 
 type PackagesResponse struct {
@@ -47,9 +64,10 @@ type PackagesResponse struct {
 // nolint: lll
 // Used as a for subquery performing the actual calculation which is joined with latest summaries
 type queryItem struct {
-	NameID           int `query:"spkg.name_id" gorm:"column:name_id"`
-	SystemsInstalled int `json:"systems_installed" query:"count(*)" gorm:"column:systems_installed"`
-	SystemsUpdatable int `json:"systems_updatable" query:"count(*) filter (where spkg.latest_evra IS NOT NULL)" gorm:"column:systems_updatable"`
+	NameID             int `query:"spkg.name_id" gorm:"column:name_id"`
+	SystemsInstalled   int `json:"systems_installed" query:"count(*)" gorm:"column:systems_installed"`
+	SystemsInstallable int `json:"systems_installable" query:"count(*) filter (where update_status(spkg.update_data) = 'Installable')" gorm:"column:systems_installable"`
+	SystemsApplicable  int `json:"systems_applicable" query:"count(*) filter (where update_status(spkg.update_data) != 'None')" gorm:"column:systems_applicable"`
 }
 
 var queryItemSelect = database.MustGetSelect(&queryItem{})
@@ -85,21 +103,23 @@ func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int) *gorm.DB
 		Joins("JOIN (?) res ON res.name_id = pn.id", subQ)
 }
 
+// nolint: lll
 // @Summary Show me all installed packages across my systems
 // @Description Show me all installed packages across my systems
 // @ID listPackages
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    limit          query      int     false   "Limit for paging, set -1 to return all"
-// @Param    offset         query      int     false   "Offset for paging"
-// @Param    sort           query      string  false   "Sort field" Enums(id,name,systems_installed,systems_updatable)
-// @Param    search         query      string  false   "Find matching text"
-// @Param    filter[name]    query     string  false "Filter"
-// @Param    filter[systems_installed] query   string  false "Filter"
-// @Param    filter[systems_updatable] query   string  false "Filter"
-// @Param    filter[summary]           query   string  false "Filter"
-// @Param    tags                      query   []string  false "Tag filter"
+// @Param    limit          query        int     false   "Limit for paging, set -1 to return all"
+// @Param    offset         query        int     false   "Offset for paging"
+// @Param    sort           query        string  false   "Sort field" Enums(id,name,systems_installed,systems_installable,systems_applicable)
+// @Param    search         query        string  false   "Find matching text"
+// @Param    filter[name]   query        string  false "Filter"
+// @Param    filter[systems_installed]   query   string  false "Filter"
+// @Param    filter[systems_installable] query   string  false "Filter"
+// @Param    filter[systems_applicable]  query   string  false "Filter"
+// @Param    filter[summary]             query   string  false "Filter"
+// @Param    tags                        query   []string  false "Tag filter"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
 // @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
@@ -114,6 +134,7 @@ func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int) *gorm.DB
 func PackagesListHandler(c *gin.Context) {
 	var filters map[string]FilterData
 	account := c.GetInt(middlewares.KeyAccount)
+	apiver := c.GetInt(middlewares.KeyApiver)
 
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
@@ -142,6 +163,15 @@ func PackagesListHandler(c *gin.Context) {
 	if err != nil {
 		return // Error handled in method itself
 	}
+	if apiver < 3 {
+		dataV2 := packages2PackagesV2(data)
+		c.JSON(http.StatusOK, PackagesResponseV2{
+			Data:  dataV2,
+			Links: *links,
+			Meta:  *meta,
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, PackagesResponse{
 		Data:  data,
@@ -160,4 +190,15 @@ func PackageDBLookup2Item(packages []PackageDBLookup) ([]PackageItem, int) {
 		data[i] = v.PackageItem
 	}
 	return data, total
+}
+
+func packages2PackagesV2(data []PackageItem) []PackageItemV2 {
+	v2 := make([]PackageItemV2, len(data))
+	for i, x := range data {
+		v2[i] = PackageItemV2{
+			PackageItemCommon: x.PackageItemCommon,
+			SystemsUpdatable:  x.SystemsInstallable,
+		}
+	}
+	return v2
 }
