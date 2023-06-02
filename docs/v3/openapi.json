@@ -1929,7 +1929,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.PackageSystemItem"
+                                        "$ref": "#/components/schemas/controllers.PackageSystemItemV3"
                                     }
                                 }
                             }
@@ -3304,7 +3304,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.IDsResponse"
+                                    "$ref": "#/components/schemas/controllers.IDsStatusResponse"
                                 }
                             }
                         }
@@ -4152,7 +4152,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.PackageSystemsResponse"
+                                    "$ref": "#/components/schemas/controllers.PackageSystemsResponseV3"
                                 }
                             }
                         }
@@ -6048,7 +6048,7 @@
                     }
                 }
             },
-            "controllers.PackageSystemItem": {
+            "controllers.PackageSystemItemV3": {
                 "type": "object",
                 "properties": {
                     "available_evra": {
@@ -6077,16 +6077,19 @@
                     },
                     "updatable": {
                         "type": "boolean"
+                    },
+                    "update_status": {
+                        "type": "string"
                     }
                 }
             },
-            "controllers.PackageSystemsResponse": {
+            "controllers.PackageSystemsResponseV3": {
                 "type": "object",
                 "properties": {
                     "data": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/controllers.PackageSystemItem"
+                            "$ref": "#/components/schemas/controllers.PackageSystemItemV3"
                         }
                     },
                     "links": {
