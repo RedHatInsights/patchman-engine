@@ -239,10 +239,11 @@ func (TimestampKV) TableName() string {
 }
 
 type PackageAccountData struct {
-	AccID        int   `gorm:"column:rh_account_id"`
-	PkgNameID    int64 `gorm:"column:package_name_id"`
-	SysInstalled int   `gorm:"column:systems_installed"`
-	SysUpdatable int   `gorm:"column:systems_updatable"`
+	AccID          int   `gorm:"column:rh_account_id"`
+	PkgNameID      int64 `gorm:"column:package_name_id"`
+	SysInstalled   int   `gorm:"column:systems_installed"`
+	SysInstallable int   `gorm:"column:systems_installable"`
+	SysApplicable  int   `gorm:"column:systems_applicable"`
 }
 
 func (PackageAccountData) TableName() string {
