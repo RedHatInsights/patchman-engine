@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (109, false);
+VALUES (110, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -1032,7 +1032,8 @@ CREATE TABLE IF NOT EXISTS package_account_data
     package_name_id          BIGINT NOT NULL,
     rh_account_id            INT NOT NULL,
     systems_installed        INT NOT NULL DEFAULT 0,
-    systems_updatable        INT NOT NULL DEFAULT 0,
+    systems_installable      INT NOT NULL DEFAULT 0,
+    systems_applicable       INT NOT NULL DEFAULT 0,
     CONSTRAINT package_name_id
         FOREIGN KEY (package_name_id)
             REFERENCES package_name (id),
