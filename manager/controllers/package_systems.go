@@ -23,26 +23,42 @@ var PackageSystemsOpts = ListOpts{
 }
 
 //nolint:lll
-type PackageSystemItem struct {
+type PackageSystemItemCommon struct {
 	SystemIDAttribute
 	SystemDisplayName
 	InstalledEVRA string         `json:"installed_evra" csv:"installed_evra" query:"p.evra" gorm:"column:installed_evra"`
 	AvailableEVRA string         `json:"available_evra" csv:"available_evra" query:"spkg.latest_evra" gorm:"column:available_evra"`
-	Updatable     bool           `json:"updatable" csv:"updatable" query:"spkg.latest_evra IS NOT NULL" gorm:"column:updatable"`
+	Updatable     bool           `json:"updatable" csv:"updatable" query:"(update_status(spkg.update_data) = 'Installable')" gorm:"column:updatable"`
 	Tags          SystemTagsList `json:"tags" csv:"tags" query:"null" gorm:"-"`
 	BaselineAttributes
+}
+
+type PackageSystemItemV2 struct {
+	PackageSystemItemCommon
+}
+
+//nolint:lll
+type PackageSystemItemV3 struct {
+	PackageSystemItemCommon
+	UpdateStatus string `json:"update_status" csv:"update_status" query:"update_status(spkg.update_data)" gorm:"column:update_status"`
 }
 
 type PackageSystemDBLookup struct {
 	SystemsMetaTagTotal
 
-	PackageSystemItem
+	PackageSystemItemV3
 }
 
-type PackageSystemsResponse struct {
-	Data  []PackageSystemItem `json:"data"`
-	Links Links               `json:"links"`
-	Meta  ListMeta            `json:"meta"`
+type PackageSystemsResponseV2 struct {
+	Data  []PackageSystemItemV2 `json:"data"`
+	Links Links                 `json:"links"`
+	Meta  ListMeta              `json:"meta"`
+}
+
+type PackageSystemsResponseV3 struct {
+	Data  []PackageSystemItemV3 `json:"data"`
+	Links Links                 `json:"links"`
+	Meta  ListMeta              `json:"meta"`
 }
 
 func packagesByNameQuery(db *gorm.DB, pkgName string) *gorm.DB {
@@ -113,13 +129,15 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Param    filter[updatable]       								query   bool    false "Filter"
-// @Success 200 {object} PackageSystemsResponse
+// @Success 200 {object} PackageSystemsResponseV3
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /packages/{package_name}/systems [get]
 func PackageSystemsListHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
+	apiver := c.GetInt(middlewares.KeyApiver)
+
 	query, meta, params, err := packageSystemsCommon(db, c)
 	if err != nil {
 		return
@@ -132,17 +150,29 @@ func PackageSystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	outputItems, total := packageSystemDBLookups2PackageSystemItems(systems)
+	outputItems, total := packageSystemDBLookups2PackageSystemItemsV3(systems)
 
 	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
 	if err != nil {
 		return // Error handled in method itself
 	}
-	c.JSON(http.StatusOK, PackageSystemsResponse{
+	if apiver < 3 {
+		dataV2 := packageSystemItemV3toV2(outputItems)
+		var resp = PackageSystemsResponseV2{
+			Data:  dataV2,
+			Links: *links,
+			Meta:  *meta,
+		}
+		c.JSON(http.StatusOK, &resp)
+		return
+	}
+
+	response := PackageSystemsResponseV3{
 		Data:  outputItems,
 		Links: *links,
 		Meta:  *meta,
-	})
+	}
+	c.JSON(http.StatusOK, response)
 }
 
 // nolint: dupl
@@ -189,19 +219,30 @@ func PackageSystemsListIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func packageSystemDBLookups2PackageSystemItems(systems []PackageSystemDBLookup) ([]PackageSystemItem, int) {
+func packageSystemDBLookups2PackageSystemItemsV3(systems []PackageSystemDBLookup) ([]PackageSystemItemV3, int) {
 	var total int
 	if len(systems) > 0 {
 		total = systems[0].Total
 	}
-	data := make([]PackageSystemItem, len(systems))
+	data := make([]PackageSystemItemV3, len(systems))
 	var err error
 	for i, system := range systems {
-		system.PackageSystemItem.Tags, err = parseSystemTags(system.TagsStr)
+		system.PackageSystemItemV3.Tags, err = parseSystemTags(system.TagsStr)
 		if err != nil {
 			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system tags parsing failed")
 		}
-		data[i] = system.PackageSystemItem
+		data[i] = system.PackageSystemItemV3
 	}
 	return data, total
+}
+
+func packageSystemItemV3toV2(systems []PackageSystemItemV3) []PackageSystemItemV2 {
+	nSystems := len(systems)
+	systemsV2 := make([]PackageSystemItemV2, nSystems)
+	for i := 0; i < nSystems; i++ {
+		systemsV2[i] = PackageSystemItemV2{
+			PackageSystemItemCommon: systems[i].PackageSystemItemCommon,
+		}
+	}
+	return systemsV2
 }

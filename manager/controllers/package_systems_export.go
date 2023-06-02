@@ -23,7 +23,7 @@ import (
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Param    tags            query   []string  false "Tag filter"
-// @Success 200 {array} PackageSystemItem
+// @Success 200 {array} PackageSystemItemV3
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 415 {object} utils.ErrorResponse
@@ -31,6 +31,7 @@ import (
 // @Router /export/packages/{package_name}/systems [get]
 func PackageSystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
+	apiver := c.GetInt(middlewares.KeyApiver)
 
 	packageName := c.Param("package_name")
 	if packageName == "" {
@@ -68,6 +69,12 @@ func PackageSystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	outputItems, _ := packageSystemDBLookups2PackageSystemItems(systems)
+	outputItems, _ := packageSystemDBLookups2PackageSystemItemsV3(systems)
+	if apiver < 3 {
+		itemsV2 := packageSystemItemV3toV2(outputItems)
+		OutputExportData(c, itemsV2)
+		return
+	}
+
 	OutputExportData(c, outputItems)
 }
