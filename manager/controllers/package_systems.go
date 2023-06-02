@@ -192,30 +192,34 @@ func PackageSystemsListHandler(c *gin.Context) {
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
-// @Success 200 {object} IDsResponse
+// @Success 200 {object} IDsStatusResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/packages/{package_name}/systems [get]
 func PackageSystemsListIDsHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
+	apiver := c.GetInt(middlewares.KeyApiver)
 	query, meta, _, err := packageSystemsCommon(db, c)
 	if err != nil {
 		return
 	} // Error handled in method itself
 
-	var sids []SystemsID
+	var sids []SystemsStatusID
 	err = query.Find(&sids).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")
 		return
 	}
 
-	ids, err := systemsIDs(c, sids, meta)
+	resp, err := systemsIDsStatus(c, sids, meta)
 	if err != nil {
 		return // Error handled in method itself
 	}
-	var resp = IDsResponse{IDs: ids}
+	if apiver < 3 {
+		c.JSON(http.StatusOK, &resp.IDsResponse)
+		return
+	}
 	c.JSON(http.StatusOK, &resp)
 }
 
