@@ -557,7 +557,7 @@ parameters:
 - {name: PRELOAD_ADVISORY_DETAIL_CACHE, value: 'true'} # Enable advisory detail cache preloading
 - {name: ENABLE_BASELINES_API, value: 'true'} # Enable baselines API endpoints
 - {name: ENABLE_BASELINE_CHANGE_EVAL, value: 'true'} # Send Kafka eval messages on baseline update
-- {name: ENABLE_PACKAGE_CACHE_MANAGER, value: 'false'} # Enable caching for /packages endpoint
+- {name: ENABLE_PACKAGE_CACHE_MANAGER, value: 'true'} # Enable caching for /packages endpoint
 - {name: EVAL_TOPIC_MANAGER, value: patchman.evaluator.upload}
 - {name: RES_LIMIT_CPU_MANAGER, value: 200m}
 - {name: RES_LIMIT_MEM_MANAGER, value: 256Mi}
