@@ -73,8 +73,9 @@ func getCounts(pkgSysCounts *[]models.PackageAccountData, accID *int) error {
 			Select(`
 				sp.rh_account_id rh_account_id,
 				spkg.name_id package_name_id,
-				count(spkg.system_id) as systems_installed,
-				count(spkg.system_id) filter (where spkg.latest_evra IS NOT NULL) as systems_updatable
+				count(*) as systems_installed,
+				count(*) filter (where update_status(spkg.update_data) = 'Installable') as systems_installable,
+				count(*) filter (where update_status(spkg.update_data) != 'None') as systems_applicable
 			`).
 			Joins("JOIN system_package spkg ON sp.id = spkg.system_id AND sp.rh_account_id = spkg.rh_account_id").
 			Joins("JOIN rh_account acc ON sp.rh_account_id = acc.id").
@@ -95,7 +96,7 @@ func getCounts(pkgSysCounts *[]models.PackageAccountData, accID *int) error {
 func updatePackageAccountData(pkgSysCounts []models.PackageAccountData) error {
 	err := tasks.WithTx(func(tx *gorm.DB) error {
 		tx = database.OnConflictUpdateMulti(
-			tx, []string{"package_name_id", "rh_account_id"}, "systems_updatable", "systems_installed",
+			tx, []string{"package_name_id", "rh_account_id"}, "systems_installable", "systems_applicable", "systems_installed",
 		)
 		return database.BulkInsert(tx, pkgSysCounts)
 	})
