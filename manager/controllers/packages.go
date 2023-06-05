@@ -27,7 +27,9 @@ type PackageDBLookup struct {
 	// a helper to get total number of systems
 	MetaTotalHelper
 
-	PackageItem
+	PackageItemCommon
+	PackageItemV2Only
+	PackageItemV3Only
 }
 
 // nolint: lll
@@ -38,15 +40,24 @@ type PackageItemCommon struct {
 }
 
 // nolint: lll
-type PackageItem struct {
-	PackageItemCommon
+type PackageItemV3Only struct {
 	SystemsInstallable int `json:"systems_installable" csv:"systems_installable" query:"res.systems_installable" gorm:"column:systems_installable"`
 	SystemsApplicable  int `json:"systems_applicable" csv:"systems_applicable" query:"res.systems_applicable" gorm:"column:systems_applicable"`
 }
 
+type PackageItem struct {
+	PackageItemCommon
+	PackageItemV3Only
+}
+
+// nolint: lll
+type PackageItemV2Only struct {
+	SystemsUpdatable int `json:"systems_updatable" csv:"systems_updatable" query:"res.systems_installable" gorm:"column:systems_updatable"`
+}
+
 type PackageItemV2 struct {
 	PackageItemCommon
-	SystemsUpdatable int `json:"systems_updatable" csv:"systems_updatable"`
+	PackageItemV2Only
 }
 
 type PackagesResponseV2 struct {
@@ -187,7 +198,7 @@ func PackageDBLookup2Item(packages []PackageDBLookup) ([]PackageItem, int) {
 	}
 	data := make([]PackageItem, len(packages))
 	for i, v := range packages {
-		data[i] = v.PackageItem
+		data[i] = PackageItem{v.PackageItemCommon, v.PackageItemV3Only}
 	}
 	return data, total
 }
@@ -197,7 +208,7 @@ func packages2PackagesV2(data []PackageItem) []PackageItemV2 {
 	for i, x := range data {
 		v2[i] = PackageItemV2{
 			PackageItemCommon: x.PackageItemCommon,
-			SystemsUpdatable:  x.SystemsInstallable,
+			PackageItemV2Only: PackageItemV2Only{x.SystemsInstallable},
 		}
 	}
 	return v2
