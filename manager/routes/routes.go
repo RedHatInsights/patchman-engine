@@ -95,4 +95,10 @@ func InitAdmin(app *gin.Engine) {
 	api.GET("/sessions", admin.GetActiveSessionsHandler)
 	api.GET("/sessions/:search", admin.GetActiveSessionsHandler)
 	api.DELETE("/sessions/:pid", admin.TerminateSessionHandler)
+
+	pprof := api.Group("/pprof")
+	pprof.GET("/evaluator_upload/:param", admin.GetEvaluatorUploadPprof)
+	pprof.GET("/evaluator_recalc/:param", admin.GetEvaluatorRecalcPprof)
+	pprof.GET("/listener/:param", admin.GetListenerPprof)
+	pprof.GET("/manager/:param", admin.GetManagerPprof)
 }

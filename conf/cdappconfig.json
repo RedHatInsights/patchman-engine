@@ -68,6 +68,32 @@
             "port": 9001
         }
     ],
+    "privateEndpoints": [
+        {
+            "app": "patchman",
+            "hostname": "manager",
+            "name": "manager",
+            "port": 9000
+        },
+        {
+            "app": "patchman",
+            "hostname": "listener",
+            "name": "listener",
+            "port": 9000
+        },
+        {
+            "app": "patchman",
+            "hostname": "evaluator_upload",
+            "name": "evaluator-upload",
+            "port": 9000
+        },
+        {
+            "app": "patchman",
+            "hostname": "evaluator_recalc",
+            "name": "evaluator-recalc",
+            "port": 9000
+        }
+    ],
     "logging": {
         "cloudwatch": {
             "accessKeyId": "",

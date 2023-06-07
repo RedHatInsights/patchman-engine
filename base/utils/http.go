@@ -9,6 +9,8 @@ import (
 
 	"github.com/lestrrat-go/backoff"
 	"github.com/pkg/errors"
+
+	_ "net/http/pprof" //nolint:gosec
 )
 
 func HTTPCallRetry(ctx context.Context, httpCallFun func() (outputDataPtr interface{}, resp *http.Response, err error),
@@ -102,4 +104,16 @@ func statusCodeFound(response *http.Response, statusCodes []int) bool {
 		}
 	}
 	return false
+}
+
+// run net/http/pprof on privatePort
+func RunProfiler() {
+	if Cfg.ProfilerEnabled {
+		go func() {
+			err := http.ListenAndServe(fmt.Sprintf(":%d", Cfg.PrivatePort), nil) //nolint:gosec
+			if err != nil {
+				LogWarn("err", err.Error(), "couldn't start profiler")
+			}
+		}()
+	}
 }
