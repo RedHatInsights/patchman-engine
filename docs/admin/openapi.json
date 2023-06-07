@@ -63,6 +63,174 @@
                 ]
             }
         },
+        "/pprof/evaluator_recalc/{param}": {
+            "get": {
+                "summary": "Get profile info",
+                "description": "Get profile info",
+                "operationId": "getEvaluatorRecalcPprof",
+                "parameters": [
+                    {
+                        "name": "param",
+                        "in": "path",
+                        "description": "What to profile",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
+        "/pprof/evaluator_upload/{param}": {
+            "get": {
+                "summary": "Get profile info",
+                "description": "Get profile info",
+                "operationId": "getEvaluatorUploadPprof",
+                "parameters": [
+                    {
+                        "name": "param",
+                        "in": "path",
+                        "description": "What to profile",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
+        "/pprof/listener/{param}": {
+            "get": {
+                "summary": "Get profile info",
+                "description": "Get profile info",
+                "operationId": "getListenerPprof",
+                "parameters": [
+                    {
+                        "name": "param",
+                        "in": "path",
+                        "description": "What to profile",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
+        "/pprof/manager/{param}": {
+            "get": {
+                "summary": "Get profile info",
+                "description": "Get profile info",
+                "operationId": "getManagerPprof",
+                "parameters": [
+                    {
+                        "name": "param",
+                        "in": "path",
+                        "description": "What to profile",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
         "/re-calc": {
             "get": {
                 "summary": "Re-evaluate systems",
