@@ -86,6 +86,9 @@ func runReaders(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 
 func RunListener() {
 	var wg sync.WaitGroup
+
+	go utils.RunProfiler()
+
 	runReaders(&wg, mqueue.NewKafkaReaderFromEnv)
 	wg.Wait()
 	utils.LogInfo("listener completed")

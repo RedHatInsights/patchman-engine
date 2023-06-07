@@ -613,6 +613,9 @@ func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 
 func RunEvaluator() {
 	var wg sync.WaitGroup
+
+	go utils.RunProfiler()
+
 	run(&wg, mqueue.NewKafkaReaderFromEnv)
 	wg.Wait()
 	utils.LogInfo("evaluator completed")
