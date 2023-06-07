@@ -214,10 +214,10 @@ func initServicesFromClowder() {
 		switch endpoint.App {
 		case "vmaas":
 			if strings.Contains(endpoint.Name, webappName) {
-				Cfg.VmaasAddress = (*Endpoint)(&endpoint).buildURL("http")
+				Cfg.VmaasAddress = (*Endpoint)(&endpoint).buildURL()
 			}
 		case "rbac":
-			Cfg.RbacAddress = (*Endpoint)(&endpoint).buildURL("http")
+			Cfg.RbacAddress = (*Endpoint)(&endpoint).buildURL()
 		}
 	}
 
@@ -226,30 +226,28 @@ func initServicesFromClowder() {
 		if e.App == "patchman" {
 			switch e.Name {
 			case "manager":
-				Cfg.ManagerPrivateAddress = (*Endpoint)(&e).buildURL("http")
+				Cfg.ManagerPrivateAddress = (*Endpoint)(&e).buildURL()
 			case "listener":
-				Cfg.ListenerPrivateAddress = (*Endpoint)(&e).buildURL("http")
+				Cfg.ListenerPrivateAddress = (*Endpoint)(&e).buildURL()
 			case "evaluator-upload":
-				Cfg.EvaluatorUploadPrivateAddress = (*Endpoint)(&e).buildURL("http")
+				Cfg.EvaluatorUploadPrivateAddress = (*Endpoint)(&e).buildURL()
 			case "evaluator-recalc":
-				Cfg.EvaluatorRecalcPrivateAddress = (*Endpoint)(&e).buildURL("http")
+				Cfg.EvaluatorRecalcPrivateAddress = (*Endpoint)(&e).buildURL()
 			}
 		}
 	}
 }
 
-func (e *Endpoint) buildURL(scheme string) string {
-	return buildURL(scheme, e.Hostname, e.Port, e.TlsPort)
-}
-
-func buildURL(scheme, host string, port int, tlsPort *int) string {
+func (e *Endpoint) buildURL() string {
+	port := e.Port
+	scheme := "http"
 	if clowder.LoadedConfig.TlsCAPath != nil {
 		scheme += "s"
-		if tlsPort != nil {
-			port = *tlsPort
+		if e.TlsPort != nil {
+			port = *e.TlsPort
 		}
 	}
-	return fmt.Sprintf("%s://%s:%d", scheme, host, port)
+	return fmt.Sprintf("%s://%s:%d", scheme, e.Hostname, port)
 }
 
 func initCloudwatchFromClowder() {
