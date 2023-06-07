@@ -58,6 +58,9 @@ func RunManager() {
 		routes.InitAPI(api, endpointsConfig)
 	}
 
+	// profiler
+	go utils.RunProfiler()
+
 	go base.TryExposeOnMetricsPort(app)
 	go controllers.PreloadAdvisoryCacheItems()
 
