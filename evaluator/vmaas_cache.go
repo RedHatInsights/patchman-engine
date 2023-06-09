@@ -66,9 +66,11 @@ func (c *VmaasCache) Add(checksum *string, response *vmaas.UpdatesV2Response) {
 }
 
 func (c *VmaasCache) Reset(ts *types.Rfc3339TimestampWithZ) {
-	c.data.Purge()
-	c.validity = ts
-	vmaasCacheGauge.Set(0)
+	if c.enabled {
+		c.data.Purge()
+		c.validity = ts
+		vmaasCacheGauge.Set(0)
+	}
 }
 
 func (c *VmaasCache) CheckValidity() {
