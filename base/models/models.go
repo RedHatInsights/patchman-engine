@@ -72,6 +72,13 @@ func (SystemPlatform) TableName() string {
 	return "system_platform"
 }
 
+func (s *SystemPlatform) GetInventoryID() string {
+	if s == nil {
+		return ""
+	}
+	return s.InventoryID
+}
+
 type String struct {
 	ID    []byte `gorm:"primary_key"`
 	Value string

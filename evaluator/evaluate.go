@@ -105,6 +105,8 @@ func configure() {
 func Evaluate(ctx context.Context, event *mqueue.PlatformEvent, inventoryID, evaluationType string) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationDuration.WithLabelValues(evaluationType))
+
+	utils.LogInfo("inventoryID", inventoryID, "Evaluating system")
 	if enableBypass {
 		evaluationCnt.WithLabelValues("bypassed").Inc()
 		utils.LogInfo("inventoryID", inventoryID, "Evaluation bypassed")
@@ -126,8 +128,10 @@ func Evaluate(ctx context.Context, event *mqueue.PlatformEvent, inventoryID, eva
 		// increment `success` metric only if the system exists
 		// don't count messages from `tryGetSystem` as success
 		evaluationCnt.WithLabelValues("success").Inc()
+		utils.LogInfo("inventoryID", inventoryID, "evalLabel", evaluationType, "System evaluated successfully")
+		return nil
 	}
-	utils.LogInfo("inventoryID", inventoryID, "evalLabel", evaluationType, "system evaluated successfully")
+	utils.LogInfo("inventoryID", inventoryID, "evalLabel", evaluationType, "System not evaluated")
 	return nil
 }
 
@@ -173,8 +177,12 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 	// Don't allow requested TX to hang around locking the rows
 	defer tx.Rollback()
 
-	system := tryGetSystem(tx, event.AccountID, inventoryID, event.Timestamp)
+	system, err := tryGetSystem(tx, event.AccountID, inventoryID, event.Timestamp)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "unable to get system")
+	}
 	if system == nil {
+		// warning logged in `tryGetSystem`
 		return nil, nil, nil
 	}
 
@@ -183,6 +191,7 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 		return nil, nil, errors.Wrap(err, "unable to get updates data")
 	}
 	if updatesData == nil {
+		utils.LogWarn("inventoryID", inventoryID, "No vmaas updates")
 		return nil, nil, nil
 	}
 
@@ -207,6 +216,7 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV2Response, 
 	updatesMap := resp.GetUpdateList()
 	if len(updatesMap) == 0 {
 		// TODO: do we need evaluationCnt.WithLabelValues("error-no-yum-packages").Inc()?
+		utils.LogWarn("inventoryID", system.GetInventoryID(), "No yum_updates")
 		return nil, nil
 	}
 
@@ -278,6 +288,7 @@ func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 	}
 
 	if updatesReq == nil {
+		// warning logged in `tryGetVmaasRequest`
 		return nil, nil
 	}
 
@@ -304,7 +315,7 @@ func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 func tryGetVmaasRequest(system *models.SystemPlatform) (*vmaas.UpdatesV3Request, error) {
 	if system == nil || system.VmaasJSON == nil {
 		evaluationCnt.WithLabelValues("error-parse-vmaas-json").Inc()
-		utils.LogWarn("inventory_id", system.InventoryID, "system with empty vmaas json")
+		utils.LogWarn("inventoryID", system.GetInventoryID(), "system with empty vmaas json")
 		// skip the system
 		// don't return error as it will cause panic of evaluator pod
 		return nil, nil
@@ -318,35 +329,44 @@ func tryGetVmaasRequest(system *models.SystemPlatform) (*vmaas.UpdatesV3Request,
 
 	if len(updatesReq.PackageList) == 0 {
 		evaluationCnt.WithLabelValues("error-no-packages").Inc()
+		utils.LogWarn("inventoryID", system.GetInventoryID(), "Empty package list")
 		return nil, nil
 	}
 
 	if len(updatesReq.RepositoryList) == 0 {
 		// system without any repositories won't have any advisories evaluated by vmaas
 		evaluationCnt.WithLabelValues("error-no-repositories").Inc()
+		utils.LogWarn("inventoryID", system.GetInventoryID(), "Empty repository list")
 		return nil, nil
 	}
 	return &updatesReq, nil
 }
 
 func tryGetSystem(tx *gorm.DB, accountID int, inventoryID string,
-	requested *types.Rfc3339Timestamp) *models.SystemPlatform {
+	requested *types.Rfc3339Timestamp) (*models.SystemPlatform, error) {
 	system, err := loadSystemData(tx, accountID, inventoryID)
-	if err != nil || system.ID == 0 {
+	if err != nil {
 		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
-		return nil
+		return nil, errors.Wrap(err, "error loading system from DB")
+	}
+	if system.ID == 0 {
+		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
+		utils.LogWarn("inventoryID", inventoryID, "System not found in DB")
+		return nil, nil
 	}
 
 	if system.Stale && !enableStaleSysEval {
 		evaluationCnt.WithLabelValues("skipping-stale").Inc()
-		return nil
+		utils.LogWarn("inventoryID", inventoryID, "Skipping stale system")
+		return nil, nil
 	}
 
 	if requested != nil && system.LastEvaluation != nil && requested.Time().Before(*system.LastEvaluation) {
 		evaluationCnt.WithLabelValues("skip-old-msg").Inc()
-		return nil
+		utils.LogWarn("inventoryID", inventoryID, "Skipping old message")
+		return nil, nil
 	}
-	return system
+	return system, nil
 }
 
 func commitWithObserve(tx *gorm.DB) error {
@@ -383,7 +403,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
 		err = publishNewAdvisoriesNotification(tx, system, event, system.RhAccountID, newSystemAdvisories)
 		if err != nil {
 			evaluationCnt.WithLabelValues("error-advisory-notification").Inc()
-			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.InventoryID, "err", err.Error(),
+			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err.Error(),
 				"publishing new advisories notification failed")
 		}
 	}
