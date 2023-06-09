@@ -591,7 +591,10 @@ func loadCache() {
 	memoryPackageCache = NewPackageCache(enablePackageCache, preloadPackageCache, packageCacheSize, packageNameCacheSize)
 	memoryPackageCache.Load()
 	memoryVmaasCache = NewVmaasPackageCache(enableVmaasCache, vmaasCacheSize, vmaasCacheCheckDuration)
-	go memoryVmaasCache.CheckValidity()
+	if memoryVmaasCache.enabled {
+		// no need to check cache validity when cache is not enabled
+		go memoryVmaasCache.CheckValidity()
+	}
 }
 
 func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
