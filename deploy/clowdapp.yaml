@@ -582,7 +582,7 @@ parameters:
 - {name: RES_REQUEST_MEM_LISTENER, value: 256Mi}
 
 # Evaluator
-- {name: USE_VMAAS_GO, value: 'false'}
+- {name: USE_VMAAS_GO, value: 'true'}
 - {name: GOGC, value: '25'}
 
 # Evaluator - upload
