@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (110, false);
+VALUES (111, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -20,11 +20,11 @@ CREATE COLLATION IF NOT EXISTS numeric (provider = icu, locale = 'en-u-kn-true')
 -- empty
 CREATE OR REPLACE FUNCTION empty(t TEXT)
     RETURNS BOOLEAN as
-$empty$
+$$
 BEGIN
     RETURN t ~ '^[[:space:]]*$';
 END;
-$empty$ LANGUAGE 'plpgsql';
+$$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
 
 CREATE OR REPLACE FUNCTION ternary(cond BOOL, iftrue ANYELEMENT, iffalse ANYELEMENT)
     RETURNS ANYELEMENT
@@ -616,7 +616,7 @@ BEGIN
     END IF;
     RETURN 'Applicable';
 END;
-$$ LANGUAGE 'plpgsql';
+$$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
 
 
 -- ---------------------------------------------------------------------------
