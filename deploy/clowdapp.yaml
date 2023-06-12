@@ -46,6 +46,7 @@ objects:
         - {name: PACKAGES_PAGE_SIZE, value: '${PACKAGES_PAGE_SIZE}'}
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
         - {name: ENABLE_TURNPIKE_AUTH, value: '${ENABLE_TURNPIKE_AUTH}'}
+        - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_DATABASE_ADMIN}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_ADMIN}', memory: '${RES_LIMIT_MEM_ADMIN}'}
@@ -121,6 +122,7 @@ objects:
         - {name: RESPONSE_TIMEOUT, value: '${RESPONSE_TIMEOUT}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_MANAGER}'}
+        - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_MANAGER}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_MANAGER}', memory: '${RES_LIMIT_MEM_MANAGER}'}
@@ -168,6 +170,7 @@ objects:
         - {name: EXCLUDED_HOST_TYPES, value: '${EXCLUDED_HOST_TYPES}'}
         - {name: ENABLE_PAYLOAD_TRACKER, value: '${ENABLE_PAYLOAD_TRACKER}'}
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_LISTENER}'}
+        - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_LISTENER}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_LISTENER}', memory: '${RES_LIMIT_MEM_LISTENER}'}
@@ -236,6 +239,7 @@ objects:
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_UPLOAD}'}
+        - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_UPLOAD}', memory: '${RES_LIMIT_MEM_EVALUATOR_UPLOAD}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_UPLOAD}', memory: '${RES_REQUEST_MEM_EVALUATOR_UPLOAD}'}
@@ -303,6 +307,7 @@ objects:
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_RECALC}'}
+        - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_RECALC}', memory: '${RES_LIMIT_MEM_EVALUATOR_RECALC}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_RECALC}', memory: '${RES_REQUEST_MEM_EVALUATOR_RECALC}'}
@@ -352,6 +357,7 @@ objects:
         - {name: FULL_SYNC_CADENCE,value: '${FULL_SYNC_CADENCE}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
+        - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_VMAAS_SYNC}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_VMAAS_SYNC}', memory: '${RES_LIMIT_MEM_VMAAS_SYNC}'}
           requests: {cpu: '${RES_REQUEST_CPU_VMAAS_SYNC}', memory: '${RES_REQUEST_MEM_VMAAS_SYNC}'}
@@ -570,6 +576,7 @@ parameters:
 - {name: RESPONSE_TIMEOUT, value: '60'}
 - {name: DB_READ_REPLICA_ENABLED, value: 'TRUE'}
 - {name: ENABLE_PROFILER_MANAGER, value: 'false'}
+- {name: GOMEMLIMIT_MANAGER, value: '230MiB'} # set to 90% of the default memory limit 256Mi (don't forget `B`)
 
 # Listener
 - {name: REPLICAS_LISTENER, value: '1'}
@@ -582,14 +589,16 @@ parameters:
 - {name: EXCLUDED_REPORTERS, value: 'yupana'} # Comma-separated list of reporters to exclude from processing
 - {name: EXCLUDED_HOST_TYPES, value: 'edge'} # Comma-separated list of host types to exclude from processing
 - {name: RES_LIMIT_CPU_LISTENER, value: 250m}
-- {name: RES_LIMIT_MEM_LISTENER, value: 256Mi}
+- {name: RES_LIMIT_MEM_LISTENER, value: 192Mi}
 - {name: RES_REQUEST_CPU_LISTENER, value: 250m}
-- {name: RES_REQUEST_MEM_LISTENER, value: 256Mi}
+- {name: RES_REQUEST_MEM_LISTENER, value: 192Mi}
 - {name: ENABLE_PROFILER_LISTENER, value: 'false'}
+- {name: GOMEMLIMIT_LISTENER, value: '172MiB'} # set to 90% of the default memory limit 192Mi (don't forget `B`)
 
 # Evaluator
 - {name: USE_VMAAS_GO, value: 'true'}
-- {name: GOGC, value: '25'}
+- {name: GOGC, value: '100'}
+- {name: GOMEMLIMIT_EVALUATOR, value: '922MiB'} # set to 90% of the default memory limit 1024Mi (don't forget `B`)
 
 # Evaluator - upload
 - {name: REPLICAS_EVALUATOR_UPLOAD, value: '1'}
@@ -668,6 +677,7 @@ parameters:
 - {name: RES_REQUEST_CPU_VMAAS_SYNC, value: 500m}
 - {name: RES_REQUEST_MEM_VMAAS_SYNC, value: 384Mi}
 - {name: FULL_SYNC_CADENCE, value: '168'}  # run full vmaas sync (default: 168h)
+- {name: GOMEMLIMIT_VMAAS_SYNC, value: '345MiB'} # set to 90% of the default memory limit 384Mi (don't forget `B`)
 # Delete unused data
 - {name: DELETE_UNUSED_SCHEDULE, value: '10 */6 * * *'} # Cronjob schedule definition
 - {name: DELETE_UNUSED_SUSPEND, value: 'true'} # Disable cronjob execution
@@ -702,6 +712,7 @@ parameters:
 - {name: RES_REQUEST_MEM_DATABASE_ADMIN, value: 128Mi}
 - {name: UPDATE_USERS, value: 'false'} # set to true if we need to change user or passwords
 - {name: UPDATE_DB_CONFIG, value: 'false'} # set to true if we need to load new './database_admin/config.sql'
+- {name: GOMEMLIMIT_DATABASE_ADMIN, value: '115MiB'} # set to 90% of the default memory limit 128Mi (don't forget `B`)
 
 # Common parameters
 - {name: IMAGE, value: quay.io/cloudservices/patchman-engine-app}
