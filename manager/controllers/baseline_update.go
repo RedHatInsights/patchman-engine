@@ -109,7 +109,7 @@ func BaselineUpdateHandler(c *gin.Context) {
 			LogAndRespBadRequest(c, err, "Invalid inventory IDs: "+e)
 			return
 		}
-		if database.IsPgErrorCode(err, database.PgErrorDuplicateKey) {
+		if database.IsPgErrorCode(db, err, gorm.ErrDuplicatedKey) {
 			LogAndRespBadRequest(c, err, DuplicateBaselineNameErr)
 			return
 		}
