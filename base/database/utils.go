@@ -4,20 +4,16 @@ import (
 	"app/base/models"
 	"app/base/types"
 	"app/base/utils"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/jackc/pgconn"
-
 	log "github.com/sirupsen/logrus"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-)
-
-const (
-	PgErrorDuplicateKey = "23505"
 )
 
 func Systems(tx *gorm.DB, accountID int) *gorm.DB {
@@ -135,13 +131,10 @@ func ExecFile(filename string) error {
 	return err
 }
 
-func IsPgErrorCode(err error, pgCode string) bool {
-	switch e := err.(type) {
-	case *pgconn.PgError:
-		return e.Code == pgCode
-	default:
-		return false
-	}
+// compare the dialect translated errors(like gorm.ErrDuplicatedKey)
+func IsPgErrorCode(db *gorm.DB, err error, expectedGormErr error) bool {
+	translatedErr := db.Dialector.(*postgres.Dialector).Translate(err)
+	return errors.Is(translatedErr, expectedGormErr)
 }
 
 func logAndWait(query string) {
