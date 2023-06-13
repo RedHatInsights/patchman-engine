@@ -31,7 +31,6 @@ objects:
           - ./scripts/entrypoint.sh
           - admin
         env:
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_ADMIN}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
@@ -95,7 +94,6 @@ objects:
           - manager
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_MANAGER}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_MANAGER}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_MANAGER}'}
@@ -151,7 +149,6 @@ objects:
           - listener
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_LISTENER}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_LISTENER}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_LISTENER}'}
@@ -199,7 +196,6 @@ objects:
           - evaluator
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_EVALUATOR_UPLOAD}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_EVALUATOR_UPLOAD}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_EVALUATOR_UPLOAD}'}
@@ -267,7 +263,6 @@ objects:
           - evaluator
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_EVALUATOR_RECALC}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_EVALUATOR_RECALC}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_EVALUATOR_RECALC}'}
@@ -333,7 +328,6 @@ objects:
           - vmaas_sync
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
@@ -382,7 +376,6 @@ objects:
           - system_culling
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
@@ -413,7 +406,6 @@ objects:
           - packages_cache_refresh
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_PKG_REFRESH}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
@@ -440,7 +432,6 @@ objects:
           - advisory_cache_refresh
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
@@ -469,7 +460,6 @@ objects:
           - delete_unused
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
@@ -557,7 +547,6 @@ parameters:
 - {name: REPLICAS_MANAGER, value: '1'}
 - {name: IMAGE_TAG_MANAGER, value: v3.3.2}
 - {name: LOG_LEVEL_MANAGER, value: debug}
-- {name: GOMAXPROCS_MANAGER, value: '8'}
 - {name: DB_DEBUG_MANAGER, value: 'false'} # Log database queries if enabled
 - {name: ENABLE_CYNDI_TAGS, value: 'true'} # Enable filtering with Cyndi tags
 - {name: ENABLE_RBAC, value: 'true'} # Enable requesting RBAC service
@@ -582,7 +571,6 @@ parameters:
 - {name: REPLICAS_LISTENER, value: '1'}
 - {name: IMAGE_TAG_LISTENER, value: v3.3.2}
 - {name: LOG_LEVEL_LISTENER, value: debug}
-- {name: GOMAXPROCS_LISTENER, value: '8'}
 - {name: DB_DEBUG_LISTENER, value: 'false'}
 - {name: CONSUMER_COUNT_LISTENER, value: '8'}
 - {name: ENABLE_BYPASS_LISTENER, value: 'false'} # Enable only bypass (fake) messages processing
@@ -604,7 +592,6 @@ parameters:
 - {name: REPLICAS_EVALUATOR_UPLOAD, value: '1'}
 - {name: IMAGE_TAG_EVALUATOR_UPLOAD, value: v3.3.2}
 - {name: LOG_LEVEL_EVALUATOR_UPLOAD, value: debug}
-- {name: GOMAXPROCS_EVALUATOR_UPLOAD, value: '8'}
 - {name: DB_DEBUG_EVALUATOR_UPLOAD, value: 'false'}
 - {name: CONSUMER_COUNT_EVALUATOR_UPLOAD, value: '8'}
 - {name: ENABLE_BYPASS_EVALUATOR_UPLOAD, value: 'false'} # Enable only bypass (fake) messages processing
@@ -630,7 +617,6 @@ parameters:
 - {name: REPLICAS_EVALUATOR_RECALC, value: '1'}
 - {name: IMAGE_TAG_EVALUATOR_RECALC, value: v3.3.2}
 - {name: LOG_LEVEL_EVALUATOR_RECALC, value: debug}
-- {name: GOMAXPROCS_EVALUATOR_RECALC, value: '8'}
 - {name: DB_DEBUG_EVALUATOR_RECALC, value: 'false'}
 - {name: CONSUMER_COUNT_EVALUATOR_RECALC, value: '8'}
 - {name: ENABLE_BYPASS_EVALUATOR_RECALC, value: 'false'} # Enable only bypass (fake) messages processing
@@ -654,8 +640,6 @@ parameters:
 # JOBS
 - {name: IMAGE_TAG_JOBS, value: v3.3.2}
 - {name: LOG_LEVEL_JOBS, value: debug}
-- {name: GOMAXPROCS_JOBS, value: '8'}
-- {name: GOMAXPROCS_PKG_REFRESH, value: '1'}
 - {name: DB_DEBUG_JOBS, value: 'false'}
 - {name: JOBS_TIMEOUT, value: '1800'}  # 30 min timeout for jobs
 - {name: PROMETHEUS_PUSHGATEWAY, required: true, value: "pushgateway"}
@@ -698,7 +682,6 @@ parameters:
 - {name: SKIP_N_ACCOUNTS_REFRESH, value: '0'} # Skip advisory cache refresh for N first accounts in case the previous refresh didn't finish
 
 # Database admin
-- {name: GOMAXPROCS_ADMIN, value: '8'}
 - {name: IMAGE_TAG_DATABASE_ADMIN, value: v3.3.2}
 - {name: LOG_LEVEL_DATABASE_ADMIN, value: debug}
 - {name: DB_DEBUG_DATABASE_ADMIN, value: 'false'}
