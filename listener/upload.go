@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -187,9 +188,15 @@ func sendPayloadStatus(w mqueue.Writer, event mqueue.PayloadTrackerEvent, status
 
 // accumulate events and create group PlatformEvents to save some resources
 var evalBufferSize = 5 * mqueue.BatchSize
-
-var evalBuffer = make(mqueue.EvalDataSlice, 0, evalBufferSize+1)
-var ptBuffer = make(mqueue.PayloadTrackerEvents, 0, evalBufferSize+1)
+var eBuffer = struct {
+	EvalBuffer mqueue.EvalDataSlice
+	PtBuffer   mqueue.PayloadTrackerEvents
+	Lock       sync.Mutex
+}{
+	EvalBuffer: make(mqueue.EvalDataSlice, 0, evalBufferSize+1),
+	PtBuffer:   make(mqueue.PayloadTrackerEvents, 0, evalBufferSize+1),
+	Lock:       sync.Mutex{},
+}
 var flushTimer = time.AfterFunc(87600*time.Hour, func() {
 	utils.LogInfo(FlushedTimeoutBuffer)
 	flushEvalEvents()
@@ -199,16 +206,20 @@ var flushTimer = time.AfterFunc(87600*time.Hour, func() {
 func bufferEvalEvents(inventoryID string, rhAccountID int, ptEvent *mqueue.PayloadTrackerEvent) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-eval-events"))
+
+	eBuffer.Lock.Lock()
 	evalData := mqueue.EvalData{
 		InventoryID: inventoryID,
 		RhAccountID: rhAccountID,
 		OrgID:       ptEvent.OrgID,
 		RequestID:   *ptEvent.RequestID,
 	}
-	evalBuffer = append(evalBuffer, evalData)
-	ptBuffer = append(ptBuffer, *ptEvent)
+	eBuffer.EvalBuffer = append(eBuffer.EvalBuffer, evalData)
+	eBuffer.PtBuffer = append(eBuffer.PtBuffer, *ptEvent)
+	eBuffer.Lock.Unlock()
+
 	flushTimer.Reset(uploadEvalTimeout)
-	if len(evalBuffer) >= evalBufferSize {
+	if len(eBuffer.EvalBuffer) >= evalBufferSize {
 		utils.LogInfo(FlushedFullBuffer)
 		flushEvalEvents()
 	}
@@ -216,19 +227,21 @@ func bufferEvalEvents(inventoryID string, rhAccountID int, ptEvent *mqueue.Paylo
 
 func flushEvalEvents() {
 	tStart := time.Now()
-	err := mqueue.SendMessages(base.Context, evalWriter, evalBuffer)
+	eBuffer.Lock.Lock()
+	defer eBuffer.Lock.Unlock()
+	err := mqueue.SendMessages(base.Context, evalWriter, eBuffer.EvalBuffer)
 	if err != nil {
 		utils.LogError("err", err.Error(), ErrorKafkaSend)
 	}
 	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-sent-evaluator"))
-	err = mqueue.SendMessages(base.Context, ptWriter, ptBuffer)
+	err = mqueue.SendMessages(base.Context, ptWriter, eBuffer.PtBuffer)
 	if err != nil {
 		utils.LogWarn("err", err.Error(), WarnPayloadTracker)
 	}
 	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-sent-payload-tracker"))
 	// empty buffer
-	evalBuffer = evalBuffer[:0]
-	ptBuffer = ptBuffer[:0]
+	eBuffer.EvalBuffer = eBuffer.EvalBuffer[:0]
+	eBuffer.PtBuffer = eBuffer.PtBuffer[:0]
 }
 
 func updateReporterCounter(reporter string) {
