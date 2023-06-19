@@ -208,13 +208,7 @@ func TerminateSessionHandler(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{}
 // @Router /pprof/evaluator_upload/{param} [get]
 func GetEvaluatorUploadPprof(c *gin.Context) {
-	param := c.Param("param")
-	data, err := getPprof(utils.Cfg.EvaluatorUploadPrivateAddress, param)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
-		return
-	}
-	c.Data(http.StatusOK, "application/octet-stream", data)
+	pprofHandler(c, utils.Cfg.EvaluatorUploadPrivateAddress)
 }
 
 // @Summary Get profile info
@@ -227,13 +221,7 @@ func GetEvaluatorUploadPprof(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{}
 // @Router /pprof/evaluator_recalc/{param} [get]
 func GetEvaluatorRecalcPprof(c *gin.Context) {
-	param := c.Param("param")
-	data, err := getPprof(utils.Cfg.EvaluatorRecalcPrivateAddress, param)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
-		return
-	}
-	c.Data(http.StatusOK, "application/octet-stream", data)
+	pprofHandler(c, utils.Cfg.EvaluatorRecalcPrivateAddress)
 }
 
 // @Summary Get profile info
@@ -246,13 +234,7 @@ func GetEvaluatorRecalcPprof(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{}
 // @Router /pprof/listener/{param} [get]
 func GetListenerPprof(c *gin.Context) {
-	param := c.Param("param")
-	data, err := getPprof(utils.Cfg.ListenerPrivateAddress, param)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
-		return
-	}
-	c.Data(http.StatusOK, "application/octet-stream", data)
+	pprofHandler(c, utils.Cfg.ListenerPrivateAddress)
 }
 
 // @Summary Get profile info
@@ -265,20 +247,28 @@ func GetListenerPprof(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{}
 // @Router /pprof/manager/{param} [get]
 func GetManagerPprof(c *gin.Context) {
+	pprofHandler(c, utils.Cfg.ManagerPrivateAddress)
+}
+
+func pprofHandler(c *gin.Context, address string) {
+	query := c.Request.URL.RawQuery
 	param := c.Param("param")
-	data, err := getPprof(utils.Cfg.ManagerPrivateAddress, param)
+	data, err := getPprof(address, param, query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
 	}
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", param))
 	c.Data(http.StatusOK, "application/octet-stream", data)
 }
 
-func getPprof(address, param string) ([]byte, error) {
+func getPprof(address, param, query string) ([]byte, error) {
 	client := &http.Client{
 		Timeout: time.Second * 60,
 	}
-
+	if len(query) > 0 {
+		param = param + "?" + query
+	}
 	urlPath := fmt.Sprintf("%s/debug/pprof/%s", address, param)
 	req, err := http.NewRequest(http.MethodGet, urlPath, nil)
 	if err != nil {
