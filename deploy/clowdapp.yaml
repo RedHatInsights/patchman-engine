@@ -574,7 +574,7 @@ parameters:
 - {name: DB_DEBUG_LISTENER, value: 'false'}
 - {name: CONSUMER_COUNT_LISTENER, value: '8'}
 - {name: ENABLE_BYPASS_LISTENER, value: 'false'} # Enable only bypass (fake) messages processing
-- {name: EXCLUDED_REPORTERS, value: 'yupana'} # Comma-separated list of reporters to exclude from processing
+- {name: EXCLUDED_REPORTERS, value: 'yupana,rhsm-conduit'} # Comma-separated list of reporters to exclude from processing
 - {name: EXCLUDED_HOST_TYPES, value: 'edge'} # Comma-separated list of host types to exclude from processing
 - {name: RES_LIMIT_CPU_LISTENER, value: 250m}
 - {name: RES_LIMIT_MEM_LISTENER, value: 192Mi}
