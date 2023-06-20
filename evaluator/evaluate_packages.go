@@ -308,8 +308,6 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 			toStore = append(toStore, *systemPackagePtr)
 		}
 	}
-	tx = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "system_id", "package_id"}, "update_data")
-	// return installed, updatable, errors.Wrap(database.BulkInsert(tx, toStore), "Storing system packages")
 	return installed, updatable, errors.Wrap(
 		database.UnnestInsert(tx,
 			"INSERT INTO system_package (rh_account_id, system_id, package_id, update_data, name_id)"+
