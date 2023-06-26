@@ -30,12 +30,30 @@ func CancelableDB() *gorm.DB {
 	return database.Db.WithContext(base.Context)
 }
 
-// Need to run code within a function, because defer can't be used in loops
-func WithTx(do func(db *gorm.DB) error) error {
-	tx := CancelableDB().Begin()
+// return read replica (if available) database handler with base context
+// which will be properly canceled in case of service shutdown
+func CancelableReadReplicaDB() *gorm.DB {
+	if utils.Cfg.DBReadReplicaEnabled && database.ReadReplicaConfigured() {
+		return database.DbReadReplica.WithContext(base.Context)
+	}
+	return database.Db.WithContext(base.Context)
+}
+
+func withTx(do func(db *gorm.DB) error, cancelableDB func() *gorm.DB) error {
+	tx := cancelableDB().Begin()
 	defer tx.Rollback()
 	if err := do(tx); err != nil {
 		return err
 	}
 	return errors.Wrap(tx.Commit().Error, "Commit")
+}
+
+// Need to run code within a function, because defer can't be used in loops
+func WithTx(do func(db *gorm.DB) error) error {
+	return withTx(do, CancelableDB)
+}
+
+// Need to run code within a function, because defer can't be used in loops
+func WithReadReplicaTx(do func(db *gorm.DB) error) error {
+	return withTx(do, CancelableReadReplicaDB)
 }
