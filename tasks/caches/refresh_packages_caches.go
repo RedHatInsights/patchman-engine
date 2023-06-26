@@ -95,10 +95,14 @@ func getCounts(pkgSysCounts *[]models.PackageAccountData, accID *int) error {
 
 func updatePackageAccountData(pkgSysCounts []models.PackageAccountData) error {
 	err := tasks.WithTx(func(tx *gorm.DB) error {
-		tx = database.OnConflictUpdateMulti(
-			tx, []string{"package_name_id", "rh_account_id"}, "systems_installable", "systems_applicable", "systems_installed",
-		)
-		return database.BulkInsert(tx, pkgSysCounts)
+		return database.UnnestInsert(tx,
+			"INSERT INTO package_account_data"+
+				" (rh_account_id, package_name_id, systems_installed, systems_installable, systems_applicable)"+
+				" (SELECT * FROM unnest($1::int[], $2::bigint[], $3::int[], $4::int[], $5::int[]))"+
+				" ON CONFLICT (rh_account_id, package_name_id) DO UPDATE SET"+
+				" systems_installable = EXCLUDED.systems_installable,"+
+				" systems_applicable = EXCLUDED.systems_applicable,"+
+				" systems_installed = EXCLUDED.systems_installed", pkgSysCounts)
 	})
 	return errors.Wrap(err, "failed to insert to package_account_data")
 }
