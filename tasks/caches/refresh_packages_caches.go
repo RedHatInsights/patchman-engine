@@ -57,7 +57,7 @@ func accountsWithoutCache() ([]int, error) {
 	accs := []int{}
 	// order account ids by partition number in system_package (128 partitions)
 	// so that we read data sequentially and not jump from one partition to another and back
-	err := tasks.WithTx(func(tx *gorm.DB) error {
+	err := tasks.WithReadReplicaTx(func(tx *gorm.DB) error {
 		return tx.Table("rh_account").
 			Select("id").
 			Where("valid_package_cache = FALSE").
@@ -68,7 +68,7 @@ func accountsWithoutCache() ([]int, error) {
 }
 
 func getCounts(pkgSysCounts *[]models.PackageAccountData, accID *int) error {
-	err := tasks.WithTx(func(tx *gorm.DB) error {
+	err := tasks.WithReadReplicaTx(func(tx *gorm.DB) error {
 		q := tx.Table("system_platform sp").
 			Select(`
 				sp.rh_account_id rh_account_id,
