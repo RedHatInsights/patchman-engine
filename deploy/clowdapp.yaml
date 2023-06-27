@@ -411,6 +411,7 @@ objects:
         - {name: DB_USER, value: vmaas_sync}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                       key: vmaas-sync-database-password}}}
+        - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
 
     - name: advisory-refresh
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}

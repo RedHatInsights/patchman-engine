@@ -5,6 +5,7 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/tasks"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -48,12 +49,15 @@ func RefreshPackagesCaches(accID *int) error {
 			utils.LogError("err", err.Error(), "Refresh failed")
 			continue
 		}
+		utils.LogDebug("account", acc, "#", i, "Cache refreshed")
 	}
 
 	return err
 }
 
 func accountsWithoutCache() ([]int, error) {
+	defer utils.ObserveSecondsSince(time.Now(), packageRefreshPartDuration.WithLabelValues("get-accounts"))
+	utils.LogDebug("Getting accounts with invalid cache")
 	accs := []int{}
 	// order account ids by partition number in system_package (128 partitions)
 	// so that we read data sequentially and not jump from one partition to another and back
@@ -68,6 +72,8 @@ func accountsWithoutCache() ([]int, error) {
 }
 
 func getCounts(pkgSysCounts *[]models.PackageAccountData, accID *int) error {
+	defer utils.ObserveSecondsSince(time.Now(), packageRefreshPartDuration.WithLabelValues("get-counts"))
+	utils.LogDebug("Getting counts of installable and applicable systems")
 	err := tasks.WithReadReplicaTx(func(tx *gorm.DB) error {
 		q := tx.Table("system_platform sp").
 			Select(`
@@ -84,8 +90,10 @@ func getCounts(pkgSysCounts *[]models.PackageAccountData, accID *int) error {
 			Group("sp.rh_account_id, spkg.name_id").
 			Order("sp.rh_account_id, spkg.name_id")
 		if accID != nil {
+			utils.LogDebug("Getting counts for single account")
 			q.Where("sp.rh_account_id = ?", *accID)
 		} else {
+			utils.LogDebug("Getting counts for multiple accounts")
 			q.Where("acc.valid_package_cache = FALSE")
 		}
 		return q.Find(pkgSysCounts).Error
@@ -94,6 +102,8 @@ func getCounts(pkgSysCounts *[]models.PackageAccountData, accID *int) error {
 }
 
 func updatePackageAccountData(pkgSysCounts []models.PackageAccountData) error {
+	defer utils.ObserveSecondsSince(time.Now(), packageRefreshPartDuration.WithLabelValues("update-package-account-data"))
+	utils.LogDebug("count", len(pkgSysCounts), "Inserting/updating package-account pairs")
 	err := tasks.WithTx(func(tx *gorm.DB) error {
 		return database.UnnestInsert(tx,
 			"INSERT INTO package_account_data"+
@@ -108,6 +118,8 @@ func updatePackageAccountData(pkgSysCounts []models.PackageAccountData) error {
 }
 
 func deleteOldCache(pkgSysCounts []models.PackageAccountData, accID *int) error {
+	defer utils.ObserveSecondsSince(time.Now(), packageRefreshPartDuration.WithLabelValues("delete-old-cache"))
+	utils.LogDebug("Deleting old packages from package_account_data")
 	seen := make(map[int]bool, len(pkgSysCounts))
 	accs := make([]int, 0, len(pkgSysCounts))
 	pkgAcc := make([][]interface{}, 0, len(pkgSysCounts))
@@ -133,6 +145,8 @@ func deleteOldCache(pkgSysCounts []models.PackageAccountData, accID *int) error 
 }
 
 func updateCacheValidity(accID *int) error {
+	defer utils.ObserveSecondsSince(time.Now(), packageRefreshPartDuration.WithLabelValues("update-validity"))
+	utils.LogDebug("Updating cache validity")
 	err := tasks.WithTx(func(tx *gorm.DB) error {
 		tx = tx.Table("rh_account acc").
 			Where("valid_package_cache = ?", false)
