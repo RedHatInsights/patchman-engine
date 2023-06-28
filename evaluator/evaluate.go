@@ -504,6 +504,11 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 		data["third_party"] = system.ThirdParty
 	}
 
+	now := time.Now()
+	if system.LastEvaluation.Sub(now) > time.Hour {
+		// log long evaluating systems
+		utils.LogWarn("id", system.InventoryID, "lastEvaluation", *system.LastEvaluation, "now", now, "uploadEvaluationDelay")
+	}
 	return tx.Model(system).Updates(data).Error
 }
 
