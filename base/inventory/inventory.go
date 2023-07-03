@@ -8,6 +8,7 @@ type SystemProfile struct {
 	DnfModules        *[]DnfModule    `json:"dnf_modules,omitempty"`
 	OperatingSystem   OperatingSystem `json:"operating_system,omitempty"`
 	Rhsm              Rhsm            `json:"rhsm,omitempty"`
+	Releasever        *string         `json:"releasever,omitempty"`
 }
 
 func (t *SystemProfile) GetInstalledPackages() []string {

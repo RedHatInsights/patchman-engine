@@ -555,6 +555,9 @@ func processUpload(host *Host, yumUpdates []byte) (*models.SystemPlatform, error
 
 	// use rhsm version if set
 	releasever := systemProfile.Rhsm.Version
+	if releasever == "" && systemProfile.Releasever != nil {
+		releasever = *systemProfile.Releasever
+	}
 	if len(releasever) > 0 {
 		updatesReq.SetReleasever(releasever)
 	}
