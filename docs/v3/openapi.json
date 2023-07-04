@@ -6066,6 +6066,9 @@
                     "available_evra": {
                         "type": "string"
                     },
+                    "baseline_id": {
+                        "type": "integer"
+                    },
                     "baseline_name": {
                         "type": "string"
                     },
@@ -6079,6 +6082,12 @@
                         "type": "string"
                     },
                     "installed_evra": {
+                        "type": "string"
+                    },
+                    "os": {
+                        "type": "string"
+                    },
+                    "rhsm": {
                         "type": "string"
                     },
                     "tags": {

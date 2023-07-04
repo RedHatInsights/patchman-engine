@@ -81,7 +81,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "OK",
                         "content": {}
                     },
                     "500": {
@@ -123,7 +123,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "OK",
                         "content": {}
                     },
                     "500": {
@@ -165,7 +165,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "OK",
                         "content": {}
                     },
                     "500": {
@@ -207,7 +207,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "OK",
                         "content": {}
                     },
                     "500": {
