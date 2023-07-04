@@ -29,7 +29,7 @@ func TestSystemsCounts(t *testing.T) {
 	assert.Equal(t, 2, counts[systemsCntLabels{staleOff, lastUploadLast1D}])
 	assert.Equal(t, 5, counts[systemsCntLabels{staleOff, lastUploadLast7D}])
 	assert.Equal(t, 8, counts[systemsCntLabels{staleOff, lastUploadLast30D}])
-	assert.Equal(t, 15, counts[systemsCntLabels{staleOff, lastUploadAll}])
+	assert.Equal(t, 16, counts[systemsCntLabels{staleOff, lastUploadAll}])
 	assert.Equal(t, 0, counts[systemsCntLabels{staleOn, lastUploadLast1D}])
 	assert.Equal(t, 0, counts[systemsCntLabels{staleOn, lastUploadLast7D}])
 	assert.Equal(t, 0, counts[systemsCntLabels{staleOn, lastUploadLast30D}])

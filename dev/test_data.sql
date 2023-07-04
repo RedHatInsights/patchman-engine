@@ -19,7 +19,8 @@ INSERT INTO rh_account (id, name, org_id) VALUES
 INSERT INTO baseline (id, rh_account_id, name, config, description) VALUES
 (1, 1, 'baseline_1-1', '{"to_time": "2010-09-22T00:00:00+00:00"}', 'desc'),
 (2, 1, 'baseline_1-2', '{"to_time": "2021-01-01T00:00:00+00:00"}', NULL),
-(3, 1, 'baseline_1-3', '{"to_time": "2000-01-01T00:00:00+00:00"}', NULL);
+(3, 1, 'baseline_1-3', '{"to_time": "2000-01-01T00:00:00+00:00"}', NULL),
+(4, 3, 'baseline_3-4', '{"to_time": "2000-01-01T00:00:00+00:00"}', NULL);
 
 INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id, reporter_id, vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_updatable, third_party, baseline_id, baseline_uptodate) VALUES
 (1, '00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2020-09-22 12:00:00-04',0,0, true, 1, true),
@@ -44,6 +45,9 @@ INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vma
 (14, '00000000-0000-0000-0000-000000000014','00000000-0000-0000-0000-000000000014', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 0,0, NULL),
 (15, '00000000-0000-0000-0000-000000000015','00000000-0000-0000-0000-000000000015', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 0,0,
  '{"update_list": {"suricata-6.0.3-2.fc35.i686": {"available_updates": [{"erratum": "RHSA-2021:3801", "basearch": "i686", "releasever": "ser1", "repository": "group_oisf:suricata-6.0", "package": "suricata-6.0.4-2.fc35.i686"}]}}, "basearch": "i686", "releasever": "ser1"}');
+
+INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_updatable, yum_updates, baseline_id) VALUES
+(16, '00000000-0000-0000-0000-000000000016','00000000-0000-0000-0000-000000000016', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 1,0, NULL, 4);
 
 INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solution, advisory_type_id,
                                public_date, modified_date, url, severity_id, cve_list, release_versions) VALUES
@@ -155,7 +159,8 @@ INSERT INTO system_package (rh_account_id, system_id, package_id, name_id, updat
 (3, 13, 1, 101, null),
 (3, 13, 2, 102, '[{"evra": "76.0.1-1.fc31.x86_64", "advisory": "RH-2", "status": "Installable"},{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1", "status": "Applicable"}]'),
 (3, 13, 3, 103, null),
-(3, 13, 4, 104, null);
+(3, 13, 4, 104, null),
+(3, 16, 1, 101, '[{"evra": "5.10.13-200.fc31.x86_64", "advisory": "RH-100", "status": "Installable"}]');
 
 INSERT INTO timestamp_kv (name, value) VALUES
 ('last_eval_repo_based', '2018-04-05T01:23:45+02:00');
