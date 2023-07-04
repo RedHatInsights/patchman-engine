@@ -58,7 +58,7 @@ func TestPackagesFilterSummary(t *testing.T) {
 }
 
 func TestPackagesFilterSAP(t *testing.T) {
-	output := doTestPackages(t, "/?filter[system_profile][is_sap][eq]=true")
+	output := doTestPackages(t, "/?filter[system_profile][sap_system]=true")
 	assert.Equal(t, 4, len(output.Data))
 	assert.Equal(t, "kernel", output.Data[3].Name)
 	assert.Equal(t, 2, output.Data[3].SystemsInstalled)
