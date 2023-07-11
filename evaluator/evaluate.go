@@ -504,12 +504,14 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 		data["third_party"] = system.ThirdParty
 	}
 
+	err := tx.Model(system).Updates(data).Error
+
 	now := time.Now()
 	if system.LastUpload.Sub(now) > time.Hour {
 		// log long evaluating systems
 		utils.LogWarn("id", system.InventoryID, "lastUpload", *system.LastUpload, "now", now, "uploadEvaluationDelay")
 	}
-	return tx.Model(system).Updates(data).Error
+	return err
 }
 
 func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.UpdatesV2Response, error) {
