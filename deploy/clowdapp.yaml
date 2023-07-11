@@ -411,6 +411,11 @@ objects:
         - {name: DB_USER, value: vmaas_sync}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                       key: vmaas-sync-database-password}}}
+        - {name: DB_HOST_READ_REPLICA, valueFrom: {secretKeyRef: {key: db.host,
+                                                                  name: patchman-db-readonly}}}
+        - {name: DB_PORT_READ_REPLICA, valueFrom: {secretKeyRef: {key: db.port,
+                                                                  name: patchman-db-readonly}}}
+        - {name: DB_READ_REPLICA_ENABLED, value: '${DB_READ_REPLICA_ENABLED_JOBS}'}
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
 
     - name: advisory-refresh
@@ -644,6 +649,7 @@ parameters:
 - {name: DB_DEBUG_JOBS, value: 'false'}
 - {name: JOBS_TIMEOUT, value: '1800'}  # 30 min timeout for jobs
 - {name: PROMETHEUS_PUSHGATEWAY, required: true, value: "pushgateway"}
+- {name: DB_READ_REPLICA_ENABLED_JOBS, value: 'TRUE'}
 
 # VMaaS sync
 - {name: VMAAS_SYNC_SCHEDULE, value: '*/5 * * * *'} # Cronjob schedule definition
