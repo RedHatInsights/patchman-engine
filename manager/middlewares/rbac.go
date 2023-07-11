@@ -5,6 +5,8 @@ import (
 	"app/base/api"
 	"app/base/rbac"
 	"app/base/utils"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -20,6 +22,7 @@ var (
 )
 
 const xRHIdentity = "x-rh-identity"
+const KeyInventoryGroups = "inventoryGroups"
 
 var allPerms = "patch:*:*"
 var readPerms = map[string]bool{allPerms: true, "patch:*:read": true}
@@ -110,7 +113,50 @@ func isAccessGranted(c *gin.Context) bool {
 	nameSplitted := strings.Split(c.HandlerName(), ".")
 	handlerName := nameSplitted[len(nameSplitted)-1]
 
-	return checkPermissions(&access, handlerName, c.Request.Method)
+	granted := checkPermissions(&access, handlerName, c.Request.Method)
+	if granted {
+		// collect inventory groups
+		c.Set(KeyInventoryGroups, findInventoryGroups(&access))
+	}
+	return granted
+}
+
+func findInventoryGroups(access *rbac.AccessPagination) map[string]string {
+	res := make(map[string]string)
+
+	if len(access.Data) == 0 {
+		return res
+	}
+	groups := []string{}
+	for _, a := range access.Data {
+		if a.Permission != "inventory:hosts:read" {
+			continue
+		}
+
+		for _, rd := range a.ResourceDefinitions {
+			if rd.AttributeFilter.Key != "group.id" {
+				continue
+			}
+			for _, v := range rd.AttributeFilter.Value {
+				if v == nil {
+					res[rbac.KeyUngrouped] = "[]"
+					continue
+				}
+				group := rbac.InventoryGroup{{ID: *v}}
+				groupJSON, err := json.Marshal(&group)
+				if err != nil {
+					utils.LogError("group", group, "err", err.Error(), "Cannot Marshal Inventory group")
+					continue
+				}
+				groups = append(groups, strconv.Quote(string(groupJSON)))
+			}
+		}
+	}
+
+	if len(groups) > 0 {
+		res[rbac.KeyGrouped] = fmt.Sprintf("{%s}", strings.Join(groups, ","))
+	}
+	return res
 }
 
 func RBAC() gin.HandlerFunc {
