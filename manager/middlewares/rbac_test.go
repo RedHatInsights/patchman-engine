@@ -224,3 +224,68 @@ func TestPermissionsRead(t *testing.T) {
 	}
 	assert.False(t, checkPermissions(&access, handler, "GET"))
 }
+
+func TestFindInventoryGroupsGrouped(t *testing.T) {
+	group1 := "df57820e-965c-49a6-b0bc-797b7dd60581"
+	access := &rbac.AccessPagination{
+		Data: []rbac.Access{{
+			Permission: "inventory:hosts:read",
+			ResourceDefinitions: []rbac.ResourceDefinition{{
+				AttributeFilter: rbac.AttributeFilter{
+					Key:   "group.id",
+					Value: []*string{&group1},
+				},
+			}},
+		}},
+	}
+	groups := findInventoryGroups(access)
+	assert.Equal(t,
+		`{"[{\"id\":\"df57820e-965c-49a6-b0bc-797b7dd60581\"}]"}`,
+		groups[rbac.KeyGrouped],
+	)
+	val, ok := groups[rbac.KeyUngrouped]
+	assert.Equal(t, "", val)
+	assert.Equal(t, false, ok)
+}
+
+func TestFindInventoryGroupsUnrouped(t *testing.T) {
+	access := &rbac.AccessPagination{
+		Data: []rbac.Access{{
+			Permission: "inventory:hosts:read",
+			ResourceDefinitions: []rbac.ResourceDefinition{{
+				AttributeFilter: rbac.AttributeFilter{
+					Key:   "group.id",
+					Value: []*string{nil},
+				},
+			}},
+		}},
+	}
+	groups := findInventoryGroups(access)
+	val, ok := groups[rbac.KeyGrouped]
+	assert.Equal(t, "", val)
+	assert.Equal(t, false, ok)
+	assert.Equal(t, "[]", groups[rbac.KeyUngrouped])
+}
+
+// nolint:lll
+func TestFindInventoryGroups(t *testing.T) {
+	group1 := "df57820e-965c-49a6-b0bc-797b7dd60581"
+	group2 := "df3f0efd-c853-41b5-80a1-86881d5343d1"
+	access := &rbac.AccessPagination{
+		Data: []rbac.Access{{
+			Permission: "inventory:hosts:read",
+			ResourceDefinitions: []rbac.ResourceDefinition{{
+				AttributeFilter: rbac.AttributeFilter{
+					Key:   "group.id",
+					Value: []*string{&group1, &group2, nil},
+				},
+			}},
+		}},
+	}
+	groups := findInventoryGroups(access)
+	assert.Equal(t,
+		`{"[{\"id\":\"df57820e-965c-49a6-b0bc-797b7dd60581\"}]","[{\"id\":\"df3f0efd-c853-41b5-80a1-86881d5343d1\"}]"}`,
+		groups[rbac.KeyGrouped],
+	)
+	assert.Equal(t, "[]", groups[rbac.KeyUngrouped])
+}
