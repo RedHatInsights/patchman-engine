@@ -10,10 +10,21 @@ import (
 
 var rbacPermissions = utils.Getenv("RBAC_PERMISSIONS", "patch:*:read")
 
+var inventoryGroup = "inventory-group-1"
+
 func rbacHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: rbacPermissions},
+			{
+				Permission: "inventory:hosts:read",
+				ResourceDefinitions: []rbac.ResourceDefinition{{
+					AttributeFilter: rbac.AttributeFilter{
+						Key:   "group.id",
+						Value: []*string{&inventoryGroup, nil},
+					},
+				}},
+			},
 		},
 	})
 }
