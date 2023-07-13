@@ -38,8 +38,10 @@ import (
 // @Router /export/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
-	advisoryName := c.Param("advisory_id")
 	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+
+	advisoryName := c.Param("advisory_id")
 	if advisoryName == "" {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "advisory_id param not found"})
 		return
@@ -57,7 +59,7 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	query := buildAdvisorySystemsQuery(db, account, advisoryName, apiver)
+	query := buildAdvisorySystemsQuery(db, account, groups, advisoryName, apiver)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return

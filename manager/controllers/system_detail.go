@@ -41,6 +41,7 @@ type SystemDetailLookup struct {
 func SystemDetailHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {
@@ -59,9 +60,8 @@ func SystemDetailHandler(c *gin.Context) {
 
 	var systemDetail SystemDetailLookup
 	db := middlewares.DBFromContext(c)
-	query := database.Systems(db, account).
+	query := database.Systems(db, account, groups).
 		Select(database.MustGetSelect(&systemDetail)).
-		Joins("JOIN inventory.hosts ih ON ih.id = inventory_id").
 		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
 		Where("sp.inventory_id = ?::uuid", inventoryID)
 

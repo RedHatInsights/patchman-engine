@@ -28,6 +28,7 @@ import (
 // @Router /export/advisories [get]
 func AdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return
@@ -36,7 +37,7 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	var query *gorm.DB
 	if disableCachedCounts || HasTags(c) {
 		var err error
-		query = buildQueryAdvisoriesTagged(db, filters, account)
+		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
 		if err != nil {
 			return
 		} // Error handled in method itself

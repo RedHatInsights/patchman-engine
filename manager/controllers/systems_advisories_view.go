@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"app/base/database"
+	"app/base/utils"
 	"app/manager/middlewares"
 	"fmt"
 	"net/http"
@@ -42,9 +43,9 @@ func totalItems(tx *gorm.DB, cols string) (int, error) {
 	return int(count), err
 }
 
-func systemsAdvisoriesQuery(db *gorm.DB, acc int, systems []SystemID, advisories []AdvisoryName,
-	limit, offset *int, apiver int) (*gorm.DB, int, int, int, error) {
-	sysq := database.Systems(db, acc).
+func systemsAdvisoriesQuery(db *gorm.DB, acc int, groups map[string]string, systems []SystemID,
+	advisories []AdvisoryName, limit, offset *int, apiver int) (*gorm.DB, int, int, int, error) {
+	sysq := database.Systems(db, acc, groups).
 		Distinct("sp.rh_account_id, sp.id, sp.inventory_id").
 		// we need to join system_advisories to make `limit` work properly
 		// without this join it can happen that we display less items on some pages
@@ -85,8 +86,10 @@ func systemsAdvisoriesQuery(db *gorm.DB, acc int, systems []SystemID, advisories
 	return query, total, lim, off, nil
 }
 
-func advisoriesSystemsQuery(db *gorm.DB, acc int, systems []SystemID, advisories []AdvisoryName,
-	limit, offset *int, apiver int) (*gorm.DB, int, int, int, error) {
+func advisoriesSystemsQuery(db *gorm.DB, acc int, groups map[string]string, systems []SystemID,
+	advisories []AdvisoryName, limit, offset *int, apiver int) (*gorm.DB, int, int, int, error) {
+	// TODO: inventory groups check
+	utils.LogWarn("groups", groups, "TODO: USE INVENTORY GROUPS!")
 	advq := db.Table("advisory_metadata am").
 		Distinct("am.id, am.name").
 		// we need to join system_advisories to make `limit` work properly
@@ -145,14 +148,15 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListM
 	}
 	acc := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
 	switch endpoint {
 	case "SystemsAdvisories":
 		q, total, limit, offset, err = systemsAdvisoriesQuery(
-			db, acc, req.Systems, req.Advisories, req.Limit, req.Offset, apiver)
+			db, acc, groups, req.Systems, req.Advisories, req.Limit, req.Offset, apiver)
 	case "AdvisoriesSystems":
 		q, total, limit, offset, err = advisoriesSystemsQuery(
-			db, acc, req.Systems, req.Advisories, req.Limit, req.Offset, apiver)
+			db, acc, groups, req.Systems, req.Advisories, req.Limit, req.Offset, apiver)
 	default:
 		return nil, nil, fmt.Errorf("unknown endpoint '%s'", endpoint)
 	}

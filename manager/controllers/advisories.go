@@ -119,6 +119,7 @@ type AdvisoriesResponseV3 struct {
 func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	db := middlewares.DBFromContext(c)
 	account := c.GetInt(middlewares.KeyAccount)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	var query *gorm.DB
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
@@ -126,7 +127,7 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	}
 	if disableCachedCounts || HasTags(c) {
 		var err error
-		query = buildQueryAdvisoriesTagged(db, filters, account)
+		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
 		if err != nil {
 			return nil, nil, nil, err
 		} // Error handled in method itself
@@ -262,8 +263,8 @@ func buildQueryAdvisories(db *gorm.DB, account int) *gorm.DB {
 	return query
 }
 
-func buildAdvisoryAccountDataQuery(db *gorm.DB, account int) *gorm.DB {
-	query := database.SystemAdvisories(db, account).
+func buildAdvisoryAccountDataQuery(db *gorm.DB, account int, groups map[string]string) *gorm.DB {
+	query := database.SystemAdvisories(db, account, groups).
 		Select(`sa.advisory_id, sp.rh_account_id as rh_account_id,
 		        count(sp.*) filter (where sa.status_id = 0) as systems_installable,
 		        count(sp.*) as systems_applicable`).
@@ -273,8 +274,9 @@ func buildAdvisoryAccountDataQuery(db *gorm.DB, account int) *gorm.DB {
 	return query
 }
 
-func buildQueryAdvisoriesTagged(db *gorm.DB, filters map[string]FilterData, account int) *gorm.DB {
-	subq := buildAdvisoryAccountDataQuery(db, account)
+func buildQueryAdvisoriesTagged(db *gorm.DB, filters map[string]FilterData, account int, groups map[string]string,
+) *gorm.DB {
+	subq := buildAdvisoryAccountDataQuery(db, account, groups)
 	subq, _ = ApplyTagsFilter(filters, subq, "sp.inventory_id")
 
 	query := db.Table("advisory_metadata am").
