@@ -25,13 +25,14 @@ import (
 func PackagesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return
 	}
 
 	db := middlewares.DBFromContext(c)
-	query := packagesQuery(db, filters, account)
+	query := packagesQuery(db, filters, account, groups)
 	if err != nil {
 		return
 	}

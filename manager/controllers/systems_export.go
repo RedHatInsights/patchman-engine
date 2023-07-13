@@ -38,8 +38,9 @@ import (
 func SystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
-	query := querySystems(db, account, apiver)
+	query := querySystems(db, account, apiver, groups)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return

@@ -83,7 +83,7 @@ type queryItem struct {
 
 var queryItemSelect = database.MustGetSelect(&queryItem{})
 
-func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int) *gorm.DB {
+func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, groups map[string]string) *gorm.DB {
 	var validCache bool
 	err := db.Table("rh_account").
 		Select("valid_package_cache").
@@ -97,8 +97,8 @@ func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int) *gorm.DB
 			Where("rh_account_id = ?", acc)
 		return q
 	}
-	systemsWithPkgsInstalledQ := database.Systems(db, acc).
-		Select("id").
+	systemsWithPkgsInstalledQ := database.Systems(db, acc, groups).
+		Select("sp.id").
 		Where("sp.stale = false AND sp.packages_installed > 0")
 
 	// We need to apply tag filtering on subquery
@@ -146,6 +146,7 @@ func PackagesListHandler(c *gin.Context) {
 	var filters map[string]FilterData
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
@@ -153,7 +154,7 @@ func PackagesListHandler(c *gin.Context) {
 	}
 
 	db := middlewares.DBFromContext(c)
-	query := packagesQuery(db, filters, account)
+	query := packagesQuery(db, filters, account, groups)
 	if err != nil {
 		return
 	} // Error handled in method itself

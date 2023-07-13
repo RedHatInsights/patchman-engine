@@ -85,7 +85,7 @@ type BaselineSystemsResponse struct {
 	Meta  ListMeta             `json:"meta"`
 }
 
-func queryBaselineSystems(c *gin.Context, account, apiver int) (*gorm.DB, error) {
+func queryBaselineSystems(c *gin.Context, account, apiver int, groups map[string]string) (*gorm.DB, error) {
 	baselineID := c.Param("baseline_id")
 	id, err := strconv.ParseInt(baselineID, 10, 64)
 	if err != nil {
@@ -106,7 +106,7 @@ func queryBaselineSystems(c *gin.Context, account, apiver int) (*gorm.DB, error)
 		return nil, err
 	}
 
-	query := buildQueryBaselineSystems(db, account, id, apiver)
+	query := buildQueryBaselineSystems(db, account, groups, id, apiver)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return nil, err
@@ -115,8 +115,9 @@ func queryBaselineSystems(c *gin.Context, account, apiver int) (*gorm.DB, error)
 	return query, nil
 }
 
-func baselineSystemsCommon(c *gin.Context, account, apiver int) (*gorm.DB, *ListMeta, []string, error) {
-	query, err := queryBaselineSystems(c, account, apiver)
+func baselineSystemsCommon(c *gin.Context, account, apiver int, groups map[string]string,
+) (*gorm.DB, *ListMeta, []string, error) {
+	query, err := queryBaselineSystems(c, account, apiver, groups)
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled in method itself
@@ -159,8 +160,9 @@ func baselineSystemsCommon(c *gin.Context, account, apiver int) (*gorm.DB, *List
 func BaselineSystemsListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 
-	query, meta, params, err := baselineSystemsCommon(c, account, apiver)
+	query, meta, params, err := baselineSystemsCommon(c, account, apiver, groups)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -213,12 +215,13 @@ func BaselineSystemsListHandler(c *gin.Context) {
 func BaselineSystemsListIDsHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	if apiver < 3 {
 		c.AbortWithStatus(404)
 		return
 	}
 
-	query, meta, _, err := baselineSystemsCommon(c, account, apiver)
+	query, meta, _, err := baselineSystemsCommon(c, account, apiver, groups)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -238,10 +241,10 @@ func BaselineSystemsListIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildQueryBaselineSystems(db *gorm.DB, account int, baselineID int64, apiver int) *gorm.DB {
-	query := db.Table("system_platform AS sp").
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
-		Where("sp.rh_account_id = ? AND sp.baseline_id = ?", account, baselineID)
+func buildQueryBaselineSystems(db *gorm.DB, account int, groups map[string]string, baselineID int64, apiver int,
+) *gorm.DB {
+	query := database.Systems(db, account, groups).
+		Where("sp.baseline_id = ?", baselineID)
 	if apiver < 3 {
 		query.Select(BaselineSystemSelectV2)
 	} else {

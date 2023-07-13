@@ -32,6 +32,7 @@ import (
 func PackageSystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 
 	packageName := c.Param("package_name")
 	if packageName == "" {
@@ -51,7 +52,7 @@ func PackageSystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	query := packageSystemsQuery(db, account, packageName, packageIDs)
+	query := packageSystemsQuery(db, account, groups, packageName, packageIDs)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return

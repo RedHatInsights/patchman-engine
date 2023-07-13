@@ -69,10 +69,10 @@ func packagesByNameQuery(db *gorm.DB, pkgName string) *gorm.DB {
 		Where("pn.name = ?", pkgName)
 }
 
-func packageSystemsQuery(db *gorm.DB, acc int, packageName string, packageIDs []int) *gorm.DB {
-	query := database.SystemPackages(db, acc).
+func packageSystemsQuery(db *gorm.DB, acc int, groups map[string]string, packageName string, packageIDs []int,
+) *gorm.DB {
+	query := database.SystemPackages(db, acc, groups).
 		Select(PackageSystemsSelect).
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
 		Where("sp.stale = false").
 		Where("pn.name = ?", packageName).
@@ -83,6 +83,7 @@ func packageSystemsQuery(db *gorm.DB, acc int, packageName string, packageIDs []
 
 func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(middlewares.KeyAccount)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	var filters map[string]FilterData
 
 	packageName := c.Param("package_name")
@@ -102,7 +103,7 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 		return nil, nil, nil, errors.New("package not found")
 	}
 
-	query := packageSystemsQuery(db, account, packageName, packageIDs)
+	query := packageSystemsQuery(db, account, groups, packageName, packageIDs)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return nil, nil, nil, err

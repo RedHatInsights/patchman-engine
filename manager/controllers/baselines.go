@@ -83,13 +83,14 @@ type BaselinesResponse struct {
 func BaselinesListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return
 	}
 
 	db := middlewares.DBFromContext(c)
-	query := buildQueryBaselines(db, filters, account)
+	query := buildQueryBaselines(db, filters, account, groups)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -128,11 +129,9 @@ func BaselinesListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildQueryBaselines(db *gorm.DB, filters map[string]FilterData, account int) *gorm.DB {
-	subq := db.Table("system_platform sp").
+func buildQueryBaselines(db *gorm.DB, filters map[string]FilterData, account int, groups map[string]string) *gorm.DB {
+	subq := database.Systems(db, account, groups).
 		Select("sp.baseline_id, count(sp.inventory_id) as systems").
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
-		Where("sp.rh_account_id = ?", account).
 		Group("sp.baseline_id")
 
 	subq, _ = ApplyTagsFilter(filters, subq, "sp.inventory_id")

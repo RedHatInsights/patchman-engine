@@ -156,8 +156,9 @@ type SystemsResponseV3 struct {
 func systemsCommon(c *gin.Context, apiver int) (*gorm.DB, *ListMeta, []string, error) {
 	var err error
 	account := c.GetInt(middlewares.KeyAccount)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
-	query := querySystems(db, account, apiver)
+	query := querySystems(db, account, apiver, groups)
 	filters, err := ParseTagsFilters(c)
 	if err != nil {
 		return nil, nil, nil, err
@@ -302,9 +303,8 @@ func SystemsListIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func querySystems(db *gorm.DB, account, apiver int) *gorm.DB {
-	q := database.Systems(db, account).
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
+func querySystems(db *gorm.DB, account, apiver int, groups map[string]string) *gorm.DB {
+	q := database.Systems(db, account, groups).
 		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id")
 	if apiver < 3 {
 		return q.Select(SystemsSelectV2)
