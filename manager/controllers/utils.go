@@ -28,7 +28,7 @@ var tagRegex = regexp.MustCompile(`([^/=]+)/([^/=]+)(=([^/=]+))?`)
 var enableCyndiTags = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_TAGS", false)
 var disableCachedCounts = utils.GetBoolEnvOrDefault("DISABLE_CACHE_COUNTS", false)
 
-var validFilters = map[string]bool{
+var validSystemProfileFilters = map[string]bool{
 	"sap_sids":                    true,
 	"sap_system":                  true,
 	"mssql":                       true,
@@ -294,23 +294,23 @@ type Tag struct {
 	Value     *string
 }
 
-func HasTags(c *gin.Context) bool {
+func HasInventoryFilter(c *gin.Context) bool {
 	if !enableCyndiTags {
 		return false
 	}
-	hasTags := false
+	hasFilter := false
 	if len(c.QueryArray("tags")) > 0 {
-		hasTags = true
+		hasFilter = true
 	}
 
 	// If we have the `system_profile` filter item, then we have tags
 	spQuery := NestedQueryMap(c, "filter").Path("system_profile")
 	if spQuery != nil {
 		spQuery.Visit(func(path []string, val string) {
-			hasTags = true
+			hasFilter = true
 		})
 	}
-	return hasTags
+	return hasFilter
 }
 
 func trimQuotes(s string) string {
@@ -367,7 +367,7 @@ func (t *Tag) ApplyTag(tx *gorm.DB) *gorm.DB {
 	return tx.Where("ih.tags @> ?::jsonb", query)
 }
 
-func ParseTagsFilters(c *gin.Context) (map[string]FilterData, error) {
+func ParseInventoryFilters(c *gin.Context) (map[string]FilterData, error) {
 	filters := Filters{}
 
 	err := parseTagsFromCtx(c, filters)
@@ -446,7 +446,7 @@ func parseFiltersFromCtx(c *gin.Context, filters Filters) {
 }
 
 // Filter systems by tags with subquery
-func ApplyTagsFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
+func ApplyInventoryFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
 	if !enableCyndiTags {
 		return tx, false
 	}
@@ -455,7 +455,7 @@ func ApplyTagsFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr st
 		Table("inventory.hosts ih").
 		Select("ih.id")
 
-	subq, applied := ApplyTagsWhere(filters, subq)
+	subq, applied := ApplyInventoryWhere(filters, subq)
 
 	// Don't add the subquery if we don't have to
 	if !applied {
@@ -465,7 +465,7 @@ func ApplyTagsFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr st
 }
 
 // Apply Where clause with tags filter
-func ApplyTagsWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, bool) {
+func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, bool) {
 	applied := false
 	for key, val := range filters {
 		if strings.Contains(key, "/") {
@@ -476,9 +476,9 @@ func ApplyTagsWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, bool)
 			continue
 		}
 
-		if validFilters[key] {
+		if validSystemProfileFilters[key] {
 			values := strings.Join(val.Values, ",")
-			q := buildQuery(key, values)
+			q := buildSystemProfileQuery(key, values)
 
 			// Builds array of values
 			if len(val.Values) > 1 {
@@ -499,9 +499,9 @@ func ApplyTagsWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, bool)
 
 // Builds system_profile sub query in generic way.
 // Example:
-// buildQuery("mssql->version", "1.0")
+// buildSystemProfileQuery("mssql->version", "1.0")
 // returns "(ih.system_profile -> 'mssql' ->> 'version')::text = 1.0"
-func buildQuery(key string, val string) string {
+func buildSystemProfileQuery(key string, val string) string {
 	var cmp string
 
 	switch key {

@@ -29,13 +29,13 @@ import (
 func AdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
-	filters, err := ParseTagsFilters(c)
+	filters, err := ParseInventoryFilters(c)
 	if err != nil {
 		return
 	}
 	db := middlewares.DBFromContext(c)
 	var query *gorm.DB
-	if disableCachedCounts || HasTags(c) {
+	if disableCachedCounts || HasInventoryFilter(c) {
 		var err error
 		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
 		if err != nil {
