@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"app/base/database"
-	"app/base/utils"
 	"app/manager/middlewares"
 	"fmt"
 	"net/http"
@@ -88,13 +87,13 @@ func systemsAdvisoriesQuery(db *gorm.DB, acc int, groups map[string]string, syst
 
 func advisoriesSystemsQuery(db *gorm.DB, acc int, groups map[string]string, systems []SystemID,
 	advisories []AdvisoryName, limit, offset *int, apiver int) (*gorm.DB, int, int, int, error) {
-	// TODO: inventory groups check
-	utils.LogWarn("groups", groups, "TODO: USE INVENTORY GROUPS!")
-	advq := db.Table("advisory_metadata am").
+	// get all advisories for all systems in the account (with inventory.hosts join)
+	advq := database.Systems(db, acc, groups).
 		Distinct("am.id, am.name").
 		// we need to join system_advisories to make `limit` work properly
 		// without this join it can happen that we display less items on some pages
-		Joins("JOIN system_advisories sa ON am.id = sa.advisory_id AND sa.rh_account_id = ?", acc).
+		Joins("JOIN system_advisories sa ON sp.id = sa.system_id AND sa.rh_account_id = ?", acc).
+		Joins("JOIN advisory_metadata am ON am.id = sa.advisory_id").
 		Order("am.name, am.id")
 	if len(advisories) > 0 {
 		advq = advq.Where("am.name in (?)", advisories)
