@@ -60,11 +60,11 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 	}
 
 	query := buildAdvisorySystemsQuery(db, account, groups, advisoryName, apiver)
-	filters, err := ParseTagsFilters(c)
+	filters, err := ParseInventoryFilters(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
-	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
+	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
 
 	query = query.Order("sp.id")
 	query, err = ExportListCommon(query, c, AdvisorySystemOpts)

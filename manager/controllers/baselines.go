@@ -84,7 +84,7 @@ func BaselinesListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
-	filters, err := ParseTagsFilters(c)
+	filters, err := ParseInventoryFilters(c)
 	if err != nil {
 		return
 	}
@@ -134,7 +134,7 @@ func buildQueryBaselines(db *gorm.DB, filters map[string]FilterData, account int
 		Select("sp.baseline_id, count(sp.inventory_id) as systems").
 		Group("sp.baseline_id")
 
-	subq, _ = ApplyTagsFilter(filters, subq, "sp.inventory_id")
+	subq, _ = ApplyInventoryFilter(filters, subq, "sp.inventory_id")
 
 	query := db.Table("baseline as bl").
 		Select(BaselineSelect).

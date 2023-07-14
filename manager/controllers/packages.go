@@ -102,7 +102,7 @@ func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, groups m
 		Where("sp.stale = false AND sp.packages_installed > 0")
 
 	// We need to apply tag filtering on subquery
-	systemsWithPkgsInstalledQ, _ = ApplyTagsFilter(filters, systemsWithPkgsInstalledQ, "sp.inventory_id")
+	systemsWithPkgsInstalledQ, _ = ApplyInventoryFilter(filters, systemsWithPkgsInstalledQ, "sp.inventory_id")
 	subQ := database.SystemPackagesShort(db, acc).
 		Select(queryItemSelect).
 		Where("spkg.system_id IN (?)", systemsWithPkgsInstalledQ).
@@ -148,7 +148,7 @@ func PackagesListHandler(c *gin.Context) {
 	apiver := c.GetInt(middlewares.KeyApiver)
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 
-	filters, err := ParseTagsFilters(c)
+	filters, err := ParseInventoryFilters(c)
 	if err != nil {
 		return
 	}

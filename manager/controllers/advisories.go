@@ -121,11 +121,11 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(middlewares.KeyAccount)
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	var query *gorm.DB
-	filters, err := ParseTagsFilters(c)
+	filters, err := ParseInventoryFilters(c)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	if disableCachedCounts || HasTags(c) {
+	if disableCachedCounts || HasInventoryFilter(c) {
 		var err error
 		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
 		if err != nil {
@@ -277,7 +277,7 @@ func buildAdvisoryAccountDataQuery(db *gorm.DB, account int, groups map[string]s
 func buildQueryAdvisoriesTagged(db *gorm.DB, filters map[string]FilterData, account int, groups map[string]string,
 ) *gorm.DB {
 	subq := buildAdvisoryAccountDataQuery(db, account, groups)
-	subq, _ = ApplyTagsFilter(filters, subq, "sp.inventory_id")
+	subq, _ = ApplyInventoryFilter(filters, subq, "sp.inventory_id")
 
 	query := db.Table("advisory_metadata am").
 		Select(AdvisoriesSelectV3).
