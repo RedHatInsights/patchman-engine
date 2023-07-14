@@ -141,6 +141,14 @@
                         }
                     },
                     {
+                        "name": "filter[group_name][in]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -423,6 +431,14 @@
                             "items": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    {
+                        "name": "filter[group_name][in]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     {
@@ -1069,6 +1085,14 @@
                         }
                     },
                     {
+                        "name": "filter[group_name][in]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -1358,6 +1382,14 @@
                         }
                     },
                     {
+                        "name": "filter[group_name][in]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -1572,6 +1604,14 @@
                             "items": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    {
+                        "name": "filter[group_name][in]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     {
@@ -1855,6 +1895,14 @@
                         }
                     },
                     {
+                        "name": "filter[group_name][in]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -2065,6 +2113,14 @@
                         "name": "filter[packages_installed]",
                         "in": "query",
                         "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[group_name][in]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
                         "schema": {
                             "type": "string"
                         }
@@ -2640,6 +2696,14 @@
                         }
                     },
                     {
+                        "name": "filter[group_name][in]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -2958,6 +3022,14 @@
                         }
                     },
                     {
+                        "name": "filter[group_name][in]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -3245,6 +3317,14 @@
                         }
                     },
                     {
+                        "name": "filter[group_name][in]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -3528,6 +3608,14 @@
                             "items": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    {
+                        "name": "filter[group_name][in]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     {
@@ -3882,6 +3970,14 @@
                         }
                     },
                     {
+                        "name": "filter[group_name][in]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -4091,6 +4187,14 @@
                             "items": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    {
+                        "name": "filter[group_name][in]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     {
@@ -4466,6 +4570,14 @@
                             "items": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    {
+                        "name": "filter[group_name][in]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     {

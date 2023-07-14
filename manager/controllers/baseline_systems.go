@@ -146,6 +146,7 @@ func baselineSystemsCommon(c *gin.Context, account, apiver int, groups map[strin
 // @Param    filter[display_name]           query   string  false "Filter"
 // @Param    filter[os]           			query   string  false "Filter"
 // @Param    tags           query   []string  false "Tag filter"
+// @Param    filter[group_name][in]									query string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
 // @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"

@@ -131,6 +131,7 @@ func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, groups m
 // @Param    filter[systems_applicable]  query   string  false "Filter"
 // @Param    filter[summary]             query   string  false "Filter"
 // @Param    tags                        query   []string  false "Tag filter"
+// @Param    filter[group_name][in]									query string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
 // @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"

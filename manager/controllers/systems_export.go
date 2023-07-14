@@ -22,6 +22,7 @@ import (
 // @Param    filter[other_count]     query   string  false "Filter"
 // @Param    filter[stale]           query   string  false "Filter"
 // @Param    filter[packages_installed] query string false "Filter"
+// @Param    filter[group_name][in]									query string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
 // @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
