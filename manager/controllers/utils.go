@@ -37,6 +37,11 @@ var validSystemProfileFilters = map[string]bool{
 	"ansible->controller_version": true,
 }
 
+var multiValueFilters = map[string]bool{
+	"sap_sids":   true,
+	"group_name": true,
+}
+
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	utils.LogError("err", err.Error(), respMsg)
 	c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{Error: respMsg})
@@ -101,8 +106,8 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 
 func validateFilters(q QueryMap, allowedFields database.AttrMap) error {
 	for key := range q {
-		// system_profile is hadled by tags, so it can be skipped
-		if key == "system_profile" {
+		// system_profile and group_name are handled by tags, so it can be skipped
+		if key == "system_profile" || key == "group_name" {
 			continue
 		}
 		if _, ok := allowedFields[key]; !ok {
@@ -310,6 +315,13 @@ func HasInventoryFilter(c *gin.Context) bool {
 			hasFilter = true
 		})
 	}
+
+	groupsQuery := NestedQueryMap(c, "filter").Path("group_name")
+	if groupsQuery != nil {
+		groupsQuery.Visit(func(path []string, val string) {
+			hasFilter = true
+		})
+	}
 	return hasFilter
 }
 
@@ -413,36 +425,52 @@ func parseTagsFromCtx(c *gin.Context, filters Filters) error {
 }
 
 func parseFiltersFromCtx(c *gin.Context, filters Filters) {
-	filter := NestedQueryMap(c, "filter").Path("system_profile")
-	if filter == nil {
-		return
+	var filterItems []QueryItem
+	filter := NestedQueryMap(c, "filter")
+
+	if item, ok := filter.GetPath("system_profile"); ok {
+		// filter nested under "system_profile"
+		filterItems = append(filterItems, item)
+	}
+	if _, ok := filter.GetPath("group_name"); ok {
+		// "group_name" filter
+		filterItems = append(filterItems, filter)
 	}
 
-	filter.Visit(func(path []string, val string) {
-		// Specific filter keys
-		if len(path) >= 1 && path[0] == "sap_sids" {
-			val = strconv.Quote(val)
-			var op string
-			if op = "eq"; len(path) > 1 {
-				op = path[1]
-			}
-			appendFilterData(filters, "sap_sids", op, val)
+	for _, filter := range filterItems {
+		filter.Visit(func(path []string, val string) {
+			// Specific filter keys
+			if len(path) >= 1 && multiValueFilters[path[0]] {
+				val = strconv.Quote(val)
+				var op string
+				if op = "eq"; len(path) > 1 {
+					op = path[1]
+				}
+				appendFilterData(filters, path[0], op, val)
 
-			return
-		}
-
-		// Generic filter keys
-		var key string
-		// Builds key in following format path[0]->path[1]->path[2]...
-		for i, s := range path {
-			if i == 0 {
-				key = path[0]
-				continue
+				return
 			}
-			key = fmt.Sprintf("%s->%s", key, s)
-		}
-		appendFilterData(filters, key, "eq", val)
-	})
+
+			// [group_name] filter can be processed only with Specific filter keys
+			if f, ok := filter.(QueryMap); ok {
+				if _, has := f.GetPath("group_name"); has {
+					return
+				}
+			}
+
+			// Generic [system_profile] filter keys
+			var key string
+			// Builds key in following format path[0]->path[1]->path[2]...
+			for i, s := range path {
+				if i == 0 {
+					key = path[0]
+					continue
+				}
+				key = fmt.Sprintf("%s->%s", key, s)
+			}
+			appendFilterData(filters, key, "eq", val)
+		})
+	}
 }
 
 // Filter systems by tags with subquery
@@ -491,6 +519,26 @@ func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, 
 				tx = tx.Where(q, values)
 			}
 
+			applied = true
+			continue
+		}
+
+		if strings.Contains(key, "group_name") {
+			groups := []string{}
+			for _, v := range val.Values {
+				name, err := strconv.Unquote(v)
+				if err != nil {
+					name = v
+				}
+				group, err := utils.ParseInventoryGroup(nil, &name)
+				if err != nil {
+					// couldn't marshal inventory group to json
+					continue
+				}
+				groups = append(groups, group)
+			}
+			jsonq := fmt.Sprintf("{%s}", strings.Join(groups, ","))
+			tx = tx.Where("ih.groups @> ANY (?::jsonb[])", jsonq)
 			applied = true
 		}
 	}
