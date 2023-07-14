@@ -21,8 +21,9 @@ type AttributeFilter struct {
 	Value []*string `json:"value"`
 }
 
-type InventoryGroupID struct {
-	ID string `json:"id"`
+type inventoryGroup struct {
+	ID   *string `json:"id,omitempty"`
+	Name *string `json:"name,omitempty"`
 }
 
-type InventoryGroup []InventoryGroupID
+type InventoryGroup []inventoryGroup

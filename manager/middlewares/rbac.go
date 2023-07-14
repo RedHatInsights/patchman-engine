@@ -5,7 +5,6 @@ import (
 	"app/base/api"
 	"app/base/rbac"
 	"app/base/utils"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -142,13 +141,12 @@ func findInventoryGroups(access *rbac.AccessPagination) map[string]string {
 					res[rbac.KeyUngrouped] = "[]"
 					continue
 				}
-				group := rbac.InventoryGroup{{ID: *v}}
-				groupJSON, err := json.Marshal(&group)
+				group, err := utils.ParseInventoryGroup(v, nil)
 				if err != nil {
-					utils.LogError("group", group, "err", err.Error(), "Cannot Marshal Inventory group")
+					// couldn't marshal inventory group to json
 					continue
 				}
-				groups = append(groups, strconv.Quote(string(groupJSON)))
+				groups = append(groups, group)
 			}
 		}
 	}
