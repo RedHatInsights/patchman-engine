@@ -134,19 +134,23 @@ func ParseFilters(q QueryMap, allowedFields database.AttrMap,
 	// nolint: scopelint
 	for f := range allowedFields {
 		if elem := q.Path(f); elem != nil {
-			elem.Visit(func(path []string, val string) {
+			err := elem.Visit(func(path []string, val string) error {
 				// If we encountered error in previous element, skip processing others
 				if err != nil {
-					return
+					return err
 				}
 
 				// the filter[a][eq]=b syntax was not yet implemented
 				if len(path) > 0 {
 					err = errors.New(InvalidNestedFilter)
-					return
+					return err
 				}
 				filters[f], err = ParseFilterValue(val)
+				return err
 			})
+			if err != nil {
+				return filters, err
+			}
 		}
 	}
 
@@ -311,15 +315,19 @@ func HasInventoryFilter(c *gin.Context) bool {
 	// If we have the `system_profile` filter item, then we have tags
 	spQuery := NestedQueryMap(c, "filter").Path("system_profile")
 	if spQuery != nil {
-		spQuery.Visit(func(path []string, val string) {
+		// nolint: errcheck
+		spQuery.Visit(func(path []string, val string) error {
 			hasFilter = true
+			return nil
 		})
 	}
 
 	groupsQuery := NestedQueryMap(c, "filter").Path("group_name")
 	if groupsQuery != nil {
-		groupsQuery.Visit(func(path []string, val string) {
+		// nolint: errcheck
+		groupsQuery.Visit(func(path []string, val string) error {
 			hasFilter = true
+			return nil
 		})
 	}
 	return hasFilter
@@ -387,7 +395,9 @@ func ParseInventoryFilters(c *gin.Context) (map[string]FilterData, error) {
 		return nil, err
 	}
 
-	parseFiltersFromCtx(c, filters)
+	if err := parseFiltersFromCtx(c, filters); err != nil {
+		return nil, errors.Wrap(err, "cannot parse inventory filters")
+	}
 
 	return filters, nil
 }
@@ -424,7 +434,7 @@ func parseTagsFromCtx(c *gin.Context, filters Filters) error {
 	return nil
 }
 
-func parseFiltersFromCtx(c *gin.Context, filters Filters) {
+func parseFiltersFromCtx(c *gin.Context, filters Filters) error {
 	var filterItems []QueryItem
 	filter := NestedQueryMap(c, "filter")
 
@@ -438,39 +448,55 @@ func parseFiltersFromCtx(c *gin.Context, filters Filters) {
 	}
 
 	for _, filter := range filterItems {
-		filter.Visit(func(path []string, val string) {
+		err := filter.Visit(func(path []string, val string) error {
 			// Specific filter keys
 			if len(path) >= 1 && multiValueFilters[path[0]] {
-				val = strconv.Quote(val)
-				var op string
-				if op = "eq"; len(path) > 1 {
-					op = path[1]
-				}
-				appendFilterData(filters, path[0], op, val)
-
-				return
+				return visitMultiValueFilters(filters, path, val)
 			}
 
 			// [group_name] filter can be processed only with Specific filter keys
 			if f, ok := filter.(QueryMap); ok {
 				if _, has := f.GetPath("group_name"); has {
-					return
+					return nil
 				}
 			}
 
 			// Generic [system_profile] filter keys
-			var key string
-			// Builds key in following format path[0]->path[1]->path[2]...
-			for i, s := range path {
-				if i == 0 {
-					key = path[0]
-					continue
-				}
-				key = fmt.Sprintf("%s->%s", key, s)
-			}
-			appendFilterData(filters, key, "eq", val)
+			return visitSystemProfileFilters(filters, path, val)
 		})
+		if err != nil {
+			LogAndRespBadRequest(c, err, err.Error())
+			return err
+		}
 	}
+	return nil
+}
+
+func visitMultiValueFilters(filters Filters, path []string, val string) error {
+	val = strconv.Quote(val)
+	var op string
+	if op = "eq"; len(path) > 1 {
+		op = path[1]
+	}
+	err := appendFilterData(filters, path[0], op, val)
+	if err != nil {
+		return errors.Wrapf(err, "invalid filter value: %s", val)
+	}
+	return nil
+}
+
+// Builds key in following format path[0]->path[1]->path[2]...
+func visitSystemProfileFilters(filters Filters, path []string, val string) error {
+	var key string
+	for i, s := range path {
+		if i == 0 {
+			key = path[0]
+			continue
+		}
+		key = fmt.Sprintf("%s->%s", key, s)
+	}
+	err := appendFilterData(filters, key, "eq", val)
+	return errors.Wrapf(err, "invalid filter value: %s", val)
 }
 
 // Filter systems by tags with subquery
@@ -579,37 +605,45 @@ func buildSystemProfileQuery(key string, val string) string {
 
 type QueryItem interface {
 	IsQuery()
-	Visit(visitor func(path []string, val string), pathPrefix ...string)
+	Visit(visitor func(path []string, val string) error, pathPrefix ...string) error
 }
 type QueryArr []string
 
 func (QueryArr) IsQuery() {}
 
-func (q QueryArr) Visit(visitor func(path []string, val string), pathPrefix ...string) {
+func (q QueryArr) Visit(visitor func(path []string, val string) error, pathPrefix ...string) error {
 	for _, item := range q {
-		visitor(pathPrefix, item)
+		if err := visitor(pathPrefix, item); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 type QueryMap map[string]QueryItem
 
 func (QueryMap) IsQuery() {}
 
-func (q QueryMap) Visit(visitor func(path []string, val string), pathPrefix ...string) {
+func (q QueryMap) Visit(visitor func(path []string, val string) error, pathPrefix ...string) error {
 	for k, v := range q {
 		newPath := make([]string, len(pathPrefix))
 		copy(newPath, pathPrefix)
 		newPath = append(newPath, k)
 		switch val := v.(type) {
 		case QueryMap:
-			val.Visit(visitor, newPath...)
+			if err := val.Visit(visitor, newPath...); err != nil {
+				return err
+			}
 		case QueryArr:
 			// Inlined code here to avoid calling interface method in struct receiver (low perf)
 			for _, item := range val {
-				visitor(newPath, item)
+				if err := visitor(newPath, item); err != nil {
+					return err
+				}
 			}
 		}
 	}
+	return nil
 }
 
 func (q QueryMap) GetPath(keys ...string) (QueryItem, bool) {
@@ -886,16 +920,33 @@ func mergeMaps(first map[string]FilterData, second map[string]FilterData) {
 	}
 }
 
-func appendFilterData(filters Filters, key string, op, val string) {
-	if fd, ok := filters[key]; ok {
-		fd.Values = append(fd.Values, val)
-		filters[key] = fd
-	} else {
-		filters[key] = FilterData{
-			Operator: op,
-			Values:   strings.Split(val, ","),
-		}
+func appendFilterData(filters Filters, key string, op, val string) error {
+	if _, ok := filters[key]; !ok {
+		filters[key] = FilterData{}
 	}
+
+	values, err := splitValues(op, val)
+	if err != nil {
+		return err
+	}
+
+	filters[key] = FilterData{
+		Operator: op,
+		Values:   append(filters[key].Values, values...),
+	}
+	return nil
+}
+
+// Split comma delimited string values for IN operator
+func splitValues(op, val string) ([]string, error) {
+	if op == "in" && strings.Contains(val, ",") {
+		val, err := strconv.Unquote(val)
+		if err != nil {
+			return []string{}, errors.Wrap(err, "cannot unquote value")
+		}
+		return strings.Split(val, ","), nil
+	}
+	return []string{val}, nil
 }
 
 // Pagination query for handlers where ListCommon is not used
