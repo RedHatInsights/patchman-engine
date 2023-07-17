@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"app/base/database"
+	"app/base/rbac"
 	"app/manager/middlewares"
 	"net/http"
 	"time"
@@ -125,7 +126,7 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	if disableCachedCounts || HasInventoryFilter(c) {
+	if disableCachedCounts || HasInventoryFilter(c) || len(groups[rbac.KeyGrouped]) != 0 {
 		var err error
 		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
 		if err != nil {
