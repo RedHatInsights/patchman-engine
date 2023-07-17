@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"app/base/database"
+	"app/base/rbac"
 	"app/base/utils"
 	"app/manager/middlewares"
 	"net/http"
@@ -89,7 +90,7 @@ func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, groups m
 		Select("valid_package_cache").
 		Where("id = ?", acc).
 		Scan(&validCache).Error
-	if err == nil && validCache && len(filters) == 0 && enabledPackageCache {
+	if err == nil && validCache && len(filters) == 0 && enabledPackageCache && len(groups[rbac.KeyGrouped]) == 0 {
 		// use cache only when tag filter is not used
 		q := db.Table("package_account_data res").
 			Select(PackagesSelect).
