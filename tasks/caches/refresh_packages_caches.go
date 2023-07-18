@@ -45,7 +45,7 @@ func RefreshPackagesCaches(accID *int) error {
 			continue
 		}
 
-		if err = updateCacheValidity(&acc); err != nil {
+		if err = updatePkgCacheValidity(&acc); err != nil {
 			utils.LogError("err", err.Error(), "Refresh failed")
 			continue
 		}
@@ -144,7 +144,7 @@ func deleteOldCache(pkgSysCounts []models.PackageAccountData, accID *int) error 
 	return errors.Wrap(err, "failed to insert to package_account_data")
 }
 
-func updateCacheValidity(accID *int) error {
+func updatePkgCacheValidity(accID *int) error {
 	defer utils.ObserveSecondsSince(time.Now(), packageRefreshPartDuration.WithLabelValues("update-validity"))
 	utils.LogDebug("Updating cache validity")
 	err := tasks.WithTx(func(tx *gorm.DB) error {
