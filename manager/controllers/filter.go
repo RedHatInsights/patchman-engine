@@ -3,9 +3,10 @@ package controllers
 import (
 	"app/base/database"
 	"fmt"
+	"strings"
+
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"strings"
 )
 
 type FilterData struct {
@@ -88,9 +89,6 @@ func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (str
 	case "leq":
 		return fmt.Sprintf("%s <= ? ", attributes[fieldName].DataQuery), values, nil
 	case "between":
-		if len(transformedValues) != 2 {
-			return "", []interface{}{}, errors.New("the `between` filter needs 2 values")
-		}
 		return fmt.Sprintf("%s BETWEEN ? AND ? ", attributes[fieldName].DataQuery), values, nil
 	case "in":
 		return fmt.Sprintf("%s IN (?) ", attributes[fieldName].DataQuery), []interface{}{values}, nil
