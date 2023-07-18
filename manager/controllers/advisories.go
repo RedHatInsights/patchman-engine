@@ -126,7 +126,18 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	if disableCachedCounts || HasInventoryFilter(c) || len(groups[rbac.KeyGrouped]) != 0 {
+
+	var validCache bool
+	if !disableCachedCounts {
+		err = db.Table("rh_account").
+			Select("valid_advisory_cache").
+			Where("id = ?", account).
+			Scan(&validCache).Error
+		if err != nil {
+			validCache = false
+		}
+	}
+	if !validCache || HasInventoryFilter(c) || len(groups[rbac.KeyGrouped]) != 0 {
 		var err error
 		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
 		if err != nil {

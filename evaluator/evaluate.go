@@ -558,10 +558,10 @@ func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, erro
 	return updatesReq, err
 }
 
-func invalidatePkgCache(orgID string) error {
+func invalidateCaches(orgID string) error {
 	err := database.Db.Model(models.RhAccount{}).
 		Where("org_id = ?", orgID).
-		Update("valid_package_cache", false).
+		Updates(models.RhAccount{ValidPackageCache: false, ValidAdvisoryCache: false}).
 		Error
 	return err
 }
@@ -599,8 +599,8 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 	}
 	wg.Wait()
 
-	if cacheErr := invalidatePkgCache(event.GetOrgID()); cacheErr != nil {
-		utils.LogError("err", err.Error(), "org_id", event.GetOrgID(), "Couldn't invalidate pkg cache")
+	if cacheErr := invalidateCaches(event.GetOrgID()); cacheErr != nil {
+		utils.LogError("err", err.Error(), "org_id", event.GetOrgID(), "Couldn't invalidate caches")
 	}
 
 	// send kafka message to payload tracker

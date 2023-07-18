@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (111, false);
+VALUES (112, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -630,6 +630,7 @@ CREATE TABLE IF NOT EXISTS rh_account
     name                    TEXT UNIQUE CHECK (NOT empty(name)),
     org_id                  TEXT UNIQUE CHECK (NOT empty(org_id)),
     valid_package_cache     BOOLEAN NOT NULL DEFAULT FALSE,
+    valid_advisory_cache    BOOLEAN NOT NULL DEFAULT FALSE,
     CHECK (name IS NOT NULL OR org_id IS NOT NULL),
     PRIMARY KEY (id)
 ) TABLESPACE pg_default;

@@ -5,10 +5,11 @@ import (
 )
 
 type RhAccount struct {
-	ID                int `gorm:"primaryKey"`
-	Name              *string
-	OrgID             *string
-	ValidPackageCache bool
+	ID                 int `gorm:"primaryKey"`
+	Name               *string
+	OrgID              *string
+	ValidPackageCache  bool
+	ValidAdvisoryCache bool
 }
 
 func (RhAccount) TableName() string {
