@@ -49,12 +49,13 @@ func TestBaselineSystemsExportCSV(t *testing.T) {
 	assert.Equal(t,
 		"id,display_name,os,rhsm,installable_rhsa_count,installable_rhba_count,installable_rhea_count,"+
 			"installable_other_count,applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,"+
-			"applicable_other_count,tags,last_upload",
+			"applicable_other_count,tags,groups,last_upload",
 		lines[0])
 
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,RHEL 8.10,"+
 		"8.10,2,2,1,0,2,3,3,0,\"[{'key':'k1','namespace':'ns1','value':'val1'},"+
-		"{'key':'k2','namespace':'ns1','value':'val2'}]\",2020-09-22T16:00:00Z",
+		"{'key':'k2','namespace':'ns1','value':'val2'}]\","+
+		"\"[{'id':'inventory-group-1','name':'group1'}]\",2020-09-22T16:00:00Z",
 		lines[1])
 }
 
@@ -80,7 +81,7 @@ func TestBaselineSystemsExportCSVFilter(t *testing.T) {
 	assert.Equal(t,
 		"id,display_name,os,rhsm,installable_rhsa_count,installable_rhba_count,installable_rhea_count,"+
 			"installable_other_count,applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,"+
-			"applicable_other_count,tags,last_upload",
+			"applicable_other_count,tags,groups,last_upload",
 		lines[0])
 	assert.Equal(t, "", lines[1])
 }
