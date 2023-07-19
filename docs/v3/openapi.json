@@ -5501,6 +5501,12 @@
                     "display_name": {
                         "type": "string"
                     },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
+                    },
                     "id": {
                         "type": "string"
                     },
@@ -5564,6 +5570,12 @@
                     },
                     "display_name": {
                         "type": "string"
+                    },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
                     },
                     "last_upload": {
                         "type": "string"
@@ -5735,6 +5747,12 @@
                         "description": "Baseline system display name",
                         "example": "my-baselined-system"
                     },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
+                    },
                     "installable_other_count": {
                         "type": "integer"
                     },
@@ -5801,6 +5819,12 @@
                         "type": "string",
                         "description": "Baseline system display name",
                         "example": "my-baselined-system"
+                    },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
                     },
                     "id": {
                         "type": "string"
@@ -6190,6 +6214,12 @@
                     "display_name": {
                         "type": "string"
                     },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
+                    },
                     "id": {
                         "type": "string"
                     },
@@ -6400,6 +6430,12 @@
                     "display_name": {
                         "type": "string"
                     },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
+                    },
                     "id": {
                         "type": "string"
                     },
@@ -6452,6 +6488,17 @@
                     }
                 }
             },
+            "controllers.SystemGroup": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
             "controllers.SystemItem": {
                 "type": "object",
                 "properties": {
@@ -6486,6 +6533,12 @@
                     },
                     "display_name": {
                         "type": "string"
+                    },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
                     },
                     "insights_id": {
                         "type": "string"
@@ -6566,6 +6619,12 @@
                     },
                     "display_name": {
                         "type": "string"
+                    },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
                     },
                     "last_upload": {
                         "type": "string"
