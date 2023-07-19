@@ -39,6 +39,7 @@ type AdvisorySystemItemAttributes struct {
 	OSAttributes
 	SystemTimestamps
 	SystemTags
+	SystemGroups
 	BaselineIDAttr
 	BaselineNameAttr
 	SystemAdvisoryStatus
@@ -98,9 +99,11 @@ func buildAdvisorySystemsData(fields []AdvisorySystemDBLookup) ([]AdvisorySystem
 	}
 	data := make([]AdvisorySystemItem, len(fields))
 	for i, as := range fields {
-		as.AdvisorySystemItemAttributes.Tags, err = parseSystemTags(as.TagsStr)
-		if err != nil {
+		if err = parseSystemItems(as.TagsStr, &as.AdvisorySystemItemAttributes.Tags); err != nil {
 			utils.LogDebug("err", err.Error(), "inventory_id", as.ID, "system tags parsing failed")
+		}
+		if err = parseSystemItems(as.GroupsStr, &as.AdvisorySystemItemAttributes.Groups); err != nil {
+			utils.LogDebug("err", err.Error(), "inventory_id", as.ID, "system groups parsing failed")
 		}
 		data[i] = AdvisorySystemItem{
 			Attributes: as.AdvisorySystemItemAttributes,

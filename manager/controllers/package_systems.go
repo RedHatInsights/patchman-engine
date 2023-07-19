@@ -43,6 +43,7 @@ type PackageSystemItemV3 struct {
 	BaselineIDAttr
 	OSAttributes
 	UpdateStatus string `json:"update_status" csv:"update_status" query:"update_status(spkg.update_data)" gorm:"column:update_status"`
+	SystemGroups
 }
 
 type PackageSystemDBLookup struct {
@@ -234,11 +235,12 @@ func packageSystemDBLookups2PackageSystemItemsV3(systems []PackageSystemDBLookup
 		total = systems[0].Total
 	}
 	data := make([]PackageSystemItemV3, len(systems))
-	var err error
 	for i, system := range systems {
-		system.PackageSystemItemV3.Tags, err = parseSystemTags(system.TagsStr)
-		if err != nil {
+		if err := parseSystemItems(system.TagsStr, &system.PackageSystemItemV3.Tags); err != nil {
 			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system tags parsing failed")
+		}
+		if err := parseSystemItems(system.GroupsStr, &system.PackageSystemItemV3.Groups); err != nil {
+			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system groups parsing failed")
 		}
 		data[i] = system.PackageSystemItemV3
 	}
