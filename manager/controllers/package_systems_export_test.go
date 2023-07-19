@@ -37,13 +37,14 @@ func TestPackageSystemsExportHandlerCSV(t *testing.T) {
 
 	assert.Equal(t, 5, len(lines))
 	assert.Equal(t, "id,display_name,installed_evra,available_evra,updatable,tags,"+
-		"baseline_name,baseline_uptodate,baseline_id,os,rhsm,update_status", lines[0])
+		"baseline_name,baseline_uptodate,baseline_id,os,rhsm,update_status,groups", lines[0])
 	assert.Equal(t, "00000000-0000-0000-0000-000000000012,00000000-0000-0000-0000-000000000012,"+
 		"5.6.13-200.fc31.x86_64,5.10.13-200.fc31.x86_64,true,"+
-		"\"[{'key':'k1','namespace':'ns1','value':'val1'}]\",,,0,RHEL 8.1,8.1,Installable",
+		"\"[{'key':'k1','namespace':'ns1','value':'val1'}]\",,,0,RHEL 8.1,8.1,Installable,[]",
 		lines[1])
 	assert.Equal(t, "00000000-0000-0000-0000-000000000013,00000000-0000-0000-0000-000000000013,"+
-		"5.6.13-200.fc31.x86_64,,false,\"[{'key':'k1','namespace':'ns1','value':'val1'}]\",,,0,RHEL 8.2,8.2,None", lines[2])
+		"5.6.13-200.fc31.x86_64,,false,\"[{'key':'k1','namespace':'ns1','value':'val1'}]\",,,"+
+		"0,RHEL 8.2,8.2,None,[]", lines[2])
 }
 
 func TestPackageSystemsExportInvalidName(t *testing.T) {

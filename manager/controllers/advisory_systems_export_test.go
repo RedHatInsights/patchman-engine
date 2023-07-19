@@ -32,10 +32,11 @@ func TestAdvisorySystemsExportCSV(t *testing.T) {
 	assert.Equal(t, 8, len(lines))
 	assert.Equal(t,
 		"display_name,last_upload,stale,os,rhsm,stale_timestamp,stale_warning_timestamp,culled_timestamp,created,tags,"+
-			"baseline_id,baseline_name,status,id", lines[0])
+			"groups,baseline_id,baseline_name,status,id", lines[0])
 
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001,2020-09-22T16:00:00Z,false,RHEL 8.10,8.10,2018-08-26T16:00:00Z,"+
 		"2018-09-02T16:00:00Z,2018-09-09T16:00:00Z,2018-08-26T16:00:00Z,\"[{'key':'k1','namespace':'ns1','value':'val1'},"+
-		"{'key':'k2','namespace':'ns1','value':'val2'}]\",1,baseline_1-1,Installable,00000000-0000-0000-0000-000000000001",
+		"{'key':'k2','namespace':'ns1','value':'val2'}]\",\"[{'id':'inventory-group-1','name':'group1'}]\","+
+		"1,baseline_1-1,Installable,00000000-0000-0000-0000-000000000001",
 		lines[1])
 }
