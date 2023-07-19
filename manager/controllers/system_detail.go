@@ -23,6 +23,7 @@ type SystemDetailResponse struct {
 type SystemDetailLookup struct {
 	SystemItemAttributesAll
 	TagsStrHelper
+	GroupsStrHelper
 }
 
 // nolint: funlen
@@ -76,9 +77,12 @@ func SystemDetailHandler(c *gin.Context) {
 		return
 	}
 
-	systemDetail.Tags, err = parseSystemTags(systemDetail.TagsStr)
-	if err != nil {
+	if err := parseSystemItems(systemDetail.TagsStr, &systemDetail.Tags); err != nil {
 		utils.LogDebug("err", err.Error(), "inventory_id", inventoryID, "system tags parsing failed")
+	}
+
+	if err := parseSystemItems(systemDetail.GroupsStr, &systemDetail.Groups); err != nil {
+		utils.LogDebug("err", err.Error(), "inventory_id", inventoryID, "system groups parsing failed")
 	}
 
 	if apiver < 3 {

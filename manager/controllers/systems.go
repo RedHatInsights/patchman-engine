@@ -94,6 +94,7 @@ type SystemItemAttributesV2Only struct {
 
 type SystemItemAttributesV3Only struct {
 	BaselineIDAttr
+	SystemGroups
 }
 
 type SystemItemAttributesV2 struct {
@@ -113,9 +114,21 @@ type SystemItemAttributesAll struct {
 }
 
 type SystemTagsList []SystemTag
+type SystemGroupsList []SystemGroup
+type SystemInventoryItemList[T SystemTagsList | SystemGroupsList] struct {
+	SystemInventoryItems T
+}
 
 func (v SystemTagsList) String() string {
-	b, err := json.Marshal(v)
+	return SystemInventoryItemList[SystemTagsList]{v}.String()
+}
+
+func (v SystemGroupsList) String() string {
+	return SystemInventoryItemList[SystemGroupsList]{v}.String()
+}
+
+func (v SystemInventoryItemList[T]) String() string {
+	b, err := json.Marshal(v.SystemInventoryItems)
 	if err != nil {
 		utils.LogError("err", err.Error(), "Unable to convert tags struct to json")
 	}
@@ -314,17 +327,15 @@ func querySystems(db *gorm.DB, account, apiver int, groups map[string]string) *g
 	return q.Select(SystemsSelectV3)
 }
 
-func parseSystemTags(jsonStr string) ([]SystemTag, error) {
+func parseSystemItems(jsonStr string, res interface{}) error {
 	js := json.RawMessage(jsonStr)
 	b, err := json.Marshal(js)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var systemTags []SystemTag
-	err = json.Unmarshal(b, &systemTags)
-	if err != nil {
-		return nil, err
+	if err := json.Unmarshal(b, res); err != nil {
+		return err
 	}
-	return systemTags, nil
+	return nil
 }
