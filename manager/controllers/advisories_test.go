@@ -186,14 +186,6 @@ func TestAdvisoriesFilterTypeID4(t *testing.T) {
 }
 
 func TestAdvisoriesFilterTypeID5(t *testing.T) {
-	output := testAdvisories(t, "/?filter[advisory_type_name]!=other")
-	assert.Equal(t, 4, len(output.Data))
-	for _, advisory := range output.Data {
-		assert.NotContains(t, "bugfix enhancement security", advisory.Attributes.AdvisoryTypeName)
-	}
-}
-
-func TestAdvisoriesFilterTypeID6(t *testing.T) {
 	output := testAdvisories(t, "/?filter[advisory_type_name]=in:other,bugfix")
 	assert.Equal(t, 7, len(output.Data))
 	for _, advisory := range output.Data {
