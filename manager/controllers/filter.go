@@ -17,7 +17,7 @@ type FilterData struct {
 type Filters map[string]FilterData
 
 // Parse a filter from field name and field value specification
-func ParseFilterValue(val string) (FilterData, error) {
+func ParseFilterValue(val string) FilterData {
 	idx := strings.Index(val, ":")
 
 	var operator string
@@ -36,7 +36,7 @@ func ParseFilterValue(val string) (FilterData, error) {
 	return FilterData{
 		Operator: operator,
 		Values:   values,
-	}, nil
+	}
 }
 
 func checkValueCount(operator string, nValues int) bool {
