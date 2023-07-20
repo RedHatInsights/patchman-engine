@@ -34,8 +34,7 @@ func TestFilterParse(t *testing.T) {
 	}
 
 	for i, f := range testFilters {
-		filter, err := ParseFilterValue(f)
-		assert.Equal(t, nil, err)
+		filter := ParseFilterValue(f)
 		assert.Equal(t, operators[i], filter.Operator)
 		assert.Equal(t, values[i], filter.Values)
 	}
@@ -52,8 +51,7 @@ func TestFilterToSql(t *testing.T) {
 	}
 
 	for i, f := range testFilters {
-		filter, err := ParseFilterValue(f)
-		assert.Equal(t, nil, err)
+		filter := ParseFilterValue(f)
 
 		attrMap := database.AttrMap{"test": {DataQuery: "test", OrderQuery: "test", Parser: dummyParser}}
 		query, _, err := filter.ToWhere("test", attrMap)
@@ -73,8 +71,7 @@ func TestFilterToSqlAdvanced(t *testing.T) {
 	}
 
 	for i, f := range testFilters {
-		filter, err := ParseFilterValue(f)
-		assert.Equal(t, nil, err)
+		filter := ParseFilterValue(f)
 		attrMap := database.AttrMap{"test": {DataQuery: "(NOT test)", OrderQuery: "(NOT test)", Parser: dummyParser}}
 		query, _, err := filter.ToWhere("test", attrMap)
 		assert.Equal(t, nil, err)
@@ -84,8 +81,7 @@ func TestFilterToSqlAdvanced(t *testing.T) {
 
 // Filter out null characters
 func TestFilterInvalidValue(t *testing.T) {
-	filter, err := ParseFilterValue("eq:aa\u0000aa")
-	assert.NoError(t, err)
+	filter := ParseFilterValue("eq:aa\u0000aa")
 	attrMap, _, err := database.GetQueryAttrs(struct{ V string }{""})
 	assert.NoError(t, err)
 	_, value, err := filter.ToWhere("V", attrMap)

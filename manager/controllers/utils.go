@@ -146,8 +146,8 @@ func ParseFilters(q QueryMap, allowedFields database.AttrMap,
 					err = errors.New(InvalidNestedFilter)
 					return err
 				}
-				filters[f], err = ParseFilterValue(val)
-				return err
+				filters[f] = ParseFilterValue(val)
+				return nil
 			})
 			if err != nil {
 				return filters, err
