@@ -55,18 +55,6 @@ services:
     security_opt:
       - label=disable
 
-  zookeeper:
-    image: docker.io/confluentinc/cp-zookeeper:7.0.5
-    container_name: zookeeper
-    env_file:
-      - ./conf/zookeeper.env
-    ports:
-      - 2181:2181
-    command: sh -c "
-        echo 'admin.enableServer=false' >> /etc/confluent/docker/zookeeper.properties.template &&
-        echo '4lw.commands.whitelist=*' >> /etc/confluent/docker/zookeeper.properties.template &&
-        /etc/confluent/docker/run"
-
   kafka:
     container_name: kafka
     build:
@@ -75,8 +63,6 @@ services:
     image: patchman-engine-kafka
     env_file:
       - ./conf/kafka.env
-    depends_on:
-      - zookeeper
     volumes:
       - ./dev/kafka/secrets:/etc/kafka/secrets
       - ./dev/kafka:/app
