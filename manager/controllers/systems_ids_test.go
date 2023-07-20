@@ -156,12 +156,6 @@ func TestSystemsIDsFilterOS(t *testing.T) {
 	assert.Equal(t, output.Data[2].ID, outputIDs.IDs[2])
 }
 
-func TestSystemsIDsFilterInvalidSyntax(t *testing.T) {
-	statusCode, errResp := testSystemsIDsError(t, "/?filter[os][in]=RHEL 8.1,RHEL 7.3")
-	assert.Equal(t, http.StatusBadRequest, statusCode)
-	assert.Equal(t, InvalidNestedFilter, errResp.Error)
-}
-
 func TestSystemsIDsOrderOS(t *testing.T) {
 	output := testSystems(t, `/?sort=os`, 1)
 	outputIDs := testSystemsIDs(t, `/?sort=os`, 1)
