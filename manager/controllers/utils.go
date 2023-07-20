@@ -20,6 +20,7 @@ import (
 )
 
 const InvalidOffsetMsg = "Invalid offset"
+const InvalidFilter = "Invalid filter field: %v"
 const InvalidTagMsg = "Invalid tag '%s'. Use 'namespace/key=val format'"
 const InvalidNestedFilter = "Nested operators not yet implemented for standard filters"
 const FilterNotSupportedMsg = "filtering not supported on this endpoint"
@@ -111,7 +112,7 @@ func validateFilters(q QueryMap, allowedFields database.AttrMap) error {
 			continue
 		}
 		if _, ok := allowedFields[key]; !ok {
-			return errors.Errorf("Invalid filter field: %v", key)
+			return errors.Errorf(InvalidFilter, key)
 		}
 	}
 	return nil
@@ -166,6 +167,54 @@ func ParseFilters(q QueryMap, allowedFields database.AttrMap,
 	return filters, err
 }
 
+type NestedFilterMap map[string]string
+
+var nestedFilters = NestedFilterMap{
+	"group_name][in":                              "group_name",
+	"system_profile][sap_system":                  "sap_system",
+	"system_profile][sap_sids][":                  "sap_sids",
+	"system_profile][sap_sids][in":                "sap_sids",
+	"system_profile][sap_sids][in][":              "sap_sids",
+	"system_profile][ansible":                     "ansible",
+	"system_profile][ansible][controller_version": "ansible->controller_version",
+	"system_profile][mssql":                       "mssql",
+	"system_profile][mssql][version":              "mssql->version",
+}
+
+func ParseFilters3(c *gin.Context, allowedFields database.AttrMap,
+	defaultFilters map[string]FilterData, apiver int) (Filters, Filters, error) {
+	filters := Filters{}
+	inventoryFilters := Filters{}
+
+	params := c.Request.URL.Query() // map[string][]string
+	for name, values := range params {
+		if strings.HasPrefix(name, "filter[") {
+			subject := name[7 : len(name)-1] // strip key from "filter[...]"
+			for _, v := range values {
+				if _, ok := nestedFilters[subject]; ok {
+					nested := nestedFilters[subject]
+					inventoryFilters.Update(nested, v)
+					continue
+				}
+				if _, ok := allowedFields[subject]; !ok {
+					return Filters{}, Filters{}, errors.Errorf(InvalidFilter, subject)
+				}
+
+				filters.Update(subject, v)
+			}
+		}
+	}
+
+	// Apply default filters if there isn't such filter already
+	for n, v := range defaultFilters {
+		if _, ok := filters[n]; !ok {
+			filters[n] = v
+		}
+	}
+
+	return filters, inventoryFilters, nil
+}
+
 type ListOpts struct {
 	Fields         database.AttrMap
 	DefaultFilters map[string]FilterData
@@ -175,9 +224,8 @@ type ListOpts struct {
 }
 
 func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, error) {
-	query := NestedQueryMap(c, "filter")
 	apiver := c.GetInt(middlewares.KeyApiver)
-	filters, err := ParseFilters(query, opts.Fields, opts.DefaultFilters, apiver)
+	filters, _, err := ParseFilters3(c, opts.Fields, opts.DefaultFilters, apiver)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
 		return nil, errors.Wrap(err, "filters parsing failed")
@@ -213,9 +261,7 @@ func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, op
 	}
 	tx, searchQ := ApplySearch(c, tx, opts.SearchFields...)
 
-	query := NestedQueryMap(c, "filter")
-
-	filters, err := ParseFilters(query, opts.Fields, opts.DefaultFilters, apiver)
+	filters, _, err := ParseFilters3(c, opts.Fields, opts.DefaultFilters, apiver)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
 		return nil, nil, nil, errors.Wrap(err, "filters parsing failed")
@@ -531,7 +577,7 @@ func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, 
 		}
 
 		if validSystemProfileFilters[key] {
-			values := strings.Join(val.Values, ",")
+			values := fmt.Sprintf(`"%s"`, strings.Join(val.Values, `","`))
 			q := buildSystemProfileQuery(key, values)
 
 			// Builds array of values

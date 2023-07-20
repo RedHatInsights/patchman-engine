@@ -149,3 +149,11 @@ func (t Filters) Apply(tx *gorm.DB, fields database.AttrMap) (*gorm.DB, error) {
 	}
 	return tx, nil
 }
+
+func (t Filters) Update(key string, value string) {
+	data := ParseFilterValue(value)
+	if fdata, ok := t[key]; ok {
+		data.Values = append(data.Values, fdata.Values...)
+	}
+	t[key] = data
+}
