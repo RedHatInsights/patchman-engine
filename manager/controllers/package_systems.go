@@ -105,7 +105,7 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 	}
 
 	query := packageSystemsQuery(db, account, groups, packageName, packageIDs)
-	filters, err := ParseInventoryFilters(c)
+	filters, err := ParseInventoryFilters(c, PackageSystemsOpts)
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled in method itself
