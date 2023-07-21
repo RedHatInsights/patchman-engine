@@ -58,15 +58,15 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error
 	}
 
 	query := buildAdvisorySystemsQuery(db, account, groups, advisoryName, apiver)
-	filters, err := ParseInventoryFilters(c)
-	if err != nil {
-		return nil, nil, nil, err
-	} // Error handled in method itself
-	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
 	opts := AdvisorySystemOptsV3
 	if apiver < 3 {
 		opts = AdvisorySystemOpts
 	}
+	filters, err := ParseInventoryFilters(c, opts)
+	if err != nil {
+		return nil, nil, nil, err
+	} // Error handled in method itself
+	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
 	query, meta, params, err := ListCommon(query, c, filters, opts)
 	// Error handled in method itself
 	return query, meta, params, err

@@ -212,6 +212,15 @@ func ParseFilters3(c *gin.Context, allowedFields database.AttrMap,
 		}
 	}
 
+	// backward compatibility for v2 api and applicable_systems filter
+	if apiver < 3 {
+		if _, ok := filters["applicable_systems"]; ok {
+			// replace with `installable_systems`
+			filters["installable_systems"] = filters["applicable_systems"]
+			delete(filters, "applicable_systems")
+		}
+	}
+
 	return filters, inventoryFilters, nil
 }
 
@@ -349,34 +358,11 @@ type Tag struct {
 	Value     *string
 }
 
-func HasInventoryFilter(c *gin.Context) bool {
+func HasInventoryFilter(filters Filters) bool {
 	if !enableCyndiTags {
 		return false
 	}
-	hasFilter := false
-	if len(c.QueryArray("tags")) > 0 {
-		hasFilter = true
-	}
-
-	// If we have the `system_profile` filter item, then we have tags
-	spQuery := NestedQueryMap(c, "filter").Path("system_profile")
-	if spQuery != nil {
-		// nolint: errcheck
-		spQuery.Visit(func(path []string, val string) error {
-			hasFilter = true
-			return nil
-		})
-	}
-
-	groupsQuery := NestedQueryMap(c, "filter").Path("group_name")
-	if groupsQuery != nil {
-		// nolint: errcheck
-		groupsQuery.Visit(func(path []string, val string) error {
-			hasFilter = true
-			return nil
-		})
-	}
-	return hasFilter
+	return len(filters) > 0
 }
 
 func trimQuotes(s string) string {
@@ -433,7 +419,7 @@ func (t *Tag) ApplyTag(tx *gorm.DB) *gorm.DB {
 	return tx.Where("ih.tags @> ?::jsonb", query)
 }
 
-func ParseInventoryFilters(c *gin.Context) (map[string]FilterData, error) {
+func ParseInventoryFilters(c *gin.Context, opts ListOpts) (map[string]FilterData, error) {
 	filters := Filters{}
 
 	err := parseTagsFromCtx(c, filters)
@@ -441,10 +427,15 @@ func ParseInventoryFilters(c *gin.Context) (map[string]FilterData, error) {
 		return nil, err
 	}
 
-	if err := parseFiltersFromCtx(c, filters); err != nil {
-		return nil, errors.Wrap(err, "cannot parse inventory filters")
+	apiver := c.GetInt(middlewares.KeyApiver)
+	_, inventoryFilters, err := ParseFilters3(c, opts.Fields, opts.DefaultFilters, apiver)
+	if err != nil {
+		err = errors.Wrap(err, "cannot parse inventory filters")
+		LogAndRespBadRequest(c, err, err.Error())
+		return nil, err
 	}
 
+	mergeMaps(filters, inventoryFilters)
 	return filters, nil
 }
 
@@ -577,19 +568,7 @@ func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, 
 		}
 
 		if validSystemProfileFilters[key] {
-			values := fmt.Sprintf(`"%s"`, strings.Join(val.Values, `","`))
-			q := buildSystemProfileQuery(key, values)
-
-			// Builds array of values
-			if len(val.Values) > 1 {
-				values = fmt.Sprintf("[%s]", values)
-			}
-
-			if values == "not_nil" {
-				tx = tx.Where(q)
-			} else {
-				tx = tx.Where(q, values)
-			}
+			tx = buildSystemProfileQuery(tx, key, val.Values)
 
 			applied = true
 			continue
@@ -598,10 +577,7 @@ func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, 
 		if strings.Contains(key, "group_name") {
 			groups := []string{}
 			for _, v := range val.Values {
-				name, err := strconv.Unquote(v)
-				if err != nil {
-					name = v
-				}
+				name := v
 				group, err := utils.ParseInventoryGroup(nil, &name)
 				if err != nil {
 					// couldn't marshal inventory group to json
@@ -621,14 +597,17 @@ func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, 
 // Example:
 // buildSystemProfileQuery("mssql->version", "1.0")
 // returns "(ih.system_profile -> 'mssql' ->> 'version')::text = 1.0"
-func buildSystemProfileQuery(key string, val string) string {
+func buildSystemProfileQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
 	var cmp string
+	var val string
 
 	switch key {
 	case "sap_sids":
 		cmp = "::jsonb @> ?::jsonb"
+		val = fmt.Sprintf(`["%s"]`, strings.Join(values, `","`))
 	default:
 		cmp = "::text = ?"
+		val = values[0]
 	}
 
 	if val == "not_nil" {
@@ -646,7 +625,12 @@ func buildSystemProfileQuery(key string, val string) string {
 		}
 	}
 
-	return fmt.Sprintf("%s%s", subq, cmp)
+	subq = fmt.Sprintf("%s%s", subq, cmp)
+	if val == "not_nil" {
+		return tx.Where(subq)
+	}
+
+	return tx.Where(subq, val)
 }
 
 type QueryItem interface {

@@ -84,7 +84,7 @@ func BaselinesListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
-	filters, err := ParseInventoryFilters(c)
+	filters, err := ParseInventoryFilters(c, BaselineOpts)
 	if err != nil {
 		return
 	}

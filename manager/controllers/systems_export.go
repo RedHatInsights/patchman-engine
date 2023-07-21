@@ -42,7 +42,7 @@ func SystemsExportHandler(c *gin.Context) {
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
 	query := querySystems(db, account, apiver, groups)
-	filters, err := ParseInventoryFilters(c)
+	filters, err := ParseInventoryFilters(c, SystemOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself
