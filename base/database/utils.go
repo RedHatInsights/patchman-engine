@@ -222,6 +222,10 @@ func ReadReplicaConfigured() bool {
 func InventoryHostsJoin(tx *gorm.DB, groups map[string]string) *gorm.DB {
 	tx = tx.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
 	if _, ok := groups[rbac.KeyGrouped]; !ok {
+		if _, ok := groups[rbac.KeyUngrouped]; ok {
+			// show only systems with '[]' group
+			return tx.Where("ih.groups = '[]'")
+		}
 		// return query without WHERE if there are no groups
 		return tx
 	}

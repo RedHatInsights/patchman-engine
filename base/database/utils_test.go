@@ -30,6 +30,7 @@ var testCases = []map[int64]map[string]string{
 		rbac.KeyUngrouped: "[]",
 	}},
 	{0: {rbac.KeyGrouped: `{"[{\"id\":\"non-existing-group\"}]"}`}},
+	{nUngrouped: {rbac.KeyUngrouped: "[]"}},
 	{nAll: {}},
 }
 
