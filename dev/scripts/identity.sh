@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This identity contains account_name = "0"
-ACCOUNT_NUMBER=${1:-"0"}
+ACCOUNT_NUMBER=${1:-"org_1"}
 
 encode() {
         local input=$(</dev/stdin)
