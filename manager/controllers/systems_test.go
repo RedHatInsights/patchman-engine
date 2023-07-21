@@ -174,7 +174,7 @@ func TestSystemsFilterBaseline(t *testing.T) {
 func TestSystemsFilterNotExisting(t *testing.T) {
 	statusCode, errResp := testSystemsError(t, "/?filter[not-existing]=1")
 	assert.Equal(t, http.StatusBadRequest, statusCode)
-	assert.Equal(t, "Invalid filter field: not-existing", errResp.Error)
+	assert.Equal(t, "cannot parse inventory filters: Invalid filter field: not-existing", errResp.Error)
 }
 
 func TestSystemsFilterOS(t *testing.T) {
@@ -234,7 +234,7 @@ func TestSAPSystemMeta1(t *testing.T) {
 	url := "/?filter[system_profile][sap_sids][]=ABC"
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
-		"sap_sids": {"eq", []string{`"ABC"`}},
+		"sap_sids": {"eq", []string{"ABC"}},
 		"stale":    {"eq", []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
@@ -244,7 +244,7 @@ func TestSAPSystemMeta2(t *testing.T) {
 	url := "/?filter[system_profile][sap_sids][in][]=ABC"
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
-		"sap_sids": {"in", []string{`"ABC"`}},
+		"sap_sids": {"eq", []string{"ABC"}},
 		"stale":    {"eq", []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
@@ -255,7 +255,7 @@ func TestSAPSystemMeta3(t *testing.T) {
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
 		"sap_system": {"eq", []string{"true"}},
-		"sap_sids":   {"eq", []string{`"ABC"`}},
+		"sap_sids":   {"eq", []string{"ABC"}},
 		"stale":      {"eq", []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
@@ -265,7 +265,7 @@ func TestSAPSystemMeta4(t *testing.T) {
 	url := "/?filter[system_profile][sap_sids][in]=ABC&filter[system_profile][sap_sids][in]=GHI"
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
-		"sap_sids": {"in", []string{`"ABC"`, `"GHI"`}},
+		"sap_sids": {"eq", []string{"GHI", "ABC"}},
 		"stale":    {"eq", []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)

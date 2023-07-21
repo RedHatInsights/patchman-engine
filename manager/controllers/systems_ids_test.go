@@ -136,7 +136,7 @@ func TestSystemsIDsFilterBaseline(t *testing.T) {
 func TestSystemsIDsFilterNotExisting(t *testing.T) {
 	statusCode, errResp := testSystemsIDsError(t, "/?filter[not-existing]=1")
 	assert.Equal(t, http.StatusBadRequest, statusCode)
-	assert.Equal(t, "Invalid filter field: not-existing", errResp.Error)
+	assert.Equal(t, "cannot parse inventory filters: Invalid filter field: not-existing", errResp.Error)
 }
 
 func TestSystemsIDsFilterPartialOS(t *testing.T) {
