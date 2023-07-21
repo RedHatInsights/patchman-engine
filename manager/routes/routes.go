@@ -38,6 +38,8 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	systems.GET("/:inventory_id", controllers.SystemDetailHandler)
 	systems.GET("/:inventory_id/advisories", controllers.SystemAdvisoriesHandler)
 	systems.GET("/:inventory_id/packages", controllers.SystemPackagesHandler)
+	systems.GET("/:inventory_id/vmaas_json", controllers.SystemVmaasJSONHandler)
+	systems.GET("/:inventory_id/yum_updates", controllers.SystemYumUpdatesHandler)
 	systems.DELETE("/:inventory_id", controllers.SystemDeleteHandler)
 
 	api.GET("/tags", controllers.SystemTagListHandler)

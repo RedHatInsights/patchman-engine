@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"app/base/models"
 	"app/base/vmaas"
+	"encoding/json"
 )
 
 // Merge update data from vmaasDataB into vmaasDataA without duplicating.
@@ -120,4 +122,10 @@ func RemoveNonLatestPackages(updates *vmaas.UpdatesV2Response) error {
 	}
 	updates.UpdateList = &updateList
 	return nil
+}
+
+func ParseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, error) {
+	var updatesReq vmaas.UpdatesV3Request
+	err := json.Unmarshal([]byte(*system.VmaasJSON), &updatesReq)
+	return updatesReq, err
 }
