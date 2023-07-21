@@ -5084,6 +5084,136 @@
                 ]
             }
         },
+        "/systems/{inventory_id}/vmaas_json": {
+            "get": {
+                "summary": "Show me system's json request for VMaaS",
+                "description": "Show me system's json request for VMaaS",
+                "operationId": "systemVmaasJson",
+                "parameters": [
+                    {
+                        "name": "inventory_id",
+                        "in": "path",
+                        "description": "Inventory ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.SystemVmaasJSONResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
+        "/systems/{inventory_id}/yum_updates": {
+            "get": {
+                "summary": "Show me system's yum_updates (client side evaluation data)",
+                "description": "Show me system's yum_updates (client side evaluation data)",
+                "operationId": "systemYumUpdates",
+                "parameters": [
+                    {
+                        "name": "inventory_id",
+                        "in": "path",
+                        "description": "Inventory ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.SystemYumUpdatesResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
         "/tags": {
             "get": {
                 "summary": "Show me systems tags applicable to this application",
@@ -6798,6 +6928,22 @@
                     }
                 }
             },
+            "controllers.SystemVmaasJSONResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/vmaas.UpdatesV3Request"
+                    }
+                }
+            },
+            "controllers.SystemYumUpdatesResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/vmaas.UpdatesV2Response"
+                    }
+                }
+            },
             "controllers.SystemsAdvisoriesRequest": {
                 "type": "object",
                 "properties": {
@@ -6907,6 +7053,127 @@
                 "type": "object",
                 "properties": {
                     "error": {
+                        "type": "string"
+                    }
+                }
+            },
+            "vmaas.UpdatesV2Response": {
+                "type": "object",
+                "properties": {
+                    "basearch": {
+                        "type": "string"
+                    },
+                    "last_change": {
+                        "type": "string"
+                    },
+                    "modules_list": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/vmaas.UpdatesV3RequestModulesList"
+                        }
+                    },
+                    "releasever": {
+                        "type": "string"
+                    },
+                    "repository_list": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "update_list": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/vmaas.UpdatesV2ResponseUpdateList"
+                        }
+                    }
+                }
+            },
+            "vmaas.UpdatesV2ResponseAvailableUpdates": {
+                "type": "object",
+                "properties": {
+                    "basearch": {
+                        "type": "string"
+                    },
+                    "erratum": {
+                        "type": "string"
+                    },
+                    "package": {
+                        "type": "string"
+                    },
+                    "releasever": {
+                        "type": "string"
+                    },
+                    "repository": {
+                        "type": "string"
+                    }
+                }
+            },
+            "vmaas.UpdatesV2ResponseUpdateList": {
+                "type": "object",
+                "properties": {
+                    "available_updates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/vmaas.UpdatesV2ResponseAvailableUpdates"
+                        }
+                    }
+                }
+            },
+            "vmaas.UpdatesV3Request": {
+                "type": "object",
+                "properties": {
+                    "basearch": {
+                        "type": "string"
+                    },
+                    "epoch_required": {
+                        "type": "boolean",
+                        "description": "VMaaS will check package_list and return error if we provide package_list without epochs"
+                    },
+                    "latest_only": {
+                        "type": "boolean"
+                    },
+                    "modules_list": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/vmaas.UpdatesV3RequestModulesList"
+                        }
+                    },
+                    "optimistic_updates": {
+                        "type": "boolean",
+                        "description": "Search for updates of unknown package EVRAs."
+                    },
+                    "package_list": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "releasever": {
+                        "type": "string"
+                    },
+                    "repository_list": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "security_only": {
+                        "type": "boolean"
+                    },
+                    "third_party": {
+                        "type": "boolean",
+                        "description": "Include content from \\\"third party\\\" repositories into the response, disabled by default."
+                    }
+                }
+            },
+            "vmaas.UpdatesV3RequestModulesList": {
+                "type": "object",
+                "properties": {
+                    "module_name": {
+                        "type": "string"
+                    },
+                    "module_stream": {
                         "type": "string"
                     }
                 }

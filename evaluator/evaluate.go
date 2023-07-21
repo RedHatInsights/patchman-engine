@@ -552,10 +552,7 @@ func loadSystemData(tx *gorm.DB, accountID int, inventoryID string) (*models.Sys
 func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("parse-vmaas-json"))
-
-	var updatesReq vmaas.UpdatesV3Request
-	err := json.Unmarshal([]byte(*system.VmaasJSON), &updatesReq)
-	return updatesReq, err
+	return utils.ParseVmaasJSON(system)
 }
 
 func invalidateCaches(orgID string) error {
