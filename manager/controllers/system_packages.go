@@ -118,11 +118,15 @@ func SystemPackagesHandler(c *gin.Context) {
 		LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
 		return
 	}
-
+	filters, inventoryFilters, err := ParseInventoryFilters(c, PackageSystemsOpts)
+	if err != nil {
+		// Error handled in method itself
+		return
+	}
 	var loaded []SystemPackageDBLoad
 	db := middlewares.DBFromContext(c)
 	q := systemPackageQuery(db, account, groups, inventoryID)
-	q, meta, params, err := ListCommon(q, c, nil, SystemPackagesOpts)
+	q, meta, params, err := ListCommon(q, c, filters, inventoryFilters, SystemPackagesOpts)
 	if err != nil {
 		return
 	}

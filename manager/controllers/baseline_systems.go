@@ -108,11 +108,11 @@ func queryBaselineSystems(c *gin.Context, account, apiver int, groups map[string
 	}
 
 	query := buildQueryBaselineSystems(db, account, groups, id, apiver)
-	filters, err := ParseInventoryFilters(c, BaselineSystemOpts)
+	_, inventoryFilters, err := ParseInventoryFilters(c, BaselineSystemOpts)
 	if err != nil {
 		return nil, err
 	} // Error handled in method itself
-	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
+	query, _ = ApplyInventoryFilter(inventoryFilters, query, "sp.inventory_id")
 	return query, nil
 }
 
@@ -123,7 +123,12 @@ func baselineSystemsCommon(c *gin.Context, account, apiver int, groups map[strin
 		return nil, nil, nil, err
 	} // Error handled in method itself
 
-	query, meta, params, err := ListCommon(query, c, nil, BaselineSystemOpts)
+	filters, inventoryFilters, err := ParseInventoryFilters(c, PackageSystemsOpts)
+	if err != nil {
+		// Error handled in method itself
+		return nil, nil, nil, err
+	}
+	query, meta, params, err := ListCommon(query, c, filters, inventoryFilters, BaselineSystemOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return nil, nil, nil, err

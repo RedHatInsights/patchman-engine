@@ -192,10 +192,9 @@ func extractTagsQueryString(c *gin.Context) string {
 }
 
 // nolint: funlen, lll
-func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, opts ListOpts, params ...string) (
+func ListCommon(tx *gorm.DB, c *gin.Context, filters Filters, tagFilter Filters, opts ListOpts, params ...string) (
 	*gorm.DB, *ListMeta, []string, error) {
 	hasSystems := true
-	apiver := c.GetInt(middlewares.KeyApiver)
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
@@ -203,7 +202,6 @@ func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, op
 	}
 	tx, searchQ := ApplySearch(c, tx, opts.SearchFields...)
 
-	filters, _, err := ParseFilters(c, opts.Fields, opts.DefaultFilters, apiver)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
 		return nil, nil, nil, errors.Wrap(err, "filters parsing failed")
@@ -352,24 +350,24 @@ func (t *Tag) ApplyTag(tx *gorm.DB) *gorm.DB {
 	return tx.Where("ih.tags @> ?::jsonb", query)
 }
 
-func ParseInventoryFilters(c *gin.Context, opts ListOpts) (map[string]FilterData, error) {
-	filters := Filters{}
+func ParseInventoryFilters(c *gin.Context, opts ListOpts) (Filters, Filters, error) {
+	tagFilters := Filters{}
 
-	err := parseTagsFromCtx(c, filters)
+	err := parseTagsFromCtx(c, tagFilters)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	apiver := c.GetInt(middlewares.KeyApiver)
-	_, inventoryFilters, err := ParseFilters(c, opts.Fields, opts.DefaultFilters, apiver)
+	filters, inventoryFilters, err := ParseFilters(c, opts.Fields, opts.DefaultFilters, apiver)
 	if err != nil {
 		err = errors.Wrap(err, "cannot parse inventory filters")
 		LogAndRespBadRequest(c, err, err.Error())
-		return nil, err
+		return nil, nil, err
 	}
 
-	mergeMaps(filters, inventoryFilters)
-	return filters, nil
+	mergeMaps(tagFilters, inventoryFilters)
+	return filters, tagFilters, nil
 }
 
 func parseTagsFromCtx(c *gin.Context, filters Filters) error {

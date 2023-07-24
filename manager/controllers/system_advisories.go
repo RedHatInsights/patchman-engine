@@ -92,7 +92,7 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 	}
 
 	query := buildSystemAdvisoriesQuery(db, account, groups, inventoryID)
-	query, meta, params, err := ListCommon(query, c, nil, SystemAdvisoriesOpts)
+	query, meta, params, err := ListCommon(query, c, nil, nil, SystemAdvisoriesOpts)
 	// Error handling and setting of result code & content is done in ListCommon
 	return query, meta, params, err
 }

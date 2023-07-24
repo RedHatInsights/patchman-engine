@@ -122,7 +122,7 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(middlewares.KeyAccount)
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	var query *gorm.DB
-	filters, err := ParseInventoryFilters(c, AdvisoriesOpts)
+	filters, inventoryFilters, err := ParseInventoryFilters(c, AdvisoriesOpts)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -137,9 +137,9 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 			validCache = false
 		}
 	}
-	if !validCache || HasInventoryFilter(filters) || len(groups[rbac.KeyGrouped]) != 0 {
+	if !validCache || HasInventoryFilter(inventoryFilters) || len(groups[rbac.KeyGrouped]) != 0 {
 		var err error
-		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
+		query = buildQueryAdvisoriesTagged(db, inventoryFilters, account, groups)
 		if err != nil {
 			return nil, nil, nil, err
 		} // Error handled in method itself
@@ -147,7 +147,7 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 		query = buildQueryAdvisories(db, account)
 	}
 
-	query, meta, params, err := ListCommon(query, c, filters, AdvisoriesOpts)
+	query, meta, params, err := ListCommon(query, c, filters, inventoryFilters, AdvisoriesOpts)
 	// Error handling and setting of result code & content is done in ListCommon
 	return query, meta, params, err
 }

@@ -30,7 +30,7 @@ import (
 func AdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
-	filters, err := ParseInventoryFilters(c, SystemOpts)
+	_, inventoryFilters, err := ParseInventoryFilters(c, SystemOpts)
 	if err != nil {
 		return
 	}
@@ -47,9 +47,9 @@ func AdvisoriesExportHandler(c *gin.Context) {
 			validCache = false
 		}
 	}
-	if !validCache || HasInventoryFilter(filters) || len(groups[rbac.KeyGrouped]) != 0 {
+	if !validCache || HasInventoryFilter(inventoryFilters) || len(groups[rbac.KeyGrouped]) != 0 {
 		var err error
-		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
+		query = buildQueryAdvisoriesTagged(db, inventoryFilters, account, groups)
 		if err != nil {
 			return
 		} // Error handled in method itself

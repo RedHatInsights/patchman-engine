@@ -19,7 +19,7 @@ func TestGroupNameFilter(t *testing.T) {
 	c, _ := gin.CreateTestContext(httptest.NewRecorder())
 	c.Request, _ = http.NewRequest("GET", "/?filter[group_name][in]=group2", nil)
 
-	filters, err := ParseInventoryFilters(c, ListOpts{})
+	_, inventoryFilters, err := ParseInventoryFilters(c, ListOpts{})
 	assert.Nil(t, err)
 
 	var systems []SystemsID
@@ -27,7 +27,7 @@ func TestGroupNameFilter(t *testing.T) {
 		rbac.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]","[{\"id\":\"inventory-group-2\"}]"}`,
 	}
 	tx := database.Systems(database.Db, 1, groups)
-	tx, _ = ApplyInventoryFilter(filters, tx, "sp.inventory_id")
+	tx, _ = ApplyInventoryFilter(inventoryFilters, tx, "sp.inventory_id")
 	tx.Scan(&systems)
 
 	assert.Equal(t, 2, len(systems)) // 2 systems with `group2` in test_data
@@ -42,7 +42,7 @@ func TestGroupNameFilter2(t *testing.T) {
 	c, _ := gin.CreateTestContext(httptest.NewRecorder())
 	c.Request, _ = http.NewRequest("GET", "/?filter[group_name][in]=group1,group2", nil)
 
-	filters, err := ParseInventoryFilters(c, ListOpts{})
+	_, inventoryFilters, err := ParseInventoryFilters(c, ListOpts{})
 	assert.Nil(t, err)
 
 	var systems []SystemsID
@@ -50,7 +50,7 @@ func TestGroupNameFilter2(t *testing.T) {
 		rbac.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]","[{\"id\":\"inventory-group-2\"}]"}`,
 	}
 	tx := database.Systems(database.Db, 1, groups)
-	tx, _ = ApplyInventoryFilter(filters, tx, "sp.inventory_id")
+	tx, _ = ApplyInventoryFilter(inventoryFilters, tx, "sp.inventory_id")
 	tx.Scan(&systems)
 
 	assert.Equal(t, 8, len(systems)) // 2 systems with `group2`, 6 with `group1` in test_data
