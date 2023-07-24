@@ -114,7 +114,7 @@ var nestedFilters = NestedFilterMap{
 	"system_profile][mssql][version":              "mssql->version",
 }
 
-func ParseFilters3(c *gin.Context, allowedFields database.AttrMap,
+func ParseFilters(c *gin.Context, allowedFields database.AttrMap,
 	defaultFilters map[string]FilterData, apiver int) (Filters, Filters, error) {
 	filters := Filters{}
 	inventoryFilters := Filters{}
@@ -167,7 +167,7 @@ type ListOpts struct {
 
 func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, error) {
 	apiver := c.GetInt(middlewares.KeyApiver)
-	filters, _, err := ParseFilters3(c, opts.Fields, opts.DefaultFilters, apiver)
+	filters, _, err := ParseFilters(c, opts.Fields, opts.DefaultFilters, apiver)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
 		return nil, errors.Wrap(err, "filters parsing failed")
@@ -203,7 +203,7 @@ func ListCommon(tx *gorm.DB, c *gin.Context, tagFilter map[string]FilterData, op
 	}
 	tx, searchQ := ApplySearch(c, tx, opts.SearchFields...)
 
-	filters, _, err := ParseFilters3(c, opts.Fields, opts.DefaultFilters, apiver)
+	filters, _, err := ParseFilters(c, opts.Fields, opts.DefaultFilters, apiver)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
 		return nil, nil, nil, errors.Wrap(err, "filters parsing failed")
@@ -361,7 +361,7 @@ func ParseInventoryFilters(c *gin.Context, opts ListOpts) (map[string]FilterData
 	}
 
 	apiver := c.GetInt(middlewares.KeyApiver)
-	_, inventoryFilters, err := ParseFilters3(c, opts.Fields, opts.DefaultFilters, apiver)
+	_, inventoryFilters, err := ParseFilters(c, opts.Fields, opts.DefaultFilters, apiver)
 	if err != nil {
 		err = errors.Wrap(err, "cannot parse inventory filters")
 		LogAndRespBadRequest(c, err, err.Error())
