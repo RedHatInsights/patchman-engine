@@ -220,6 +220,29 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV3Response, 
 		return nil, nil
 	}
 
+	// set EVRA and package name
+	for k, v := range updatesMap {
+		updates := make([]vmaas.UpdatesV3ResponseAvailableUpdates, 0, len(v.GetAvailableUpdates()))
+		for _, u := range v.GetAvailableUpdates() {
+			nevra, err := utils.ParseNevra(u.GetPackage())
+			if err != nil {
+				utils.LogWarn("package", u.GetPackage(), "Cannot parse package")
+				continue
+			}
+			updates = append(updates, vmaas.UpdatesV3ResponseAvailableUpdates{
+				Repository:  u.Repository,
+				Releasever:  u.Releasever,
+				Basearch:    u.Basearch,
+				Erratum:     u.Erratum,
+				Package:     u.Package,
+				PackageName: utils.PtrString(nevra.Name),
+				EVRA:        utils.PtrString(nevra.EVRAString()),
+			})
+		}
+		updatesMap[k] = vmaas.UpdatesV3ResponseUpdateList{
+			AvailableUpdates: &updates,
+		}
+	}
 	return &resp, nil
 }
 
