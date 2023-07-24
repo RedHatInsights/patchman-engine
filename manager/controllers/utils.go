@@ -38,11 +38,6 @@ var validSystemProfileFilters = map[string]bool{
 	"ansible->controller_version": true,
 }
 
-var multiValueFilters = map[string]bool{
-	"sap_sids":   true,
-	"group_name": true,
-}
-
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	utils.LogError("err", err.Error(), respMsg)
 	c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{Error: respMsg})
@@ -103,68 +98,6 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 	}
 	tx.Order(stableSort + " ASC")
 	return tx, appliedFields, nil
-}
-
-func validateFilters(q QueryMap, allowedFields database.AttrMap) error {
-	for key := range q {
-		// system_profile and group_name are handled by tags, so it can be skipped
-		if key == "system_profile" || key == "group_name" {
-			continue
-		}
-		if _, ok := allowedFields[key]; !ok {
-			return errors.Errorf(InvalidFilter, key)
-		}
-	}
-	return nil
-}
-
-func ParseFilters(q QueryMap, allowedFields database.AttrMap,
-	defaultFilters map[string]FilterData, apiver int) (Filters, error) {
-	filters := Filters{}
-	var err error
-
-	if err = validateFilters(q, allowedFields); err != nil {
-		return filters, err
-	}
-
-	// Apply default filters
-	for n, v := range defaultFilters {
-		filters[n] = v
-	}
-
-	// nolint: scopelint
-	for f := range allowedFields {
-		if elem := q.Path(f); elem != nil {
-			err := elem.Visit(func(path []string, val string) error {
-				// If we encountered error in previous element, skip processing others
-				if err != nil {
-					return err
-				}
-
-				// the filter[a][eq]=b syntax was not yet implemented
-				if len(path) > 0 {
-					err = errors.New(InvalidNestedFilter)
-					return err
-				}
-				filters[f] = ParseFilterValue(val)
-				return nil
-			})
-			if err != nil {
-				return filters, err
-			}
-		}
-	}
-
-	// backward compatibility for v2 api and applicable_systems filter
-	if apiver < 3 {
-		if _, ok := filters["applicable_systems"]; ok {
-			// replace with `installable_systems`
-			filters["installable_systems"] = filters["applicable_systems"]
-			delete(filters, "applicable_systems")
-		}
-	}
-
-	return filters, err
 }
 
 type NestedFilterMap map[string]string
@@ -471,71 +404,6 @@ func parseTagsFromCtx(c *gin.Context, filters Filters) error {
 	return nil
 }
 
-func parseFiltersFromCtx(c *gin.Context, filters Filters) error {
-	var filterItems []QueryItem
-	filter := NestedQueryMap(c, "filter")
-
-	if item, ok := filter.GetPath("system_profile"); ok {
-		// filter nested under "system_profile"
-		filterItems = append(filterItems, item)
-	}
-	if _, ok := filter.GetPath("group_name"); ok {
-		// "group_name" filter
-		filterItems = append(filterItems, filter)
-	}
-
-	for _, filter := range filterItems {
-		err := filter.Visit(func(path []string, val string) error {
-			// Specific filter keys
-			if len(path) >= 1 && multiValueFilters[path[0]] {
-				return visitMultiValueFilters(filters, path, val)
-			}
-
-			// [group_name] filter can be processed only with Specific filter keys
-			if f, ok := filter.(QueryMap); ok {
-				if _, has := f.GetPath("group_name"); has {
-					return nil
-				}
-			}
-
-			// Generic [system_profile] filter keys
-			return visitSystemProfileFilters(filters, path, val)
-		})
-		if err != nil {
-			LogAndRespBadRequest(c, err, err.Error())
-			return err
-		}
-	}
-	return nil
-}
-
-func visitMultiValueFilters(filters Filters, path []string, val string) error {
-	val = strconv.Quote(val)
-	var op string
-	if op = "eq"; len(path) > 1 {
-		op = path[1]
-	}
-	err := appendFilterData(filters, path[0], op, val)
-	if err != nil {
-		return errors.Wrapf(err, "invalid filter value: %s", val)
-	}
-	return nil
-}
-
-// Builds key in following format path[0]->path[1]->path[2]...
-func visitSystemProfileFilters(filters Filters, path []string, val string) error {
-	var key string
-	for i, s := range path {
-		if i == 0 {
-			key = path[0]
-			continue
-		}
-		key = fmt.Sprintf("%s->%s", key, s)
-	}
-	err := appendFilterData(filters, key, "eq", val)
-	return errors.Wrapf(err, "invalid filter value: %s", val)
-}
-
 // Filter systems by tags with subquery
 func ApplyInventoryFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
 	if !enableCyndiTags {
@@ -631,119 +499,6 @@ func buildSystemProfileQuery(tx *gorm.DB, key string, values []string) *gorm.DB 
 	}
 
 	return tx.Where(subq, val)
-}
-
-type QueryItem interface {
-	IsQuery()
-	Visit(visitor func(path []string, val string) error, pathPrefix ...string) error
-}
-type QueryArr []string
-
-func (QueryArr) IsQuery() {}
-
-func (q QueryArr) Visit(visitor func(path []string, val string) error, pathPrefix ...string) error {
-	for _, item := range q {
-		if err := visitor(pathPrefix, item); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-type QueryMap map[string]QueryItem
-
-func (QueryMap) IsQuery() {}
-
-func (q QueryMap) Visit(visitor func(path []string, val string) error, pathPrefix ...string) error {
-	for k, v := range q {
-		newPath := make([]string, len(pathPrefix))
-		copy(newPath, pathPrefix)
-		newPath = append(newPath, k)
-		switch val := v.(type) {
-		case QueryMap:
-			if err := val.Visit(visitor, newPath...); err != nil {
-				return err
-			}
-		case QueryArr:
-			// Inlined code here to avoid calling interface method in struct receiver (low perf)
-			for _, item := range val {
-				if err := visitor(newPath, item); err != nil {
-					return err
-				}
-			}
-		}
-	}
-	return nil
-}
-
-func (q QueryMap) GetPath(keys ...string) (QueryItem, bool) {
-	var item QueryItem
-	item, has := q, true
-
-	for has && item != nil && len(keys) > 0 {
-		switch itemMap := item.(type) {
-		case QueryMap:
-			item, has = itemMap[keys[0]]
-			keys = keys[1:]
-
-		default:
-			break
-		}
-	}
-	return item, has
-}
-
-func (q QueryMap) Path(keys ...string) QueryItem {
-	v, _ := q.GetPath(keys...)
-	return v
-}
-
-func NestedQueryMap(c *gin.Context, key string) QueryMap {
-	return nestedQueryImpl(c.Request.URL.Query(), key)
-}
-
-func (q *QueryMap) appendValue(steps []string, value []string) {
-	res := *q
-	for i, v := range steps {
-		if i == len(steps)-1 {
-			res[v] = QueryArr(value)
-		} else {
-			if _, has := res[v]; !has {
-				res[v] = QueryMap{}
-			}
-			res = res[v].(QueryMap)
-		}
-	}
-}
-
-// nolint: gocognit
-func nestedQueryImpl(values map[string][]string, key string) QueryMap {
-	root := QueryMap{}
-
-	for name, value := range values {
-		var steps []string
-		var i int
-		var j int
-		for len(name) > 0 && i >= 0 && j >= 0 {
-			if i = strings.IndexByte(name, '['); i >= 0 {
-				if name[0:i] == key || len(steps) > 0 {
-					// if j is 0 here, that means we received []as a part of query param name, should indicate an array
-					if j = strings.IndexByte(name[i+1:], ']'); j >= 0 {
-						// Skip [] in param names
-						if len(name[i+1:][:j]) > 0 {
-							steps = append(steps, name[i+1:][:j])
-						}
-						name = name[i+j+2:]
-					}
-				} else if name[0:i] != key && steps == nil {
-					// Invalid key for the context - abort.
-					return root
-				}
-			}
-		}
-		root.appendValue(steps, value)
-	}
-	return root
 }
 
 func Csv(ctx *gin.Context, code int, res interface{}) {
@@ -952,35 +707,6 @@ func mergeMaps(first map[string]FilterData, second map[string]FilterData) {
 	for key, val := range second {
 		first[key] = val
 	}
-}
-
-func appendFilterData(filters Filters, key string, op, val string) error {
-	if _, ok := filters[key]; !ok {
-		filters[key] = FilterData{}
-	}
-
-	values, err := splitValues(op, val)
-	if err != nil {
-		return err
-	}
-
-	filters[key] = FilterData{
-		Operator: op,
-		Values:   append(filters[key].Values, values...),
-	}
-	return nil
-}
-
-// Split comma delimited string values for IN operator
-func splitValues(op, val string) ([]string, error) {
-	if op == "in" && strings.Contains(val, ",") {
-		val, err := strconv.Unquote(val)
-		if err != nil {
-			return []string{}, errors.Wrap(err, "cannot unquote value")
-		}
-		return strings.Split(val, ","), nil
-	}
-	return []string{val}, nil
 }
 
 // Pagination query for handlers where ListCommon is not used
