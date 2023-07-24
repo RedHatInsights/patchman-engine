@@ -135,8 +135,8 @@ func assertYumUpdatesInDB(t *testing.T, inventoryID string, yumUpdates []byte) {
 	var system models.SystemPlatform
 	assert.NoError(t, database.Db.Where("inventory_id = ?::uuid", inventoryID).Find(&system).Error)
 	assert.Equal(t, system.InventoryID, inventoryID)
-	var systemYumUpdatesParsed vmaas.UpdatesV2Response
-	var yumUpdatesParsed vmaas.UpdatesV2Response
+	var systemYumUpdatesParsed vmaas.UpdatesV3Response
+	var yumUpdatesParsed vmaas.UpdatesV3Response
 	err := json.Unmarshal(system.YumUpdates, &systemYumUpdatesParsed)
 	assert.Nil(t, err)
 	err = json.Unmarshal(yumUpdates, &yumUpdatesParsed)

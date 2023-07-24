@@ -176,7 +176,7 @@ func TestVMaaSUpdatesCall(t *testing.T) {
 		PackageList:       []string{"curl-7.29.0-51.el7_6.3.x86_64"},
 	}
 
-	resp := vmaas.UpdatesV2Response{}
+	resp := vmaas.UpdatesV3Response{}
 	ctx := context.Background()
 	httpResp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasUpdatesURL, &req, &resp) // nolint: bodyclose
 	assert.Nil(t, err)

@@ -38,18 +38,18 @@ func TestGetReportedAdvisories1(t *testing.T) {
 }
 
 func TestGetReportedAdvisories2(t *testing.T) {
-	aUpdates := []vmaas.UpdatesV2ResponseAvailableUpdates{
+	aUpdates := []vmaas.UpdatesV3ResponseAvailableUpdates{
 		{Erratum: utils.PtrString("ER1")}, {Erratum: utils.PtrString("ER2")}}
-	bUpdates := []vmaas.UpdatesV2ResponseAvailableUpdates{
+	bUpdates := []vmaas.UpdatesV3ResponseAvailableUpdates{
 		{Erratum: utils.PtrString("ER2")}, {Erratum: utils.PtrString("ER3")}}
-	cUpdates := []vmaas.UpdatesV2ResponseAvailableUpdates{
+	cUpdates := []vmaas.UpdatesV3ResponseAvailableUpdates{
 		{Erratum: utils.PtrString("ER3")}, {Erratum: utils.PtrString("ER4")}}
-	updateList := map[string]vmaas.UpdatesV2ResponseUpdateList{
+	updateList := map[string]vmaas.UpdatesV3ResponseUpdateList{
 		"pkg-a": {AvailableUpdates: &aUpdates},
 		"pkg-b": {AvailableUpdates: &bUpdates},
 		"pkg-c": {AvailableUpdates: &cUpdates},
 	}
-	vmaasData := vmaas.UpdatesV2Response{UpdateList: &updateList}
+	vmaasData := vmaas.UpdatesV3Response{UpdateList: &updateList}
 	advisories := getReportedAdvisories(&vmaasData)
 	assert.Equal(t, 4, len(advisories))
 }
@@ -126,9 +126,9 @@ func TestEnsureSystemAdvisories(t *testing.T) {
 	database.DeleteSystemAdvisories(t, systemID, advisoryIDs)
 }
 
-func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV2Response {
+func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV3Response {
 	ctx := context.Background()
-	vmaasData := vmaas.UpdatesV2Response{}
+	vmaasData := vmaas.UpdatesV3Response{}
 	resp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasUpdatesURL, nil, &vmaasData)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)

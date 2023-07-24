@@ -8,8 +8,8 @@ import (
 
 // Merge update data from vmaasDataB into vmaasDataA without duplicating.
 // Requires sorted update input and returns sorted output.
-func MergeVMaaSResponses(vmaasDataA *vmaas.UpdatesV2Response,
-	vmaasDataB *vmaas.UpdatesV2Response) (*vmaas.UpdatesV2Response, error) {
+func MergeVMaaSResponses(vmaasDataA *vmaas.UpdatesV3Response,
+	vmaasDataB *vmaas.UpdatesV3Response) (*vmaas.UpdatesV3Response, error) {
 	if vmaasDataA == nil {
 		return vmaasDataB, nil
 	}
@@ -39,9 +39,9 @@ func MergeVMaaSResponses(vmaasDataA *vmaas.UpdatesV2Response,
 	return vmaasDataA, nil
 }
 
-func mergeUpdates(listA, listB vmaas.UpdatesV2ResponseUpdateList) (*vmaas.UpdatesV2ResponseUpdateList, error) {
+func mergeUpdates(listA, listB vmaas.UpdatesV3ResponseUpdateList) (*vmaas.UpdatesV3ResponseUpdateList, error) {
 	updatesA, updatesB := listA.GetAvailableUpdates(), listB.GetAvailableUpdates()
-	newUpdates := make([]vmaas.UpdatesV2ResponseAvailableUpdates, 0)
+	newUpdates := make([]vmaas.UpdatesV3ResponseAvailableUpdates, 0)
 	a, b := 0, 0
 	for a < len(updatesA) && b < len(updatesB) {
 		nevraA, err := ParseNevra(updatesA[a].GetPackage())
@@ -78,13 +78,13 @@ func mergeUpdates(listA, listB vmaas.UpdatesV2ResponseUpdateList) (*vmaas.Update
 	if b <= len(updatesB)-1 {
 		newUpdates = append(newUpdates, updatesB[b:]...)
 	}
-	return &vmaas.UpdatesV2ResponseUpdateList{
+	return &vmaas.UpdatesV3ResponseUpdateList{
 		AvailableUpdates: &newUpdates,
 	}, nil
 }
 
 // Keep only updates for the latest package in update list
-func RemoveNonLatestPackages(updates *vmaas.UpdatesV2Response) error {
+func RemoveNonLatestPackages(updates *vmaas.UpdatesV3Response) error {
 	var toDel []string
 	type nevraStruct struct {
 		nameString string

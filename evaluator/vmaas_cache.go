@@ -18,7 +18,7 @@ type VmaasCache struct {
 	currentSize   int
 	validity      *types.Rfc3339TimestampWithZ
 	checkDuration time.Duration
-	data          *lru.TwoQueueCache[string, *vmaas.UpdatesV2Response]
+	data          *lru.TwoQueueCache[string, *vmaas.UpdatesV3Response]
 }
 
 func NewVmaasPackageCache(enabled bool, size int, checkDuration time.Duration) *VmaasCache {
@@ -33,7 +33,7 @@ func NewVmaasPackageCache(enabled bool, size int, checkDuration time.Duration) *
 
 	if c.enabled {
 		var err error
-		c.data, err = lru.New2Q[string, *vmaas.UpdatesV2Response](c.size)
+		c.data, err = lru.New2Q[string, *vmaas.UpdatesV3Response](c.size)
 		if err != nil {
 			panic(err)
 		}
@@ -42,7 +42,7 @@ func NewVmaasPackageCache(enabled bool, size int, checkDuration time.Duration) *
 	return c
 }
 
-func (c *VmaasCache) Get(checksum *string) (*vmaas.UpdatesV2Response, bool) {
+func (c *VmaasCache) Get(checksum *string) (*vmaas.UpdatesV3Response, bool) {
 	if c.enabled && checksum != nil {
 		val, ok := c.data.Get(*checksum)
 		if ok {
@@ -55,7 +55,7 @@ func (c *VmaasCache) Get(checksum *string) (*vmaas.UpdatesV2Response, bool) {
 	return nil, false
 }
 
-func (c *VmaasCache) Add(checksum *string, response *vmaas.UpdatesV2Response) {
+func (c *VmaasCache) Add(checksum *string, response *vmaas.UpdatesV3Response) {
 	if c.enabled && checksum != nil {
 		c.data.Add(*checksum, response)
 		if c.currentSize <= c.size {
