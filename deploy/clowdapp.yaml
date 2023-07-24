@@ -551,7 +551,7 @@ objects:
 parameters:
 # Manager
 - {name: REPLICAS_MANAGER, value: '1'}
-- {name: IMAGE_TAG_MANAGER, value: v3.4.6}
+- {name: IMAGE_TAG_MANAGER, value: v3.4.7}
 - {name: LOG_LEVEL_MANAGER, value: debug}
 - {name: DB_DEBUG_MANAGER, value: 'false'} # Log database queries if enabled
 - {name: ENABLE_CYNDI_TAGS, value: 'true'} # Enable filtering with Cyndi tags
@@ -575,7 +575,7 @@ parameters:
 
 # Listener
 - {name: REPLICAS_LISTENER, value: '1'}
-- {name: IMAGE_TAG_LISTENER, value: v3.4.6}
+- {name: IMAGE_TAG_LISTENER, value: v3.4.7}
 - {name: LOG_LEVEL_LISTENER, value: debug}
 - {name: DB_DEBUG_LISTENER, value: 'false'}
 - {name: CONSUMER_COUNT_LISTENER, value: '8'}
@@ -596,7 +596,7 @@ parameters:
 
 # Evaluator - upload
 - {name: REPLICAS_EVALUATOR_UPLOAD, value: '1'}
-- {name: IMAGE_TAG_EVALUATOR_UPLOAD, value: v3.4.6}
+- {name: IMAGE_TAG_EVALUATOR_UPLOAD, value: v3.4.7}
 - {name: LOG_LEVEL_EVALUATOR_UPLOAD, value: debug}
 - {name: DB_DEBUG_EVALUATOR_UPLOAD, value: 'false'}
 - {name: CONSUMER_COUNT_EVALUATOR_UPLOAD, value: '8'}
@@ -621,7 +621,7 @@ parameters:
 
 # Evaluator - recalc
 - {name: REPLICAS_EVALUATOR_RECALC, value: '1'}
-- {name: IMAGE_TAG_EVALUATOR_RECALC, value: v3.4.6}
+- {name: IMAGE_TAG_EVALUATOR_RECALC, value: v3.4.7}
 - {name: LOG_LEVEL_EVALUATOR_RECALC, value: debug}
 - {name: DB_DEBUG_EVALUATOR_RECALC, value: 'false'}
 - {name: CONSUMER_COUNT_EVALUATOR_RECALC, value: '8'}
@@ -644,7 +644,7 @@ parameters:
 - {name: ENABLE_PROFILER_EVALUATOR_RECALC, value: 'false'}
 
 # JOBS
-- {name: IMAGE_TAG_JOBS, value: v3.4.6}
+- {name: IMAGE_TAG_JOBS, value: v3.4.7}
 - {name: LOG_LEVEL_JOBS, value: debug}
 - {name: DB_DEBUG_JOBS, value: 'false'}
 - {name: JOBS_TIMEOUT, value: '1800'}  # 30 min timeout for jobs
@@ -689,7 +689,7 @@ parameters:
 - {name: SKIP_N_ACCOUNTS_REFRESH, value: '0'} # Skip advisory cache refresh for N first accounts in case the previous refresh didn't finish
 
 # Database admin
-- {name: IMAGE_TAG_DATABASE_ADMIN, value: v3.4.6}
+- {name: IMAGE_TAG_DATABASE_ADMIN, value: v3.4.7}
 - {name: LOG_LEVEL_DATABASE_ADMIN, value: debug}
 - {name: DB_DEBUG_DATABASE_ADMIN, value: 'false'}
 - {name: SCHEMA_MIGRATION, value: '-1'} # Set specific database schema version or use the last schema version (-1)
@@ -720,7 +720,7 @@ parameters:
 - {name: SSL_CERT_DIR, value: '/etc/ssl/certs:/etc/pki/tls/certs:/system/etc/security/cacerts:/cdapp/certs'}
 
 # Turnpike
-- {name: IMAGE_TAG_ADMIN, value: v3.4.6}
+- {name: IMAGE_TAG_ADMIN, value: v3.4.7}
 - {name: ENABLE_TURNPIKE_AUTH, value: 'true'} # Enable Turnpike authentication for internal API (manual sync, re-calc)
 - {name: REPLICAS_ADMIN, value: '1'}
 - {name: RES_LIMIT_CPU_ADMIN, value: 100m}
