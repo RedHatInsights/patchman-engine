@@ -84,18 +84,18 @@ func BaselinesListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
-	filters, err := ParseInventoryFilters(c, BaselineOpts)
+	filters, inventoryFilters, err := ParseInventoryFilters(c, BaselineOpts)
 	if err != nil {
 		return
 	}
 
 	db := middlewares.DBFromContext(c)
-	query := buildQueryBaselines(db, filters, account, groups)
+	query := buildQueryBaselines(db, inventoryFilters, account, groups)
 	if err != nil {
 		return
 	} // Error handled in method itself
 
-	query, meta, params, err := ListCommon(query, c, filters, BaselineOpts)
+	query, meta, params, err := ListCommon(query, c, filters, inventoryFilters, BaselineOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return

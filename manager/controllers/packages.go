@@ -150,17 +150,17 @@ func PackagesListHandler(c *gin.Context) {
 	apiver := c.GetInt(middlewares.KeyApiver)
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 
-	filters, err := ParseInventoryFilters(c, PackagesOpts)
+	filters, inventoryFilters, err := ParseInventoryFilters(c, PackagesOpts)
 	if err != nil {
 		return
 	}
 
 	db := middlewares.DBFromContext(c)
-	query := packagesQuery(db, filters, account, groups)
+	query := packagesQuery(db, inventoryFilters, account, groups)
 	if err != nil {
 		return
 	} // Error handled in method itself
-	query, meta, params, err := ListCommon(query, c, filters, PackagesOpts)
+	query, meta, params, err := ListCommon(query, c, filters, inventoryFilters, PackagesOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself
