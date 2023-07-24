@@ -22,14 +22,18 @@ func updatesHandler(c *gin.Context) {
 						"erratum": "RH-1",
 						"package": "firefox-0:77.0.1-1.fc31.x86_64",
 						"releasever": "ser1",
-						"repository": "repo1"
+						"repository": "repo1",
+                        "package_name": "firefox",
+                        "evra": "0:77.0.1-1.fc31.x86_64"
 					},
 					{
 						"basearch": "i686",
 						"erratum": "RH-2",
 						"package": "firefox-1:76.0.1-1.fc31.x86_64",
 						"releasever": "ser1",
-						"repository": "repo1"
+						"repository": "repo1",
+                        "package_name": "firefox",
+                        "evra": "1:76.0.1-1.fc31.x86_64"
 					}
 				]
 			},
@@ -40,7 +44,9 @@ func updatesHandler(c *gin.Context) {
 						"erratum": "RH-100",
 						"package": "kernel-0:5.10.13-200.fc31.x86_64",
 						"releasever": "ser1",
-						"repository": "repo1"
+						"repository": "repo1",
+                        "package_name": "kernel",
+                        "evra": "0:5.10.13-200.fc31.x86_64"
 					}
 				]
 			}
