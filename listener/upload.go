@@ -588,7 +588,7 @@ func processUpload(host *Host, yumUpdates []byte) (*models.SystemPlatform, error
 }
 
 func getYumUpdates(event HostEvent, client *api.Client) ([]byte, error) {
-	var parsed vmaas.UpdatesV2Response
+	var parsed vmaas.UpdatesV3Response
 	yumUpdates := event.PlatformMetadata.CustomMetadata.YumUpdates
 	yumUpdatesURL := event.PlatformMetadata.CustomMetadata.YumUpdatesS3URL
 
@@ -602,7 +602,7 @@ func getYumUpdates(event HostEvent, client *api.Client) ([]byte, error) {
 		}
 	}
 
-	if (parsed == vmaas.UpdatesV2Response{}) {
+	if (parsed == vmaas.UpdatesV3Response{}) {
 		utils.LogWarn("yum_updates_s3url", yumUpdatesURL, "No yum updates on S3, getting legacy yum_updates field")
 		err := json.Unmarshal(yumUpdates, &parsed)
 		if err != nil {
@@ -619,7 +619,7 @@ func getYumUpdates(event HostEvent, client *api.Client) ([]byte, error) {
 	installedPkgs := event.Host.SystemProfile.GetInstalledPackages()
 	for _, pkg := range installedPkgs {
 		if _, has := updatesMap[pkg]; !has {
-			updatesMap[pkg] = vmaas.UpdatesV2ResponseUpdateList{}
+			updatesMap[pkg] = vmaas.UpdatesV3ResponseUpdateList{}
 		}
 	}
 	parsed.UpdateList = &updatesMap

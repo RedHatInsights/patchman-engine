@@ -39,8 +39,8 @@ func (o *UpdatesV3Request) SetReleasever(v string) {
 	o.Releasever = &v
 }
 
-type UpdatesV2Response struct {
-	UpdateList     *map[string]UpdatesV2ResponseUpdateList `json:"update_list,omitempty"`
+type UpdatesV3Response struct {
+	UpdateList     *map[string]UpdatesV3ResponseUpdateList `json:"update_list,omitempty"`
 	RepositoryList *[]string                               `json:"repository_list,omitempty"`
 	ModulesList    *[]UpdatesV3RequestModulesList          `json:"modules_list,omitempty"`
 	Releasever     *string                                 `json:"releasever,omitempty"`
@@ -49,21 +49,21 @@ type UpdatesV2Response struct {
 }
 
 // GetUpdateList returns the UpdateList field value if set, zero value otherwise.
-func (o *UpdatesV2Response) GetUpdateList() map[string]UpdatesV2ResponseUpdateList {
+func (o *UpdatesV3Response) GetUpdateList() map[string]UpdatesV3ResponseUpdateList {
 	if o == nil || o.UpdateList == nil {
-		var ret map[string]UpdatesV2ResponseUpdateList
+		var ret map[string]UpdatesV3ResponseUpdateList
 		return ret
 	}
 	return *o.UpdateList
 }
 
-type UpdatesV2ResponseUpdateList struct {
-	AvailableUpdates *[]UpdatesV2ResponseAvailableUpdates `json:"available_updates,omitempty"`
+type UpdatesV3ResponseUpdateList struct {
+	AvailableUpdates *[]UpdatesV3ResponseAvailableUpdates `json:"available_updates,omitempty"`
 }
 
-func (o *UpdatesV2ResponseUpdateList) GetAvailableUpdates() []UpdatesV2ResponseAvailableUpdates {
+func (o *UpdatesV3ResponseUpdateList) GetAvailableUpdates() []UpdatesV3ResponseAvailableUpdates {
 	if o == nil || o.AvailableUpdates == nil {
-		var ret []UpdatesV2ResponseAvailableUpdates
+		var ret []UpdatesV3ResponseAvailableUpdates
 		return ret
 	}
 	updates := *o.AvailableUpdates
@@ -85,7 +85,7 @@ func (o *UpdatesV2ResponseUpdateList) GetAvailableUpdates() []UpdatesV2ResponseA
 	return updates
 }
 
-type UpdatesV2ResponseAvailableUpdates struct {
+type UpdatesV3ResponseAvailableUpdates struct {
 	Repository *string `json:"repository,omitempty"`
 	Releasever *string `json:"releasever,omitempty"`
 	Basearch   *string `json:"basearch,omitempty"`
@@ -95,7 +95,7 @@ type UpdatesV2ResponseAvailableUpdates struct {
 	StatusID int `json:"-"`
 }
 
-func (o *UpdatesV2ResponseAvailableUpdates) GetPackage() string {
+func (o *UpdatesV3ResponseAvailableUpdates) GetPackage() string {
 	if o == nil || o.Package == nil {
 		var ret string
 		return ret
@@ -103,7 +103,7 @@ func (o *UpdatesV2ResponseAvailableUpdates) GetPackage() string {
 	return *o.Package
 }
 
-func (o *UpdatesV2ResponseAvailableUpdates) GetErratum() string {
+func (o *UpdatesV3ResponseAvailableUpdates) GetErratum() string {
 	if o == nil || o.Erratum == nil {
 		var ret string
 		return ret
@@ -111,7 +111,7 @@ func (o *UpdatesV2ResponseAvailableUpdates) GetErratum() string {
 	return *o.Erratum
 }
 
-func (o *UpdatesV2ResponseAvailableUpdates) GetBasearch() string {
+func (o *UpdatesV3ResponseAvailableUpdates) GetBasearch() string {
 	if o == nil || o.Basearch == nil {
 		var ret string
 		return ret
@@ -119,7 +119,7 @@ func (o *UpdatesV2ResponseAvailableUpdates) GetBasearch() string {
 	return *o.Basearch
 }
 
-func (o *UpdatesV2ResponseAvailableUpdates) GetReleasever() string {
+func (o *UpdatesV3ResponseAvailableUpdates) GetReleasever() string {
 	if o == nil || o.Releasever == nil {
 		var ret string
 		return ret
@@ -127,7 +127,7 @@ func (o *UpdatesV2ResponseAvailableUpdates) GetReleasever() string {
 	return *o.Releasever
 }
 
-func (o *UpdatesV2ResponseAvailableUpdates) GetRepository() string {
+func (o *UpdatesV3ResponseAvailableUpdates) GetRepository() string {
 	if o == nil || o.Repository == nil {
 		var ret string
 		return ret
@@ -135,7 +135,7 @@ func (o *UpdatesV2ResponseAvailableUpdates) GetRepository() string {
 	return *o.Repository
 }
 
-func (o *UpdatesV2ResponseAvailableUpdates) Cmp(b *UpdatesV2ResponseAvailableUpdates) int {
+func (o *UpdatesV3ResponseAvailableUpdates) Cmp(b *UpdatesV3ResponseAvailableUpdates) int {
 	if cmp := strings.Compare(o.GetPackage(), b.GetPackage()); cmp != 0 {
 		return cmp
 	}

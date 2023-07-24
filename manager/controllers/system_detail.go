@@ -34,7 +34,7 @@ type SystemVmaasJSONResponse struct {
 }
 
 type SystemYumUpdatesResponse struct {
-	Data vmaas.UpdatesV2Response `json:"data"`
+	Data vmaas.UpdatesV3Response `json:"data"`
 }
 
 // nolint: funlen

@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) (
+func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV3Response) (
 	SystemAdvisoryMap, error) {
 	if !enableAdvisoryAnalysis {
 		utils.LogInfo("advisory analysis disabled, skipping")
@@ -36,7 +36,7 @@ func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vm
 // Changes data stored in system_advisories, in order to match newest evaluation
 // Before this methods stores the entries into the system_advisories table, it locks
 // advisory_account_data table, so other evaluations don't interfere with this one
-func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) (
+func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV3Response) (
 	[]int64, []int64, []int64, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))

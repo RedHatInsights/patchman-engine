@@ -232,7 +232,7 @@ func mockToggleUpload(c *gin.Context) {
 
 func mockYumUpdatesS3(c *gin.Context) {
 	utils.LogInfo("Mocking S3 for providing yum updates")
-	updates := vmaas.UpdatesV2Response{}
+	updates := vmaas.UpdatesV3Response{}
 	if err := json.Unmarshal([]byte(yumUpdates), &updates); err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return

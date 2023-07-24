@@ -172,7 +172,7 @@ func runEvaluate(
 }
 
 func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, inventoryID string) (
-	*models.SystemPlatform, *vmaas.UpdatesV2Response, error) {
+	*models.SystemPlatform, *vmaas.UpdatesV3Response, error) {
 	tx := database.Db.WithContext(base.Context).Begin()
 	// Don't allow requested TX to hang around locking the rows
 	defer tx.Rollback()
@@ -203,12 +203,12 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 	return system, vmaasData, nil
 }
 
-func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV2Response, error) {
+func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV3Response, error) {
 	if system.YumUpdates == nil {
 		return nil, nil
 	}
 
-	var resp vmaas.UpdatesV2Response
+	var resp vmaas.UpdatesV3Response
 	err := json.Unmarshal(system.YumUpdates, &resp)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to unmarshall yum updates")
@@ -223,8 +223,8 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV2Response, 
 	return &resp, nil
 }
 
-func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV2Response,
-	system *models.SystemPlatform, event *mqueue.PlatformEvent) (*vmaas.UpdatesV2Response, error) {
+func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV3Response,
+	system *models.SystemPlatform, event *mqueue.PlatformEvent) (*vmaas.UpdatesV3Response, error) {
 	if enableBaselineEval {
 		err := limitVmaasToBaseline(tx, system, updatesData)
 		if err != nil {
@@ -246,8 +246,8 @@ func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV2Response,
 }
 
 func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatform) (
-	*vmaas.UpdatesV2Response, error) {
-	var yumUpdates *vmaas.UpdatesV2Response
+	*vmaas.UpdatesV3Response, error) {
+	var yumUpdates *vmaas.UpdatesV3Response
 	var yumErr error
 	if enableYumUpdatesEval {
 		yumUpdates, yumErr = tryGetYumUpdates(system)
@@ -276,7 +276,7 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 }
 
 func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
-	system *models.SystemPlatform) (*vmaas.UpdatesV2Response, error) {
+	system *models.SystemPlatform) (*vmaas.UpdatesV3Response, error) {
 	// first check if we have data in cache
 	vmaasData, ok := memoryVmaasCache.Get(system.JSONChecksum)
 	if ok {
@@ -381,7 +381,7 @@ func commitWithObserve(tx *gorm.DB) error {
 }
 
 func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
-	vmaasData *vmaas.UpdatesV2Response, event *mqueue.PlatformEvent) error {
+	vmaasData *vmaas.UpdatesV3Response, event *mqueue.PlatformEvent) error {
 	newSystemAdvisories, err := analyzeAdvisories(tx, system, vmaasData)
 	if err != nil {
 		return errors.Wrap(err, "Advisory analysis failed")
@@ -514,13 +514,13 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 	return err
 }
 
-func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.UpdatesV2Response, error) {
+func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.UpdatesV3Response, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("vmaas-updates-call"))
 
 	vmaasCallFunc := func() (interface{}, *http.Response, error) {
 		utils.LogTrace("request", *request, "vmaas /updates request")
-		vmaasData := vmaas.UpdatesV2Response{}
+		vmaasData := vmaas.UpdatesV3Response{}
 		resp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasUpdatesURL, request, &vmaasData)
 		utils.LogDebug("status_code", utils.TryGetStatusCode(resp), "vmaas /updates call")
 		utils.LogTrace("response", resp, "vmaas /updates response")
@@ -532,7 +532,7 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 	if err != nil {
 		return nil, errors.Wrap(err, "vmaas /v3/updates API call failed")
 	}
-	return vmaasDataPtr.(*vmaas.UpdatesV2Response), nil
+	return vmaasDataPtr.(*vmaas.UpdatesV3Response), nil
 }
 
 func loadSystemData(tx *gorm.DB, accountID int, inventoryID string) (*models.SystemPlatform, error) {

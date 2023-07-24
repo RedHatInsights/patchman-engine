@@ -25,7 +25,7 @@ type RemediationsState struct {
 	Issues []string `json:"issues"`
 }
 
-func createRemediationsStateMsg(id string, response *vmaas.UpdatesV2Response) *RemediationsState {
+func createRemediationsStateMsg(id string, response *vmaas.UpdatesV3Response) *RemediationsState {
 	advisories := getReportedAdvisories(response)
 	packages := getReportedPackageUpdates(response)
 	var state RemediationsState
@@ -41,7 +41,7 @@ func createRemediationsStateMsg(id string, response *vmaas.UpdatesV2Response) *R
 	return &state
 }
 
-func getReportedAdvisories(vmaasData *vmaas.UpdatesV2Response) map[string]int {
+func getReportedAdvisories(vmaasData *vmaas.UpdatesV3Response) map[string]int {
 	updateList := vmaasData.GetUpdateList()
 	advisories := make(map[string]int, len(updateList))
 	for _, updates := range updateList {
@@ -52,7 +52,7 @@ func getReportedAdvisories(vmaasData *vmaas.UpdatesV2Response) map[string]int {
 	return advisories
 }
 
-func getReportedPackageUpdates(vmaasData *vmaas.UpdatesV2Response) map[string]bool {
+func getReportedPackageUpdates(vmaasData *vmaas.UpdatesV3Response) map[string]bool {
 	updateList := vmaasData.GetUpdateList()
 	packages := make(map[string]bool, len(updateList))
 	for _, updates := range updateList {
@@ -63,7 +63,7 @@ func getReportedPackageUpdates(vmaasData *vmaas.UpdatesV2Response) map[string]bo
 	return packages
 }
 
-func publishRemediationsState(system *models.SystemPlatform, response *vmaas.UpdatesV2Response) error {
+func publishRemediationsState(system *models.SystemPlatform, response *vmaas.UpdatesV3Response) error {
 	if remediationsPublisher == nil {
 		return nil
 	}

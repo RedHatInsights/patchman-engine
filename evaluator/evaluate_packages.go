@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) (
+func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV3Response) (
 	installed, updatable int, err error) {
 	if !enablePackageAnalysis {
 		return 0, 0, nil
@@ -42,7 +42,7 @@ func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaa
 }
 
 // Add unknown EVRAs into the db if needed
-func lazySavePackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) error {
+func lazySavePackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV3Response) error {
 	if !enableLazyPackageSave {
 		return nil
 	}
@@ -58,7 +58,7 @@ func lazySavePackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) error {
 }
 
 // Get packages with known name but version missing in db/cache
-func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) models.PackageSlice {
+func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV3Response) models.PackageSlice {
 	updates := vmaasData.GetUpdateList()
 	packages := make(models.PackageSlice, 0, len(updates))
 	for nevra := range updates {
@@ -150,7 +150,7 @@ func updatePackageCache(missing models.PackageSlice) {
 
 // Find relevant package data based on vmaas results
 func loadPackages(tx *gorm.DB, system *models.SystemPlatform,
-	vmaasData *vmaas.UpdatesV2Response) (*map[string]namedPackage, error) {
+	vmaasData *vmaas.UpdatesV3Response) (*map[string]namedPackage, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-load"))
 
 	packages, err := loadSystemNEVRAsFromDB(tx, system, vmaasData)
@@ -179,7 +179,7 @@ func packages2NevraMap(packages []namedPackage) map[string]namedPackage {
 }
 
 func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform,
-	vmaasData *vmaas.UpdatesV2Response) ([]namedPackage, error) {
+	vmaasData *vmaas.UpdatesV3Response) ([]namedPackage, error) {
 	updates := vmaasData.GetUpdateList()
 	numUpdates := len(updates)
 	packageIDs := make([]int64, 0, numUpdates)
@@ -257,7 +257,7 @@ func updateDataChanged(currentNamedPackage *namedPackage, updateDataJSON []byte)
 }
 
 func createSystemPackage(nevra string,
-	updateData vmaas.UpdatesV2ResponseUpdateList,
+	updateData vmaas.UpdatesV3ResponseUpdateList,
 	system *models.SystemPlatform,
 	packagesByNEVRA *map[string]namedPackage) (systemPackagePtr *models.SystemPackage, updatesChanged bool) {
 	updateDataJSON, err := vmaasResponse2UpdateDataJSON(&updateData)
@@ -284,7 +284,7 @@ func createSystemPackage(nevra string,
 
 func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 	packagesByNEVRA *map[string]namedPackage,
-	vmaasData *vmaas.UpdatesV2Response) (installed, updatable int, err error) {
+	vmaasData *vmaas.UpdatesV3Response) (installed, updatable int, err error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-store"))
 
 	updates := vmaasData.GetUpdateList()
@@ -316,7 +316,7 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 		"Storing system packages")
 }
 
-func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList) ([]byte, error) {
+func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV3ResponseUpdateList) ([]byte, error) {
 	var latestInstallable models.PackageUpdate
 	var latestApplicable models.PackageUpdate
 	uniqUpdates := make(map[models.PackageUpdate]bool)

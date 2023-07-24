@@ -23,13 +23,13 @@ func TestAnalyzePackages(t *testing.T) {
 	database.CheckEVRAsInDB(t, 0, "12.0.1-1.fc31.x86_64") // lazy added package
 	// we send request with zero epoch and expect response with zero epoch
 	// so we have to test with zero epoch
-	vmaasData := vmaas.UpdatesV2Response{UpdateList: &map[string]vmaas.UpdatesV2ResponseUpdateList{
-		"kernel-0:5.6.13-200.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV2ResponseAvailableUpdates{}},
-		"firefox-0:12.0.1-1.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV2ResponseAvailableUpdates{{
+	vmaasData := vmaas.UpdatesV3Response{UpdateList: &map[string]vmaas.UpdatesV3ResponseUpdateList{
+		"kernel-0:5.6.13-200.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{}},
+		"firefox-0:12.0.1-1.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{{
 			Package: utils.PtrString("firefox-0:77.0.1-1.fc31.x86_64"),
 		}}},
 		// this custom-package will NOT be ignored
-		"custom-package-0:1.2.3-1.fc33.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV2ResponseAvailableUpdates{{}}}}}
+		"custom-package-0:1.2.3-1.fc33.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{{}}}}}
 
 	installed, updatable, err := analyzePackages(database.Db, &system, &vmaasData)
 	assert.Nil(t, err)
@@ -51,12 +51,12 @@ func TestLazySavePackages(t *testing.T) {
 
 	names := []string{"kernel", "firefox", "custom-package"}
 	evras := []string{"1-0.el7.x86_64", "1-1.1.el7.x86_64", "11-1.el7.x86_64"}
-	updateList := make(map[string]vmaas.UpdatesV2ResponseUpdateList, len(names))
+	updateList := make(map[string]vmaas.UpdatesV3ResponseUpdateList, len(names))
 	for i, name := range names {
 		nevra := fmt.Sprintf("%s-%s", name, evras[i])
-		updateList[nevra] = vmaas.UpdatesV2ResponseUpdateList{}
+		updateList[nevra] = vmaas.UpdatesV3ResponseUpdateList{}
 	}
-	vmaasData := vmaas.UpdatesV2Response{UpdateList: &updateList}
+	vmaasData := vmaas.UpdatesV3Response{UpdateList: &updateList}
 	database.CheckEVRAsInDB(t, 0, evras...)
 	err := lazySavePackages(database.Db, &vmaasData)
 	assert.Nil(t, err)
