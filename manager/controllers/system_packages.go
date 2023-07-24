@@ -97,6 +97,7 @@ func systemPackageQuery(db *gorm.DB, account int, groups map[string]string, inve
 // @Param    filter[evra]            query   string  false "Filter"
 // @Param    filter[summary]         query   string  false "Filter"
 // @Param    filter[updatable]       query   bool    false "Filter"
+// @Param    filter[update_status]   query   string  false "Filter"
 // @Success 200 {object} SystemPackageResponseV3
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
