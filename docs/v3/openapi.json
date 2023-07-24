@@ -6948,7 +6948,7 @@
                 "type": "object",
                 "properties": {
                     "data": {
-                        "$ref": "#/components/schemas/vmaas.UpdatesV2Response"
+                        "$ref": "#/components/schemas/vmaas.UpdatesV3Response"
                     }
                 }
             },
@@ -7065,69 +7065,6 @@
                     }
                 }
             },
-            "vmaas.UpdatesV2Response": {
-                "type": "object",
-                "properties": {
-                    "basearch": {
-                        "type": "string"
-                    },
-                    "last_change": {
-                        "type": "string"
-                    },
-                    "modules_list": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/vmaas.UpdatesV3RequestModulesList"
-                        }
-                    },
-                    "releasever": {
-                        "type": "string"
-                    },
-                    "repository_list": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "update_list": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "$ref": "#/components/schemas/vmaas.UpdatesV2ResponseUpdateList"
-                        }
-                    }
-                }
-            },
-            "vmaas.UpdatesV2ResponseAvailableUpdates": {
-                "type": "object",
-                "properties": {
-                    "basearch": {
-                        "type": "string"
-                    },
-                    "erratum": {
-                        "type": "string"
-                    },
-                    "package": {
-                        "type": "string"
-                    },
-                    "releasever": {
-                        "type": "string"
-                    },
-                    "repository": {
-                        "type": "string"
-                    }
-                }
-            },
-            "vmaas.UpdatesV2ResponseUpdateList": {
-                "type": "object",
-                "properties": {
-                    "available_updates": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/vmaas.UpdatesV2ResponseAvailableUpdates"
-                        }
-                    }
-                }
-            },
             "vmaas.UpdatesV3Request": {
                 "type": "object",
                 "properties": {
@@ -7183,6 +7120,75 @@
                     },
                     "module_stream": {
                         "type": "string"
+                    }
+                }
+            },
+            "vmaas.UpdatesV3Response": {
+                "type": "object",
+                "properties": {
+                    "basearch": {
+                        "type": "string"
+                    },
+                    "last_change": {
+                        "type": "string"
+                    },
+                    "modules_list": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/vmaas.UpdatesV3RequestModulesList"
+                        }
+                    },
+                    "releasever": {
+                        "type": "string"
+                    },
+                    "repository_list": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "update_list": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/vmaas.UpdatesV3ResponseUpdateList"
+                        }
+                    }
+                }
+            },
+            "vmaas.UpdatesV3ResponseAvailableUpdates": {
+                "type": "object",
+                "properties": {
+                    "basearch": {
+                        "type": "string"
+                    },
+                    "erratum": {
+                        "type": "string"
+                    },
+                    "evra": {
+                        "type": "string"
+                    },
+                    "package": {
+                        "type": "string"
+                    },
+                    "package_name": {
+                        "type": "string"
+                    },
+                    "releasever": {
+                        "type": "string"
+                    },
+                    "repository": {
+                        "type": "string"
+                    }
+                }
+            },
+            "vmaas.UpdatesV3ResponseUpdateList": {
+                "type": "object",
+                "properties": {
+                    "available_updates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/vmaas.UpdatesV3ResponseAvailableUpdates"
+                        }
                     }
                 }
             }
