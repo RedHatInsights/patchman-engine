@@ -5033,6 +5033,14 @@
                         "schema": {
                             "type": "boolean"
                         }
+                    },
+                    {
+                        "name": "filter[update_status]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
