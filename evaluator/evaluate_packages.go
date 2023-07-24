@@ -322,15 +322,15 @@ func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV3ResponseUpdateList)
 	uniqUpdates := make(map[models.PackageUpdate]bool)
 	pkgUpdates := make([]models.PackageUpdate, 0, len(updateData.GetAvailableUpdates()))
 	for _, upData := range updateData.GetAvailableUpdates() {
-		upNevra, err := utils.ParseNevra(upData.GetPackage())
-		// Skip invalid nevras in updates list
-		if err != nil {
-			utils.LogWarn("nevra", upData.Package, "Invalid nevra")
+		if len(upData.GetPackage()) == 0 {
+			// no update
 			continue
 		}
+		// before we used nevra.EVRAString() function which shows only non zero epoch, keep it consistent
+		evra := strings.TrimPrefix(upData.GetEVRA(), "0:")
 		// Keep only unique entries for each update in the list
 		pkgUpdate := models.PackageUpdate{
-			EVRA: upNevra.EVRAString(), Advisory: upData.GetErratum(), Status: STATUS[upData.StatusID],
+			EVRA: evra, Advisory: upData.GetErratum(), Status: STATUS[upData.StatusID],
 		}
 		if !uniqUpdates[pkgUpdate] {
 			pkgUpdates = append(pkgUpdates, pkgUpdate)

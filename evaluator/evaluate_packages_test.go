@@ -27,6 +27,7 @@ func TestAnalyzePackages(t *testing.T) {
 		"kernel-0:5.6.13-200.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{}},
 		"firefox-0:12.0.1-1.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{{
 			Package: utils.PtrString("firefox-0:77.0.1-1.fc31.x86_64"),
+			EVRA:    utils.PtrString("0:77.0.1-1.fc31.x86_64"),
 		}}},
 		// this custom-package will NOT be ignored
 		"custom-package-0:1.2.3-1.fc33.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{{}}}}}
