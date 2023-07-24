@@ -86,11 +86,13 @@ func (o *UpdatesV3ResponseUpdateList) GetAvailableUpdates() []UpdatesV3ResponseA
 }
 
 type UpdatesV3ResponseAvailableUpdates struct {
-	Repository *string `json:"repository,omitempty"`
-	Releasever *string `json:"releasever,omitempty"`
-	Basearch   *string `json:"basearch,omitempty"`
-	Erratum    *string `json:"erratum,omitempty"`
-	Package    *string `json:"package,omitempty"`
+	Repository  *string `json:"repository,omitempty"`
+	Releasever  *string `json:"releasever,omitempty"`
+	Basearch    *string `json:"basearch,omitempty"`
+	Erratum     *string `json:"erratum,omitempty"`
+	Package     *string `json:"package,omitempty"`
+	PackageName *string `json:"package_name,omitempty"`
+	EVRA        *string `json:"evra,omitempty"`
 	// helper column to diferentiate installable/applicable
 	StatusID int `json:"-"`
 }
@@ -101,6 +103,22 @@ func (o *UpdatesV3ResponseAvailableUpdates) GetPackage() string {
 		return ret
 	}
 	return *o.Package
+}
+
+func (o *UpdatesV3ResponseAvailableUpdates) GetPackageName() string {
+	if o == nil || o.PackageName == nil {
+		var ret string
+		return ret
+	}
+	return *o.PackageName
+}
+
+func (o *UpdatesV3ResponseAvailableUpdates) GetEVRA() string {
+	if o == nil || o.EVRA == nil {
+		var ret string
+		return ret
+	}
+	return *o.EVRA
 }
 
 func (o *UpdatesV3ResponseAvailableUpdates) GetErratum() string {
