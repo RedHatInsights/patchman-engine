@@ -112,6 +112,26 @@ func TestSystemsTagsInvalid(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
+func TestSystemsTagsEscaping1(t *testing.T) {
+	output := testSystems(t, `/?tags=ns1/k3=val4&tags="ns/key=quote"`, 1)
+	assert.Equal(t, 0, len(output.Data))
+}
+
+func TestSystemsTagsEscaping2(t *testing.T) {
+	output := testSystems(t, `/?tags=ns1/k3=val4&tags='ns/key=singlequote'`, 1)
+	assert.Equal(t, 0, len(output.Data))
+}
+
+func TestSystemsTagsEscaping3(t *testing.T) {
+	output := testSystems(t, `/?tags=ns1/k3=val4&tags='ns/key=inside""quote'`, 1)
+	assert.Equal(t, 0, len(output.Data))
+}
+
+func TestSystemsTagsEscaping4(t *testing.T) {
+	output := testSystems(t, `/?tags=ns1/k3=val4&tags=ne/key="{{malformed json}}"`, 1)
+	assert.Equal(t, 0, len(output.Data))
+}
+
 func TestSystemsWorkloads1(t *testing.T) {
 	url := "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC"
 	output := testSystems(t, url, 1)
@@ -131,6 +151,17 @@ func TestSystemsWorkloads3(t *testing.T) {
 	assert.Equal(t, 0, len(output.Data))
 }
 
+func TestSystemsWorkloadEscaping1(t *testing.T) {
+	url := "/?filter[system_profile][sap_sids]='singlequote'"
+	output := testSystems(t, url, 1)
+	assert.Equal(t, 0, len(output.Data))
+}
+
+func TestSystemsWorkloadEscaping2(t *testing.T) {
+	url := `/?filter[system_profile][sap_sids]="{{malformed json}}"`
+	output := testSystems(t, url, 1)
+	assert.Equal(t, 0, len(output.Data))
+}
 func TestSystemsPackagesCount(t *testing.T) {
 	output := testSystems(t, "/?sort=-packages_installed,id", 3)
 	assert.Equal(t, 5, len(output.Data))
