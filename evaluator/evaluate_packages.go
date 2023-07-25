@@ -166,13 +166,7 @@ func packages2NevraMap(packages []namedPackage) map[string]namedPackage {
 	pkgByNevra := make(map[string]namedPackage, len(packages))
 	for _, p := range packages {
 		// make sure nevra contains epoch even if epoch==0
-		nevra, err := utils.ParseNameEVRA(p.Name, p.EVRA)
-		if err != nil {
-			utils.LogWarn("package_id", p.PackageID, "name_id", p.NameID, "name", p.Name, "evra", p.EVRA,
-				"packages2NevraMap: cannot parse evra")
-			continue
-		}
-		nevraString := nevra.StringE(true)
+		nevraString := utils.NEVRAStringE(p.Name, p.EVRA, true)
 		pkgByNevra[nevraString] = p
 	}
 	return pkgByNevra
