@@ -222,13 +222,7 @@ func (c *PackageCache) addByID(pkg *PackageCacheMetadata) {
 
 func (c *PackageCache) addByNevra(pkg *PackageCacheMetadata) {
 	// make sure nevra contains epoch even if epoch==0
-	nevra, err := utils.ParseNameEVRA(pkg.Name, pkg.Evra)
-	if err != nil {
-		utils.LogWarn("id", pkg.ID, "name_id", pkg.NameID, "name", pkg.Name, "evra", pkg.Evra,
-			"PackageCache.addByNevra: cannot parse evra")
-		return
-	}
-	nevraString := nevra.StringE(true)
+	nevraString := utils.NEVRAStringE(pkg.Name, pkg.Evra, true)
 	evicted := c.byNevra.Add(nevraString, pkg)
 	if !evicted {
 		packageCacheGauge.WithLabelValues("nevra").Inc()
