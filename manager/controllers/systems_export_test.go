@@ -101,7 +101,7 @@ func TestExportSystemsTagsInvalid(t *testing.T) {
 func TestSystemsExportWorkloads(t *testing.T) {
 	w := makeRequest(
 		t,
-		"/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][in][]=ABC",
+		"/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC",
 		"application/json",
 	)
 

@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const sapABCFilter = "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][]=ABC"
+const sapABCFilter = "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC"
 
 func TestSystemsDefault(t *testing.T) {
 	output := testSystems(t, `/`, 1)
@@ -113,7 +113,7 @@ func TestSystemsTagsInvalid(t *testing.T) {
 }
 
 func TestSystemsWorkloads1(t *testing.T) {
-	url := "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][in][]=ABC"
+	url := "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC"
 	output := testSystems(t, url, 1)
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
@@ -231,7 +231,7 @@ func TestSystemsTagsInMetadata(t *testing.T) {
 }
 
 func TestSAPSystemMeta1(t *testing.T) {
-	url := "/?filter[system_profile][sap_sids][]=ABC"
+	url := "/?filter[system_profile][sap_sids]=ABC"
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
 		"sap_sids": {"eq", []string{"ABC"}},
@@ -241,7 +241,7 @@ func TestSAPSystemMeta1(t *testing.T) {
 }
 
 func TestSAPSystemMeta2(t *testing.T) {
-	url := "/?filter[system_profile][sap_sids][in][]=ABC"
+	url := "/?filter[system_profile][sap_sids]=ABC"
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
 		"sap_sids": {"eq", []string{"ABC"}},
@@ -262,7 +262,7 @@ func TestSAPSystemMeta3(t *testing.T) {
 }
 
 func TestSAPSystemMeta4(t *testing.T) {
-	url := "/?filter[system_profile][sap_sids][in]=ABC&filter[system_profile][sap_sids][in]=GHI"
+	url := "/?filter[system_profile][sap_sids]=ABC&filter[system_profile][sap_sids]=GHI"
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
 		"sap_sids": {"eq", []string{"GHI", "ABC"}},

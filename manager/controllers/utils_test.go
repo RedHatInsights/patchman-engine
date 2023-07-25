@@ -17,7 +17,7 @@ func TestGroupNameFilter(t *testing.T) {
 	database.Configure()
 
 	c, _ := gin.CreateTestContext(httptest.NewRecorder())
-	c.Request, _ = http.NewRequest("GET", "/?filter[group_name][in]=group2", nil)
+	c.Request, _ = http.NewRequest("GET", "/?filter[group_name]=group2", nil)
 
 	_, inventoryFilters, err := ParseInventoryFilters(c, ListOpts{})
 	assert.Nil(t, err)
@@ -40,7 +40,7 @@ func TestGroupNameFilter2(t *testing.T) {
 	database.Configure()
 
 	c, _ := gin.CreateTestContext(httptest.NewRecorder())
-	c.Request, _ = http.NewRequest("GET", "/?filter[group_name][in]=group1,group2", nil)
+	c.Request, _ = http.NewRequest("GET", "/?filter[group_name]=group1,group2", nil)
 
 	_, inventoryFilters, err := ParseInventoryFilters(c, ListOpts{})
 	assert.Nil(t, err)
