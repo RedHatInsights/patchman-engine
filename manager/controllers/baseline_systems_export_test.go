@@ -112,7 +112,7 @@ func TestBaselineSystemsExportWorkloads(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath(
 		"GET",
-		"/1/systems?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][in][]=ABC",
+		"/1/systems?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC",
 		nil,
 		"application/json",
 		BaselineSystemsExportHandler,

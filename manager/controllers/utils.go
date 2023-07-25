@@ -103,11 +103,13 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 type NestedFilterMap map[string]string
 
 var nestedFilters = NestedFilterMap{
-	"group_name][in":                              "group_name",
+	"group_name":                                  "group_name",
+	"group_name][in":                              "group_name", // obsoleted, backward compatible
 	"system_profile][sap_system":                  "sap_system",
-	"system_profile][sap_sids][":                  "sap_sids",
-	"system_profile][sap_sids][in":                "sap_sids",
-	"system_profile][sap_sids][in][":              "sap_sids",
+	"system_profile][sap_sids":                    "sap_sids",
+	"system_profile][sap_sids][":                  "sap_sids", // obsoleted, backward compatible
+	"system_profile][sap_sids][in":                "sap_sids", // obsoleted, backward compatible
+	"system_profile][sap_sids][in][":              "sap_sids", // obsoleted, backward compatible
 	"system_profile][ansible":                     "ansible",
 	"system_profile][ansible][controller_version": "ansible->controller_version",
 	"system_profile][mssql":                       "mssql",

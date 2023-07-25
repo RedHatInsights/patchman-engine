@@ -74,7 +74,7 @@ func TestSystemsIDsTagsInvalid(t *testing.T) {
 }
 
 func TestSystemsIDsWorkloads1(t *testing.T) {
-	url := "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][in][]=ABC"
+	url := "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC"
 	output := testSystemsIDs(t, url, 1)
 	assert.Equal(t, 2, len(output.IDs))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.IDs[0])
