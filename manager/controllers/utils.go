@@ -286,9 +286,9 @@ func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) (*gorm.DB
 }
 
 type Tag struct {
-	Namespace *string
-	Key       string
-	Value     *string
+	Namespace *string `json:"namespace,omitempty"`
+	Key       string  `json:"key"`
+	Value     *string `json:"value,omitempty"`
 }
 
 func HasInventoryFilter(filters Filters) bool {
@@ -338,18 +338,8 @@ func (t *Tag) ApplyTag(tx *gorm.DB) *gorm.DB {
 		return tx
 	}
 
-	ns := ""
-	if t.Namespace != nil {
-		ns = fmt.Sprintf(`"namespace": "%s",`, *t.Namespace)
-	}
-
-	v := ""
-	if t.Value != nil {
-		v = fmt.Sprintf(`, "value":"%s"`, *t.Value)
-	}
-
-	query := fmt.Sprintf(`[{%s "key": "%s" %s}]`, ns, t.Key, v)
-	return tx.Where("ih.tags @> ?::jsonb", query)
+	tagStr, _ := json.Marshal([]Tag{*t})
+	return tx.Where("ih.tags @> ?::jsonb", tagStr)
 }
 
 func ParseInventoryFilters(c *gin.Context, opts ListOpts) (Filters, Filters, error) {
@@ -472,7 +462,8 @@ func buildSystemProfileQuery(tx *gorm.DB, key string, values []string) *gorm.DB 
 	switch key {
 	case "sap_sids":
 		cmp = "::jsonb @> ?::jsonb"
-		val = fmt.Sprintf(`["%s"]`, strings.Join(values, `","`))
+		bval, _ := json.Marshal(values)
+		val = string(bval)
 	default:
 		cmp = "::text = ?"
 		val = values[0]
