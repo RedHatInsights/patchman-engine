@@ -87,9 +87,11 @@ func SystemPackagesExportHandler(c *gin.Context) {
 	OutputExportData(c, data)
 }
 
-func findLatestEVRA(pkg SystemPackageDBLoad) (installable string, applicable string) {
-	installable = pkg.SystemPackagesAttrsV3.EVRA
-	applicable = pkg.SystemPackagesAttrsV3.EVRA
+func findLatestEVRA(pkg SystemPackageDBLoad) (installable models.PackageUpdate, applicable models.PackageUpdate) {
+	installable = models.PackageUpdate{
+		EVRA: pkg.EVRA,
+	}
+	applicable = installable
 	if pkg.Updates == nil {
 		return
 	}
@@ -99,10 +101,10 @@ func findLatestEVRA(pkg SystemPackageDBLoad) (installable string, applicable str
 	}
 	nUpdates := len(updates)
 	if nUpdates > 0 {
-		applicable = updates[nUpdates-1].EVRA
+		applicable = updates[nUpdates-1]
 		for i := nUpdates - 1; i >= 0; i-- {
 			if updates[i].Status == "Installable" {
-				installable = updates[i].EVRA
+				installable = updates[i]
 				break
 			}
 		}
@@ -114,7 +116,8 @@ func buildSystemPackageInlineV2(pkgs []SystemPackageDBLoad) []SystemPackageInlin
 	data := make([]SystemPackageInlineV2, len(pkgs))
 	for i, v := range pkgs {
 		data[i].SystemPackagesAttrsCommon = v.SystemPackagesAttrsCommon
-		data[i].LatestEVRA, _ = findLatestEVRA(v)
+		installable, _ := findLatestEVRA(v)
+		data[i].LatestEVRA = installable.EVRA
 	}
 	return data
 }
@@ -123,7 +126,9 @@ func buildSystemPackageInlineV3(pkgs []SystemPackageDBLoad) []SystemPackageInlin
 	data := make([]SystemPackageInlineV3, len(pkgs))
 	for i, v := range pkgs {
 		data[i].SystemPackagesAttrsV3 = v.SystemPackagesAttrsV3
-		data[i].LatestInstallable, data[i].LatestApplicable = findLatestEVRA(v)
+		latestInstallable, latestApplicable := findLatestEVRA(v)
+		data[i].LatestInstallable = latestInstallable.EVRA
+		data[i].LatestApplicable = latestApplicable.EVRA
 	}
 	return data
 }

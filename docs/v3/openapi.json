@@ -7116,9 +7116,6 @@
             "models.PackageUpdate": {
                 "type": "object",
                 "properties": {
-                    "advisory": {
-                        "type": "string"
-                    },
                     "evra": {
                         "type": "string"
                     },

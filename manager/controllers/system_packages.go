@@ -5,7 +5,6 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -177,8 +176,13 @@ func buildSystemPackageData(loaded []SystemPackageDBLoad) (int, []SystemPackageD
 		if sp.Updates == nil {
 			continue
 		}
-		if err := json.Unmarshal(sp.Updates, &data[i].Updates); err != nil {
-			panic(err)
+		// keep only latest installable and applicable
+		installable, applicable := findLatestEVRA(sp)
+		if installable.EVRA != sp.EVRA {
+			data[i].Updates = append(data[i].Updates, installable)
+		}
+		if applicable.EVRA != sp.EVRA {
+			data[i].Updates = append(data[i].Updates, applicable)
 		}
 	}
 	return total, data
