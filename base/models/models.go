@@ -126,7 +126,7 @@ func (SystemPackage) TableName() string {
 
 type PackageUpdate struct {
 	EVRA     string `json:"evra"`
-	Advisory string `json:"advisory"`
+	Advisory string `json:"-"` // don't show it in API, we can probably remove it completely later
 	Status   string `json:"status"`
 }
 
