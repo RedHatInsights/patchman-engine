@@ -142,7 +142,7 @@ INSERT INTO strings(id, value) VALUES
 INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_id, synced) VALUES
 (1, 101, '5.6.13-200.fc31.x86_64', '11', '1', 1, true), -- kernel
 (2, 102, '76.0.1-1.fc31.x86_64', '22', '2', 1, true), -- firefox
-(3, 103, '4.4.19-8.el8_0.x86_64', '33', '3', 3, true), -- bas
+(3, 103, '4.4.19-8.el8_0.x86_64', '33', '3', 3, true), -- bash
 (4, 104, '7.61.1-8.el8.x86_64', '44', '4', 4, true), -- curl
 (5, 105, '1.30-4.el8.x86_64', '55', '5', 5, true), -- tar
 (6, 106, '239-13.el8_0.5.x86_64', '66', '6', 6, true), -- systemd
@@ -154,13 +154,13 @@ INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_
 (12, 102, '76.0.1-2.fc31.x86_64', '22', '2', null, true); -- firefox
 
 INSERT INTO system_package (rh_account_id, system_id, package_id, name_id, update_data) VALUES
-(3, 12, 1, 101, '[{"evra": "5.10.13-200.fc31.x86_64", "advisory": "RH-100", "status": "Installable"}]'),
-(3, 12, 2, 102, '[{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1", "status": "Installable"}, {"evra": "76.0.1-1.fc31.x86_64", "advisory": "RH-2", "status": "Installable"}]'),
+(3, 12, 1, 101, '[{"evra": "5.10.13-201.fc31.x86_64", "advisory": "RH-100", "status": "Installable"}]'),
+(3, 12, 2, 102, '[{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1", "status": "Installable"}, {"evra": "76.0.1-2.fc31.x86_64", "advisory": "RH-2", "status": "Installable"}]'),
 (3, 13, 1, 101, null),
-(3, 13, 2, 102, '[{"evra": "76.0.1-1.fc31.x86_64", "advisory": "RH-2", "status": "Installable"},{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1", "status": "Applicable"}]'),
+(3, 13, 2, 102, '[{"evra": "76.0.1-2.fc31.x86_64", "advisory": "RH-2", "status": "Installable"},{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1", "status": "Applicable"}]'),
 (3, 13, 3, 103, null),
 (3, 13, 4, 104, null),
-(3, 16, 1, 101, '[{"evra": "5.10.13-200.fc31.x86_64", "advisory": "RH-100", "status": "Installable"}]');
+(3, 16, 1, 101, '[{"evra": "5.10.13-201.fc31.x86_64", "advisory": "RH-100", "status": "Installable"}]');
 
 INSERT INTO timestamp_kv (name, value) VALUES
 ('last_eval_repo_based', '2018-04-05T01:23:45+02:00');
