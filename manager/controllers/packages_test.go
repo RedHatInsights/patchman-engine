@@ -95,8 +95,8 @@ func TestPackageTagsInMetadata(t *testing.T) {
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	testMap := map[string]FilterData{
-		"ns1/k1": {"eq", []string{"val1"}},
-		"ns1/k3": {"eq", []string{"val4"}},
+		"ns1/k1": {Operator: "eq", Values: []string{"val1"}},
+		"ns1/k3": {Operator: "eq", Values: []string{"val4"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
