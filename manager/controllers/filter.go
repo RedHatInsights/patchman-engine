@@ -151,6 +151,9 @@ func (t Filters) ToQueryParams() string {
 
 func (t Filters) Apply(tx *gorm.DB, fields database.AttrMap) (*gorm.DB, error) {
 	for name, f := range t {
+		if f.Type != ColumnFilter {
+			continue
+		}
 		query, args, err := f.ToWhere(name, fields)
 		if err != nil {
 			return nil, err

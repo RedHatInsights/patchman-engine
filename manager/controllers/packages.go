@@ -161,7 +161,7 @@ func PackagesListHandler(c *gin.Context) {
 	if err != nil {
 		return
 	} // Error handled in method itself
-	query, meta, params, err := ListCommon(query, c, filters, filters, PackagesOpts)
+	query, meta, params, err := ListCommon(query, c, filters, PackagesOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself

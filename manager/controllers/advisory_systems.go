@@ -67,7 +67,7 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error
 		return nil, nil, nil, err
 	} // Error handled in method itself
 	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
-	query, meta, params, err := ListCommon(query, c, filters, inventoryFilters, opts)
+	query, meta, params, err := ListCommon(query, c, filters, opts)
 	// Error handled in method itself
 	return query, meta, params, err
 }
