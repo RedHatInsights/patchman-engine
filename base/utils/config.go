@@ -29,6 +29,7 @@ type Config struct {
 	DBReadReplicaHost        string
 	DBReadReplicaPort        int
 	DBReadReplicaEnabled     bool
+	DBWorkMem                int
 
 	// API
 	PublicPort      int
@@ -111,6 +112,7 @@ func initDBFromEnv() {
 		Cfg.DBReadReplicaHost = Getenv("DB_HOST_READ_REPLICA", "")
 		Cfg.DBReadReplicaPort = GetIntEnvOrDefault("DB_PORT_READ_REPLICA", 0)
 	}
+	Cfg.DBWorkMem = GetIntEnvOrDefault("DB_WORK_MEM", 4096) // 4MB is DB default
 }
 
 func initKafkaFromEnv() {

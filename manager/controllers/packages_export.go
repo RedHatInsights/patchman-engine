@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/utils"
 	"app/manager/middlewares"
 
 	"github.com/gin-gonic/gin"
@@ -32,7 +33,12 @@ func PackagesExportHandler(c *gin.Context) {
 	}
 
 	db := middlewares.DBFromContext(c)
-	query := packagesQuery(db, inventoryfilters, account, groups)
+	useCache := shouldUseCache(db, account, inventoryfilters, groups)
+	if !useCache {
+		db.Exec("SET work_mem TO ?", utils.Cfg.DBWorkMem)
+		defer db.Exec("RESET work_mem")
+	}
+	query := packagesQuery(db, inventoryfilters, account, groups, useCache)
 	if err != nil {
 		return
 	}
