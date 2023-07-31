@@ -128,7 +128,7 @@ func baselineSystemsCommon(c *gin.Context, account, apiver int, groups map[strin
 		// Error handled in method itself
 		return nil, nil, nil, err
 	}
-	query, meta, params, err := ListCommon(query, c, filters, inventoryFilters, BaselineSystemOpts)
+	query, meta, params, err := ListCommon(query, c, filters, BaselineSystemOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return nil, nil, nil, err

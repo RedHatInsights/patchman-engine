@@ -192,7 +192,7 @@ func extractTagsQueryString(c *gin.Context) string {
 }
 
 // nolint: funlen, lll
-func ListCommon(tx *gorm.DB, c *gin.Context, filters Filters, tagFilter Filters, opts ListOpts, params ...string) (
+func ListCommon(tx *gorm.DB, c *gin.Context, filters Filters, opts ListOpts, params ...string) (
 	*gorm.DB, *ListMeta, []string, error) {
 	hasSystems := true
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
@@ -237,7 +237,6 @@ func ListCommon(tx *gorm.DB, c *gin.Context, filters Filters, tagFilter Filters,
 	tagQ := extractTagsQueryString(c)
 
 	params = append(params, filters.ToQueryParams(), sortQ, tagQ, searchQ)
-	mergeMaps(meta.Filter, tagFilter)
 
 	if limit != -1 {
 		tx = tx.Limit(limit)
@@ -695,12 +694,6 @@ func isFilterInURLValid(c *gin.Context) bool {
 		return false
 	}
 	return true
-}
-
-func mergeMaps(first map[string]FilterData, second map[string]FilterData) {
-	for key, val := range second {
-		first[key] = val
-	}
 }
 
 // Pagination query for handlers where ListCommon is not used
