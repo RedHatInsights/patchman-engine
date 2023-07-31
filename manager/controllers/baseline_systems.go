@@ -108,7 +108,7 @@ func queryBaselineSystems(c *gin.Context, account, apiver int, groups map[string
 	}
 
 	query := buildQueryBaselineSystems(db, account, groups, id, apiver)
-	_, inventoryFilters, err := ParseInventoryFilters(c, BaselineSystemOpts)
+	filters, err := ParseAllFilters(c, BaselineSystemOpts)
 	if err != nil {
 		return nil, err
 	} // Error handled in method itself
@@ -123,7 +123,7 @@ func baselineSystemsCommon(c *gin.Context, account, apiver int, groups map[strin
 		return nil, nil, nil, err
 	} // Error handled in method itself
 
-	filters, inventoryFilters, err := ParseInventoryFilters(c, PackageSystemsOpts)
+	filters, err := ParseAllFilters(c, PackageSystemsOpts)
 	if err != nil {
 		// Error handled in method itself
 		return nil, nil, nil, err

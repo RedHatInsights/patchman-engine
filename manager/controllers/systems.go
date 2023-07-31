@@ -172,7 +172,7 @@ func systemsCommon(c *gin.Context, apiver int) (*gorm.DB, *ListMeta, []string, e
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
 	query := querySystems(db, account, apiver, groups)
-	filters, inventoryFilters, err := ParseInventoryFilters(c, SystemOpts)
+	filters, err := ParseAllFilters(c, SystemOpts)
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled method itself

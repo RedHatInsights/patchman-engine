@@ -62,7 +62,7 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error
 	if apiver < 3 {
 		opts = AdvisorySystemOpts
 	}
-	filters, inventoryFilters, err := ParseInventoryFilters(c, opts)
+	filters, err := ParseAllFilters(c, opts)
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled in method itself

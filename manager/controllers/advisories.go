@@ -122,7 +122,7 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(middlewares.KeyAccount)
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	var query *gorm.DB
-	filters, inventoryFilters, err := ParseInventoryFilters(c, AdvisoriesOpts)
+	filters, err := ParseAllFilters(c, AdvisoriesOpts)
 	if err != nil {
 		return nil, nil, nil, err
 	}

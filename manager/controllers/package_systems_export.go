@@ -54,7 +54,7 @@ func PackageSystemsExportHandler(c *gin.Context) {
 	}
 
 	query := packageSystemsQuery(db, account, groups, packageName, packageIDs)
-	_, inventoryFilters, err := ParseInventoryFilters(c, PackageSystemsOpts)
+	filters, err := ParseAllFilters(c, PackageSystemsOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself

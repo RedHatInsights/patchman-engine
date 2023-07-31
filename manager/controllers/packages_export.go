@@ -27,7 +27,7 @@ func PackagesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
-	_, inventoryfilters, err := ParseInventoryFilters(c, PackagesOpts)
+	filters, err := ParseAllFilters(c, PackagesOpts)
 	if err != nil {
 		return
 	}
