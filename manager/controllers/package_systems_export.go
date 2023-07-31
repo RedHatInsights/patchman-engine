@@ -58,7 +58,7 @@ func PackageSystemsExportHandler(c *gin.Context) {
 	if err != nil {
 		return
 	} // Error handled in method itself
-	query, _ = ApplyInventoryFilter(inventoryFilters, query, "sp.inventory_id")
+	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
 	query, err = ExportListCommon(query, c, PackageSystemsOpts)
 	if err != nil {
 		return
