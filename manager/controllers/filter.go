@@ -9,15 +9,24 @@ import (
 	"gorm.io/gorm"
 )
 
+type FilterType int8
+
+const (
+	ColumnFilter FilterType = iota
+	InventoryFilter
+	TagFilter
+)
+
 type FilterData struct {
-	Operator string   `json:"op"`
-	Values   []string `json:"values"`
+	Type     FilterType `json:"-"`
+	Operator string     `json:"op"`
+	Values   []string   `json:"values"`
 }
 
 type Filters map[string]FilterData
 
 // Parse a filter from field name and field value specification
-func ParseFilterValue(val string) FilterData {
+func ParseFilterValue(ftype FilterType, val string) FilterData {
 	idx := strings.Index(val, ":")
 
 	var operator string
@@ -34,6 +43,7 @@ func ParseFilterValue(val string) FilterData {
 	values := strings.Split(value, ",")
 
 	return FilterData{
+		Type:     ftype,
 		Operator: operator,
 		Values:   values,
 	}
@@ -150,8 +160,8 @@ func (t Filters) Apply(tx *gorm.DB, fields database.AttrMap) (*gorm.DB, error) {
 	return tx, nil
 }
 
-func (t Filters) Update(key string, value string) {
-	data := ParseFilterValue(value)
+func (t Filters) Update(ftype FilterType, key string, value string) {
+	data := ParseFilterValue(ftype, value)
 	if fdata, ok := t[key]; ok {
 		data.Values = append(data.Values, fdata.Values...)
 	}
