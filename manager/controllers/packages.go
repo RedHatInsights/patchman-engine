@@ -145,7 +145,7 @@ func PackagesListHandler(c *gin.Context) {
 	apiver := c.GetInt(middlewares.KeyApiver)
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 
-	filters, inventoryFilters, err := ParseInventoryFilters(c, PackagesOpts)
+	filters, err := ParseAllFilters(c, PackagesOpts)
 	if err != nil {
 		return
 	}

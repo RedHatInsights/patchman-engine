@@ -117,7 +117,7 @@ func SystemPackagesHandler(c *gin.Context) {
 		LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
 		return
 	}
-	filters, inventoryFilters, err := ParseInventoryFilters(c, PackageSystemsOpts)
+	filters, err := ParseAllFilters(c, PackageSystemsOpts)
 	if err != nil {
 		// Error handled in method itself
 		return

@@ -30,7 +30,7 @@ import (
 func AdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
-	_, inventoryFilters, err := ParseInventoryFilters(c, SystemOpts)
+	filters, err := ParseAllFilters(c, SystemOpts)
 	if err != nil {
 		return
 	}
