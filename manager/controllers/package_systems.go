@@ -109,7 +109,7 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled in method itself
-	query, _ = ApplyInventoryFilter(inventoryFilters, query, "sp.inventory_id")
+	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
 	query, meta, params, err := ListCommon(query, c, filters, inventoryFilters, PackageSystemsOpts)
 	// Error handled in method itself
 	return query, meta, params, err

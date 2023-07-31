@@ -420,7 +420,7 @@ func ApplyInventoryFilter(filters map[string]FilterData, tx *gorm.DB, systemIDEx
 func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, bool) {
 	applied := false
 	for key, val := range filters {
-		if strings.Contains(key, "/") {
+		if val.Type == TagFilter {
 			tagString := key + "=" + strings.Join(val.Values, ",")
 			tag, _ := ParseTag(tagString)
 			tx = tag.ApplyTag(tx)

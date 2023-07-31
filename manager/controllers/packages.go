@@ -151,17 +151,17 @@ func PackagesListHandler(c *gin.Context) {
 	}
 
 	db := middlewares.DBFromContext(c)
-	useCache := shouldUseCache(db, account, inventoryFilters, groups)
+	useCache := shouldUseCache(db, account, filters, groups)
 	if !useCache {
 		db.Exec("SET work_mem TO '?'", utils.Cfg.DBWorkMem)
 		defer db.Exec("RESET work_mem")
 	}
 
-	query := packagesQuery(db, inventoryFilters, account, groups, useCache)
+	query := packagesQuery(db, filters, account, groups, useCache)
 	if err != nil {
 		return
 	} // Error handled in method itself
-	query, meta, params, err := ListCommon(query, c, filters, inventoryFilters, PackagesOpts)
+	query, meta, params, err := ListCommon(query, c, filters, filters, PackagesOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -219,11 +219,11 @@ func packages2PackagesV2(data []PackageItem) []PackageItemV2 {
 }
 
 // use cache only when tag filter is not used, there are no inventory groups and cache is valid
-func shouldUseCache(db *gorm.DB, acc int, inventoryFilters map[string]FilterData, groups map[string]string) bool {
+func shouldUseCache(db *gorm.DB, acc int, filters map[string]FilterData, groups map[string]string) bool {
 	if !enabledPackageCache {
 		return false
 	}
-	if len(inventoryFilters) != 0 || len(groups[rbac.KeyGrouped]) != 0 {
+	if HasInventoryFilter(filters) || len(groups[rbac.KeyGrouped]) != 0 {
 		return false
 	}
 

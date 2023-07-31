@@ -112,7 +112,7 @@ func queryBaselineSystems(c *gin.Context, account, apiver int, groups map[string
 	if err != nil {
 		return nil, err
 	} // Error handled in method itself
-	query, _ = ApplyInventoryFilter(inventoryFilters, query, "sp.inventory_id")
+	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
 	return query, nil
 }
 

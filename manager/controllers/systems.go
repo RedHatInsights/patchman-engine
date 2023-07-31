@@ -176,7 +176,7 @@ func systemsCommon(c *gin.Context, apiver int) (*gorm.DB, *ListMeta, []string, e
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled method itself
-	query, _ = ApplyInventoryFilter(inventoryFilters, query, "sp.inventory_id")
+	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
 	query, meta, params, err := ListCommon(query, c, filters, inventoryFilters, SystemOpts)
 	// Error handled method itself
 	return query, meta, params, err

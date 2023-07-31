@@ -49,7 +49,7 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	}
 	if !validCache || HasInventoryFilter(filters) || len(groups[rbac.KeyGrouped]) != 0 {
 		var err error
-		query = buildQueryAdvisoriesTagged(db, inventoryFilters, account, groups)
+		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
 		if err != nil {
 			return
 		} // Error handled in method itself

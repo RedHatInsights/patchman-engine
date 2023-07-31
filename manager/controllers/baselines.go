@@ -90,7 +90,7 @@ func BaselinesListHandler(c *gin.Context) {
 	}
 
 	db := middlewares.DBFromContext(c)
-	query := buildQueryBaselines(db, inventoryFilters, account, groups)
+	query := buildQueryBaselines(db, filters, account, groups)
 	if err != nil {
 		return
 	} // Error handled in method itself
