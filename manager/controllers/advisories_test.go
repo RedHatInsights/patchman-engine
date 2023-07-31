@@ -308,9 +308,9 @@ func TestAdvisoryTagsInMetadata(t *testing.T) {
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	testMap := map[string]FilterData{
-		"ns1/k1":             {"eq", []string{"val1"}},
-		"ns1/k3":             {"eq", []string{"val4"}},
-		"applicable_systems": {"gt", []string{"0"}},
+		"ns1/k1":             {Operator: "eq", Values: []string{"val1"}},
+		"ns1/k3":             {Operator: "eq", Values: []string{"val4"}},
+		"applicable_systems": {Operator: "gt", Values: []string{"0"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }

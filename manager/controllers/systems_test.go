@@ -254,9 +254,9 @@ func TestSystemsTagsInMetadata(t *testing.T) {
 	ParseResponseBody(t, w.Body.Bytes(), &output)
 
 	testMap := map[string]FilterData{
-		"ns1/k1": {"eq", []string{"val1"}},
-		"ns1/k3": {"eq", []string{"val4"}},
-		"stale":  {"eq", []string{"false"}},
+		"ns1/k1": {Operator: "eq", Values: []string{"val1"}},
+		"ns1/k3": {Operator: "eq", Values: []string{"val4"}},
+		"stale":  {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -265,8 +265,8 @@ func TestSAPSystemMeta1(t *testing.T) {
 	url := "/?filter[system_profile][sap_sids]=ABC"
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
-		"sap_sids": {"eq", []string{"ABC"}},
-		"stale":    {"eq", []string{"false"}},
+		"sap_sids": {Operator: "eq", Values: []string{"ABC"}},
+		"stale":    {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -275,8 +275,8 @@ func TestSAPSystemMeta2(t *testing.T) {
 	url := "/?filter[system_profile][sap_sids]=ABC"
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
-		"sap_sids": {"eq", []string{"ABC"}},
-		"stale":    {"eq", []string{"false"}},
+		"sap_sids": {Operator: "eq", Values: []string{"ABC"}},
+		"stale":    {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -285,9 +285,9 @@ func TestSAPSystemMeta3(t *testing.T) {
 	url := sapABCFilter
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
-		"sap_system": {"eq", []string{"true"}},
-		"sap_sids":   {"eq", []string{"ABC"}},
-		"stale":      {"eq", []string{"false"}},
+		"sap_system": {Operator: "eq", Values: []string{"true"}},
+		"sap_sids":   {Operator: "eq", Values: []string{"ABC"}},
+		"stale":      {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -296,8 +296,8 @@ func TestSAPSystemMeta4(t *testing.T) {
 	url := "/?filter[system_profile][sap_sids]=ABC&filter[system_profile][sap_sids]=GHI"
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
-		"sap_sids": {"eq", []string{"GHI", "ABC"}},
-		"stale":    {"eq", []string{"false"}},
+		"sap_sids": {Operator: "eq", Values: []string{"GHI", "ABC"}},
+		"stale":    {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -306,8 +306,8 @@ func TestAAPSystemMeta(t *testing.T) {
 	url := `/?filter[system_profile][ansible][controller_version]=1.0`
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
-		"ansible->controller_version": {"eq", []string{"1.0"}},
-		"stale":                       {"eq", []string{"false"}},
+		"ansible->controller_version": {Operator: "eq", Values: []string{"1.0"}},
+		"stale":                       {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -316,8 +316,8 @@ func TestAAPSystemMeta2(t *testing.T) {
 	url := `/?filter[system_profile][ansible]=not_nil`
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
-		"ansible": {"eq", []string{"not_nil"}},
-		"stale":   {"eq", []string{"false"}},
+		"ansible": {Operator: "eq", Values: []string{"not_nil"}},
+		"stale":   {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -337,8 +337,8 @@ func TestMSSQLSystemMeta(t *testing.T) {
 	url := `/?filter[system_profile][mssql][version]=15.3.0`
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
-		"mssql->version": {"eq", []string{"15.3.0"}},
-		"stale":          {"eq", []string{"false"}},
+		"mssql->version": {Operator: "eq", Values: []string{"15.3.0"}},
+		"stale":          {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -347,8 +347,8 @@ func TestMSSQLSystemMeta2(t *testing.T) {
 	url := `/?filter[system_profile][mssql]=not_nil`
 	output := testSystems(t, url, 1)
 	testMap := map[string]FilterData{
-		"mssql": {"eq", []string{"not_nil"}},
-		"stale": {"eq", []string{"false"}},
+		"mssql": {Operator: "eq", Values: []string{"not_nil"}},
+		"stale": {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
