@@ -293,7 +293,12 @@ func HasInventoryFilter(filters Filters) bool {
 	if !enableCyndiTags {
 		return false
 	}
-	return len(filters) > 0
+	for _, data := range filters {
+		if data.Type == InventoryFilter {
+			return true
+		}
+	}
+	return false
 }
 
 func trimQuotes(s string) string {

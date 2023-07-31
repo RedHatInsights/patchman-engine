@@ -47,7 +47,7 @@ func AdvisoriesExportHandler(c *gin.Context) {
 			validCache = false
 		}
 	}
-	if !validCache || HasInventoryFilter(inventoryFilters) || len(groups[rbac.KeyGrouped]) != 0 {
+	if !validCache || HasInventoryFilter(filters) || len(groups[rbac.KeyGrouped]) != 0 {
 		var err error
 		query = buildQueryAdvisoriesTagged(db, inventoryFilters, account, groups)
 		if err != nil {
