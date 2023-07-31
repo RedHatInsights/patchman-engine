@@ -84,14 +84,9 @@ type queryItem struct {
 
 var queryItemSelect = database.MustGetSelect(&queryItem{})
 
-func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, groups map[string]string) *gorm.DB {
-	var validCache bool
-	err := db.Table("rh_account").
-		Select("valid_package_cache").
-		Where("id = ?", acc).
-		Scan(&validCache).Error
-	if err == nil && validCache && len(filters) == 0 && enabledPackageCache && len(groups[rbac.KeyGrouped]) == 0 {
-		// use cache only when tag filter is not used
+// nolint: lll
+func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, groups map[string]string, useCache bool) *gorm.DB {
+	if useCache {
 		q := db.Table("package_account_data res").
 			Select(PackagesSelect).
 			Joins("JOIN package_name pn ON res.package_name_id = pn.id").
@@ -156,7 +151,13 @@ func PackagesListHandler(c *gin.Context) {
 	}
 
 	db := middlewares.DBFromContext(c)
-	query := packagesQuery(db, inventoryFilters, account, groups)
+	useCache := shouldUseCache(db, account, inventoryFilters, groups)
+	if !useCache {
+		db.Exec("SET work_mem TO ?", utils.Cfg.DBWorkMem)
+		defer db.Exec("RESET work_mem")
+	}
+
+	query := packagesQuery(db, inventoryFilters, account, groups, useCache)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -215,4 +216,21 @@ func packages2PackagesV2(data []PackageItem) []PackageItemV2 {
 		}
 	}
 	return v2
+}
+
+// use cache only when tag filter is not used, there are no inventory groups and cache is valid
+func shouldUseCache(db *gorm.DB, acc int, inventoryFilters map[string]FilterData, groups map[string]string) bool {
+	if !enabledPackageCache {
+		return false
+	}
+	if len(inventoryFilters) != 0 || len(groups[rbac.KeyGrouped]) != 0 {
+		return false
+	}
+
+	var validCache bool
+	err := db.Table("rh_account").
+		Select("valid_package_cache").
+		Where("id = ?", acc).
+		Scan(&validCache).Error
+	return err == nil && validCache
 }

@@ -75,6 +75,9 @@ func getCounts(pkgSysCounts *[]models.PackageAccountData, accID *int) error {
 	defer utils.ObserveSecondsSince(time.Now(), packageRefreshPartDuration.WithLabelValues("get-counts"))
 	utils.LogDebug("Getting counts of installable and applicable systems")
 	err := tasks.WithReadReplicaTx(func(tx *gorm.DB) error {
+		tx.Exec("SET work_mem TO ?", utils.Cfg.DBWorkMem)
+		defer tx.Exec("RESET work_mem")
+
 		q := tx.Table("system_platform sp").
 			Select(`
 				sp.rh_account_id rh_account_id,

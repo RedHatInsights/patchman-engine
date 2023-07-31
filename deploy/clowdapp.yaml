@@ -105,6 +105,7 @@ objects:
         - {name: DB_PORT_READ_REPLICA, valueFrom: {secretKeyRef: {key: db.port,
                                                                   name: patchman-db-readonly}}}
         - {name: DB_READ_REPLICA_ENABLED, value: '${DB_READ_REPLICA_ENABLED}'}
+        - {name: DB_WORK_MEM, value: '${DB_WORK_MEM}'}
         - {name: ENABLE_CYNDI_TAGS, value: '${ENABLE_CYNDI_TAGS}'}
         - {name: ENABLE_RBAC, value: '${ENABLE_RBAC}'}
         - {name: DISABLE_CACHE_COUNTS, value: '${DISABLE_CACHE_COUNTS}'}
@@ -416,6 +417,7 @@ objects:
         - {name: DB_PORT_READ_REPLICA, valueFrom: {secretKeyRef: {key: db.port,
                                                                   name: patchman-db-readonly}}}
         - {name: DB_READ_REPLICA_ENABLED, value: '${DB_READ_REPLICA_ENABLED_JOBS}'}
+        - {name: DB_WORK_MEM, value: '${DB_WORK_MEM}'}
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
 
     - name: advisory-refresh
@@ -718,6 +720,7 @@ parameters:
 - {name: MSG_BATCH_SIZE, value: '4000'} # BatchSize for PlatformEvent message
 - {name: ENABLE_PAYLOAD_TRACKER, value: 'true'} # Send status messages to payload tracker
 - {name: SSL_CERT_DIR, value: '/etc/ssl/certs:/etc/pki/tls/certs:/system/etc/security/cacerts:/cdapp/certs'}
+- {name: DB_WORK_MEM, value: '512000'} # How much memory can query use (used for packages queries) in kB - 500MB, postgres default is 4MB
 
 # Turnpike
 - {name: IMAGE_TAG_ADMIN, value: v3.4.12}
