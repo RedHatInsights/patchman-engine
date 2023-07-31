@@ -116,11 +116,8 @@ var nestedFilters = NestedFilterMap{
 	"system_profile][mssql][version":              "mssql->version",
 }
 
-func ParseFilters(c *gin.Context, allowedFields database.AttrMap,
-	defaultFilters map[string]FilterData, apiver int) (Filters, Filters, error) {
-	filters := Filters{}
-	inventoryFilters := Filters{}
-
+func ParseFilters(c *gin.Context, filters Filters, allowedFields database.AttrMap,
+	defaultFilters map[string]FilterData, apiver int) error {
 	params := c.Request.URL.Query() // map[string][]string
 	for name, values := range params {
 		if strings.HasPrefix(name, "filter[") {
@@ -128,14 +125,14 @@ func ParseFilters(c *gin.Context, allowedFields database.AttrMap,
 			for _, v := range values {
 				if _, ok := nestedFilters[subject]; ok {
 					nested := nestedFilters[subject]
-					inventoryFilters.Update(nested, v)
+					filters.Update(InventoryFilter, nested, v)
 					continue
 				}
 				if _, ok := allowedFields[subject]; !ok {
-					return Filters{}, Filters{}, errors.Errorf(InvalidFilter, subject)
+					return errors.Errorf(InvalidFilter, subject)
 				}
 
-				filters.Update(subject, v)
+				filters.Update(ColumnFilter, subject, v)
 			}
 		}
 	}
@@ -156,7 +153,7 @@ func ParseFilters(c *gin.Context, allowedFields database.AttrMap,
 		}
 	}
 
-	return filters, inventoryFilters, nil
+	return nil
 }
 
 type ListOpts struct {
@@ -169,7 +166,8 @@ type ListOpts struct {
 
 func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, error) {
 	apiver := c.GetInt(middlewares.KeyApiver)
-	filters, _, err := ParseFilters(c, opts.Fields, opts.DefaultFilters, apiver)
+	filters := Filters{}
+	err := ParseFilters(c, filters, opts.Fields, opts.DefaultFilters, apiver)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
 		return nil, errors.Wrap(err, "filters parsing failed")
@@ -342,27 +340,26 @@ func (t *Tag) ApplyTag(tx *gorm.DB) *gorm.DB {
 	return tx.Where("ih.tags @> ?::jsonb", tagStr)
 }
 
-func ParseInventoryFilters(c *gin.Context, opts ListOpts) (Filters, Filters, error) {
-	tagFilters := Filters{}
+func ParseAllFilters(c *gin.Context, opts ListOpts) (Filters, error) {
+	filters := Filters{}
 
-	err := parseTagsFromCtx(c, tagFilters)
+	err := parseTags(c, filters)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	apiver := c.GetInt(middlewares.KeyApiver)
-	filters, inventoryFilters, err := ParseFilters(c, opts.Fields, opts.DefaultFilters, apiver)
+	err = ParseFilters(c, filters, opts.Fields, opts.DefaultFilters, apiver)
 	if err != nil {
 		err = errors.Wrap(err, "cannot parse inventory filters")
 		LogAndRespBadRequest(c, err, err.Error())
-		return nil, nil, err
+		return nil, err
 	}
 
-	mergeMaps(tagFilters, inventoryFilters)
-	return filters, tagFilters, nil
+	return filters, nil
 }
 
-func parseTagsFromCtx(c *gin.Context, filters Filters) error {
+func parseTags(c *gin.Context, filters Filters) error {
 	tags := c.QueryArray("tags")
 	for _, t := range tags {
 		tag, err := ParseTag(t)
@@ -386,6 +383,7 @@ func parseTagsFromCtx(c *gin.Context, filters Filters) error {
 			value = strings.Split(val, ",")
 		}
 		filters[key] = FilterData{
+			Type:     TagFilter,
 			Operator: "eq",
 			Values:   value,
 		}
