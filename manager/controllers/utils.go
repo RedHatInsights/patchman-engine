@@ -29,15 +29,6 @@ var tagRegex = regexp.MustCompile(`([^/=]+)/([^/=]+)(=([^/=]+))?`)
 var enableCyndiTags = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_TAGS", false)
 var disableCachedCounts = utils.GetBoolEnvOrDefault("DISABLE_CACHE_COUNTS", false)
 
-var validSystemProfileFilters = map[string]bool{
-	"sap_sids":                    true,
-	"sap_system":                  true,
-	"mssql":                       true,
-	"mssql->version":              true,
-	"ansible":                     true,
-	"ansible->controller_version": true,
-}
-
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	utils.LogError("err", err.Error(), respMsg)
 	c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{Error: respMsg})
@@ -416,37 +407,35 @@ func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, 
 			continue
 		}
 
-		if validSystemProfileFilters[key] {
-			tx = buildSystemProfileQuery(tx, key, val.Values)
-
+		if val.Type == InventoryFilter {
+			tx = buildInventoryQuery(tx, key, val.Values)
 			applied = true
 			continue
-		}
-
-		if strings.Contains(key, "group_name") {
-			groups := []string{}
-			for _, v := range val.Values {
-				name := v
-				group, err := utils.ParseInventoryGroup(nil, &name)
-				if err != nil {
-					// couldn't marshal inventory group to json
-					continue
-				}
-				groups = append(groups, group)
-			}
-			jsonq := fmt.Sprintf("{%s}", strings.Join(groups, ","))
-			tx = tx.Where("ih.groups @> ANY (?::jsonb[])", jsonq)
-			applied = true
 		}
 	}
 	return tx, applied
 }
 
-// Builds system_profile sub query in generic way.
+// Builds inventory sub query in generic way.
 // Example:
 // buildSystemProfileQuery("mssql->version", "1.0")
 // returns "(ih.system_profile -> 'mssql' ->> 'version')::text = 1.0"
-func buildSystemProfileQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
+func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
+	if strings.Contains(key, "group_name") {
+		groups := []string{}
+		for _, v := range values {
+			name := v
+			group, err := utils.ParseInventoryGroup(nil, &name)
+			if err != nil {
+				// couldn't marshal inventory group to json
+				continue
+			}
+			groups = append(groups, group)
+		}
+		jsonq := fmt.Sprintf("{%s}", strings.Join(groups, ","))
+		return tx.Where("ih.groups @> ANY (?::jsonb[])", jsonq)
+	}
+
 	var cmp string
 	var val string
 
