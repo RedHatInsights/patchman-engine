@@ -274,7 +274,7 @@ func TestAdvisoriesTags(t *testing.T) {
 	assert.Equal(t, 8, len(output.Data))
 	assert.Equal(t, 1, output.Data[0].Attributes.InstallableSystems)
 	assert.Equal(t, 2, output.Data[0].Attributes.ApplicableSystems)
-	assert.Equal(t, "/?offset=0&limit=20&filter[applicable_systems]=gt:0&sort=id&tags=ns1/k2=val2", output.Links.First)
+	assert.Equal(t, "/?offset=0&limit=20&tags=ns1/k2=val2&filter[applicable_systems]=gt:0&sort=id", output.Links.First)
 }
 
 func TestListAdvisoriesTagsInvalid(t *testing.T) {
