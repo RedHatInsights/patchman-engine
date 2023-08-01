@@ -96,15 +96,15 @@ type NestedFilterMap map[string]string
 var nestedFilters = NestedFilterMap{
 	"group_name":                                  "group_name",
 	"group_name][in":                              "group_name", // obsoleted, backward compatible
-	"system_profile][sap_system":                  "sap_system",
-	"system_profile][sap_sids":                    "sap_sids",
-	"system_profile][sap_sids][":                  "sap_sids", // obsoleted, backward compatible
-	"system_profile][sap_sids][in":                "sap_sids", // obsoleted, backward compatible
-	"system_profile][sap_sids][in][":              "sap_sids", // obsoleted, backward compatible
-	"system_profile][ansible":                     "ansible",
-	"system_profile][ansible][controller_version": "ansible->controller_version",
-	"system_profile][mssql":                       "mssql",
-	"system_profile][mssql][version":              "mssql->version",
+	"system_profile][sap_system":                  "system_profile][sap_system",
+	"system_profile][sap_sids":                    "system_profile][sap_sids",
+	"system_profile][sap_sids][":                  "system_profile][sap_sids", // obsoleted, backward compatible
+	"system_profile][sap_sids][in":                "system_profile][sap_sids", // obsoleted, backward compatible
+	"system_profile][sap_sids][in][":              "system_profile][sap_sids", // obsoleted, backward compatible
+	"system_profile][ansible":                     "system_profile][ansible",
+	"system_profile][ansible][controller_version": "system_profile][ansible][controller_version",
+	"system_profile][mssql":                       "system_profile][mssql",
+	"system_profile][mssql][version":              "system_profile][mssql][version",
 }
 
 func ParseFilters(c *gin.Context, filters Filters, allowedFields database.AttrMap,
@@ -437,31 +437,27 @@ func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
 	}
 
 	var cmp string
-	var val string
+	val := values[0]
 
-	switch key {
-	case "sap_sids":
+	switch {
+	case val == "not_nil":
+		cmp = " is not null"
+	case strings.Contains(key, "[sap_sids"):
 		cmp = "::jsonb @> ?::jsonb"
 		bval, _ := json.Marshal(values)
 		val = string(bval)
 	default:
 		cmp = "::text = ?"
-		val = values[0]
 	}
 
-	if val == "not_nil" {
-		cmp = " is not null"
+	sbkeys := strings.Split(key, "][")
+	subq := fmt.Sprintf("(ih.%s", sbkeys[0])
+	nSbkeys := len(sbkeys)
+	if nSbkeys > 2 {
+		subq = fmt.Sprintf("%s -> '%s'", subq, strings.Join(sbkeys[1:nSbkeys-1], "' -> '"))
 	}
-
-	subq := "(ih.system_profile"
-	sbkeys := strings.Split(key, "->")
-	for i, sbkey := range sbkeys {
-		sbkey = fmt.Sprintf("'%s'", sbkey)
-		if i == len(sbkeys)-1 {
-			subq = fmt.Sprintf("%s ->> %s)", subq, sbkey)
-		} else {
-			subq = fmt.Sprintf("%s -> %s", subq, sbkey)
-		}
+	if nSbkeys > 1 {
+		subq = fmt.Sprintf("%s ->> '%s')", subq, sbkeys[nSbkeys-1])
 	}
 
 	subq = fmt.Sprintf("%s%s", subq, cmp)
