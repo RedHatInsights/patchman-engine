@@ -182,15 +182,6 @@ func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, err
 	return tx, nil
 }
 
-func extractTagsQueryString(c *gin.Context) string {
-	var tagQ string
-	var tags = c.QueryArray("tags")
-	for _, t := range tags {
-		tagQ = fmt.Sprintf("tags=%s&%s", t, tagQ)
-	}
-	return strings.TrimSuffix(tagQ, "&")
-}
-
 // nolint: funlen, lll
 func ListCommon(tx *gorm.DB, c *gin.Context, filters Filters, opts ListOpts, params ...string) (
 	*gorm.DB, *ListMeta, []string, error) {
@@ -234,9 +225,7 @@ func ListCommon(tx *gorm.DB, c *gin.Context, filters Filters, opts ListOpts, par
 		HasSystems: &hasSystems,
 	}
 
-	tagQ := extractTagsQueryString(c)
-
-	params = append(params, filters.ToQueryParams(), sortQ, tagQ, searchQ)
+	params = append(params, filters.ToQueryParams(), sortQ, searchQ)
 
 	if limit != -1 {
 		tx = tx.Limit(limit)

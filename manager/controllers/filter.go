@@ -144,7 +144,11 @@ func (t Filters) ToQueryParams() string {
 	parts := make([]string, 0, len(t))
 	for name, v := range t {
 		values := strings.Join(v.Values, ",")
-		parts = append(parts, fmt.Sprintf("filter[%s]=%s:%s", name, v.Operator, values))
+		if v.Type == TagFilter {
+			parts = append(parts, fmt.Sprintf("tags=%s=%s", name, values))
+		} else {
+			parts = append(parts, fmt.Sprintf("filter[%s]=%s:%s", name, v.Operator, values))
+		}
 	}
 	return strings.Join(parts, "&")
 }
