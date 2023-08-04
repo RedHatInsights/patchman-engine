@@ -6,6 +6,7 @@ create table if not exists _const (
     val int
 );
 
+truncate table _const ;
 insert into _const values           -- counts in prod 2022/02
     ('accounts',   50),             --  50k     -- number of rh_accounts
     ('systems',    7500),           -- 750k     -- number of systems(_platform)
@@ -339,7 +340,7 @@ do $$
     progress int;
     pkgs int;
     accounts int;
-    update_data jsonb := '[{"evra": "5.10.13-200.fc31.x86_64", "advisory": "RH-100"}]'::jsonb;
+    update_data jsonb := '[{"evra": "5.10.13-200.fc31.x86_64", "advisory": "RH-100", "status": "Applicable"}]'::jsonb;
     rnd float;
     rnd1 float;
     rnd2 float;
