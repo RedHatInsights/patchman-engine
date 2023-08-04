@@ -339,7 +339,7 @@ do $$
     progress int;
     pkgs int;
     accounts int;
-    update_data jsonb := '[{"evra": "5.10.13-200.fc31.x86_64", "advisory": "RH-100"}]'::jsonb;
+    update_data jsonb := '[{"evra": "5.10.13-200.fc31.x86_64", "advisory": "RH-100", "status": "Applicable"}]'::jsonb;
     rnd float;
     rnd1 float;
     rnd2 float;
@@ -374,3 +374,17 @@ do $$
   end;
 $$
 ;
+
+-- copy data from old system_package to new
+insert into system_package2 (select rh_account_id, system_id, name_id, package_id, package_id, package_id from system_package);
+
+-- show size of whole system_platform table
+SELECT
+    parent.relname      AS parent,
+    child.relname       AS child,
+    pg_size_pretty(pg_relation_size(child.oid)) as size,
+    pg_size_pretty(sum(pg_relation_size(child.oid))  over (partition by parent.oid)) as total
+FROM pg_inherits
+    JOIN pg_class parent            ON pg_inherits.inhparent = parent.oid
+    JOIN pg_class child             ON pg_inherits.inhrelid   = child.oid
+WHERE parent.relname in ('system_package', 'system_package2');
