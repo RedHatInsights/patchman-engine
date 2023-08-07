@@ -76,9 +76,14 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 		return nil, nil, nil, errors.New("incorrect inventory_id format")
 	}
 
+	filters, err := ParseAllFilters(c, SystemAdvisoriesOpts)
+	if err != nil {
+		return nil, nil, nil, err
+	} // Error handled method itself
+
 	db := middlewares.DBFromContext(c)
 	var exists int64
-	err := db.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid ", inventoryID).
+	err = db.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid ", inventoryID).
 		Count(&exists).Error
 
 	if err != nil {
@@ -92,7 +97,7 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 	}
 
 	query := buildSystemAdvisoriesQuery(db, account, groups, inventoryID)
-	query, meta, params, err := ListCommon(query, c, nil, SystemAdvisoriesOpts)
+	query, meta, params, err := ListCommon(query, c, filters, SystemAdvisoriesOpts)
 	// Error handling and setting of result code & content is done in ListCommon
 	return query, meta, params, err
 }
