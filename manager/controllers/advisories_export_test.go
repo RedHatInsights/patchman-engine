@@ -53,15 +53,18 @@ func TestAdvisoriesExportWrongFormat(t *testing.T) {
 
 func TestAdvisoriesExportCSVFilter(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequest("GET", "/?filter[id]=RH-1", nil, "text/csv", AdvisoriesExportHandler)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	body := w.Body.String()
-	lines := strings.Split(body, "\n")
+	for _, URL := range []string{"/?filter[id]=RH-1", "/?filter[synopsis]=adv-1-syn"} {
+		w := CreateRequest("GET", URL, nil, "text/csv", AdvisoriesExportHandler)
 
-	assert.Equal(t, 3, len(lines))
-	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,enhancement,,0,false,\"7.0,7Server\",4,6", lines[1])
-	assert.Equal(t, "", lines[2])
+		assert.Equal(t, http.StatusOK, w.Code)
+		body := w.Body.String()
+		lines := strings.Split(body, "\n")
+
+		assert.Equal(t, 3, len(lines))
+		assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,enhancement,,0,false,\"7.0,7Server\",4,6", lines[1])
+		assert.Equal(t, "", lines[2])
+	}
 }
 
 func TestAdvisoriesExportTagsInvalid(t *testing.T) {
