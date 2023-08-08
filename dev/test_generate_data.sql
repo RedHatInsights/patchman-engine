@@ -119,6 +119,16 @@ do $$
 $$
 ;
 
+-- fill inventory.hosts from system platform
+delete from inventory.hosts;
+insert into inventory.hosts (id, account, display_name, tags, updated, created, stale_timestamp,
+                             system_profile, reporter, per_reporter_staleness, org_id, groups )
+  select sp.inventory_id, substr(ac.name, 0, 10), sp.display_name, '{}', sp.last_updated, sp.last_updated, coalesce(sp.stale_timestamp, now()),
+         '{}', 'puptoo', '{}', ac.org_id, '{}'
+    from system_platform sp
+    join rh_account ac on sp.rh_account_id = ac.id ;
+
+
 -- generate advisory_metadata
 -- duration: 3s / 60k advisories (on RDS)
 alter sequence advisory_metadata_id_seq restart with 1;
