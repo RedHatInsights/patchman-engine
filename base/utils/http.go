@@ -56,6 +56,12 @@ func CallAPI(client *http.Client, request *http.Request, debugEnabled bool) (*ht
 		return resp, err
 	}
 
+	if resp.StatusCode < http.StatusOK || resp.StatusCode > 299 {
+		// we got non 2xx status code, return error
+		// return also the response which is used for request retry
+		return resp, fmt.Errorf("received non 2xx status code, status code: %d", resp.StatusCode)
+	}
+
 	if debugEnabled {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err != nil {
