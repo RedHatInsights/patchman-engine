@@ -57,6 +57,17 @@ func TestSystemPackagesUpdatableOnly(t *testing.T) {
 	assert.Equal(t, output.Data[0].Name, "firefox")
 }
 
+func TestSystemPackagesName(t *testing.T) {
+	core.SetupTest(t)
+	w := CreateRequestRouterWithParams("GET", "/00000000-0000-0000-0000-000000000013/packages?filter[name]=firefox",
+		nil, "", SystemPackagesHandler, 3, "GET", "/:inventory_id/packages")
+
+	var output SystemPackageResponseV3
+	CheckResponse(t, w, http.StatusOK, &output)
+	assert.Len(t, output.Data, 1)
+	assert.Equal(t, output.Data[0].Name, "firefox")
+}
+
 func TestSystemPackagesNonUpdatableOnly(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET",
