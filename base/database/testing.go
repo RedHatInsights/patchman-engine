@@ -255,9 +255,9 @@ func CheckEVRAsInDBSynced(t *testing.T, nExpected int, synced bool, evras ...str
 	}
 }
 
-func CheckSystemPackages(t *testing.T, systemID int64, nExpected int, packageIDs ...int64) {
+func CheckSystemPackages(t *testing.T, accountID int, systemID int64, nExpected int, packageIDs ...int64) {
 	var systemPackages []models.SystemPackage
-	query := Db.Where("system_id = ?", systemID)
+	query := Db.Where("rh_account_id = ? AND system_id = ?", accountID, systemID)
 	if len(packageIDs) > 0 {
 		query = query.Where("package_id IN (?)", packageIDs)
 	}
@@ -295,8 +295,8 @@ func DeleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int6
 	assert.Equal(t, int64(0), cnt)
 }
 
-func DeleteSystemPackages(t *testing.T, systemID int64, pkgIDs ...int64) {
-	query := Db.Model(&models.SystemPackage{}).Where("system_id = ?", systemID)
+func DeleteSystemPackages(t *testing.T, accountID int, systemID int64, pkgIDs ...int64) {
+	query := Db.Model(&models.SystemPackage{}).Where("rh_account_id = ? AND system_id = ?", accountID, systemID)
 	if len(pkgIDs) > 0 {
 		query = query.Where("package_id in (?)", pkgIDs)
 	}
