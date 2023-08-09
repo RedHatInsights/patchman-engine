@@ -23,7 +23,7 @@ const uploadEvent = `{
 		"type": "created",
 		"host": {
 			"id":       "00000000-0000-0000-0000-000000000100",
-			"account":  "TEST-0000",
+			"org_id":   "org_1",
 			"reporter": "puptoo",
 			"tags": [
 				{
@@ -169,8 +169,8 @@ func platformMock() {
 
 func mockIdentity() string {
 	ident := identity.Identity{
-		Type:          "User",
-		AccountNumber: "0",
+		Type:  "User",
+		OrgID: "org_1",
 	}
 	js, err := json.Marshal(&ident)
 	if err != nil {
