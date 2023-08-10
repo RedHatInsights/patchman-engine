@@ -49,9 +49,13 @@ services:
     restart: unless-stopped
     ports:
       - 9001:9001
+    volumes:
+      - ./conf/cdappconfig.json:/go/src/app/conf/cdappconfig.json
     depends_on:
       - kafka
       - db
+    security_opt:
+      - label=disable
 
   test:
     container_name: test
