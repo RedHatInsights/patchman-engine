@@ -142,6 +142,7 @@ var yumUpdates = `{
 			]
 		}
 	},
+	"build_pkgcache": false,
 	"metadata_time": "2022-05-30T14:00:25Z"
 }`
 

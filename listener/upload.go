@@ -77,6 +77,27 @@ type HostCustomMetadata struct {
 	YumUpdatesS3URL *string         `json:"yum_updates_s3url,omitempty"`
 }
 
+type YumUpdates struct {
+	RawParsed     json.RawMessage
+	BuiltPkgcache bool
+}
+
+// GetRawParsed returns prepared parsed raw yumupdates
+func (y *YumUpdates) GetRawParsed() json.RawMessage {
+	if y == nil {
+		return nil
+	}
+	return y.RawParsed
+}
+
+// GetBuiltPkgcache returns boolean for build_pkgcache from yum_updates
+func (y *YumUpdates) GetBuiltPkgcache() bool {
+	if y == nil {
+		return false
+	}
+	return y.BuiltPkgcache
+}
+
 //nolint:funlen
 func HandleUpload(event HostEvent) error {
 	tStart := time.Now()
@@ -126,7 +147,7 @@ func HandleUpload(event HostEvent) error {
 		// don't fail, use vmaas evaluation
 		utils.LogError("err", err, "Could not get yum updates")
 	}
-	utils.LogTrace("inventoryID", event.Host.ID, "yum_updates", string(yumUpdates))
+	utils.LogTrace("inventoryID", event.Host.ID, "yum_updates", string(yumUpdates.GetRawParsed()))
 
 	if len(event.Host.SystemProfile.GetInstalledPackages()) == 0 && yumUpdates == nil {
 		utils.LogWarn("inventoryID", event.Host.ID, WarnSkippingNoPackages)
@@ -256,7 +277,7 @@ func updateReporterCounter(reporter string) {
 // nolint: funlen
 // Stores or updates base system profile, returing internal system id
 func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *Host,
-	yumUpdates []byte, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
+	yumUpdates *YumUpdates, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("update-system-platform"))
 	updatesReqJSON, err := json.Marshal(updatesReq)
@@ -266,7 +287,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 
 	hash := sha256.Sum256(updatesReqJSON)
 	jsonChecksum := hex.EncodeToString(hash[:])
-	hash = sha256.Sum256(yumUpdates)
+	hash = sha256.Sum256(yumUpdates.GetRawParsed())
 	yumChecksum := hex.EncodeToString(hash[:])
 
 	var colsToUpdate = []string{
@@ -277,6 +298,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		"stale_warning_timestamp",
 		"culled_timestamp",
 		"satellite_managed",
+		"built_pkgcache",
 	}
 
 	now := time.Now()
@@ -299,8 +321,9 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		CulledTimestamp:       host.CulledTimestamp.Time(),
 		Stale:                 staleWarning != nil && staleWarning.Before(time.Now()),
 		ReporterID:            getReporterID(host.Reporter),
-		YumUpdates:            yumUpdates,
+		YumUpdates:            yumUpdates.GetRawParsed(),
 		SatelliteManaged:      host.SystemProfile.SatelliteManaged,
+		BuiltPkgcache:         yumUpdates.GetBuiltPkgcache(),
 	}
 
 	var oldChecksums map[string]string
@@ -535,7 +558,7 @@ func processModules(systemProfile *inventory.SystemProfile) *[]vmaas.UpdatesV3Re
 }
 
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
-func processUpload(host *Host, yumUpdates []byte) (*models.SystemPlatform, error) {
+func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatform, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("upload-processing"))
 	// Ensure we have account stored
@@ -589,8 +612,9 @@ func processUpload(host *Host, yumUpdates []byte) (*models.SystemPlatform, error
 	return sys, nil
 }
 
-func getYumUpdates(event HostEvent, client *api.Client) ([]byte, error) {
+func getYumUpdates(event HostEvent, client *api.Client) (*YumUpdates, error) {
 	var parsed vmaas.UpdatesV3Response
+	res := &YumUpdates{}
 	yumUpdates := event.PlatformMetadata.CustomMetadata.YumUpdates
 	yumUpdatesURL := event.PlatformMetadata.CustomMetadata.YumUpdatesS3URL
 
@@ -615,7 +639,9 @@ func getYumUpdates(event HostEvent, client *api.Client) ([]byte, error) {
 	updatesMap := parsed.GetUpdateList()
 	if len(updatesMap) == 0 {
 		// system does not have any yum updates
-		return yumUpdates, nil
+		res.RawParsed = yumUpdates
+		res.BuiltPkgcache = parsed.GetBuildPkgcache()
+		return res, nil
 	}
 	// we need to get all packages to show up-to-date packages
 	installedPkgs := event.Host.SystemProfile.GetInstalledPackages()
@@ -633,7 +659,10 @@ func getYumUpdates(event HostEvent, client *api.Client) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to marshall yum updates")
 	}
-	return yumUpdates, nil
+	res.RawParsed = yumUpdates
+	res.BuiltPkgcache = parsed.GetBuildPkgcache()
+
+	return res, nil
 }
 
 func (host *Host) GetOrgID() string {

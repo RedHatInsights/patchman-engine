@@ -46,6 +46,7 @@ type UpdatesV3Response struct {
 	Releasever     *string                                 `json:"releasever,omitempty"`
 	Basearch       *string                                 `json:"basearch,omitempty"`
 	LastChange     *string                                 `json:"last_change,omitempty"`
+	BuildPkgcache  *bool                                   `json:"build_pkgcache,omitempty"`
 }
 
 // GetUpdateList returns the UpdateList field value if set, zero value otherwise.
@@ -55,6 +56,14 @@ func (o *UpdatesV3Response) GetUpdateList() map[string]UpdatesV3ResponseUpdateLi
 		return ret
 	}
 	return *o.UpdateList
+}
+
+// GetBuildPkgcache returns the boolean value for the `build_pkgcache` field of yum_updates
+func (o *UpdatesV3Response) GetBuildPkgcache() bool {
+	if o == nil || o.BuildPkgcache == nil {
+		return false
+	}
+	return *o.BuildPkgcache
 }
 
 type UpdatesV3ResponseUpdateList struct {
