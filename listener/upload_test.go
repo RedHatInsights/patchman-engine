@@ -83,6 +83,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	assert.Equal(t, sys1.ID, sys2.ID)
 	assert.Equal(t, sys1.InventoryID, sys2.InventoryID)
 	assert.Equal(t, sys1.Stale, sys2.Stale)
+	assert.Equal(t, sys1.SatelliteManaged, sys2.SatelliteManaged)
 	assert.NotNil(t, sys1.StaleTimestamp)
 	assert.Nil(t, sys1.StaleWarningTimestamp)
 	assert.Nil(t, sys1.CulledTimestamp)
@@ -314,13 +315,14 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	database.Db.Model(&models.SystemPlatform{}).Select("count(*)").Find(&oldCount)
 	database.Db.Raw("select nextval('system_platform_id_seq')").Find(&nextval)
 
-	colsToUpdate := []string{"vmaas_json", "json_checksum", "reporter_id"}
+	colsToUpdate := []string{"vmaas_json", "json_checksum", "reporter_id", "satellite_managed"}
 	json := "this_is_json"
 	inStore := models.SystemPlatform{
-		InventoryID: "99990000-0000-0000-0000-000000000001",
-		RhAccountID: 1,
-		VmaasJSON:   &json,
-		DisplayName: "display_name",
+		InventoryID:      "99990000-0000-0000-0000-000000000001",
+		RhAccountID:      1,
+		VmaasJSON:        &json,
+		DisplayName:      "display_name",
+		SatelliteManaged: false,
 	}
 	// insert new row
 	err := storeOrUpdateSysPlatform(database.Db, &inStore, colsToUpdate)
@@ -333,6 +335,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	assert.Equal(t, inStore.InventoryID, outStore.InventoryID)
 	assert.Equal(t, inStore.RhAccountID, outStore.RhAccountID)
 	assert.Equal(t, *inStore.VmaasJSON, *outStore.VmaasJSON)
+	assert.Equal(t, inStore.SatelliteManaged, outStore.SatelliteManaged)
 
 	updateJSON := "updated_json"
 	reporter := 2
@@ -341,6 +344,8 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	inUpdate.JSONChecksum = &updateJSON
 	inUpdate.ReporterID = &reporter
 	inUpdate.DisplayName = "should_not_be_updated"
+	inUpdate.SatelliteManaged = true
+
 	// update row
 	err = storeOrUpdateSysPlatform(database.Db, &inUpdate, colsToUpdate)
 	assert.Nil(t, err)
@@ -352,6 +357,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	assert.Equal(t, *inUpdate.VmaasJSON, *outUpdate.VmaasJSON)
 	assert.Equal(t, *inUpdate.JSONChecksum, *outUpdate.JSONChecksum)
 	assert.Equal(t, *inUpdate.ReporterID, *outUpdate.ReporterID)
+	assert.Equal(t, inUpdate.SatelliteManaged, outUpdate.SatelliteManaged)
 	// it should update the row
 	assert.Equal(t, outStore.ID, outUpdate.ID)
 	// DisplayName is not in colsToUpdate, it should not be updated

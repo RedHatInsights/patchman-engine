@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (112, false);
+VALUES (113, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -709,6 +709,7 @@ CREATE TABLE IF NOT EXISTS system_platform
     applicable_advisory_enh_count_cache  INT                      NOT NULL DEFAULT 0,
     applicable_advisory_bug_count_cache  INT                      NOT NULL DEFAULT 0,
     applicable_advisory_sec_count_cache  INT                      NOT NULL DEFAULT 0,
+    satellite_managed                    BOOLEAN                  NOT NULL DEFAULT FALSE,
     PRIMARY KEY (rh_account_id, id),
     UNIQUE (rh_account_id, inventory_id),
     CONSTRAINT reporter_id FOREIGN KEY (reporter_id) REFERENCES reporter (id),
