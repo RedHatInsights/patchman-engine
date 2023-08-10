@@ -9,6 +9,7 @@ type SystemProfile struct {
 	OperatingSystem   OperatingSystem `json:"operating_system,omitempty"`
 	Rhsm              Rhsm            `json:"rhsm,omitempty"`
 	Releasever        *string         `json:"releasever,omitempty"`
+	SatelliteManaged  bool            `json:"satellite_managed,omitempty"`
 }
 
 func (t *SystemProfile) GetInstalledPackages() []string {

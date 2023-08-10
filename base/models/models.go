@@ -67,6 +67,7 @@ type SystemPlatform struct {
 	BaselineID            *int64
 	BaselineUpToDate      *bool  `gorm:"column:baseline_uptodate"`
 	YumUpdates            []byte `gorm:"column:yum_updates"`
+	SatelliteManaged      bool   `gorm:"column:satellite_managed"`
 }
 
 func (SystemPlatform) TableName() string {
