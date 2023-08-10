@@ -296,7 +296,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 	assertYumUpdatesInDB(t, id, yumUpdates)
 
 	// check that yumUpdates has been updated
-	yumUpdates = []byte("{}")
+	yumUpdates.RawParsed = []byte("{}")
 	_, err = updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(t), yumUpdates, &req)
 	assert.Nil(t, err)
 	assertYumUpdatesInDB(t, id, yumUpdates)

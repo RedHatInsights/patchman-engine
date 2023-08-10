@@ -7196,6 +7196,9 @@
                     "basearch": {
                         "type": "string"
                     },
+                    "build_pkgcache": {
+                        "type": "boolean"
+                    },
                     "last_change": {
                         "type": "string"
                     },
