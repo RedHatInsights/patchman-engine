@@ -27,10 +27,15 @@ type PackageSystemItemCommon struct {
 	SystemIDAttribute
 	SystemDisplayName
 	InstalledEVRA string         `json:"installed_evra" csv:"installed_evra" query:"p.evra" gorm:"column:installed_evra"`
-	AvailableEVRA string         `json:"available_evra" csv:"available_evra" query:"spkg.latest_evra" gorm:"column:available_evra"`
-	Updatable     bool           `json:"updatable" csv:"updatable" query:"(update_status(spkg.update_data) = 'Installable')" gorm:"column:updatable"`
+	AvailableEVRA string         `json:"available_evra" csv:"available_evra" query:"null" gorm:"-"`
+	Updatable     bool           `json:"updatable" csv:"updatable" query:"(spkg.installable_id IS NOT NULL)" gorm:"column:updatable"`
 	Tags          SystemTagsList `json:"tags" csv:"tags" query:"null" gorm:"-"`
 	BaselineAttributes
+	// helper to get AvailableEVRA (latest_evra)
+	InstallableID   int64  `json:"-" csv:"-" query:"spkg.installable_id" gorm:"column:installable_id"`
+	ApplicableID    int64  `json:"-" csv:"-" query:"spkg.applicable_id" gorm:"column:applicable_id"`
+	InstallableEVRA string `json:"-" csv:"-" query:"pi.evra" gorm:"column:installable_evra"`
+	ApplicableEVRA  string `json:"-" csv:"-" query:"pa.evra" gorm:"column:applicable_evra"`
 }
 
 type PackageSystemItemV2 struct {
@@ -43,7 +48,7 @@ type PackageSystemItemV3 struct {
 	SystemSatelliteManaged
 	BaselineIDAttr
 	OSAttributes
-	UpdateStatus string `json:"update_status" csv:"update_status" query:"update_status(spkg.update_data)" gorm:"column:update_status"`
+	UpdateStatus string `json:"update_status" csv:"update_status" query:"CASE WHEN spkg.installable_id is not null THEN 'Installable' WHEN spkg.applicable_id is not null THEN 'Applicable' ELSE 'None' END" gorm:"column:update_status"`
 	SystemGroups
 }
 
@@ -73,13 +78,14 @@ func packagesByNameQuery(db *gorm.DB, pkgName string) *gorm.DB {
 
 func packageSystemsQuery(db *gorm.DB, acc int, groups map[string]string, packageName string, packageIDs []int,
 ) *gorm.DB {
-	query := database.SystemPackages(db, acc, groups).
+	query := database.SystemPackages2(db, acc, groups).
 		Select(PackageSystemsSelect).
+		Joins("LEFT JOIN package pi ON pi.id = spkg.installable_id").
+		Joins("LEFT JOIN package pa ON pa.id = spkg.applicable_id").
 		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
 		Where("sp.stale = false").
 		Where("pn.name = ?", packageName).
 		Where("spkg.package_id in (?)", packageIDs)
-
 	return query
 }
 
@@ -246,6 +252,10 @@ func packageSystemDBLookups2PackageSystemItemsV3(systems []PackageSystemDBLookup
 			utils.LogDebug("err", err.Error(), "inventory_id", systems[i].ID, "system groups parsing failed")
 		}
 		data[i] = systems[i].PackageSystemItemV3
+		data[i].AvailableEVRA = data[i].InstallableEVRA
+		if len(data[i].ApplicableEVRA) > 0 {
+			data[i].AvailableEVRA = data[i].ApplicableEVRA
+		}
 	}
 	return data, total
 }
