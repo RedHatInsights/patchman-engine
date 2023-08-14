@@ -26,6 +26,12 @@ const KeyInventoryGroups = "inventoryGroups"
 var allPerms = "patch:*:*"
 var readPerms = map[string]bool{allPerms: true, "patch:*:read": true}
 var writePerms = map[string]bool{allPerms: true, "patch:*:write": true}
+var inventoryReadPerms = map[string]bool{
+	"inventory:*:*":        true,
+	"inventory:*:read":     true,
+	"inventory:hosts:*":    true,
+	"inventory:hosts:read": true,
+}
 
 // handlerName to permissions mapping
 var granularPerms = map[string]struct {
@@ -48,48 +54,60 @@ func makeClient(identity string) *api.Client {
 		DefaultHeaders: map[string]string{xRHIdentity: identity},
 	}
 	if rbacURL == "" {
-		rbacURL = utils.FailIfEmpty(utils.Cfg.RbacAddress, "RBAC_ADDRESS") + base.RBACApiPrefix + "/access/?application=patch,inventory"
+		rbacURL = utils.FailIfEmpty(utils.Cfg.RbacAddress, "RBAC_ADDRESS") + base.RBACApiPrefix +
+			"/access/?application=patch,inventory"
 	}
 	return &client
 }
 
 func checkPermissions(access *rbac.AccessPagination, handlerName, method string) bool {
-	granted := false
+	grantedPatch := false
+	grantedInventory := false
 	for _, a := range access.Data {
-		if granted {
+		switch {
+		case !grantedPatch:
+			if p, has := granularPerms[handlerName]; has {
+				// API handler requires granular permissions
+				if a.Permission == p.Permission {
+					// the required permission is present, e.g. patch:template:write
+					grantedPatch = true
+					continue
+				}
+				if p.Read && !p.Write && readPerms[a.Permission] {
+					// required permission is read permission
+					// check whether we have either patch:*:read or patch:*:*
+					grantedPatch = true
+					continue
+				}
+				if p.Write && !p.Read && writePerms[a.Permission] {
+					// required permission is write permission
+					// check whether we have either patch:*:write or patch:*:*
+					grantedPatch = true
+					continue
+				}
+				// we need both read and write permissions - patch:*:*
+				grantedPatch = (a.Permission == allPerms)
+			} else {
+				// not granular
+				// require read permissions for GET and POST
+				// require write permissions for PUT and DELETE
+				switch method {
+				case "GET", "POST":
+					grantedPatch = readPerms[a.Permission]
+				case "PUT", "DELETE":
+					grantedPatch = writePerms[a.Permission]
+				}
+			}
+		case !grantedInventory:
+			if inventoryReadPerms[a.Permission] {
+				grantedInventory = true
+				continue
+			}
+		case grantedPatch && grantedInventory:
 			return true
 		}
-		if p, has := granularPerms[handlerName]; has {
-			// API handler requires granular permissions
-			if a.Permission == p.Permission {
-				// the required permission is present, e.g. patch:template:write
-				return true
-			}
-			if p.Read && !p.Write && readPerms[a.Permission] {
-				// required permission is read permission
-				// check whether we have either patch:*:read or patch:*:*
-				return true
-			}
-			if p.Write && !p.Read && writePerms[a.Permission] {
-				// required permission is write permission
-				// check whether we have either patch:*:write or patch:*:*
-				return true
-			}
-			// we need both read and write permissions - patch:*:*
-			granted = (a.Permission == allPerms)
-		} else {
-			// not granular
-			// require read permissions for GET and POST
-			// require write permissions for PUT and DELETE
-			switch method {
-			case "GET", "POST":
-				granted = readPerms[a.Permission]
-			case "PUT", "DELETE":
-				granted = writePerms[a.Permission]
-			}
-		}
 	}
-	return granted
+	return grantedPatch && grantedInventory
 }
 
 func isAccessGranted(c *gin.Context) bool {
@@ -128,7 +146,7 @@ func findInventoryGroups(access *rbac.AccessPagination) map[string]string {
 	}
 	groups := []string{}
 	for _, a := range access.Data {
-		if a.Permission != "inventory:hosts:read" {
+		if !inventoryReadPerms[a.Permission] {
 			continue
 		}
 

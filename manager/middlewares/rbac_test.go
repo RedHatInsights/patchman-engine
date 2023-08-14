@@ -46,6 +46,7 @@ func TestPermissionsSingleWrite(t *testing.T) {
 	access := rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:*"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.True(t, checkPermissions(&access, handler, "PUT"))
@@ -53,6 +54,7 @@ func TestPermissionsSingleWrite(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:write"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.True(t, checkPermissions(&access, handler, "PUT"))
@@ -60,6 +62,7 @@ func TestPermissionsSingleWrite(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:template:write"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.True(t, checkPermissions(&access, handler, "PUT"))
@@ -74,6 +77,7 @@ func TestPermissionsSingleWrite(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:asdf:read"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.False(t, checkPermissions(&access, handler, "PUT"))
@@ -81,6 +85,7 @@ func TestPermissionsSingleWrite(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:read"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.False(t, checkPermissions(&access, handler, "PUT"))
@@ -97,6 +102,7 @@ func TestPermissionsSingleRead(t *testing.T) {
 	access := rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:*"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.True(t, checkPermissions(&access, handler, "GET"))
@@ -104,6 +110,7 @@ func TestPermissionsSingleRead(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:read"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.True(t, checkPermissions(&access, handler, "GET"))
@@ -111,6 +118,7 @@ func TestPermissionsSingleRead(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:single:read"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.True(t, checkPermissions(&access, handler, "GET"))
@@ -118,6 +126,7 @@ func TestPermissionsSingleRead(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:asdf:read"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.False(t, checkPermissions(&access, handler, "GET"))
@@ -125,6 +134,7 @@ func TestPermissionsSingleRead(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:asdf:write"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.False(t, checkPermissions(&access, handler, "GET"))
@@ -132,11 +142,13 @@ func TestPermissionsSingleRead(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:write"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.False(t, checkPermissions(&access, handler, "GET"))
 }
 
+// nolint:funlen
 func TestPermissionsSingleReadWrite(t *testing.T) {
 	// handler needs `patch:single:read`
 	handler := "SingleReadWrite"
@@ -148,6 +160,7 @@ func TestPermissionsSingleReadWrite(t *testing.T) {
 	access := rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:*"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.True(t, checkPermissions(&access, handler, "PUT"))
@@ -155,6 +168,7 @@ func TestPermissionsSingleReadWrite(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:single:*"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.True(t, checkPermissions(&access, handler, "PUT"))
@@ -162,6 +176,7 @@ func TestPermissionsSingleReadWrite(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:read"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.False(t, checkPermissions(&access, handler, "PUT"))
@@ -169,6 +184,7 @@ func TestPermissionsSingleReadWrite(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:single:read"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.False(t, checkPermissions(&access, handler, "PUT"))
@@ -176,6 +192,7 @@ func TestPermissionsSingleReadWrite(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:asdf:read"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.False(t, checkPermissions(&access, handler, "PUT"))
@@ -183,6 +200,7 @@ func TestPermissionsSingleReadWrite(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:asdf:write"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.False(t, checkPermissions(&access, handler, "PUT"))
@@ -190,6 +208,7 @@ func TestPermissionsSingleReadWrite(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:write"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.False(t, checkPermissions(&access, handler, "PUT"))
@@ -206,6 +225,7 @@ func TestPermissionsRead(t *testing.T) {
 	access := rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:*"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.True(t, checkPermissions(&access, handler, "GET"))
@@ -213,6 +233,7 @@ func TestPermissionsRead(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:read"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.True(t, checkPermissions(&access, handler, "GET"))
@@ -220,6 +241,7 @@ func TestPermissionsRead(t *testing.T) {
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:write"},
+			{Permission: "inventory:*:*"},
 		},
 	}
 	assert.False(t, checkPermissions(&access, handler, "GET"))
