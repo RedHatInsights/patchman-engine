@@ -64,8 +64,15 @@ func checkPermissions(access *rbac.AccessPagination, handlerName, method string)
 	grantedPatch := false
 	grantedInventory := false
 	for _, a := range access.Data {
-		switch {
-		case !grantedPatch:
+		if grantedPatch && grantedInventory {
+			return true
+		}
+
+		if !grantedInventory {
+			grantedInventory = inventoryReadPerms[a.Permission]
+		}
+
+		if !grantedPatch {
 			if p, has := granularPerms[handlerName]; has {
 				// API handler requires granular permissions
 				if a.Permission == p.Permission {
@@ -98,13 +105,6 @@ func checkPermissions(access *rbac.AccessPagination, handlerName, method string)
 					grantedPatch = writePerms[a.Permission]
 				}
 			}
-		case !grantedInventory:
-			if inventoryReadPerms[a.Permission] {
-				grantedInventory = true
-				continue
-			}
-		case grantedPatch && grantedInventory:
-			return true
 		}
 	}
 	return grantedPatch && grantedInventory
