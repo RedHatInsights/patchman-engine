@@ -311,3 +311,33 @@ func TestFindInventoryGroups(t *testing.T) {
 	)
 	assert.Equal(t, "[]", groups[rbac.KeyUngrouped])
 }
+
+func TestMultiplePermissions(t *testing.T) {
+	handler := "MultiplePermissions"
+	access := rbac.AccessPagination{
+		Data: []rbac.Access{
+			{Permission: "inventory:*:read"},
+			{Permission: "inventory:hosts:write"},
+			{Permission: "inventory:hosts:read"},
+			{Permission: "inventory:groups:write"},
+			{Permission: "inventory:groups:read"},
+			{Permission: "patch:*:*"},
+			{Permission: "patch:*:read"},
+		},
+	}
+	assert.True(t, checkPermissions(&access, handler, "GET"))
+	assert.True(t, checkPermissions(&access, handler, "DELETE"))
+
+	access = rbac.AccessPagination{
+		Data: []rbac.Access{
+			{Permission: "inventory:*:read"},
+			{Permission: "inventory:hosts:write"},
+			{Permission: "inventory:groups:write"},
+			{Permission: "patch:*:read"},
+			{Permission: "inventory:hosts:read"},
+			{Permission: "inventory:groups:read"},
+		},
+	}
+	assert.True(t, checkPermissions(&access, handler, "GET"))
+	assert.False(t, checkPermissions(&access, handler, "DELETE"))
+}
