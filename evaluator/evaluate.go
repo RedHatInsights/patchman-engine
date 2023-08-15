@@ -581,6 +581,7 @@ func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, erro
 func invalidateCaches(orgID string) error {
 	err := database.Db.Model(models.RhAccount{}).
 		Where("org_id = ?", orgID).
+		Where("valid_package_cache = true OR valid_advisory_cache = true").
 		// use map because struct updates only non-zero values and we need to update it to `false`
 		Updates(map[string]interface{}{"valid_package_cache": false, "valid_advisory_cache": false}).
 		Error
