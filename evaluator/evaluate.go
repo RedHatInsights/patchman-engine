@@ -58,6 +58,7 @@ var (
 	enableYumUpdatesEval          bool
 	nEvalGoroutines               int
 	enableInstantNotifications    bool
+	errVmaasBadRequest            = errors.New("vmaas bad request")
 )
 
 const WarnPayloadTracker = "unable to send message to payload tracker"
@@ -282,6 +283,13 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 
 	vmaasData, vmaasErr := getVmaasUpdates(ctx, tx, system)
 	if vmaasErr != nil {
+		if errors.Is(vmaasErr, errVmaasBadRequest) {
+			// vmaas bad request means we either created wrong vmaas request
+			// or more likely we received package_list without epochs
+			// either way, we should skip this system and not fail hard which will cause pod to restart
+			utils.LogWarn("Vmaas response error - bad request, skipping system", vmaasErr.Error())
+			return nil, nil
+		}
 		// if there's no yum update fail hard otherwise only log warning and use yum data
 		if yumUpdates == nil {
 			return nil, errors.Wrap(vmaasErr, vmaasErr.Error())
@@ -545,8 +553,12 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 		utils.LogTrace("request", *request, "vmaas /updates request")
 		vmaasData := vmaas.UpdatesV3Response{}
 		resp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasUpdatesURL, request, &vmaasData)
-		utils.LogDebug("status_code", utils.TryGetStatusCode(resp), "vmaas /updates call")
+		statusCode := utils.TryGetStatusCode(resp)
+		utils.LogDebug("status_code", statusCode, "vmaas /updates call")
 		utils.LogTrace("response", resp, "vmaas /updates response")
+		if err != nil && statusCode == 400 {
+			err = errors.Wrap(errVmaasBadRequest, err.Error())
+		}
 		return &vmaasData, resp, err
 	}
 
