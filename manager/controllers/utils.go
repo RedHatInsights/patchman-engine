@@ -273,7 +273,10 @@ func HasInventoryFilter(filters Filters) bool {
 		return false
 	}
 	for _, data := range filters {
-		if data.Type == InventoryFilter {
+		switch data.Type {
+		case InventoryFilter:
+			return true
+		case TagFilter:
 			return true
 		}
 	}
