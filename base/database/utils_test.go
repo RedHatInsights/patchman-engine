@@ -32,6 +32,7 @@ var testCases = []map[int64]map[string]string{
 	{0: {rbac.KeyGrouped: `{"[{\"id\":\"non-existing-group\"}]"}`}},
 	{nUngrouped: {rbac.KeyUngrouped: "[]"}},
 	{nAll: {}},
+	{nAll: nil},
 }
 
 func TestInventoryHostsJoin(t *testing.T) {

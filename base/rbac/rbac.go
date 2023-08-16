@@ -13,7 +13,7 @@ type Access struct {
 }
 
 type ResourceDefinition struct {
-	AttributeFilter AttributeFilter `json:"attributeFilter"`
+	AttributeFilter AttributeFilter `json:"attributeFilter,omitempty"`
 }
 
 type AttributeFilter struct {

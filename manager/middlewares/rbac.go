@@ -150,6 +150,10 @@ func findInventoryGroups(access *rbac.AccessPagination) map[string]string {
 			continue
 		}
 
+		if len(a.ResourceDefinitions) == 0 {
+			// access to all groups
+			return nil
+		}
 		for _, rd := range a.ResourceDefinitions {
 			if rd.AttributeFilter.Key != "group.id" {
 				continue
