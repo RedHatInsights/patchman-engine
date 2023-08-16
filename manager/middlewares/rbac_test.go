@@ -10,6 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	group1 = "df57820e-965c-49a6-b0bc-797b7dd60581"
+	group2 = "df3f0efd-c853-41b5-80a1-86881d5343d1"
+)
+
 func okHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, nil)
 }
@@ -248,7 +253,6 @@ func TestPermissionsRead(t *testing.T) {
 }
 
 func TestFindInventoryGroupsGrouped(t *testing.T) {
-	group1 := "df57820e-965c-49a6-b0bc-797b7dd60581"
 	access := &rbac.AccessPagination{
 		Data: []rbac.Access{{
 			Permission: "inventory:hosts:read",
@@ -291,8 +295,6 @@ func TestFindInventoryGroupsUnrouped(t *testing.T) {
 
 // nolint:lll
 func TestFindInventoryGroups(t *testing.T) {
-	group1 := "df57820e-965c-49a6-b0bc-797b7dd60581"
-	group2 := "df3f0efd-c853-41b5-80a1-86881d5343d1"
 	access := &rbac.AccessPagination{
 		Data: []rbac.Access{{
 			Permission: "inventory:hosts:read",
@@ -310,6 +312,52 @@ func TestFindInventoryGroups(t *testing.T) {
 		groups[rbac.KeyGrouped],
 	)
 	assert.Equal(t, "[]", groups[rbac.KeyUngrouped])
+}
+
+func TestFindInventoryGroupsOverwrite(t *testing.T) {
+	access := &rbac.AccessPagination{
+		Data: []rbac.Access{
+			{
+				Permission: "inventory:hosts:read",
+				ResourceDefinitions: []rbac.ResourceDefinition{{
+					AttributeFilter: rbac.AttributeFilter{
+						Key:   "group.id",
+						Value: []*string{&group1, nil},
+					},
+				}},
+			},
+			{
+				Permission:          "inventory:hosts:read",
+				ResourceDefinitions: []rbac.ResourceDefinition{},
+			},
+		},
+	}
+	groups := findInventoryGroups(access)
+	// we expect access to all groups (empty map)
+	assert.Equal(t, 0, len(groups))
+}
+
+func TestFindInventoryGroupsOverwrite2(t *testing.T) {
+	access := &rbac.AccessPagination{
+		Data: []rbac.Access{
+			{
+				Permission:          "inventory:hosts:read",
+				ResourceDefinitions: []rbac.ResourceDefinition{},
+			},
+			{
+				Permission: "inventory:hosts:read",
+				ResourceDefinitions: []rbac.ResourceDefinition{{
+					AttributeFilter: rbac.AttributeFilter{
+						Key:   "group.id",
+						Value: []*string{&group1, nil},
+					},
+				}},
+			},
+		},
+	}
+	groups := findInventoryGroups(access)
+	// we expect access to all groups (empty map)
+	assert.Equal(t, 0, len(groups))
 }
 
 func TestMultiplePermissions(t *testing.T) {
