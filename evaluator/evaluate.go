@@ -240,7 +240,7 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV3Response, 
 				EVRA:        utils.PtrString(nevra.EVRAString()),
 			})
 		}
-		updatesMap[k] = vmaas.UpdatesV3ResponseUpdateList{
+		updatesMap[k] = &vmaas.UpdatesV3ResponseUpdateList{
 			AvailableUpdates: &updates,
 		}
 	}
@@ -297,13 +297,15 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 		utils.LogWarn("Vmaas response error, continuing with yum updates only", vmaasErr.Error())
 	}
 
-	// Try to merge YumUpdates and VMaaS updates
-	updatesData, err := utils.MergeVMaaSResponses(vmaasData, yumUpdates)
-	if err != nil {
-		return nil, err
+	if system.SatelliteManaged {
+		// satellite managed systems has vmaas updates APPLICABLE instead of INSTALLABLE
+		mergedUpdateList := vmaasData.GetUpdateList()
+		for nevra := range mergedUpdateList {
+			(*mergedUpdateList[nevra]).SetUpdatesInstallability(APPLICABLE)
+		}
 	}
 
-	return updatesData, nil
+	return utils.MergeVMaaSResponses(yumUpdates, vmaasData)
 }
 
 func getVmaasUpdates(ctx context.Context, tx *gorm.DB,

@@ -251,10 +251,10 @@ func updateDataChanged(currentNamedPackage *namedPackage, updateDataJSON []byte)
 }
 
 func createSystemPackage(nevra string,
-	updateData vmaas.UpdatesV3ResponseUpdateList,
+	updateData *vmaas.UpdatesV3ResponseUpdateList,
 	system *models.SystemPlatform,
 	packagesByNEVRA *map[string]namedPackage) (systemPackagePtr *models.SystemPackage, updatesChanged bool) {
-	updateDataJSON, err := vmaasResponse2UpdateDataJSON(&updateData)
+	updateDataJSON, err := vmaasResponse2UpdateDataJSON(updateData)
 	if err != nil {
 		utils.LogError("nevra", nevra, "VMaaS updates response parsing failed")
 		return nil, false

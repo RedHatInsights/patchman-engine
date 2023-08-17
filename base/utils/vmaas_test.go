@@ -16,7 +16,7 @@ func compareUpdatesMerge(t *testing.T, jsonA, jsonB, merged []byte) {
 	err = json.Unmarshal(jsonB, &listB)
 	assert.Nil(t, err)
 
-	listMerged, err := mergeUpdates(listA, listB)
+	listMerged, err := mergeUpdates(&listA, &listB)
 	assert.Nil(t, err)
 
 	res, err := json.Marshal(listMerged)

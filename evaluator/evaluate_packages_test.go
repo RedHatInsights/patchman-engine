@@ -23,7 +23,7 @@ func TestAnalyzePackages(t *testing.T) {
 	database.CheckEVRAsInDB(t, 0, "12.0.1-1.fc31.x86_64") // lazy added package
 	// we send request with zero epoch and expect response with zero epoch
 	// so we have to test with zero epoch
-	vmaasData := vmaas.UpdatesV3Response{UpdateList: &map[string]vmaas.UpdatesV3ResponseUpdateList{
+	vmaasData := vmaas.UpdatesV3Response{UpdateList: &map[string]*vmaas.UpdatesV3ResponseUpdateList{
 		"kernel-0:5.6.13-200.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{}},
 		"firefox-0:12.0.1-1.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{{
 			Package: utils.PtrString("firefox-0:77.0.1-1.fc31.x86_64"),
@@ -52,10 +52,10 @@ func TestLazySavePackages(t *testing.T) {
 
 	names := []string{"kernel", "firefox", "custom-package"}
 	evras := []string{"1-0.el7.x86_64", "1-1.1.el7.x86_64", "11-1.el7.x86_64"}
-	updateList := make(map[string]vmaas.UpdatesV3ResponseUpdateList, len(names))
+	updateList := make(map[string]*vmaas.UpdatesV3ResponseUpdateList, len(names))
 	for i, name := range names {
 		nevra := fmt.Sprintf("%s-%s", name, evras[i])
-		updateList[nevra] = vmaas.UpdatesV3ResponseUpdateList{}
+		updateList[nevra] = &vmaas.UpdatesV3ResponseUpdateList{}
 	}
 	vmaasData := vmaas.UpdatesV3Response{UpdateList: &updateList}
 	database.CheckEVRAsInDB(t, 0, evras...)
