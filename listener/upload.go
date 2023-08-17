@@ -647,7 +647,7 @@ func getYumUpdates(event HostEvent, client *api.Client) (*YumUpdates, error) {
 	installedPkgs := event.Host.SystemProfile.GetInstalledPackages()
 	for _, pkg := range installedPkgs {
 		if _, has := updatesMap[pkg]; !has {
-			updatesMap[pkg] = vmaas.UpdatesV3ResponseUpdateList{}
+			updatesMap[pkg] = &vmaas.UpdatesV3ResponseUpdateList{}
 		}
 	}
 	parsed.UpdateList = &updatesMap

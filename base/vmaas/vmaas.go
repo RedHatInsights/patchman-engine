@@ -39,19 +39,19 @@ func (o *UpdatesV3Request) SetReleasever(v string) {
 }
 
 type UpdatesV3Response struct {
-	UpdateList     *map[string]UpdatesV3ResponseUpdateList `json:"update_list,omitempty"`
-	RepositoryList *[]string                               `json:"repository_list,omitempty"`
-	ModulesList    *[]UpdatesV3RequestModulesList          `json:"modules_list,omitempty"`
-	Releasever     *string                                 `json:"releasever,omitempty"`
-	Basearch       *string                                 `json:"basearch,omitempty"`
-	LastChange     *string                                 `json:"last_change,omitempty"`
-	BuildPkgcache  *bool                                   `json:"build_pkgcache,omitempty"`
+	UpdateList     *map[string]*UpdatesV3ResponseUpdateList `json:"update_list,omitempty"`
+	RepositoryList *[]string                                `json:"repository_list,omitempty"`
+	ModulesList    *[]UpdatesV3RequestModulesList           `json:"modules_list,omitempty"`
+	Releasever     *string                                  `json:"releasever,omitempty"`
+	Basearch       *string                                  `json:"basearch,omitempty"`
+	LastChange     *string                                  `json:"last_change,omitempty"`
+	BuildPkgcache  *bool                                    `json:"build_pkgcache,omitempty"`
 }
 
 // GetUpdateList returns the UpdateList field value if set, zero value otherwise.
-func (o *UpdatesV3Response) GetUpdateList() map[string]UpdatesV3ResponseUpdateList {
+func (o *UpdatesV3Response) GetUpdateList() map[string]*UpdatesV3ResponseUpdateList {
 	if o == nil || o.UpdateList == nil {
-		var ret map[string]UpdatesV3ResponseUpdateList
+		var ret map[string]*UpdatesV3ResponseUpdateList
 		return ret
 	}
 	return *o.UpdateList
@@ -75,6 +75,15 @@ func (o *UpdatesV3ResponseUpdateList) GetAvailableUpdates() []UpdatesV3ResponseA
 		return ret
 	}
 	return *o.AvailableUpdates
+}
+
+func (o *UpdatesV3ResponseUpdateList) SetUpdatesInstallability(status int) {
+	if o == nil || o.AvailableUpdates == nil {
+		return
+	}
+	for index := range *o.AvailableUpdates {
+		(*o.AvailableUpdates)[index].SetInstallability(status)
+	}
 }
 
 type UpdatesV3ResponseAvailableUpdates struct {
@@ -143,6 +152,13 @@ func (o *UpdatesV3ResponseAvailableUpdates) GetRepository() string {
 		return ret
 	}
 	return *o.Repository
+}
+
+func (o *UpdatesV3ResponseAvailableUpdates) SetInstallability(status int) {
+	if o == nil {
+		return
+	}
+	o.StatusID = status
 }
 
 func (o *UpdatesV3ResponseAvailableUpdates) Cmp(b *UpdatesV3ResponseAvailableUpdates) int {

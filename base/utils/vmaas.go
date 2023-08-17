@@ -8,8 +8,7 @@ import (
 
 // Merge update data from vmaasDataB into vmaasDataA without duplicating.
 // Requires sorted update input and returns sorted output.
-func MergeVMaaSResponses(vmaasDataA *vmaas.UpdatesV3Response,
-	vmaasDataB *vmaas.UpdatesV3Response) (*vmaas.UpdatesV3Response, error) {
+func MergeVMaaSResponses(vmaasDataA, vmaasDataB *vmaas.UpdatesV3Response) (*vmaas.UpdatesV3Response, error) {
 	if vmaasDataA == nil {
 		return vmaasDataB, nil
 	}
@@ -26,7 +25,7 @@ func MergeVMaaSResponses(vmaasDataA *vmaas.UpdatesV3Response,
 			if err != nil {
 				return nil, err
 			}
-			mergedList[nevraB] = *merged
+			mergedList[nevraB] = merged
 		} else {
 			mergedList[nevraB] = updateListB
 		}
@@ -39,7 +38,7 @@ func MergeVMaaSResponses(vmaasDataA *vmaas.UpdatesV3Response,
 	return vmaasDataA, nil
 }
 
-func mergeUpdates(listA, listB vmaas.UpdatesV3ResponseUpdateList) (*vmaas.UpdatesV3ResponseUpdateList, error) {
+func mergeUpdates(listA, listB *vmaas.UpdatesV3ResponseUpdateList) (*vmaas.UpdatesV3ResponseUpdateList, error) {
 	updatesA, updatesB := listA.GetAvailableUpdates(), listB.GetAvailableUpdates()
 	newUpdates := make([]vmaas.UpdatesV3ResponseAvailableUpdates, 0)
 	a, b := 0, 0

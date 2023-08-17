@@ -36,7 +36,7 @@ func limitVmaasToBaseline(tx *gorm.DB, system *models.SystemPlatform, vmaasData 
 	}
 
 	updateList := vmaasData.GetUpdateList()
-	modifiedUpdateList := make(map[string]vmaas.UpdatesV3ResponseUpdateList, len(updateList))
+	modifiedUpdateList := make(map[string]*vmaas.UpdatesV3ResponseUpdateList, len(updateList))
 	for pkg, updates := range updateList {
 		availableUpdates := updates.GetAvailableUpdates()
 		for i := range availableUpdates {
