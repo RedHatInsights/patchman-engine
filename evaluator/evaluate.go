@@ -249,7 +249,7 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV3Response, 
 
 func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV3Response,
 	system *models.SystemPlatform, event *mqueue.PlatformEvent) (*vmaas.UpdatesV3Response, error) {
-	if enableBaselineEval {
+	if enableBaselineEval && !system.SatelliteManaged {
 		err := limitVmaasToBaseline(tx, system, updatesData)
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to evaluate baseline")
