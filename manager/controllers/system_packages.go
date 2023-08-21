@@ -18,7 +18,7 @@ type SystemPackagesAttrsCommon struct {
 	EVRA        string `json:"evra" csv:"evra" query:"p.evra" gorm:"column:evra"`
 	Summary     string `json:"summary" csv:"summary" query:"sum.value" gorm:"column:summary"`
 	Description string `json:"description" csv:"description" query:"descr.value" gorm:"column:description"`
-	Updatable   bool   `json:"updatable" csv:"updatable" query:"(update_status(spkg.update_data) = 'Installable')" gorm:"column:updatable"`
+	Updatable   bool   `json:"updatable" csv:"updatable" query:"(spkg.installable_id is not null)" gorm:"column:updatable"`
 }
 
 type SystemPackageUpdates struct {
@@ -32,7 +32,7 @@ type SystemPackagesAttrsV2 struct {
 // nolint: lll
 type SystemPackagesAttrsV3 struct {
 	SystemPackagesAttrsCommon
-	UpdateStatus string `json:"update_status" csv:"update_status" query:"update_status(spkg.update_data)" gorm:"column:update_status"`
+	UpdateStatus string `json:"update_status" csv:"update_status" query:"CASE WHEN spkg.installable_id is not null THEN 'Installable' WHEN spkg.applicable_id is not null THEN 'Applicable' ELSE 'None' END" gorm:"column:update_status"`
 }
 
 type SystemPackageDataV2 struct {
@@ -66,13 +66,17 @@ var SystemPackagesOpts = ListOpts{
 
 type SystemPackageDBLoad struct {
 	SystemPackagesAttrsV3
-	Updates []byte `json:"updates" query:"spkg.update_data" gorm:"column:updates"`
+	// helper to get Updates
+	InstallableEVRA string `json:"-" csv:"-" query:"pi.evra" gorm:"column:installable_evra"`
+	ApplicableEVRA  string `json:"-" csv:"-" query:"pa.evra" gorm:"column:applicable_evra"`
 	// a helper to get total number of systems
 	MetaTotalHelper
 }
 
 func systemPackageQuery(db *gorm.DB, account int, groups map[string]string, inventoryID string) *gorm.DB {
-	query := database.SystemPackages(db, account, groups).
+	query := database.SystemPackages2(db, account, groups).
+		Joins("LEFT JOIN package pi ON pi.id = spkg.installable_id").
+		Joins("LEFT JOIN package pa ON pa.id = spkg.applicable_id").
 		Joins("LEFT JOIN strings AS descr ON p.description_hash = descr.id").
 		Joins("LEFT JOIN strings AS sum ON p.summary_hash = sum.id").
 		Select(SystemPackagesSelect).
@@ -173,16 +177,16 @@ func buildSystemPackageData(loaded []SystemPackageDBLoad) (int, []SystemPackageD
 	data := make([]SystemPackageDataV3, len(loaded))
 	for i, sp := range loaded {
 		data[i].SystemPackagesAttrsV3 = sp.SystemPackagesAttrsV3
-		if sp.Updates == nil {
-			continue
-		}
 		// keep only latest installable and applicable
-		installable, applicable := findLatestEVRA(sp)
-		if installable.EVRA != sp.EVRA {
-			data[i].Updates = append(data[i].Updates, installable)
+		if len(sp.InstallableEVRA) > 0 && sp.InstallableEVRA != sp.EVRA {
+			data[i].Updates = append(data[i].Updates, models.PackageUpdate{
+				EVRA: sp.InstallableEVRA, Status: "Installable",
+			})
 		}
-		if applicable.EVRA != sp.EVRA {
-			data[i].Updates = append(data[i].Updates, applicable)
+		if len(sp.ApplicableEVRA) > 0 && sp.ApplicableEVRA != sp.EVRA {
+			data[i].Updates = append(data[i].Updates, models.PackageUpdate{
+				EVRA: sp.ApplicableEVRA, Status: "Applicable",
+			})
 		}
 	}
 	return total, data
