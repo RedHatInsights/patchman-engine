@@ -83,10 +83,10 @@ func getCounts(pkgSysCounts *[]models.PackageAccountData, accID *int) error {
 				sp.rh_account_id rh_account_id,
 				spkg.name_id package_name_id,
 				count(*) as systems_installed,
-				count(*) filter (where update_status(spkg.update_data) = 'Installable') as systems_installable,
-				count(*) filter (where update_status(spkg.update_data) != 'None') as systems_applicable
+				count(*) filter (where spkg.installable_id is not null) as systems_installable,
+				count(*) filter (where spkg.installable_id is not null or spkg.applicable_id is not null) as systems_applicable
 			`).
-			Joins("JOIN system_package spkg ON sp.id = spkg.system_id AND sp.rh_account_id = spkg.rh_account_id").
+			Joins("JOIN system_package2 spkg ON sp.id = spkg.system_id AND sp.rh_account_id = spkg.rh_account_id").
 			Joins("JOIN rh_account acc ON sp.rh_account_id = acc.id").
 			Joins("JOIN inventory.hosts ih ON sp.inventory_id = ih.id").
 			Where("sp.packages_installed > 0 AND sp.stale = FALSE").
