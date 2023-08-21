@@ -77,8 +77,8 @@ type PackagesResponse struct {
 type queryItem struct {
 	NameID             int `query:"spkg.name_id" gorm:"column:name_id"`
 	SystemsInstalled   int `json:"systems_installed" query:"count(*)" gorm:"column:systems_installed"`
-	SystemsInstallable int `json:"systems_installable" query:"count(*) filter (where update_status(spkg.update_data) = 'Installable')" gorm:"column:systems_installable"`
-	SystemsApplicable  int `json:"systems_applicable" query:"count(*) filter (where update_status(spkg.update_data) != 'None')" gorm:"column:systems_applicable"`
+	SystemsInstallable int `json:"systems_installable" query:"count(*) filter (where spkg.installable_id is not null)" gorm:"column:systems_installable"`
+	SystemsApplicable  int `json:"systems_applicable" query:"count(*) filter (where spkg.installable_id is not null or spkg.applicable_id is not null)" gorm:"column:systems_applicable"`
 }
 
 var queryItemSelect = database.MustGetSelect(&queryItem{})

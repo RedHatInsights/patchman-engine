@@ -27,7 +27,7 @@ func SystemAdvisories(tx *gorm.DB, accountID int, groups map[string]string) *gor
 }
 
 func SystemPackagesShort(tx *gorm.DB, accountID int) *gorm.DB {
-	return tx.Table("system_package spkg").
+	return tx.Table("system_package2 spkg").
 		Where("spkg.rh_account_id = ?", accountID)
 }
 
