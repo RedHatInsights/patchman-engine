@@ -74,7 +74,7 @@ type SystemPackageDBLoad struct {
 }
 
 func systemPackageQuery(db *gorm.DB, account int, groups map[string]string, inventoryID string) *gorm.DB {
-	query := database.SystemPackages2(db, account, groups).
+	query := database.SystemPackages(db, account, groups).
 		Joins("LEFT JOIN package pi ON pi.id = spkg.installable_id").
 		Joins("LEFT JOIN package pa ON pa.id = spkg.applicable_id").
 		Joins("LEFT JOIN strings AS descr ON p.description_hash = descr.id").
