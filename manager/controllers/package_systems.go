@@ -32,8 +32,6 @@ type PackageSystemItemCommon struct {
 	Tags          SystemTagsList `json:"tags" csv:"tags" query:"null" gorm:"-"`
 	BaselineAttributes
 	// helper to get AvailableEVRA (latest_evra)
-	InstallableID   int64  `json:"-" csv:"-" query:"spkg.installable_id" gorm:"column:installable_id"`
-	ApplicableID    int64  `json:"-" csv:"-" query:"spkg.applicable_id" gorm:"column:applicable_id"`
 	InstallableEVRA string `json:"-" csv:"-" query:"pi.evra" gorm:"column:installable_evra"`
 	ApplicableEVRA  string `json:"-" csv:"-" query:"pa.evra" gorm:"column:applicable_evra"`
 }
