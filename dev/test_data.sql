@@ -151,7 +151,8 @@ INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_
 (9, 109, '2.21-10.el8.x86_64', '99', '9', 9, true), -- which
 (10, 110, '0.80-2.el8.x86_64', '1010', '10', 9, true), -- passwd
 (11, 101, '5.6.13-201.fc31.x86_64', '11', '1', 7, true), -- kernel
-(12, 102, '76.0.1-2.fc31.x86_64', '22', '2', null, true); -- firefox
+(12, 102, '76.0.1-2.fc31.x86_64', '22', '2', null, true), -- firefox
+(13, 102, '77.0.1-1.fc31.x86_64', '22', '2', null, true); -- firefox
 
 INSERT INTO system_package (rh_account_id, system_id, package_id, name_id, update_data) VALUES
 (3, 12, 1, 101, '[{"evra": "5.10.13-201.fc31.x86_64", "advisory": "RH-100", "status": "Installable"}]'),
@@ -161,6 +162,15 @@ INSERT INTO system_package (rh_account_id, system_id, package_id, name_id, updat
 (3, 13, 3, 103, null),
 (3, 13, 4, 104, null),
 (3, 16, 1, 101, '[{"evra": "5.10.13-201.fc31.x86_64", "advisory": "RH-100", "status": "Installable"}]');
+
+INSERT INTO system_package2 (rh_account_id, system_id, name_id, package_id, installable_id, applicable_id) VALUES
+(3, 12, 101, 1, 11, null),
+(3, 12, 102, 2, 12, null),
+(3, 13, 101, 1, null, null),
+(3, 13, 102, 2, 12, 13),
+(3, 13, 103, 3, null, null),
+(3, 13, 104, 4, null, null),
+(3, 16, 101, 1, 11, 11);
 
 INSERT INTO timestamp_kv (name, value) VALUES
 ('last_eval_repo_based', '2018-04-05T01:23:45+02:00');
