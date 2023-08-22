@@ -537,6 +537,11 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 		data["third_party"] = system.ThirdParty
 	}
 
+	if system.SatelliteManaged && system.BaselineID != nil {
+		data["baseline_id"] = nil
+		data["baseline_uptodate"] = nil
+	}
+
 	err := tx.Model(system).Updates(data).Error
 
 	now := time.Now()
