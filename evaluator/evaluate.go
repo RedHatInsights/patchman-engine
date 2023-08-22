@@ -58,6 +58,7 @@ var (
 	enableYumUpdatesEval          bool
 	nEvalGoroutines               int
 	enableInstantNotifications    bool
+	enableSatelliteFunctionality  bool
 	errVmaasBadRequest            = errors.New("vmaas bad request")
 )
 
@@ -98,6 +99,7 @@ func configure() {
 	enableYumUpdatesEval = utils.GetBoolEnvOrDefault("ENABLE_YUM_UPDATES_EVAL", true)
 	nEvalGoroutines = utils.GetIntEnvOrDefault("MAX_EVAL_GOROUTINES", 1)
 	enableInstantNotifications = utils.GetBoolEnvOrDefault("ENABLE_INSTANT_NOTIFICATIONS", true)
+	enableSatelliteFunctionality = utils.GetBoolEnvOrDefault("ENABLE_SATELLITE_FUNCTIONALITY", true)
 	configureRemediations()
 	configureNotifications()
 	configureStatus()
@@ -249,10 +251,12 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV3Response, 
 
 func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV3Response,
 	system *models.SystemPlatform, event *mqueue.PlatformEvent) (*vmaas.UpdatesV3Response, error) {
-	if enableBaselineEval && !system.SatelliteManaged {
-		err := limitVmaasToBaseline(tx, system, updatesData)
-		if err != nil {
-			return nil, errors.Wrap(err, "Failed to evaluate baseline")
+	if enableBaselineEval {
+		if !system.SatelliteManaged || (system.SatelliteManaged && !enableSatelliteFunctionality) {
+			err := limitVmaasToBaseline(tx, system, updatesData)
+			if err != nil {
+				return nil, errors.Wrap(err, "Failed to evaluate baseline")
+			}
 		}
 	}
 
@@ -537,7 +541,7 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 		data["third_party"] = system.ThirdParty
 	}
 
-	if system.SatelliteManaged && system.BaselineID != nil {
+	if enableSatelliteFunctionality && system.SatelliteManaged && system.BaselineID != nil {
 		data["baseline_id"] = nil
 		data["baseline_uptodate"] = nil
 	}
