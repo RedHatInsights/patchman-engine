@@ -237,6 +237,7 @@ objects:
         - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_UPLOAD}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
+        - {name: ENABLE_SATELLITE_FUNCTIONALITY, value: '${ENABLE_SATELLITE_FUNCTIONALITY}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_UPLOAD}', memory: '${RES_LIMIT_MEM_EVALUATOR_UPLOAD}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_UPLOAD}', memory: '${RES_REQUEST_MEM_EVALUATOR_UPLOAD}'}
@@ -304,6 +305,7 @@ objects:
         - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_RECALC}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
+        - {name: ENABLE_SATELLITE_FUNCTIONALITY, value: '${ENABLE_SATELLITE_FUNCTIONALITY}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_RECALC}', memory: '${RES_LIMIT_MEM_EVALUATOR_RECALC}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_RECALC}', memory: '${RES_REQUEST_MEM_EVALUATOR_RECALC}'}
@@ -620,6 +622,7 @@ parameters:
 - {name: ENABLE_INSTANT_NOTIFICATIONS, value: 'true'}
 - {name: VMAAS_CACHE_SIZE, value: '10000'}
 - {name: ENABLE_PROFILER_EVALUATOR_UPLOAD, value: 'false'}
+- {name: ENABLE_SATELLITE_FUNCTIONALITY, value: 'false'}
 
 # Evaluator - recalc
 - {name: REPLICAS_EVALUATOR_RECALC, value: '1'}
