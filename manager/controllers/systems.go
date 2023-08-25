@@ -77,6 +77,7 @@ type SystemItemAttributesCommon struct {
 	SystemLastUpload
 	SystemTimestamps
 	SystemStale
+	SystemSatelliteManaged
 }
 
 // nolint: lll
@@ -267,7 +268,7 @@ func SystemsListHandler(c *gin.Context) {
 // @Produce  json
 // @Param    limit      query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset     query   int     false   "Offset for paging"
-// @Param    sort       query   string  false   "Sort field" Enums(id,display_name,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale,packages_installed,baseline_name)
+// @Param    sort       query   string  false   "Sort field" Enums(id,display_name,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale,packages_installed,baseline_name,satellite_managed)
 // @Param    search     query   string  false   "Find matching text"
 // @Param    filter[id]                     query   string  false   "Filter"
 // @Param    filter[display_name]           query   string  false   "Filter"
@@ -284,6 +285,7 @@ func SystemsListHandler(c *gin.Context) {
 // @Param    filter[created]                query   string  false   "Filter"
 // @Param    filter[baseline_name]          query   string  false   "Filter"
 // @Param    filter[os]                     query   string  false   "Filter OS version"
+// @Param    filter[satellite_managed]      query   string  false   "Filter"
 // @Param    tags                           query   []string false  "Tag filter"
 // @Param    filter[group_name] 									query	[]string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]                     query   string  false   "Filter only SAP systems"

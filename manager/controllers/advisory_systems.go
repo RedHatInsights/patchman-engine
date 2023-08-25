@@ -150,7 +150,7 @@ func advisorySystemsListHandler(c *gin.Context) {
 // @Param    advisory_id    path    string  true    "Advisory ID"
 // @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort    query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale)
+// @Param    sort    query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,other_count,satellite_managed,stale)
 // @Param    search         query   string  false   "Find matching text"
 // @Param    filter[id]              query   string  false "Filter"
 // @Param    filter[insights_id]     query   string  false "Filter"
@@ -161,6 +161,7 @@ func advisorySystemsListHandler(c *gin.Context) {
 // @Param    filter[rhba_count]      query   string  false "Filter"
 // @Param    filter[rhea_count]      query   string  false "Filter"
 // @Param    filter[other_count]     query   string  false "Filter"
+// @Param    filter[satellite_managed] query string  false "Filter"
 // @Param    filter[stale]           query   string  false "Filter"
 // @Param    filter[stale_timestamp] query   string false "Filter"
 // @Param    filter[stale_warning_timestamp] query string false "Filter"

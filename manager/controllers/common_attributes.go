@@ -81,6 +81,10 @@ type SystemAdvisoryStatus struct {
 	Status string `json:"status" csv:"status" query:"st.name" gorm:"column:status"`
 }
 
+type SystemSatelliteManaged struct {
+	SatelliteManaged bool `json:"satellite_managed" csv:"satellite_managed" query:"sp.satellite_managed" gorm:"column:satellite_managed"`
+}
+
 // nolint: lll
 type InstallableAdvisories struct {
 	InstallableRhsaCount  int `json:"installable_rhsa_count" csv:"installable_rhsa_count" query:"sp.installable_advisory_sec_count_cache" gorm:"column:installable_rhsa_count"`

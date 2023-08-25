@@ -43,6 +43,7 @@ type AdvisorySystemItemAttributes struct {
 	BaselineIDAttr
 	BaselineNameAttr
 	SystemAdvisoryStatus
+	SystemSatelliteManaged
 }
 
 type SystemsStatusID struct {
