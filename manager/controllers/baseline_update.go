@@ -38,7 +38,7 @@ type UpdateBaselineResponse struct {
 
 // nolint: funlen
 // @Summary Update a baseline for my set of systems
-// @Description Update a baseline for my set of systems
+// @Description Update a baseline for my set of systems. System cannot be satellite managed.
 // @ID updateBaseline
 // @Security RhIdentity
 // @Accept   json
@@ -90,13 +90,17 @@ func BaselineUpdateHandler(c *gin.Context) {
 	}
 
 	inventoryIDsList := map2list(req.InventoryIDs)
-	missingIDs, err := checkInventoryIDs(db, account, inventoryIDsList)
+	missingIDs, satelliteManagedIDs, err := checkInventoryIDs(db, account, inventoryIDsList)
 	if err != nil {
 		LogAndRespError(c, err, "Database error")
 		return
 	}
 
-	if len(missingIDs) > 0 {
+	if enableSatelliteFunctionality && len(satelliteManagedIDs) > 0 {
+		msg := fmt.Sprintf("Attempting to add satellite managed systems to baseline: %v", satelliteManagedIDs)
+		LogAndRespBadRequest(c, errors.New(msg), msg)
+		return
+	} else if len(missingIDs) > 0 {
 		msg := fmt.Sprintf("Missing inventory_ids: %v", missingIDs)
 		LogAndRespNotFound(c, errors.New(msg), msg)
 		return

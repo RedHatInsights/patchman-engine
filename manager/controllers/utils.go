@@ -28,6 +28,7 @@ const FilterNotSupportedMsg = "filtering not supported on this endpoint"
 var tagRegex = regexp.MustCompile(`([^/=]+)/([^/=]+)(=([^/=]+))?`)
 var enableCyndiTags = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_TAGS", false)
 var disableCachedCounts = utils.GetBoolEnvOrDefault("DISABLE_CACHE_COUNTS", false)
+var enableSatelliteFunctionality = utils.GetBoolEnvOrDefault("ENABLE_SATELLITE_FUNCTIONALITY", true)
 
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	utils.LogError("err", err.Error(), respMsg)

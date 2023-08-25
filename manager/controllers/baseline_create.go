@@ -38,8 +38,13 @@ type CreateBaselineResponse struct {
 	BaselineID int64 `json:"baseline_id" example:"1"` // Updated baseline unique ID, it can not be changed
 }
 
+type SystemBaselineDBLookup struct {
+	InventoryID      string `query:"sp.inventory_id"`
+	SatelliteManaged bool   `query:"sp.satellite_managed"`
+}
+
 // @Summary Create a baseline for my set of systems
-// @Description Create a baseline for my set of systems
+// @Description Create a baseline for my set of systems. System cannot be satellite managed.
 // @ID createBaseline
 // @Security RhIdentity
 // @Accept   json
@@ -74,13 +79,17 @@ func CreateBaselineHandler(c *gin.Context) {
 	request.Description = utils.EmptyToNil(request.Description)
 
 	db := middlewares.DBFromContext(c)
-	missingIDs, err := checkInventoryIDs(db, accountID, request.InventoryIDs)
+	missingIDs, satelliteManagedIDs, err := checkInventoryIDs(db, accountID, request.InventoryIDs)
 	if err != nil {
 		LogAndRespError(c, err, "Database error")
 		return
 	}
 
-	if len(missingIDs) > 0 {
+	if enableSatelliteFunctionality && len(satelliteManagedIDs) > 0 {
+		msg := fmt.Sprintf("Attempting to add satellite managed systems to baseline: %v", satelliteManagedIDs)
+		LogAndRespBadRequest(c, errors.New(msg), msg)
+		return
+	} else if len(missingIDs) > 0 {
 		msg := fmt.Sprintf("Missing inventory_ids: %v", missingIDs)
 		LogAndRespNotFound(c, errors.New(msg), msg)
 		return
@@ -141,22 +150,23 @@ func buildCreateBaselineQuery(db *gorm.DB, request CreateBaselineRequest, accoun
 	return baseline.ID, err
 }
 
-func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string) (missingIDs []string, err error) {
-	var containingIDs []string
+func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string,
+) (missingIDs, satelliteManagedIDs []string, err error) {
+	var containingSystems []SystemBaselineDBLookup
 	err = db.Table("system_platform sp").
 		Where("rh_account_id = ? AND inventory_id::text IN (?)", accountID, inventoryIDs).
-		Pluck("sp.inventory_id", &containingIDs).Error
+		Scan(&containingSystems).Error
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	if len(inventoryIDs) == len(containingIDs) {
-		return []string{}, nil // all inventoryIDs found in database
-	}
+	containingIDsMap := make(map[string]bool, len(containingSystems))
+	for _, containingSystem := range containingSystems {
+		containingIDsMap[containingSystem.InventoryID] = true
 
-	containingIDsMap := make(map[string]bool, len(containingIDs))
-	for _, containingID := range containingIDs {
-		containingIDsMap[containingID] = true
+		if containingSystem.SatelliteManaged {
+			satelliteManagedIDs = append(satelliteManagedIDs, containingSystem.InventoryID)
+		}
 	}
 
 	for _, inventoryID := range inventoryIDs {
@@ -164,6 +174,9 @@ func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string) (missi
 			missingIDs = append(missingIDs, inventoryID)
 		}
 	}
+
 	sort.Strings(missingIDs)
-	return missingIDs, nil
+	sort.Strings(satelliteManagedIDs)
+
+	return missingIDs, satelliteManagedIDs, nil
 }
