@@ -678,7 +678,7 @@
             },
             "put": {
                 "summary": "Create a baseline for my set of systems",
-                "description": "Create a baseline for my set of systems",
+                "description": "Create a baseline for my set of systems. System cannot be satellite managed.",
                 "operationId": "createBaseline",
                 "requestBody": {
                     "description": "Request body",
@@ -867,7 +867,7 @@
             },
             "put": {
                 "summary": "Update a baseline for my set of systems",
-                "description": "Update a baseline for my set of systems",
+                "description": "Update a baseline for my set of systems. System cannot be satellite managed.",
                 "operationId": "updateBaseline",
                 "parameters": [
                     {
