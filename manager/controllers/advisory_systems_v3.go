@@ -44,6 +44,7 @@ type AdvisorySystemItemAttributes struct {
 	BaselineNameAttr
 	SystemAdvisoryStatus
 	SystemSatelliteManaged
+	SystemBuiltPkgcache
 }
 
 type SystemsStatusID struct {

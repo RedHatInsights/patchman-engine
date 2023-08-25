@@ -2893,7 +2893,8 @@
                                 "rhea_count",
                                 "other_count",
                                 "satellite_managed",
-                                "stale"
+                                "stale",
+                                "built_pkgcache"
                             ]
                         }
                     },
@@ -3053,6 +3054,14 @@
                         "name": "filter[os]",
                         "in": "query",
                         "description": "Filter OS version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[built_pkgcache]",
+                        "in": "query",
+                        "description": "Filter",
                         "schema": {
                             "type": "string"
                         }
@@ -3525,7 +3534,8 @@
                                 "stale",
                                 "packages_installed",
                                 "baseline_name",
-                                "satellite_managed"
+                                "satellite_managed",
+                                "built_pkgcache"
                             ]
                         }
                     },
@@ -3659,6 +3669,14 @@
                     },
                     {
                         "name": "filter[satellite_managed]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[built_pkgcache]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -5718,6 +5736,9 @@
                     "baseline_name": {
                         "type": "string"
                     },
+                    "built_pkgcache": {
+                        "type": "boolean"
+                    },
                     "created": {
                         "type": "string"
                     },
@@ -5790,6 +5811,9 @@
                     },
                     "baseline_name": {
                         "type": "string"
+                    },
+                    "built_pkgcache": {
+                        "type": "boolean"
                     },
                     "created": {
                         "type": "string"
@@ -6653,6 +6677,9 @@
                     "baseline_name": {
                         "type": "string"
                     },
+                    "built_pkgcache": {
+                        "type": "boolean"
+                    },
                     "created": {
                         "type": "string"
                     },
@@ -6760,6 +6787,9 @@
                     "baseline_uptodate": {
                         "type": "boolean"
                     },
+                    "built_pkgcache": {
+                        "type": "boolean"
+                    },
                     "created": {
                         "type": "string"
                     },
@@ -6848,6 +6878,9 @@
                     },
                     "baseline_name": {
                         "type": "string"
+                    },
+                    "built_pkgcache": {
+                        "type": "boolean"
                     },
                     "created": {
                         "type": "string"

@@ -31,6 +31,7 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	assert.Equal(t, "baseline_1-1", output.Data[0].Attributes.BaselineName)
 	assert.Equal(t, int64(1), output.Data[0].Attributes.BaselineID)
 	assert.False(t, output.Data[0].Attributes.SatelliteManaged)
+	assert.False(t, output.Data[0].Attributes.BuiltPkgcache)
 }
 
 func TestAdvisorySystemsIDsDefault(t *testing.T) { //nolint:dupl

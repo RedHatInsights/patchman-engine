@@ -34,6 +34,7 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, "baseline_1-1", output.Data[0].Attributes.BaselineName)
 	assert.Equal(t, int64(1), output.Data[0].Attributes.BaselineID)
 	assert.False(t, output.Data[0].Attributes.SatelliteManaged)
+	assert.False(t, output.Data[0].Attributes.BuiltPkgcache)
 
 	// links
 	assert.Equal(t, "/?offset=0&limit=20&filter[stale]=eq:false&sort=-last_upload", output.Links.First)
