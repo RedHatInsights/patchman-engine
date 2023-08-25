@@ -361,3 +361,29 @@ func TestSatelliteSystemAdvisories(t *testing.T) {
 
 	database.Db.Delete(system)
 }
+
+func TestCallVmaas400(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	utils.SkipWithoutPlatform(t)
+	configure()
+	req := vmaas.UpdatesV3Request{TestReturnStatus: 400}
+	_, err := callVMaas(context.Background(), &req)
+	assert.ErrorIs(t, err, errVmaasBadRequest)
+}
+
+func TestGetUpdatesDataVmaas400(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	utils.SkipWithoutPlatform(t)
+	configure()
+	loadCache()
+	req := vmaas.UpdatesV3Request{
+		TestReturnStatus: 400, PackageList: []string{"pkg"}, RepositoryList: []string{"repo"},
+	}
+	reqJSON, _ := json.Marshal(req)
+	reqString := string(reqJSON)
+	sp := models.SystemPlatform{VmaasJSON: &reqString}
+	res, err := getUpdatesData(context.Background(), database.Db, &sp)
+	// response and error should be nil, system is skipped due to VMaaS 400
+	assert.Nil(t, err)
+	assert.Nil(t, res)
+}

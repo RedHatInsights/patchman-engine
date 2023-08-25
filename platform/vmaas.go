@@ -1,12 +1,23 @@
 package platform
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 func updatesHandler(c *gin.Context) {
+	var body struct {
+		ReturnStatus int `json:"return_status"`
+	}
+	jsonData, _ := io.ReadAll(c.Request.Body)
+	json.Unmarshal(jsonData, &body) // nolint:errcheck
+	if body.ReturnStatus > 200 {
+		c.AbortWithStatus(body.ReturnStatus)
+		return
+	}
 	data := `{
         "basearch": "i686",
         "modules_list": [],

@@ -19,6 +19,8 @@ type UpdatesV3Request struct {
 	OptimisticUpdates *bool `json:"optimistic_updates,omitempty"`
 	// VMaaS will check package_list and return error if we provide package_list without epochs
 	EpochRequired *bool `json:"epoch_required,omitempty"`
+	// helper for tests to get different status code from VMaaS mock
+	TestReturnStatus int `swaggerignore:"true" json:"return_status,omitempty"`
 }
 
 type UpdatesV3RequestModulesList struct {
