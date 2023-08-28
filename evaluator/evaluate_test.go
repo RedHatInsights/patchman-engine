@@ -110,7 +110,8 @@ func TestEvaluateYum(t *testing.T) {
 	expectedAddedAdvisories := []string{"RH-1", "RH-2", "RH-100", "RHSA-2021:3801"}
 	expectedAdvisoryIDs := []int64{1, 2, 100, 14} // advisories expected to be paired to the system after evaluation
 	oldSystemAdvisoryIDs := []int64{1, 2}         // old advisories paired with the system
-	expectedPackageIDs := []int64{1, 2, 105}
+	expectedPackageIDs := []int64{
+		1, 2, 107} // kernel-5.6.13-200.fc31.x86_64, firefox-76.0.1-1.fc31.x86_64, suricata-6.0.3-2.fc35.i686
 
 	database.DeleteSystemAdvisories(t, sysID, expectedAdvisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
