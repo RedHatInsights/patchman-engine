@@ -8,7 +8,7 @@ Main database tables description:
 - **advisory_account_data** - stores info about all advisories detected within at least one system that belongs to a given account. So it provides overall statistics about system advisories displayed by the application.
 - **package_name** - names of the packages installed on systems
 - **package** - list of all packages versions, precisely all EVRAs (epoch-version-release-arch)
-- **system_package** - list of packages installed on a system
+- **system_package2** - list of packages installed on a system
 
 ## Schema
 ![](graphics/db_diagram.png)
