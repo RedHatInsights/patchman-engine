@@ -5648,7 +5648,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_package_.*\"}) by (pod))",
+                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_package2_.*\"}) by (pod))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "system_package_sum",
