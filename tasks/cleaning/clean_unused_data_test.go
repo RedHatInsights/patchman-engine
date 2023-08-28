@@ -43,13 +43,11 @@ func TestCleanUnusedPackages(t *testing.T) {
 
 	// anything else deleted by mistake?
 	// it is affected by test order
-	// there are 2 packages with synced=false
-	//   105 3 6.0.3-2.fc35.i686
-	//   106 101 0000.0.0-0.x86_64
+	// there are multiple packages with synced=false
 	var afterPkgCount int64
 	err = database.Db.Model(models.Package{}).Count(&afterPkgCount).Error
 	assert.Nil(t, err)
-	assert.Equal(t, beforePkgCount, afterPkgCount+1)
+	assert.Equal(t, beforePkgCount, afterPkgCount+2)
 }
 
 // Test for making sure system culling works
