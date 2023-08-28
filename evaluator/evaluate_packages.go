@@ -5,8 +5,7 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/base/vmaas"
-	"bytes"
-	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -57,45 +56,60 @@ func lazySavePackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV3Response) error {
 	return nil
 }
 
+func getMissingPackage(tx *gorm.DB, nevra string) *models.Package {
+	_, found := memoryPackageCache.GetByNevra(nevra)
+	if found {
+		// package is already in db/cache, nothing needed
+		return nil
+	}
+
+	utils.LogTrace("missing nevra", nevra, "getMissingPackages")
+	parsed, err := utils.ParseNevra(nevra)
+	if err != nil {
+		utils.LogWarn("err", err.Error(), "nevra", nevra, "Unable to parse nevra")
+		return nil
+	}
+
+	latestName, found := memoryPackageCache.GetLatestByName(parsed.Name)
+	pkg := models.Package{EVRA: parsed.EVRAString()}
+	if found {
+		// name is known, create missing package in db/cache
+		pkg.NameID = latestName.NameID
+		pkg.SummaryHash = &latestName.SummaryHash
+		pkg.DescriptionHash = &latestName.DescriptionHash
+	} else {
+		// name is unknown, insert into package_name
+		pkgName := models.PackageName{Name: parsed.Name}
+		err := updatePackageNameDB(tx, &pkgName)
+		if err != nil {
+			utils.LogError("err", err.Error(), "nevra", nevra, "unknown package name insert failed")
+		}
+		pkg.NameID = pkgName.ID
+		if pkg.NameID == 0 {
+			// insert conflict, it did not return ID
+			// try to get ID from package_name table
+			tx.Where("name = ?", parsed.Name).First(&pkgName)
+			pkg.NameID = pkgName.ID
+		}
+	}
+	return &pkg
+}
+
 // Get packages with known name but version missing in db/cache
 func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV3Response) models.PackageSlice {
 	updates := vmaasData.GetUpdateList()
 	packages := make(models.PackageSlice, 0, len(updates))
-	for nevra := range updates {
-		_, found := memoryPackageCache.GetByNevra(nevra)
-		if found {
-			// package is already in db/cache, nothing needed
-			continue
+	for nevra, update := range updates {
+		if pkg := getMissingPackage(tx, nevra); pkg != nil {
+			packages = append(packages, *pkg)
 		}
-		utils.LogTrace("missing nevra", nevra, "getMissingPackages")
-		parsed, err := utils.ParseNevra(nevra)
-		if err != nil {
-			utils.LogWarn("err", err.Error(), "nevra", nevra, "Unable to parse nevra")
-			continue
-		}
-		latestName, found := memoryPackageCache.GetLatestByName(parsed.Name)
-		pkg := models.Package{EVRA: parsed.EVRAString()}
-		if found {
-			// name is known, create missing package in db/cache
-			pkg.NameID = latestName.NameID
-			pkg.SummaryHash = &latestName.SummaryHash
-			pkg.DescriptionHash = &latestName.DescriptionHash
-		} else {
-			// name is unknown, insert into package_name
-			pkgName := models.PackageName{Name: parsed.Name}
-			err := updatePackageNameDB(tx, &pkgName)
-			if err != nil {
-				utils.LogError("err", err.Error(), "nevra", nevra, "unknown package name insert failed")
-			}
-			pkg.NameID = pkgName.ID
-			if pkg.NameID == 0 {
-				// insert conflict, it did not return ID
-				// try to get ID from package_name table
-				tx.Where("name = ?", parsed.Name).First(&pkgName)
-				pkg.NameID = pkgName.ID
+		for _, pkgUpdate := range update.GetAvailableUpdates() {
+			// don't use pkgUpdate.Package since it might be missing epoch, construct it from name and evra
+			updateNevra := fmt.Sprintf("%s-%s", pkgUpdate.GetPackageName(), pkgUpdate.GetEVRA())
+			if pkg := getMissingPackage(tx, updateNevra); pkg != nil {
+				packages = append(packages, *pkg)
 			}
 		}
-		packages = append(packages, pkg)
 	}
 	return packages
 }
@@ -185,20 +199,19 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform,
 		if ok {
 			packageIDs = append(packageIDs, pkgMeta.ID)
 			p := namedPackage{
-				NameID:     pkgMeta.NameID,
-				Name:       pkgMeta.Name,
-				PackageID:  pkgMeta.ID,
-				EVRA:       pkgMeta.Evra,
-				WasStored:  false,
-				UpdateData: nil,
+				NameID:    pkgMeta.NameID,
+				Name:      pkgMeta.Name,
+				PackageID: pkgMeta.ID,
+				EVRA:      pkgMeta.Evra,
+				WasStored: false,
 			}
 			packages = append(packages, p)
 			id2index[pkgMeta.ID] = i
 			i++
 		}
 	}
-	rows, err := tx.Table("system_package").
-		Select("package_id, update_data").
+	rows, err := tx.Table("system_package2").
+		Select("package_id, installable_id, applicable_id").
 		Where("rh_account_id = ? AND system_id = ?", system.RhAccountID, system.ID).
 		Where("package_id in (?)", packageIDs).
 		Rows()
@@ -213,7 +226,8 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform,
 		}
 		index := id2index[columns.PackageID]
 		packages[index].WasStored = true
-		packages[index].UpdateData = columns.UpdateData
+		packages[index].InstallableID = columns.InstallableID
+		packages[index].ApplicableID = columns.ApplicableID
 	}
 	utils.LogInfo("inventoryID", system.InventoryID, "packages", numUpdates, "already stored", len(packages))
 	return packages, err
@@ -234,16 +248,24 @@ func isValidNevra(nevra string, packagesByNEVRA *map[string]namedPackage) bool {
 	return true
 }
 
-func updateDataChanged(currentNamedPackage *namedPackage, updateDataJSON []byte) bool {
-	if bytes.Equal(updateDataJSON, currentNamedPackage.UpdateData) {
+func latestPkgsChanged(currentNamedPackage *namedPackage, installableID, applicableID int64) bool {
+	currentInstallableID, currentApplicableID := int64(0), int64(0)
+	if currentNamedPackage.InstallableID != nil {
+		currentInstallableID = *currentNamedPackage.InstallableID
+	}
+	if currentNamedPackage.ApplicableID != nil {
+		currentApplicableID = *currentNamedPackage.ApplicableID
+	}
+
+	if installableID == currentInstallableID && applicableID == currentApplicableID {
 		// If the update_data we want to store is null, we skip only if there was a row for this specific
 		// system_package already stored.
-		if updateDataJSON == nil && currentNamedPackage.WasStored {
+		if installableID == 0 && applicableID == 0 && currentNamedPackage.WasStored {
 			return false
 		}
 
 		// If its not null, then the previous check ensured that the old update data matches new one
-		if updateDataJSON != nil {
+		if installableID != 0 || applicableID != 0 {
 			return false
 		}
 	}
@@ -254,15 +276,11 @@ func createSystemPackage(nevra string,
 	updateData vmaas.UpdatesV3ResponseUpdateList,
 	system *models.SystemPlatform,
 	packagesByNEVRA *map[string]namedPackage) (systemPackagePtr *models.SystemPackage, updatesChanged bool) {
-	updateDataJSON, err := vmaasResponse2UpdateDataJSON(&updateData)
-	if err != nil {
-		utils.LogError("nevra", nevra, "VMaaS updates response parsing failed")
-		return nil, false
-	}
+	installableID, applicableID := latestPackagesFromVmaasResponse(&updateData)
 
 	// Skip overwriting entries which have the same data as before
 	currentNamedPackage := (*packagesByNEVRA)[nevra]
-	if !updateDataChanged(&currentNamedPackage, updateDataJSON) {
+	if !latestPkgsChanged(&currentNamedPackage, installableID, applicableID) {
 		return nil, false
 	}
 
@@ -270,8 +288,15 @@ func createSystemPackage(nevra string,
 		RhAccountID: system.RhAccountID,
 		SystemID:    system.ID,
 		PackageID:   currentNamedPackage.PackageID,
-		UpdateData:  updateDataJSON,
 		NameID:      currentNamedPackage.NameID,
+	}
+	if installableID != 0 {
+		systemPackage.InstallableID = &installableID
+		// // installable advisory is also applicable unless there is a newer applicable advisory
+		// systemPackage.ApplicableID = &installableID
+	}
+	if applicableID != 0 {
+		systemPackage.ApplicableID = &applicableID
 	}
 	return &systemPackage, true
 }
@@ -304,59 +329,47 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 	}
 	return installed, updatable, errors.Wrap(
 		database.UnnestInsert(tx,
-			"INSERT INTO system_package (rh_account_id, system_id, package_id, update_data, name_id)"+
-				" (select * from unnest($1::int[], $2::bigint[], $3::bigint[], $4::jsonb[], $5::bigint[]))"+
-				" ON CONFLICT (rh_account_id, system_id, package_id) DO UPDATE SET update_data = EXCLUDED.update_data", toStore),
+			"INSERT INTO system_package2 (rh_account_id, system_id, package_id, name_id, installable_id, applicable_id)"+
+				" (select * from unnest($1::int[], $2::bigint[], $3::bigint[], $4::bigint[], $5::bigint[], $6::bigint[]))"+
+				" ON CONFLICT (rh_account_id, system_id, package_id)"+
+				" DO UPDATE SET installable_id = EXCLUDED.installable_id, applicable_id = EXCLUDED.applicable_id", toStore),
 		"Storing system packages")
 }
 
-func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV3ResponseUpdateList) ([]byte, error) {
-	var latestInstallable models.PackageUpdate
-	var latestApplicable models.PackageUpdate
-	uniqUpdates := make(map[models.PackageUpdate]bool)
-	pkgUpdates := make([]models.PackageUpdate, 0, len(updateData.GetAvailableUpdates()))
+func latestPackagesFromVmaasResponse(updateData *vmaas.UpdatesV3ResponseUpdateList) (int64, int64) {
+	var (
+		latestInstallable, latestApplicable string
+		installableID, applicableID         int64
+	)
+	uniqUpdates := make(map[string]bool)
 	for _, upData := range updateData.GetAvailableUpdates() {
-		if len(upData.GetPackage()) == 0 {
+		nevra := upData.GetPackage()
+		if len(nevra) == 0 {
 			// no update
 			continue
 		}
-		// before we used nevra.EVRAString() function which shows only non zero epoch, keep it consistent
-		evra := strings.TrimPrefix(upData.GetEVRA(), "0:")
 		// Keep only unique entries for each update in the list
-		pkgUpdate := models.PackageUpdate{
-			EVRA: evra, Advisory: upData.GetErratum(), Status: STATUS[upData.StatusID],
-		}
-		if !uniqUpdates[pkgUpdate] {
-			pkgUpdates = append(pkgUpdates, pkgUpdate)
-			uniqUpdates[pkgUpdate] = true
+		if !uniqUpdates[nevra] {
+			uniqUpdates[nevra] = true
 			switch upData.StatusID {
 			case INSTALLABLE:
-				latestInstallable = pkgUpdate
+				latestInstallable = nevra
 			case APPLICABLE:
-				latestApplicable = pkgUpdate
+				latestApplicable = nevra
 			}
 		}
 	}
-
-	if prunePackageLatestOnly && len(pkgUpdates) > 1 {
-		pkgUpdates = make([]models.PackageUpdate, 0, 2)
-		if latestInstallable.EVRA != "" {
-			pkgUpdates = append(pkgUpdates, latestInstallable)
-		}
-		if latestApplicable.EVRA != "" {
-			pkgUpdates = append(pkgUpdates, latestApplicable)
+	if len(latestInstallable) > 0 {
+		if installableFromCache, ok := memoryPackageCache.GetByNevra(latestInstallable); ok {
+			installableID = installableFromCache.ID
 		}
 	}
-
-	var updateDataJSON []byte
-	var err error
-	if len(pkgUpdates) > 0 {
-		updateDataJSON, err = json.Marshal(pkgUpdates)
-		if err != nil {
-			return nil, errors.Wrap(err, "Serializing pkg json")
+	if len(latestApplicable) > 0 {
+		if applicableFromCache, ok := memoryPackageCache.GetByNevra(latestApplicable); ok {
+			applicableID = applicableFromCache.ID
 		}
 	}
-	return updateDataJSON, nil
+	return installableID, applicableID
 }
 
 func deleteOldSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
@@ -375,10 +388,11 @@ func deleteOldSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 }
 
 type namedPackage struct {
-	NameID     int64
-	Name       string
-	PackageID  int64
-	EVRA       string
-	WasStored  bool
-	UpdateData []byte
+	NameID        int64
+	Name          string
+	PackageID     int64
+	EVRA          string
+	WasStored     bool
+	InstallableID *int64
+	ApplicableID  *int64
 }
