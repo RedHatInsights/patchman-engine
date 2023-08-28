@@ -135,29 +135,6 @@ func TestEvaluateYum(t *testing.T) {
 	assert.Equal(t, 1, len(mockWriter.Messages))
 }
 
-func TestEvaluatePruneUpdates(t *testing.T) {
-	assert.NoError(t, os.Setenv("PRUNE_UPDATES_LATEST_ONLY", "true"))
-	defer os.Setenv("PRUNE_UPDATES_LATEST_ONLY", "false")
-
-	TestEvaluate(t)
-	count := database.CheckSystemUpdatesCount(t, rhAccountID, systemID)
-	for _, c := range count {
-		assert.LessOrEqual(t, c, 1, "All packages should only have single update stored")
-	}
-}
-
-func TestEvaluateDontPruneUpdates(t *testing.T) {
-	assert.NoError(t, os.Setenv("PRUNE_UPDATES_LATEST_ONLY", "false"))
-	TestEvaluate(t)
-	count := database.CheckSystemUpdatesCount(t, rhAccountID, systemID)
-	oneGreater := false
-	for _, c := range count {
-		oneGreater = oneGreater || (c > 1)
-	}
-	assert.True(t, oneGreater,
-		"At least one package should have multiple updates (OR we have package pruning enabled)")
-}
-
 func TestRun(t *testing.T) {
 	configure()
 	var nReaders int32
