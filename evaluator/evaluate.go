@@ -44,7 +44,6 @@ var (
 	enableStaleSysEval            bool
 	enableLazyPackageSave         bool
 	enableBaselineEval            bool
-	prunePackageLatestOnly        bool
 	enablePackageCache            bool
 	preloadPackageCache           bool
 	packageCacheSize              int
@@ -76,7 +75,6 @@ func configure() {
 	enableStaleSysEval = utils.GetBoolEnvOrDefault("ENABLE_STALE_SYSTEM_EVALUATION", true)
 	enableLazyPackageSave = utils.GetBoolEnvOrDefault("ENABLE_LAZY_PACKAGE_SAVE", true)
 	enableBaselineEval = utils.GetBoolEnvOrDefault("ENABLE_BASELINE_EVAL", true)
-	prunePackageLatestOnly = utils.GetBoolEnvOrDefault("PRUNE_UPDATES_LATEST_ONLY", false)
 	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
 	useTraceLevel := strings.ToLower(utils.Getenv("LOG_LEVEL", "INFO")) == "trace"
 	vmaasClient = &api.Client{
