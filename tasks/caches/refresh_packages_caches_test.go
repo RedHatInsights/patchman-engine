@@ -57,5 +57,5 @@ func TestUpdatePkgCacheValidity(t *testing.T) {
 	// set back to false
 	database.Db.Table("rh_account").
 		Where("id = ?", _acc).
-		Update("valid_package_cache = ?", false)
+		Update("valid_package_cache", false)
 }
