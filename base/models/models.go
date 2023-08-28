@@ -114,16 +114,16 @@ func (Package) TableName() string {
 type PackageSlice []Package
 
 type SystemPackage struct {
-	RhAccountID int   `gorm:"primaryKey"`
-	SystemID    int64 `gorm:"primaryKey"`
-	PackageID   int64 `gorm:"primaryKey"`
-	// Will contain json in form of [{ "evra": "...", "advisory": "..."}]
-	UpdateData []byte
-	NameID     int64
+	RhAccountID   int   `gorm:"primaryKey"`
+	SystemID      int64 `gorm:"primaryKey"`
+	PackageID     int64 `gorm:"primaryKey"`
+	NameID        int64
+	InstallableID *int64
+	ApplicableID  *int64
 }
 
 func (SystemPackage) TableName() string {
-	return "system_package"
+	return "system_package2"
 }
 
 type PackageUpdate struct {
