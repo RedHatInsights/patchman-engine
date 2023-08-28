@@ -173,16 +173,6 @@ func CheckAdvisoriesAccountDataNotified(t *testing.T, rhAccountID int, advisoryI
 	}
 }
 
-func CheckSystemUpdatesCount(t *testing.T, accountID int, systemID int64) []int {
-	var cnt []int
-	assert.NoError(t, Db.Table("system_package spkg").
-		Select("json_array_length(spkg.update_data::json) as len").
-		Where("spkg.update_data is not null").
-		Where("spkg.system_id = ? AND spkg.rh_account_id = ? ", systemID, accountID).
-		Pluck("len", &cnt).Error)
-	return cnt
-}
-
 func CreateReportedAdvisories(reportedAdvisories []string, status []int) map[string]int {
 	reportedAdvisoriesMap := make(map[string]int, len(reportedAdvisories))
 	for i, adv := range reportedAdvisories {
@@ -314,7 +304,10 @@ func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int64, repoIDs []
 }
 
 func DeleteNewlyAddedPackages(t *testing.T) {
-	query := Db.Model(models.Package{}).Where("id >= 100")
+	query := Db.Table("package p").
+		Where("id >= 100").
+		Where("NOT EXISTS (SELECT 1 FROM system_package2 sp WHERE" +
+			" p.id = sp.package_id OR p.id = sp.installable_id OR p.id = sp.applicable_id)")
 	assert.Nil(t, query.Delete(models.Package{}).Error)
 	var cnt int64
 	assert.Nil(t, query.Count(&cnt).Error)
