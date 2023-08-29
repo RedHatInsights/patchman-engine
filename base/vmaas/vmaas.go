@@ -101,6 +101,14 @@ type UpdatesV3ResponseAvailableUpdates struct {
 }
 
 func (o *UpdatesV3ResponseAvailableUpdates) GetPackage() string {
+	// `package` does not contain epoch if epoch=0
+	// get epoch from `evra` if it exists (not available in yum_updates)
+	name := o.GetPackageName()
+	evra := o.GetEVRA()
+	if len(name) > 0 && len(evra) > 0 {
+		return strings.Join([]string{name, evra}, "-")
+	}
+	// get value from `package` if `package_name` or `evra` is empty
 	if o == nil || o.Package == nil {
 		var ret string
 		return ret

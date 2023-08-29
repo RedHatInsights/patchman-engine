@@ -261,14 +261,18 @@ func TestSatelliteSystemAdvisories(t *testing.T) {
 						"basearch": "x86_64",
 						"releasever": "8",
 						"repository": "rhel-8-for-x86_64-appstream-rpms",
-						"package": "git-2.39.3-1.el8_8.x86_64"
+						"package": "git-2.39.3-1.el8_8.x86_64",
+						"package_name": "git",
+						"evra": "0:2.39.3-1.el8_8.x86_64"
 					},
 					{
 						"erratum": "RHSA-2023:3240",
 						"basearch": "x86_64",
 						"releasever": "8",
 						"repository": "rhel-8-for-x86_64-appstream-rpms",
-						"package": "git-2.39.4-1.el8_8.x86_64"
+						"package": "git-2.39.4-1.el8_8.x86_64",
+						"package_name": "git",
+						"evra": "0:2.39.4-1.el8_8.x86_64"
 					}
 				]
 			},
@@ -279,7 +283,9 @@ func TestSatelliteSystemAdvisories(t *testing.T) {
 						"basearch": "x86_64",
 						"releasever": "8",
 						"repository": "rhel-8-for-x86_64-appstream-rpms",
-						"package": "sqlite-3.26.0-16.el8_6.x86_64"
+						"package": "sqlite-3.26.0-16.el8_6.x86_64",
+						"package_name": "sqlite",
+						"evra": "0:3.26.0-16.el8_6.x86_64"
 					}
 				]
 			}
@@ -307,7 +313,7 @@ func TestSatelliteSystemAdvisories(t *testing.T) {
 							"basearch": "x86_64",
 							"releasever": "8",
 							"repository": "rhel-8-for-x86_64-appstream-rpms",
-							"package": "git-2.39.3-1.el8_8.x86_64"
+							"package": "git-0:2.39.3-1.el8_8.x86_64"
 						}
 					]
 				},

@@ -239,7 +239,7 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV3Response, 
 				Erratum:     u.Erratum,
 				Package:     u.Package,
 				PackageName: utils.PtrString(nevra.Name),
-				EVRA:        utils.PtrString(nevra.EVRAString()),
+				EVRA:        utils.PtrString(nevra.EVRAStringE(true)),
 			})
 		}
 		updatesMap[k] = &vmaas.UpdatesV3ResponseUpdateList{
