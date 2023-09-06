@@ -348,11 +348,6 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		colsToUpdate = append(colsToUpdate, "yum_updates")
 	}
 
-	if err := database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
-		Save(&systemPlatform).Error; err != nil {
-		return nil, errors.Wrap(err, "Unable to save or update system in database")
-	}
-
 	if err := storeOrUpdateSysPlatform(tx, &systemPlatform, colsToUpdate); err != nil {
 		return nil, errors.Wrap(err, "Unable to save or update system in database")
 	}
