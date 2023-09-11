@@ -377,6 +377,9 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 		utils.LogWarn("err", errSelect, "couldn't find system for update")
 	}
 
+	// return system_platform record after update
+	tx = tx.Clauses(clause.Returning{})
+
 	if system.ID != 0 {
 		// update system
 		err = tx.Select(colsToUpdate).Updates(system).Error
