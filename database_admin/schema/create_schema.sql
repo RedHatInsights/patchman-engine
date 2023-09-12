@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (115, false);
+VALUES (116, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -387,6 +387,11 @@ BEGIN
     WHERE rh_account_id = v_account_id
       AND system_id = v_system_id;
 
+    DELETE
+    FROM system_package2
+    WHERE rh_account_id = v_account_id
+      AND system_id = v_system_id;
+
     RETURN QUERY DELETE FROM system_platform
         WHERE rh_account_id = v_account_id AND
               id = v_system_id
@@ -425,6 +430,11 @@ BEGIN
          packages as (
              DELETE
                  FROM system_package
+                     WHERE (rh_account_id, system_id) in (select rh_account_id, id from systems)
+         ),
+         packages2 as (
+             DELETE
+                 FROM system_package2
                      WHERE (rh_account_id, system_id) in (select rh_account_id, id from systems)
          ),
          deleted as (
