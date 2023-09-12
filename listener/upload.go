@@ -378,7 +378,12 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 	}
 
 	// return system_platform record after update
-	tx = tx.Clauses(clause.Returning{})
+	tx = tx.Clauses(clause.Returning{
+		Columns: []clause.Column{
+			{Name: "id"}, {Name: "inventory_id"}, {Name: "rh_account_id"},
+			{Name: "unchanged_since"}, {Name: "last_evaluation"},
+		},
+	})
 
 	if system.ID != 0 {
 		// update system
