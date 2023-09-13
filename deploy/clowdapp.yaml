@@ -122,6 +122,7 @@ objects:
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_MANAGER}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_MANAGER}'}
+        - {name: ENABLE_SATELLITE_FUNCTIONALITY, value: '${ENABLE_SATELLITE_FUNCTIONALITY}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_MANAGER}', memory: '${RES_LIMIT_MEM_MANAGER}'}
