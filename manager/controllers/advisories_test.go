@@ -211,7 +211,7 @@ func TestAdvisoriesPossibleSorts(t *testing.T) {
 	core.SetupTest(t)
 
 	for sort := range AdvisoriesFields {
-		if sort == "ReleaseVersions" {
+		if sort == "releaseversions" {
 			// this fiesd is not sortable, skip it
 			continue
 		}

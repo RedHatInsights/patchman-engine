@@ -4,12 +4,13 @@ import (
 	"app/base"
 	"app/base/utils"
 	"fmt"
-	"github.com/pkg/errors"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type AttrParser func(string) (interface{}, error)
@@ -91,7 +92,7 @@ func getQueryFromTags(v reflect.Type) (AttrMap, []AttrName, error) {
 				res[k] = v
 			}
 		} else {
-			columnName := field.Name
+			columnName := strings.ToLower(field.Name)
 			if expr, has := field.Tag.Lookup("gorm"); has {
 				match := ColumnNameRe.FindStringSubmatch(expr)
 				if len(match) > 0 {
