@@ -365,7 +365,8 @@
                                 "last_upload",
                                 "stale",
                                 "status",
-                                "template"
+                                "template",
+                                "groups"
                             ]
                         }
                     },
@@ -1053,7 +1054,8 @@
                                 "applicable_rhba_count",
                                 "applicable_rhea_count",
                                 "applicable_other_count",
-                                "last_upload"
+                                "last_upload",
+                                "groups"
                             ]
                         }
                     },
@@ -4528,7 +4530,8 @@
                                 "other_count",
                                 "stale",
                                 "packages_installed",
-                                "baseline_name"
+                                "baseline_name",
+                                "groups"
                             ]
                         }
                     },

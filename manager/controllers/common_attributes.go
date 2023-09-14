@@ -41,7 +41,7 @@ type SystemTags struct {
 }
 
 type SystemGroups struct {
-	Groups SystemGroupsList `json:"groups" csv:"groups" gorm:"-"`
+	Groups SystemGroupsList `json:"groups" csv:"groups" gorm:"-" order_query:"ih.groups->>0"`
 }
 
 type BaselineAttributes struct {

@@ -147,7 +147,7 @@ func baselineSystemsCommon(c *gin.Context, account, apiver int, groups map[strin
 // @Param    baseline_id    path    int     true    "Baseline ID"
 // @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field"    Enums(id,display_name,os,installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count,applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count,last_upload)
+// @Param    sort           query   string  false   "Sort field"    Enums(id,display_name,os,installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count,applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count,last_upload,groups)
 // @Param    search         query   string  false   "Find matching text"
 // @Param    filter[display_name]           query   string  false "Filter"
 // @Param    filter[os]           			query   string  false "Filter"
