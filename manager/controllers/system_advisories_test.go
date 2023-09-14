@@ -100,7 +100,7 @@ func TestSystemAdvisoriesPossibleSorts(t *testing.T) {
 	core.SetupTest(t)
 
 	for sort := range SystemAdvisoriesFields {
-		if sort == "ReleaseVersions" {
+		if sort == "releaseversions" {
 			// this field is not sortable, skip it
 			continue
 		}
