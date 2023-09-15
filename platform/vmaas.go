@@ -1,51 +1,68 @@
 package platform
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 func updatesHandler(c *gin.Context) {
+	var body struct {
+		ReturnStatus int `json:"return_status"`
+	}
+	jsonData, _ := io.ReadAll(c.Request.Body)
+	json.Unmarshal(jsonData, &body) // nolint:errcheck
+	if body.ReturnStatus > 200 {
+		c.AbortWithStatus(body.ReturnStatus)
+		return
+	}
 	data := `{
-		"basearch": "i686",
-		"modules_list": [],
-		"releasever": "ser1",
-		"repository_list": [
-			"repo1"
-		],
-		"update_list": {
-			"firefox-0:76.0.1-1.fc31.x86_64": {
-				"available_updates": [
-					{
-						"basearch": "i686",
-						"erratum": "RH-1",
-						"package": "firefox-0:77.0.1-1.fc31.x86_64",
-						"releasever": "ser1",
-						"repository": "repo1"
-					},
-					{
-						"basearch": "i686",
-						"erratum": "RH-2",
-						"package": "firefox-1:76.0.1-1.fc31.x86_64",
-						"releasever": "ser1",
-						"repository": "repo1"
-					}
-				]
-			},
-			"kernel-0:5.6.13-200.fc31.x86_64": {
-				"available_updates": [
-					{
-						"basearch": "i686",
-						"erratum": "RH-100",
-						"package": "kernel-0:5.10.13-200.fc31.x86_64",
-						"releasever": "ser1",
-						"repository": "repo1"
-					}
-				]
-			}
-		}
-	}`
+        "basearch": "i686",
+        "modules_list": [],
+        "releasever": "ser1",
+        "repository_list": [
+            "repo1"
+        ],
+        "update_list": {
+            "firefox-0:76.0.1-1.fc31.x86_64": {
+                "available_updates": [
+                    {
+                        "basearch": "i686",
+                        "erratum": "RH-1",
+                        "package": "firefox-0:77.0.1-1.fc31.x86_64",
+                        "releasever": "ser1",
+                        "repository": "repo1",
+                        "package_name": "firefox",
+                        "evra": "0:77.0.1-1.fc31.x86_64"
+                    },
+                    {
+                        "basearch": "i686",
+                        "erratum": "RH-2",
+                        "package": "firefox-1:76.0.1-1.fc31.x86_64",
+                        "releasever": "ser1",
+                        "repository": "repo1",
+                        "package_name": "firefox",
+                        "evra": "1:76.0.1-1.fc31.x86_64"
+                    }
+                ]
+            },
+            "kernel-0:5.6.13-200.fc31.x86_64": {
+                "available_updates": [
+                    {
+                        "basearch": "i686",
+                        "erratum": "RH-100",
+                        "package": "kernel-0:5.10.13-200.fc31.x86_64",
+                        "releasever": "ser1",
+                        "repository": "repo1",
+                        "package_name": "kernel",
+                        "evra": "0:5.10.13-200.fc31.x86_64"
+                    }
+                ]
+            }
+        }
+    }`
 	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
 }
 
@@ -142,38 +159,38 @@ func pkgListHandler(c *gin.Context) {
     "page_size": 8,
     "pages": 1,
     "package_list": [{
-			"nevra": "firefox-76.0.1-1.fc31.x86_64",
-			"summary": "Mozilla Firefox Web browser",
-			"description": "Mozilla Firefox is an open-source web browser..."
+            "nevra": "firefox-76.0.1-1.fc31.x86_64",
+            "summary": "Mozilla Firefox Web browser",
+            "description": "Mozilla Firefox is an open-source web browser..."
         },{
-			"nevra": "kernel-5.6.13-200.fc31.x86_64",
-			"summary": "The Linux kernel",
-			"description": "The kernel meta package"		
+            "nevra": "kernel-5.6.13-200.fc31.x86_64",
+            "summary": "The Linux kernel",
+            "description": "The kernel meta package"		
         },{
-			"nevra": "firefox-0:77.0.1-1.fc31.x86_64",
-			"summary": "Mozilla Firefox Web browser",
-			"description": "Mozilla Firefox is an open-source web browser..."
-		},{
-			"nevra": "kernel-5.7.13-200.fc31.x86_64",
-			"summary": "The Linux kernel",
-			"description": "The kernel meta package"
-		},{
+            "nevra": "firefox-0:77.0.1-1.fc31.x86_64",
+            "summary": "Mozilla Firefox Web browser",
+            "description": "Mozilla Firefox is an open-source web browser..."
+        },{
+            "nevra": "kernel-5.7.13-200.fc31.x86_64",
+            "summary": "The Linux kernel",
+            "description": "The kernel meta package"
+        },{
             "nevra": "firefox-0:77.0.1-1.fc31.src",
-			"summary": null,
-			"description": null
-		},{
-			"nevra": "kernel-5.7.13-200.fc31.src",
-			"summary": null,
-			"description": null
-		},{
-			"nevra": "curl-999-1.x86_64",
-			"summary": "curl newest summary",
-			"description": "curl newest description"
-		},{
-			"nevra": "bash-999-2.x86_64",
-			"summary": "bash newest summary",
-			"description": "bash newest description"
-		}
+            "summary": null,
+            "description": null
+        },{
+            "nevra": "kernel-5.7.13-200.fc31.src",
+            "summary": null,
+            "description": null
+        },{
+            "nevra": "curl-999-1.x86_64",
+            "summary": "curl newest summary",
+            "description": "curl newest description"
+        },{
+            "nevra": "bash-999-2.x86_64",
+            "summary": "bash newest summary",
+            "description": "bash newest description"
+        }
     ],
     "last_change": "2021-04-09T04:52:06.999732+00:00"}`
 	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
@@ -194,13 +211,11 @@ func reposHandler(c *gin.Context) {
 
 func dbchangeHandler(c *gin.Context) {
 	data := `{
-        "dbchange": {
-            "errata_changes": "2222-04-16 20:07:58.500192+00",
-            "cve_changes": "2222-04-16 20:06:47.214266+00",
-            "repository_changes": "2222-04-16 20:07:55.214266+00",
-            "last_change": "2222-04-16 20:07:58.500192+00",
-            "exported": "2222-04-16 20:07:59.235962+00"
-        }
+        "errata_changes": "2222-04-16 20:07:58.500192+00",
+        "cve_changes": "2222-04-16 20:06:47.214266+00",
+        "repository_changes": "2222-04-16 20:07:55.214266+00",
+        "last_change": "2222-04-16 20:07:58.500192+00",
+        "exported": "2222-04-16 20:07:59.235962+00"
     }`
 	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
 }

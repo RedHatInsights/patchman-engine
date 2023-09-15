@@ -36,7 +36,7 @@ func (o *Client) Request(ctx *context.Context, method, url string,
 
 	httpResp, err := utils.CallAPI(o.HTTPClient, httpReq, o.Debug)
 	if err != nil {
-		return nil, errors.Wrap(err, "Request failed")
+		return httpResp, errors.Wrap(err, "Request failed")
 	}
 
 	bodyBytes, err := io.ReadAll(httpResp.Body)

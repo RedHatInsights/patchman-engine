@@ -134,7 +134,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -222,7 +222,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -309,7 +309,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -396,7 +396,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -483,7 +483,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -570,7 +570,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -657,7 +657,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -743,7 +743,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -832,7 +832,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -919,7 +919,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -1007,7 +1007,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -1097,7 +1097,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -1186,7 +1186,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -1273,7 +1273,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -1361,7 +1361,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -1448,7 +1448,7 @@ data:
                     },
                     "textMode": "auto"
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -1858,7 +1858,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -1970,7 +1970,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2110,7 +2110,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2222,7 +2222,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2480,7 +2480,7 @@ data:
                         "unit": "short"
                     }
                 },
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "targets": [
                     {
                         "datasource": {
@@ -2802,7 +2802,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -2874,6 +2874,7 @@ data:
                 "dashLength": 10,
                 "dashes": false,
                 "datasource": {
+                    "type": "prometheus",
                     "uid": "$datasource"
                 },
                 "description": "The number of messages per second received by result in Listener.",
@@ -2916,7 +2917,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3032,7 +3033,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3173,7 +3174,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3327,7 +3328,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3445,7 +3446,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3565,7 +3566,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3677,7 +3678,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3827,7 +3828,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -3976,7 +3977,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -4124,7 +4125,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -4663,8 +4664,243 @@ data:
                         "refId": "A"
                     }
                 ],
-                "title": "VMaaS sync",
+                "title": "Jobs",
                 "type": "row"
+            },
+            {
+                "aliasColors": {
+
+                },
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "$datasource"
+                },
+                "description": "The median value of duration of particular evaluation part.",
+                "fieldConfig": {
+                    "defaults": {
+                        "links": [
+
+                        ]
+                    },
+                    "overrides": [
+
+                    ]
+                },
+                "fill": 1,
+                "fillGradient": 0,
+                "gridPos": {
+                    "h": 6,
+                    "w": 12,
+                    "x": 0,
+                    "y": 91
+                },
+                "hiddenSeries": false,
+                "id": 97,
+                "legend": {
+                    "avg": false,
+                    "current": false,
+                    "max": false,
+                    "min": false,
+                    "show": true,
+                    "total": false,
+                    "values": false
+                },
+                "lines": true,
+                "linewidth": 1,
+                "links": [
+
+                ],
+                "nullPointMode": "null",
+                "options": {
+                    "alertThreshold": true
+                },
+                "percentage": false,
+                "pluginVersion": "9.3.8",
+                "pointradius": 5,
+                "points": false,
+                "renderer": "flot",
+                "seriesOverrides": [
+
+                ],
+                "spaceLength": 10,
+                "stack": false,
+                "steppedLine": false,
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "editorMode": "code",
+                        "expr": "histogram_quantile(0.5, sum(rate(patchman_engine_caches_package_refresh_part_duration_seconds_bucket[$interval])) by (part, le))",
+                        "hide": false,
+                        "legendFormat": "__auto",
+                        "range": true,
+                        "refId": "C"
+                    }
+                ],
+                "thresholds": [
+
+                ],
+                "timeRegions": [
+
+                ],
+                "title": "Package refresh part duration median",
+                "tooltip": {
+                    "shared": true,
+                    "sort": 0,
+                    "value_type": "individual"
+                },
+                "type": "graph",
+                "xaxis": {
+                    "mode": "time",
+                    "show": true,
+                    "values": [
+
+                    ]
+                },
+                "yaxes": [
+                    {
+                        "$$hashKey": "object:447",
+                        "format": "short",
+                        "label": "Median of duration",
+                        "logBase": 1,
+                        "show": true
+                    },
+                    {
+                        "$$hashKey": "object:448",
+                        "format": "short",
+                        "logBase": 1,
+                        "show": true
+                    }
+                ],
+                "yaxis": {
+                    "align": false
+                }
+            },
+            {
+                "aliasColors": {
+
+                },
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
+                "datasource": {
+                    "uid": "$datasource"
+                },
+                "description": "The number of external services calls and their result.",
+                "fieldConfig": {
+                    "defaults": {
+                        "links": [
+
+                        ]
+                    },
+                    "overrides": [
+
+                    ]
+                },
+                "fill": 1,
+                "fillGradient": 0,
+                "gridPos": {
+                    "h": 6,
+                    "w": 12,
+                    "x": 12,
+                    "y": 91
+                },
+                "hiddenSeries": false,
+                "id": 40,
+                "legend": {
+                    "avg": false,
+                    "current": false,
+                    "max": false,
+                    "min": false,
+                    "show": true,
+                    "total": false,
+                    "values": false
+                },
+                "lines": true,
+                "linewidth": 1,
+                "links": [
+
+                ],
+                "nullPointMode": "null",
+                "options": {
+                    "alertThreshold": true
+                },
+                "percentage": false,
+                "pluginVersion": "9.3.8",
+                "pointradius": 5,
+                "points": false,
+                "renderer": "flot",
+                "seriesOverrides": [
+
+                ],
+                "spaceLength": 10,
+                "stack": false,
+                "steppedLine": false,
+                "targets": [
+                    {
+                        "datasource": {
+                            "uid": "$datasource"
+                        },
+                        "expr": "sum(increase(patchman_engine_vmaas_sync_vmaas_call{}[$interval])) by (type)",
+                        "format": "time_series",
+                        "intervalFactor": 1,
+                        "legendFormat": "VMaaS Sync - {{type}}",
+                        "refId": "A"
+                    },
+                    {
+                        "datasource": {
+                            "uid": "$datasource"
+                        },
+                        "expr": "sum(increase(patchman_engine_manager_dependency_call{name=\"rbac\"}[$interval])) by (name, status)",
+                        "format": "time_series",
+                        "intervalFactor": 1,
+                        "legendFormat": "{{name}} - {{status}}",
+                        "refId": "B"
+                    }
+                ],
+                "thresholds": [
+
+                ],
+                "timeRegions": [
+
+                ],
+                "title": "Vmaas sync - external services",
+                "tooltip": {
+                    "shared": true,
+                    "sort": 0,
+                    "value_type": "individual"
+                },
+                "type": "graph",
+                "xaxis": {
+                    "mode": "time",
+                    "show": true,
+                    "values": [
+
+                    ]
+                },
+                "yaxes": [
+                    {
+                        "$$hashKey": "object:1297",
+                        "format": "none",
+                        "label": "Calls/s",
+                        "logBase": 1,
+                        "show": true
+                    },
+                    {
+                        "$$hashKey": "object:1298",
+                        "format": "short",
+                        "logBase": 1,
+                        "show": true
+                    }
+                ],
+                "yaxis": {
+                    "align": false
+                }
             },
             {
                 "aliasColors": {
@@ -4693,7 +4929,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 91
+                    "y": 97
                 },
                 "hiddenSeries": false,
                 "id": 76,
@@ -4716,7 +4952,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -4790,127 +5026,6 @@ data:
                 }
             },
             {
-                "aliasColors": {
-
-                },
-                "bars": false,
-                "dashLength": 10,
-                "dashes": false,
-                "datasource": {
-                    "uid": "$datasource"
-                },
-                "description": "The number of external services calls and their result.",
-                "fieldConfig": {
-                    "defaults": {
-                        "links": [
-
-                        ]
-                    },
-                    "overrides": [
-
-                    ]
-                },
-                "fill": 1,
-                "fillGradient": 0,
-                "gridPos": {
-                    "h": 6,
-                    "w": 12,
-                    "x": 12,
-                    "y": 91
-                },
-                "hiddenSeries": false,
-                "id": 40,
-                "legend": {
-                    "avg": false,
-                    "current": false,
-                    "max": false,
-                    "min": false,
-                    "show": true,
-                    "total": false,
-                    "values": false
-                },
-                "lines": true,
-                "linewidth": 1,
-                "links": [
-
-                ],
-                "nullPointMode": "null",
-                "options": {
-                    "alertThreshold": true
-                },
-                "percentage": false,
-                "pluginVersion": "9.4.3",
-                "pointradius": 5,
-                "points": false,
-                "renderer": "flot",
-                "seriesOverrides": [
-
-                ],
-                "spaceLength": 10,
-                "stack": false,
-                "steppedLine": false,
-                "targets": [
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "expr": "sum(increase(patchman_engine_vmaas_sync_vmaas_call{}[$interval])) by (type)",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "legendFormat": "VMaaS Sync - {{type}}",
-                        "refId": "A"
-                    },
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
-                        "expr": "sum(increase(patchman_engine_manager_dependency_call{name=\"rbac\"}[$interval])) by (name, status)",
-                        "format": "time_series",
-                        "intervalFactor": 1,
-                        "legendFormat": "{{name}} - {{status}}",
-                        "refId": "B"
-                    }
-                ],
-                "thresholds": [
-
-                ],
-                "timeRegions": [
-
-                ],
-                "title": "External services",
-                "tooltip": {
-                    "shared": true,
-                    "sort": 0,
-                    "value_type": "individual"
-                },
-                "type": "graph",
-                "xaxis": {
-                    "mode": "time",
-                    "show": true,
-                    "values": [
-
-                    ]
-                },
-                "yaxes": [
-                    {
-                        "$$hashKey": "object:1297",
-                        "format": "none",
-                        "label": "Calls/s",
-                        "logBase": 1,
-                        "show": true
-                    },
-                    {
-                        "$$hashKey": "object:1298",
-                        "format": "short",
-                        "logBase": 1,
-                        "show": true
-                    }
-                ],
-                "yaxis": {
-                    "align": false
-                }
-            },
-            {
                 "collapsed": false,
                 "datasource": {
                     "type": "prometheus",
@@ -4920,7 +5035,7 @@ data:
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 97
+                    "y": 103
                 },
                 "id": 69,
                 "panels": [
@@ -4969,7 +5084,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 98
+                    "y": 104
                 },
                 "hiddenSeries": false,
                 "id": 51,
@@ -4992,7 +5107,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -5095,7 +5210,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 98
+                    "y": 104
                 },
                 "hiddenSeries": false,
                 "id": 42,
@@ -5118,7 +5233,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -5221,7 +5336,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 104
+                    "y": 110
                 },
                 "hiddenSeries": false,
                 "id": 73,
@@ -5244,7 +5359,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -5336,7 +5451,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 104
+                    "y": 110
                 },
                 "hiddenSeries": false,
                 "id": 78,
@@ -5359,7 +5474,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -5463,7 +5578,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 110
+                    "y": 116
                 },
                 "hiddenSeries": false,
                 "id": 58,
@@ -5486,7 +5601,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -5621,7 +5736,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 110
+                    "y": 116
                 },
                 "hiddenSeries": false,
                 "id": 59,
@@ -5644,7 +5759,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -5715,7 +5830,7 @@ data:
                     "h": 1,
                     "w": 24,
                     "x": 0,
-                    "y": 116
+                    "y": 122
                 },
                 "id": 71,
                 "panels": [
@@ -5766,7 +5881,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 117
+                    "y": 123
                 },
                 "hiddenSeries": false,
                 "id": 53,
@@ -5789,7 +5904,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -5882,7 +5997,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 117
+                    "y": 123
                 },
                 "hiddenSeries": false,
                 "id": 52,
@@ -5905,7 +6020,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -6008,7 +6123,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 0,
-                    "y": 123
+                    "y": 129
                 },
                 "hiddenSeries": false,
                 "id": 54,
@@ -6031,7 +6146,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -6154,7 +6269,7 @@ data:
                     "h": 6,
                     "w": 12,
                     "x": 12,
-                    "y": 123
+                    "y": 129
                 },
                 "hiddenSeries": false,
                 "id": 55,
@@ -6177,7 +6292,7 @@ data:
                     "alertThreshold": true
                 },
                 "percentage": false,
-                "pluginVersion": "9.4.3",
+                "pluginVersion": "9.3.8",
                 "pointradius": 5,
                 "points": false,
                 "renderer": "flot",
@@ -6260,7 +6375,7 @@ data:
         ],
         "refresh": "",
         "revision": 1,
-        "schemaVersion": 38,
+        "schemaVersion": 37,
         "style": "dark",
         "tags": [
 
@@ -6407,7 +6522,7 @@ data:
                 },
                 {
                     "current": {
-                        "selected": false,
+                        "selected": true,
                         "text": "crcs02ue1-prometheus",
                         "value": "crcs02ue1-prometheus"
                     },
@@ -6428,7 +6543,7 @@ data:
                 },
                 {
                     "current": {
-                        "selected": false,
+                        "selected": true,
                         "text": "app-sre-stage-01-prometheus",
                         "value": "app-sre-stage-01-prometheus"
                     },
@@ -6487,8 +6602,8 @@ data:
                 {
                     "current": {
                         "selected": false,
-                        "text": "GET/api/patch/v2/packages/",
-                        "value": "GET/api/patch/v2/packages/"
+                        "text": "GET/api/patch/v2/advisories",
+                        "value": "GET/api/patch/v2/advisories"
                     },
                     "datasource": {
                         "type": "prometheus",
@@ -6546,7 +6661,7 @@ data:
         "timezone": "",
         "title": "patchman-engine",
         "uid": "patch",
-        "version": 2,
+        "version": 3,
         "weekStart": ""
     }
 kind: ConfigMap

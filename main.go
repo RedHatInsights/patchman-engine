@@ -15,6 +15,8 @@ import (
 	"app/turnpike"
 	"log"
 	"os"
+
+	_ "go.uber.org/automaxprocs" // automatically sets GOMAXPROCS based on the CPU limit
 )
 
 // nolint: funlen

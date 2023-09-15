@@ -6,6 +6,7 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"app/docs"
+	"app/manager/controllers"
 	"app/manager/kafka"
 	"app/manager/middlewares"
 	"app/manager/routes"
@@ -57,7 +58,11 @@ func RunManager() {
 		routes.InitAPI(api, endpointsConfig)
 	}
 
+	// profiler
+	go utils.RunProfiler()
+
 	go base.TryExposeOnMetricsPort(app)
+	go controllers.PreloadAdvisoryCacheItems()
 
 	kafka.TryStartEvalQueue(mqueue.NewKafkaWriterFromEnv)
 

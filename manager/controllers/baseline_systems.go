@@ -51,6 +51,7 @@ type BaselineSystemAttributes struct {
 	InstallableAdvisories
 	ApplicableAdvisories
 	SystemTags
+	SystemGroups
 	SystemLastUpload
 }
 
@@ -85,6 +86,57 @@ type BaselineSystemsResponse struct {
 	Meta  ListMeta             `json:"meta"`
 }
 
+func queryBaselineSystems(c *gin.Context, account, apiver int, groups map[string]string) (*gorm.DB, error) {
+	baselineID := c.Param("baseline_id")
+	id, err := strconv.ParseInt(baselineID, 10, 64)
+	if err != nil {
+		LogAndRespBadRequest(c, err, fmt.Sprintf("Invalid baseline_id: %s", baselineID))
+		return nil, err
+	}
+
+	db := middlewares.DBFromContext(c)
+	var exists int64
+	err = db.Model(&models.Baseline{}).
+		Where("id = ? ", id).Count(&exists).Error
+	if err != nil {
+		LogAndRespError(c, err, "database error")
+		return nil, err
+	}
+	if exists == 0 {
+		LogAndRespNotFound(c, errors.New("Baseline not found"), "Baseline not found")
+		return nil, err
+	}
+
+	query := buildQueryBaselineSystems(db, account, groups, id, apiver)
+	filters, err := ParseAllFilters(c, BaselineSystemOpts)
+	if err != nil {
+		return nil, err
+	} // Error handled in method itself
+	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
+	return query, nil
+}
+
+func baselineSystemsCommon(c *gin.Context, account, apiver int, groups map[string]string,
+) (*gorm.DB, *ListMeta, []string, error) {
+	query, err := queryBaselineSystems(c, account, apiver, groups)
+	if err != nil {
+		return nil, nil, nil, err
+	} // Error handled in method itself
+
+	filters, err := ParseAllFilters(c, PackageSystemsOpts)
+	if err != nil {
+		// Error handled in method itself
+		return nil, nil, nil, err
+	}
+	query, meta, params, err := ListCommon(query, c, filters, BaselineSystemOpts)
+	if err != nil {
+		// Error handling and setting of result code & content is done in ListCommon
+		return nil, nil, nil, err
+	}
+
+	return query, meta, params, err
+}
+
 // nolint: lll
 // @Summary Show me all systems belonging to a baseline
 // @Description  Show me all systems applicable to a baseline
@@ -95,11 +147,18 @@ type BaselineSystemsResponse struct {
 // @Param    baseline_id    path    int     true    "Baseline ID"
 // @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field"    Enums(id,display_name,os,installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count,applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count,last_upload)
+// @Param    sort           query   string  false   "Sort field"    Enums(id,display_name,os,installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count,applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count,last_upload,groups)
 // @Param    search         query   string  false   "Find matching text"
 // @Param    filter[display_name]           query   string  false "Filter"
 // @Param    filter[os]           			query   string  false "Filter"
 // @Param    tags           query   []string  false "Tag filter"
+// @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
+// @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
+// @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
+// @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
+// @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Success 200 {object} BaselineSystemsResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
@@ -108,39 +167,12 @@ type BaselineSystemsResponse struct {
 func BaselineSystemsListHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 
-	baselineID := c.Param("baseline_id")
-	id, err := strconv.ParseInt(baselineID, 10, 64)
-	if err != nil {
-		LogAndRespBadRequest(c, err, fmt.Sprintf("Invalid baseline_id: %s", baselineID))
-		return
-	}
-
-	db := middlewares.DBFromContext(c)
-	var exists int64
-	err = db.Model(&models.Baseline{}).
-		Where("id = ? ", id).Count(&exists).Error
-	if err != nil {
-		LogAndRespError(c, err, "database error")
-		return
-	}
-	if exists == 0 {
-		LogAndRespNotFound(c, errors.New("Baseline not found"), "Baseline not found")
-		return
-	}
-
-	query := buildQueryBaselineSystems(db, account, id, apiver)
-	filters, err := ParseTagsFilters(c)
+	query, meta, params, err := baselineSystemsCommon(c, account, apiver, groups)
 	if err != nil {
 		return
 	} // Error handled in method itself
-	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
-
-	query, meta, params, err := ListCommon(query, c, nil, BaselineSystemOpts)
-	if err != nil {
-		// Error handling and setting of result code & content is done in ListCommon
-		return
-	}
 
 	var baselineSystems []BaselineSystemsDBLookup
 	err = query.Find(&baselineSystems).Error
@@ -167,10 +199,59 @@ func BaselineSystemsListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildQueryBaselineSystems(db *gorm.DB, account int, baselineID int64, apiver int) *gorm.DB {
-	query := db.Table("system_platform AS sp").
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
-		Where("sp.rh_account_id = ? AND sp.baseline_id = ?", account, baselineID)
+// nolint: lll
+// @Summary Show me all systems belonging to a baseline
+// @Description  Show me all systems applicable to a baseline
+// @ID listBaselineSystemsIds
+// @Security RhIdentity
+// @Accept   json
+// @Produce  json
+// @Param    baseline_id    path    int     true    "Baseline ID"
+// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    offset         query   int     false   "Offset for paging"
+// @Param    sort           query   string  false   "Sort field"    Enums(id,display_name,os,installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count,applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count,last_upload)
+// @Param    search         query   string  false   "Find matching text"
+// @Param    filter[display_name]           query   string  false "Filter"
+// @Param    filter[os]           			query   string  false "Filter"
+// @Param    tags           query   []string  false "Tag filter"
+// @Success 200 {object} IDsResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /ids/baselines/{baseline_id}/systems [get]
+func BaselineSystemsListIDsHandler(c *gin.Context) {
+	account := c.GetInt(middlewares.KeyAccount)
+	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	if apiver < 3 {
+		c.AbortWithStatus(404)
+		return
+	}
+
+	query, meta, _, err := baselineSystemsCommon(c, account, apiver, groups)
+	if err != nil {
+		return
+	} // Error handled in method itself
+
+	var sids []SystemsID
+
+	if err = query.Scan(&sids).Error; err != nil {
+		LogAndRespError(c, err, "db error")
+		return
+	}
+
+	ids, err := systemsIDs(c, sids, meta)
+	if err != nil {
+		return // Error handled in method itself
+	}
+	var resp = IDsResponse{IDs: ids}
+	c.JSON(http.StatusOK, &resp)
+}
+
+func buildQueryBaselineSystems(db *gorm.DB, account int, groups map[string]string, baselineID int64, apiver int,
+) *gorm.DB {
+	query := database.Systems(db, account, groups).
+		Where("sp.baseline_id = ?", baselineID)
 	if apiver < 3 {
 		query.Select(BaselineSystemSelectV2)
 	} else {
@@ -181,15 +262,16 @@ func buildQueryBaselineSystems(db *gorm.DB, account int, baselineID int64, apive
 
 func buildBaselineSystemData(baselineSystems []BaselineSystemsDBLookup) ([]BaselineSystemItem, int) {
 	var total int
-	var err error
 	if len(baselineSystems) > 0 {
 		total = baselineSystems[0].Total
 	}
 	data := make([]BaselineSystemItem, len(baselineSystems))
 	for i := 0; i < len(baselineSystems); i++ {
-		baselineSystems[i].Tags, err = parseSystemTags(baselineSystems[i].TagsStr)
-		if err != nil {
+		if err := parseSystemItems(baselineSystems[i].TagsStr, &baselineSystems[i].Tags); err != nil {
 			utils.LogDebug("err", err.Error(), "inventory_id", baselineSystems[i].ID, "system tags parsing failed")
+		}
+		if err := parseSystemItems(baselineSystems[i].GroupsStr, &baselineSystems[i].Groups); err != nil {
+			utils.LogDebug("err", err.Error(), "inventory_id", baselineSystems[i].ID, "system groups parsing failed")
 		}
 		data[i] = BaselineSystemItem{
 			Attributes: baselineSystems[i].BaselineSystemAttributes,

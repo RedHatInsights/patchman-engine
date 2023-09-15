@@ -90,7 +90,7 @@ func TestMarkSystemsStale(t *testing.T) {
 	}
 	nMarked, err := markSystemsStale(database.Db, 500)
 	assert.Nil(t, err)
-	assert.Equal(t, 15, nMarked)
+	assert.Equal(t, 16, nMarked)
 
 	assert.NoError(t, database.Db.Find(&systems).Error)
 	for i, s := range systems {

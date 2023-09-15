@@ -7,7 +7,7 @@ import (
 	"app/tasks/vmaas_sync"
 	"time"
 
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2"
 )
 
 var memoryVmaasCache *VmaasCache
@@ -15,9 +15,10 @@ var memoryVmaasCache *VmaasCache
 type VmaasCache struct {
 	enabled       bool
 	size          int
+	currentSize   int
 	validity      *types.Rfc3339TimestampWithZ
 	checkDuration time.Duration
-	data          *lru.TwoQueueCache
+	data          *lru.TwoQueueCache[string, *vmaas.UpdatesV3Response]
 }
 
 func NewVmaasPackageCache(enabled bool, size int, checkDuration time.Duration) *VmaasCache {
@@ -25,46 +26,51 @@ func NewVmaasPackageCache(enabled bool, size int, checkDuration time.Duration) *
 
 	c.enabled = enabled
 	c.size = size
+	c.currentSize = 0
 	c.validity = vmaas_sync.GetLastSync(vmaas_sync.VmaasExported)
 	c.checkDuration = checkDuration
 	vmaasCacheGauge.Set(0)
 
 	if c.enabled {
 		var err error
-		c.data, err = lru.New2Q(c.size)
+		c.data, err = lru.New2Q[string, *vmaas.UpdatesV3Response](c.size)
 		if err != nil {
 			panic(err)
 		}
 		return c
 	}
-	return nil
+	return c
 }
 
-func (c *VmaasCache) Get(checksum *string) (*vmaas.UpdatesV2Response, bool) {
+func (c *VmaasCache) Get(checksum *string) (*vmaas.UpdatesV3Response, bool) {
 	if c.enabled && checksum != nil {
-		val, ok := c.data.Get(checksum)
+		val, ok := c.data.Get(*checksum)
 		if ok {
 			vmaasCacheCnt.WithLabelValues("hit").Inc()
-			utils.LogTrace("checksum", checksum, "VmaasCache.Get cache hit")
-			response := val.(*vmaas.UpdatesV2Response)
-			return response, true
+			utils.LogTrace("checksum", *checksum, "VmaasCache.Get cache hit")
+			return val, true
 		}
 	}
 	vmaasCacheCnt.WithLabelValues("miss").Inc()
 	return nil, false
 }
 
-func (c *VmaasCache) Add(checksum *string, response *vmaas.UpdatesV2Response) {
+func (c *VmaasCache) Add(checksum *string, response *vmaas.UpdatesV3Response) {
 	if c.enabled && checksum != nil {
-		vmaasCacheGauge.Inc()
-		c.data.Add(checksum, response)
+		c.data.Add(*checksum, response)
+		if c.currentSize <= c.size {
+			c.currentSize++
+			vmaasCacheGauge.Inc()
+		}
 	}
 }
 
 func (c *VmaasCache) Reset(ts *types.Rfc3339TimestampWithZ) {
-	c.data.Purge()
-	c.validity = ts
-	vmaasCacheGauge.Set(0)
+	if c.enabled {
+		c.data.Purge()
+		c.validity = ts
+		vmaasCacheGauge.Set(0)
+	}
 }
 
 func (c *VmaasCache) CheckValidity() {

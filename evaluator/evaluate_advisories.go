@@ -12,12 +12,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-const (
-	INSTALLABLE = 0
-	APPLICABLE  = 1
-)
-
-func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) (
+func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV3Response) (
 	SystemAdvisoryMap, error) {
 	if !enableAdvisoryAnalysis {
 		utils.LogInfo("advisory analysis disabled, skipping")
@@ -41,13 +36,13 @@ func analyzeAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vm
 // Changes data stored in system_advisories, in order to match newest evaluation
 // Before this methods stores the entries into the system_advisories table, it locks
 // advisory_account_data table, so other evaluations don't interfere with this one
-func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) (
+func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV3Response) (
 	[]int64, []int64, []int64, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-processing"))
 
 	reported := getReportedAdvisories(vmaasData)
-	oldSystemAdvisories, err := getStoredAdvisoriesMap(tx, system.RhAccountID, int(system.ID))
+	oldSystemAdvisories, err := getStoredAdvisoriesMap(tx, system.RhAccountID, system.ID)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Unable to get system stored advisories")
 	}
@@ -98,7 +93,7 @@ func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform,
 	return newSystemAdvisories, nil
 }
 
-func getStoredAdvisoriesMap(tx *gorm.DB, accountID, systemID int) (map[string]models.SystemAdvisories, error) {
+func getStoredAdvisoriesMap(tx *gorm.DB, accountID int, systemID int64) (map[string]models.SystemAdvisories, error) {
 	var advisories []models.SystemAdvisories
 	err := database.SystemAdvisoriesBySystemID(tx, accountID, systemID).Preload("Advisory").Find(&advisories).Error
 	if err != nil {
@@ -118,7 +113,7 @@ func getAdvisoryChanges(reported map[string]int, stored map[string]models.System
 	applicableNames := make([]string, 0, len(reported))
 	deleteIDs := make([]int64, 0, len(stored))
 	for reportedAdvisory, statusID := range reported {
-		if _, found := stored[reportedAdvisory]; !found {
+		if advisory, found := stored[reportedAdvisory]; !found || advisory.StatusID != statusID {
 			if statusID == INSTALLABLE {
 				installableNames = append(installableNames, reportedAdvisory)
 			} else {
@@ -164,10 +159,8 @@ func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int64, instal
 				StatusID:   APPLICABLE})
 	}
 
-	txOnConflict := tx.Clauses(clause.OnConflict{
-		DoNothing: true,
-	})
-	err := database.BulkInsert(txOnConflict, advisoriesObjs)
+	tx = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "system_id", "advisory_id"}, "status_id")
+	err := database.BulkInsert(tx, advisoriesObjs)
 	return err
 }
 
@@ -192,11 +185,6 @@ func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs, installableID
 		return []models.AdvisoryAccountData{}
 	}
 
-	isApplicable := make(map[int64]bool, len(applicableIDs))
-	for _, id := range applicableIDs {
-		isApplicable[id] = true
-	}
-
 	aadMap := make(map[int64]models.AdvisoryAccountData, len(installableIDs))
 
 	for _, id := range installableIDs {
@@ -206,6 +194,19 @@ func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs, installableID
 			SystemsInstallable: 1,
 			// every installable advisory is also applicable advisory
 			SystemsApplicable: 1,
+		}
+	}
+
+	isApplicable := make(map[int64]bool, len(applicableIDs))
+	for _, id := range applicableIDs {
+		isApplicable[id] = true
+		// add advisories which are only applicable and not installable to aad
+		if _, ok := aadMap[id]; !ok {
+			aadMap[id] = models.AdvisoryAccountData{
+				AdvisoryID:        id,
+				RhAccountID:       system.RhAccountID,
+				SystemsApplicable: 1,
+			}
 		}
 	}
 
@@ -223,7 +224,7 @@ func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs, installableID
 		}
 	}
 
-	deltas := make([]models.AdvisoryAccountData, 0, len(deleteIDs)+len(installableIDs))
+	deltas := make([]models.AdvisoryAccountData, 0, len(deleteIDs)+len(installableIDs)+len(applicableIDs))
 	for _, aad := range aadMap {
 		deltas = append(deltas, aad)
 	}

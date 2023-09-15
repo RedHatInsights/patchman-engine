@@ -48,7 +48,7 @@ func GetInventoryIDsToEvaluate(db *gorm.DB, baselineID *int64, accountID int,
 
 	var inventoryAIDs []mqueue.EvalData
 	if !configUpdated { // we just need to evaluate updated inventory IDs
-		inventoryAIDs = inventoryIDs2InventoryAIDs(accountID, updatedInventoryIDs)
+		inventoryAIDs = InventoryIDs2InventoryAIDs(accountID, updatedInventoryIDs)
 	} else { // config updated - we need to update all baseline inventory IDs and the added ones too
 		inventoryAIDs = getInventoryIDs(db, baselineID, accountID, updatedInventoryIDs)
 	}
@@ -58,7 +58,7 @@ func GetInventoryIDsToEvaluate(db *gorm.DB, baselineID *int64, accountID int,
 	return inventoryAIDs
 }
 
-func inventoryIDs2InventoryAIDs(accountID int, inventoryIDs []string) []mqueue.EvalData {
+func InventoryIDs2InventoryAIDs(accountID int, inventoryIDs []string) []mqueue.EvalData {
 	inventoryAIDs := make([]mqueue.EvalData, 0, len(inventoryIDs))
 	for _, v := range inventoryIDs {
 		inventoryAIDs = append(inventoryAIDs, mqueue.EvalData{InventoryID: v, RhAccountID: accountID})

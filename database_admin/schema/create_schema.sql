@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (107, false);
+VALUES (114, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -20,11 +20,11 @@ CREATE COLLATION IF NOT EXISTS numeric (provider = icu, locale = 'en-u-kn-true')
 -- empty
 CREATE OR REPLACE FUNCTION empty(t TEXT)
     RETURNS BOOLEAN as
-$empty$
+$$
 BEGIN
     RETURN t ~ '^[[:space:]]*$';
 END;
-$empty$ LANGUAGE 'plpgsql';
+$$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
 
 CREATE OR REPLACE FUNCTION ternary(cond BOOL, iftrue ANYELEMENT, iffalse ANYELEMENT)
     RETURNS ANYELEMENT
@@ -600,6 +600,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION update_status(update_data jsonb)
+    RETURNS TEXT as
+$$
+DECLARE
+    len int;
+BEGIN
+    len = jsonb_array_length(update_data);
+    IF len IS NULL or len = 0 THEN
+        RETURN 'None';
+    END IF;
+    len = jsonb_array_length(jsonb_path_query_array(update_data, '$ ? (@.status == "Installable")'));
+    IF len > 0 THEN
+        RETURN 'Installable';
+    END IF;
+    RETURN 'Applicable';
+END;
+$$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
+
+
 -- ---------------------------------------------------------------------------
 -- Tables
 -- ---------------------------------------------------------------------------
@@ -611,6 +630,7 @@ CREATE TABLE IF NOT EXISTS rh_account
     name                    TEXT UNIQUE CHECK (NOT empty(name)),
     org_id                  TEXT UNIQUE CHECK (NOT empty(org_id)),
     valid_package_cache     BOOLEAN NOT NULL DEFAULT FALSE,
+    valid_advisory_cache    BOOLEAN NOT NULL DEFAULT FALSE,
     CHECK (name IS NOT NULL OR org_id IS NOT NULL),
     PRIMARY KEY (id)
 ) TABLESPACE pg_default;
@@ -630,7 +650,8 @@ CREATE TABLE reporter
 INSERT INTO reporter (id, name)
 VALUES (1, 'puptoo'),
        (2, 'rhsm-conduit'),
-       (3, 'yupana')
+       (3, 'yupana'),
+       (4, 'rhsm-system-profile-bridge')
 ON CONFLICT DO NOTHING;
 
 -- baseline
@@ -688,6 +709,8 @@ CREATE TABLE IF NOT EXISTS system_platform
     applicable_advisory_enh_count_cache  INT                      NOT NULL DEFAULT 0,
     applicable_advisory_bug_count_cache  INT                      NOT NULL DEFAULT 0,
     applicable_advisory_sec_count_cache  INT                      NOT NULL DEFAULT 0,
+    satellite_managed                    BOOLEAN                  NOT NULL DEFAULT FALSE,
+    built_pkgcache                       BOOLEAN                  NOT NULL DEFAULT FALSE,
     PRIMARY KEY (rh_account_id, id),
     UNIQUE (rh_account_id, inventory_id),
     CONSTRAINT reporter_id FOREIGN KEY (reporter_id) REFERENCES reporter (id),
@@ -1012,7 +1035,8 @@ CREATE TABLE IF NOT EXISTS package_account_data
     package_name_id          BIGINT NOT NULL,
     rh_account_id            INT NOT NULL,
     systems_installed        INT NOT NULL DEFAULT 0,
-    systems_updatable        INT NOT NULL DEFAULT 0,
+    systems_installable      INT NOT NULL DEFAULT 0,
+    systems_applicable       INT NOT NULL DEFAULT 0,
     CONSTRAINT package_name_id
         FOREIGN KEY (package_name_id)
             REFERENCES package_name (id),

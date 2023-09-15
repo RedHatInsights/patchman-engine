@@ -29,6 +29,7 @@ type Config struct {
 	DBReadReplicaHost        string
 	DBReadReplicaPort        int
 	DBReadReplicaEnabled     bool
+	DBWorkMem                int
 
 	// API
 	PublicPort      int
@@ -57,8 +58,12 @@ type Config struct {
 	NotificationsTopic     string
 
 	// services
-	VmaasAddress string
-	RbacAddress  string
+	VmaasAddress                  string
+	RbacAddress                   string
+	ManagerPrivateAddress         string
+	ListenerPrivateAddress        string
+	EvaluatorUploadPrivateAddress string
+	EvaluatorRecalcPrivateAddress string
 
 	// cloudwatch
 	CloudWatchAccessKeyID     string
@@ -68,6 +73,9 @@ type Config struct {
 
 	// prometheus pushgateway
 	PrometheusPushGateway string
+
+	// profiler
+	ProfilerEnabled bool
 }
 
 func init() {
@@ -85,6 +93,7 @@ func init() {
 	initKafkaFromEnv()
 	initServicesFromEnv()
 	initPrometheusPushGatewayFromEnv()
+	initProfilerFromEnv()
 }
 
 func initDBFromEnv() {
@@ -103,6 +112,7 @@ func initDBFromEnv() {
 		Cfg.DBReadReplicaHost = Getenv("DB_HOST_READ_REPLICA", "")
 		Cfg.DBReadReplicaPort = GetIntEnvOrDefault("DB_PORT_READ_REPLICA", 0)
 	}
+	Cfg.DBWorkMem = GetIntEnvOrDefault("DB_WORK_MEM", 4096) // 4MB is DB default
 }
 
 func initKafkaFromEnv() {
@@ -206,26 +216,40 @@ func initServicesFromClowder() {
 		switch endpoint.App {
 		case "vmaas":
 			if strings.Contains(endpoint.Name, webappName) {
-				Cfg.VmaasAddress = (*Endpoint)(&endpoint).buildURL("http")
+				Cfg.VmaasAddress = (*Endpoint)(&endpoint).buildURL()
 			}
 		case "rbac":
-			Cfg.RbacAddress = (*Endpoint)(&endpoint).buildURL("http")
+			Cfg.RbacAddress = (*Endpoint)(&endpoint).buildURL()
+		}
+	}
+
+	for _, e := range clowder.LoadedConfig.PrivateEndpoints {
+		e := e // re-assign iteration variable to use a new memory pointer
+		if e.App == "patchman" {
+			switch e.Name {
+			case "manager":
+				Cfg.ManagerPrivateAddress = (*Endpoint)(&e).buildURL()
+			case "listener":
+				Cfg.ListenerPrivateAddress = (*Endpoint)(&e).buildURL()
+			case "evaluator-upload":
+				Cfg.EvaluatorUploadPrivateAddress = (*Endpoint)(&e).buildURL()
+			case "evaluator-recalc":
+				Cfg.EvaluatorRecalcPrivateAddress = (*Endpoint)(&e).buildURL()
+			}
 		}
 	}
 }
 
-func (e *Endpoint) buildURL(scheme string) string {
-	return buildURL(scheme, e.Hostname, e.Port, e.TlsPort)
-}
-
-func buildURL(scheme, host string, port int, tlsPort *int) string {
+func (e *Endpoint) buildURL() string {
+	port := e.Port
+	scheme := "http"
 	if clowder.LoadedConfig.TlsCAPath != nil {
 		scheme += "s"
-		if tlsPort != nil {
-			port = *tlsPort
+		if e.TlsPort != nil {
+			port = *e.TlsPort
 		}
 	}
-	return fmt.Sprintf("%s://%s:%d", scheme, host, port)
+	return fmt.Sprintf("%s://%s:%d", scheme, e.Hostname, port)
 }
 
 func initCloudwatchFromClowder() {
@@ -240,6 +264,10 @@ func initCloudwatchFromClowder() {
 
 func initPrometheusPushGatewayFromEnv() {
 	Cfg.PrometheusPushGateway = Getenv("PROMETHEUS_PUSHGATEWAY", "pushgateway")
+}
+
+func initProfilerFromEnv() {
+	Cfg.ProfilerEnabled = GetBoolEnvOrDefault("ENABLE_PROFILER", false)
 }
 
 // PrintClowderParams Print Clowder params to export environment variables.

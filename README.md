@@ -16,6 +16,7 @@ System Patch Manager is one of the applications for [console.redhat.com](https:/
 - [Control by private API](#control-by-private-api)
 - [VMaaS](#vmaas)
 - [Monitoring](#monitoring)
+- [Profiling] (#profiling)
 
 ## Development environment
 
@@ -134,6 +135,22 @@ Copy Grafana board json config to the temporary file, e.g. `grafana.json` and ru
 ~~~bash
 ./scripts/grafana-json-to-yaml.sh grafana.json > ./dashboards/grafana-dashboard-insights-patchman-engine-general.configmap.yaml
 ~~~
+
+## Profiling
+App can be profiled using [/net/http/pprof](https://pkg.go.dev/net/http/pprof). Profiler is exposed on app's private port.
+### Local development
+- set `ENABLE_PROFILE=true` in the `cont/common.env`
+- `docker-compose up --build`
+- `go tool pprof http://localhost:{port}/debug/pprof/{heap|profile|block|mutex}`
+available ports:
+- 9000 - manager
+- 9002 - listener
+- 9003 - evaluator-upload
+- 9004 - evaluator-recalc
+### Admin API
+- set `ENABLE_PROFILE_{container_name}=true` in the ClowdApp
+- download the profile file using internal api `/api/patch/admin/pprof/{manager|listener|evaluator_upload|evaluator_recalc}/{heap|profile|block|mutex|trace}`
+- `go tool pprof <saved.file>`
 
 ## Deps backup
 [patchman-engine-deps](https://github.com/RedHatInsights/patchman-engine-deps)

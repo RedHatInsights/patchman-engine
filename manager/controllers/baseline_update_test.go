@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/database"
+	"app/base/models"
 	"app/base/utils"
 	"bytes"
 	"fmt"
@@ -266,6 +267,38 @@ func TestUpdateBaselineSpacesDescription(t *testing.T) {
 	w := CreateRequestRouterWithParams("PUT", fmt.Sprintf(`/%v`, baselineID), bytes.NewBufferString(data), "",
 		BaselineUpdateHandler, 1, "PUT", "/:baseline_id")
 
+	var err utils.ErrorResponse
+	CheckResponse(t, w, http.StatusBadRequest, &err)
+}
+
+func TestUpdateBaselineSatelliteSystem(t *testing.T) {
+	core.SetupTestEnvironment()
+
+	baselineName := "baseline_satellite"
+	desc := "satellite baseline"
+	baselineID := database.CreateBaseline(t, baselineName, []string{}, &desc)
+	defer database.DeleteBaseline(t, baselineID)
+
+	system := models.SystemPlatform{
+		InventoryID:      "99999999-0000-0000-0000-000000000015",
+		DisplayName:      "satellite_system_test",
+		RhAccountID:      1,
+		BuiltPkgcache:    true,
+		SatelliteManaged: true,
+	}
+	tx := database.Db.Create(&system)
+	assert.Nil(t, tx.Error)
+	defer database.Db.Delete(system)
+
+	data := `{
+		"inventory_ids": {
+			"00000000-0000-0000-0000-000000000001": true,
+			"99999999-0000-0000-0000-000000000015": true
+		}
+	}`
+
+	w := CreateRequestRouterWithParams("PUT", fmt.Sprintf("/%v", baselineID), bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1, "PUT", "/:baseline_id")
 	var err utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &err)
 }

@@ -9,6 +9,8 @@ import (
 
 	"github.com/lestrrat-go/backoff"
 	"github.com/pkg/errors"
+
+	_ "net/http/pprof" //nolint:gosec
 )
 
 func HTTPCallRetry(ctx context.Context, httpCallFun func() (outputDataPtr interface{}, resp *http.Response, err error),
@@ -52,6 +54,12 @@ func CallAPI(client *http.Client, request *http.Request, debugEnabled bool) (*ht
 	resp, err := client.Do(request)
 	if err != nil {
 		return resp, err
+	}
+
+	if resp.StatusCode < http.StatusOK || resp.StatusCode > 299 {
+		// we got non 2xx status code, return error
+		// return also the response which is used for request retry
+		return resp, fmt.Errorf("received non 2xx status code, status code: %d", resp.StatusCode)
 	}
 
 	if debugEnabled {
@@ -102,4 +110,16 @@ func statusCodeFound(response *http.Response, statusCodes []int) bool {
 		}
 	}
 	return false
+}
+
+// run net/http/pprof on privatePort
+func RunProfiler() {
+	if Cfg.ProfilerEnabled {
+		go func() {
+			err := http.ListenAndServe(fmt.Sprintf(":%d", Cfg.PrivatePort), nil) //nolint:gosec
+			if err != nil {
+				LogWarn("err", err.Error(), "couldn't start profiler")
+			}
+		}()
+	}
 }

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/rbac"
 	"app/manager/middlewares"
 
 	"github.com/gin-gonic/gin"
@@ -28,15 +29,17 @@ import (
 // @Router /export/advisories [get]
 func AdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
-	filters, err := ParseTagsFilters(c)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	filters, err := ParseAllFilters(c, AdvisoriesOpts)
 	if err != nil {
 		return
 	}
 	db := middlewares.DBFromContext(c)
 	var query *gorm.DB
-	if disableCachedCounts || HasTags(c) {
+
+	if disableCachedCounts || HasInventoryFilter(filters) || len(groups[rbac.KeyGrouped]) != 0 {
 		var err error
-		query = buildQueryAdvisoriesTagged(db, filters, account)
+		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
 		if err != nil {
 			return
 		} // Error handled in method itself

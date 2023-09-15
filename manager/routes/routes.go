@@ -19,13 +19,11 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 
 	advisories := api.Group("/advisories")
 	advisories.GET("", controllers.AdvisoriesListHandler)
-	go controllers.PreloadAdvisoryCacheItems()
 	advisories.GET("/:advisory_id", controllers.AdvisoryDetailHandler)
 	advisories.GET("/:advisory_id/systems", controllers.AdvisorySystemsListHandler)
 
 	if config.EnableBaselines {
 		baselines := api.Group("/baselines")
-		baselines.Use(middlewares.EntitlementsAuthenticator())
 		baselines.GET("", controllers.BaselinesListHandler)
 		baselines.GET("/:baseline_id", controllers.BaselineDetailHandler)
 		baselines.GET("/:baseline_id/systems", controllers.BaselineSystemsListHandler)
@@ -40,6 +38,8 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	systems.GET("/:inventory_id", controllers.SystemDetailHandler)
 	systems.GET("/:inventory_id/advisories", controllers.SystemAdvisoriesHandler)
 	systems.GET("/:inventory_id/packages", controllers.SystemPackagesHandler)
+	systems.GET("/:inventory_id/vmaas_json", controllers.SystemVmaasJSONHandler)
+	systems.GET("/:inventory_id/yum_updates", controllers.SystemYumUpdatesHandler)
 	systems.DELETE("/:inventory_id", controllers.SystemDeleteHandler)
 
 	api.GET("/tags", controllers.SystemTagListHandler)
@@ -60,6 +60,9 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 
 	export.GET("/packages", controllers.PackagesExportHandler)
 	export.GET("/packages/:package_name/systems", controllers.PackageSystemsExportHandler)
+	if config.EnableBaselines {
+		export.GET("/baselines/:baseline_id/systems", controllers.BaselineSystemsExportHandler)
+	}
 
 	views := api.Group("/views")
 	views.POST("/systems/advisories", controllers.PostSystemsAdvisories)
@@ -71,6 +74,9 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	ids.GET("/packages/:package_name/systems", controllers.PackageSystemsListIDsHandler)
 	ids.GET("/systems", controllers.SystemsListIDsHandler)
 	ids.GET("/systems/:inventory_id/advisories", controllers.SystemAdvisoriesIDsHandler)
+	if config.EnableBaselines {
+		ids.GET("/baselines/:baseline_id/systems", controllers.BaselineSystemsListIDsHandler)
+	}
 
 	api.GET("/status", controllers.Status)
 }
@@ -91,4 +97,10 @@ func InitAdmin(app *gin.Engine) {
 	api.GET("/sessions", admin.GetActiveSessionsHandler)
 	api.GET("/sessions/:search", admin.GetActiveSessionsHandler)
 	api.DELETE("/sessions/:pid", admin.TerminateSessionHandler)
+
+	pprof := api.Group("/pprof")
+	pprof.GET("/evaluator_upload/:param", admin.GetEvaluatorUploadPprof)
+	pprof.GET("/evaluator_recalc/:param", admin.GetEvaluatorRecalcPprof)
+	pprof.GET("/listener/:param", admin.GetListenerPprof)
+	pprof.GET("/manager/:param", admin.GetManagerPprof)
 }

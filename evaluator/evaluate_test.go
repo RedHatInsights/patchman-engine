@@ -8,6 +8,7 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"context"
+	"encoding/json"
 	"net/http"
 	"os"
 	"sync"
@@ -28,6 +29,10 @@ func TestEvaluate(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	utils.SkipWithoutPlatform(t)
 	core.SetupTestEnvironment()
+	// don't use vmaas-cache since tests here are not using vmaas_json
+	// so it will always get the same result from cache for empty vmaas_json
+	os.Setenv("ENABLE_VMAAS_CACHE", "false")
+	defer os.Setenv("ENABLE_VMAAS_CACHE", "true")
 
 	configure()
 	loadCache()
@@ -172,7 +177,7 @@ func TestVMaaSUpdatesCall(t *testing.T) {
 		PackageList:       []string{"curl-7.29.0-51.el7_6.3.x86_64"},
 	}
 
-	resp := vmaas.UpdatesV2Response{}
+	resp := vmaas.UpdatesV3Response{}
 	ctx := context.Background()
 	httpResp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasUpdatesURL, &req, &resp) // nolint: bodyclose
 	assert.Nil(t, err)
@@ -214,4 +219,177 @@ func TestGetYumUpdates(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, updates)
 	assert.Equal(t, 2, len(updateList.GetAvailableUpdates()))
+}
+
+// nolint:funlen
+func TestSatelliteSystemAdvisories(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	utils.SkipWithoutPlatform(t)
+	core.SetupTestEnvironment()
+
+	ogYumUpdatesEval := enableYumUpdatesEval
+	enableYumUpdatesEval = true
+	defer func() { enableYumUpdatesEval = ogYumUpdatesEval }()
+
+	configure()
+	loadCache()
+	mockWriter := mqueue.MockKafkaWriter{}
+	remediationsPublisher = &mockWriter
+
+	vmaasJSON := `
+	{
+		"package_list": [
+			"git-2.30.1-1.el8_8.x86_64",
+			"sqlite-3.21.0-1.el8_6.x86_64"
+		],
+		"repository_list": [
+			"rhel-8-for-x86_64-appstream-rpms"
+		],
+		"releasever": "8",
+		"basearch": "x86_64",
+		"latest_only": true
+	}
+	`
+	// this satellite system has 2 git and 1 sqlite advisories reported by vmaas (APPLICABLE)
+	vmaasDataResp := `
+	{
+		"update_list": {
+			"git-2.30.1-1.el8_8.x86_64": {
+				"available_updates": [
+					{
+						"erratum": "RHSA-2023:3246",
+						"basearch": "x86_64",
+						"releasever": "8",
+						"repository": "rhel-8-for-x86_64-appstream-rpms",
+						"package": "git-2.39.3-1.el8_8.x86_64",
+						"package_name": "git",
+						"evra": "0:2.39.3-1.el8_8.x86_64"
+					},
+					{
+						"erratum": "RHSA-2023:3240",
+						"basearch": "x86_64",
+						"releasever": "8",
+						"repository": "rhel-8-for-x86_64-appstream-rpms",
+						"package": "git-2.39.4-1.el8_8.x86_64",
+						"package_name": "git",
+						"evra": "0:2.39.4-1.el8_8.x86_64"
+					}
+				]
+			},
+			"sqlite-3.21.0-1.el8_6.x86_64": {
+				"available_updates": [
+					{
+						"erratum": "RHSA-2022:7100",
+						"basearch": "x86_64",
+						"releasever": "8",
+						"repository": "rhel-8-for-x86_64-appstream-rpms",
+						"package": "sqlite-3.26.0-16.el8_6.x86_64",
+						"package_name": "sqlite",
+						"evra": "0:3.26.0-16.el8_6.x86_64"
+					}
+				]
+			}
+		}
+	}
+	`
+
+	var vmaasData vmaas.UpdatesV3Response
+	err := json.Unmarshal([]byte(vmaasDataResp), &vmaasData)
+	assert.Nil(t, err)
+
+	// lets add the checksum to the cache, so we do not actually call vmaas
+	vmaasJSONChecksum := "1337"
+	memoryVmaasCache.Add(&vmaasJSONChecksum, &vmaasData)
+
+	// this satellite system has 1 git installable advisory which is the same as the applicable one from vmaas
+	// and 1 sqlite different installable advisory
+	yumUpdatesRaw := []byte(`
+		{
+			"update_list": {
+				"git-2.30.1-1.el8_8.x86_64": {
+					"available_updates": [
+						{
+							"erratum": "RHSA-2023:3246",
+							"basearch": "x86_64",
+							"releasever": "8",
+							"repository": "rhel-8-for-x86_64-appstream-rpms",
+							"package": "git-0:2.39.3-1.el8_8.x86_64"
+						}
+					]
+				},
+				"sqlite-3.21.0-1.el8_6.x86_64": {
+					"available_updates": [
+						{
+							"erratum": "RHSA-2022:7108",
+							"basearch": "x86_64",
+							"releasever": "8",
+							"repository": "rhel-8-for-x86_64-appstream-rpms",
+							"package": "sqlite-3.26.0-16.el8_6.x86_64"
+						}
+					]
+				}
+			}
+		}
+		`)
+
+	system := models.SystemPlatform{
+		InventoryID:      "99999999-0000-0000-0000-000000000015",
+		JSONChecksum:     &vmaasJSONChecksum,
+		VmaasJSON:        &vmaasJSON,
+		YumUpdates:       yumUpdatesRaw,
+		DisplayName:      "satellite_system_test1",
+		RhAccountID:      1,
+		BuiltPkgcache:    true,
+		SatelliteManaged: true,
+	}
+	tx := database.Db.Create(&system)
+	assert.Nil(t, tx.Error)
+
+	result, err := getUpdatesData(context.Background(), database.Db, &system)
+	assert.Nil(t, err)
+
+	// result should have 2 git advisories,    1 is installable (taken from yum updates and vmaas, merged)
+	//                                         1 is applicable  (taken from vmaas)
+	//                    2 sqlite advisories, 1 is installable (taken from yum updates)
+	//                                         1 is applicable  (taken from vmaas)
+	var installableCnt, applicableCnt int
+	for _, updates := range result.GetUpdateList() {
+		for _, update := range updates.GetAvailableUpdates() {
+			if update.StatusID == INSTALLABLE {
+				installableCnt++
+			} else if update.StatusID == APPLICABLE {
+				applicableCnt++
+			}
+		}
+	}
+	assert.Equal(t, 2, installableCnt)
+	assert.Equal(t, 2, applicableCnt)
+
+	database.Db.Delete(system)
+}
+
+func TestCallVmaas400(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	utils.SkipWithoutPlatform(t)
+	configure()
+	req := vmaas.UpdatesV3Request{TestReturnStatus: 400}
+	_, err := callVMaas(context.Background(), &req)
+	assert.ErrorIs(t, err, errVmaasBadRequest)
+}
+
+func TestGetUpdatesDataVmaas400(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	utils.SkipWithoutPlatform(t)
+	configure()
+	loadCache()
+	req := vmaas.UpdatesV3Request{
+		TestReturnStatus: 400, PackageList: []string{"pkg"}, RepositoryList: []string{"repo"},
+	}
+	reqJSON, _ := json.Marshal(req)
+	reqString := string(reqJSON)
+	sp := models.SystemPlatform{VmaasJSON: &reqString}
+	res, err := getUpdatesData(context.Background(), database.Db, &sp)
+	// response and error should be nil, system is skipped due to VMaaS 400
+	assert.Nil(t, err)
+	assert.Nil(t, res)
 }

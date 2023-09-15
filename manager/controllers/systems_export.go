@@ -22,8 +22,9 @@ import (
 // @Param    filter[other_count]     query   string  false "Filter"
 // @Param    filter[stale]           query   string  false "Filter"
 // @Param    filter[packages_installed] query string false "Filter"
+// @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
@@ -38,13 +39,14 @@ import (
 func SystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
-	query := querySystems(db, account, apiver)
-	filters, err := ParseTagsFilters(c)
+	query := querySystems(db, account, apiver, groups)
+	filters, err := ParseAllFilters(c, SystemOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself
-	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
+	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
 
 	var systems SystemDBLookupSlice
 

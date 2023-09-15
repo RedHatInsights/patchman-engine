@@ -3,20 +3,30 @@ package controllers
 import (
 	"app/base/database"
 	"fmt"
+	"strings"
+
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"strings"
+)
+
+type FilterType int8
+
+const (
+	ColumnFilter FilterType = iota
+	InventoryFilter
+	TagFilter
 )
 
 type FilterData struct {
-	Operator string   `json:"op"`
-	Values   []string `json:"values"`
+	Type     FilterType `json:"-"`
+	Operator string     `json:"op"`
+	Values   []string   `json:"values"`
 }
 
 type Filters map[string]FilterData
 
 // Parse a filter from field name and field value specification
-func ParseFilterValue(val string) (FilterData, error) {
+func ParseFilterValue(ftype FilterType, val string) FilterData {
 	idx := strings.Index(val, ":")
 
 	var operator string
@@ -33,9 +43,10 @@ func ParseFilterValue(val string) (FilterData, error) {
 	values := strings.Split(value, ",")
 
 	return FilterData{
+		Type:     ftype,
 		Operator: operator,
 		Values:   values,
-	}, nil
+	}
 }
 
 func checkValueCount(operator string, nValues int) bool {
@@ -88,9 +99,6 @@ func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (str
 	case "leq":
 		return fmt.Sprintf("%s <= ? ", attributes[fieldName].DataQuery), values, nil
 	case "between":
-		if len(transformedValues) != 2 {
-			return "", []interface{}{}, errors.New("the `between` filter needs 2 values")
-		}
 		return fmt.Sprintf("%s BETWEEN ? AND ? ", attributes[fieldName].DataQuery), values, nil
 	case "in":
 		return fmt.Sprintf("%s IN (?) ", attributes[fieldName].DataQuery), []interface{}{values}, nil
@@ -136,13 +144,20 @@ func (t Filters) ToQueryParams() string {
 	parts := make([]string, 0, len(t))
 	for name, v := range t {
 		values := strings.Join(v.Values, ",")
-		parts = append(parts, fmt.Sprintf("filter[%s]=%s:%s", name, v.Operator, values))
+		if v.Type == TagFilter {
+			parts = append(parts, fmt.Sprintf("tags=%s=%s", name, values))
+		} else {
+			parts = append(parts, fmt.Sprintf("filter[%s]=%s:%s", name, v.Operator, values))
+		}
 	}
 	return strings.Join(parts, "&")
 }
 
 func (t Filters) Apply(tx *gorm.DB, fields database.AttrMap) (*gorm.DB, error) {
 	for name, f := range t {
+		if f.Type != ColumnFilter {
+			continue
+		}
 		query, args, err := f.ToWhere(name, fields)
 		if err != nil {
 			return nil, err
@@ -150,4 +165,12 @@ func (t Filters) Apply(tx *gorm.DB, fields database.AttrMap) (*gorm.DB, error) {
 		tx = tx.Where(query, args...)
 	}
 	return tx, nil
+}
+
+func (t Filters) Update(ftype FilterType, key string, value string) {
+	data := ParseFilterValue(ftype, value)
+	if fdata, ok := t[key]; ok {
+		data.Values = append(data.Values, fdata.Values...)
+	}
+	t[key] = data
 }

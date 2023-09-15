@@ -108,7 +108,7 @@ func statementFromObjects(db *gorm.DB, objects reflect.Value) (*gorm.Statement, 
 	}()
 	// Get a map of the first element to calculate field names and number of
 	// placeholders.
-	firstObjectFields, err := objectToMap(db, firstElem)
+	firstObjectFields, err := objectToMap(schema, firstElem)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func statementFromObjects(db *gorm.DB, objects reflect.Value) (*gorm.Statement, 
 	for i := 0; i < objects.Len(); i++ {
 		// Retrieve ith element as an interface
 		r := objects.Index(i).Interface()
-		row, err := objectToMap(db, r)
+		row, err := objectToMap(schema, r)
 		if err != nil {
 			return nil, err
 		}
@@ -212,7 +212,7 @@ func parseClause(clauseOnConflict clause.Expression) string {
 
 // objectToMap takes any object of type <T> and returns a map with the gorm
 // field DB name as key and the value as value
-func objectToMap(db *gorm.DB, object interface{}) (map[string]interface{}, error) {
+func objectToMap(schema *schema.Schema, object interface{}) (map[string]interface{}, error) {
 	attributes := make(map[string]interface{})
 	now := bulkNow
 
@@ -220,7 +220,6 @@ func objectToMap(db *gorm.DB, object interface{}) (map[string]interface{}, error
 	rv := reflect.ValueOf(object)
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
-		object = rv.Interface()
 	}
 	if rv.Kind() != reflect.Struct {
 		return nil, errors.New("value must be kind of Struct")
@@ -230,8 +229,7 @@ func objectToMap(db *gorm.DB, object interface{}) (map[string]interface{}, error
 		now = Db.NowFunc()
 	}
 
-	parsedSchema, _ := schema.Parse(object, &sync.Map{}, db.NamingStrategy)
-	for _, field := range parsedSchema.Fields {
+	for _, field := range schema.Fields {
 		// Exclude relational record because it's not directly contained in database columns
 		fieldVaule := rv.FieldByName(field.Name).Interface()
 		_, hasForeignKey := field.TagSettings["FOREIGNKEY"]

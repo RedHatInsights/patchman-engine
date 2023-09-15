@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/models"
 	"app/base/utils"
+	"app/manager/kafka"
 	"app/manager/middlewares"
 	"net/http"
 
@@ -51,6 +52,10 @@ func BaselineSystemsRemoveHandler(c *gin.Context) {
 		}
 		return
 	}
+
+	// re-evaluate systems removed from baselines
+	inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, req.InventoryIDs)
+	kafka.EvaluateBaselineSystems(inventoryAIDs)
 
 	c.Status(http.StatusOK)
 }

@@ -22,8 +22,9 @@ import (
 // @Param    filter[id]              query   string  false "Filter"
 // @Param    filter[display_name]    query   string  false "Filter"
 // @Param    filter[stale]           query   string  false "Filter"
+// @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
@@ -38,8 +39,10 @@ import (
 // @Router /export/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
-	advisoryName := c.Param("advisory_id")
 	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+
+	advisoryName := c.Param("advisory_id")
 	if advisoryName == "" {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "advisory_id param not found"})
 		return
@@ -57,12 +60,12 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	query := buildAdvisorySystemsQuery(db, account, advisoryName, apiver)
-	filters, err := ParseTagsFilters(c)
+	query := buildAdvisorySystemsQuery(db, account, groups, advisoryName, apiver)
+	filters, err := ParseAllFilters(c, AdvisorySystemOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself
-	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
+	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
 
 	query = query.Order("sp.id")
 	query, err = ExportListCommon(query, c, AdvisorySystemOpts)

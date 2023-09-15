@@ -23,7 +23,7 @@ const uploadEvent = `{
 		"type": "created",
 		"host": {
 			"id":       "00000000-0000-0000-0000-000000000100",
-			"account":  "TEST-0000",
+			"org_id":   "org_1",
 			"reporter": "puptoo",
 			"tags": [
 				{
@@ -142,6 +142,7 @@ var yumUpdates = `{
 			]
 		}
 	},
+	"build_pkgcache": false,
 	"metadata_time": "2022-05-30T14:00:25Z"
 }`
 
@@ -169,8 +170,8 @@ func platformMock() {
 
 func mockIdentity() string {
 	ident := identity.Identity{
-		Type:          "User",
-		AccountNumber: "0",
+		Type:  "User",
+		OrgID: "org_1",
 	}
 	js, err := json.Marshal(&ident)
 	if err != nil {
@@ -232,7 +233,7 @@ func mockToggleUpload(c *gin.Context) {
 
 func mockYumUpdatesS3(c *gin.Context) {
 	utils.LogInfo("Mocking S3 for providing yum updates")
-	updates := vmaas.UpdatesV2Response{}
+	updates := vmaas.UpdatesV3Response{}
 	if err := json.Unmarshal([]byte(yumUpdates), &updates); err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return

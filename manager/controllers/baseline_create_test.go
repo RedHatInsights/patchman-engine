@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/database"
+	"app/base/models"
 	"app/base/utils"
 	"bytes"
 	"net/http"
@@ -105,6 +106,36 @@ func TestCreateBaselineDescriptionSpaces(t *testing.T) {
 	data := `{"name": "baseline_spaces_desc", "description": "   "}`
 	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
 
+	var err utils.ErrorResponse
+	CheckResponse(t, w, http.StatusBadRequest, &err)
+}
+
+func TestCreateBaselineSatelliteSystem(t *testing.T) {
+	core.SetupTest(t)
+
+	system := models.SystemPlatform{
+		InventoryID:      "99999999-0000-0000-0000-000000000015",
+		DisplayName:      "satellite_system_test",
+		RhAccountID:      1,
+		BuiltPkgcache:    true,
+		SatelliteManaged: true,
+	}
+	tx := database.Db.Create(&system)
+	assert.Nil(t, tx.Error)
+	defer database.Db.Delete(system)
+
+	data := `{
+		"name": "baseline_satellite",
+		"inventory_ids": [
+			"00000000-0000-0000-0000-000000000005",
+			"99999999-0000-0000-0000-000000000015"
+		],
+        "config": {"to_time": "2022-12-31T12:00:00-04:00"},
+		"description": "desc"
+	}`
+
+	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "",
+		CreateBaselineHandler, 1, "PUT", "/")
 	var err utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &err)
 }

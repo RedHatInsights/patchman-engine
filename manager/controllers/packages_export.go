@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/utils"
 	"app/manager/middlewares"
 
 	"github.com/gin-gonic/gin"
@@ -24,13 +25,20 @@ import (
 // @Router /export/packages [get]
 func PackagesExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
-	filters, err := ParseTagsFilters(c)
+	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	filters, err := ParseAllFilters(c, PackagesOpts)
 	if err != nil {
 		return
 	}
 
 	db := middlewares.DBFromContext(c)
-	query := packagesQuery(db, filters, account)
+	useCache := shouldUseCache(db, account, filters, groups)
+	if !useCache {
+		db.Exec("SET work_mem TO '?'", utils.Cfg.DBWorkMem)
+		defer db.Exec("RESET work_mem")
+	}
+	query := packagesQuery(db, filters, account, groups, useCache)
 	if err != nil {
 		return
 	}
@@ -46,6 +54,11 @@ func PackagesExportHandler(c *gin.Context) {
 	items, _ := PackageDBLookup2Item(data)
 	if err != nil {
 		LogAndRespError(c, err, "db error")
+		return
+	}
+	if apiver < 3 {
+		itemsV2 := packages2PackagesV2(items)
+		OutputExportData(c, itemsV2)
 		return
 	}
 

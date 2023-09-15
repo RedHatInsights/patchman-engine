@@ -1,0 +1,1 @@
+ALTER TABLE system_platform ADD COLUMN built_pkgcache BOOLEAN NOT NULL DEFAULT FALSE;

@@ -16,14 +16,15 @@ import (
 // @Accept   json
 // @Produce  json
 // @Param    package_name    path    string    true  "Package name"
+// @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Param    tags            query   []string  false "Tag filter"
-// @Success 200 {array} PackageSystemItem
+// @Success 200 {array} PackageSystemItemV3
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 415 {object} utils.ErrorResponse
@@ -31,6 +32,8 @@ import (
 // @Router /export/packages/{package_name}/systems [get]
 func PackageSystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(middlewares.KeyAccount)
+	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 
 	packageName := c.Param("package_name")
 	if packageName == "" {
@@ -50,12 +53,12 @@ func PackageSystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	query := packageSystemsQuery(db, account, packageName, packageIDs)
-	filters, err := ParseTagsFilters(c)
+	query := packageSystemsQuery(db, account, groups, packageName, packageIDs)
+	filters, err := ParseAllFilters(c, PackageSystemsOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself
-	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
+	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
 	query, err = ExportListCommon(query, c, PackageSystemsOpts)
 	if err != nil {
 		return
@@ -68,6 +71,12 @@ func PackageSystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	outputItems, _ := packageSystemDBLookups2PackageSystemItems(systems)
+	outputItems, _ := packageSystemDBLookups2PackageSystemItemsV3(systems)
+	if apiver < 3 {
+		itemsV2 := packageSystemItemV3toV2(outputItems)
+		OutputExportData(c, itemsV2)
+		return
+	}
+
 	OutputExportData(c, outputItems)
 }

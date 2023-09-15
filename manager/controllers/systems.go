@@ -77,6 +77,8 @@ type SystemItemAttributesCommon struct {
 	SystemLastUpload
 	SystemTimestamps
 	SystemStale
+	SystemSatelliteManaged
+	SystemBuiltPkgcache
 }
 
 // nolint: lll
@@ -94,6 +96,7 @@ type SystemItemAttributesV2Only struct {
 
 type SystemItemAttributesV3Only struct {
 	BaselineIDAttr
+	SystemGroups
 }
 
 type SystemItemAttributesV2 struct {
@@ -113,9 +116,21 @@ type SystemItemAttributesAll struct {
 }
 
 type SystemTagsList []SystemTag
+type SystemGroupsList []SystemGroup
+type SystemInventoryItemList[T SystemTagsList | SystemGroupsList] struct {
+	SystemInventoryItems T
+}
 
 func (v SystemTagsList) String() string {
-	b, err := json.Marshal(v)
+	return SystemInventoryItemList[SystemTagsList]{v}.String()
+}
+
+func (v SystemGroupsList) String() string {
+	return SystemInventoryItemList[SystemGroupsList]{v}.String()
+}
+
+func (v SystemInventoryItemList[T]) String() string {
+	b, err := json.Marshal(v.SystemInventoryItems)
 	if err != nil {
 		utils.LogError("err", err.Error(), "Unable to convert tags struct to json")
 	}
@@ -156,13 +171,14 @@ type SystemsResponseV3 struct {
 func systemsCommon(c *gin.Context, apiver int) (*gorm.DB, *ListMeta, []string, error) {
 	var err error
 	account := c.GetInt(middlewares.KeyAccount)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
-	query := querySystems(db, account, apiver)
-	filters, err := ParseTagsFilters(c)
+	query := querySystems(db, account, apiver, groups)
+	filters, err := ParseAllFilters(c, SystemOpts)
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled method itself
-	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
+	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
 	query, meta, params, err := ListCommon(query, c, filters, SystemOpts)
 	// Error handled method itself
 	return query, meta, params, err
@@ -177,7 +193,7 @@ func systemsCommon(c *gin.Context, apiver int) (*gorm.DB, *ListMeta, []string, e
 // @Produce  json
 // @Param    limit      query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset     query   int     false   "Offset for paging"
-// @Param    sort       query   string  false   "Sort field" Enums(id,display_name,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale,packages_installed,baseline_name)
+// @Param    sort       query   string  false   "Sort field" Enums(id,display_name,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale,packages_installed,baseline_name,groups)
 // @Param    search     query   string  false   "Find matching text"
 // @Param    filter[id]                     query   string  false   "Filter"
 // @Param    filter[display_name]           query   string  false   "Filter"
@@ -195,8 +211,9 @@ func systemsCommon(c *gin.Context, apiver int) (*gorm.DB, *ListMeta, []string, e
 // @Param    filter[baseline_name]          query   string  false   "Filter"
 // @Param    filter[os]                     query   string  false   "Filter OS version"
 // @Param    tags                           query   []string false  "Tag filter"
+// @Param    filter[group_name] 									query   []string false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]                     query   string  false   "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in]                   query   []string false  "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][sap_sids]	                    query   []string false  "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]                        query   string  false   "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]    query   string  false   "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]                          query   string  false   "Filter systems by mssql version"
@@ -252,7 +269,7 @@ func SystemsListHandler(c *gin.Context) {
 // @Produce  json
 // @Param    limit      query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset     query   int     false   "Offset for paging"
-// @Param    sort       query   string  false   "Sort field" Enums(id,display_name,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale,packages_installed,baseline_name)
+// @Param    sort       query   string  false   "Sort field" Enums(id,display_name,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale,packages_installed,baseline_name,satellite_managed,built_pkgcache)
 // @Param    search     query   string  false   "Find matching text"
 // @Param    filter[id]                     query   string  false   "Filter"
 // @Param    filter[display_name]           query   string  false   "Filter"
@@ -269,9 +286,12 @@ func SystemsListHandler(c *gin.Context) {
 // @Param    filter[created]                query   string  false   "Filter"
 // @Param    filter[baseline_name]          query   string  false   "Filter"
 // @Param    filter[os]                     query   string  false   "Filter OS version"
+// @Param    filter[satellite_managed]      query   string  false   "Filter"
+// @Param    filter[built_pkgcache]         query   string  false   "Filter"
 // @Param    tags                           query   []string false  "Tag filter"
+// @Param    filter[group_name] 									query	[]string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]                     query   string  false   "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in]                   query   []string false  "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][sap_sids]	                    query   []string false  "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]                        query   string  false   "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]    query   string  false   "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]                          query   string  false   "Filter systems by mssql version"
@@ -302,9 +322,8 @@ func SystemsListIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func querySystems(db *gorm.DB, account, apiver int) *gorm.DB {
-	q := database.Systems(db, account).
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
+func querySystems(db *gorm.DB, account, apiver int, groups map[string]string) *gorm.DB {
+	q := database.Systems(db, account, groups).
 		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id")
 	if apiver < 3 {
 		return q.Select(SystemsSelectV2)
@@ -312,17 +331,15 @@ func querySystems(db *gorm.DB, account, apiver int) *gorm.DB {
 	return q.Select(SystemsSelectV3)
 }
 
-func parseSystemTags(jsonStr string) ([]SystemTag, error) {
+func parseSystemItems(jsonStr string, res interface{}) error {
 	js := json.RawMessage(jsonStr)
 	b, err := json.Marshal(js)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var systemTags []SystemTag
-	err = json.Unmarshal(b, &systemTags)
-	if err != nil {
-		return nil, err
+	if err := json.Unmarshal(b, res); err != nil {
+		return err
 	}
-	return systemTags, nil
+	return nil
 }

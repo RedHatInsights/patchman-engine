@@ -41,7 +41,7 @@ func TestLimitVmaasToBaseline(t *testing.T) {
 	assert.Equal(t, []string{"RH-1", "RH-2"}, errataInVmaasData(vmaasData, APPLICABLE))
 }
 
-func errataInVmaasData(vmaasData vmaas.UpdatesV2Response, status int) []string {
+func errataInVmaasData(vmaasData vmaas.UpdatesV3Response, status int) []string {
 	errata := make([]string, 0)
 	for _, updates := range vmaasData.GetUpdateList() {
 		availableUpdates := updates.GetAvailableUpdates()

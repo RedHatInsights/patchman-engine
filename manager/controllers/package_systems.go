@@ -23,26 +23,45 @@ var PackageSystemsOpts = ListOpts{
 }
 
 //nolint:lll
-type PackageSystemItem struct {
+type PackageSystemItemCommon struct {
 	SystemIDAttribute
 	SystemDisplayName
 	InstalledEVRA string         `json:"installed_evra" csv:"installed_evra" query:"p.evra" gorm:"column:installed_evra"`
 	AvailableEVRA string         `json:"available_evra" csv:"available_evra" query:"spkg.latest_evra" gorm:"column:available_evra"`
-	Updatable     bool           `json:"updatable" csv:"updatable" query:"spkg.latest_evra IS NOT NULL" gorm:"column:updatable"`
+	Updatable     bool           `json:"updatable" csv:"updatable" query:"(update_status(spkg.update_data) = 'Installable')" gorm:"column:updatable"`
 	Tags          SystemTagsList `json:"tags" csv:"tags" query:"null" gorm:"-"`
 	BaselineAttributes
+}
+
+type PackageSystemItemV2 struct {
+	PackageSystemItemCommon
+}
+
+//nolint:lll
+type PackageSystemItemV3 struct {
+	PackageSystemItemCommon
+	BaselineIDAttr
+	OSAttributes
+	UpdateStatus string `json:"update_status" csv:"update_status" query:"update_status(spkg.update_data)" gorm:"column:update_status"`
+	SystemGroups
 }
 
 type PackageSystemDBLookup struct {
 	SystemsMetaTagTotal
 
-	PackageSystemItem
+	PackageSystemItemV3
 }
 
-type PackageSystemsResponse struct {
-	Data  []PackageSystemItem `json:"data"`
-	Links Links               `json:"links"`
-	Meta  ListMeta            `json:"meta"`
+type PackageSystemsResponseV2 struct {
+	Data  []PackageSystemItemV2 `json:"data"`
+	Links Links                 `json:"links"`
+	Meta  ListMeta              `json:"meta"`
+}
+
+type PackageSystemsResponseV3 struct {
+	Data  []PackageSystemItemV3 `json:"data"`
+	Links Links                 `json:"links"`
+	Meta  ListMeta              `json:"meta"`
 }
 
 func packagesByNameQuery(db *gorm.DB, pkgName string) *gorm.DB {
@@ -51,10 +70,10 @@ func packagesByNameQuery(db *gorm.DB, pkgName string) *gorm.DB {
 		Where("pn.name = ?", pkgName)
 }
 
-func packageSystemsQuery(db *gorm.DB, acc int, packageName string, packageIDs []int) *gorm.DB {
-	query := database.SystemPackages(db, acc).
+func packageSystemsQuery(db *gorm.DB, acc int, groups map[string]string, packageName string, packageIDs []int,
+) *gorm.DB {
+	query := database.SystemPackages(db, acc, groups).
 		Select(PackageSystemsSelect).
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
 		Where("sp.stale = false").
 		Where("pn.name = ?", packageName).
@@ -65,6 +84,7 @@ func packageSystemsQuery(db *gorm.DB, acc int, packageName string, packageIDs []
 
 func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(middlewares.KeyAccount)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	var filters map[string]FilterData
 
 	packageName := c.Param("package_name")
@@ -84,12 +104,12 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 		return nil, nil, nil, errors.New("package not found")
 	}
 
-	query := packageSystemsQuery(db, account, packageName, packageIDs)
-	filters, err := ParseTagsFilters(c)
+	query := packageSystemsQuery(db, account, groups, packageName, packageIDs)
+	filters, err := ParseAllFilters(c, PackageSystemsOpts)
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled in method itself
-	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
+	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
 	query, meta, params, err := ListCommon(query, c, filters, PackageSystemsOpts)
 	// Error handled in method itself
 	return query, meta, params, err
@@ -106,19 +126,23 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    package_name    path    string    true  "Package name"
 // @Param    tags            query   []string  false "Tag filter"
+// @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
-// @Success 200 {object} PackageSystemsResponse
+// @Param    filter[updatable]       								query   bool    false "Filter"
+// @Success 200 {object} PackageSystemsResponseV3
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /packages/{package_name}/systems [get]
 func PackageSystemsListHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
+	apiver := c.GetInt(middlewares.KeyApiver)
+
 	query, meta, params, err := packageSystemsCommon(db, c)
 	if err != nil {
 		return
@@ -131,17 +155,29 @@ func PackageSystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	outputItems, total := packageSystemDBLookups2PackageSystemItems(systems)
+	outputItems, total := packageSystemDBLookups2PackageSystemItemsV3(systems)
 
 	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
 	if err != nil {
 		return // Error handled in method itself
 	}
-	c.JSON(http.StatusOK, PackageSystemsResponse{
+	if apiver < 3 {
+		dataV2 := packageSystemItemV3toV2(outputItems)
+		var resp = PackageSystemsResponseV2{
+			Data:  dataV2,
+			Links: *links,
+			Meta:  *meta,
+		}
+		c.JSON(http.StatusOK, &resp)
+		return
+	}
+
+	response := PackageSystemsResponseV3{
 		Data:  outputItems,
 		Links: *links,
 		Meta:  *meta,
-	})
+	}
+	c.JSON(http.StatusOK, response)
 }
 
 // nolint: dupl
@@ -155,52 +191,69 @@ func PackageSystemsListHandler(c *gin.Context) {
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    package_name    path    string    true  "Package name"
 // @Param    tags            query   []string  false "Tag filter"
+// @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
-// @Success 200 {object} IDsResponse
+// @Success 200 {object} IDsStatusResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/packages/{package_name}/systems [get]
 func PackageSystemsListIDsHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
+	apiver := c.GetInt(middlewares.KeyApiver)
 	query, meta, _, err := packageSystemsCommon(db, c)
 	if err != nil {
 		return
 	} // Error handled in method itself
 
-	var sids []SystemsID
+	var sids []SystemsStatusID
 	err = query.Find(&sids).Error
 	if err != nil {
 		LogAndRespError(c, err, "database error")
 		return
 	}
 
-	ids, err := systemsIDs(c, sids, meta)
+	resp, err := systemsIDsStatus(c, sids, meta)
 	if err != nil {
 		return // Error handled in method itself
 	}
-	var resp = IDsResponse{IDs: ids}
+	if apiver < 3 {
+		c.JSON(http.StatusOK, &resp.IDsResponse)
+		return
+	}
 	c.JSON(http.StatusOK, &resp)
 }
 
-func packageSystemDBLookups2PackageSystemItems(systems []PackageSystemDBLookup) ([]PackageSystemItem, int) {
+func packageSystemDBLookups2PackageSystemItemsV3(systems []PackageSystemDBLookup) ([]PackageSystemItemV3, int) {
 	var total int
 	if len(systems) > 0 {
 		total = systems[0].Total
 	}
-	data := make([]PackageSystemItem, len(systems))
-	var err error
+	data := make([]PackageSystemItemV3, len(systems))
 	for i, system := range systems {
-		system.PackageSystemItem.Tags, err = parseSystemTags(system.TagsStr)
-		if err != nil {
+		if err := parseSystemItems(system.TagsStr, &system.PackageSystemItemV3.Tags); err != nil {
 			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system tags parsing failed")
 		}
-		data[i] = system.PackageSystemItem
+		if err := parseSystemItems(system.GroupsStr, &system.PackageSystemItemV3.Groups); err != nil {
+			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system groups parsing failed")
+		}
+		data[i] = system.PackageSystemItemV3
 	}
 	return data, total
+}
+
+func packageSystemItemV3toV2(systems []PackageSystemItemV3) []PackageSystemItemV2 {
+	nSystems := len(systems)
+	systemsV2 := make([]PackageSystemItemV2, nSystems)
+	for i := 0; i < nSystems; i++ {
+		systemsV2[i] = PackageSystemItemV2{
+			PackageSystemItemCommon: systems[i].PackageSystemItemCommon,
+		}
+	}
+	return systemsV2
 }

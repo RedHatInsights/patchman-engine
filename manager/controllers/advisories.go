@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"app/base/database"
+	"app/base/rbac"
 	"app/manager/middlewares"
 	"net/http"
 	"time"
@@ -14,11 +15,16 @@ var AdvisoriesFields = database.MustGetQueryAttrs(&AdvisoriesDBLookupV3{})
 var AdvisoriesSelectV2 = database.MustGetSelect(&AdvisoriesDBLookupV2{})
 var AdvisoriesSelectV3 = database.MustGetSelect(&AdvisoriesDBLookupV3{})
 var AdvisoriesOpts = ListOpts{
-	Fields:         AdvisoriesFields,
-	DefaultFilters: nil,
-	DefaultSort:    "-public_date",
-	StableSort:     "id",
-	SearchFields:   []string{"am.name", "am.cve_list", "synopsis"},
+	Fields: AdvisoriesFields,
+	DefaultFilters: map[string]FilterData{
+		"applicable_systems": {
+			Operator: "gt",
+			Values:   []string{"0"},
+		},
+	},
+	DefaultSort:  "-public_date",
+	StableSort:   "id",
+	SearchFields: []string{"am.name", "am.cve_list", "synopsis"},
 }
 
 type AdvisoryID struct {
@@ -114,14 +120,16 @@ type AdvisoriesResponseV3 struct {
 func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	db := middlewares.DBFromContext(c)
 	account := c.GetInt(middlewares.KeyAccount)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	var query *gorm.DB
-	filters, err := ParseTagsFilters(c)
+	filters, err := ParseAllFilters(c, AdvisoriesOpts)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	if disableCachedCounts || HasTags(c) {
+
+	if disableCachedCounts || HasInventoryFilter(filters) || len(groups[rbac.KeyGrouped]) != 0 {
 		var err error
-		query = buildQueryAdvisoriesTagged(db, filters, account)
+		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
 		if err != nil {
 			return nil, nil, nil, err
 		} // Error handled in method itself
@@ -143,20 +151,20 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 // @Produce  json
 // @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field"    Enums(id,name,advisory_type,synopsis,public_date,applicable_systems)
+// @Param    sort           query   string  false   "Sort field"    Enums(id,advisory_type_name,synopsis,public_date,severity,installable_systems,applicable_systems)
 // @Param    search         query   string  false   "Find matching text"
 // @Param    filter[id]                  query   string  false "Filter "
 // @Param    filter[description]         query   string  false "Filter"
 // @Param    filter[public_date]         query   string  false "Filter"
 // @Param    filter[synopsis]            query   string  false "Filter"
-// @Param    filter[advisory_type]       query   string  false "Filter"
 // @Param    filter[advisory_type_name]  query   string  false "Filter"
 // @Param    filter[severity]            query   string  false "Filter"
 // @Param    filter[installable_systems] query   string  false "Filter"
 // @Param    filter[applicable_systems]  query   string  false "Filter"
 // @Param    tags                        query   []string  false "Tag filter"
+// @Param    filter[group_name]  									query []string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
@@ -222,8 +230,9 @@ func AdvisoriesListHandler(c *gin.Context) {
 // @Param    filter[installable_systems] query   string  false "Filter"
 // @Param    filter[applicable_systems]  query   string  false "Filter"
 // @Param    tags                        query   []string  false "Tag filter"
+// @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
@@ -258,8 +267,8 @@ func buildQueryAdvisories(db *gorm.DB, account int) *gorm.DB {
 	return query
 }
 
-func buildAdvisoryAccountDataQuery(db *gorm.DB, account int) *gorm.DB {
-	query := database.SystemAdvisories(db, account).
+func buildAdvisoryAccountDataQuery(db *gorm.DB, account int, groups map[string]string) *gorm.DB {
+	query := database.SystemAdvisories(db, account, groups).
 		Select(`sa.advisory_id, sp.rh_account_id as rh_account_id,
 		        count(sp.*) filter (where sa.status_id = 0) as systems_installable,
 		        count(sp.*) as systems_applicable`).
@@ -269,9 +278,10 @@ func buildAdvisoryAccountDataQuery(db *gorm.DB, account int) *gorm.DB {
 	return query
 }
 
-func buildQueryAdvisoriesTagged(db *gorm.DB, filters map[string]FilterData, account int) *gorm.DB {
-	subq := buildAdvisoryAccountDataQuery(db, account)
-	subq, _ = ApplyTagsFilter(filters, subq, "sp.inventory_id")
+func buildQueryAdvisoriesTagged(db *gorm.DB, filters map[string]FilterData, account int, groups map[string]string,
+) *gorm.DB {
+	subq := buildAdvisoryAccountDataQuery(db, account, groups)
+	subq, _ = ApplyInventoryFilter(filters, subq, "sp.inventory_id")
 
 	query := db.Table("advisory_metadata am").
 		Select(AdvisoriesSelectV3).

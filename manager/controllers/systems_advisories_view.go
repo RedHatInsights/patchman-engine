@@ -42,9 +42,9 @@ func totalItems(tx *gorm.DB, cols string) (int, error) {
 	return int(count), err
 }
 
-func systemsAdvisoriesQuery(db *gorm.DB, acc int, systems []SystemID, advisories []AdvisoryName,
-	limit, offset *int) (*gorm.DB, int, int, int, error) {
-	sysq := database.Systems(db, acc).
+func systemsAdvisoriesQuery(db *gorm.DB, acc int, groups map[string]string, systems []SystemID,
+	advisories []AdvisoryName, limit, offset *int, apiver int) (*gorm.DB, int, int, int, error) {
+	sysq := database.Systems(db, acc, groups).
 		Distinct("sp.rh_account_id, sp.id, sp.inventory_id").
 		// we need to join system_advisories to make `limit` work properly
 		// without this join it can happen that we display less items on some pages
@@ -65,10 +65,16 @@ func systemsAdvisoriesQuery(db *gorm.DB, acc int, systems []SystemID, advisories
 		return nil, total, lim, off, err
 	}
 
+	installableOnly := ""
+	if apiver > 2 {
+		// display only installable advisories in v3 api
+		installableOnly = "AND sa.status_id = 0"
+	}
+
 	query := db.Table("(?) as sp", sysq).
 		Select(systemsAdvisoriesSelect).
-		Joins(`LEFT JOIN system_advisories sa ON sa.system_id = sp.id
-			AND sa.rh_account_id = sp.rh_account_id AND sa.rh_account_id = ?`, acc)
+		Joins(fmt.Sprintf(`LEFT JOIN system_advisories sa ON sa.system_id = sp.id
+			AND sa.rh_account_id = sp.rh_account_id AND sa.rh_account_id = ? %s`, installableOnly), acc)
 	if len(advisories) > 0 {
 		query = query.Joins("LEFT JOIN advisory_metadata am ON am.id = sa.advisory_id AND am.name in (?)", advisories)
 	} else {
@@ -79,13 +85,15 @@ func systemsAdvisoriesQuery(db *gorm.DB, acc int, systems []SystemID, advisories
 	return query, total, lim, off, nil
 }
 
-func advisoriesSystemsQuery(db *gorm.DB, acc int, systems []SystemID, advisories []AdvisoryName,
-	limit, offset *int) (*gorm.DB, int, int, int, error) {
-	advq := db.Table("advisory_metadata am").
+func advisoriesSystemsQuery(db *gorm.DB, acc int, groups map[string]string, systems []SystemID,
+	advisories []AdvisoryName, limit, offset *int, apiver int) (*gorm.DB, int, int, int, error) {
+	// get all advisories for all systems in the account (with inventory.hosts join)
+	advq := database.Systems(db, acc, groups).
 		Distinct("am.id, am.name").
 		// we need to join system_advisories to make `limit` work properly
 		// without this join it can happen that we display less items on some pages
-		Joins("JOIN system_advisories sa ON am.id = sa.advisory_id AND sa.rh_account_id = ?", acc).
+		Joins("JOIN system_advisories sa ON sp.id = sa.system_id AND sa.rh_account_id = ?", acc).
+		Joins("JOIN advisory_metadata am ON am.id = sa.advisory_id").
 		Order("am.name, am.id")
 	if len(advisories) > 0 {
 		advq = advq.Where("am.name in (?)", advisories)
@@ -101,10 +109,22 @@ func advisoriesSystemsQuery(db *gorm.DB, acc int, systems []SystemID, advisories
 		return nil, total, lim, off, err
 	}
 
+	installableOnly := ""
+	if apiver > 2 {
+		// display only systems with installable advisories in v3 api
+		installableOnly = "AND sa.status_id = 0"
+	}
+
 	spJoin := "LEFT JOIN system_platform sp ON sp.id = sa.system_id AND sa.rh_account_id = sp.rh_account_id"
 	query := db.Table("(?) as am", advq).
 		Distinct(systemsAdvisoriesSelect).
-		Joins("JOIN system_advisories sa ON am.id = sa.advisory_id AND sa.rh_account_id = ?", acc)
+		Joins(
+			fmt.Sprintf(
+				"LEFT JOIN system_advisories sa ON am.id = sa.advisory_id AND sa.rh_account_id = ? %s",
+				installableOnly,
+			),
+			acc,
+		)
 	if len(systems) > 0 {
 		query = query.Joins(fmt.Sprintf("%s AND sp.inventory_id::text in (?)", spJoin), systems)
 	} else {
@@ -126,12 +146,16 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListM
 		return nil, nil, err
 	}
 	acc := c.GetInt(middlewares.KeyAccount)
+	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
 	switch endpoint {
 	case "SystemsAdvisories":
-		q, total, limit, offset, err = systemsAdvisoriesQuery(db, acc, req.Systems, req.Advisories, req.Limit, req.Offset)
+		q, total, limit, offset, err = systemsAdvisoriesQuery(
+			db, acc, groups, req.Systems, req.Advisories, req.Limit, req.Offset, apiver)
 	case "AdvisoriesSystems":
-		q, total, limit, offset, err = advisoriesSystemsQuery(db, acc, req.Systems, req.Advisories, req.Limit, req.Offset)
+		q, total, limit, offset, err = advisoriesSystemsQuery(
+			db, acc, groups, req.Systems, req.Advisories, req.Limit, req.Offset, apiver)
 	default:
 		return nil, nil, fmt.Errorf("unknown endpoint '%s'", endpoint)
 	}
@@ -152,8 +176,8 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListM
 	return data, &meta, nil
 }
 
-// @Summary View system-advisory pairs for selected systems and advisories
-// @Description View system-advisory pairs for selected systems and advisories
+// @Summary View system-advisory pairs for selected systems and installable advisories
+// @Description View system-advisory pairs for selected systems and installable advisories
 // @ID viewSystemsAdvisories
 // @Security RhIdentity
 // @Accept   json
@@ -188,8 +212,8 @@ func PostSystemsAdvisories(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// @Summary View advisory-system pairs for selected systems and advisories
-// @Description View advisory-system pairs for selected systems and advisories
+// @Summary View advisory-system pairs for selected systems and installable advisories
+// @Description View advisory-system pairs for selected systems and installable advisories
 // @ID viewAdvisoriesSystems
 // @Security RhIdentity
 // @Accept   json

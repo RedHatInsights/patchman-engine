@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func isSyncNeeded(dbExportedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *types.Rfc3339TimestampNoT) bool {
+func isSyncNeeded(dbExportedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *types.Rfc3339Timestamp) bool {
 	if dbExportedTS == nil || vmaasExportedTS == nil {
 		return true
 	}
@@ -38,7 +38,7 @@ func vmaasDBChangeRequest() (*vmaas.DBChangeResponse, error) {
 	return vmaasDataPtr.(*vmaas.DBChangeResponse), nil
 }
 
-func VmaasDBExported() *types.Rfc3339TimestampNoT {
+func VmaasDBExported() *types.Rfc3339Timestamp {
 	dbchange, err := vmaasDBChangeRequest()
 	if err != nil {
 		utils.LogError("err", err, "Could'n query vmaas dbchange")

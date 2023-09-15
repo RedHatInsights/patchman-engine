@@ -35,6 +35,7 @@ var AdvisorySystemOpts = ListOpts{
 func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 
 	advisoryName := c.Param("advisory_id")
 	if advisoryName == "" {
@@ -56,13 +57,17 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error
 		return nil, nil, nil, err
 	}
 
-	query := buildAdvisorySystemsQuery(db, account, advisoryName, apiver)
-	filters, err := ParseTagsFilters(c)
+	query := buildAdvisorySystemsQuery(db, account, groups, advisoryName, apiver)
+	opts := AdvisorySystemOptsV3
+	if apiver < 3 {
+		opts = AdvisorySystemOpts
+	}
+	filters, err := ParseAllFilters(c, opts)
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled in method itself
-	query, _ = ApplyTagsFilter(filters, query, "sp.inventory_id")
-	query, meta, params, err := ListCommon(query, c, filters, AdvisorySystemOpts)
+	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
+	query, meta, params, err := ListCommon(query, c, filters, opts)
 	// Error handled in method itself
 	return query, meta, params, err
 }
@@ -77,7 +82,7 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error
 // @Param    advisory_id    path    string  true    "Advisory ID"
 // @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,stale,status,template)
+// @Param    sort           query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,stale,status,template,groups)
 // @Param    search         query   string  false   "Find matching text"
 // @Param    filter[id]             query   string    false "Filter"
 // @Param    filter[display_name]   query   string    false "Filter"
@@ -86,8 +91,9 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error
 // @Param    filter[template]       query   string    false "Filter"
 // @Param    filter[os]             query   string    false "Filter OS version"
 // @Param    tags                   query   []string  false "Tag filter"
+// @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
@@ -144,7 +150,7 @@ func advisorySystemsListHandler(c *gin.Context) {
 // @Param    advisory_id    path    string  true    "Advisory ID"
 // @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort    query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale)
+// @Param    sort    query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,other_count,satellite_managed,stale,built_pkgcache)
 // @Param    search         query   string  false   "Find matching text"
 // @Param    filter[id]              query   string  false "Filter"
 // @Param    filter[insights_id]     query   string  false "Filter"
@@ -155,6 +161,7 @@ func advisorySystemsListHandler(c *gin.Context) {
 // @Param    filter[rhba_count]      query   string  false "Filter"
 // @Param    filter[rhea_count]      query   string  false "Filter"
 // @Param    filter[other_count]     query   string  false "Filter"
+// @Param    filter[satellite_managed] query string  false "Filter"
 // @Param    filter[stale]           query   string  false "Filter"
 // @Param    filter[stale_timestamp] query   string false "Filter"
 // @Param    filter[stale_warning_timestamp] query string false "Filter"
@@ -164,48 +171,54 @@ func advisorySystemsListHandler(c *gin.Context) {
 // @Param    filter[osminor] query string false "Filter"
 // @Param    filter[osmajor] query string false "Filter"
 // @Param    filter[os]              query   string    false "Filter OS version"
+// @Param    filter[built_pkgcache]  query   string    false "Filter"
 // @Param    tags                    query   []string  false "Tag filter"
+// @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
-// @Param    filter[system_profile][sap_sids][in]					query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
-// @Success 200 {object} IDsResponse
+// @Success 200 {object} IDsStatusResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListIDsHandler(c *gin.Context) {
+	apiver := c.GetInt(middlewares.KeyApiver)
 	query, meta, _, err := advisorySystemsCommon(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
 
-	var sids []SystemsID
+	var sids []SystemsStatusID
 
 	if err = query.Scan(&sids).Error; err != nil {
 		LogAndRespError(c, err, "database error")
 		return
 	}
 
-	ids, err := systemsIDs(c, sids, meta)
+	resp, err := systemsIDsStatus(c, sids, meta)
 	if err != nil {
 		return // Error handled in method itself
 	}
-	var resp = IDsResponse{IDs: ids}
+	if apiver < 3 {
+		c.JSON(http.StatusOK, &resp.IDsResponse)
+		return
+	}
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildAdvisorySystemsQuery(db *gorm.DB, account int, advisoryName string, apiver int) *gorm.DB {
+func buildAdvisorySystemsQuery(db *gorm.DB, account int, groups map[string]string, advisoryName string, apiver int,
+) *gorm.DB {
 	selectQuery := AdvisorySystemsSelect
 	if apiver < 3 {
 		selectQuery = SystemsSelectV2
 	}
-	query := database.SystemAdvisories(db, account).
+	query := database.SystemAdvisories(db, account, groups).
 		Select(selectQuery).
 		Joins("JOIN advisory_metadata am ON am.id = sa.advisory_id").
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Joins("LEFT JOIN status st ON sa.status_id = st.id").
 		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
 		Where("am.name = ?", advisoryName).

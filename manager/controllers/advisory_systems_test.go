@@ -30,16 +30,21 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output.Data[0].Attributes.Tags)
 	assert.Equal(t, "baseline_1-1", output.Data[0].Attributes.BaselineName)
 	assert.Equal(t, int64(1), output.Data[0].Attributes.BaselineID)
+	assert.False(t, output.Data[0].Attributes.SatelliteManaged)
+	assert.False(t, output.Data[0].Attributes.BuiltPkgcache)
 }
 
 func TestAdvisorySystemsIDsDefault(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, "", AdvisorySystemsListIDsHandler, "/:advisory_id")
 
-	var output IDsResponse
+	var output IDsStatusResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 6, len(output.IDs))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.IDs[0])
+	assert.Equal(t, 6, len(output.Data))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
+	assert.Equal(t, "Installable", output.Data[0].Status)
 }
 
 func TestAdvisorySystemsNotFound(t *testing.T) { //nolint:dupl
@@ -75,7 +80,7 @@ func TestAdvisorySystemsOffsetOverflow(t *testing.T) {
 func TestAdvisorySystemsSorts(t *testing.T) {
 	core.SetupTest(t)
 
-	for sort := range SystemsFields {
+	for sort := range AdvisorySystemsFields {
 		w := CreateRequestRouterWithPath("GET", fmt.Sprintf("/RH-1?sort=%v", sort), nil, "",
 			AdvisorySystemsListHandler, "/:advisory_id")
 
@@ -148,9 +153,9 @@ func TestAdvisorySystemsTagsInMetadata(t *testing.T) {
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	testMap := map[string]FilterData{
-		"ns1/k1": {"eq", []string{"val1"}},
-		"ns1/k3": {"eq", []string{"val4"}},
-		"stale":  {"eq", []string{"false"}},
+		"ns1/k1": {Operator: "eq", Values: []string{"val1"}},
+		"ns1/k3": {Operator: "eq", Values: []string{"val4"}},
+		"stale":  {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }

@@ -6,11 +6,17 @@ import "time"
 type SystemsMetaTagTotal struct {
 	MetaTotalHelper
 	TagsStrHelper
+	GroupsStrHelper
 }
 
 type TagsStrHelper struct {
 	// Just helper field to get tags from db in plain string, then parsed to "Tags" attr., excluded from output data.
 	TagsStr string `json:"-" csv:"-" query:"ih.tags" gorm:"column:tags_str"`
+}
+
+type GroupsStrHelper struct {
+	// Just helper field to get Groups from db in plain string, then parsed to "Groups" attr., excluded from output data.
+	GroupsStr string `json:"-" csv:"-" query:"ih.groups" gorm:"column:groups_str"`
 }
 
 type MetaTotalHelper struct {
@@ -32,6 +38,10 @@ type SystemTimestamps struct {
 
 type SystemTags struct {
 	Tags SystemTagsList `json:"tags" csv:"tags" gorm:"-"`
+}
+
+type SystemGroups struct {
+	Groups SystemGroupsList `json:"groups" csv:"groups" gorm:"-" order_query:"ih.groups->>0"`
 }
 
 type BaselineAttributes struct {
@@ -68,7 +78,15 @@ type SystemIDAttribute struct {
 }
 
 type SystemAdvisoryStatus struct {
-	Status string `json:"status" csv:"status" query:"st.name" gorm:"column:name"`
+	Status string `json:"status" csv:"status" query:"st.name" gorm:"column:status"`
+}
+
+type SystemSatelliteManaged struct {
+	SatelliteManaged bool `json:"satellite_managed" csv:"satellite_managed" query:"sp.satellite_managed" gorm:"column:satellite_managed"`
+}
+
+type SystemBuiltPkgcache struct {
+	BuiltPkgcache bool `json:"built_pkgcache" csv:"built_pkgcache" query:"sp.built_pkgcache" gorm:"column:built_pkgcache"`
 }
 
 // nolint: lll

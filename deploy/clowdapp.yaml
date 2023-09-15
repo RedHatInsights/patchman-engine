@@ -31,7 +31,6 @@ objects:
           - ./scripts/entrypoint.sh
           - admin
         env:
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_ADMIN}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
@@ -46,6 +45,7 @@ objects:
         - {name: PACKAGES_PAGE_SIZE, value: '${PACKAGES_PAGE_SIZE}'}
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
         - {name: ENABLE_TURNPIKE_AUTH, value: '${ENABLE_TURNPIKE_AUTH}'}
+        - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_DATABASE_ADMIN}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_ADMIN}', memory: '${RES_LIMIT_MEM_ADMIN}'}
@@ -58,7 +58,7 @@ objects:
           enabled: true
           apiPath: patch
         private:
-          enabled: false
+          enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG_MANAGER}
         initContainers:
@@ -94,7 +94,6 @@ objects:
           - manager
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_MANAGER}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_MANAGER}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_MANAGER}'}
@@ -106,6 +105,7 @@ objects:
         - {name: DB_PORT_READ_REPLICA, valueFrom: {secretKeyRef: {key: db.port,
                                                                   name: patchman-db-readonly}}}
         - {name: DB_READ_REPLICA_ENABLED, value: '${DB_READ_REPLICA_ENABLED}'}
+        - {name: DB_WORK_MEM, value: '${DB_WORK_MEM}'}
         - {name: ENABLE_CYNDI_TAGS, value: '${ENABLE_CYNDI_TAGS}'}
         - {name: ENABLE_RBAC, value: '${ENABLE_RBAC}'}
         - {name: DISABLE_CACHE_COUNTS, value: '${DISABLE_CACHE_COUNTS}'}
@@ -120,6 +120,9 @@ objects:
         - {name: ENABLE_PACKAGE_CACHE, value: '${ENABLE_PACKAGE_CACHE_MANAGER}'}
         - {name: RESPONSE_TIMEOUT, value: '${RESPONSE_TIMEOUT}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
+        - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_MANAGER}'}
+        - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_MANAGER}'}
+        - {name: ENABLE_SATELLITE_FUNCTIONALITY, value: '${ENABLE_SATELLITE_FUNCTIONALITY}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_MANAGER}', memory: '${RES_LIMIT_MEM_MANAGER}'}
@@ -131,7 +134,7 @@ objects:
         public:
           enabled: true
         private:
-          enabled: false
+          enabled: true
         metrics:
           enabled: true
       podSpec:
@@ -148,7 +151,6 @@ objects:
           - listener
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_LISTENER}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_LISTENER}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_LISTENER}'}
@@ -166,6 +168,8 @@ objects:
         - {name: EXCLUDED_REPORTERS, value: '${EXCLUDED_REPORTERS}'}
         - {name: EXCLUDED_HOST_TYPES, value: '${EXCLUDED_HOST_TYPES}'}
         - {name: ENABLE_PAYLOAD_TRACKER, value: '${ENABLE_PAYLOAD_TRACKER}'}
+        - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_LISTENER}'}
+        - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_LISTENER}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_LISTENER}', memory: '${RES_LIMIT_MEM_LISTENER}'}
@@ -177,7 +181,7 @@ objects:
         public:
           enabled: true
         private:
-          enabled: false
+          enabled: true
         metrics:
           enabled: true
       podSpec:
@@ -194,7 +198,6 @@ objects:
           - evaluator
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_EVALUATOR_UPLOAD}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_EVALUATOR_UPLOAD}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_EVALUATOR_UPLOAD}'}
@@ -232,6 +235,10 @@ objects:
         - {name: ENABLE_INSTANT_NOTIFICATIONS, value: '${ENABLE_INSTANT_NOTIFICATIONS}'}
         - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
+        - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
+        - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_UPLOAD}'}
+        - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
+        - {name: ENABLE_SATELLITE_FUNCTIONALITY, value: '${ENABLE_SATELLITE_FUNCTIONALITY}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_UPLOAD}', memory: '${RES_LIMIT_MEM_EVALUATOR_UPLOAD}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_UPLOAD}', memory: '${RES_REQUEST_MEM_EVALUATOR_UPLOAD}'}
@@ -242,7 +249,7 @@ objects:
         public:
           enabled: true
         private:
-          enabled: false
+          enabled: true
         metrics:
           enabled: true
       podSpec:
@@ -259,7 +266,6 @@ objects:
           - evaluator
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_EVALUATOR_RECALC}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_EVALUATOR_RECALC}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_EVALUATOR_RECALC}'}
@@ -297,6 +303,10 @@ objects:
         - {name: ENABLE_INSTANT_NOTIFICATIONS, value: '${ENABLE_INSTANT_NOTIFICATIONS}'}
         - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
+        - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
+        - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_RECALC}'}
+        - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
+        - {name: ENABLE_SATELLITE_FUNCTIONALITY, value: '${ENABLE_SATELLITE_FUNCTIONALITY}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_RECALC}', memory: '${RES_LIMIT_MEM_EVALUATOR_RECALC}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_RECALC}', memory: '${RES_REQUEST_MEM_EVALUATOR_RECALC}'}
@@ -322,7 +332,6 @@ objects:
           - vmaas_sync
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
@@ -345,6 +354,8 @@ objects:
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
         - {name: FULL_SYNC_CADENCE,value: '${FULL_SYNC_CADENCE}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
+        - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
+        - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_VMAAS_SYNC}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_VMAAS_SYNC}', memory: '${RES_LIMIT_MEM_VMAAS_SYNC}'}
           requests: {cpu: '${RES_REQUEST_CPU_VMAAS_SYNC}', memory: '${RES_REQUEST_MEM_VMAAS_SYNC}'}
@@ -369,7 +380,6 @@ objects:
           - system_culling
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
@@ -400,12 +410,18 @@ objects:
           - packages_cache_refresh
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_PKG_REFRESH}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                       key: vmaas-sync-database-password}}}
+        - {name: DB_HOST_READ_REPLICA, valueFrom: {secretKeyRef: {key: db.host,
+                                                                  name: patchman-db-readonly}}}
+        - {name: DB_PORT_READ_REPLICA, valueFrom: {secretKeyRef: {key: db.port,
+                                                                  name: patchman-db-readonly}}}
+        - {name: DB_READ_REPLICA_ENABLED, value: '${DB_READ_REPLICA_ENABLED_JOBS}'}
+        - {name: DB_WORK_MEM, value: '${DB_WORK_MEM}'}
+        - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
 
     - name: advisory-refresh
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -427,13 +443,13 @@ objects:
           - advisory_cache_refresh
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                       key: vmaas-sync-database-password}}}
         - {name: ENABLE_REFRESH_ADVISORY_CACHES, value: '${ENABLE_REFRESH_ADVISORY_CACHES}'}
+        - {name: SKIP_N_ACCOUNTS_REFRESH, value: '${SKIP_N_ACCOUNTS_REFRESH}'}
 
     - name: delete-unused
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -455,7 +471,6 @@ objects:
           - delete_unused
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GOMAXPROCS, value: '${GOMAXPROCS_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
@@ -541,9 +556,8 @@ objects:
 parameters:
 # Manager
 - {name: REPLICAS_MANAGER, value: '1'}
-- {name: IMAGE_TAG_MANAGER, value: v3.1.27}
+- {name: IMAGE_TAG_MANAGER, value: v3.5.7}
 - {name: LOG_LEVEL_MANAGER, value: debug}
-- {name: GOMAXPROCS_MANAGER, value: '8'}
 - {name: DB_DEBUG_MANAGER, value: 'false'} # Log database queries if enabled
 - {name: ENABLE_CYNDI_TAGS, value: 'true'} # Enable filtering with Cyndi tags
 - {name: ENABLE_RBAC, value: 'true'} # Enable requesting RBAC service
@@ -553,7 +567,7 @@ parameters:
 - {name: PRELOAD_ADVISORY_DETAIL_CACHE, value: 'true'} # Enable advisory detail cache preloading
 - {name: ENABLE_BASELINES_API, value: 'true'} # Enable baselines API endpoints
 - {name: ENABLE_BASELINE_CHANGE_EVAL, value: 'true'} # Send Kafka eval messages on baseline update
-- {name: ENABLE_PACKAGE_CACHE_MANAGER, value: 'false'} # Enable caching for /packages endpoint
+- {name: ENABLE_PACKAGE_CACHE_MANAGER, value: 'true'} # Enable caching for /packages endpoint
 - {name: EVAL_TOPIC_MANAGER, value: patchman.evaluator.upload}
 - {name: RES_LIMIT_CPU_MANAGER, value: 200m}
 - {name: RES_LIMIT_MEM_MANAGER, value: 256Mi}
@@ -561,35 +575,39 @@ parameters:
 - {name: RES_REQUEST_MEM_MANAGER, value: 256Mi}
 - {name: RESPONSE_TIMEOUT, value: '60'}
 - {name: DB_READ_REPLICA_ENABLED, value: 'TRUE'}
+- {name: ENABLE_PROFILER_MANAGER, value: 'false'}
+- {name: GOMEMLIMIT_MANAGER, value: '230MiB'} # set to 90% of the default memory limit 256Mi (don't forget `B`)
 
 # Listener
 - {name: REPLICAS_LISTENER, value: '1'}
-- {name: IMAGE_TAG_LISTENER, value: v3.1.27}
+- {name: IMAGE_TAG_LISTENER, value: v3.5.7}
 - {name: LOG_LEVEL_LISTENER, value: debug}
-- {name: GOMAXPROCS_LISTENER, value: '8'}
 - {name: DB_DEBUG_LISTENER, value: 'false'}
 - {name: CONSUMER_COUNT_LISTENER, value: '8'}
 - {name: ENABLE_BYPASS_LISTENER, value: 'false'} # Enable only bypass (fake) messages processing
-- {name: EXCLUDED_REPORTERS, value: 'yupana'} # Comma-separated list of reporters to exclude from processing
+- {name: EXCLUDED_REPORTERS, value: 'yupana,rhsm-conduit'} # Comma-separated list of reporters to exclude from processing
 - {name: EXCLUDED_HOST_TYPES, value: 'edge'} # Comma-separated list of host types to exclude from processing
 - {name: RES_LIMIT_CPU_LISTENER, value: 250m}
-- {name: RES_LIMIT_MEM_LISTENER, value: 256Mi}
+- {name: RES_LIMIT_MEM_LISTENER, value: 192Mi}
 - {name: RES_REQUEST_CPU_LISTENER, value: 250m}
-- {name: RES_REQUEST_MEM_LISTENER, value: 256Mi}
+- {name: RES_REQUEST_MEM_LISTENER, value: 192Mi}
+- {name: ENABLE_PROFILER_LISTENER, value: 'false'}
+- {name: GOMEMLIMIT_LISTENER, value: '172MiB'} # set to 90% of the default memory limit 192Mi (don't forget `B`)
 
 # Evaluator
-- {name: USE_VMAAS_GO, value: 'false'}
+- {name: USE_VMAAS_GO, value: 'true'}
+- {name: GOGC, value: '100'}
+- {name: GOMEMLIMIT_EVALUATOR, value: '922MiB'} # set to 90% of the default memory limit 1024Mi (don't forget `B`)
 
 # Evaluator - upload
 - {name: REPLICAS_EVALUATOR_UPLOAD, value: '1'}
-- {name: IMAGE_TAG_EVALUATOR_UPLOAD, value: v3.1.27}
+- {name: IMAGE_TAG_EVALUATOR_UPLOAD, value: v3.5.7}
 - {name: LOG_LEVEL_EVALUATOR_UPLOAD, value: debug}
-- {name: GOMAXPROCS_EVALUATOR_UPLOAD, value: '8'}
 - {name: DB_DEBUG_EVALUATOR_UPLOAD, value: 'false'}
 - {name: CONSUMER_COUNT_EVALUATOR_UPLOAD, value: '8'}
 - {name: ENABLE_BYPASS_EVALUATOR_UPLOAD, value: 'false'} # Enable only bypass (fake) messages processing
 - {name: ENABLE_LAZY_PACKAGE_SAVE_EVALUATOR_UPLOAD, value: 'false'} # Enable unknown EVRAs saving during the evaluation
-- {name: ENABLE_BASELINE_EVAL_EVALUATOR_UPLOAD, value: 'false'} # Take baselines into account during the evaluation
+- {name: ENABLE_BASELINE_EVAL_EVALUATOR_UPLOAD, value: 'true'} # Take baselines into account during the evaluation
 - {name: ENABLE_ADVISORY_ANALYSIS_SAVE_EVALUATOR_UPLOAD, value: 'true'}
 - {name: ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_UPLOAD, value: 'true'}
 - {name: ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_UPLOAD, value: 'true'}
@@ -604,17 +622,18 @@ parameters:
 - {name: MAX_EVAL_GOROUTINES_UPLOAD, value: '1'}
 - {name: ENABLE_INSTANT_NOTIFICATIONS, value: 'true'}
 - {name: VMAAS_CACHE_SIZE, value: '10000'}
+- {name: ENABLE_PROFILER_EVALUATOR_UPLOAD, value: 'false'}
+- {name: ENABLE_SATELLITE_FUNCTIONALITY, value: 'false'}
 
 # Evaluator - recalc
 - {name: REPLICAS_EVALUATOR_RECALC, value: '1'}
-- {name: IMAGE_TAG_EVALUATOR_RECALC, value: v3.1.27}
+- {name: IMAGE_TAG_EVALUATOR_RECALC, value: v3.5.7}
 - {name: LOG_LEVEL_EVALUATOR_RECALC, value: debug}
-- {name: GOMAXPROCS_EVALUATOR_RECALC, value: '8'}
 - {name: DB_DEBUG_EVALUATOR_RECALC, value: 'false'}
 - {name: CONSUMER_COUNT_EVALUATOR_RECALC, value: '8'}
 - {name: ENABLE_BYPASS_EVALUATOR_RECALC, value: 'false'} # Enable only bypass (fake) messages processing
 - {name: ENABLE_LAZY_PACKAGE_SAVE_EVALUATOR_RECALC, value: 'false'} # Enable unknown EVRAs saving during the evaluation
-- {name: ENABLE_BASELINE_EVAL_EVALUATOR_RECALC, value: 'false'} # Take baselines into account during the evaluation
+- {name: ENABLE_BASELINE_EVAL_EVALUATOR_RECALC, value: 'true'} # Take baselines into account during the evaluation
 - {name: ENABLE_ADVISORY_ANALYSIS_SAVE_EVALUATOR_RECALC, value: 'true'}
 - {name: ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_RECALC, value: 'true'}
 - {name: ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_RECALC, value: 'true'}
@@ -628,15 +647,15 @@ parameters:
 - {name: RES_REQUEST_MEM_EVALUATOR_RECALC, value: 1024Mi}
 - {name: MAX_EVAL_GOROUTINES_RECALC, value: '1'}
 - {name: ENABLE_INSTANT_NOTIFICATIONS, value: 'true'}
+- {name: ENABLE_PROFILER_EVALUATOR_RECALC, value: 'false'}
 
 # JOBS
-- {name: IMAGE_TAG_JOBS, value: v3.1.27}
+- {name: IMAGE_TAG_JOBS, value: v3.5.7}
 - {name: LOG_LEVEL_JOBS, value: debug}
-- {name: GOMAXPROCS_JOBS, value: '8'}
-- {name: GOMAXPROCS_PKG_REFRESH, value: '1'}
 - {name: DB_DEBUG_JOBS, value: 'false'}
 - {name: JOBS_TIMEOUT, value: '1800'}  # 30 min timeout for jobs
 - {name: PROMETHEUS_PUSHGATEWAY, required: true, value: "pushgateway"}
+- {name: DB_READ_REPLICA_ENABLED_JOBS, value: 'TRUE'}
 
 # VMaaS sync
 - {name: VMAAS_SYNC_SCHEDULE, value: '*/5 * * * *'} # Cronjob schedule definition
@@ -655,6 +674,7 @@ parameters:
 - {name: RES_REQUEST_CPU_VMAAS_SYNC, value: 500m}
 - {name: RES_REQUEST_MEM_VMAAS_SYNC, value: 384Mi}
 - {name: FULL_SYNC_CADENCE, value: '168'}  # run full vmaas sync (default: 168h)
+- {name: GOMEMLIMIT_VMAAS_SYNC, value: '345MiB'} # set to 90% of the default memory limit 384Mi (don't forget `B`)
 # Delete unused data
 - {name: DELETE_UNUSED_SCHEDULE, value: '10 */6 * * *'} # Cronjob schedule definition
 - {name: DELETE_UNUSED_SUSPEND, value: 'true'} # Disable cronjob execution
@@ -667,15 +687,15 @@ parameters:
 - {name: ENABLE_CULLED_SYSTEM_DELETE, value: 'true'} # Enable deleting part of culling method
 - {name: ENABLE_SYSTEM_STALING, value: 'true'} # Enable marking systems stale of culling method
 # Cache refresh
-- {name: PKG_REFRESH_SCHEDULE, value: '5 11-22 * * *'} # Cronjob schedule definition
+- {name: PKG_REFRESH_SCHEDULE, value: '5 11-20/2 * * *'} # Cronjob schedule definition
 - {name: PKG_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
 - {name: ADVISORY_REFRESH_SCHEDULE, value: '*/15 * * * *'} # Cronjob schedule definition
 - {name: ADVISORY_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
 - {name: ENABLE_REFRESH_ADVISORY_CACHES, value: 'true'} # Enable periodic refresh of account advisory caches
+- {name: SKIP_N_ACCOUNTS_REFRESH, value: '0'} # Skip advisory cache refresh for N first accounts in case the previous refresh didn't finish
 
 # Database admin
-- {name: GOMAXPROCS_ADMIN, value: '8'}
-- {name: IMAGE_TAG_DATABASE_ADMIN, value: v3.1.27}
+- {name: IMAGE_TAG_DATABASE_ADMIN, value: v3.5.7}
 - {name: LOG_LEVEL_DATABASE_ADMIN, value: debug}
 - {name: DB_DEBUG_DATABASE_ADMIN, value: 'false'}
 - {name: SCHEMA_MIGRATION, value: '-1'} # Set specific database schema version or use the last schema version (-1)
@@ -688,6 +708,7 @@ parameters:
 - {name: RES_REQUEST_MEM_DATABASE_ADMIN, value: 128Mi}
 - {name: UPDATE_USERS, value: 'false'} # set to true if we need to change user or passwords
 - {name: UPDATE_DB_CONFIG, value: 'false'} # set to true if we need to load new './database_admin/config.sql'
+- {name: GOMEMLIMIT_DATABASE_ADMIN, value: '115MiB'} # set to 90% of the default memory limit 128Mi (don't forget `B`)
 
 # Common parameters
 - {name: IMAGE, value: quay.io/cloudservices/patchman-engine-app}
@@ -703,9 +724,10 @@ parameters:
 - {name: MSG_BATCH_SIZE, value: '4000'} # BatchSize for PlatformEvent message
 - {name: ENABLE_PAYLOAD_TRACKER, value: 'true'} # Send status messages to payload tracker
 - {name: SSL_CERT_DIR, value: '/etc/ssl/certs:/etc/pki/tls/certs:/system/etc/security/cacerts:/cdapp/certs'}
+- {name: DB_WORK_MEM, value: '512000'} # How much memory can query use (used for packages queries) in kB - 500MB, postgres default is 4MB
 
 # Turnpike
-- {name: IMAGE_TAG_ADMIN, value: v3.1.27}
+- {name: IMAGE_TAG_ADMIN, value: v3.5.7}
 - {name: ENABLE_TURNPIKE_AUTH, value: 'true'} # Enable Turnpike authentication for internal API (manual sync, re-calc)
 - {name: REPLICAS_ADMIN, value: '1'}
 - {name: RES_LIMIT_CPU_ADMIN, value: 100m}

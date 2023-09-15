@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"app/base/rbac"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"math"
 	"os"
@@ -162,4 +164,14 @@ func GetGorutineID() uint64 {
 	b = b[:bytes.IndexByte(b, ' ')]
 	n, _ := strconv.ParseUint(string(b), 10, 64)
 	return n
+}
+
+func ParseInventoryGroup(id *string, name *string) (string, error) {
+	group := rbac.InventoryGroup{{ID: id, Name: name}}
+	groupJSON, err := json.Marshal(&group)
+	if err != nil {
+		LogError("group", group, "err", err.Error(), "Cannot Marshal Inventory group")
+		return "", err
+	}
+	return strconv.Quote(string(groupJSON)), nil
 }

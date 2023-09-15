@@ -8,7 +8,7 @@ import (
 	"time"
 
 	rpm "github.com/ezamriy/gorpm"
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2"
 	"gorm.io/gorm"
 )
 
@@ -30,10 +30,10 @@ type PackageCache struct {
 	preload      bool
 	size         int
 	nameSize     int
-	byID         *lru.Cache
-	byNevra      *lru.Cache
-	latestByName *lru.Cache
-	nameByID     *lru.Cache
+	byID         *lru.Cache[int64, *PackageCacheMetadata]
+	byNevra      *lru.Cache[string, *PackageCacheMetadata]
+	latestByName *lru.Cache[string, *PackageCacheMetadata]
+	nameByID     *lru.Cache[int64, *PackageCacheMetadata]
 }
 
 func NewPackageCache(enabled bool, preload bool, size int, nameSize int) *PackageCache {
@@ -51,25 +51,25 @@ func NewPackageCache(enabled bool, preload bool, size int, nameSize int) *Packag
 
 	if c.enabled {
 		var err error
-		c.byID, err = lru.New(c.size)
+		c.byID, err = lru.New[int64, *PackageCacheMetadata](c.size)
 		if err != nil {
 			panic(err)
 		}
-		c.byNevra, err = lru.New(c.size)
+		c.byNevra, err = lru.New[string, *PackageCacheMetadata](c.size)
 		if err != nil {
 			panic(err)
 		}
-		c.latestByName, err = lru.New(c.nameSize)
+		c.latestByName, err = lru.New[string, *PackageCacheMetadata](c.nameSize)
 		if err != nil {
 			panic(err)
 		}
-		c.nameByID, err = lru.New(c.nameSize)
+		c.nameByID, err = lru.New[int64, *PackageCacheMetadata](c.nameSize)
 		if err != nil {
 			panic(err)
 		}
 		return c
 	}
-	return nil
+	return c
 }
 
 func (c *PackageCache) Load() {
@@ -127,8 +127,7 @@ func (c *PackageCache) GetByID(id int64) (*PackageCacheMetadata, bool) {
 		if ok {
 			packageCacheCnt.WithLabelValues("hit", "id").Inc()
 			utils.LogTrace("id", id, "PackageCache.GetByID cache hit")
-			metadata := val.(*PackageCacheMetadata)
-			return metadata, true
+			return val, true
 		}
 	}
 
@@ -149,8 +148,7 @@ func (c *PackageCache) GetByNevra(nevra string) (*PackageCacheMetadata, bool) {
 		if ok {
 			packageCacheCnt.WithLabelValues("hit", "nevra").Inc()
 			utils.LogTrace("nevra", nevra, "PackageCache.GetByNevra cache hit")
-			metadata := val.(*PackageCacheMetadata)
-			return metadata, true
+			return val, true
 		}
 	}
 
@@ -171,8 +169,7 @@ func (c *PackageCache) GetLatestByName(name string) (*PackageCacheMetadata, bool
 		if ok {
 			packageCacheCnt.WithLabelValues("hit", "name").Inc()
 			utils.LogTrace("name", name, "PackageCache.GetLatestByName cache hit")
-			metadata := val.(*PackageCacheMetadata)
-			return metadata, true
+			return val, true
 		}
 	}
 
@@ -193,8 +190,7 @@ func (c *PackageCache) GetNameByID(id int64) (string, bool) {
 		if ok {
 			packageCacheCnt.WithLabelValues("hit", "nameByID").Inc()
 			utils.LogTrace("id", id, "PackageCache.GetNameByID cache hit")
-			metadata := val.(*PackageCacheMetadata)
-			return metadata.Name, true
+			return val.Name, true
 		}
 	}
 
@@ -218,21 +214,19 @@ func (c *PackageCache) Add(pkg *PackageCacheMetadata) {
 
 func (c *PackageCache) addByID(pkg *PackageCacheMetadata) {
 	evicted := c.byID.Add(pkg.ID, pkg)
-	packageCacheGauge.WithLabelValues("id").Inc()
+	if !evicted {
+		packageCacheGauge.WithLabelValues("id").Inc()
+	}
 	utils.LogTrace("byID", pkg.ID, "evicted", evicted, "PackageCache.addByID")
 }
 
 func (c *PackageCache) addByNevra(pkg *PackageCacheMetadata) {
 	// make sure nevra contains epoch even if epoch==0
-	nevra, err := utils.ParseNameEVRA(pkg.Name, pkg.Evra)
-	if err != nil {
-		utils.LogWarn("id", pkg.ID, "name_id", pkg.NameID, "name", pkg.Name, "evra", pkg.Evra,
-			"PackageCache.addByNevra: cannot parse evra")
-		return
-	}
-	nevraString := nevra.StringE(true)
+	nevraString := utils.NEVRAStringE(pkg.Name, pkg.Evra, true)
 	evicted := c.byNevra.Add(nevraString, pkg)
-	packageCacheGauge.WithLabelValues("nevra").Inc()
+	if !evicted {
+		packageCacheGauge.WithLabelValues("nevra").Inc()
+	}
 	utils.LogTrace("byNevra", nevraString, "evicted", evicted, "PackageCache.addByNevra")
 }
 
@@ -240,13 +234,15 @@ func (c *PackageCache) addLatestByName(pkg *PackageCacheMetadata) {
 	var latestEvra string
 	latest, ok := c.latestByName.Peek(pkg.Name)
 	if ok {
-		latestEvra = latest.(*PackageCacheMetadata).Evra
+		latestEvra = latest.Evra
 	}
 	if !ok || rpm.Vercmp(pkg.Evra, latestEvra) > 0 {
 		// if there is no record yet
 		// or it has older EVR we have to replace it
 		evicted := c.latestByName.Add(pkg.Name, pkg)
-		packageCacheGauge.WithLabelValues("name").Inc()
+		if !evicted {
+			packageCacheGauge.WithLabelValues("name").Inc()
+		}
 		utils.LogTrace("latestByName", pkg.Name, "evicted", evicted, "PackageCache.addLatestByName")
 	}
 }
@@ -255,7 +251,9 @@ func (c *PackageCache) addNameByID(pkg *PackageCacheMetadata) {
 	ok, evicted := c.nameByID.ContainsOrAdd(pkg.NameID, pkg)
 	if !ok {
 		// name was not there and we've added it
-		packageCacheGauge.WithLabelValues("nameByID").Inc()
+		if !evicted {
+			packageCacheGauge.WithLabelValues("nameByID").Inc()
+		}
 		utils.LogTrace("nameByID", pkg.NameID, "evicted", evicted, "PackageCache.addNameByID")
 	}
 }

@@ -2,7 +2,6 @@ package vmaas
 
 import (
 	"app/base/types"
-	"sort"
 	"strings"
 )
 
@@ -18,6 +17,10 @@ type UpdatesV3Request struct {
 	ThirdParty *bool `json:"third_party,omitempty"`
 	// Search for updates of unknown package EVRAs.
 	OptimisticUpdates *bool `json:"optimistic_updates,omitempty"`
+	// VMaaS will check package_list and return error if we provide package_list without epochs
+	EpochRequired *bool `json:"epoch_required,omitempty"`
+	// helper for tests to get different status code from VMaaS mock
+	TestReturnStatus int `swaggerignore:"true" json:"return_status,omitempty"`
 }
 
 type UpdatesV3RequestModulesList struct {
@@ -37,63 +40,75 @@ func (o *UpdatesV3Request) SetReleasever(v string) {
 	o.Releasever = &v
 }
 
-type UpdatesV2Response struct {
-	UpdateList     *map[string]UpdatesV2ResponseUpdateList `json:"update_list,omitempty"`
-	RepositoryList *[]string                               `json:"repository_list,omitempty"`
-	ModulesList    *[]UpdatesV3RequestModulesList          `json:"modules_list,omitempty"`
-	Releasever     *string                                 `json:"releasever,omitempty"`
-	Basearch       *string                                 `json:"basearch,omitempty"`
-	LastChange     *string                                 `json:"last_change,omitempty"`
+type UpdatesV3Response struct {
+	UpdateList     *map[string]*UpdatesV3ResponseUpdateList `json:"update_list,omitempty"`
+	RepositoryList *[]string                                `json:"repository_list,omitempty"`
+	ModulesList    *[]UpdatesV3RequestModulesList           `json:"modules_list,omitempty"`
+	Releasever     *string                                  `json:"releasever,omitempty"`
+	Basearch       *string                                  `json:"basearch,omitempty"`
+	LastChange     *string                                  `json:"last_change,omitempty"`
+	BuildPkgcache  *bool                                    `json:"build_pkgcache,omitempty"`
 }
 
 // GetUpdateList returns the UpdateList field value if set, zero value otherwise.
-func (o *UpdatesV2Response) GetUpdateList() map[string]UpdatesV2ResponseUpdateList {
+func (o *UpdatesV3Response) GetUpdateList() map[string]*UpdatesV3ResponseUpdateList {
 	if o == nil || o.UpdateList == nil {
-		var ret map[string]UpdatesV2ResponseUpdateList
+		var ret map[string]*UpdatesV3ResponseUpdateList
 		return ret
 	}
 	return *o.UpdateList
 }
 
-type UpdatesV2ResponseUpdateList struct {
-	AvailableUpdates *[]UpdatesV2ResponseAvailableUpdates `json:"available_updates,omitempty"`
+// GetBuildPkgcache returns the boolean value for the `build_pkgcache` field of yum_updates
+func (o *UpdatesV3Response) GetBuildPkgcache() bool {
+	if o == nil || o.BuildPkgcache == nil {
+		return false
+	}
+	return *o.BuildPkgcache
 }
 
-func (o *UpdatesV2ResponseUpdateList) GetAvailableUpdates() []UpdatesV2ResponseAvailableUpdates {
+type UpdatesV3ResponseUpdateList struct {
+	AvailableUpdates *[]UpdatesV3ResponseAvailableUpdates `json:"available_updates,omitempty"`
+}
+
+func (o *UpdatesV3ResponseUpdateList) GetAvailableUpdates() []UpdatesV3ResponseAvailableUpdates {
 	if o == nil || o.AvailableUpdates == nil {
-		var ret []UpdatesV2ResponseAvailableUpdates
+		var ret []UpdatesV3ResponseAvailableUpdates
 		return ret
 	}
-	updates := *o.AvailableUpdates
-	sort.Slice(updates, func(i, j int) bool {
-		// `less` function
-		updatesI := updates[i]
-		updatesJ := updates[j]
-		if updatesI.Package == nil && updatesJ.Package != nil {
-			return true
-		}
-		if updatesJ.Package == nil && updatesI.Package != nil {
-			return false
-		}
-		if updatesJ.Package == nil && updatesI.Package == nil {
-			return true
-		}
-		return *updatesI.Package < *updatesJ.Package
-	})
-	return updates
+	return *o.AvailableUpdates
 }
 
-type UpdatesV2ResponseAvailableUpdates struct {
-	Repository *string `json:"repository,omitempty"`
-	Releasever *string `json:"releasever,omitempty"`
-	Basearch   *string `json:"basearch,omitempty"`
-	Erratum    *string `json:"erratum,omitempty"`
-	Package    *string `json:"package,omitempty"`
+func (o *UpdatesV3ResponseUpdateList) SetUpdatesInstallability(status int) {
+	if o == nil || o.AvailableUpdates == nil {
+		return
+	}
+	for index := range *o.AvailableUpdates {
+		(*o.AvailableUpdates)[index].SetInstallability(status)
+	}
+}
+
+type UpdatesV3ResponseAvailableUpdates struct {
+	Repository  *string `json:"repository,omitempty"`
+	Releasever  *string `json:"releasever,omitempty"`
+	Basearch    *string `json:"basearch,omitempty"`
+	Erratum     *string `json:"erratum,omitempty"`
+	Package     *string `json:"package,omitempty"`
+	PackageName *string `json:"package_name,omitempty"`
+	EVRA        *string `json:"evra,omitempty"`
 	// helper column to diferentiate installable/applicable
 	StatusID int `json:"-"`
 }
 
-func (o *UpdatesV2ResponseAvailableUpdates) GetPackage() string {
+func (o *UpdatesV3ResponseAvailableUpdates) GetPackage() string {
+	// `package` does not contain epoch if epoch=0
+	// get epoch from `evra` if it exists (not available in yum_updates)
+	name := o.GetPackageName()
+	evra := o.GetEVRA()
+	if len(name) > 0 && len(evra) > 0 {
+		return strings.Join([]string{name, evra}, "-")
+	}
+	// get value from `package` if `package_name` or `evra` is empty
 	if o == nil || o.Package == nil {
 		var ret string
 		return ret
@@ -101,7 +116,23 @@ func (o *UpdatesV2ResponseAvailableUpdates) GetPackage() string {
 	return *o.Package
 }
 
-func (o *UpdatesV2ResponseAvailableUpdates) GetErratum() string {
+func (o *UpdatesV3ResponseAvailableUpdates) GetPackageName() string {
+	if o == nil || o.PackageName == nil {
+		var ret string
+		return ret
+	}
+	return *o.PackageName
+}
+
+func (o *UpdatesV3ResponseAvailableUpdates) GetEVRA() string {
+	if o == nil || o.EVRA == nil {
+		var ret string
+		return ret
+	}
+	return *o.EVRA
+}
+
+func (o *UpdatesV3ResponseAvailableUpdates) GetErratum() string {
 	if o == nil || o.Erratum == nil {
 		var ret string
 		return ret
@@ -109,7 +140,7 @@ func (o *UpdatesV2ResponseAvailableUpdates) GetErratum() string {
 	return *o.Erratum
 }
 
-func (o *UpdatesV2ResponseAvailableUpdates) GetBasearch() string {
+func (o *UpdatesV3ResponseAvailableUpdates) GetBasearch() string {
 	if o == nil || o.Basearch == nil {
 		var ret string
 		return ret
@@ -117,7 +148,7 @@ func (o *UpdatesV2ResponseAvailableUpdates) GetBasearch() string {
 	return *o.Basearch
 }
 
-func (o *UpdatesV2ResponseAvailableUpdates) GetReleasever() string {
+func (o *UpdatesV3ResponseAvailableUpdates) GetReleasever() string {
 	if o == nil || o.Releasever == nil {
 		var ret string
 		return ret
@@ -125,7 +156,7 @@ func (o *UpdatesV2ResponseAvailableUpdates) GetReleasever() string {
 	return *o.Releasever
 }
 
-func (o *UpdatesV2ResponseAvailableUpdates) GetRepository() string {
+func (o *UpdatesV3ResponseAvailableUpdates) GetRepository() string {
 	if o == nil || o.Repository == nil {
 		var ret string
 		return ret
@@ -133,7 +164,14 @@ func (o *UpdatesV2ResponseAvailableUpdates) GetRepository() string {
 	return *o.Repository
 }
 
-func (o *UpdatesV2ResponseAvailableUpdates) Cmp(b *UpdatesV2ResponseAvailableUpdates) int {
+func (o *UpdatesV3ResponseAvailableUpdates) SetInstallability(status int) {
+	if o == nil {
+		return
+	}
+	o.StatusID = status
+}
+
+func (o *UpdatesV3ResponseAvailableUpdates) Cmp(b *UpdatesV3ResponseAvailableUpdates) int {
 	if cmp := strings.Compare(o.GetPackage(), b.GetPackage()); cmp != 0 {
 		return cmp
 	}
@@ -234,20 +272,16 @@ type ReposResponse struct {
 }
 
 type DBChangeResponse struct {
-	DBChange dbChange `json:"dbchange,omitempty"`
+	ErrataChanges     *types.Rfc3339Timestamp `json:"errata_changes,omitempty"`
+	CVEChanges        *types.Rfc3339Timestamp `json:"cve_changes,omitempty"`
+	RepositoryChanges *types.Rfc3339Timestamp `json:"repository_changes,omitempty"`
+	LastChange        *types.Rfc3339Timestamp `json:"last_change,omitempty"`
+	Exported          *types.Rfc3339Timestamp `json:"exported,omitempty"`
 }
 
-type dbChange struct {
-	ErrataChanges     *types.Rfc3339TimestampNoT `json:"errata_changes,omitempty"`
-	CVEChanges        *types.Rfc3339TimestampNoT `json:"cve_changes,omitempty"`
-	RepositoryChanges *types.Rfc3339TimestampNoT `json:"repository_changes,omitempty"`
-	LastChange        *types.Rfc3339TimestampNoT `json:"last_change,omitempty"`
-	Exported          *types.Rfc3339TimestampNoT `json:"exported,omitempty"`
-}
-
-func (o *DBChangeResponse) GetExported() *types.Rfc3339TimestampNoT {
+func (o *DBChangeResponse) GetExported() *types.Rfc3339Timestamp {
 	if o == nil {
 		return nil
 	}
-	return o.DBChange.Exported
+	return o.Exported
 }

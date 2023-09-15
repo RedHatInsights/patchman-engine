@@ -1,7 +1,7 @@
 package database
 
 type TestTable struct {
-	ID    uint   `gorm:"primary_key"`
+	ID    uint   `gorm:"primaryKey"`
 	Name  string `gorm:"unique"`
 	Email string
 }

@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV2Response) (
+func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV3Response) (
 	installed, updatable int, err error) {
 	if !enablePackageAnalysis {
 		return 0, 0, nil
@@ -42,7 +42,7 @@ func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaa
 }
 
 // Add unknown EVRAs into the db if needed
-func lazySavePackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) error {
+func lazySavePackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV3Response) error {
 	if !enableLazyPackageSave {
 		return nil
 	}
@@ -58,7 +58,7 @@ func lazySavePackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) error {
 }
 
 // Get packages with known name but version missing in db/cache
-func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV2Response) models.PackageSlice {
+func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV3Response) models.PackageSlice {
 	updates := vmaasData.GetUpdateList()
 	packages := make(models.PackageSlice, 0, len(updates))
 	for nevra := range updates {
@@ -150,7 +150,7 @@ func updatePackageCache(missing models.PackageSlice) {
 
 // Find relevant package data based on vmaas results
 func loadPackages(tx *gorm.DB, system *models.SystemPlatform,
-	vmaasData *vmaas.UpdatesV2Response) (*map[string]namedPackage, error) {
+	vmaasData *vmaas.UpdatesV3Response) (*map[string]namedPackage, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-load"))
 
 	packages, err := loadSystemNEVRAsFromDB(tx, system, vmaasData)
@@ -166,20 +166,14 @@ func packages2NevraMap(packages []namedPackage) map[string]namedPackage {
 	pkgByNevra := make(map[string]namedPackage, len(packages))
 	for _, p := range packages {
 		// make sure nevra contains epoch even if epoch==0
-		nevra, err := utils.ParseNameEVRA(p.Name, p.EVRA)
-		if err != nil {
-			utils.LogWarn("package_id", p.PackageID, "name_id", p.NameID, "name", p.Name, "evra", p.EVRA,
-				"packages2NevraMap: cannot parse evra")
-			continue
-		}
-		nevraString := nevra.StringE(true)
+		nevraString := utils.NEVRAStringE(p.Name, p.EVRA, true)
 		pkgByNevra[nevraString] = p
 	}
 	return pkgByNevra
 }
 
 func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform,
-	vmaasData *vmaas.UpdatesV2Response) ([]namedPackage, error) {
+	vmaasData *vmaas.UpdatesV3Response) ([]namedPackage, error) {
 	updates := vmaasData.GetUpdateList()
 	numUpdates := len(updates)
 	packageIDs := make([]int64, 0, numUpdates)
@@ -257,10 +251,10 @@ func updateDataChanged(currentNamedPackage *namedPackage, updateDataJSON []byte)
 }
 
 func createSystemPackage(nevra string,
-	updateData vmaas.UpdatesV2ResponseUpdateList,
+	updateData *vmaas.UpdatesV3ResponseUpdateList,
 	system *models.SystemPlatform,
 	packagesByNEVRA *map[string]namedPackage) (systemPackagePtr *models.SystemPackage, updatesChanged bool) {
-	updateDataJSON, err := vmaasResponse2UpdateDataJSON(&updateData)
+	updateDataJSON, err := vmaasResponse2UpdateDataJSON(updateData)
 	if err != nil {
 		utils.LogError("nevra", nevra, "VMaaS updates response parsing failed")
 		return nil, false
@@ -284,7 +278,7 @@ func createSystemPackage(nevra string,
 
 func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 	packagesByNEVRA *map[string]namedPackage,
-	vmaasData *vmaas.UpdatesV2Response) (installed, updatable int, err error) {
+	vmaasData *vmaas.UpdatesV3Response) (installed, updatable int, err error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-store"))
 
 	updates := vmaasData.GetUpdateList()
@@ -308,8 +302,6 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 			toStore = append(toStore, *systemPackagePtr)
 		}
 	}
-	tx = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "system_id", "package_id"}, "update_data")
-	// return installed, updatable, errors.Wrap(database.BulkInsert(tx, toStore), "Storing system packages")
 	return installed, updatable, errors.Wrap(
 		database.UnnestInsert(tx,
 			"INSERT INTO system_package (rh_account_id, system_id, package_id, update_data, name_id)"+
@@ -318,28 +310,42 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 		"Storing system packages")
 }
 
-func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV2ResponseUpdateList) ([]byte, error) {
+func vmaasResponse2UpdateDataJSON(updateData *vmaas.UpdatesV3ResponseUpdateList) ([]byte, error) {
+	var latestInstallable models.PackageUpdate
+	var latestApplicable models.PackageUpdate
 	uniqUpdates := make(map[models.PackageUpdate]bool)
 	pkgUpdates := make([]models.PackageUpdate, 0, len(updateData.GetAvailableUpdates()))
 	for _, upData := range updateData.GetAvailableUpdates() {
-		upNevra, err := utils.ParseNevra(upData.GetPackage())
-		// Skip invalid nevras in updates list
-		if err != nil {
-			utils.LogWarn("nevra", upData.Package, "Invalid nevra")
+		if len(upData.GetPackage()) == 0 {
+			// no update
 			continue
 		}
+		// before we used nevra.EVRAString() function which shows only non zero epoch, keep it consistent
+		evra := strings.TrimPrefix(upData.GetEVRA(), "0:")
 		// Keep only unique entries for each update in the list
 		pkgUpdate := models.PackageUpdate{
-			EVRA: upNevra.EVRAString(), Advisory: upData.GetErratum(),
+			EVRA: evra, Advisory: upData.GetErratum(), Status: STATUS[upData.StatusID],
 		}
 		if !uniqUpdates[pkgUpdate] {
 			pkgUpdates = append(pkgUpdates, pkgUpdate)
 			uniqUpdates[pkgUpdate] = true
+			switch upData.StatusID {
+			case INSTALLABLE:
+				latestInstallable = pkgUpdate
+			case APPLICABLE:
+				latestApplicable = pkgUpdate
+			}
 		}
 	}
 
 	if prunePackageLatestOnly && len(pkgUpdates) > 1 {
-		pkgUpdates = pkgUpdates[len(pkgUpdates)-1:]
+		pkgUpdates = make([]models.PackageUpdate, 0, 2)
+		if latestInstallable.EVRA != "" {
+			pkgUpdates = append(pkgUpdates, latestInstallable)
+		}
+		if latestApplicable.EVRA != "" {
+			pkgUpdates = append(pkgUpdates, latestApplicable)
+		}
 	}
 
 	var updateDataJSON []byte

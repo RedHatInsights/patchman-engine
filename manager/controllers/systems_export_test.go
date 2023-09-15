@@ -48,13 +48,14 @@ func TestSystemsExportCSV(t *testing.T) {
 	assert.Equal(t, 10, len(lines))
 	assert.Equal(t,
 		"id,display_name,os,rhsm,tags,rhsa_count,rhba_count,rhea_count,other_count,packages_installed,baseline_name,"+
-			"last_upload,stale_timestamp,stale_warning_timestamp,culled_timestamp,created,stale,baseline_id",
+			"last_upload,stale_timestamp,stale_warning_timestamp,culled_timestamp,created,stale,satellite_managed,"+
+			"built_pkgcache,baseline_id,groups",
 		lines[0])
 
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,RHEL 8.10,8.10,"+
 		"\"[{'key':'k1','namespace':'ns1','value':'val1'},{'key':'k2','namespace':'ns1','value':'val2'}]\","+
 		"2,2,1,0,0,baseline_1-1,2020-09-22T16:00:00Z,2018-08-26T16:00:00Z,2018-09-02T16:00:00Z,2018-09-09T16:00:00Z,"+
-		"2018-08-26T16:00:00Z,false,1",
+		"2018-08-26T16:00:00Z,false,false,false,1,\"[{'id':'inventory-group-1','name':'group1'}]\"",
 		lines[1])
 }
 
@@ -63,8 +64,7 @@ func TestSystemsExportWrongFormat(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnsupportedMediaType, w.Code)
 	body := w.Body.String()
-	exp := `{"error":"Invalid content type 'test-format', use 'application/json' or 'text/csv'"}`
-	assert.Equal(t, exp, body)
+	assert.Equal(t, InvalidContentTypeErr, body)
 }
 
 func TestSystemsExportCSVFilter(t *testing.T) {
@@ -77,7 +77,8 @@ func TestSystemsExportCSVFilter(t *testing.T) {
 	assert.Equal(t, 2, len(lines))
 	assert.Equal(t,
 		"id,display_name,os,rhsm,tags,rhsa_count,rhba_count,rhea_count,other_count,packages_installed,baseline_name,"+
-			"last_upload,stale_timestamp,stale_warning_timestamp,culled_timestamp,created,stale,baseline_id",
+			"last_upload,stale_timestamp,stale_warning_timestamp,culled_timestamp,created,stale,satellite_managed,"+
+			"built_pkgcache,baseline_id,groups",
 		lines[0])
 	assert.Equal(t, "", lines[1])
 }
@@ -102,7 +103,7 @@ func TestExportSystemsTagsInvalid(t *testing.T) {
 func TestSystemsExportWorkloads(t *testing.T) {
 	w := makeRequest(
 		t,
-		"/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][in][]=ABC",
+		"/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC",
 		"application/json",
 	)
 

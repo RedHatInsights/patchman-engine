@@ -1,0 +1,1 @@
+ALTER TABLE rh_account ADD COLUMN valid_advisory_cache BOOLEAN NOT NULL DEFAULT FALSE;

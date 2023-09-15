@@ -100,7 +100,7 @@ func GetLastSync(key string) *types.Rfc3339TimestampWithZ {
 	return ts
 }
 
-func SyncData(lastModifiedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *types.Rfc3339TimestampNoT) error {
+func SyncData(lastModifiedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *types.Rfc3339Timestamp) error {
 	utils.LogInfo("Data sync started")
 	syncStart := time.Now()
 	defer utils.ObserveSecondsSince(syncStart, syncDuration)

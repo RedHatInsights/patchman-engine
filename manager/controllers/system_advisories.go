@@ -52,12 +52,18 @@ type SystemAdvisoriesResponse struct {
 	Meta  ListMeta             `json:"meta"`
 }
 
+type AdvisoryStatusID struct {
+	AdvisoryID
+	SystemAdvisoryStatus
+}
+
 func (v RelList) String() string {
 	return strings.Join(v, ",")
 }
 
 func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(middlewares.KeyAccount)
+	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {
@@ -70,9 +76,14 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 		return nil, nil, nil, errors.New("incorrect inventory_id format")
 	}
 
+	filters, err := ParseAllFilters(c, SystemAdvisoriesOpts)
+	if err != nil {
+		return nil, nil, nil, err
+	} // Error handled method itself
+
 	db := middlewares.DBFromContext(c)
 	var exists int64
-	err := db.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid ", inventoryID).
+	err = db.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid ", inventoryID).
 		Count(&exists).Error
 
 	if err != nil {
@@ -85,8 +96,8 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 		return nil, nil, nil, err
 	}
 
-	query := buildSystemAdvisoriesQuery(db, account, inventoryID)
-	query, meta, params, err := ListCommon(query, c, nil, SystemAdvisoriesOpts)
+	query := buildSystemAdvisoriesQuery(db, account, groups, inventoryID)
+	query, meta, params, err := ListCommon(query, c, filters, SystemAdvisoriesOpts)
 	// Error handling and setting of result code & content is done in ListCommon
 	return query, meta, params, err
 }
@@ -161,30 +172,34 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 // @Param    filter[advisory_type]       query   string  false "Filter"
 // @Param    filter[advisory_type_name]  query   string  false "Filter"
 // @Param    filter[severity]            query   string  false "Filter"
-// @Success 200 {object} IDsResponse
+// @Success 200 {object} IDsStatusResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesIDsHandler(c *gin.Context) {
+	apiver := c.GetInt(middlewares.KeyApiver)
 	query, _, _, err := systemAdvisoriesCommon(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
 
-	var aids []AdvisoryID
+	var aids []AdvisoryStatusID
 	err = query.Find(&aids).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 	}
 
-	ids := advisoriesIDs(aids)
-	var resp = IDsResponse{IDs: ids}
+	resp := advisoriesStatusIDs(aids)
+	if apiver < 3 {
+		c.JSON(http.StatusOK, &resp.IDsResponse)
+		return
+	}
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildSystemAdvisoriesQuery(db *gorm.DB, account int, inventoryID string) *gorm.DB {
-	query := database.SystemAdvisoriesByInventoryID(db, account, inventoryID).
+func buildSystemAdvisoriesQuery(db *gorm.DB, account int, groups map[string]string, inventoryID string) *gorm.DB {
+	query := database.SystemAdvisoriesByInventoryID(db, account, groups, inventoryID).
 		Joins("JOIN advisory_metadata am on am.id = sa.advisory_id").
 		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
 		Joins("JOIN status ON sa.status_id = status.id").

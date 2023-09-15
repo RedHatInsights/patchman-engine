@@ -58,6 +58,8 @@ var (
 	enableYumUpdatesEval          bool
 	nEvalGoroutines               int
 	enableInstantNotifications    bool
+	enableSatelliteFunctionality  bool
+	errVmaasBadRequest            = errors.New("vmaas bad request")
 )
 
 const WarnPayloadTracker = "unable to send message to payload tracker"
@@ -97,13 +99,17 @@ func configure() {
 	enableYumUpdatesEval = utils.GetBoolEnvOrDefault("ENABLE_YUM_UPDATES_EVAL", true)
 	nEvalGoroutines = utils.GetIntEnvOrDefault("MAX_EVAL_GOROUTINES", 1)
 	enableInstantNotifications = utils.GetBoolEnvOrDefault("ENABLE_INSTANT_NOTIFICATIONS", true)
+	enableSatelliteFunctionality = utils.GetBoolEnvOrDefault("ENABLE_SATELLITE_FUNCTIONALITY", true)
 	configureRemediations()
 	configureNotifications()
+	configureStatus()
 }
 
 func Evaluate(ctx context.Context, event *mqueue.PlatformEvent, inventoryID, evaluationType string) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationDuration.WithLabelValues(evaluationType))
+
+	utils.LogInfo("inventoryID", inventoryID, "Evaluating system")
 	if enableBypass {
 		evaluationCnt.WithLabelValues("bypassed").Inc()
 		utils.LogInfo("inventoryID", inventoryID, "Evaluation bypassed")
@@ -125,8 +131,10 @@ func Evaluate(ctx context.Context, event *mqueue.PlatformEvent, inventoryID, eva
 		// increment `success` metric only if the system exists
 		// don't count messages from `tryGetSystem` as success
 		evaluationCnt.WithLabelValues("success").Inc()
+		utils.LogInfo("inventoryID", inventoryID, "evalLabel", evaluationType, "System evaluated successfully")
+		return nil
 	}
-	utils.LogInfo("inventoryID", inventoryID, "evalLabel", evaluationType, "system evaluated successfully")
+	utils.LogInfo("inventoryID", inventoryID, "evalLabel", evaluationType, "System not evaluated")
 	return nil
 }
 
@@ -167,13 +175,17 @@ func runEvaluate(
 }
 
 func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, inventoryID string) (
-	*models.SystemPlatform, *vmaas.UpdatesV2Response, error) {
+	*models.SystemPlatform, *vmaas.UpdatesV3Response, error) {
 	tx := database.Db.WithContext(base.Context).Begin()
 	// Don't allow requested TX to hang around locking the rows
 	defer tx.Rollback()
 
-	system := tryGetSystem(tx, event.AccountID, inventoryID, event.Timestamp)
+	system, err := tryGetSystem(tx, event.AccountID, inventoryID, event.Timestamp)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "unable to get system")
+	}
 	if system == nil {
+		// warning logged in `tryGetSystem`
 		return nil, nil, nil
 	}
 
@@ -182,6 +194,7 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 		return nil, nil, errors.Wrap(err, "unable to get updates data")
 	}
 	if updatesData == nil {
+		utils.LogWarn("inventoryID", inventoryID, "No vmaas updates")
 		return nil, nil, nil
 	}
 
@@ -193,12 +206,12 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 	return system, vmaasData, nil
 }
 
-func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV2Response, error) {
+func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV3Response, error) {
 	if system.YumUpdates == nil {
 		return nil, nil
 	}
 
-	var resp vmaas.UpdatesV2Response
+	var resp vmaas.UpdatesV3Response
 	err := json.Unmarshal(system.YumUpdates, &resp)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to unmarshall yum updates")
@@ -206,18 +219,44 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV2Response, 
 	updatesMap := resp.GetUpdateList()
 	if len(updatesMap) == 0 {
 		// TODO: do we need evaluationCnt.WithLabelValues("error-no-yum-packages").Inc()?
+		utils.LogWarn("inventoryID", system.GetInventoryID(), "No yum_updates")
 		return nil, nil
 	}
 
+	// set EVRA and package name
+	for k, v := range updatesMap {
+		updates := make([]vmaas.UpdatesV3ResponseAvailableUpdates, 0, len(v.GetAvailableUpdates()))
+		for _, u := range v.GetAvailableUpdates() {
+			nevra, err := utils.ParseNevra(u.GetPackage())
+			if err != nil {
+				utils.LogWarn("package", u.GetPackage(), "Cannot parse package")
+				continue
+			}
+			updates = append(updates, vmaas.UpdatesV3ResponseAvailableUpdates{
+				Repository:  u.Repository,
+				Releasever:  u.Releasever,
+				Basearch:    u.Basearch,
+				Erratum:     u.Erratum,
+				Package:     u.Package,
+				PackageName: utils.PtrString(nevra.Name),
+				EVRA:        utils.PtrString(nevra.EVRAStringE(true)),
+			})
+		}
+		updatesMap[k] = &vmaas.UpdatesV3ResponseUpdateList{
+			AvailableUpdates: &updates,
+		}
+	}
 	return &resp, nil
 }
 
-func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV2Response,
-	system *models.SystemPlatform, event *mqueue.PlatformEvent) (*vmaas.UpdatesV2Response, error) {
+func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV3Response,
+	system *models.SystemPlatform, event *mqueue.PlatformEvent) (*vmaas.UpdatesV3Response, error) {
 	if enableBaselineEval {
-		err := limitVmaasToBaseline(tx, system, updatesData)
-		if err != nil {
-			return nil, errors.Wrap(err, "Failed to evaluate baseline")
+		if !system.SatelliteManaged || (system.SatelliteManaged && !enableSatelliteFunctionality) {
+			err := limitVmaasToBaseline(tx, system, updatesData)
+			if err != nil {
+				return nil, errors.Wrap(err, "Failed to evaluate baseline")
+			}
 		}
 	}
 
@@ -235,8 +274,8 @@ func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV2Response,
 }
 
 func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatform) (
-	*vmaas.UpdatesV2Response, error) {
-	var yumUpdates *vmaas.UpdatesV2Response
+	*vmaas.UpdatesV3Response, error) {
+	var yumUpdates *vmaas.UpdatesV3Response
 	var yumErr error
 	if enableYumUpdatesEval {
 		yumUpdates, yumErr = tryGetYumUpdates(system)
@@ -248,6 +287,13 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 
 	vmaasData, vmaasErr := getVmaasUpdates(ctx, tx, system)
 	if vmaasErr != nil {
+		if errors.Is(vmaasErr, errVmaasBadRequest) {
+			// vmaas bad request means we either created wrong vmaas request
+			// or more likely we received package_list without epochs
+			// either way, we should skip this system and not fail hard which will cause pod to restart
+			utils.LogWarn("Vmaas response error - bad request, skipping system", vmaasErr.Error())
+			return nil, nil
+		}
 		// if there's no yum update fail hard otherwise only log warning and use yum data
 		if yumUpdates == nil {
 			return nil, errors.Wrap(vmaasErr, vmaasErr.Error())
@@ -255,17 +301,19 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 		utils.LogWarn("Vmaas response error, continuing with yum updates only", vmaasErr.Error())
 	}
 
-	// Try to merge YumUpdates and VMaaS updates
-	updatesData, err := utils.MergeVMaaSResponses(vmaasData, yumUpdates)
-	if err != nil {
-		return nil, err
+	if system.SatelliteManaged {
+		// satellite managed systems has vmaas updates APPLICABLE instead of INSTALLABLE
+		mergedUpdateList := vmaasData.GetUpdateList()
+		for nevra := range mergedUpdateList {
+			(*mergedUpdateList[nevra]).SetUpdatesInstallability(APPLICABLE)
+		}
 	}
 
-	return updatesData, nil
+	return utils.MergeVMaaSResponses(yumUpdates, vmaasData)
 }
 
 func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
-	system *models.SystemPlatform) (*vmaas.UpdatesV2Response, error) {
+	system *models.SystemPlatform) (*vmaas.UpdatesV3Response, error) {
 	// first check if we have data in cache
 	vmaasData, ok := memoryVmaasCache.Get(system.JSONChecksum)
 	if ok {
@@ -277,6 +325,7 @@ func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 	}
 
 	if updatesReq == nil {
+		// warning logged in `tryGetVmaasRequest`
 		return nil, nil
 	}
 
@@ -288,6 +337,7 @@ func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 	updatesReq.ThirdParty = utils.PtrBool(thirdParty) // enable "third_party" updates in VMaaS if needed
 	useOptimisticUpdates := thirdParty || vmaasCallUseOptimisticUpdates
 	updatesReq.OptimisticUpdates = utils.PtrBool(useOptimisticUpdates)
+	updatesReq.EpochRequired = utils.PtrBool(true)
 
 	vmaasData, err = callVMaas(ctx, updatesReq)
 	if err != nil {
@@ -302,7 +352,7 @@ func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 func tryGetVmaasRequest(system *models.SystemPlatform) (*vmaas.UpdatesV3Request, error) {
 	if system == nil || system.VmaasJSON == nil {
 		evaluationCnt.WithLabelValues("error-parse-vmaas-json").Inc()
-		utils.LogWarn("inventory_id", system.InventoryID, "system with empty vmaas json")
+		utils.LogWarn("inventoryID", system.GetInventoryID(), "system with empty vmaas json")
 		// skip the system
 		// don't return error as it will cause panic of evaluator pod
 		return nil, nil
@@ -316,35 +366,44 @@ func tryGetVmaasRequest(system *models.SystemPlatform) (*vmaas.UpdatesV3Request,
 
 	if len(updatesReq.PackageList) == 0 {
 		evaluationCnt.WithLabelValues("error-no-packages").Inc()
+		utils.LogWarn("inventoryID", system.GetInventoryID(), "Empty package list")
 		return nil, nil
 	}
 
 	if len(updatesReq.RepositoryList) == 0 {
 		// system without any repositories won't have any advisories evaluated by vmaas
 		evaluationCnt.WithLabelValues("error-no-repositories").Inc()
+		utils.LogWarn("inventoryID", system.GetInventoryID(), "Empty repository list")
 		return nil, nil
 	}
 	return &updatesReq, nil
 }
 
 func tryGetSystem(tx *gorm.DB, accountID int, inventoryID string,
-	requested *types.Rfc3339Timestamp) *models.SystemPlatform {
+	requested *types.Rfc3339Timestamp) (*models.SystemPlatform, error) {
 	system, err := loadSystemData(tx, accountID, inventoryID)
-	if err != nil || system.ID == 0 {
+	if err != nil {
 		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
-		return nil
+		return nil, errors.Wrap(err, "error loading system from DB")
+	}
+	if system.ID == 0 {
+		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
+		utils.LogWarn("inventoryID", inventoryID, "System not found in DB")
+		return nil, nil
 	}
 
 	if system.Stale && !enableStaleSysEval {
 		evaluationCnt.WithLabelValues("skipping-stale").Inc()
-		return nil
+		utils.LogWarn("inventoryID", inventoryID, "Skipping stale system")
+		return nil, nil
 	}
 
 	if requested != nil && system.LastEvaluation != nil && requested.Time().Before(*system.LastEvaluation) {
 		evaluationCnt.WithLabelValues("skip-old-msg").Inc()
-		return nil
+		utils.LogWarn("inventoryID", inventoryID, "Skipping old message")
+		return nil, nil
 	}
-	return system
+	return system, nil
 }
 
 func commitWithObserve(tx *gorm.DB) error {
@@ -359,7 +418,7 @@ func commitWithObserve(tx *gorm.DB) error {
 }
 
 func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
-	vmaasData *vmaas.UpdatesV2Response, event *mqueue.PlatformEvent) error {
+	vmaasData *vmaas.UpdatesV3Response, event *mqueue.PlatformEvent) error {
 	newSystemAdvisories, err := analyzeAdvisories(tx, system, vmaasData)
 	if err != nil {
 		return errors.Wrap(err, "Advisory analysis failed")
@@ -381,7 +440,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
 		err = publishNewAdvisoriesNotification(tx, system, event, system.RhAccountID, newSystemAdvisories)
 		if err != nil {
 			evaluationCnt.WithLabelValues("error-advisory-notification").Inc()
-			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.InventoryID, "err", err.Error(),
+			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err.Error(),
 				"publishing new advisories notification failed")
 		}
 	}
@@ -482,19 +541,35 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 		data["third_party"] = system.ThirdParty
 	}
 
-	return tx.Model(system).Updates(data).Error
+	if enableSatelliteFunctionality && system.SatelliteManaged && system.BaselineID != nil {
+		data["baseline_id"] = nil
+		data["baseline_uptodate"] = nil
+	}
+
+	err := tx.Model(system).Updates(data).Error
+
+	now := time.Now()
+	if system.LastUpload.Sub(now) > time.Hour {
+		// log long evaluating systems
+		utils.LogWarn("id", system.InventoryID, "lastUpload", *system.LastUpload, "now", now, "uploadEvaluationDelay")
+	}
+	return err
 }
 
-func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.UpdatesV2Response, error) {
+func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.UpdatesV3Response, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("vmaas-updates-call"))
 
 	vmaasCallFunc := func() (interface{}, *http.Response, error) {
 		utils.LogTrace("request", *request, "vmaas /updates request")
-		vmaasData := vmaas.UpdatesV2Response{}
+		vmaasData := vmaas.UpdatesV3Response{}
 		resp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasUpdatesURL, request, &vmaasData)
-		utils.LogDebug("status_code", utils.TryGetStatusCode(resp), "vmaas /updates call")
+		statusCode := utils.TryGetStatusCode(resp)
+		utils.LogDebug("status_code", statusCode, "vmaas /updates call")
 		utils.LogTrace("response", resp, "vmaas /updates response")
+		if err != nil && statusCode == 400 {
+			err = errors.Wrap(errVmaasBadRequest, err.Error())
+		}
 		return &vmaasData, resp, err
 	}
 
@@ -503,7 +578,7 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 	if err != nil {
 		return nil, errors.Wrap(err, "vmaas /v3/updates API call failed")
 	}
-	return vmaasDataPtr.(*vmaas.UpdatesV2Response), nil
+	return vmaasDataPtr.(*vmaas.UpdatesV3Response), nil
 }
 
 func loadSystemData(tx *gorm.DB, accountID int, inventoryID string) (*models.SystemPlatform, error) {
@@ -523,16 +598,15 @@ func loadSystemData(tx *gorm.DB, accountID int, inventoryID string) (*models.Sys
 func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("parse-vmaas-json"))
-
-	var updatesReq vmaas.UpdatesV3Request
-	err := json.Unmarshal([]byte(*system.VmaasJSON), &updatesReq)
-	return updatesReq, err
+	return utils.ParseVmaasJSON(system)
 }
 
-func invalidatePkgCache(orgID string) error {
+func invalidateCaches(orgID string) error {
 	err := database.Db.Model(models.RhAccount{}).
 		Where("org_id = ?", orgID).
-		Update("valid_package_cache", false).
+		Where("valid_package_cache = true OR valid_advisory_cache = true").
+		// use map because struct updates only non-zero values and we need to update it to `false`
+		Updates(map[string]interface{}{"valid_package_cache": false, "valid_advisory_cache": false}).
 		Error
 	return err
 }
@@ -570,8 +644,8 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 	}
 	wg.Wait()
 
-	if cacheErr := invalidatePkgCache(event.GetOrgID()); cacheErr != nil {
-		utils.LogError("err", err.Error(), "org_id", event.GetOrgID(), "Couldn't invalidate pkg cache")
+	if cacheErr := invalidateCaches(event.GetOrgID()); cacheErr != nil {
+		utils.LogError("err", err.Error(), "org_id", event.GetOrgID(), "Couldn't invalidate caches")
 	}
 
 	// send kafka message to payload tracker
@@ -589,7 +663,10 @@ func loadCache() {
 	memoryPackageCache = NewPackageCache(enablePackageCache, preloadPackageCache, packageCacheSize, packageNameCacheSize)
 	memoryPackageCache.Load()
 	memoryVmaasCache = NewVmaasPackageCache(enableVmaasCache, vmaasCacheSize, vmaasCacheCheckDuration)
-	go memoryVmaasCache.CheckValidity()
+	if memoryVmaasCache.enabled {
+		// no need to check cache validity when cache is not enabled
+		go memoryVmaasCache.CheckValidity()
+	}
 }
 
 func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
@@ -611,6 +688,9 @@ func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 
 func RunEvaluator() {
 	var wg sync.WaitGroup
+
+	go utils.RunProfiler()
+
 	run(&wg, mqueue.NewKafkaReaderFromEnv)
 	wg.Wait()
 	utils.LogInfo("evaluator completed")

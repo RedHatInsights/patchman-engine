@@ -74,7 +74,7 @@ func TestSystemsIDsTagsInvalid(t *testing.T) {
 }
 
 func TestSystemsIDsWorkloads1(t *testing.T) {
-	url := "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids][in][]=ABC"
+	url := "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC"
 	output := testSystemsIDs(t, url, 1)
 	assert.Equal(t, 2, len(output.IDs))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.IDs[0])
@@ -94,7 +94,7 @@ func TestSystemsIDsWorkloads3(t *testing.T) {
 
 func TestSystemsIDsPackagesCount(t *testing.T) {
 	output := testSystemsIDs(t, "/?sort=-packages_installed,id", 3)
-	assert.Equal(t, 4, len(output.IDs))
+	assert.Equal(t, 5, len(output.IDs))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output.IDs[0])
 }
 
@@ -136,7 +136,7 @@ func TestSystemsIDsFilterBaseline(t *testing.T) {
 func TestSystemsIDsFilterNotExisting(t *testing.T) {
 	statusCode, errResp := testSystemsIDsError(t, "/?filter[not-existing]=1")
 	assert.Equal(t, http.StatusBadRequest, statusCode)
-	assert.Equal(t, "Invalid filter field: not-existing", errResp.Error)
+	assert.Equal(t, "cannot parse inventory filters: Invalid filter field: not-existing", errResp.Error)
 }
 
 func TestSystemsIDsFilterPartialOS(t *testing.T) {
@@ -154,12 +154,6 @@ func TestSystemsIDsFilterOS(t *testing.T) {
 	assert.Equal(t, output.Data[0].ID, outputIDs.IDs[0])
 	assert.Equal(t, output.Data[1].ID, outputIDs.IDs[1])
 	assert.Equal(t, output.Data[2].ID, outputIDs.IDs[2])
-}
-
-func TestSystemsIDsFilterInvalidSyntax(t *testing.T) {
-	statusCode, errResp := testSystemsIDsError(t, "/?filter[os][in]=RHEL 8.1,RHEL 7.3")
-	assert.Equal(t, http.StatusBadRequest, statusCode)
-	assert.Equal(t, InvalidNestedFilter, errResp.Error)
 }
 
 func TestSystemsIDsOrderOS(t *testing.T) {

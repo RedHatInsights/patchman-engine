@@ -10,13 +10,13 @@ import (
 )
 
 func compareUpdatesMerge(t *testing.T, jsonA, jsonB, merged []byte) {
-	var listA, listB vmaas.UpdatesV2ResponseUpdateList
+	var listA, listB vmaas.UpdatesV3ResponseUpdateList
 	err := json.Unmarshal(jsonA, &listA)
 	assert.Nil(t, err)
 	err = json.Unmarshal(jsonB, &listB)
 	assert.Nil(t, err)
 
-	listMerged, err := mergeUpdates(listA, listB)
+	listMerged, err := mergeUpdates(&listA, &listB)
 	assert.Nil(t, err)
 
 	res, err := json.Marshal(listMerged)
@@ -51,7 +51,7 @@ func TestMergeDifferentAttrs(t *testing.T) {
 }
 
 func compareResponseMerge(t *testing.T, jsonA, jsonB, merged []byte) {
-	var respA, respB vmaas.UpdatesV2Response
+	var respA, respB vmaas.UpdatesV3Response
 
 	err := json.Unmarshal(jsonA, &respA)
 	assert.Nil(t, err)

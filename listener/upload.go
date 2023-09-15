@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -76,6 +77,27 @@ type HostCustomMetadata struct {
 	YumUpdatesS3URL *string         `json:"yum_updates_s3url,omitempty"`
 }
 
+type YumUpdates struct {
+	RawParsed     json.RawMessage
+	BuiltPkgcache bool
+}
+
+// GetRawParsed returns prepared parsed raw yumupdates
+func (y *YumUpdates) GetRawParsed() json.RawMessage {
+	if y == nil {
+		return nil
+	}
+	return y.RawParsed
+}
+
+// GetBuiltPkgcache returns boolean for build_pkgcache from yum_updates
+func (y *YumUpdates) GetBuiltPkgcache() bool {
+	if y == nil {
+		return false
+	}
+	return y.BuiltPkgcache
+}
+
 //nolint:funlen
 func HandleUpload(event HostEvent) error {
 	tStart := time.Now()
@@ -125,7 +147,7 @@ func HandleUpload(event HostEvent) error {
 		// don't fail, use vmaas evaluation
 		utils.LogError("err", err, "Could not get yum updates")
 	}
-	utils.LogTrace("inventoryID", event.Host.ID, "yum_updates", string(yumUpdates))
+	utils.LogTrace("inventoryID", event.Host.ID, "yum_updates", string(yumUpdates.GetRawParsed()))
 
 	if len(event.Host.SystemProfile.GetInstalledPackages()) == 0 && yumUpdates == nil {
 		utils.LogWarn("inventoryID", event.Host.ID, WarnSkippingNoPackages)
@@ -187,9 +209,15 @@ func sendPayloadStatus(w mqueue.Writer, event mqueue.PayloadTrackerEvent, status
 
 // accumulate events and create group PlatformEvents to save some resources
 var evalBufferSize = 5 * mqueue.BatchSize
-
-var evalBuffer = make(mqueue.EvalDataSlice, 0, evalBufferSize+1)
-var ptBuffer = make(mqueue.PayloadTrackerEvents, 0, evalBufferSize+1)
+var eBuffer = struct {
+	EvalBuffer mqueue.EvalDataSlice
+	PtBuffer   mqueue.PayloadTrackerEvents
+	Lock       sync.Mutex
+}{
+	EvalBuffer: make(mqueue.EvalDataSlice, 0, evalBufferSize+1),
+	PtBuffer:   make(mqueue.PayloadTrackerEvents, 0, evalBufferSize+1),
+	Lock:       sync.Mutex{},
+}
 var flushTimer = time.AfterFunc(87600*time.Hour, func() {
 	utils.LogInfo(FlushedTimeoutBuffer)
 	flushEvalEvents()
@@ -199,16 +227,20 @@ var flushTimer = time.AfterFunc(87600*time.Hour, func() {
 func bufferEvalEvents(inventoryID string, rhAccountID int, ptEvent *mqueue.PayloadTrackerEvent) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-eval-events"))
+
+	eBuffer.Lock.Lock()
 	evalData := mqueue.EvalData{
 		InventoryID: inventoryID,
 		RhAccountID: rhAccountID,
 		OrgID:       ptEvent.OrgID,
 		RequestID:   *ptEvent.RequestID,
 	}
-	evalBuffer = append(evalBuffer, evalData)
-	ptBuffer = append(ptBuffer, *ptEvent)
+	eBuffer.EvalBuffer = append(eBuffer.EvalBuffer, evalData)
+	eBuffer.PtBuffer = append(eBuffer.PtBuffer, *ptEvent)
+	eBuffer.Lock.Unlock()
+
 	flushTimer.Reset(uploadEvalTimeout)
-	if len(evalBuffer) >= evalBufferSize {
+	if len(eBuffer.EvalBuffer) >= evalBufferSize {
 		utils.LogInfo(FlushedFullBuffer)
 		flushEvalEvents()
 	}
@@ -216,19 +248,21 @@ func bufferEvalEvents(inventoryID string, rhAccountID int, ptEvent *mqueue.Paylo
 
 func flushEvalEvents() {
 	tStart := time.Now()
-	err := mqueue.SendMessages(base.Context, evalWriter, evalBuffer)
+	eBuffer.Lock.Lock()
+	defer eBuffer.Lock.Unlock()
+	err := mqueue.SendMessages(base.Context, evalWriter, eBuffer.EvalBuffer)
 	if err != nil {
 		utils.LogError("err", err.Error(), ErrorKafkaSend)
 	}
 	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-sent-evaluator"))
-	err = mqueue.SendMessages(base.Context, ptWriter, ptBuffer)
+	err = mqueue.SendMessages(base.Context, ptWriter, eBuffer.PtBuffer)
 	if err != nil {
 		utils.LogWarn("err", err.Error(), WarnPayloadTracker)
 	}
 	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-sent-payload-tracker"))
 	// empty buffer
-	evalBuffer = evalBuffer[:0]
-	ptBuffer = ptBuffer[:0]
+	eBuffer.EvalBuffer = eBuffer.EvalBuffer[:0]
+	eBuffer.PtBuffer = eBuffer.PtBuffer[:0]
 }
 
 func updateReporterCounter(reporter string) {
@@ -243,7 +277,7 @@ func updateReporterCounter(reporter string) {
 // nolint: funlen
 // Stores or updates base system profile, returing internal system id
 func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *Host,
-	yumUpdates []byte, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
+	yumUpdates *YumUpdates, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("update-system-platform"))
 	updatesReqJSON, err := json.Marshal(updatesReq)
@@ -253,7 +287,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 
 	hash := sha256.Sum256(updatesReqJSON)
 	jsonChecksum := hex.EncodeToString(hash[:])
-	hash = sha256.Sum256(yumUpdates)
+	hash = sha256.Sum256(yumUpdates.GetRawParsed())
 	yumChecksum := hex.EncodeToString(hash[:])
 
 	var colsToUpdate = []string{
@@ -263,6 +297,8 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		"stale_timestamp",
 		"stale_warning_timestamp",
 		"culled_timestamp",
+		"satellite_managed",
+		"built_pkgcache",
 	}
 
 	now := time.Now()
@@ -285,7 +321,9 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		CulledTimestamp:       host.CulledTimestamp.Time(),
 		Stale:                 staleWarning != nil && staleWarning.Before(time.Now()),
 		ReporterID:            getReporterID(host.Reporter),
-		YumUpdates:            yumUpdates,
+		YumUpdates:            yumUpdates.GetRawParsed(),
+		SatelliteManaged:      host.SystemProfile.SatelliteManaged,
+		BuiltPkgcache:         yumUpdates.GetBuiltPkgcache(),
 	}
 
 	var oldChecksums map[string]string
@@ -308,11 +346,6 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	// Skip updating yum_updates if the checksum haven't changed.
 	if oldChecksums["yum_checksum"] != yumChecksum {
 		colsToUpdate = append(colsToUpdate, "yum_updates")
-	}
-
-	if err := database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
-		Save(&systemPlatform).Error; err != nil {
-		return nil, errors.Wrap(err, "Unable to save or update system in database")
 	}
 
 	if err := storeOrUpdateSysPlatform(tx, &systemPlatform, colsToUpdate); err != nil {
@@ -343,6 +376,14 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 		Select("id").Find(system).Error; err != nil {
 		utils.LogWarn("err", errSelect, "couldn't find system for update")
 	}
+
+	// return system_platform record after update
+	tx = tx.Clauses(clause.Returning{
+		Columns: []clause.Column{
+			{Name: "id"}, {Name: "inventory_id"}, {Name: "rh_account_id"},
+			{Name: "unchanged_since"}, {Name: "last_evaluation"},
+		},
+	})
 
 	if system.ID != 0 {
 		// update system
@@ -520,7 +561,7 @@ func processModules(systemProfile *inventory.SystemProfile) *[]vmaas.UpdatesV3Re
 }
 
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
-func processUpload(host *Host, yumUpdates []byte) (*models.SystemPlatform, error) {
+func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatform, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("upload-processing"))
 	// Ensure we have account stored
@@ -542,6 +583,9 @@ func processUpload(host *Host, yumUpdates []byte) (*models.SystemPlatform, error
 
 	// use rhsm version if set
 	releasever := systemProfile.Rhsm.Version
+	if releasever == "" && systemProfile.Releasever != nil {
+		releasever = *systemProfile.Releasever
+	}
 	if len(releasever) > 0 {
 		updatesReq.SetReleasever(releasever)
 	}
@@ -571,8 +615,9 @@ func processUpload(host *Host, yumUpdates []byte) (*models.SystemPlatform, error
 	return sys, nil
 }
 
-func getYumUpdates(event HostEvent, client *api.Client) ([]byte, error) {
-	var parsed vmaas.UpdatesV2Response
+func getYumUpdates(event HostEvent, client *api.Client) (*YumUpdates, error) {
+	var parsed vmaas.UpdatesV3Response
+	res := &YumUpdates{}
 	yumUpdates := event.PlatformMetadata.CustomMetadata.YumUpdates
 	yumUpdatesURL := event.PlatformMetadata.CustomMetadata.YumUpdatesS3URL
 
@@ -586,7 +631,7 @@ func getYumUpdates(event HostEvent, client *api.Client) ([]byte, error) {
 		}
 	}
 
-	if (parsed == vmaas.UpdatesV2Response{}) {
+	if (parsed == vmaas.UpdatesV3Response{}) {
 		utils.LogWarn("yum_updates_s3url", yumUpdatesURL, "No yum updates on S3, getting legacy yum_updates field")
 		err := json.Unmarshal(yumUpdates, &parsed)
 		if err != nil {
@@ -597,13 +642,15 @@ func getYumUpdates(event HostEvent, client *api.Client) ([]byte, error) {
 	updatesMap := parsed.GetUpdateList()
 	if len(updatesMap) == 0 {
 		// system does not have any yum updates
-		return yumUpdates, nil
+		res.RawParsed = yumUpdates
+		res.BuiltPkgcache = parsed.GetBuildPkgcache()
+		return res, nil
 	}
 	// we need to get all packages to show up-to-date packages
 	installedPkgs := event.Host.SystemProfile.GetInstalledPackages()
 	for _, pkg := range installedPkgs {
 		if _, has := updatesMap[pkg]; !has {
-			updatesMap[pkg] = vmaas.UpdatesV2ResponseUpdateList{}
+			updatesMap[pkg] = &vmaas.UpdatesV3ResponseUpdateList{}
 		}
 	}
 	parsed.UpdateList = &updatesMap
@@ -615,7 +662,10 @@ func getYumUpdates(event HostEvent, client *api.Client) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to marshall yum updates")
 	}
-	return yumUpdates, nil
+	res.RawParsed = yumUpdates
+	res.BuiltPkgcache = parsed.GetBuildPkgcache()
+
+	return res, nil
 }
 
 func (host *Host) GetOrgID() string {

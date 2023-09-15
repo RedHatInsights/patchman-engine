@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
 var AdvisorySystemsFields = database.MustGetQueryAttrs(&AdvisorySystemDBLookup{})
@@ -38,8 +39,16 @@ type AdvisorySystemItemAttributes struct {
 	OSAttributes
 	SystemTimestamps
 	SystemTags
+	SystemGroups
 	BaselineIDAttr
 	BaselineNameAttr
+	SystemAdvisoryStatus
+	SystemSatelliteManaged
+	SystemBuiltPkgcache
+}
+
+type SystemsStatusID struct {
+	SystemsID
 	SystemAdvisoryStatus
 }
 
@@ -92,9 +101,11 @@ func buildAdvisorySystemsData(fields []AdvisorySystemDBLookup) ([]AdvisorySystem
 	}
 	data := make([]AdvisorySystemItem, len(fields))
 	for i, as := range fields {
-		as.AdvisorySystemItemAttributes.Tags, err = parseSystemTags(as.TagsStr)
-		if err != nil {
+		if err = parseSystemItems(as.TagsStr, &as.AdvisorySystemItemAttributes.Tags); err != nil {
 			utils.LogDebug("err", err.Error(), "inventory_id", as.ID, "system tags parsing failed")
+		}
+		if err = parseSystemItems(as.GroupsStr, &as.AdvisorySystemItemAttributes.Groups); err != nil {
+			utils.LogDebug("err", err.Error(), "inventory_id", as.ID, "system groups parsing failed")
 		}
 		data[i] = AdvisorySystemItem{
 			Attributes: as.AdvisorySystemItemAttributes,
@@ -103,4 +114,29 @@ func buildAdvisorySystemsData(fields []AdvisorySystemDBLookup) ([]AdvisorySystem
 		}
 	}
 	return data, total
+}
+
+func systemsIDsStatus(c *gin.Context, systems []SystemsStatusID, meta *ListMeta) (IDsStatusResponse, error) {
+	var total int
+	resp := IDsStatusResponse{}
+	if len(systems) > 0 {
+		total = systems[0].Total
+	}
+	if meta.Offset > total {
+		err := errors.New("Offset")
+		LogAndRespBadRequest(c, err, InvalidOffsetMsg)
+		return resp, err
+	}
+	if systems == nil {
+		return resp, nil
+	}
+	ids := make([]string, len(systems))
+	data := make([]IDStatus, len(systems))
+	for i, x := range systems {
+		ids[i] = x.ID
+		data[i] = IDStatus{x.ID, x.Status}
+	}
+	resp.IDs = ids
+	resp.Data = data
+	return resp, nil
 }

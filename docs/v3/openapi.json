@@ -8,7 +8,7 @@
             "name": "GPLv3",
             "url": "https://www.gnu.org/licenses/gpl-3.0.en.html"
         },
-        "version": "v3.1.27"
+        "version": "v3.5.7"
     },
     "servers": [
         {
@@ -46,10 +46,11 @@
                             "type": "string",
                             "enum": [
                                 "id",
-                                "name",
-                                "advisory_type",
+                                "advisory_type_name",
                                 "synopsis",
                                 "public_date",
+                                "severity",
+                                "installable_systems",
                                 "applicable_systems"
                             ]
                         }
@@ -88,14 +89,6 @@
                     },
                     {
                         "name": "filter[synopsis]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[advisory_type]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -148,6 +141,19 @@
                         }
                     },
                     {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -156,7 +162,7 @@
                         }
                     },
                     {
-                        "name": "filter[system_profile][sap_sids][in]",
+                        "name": "filter[system_profile][sap_sids]",
                         "in": "query",
                         "description": "Filter systems by their SAP SIDs",
                         "style": "form",
@@ -359,7 +365,8 @@
                                 "last_upload",
                                 "stale",
                                 "status",
-                                "template"
+                                "template",
+                                "groups"
                             ]
                         }
                     },
@@ -433,6 +440,19 @@
                         }
                     },
                     {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -441,7 +461,7 @@
                         }
                     },
                     {
-                        "name": "filter[system_profile][sap_sids][in]",
+                        "name": "filter[system_profile][sap_sids]",
                         "in": "query",
                         "description": "Filter systems by their SAP SIDs",
                         "style": "form",
@@ -659,7 +679,7 @@
             },
             "put": {
                 "summary": "Create a baseline for my set of systems",
-                "description": "Create a baseline for my set of systems",
+                "description": "Create a baseline for my set of systems. System cannot be satellite managed.",
                 "operationId": "createBaseline",
                 "requestBody": {
                     "description": "Request body",
@@ -848,7 +868,7 @@
             },
             "put": {
                 "summary": "Update a baseline for my set of systems",
-                "description": "Update a baseline for my set of systems",
+                "description": "Update a baseline for my set of systems. System cannot be satellite managed.",
                 "operationId": "updateBaseline",
                 "parameters": [
                     {
@@ -1034,7 +1054,8 @@
                                 "applicable_rhba_count",
                                 "applicable_rhea_count",
                                 "applicable_other_count",
-                                "last_upload"
+                                "last_upload",
+                                "groups"
                             ]
                         }
                     },
@@ -1073,6 +1094,72 @@
                             "items": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][sap_system]",
+                        "in": "query",
+                        "description": "Filter only SAP systems",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][sap_sids]",
+                        "in": "query",
+                        "description": "Filter systems by their SAP SIDs",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible]",
+                        "in": "query",
+                        "description": "Filter systems by ansible",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible][controller_version]",
+                        "in": "query",
+                        "description": "Filter systems by ansible version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql][version]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],
@@ -1312,6 +1399,19 @@
                         }
                     },
                     {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -1320,7 +1420,7 @@
                         }
                     },
                     {
-                        "name": "filter[system_profile][sap_sids][in]",
+                        "name": "filter[system_profile][sap_sids]",
                         "in": "query",
                         "description": "Filter systems by their SAP SIDs",
                         "style": "form",
@@ -1403,6 +1503,215 @@
                                     "type": "array",
                                     "items": {
                                         "$ref": "#/components/schemas/controllers.AdvisorySystemDBLookup"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            },
+                            "text/csv": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            },
+                            "text/csv": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "415": {
+                        "description": "Unsupported Media Type",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            },
+                            "text/csv": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            },
+                            "text/csv": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
+        "/export/baselines/{baseline_id}/systems": {
+            "get": {
+                "summary": "Export systems belonging to a baseline",
+                "description": "Export systems applicable to a baseline",
+                "operationId": "exportBaselineSystems",
+                "parameters": [
+                    {
+                        "name": "baseline_id",
+                        "in": "path",
+                        "description": "Baseline ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Find matching text",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[display_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[os]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Tag filter",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][sap_system]",
+                        "in": "query",
+                        "description": "Filter only SAP systems",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][sap_sids]",
+                        "in": "query",
+                        "description": "Filter systems by their SAP SIDs",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible]",
+                        "in": "query",
+                        "description": "Filter systems by ansible",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible][controller_version]",
+                        "in": "query",
+                        "description": "Filter systems by ansible version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql][version]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/controllers.BaselineSystemsDBLookup"
+                                    }
+                                }
+                            },
+                            "text/csv": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/controllers.BaselineSystemsDBLookup"
                                     }
                                 }
                             }
@@ -1613,6 +1922,19 @@
                         }
                     },
                     {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -1621,7 +1943,7 @@
                         }
                     },
                     {
-                        "name": "filter[system_profile][sap_sids][in]",
+                        "name": "filter[system_profile][sap_sids]",
                         "in": "query",
                         "description": "Filter systems by their SAP SIDs",
                         "style": "form",
@@ -1687,7 +2009,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.PackageSystemItem"
+                                        "$ref": "#/components/schemas/controllers.PackageSystemItemV3"
                                     }
                                 }
                             }
@@ -1828,6 +2150,19 @@
                         }
                     },
                     {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -1836,7 +2171,7 @@
                         }
                     },
                     {
-                        "name": "filter[system_profile][sap_sids][in]",
+                        "name": "filter[system_profile][sap_sids]",
                         "in": "query",
                         "description": "Filter systems by their SAP SIDs",
                         "style": "form",
@@ -2212,7 +2547,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.SystemPackageInline"
+                                        "$ref": "#/components/schemas/controllers.SystemPackageInlineV3"
                                     }
                                 }
                             }
@@ -2398,6 +2733,19 @@
                         }
                     },
                     {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -2406,7 +2754,7 @@
                         }
                     },
                     {
-                        "name": "filter[system_profile][sap_sids][in]",
+                        "name": "filter[system_profile][sap_sids]",
                         "in": "query",
                         "description": "Filter systems by their SAP SIDs",
                         "style": "form",
@@ -2546,7 +2894,9 @@
                                 "rhba_count",
                                 "rhea_count",
                                 "other_count",
-                                "stale"
+                                "satellite_managed",
+                                "stale",
+                                "built_pkgcache"
                             ]
                         }
                     },
@@ -2631,6 +2981,14 @@
                         }
                     },
                     {
+                        "name": "filter[satellite_managed]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[stale]",
                         "in": "query",
                         "description": "Filter",
@@ -2703,9 +3061,30 @@
                         }
                     },
                     {
+                        "name": "filter[built_pkgcache]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "tags",
                         "in": "query",
                         "description": "Tag filter",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
                         "style": "form",
                         "explode": true,
                         "schema": {
@@ -2724,7 +3103,7 @@
                         }
                     },
                     {
-                        "name": "filter[system_profile][sap_sids][in]",
+                        "name": "filter[system_profile][sap_sids]",
                         "in": "query",
                         "description": "Filter systems by their SAP SIDs",
                         "style": "form",
@@ -2766,6 +3145,146 @@
                         "description": "Filter systems by mssql version",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.IDsStatusResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
+        "/ids/baselines/{baseline_id}/systems": {
+            "get": {
+                "summary": "Show me all systems belonging to a baseline",
+                "description": "Show me all systems applicable to a baseline",
+                "operationId": "listBaselineSystemsIds",
+                "parameters": [
+                    {
+                        "name": "baseline_id",
+                        "in": "path",
+                        "description": "Baseline ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit for paging, set -1 to return all",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Offset for paging",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort field",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "id",
+                                "display_name",
+                                "os",
+                                "installable_rhsa_count",
+                                "installable_rhba_count",
+                                "installable_rhea_count",
+                                "installable_other_count",
+                                "applicable_rhsa_count",
+                                "applicable_rhba_count",
+                                "applicable_rhea_count",
+                                "applicable_other_count",
+                                "last_upload"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Find matching text",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[display_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[os]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Tag filter",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
                         }
                     }
                 ],
@@ -2863,6 +3382,19 @@
                         }
                     },
                     {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -2871,7 +3403,7 @@
                         }
                     },
                     {
-                        "name": "filter[system_profile][sap_sids][in]",
+                        "name": "filter[system_profile][sap_sids]",
                         "in": "query",
                         "description": "Filter systems by their SAP SIDs",
                         "style": "form",
@@ -2922,7 +3454,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.IDsResponse"
+                                    "$ref": "#/components/schemas/controllers.IDsStatusResponse"
                                 }
                             }
                         }
@@ -3003,7 +3535,9 @@
                                 "other_count",
                                 "stale",
                                 "packages_installed",
-                                "baseline_name"
+                                "baseline_name",
+                                "satellite_managed",
+                                "built_pkgcache"
                             ]
                         }
                     },
@@ -3136,9 +3670,38 @@
                         }
                     },
                     {
+                        "name": "filter[satellite_managed]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[built_pkgcache]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "tags",
                         "in": "query",
                         "description": "Tag filter",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
                         "style": "form",
                         "explode": true,
                         "schema": {
@@ -3157,7 +3720,7 @@
                         }
                     },
                     {
-                        "name": "filter[system_profile][sap_sids][in]",
+                        "name": "filter[system_profile][sap_sids]",
                         "in": "query",
                         "description": "Filter systems by their SAP SIDs",
                         "style": "form",
@@ -3358,7 +3921,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.IDsResponse"
+                                    "$ref": "#/components/schemas/controllers.IDsStatusResponse"
                                 }
                             }
                         }
@@ -3433,7 +3996,8 @@
                                 "id",
                                 "name",
                                 "systems_installed",
-                                "systems_updatable"
+                                "systems_installable",
+                                "systems_applicable"
                             ]
                         }
                     },
@@ -3462,7 +4026,15 @@
                         }
                     },
                     {
-                        "name": "filter[systems_updatable]",
+                        "name": "filter[systems_installable]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[systems_applicable]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -3491,6 +4063,19 @@
                         }
                     },
                     {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -3499,7 +4084,7 @@
                         }
                     },
                     {
-                        "name": "filter[system_profile][sap_sids][in]",
+                        "name": "filter[system_profile][sap_sids]",
                         "in": "query",
                         "description": "Filter systems by their SAP SIDs",
                         "style": "form",
@@ -3703,6 +4288,19 @@
                         }
                     },
                     {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -3711,7 +4309,7 @@
                         }
                     },
                     {
-                        "name": "filter[system_profile][sap_sids][in]",
+                        "name": "filter[system_profile][sap_sids]",
                         "in": "query",
                         "description": "Filter systems by their SAP SIDs",
                         "style": "form",
@@ -3754,6 +4352,14 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "filter[updatable]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "boolean"
+                        }
                     }
                 ],
                 "responses": {
@@ -3762,7 +4368,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.PackageSystemsResponse"
+                                    "$ref": "#/components/schemas/controllers.PackageSystemsResponseV3"
                                 }
                             }
                         }
@@ -3924,7 +4530,8 @@
                                 "other_count",
                                 "stale",
                                 "packages_installed",
-                                "baseline_name"
+                                "baseline_name",
+                                "groups"
                             ]
                         }
                     },
@@ -4070,6 +4677,19 @@
                         }
                     },
                     {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -4078,7 +4698,7 @@
                         }
                     },
                     {
-                        "name": "filter[system_profile][sap_sids][in]",
+                        "name": "filter[system_profile][sap_sids]",
                         "in": "query",
                         "description": "Filter systems by their SAP SIDs",
                         "style": "form",
@@ -4522,6 +5142,14 @@
                         "schema": {
                             "type": "boolean"
                         }
+                    },
+                    {
+                        "name": "filter[update_status]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -4530,7 +5158,137 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.SystemPackageResponse"
+                                    "$ref": "#/components/schemas/controllers.SystemPackageResponseV3"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
+        "/systems/{inventory_id}/vmaas_json": {
+            "get": {
+                "summary": "Show me system's json request for VMaaS",
+                "description": "Show me system's json request for VMaaS",
+                "operationId": "systemVmaasJson",
+                "parameters": [
+                    {
+                        "name": "inventory_id",
+                        "in": "path",
+                        "description": "Inventory ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.SystemVmaasJSONResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
+        "/systems/{inventory_id}/yum_updates": {
+            "get": {
+                "summary": "Show me system's yum_updates (client side evaluation data)",
+                "description": "Show me system's yum_updates (client side evaluation data)",
+                "operationId": "systemYumUpdates",
+                "parameters": [
+                    {
+                        "name": "inventory_id",
+                        "in": "path",
+                        "description": "Inventory ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.SystemYumUpdatesResponse"
                                 }
                             }
                         }
@@ -4649,8 +5407,8 @@
         },
         "/views/advisories/systems": {
             "post": {
-                "summary": "View advisory-system pairs for selected systems and advisories",
-                "description": "View advisory-system pairs for selected systems and advisories",
+                "summary": "View advisory-system pairs for selected systems and installable advisories",
+                "description": "View advisory-system pairs for selected systems and installable advisories",
                 "operationId": "viewAdvisoriesSystems",
                 "requestBody": {
                     "description": "Request body",
@@ -4705,8 +5463,8 @@
         },
         "/views/systems/advisories": {
             "post": {
-                "summary": "View system-advisory pairs for selected systems and advisories",
-                "description": "View system-advisory pairs for selected systems and advisories",
+                "summary": "View system-advisory pairs for selected systems and installable advisories",
+                "description": "View system-advisory pairs for selected systems and installable advisories",
                 "operationId": "viewSystemsAdvisories",
                 "requestBody": {
                     "description": "Request body",
@@ -4981,6 +5739,9 @@
                     "baseline_name": {
                         "type": "string"
                     },
+                    "built_pkgcache": {
+                        "type": "boolean"
+                    },
                     "created": {
                         "type": "string"
                     },
@@ -4989,6 +5750,12 @@
                     },
                     "display_name": {
                         "type": "string"
+                    },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
                     },
                     "id": {
                         "type": "string"
@@ -5001,6 +5768,9 @@
                     },
                     "rhsm": {
                         "type": "string"
+                    },
+                    "satellite_managed": {
+                        "type": "boolean"
                     },
                     "stale": {
                         "type": "boolean"
@@ -5045,6 +5815,9 @@
                     "baseline_name": {
                         "type": "string"
                     },
+                    "built_pkgcache": {
+                        "type": "boolean"
+                    },
                     "created": {
                         "type": "string"
                     },
@@ -5054,6 +5827,12 @@
                     "display_name": {
                         "type": "string"
                     },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
+                    },
                     "last_upload": {
                         "type": "string"
                     },
@@ -5062,6 +5841,9 @@
                     },
                     "rhsm": {
                         "type": "string"
+                    },
+                    "satellite_managed": {
+                        "type": "boolean"
                     },
                     "stale": {
                         "type": "boolean"
@@ -5224,6 +6006,12 @@
                         "description": "Baseline system display name",
                         "example": "my-baselined-system"
                     },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
+                    },
                     "installable_other_count": {
                         "type": "integer"
                     },
@@ -5268,6 +6056,64 @@
                         "type": "string",
                         "description": "Document type name",
                         "example": "baseline_system"
+                    }
+                }
+            },
+            "controllers.BaselineSystemsDBLookup": {
+                "type": "object",
+                "properties": {
+                    "applicable_other_count": {
+                        "type": "integer"
+                    },
+                    "applicable_rhba_count": {
+                        "type": "integer"
+                    },
+                    "applicable_rhea_count": {
+                        "type": "integer"
+                    },
+                    "applicable_rhsa_count": {
+                        "type": "integer"
+                    },
+                    "display_name": {
+                        "type": "string",
+                        "description": "Baseline system display name",
+                        "example": "my-baselined-system"
+                    },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "installable_other_count": {
+                        "type": "integer"
+                    },
+                    "installable_rhba_count": {
+                        "type": "integer"
+                    },
+                    "installable_rhea_count": {
+                        "type": "integer"
+                    },
+                    "installable_rhsa_count": {
+                        "type": "integer"
+                    },
+                    "last_upload": {
+                        "type": "string"
+                    },
+                    "os": {
+                        "type": "string"
+                    },
+                    "rhsm": {
+                        "type": "string"
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemTag"
+                        }
                     }
                 }
             },
@@ -5434,9 +6280,37 @@
                     }
                 }
             },
+            "controllers.IDStatus": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                }
+            },
             "controllers.IDsResponse": {
                 "type": "object",
                 "properties": {
+                    "ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "controllers.IDsStatusResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.IDStatus"
+                        }
+                    },
                     "ids": {
                         "type": "array",
                         "items": {
@@ -5570,19 +6444,25 @@
                     "summary": {
                         "type": "string"
                     },
-                    "systems_installed": {
+                    "systems_applicable": {
                         "type": "integer"
                     },
-                    "systems_updatable": {
+                    "systems_installable": {
+                        "type": "integer"
+                    },
+                    "systems_installed": {
                         "type": "integer"
                     }
                 }
             },
-            "controllers.PackageSystemItem": {
+            "controllers.PackageSystemItemV3": {
                 "type": "object",
                 "properties": {
                     "available_evra": {
                         "type": "string"
+                    },
+                    "baseline_id": {
+                        "type": "integer"
                     },
                     "baseline_name": {
                         "type": "string"
@@ -5593,10 +6473,22 @@
                     "display_name": {
                         "type": "string"
                     },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
+                    },
                     "id": {
                         "type": "string"
                     },
                     "installed_evra": {
+                        "type": "string"
+                    },
+                    "os": {
+                        "type": "string"
+                    },
+                    "rhsm": {
                         "type": "string"
                     },
                     "tags": {
@@ -5607,16 +6499,19 @@
                     },
                     "updatable": {
                         "type": "boolean"
+                    },
+                    "update_status": {
+                        "type": "string"
                     }
                 }
             },
-            "controllers.PackageSystemsResponse": {
+            "controllers.PackageSystemsResponseV3": {
                 "type": "object",
                 "properties": {
                     "data": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/controllers.PackageSystemItem"
+                            "$ref": "#/components/schemas/controllers.PackageSystemItemV3"
                         }
                     },
                     "links": {
@@ -5785,6 +6680,9 @@
                     "baseline_name": {
                         "type": "string"
                     },
+                    "built_pkgcache": {
+                        "type": "boolean"
+                    },
                     "created": {
                         "type": "string"
                     },
@@ -5793,6 +6691,12 @@
                     },
                     "display_name": {
                         "type": "string"
+                    },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
                     },
                     "id": {
                         "type": "string"
@@ -5821,6 +6725,9 @@
                     "rhsm": {
                         "type": "string"
                     },
+                    "satellite_managed": {
+                        "type": "boolean"
+                    },
                     "stale": {
                         "type": "boolean"
                     },
@@ -5843,6 +6750,17 @@
                 "properties": {
                     "data": {
                         "$ref": "#/components/schemas/controllers.SystemItem"
+                    }
+                }
+            },
+            "controllers.SystemGroup": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
                     }
                 }
             },
@@ -5872,6 +6790,9 @@
                     "baseline_uptodate": {
                         "type": "boolean"
                     },
+                    "built_pkgcache": {
+                        "type": "boolean"
+                    },
                     "created": {
                         "type": "string"
                     },
@@ -5880,6 +6801,12 @@
                     },
                     "display_name": {
                         "type": "string"
+                    },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
                     },
                     "insights_id": {
                         "type": "string"
@@ -5923,6 +6850,9 @@
                     "rhsm": {
                         "type": "string"
                     },
+                    "satellite_managed": {
+                        "type": "boolean"
+                    },
                     "stale": {
                         "type": "boolean"
                     },
@@ -5952,6 +6882,9 @@
                     "baseline_name": {
                         "type": "string"
                     },
+                    "built_pkgcache": {
+                        "type": "boolean"
+                    },
                     "created": {
                         "type": "string"
                     },
@@ -5960,6 +6893,12 @@
                     },
                     "display_name": {
                         "type": "string"
+                    },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
                     },
                     "last_upload": {
                         "type": "string"
@@ -5984,6 +6923,9 @@
                     },
                     "rhsm": {
                         "type": "string"
+                    },
+                    "satellite_managed": {
+                        "type": "boolean"
                     },
                     "stale": {
                         "type": "boolean"
@@ -6016,7 +6958,7 @@
                     }
                 }
             },
-            "controllers.SystemPackageData": {
+            "controllers.SystemPackageDataV3": {
                 "type": "object",
                 "properties": {
                     "description": {
@@ -6033,6 +6975,9 @@
                     },
                     "updatable": {
                         "type": "boolean"
+                    },
+                    "update_status": {
+                        "type": "string"
                     },
                     "updates": {
                         "type": "array",
@@ -6042,7 +6987,7 @@
                     }
                 }
             },
-            "controllers.SystemPackageInline": {
+            "controllers.SystemPackageInlineV3": {
                 "type": "object",
                 "properties": {
                     "description": {
@@ -6051,7 +6996,10 @@
                     "evra": {
                         "type": "string"
                     },
-                    "latest_evra": {
+                    "latest_applicable": {
+                        "type": "string"
+                    },
+                    "latest_installable": {
                         "type": "string"
                     },
                     "name": {
@@ -6062,16 +7010,19 @@
                     },
                     "updatable": {
                         "type": "boolean"
+                    },
+                    "update_status": {
+                        "type": "string"
                     }
                 }
             },
-            "controllers.SystemPackageResponse": {
+            "controllers.SystemPackageResponseV3": {
                 "type": "object",
                 "properties": {
                     "data": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/controllers.SystemPackageData"
+                            "$ref": "#/components/schemas/controllers.SystemPackageDataV3"
                         }
                     },
                     "links": {
@@ -6121,6 +7072,22 @@
                     },
                     "meta": {
                         "$ref": "#/components/schemas/controllers.ListMeta"
+                    }
+                }
+            },
+            "controllers.SystemVmaasJSONResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/vmaas.UpdatesV3Request"
+                    }
+                }
+            },
+            "controllers.SystemYumUpdatesResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/vmaas.UpdatesV3Response"
                     }
                 }
             },
@@ -6218,10 +7185,10 @@
             "models.PackageUpdate": {
                 "type": "object",
                 "properties": {
-                    "advisory": {
+                    "evra": {
                         "type": "string"
                     },
-                    "evra": {
+                    "status": {
                         "type": "string"
                     }
                 }
@@ -6231,6 +7198,136 @@
                 "properties": {
                     "error": {
                         "type": "string"
+                    }
+                }
+            },
+            "vmaas.UpdatesV3Request": {
+                "type": "object",
+                "properties": {
+                    "basearch": {
+                        "type": "string"
+                    },
+                    "epoch_required": {
+                        "type": "boolean",
+                        "description": "VMaaS will check package_list and return error if we provide package_list without epochs"
+                    },
+                    "latest_only": {
+                        "type": "boolean"
+                    },
+                    "modules_list": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/vmaas.UpdatesV3RequestModulesList"
+                        }
+                    },
+                    "optimistic_updates": {
+                        "type": "boolean",
+                        "description": "Search for updates of unknown package EVRAs."
+                    },
+                    "package_list": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "releasever": {
+                        "type": "string"
+                    },
+                    "repository_list": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "security_only": {
+                        "type": "boolean"
+                    },
+                    "third_party": {
+                        "type": "boolean",
+                        "description": "Include content from \\\"third party\\\" repositories into the response, disabled by default."
+                    }
+                }
+            },
+            "vmaas.UpdatesV3RequestModulesList": {
+                "type": "object",
+                "properties": {
+                    "module_name": {
+                        "type": "string"
+                    },
+                    "module_stream": {
+                        "type": "string"
+                    }
+                }
+            },
+            "vmaas.UpdatesV3Response": {
+                "type": "object",
+                "properties": {
+                    "basearch": {
+                        "type": "string"
+                    },
+                    "build_pkgcache": {
+                        "type": "boolean"
+                    },
+                    "last_change": {
+                        "type": "string"
+                    },
+                    "modules_list": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/vmaas.UpdatesV3RequestModulesList"
+                        }
+                    },
+                    "releasever": {
+                        "type": "string"
+                    },
+                    "repository_list": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "update_list": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/vmaas.UpdatesV3ResponseUpdateList"
+                        }
+                    }
+                }
+            },
+            "vmaas.UpdatesV3ResponseAvailableUpdates": {
+                "type": "object",
+                "properties": {
+                    "basearch": {
+                        "type": "string"
+                    },
+                    "erratum": {
+                        "type": "string"
+                    },
+                    "evra": {
+                        "type": "string"
+                    },
+                    "package": {
+                        "type": "string"
+                    },
+                    "package_name": {
+                        "type": "string"
+                    },
+                    "releasever": {
+                        "type": "string"
+                    },
+                    "repository": {
+                        "type": "string"
+                    }
+                }
+            },
+            "vmaas.UpdatesV3ResponseUpdateList": {
+                "type": "object",
+                "properties": {
+                    "available_updates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/vmaas.UpdatesV3ResponseAvailableUpdates"
+                        }
                     }
                 }
             }

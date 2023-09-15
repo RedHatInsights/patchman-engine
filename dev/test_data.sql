@@ -19,7 +19,8 @@ INSERT INTO rh_account (id, name, org_id) VALUES
 INSERT INTO baseline (id, rh_account_id, name, config, description) VALUES
 (1, 1, 'baseline_1-1', '{"to_time": "2010-09-22T00:00:00+00:00"}', 'desc'),
 (2, 1, 'baseline_1-2', '{"to_time": "2021-01-01T00:00:00+00:00"}', NULL),
-(3, 1, 'baseline_1-3', '{"to_time": "2000-01-01T00:00:00+00:00"}', NULL);
+(3, 1, 'baseline_1-3', '{"to_time": "2000-01-01T00:00:00+00:00"}', NULL),
+(4, 3, 'baseline_3-4', '{"to_time": "2000-01-01T00:00:00+00:00"}', NULL);
 
 INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id, reporter_id, vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_updatable, third_party, baseline_id, baseline_uptodate) VALUES
 (1, '00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2020-09-22 12:00:00-04',0,0, true, 1, true),
@@ -44,6 +45,9 @@ INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vma
 (14, '00000000-0000-0000-0000-000000000014','00000000-0000-0000-0000-000000000014', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 0,0, NULL),
 (15, '00000000-0000-0000-0000-000000000015','00000000-0000-0000-0000-000000000015', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 0,0,
  '{"update_list": {"suricata-6.0.3-2.fc35.i686": {"available_updates": [{"erratum": "RHSA-2021:3801", "basearch": "i686", "releasever": "ser1", "repository": "group_oisf:suricata-6.0", "package": "suricata-6.0.4-2.fc35.i686"}]}}, "basearch": "i686", "releasever": "ser1"}');
+
+INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_updatable, yum_updates, baseline_id) VALUES
+(16, '00000000-0000-0000-0000-000000000016','00000000-0000-0000-0000-000000000016', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 1,0, NULL, 4);
 
 INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solution, advisory_type_id,
                                public_date, modified_date, url, severity_id, cve_list, release_versions) VALUES
@@ -138,7 +142,7 @@ INSERT INTO strings(id, value) VALUES
 INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_id, synced) VALUES
 (1, 101, '5.6.13-200.fc31.x86_64', '11', '1', 1, true), -- kernel
 (2, 102, '76.0.1-1.fc31.x86_64', '22', '2', 1, true), -- firefox
-(3, 103, '4.4.19-8.el8_0.x86_64', '33', '3', 3, true), -- bas
+(3, 103, '4.4.19-8.el8_0.x86_64', '33', '3', 3, true), -- bash
 (4, 104, '7.61.1-8.el8.x86_64', '44', '4', 4, true), -- curl
 (5, 105, '1.30-4.el8.x86_64', '55', '5', 5, true), -- tar
 (6, 106, '239-13.el8_0.5.x86_64', '66', '6', 6, true), -- systemd
@@ -150,52 +154,70 @@ INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_
 (12, 102, '76.0.1-2.fc31.x86_64', '22', '2', null, true); -- firefox
 
 INSERT INTO system_package (rh_account_id, system_id, package_id, name_id, update_data) VALUES
-(3, 12, 1, 101, '[{"evra": "5.10.13-200.fc31.x86_64", "advisory": "RH-100"}]'),
-(3, 12, 2, 102, '[{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31.x86_64", "advisory": "RH-2"}]'),
+(3, 12, 1, 101, '[{"evra": "5.10.13-201.fc31.x86_64", "advisory": "RH-100", "status": "Installable"}]'),
+(3, 12, 2, 102, '[{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1", "status": "Installable"}, {"evra": "76.0.1-2.fc31.x86_64", "advisory": "RH-2", "status": "Installable"}]'),
 (3, 13, 1, 101, null),
-(3, 13, 2, 102, '[{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1"}, {"evra": "76.0.1-1.fc31.x86_64", "advisory": "RH-2"}]'),
+(3, 13, 2, 102, '[{"evra": "76.0.1-2.fc31.x86_64", "advisory": "RH-2", "status": "Installable"},{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1", "status": "Applicable"}]'),
 (3, 13, 3, 103, null),
-(3, 13, 4, 104, null);
+(3, 13, 4, 104, null),
+(3, 16, 1, 101, '[{"evra": "5.10.13-201.fc31.x86_64", "advisory": "RH-100", "status": "Installable"}]');
 
 INSERT INTO timestamp_kv (name, value) VALUES
 ('last_eval_repo_based', '2018-04-05T01:23:45+02:00');
 
-INSERT INTO inventory.hosts_v1_0 (id, insights_id, account, display_name, tags, updated, created, stale_timestamp, system_profile) VALUES
+INSERT INTO inventory.hosts_v1_0 (id, insights_id, account, display_name, tags, updated, created, stale_timestamp, system_profile, reporter, per_reporter_staleness, org_id, groups) VALUES
 ('00000000000000000000000000000001', '00000000-0000-0000-0001-000000000001', '1', '00000000-0000-0000-0000-000000000001', '[{"key": "k1", "value": "val1", "namespace": "ns1"},{"key": "k2", "value": "val2", "namespace": "ns1"}]',
-'2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "sap_sids": ["ABC", "DEF", "GHI"], "operating_system": {"name": "RHEL", "major": 8, "minor": 10}, "rhsm": {"version": "8.10"}}'),
+'2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "sap_sids": ["ABC", "DEF", "GHI"], "operating_system": {"name": "RHEL", "major": 8, "minor": 10}, "rhsm": {"version": "8.10"}}',
+ 'puptoo', '{}', 'org_1', '[{"id": "inventory-group-1", "name": "group1"}]'),
 ('00000000000000000000000000000002', '00000000-0000-0000-0002-000000000001', '1', '00000000-0000-0000-0000-000000000002', '[{"key": "k1", "value": "val1", "namespace": "ns1"},{"key": "k2", "value": "val2", "namespace": "ns1"},{"key": "k3", "value": "val3", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "sap_sids": ["ABC"], "operating_system": {"name": "RHEL", "major": 8, "minor": 1}, "rhsm": {"version": "8.1"}}'),
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "sap_sids": ["ABC"], "operating_system": {"name": "RHEL", "major": 8, "minor": 1}, "rhsm": {"version": "8.1"}}',
+ 'puptoo', '{}', 'org_1', '[{"id": "inventory-group-1", "name": "group1"}]'),
 ('00000000000000000000000000000003', '00000000-0000-0000-0003-000000000001', '1', '00000000-0000-0000-0000-000000000003', '[{"key": "k1", "value": "val1", "namespace": "ns1"}, {"key": "k3", "value": "val4", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 1}, "rhsm": {"version": "8.0"}}'),
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 1}, "rhsm": {"version": "8.0"}}',
+ 'puptoo', '{}', 'org_1', '[{"id": "inventory-group-1", "name": "group1"}]'),
 ('00000000000000000000000000000004', '00000000-0000-0000-0004-000000000001', '1', '00000000-0000-0000-0000-000000000004', '[{"key": "k3", "value": "val4", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 2}, "rhsm": {"version": "8.3"}}'),
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 2}, "rhsm": {"version": "8.3"}}',
+ 'puptoo', '{}', 'org_1', '[{"id": "inventory-group-1", "name": "group1"}]'),
 ('00000000000000000000000000000005', '00000000-0000-0000-0005-000000000001', '1', '00000000-0000-0000-0000-000000000005', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 3}, "rhsm": {"version": "8.3"}}'),
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 3}, "rhsm": {"version": "8.3"}}',
+ 'puptoo', '{}', 'org_1', '[{"id": "inventory-group-1", "name": "group1"}]'),
 ('00000000000000000000000000000006', '00000000-0000-0000-0006-000000000001', '1', '00000000-0000-0000-0000-000000000006', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 7, "minor": 3}, "rhsm": {"version": "7.3"}, "mssql": { "version": "15.3.0"}}'),
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 7, "minor": 3}, "rhsm": {"version": "7.3"}, "mssql": { "version": "15.3.0"}}',
+ 'puptoo', '{}', 'org_1', '[{"id": "inventory-group-1", "name": "group1"}]'),
 ('00000000000000000000000000000007', '00000000-0000-0000-0007-000000000001', '1', '00000000-0000-0000-0000-000000000007','[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": "x"}, "rhsm": {"version": "8.x"}, "ansible": {"controller_version": "1.0"}}'),
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": "x"}, "rhsm": {"version": "8.x"}, "ansible": {"controller_version": "1.0"}}',
+ 'puptoo', '{}', 'org_1', '[{"id": "inventory-group-2", "name": "group2"}]'),
 ('00000000000000000000000000000008', '00000000-0000-0000-0008-000000000001', '1', '00000000-0000-0000-0000-000000000008', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 3}, "rhsm": {"version": "8.3"}}'),
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 3}, "rhsm": {"version": "8.3"}}',
+ 'puptoo', '{}', 'org_1', '[{"id": "inventory-group-2", "name": "group2"}]'),
 ('00000000000000000000000000000009', '00000000-0000-0000-0009-000000000001', '2', '00000000-0000-0000-0000-000000000009', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 1}, "rhsm": {"version": "8.1"}}'),
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 1}, "rhsm": {"version": "8.1"}}',
+ 'puptoo', '{}', 'org_2', NULL),
 ('00000000000000000000000000000010', '00000000-0000-0000-0010-000000000001', '2', '00000000-0000-0000-0000-000000000010', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 2}, "rhsm": {"version": "8.2"}}'),
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 2}, "rhsm": {"version": "8.2"}}',
+ 'puptoo', '{}', 'org_2', NULL),
 ('00000000000000000000000000000011', '00000000-0000-0000-0011-000000000001', '2', '00000000-0000-0000-0000-000000000011', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 3}, "rhsm": {"version": "8.3"}}'),
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 3}, "rhsm": {"version": "8.3"}}',
+ 'puptoo', '{}', 'org_2', '[]'),
 ('00000000000000000000000000000012', '00000000-0000-0000-0012-000000000001', '3', '00000000-0000-0000-0000-000000000012', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 1}, "rhsm": {"version": "8.1"}}'),
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 1}, "rhsm": {"version": "8.1"}}',
+ 'puptoo', '{}', 'org_3', '[]'),
 ('00000000000000000000000000000013', '00000000-0000-0000-0013-000000000001', '3', '00000000-0000-0000-0000-000000000013', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 2}, "rhsm": {"version": "8.2"}}'),
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 2}, "rhsm": {"version": "8.2"}}',
+ 'puptoo', '{}', 'org_3', '[]'),
 ('00000000000000000000000000000014', '00000000-0000-0000-0014-000000000001', '3', '00000000-0000-0000-0000-000000000014', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 3}}'),
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 3}}',
+ 'puptoo', '{}', 'org_3', '[]'),
 ('00000000000000000000000000000015', '00000000-0000-0000-0015-000000000001', '3', '00000000-0000-0000-0000-000000000015', '[{"key": "k3", "value": "val4", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": false, "operating_system": {"name": "RHEL", "major": 8, "minor": 1}, "rhsm": {"version": "8.1"}}'),
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": false, "operating_system": {"name": "RHEL", "major": 8, "minor": 1}, "rhsm": {"version": "8.1"}}',
+ 'puptoo', '{}', 'org_3', '[]'),
 ('00000000000000000000000000000016', '00000000-0000-0000-0016-000000000001', '3', '00000000-0000-0000-0000-000000000016', '[]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": false, "operating_system": {"name": "RHEL", "major": 8, "minor": 2}, "rhsm": {"version": "8.2"}}'),
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": false, "operating_system": {"name": "RHEL", "major": 8, "minor": 2}, "rhsm": {"version": "8.2"}}',
+ 'puptoo', '{}', 'org_3', '[]'),
 ('00000000000000000000000000000017', '00000000-0000-0000-0017-000000000001', '3', '00000000-0000-0000-0000-000000000017', '[]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04',
- '{"rhsm": {"version": "8.1"}, "operating_system": {"name": "RHEL", "major": 8, "minor": 1}, "ansible": {"controller_version": "1.0", "hub_version": "3.4.1", "catalog_worker_version": "100.387.9846.12", "sso_version": "1.28.3.52641.10000513168495123"}, "mssql": { "version": "15.3.0"}}');
+ '{"rhsm": {"version": "8.1"}, "operating_system": {"name": "RHEL", "major": 8, "minor": 1}, "ansible": {"controller_version": "1.0", "hub_version": "3.4.1", "catalog_worker_version": "100.387.9846.12", "sso_version": "1.28.3.52641.10000513168495123"}, "mssql": { "version": "15.3.0"}}',
+ 'puptoo', '{}', 'org_3', '[]');
 
 SELECT refresh_all_cached_counts();
 
