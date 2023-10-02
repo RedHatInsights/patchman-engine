@@ -479,6 +479,32 @@ objects:
         - {name: DELETE_UNUSED_DATA_LIMIT, value: '${DELETE_UNUSED_DATA_LIMIT}'}
         - {name: ENABLE_UNUSED_DATA_DELETE, value: '${ENABLE_UNUSED_DATA_DELETE}'}
 
+    - name: migrate-system-package-data
+      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
+      disabled: ${MIGRATE_SYSTEM_PACKAGE_DISABLED}}
+      concurrencyPolicy: Forbid
+      completions: 1
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG_JOBS}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+        command:
+          - ./scripts/entrypoint.sh
+          - job
+          - system_package_data_migration
+        env:
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
+        - {name: DB_USER, value: vmaas_sync}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                      key: vmaas-sync-database-password}}}
+
     database:
       name: patchman
       version: 12
@@ -693,6 +719,8 @@ parameters:
 - {name: ADVISORY_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
 - {name: ENABLE_REFRESH_ADVISORY_CACHES, value: 'true'} # Enable periodic refresh of account advisory caches
 - {name: SKIP_N_ACCOUNTS_REFRESH, value: '0'} # Skip advisory cache refresh for N first accounts in case the previous refresh didn't finish
+# Migrate system package data
+- {name: MIGRATE_SYSTEM_PACKAGE_DISABLED, value: 'true'}
 
 # Database admin
 - {name: IMAGE_TAG_DATABASE_ADMIN, value: v3.5.9}
