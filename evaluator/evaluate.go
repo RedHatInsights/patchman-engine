@@ -367,6 +367,7 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
 
 	installed, updatable, err := analyzePackages(tx, system, vmaasData)
 	if err != nil {
+		utils.LogError("requestIDs", event.RequestIDs, "inventoryID", system.InventoryID)
 		return errors.Wrap(err, "Package analysis failed")
 	}
 
