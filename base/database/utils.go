@@ -50,6 +50,17 @@ func SystemPackageData(tx *gorm.DB, accountID int, groups map[string]string) *go
 		Joins("JOIN package_name pn on pn.id = p.name_id")
 }
 
+func PackageSystemData(tx *gorm.DB, accountID int, groups map[string]string) *gorm.DB {
+	return Systems(tx, accountID, groups).
+		Joins(`JOIN (SELECT package_name_id as name_id,
+                            jsonb_object_keys(update_data)::bigint as system_id,
+                            jsonb_path_query(update_data, '$.*') as update_data
+                       FROM package_system_data
+                      WHERE rh_account_id = ?) as spkg
+                 ON spkg.system_id = sp.id`, accountID).
+		Joins("JOIN package_name pn on pn.id = spkg.name_id")
+}
+
 func Packages(tx *gorm.DB) *gorm.DB {
 	return tx.Table("package p").
 		Joins("JOIN package_name pn on p.name_id = pn.id").

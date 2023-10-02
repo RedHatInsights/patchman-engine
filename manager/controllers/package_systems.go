@@ -26,14 +26,11 @@ var PackageSystemsOpts = ListOpts{
 type PackageSystemItemCommon struct {
 	SystemIDAttribute
 	SystemDisplayName
-	InstalledEVRA string         `json:"installed_evra" csv:"installed_evra" query:"p.evra" gorm:"column:installed_evra"`
-	AvailableEVRA string         `json:"available_evra" csv:"available_evra" query:"null" gorm:"-"`
-	Updatable     bool           `json:"updatable" csv:"updatable" query:"(spkg.installable_id IS NOT NULL)" gorm:"column:updatable"`
+	InstalledEVRA string         `json:"installed_evra" csv:"installed_evra" query:"jsonb_path_query_array(update_data, '$ ? (@.status == \"Installed\")')->0->>'evra'" gorm:"column:installed_evra"`
+	AvailableEVRA string         `json:"available_evra" csv:"available_evra" query:"jsonb_path_query_array(update_data, '$ ? (@.status != \"Installed\")')-> -1 ->>'evra'" gorm:"column:available_evra"`
+	Updatable     bool           `json:"updatable" csv:"updatable" query:"(update_status(spkg.update_data) = 'Installable')" gorm:"column:updatable"`
 	Tags          SystemTagsList `json:"tags" csv:"tags" query:"null" gorm:"-"`
 	BaselineAttributes
-	// helper to get AvailableEVRA (latest_evra)
-	InstallableEVRA string `json:"-" csv:"-" query:"pi.evra" gorm:"column:installable_evra"`
-	ApplicableEVRA  string `json:"-" csv:"-" query:"pa.evra" gorm:"column:applicable_evra"`
 }
 
 type PackageSystemItemV2 struct {
@@ -68,29 +65,31 @@ type PackageSystemsResponseV3 struct {
 	Meta  ListMeta              `json:"meta"`
 }
 
-func packagesByNameQuery(db *gorm.DB, pkgName string) *gorm.DB {
-	return db.Table("package p").
+func packagesByNameExist(db *gorm.DB, pkgName string) (int64, error) {
+	var exist int64
+	err := db.Table("package p").
 		Joins("INNER JOIN package_name pn ON p.name_id = pn.id").
-		Where("pn.name = ?", pkgName)
+		Where("pn.name = ?", pkgName).
+		Limit(1).
+		Pluck("pn.id", &exist).Error
+
+	return exist, err
 }
 
-func packageSystemsQuery(db *gorm.DB, acc int, groups map[string]string, packageName string, packageIDs []int,
+func packageSystemsQuery(db *gorm.DB, acc int, groups map[string]string, packageName string,
 ) *gorm.DB {
-	query := database.SystemPackages(db, acc, groups).
+	query := database.PackageSystemData(db, acc, groups).
 		Select(PackageSystemsSelect).
-		Joins("LEFT JOIN package pi ON pi.id = spkg.installable_id").
-		Joins("LEFT JOIN package pa ON pa.id = spkg.applicable_id").
 		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
 		Where("sp.stale = false").
-		Where("pn.name = ?", packageName).
-		Where("spkg.package_id in (?)", packageIDs)
+		Where("pn.name = ?", packageName)
+
 	return query
 }
 
 func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(utils.KeyAccount)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
-	var filters map[string]FilterData
 
 	packageName := c.Param("package_name")
 	if packageName == "" {
@@ -98,18 +97,18 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 		return nil, nil, nil, errors.New("package_name param not found")
 	}
 
-	var packageIDs []int
-	if err := packagesByNameQuery(db, packageName).Pluck("p.id", &packageIDs).Error; err != nil {
+	exist, err := packagesByNameExist(db, packageName)
+	if err != nil {
 		LogAndRespError(c, err, "database error")
 		return nil, nil, nil, err
 	}
 
-	if len(packageIDs) == 0 {
+	if exist == 0 {
 		LogAndRespNotFound(c, errors.New("not found"), "package not found")
 		return nil, nil, nil, errors.New("package not found")
 	}
 
-	query := packageSystemsQuery(db, account, groups, packageName, packageIDs)
+	query := packageSystemsQuery(db, account, groups, packageName)
 	filters, err := ParseAllFilters(c, PackageSystemsOpts)
 	if err != nil {
 		return nil, nil, nil, err
@@ -250,10 +249,6 @@ func packageSystemDBLookups2PackageSystemItemsV3(systems []PackageSystemDBLookup
 			utils.LogDebug("err", err.Error(), "inventory_id", systems[i].ID, "system groups parsing failed")
 		}
 		data[i] = systems[i].PackageSystemItemV3
-		data[i].AvailableEVRA = data[i].InstallableEVRA
-		if len(data[i].ApplicableEVRA) > 0 {
-			data[i].AvailableEVRA = data[i].ApplicableEVRA
-		}
 	}
 	return data, total
 }
