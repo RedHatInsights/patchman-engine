@@ -508,6 +508,11 @@ objects:
         - {name: DB_USER, value: vmaas_sync}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                       key: vmaas-sync-database-password}}}
+        - {name: PACKAGE_CACHE_SIZE, value: '${PACKAGE_CACHE_SIZE}'}
+        - {name: PACKAGE_NAME_CACHE_SIZE, value: '${PACKAGE_NAME_CACHE_SIZE}'}
+        resources:
+          limits: {cpu: '${RES_LIMIT_CPU_MIGRATE_JOB}', memory: '${RES_LIMIT_MEM_MIGRATE_JOB}'}
+          requests: {cpu: '${RES_REQUEST_CPU_MIGRATE_JOB}', memory: '${RES_REQUEST_MEM_MIGRATE_JOB}'}
 
     database:
       name: patchman
@@ -729,6 +734,10 @@ parameters:
 - {name: SKIP_N_ACCOUNTS_REFRESH, value: '0'} # Skip advisory cache refresh for N first accounts in case the previous refresh didn't finish
 # Migrate system package data
 - {name: MIGRATE_SYSTEM_PACKAGE_DISABLED, value: 'true'}
+- {name: RES_REQUEST_CPU_MIGRATE_JOB, value: '1'}
+- {name: RES_LIMIT_CPU_MIGRATE_JOB, value: '2'}
+- {name: RES_REQUEST_MEM_MIGRATE_JOB, value: '512Mi'}
+- {name: RES_LIMIT_MEM_MIGRATE_JOB, value: '1024Mi'}
 
 # Database admin
 - {name: IMAGE_TAG_DATABASE_ADMIN, value: v3.5.32}
