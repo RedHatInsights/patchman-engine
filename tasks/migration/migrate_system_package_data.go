@@ -4,16 +4,24 @@ import (
 	"app/base/core"
 	"app/base/models"
 	"app/base/utils"
+	"app/evaluator"
 	"app/tasks"
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	"gorm.io/gorm"
 )
 
+var memoryPackageCache *evaluator.PackageCache
+
 func RunSystemPackageDataMigration() {
 	tasks.HandleContextCancel(tasks.WaitAndExit)
 	core.ConfigureApp()
+	packageCacheSize := utils.GetIntEnvOrDefault("PACKAGE_CACHE_SIZE", 1000000)
+	packageNameCacheSize := utils.GetIntEnvOrDefault("PACKAGE_NAME_CACHE_SIZE", 60000)
+	memoryPackageCache = evaluator.NewPackageCache(true, true, packageCacheSize, packageNameCacheSize)
+	memoryPackageCache.Load()
 	utils.LogInfo("Migrating installable/applicable advisories from system_package to system_package2")
 	MigrateSystemPackageData()
 }
@@ -178,6 +186,37 @@ func getPackageIDs(u SystemPackageRecord, i int, latestApplicable, latestInstall
 		return 0, 0
 	}
 
+	var applicableID, installableID int64
+
+	name, ok := memoryPackageCache.GetNameByID(u.NameID)
+	if ok {
+		var applicable, installable *evaluator.PackageCacheMetadata
+		// assume both evras will be found in cache
+		applicableInCache := true
+		installableInCache := true
+
+		if len(latestApplicable) > 0 {
+			nevraApplicable := fmt.Sprintf("%s-%s", name, latestApplicable)
+			applicable, applicableInCache = memoryPackageCache.GetByNevra(nevraApplicable)
+			if applicableInCache {
+				applicableID = applicable.ID
+			}
+		}
+
+		if len(latestInstallable) > 0 {
+			nevraInstallable := fmt.Sprintf("%s-%s", name, latestInstallable)
+			installable, installableInCache = memoryPackageCache.GetByNevra(nevraInstallable)
+			if installableInCache {
+				installableID = installable.ID
+			}
+		}
+
+		if applicableInCache && installableInCache {
+			// return ids only if both evras are found in cache
+			return applicableID, installableID
+		}
+	}
+
 	var packages []Package
 	err := tasks.WithReadReplicaTx(func(db *gorm.DB) error {
 		return db.Table("package").
@@ -190,7 +229,6 @@ func getPackageIDs(u SystemPackageRecord, i int, latestApplicable, latestInstall
 		utils.LogWarn("#", i, "Failed to load packages")
 	}
 
-	var applicableID, installableID int64
 	for _, p := range packages {
 		if p.Evra == latestApplicable {
 			applicableID = p.ID
