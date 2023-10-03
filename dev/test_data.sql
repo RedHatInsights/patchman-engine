@@ -243,13 +243,13 @@ ALTER TABLE baseline ALTER COLUMN id RESTART WITH 100;
 
 truncate table system_package_data;
 INSERT INTO system_package_data (rh_account_id, system_id, update_data) VALUES
-(3, 12, '{"1": [{"evra": "5.10.13-200.fc31.x86_64", "status": "Installable"}], "2": [{"evra": "1:76.0.1-1.fc31.x86_64", "status": "Installable"}]}'),
-(3, 13, '{"1": [], "2": [{"evra": "76.0.1-2.fc31.x86_64", "status": "Installable"}, {"evra": "77.0.1-1.fc31.x86_64", "status": "Applicable"}], "3": [], "4": []}'),
-(3, 16, '{"1": [{"evra": "5.10.13-201.fc31.x86_64", "status": "Installable"}, {"evra": "5.10.13-201.fc31.x86_64", "status": "Applicable"}]}');
+(3, 12, '{"1": {"installable": "5.10.13-200.fc31.x86_64"}, "2": {"installable": "1:76.0.1-1.fc31.x86_64"}}'),
+(3, 13, '{"1": {}, "2": {"applicable": "77.0.1-1.fc31.x86_64", "installable": "76.0.1-2.fc31.x86_64"}, "3": {}, "4": {}}'),
+(3, 16, '{"1": {"installable": "5.10.13-201.fc31.x86_64", "applicable": "5.10.13-201.fc31.x86_64"}}');
 
 truncate table package_system_data;
 INSERT INTO package_system_data (rh_account_id, package_name_id, update_data) VALUES
-(3, 101, '{"12": [{"evra": "5.6.13-200.fc31.x86_64", "status": "Installed"}, {"evra": "5.10.13-200.fc31.x86_64", "status": "Installable"}], "13": [{"evra": "5.6.13-200.fc31.x86_64", "status": "Installed"}], "16": [{"evra": "5.6.13-200.fc31.x86_64", "status": "Installed"}, {"evra": "5.10.13-201.fc31.x86_64", "status": "Installable"}]}'),
-(3, 102, '{"12": [{"evra": "76.0.1-1.fc31.x86_64", "status": "Installed"}, {"evra": "1:76.0.1-1.fc31.x86_64", "status": "Installable"}], "13": [{"evra": "76.0.1-1.fc31.x86_64", "status": "Installed"}, {"evra": "76.0.1-2.fc31.x86_64", "status": "Installable"}, {"evra": "77.0.1-1.fc31.x86_64", "status": "Applicable"}]}'),
-(3, 103, '{"13": [{"evra": "4.4.19-8.el8_0.x86_64", "status": "Installed"}]}'),
-(3, 104, '{"13": [{"evra": "7.61.1-8.el8.x86_64", "status": "Installed"}]}');
+(3, 101, '{"12": {"installed": "5.6.13-200.fc31.x86_64", "installable": "5.10.13-200.fc31.x86_64"}, "13": {"installed": "5.6.13-200.fc31.x86_64"}, "16": {"installed": "5.6.13-200.fc31.x86_64", "installable": "5.10.13-201.fc31.x86_64"}}'),
+(3, 102, '{"12": {"installed": "76.0.1-1.fc31.x86_64", "installable": "1:76.0.1-1.fc31.x86_64"}, "13": {"installed": "76.0.1-1.fc31.x86_64", "applicable": "77.0.1-1.fc31.x86_64", "installable": "76.0.1-2.fc31.x86_64"}}'),
+(3, 103, '{"13": {"installed": "4.4.19-8.el8_0.x86_64"}}'),
+(3, 104, '{"13": {"installed": "7.61.1-8.el8.x86_64"}}');

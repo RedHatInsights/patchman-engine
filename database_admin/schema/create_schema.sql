@@ -392,6 +392,19 @@ BEGIN
     WHERE rh_account_id = v_account_id
       AND system_id = v_system_id;
 
+    DELETE
+    FROM system_package_data
+    WHERE rh_account_id = v_account_id
+      AND system_id = v_system_id;
+
+    UPDATE package_system_data
+    SET update_data = update_data - v_system_id::text
+    WHERE rh_account_id = v_account_id;
+    DELETE
+    FROM package_system_data
+    WHERE rh_account_id = v_account_id
+      AND (update_data IS NULL OR update_data = '{}'::jsonb);
+
     RETURN QUERY DELETE FROM system_platform
         WHERE rh_account_id = v_account_id AND
               id = v_system_id
@@ -436,6 +449,23 @@ BEGIN
              DELETE
                  FROM system_package2
                      WHERE (rh_account_id, system_id) in (select rh_account_id, id from systems)
+         ),
+         system_package_data as (
+             DELETE
+                 FROM system_package_data
+                     WHERE (rh_account_id, system_id) in (select rh_account_id, id from systems)
+         ),
+         package_system_data_u as (
+             UPDATE package_system_data psd
+                SET update_data = update_data - s.id::text
+               FROM (select rh_account_id, id from systems) s
+              WHERE psd.rh_account_id = s.rh_account_id
+         ),
+         package_system_data_d as (
+             DELETE
+                 FROM package_system_data
+                     WHERE rh_account_id in (select rh_account_id from systems)
+                     AND (update_data IS NULL OR update_data = '{}'::jsonb)
          ),
          deleted as (
              DELETE
@@ -609,24 +639,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
-CREATE OR REPLACE FUNCTION update_status(update_data jsonb)
-    RETURNS TEXT as
-$$
-DECLARE
-    len int;
-BEGIN
-    len = jsonb_array_length(jsonb_path_query_array(update_data, '$ ? (@.status != "Installed")'));
-    IF len IS NULL or len = 0 THEN
-        RETURN 'None';
-    END IF;
-    len = jsonb_array_length(jsonb_path_query_array(update_data, '$ ? (@.status == "Installable")'));
-    IF len > 0 THEN
-        RETURN 'Installable';
-    END IF;
-    RETURN 'Applicable';
-END;
-$$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
 
 
 -- ---------------------------------------------------------------------------
