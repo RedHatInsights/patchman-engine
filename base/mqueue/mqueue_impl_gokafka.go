@@ -154,22 +154,23 @@ func getSaslMechanism() sasl.Mechanism {
 			panic(err)
 		}
 		return mechanism
-	case "plain":
+	case "plain", "none":
 		mechanism := kafkaPlain.Mechanism{Username: kafkaUsername, Password: kafkaPassword}
 		return mechanism
 	}
-	panic(fmt.Sprintf("Unknown sasl type '%s', options: {scram, scram-sha-256, scram-sha-512, plain}", saslType))
+	panic(fmt.Sprintf("Unknown sasl type '%s', options: {scram, scram-sha-256, scram-sha-512, plain, none}", saslType))
 }
 
 func caCertTLSConfigFromEnv() *tls.Config {
-	caCertPath := utils.FailIfEmpty(utils.Cfg.KafkaSslCert, "KAFKA_SSL_CERT")
-	caCert, err := os.ReadFile(caCertPath)
-	if err != nil {
-		panic(err)
+	var caCertPool *x509.CertPool
+	if len(utils.Cfg.KafkaSslCert) > 0 {
+		caCertPool = x509.NewCertPool()
+		caCert, err := os.ReadFile(utils.Cfg.KafkaSslCert)
+		if err != nil {
+			panic(err)
+		}
+		caCertPool.AppendCertsFromPEM(caCert)
 	}
-
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
 
 	tlsConfig := tls.Config{RootCAs: caCertPool} // nolint:gosec
 	return &tlsConfig
