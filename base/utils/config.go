@@ -178,17 +178,8 @@ func initKafkaFromClowder() {
 		kafkaHost := brokerCfg.Hostname
 		kafkaPort := *brokerCfg.Port
 		Cfg.KafkaAddress = fmt.Sprintf("%s:%d", kafkaHost, kafkaPort)
-		if brokerCfg.Cacert != nil && len(*brokerCfg.Cacert) > 0 {
-			Cfg.KafkaSslEnabled = true
-			if strings.HasPrefix(*brokerCfg.Cacert, "-----BEGIN CERTIFICATE-----") {
-				certPath, err := clowder.LoadedConfig.KafkaCa(brokerCfg)
-				if err != nil {
-					panic(err)
-				}
-				Cfg.KafkaSslCert = certPath
-			} else {
-				Cfg.KafkaSslCert = *brokerCfg.Cacert
-			}
+		if brokerCfg.SecurityProtocol != nil {
+			Cfg.KafkaSslEnabled = strings.Contains(*brokerCfg.SecurityProtocol, "SSL")
 		}
 		if Cfg.KafkaSslEnabled {
 			if brokerCfg.Sasl.Username != nil {
@@ -196,6 +187,19 @@ func initKafkaFromClowder() {
 				Cfg.KafkaPassword = *brokerCfg.Sasl.Password
 				Cfg.KafkaSaslType = brokerCfg.Sasl.SaslMechanism
 			}
+
+			if brokerCfg.Cacert != nil && len(*brokerCfg.Cacert) > 0 {
+				if strings.HasPrefix(*brokerCfg.Cacert, "-----BEGIN CERTIFICATE-----") {
+					certPath, err := clowder.LoadedConfig.KafkaCa(brokerCfg)
+					if err != nil {
+						panic(err)
+					}
+					Cfg.KafkaSslCert = certPath
+				} else {
+					Cfg.KafkaSslCert = *brokerCfg.Cacert
+				}
+			}
+
 			if len(Cfg.KafkaSslCert) == 0 {
 				// use default CA if CA cert is not provided by clowder and Kafka TLS is enabled
 				Cfg.KafkaSslCert = "/etc/pki/tls/certs/ca-bundle.crt"
