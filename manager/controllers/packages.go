@@ -77,8 +77,8 @@ type PackagesResponse struct {
 type queryItem struct {
 	NameID             int `query:"spkg.name_id" gorm:"column:name_id"`
 	SystemsInstalled   int `json:"systems_installed" query:"count(*)" gorm:"column:systems_installed"`
-	SystemsInstallable int `json:"systems_installable" query:"count(*) filter (where spkg.installable_id is not null)" gorm:"column:systems_installable"`
-	SystemsApplicable  int `json:"systems_applicable" query:"count(*) filter (where spkg.installable_id is not null or spkg.applicable_id is not null)" gorm:"column:systems_applicable"`
+	SystemsInstallable int `json:"systems_installable" query:"count(*) filter (where update_data ? 'installable')" gorm:"column:systems_installable"`
+	SystemsApplicable  int `json:"systems_applicable" query:"count(*) filter (where (update_data ?| ARRAY['installable','applicable']))" gorm:"column:systems_applicable"`
 }
 
 var queryItemSelect = database.MustGetSelect(&queryItem{})
@@ -98,7 +98,7 @@ func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, groups m
 
 	// We need to apply tag filtering on subquery
 	systemsWithPkgsInstalledQ, _ = ApplyInventoryFilter(filters, systemsWithPkgsInstalledQ, "sp.inventory_id")
-	subQ := database.SystemPackagesShort(db, acc).
+	subQ := db.Table("(?) as spkg", database.PackageSystemDataShort(db, acc)).
 		Select(queryItemSelect).
 		Where("spkg.system_id IN (?)", systemsWithPkgsInstalledQ).
 		Group("spkg.name_id")
