@@ -196,6 +196,10 @@ func initKafkaFromClowder() {
 				Cfg.KafkaPassword = *brokerCfg.Sasl.Password
 				Cfg.KafkaSaslType = brokerCfg.Sasl.SaslMechanism
 			}
+			if len(Cfg.KafkaSslCert) == 0 {
+				// use default CA if CA cert is not provided by clowder and Kafka TLS is enabled
+				Cfg.KafkaSslCert = "/etc/pki/tls/certs/ca-bundle.crt"
+			}
 		}
 
 		// translate kafka topic names
