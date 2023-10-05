@@ -89,9 +89,13 @@ func SystemPackagesExportHandler(c *gin.Context) {
 
 func findLatestEVRA(pkg SystemPackageDBLoad) (installable models.PackageUpdate, applicable models.PackageUpdate) {
 	installable = models.PackageUpdate{
-		EVRA: pkg.EVRA,
+		EVRA:   pkg.EVRA,
+		Status: "Installable",
 	}
-	applicable = installable
+	applicable = models.PackageUpdate{
+		EVRA:   pkg.EVRA,
+		Status: "Applicable",
+	}
 	if pkg.Updates == nil {
 		return
 	}

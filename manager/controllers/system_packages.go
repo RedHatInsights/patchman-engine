@@ -18,7 +18,7 @@ type SystemPackagesAttrsCommon struct {
 	EVRA        string `json:"evra" csv:"evra" query:"p.evra" gorm:"column:evra"`
 	Summary     string `json:"summary" csv:"summary" query:"sum.value" gorm:"column:summary"`
 	Description string `json:"description" csv:"description" query:"descr.value" gorm:"column:description"`
-	Updatable   bool   `json:"updatable" csv:"updatable" query:"(spkg.installable_id is not null)" gorm:"column:updatable"`
+	Updatable   bool   `json:"updatable" csv:"updatable" query:"(update_data->>'installable' IS NOT NULL)" gorm:"column:updatable"`
 }
 
 type SystemPackageUpdates struct {
@@ -32,7 +32,7 @@ type SystemPackagesAttrsV2 struct {
 // nolint: lll
 type SystemPackagesAttrsV3 struct {
 	SystemPackagesAttrsCommon
-	UpdateStatus string `json:"update_status" csv:"update_status" query:"CASE WHEN spkg.installable_id is not null THEN 'Installable' WHEN spkg.applicable_id is not null THEN 'Applicable' ELSE 'None' END" gorm:"column:update_status"`
+	UpdateStatus string `json:"update_status" csv:"update_status" query:"case when spkg.update_data ? 'installable' then 'Installable' when spkg.update_data ? 'applicable' then 'Applicable' else 'None' end" gorm:"column:update_status"`
 }
 
 type SystemPackageDataV2 struct {
