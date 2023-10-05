@@ -132,6 +132,12 @@ type PackageUpdate struct {
 	Status   string `json:"status"`
 }
 
+type PackageUpdateData struct {
+	Installed   string `json:"installed,omitempty"`
+	Installable string `json:"installable,omitempty"`
+	Applicable  string `'json:"applicable,omitempty"`
+}
+
 type DeletedSystem struct {
 	InventoryID string
 	WhenDeleted time.Time

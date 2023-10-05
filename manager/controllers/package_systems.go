@@ -26,9 +26,9 @@ var PackageSystemsOpts = ListOpts{
 type PackageSystemItemCommon struct {
 	SystemIDAttribute
 	SystemDisplayName
-	InstalledEVRA string         `json:"installed_evra" csv:"installed_evra" query:"jsonb_path_query_array(update_data, '$ ? (@.status == \"Installed\")')->0->>'evra'" gorm:"column:installed_evra"`
-	AvailableEVRA string         `json:"available_evra" csv:"available_evra" query:"jsonb_path_query_array(update_data, '$ ? (@.status != \"Installed\")')-> -1 ->>'evra'" gorm:"column:available_evra"`
-	Updatable     bool           `json:"updatable" csv:"updatable" query:"(update_status(spkg.update_data) = 'Installable')" gorm:"column:updatable"`
+	InstalledEVRA string         `json:"installed_evra" csv:"installed_evra" query:"update_data->>'installed'" gorm:"column:installed_evra"`
+	AvailableEVRA string         `json:"available_evra" csv:"available_evra" query:"COALESCE(update_data->>'applicable', update_data->>'installable')" gorm:"column:available_evra"`
+	Updatable     bool           `json:"updatable" csv:"updatable" query:"(update_data->>'installable' IS NOT NULL)" gorm:"column:updatable"`
 	Tags          SystemTagsList `json:"tags" csv:"tags" query:"null" gorm:"-"`
 	BaselineAttributes
 }
@@ -43,7 +43,7 @@ type PackageSystemItemV3 struct {
 	SystemSatelliteManaged
 	BaselineIDAttr
 	OSAttributes
-	UpdateStatus string `json:"update_status" csv:"update_status" query:"CASE WHEN spkg.installable_id is not null THEN 'Installable' WHEN spkg.applicable_id is not null THEN 'Applicable' ELSE 'None' END" gorm:"column:update_status"`
+	UpdateStatus string `json:"update_status" csv:"update_status" query:"case when update_data ? 'installable' then 'Installable' when update_data ? 'applicable' then 'Applicable' else 'None' end" gorm:"column:update_status"`
 	SystemGroups
 }
 

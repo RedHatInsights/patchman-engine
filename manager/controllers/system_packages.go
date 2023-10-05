@@ -66,9 +66,7 @@ var SystemPackagesOpts = ListOpts{
 
 type SystemPackageDBLoad struct {
 	SystemPackagesAttrsV3
-	// helper to get Updates
-	InstallableEVRA string `json:"-" csv:"-" query:"pi.evra" gorm:"column:installable_evra"`
-	ApplicableEVRA  string `json:"-" csv:"-" query:"pa.evra" gorm:"column:applicable_evra"`
+	Updates []byte `json:"updates" query:"spkg.update_data" gorm:"column:updates"`
 	// a helper to get total number of systems
 	MetaTotalHelper
 }
@@ -175,16 +173,15 @@ func buildSystemPackageData(loaded []SystemPackageDBLoad) (int, []SystemPackageD
 	data := make([]SystemPackageDataV3, len(loaded))
 	for i, sp := range loaded {
 		data[i].SystemPackagesAttrsV3 = sp.SystemPackagesAttrsV3
-		// keep only latest installable and applicable
-		if len(sp.InstallableEVRA) > 0 && sp.InstallableEVRA != sp.EVRA {
-			data[i].Updates = append(data[i].Updates, models.PackageUpdate{
-				EVRA: sp.InstallableEVRA, Status: "Installable",
-			})
+		if sp.Updates == nil {
+			continue
 		}
-		if len(sp.ApplicableEVRA) > 0 && sp.ApplicableEVRA != sp.EVRA {
-			data[i].Updates = append(data[i].Updates, models.PackageUpdate{
-				EVRA: sp.ApplicableEVRA, Status: "Applicable",
-			})
+		installable, applicable := findLatestEVRA(sp)
+		if installable.EVRA != sp.EVRA {
+			data[i].Updates = append(data[i].Updates, installable)
+		}
+		if applicable.EVRA != sp.EVRA {
+			data[i].Updates = append(data[i].Updates, applicable)
 		}
 	}
 	return total, data

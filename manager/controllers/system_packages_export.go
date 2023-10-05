@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -85,14 +87,34 @@ func SystemPackagesExportHandler(c *gin.Context) {
 	OutputExportData(c, data)
 }
 
+func findLatestEVRA(pkg SystemPackageDBLoad) (installable models.PackageUpdate, applicable models.PackageUpdate) {
+	installable = models.PackageUpdate{
+		EVRA: pkg.EVRA,
+	}
+	applicable = installable
+	if pkg.Updates == nil {
+		return
+	}
+	var updates models.PackageUpdateData
+	if err := json.Unmarshal(pkg.Updates, &updates); err != nil {
+		panic(err)
+	}
+	if updates.Installable != "" {
+		installable.EVRA = updates.Installable
+		applicable.EVRA = updates.Installable
+	}
+	if updates.Applicable != "" {
+		applicable.EVRA = updates.Applicable
+	}
+	return
+}
+
 func buildSystemPackageInlineV2(pkgs []SystemPackageDBLoad) []SystemPackageInlineV2 {
 	data := make([]SystemPackageInlineV2, len(pkgs))
 	for i, v := range pkgs {
 		data[i].SystemPackagesAttrsCommon = v.SystemPackagesAttrsCommon
-		data[i].LatestEVRA = v.EVRA
-		if len(v.InstallableEVRA) > 0 {
-			data[i].LatestEVRA = v.InstallableEVRA
-		}
+		installable, _ := findLatestEVRA(v)
+		data[i].LatestEVRA = installable.EVRA
 	}
 	return data
 }
@@ -101,14 +123,9 @@ func buildSystemPackageInlineV3(pkgs []SystemPackageDBLoad) []SystemPackageInlin
 	data := make([]SystemPackageInlineV3, len(pkgs))
 	for i, v := range pkgs {
 		data[i].SystemPackagesAttrsV3 = v.SystemPackagesAttrsV3
-		data[i].LatestInstallable = v.EVRA
-		if len(v.InstallableEVRA) > 0 {
-			data[i].LatestInstallable = v.InstallableEVRA
-		}
-		data[i].LatestApplicable = data[i].LatestInstallable
-		if len(v.ApplicableEVRA) > 0 {
-			data[i].LatestApplicable = v.ApplicableEVRA
-		}
+		latestInstallable, latestApplicable := findLatestEVRA(v)
+		data[i].LatestInstallable = latestInstallable.EVRA
+		data[i].LatestApplicable = latestApplicable.EVRA
 	}
 	return data
 }
