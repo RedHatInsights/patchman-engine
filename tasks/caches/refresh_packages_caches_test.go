@@ -30,7 +30,7 @@ func TestGetCounts(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	err := getCounts(&_counts, &_acc)
+	err := getCounts(&_counts, _acc)
 	assert.Nil(t, err)
 	assert.Equal(t, 4, len(_counts))
 }
