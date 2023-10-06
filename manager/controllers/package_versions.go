@@ -46,10 +46,10 @@ func packagesNameID(db *gorm.DB, pkgName string) *gorm.DB {
 }
 
 func packageVersionsQuery(db *gorm.DB, acc int, groups map[string]string, packageNameIDs []int) *gorm.DB {
-	query := database.SystemPackages(db, acc, groups).
+	query := database.SystemPackageData(db, acc, groups).
 		Distinct(PackageVersionSelect).
 		Where("sp.stale = false").
-		Where("spkg.name_id in (?)", packageNameIDs)
+		Where("p.name_id in (?)", packageNameIDs)
 	return query
 }
 

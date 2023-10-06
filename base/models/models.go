@@ -122,10 +122,6 @@ type SystemPackage struct {
 	ApplicableID  *int64
 }
 
-func (SystemPackage) TableName() string {
-	return "system_package2"
-}
-
 type PackageUpdate struct {
 	EVRA     string `json:"evra"`
 	Advisory string `json:"-"` // don't show it in API, we can probably remove it completely later
