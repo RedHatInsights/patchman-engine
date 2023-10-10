@@ -26,24 +26,29 @@ func SystemAdvisories(tx *gorm.DB, accountID int, groups map[string]string) *gor
 		Joins("JOIN system_advisories sa on sa.system_id = sp.id AND sa.rh_account_id = ?", accountID)
 }
 
-func PackageSystemDataShort(tx *gorm.DB, accountID int) *gorm.DB {
-	return tx.Select(`pd.package_name_id as name_id,
-		 					 jsonb_object_keys(pd.update_data)::bigint as system_id,
-                             jsonb_path_query(update_data, '$.*') as update_data`).
-		Table("package_system_data pd").
-		Where("pd.rh_account_id = ?", accountID)
+func SystemPackageDataShort(tx *gorm.DB, accountID int) *gorm.DB {
+	return tx.Select(`system_id,
+                      jsonb_object_keys(update_data)::bigint as package_id,
+                      jsonb_path_query(update_data, '$.*') as update_data`).
+		Table("system_package_data").
+		Where("rh_account_id = ?", accountID)
 }
 
 func SystemPackageData(tx *gorm.DB, accountID int, groups map[string]string) *gorm.DB {
+	spkg := SystemPackageDataShort(tx, accountID)
 	return Systems(tx, accountID, groups).
-		Joins(`JOIN (SELECT system_id,
-                            jsonb_object_keys(update_data)::bigint as package_id,
-                            jsonb_path_query(update_data, '$.*') as update_data
-                       FROM system_package_data
-                      WHERE rh_account_id = ?) as spkg
-                 ON spkg.system_id = sp.id`, accountID).
+		Joins(`JOIN (?) as spkg
+                 ON spkg.system_id = sp.id`, spkg).
 		Joins("JOIN package p on p.id = spkg.package_id").
 		Joins("JOIN package_name pn on pn.id = p.name_id")
+}
+
+func PackageSystemDataShort(tx *gorm.DB, accountID int) *gorm.DB {
+	return tx.Select(`pd.package_name_id as name_id,
+					  jsonb_object_keys(pd.update_data)::bigint as system_id,
+					  jsonb_path_query(update_data, '$.*') as update_data`).
+		Table("package_system_data pd").
+		Where("pd.rh_account_id = ?", accountID)
 }
 
 func PackageSystemData(tx *gorm.DB, accountID int, groups map[string]string) *gorm.DB {
