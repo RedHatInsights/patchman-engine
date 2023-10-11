@@ -32,11 +32,12 @@ type Config struct {
 	DBWorkMem                int
 
 	// API
-	PublicPort      int
-	PrivatePort     int
-	MetricsPort     int
-	MetricsPath     string
-	ResponseTimeout time.Duration
+	PublicPort         int
+	PrivatePort        int
+	MetricsPort        int
+	MetricsPath        string
+	ResponseTimeout    time.Duration
+	MaxRequestBodySize int64
 
 	// kafka
 	KafkaAddress           string
@@ -169,6 +170,7 @@ func initAPIromClowder() {
 	Cfg.MetricsPort = clowder.LoadedConfig.MetricsPort
 	Cfg.MetricsPath = clowder.LoadedConfig.MetricsPath
 	Cfg.ResponseTimeout = time.Duration(GetIntEnvOrDefault("RESPONSE_TIMEOUT", 60))
+	Cfg.MaxRequestBodySize = GetInt64EnvOrDefault("MAX_REQUEST_BODY_SIZE", 1*1024*1024)
 }
 
 func initKafkaFromClowder() {
