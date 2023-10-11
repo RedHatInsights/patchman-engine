@@ -142,7 +142,7 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListM
 	var limit int
 	var offset int
 	if err := c.ShouldBindJSON(&req); err != nil {
-		LogAndRespBadRequest(c, err, "Invalid request body")
+		LogAndRespBadRequest(c, err, fmt.Sprintf("Invalid request body: %s", err.Error()))
 		return nil, nil, err
 	}
 	acc := c.GetInt(middlewares.KeyAccount)

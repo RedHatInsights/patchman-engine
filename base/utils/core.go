@@ -80,6 +80,15 @@ func parseIntOrFail(envname, valueStr string) int {
 	return value
 }
 
+// parseInt64OrFail Convert string to int or panic if not possible
+func parseInt64OrFail(envname, valueStr string) int64 {
+	value, err := strconv.ParseInt(valueStr, 10, 64)
+	if err != nil {
+		panic(fmt.Sprintf("Unable convert '%s' env var '%s' to int!", envname, valueStr))
+	}
+	return value
+}
+
 // GetIntEnvOrFail Load int environment variable or fail
 func GetIntEnvOrFail(envname string) int {
 	valueStr := GetenvOrFail(envname)
@@ -93,6 +102,15 @@ func GetIntEnvOrDefault(envname string, defval int) int {
 		return defval
 	}
 	return parseIntOrFail(envname, valueStr)
+}
+
+// GetInt64EnvOrDefault Load int64 environment variable or load default
+func GetInt64EnvOrDefault(envname string, defval int64) int64 {
+	valueStr := os.Getenv(envname)
+	if valueStr == "" {
+		return defval
+	}
+	return parseInt64OrFail(envname, valueStr)
 }
 
 // SetDefaultEnvOrFail Set environment variable if not already or fail
