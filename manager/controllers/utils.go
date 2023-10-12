@@ -600,6 +600,32 @@ func systemsIDs(c *gin.Context, systems []SystemsID, meta *ListMeta) ([]string, 
 	return ids, nil
 }
 
+func systemsSatelliteIDs(c *gin.Context, systems []SystemsSatelliteManagedID, meta *ListMeta,
+) (IDsSatelliteManagedResponse, error) {
+	var total int
+	resp := IDsSatelliteManagedResponse{}
+	if len(systems) > 0 {
+		total = systems[0].Total
+	}
+	if meta.Offset > total {
+		err := errors.New("Offset")
+		LogAndRespBadRequest(c, err, InvalidOffsetMsg)
+		return resp, err
+	}
+	if systems == nil {
+		return resp, nil
+	}
+	ids := make([]string, len(systems))
+	data := make([]IDSatelliteManaged, len(systems))
+	for i, x := range systems {
+		ids[i] = x.ID
+		data[i] = IDSatelliteManaged{x.ID, x.SatelliteManaged}
+	}
+	resp.IDs = ids
+	resp.Data = data
+	return resp, nil
+}
+
 type SystemDBLookupSlice []SystemDBLookup
 type AdvisorySystemDBLookupSlice []AdvisorySystemDBLookup
 type BaselineSystemsDBLookupSlice []BaselineSystemsDBLookup

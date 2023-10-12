@@ -3771,7 +3771,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.IDsResponse"
+                                    "$ref": "#/components/schemas/controllers.IDsSatelliteManagedResponse"
                                 }
                             }
                         }
@@ -6280,6 +6280,17 @@
                     }
                 }
             },
+            "controllers.IDSatelliteManaged": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "satellite_managed": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "controllers.IDStatus": {
                 "type": "object",
                 "properties": {
@@ -6294,6 +6305,23 @@
             "controllers.IDsResponse": {
                 "type": "object",
                 "properties": {
+                    "ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "controllers.IDsSatelliteManagedResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.IDSatelliteManaged"
+                        }
+                    },
                     "ids": {
                         "type": "array",
                         "items": {
