@@ -42,8 +42,20 @@ type IDStatus struct {
 	Status string `json:"status"`
 }
 
+type IDSatelliteManaged struct {
+	ID               string `json:"id"`
+	SatelliteManaged bool   `json:"satellite_managed"`
+}
+
 type IDsStatusResponse struct {
 	Data []IDStatus `json:"data"`
+	// backward compatibility
+	// TODO: delete later once UI is using only the new `data` field
+	IDsResponse
+}
+
+type IDsSatelliteManagedResponse struct {
+	Data []IDSatelliteManaged `json:"data"`
 	// backward compatibility
 	// TODO: delete later once UI is using only the new `data` field
 	IDsResponse

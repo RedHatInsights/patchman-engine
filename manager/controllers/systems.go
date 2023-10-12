@@ -35,6 +35,12 @@ type SystemsID struct {
 	MetaTotalHelper
 }
 
+type SystemsSatelliteManagedID struct {
+	ID string `query:"sp.inventory_id" gorm:"column:id"`
+	SystemSatelliteManaged
+	MetaTotalHelper
+}
+
 // nolint: lll
 type SystemDBLookupCommon struct {
 	SystemIDAttribute
@@ -296,7 +302,7 @@ func SystemsListHandler(c *gin.Context) {
 // @Param    filter[system_profile][ansible][controller_version]    query   string  false   "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]                          query   string  false   "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]                 query   string  false   "Filter systems by mssql version"
-// @Success 200 {object} IDsResponse
+// @Success 200 {object} IDsSatelliteManagedResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/systems [get]
@@ -307,18 +313,17 @@ func SystemsListIDsHandler(c *gin.Context) {
 		return
 	} // Error handled in method itself
 
-	var sids []SystemsID
+	var sids []SystemsSatelliteManagedID
 
 	if err = query.Scan(&sids).Error; err != nil {
 		LogAndRespError(c, err, "db error")
 		return
 	}
 
-	ids, err := systemsIDs(c, sids, meta)
+	resp, err := systemsSatelliteIDs(c, sids, meta)
 	if err != nil {
 		return // Error handled in method itself
 	}
-	var resp = IDsResponse{IDs: ids}
 	c.JSON(http.StatusOK, &resp)
 }
 
