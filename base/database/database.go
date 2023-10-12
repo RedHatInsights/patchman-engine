@@ -24,7 +24,7 @@ func OnConflictUpdateMulti(db *gorm.DB, keys []string, updateCols ...string) *go
 
 type UpExpr struct {
 	Name string
-	Expr string
+	Expr interface{}
 }
 
 func OnConflictDoUpdateExpr(db *gorm.DB, keys []string, updateExprs ...UpExpr) *gorm.DB {

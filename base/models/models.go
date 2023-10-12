@@ -122,6 +122,26 @@ type SystemPackage struct {
 	ApplicableID  *int64
 }
 
+type SystemPackageData struct {
+	RhAccountID int   `gorm:"primaryKey"`
+	SystemID    int64 `gorm:"primaryKey"`
+	UpdateData  []byte
+}
+
+func (SystemPackageData) TableName() string {
+	return "system_package_data"
+}
+
+type PackageSystemData struct {
+	RhAccountID   int   `gorm:"primaryKey"`
+	PackageNameID int64 `gorm:"primaryKey"`
+	UpdateData    []byte
+}
+
+func (PackageSystemData) TableName() string {
+	return "package_system_data"
+}
+
 type PackageUpdate struct {
 	EVRA     string `json:"evra"`
 	Advisory string `json:"-"` // don't show it in API, we can probably remove it completely later
@@ -131,8 +151,14 @@ type PackageUpdate struct {
 type PackageUpdateData struct {
 	Installed   string `json:"installed,omitempty"`
 	Installable string `json:"installable,omitempty"`
-	Applicable  string `'json:"applicable,omitempty"`
+	Applicable  string `json:"applicable,omitempty"`
 }
+
+// for a given system holds map[package_id]->update_data_json
+type SystemPackageUpdateData map[int64]PackageUpdateData
+
+// for given package_name holds map[system_id]->update_data_json
+type PackageSystemUpdateData map[int64]PackageUpdateData
 
 type DeletedSystem struct {
 	InventoryID string
