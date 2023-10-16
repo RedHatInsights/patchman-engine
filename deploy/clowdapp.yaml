@@ -34,7 +34,6 @@ objects:
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
-        - {name: KAFKA_SSL_ENABLED, value: '${KAFKA_SSL_ENABLED}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
         - {name: ENABLE_REPO_BASED_RE_EVALUATION, value: '${ENABLE_REPO_BASED_RE_EVALUATION}'}
         - {name: ENABLE_RECALC_MESSAGES_SEND, value: '${ENABLE_RECALC_MESSAGES_SEND}'}
@@ -117,7 +116,6 @@ objects:
         - {name: ENABLE_BASELINE_CHANGE_EVAL, value: '${ENABLE_BASELINE_CHANGE_EVAL}'}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
-        - {name: KAFKA_SSL_ENABLED, value: '${KAFKA_SSL_ENABLED}'}
         - {name: EVAL_TOPIC, value: '${EVAL_TOPIC_MANAGER}'}
         - {name: ENABLE_PACKAGE_CACHE, value: '${ENABLE_PACKAGE_CACHE_MANAGER}'}
         - {name: RESPONSE_TIMEOUT, value: '${RESPONSE_TIMEOUT}'}
@@ -163,7 +161,6 @@ objects:
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
-        - {name: KAFKA_SSL_ENABLED, value: '${KAFKA_SSL_ENABLED}'}
         - {name: EVENTS_TOPIC, value: platform.inventory.events}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
@@ -211,7 +208,6 @@ objects:
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
-        - {name: KAFKA_SSL_ENABLED, value: '${KAFKA_SSL_ENABLED}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
@@ -280,7 +276,6 @@ objects:
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
-        - {name: KAFKA_SSL_ENABLED, value: '${KAFKA_SSL_ENABLED}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
@@ -346,7 +341,6 @@ objects:
                                                        key: vmaas-sync-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
-        - {name: KAFKA_SSL_ENABLED, value: '${KAFKA_SSL_ENABLED}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
         - {name: ENABLE_REPO_BASED_RE_EVALUATION, value: '${ENABLE_REPO_BASED_RE_EVALUATION}'}
         - {name: ENABLE_RECALC_MESSAGES_SEND, value: '${ENABLE_RECALC_MESSAGES_SEND}'}
@@ -724,7 +718,6 @@ parameters:
 - {name: GIN_MODE, value: 'release'} # Gin webframework running mode
 - {name: PACKAGE_CACHE_SIZE, value: '1000000'}
 - {name: PACKAGE_NAME_CACHE_SIZE, value: '60000'}
-- {name: KAFKA_SSL_ENABLED, value: 'true'}
 - {name: KAFKA_READER_MAX_ATTEMPTS, value: '3'} # Limit of how many attempts will be made before kafka read error.
 - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '10'} # Limit of how many attempts will be made before kafka write error.
 - {name: VMAAS_CALL_MAX_RETRIES, value: '8'} # Limit of how many unsuccessful vmaas calls are allowed before panic.
