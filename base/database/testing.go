@@ -9,7 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 func DebugWithCachesCheck(part string, fun func()) {
@@ -246,13 +248,28 @@ func CheckEVRAsInDBSynced(t *testing.T, nExpected int, synced bool, evras ...str
 }
 
 func CheckSystemPackages(t *testing.T, accountID int, systemID int64, nExpected int, packageIDs ...int64) {
-	var systemPackages []models.SystemPackage
-	query := Db.Where("rh_account_id = ? AND system_id = ?", accountID, systemID)
+	// check system_package_data
+	var foundIDs []int64
+	sysQuery := Db.Table(`(SELECT jsonb_object_keys(update_data)::bigint as package_id
+							 FROM system_package_data
+							WHERE rh_account_id = ? AND system_id = ?) as t`, accountID, systemID)
 	if len(packageIDs) > 0 {
-		query = query.Where("package_id IN (?)", packageIDs)
+		sysQuery = sysQuery.Where("package_id in (?)", packageIDs)
 	}
-	assert.Nil(t, query.Find(&systemPackages).Error)
-	assert.Equal(t, nExpected, len(systemPackages))
+	assert.Nil(t, sysQuery.Pluck("package_id", &foundIDs).Error)
+	assert.Equal(t, nExpected, len(foundIDs))
+
+	// check package_system_data
+	var foundNameIDs []int64
+	pkgQuery := Db.Table("package_system_data psd").
+		Where("psd.rh_account_id = ? AND psd.update_data->? IS NOT NULL", accountID, strconv.FormatInt(systemID, 10))
+	if len(packageIDs) > 0 {
+		pkgQuery = pkgQuery.Joins("JOIN package p ON p.name_id = psd.package_name_id").
+			Where("p.id in (?)", packageIDs)
+	}
+
+	assert.Nil(t, pkgQuery.Pluck("package_name_id", &foundNameIDs).Error)
+	assert.Equal(t, nExpected, len(foundNameIDs))
 }
 
 func CheckSystemRepos(t *testing.T, rhAccountID int, systemID int64, repoIDs []int64) {
@@ -286,15 +303,37 @@ func DeleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int6
 }
 
 func DeleteSystemPackages(t *testing.T, accountID int, systemID int64, pkgIDs ...int64) {
-	query := Db.Model(&models.SystemPackage{}).Where("rh_account_id = ? AND system_id = ?", accountID, systemID)
+	// delete system_package_data
 	if len(pkgIDs) > 0 {
-		query = query.Where("package_id in (?)", pkgIDs)
+		keys := make([]string, len(pkgIDs))
+		for i, pid := range pkgIDs {
+			keys[i] = strconv.FormatInt(pid, 10)
+		}
+		assert.Nil(t, Db.Model(&models.SystemPackageData{}).
+			Where("rh_account_id = ? and system_id = ?", accountID, systemID).
+			Update("update_data", gorm.Expr("update_data - ?::text[]", pq.StringArray(keys))).Error)
+		// remove completely if there's no package left
+		assert.Nil(t, Db.Where("rh_account_id = ? and system_id = ? and update_data = '{}'::jsonb", accountID, systemID).
+			Delete(&models.SystemPackageData{}).Error)
+	} else {
+		assert.Nil(t, Db.Where("rh_account_id = ? AND system_id = ?", accountID, systemID).
+			Delete(&models.SystemPackageData{}).Error)
 	}
-	assert.Nil(t, query.Delete(&models.SystemPackage{}).Error)
 
-	var count int64 // ensure deleted
-	assert.Nil(t, query.Count(&count).Error)
-	assert.Equal(t, int64(0), count)
+	// delete package_system_data
+	systemIDKey := strconv.FormatInt(systemID, 10)
+	query := Db.Table("package_system_data psd").
+		Where("psd.rh_account_id = ? AND psd.update_data->? IS NOT NULL", accountID, systemIDKey)
+	if len(pkgIDs) > 0 {
+		query.Where("package_name_id IN (SELECT name_id FROM package WHERE id IN (?))", pkgIDs)
+	}
+	assert.Nil(t, query.Update("update_data", gorm.Expr("update_data - ?", systemIDKey)).Error)
+	// remove completely if there's no system left
+	query = Db.Where("rh_account_id = ? AND update_data = '{}'::jsonb", accountID)
+	if len(pkgIDs) > 0 {
+		query.Where("package_name_id IN (SELECT name_id FROM package WHERE id IN (?))", pkgIDs)
+	}
+	assert.Nil(t, query.Delete(&models.PackageSystemData{}).Error)
 }
 
 func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int64, repoIDs []int64) {
@@ -306,8 +345,14 @@ func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int64, repoIDs []
 func DeleteNewlyAddedPackages(t *testing.T) {
 	query := Db.Table("package p").
 		Where("id >= 100").
-		Where("NOT EXISTS (SELECT 1 FROM system_package2 sp WHERE" +
-			" p.id = sp.package_id OR p.id = sp.installable_id OR p.id = sp.applicable_id)")
+		Where(`NOT EXISTS (SELECT 1
+							 FROM (SELECT package_name_id,
+										  jsonb_path_query(update_data, '$.*') as update_data
+									 FROM package_system_data) as psd
+							WHERE p.name_id = psd.package_name_id
+							  AND p.evra in (psd.update_data->>'installed', psd.update_data->>'installable',
+											 psd.update_data->>'applicable')
+						  )`)
 	assert.Nil(t, query.Delete(models.Package{}).Error)
 	var cnt int64
 	assert.Nil(t, query.Count(&cnt).Error)
