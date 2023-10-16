@@ -50,6 +50,7 @@ func RunManager() {
 	middlewares.SetSwagger(app, endpointsConfig)
 	app.Use(middlewares.WithTimeout(utils.Cfg.ResponseTimeout))
 	app.Use(middlewares.LimitRequestBodySize(utils.Cfg.MaxRequestBodySize))
+	app.Use(middlewares.LimitRequestHeaders(utils.Cfg.MaxHeaderCount))
 	app.HandleMethodNotAllowed = true
 
 	// routes

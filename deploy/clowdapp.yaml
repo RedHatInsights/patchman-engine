@@ -124,6 +124,7 @@ objects:
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_MANAGER}'}
         - {name: ENABLE_SATELLITE_FUNCTIONALITY, value: '${ENABLE_SATELLITE_FUNCTIONALITY}'}
         - {name: MAX_REQUEST_BODY_SIZE, value: '${MAX_REQUEST_BODY_SIZE}'}
+        - {name: MAX_HEADER_COUNT, value: '${MAX_HEADER_COUNT}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_MANAGER}', memory: '${RES_LIMIT_MEM_MANAGER}'}
@@ -579,6 +580,7 @@ parameters:
 - {name: ENABLE_PROFILER_MANAGER, value: 'false'}
 - {name: GOMEMLIMIT_MANAGER, value: '230MiB'} # set to 90% of the default memory limit 256Mi (don't forget `B`)
 - {name: MAX_REQUEST_BODY_SIZE, value: '1048576'} # limit request body size, in bytes (default 1MB)
+- {name: MAX_HEADER_COUNT, value: '50'} # limit number of request headers
 
 # Listener
 - {name: REPLICAS_LISTENER, value: '1'}

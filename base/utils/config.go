@@ -38,6 +38,7 @@ type Config struct {
 	MetricsPath        string
 	ResponseTimeout    time.Duration
 	MaxRequestBodySize int64
+	MaxHeaderCount     int
 
 	// kafka
 	KafkaAddress           string
@@ -170,6 +171,7 @@ func initAPIromClowder() {
 	Cfg.MetricsPath = clowder.LoadedConfig.MetricsPath
 	Cfg.ResponseTimeout = time.Duration(GetIntEnvOrDefault("RESPONSE_TIMEOUT", 60))
 	Cfg.MaxRequestBodySize = GetInt64EnvOrDefault("MAX_REQUEST_BODY_SIZE", 1*1024*1024)
+	Cfg.MaxHeaderCount = GetIntEnvOrDefault("MAX_HEADER_COUNT", 50)
 }
 
 func initKafkaFromClowder() {
