@@ -40,6 +40,7 @@ type Config struct {
 	MaxRequestBodySize int64
 	MaxHeaderCount     int
 	MaxGinConnections  int
+	Ratelimit          int
 
 	// kafka
 	KafkaAddress           string
@@ -174,6 +175,7 @@ func initAPIromClowder() {
 	Cfg.MaxRequestBodySize = GetInt64EnvOrDefault("MAX_REQUEST_BODY_SIZE", 1*1024*1024)
 	Cfg.MaxHeaderCount = GetIntEnvOrDefault("MAX_HEADER_COUNT", 50)
 	Cfg.MaxGinConnections = GetIntEnvOrDefault("MAX_GIN_CONNECTIONS", 50)
+	Cfg.Ratelimit = GetIntEnvOrDefault("RATELIMIT", 100)
 }
 
 func initKafkaFromClowder() {

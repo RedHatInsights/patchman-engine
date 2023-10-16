@@ -45,6 +45,7 @@ func RunManager() {
 	app.Use(gin.Recovery())
 	middlewares.Prometheus().Use(app)
 	app.Use(middlewares.MaxConnections(utils.Cfg.MaxGinConnections))
+	app.Use(middlewares.Ratelimit(utils.Cfg.Ratelimit))
 	app.Use(middlewares.RequestResponseLogger())
 	app.Use(gzip.Gzip(gzip.DefaultCompression))
 	endpointsConfig := getEndpointsConfig()

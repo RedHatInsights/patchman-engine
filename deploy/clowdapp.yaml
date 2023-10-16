@@ -126,6 +126,7 @@ objects:
         - {name: MAX_REQUEST_BODY_SIZE, value: '${MAX_REQUEST_BODY_SIZE}'}
         - {name: MAX_HEADER_COUNT, value: '${MAX_HEADER_COUNT}'}
         - {name: MAX_GIN_CONNECTIONS, value: '${MAX_GIN_CONNECTIONS}'}
+        - {name: RATELIMIT, value: '${RATELIMIT}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_MANAGER}', memory: '${RES_LIMIT_MEM_MANAGER}'}
@@ -583,6 +584,7 @@ parameters:
 - {name: MAX_REQUEST_BODY_SIZE, value: '1048576'} # limit request body size, in bytes (default 1MB)
 - {name: MAX_HEADER_COUNT, value: '50'} # limit number of request headers
 - {name: MAX_GIN_CONNECTIONS, value: '50'}
+- {name: RATELIMIT, value: '100'} # requests per second for leaky bucket rate limiter
 
 # Listener
 - {name: REPLICAS_LISTENER, value: '1'}
