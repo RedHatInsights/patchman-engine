@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/ratelimit"
 )
 
 func LimitRequestBodySize(size int64) gin.HandlerFunc {
@@ -29,6 +30,14 @@ func MaxConnections(max int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		conns <- struct{}{}
 		defer func() { <-conns }()
+		c.Next()
+	}
+}
+
+func Ratelimit(max int) gin.HandlerFunc {
+	rl := ratelimit.New(max)
+	return func(c *gin.Context) {
+		rl.Take()
 		c.Next()
 	}
 }
