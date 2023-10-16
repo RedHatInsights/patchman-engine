@@ -23,3 +23,12 @@ func LimitRequestHeaders(maxHeaderCount int) gin.HandlerFunc {
 		}
 	}
 }
+
+func MaxConnections(max int) gin.HandlerFunc {
+	conns := make(chan struct{}, max)
+	return func(c *gin.Context) {
+		conns <- struct{}{}
+		defer func() { <-conns }()
+		c.Next()
+	}
+}

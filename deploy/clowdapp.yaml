@@ -127,6 +127,7 @@ objects:
         - {name: ENABLE_SATELLITE_FUNCTIONALITY, value: '${ENABLE_SATELLITE_FUNCTIONALITY}'}
         - {name: MAX_REQUEST_BODY_SIZE, value: '${MAX_REQUEST_BODY_SIZE}'}
         - {name: MAX_HEADER_COUNT, value: '${MAX_HEADER_COUNT}'}
+        - {name: MAX_GIN_CONNECTIONS, value: '${MAX_GIN_CONNECTIONS}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_MANAGER}', memory: '${RES_LIMIT_MEM_MANAGER}'}
@@ -587,6 +588,7 @@ parameters:
 - {name: GOMEMLIMIT_MANAGER, value: '230MiB'} # set to 90% of the default memory limit 256Mi (don't forget `B`)
 - {name: MAX_REQUEST_BODY_SIZE, value: '1048576'} # limit request body size, in bytes (default 1MB)
 - {name: MAX_HEADER_COUNT, value: '50'} # limit number of request headers
+- {name: MAX_GIN_CONNECTIONS, value: '50'}
 
 # Listener
 - {name: REPLICAS_LISTENER, value: '1'}
