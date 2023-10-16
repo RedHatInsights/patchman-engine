@@ -117,7 +117,6 @@ func initDBFromEnv() {
 }
 
 func initKafkaFromEnv() {
-	Cfg.KafkaSslEnabled = GetBoolEnvOrDefault("KAFKA_SSL_ENABLED", Cfg.KafkaSslEnabled)
 	Cfg.KafkaSslCert = Getenv("KAFKA_SSL_CERT", Cfg.KafkaSslCert)
 	Cfg.KafkaSslSkipVerify = GetBoolEnvOrDefault("KAFKA_SSL_SKIP_VERIFY", false)
 	Cfg.KafkaUsername = Getenv("KAFKA_USERNAME", Cfg.KafkaUsername)
@@ -191,8 +190,6 @@ func initKafkaFromClowder() {
 			} else {
 				Cfg.KafkaSslCert = *brokerCfg.Cacert
 			}
-		}
-		if Cfg.KafkaSslEnabled {
 			if brokerCfg.Sasl.Username != nil {
 				Cfg.KafkaUsername = *brokerCfg.Sasl.Username
 				Cfg.KafkaPassword = *brokerCfg.Sasl.Password
