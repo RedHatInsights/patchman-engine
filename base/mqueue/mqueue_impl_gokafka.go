@@ -15,6 +15,7 @@ import (
 	"github.com/segmentio/kafka-go/sasl"
 	kafkaPlain "github.com/segmentio/kafka-go/sasl/plain"
 	kafkaScram "github.com/segmentio/kafka-go/sasl/scram"
+	log "github.com/sirupsen/logrus"
 )
 
 type kafkaGoReaderImpl struct {
@@ -30,6 +31,12 @@ func (t *kafkaGoReaderImpl) HandleMessages(handler MessageHandler) {
 			}
 			utils.LogError("err", err.Error(), "unable to read message from Kafka reader")
 			panic(err)
+		}
+		if log.IsLevelEnabled(log.TraceLevel) {
+			utils.LogTrace("count", len(m.Headers), "kafka message headers")
+			for _, h := range m.Headers {
+				utils.LogTrace("key", h.Key, "value", string(h.Value), "kafka message header")
+			}
 		}
 		// At this level, all errors are fatal
 		kafkaMessage := KafkaMessage{Key: m.Key, Value: m.Value}
