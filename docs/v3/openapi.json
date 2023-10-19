@@ -6519,6 +6519,9 @@
                     "rhsm": {
                         "type": "string"
                     },
+                    "satellite_managed": {
+                        "type": "boolean"
+                    },
                     "tags": {
                         "type": "array",
                         "items": {

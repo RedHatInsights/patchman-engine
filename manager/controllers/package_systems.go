@@ -40,6 +40,7 @@ type PackageSystemItemV2 struct {
 //nolint:lll
 type PackageSystemItemV3 struct {
 	PackageSystemItemCommon
+	SystemSatelliteManaged
 	BaselineIDAttr
 	OSAttributes
 	UpdateStatus string `json:"update_status" csv:"update_status" query:"update_status(spkg.update_data)" gorm:"column:update_status"`
