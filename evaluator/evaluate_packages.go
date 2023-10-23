@@ -49,11 +49,10 @@ func lazySavePackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV3Response) error {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("lazy-package-save"))
 
 	missingPackages := getMissingPackages(tx, vmaasData)
-	err := updatePackageDB(tx, &missingPackages)
+	err := updatePackageDB(&missingPackages)
 	if err != nil {
 		return errors.Wrap(err, "packages bulk insert failed")
 	}
-	updatePackageCache(missingPackages)
 	return nil
 }
 
@@ -83,7 +82,7 @@ func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV3Response) models.
 		} else {
 			// name is unknown, insert into package_name
 			pkgName := models.PackageName{Name: parsed.Name}
-			err := updatePackageNameDB(tx, &pkgName)
+			err := updatePackageNameDB(&pkgName)
 			if err != nil {
 				utils.LogError("err", err.Error(), "nevra", nevra, "unknown package name insert failed")
 			}
@@ -100,52 +99,26 @@ func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV3Response) models.
 	return packages
 }
 
-func updatePackageDB(tx *gorm.DB, missing *models.PackageSlice) error {
-	// tx.Create() also updates packages with their IDs
+func updatePackageDB(missing *models.PackageSlice) error {
+	// autonomous transaction needs to be committed even if evaluation fails
 	if len(*missing) > 0 {
-		err := tx.Transaction(func(tx2 *gorm.DB) error {
-			return tx2.Clauses(clause.OnConflict{DoNothing: true}).Create(missing).Error
-		})
-		return err
+		tx := database.Db.Begin()
+		defer tx.Commit()
+		// tx.Create() also updates packages with their IDs
+		return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(missing).Error
 	}
 	return nil
 }
 
-func updatePackageNameDB(tx *gorm.DB, missing *models.PackageName) error {
-	// TODO: use generics once we start using go1.18
-	err := tx.Transaction(func(tx2 *gorm.DB) error {
-		return tx2.Clauses(clause.OnConflict{DoNothing: true}).Create(missing).Error
-	})
-	return err
-}
-
-func updatePackageCache(missing models.PackageSlice) {
-	utils.LogTrace("updatePackageCache")
-	emptyByteSlice := make([]byte, 0)
-	for _, dbPkg := range missing {
-		name, ok := memoryPackageCache.GetNameByID(dbPkg.NameID)
-		if !ok {
-			utils.LogError("name_id", dbPkg.NameID, "name_id missing in memoryPackageCache")
-			continue
-		}
-		descHash := emptyByteSlice
-		summaryHash := emptyByteSlice
-		if dbPkg.DescriptionHash != nil {
-			descHash = *dbPkg.DescriptionHash
-		}
-		if dbPkg.SummaryHash != nil {
-			summaryHash = *dbPkg.SummaryHash
-		}
-		pkg := PackageCacheMetadata{
-			ID:              dbPkg.ID,
-			NameID:          dbPkg.NameID,
-			Name:            name,
-			Evra:            dbPkg.EVRA,
-			DescriptionHash: descHash,
-			SummaryHash:     summaryHash,
-		}
-		memoryPackageCache.Add(&pkg)
+func updatePackageNameDB(missing *models.PackageName) error {
+	// autonomous transaction needs to be committed even if evaluation fails
+	if missing != nil {
+		tx := database.Db.Begin()
+		defer tx.Commit()
+		// tx.Create() also updates packages with their IDs
+		return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(missing).Error
 	}
+	return nil
 }
 
 // Find relevant package data based on vmaas results
