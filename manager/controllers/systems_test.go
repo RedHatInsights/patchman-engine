@@ -167,10 +167,10 @@ func TestSystemsWorkloadEscaping2(t *testing.T) {
 func TestSystemsPackagesCount(t *testing.T) {
 	output := testSystems(t, "/?sort=-packages_installed,id", 3)
 	assert.Equal(t, 5, len(output.Data))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output.Data[0].ID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000015", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output.Data[0].Attributes.DisplayName)
-	assert.Equal(t, 2, output.Data[0].Attributes.PackagesInstalled)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000015", output.Data[0].Attributes.DisplayName)
+	assert.Equal(t, 3, output.Data[0].Attributes.PackagesInstalled)
 }
 
 func TestSystemsFilterAdvCount1(t *testing.T) {

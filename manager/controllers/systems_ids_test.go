@@ -95,7 +95,7 @@ func TestSystemsIDsWorkloads3(t *testing.T) {
 func TestSystemsIDsPackagesCount(t *testing.T) {
 	output := testSystemsIDs(t, "/?sort=-packages_installed,id", 3)
 	assert.Equal(t, 5, len(output.IDs))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output.IDs[0])
+	assert.Equal(t, "00000000-0000-0000-0000-000000000015", output.IDs[0])
 }
 
 func TestSystemsIDsFilterAdvCount1(t *testing.T) {
