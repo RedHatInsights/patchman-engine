@@ -110,7 +110,7 @@ func TestEvaluateYum(t *testing.T) {
 	expectedAddedAdvisories := []string{"RH-1", "RH-2", "RHSA-2021:3801"}
 	expectedAdvisoryIDs := []int64{1, 2, 14} // advisories expected to be paired to the system after evaluation
 	oldSystemAdvisoryIDs := []int64{1, 2}    // old advisories paired with the system
-	expectedPackageIDs := []int64{1, 2}
+	expectedPackageIDs := []int64{1, 2, 105}
 
 	database.DeleteSystemAdvisories(t, sysID, expectedAdvisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
@@ -124,8 +124,8 @@ func TestEvaluateYum(t *testing.T) {
 	assert.NoError(t, err)
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
-	database.CheckSystemJustEvaluated(t, ID, 3, 1, 1,
-		1, 2, 2, false)
+	database.CheckSystemPackages(t, rhAccountID, sysID, len(expectedPackageIDs), expectedPackageIDs...)
+	database.CheckSystemJustEvaluated(t, ID, 3, 1, 1, 1, 3, 3, false)
 
 	database.DeleteSystemPackages(t, rhAccountID, sysID, expectedPackageIDs...)
 	database.DeleteSystemAdvisories(t, sysID, advisoryIDs)
