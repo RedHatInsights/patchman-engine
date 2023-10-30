@@ -366,7 +366,9 @@
                                 "stale",
                                 "status",
                                 "template",
-                                "groups"
+                                "groups",
+                                "satellite_managed",
+                                "built_pkgcache"
                             ]
                         }
                     },
@@ -422,6 +424,22 @@
                         "name": "filter[os]",
                         "in": "query",
                         "description": "Filter OS version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[satellite_managed]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[built_pkgcache]",
+                        "in": "query",
+                        "description": "Filter",
                         "schema": {
                             "type": "string"
                         }
@@ -3446,6 +3464,14 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "filter[satellite_managed]",
+                        "in": "query",
+                        "description": "Filter systems managed by satellite",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -4354,6 +4380,14 @@
                         }
                     },
                     {
+                        "name": "filter[satellite_managed]",
+                        "in": "query",
+                        "description": "Filter systems managed by satellite",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[updatable]",
                         "in": "query",
                         "description": "Filter",
@@ -4531,7 +4565,9 @@
                                 "stale",
                                 "packages_installed",
                                 "baseline_name",
-                                "groups"
+                                "groups",
+                                "satellite_managed",
+                                "built_pkgcache"
                             ]
                         }
                     },
@@ -4649,6 +4685,22 @@
                     },
                     {
                         "name": "filter[baseline_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[satellite_managed]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[built_pkgcache]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
