@@ -199,7 +199,7 @@ func systemsCommon(c *gin.Context, apiver int) (*gorm.DB, *ListMeta, []string, e
 // @Produce  json
 // @Param    limit      query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset     query   int     false   "Offset for paging"
-// @Param    sort       query   string  false   "Sort field" Enums(id,display_name,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale,packages_installed,baseline_name,groups)
+// @Param    sort       query   string  false   "Sort field" Enums(id,display_name,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale,packages_installed,baseline_name,groups,satellite_managed,built_pkgcache)
 // @Param    search     query   string  false   "Find matching text"
 // @Param    filter[id]                     query   string  false   "Filter"
 // @Param    filter[display_name]           query   string  false   "Filter"
@@ -215,6 +215,8 @@ func systemsCommon(c *gin.Context, apiver int) (*gorm.DB, *ListMeta, []string, e
 // @Param    filter[culled_timestamp]       query   string  false   "Filter"
 // @Param    filter[created]                query   string  false   "Filter"
 // @Param    filter[baseline_name]          query   string  false   "Filter"
+// @Param    filter[satellite_managed] 		query   string  false   "Filter"
+// @Param    filter[built_pkgcache]         query   string  false   "Filter"
 // @Param    filter[os]                     query   string  false   "Filter OS version"
 // @Param    tags                           query   []string false  "Tag filter"
 // @Param    filter[group_name] 									query   []string false "Filter systems by inventory groups"

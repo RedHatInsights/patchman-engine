@@ -82,7 +82,7 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error
 // @Param    advisory_id    path    string  true    "Advisory ID"
 // @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset         query   int     false   "Offset for paging"
-// @Param    sort           query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,stale,status,template,groups)
+// @Param    sort           query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,stale,status,template,groups,satellite_managed,built_pkgcache)
 // @Param    search         query   string  false   "Find matching text"
 // @Param    filter[id]             query   string    false "Filter"
 // @Param    filter[display_name]   query   string    false "Filter"
@@ -90,6 +90,8 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error
 // @Param    filter[status]         query   string    false "Filter"
 // @Param    filter[template]       query   string    false "Filter"
 // @Param    filter[os]             query   string    false "Filter OS version"
+// @Param    filter[satellite_managed] query string  false "Filter"
+// @Param    filter[built_pkgcache]    query string  false "Filter"
 // @Param    tags                   query   []string  false "Tag filter"
 // @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
