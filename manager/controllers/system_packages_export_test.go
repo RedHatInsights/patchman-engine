@@ -31,7 +31,7 @@ func TestSystemPackagesExportHandlerCSV(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
-	lines := strings.Split(body, "\n")
+	lines := strings.Split(body, "\r\n")
 
 	assert.Equal(t, 6, len(lines))
 	assert.Equal(t, "name,evra,summary,description,updatable,update_status,latest_installable,latest_applicable", lines[0])

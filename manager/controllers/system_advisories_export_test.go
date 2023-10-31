@@ -27,7 +27,7 @@ func TestSystemAdvisoriesExportCSV(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
-	lines := strings.Split(body, "\n")
+	lines := strings.Split(body, "\r\n")
 
 	assert.Equal(t, 10, len(lines))
 	assert.Equal(t, "id,description,public_date,synopsis,advisory_type_name,severity,cve_count,"+

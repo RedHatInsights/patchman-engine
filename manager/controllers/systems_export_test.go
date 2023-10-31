@@ -43,7 +43,7 @@ func TestSystemsExportCSV(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
-	lines := strings.Split(body, "\n")
+	lines := strings.Split(body, "\r\n")
 
 	assert.Equal(t, 10, len(lines))
 	assert.Equal(t,
@@ -72,7 +72,7 @@ func TestSystemsExportCSVFilter(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
-	lines := strings.Split(body, "\n")
+	lines := strings.Split(body, "\r\n")
 
 	assert.Equal(t, 2, len(lines))
 	assert.Equal(t,
