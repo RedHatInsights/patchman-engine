@@ -43,7 +43,7 @@ func TestBaselineSystemsExportCSV(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
-	lines := strings.Split(body, "\n")
+	lines := strings.Split(body, "\r\n")
 
 	assert.Equal(t, 4, len(lines))
 	assert.Equal(t,
@@ -76,7 +76,7 @@ func TestBaselineSystemsExportCSVFilter(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
-	lines := strings.Split(body, "\n")
+	lines := strings.Split(body, "\r\n")
 
 	assert.Equal(t,
 		"id,display_name,os,rhsm,installable_rhsa_count,installable_rhba_count,installable_rhea_count,"+

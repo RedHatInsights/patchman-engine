@@ -36,7 +36,7 @@ func TestAdvisoriesExportCSV(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
-	lines := strings.Split(body, "\n")
+	lines := strings.Split(body, "\r\n")
 
 	assert.Equal(t, 14, len(lines))
 	assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,enhancement,,0,false,\"7.0,7Server\",4,6", lines[3])
@@ -59,7 +59,7 @@ func TestAdvisoriesExportCSVFilter(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		body := w.Body.String()
-		lines := strings.Split(body, "\n")
+		lines := strings.Split(body, "\r\n")
 
 		assert.Equal(t, 3, len(lines))
 		assert.Equal(t, "RH-1,adv-1-des,2016-09-22T16:00:00Z,adv-1-syn,enhancement,,0,false,\"7.0,7Server\",4,6", lines[1])
