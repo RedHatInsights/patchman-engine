@@ -6,8 +6,10 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -475,6 +477,11 @@ func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
 func Csv(ctx *gin.Context, code int, res interface{}) {
 	ctx.Status(http.StatusOK)
 	ctx.Header("Content-Type", "text/csv")
+	gocsv.SetCSVWriter(func(out io.Writer) *gocsv.SafeCSVWriter {
+		writer := csv.NewWriter(out)
+		writer.UseCRLF = true
+		return gocsv.NewSafeCSVWriter(writer)
+	})
 	err := gocsv.Marshal(res, ctx.Writer)
 	if err != nil {
 		panic(err)
