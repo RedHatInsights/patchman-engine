@@ -5462,6 +5462,103 @@
                 "summary": "View advisory-system pairs for selected systems and installable advisories",
                 "description": "View advisory-system pairs for selected systems and installable advisories",
                 "operationId": "viewAdvisoriesSystems",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit for paging, set -1 to return all",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Offset for paging",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Tag filter",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][sap_system]",
+                        "in": "query",
+                        "description": "Filter only SAP systems",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][sap_sids]",
+                        "in": "query",
+                        "description": "Filter systems by their SAP SIDs",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible]",
+                        "in": "query",
+                        "description": "Filter systems by ansible",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible][controller_version]",
+                        "in": "query",
+                        "description": "Filter systems by ansible version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql][version]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "description": "Request body",
                     "content": {
@@ -5518,6 +5615,103 @@
                 "summary": "View system-advisory pairs for selected systems and installable advisories",
                 "description": "View system-advisory pairs for selected systems and installable advisories",
                 "operationId": "viewSystemsAdvisories",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit for paging, set -1 to return all",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Offset for paging",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Tag filter",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][sap_system]",
+                        "in": "query",
+                        "description": "Filter only SAP systems",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][sap_sids]",
+                        "in": "query",
+                        "description": "Filter systems by their SAP SIDs",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible]",
+                        "in": "query",
+                        "description": "Filter systems by ansible",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][ansible][controller_version]",
+                        "in": "query",
+                        "description": "Filter systems by ansible version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[system_profile][mssql][version]",
+                        "in": "query",
+                        "description": "Filter systems by mssql version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "description": "Request body",
                     "content": {
@@ -5642,6 +5836,9 @@
                                 "type": "string"
                             }
                         }
+                    },
+                    "links": {
+                        "$ref": "#/components/schemas/controllers.Links"
                     },
                     "meta": {
                         "$ref": "#/components/schemas/controllers.ListMeta"
@@ -7208,6 +7405,9 @@
                                 "type": "string"
                             }
                         }
+                    },
+                    "links": {
+                        "$ref": "#/components/schemas/controllers.Links"
                     },
                     "meta": {
                         "$ref": "#/components/schemas/controllers.ListMeta"

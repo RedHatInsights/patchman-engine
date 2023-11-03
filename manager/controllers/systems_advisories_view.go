@@ -21,12 +21,14 @@ type SystemsAdvisoriesRequest struct {
 }
 
 type SystemsAdvisoriesResponse struct {
-	Data map[SystemID][]AdvisoryName `json:"data"`
-	Meta ListMeta                    `json:"meta"`
+	Data  map[SystemID][]AdvisoryName `json:"data"`
+	Links Links                       `json:"links"`
+	Meta  ListMeta                    `json:"meta"`
 }
 type AdvisoriesSystemsResponse struct {
-	Data map[AdvisoryName][]SystemID `json:"data"`
-	Meta ListMeta                    `json:"meta"`
+	Data  map[AdvisoryName][]SystemID `json:"data"`
+	Links Links                       `json:"links"`
+	Meta  ListMeta                    `json:"meta"`
 }
 
 type systemsAdvisoriesDBLoad struct {
@@ -34,7 +36,34 @@ type systemsAdvisoriesDBLoad struct {
 	AdvisoryID AdvisoryName `query:"am.name" gorm:"column:advisory_id"`
 }
 
+type systemsAdvisoriesViewSubDBLookup struct {
+	RhAccountID int      `query:"sp.rh_account_id" gorm:"column:rh_account_id"`
+	ID          int64    `query:"sp.id" gorm:"column:id"`
+	SystemID    SystemID `query:"sp.inventory_id" gorm:"column:inventory_id"`
+}
+
+type advisoriesSystemsViewSubDBLookup struct {
+	ID         int64        `query:"am.id" gorm:"column:advisory_id"`
+	AdvisoryID AdvisoryName `query:"am.name" gorm:"column:advisory_name"`
+}
+
 var systemsAdvisoriesSelect = database.MustGetSelect(&systemsAdvisoriesDBLoad{})
+var systemsAdvisoriesViewFields = database.MustGetQueryAttrs(&systemsAdvisoriesViewSubDBLookup{})
+var systemsAdvisoriesViewOpts = ListOpts{
+	Fields:         systemsAdvisoriesViewFields,
+	DefaultFilters: nil,
+	DefaultSort:    "inventory_id",
+	StableSort:     "inventory_id",
+	SearchFields:   nil,
+}
+var advisoriesSystemsViewFields = database.MustGetQueryAttrs(&advisoriesSystemsViewSubDBLookup{})
+var advisoriesSystemsViewOpts = ListOpts{
+	Fields:         advisoriesSystemsViewFields,
+	DefaultFilters: nil,
+	DefaultSort:    "advisory_id",
+	StableSort:     "am.id",
+	SearchFields:   nil,
+}
 
 func totalItems(tx *gorm.DB, cols string) (int, error) {
 	var count int64
@@ -42,27 +71,34 @@ func totalItems(tx *gorm.DB, cols string) (int, error) {
 	return int(count), err
 }
 
-func systemsAdvisoriesQuery(db *gorm.DB, acc int, groups map[string]string, systems []SystemID,
-	advisories []AdvisoryName, limit, offset *int, apiver int) (*gorm.DB, int, int, int, error) {
+func systemsAdvisoriesQuery(c *gin.Context, db *gorm.DB, acc int, groups map[string]string,
+	req SystemsAdvisoriesRequest, apiver int) (*gorm.DB, *ListMeta, *Links, error) {
+	systems := req.Systems
+	advisories := req.Advisories
 	sysq := database.Systems(db, acc, groups).
 		Distinct("sp.rh_account_id, sp.id, sp.inventory_id").
 		// we need to join system_advisories to make `limit` work properly
 		// without this join it can happen that we display less items on some pages
 		Joins(`LEFT JOIN system_advisories sa ON sa.system_id = sp.id
-			AND sa.rh_account_id = sp.rh_account_id AND sa.rh_account_id = ?`, acc).
-		Order("sp.inventory_id")
+			AND sa.rh_account_id = sp.rh_account_id AND sa.rh_account_id = ?`, acc)
 	if len(systems) > 0 {
-		sysq = sysq.Where("sp.inventory_id::text in (?)", systems)
+		sysq = sysq.Where("sp.inventory_id in (?)", systems)
 	}
+
+	filters, err := ParseAllFilters(c, systemsAdvisoriesViewOpts)
+	if err != nil {
+		return nil, nil, nil, err
+	} // Error handled by method itself
+
+	sysq, _ = ApplyInventoryFilter(filters, sysq, "sp.inventory_id")
+	sysq, meta, params, err := ListCommon(sysq, c, filters, systemsAdvisoriesViewOpts)
+	if err != nil {
+		return nil, nil, nil, err
+	} // Error handled by method itself
 
 	total, err := totalItems(sysq, "sp.rh_account_id, sp.id, sp.inventory_id")
 	if err != nil {
-		return nil, 0, 0, 0, err
-	}
-
-	lim, off, err := Paginate(sysq, limit, offset)
-	if err != nil {
-		return nil, total, lim, off, err
+		return nil, nil, nil, err
 	}
 
 	installableOnly := ""
@@ -82,31 +118,38 @@ func systemsAdvisoriesQuery(db *gorm.DB, acc int, groups map[string]string, syst
 	}
 	query = query.Order("sp.inventory_id, am.id")
 
-	return query, total, lim, off, nil
+	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
+	return query, meta, links, err
 }
 
-func advisoriesSystemsQuery(db *gorm.DB, acc int, groups map[string]string, systems []SystemID,
-	advisories []AdvisoryName, limit, offset *int, apiver int) (*gorm.DB, int, int, int, error) {
+func advisoriesSystemsQuery(c *gin.Context, db *gorm.DB, acc int, groups map[string]string,
+	req SystemsAdvisoriesRequest, apiver int) (*gorm.DB, *ListMeta, *Links, error) {
+	systems := req.Systems
+	advisories := req.Advisories
 	// get all advisories for all systems in the account (with inventory.hosts join)
 	advq := database.Systems(db, acc, groups).
 		Distinct("am.id, am.name").
 		// we need to join system_advisories to make `limit` work properly
 		// without this join it can happen that we display less items on some pages
 		Joins("JOIN system_advisories sa ON sp.id = sa.system_id AND sa.rh_account_id = ?", acc).
-		Joins("JOIN advisory_metadata am ON am.id = sa.advisory_id").
-		Order("am.name, am.id")
+		Joins("JOIN advisory_metadata am ON am.id = sa.advisory_id")
 	if len(advisories) > 0 {
 		advq = advq.Where("am.name in (?)", advisories)
 	}
 
+	filters, err := ParseAllFilters(c, advisoriesSystemsViewOpts)
+	if err != nil {
+		return nil, nil, nil, err
+	} // Error handled by method itself
+
+	advq, meta, params, err := ListCommon(advq, c, filters, advisoriesSystemsViewOpts)
+	if err != nil {
+		return nil, nil, nil, err
+	} // Error handled by method itself
+
 	total, err := totalItems(advq, "am.id, am.name")
 	if err != nil {
-		return nil, 0, 0, 0, err
-	}
-
-	lim, off, err := Paginate(advq, limit, offset)
-	if err != nil {
-		return nil, total, lim, off, err
+		return nil, nil, nil, err
 	}
 
 	installableOnly := ""
@@ -131,49 +174,50 @@ func advisoriesSystemsQuery(db *gorm.DB, acc int, groups map[string]string, syst
 		query = query.Joins(spJoin)
 	}
 	query = query.Order("am.name, sp.inventory_id")
-	return query, total, lim, off, nil
+
+	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
+	return query, meta, links, err
 }
 
-func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListMeta, error) {
+func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListMeta, *Links, error) {
 	var req SystemsAdvisoriesRequest
 	var q *gorm.DB
 	var err error
-	var total int
-	var limit int
-	var offset int
+	var meta *ListMeta
+	var links *Links
 	if err := c.ShouldBindJSON(&req); err != nil {
 		LogAndRespBadRequest(c, err, fmt.Sprintf("Invalid request body: %s", err.Error()))
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	acc := c.GetInt(middlewares.KeyAccount)
 	apiver := c.GetInt(middlewares.KeyApiver)
 	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
+	// backward compatibility, put limit/offset from json into querystring
+	if req.Limit != nil {
+		c.Request.URL.RawQuery += fmt.Sprintf("&limit=%d", *req.Limit)
+	}
+	if req.Offset != nil {
+		c.Request.URL.RawQuery += fmt.Sprintf("&offset=%d", *req.Offset)
+	}
 	switch endpoint {
 	case "SystemsAdvisories":
-		q, total, limit, offset, err = systemsAdvisoriesQuery(
-			db, acc, groups, req.Systems, req.Advisories, req.Limit, req.Offset, apiver)
+		q, meta, links, err = systemsAdvisoriesQuery(c, db, acc, groups, req, apiver)
 	case "AdvisoriesSystems":
-		q, total, limit, offset, err = advisoriesSystemsQuery(
-			db, acc, groups, req.Systems, req.Advisories, req.Limit, req.Offset, apiver)
+		q, meta, links, err = advisoriesSystemsQuery(c, db, acc, groups, req, apiver)
 	default:
-		return nil, nil, fmt.Errorf("unknown endpoint '%s'", endpoint)
+		return nil, nil, nil, fmt.Errorf("unknown endpoint '%s'", endpoint)
 	}
 	if err != nil {
-		LogAndRespBadRequest(c, err, err.Error())
-	}
+		return nil, nil, nil, err
+	} // Error handled by method itself
 
 	var data []systemsAdvisoriesDBLoad
 	if err := q.Find(&data).Error; err != nil {
 		LogAndRespError(c, err, "Database error")
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
-	meta := ListMeta{
-		Limit:      limit,
-		Offset:     offset,
-		TotalItems: total,
-	}
-	return data, &meta, nil
+	return data, meta, links, nil
 }
 
 // @Summary View system-advisory pairs for selected systems and installable advisories
@@ -183,19 +227,30 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListM
 // @Accept   json
 // @Produce  json
 // @Param    body    body    SystemsAdvisoriesRequest true "Request body"
+// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    offset         query   int     false   "Offset for paging"
+// @Param    tags                    query   []string  false "Tag filter"
+// @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
+// @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
+// @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
+// @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
+// @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Success 200 {object} SystemsAdvisoriesResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /views/systems/advisories [post]
 func PostSystemsAdvisories(c *gin.Context) {
-	data, meta, err := queryDB(c, "SystemsAdvisories")
+	data, meta, links, err := queryDB(c, "SystemsAdvisories")
 	if err != nil {
 		return
 	}
 
 	response := SystemsAdvisoriesResponse{
-		Data: map[SystemID][]AdvisoryName{},
-		Meta: *meta,
+		Data:  map[SystemID][]AdvisoryName{},
+		Links: *links,
+		Meta:  *meta,
 	}
 
 	for _, i := range data {
@@ -219,19 +274,30 @@ func PostSystemsAdvisories(c *gin.Context) {
 // @Accept   json
 // @Produce  json
 // @Param    body    body    SystemsAdvisoriesRequest true "Request body"
+// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    offset         query   int     false   "Offset for paging"
+// @Param    tags                    query   []string  false "Tag filter"
+// @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
+// @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
+// @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
+// @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
+// @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Success 200 {object} AdvisoriesSystemsResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /views/advisories/systems [post]
 func PostAdvisoriesSystems(c *gin.Context) {
-	data, meta, err := queryDB(c, "AdvisoriesSystems")
+	data, meta, links, err := queryDB(c, "AdvisoriesSystems")
 	if err != nil {
 		return
 	}
 
 	response := AdvisoriesSystemsResponse{
-		Data: map[AdvisoryName][]SystemID{},
-		Meta: *meta,
+		Data:  map[AdvisoryName][]SystemID{},
+		Links: *links,
+		Meta:  *meta,
 	}
 
 	for _, i := range data {
