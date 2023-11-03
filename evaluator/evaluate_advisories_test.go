@@ -108,9 +108,10 @@ func TestGetAdvisoriesFromDB(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	advisories := []string{"ER-1", "RH-1", "ER-2", "RH-2"}
-	advisoryIDs, err := getAdvisoriesFromDB(database.Db, advisories)
+	advisoryIDs, missingNames, err := getAdvisoriesFromDB(database.Db, advisories)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(advisoryIDs))
+	assert.Equal(t, 2, len(missingNames))
 }
 
 func TestEnsureSystemAdvisories(t *testing.T) {

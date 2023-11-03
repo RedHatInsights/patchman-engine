@@ -51,27 +51,37 @@ func processSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform, vmaasDa
 	updatesCnt.WithLabelValues("patched").Add(float64(len(deleteIDs)))
 	utils.LogInfo("inventoryID", system.InventoryID, "fixed", len(deleteIDs), "fixed advisories")
 
-	installableIDs, err := getAdvisoriesFromDB(tx, installableNames)
+	installableIDs, missingInstallableNames, err := getAdvisoriesFromDB(tx, installableNames)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Unable to ensure new installable system advisories in db")
 	}
 	nUnknown := len(installableNames) - len(installableIDs)
 	if nUnknown > 0 {
-		utils.LogInfo("inventoryID", system.InventoryID, "unknown", nUnknown, "unknown installable advisories - ignored")
+		utils.LogInfo("inventoryID", system.InventoryID, "unknown", nUnknown, "unknown installable advisories")
 		updatesCnt.WithLabelValues("unknown").Add(float64(nUnknown))
 	}
+	missingInstallableIDs, err := storeMissingAdvisories(missingInstallableNames)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "unable to store unknown installable advisories in db")
+	}
+	installableIDs = append(installableIDs, missingInstallableIDs...)
 	updatesCnt.WithLabelValues("installable").Add(float64(len(installableIDs)))
 	utils.LogInfo("inventoryID", system.InventoryID, "installable", len(installableIDs), "installable advisories")
 
-	applicableIDs, err := getAdvisoriesFromDB(tx, applicableNames)
+	applicableIDs, missingApplicableNames, err := getAdvisoriesFromDB(tx, applicableNames)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Unable to ensure new applicable system advisories in db")
 	}
 	nUnknown = len(applicableNames) - len(applicableIDs)
 	if nUnknown > 0 {
-		utils.LogInfo("inventoryID", system.InventoryID, "unknown", nUnknown, "unknown applicable advisories - ignored")
+		utils.LogInfo("inventoryID", system.InventoryID, "unknown", nUnknown, "unknown applicable advisories")
 		updatesCnt.WithLabelValues("unknown").Add(float64(nUnknown))
 	}
+	missingApplicableIDs, err := storeMissingAdvisories(missingApplicableNames)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "unable to store unknown applicable advisories in db")
+	}
+	applicableIDs = append(applicableIDs, missingApplicableIDs...)
 	updatesCnt.WithLabelValues("applicable").Add(float64(len(applicableIDs)))
 	utils.LogInfo("inventoryID", system.InventoryID, "applicable", len(applicableIDs), "applicable advisories")
 
@@ -130,15 +140,68 @@ func getAdvisoryChanges(reported map[string]int, stored map[string]models.System
 	return deleteIDs, installableNames, applicableNames
 }
 
-// Return advisory IDs, created advisories count, error
-func getAdvisoriesFromDB(tx *gorm.DB, advisories []string) ([]int64, error) {
-	var advisoryIDs []int64
+// Return advisory IDs, missing advisory names, error
+func getAdvisoriesFromDB(tx *gorm.DB, advisories []string) ([]int64, []string, error) {
+	advisoryMetadata := make(models.AdvisoryMetadataSlice, len(advisories))
+	advisoryIDs := make([]int64, 0, len(advisories))
 	err := tx.Model(&models.AdvisoryMetadata{}).Where("name IN (?)", advisories).
-		Pluck("id", &advisoryIDs).Error
+		Select("id, name").
+		Scan(&advisoryMetadata).Error
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return advisoryIDs, nil
+
+	missing := []string{}
+	found := make(map[string]bool, len(advisories))
+	for _, am := range advisoryMetadata {
+		found[am.Name] = true
+		advisoryIDs = append(advisoryIDs, am.ID)
+	}
+	for _, name := range advisories {
+		if !found[name] {
+			missing = append(missing, name)
+		}
+	}
+	return advisoryIDs, missing, err
+}
+
+func storeMissingAdvisories(missing []string) ([]int64, error) {
+	toStore := make(models.AdvisoryMetadataSlice, 0, len(missing))
+	for _, name := range missing {
+		if len(name) > 0 && len(name) < 100 {
+			toStore = append(toStore, models.AdvisoryMetadata{
+				Name:           name,
+				Description:    "Not Available",
+				Synopsis:       "Not Available",
+				Summary:        "Not Available",
+				AdvisoryTypeID: 0,
+				RebootRequired: false,
+				Synced:         false,
+			})
+		}
+	}
+	storedIDs, err := lazySaveAdvisories(toStore)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to save advisory_metadata")
+	}
+	return storedIDs, nil
+}
+
+func lazySaveAdvisories(missing models.AdvisoryMetadataSlice) ([]int64, error) {
+	var err error
+	ret := make([]int64, 0, len(missing))
+	if len(missing) > 0 {
+		tx := database.Db.Begin()
+		defer tx.Commit()
+		err = tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&missing).Error
+		if err != nil {
+			return ret, err
+		}
+		for _, x := range missing {
+			ret = append(ret, x.ID)
+		}
+	}
+	return ret, nil
 }
 
 func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int64, installableIDs,

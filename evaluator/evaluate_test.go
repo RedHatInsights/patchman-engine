@@ -39,8 +39,8 @@ func TestEvaluate(t *testing.T) {
 	mockWriter := mqueue.MockKafkaWriter{}
 	remediationsPublisher = &mockWriter
 
-	expectedAddedAdvisories := []string{"RH-1", "RH-2"}
-	expectedAdvisoryIDs := []int64{1, 2}       // advisories expected to be paired to the system after evaluation
+	expectedAddedAdvisories := []string{"RH-1", "RH-2", "RH-100"}
+	expectedAdvisoryIDs := []int64{1, 2, 100}  // advisories expected to be paired to the system after evaluation
 	oldSystemAdvisoryIDs := []int64{1, 3, 4}   // old advisories paired with the system
 	patchingSystemAdvisoryIDs := []int64{3, 4} // these advisories should be patched for the system
 	expectedPackageIDs := []int64{1, 2}
@@ -67,7 +67,7 @@ func TestEvaluate(t *testing.T) {
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
 	database.CheckSystemAdvisories(t, systemID, advisoryIDs)
 	database.CheckSystemPackages(t, rhAccountID, systemID, len(expectedPackageIDs), expectedPackageIDs...)
-	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 2, 1, 1,
+	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 3, 1, 1,
 		0, 2, 2, false)
 	database.CheckCachesValid(t)
 
@@ -80,7 +80,7 @@ func TestEvaluate(t *testing.T) {
 		RequestIDs: []string{"request-1"},
 		AccountID:  rhAccountID})
 	assert.NoError(t, err)
-	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 2, 1, 1,
+	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 3, 1, 1,
 		0, 2, 2, true)
 
 	database.DeleteSystemAdvisories(t, systemID, advisoryIDs)
@@ -107,9 +107,9 @@ func TestEvaluateYum(t *testing.T) {
 	remediationsPublisher = &mockWriter
 	evalLabel = recalcLabel
 
-	expectedAddedAdvisories := []string{"RH-1", "RH-2", "RHSA-2021:3801"}
-	expectedAdvisoryIDs := []int64{1, 2, 14} // advisories expected to be paired to the system after evaluation
-	oldSystemAdvisoryIDs := []int64{1, 2}    // old advisories paired with the system
+	expectedAddedAdvisories := []string{"RH-1", "RH-2", "RH-100", "RHSA-2021:3801"}
+	expectedAdvisoryIDs := []int64{1, 2, 100, 14} // advisories expected to be paired to the system after evaluation
+	oldSystemAdvisoryIDs := []int64{1, 2}         // old advisories paired with the system
 	expectedPackageIDs := []int64{1, 2, 105}
 
 	database.DeleteSystemAdvisories(t, sysID, expectedAdvisoryIDs)
@@ -125,7 +125,7 @@ func TestEvaluateYum(t *testing.T) {
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
 	database.CheckSystemPackages(t, rhAccountID, sysID, len(expectedPackageIDs), expectedPackageIDs...)
-	database.CheckSystemJustEvaluated(t, ID, 3, 1, 1, 1, 3, 3, false)
+	database.CheckSystemJustEvaluated(t, ID, 4, 1, 1, 1, 3, 3, false)
 
 	database.DeleteSystemPackages(t, rhAccountID, sysID, expectedPackageIDs...)
 	database.DeleteSystemAdvisories(t, sysID, advisoryIDs)

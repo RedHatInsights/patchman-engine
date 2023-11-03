@@ -80,6 +80,10 @@ func TestCleanUnusedAdvisories(t *testing.T) {
 	// advisory is there
 	database.CheckAdvisoriesInDB(t, []string{advisory})
 
+	// lazy saved RH-100 remains in AdvisoryMetadata after evaluator tests
+	var rh100count int64
+	database.Db.Model(models.AdvisoryMetadata{}).Where("name = ?", "RH-100").Count(&rh100count)
+
 	// delete unused
 	currentDeleteStatus := enableUnusedDataDelete
 	enableUnusedDataDelete = true
@@ -97,5 +101,5 @@ func TestCleanUnusedAdvisories(t *testing.T) {
 	var afterAdvCount int64
 	err = database.Db.Model(models.AdvisoryMetadata{}).Count(&afterAdvCount).Error
 	assert.Nil(t, err)
-	assert.Equal(t, beforeAdvCount, afterAdvCount)
+	assert.Equal(t, beforeAdvCount-rh100count, afterAdvCount)
 }
