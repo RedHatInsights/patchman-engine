@@ -264,11 +264,12 @@ type ReposRequest struct {
 }
 
 type ReposResponse struct {
-	Page           int                                 `json:"page,omitempty"`
-	PageSize       int                                 `json:"page_size,omitempty"`
-	Pages          int                                 `json:"pages,omitempty"`
-	RepositoryList map[string][]map[string]interface{} `json:"repository_list,omitempty"`
-	LastChange     *string                             `json:"last_change,omitempty"`
+	Page             int                                 `json:"page,omitempty"`
+	PageSize         int                                 `json:"page_size,omitempty"`
+	Pages            int                                 `json:"pages,omitempty"`
+	RepositoryList   map[string][]map[string]interface{} `json:"repository_list,omitempty"`
+	LastChange       *string                             `json:"last_change,omitempty"`
+	LatestRepoChange *types.Rfc3339Timestamp             `json:"latest_repo_change,omitempty"`
 }
 
 type DBChangeResponse struct {

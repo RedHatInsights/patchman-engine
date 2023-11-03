@@ -24,7 +24,7 @@ func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {
 	}
 
 	now := time.Now()
-	redhatRepos, thirdPartyRepos, err := getUpdatedRepos(now, lastRepoBaseEval)
+	redhatRepos, thirdPartyRepos, latestRepoChange, err := getUpdatedRepos(now, lastRepoBaseEval)
 	allRepos := append(redhatRepos, thirdPartyRepos...)
 
 	if err != nil {
@@ -36,7 +36,7 @@ func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {
 		return nil, err
 	}
 
-	database.UpdateTimestampKVValue(LastEvalRepoBased, now)
+	database.UpdateTimestampKVValue(LastEvalRepoBased, *latestRepoChange)
 
 	return inventoryAIDs, nil
 }
@@ -61,10 +61,12 @@ func getRepoBasedInventoryIDs(repos []string) ([]mqueue.EvalData, error) {
 	return ids, nil
 }
 
-func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []string, error) {
+// nolint: funlen
+func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []string, *time.Time, error) {
 	page := 1
 	var reposRedHat []string
 	var reposThirdParty []string
+	var latestRepoChange *time.Time
 	reposSyncStart := time.Now()
 	for {
 		reposReq := vmaas.ReposRequest{
@@ -83,7 +85,7 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []st
 
 		vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc, vmaasCallExpRetry, vmaasCallMaxRetries)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		vmaasCallCnt.WithLabelValues("success").Inc()
 		repos := vmaasDataPtr.(*vmaas.ReposResponse)
@@ -91,6 +93,8 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []st
 			utils.LogInfo("No repos returned from VMaaS")
 			break
 		}
+
+		latestRepoChange = repos.LatestRepoChange.Time()
 
 		utils.LogInfo("page", page, "pages", repos.Pages, "count", len(repos.RepositoryList),
 			"sync_duration", utils.SinceStr(syncStart, time.Second),
@@ -119,5 +123,5 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []st
 	}
 
 	utils.LogInfo("redhat", len(reposRedHat), "thirdparty", len(reposThirdParty), "Repos downloading complete")
-	return reposRedHat, reposThirdParty, nil
+	return reposRedHat, reposThirdParty, latestRepoChange, nil
 }

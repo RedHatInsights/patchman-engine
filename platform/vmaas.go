@@ -201,6 +201,7 @@ func reposHandler(c *gin.Context) {
     "page": 0,
     "page_size": 3,
     "pages": 1,
+    "latest_repo_change": "2222-04-16 20:07:55.214266+00",
     "repository_list": {
         "repo1": [],
         "repo2": [],
