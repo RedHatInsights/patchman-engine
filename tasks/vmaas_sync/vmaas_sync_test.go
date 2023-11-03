@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"os"
 	"testing"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -75,7 +74,8 @@ func TestSync(t *testing.T) {
 
 	ts, err := database.GetTimestampKVValueStr(LastEvalRepoBased) // check updated timestamp
 	assert.Nil(t, err)
-	assert.Equal(t, time.Now().Format("2006"), (*ts)[0:4])
+	// timestamp comes from vmaas - latest_repo_change
+	assert.Equal(t, "2222", (*ts)[0:4])
 	resetLastEvalTimestamp(t)
 	database.DeleteNewlyAddedPackages(t)
 	database.DeleteNewlyAddedAdvisories(t)

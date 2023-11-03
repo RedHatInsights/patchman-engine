@@ -95,7 +95,7 @@ func TestGetUpdatedRepos(t *testing.T) {
 	Configure()
 
 	modifiedSince := time.Now().Format(types.Rfc3339NoTz)
-	redhat, thirdparty, err := getUpdatedRepos(time.Now(), &modifiedSince)
+	redhat, thirdparty, _, err := getUpdatedRepos(time.Now(), &modifiedSince)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(redhat))
 	assert.Equal(t, 0, len(thirdparty))
