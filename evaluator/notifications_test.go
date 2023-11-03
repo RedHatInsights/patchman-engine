@@ -47,7 +47,7 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 	mockWriter := mqueue.MockKafkaWriter{}
 	notificationsPublisher = &mockWriter
 
-	expectedAddedAdvisories := []string{"RH-1", "RH-2"}
+	expectedAddedAdvisories := []string{"RH-1", "RH-2", "RH-100"}
 	expectedAdvisoryIDs := []int64{1, 2}     // advisories expected to be paired to the system after evaluation
 	oldSystemAdvisoryIDs := []int64{1, 3, 4} // old advisories paired with the system
 
