@@ -46,7 +46,10 @@ func getReportedAdvisories(vmaasData *vmaas.UpdatesV3Response) map[string]int {
 	advisories := make(map[string]int, len(updateList))
 	for _, updates := range updateList {
 		for _, u := range updates.GetAvailableUpdates() {
-			advisories[u.GetErratum()] = u.StatusID
+			erratum := u.GetErratum()
+			if len(erratum) > 0 {
+				advisories[erratum] = u.StatusID
+			}
 		}
 	}
 	return advisories
