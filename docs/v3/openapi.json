@@ -7322,6 +7322,12 @@
                             "type": "string"
                         }
                     },
+                    "repository_paths": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
                     "security_only": {
                         "type": "boolean"
                     },

@@ -370,3 +370,48 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	maxInc := currval - nextval
 	assert.Equal(t, countInc, maxInc)
 }
+
+func TestGetRepoPath(t *testing.T) {
+	repoPath, err := getRepoPath(nil, nil)
+	assert.Nil(t, err)
+	assert.Empty(t, repoPath)
+
+	repo := inventory.YumRepo{}
+	sp := inventory.SystemProfile{}
+
+	repoPath, err = getRepoPath(&sp, &repo)
+	assert.Nil(t, err)
+	assert.Empty(t, repoPath)
+
+	repo = inventory.YumRepo{Mirrorlist: "://asdf"}
+	repoPath, err = getRepoPath(&sp, &repo)
+	assert.NotNil(t, err)
+	assert.Empty(t, repoPath)
+
+	repo = inventory.YumRepo{Mirrorlist: "https://rhui.redhat.com["}
+	repoPath, err = getRepoPath(&sp, &repo)
+	assert.Nil(t, err)
+	assert.Empty(t, repoPath)
+
+	repo = inventory.YumRepo{BaseURL: "https://rhui.redhat.com/"}
+	repoPath, err = getRepoPath(&sp, &repo)
+	assert.Nil(t, err)
+	assert.Empty(t, repoPath)
+
+	repo = inventory.YumRepo{
+		BaseURL: "https://rhui.redhat.com/pulp/mirror/content/dist/rhel8/rhui/8.4/x86_64/baseos/os",
+	}
+	repoPath, err = getRepoPath(&sp, &repo)
+	assert.Nil(t, err)
+	assert.Equal(t, "/content/dist/rhel8/rhui/8.4/x86_64/baseos/os", repoPath)
+
+	repo = inventory.YumRepo{
+		BaseURL: "https://rhui.redhat.com/pulp/mirror/content/dist/rhel8/rhui/$releasever/$basearch/baseos/os",
+	}
+	arch := "x86_64"
+	release := "8.4"
+	sp = inventory.SystemProfile{Arch: &arch, Releasever: &release}
+	repoPath, err = getRepoPath(&sp, &repo)
+	assert.Nil(t, err)
+	assert.Equal(t, "/content/dist/rhel8/rhui/8.4/x86_64/baseos/os", repoPath)
+}
