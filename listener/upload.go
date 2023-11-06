@@ -16,6 +16,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -26,24 +28,29 @@ import (
 )
 
 const (
-	WarnSkippingNoPackages = "skipping profile with no packages"
-	WarnSkippingReporter   = "skipping excluded reporter"
-	WarnSkippingHostType   = "skipping excluded host type"
-	WarnPayloadTracker     = "unable to send message to payload tracker"
-	ErrorNoAccountProvided = "no account provided in host message"
-	ErrorKafkaSend         = "unable to send evaluation message"
-	ErrorProcessUpload     = "unable to process upload"
-	UploadSuccessNoEval    = "upload event handled successfully, no eval required"
-	UploadSuccess          = "upload event handled successfully"
-	FlushedFullBuffer      = "flushing full eval event buffer"
-	FlushedTimeoutBuffer   = "flushing eval event buffer after timeout"
-	ErrorUnmarshalMetadata = "unable to unmarshall platform metadata value"
-	ErrorStatus            = "error"
-	SuccessStatus          = "success"
+	WarnSkippingNoPackages    = "skipping profile with no packages"
+	WarnSkippingReporter      = "skipping excluded reporter"
+	WarnSkippingHostType      = "skipping excluded host type"
+	WarnPayloadTracker        = "unable to send message to payload tracker"
+	ErrorNoAccountProvided    = "no account provided in host message"
+	ErrorKafkaSend            = "unable to send evaluation message"
+	ErrorProcessUpload        = "unable to process upload"
+	UploadSuccessNoEval       = "upload event handled successfully, no eval required"
+	UploadSuccess             = "upload event handled successfully"
+	FlushedFullBuffer         = "flushing full eval event buffer"
+	FlushedTimeoutBuffer      = "flushing eval event buffer after timeout"
+	ErrorUnmarshalMetadata    = "unable to unmarshall platform metadata value"
+	ErrorStatus               = "error"
+	SuccessStatus             = "success"
+	RhuiPathPart              = "/rhui/"
+	RepoPathPattern           = "(/content/.*)"
+	RepoBasearchPlaceholder   = "$basearch"
+	RepoReleaseverPlaceholder = "$releasever"
 )
 
 var (
 	DeletionThreshold = time.Hour * time.Duration(utils.GetIntEnvOrDefault("SYSTEM_DELETE_HRS", 4))
+	repoPathRegex     = regexp.MustCompile(RepoPathPattern)
 	httpClient        *api.Client
 )
 
@@ -522,11 +529,47 @@ func deleteOtherSystemRepos(tx *gorm.DB, rhAccountID int, systemID int64, repoID
 	return res.DeletedCount, nil
 }
 
-func processRepos(systemProfile *inventory.SystemProfile) []string {
+// get rhui repository path form `system_profile.yum_repos.mirrorlist` or `system_profile.yum_repos.base_url`
+func getRepoPath(systemProfile *inventory.SystemProfile, repo *inventory.YumRepo) (string, error) {
+	var repoPath string
+	if systemProfile == nil || repo == nil {
+		return repoPath, nil
+	}
+	if len(repo.Mirrorlist) == 0 && len(repo.BaseURL) == 0 {
+		return repoPath, nil
+	}
+
+	repoURL := repo.Mirrorlist
+	if len(repoURL) == 0 {
+		repoURL = repo.BaseURL
+	}
+
+	url, err := url.Parse(repoURL)
+	if err != nil {
+		return repoPath, errors.Wrap(err, "couldn't parse repo mirrorlist or base_url")
+	}
+
+	foundRepoPath := repoPathRegex.FindString(url.Path)
+	if strings.Contains(foundRepoPath, RhuiPathPart) {
+		repoPath = foundRepoPath
+		if systemProfile.Arch != nil {
+			repoPath = strings.ReplaceAll(repoPath, RepoBasearchPlaceholder, *systemProfile.Arch)
+		}
+		if systemProfile.Releasever != nil {
+			repoPath = strings.ReplaceAll(repoPath, RepoReleaseverPlaceholder, *systemProfile.Releasever)
+		}
+		return repoPath, nil
+	}
+	return repoPath, nil
+}
+
+func processRepos(systemProfile *inventory.SystemProfile) ([]string, []string) {
 	yumRepos := systemProfile.GetYumRepos()
 	seen := make(map[string]bool, len(yumRepos))
 	repos := make([]string, 0, len(yumRepos))
+	repoPaths := make([]string, 0, len(yumRepos))
 	for _, r := range yumRepos {
+		r := r
 		rID := r.ID
 		if seen[rID] {
 			// remove duplicate repos
@@ -541,9 +584,17 @@ func processRepos(systemProfile *inventory.SystemProfile) []string {
 		if r.Enabled {
 			repos = append(repos, rID)
 		}
+
+		repoPath, err := getRepoPath(systemProfile, &r)
+		if err != nil {
+			utils.LogWarn("repo", rID, "mirrorlist", r.Mirrorlist, "base_url", r.BaseURL, "invalid repository_path")
+		}
+		if len(repoPath) > 0 {
+			repoPaths = append(repoPaths, repoPath)
+		}
 	}
 	fixEpelRepos(systemProfile, repos)
-	return repos
+	return repos, repoPaths
 }
 
 func processModules(systemProfile *inventory.SystemProfile) *[]vmaas.UpdatesV3RequestModulesList {
@@ -571,14 +622,16 @@ func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatform, 
 	}
 
 	systemProfile := host.SystemProfile
+	repos, repoPaths := processRepos(&systemProfile)
 	// Prepare VMaaS request
 	updatesReq := vmaas.UpdatesV3Request{
-		PackageList:    systemProfile.GetInstalledPackages(),
-		RepositoryList: processRepos(&systemProfile),
-		ModulesList:    processModules(&systemProfile),
-		Basearch:       systemProfile.Arch,
-		SecurityOnly:   utils.PtrBool(false),
-		LatestOnly:     utils.PtrBool(true),
+		PackageList:     systemProfile.GetInstalledPackages(),
+		RepositoryList:  repos,
+		RepositoryPaths: repoPaths,
+		ModulesList:     processModules(&systemProfile),
+		Basearch:        systemProfile.Arch,
+		SecurityOnly:    utils.PtrBool(false),
+		LatestOnly:      utils.PtrBool(true),
 	}
 
 	// use rhsm version if set

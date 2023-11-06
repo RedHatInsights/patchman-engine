@@ -6,13 +6,14 @@ import (
 )
 
 type UpdatesV3Request struct {
-	PackageList    []string                       `json:"package_list"`
-	RepositoryList []string                       `json:"repository_list"`
-	ModulesList    *[]UpdatesV3RequestModulesList `json:"modules_list,omitempty"`
-	Releasever     *string                        `json:"releasever,omitempty"`
-	Basearch       *string                        `json:"basearch,omitempty"`
-	SecurityOnly   *bool                          `json:"security_only,omitempty"`
-	LatestOnly     *bool                          `json:"latest_only,omitempty"`
+	PackageList     []string                       `json:"package_list"`
+	RepositoryList  []string                       `json:"repository_list"`
+	RepositoryPaths []string                       `json:"repository_paths"`
+	ModulesList     *[]UpdatesV3RequestModulesList `json:"modules_list,omitempty"`
+	Releasever      *string                        `json:"releasever,omitempty"`
+	Basearch        *string                        `json:"basearch,omitempty"`
+	SecurityOnly    *bool                          `json:"security_only,omitempty"`
+	LatestOnly      *bool                          `json:"latest_only,omitempty"`
 	// Include content from \"third party\" repositories into the response, disabled by default.
 	ThirdParty *bool `json:"third_party,omitempty"`
 	// Search for updates of unknown package EVRAs.

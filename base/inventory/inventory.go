@@ -40,9 +40,11 @@ type OperatingSystem struct {
 }
 
 type YumRepo struct {
-	ID      string `json:"id,omitempty"`
-	Name    string `json:"name,omitempty"`
-	Enabled bool   `json:"enabled,omitempty"`
+	ID         string `json:"id,omitempty"`
+	Name       string `json:"name,omitempty"`
+	Enabled    bool   `json:"enabled,omitempty"`
+	Mirrorlist string `json:"mirrorlist,omitempty"`
+	BaseURL    string `json:"base_url,omitempty"`
 }
 
 type DnfModule struct {
