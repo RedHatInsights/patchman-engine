@@ -142,7 +142,7 @@ func getAdvisoryChanges(reported map[string]int, stored map[string]models.System
 
 // Return advisory IDs, missing advisory names, error
 func getAdvisoriesFromDB(tx *gorm.DB, advisories []string) ([]int64, []string, error) {
-	advisoryMetadata := make(models.AdvisoryMetadataSlice, len(advisories))
+	advisoryMetadata := make(models.AdvisoryMetadataSlice, 0, len(advisories))
 	advisoryIDs := make([]int64, 0, len(advisories))
 	err := tx.Model(&models.AdvisoryMetadata{}).Where("name IN (?)", advisories).
 		Select("id, name").
