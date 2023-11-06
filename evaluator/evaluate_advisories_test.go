@@ -114,6 +114,17 @@ func TestGetAdvisoriesFromDB(t *testing.T) {
 	assert.Equal(t, 2, len(missingNames))
 }
 
+func TestGetAdvisoriesFromDBEmptyString(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	advisories := []string{""}
+	advisoryIDs, missingNames, err := getAdvisoriesFromDB(database.Db, advisories)
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(advisoryIDs))
+	assert.Equal(t, 1, len(missingNames))
+}
+
 func TestEnsureSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
