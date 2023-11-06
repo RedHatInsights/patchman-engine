@@ -54,6 +54,22 @@ func TestGetReportedAdvisories2(t *testing.T) {
 	assert.Equal(t, 4, len(advisories))
 }
 
+func TestGetReportedAdvisoriesEmpty(t *testing.T) {
+	utils.SkipWithoutPlatform(t)
+
+	configure()
+	available := vmaas.UpdatesV3ResponseAvailableUpdates{}
+	update := vmaas.UpdatesV3ResponseUpdateList{
+		AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{available},
+	}
+	updateList := map[string]*vmaas.UpdatesV3ResponseUpdateList{
+		"package_without_erratum": &update,
+	}
+	vmaasData := vmaas.UpdatesV3Response{UpdateList: &updateList}
+	advisories := getReportedAdvisories(&vmaasData)
+	assert.Equal(t, 0, len(advisories))
+}
+
 func TestGetStoredAdvisoriesMap(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
