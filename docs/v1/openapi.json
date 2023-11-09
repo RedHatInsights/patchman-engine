@@ -18,6 +18,7 @@
     "paths": {
         "/api/patch/v1/advisories": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me all applicable advisories for all my systems",
                 "description": "Show me all applicable advisories for all my systems",
                 "operationId": "listAdvisories",
@@ -244,6 +245,7 @@
         },
         "/api/patch/v1/advisories/{advisory_id}": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me details an advisory by given advisory name",
                 "description": "Show me details an advisory by given advisory name",
                 "operationId": "detailAdvisory",
@@ -310,6 +312,7 @@
         },
         "/api/patch/v1/advisories/{advisory_id}/systems": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me systems on which the given advisory is applicable",
                 "description": "Show me systems on which the given advisory is applicable",
                 "operationId": "listAdvisorySystems",
@@ -628,6 +631,7 @@
         },
         "/api/patch/v1/baselines": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me all baselines for all my systems",
                 "description": "Show me all baselines for all my systems",
                 "operationId": "listBaseline",
@@ -746,6 +750,7 @@
                 ]
             },
             "put": {
+                "deprecated": true,
                 "summary": "Create a baseline for my set of systems",
                 "description": "Create a baseline for my set of systems",
                 "operationId": "createBaseline",
@@ -812,6 +817,7 @@
         },
         "/api/patch/v1/baselines/systems/remove": {
             "post": {
+                "deprecated": true,
                 "summary": "Remove systems from baseline",
                 "description": "Remove systems from baseline",
                 "operationId": "removeBaselineSystems",
@@ -872,6 +878,7 @@
         },
         "/api/patch/v1/baselines/{baseline_id}": {
             "get": {
+                "deprecated": true,
                 "summary": "Show baseline detail by given baseline ID",
                 "description": "Show baseline detail by given baseline ID",
                 "operationId": "detailBaseline",
@@ -935,6 +942,7 @@
                 ]
             },
             "put": {
+                "deprecated": true,
                 "summary": "Update a baseline for my set of systems",
                 "description": "Update a baseline for my set of systems",
                 "operationId": "updateBaseline",
@@ -1010,6 +1018,7 @@
                 "x-codegen-request-body-name": "body"
             },
             "delete": {
+                "deprecated": true,
                 "summary": "Delete a baseline",
                 "description": "Delete a baseline",
                 "operationId": "baselineDelete",
@@ -1075,6 +1084,7 @@
         },
         "/api/patch/v1/baselines/{baseline_id}/systems": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me all systems belonging to a baseline",
                 "description": "Show me all systems applicable to a baseline",
                 "operationId": "listBaselineSystems",
@@ -1198,6 +1208,7 @@
         },
         "/api/patch/v1/export/advisories": {
             "get": {
+                "deprecated": true,
                 "summary": "Export applicable advisories for all my systems",
                 "description": "Export applicable advisories for all my systems",
                 "operationId": "exportAdvisories",
@@ -1337,6 +1348,7 @@
         },
         "/api/patch/v1/export/advisories/{advisory_id}/systems": {
             "get": {
+                "deprecated": true,
                 "summary": "Export systems for my account",
                 "description": "Export systems for my account",
                 "operationId": "exportAdvisorySystems",
@@ -1637,6 +1649,7 @@
         },
         "/api/patch/v1/export/packages": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me all installed packages across my systems",
                 "description": "Show me all installed packages across my systems",
                 "operationId": "exportPackages",
@@ -1758,6 +1771,7 @@
         },
         "/api/patch/v1/export/packages/{package_name}/systems": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me all my systems which have a package installed",
                 "description": "Show me all my systems which have a package installed",
                 "operationId": "exportPackageSystems",
@@ -1902,6 +1916,7 @@
         },
         "/api/patch/v1/export/systems": {
             "get": {
+                "deprecated": true,
                 "summary": "Export systems for my account",
                 "description": "Export systems for my account",
                 "operationId": "exportSystems",
@@ -2171,6 +2186,7 @@
         },
         "/api/patch/v1/export/systems/{inventory_id}/advisories": {
             "get": {
+                "deprecated": true,
                 "summary": "Export applicable advisories for all my systems",
                 "description": "Export applicable advisories for all my systems",
                 "operationId": "exportSystemAdvisories",
@@ -2341,6 +2357,7 @@
         },
         "/api/patch/v1/export/systems/{inventory_id}/packages": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me details about a system packages by given inventory id",
                 "description": "Show me details about a system packages by given inventory id",
                 "operationId": "exportSystemPackages",
@@ -2467,6 +2484,7 @@
         },
         "/api/patch/v1/packages/": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me all installed packages across my systems",
                 "description": "Show me all installed packages across my systems",
                 "operationId": "listPackages",
@@ -2659,6 +2677,7 @@
         },
         "/api/patch/v1/packages/{package_name}": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me metadata of selected package",
                 "description": "Show me metadata of selected package",
                 "operationId": "LatestPackage",
@@ -2724,6 +2743,7 @@
         },
         "/api/patch/v1/packages/{package_name}/systems": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me all my systems which have a package installed",
                 "description": "Show me all my systems which have a package installed",
                 "operationId": "packageSystems",
@@ -2871,6 +2891,7 @@
         },
         "/api/patch/v1/packages/{package_name}/versions": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me all package versions installed on some system",
                 "description": "Show me all package versions installed on some system",
                 "operationId": "packageVersions",
@@ -2952,6 +2973,7 @@
         },
         "/api/patch/v1/systems": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me all my systems",
                 "description": "Show me all my systems",
                 "operationId": "listSystems",
@@ -3277,6 +3299,7 @@
         },
         "/api/patch/v1/systems/{inventory_id}": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me details about a system by given inventory id",
                 "description": "Show me details about a system by given inventory id",
                 "operationId": "detailSystem",
@@ -3340,6 +3363,7 @@
                 ]
             },
             "delete": {
+                "deprecated": true,
                 "summary": "Delete system by inventory id",
                 "description": "Delete system by inventory id",
                 "operationId": "deletesystem",
@@ -3399,6 +3423,7 @@
         },
         "/api/patch/v1/systems/{inventory_id}/advisories": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me advisories for a system by given inventory id",
                 "description": "Show me advisories for a system by given inventory id",
                 "operationId": "listSystemAdvisories",
@@ -3559,6 +3584,7 @@
         },
         "/api/patch/v1/systems/{inventory_id}/packages": {
             "get": {
+                "deprecated": true,
                 "summary": "Show me details about a system packages by given inventory id",
                 "description": "Show me details about a system packages by given inventory id",
                 "operationId": "systemPackages",
@@ -3688,6 +3714,7 @@
         },
         "/api/patch/v1/views/advisories/systems": {
             "post": {
+                "deprecated": true,
                 "summary": "View advisory-system pairs for selected systems and advisories",
                 "description": "View advisory-system pairs for selected systems and advisories",
                 "operationId": "viewAdvisoriesSystems",
@@ -3744,6 +3771,7 @@
         },
         "/api/patch/v1/views/systems/advisories": {
             "post": {
+                "deprecated": true,
                 "summary": "View system-advisory pairs for selected systems and advisories",
                 "description": "View system-advisory pairs for selected systems and advisories",
                 "operationId": "viewSystemsAdvisories",
