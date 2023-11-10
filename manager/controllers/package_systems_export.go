@@ -31,9 +31,9 @@ import (
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /export/packages/{package_name}/systems [get]
 func PackageSystemsExportHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
-	apiver := c.GetInt(middlewares.KeyApiver)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	apiver := c.GetInt(utils.KeyApiver)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	packageName := c.Param("package_name")
 	if packageName == "" {

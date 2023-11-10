@@ -103,9 +103,9 @@ func systemPackageQuery(db *gorm.DB, account int, groups map[string]string, inve
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /systems/{inventory_id}/packages [get]
 func SystemPackagesHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
-	apiver := c.GetInt(middlewares.KeyApiver)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	apiver := c.GetInt(utils.KeyApiver)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {

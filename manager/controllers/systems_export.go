@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/utils"
 	"app/manager/middlewares"
 
 	"github.com/gin-gonic/gin"
@@ -37,9 +38,9 @@ import (
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /export/systems [get]
 func SystemsExportHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
-	apiver := c.GetInt(middlewares.KeyApiver)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	apiver := c.GetInt(utils.KeyApiver)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
 	query := querySystems(db, account, apiver, groups)
 	filters, err := ParseAllFilters(c, SystemOpts)

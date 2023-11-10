@@ -12,8 +12,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ReadHeaderTimeout same as nginx default
-const ReadHeaderTimeout = 60 * time.Second
+const (
+	KeyApiver          = "apiver"
+	KeyAccount         = "account"
+	KeyUser            = "user"
+	KeyInventoryGroups = "inventoryGroups"
+	KeyGrouped         = "grouped"
+	KeyUngrouped       = "ungrouped"
+	// ReadHeaderTimeout same as nginx default
+	ReadHeaderTimeout = 60 * time.Second
+)
 
 func LoadParamInt(c *gin.Context, param string, defaultValue int, query bool) (int, error) {
 	var valueStr string

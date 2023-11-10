@@ -2,7 +2,6 @@ package database
 
 import (
 	"app/base/models"
-	"app/base/rbac"
 	"app/base/types"
 	"app/base/utils"
 	"errors"
@@ -221,8 +220,8 @@ func ReadReplicaConfigured() bool {
 
 func InventoryHostsJoin(tx *gorm.DB, groups map[string]string) *gorm.DB {
 	tx = tx.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
-	if _, ok := groups[rbac.KeyGrouped]; !ok {
-		if _, ok := groups[rbac.KeyUngrouped]; ok {
+	if _, ok := groups[utils.KeyGrouped]; !ok {
+		if _, ok := groups[utils.KeyUngrouped]; ok {
 			// show only systems with '[]' group
 			return tx.Where("ih.groups = '[]'")
 		}
@@ -230,8 +229,8 @@ func InventoryHostsJoin(tx *gorm.DB, groups map[string]string) *gorm.DB {
 		return tx
 	}
 
-	db := Db.Where("ih.groups @> ANY (?::jsonb[])", groups[rbac.KeyGrouped])
-	if _, ok := groups[rbac.KeyUngrouped]; ok {
+	db := Db.Where("ih.groups @> ANY (?::jsonb[])", groups[utils.KeyGrouped])
+	if _, ok := groups[utils.KeyUngrouped]; ok {
 		db = db.Or("ih.groups = '[]'")
 	}
 	return tx.Where(db)

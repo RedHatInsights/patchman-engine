@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"app/base/utils"
 	"app/docs"
 	"regexp"
 	"strconv"
@@ -11,8 +12,6 @@ import (
 
 	swaggerFiles "github.com/swaggo/files"
 )
-
-const KeyApiver = "apiver"
 
 var apiRegexp = regexp.MustCompile(`/v(\d)`)
 
@@ -45,6 +44,6 @@ func SetAdminSwagger(app *gin.Engine) {
 
 func SetAPIVersion(basePath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set(KeyApiver, apiver(basePath))
+		c.Set(utils.KeyApiver, apiver(basePath))
 	}
 }

@@ -51,9 +51,9 @@ type SystemYumUpdatesResponse struct {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /systems/{inventory_id} [get]
 func SystemDetailHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
-	apiver := c.GetInt(middlewares.KeyApiver)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	apiver := c.GetInt(utils.KeyApiver)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {
@@ -179,8 +179,8 @@ func SystemYumUpdatesHandler(c *gin.Context) {
 }
 
 func systemJSONsCommon(c *gin.Context, column string) *models.SystemPlatform {
-	account := c.GetInt(middlewares.KeyAccount)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {

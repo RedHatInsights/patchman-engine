@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"app/base/database"
-	"app/base/rbac"
 	"app/base/utils"
 	"app/manager/middlewares"
 	"net/http"
@@ -141,9 +140,9 @@ func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, groups m
 // @Router /packages/ [get]
 func PackagesListHandler(c *gin.Context) {
 	var filters map[string]FilterData
-	account := c.GetInt(middlewares.KeyAccount)
-	apiver := c.GetInt(middlewares.KeyApiver)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	apiver := c.GetInt(utils.KeyApiver)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	filters, err := ParseAllFilters(c, PackagesOpts)
 	if err != nil {
@@ -223,7 +222,7 @@ func shouldUseCache(db *gorm.DB, acc int, filters map[string]FilterData, groups 
 	if !enabledPackageCache {
 		return false
 	}
-	if HasInventoryFilter(filters) || len(groups[rbac.KeyGrouped]) != 0 {
+	if HasInventoryFilter(filters) || len(groups[utils.KeyGrouped]) != 0 {
 		return false
 	}
 

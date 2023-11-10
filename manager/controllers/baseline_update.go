@@ -51,7 +51,7 @@ type UpdateBaselineResponse struct {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines/{baseline_id} [put]
 func BaselineUpdateHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
+	account := c.GetInt(utils.KeyAccount)
 
 	var req UpdateBaselineRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

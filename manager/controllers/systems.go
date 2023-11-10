@@ -176,8 +176,8 @@ type SystemsResponseV3 struct {
 
 func systemsCommon(c *gin.Context, apiver int) (*gorm.DB, *ListMeta, []string, error) {
 	var err error
-	account := c.GetInt(middlewares.KeyAccount)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
 	query := querySystems(db, account, apiver, groups)
 	filters, err := ParseAllFilters(c, SystemOpts)
@@ -231,7 +231,7 @@ func systemsCommon(c *gin.Context, apiver int) (*gorm.DB, *ListMeta, []string, e
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /systems [get]
 func SystemsListHandler(c *gin.Context) {
-	apiver := c.GetInt(middlewares.KeyApiver)
+	apiver := c.GetInt(utils.KeyApiver)
 	query, meta, params, err := systemsCommon(c, apiver)
 	if err != nil {
 		return
@@ -309,7 +309,7 @@ func SystemsListHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/systems [get]
 func SystemsListIDsHandler(c *gin.Context) {
-	apiver := c.GetInt(middlewares.KeyApiver)
+	apiver := c.GetInt(utils.KeyApiver)
 	query, meta, _, err := systemsCommon(c, apiver)
 	if err != nil {
 		return

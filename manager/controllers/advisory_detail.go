@@ -110,7 +110,7 @@ func AdvisoryDetailHandler(c *gin.Context) {
 		return
 	}
 
-	if c.GetInt(middlewares.KeyApiver) < 2 {
+	if c.GetInt(utils.KeyApiver) < 2 {
 		respV1 := advisoryRespV2toV1(respV2)
 		c.JSON(http.StatusOK, respV1)
 	} else {

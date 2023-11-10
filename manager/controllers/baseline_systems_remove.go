@@ -33,7 +33,7 @@ type BaselineSystemsRemoveRequest struct {
 // @Failure 500 {object} 	utils.ErrorResponse
 // @Router /baselines/systems/remove [POST]
 func BaselineSystemsRemoveHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
+	account := c.GetInt(utils.KeyAccount)
 
 	var req BaselineSystemsRemoveRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

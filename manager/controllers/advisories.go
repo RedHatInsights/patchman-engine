@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"app/base/database"
-	"app/base/rbac"
+	"app/base/utils"
 	"app/manager/middlewares"
 	"net/http"
 	"time"
@@ -119,15 +119,15 @@ type AdvisoriesResponseV3 struct {
 
 func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	db := middlewares.DBFromContext(c)
-	account := c.GetInt(middlewares.KeyAccount)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	var query *gorm.DB
 	filters, err := ParseAllFilters(c, AdvisoriesOpts)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	if disableCachedCounts || HasInventoryFilter(filters) || len(groups[rbac.KeyGrouped]) != 0 {
+	if disableCachedCounts || HasInventoryFilter(filters) || len(groups[utils.KeyGrouped]) != 0 {
 		var err error
 		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
 		if err != nil {
@@ -175,7 +175,7 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /advisories [get]
 func AdvisoriesListHandler(c *gin.Context) {
-	apiver := c.GetInt(middlewares.KeyApiver)
+	apiver := c.GetInt(utils.KeyApiver)
 	query, meta, params, err := advisoriesCommon(c)
 	if err != nil {
 		return

@@ -84,8 +84,8 @@ func packageSystemsQuery(db *gorm.DB, acc int, groups map[string]string, package
 }
 
 func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
-	account := c.GetInt(middlewares.KeyAccount)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	var filters map[string]FilterData
 
 	packageName := c.Param("package_name")
@@ -143,7 +143,7 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 // @Router /packages/{package_name}/systems [get]
 func PackageSystemsListHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
-	apiver := c.GetInt(middlewares.KeyApiver)
+	apiver := c.GetInt(utils.KeyApiver)
 
 	query, meta, params, err := packageSystemsCommon(db, c)
 	if err != nil {
@@ -208,7 +208,7 @@ func PackageSystemsListHandler(c *gin.Context) {
 // @Router /ids/packages/{package_name}/systems [get]
 func PackageSystemsListIDsHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
-	apiver := c.GetInt(middlewares.KeyApiver)
+	apiver := c.GetInt(utils.KeyApiver)
 	query, meta, _, err := packageSystemsCommon(db, c)
 	if err != nil {
 		return

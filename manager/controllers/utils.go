@@ -60,7 +60,7 @@ func LogAndRespNotFound(c *gin.Context, err error, respMsg string) {
 // nolint: prealloc
 func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 	defaultSort, stableSort string) (*gorm.DB, []string, error) {
-	apiver := c.GetInt(middlewares.KeyApiver)
+	apiver := c.GetInt(utils.KeyApiver)
 	query := c.DefaultQuery("sort", defaultSort)
 	fields := strings.Split(query, ",")
 	var appliedFields []string
@@ -159,7 +159,7 @@ type ListOpts struct {
 }
 
 func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, error) {
-	apiver := c.GetInt(middlewares.KeyApiver)
+	apiver := c.GetInt(utils.KeyApiver)
 	filters := Filters{}
 	err := ParseFilters(c, filters, opts.Fields, opts.DefaultFilters, apiver)
 	if err != nil {
@@ -241,7 +241,7 @@ func UpdateMetaLinks(c *gin.Context, meta *ListMeta, total int, subTotals map[st
 	meta.SubTotals = subTotals
 	if total == 0 {
 		var hasSystems bool
-		account := c.GetInt(middlewares.KeyAccount)
+		account := c.GetInt(utils.KeyAccount)
 		db := middlewares.DBFromContext(c)
 		db.Raw("SELECT EXISTS (SELECT 1 FROM system_platform where rh_account_id = ?)", account).Scan(&hasSystems)
 		meta.HasSystems = &hasSystems
@@ -338,7 +338,7 @@ func ParseAllFilters(c *gin.Context, opts ListOpts) (Filters, error) {
 		return nil, err
 	}
 
-	apiver := c.GetInt(middlewares.KeyApiver)
+	apiver := c.GetInt(utils.KeyApiver)
 	err = ParseFilters(c, filters, opts.Fields, opts.DefaultFilters, apiver)
 	if err != nil {
 		err = errors.Wrap(err, "cannot parse inventory filters")

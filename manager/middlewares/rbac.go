@@ -21,7 +21,6 @@ var (
 )
 
 const xRHIdentity = "x-rh-identity"
-const KeyInventoryGroups = "inventoryGroups"
 
 var allPerms = "patch:*:*"
 var readPerms = map[string]bool{allPerms: true, "patch:*:read": true}
@@ -133,7 +132,7 @@ func isAccessGranted(c *gin.Context) bool {
 	granted := checkPermissions(&access, handlerName, c.Request.Method)
 	if granted {
 		// collect inventory groups
-		c.Set(KeyInventoryGroups, findInventoryGroups(&access))
+		c.Set(utils.KeyInventoryGroups, findInventoryGroups(&access))
 	}
 	return granted
 }
@@ -160,7 +159,7 @@ func findInventoryGroups(access *rbac.AccessPagination) map[string]string {
 			}
 			for _, v := range rd.AttributeFilter.Value {
 				if v == nil {
-					res[rbac.KeyUngrouped] = "[]"
+					res[utils.KeyUngrouped] = "[]"
 					continue
 				}
 				group, err := utils.ParseInventoryGroup(v, nil)
@@ -174,7 +173,7 @@ func findInventoryGroups(access *rbac.AccessPagination) map[string]string {
 	}
 
 	if len(groups) > 0 {
-		res[rbac.KeyGrouped] = fmt.Sprintf("{%s}", strings.Join(groups, ","))
+		res[utils.KeyGrouped] = fmt.Sprintf("{%s}", strings.Join(groups, ","))
 	}
 	return res
 }
