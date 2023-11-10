@@ -16,11 +16,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const KeyAccount = "account"
 const UIReferer = "console.redhat.com"
 const APISource = "API"
 const UISource = "UI"
-const KeyUser = "user"
 
 var AccountIDCache = struct {
 	Values map[string]int
@@ -61,7 +59,7 @@ func findAccount(c *gin.Context, orgID string) bool {
 	defer AccountIDCache.Lock.Unlock()
 
 	if id, has := AccountIDCache.Values[orgID]; has {
-		c.Set(KeyAccount, id)
+		c.Set(utils.KeyAccount, id)
 	} else {
 		// create new account if it does not exist
 		accID, err := GetOrCreateAccount(orgID)
@@ -69,7 +67,7 @@ func findAccount(c *gin.Context, orgID string) bool {
 			return false
 		}
 		AccountIDCache.Values[orgID] = accID
-		c.Set(KeyAccount, accID)
+		c.Set(utils.KeyAccount, accID)
 	}
 	return true
 }
@@ -82,7 +80,7 @@ func PublicAuthenticator() gin.HandlerFunc {
 			return
 		}
 		if findAccount(c, xrhid.Identity.OrgID) {
-			c.Set(KeyUser, fmt.Sprintf("%s %s", xrhid.Identity.User.FirstName, xrhid.Identity.User.LastName))
+			c.Set(utils.KeyUser, fmt.Sprintf("%s %s", xrhid.Identity.User.FirstName, xrhid.Identity.User.LastName))
 			c.Next()
 		}
 	}
@@ -92,7 +90,7 @@ func PublicAuthenticator() gin.HandlerFunc {
 func CheckReferer() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ref := c.GetHeader("Referer")
-		account := strconv.Itoa(c.GetInt(KeyAccount))
+		account := strconv.Itoa(c.GetInt(utils.KeyAccount))
 
 		if strings.Contains(ref, UIReferer) {
 			callerSourceCnt.WithLabelValues(UISource, account).Inc()
@@ -120,7 +118,7 @@ func TurnpikeAuthenticator() gin.HandlerFunc {
 func MockAuthenticator(account int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		utils.LogWarn("account_id", account, "using mocking account id")
-		c.Set(KeyAccount, account)
+		c.Set(utils.KeyAccount, account)
 		c.Next()
 	}
 }

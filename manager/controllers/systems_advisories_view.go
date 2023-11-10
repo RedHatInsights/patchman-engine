@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"app/base/database"
+	"app/base/utils"
 	"app/manager/middlewares"
 	"fmt"
 	"net/http"
@@ -189,9 +190,9 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListM
 		LogAndRespBadRequest(c, err, fmt.Sprintf("Invalid request body: %s", err.Error()))
 		return nil, nil, nil, err
 	}
-	acc := c.GetInt(middlewares.KeyAccount)
-	apiver := c.GetInt(middlewares.KeyApiver)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	acc := c.GetInt(utils.KeyAccount)
+	apiver := c.GetInt(utils.KeyApiver)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
 	// backward compatibility, put limit/offset from json into querystring
 	if req.Limit != nil {

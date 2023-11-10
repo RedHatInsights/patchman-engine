@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"app/base/rbac"
+	"app/base/utils"
 	"app/manager/middlewares"
 
 	"github.com/gin-gonic/gin"
@@ -28,8 +28,8 @@ import (
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /export/advisories [get]
 func AdvisoriesExportHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	filters, err := ParseAllFilters(c, AdvisoriesOpts)
 	if err != nil {
 		return
@@ -37,7 +37,7 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
 	var query *gorm.DB
 
-	if disableCachedCounts || HasInventoryFilter(filters) || len(groups[rbac.KeyGrouped]) != 0 {
+	if disableCachedCounts || HasInventoryFilter(filters) || len(groups[utils.KeyGrouped]) != 0 {
 		var err error
 		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
 		if err != nil {
@@ -68,7 +68,7 @@ func AdvisoriesExportHandler(c *gin.Context) {
 			fillAdvisoryItemAttributeReleaseVersion(advisories[i].AdvisoryItemAttributesCommon)
 	}
 
-	apiver := c.GetInt(middlewares.KeyApiver)
+	apiver := c.GetInt(utils.KeyApiver)
 	if apiver < 3 {
 		advisoriesV2 := advisoriesDBLookupV3toV2(advisories)
 		OutputExportData(c, advisoriesV2)

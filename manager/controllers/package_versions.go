@@ -68,8 +68,8 @@ func packageVersionsQuery(db *gorm.DB, acc int, groups map[string]string, packag
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /packages/{package_name}/versions [get]
 func PackageVersionsListHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	packageName := c.Param("package_name")
 	if packageName == "" {

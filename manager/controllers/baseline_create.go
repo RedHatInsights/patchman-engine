@@ -56,8 +56,8 @@ type SystemBaselineDBLookup struct {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines [put]
 func CreateBaselineHandler(c *gin.Context) {
-	accountID := c.GetInt(middlewares.KeyAccount)
-	creator := c.GetString(middlewares.KeyUser)
+	accountID := c.GetInt(utils.KeyAccount)
+	creator := c.GetString(utils.KeyUser)
 
 	var request CreateBaselineRequest
 	if err := c.ShouldBindJSON(&request); err != nil {

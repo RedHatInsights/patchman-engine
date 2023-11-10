@@ -46,8 +46,8 @@ type BaselineDetailAttributes struct {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines/{baseline_id} [get]
 func BaselineDetailHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
-	apiver := c.GetInt(middlewares.KeyApiver)
+	account := c.GetInt(utils.KeyAccount)
+	apiver := c.GetInt(utils.KeyApiver)
 
 	baselineIDstr := c.Param("baseline_id")
 	baselineID, err := strconv.ParseInt(baselineIDstr, 10, 64)

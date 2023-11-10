@@ -38,9 +38,9 @@ import (
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /export/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsExportHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
-	apiver := c.GetInt(middlewares.KeyApiver)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	apiver := c.GetInt(utils.KeyApiver)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	advisoryName := c.Param("advisory_id")
 	if advisoryName == "" {

@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"app/manager/middlewares"
+	"app/base/utils"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -33,9 +33,9 @@ import (
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /export/baselines/{baseline_id}/systems [get]
 func BaselineSystemsExportHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
-	apiver := c.GetInt(middlewares.KeyApiver)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	apiver := c.GetInt(utils.KeyApiver)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	if apiver < 3 {
 		err := fmt.Errorf("endpoint does not exist in v%d API, use API >= v3", apiver)
 		LogAndRespNotFound(c, err, err.Error())

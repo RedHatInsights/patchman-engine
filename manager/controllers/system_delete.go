@@ -22,7 +22,7 @@ import (
 // @Failure 500 {object} 	utils.ErrorResponse
 // @Router /systems/{inventory_id} [delete]
 func SystemDeleteHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
+	account := c.GetInt(utils.KeyAccount)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {

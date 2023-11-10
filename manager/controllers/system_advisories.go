@@ -62,8 +62,8 @@ func (v RelList) String() string {
 }
 
 func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
-	account := c.GetInt(middlewares.KeyAccount)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {
@@ -127,7 +127,7 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesHandler(c *gin.Context) {
-	apiver := c.GetInt(middlewares.KeyApiver)
+	apiver := c.GetInt(utils.KeyApiver)
 	query, meta, params, err := systemAdvisoriesCommon(c)
 	if err != nil {
 		return
@@ -178,7 +178,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesIDsHandler(c *gin.Context) {
-	apiver := c.GetInt(middlewares.KeyApiver)
+	apiver := c.GetInt(utils.KeyApiver)
 	query, _, _, err := systemAdvisoriesCommon(c)
 	if err != nil {
 		return

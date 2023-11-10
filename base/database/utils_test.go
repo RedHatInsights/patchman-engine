@@ -1,7 +1,6 @@
 package database
 
 import (
-	"app/base/rbac"
 	"app/base/utils"
 	"testing"
 
@@ -18,19 +17,19 @@ var (
 
 // nolint: lll
 var testCases = []map[int64]map[string]string{
-	{nGroup1: {rbac.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]"}`}},
-	{nGroup2: {rbac.KeyGrouped: `{"[{\"id\":\"inventory-group-2\"}]"}`}},
-	{nGroup1 + nGroup2: {rbac.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]","[{\"id\":\"inventory-group-2\"}]"}`}},
+	{nGroup1: {utils.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]"}`}},
+	{nGroup2: {utils.KeyGrouped: `{"[{\"id\":\"inventory-group-2\"}]"}`}},
+	{nGroup1 + nGroup2: {utils.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]","[{\"id\":\"inventory-group-2\"}]"}`}},
 	{nGroup1 + nUngrouped: {
-		rbac.KeyGrouped:   `{"[{\"id\":\"inventory-group-1\"}]"}`,
-		rbac.KeyUngrouped: "[]",
+		utils.KeyGrouped:   `{"[{\"id\":\"inventory-group-1\"}]"}`,
+		utils.KeyUngrouped: "[]",
 	}},
 	{nUngrouped: {
-		rbac.KeyGrouped:   `{"[{\"id\":\"non-existing-group\"}]"}`,
-		rbac.KeyUngrouped: "[]",
+		utils.KeyGrouped:   `{"[{\"id\":\"non-existing-group\"}]"}`,
+		utils.KeyUngrouped: "[]",
 	}},
-	{0: {rbac.KeyGrouped: `{"[{\"id\":\"non-existing-group\"}]"}`}},
-	{nUngrouped: {rbac.KeyUngrouped: "[]"}},
+	{0: {utils.KeyGrouped: `{"[{\"id\":\"non-existing-group\"}]"}`}},
+	{nUngrouped: {utils.KeyUngrouped: "[]"}},
 	{nAll: {}},
 	{nAll: nil},
 }

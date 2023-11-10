@@ -33,9 +33,9 @@ var AdvisorySystemOpts = ListOpts{
 }
 
 func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
-	account := c.GetInt(middlewares.KeyAccount)
-	apiver := c.GetInt(middlewares.KeyApiver)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	apiver := c.GetInt(utils.KeyApiver)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	advisoryName := c.Param("advisory_id")
 	if advisoryName == "" {
@@ -106,7 +106,7 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListHandler(c *gin.Context) {
-	apiver := c.GetInt(middlewares.KeyApiver)
+	apiver := c.GetInt(utils.KeyApiver)
 	if apiver < 3 {
 		advisorySystemsListHandler(c)
 		return
@@ -188,7 +188,7 @@ func advisorySystemsListHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListIDsHandler(c *gin.Context) {
-	apiver := c.GetInt(middlewares.KeyApiver)
+	apiver := c.GetInt(utils.KeyApiver)
 	query, meta, _, err := advisorySystemsCommon(c)
 	if err != nil {
 		return

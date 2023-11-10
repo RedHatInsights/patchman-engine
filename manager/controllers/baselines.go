@@ -81,9 +81,9 @@ type BaselinesResponse struct {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines [get]
 func BaselinesListHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
-	apiver := c.GetInt(middlewares.KeyApiver)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	apiver := c.GetInt(utils.KeyApiver)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	filters, err := ParseAllFilters(c, BaselineOpts)
 	if err != nil {
 		return
@@ -168,7 +168,7 @@ func buildBaselinesData(baselines []BaselinesDBLookup, apiver int) ([]BaselineIt
 }
 
 func creatorsMeta(c *gin.Context, db *gorm.DB, account int) (BaselinesMeta, error) {
-	apiver := c.GetInt(middlewares.KeyApiver)
+	apiver := c.GetInt(utils.KeyApiver)
 	// list of creators for account
 	baselinesMeta := BaselinesMeta{}
 	err := db.Table("baseline bl").

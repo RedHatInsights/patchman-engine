@@ -29,7 +29,7 @@ type DeleteBaselineResponse struct {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines/{baseline_id} [delete]
 func BaselineDeleteHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
+	account := c.GetInt(utils.KeyAccount)
 
 	baselineIDstr := c.Param("baseline_id")
 	baselineID, err := strconv.ParseInt(baselineIDstr, 10, 64)

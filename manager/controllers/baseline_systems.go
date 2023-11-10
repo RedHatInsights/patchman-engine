@@ -165,9 +165,9 @@ func baselineSystemsCommon(c *gin.Context, account, apiver int, groups map[strin
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines/{baseline_id}/systems [get]
 func BaselineSystemsListHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
-	apiver := c.GetInt(middlewares.KeyApiver)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	apiver := c.GetInt(utils.KeyApiver)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	query, meta, params, err := baselineSystemsCommon(c, account, apiver, groups)
 	if err != nil {
@@ -220,9 +220,9 @@ func BaselineSystemsListHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/baselines/{baseline_id}/systems [get]
 func BaselineSystemsListIDsHandler(c *gin.Context) {
-	account := c.GetInt(middlewares.KeyAccount)
-	apiver := c.GetInt(middlewares.KeyApiver)
-	groups := c.GetStringMapString(middlewares.KeyInventoryGroups)
+	account := c.GetInt(utils.KeyAccount)
+	apiver := c.GetInt(utils.KeyApiver)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	if apiver < 3 {
 		c.AbortWithStatus(404)
 		return

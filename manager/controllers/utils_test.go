@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"app/base/database"
-	"app/base/rbac"
 	"app/base/utils"
 	"net/http"
 	"net/http/httptest"
@@ -24,7 +23,7 @@ func TestGroupNameFilter(t *testing.T) {
 
 	var systems []SystemsID
 	groups := map[string]string{
-		rbac.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]","[{\"id\":\"inventory-group-2\"}]"}`,
+		utils.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]","[{\"id\":\"inventory-group-2\"}]"}`,
 	}
 	tx := database.Systems(database.Db, 1, groups)
 	tx, _ = ApplyInventoryFilter(filters, tx, "sp.inventory_id")
@@ -47,7 +46,7 @@ func TestGroupNameFilter2(t *testing.T) {
 
 	var systems []SystemsID
 	groups := map[string]string{
-		rbac.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]","[{\"id\":\"inventory-group-2\"}]"}`,
+		utils.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]","[{\"id\":\"inventory-group-2\"}]"}`,
 	}
 	tx := database.Systems(database.Db, 1, groups)
 	tx, _ = ApplyInventoryFilter(filters, tx, "sp.inventory_id")

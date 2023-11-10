@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"app/base/rbac"
+	"app/base/utils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -267,9 +268,9 @@ func TestFindInventoryGroupsGrouped(t *testing.T) {
 	groups := findInventoryGroups(access)
 	assert.Equal(t,
 		`{"[{\"id\":\"df57820e-965c-49a6-b0bc-797b7dd60581\"}]"}`,
-		groups[rbac.KeyGrouped],
+		groups[utils.KeyGrouped],
 	)
-	val, ok := groups[rbac.KeyUngrouped]
+	val, ok := groups[utils.KeyUngrouped]
 	assert.Equal(t, "", val)
 	assert.Equal(t, false, ok)
 }
@@ -287,10 +288,10 @@ func TestFindInventoryGroupsUnrouped(t *testing.T) {
 		}},
 	}
 	groups := findInventoryGroups(access)
-	val, ok := groups[rbac.KeyGrouped]
+	val, ok := groups[utils.KeyGrouped]
 	assert.Equal(t, "", val)
 	assert.Equal(t, false, ok)
-	assert.Equal(t, "[]", groups[rbac.KeyUngrouped])
+	assert.Equal(t, "[]", groups[utils.KeyUngrouped])
 }
 
 // nolint:lll
@@ -309,9 +310,9 @@ func TestFindInventoryGroups(t *testing.T) {
 	groups := findInventoryGroups(access)
 	assert.Equal(t,
 		`{"[{\"id\":\"df57820e-965c-49a6-b0bc-797b7dd60581\"}]","[{\"id\":\"df3f0efd-c853-41b5-80a1-86881d5343d1\"}]"}`,
-		groups[rbac.KeyGrouped],
+		groups[utils.KeyGrouped],
 	)
-	assert.Equal(t, "[]", groups[rbac.KeyUngrouped])
+	assert.Equal(t, "[]", groups[utils.KeyUngrouped])
 }
 
 func TestFindInventoryGroupsOverwrite(t *testing.T) {

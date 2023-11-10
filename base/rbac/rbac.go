@@ -1,8 +1,5 @@
 package rbac
 
-const KeyGrouped = "grouped"
-const KeyUngrouped = "ungrouped"
-
 type AccessPagination struct {
 	Data []Access `json:"data"`
 }
