@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"app/base/deprecations"
 	"app/base/utils"
 	"app/docs"
 	"app/manager/controllers"
@@ -14,8 +15,9 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	api.Use(middlewares.RBAC())
 	api.Use(middlewares.PublicAuthenticator())
 	api.Use(middlewares.CheckReferer())
-	api.Use(middlewares.DatabaseWithContext())
 	api.Use(middlewares.SetAPIVersion(api.BasePath()))
+	api.Use(middlewares.Deprecate(deprecations.DeprecateV1V2APIs()))
+	api.Use(middlewares.DatabaseWithContext())
 
 	advisories := api.Group("/advisories")
 	advisories.GET("", controllers.AdvisoriesListHandler)
