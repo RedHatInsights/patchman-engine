@@ -94,6 +94,9 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []st
 			break
 		}
 
+		if repos.LatestRepoChange == nil {
+			break
+		}
 		latestRepoChange = repos.LatestRepoChange.Time()
 
 		utils.LogInfo("page", page, "pages", repos.Pages, "count", len(repos.RepositoryList),
