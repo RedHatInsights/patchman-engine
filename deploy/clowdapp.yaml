@@ -485,7 +485,7 @@ objects:
 
     - name: migrate-system-package-data
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
-      disabled: ${MIGRATE_SYSTEM_PACKAGE_DISABLED}}
+      disabled: ${{MIGRATE_SYSTEM_PACKAGE_DISABLED}}
       concurrencyPolicy: Forbid
       completions: 1
       podSpec:
