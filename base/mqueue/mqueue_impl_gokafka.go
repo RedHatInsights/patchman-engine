@@ -68,14 +68,13 @@ func (t *kafkaGoWriterImpl) WriteMessages(ctx context.Context, msgs ...KafkaMess
 }
 
 func NewKafkaReaderFromEnv(topic string) Reader {
-	kafkaAddress := utils.FailIfEmpty(utils.Cfg.KafkaAddress, "KAFKA_ADDRESS")
 	kafkaGroup := utils.FailIfEmpty(utils.Cfg.KafkaGroup, "KAFKA_GROUP")
 	minBytes := utils.Cfg.KafkaReaderMinBytes
 	maxBytes := utils.Cfg.KafkaReaderMaxBytes
 	maxAttempts := utils.Cfg.KafkaReaderMaxAttempts
 
 	config := kafka.ReaderConfig{
-		Brokers:     []string{kafkaAddress},
+		Brokers:     utils.Cfg.KafkaServers,
 		Topic:       topic,
 		GroupID:     kafkaGroup,
 		MinBytes:    minBytes,
@@ -90,11 +89,10 @@ func NewKafkaReaderFromEnv(topic string) Reader {
 }
 
 func NewKafkaWriterFromEnv(topic string) Writer {
-	kafkaAddress := utils.FailIfEmpty(utils.Cfg.KafkaAddress, "KAFKA_ADDRESS")
 	maxAttempts := utils.Cfg.KafkaWriterMaxAttempts
 
 	config := kafka.WriterConfig{
-		Brokers: []string{kafkaAddress},
+		Brokers: utils.Cfg.KafkaServers,
 		Topic:   topic,
 		// By default the writer will wait for a second (or until the buffer is filled by different goroutines)
 		// before sending the batch of messages. Disable this, and use it in 'non-batched' mode
