@@ -50,18 +50,21 @@
     },
     "endpoints": [
         {
+            "apiPath": "api/patch/v3",
             "app": "vmaas",
             "hostname": "platform",
             "name": "webapp-service",
             "port": 9001
         },
         {
+            "apiPath": "api/patch/v3",
             "app": "vmaas",
             "hostname": "platform",
             "name": "webapp-go",
             "port": 9001
         },
         {
+            "apiPath": "api/patch/v3",
             "app": "rbac",
             "hostname": "platform",
             "name": "",

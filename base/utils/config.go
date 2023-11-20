@@ -215,6 +215,7 @@ func initKafkaFromClowder() {
 }
 
 type Endpoint clowder.DependencyEndpoint
+type PrivateEndpoint clowder.PrivateDependencyEndpoint
 
 func initServicesFromClowder() {
 	webappName := "webapp-service"
@@ -238,19 +239,31 @@ func initServicesFromClowder() {
 		if e.App == "patchman" {
 			switch e.Name {
 			case "manager":
-				Cfg.ManagerPrivateAddress = (*Endpoint)(&e).buildURL()
+				Cfg.ManagerPrivateAddress = (*PrivateEndpoint)(&e).buildURL()
 			case "listener":
-				Cfg.ListenerPrivateAddress = (*Endpoint)(&e).buildURL()
+				Cfg.ListenerPrivateAddress = (*PrivateEndpoint)(&e).buildURL()
 			case "evaluator-upload":
-				Cfg.EvaluatorUploadPrivateAddress = (*Endpoint)(&e).buildURL()
+				Cfg.EvaluatorUploadPrivateAddress = (*PrivateEndpoint)(&e).buildURL()
 			case "evaluator-recalc":
-				Cfg.EvaluatorRecalcPrivateAddress = (*Endpoint)(&e).buildURL()
+				Cfg.EvaluatorRecalcPrivateAddress = (*PrivateEndpoint)(&e).buildURL()
 			}
 		}
 	}
 }
 
 func (e *Endpoint) buildURL() string {
+	port := e.Port
+	scheme := "http"
+	if clowder.LoadedConfig.TlsCAPath != nil {
+		scheme += "s"
+		if e.TlsPort != nil {
+			port = *e.TlsPort
+		}
+	}
+	return fmt.Sprintf("%s://%s:%d", scheme, e.Hostname, port)
+}
+
+func (e *PrivateEndpoint) buildURL() string {
 	port := e.Port
 	scheme := "http"
 	if clowder.LoadedConfig.TlsCAPath != nil {
