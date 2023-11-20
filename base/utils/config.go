@@ -43,6 +43,7 @@ type Config struct {
 	Ratelimit          int
 
 	// kafka
+	KafkaServers           []string
 	KafkaAddress           string
 	KafkaSslEnabled        bool
 	KafkaSslCert           string
@@ -181,6 +182,7 @@ func initAPIromClowder() {
 func initKafkaFromClowder() {
 	if len(clowder.LoadedConfig.Kafka.Brokers) > 0 {
 		Cfg.KafkaSaslType = nil
+		Cfg.KafkaServers = clowder.KafkaServers
 		brokerCfg := clowder.LoadedConfig.Kafka.Brokers[0]
 		kafkaHost := brokerCfg.Hostname
 		kafkaPort := *brokerCfg.Port
