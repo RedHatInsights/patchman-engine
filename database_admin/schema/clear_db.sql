@@ -4,7 +4,7 @@ $$
         stmt TEXT;
     BEGIN
         EXECUTE 'DROP EXTENSION IF EXISTS pgcrypto';
-        EXECUTE 'DROP EXTENSION IF EXISTS "uuid-osp"';
+        EXECUTE 'DROP EXTENSION IF EXISTS "uuid-ossp"';
         FOR stmt IN (SELECT 'DROP ' || case when prokind = 'f' then 'FUNCTION ' else 'PROCEDURE ' end
                             || ns.nspname || '.' || proname || '(' || oidvectortypes(proargtypes) || ') CASCADE;'
                      FROM pg_proc
