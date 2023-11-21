@@ -475,7 +475,7 @@ func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
 }
 
 func Csv(ctx *gin.Context, code int, res interface{}) {
-	ctx.Status(http.StatusOK)
+	ctx.Status(code)
 	ctx.Header("Content-Type", "text/csv")
 	gocsv.SetCSVWriter(func(out io.Writer) *gocsv.SafeCSVWriter {
 		writer := csv.NewWriter(out)
@@ -516,16 +516,16 @@ func systemDBLookups2SystemItems(systems []SystemDBLookup) ([]SystemItem, int, m
 		subtotals["stale"] = systems[0].TotalStale
 	}
 
-	for i, system := range systems {
-		if err := parseSystemItems(system.TagsStr, &system.Tags); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system tags parsing failed")
+	for i := range systems {
+		if err := parseSystemItems(systems[i].TagsStr, &systems[i].Tags); err != nil {
+			utils.LogDebug("err", err.Error(), "inventory_id", systems[i].ID, "system tags parsing failed")
 		}
-		if err := parseSystemItems(system.GroupsStr, &system.Groups); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system groups parsing failed")
+		if err := parseSystemItems(systems[i].GroupsStr, &systems[i].Groups); err != nil {
+			utils.LogDebug("err", err.Error(), "inventory_id", systems[i].ID, "system groups parsing failed")
 		}
 		data[i] = SystemItem{
-			Attributes: system.SystemItemAttributesAll,
-			ID:         system.ID,
+			Attributes: systems[i].SystemItemAttributesAll,
+			ID:         systems[i].ID,
 			Type:       "system",
 		}
 	}

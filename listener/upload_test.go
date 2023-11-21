@@ -99,7 +99,7 @@ func TestUploadHandler(t *testing.T) {
 	deleteData(t)
 
 	_ = getOrCreateTestAccount(t)
-	event := createTestUploadEvent(id, id, id, "puptoo", true, false)
+	event := createTestUploadEvent(id, id, "puptoo", true, false)
 
 	event.Host.SystemProfile.OperatingSystem = inventory.OperatingSystem{Major: 8}
 	repos := append(event.Host.SystemProfile.GetYumRepos(), inventory.YumRepo{ID: "epel", Enabled: true})
@@ -131,7 +131,7 @@ func TestUploadHandlerWarn(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	noPkgsEvent := createTestUploadEvent("1", "1", id, "puptoo", false, false)
+	noPkgsEvent := createTestUploadEvent("1", id, "puptoo", false, false)
 	err := HandleUpload(noPkgsEvent)
 	assert.NoError(t, err)
 	assertInLogs(t, WarnSkippingNoPackages, logHook.LogEntries...)
@@ -142,7 +142,7 @@ func TestUploadHandlerWarnSkipReporter(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	noPkgsEvent := createTestUploadEvent("1", "1", id, "yupana", false, false)
+	noPkgsEvent := createTestUploadEvent("1", id, "yupana", false, false)
 	err := HandleUpload(noPkgsEvent)
 	assert.NoError(t, err)
 	assertInLogs(t, WarnSkippingReporter, logHook.LogEntries...)
@@ -153,7 +153,7 @@ func TestUploadHandlerWarnSkipHostType(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	event := createTestUploadEvent("1", "1", id, "puptoo", true, false)
+	event := createTestUploadEvent("1", id, "puptoo", true, false)
 	event.Host.SystemProfile.HostType = "edge"
 	err := HandleUpload(event)
 	assert.NoError(t, err)
@@ -166,7 +166,7 @@ func TestUploadHandlerError1(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	event := createTestUploadEvent("1", "1", id, "puptoo", true, false)
+	event := createTestUploadEvent("1", id, "puptoo", true, false)
 	*event.Host.OrgID = ""
 	err := HandleUpload(event)
 	assert.NoError(t, err)
@@ -189,7 +189,7 @@ func TestUploadHandlerError2(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
 	_ = getOrCreateTestAccount(t)
-	event := createTestUploadEvent("1", "1", id, "puptoo", true, false)
+	event := createTestUploadEvent("1", id, "puptoo", true, false)
 	err := HandleUpload(event)
 	assert.Nil(t, err)
 	time.Sleep(2 * uploadEvalTimeout)
@@ -281,7 +281,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 		HTTPClient: &http.Client{},
 		Debug:      true,
 	}
-	hostEvent := createTestUploadEvent("1", "1", id, "puptoo", false, true)
+	hostEvent := createTestUploadEvent("1", id, "puptoo", false, true)
 	yumUpdates, err := getYumUpdates(hostEvent, httpClient)
 	assert.Nil(t, err)
 

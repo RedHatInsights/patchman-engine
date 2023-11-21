@@ -238,14 +238,14 @@ func packageSystemDBLookups2PackageSystemItemsV3(systems []PackageSystemDBLookup
 		total = systems[0].Total
 	}
 	data := make([]PackageSystemItemV3, len(systems))
-	for i, system := range systems {
-		if err := parseSystemItems(system.TagsStr, &system.PackageSystemItemV3.Tags); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system tags parsing failed")
+	for i := range systems {
+		if err := parseSystemItems(systems[i].TagsStr, &systems[i].PackageSystemItemV3.Tags); err != nil {
+			utils.LogDebug("err", err.Error(), "inventory_id", systems[i].ID, "system tags parsing failed")
 		}
-		if err := parseSystemItems(system.GroupsStr, &system.PackageSystemItemV3.Groups); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system groups parsing failed")
+		if err := parseSystemItems(systems[i].GroupsStr, &systems[i].PackageSystemItemV3.Groups); err != nil {
+			utils.LogDebug("err", err.Error(), "inventory_id", systems[i].ID, "system groups parsing failed")
 		}
-		data[i] = system.PackageSystemItemV3
+		data[i] = systems[i].PackageSystemItemV3
 	}
 	return data, total
 }

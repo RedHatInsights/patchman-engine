@@ -20,7 +20,7 @@ import (
 var systemID = int64(12)
 var rhAccountID = 3
 
-func TestInit(t *testing.T) {
+func TestInit(_ *testing.T) {
 	utils.TestLoadEnv("conf/evaluator_common.env", "conf/evaluator_upload.env")
 }
 

@@ -20,7 +20,7 @@ const id = "99c0ffee-0000-0000-0000-0000c0ffee99"
 
 var s3URL = "http://platform:9001/yum_updates"
 
-func TestInit(t *testing.T) {
+func TestInit(_ *testing.T) {
 	utils.TestLoadEnv("conf/listener.env")
 }
 
@@ -77,7 +77,7 @@ func getOrCreateTestAccount(t *testing.T) int {
 }
 
 // nolint: unparam
-func createTestUploadEvent(rhAccountID, orgID, inventoryID, reporter string, packages, yum bool) HostEvent {
+func createTestUploadEvent(orgID, inventoryID, reporter string, packages, yum bool) HostEvent {
 	ev := HostEvent{
 		Type: "created",
 		Host: Host{

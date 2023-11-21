@@ -12,6 +12,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const InvalidBaselineID = "Invalid baseline_id: "
+
 type DeleteBaselineResponse struct {
 	BaselineID int64 `json:"baseline_id" example:"1"` // Updated baseline unique ID, it can not be changed
 }
@@ -34,7 +36,7 @@ func BaselineDeleteHandler(c *gin.Context) {
 	baselineIDstr := c.Param("baseline_id")
 	baselineID, err := strconv.ParseInt(baselineIDstr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "Invalid baseline_id: " + baselineIDstr})
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: InvalidBaselineID + baselineIDstr})
 		return
 	}
 
