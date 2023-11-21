@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInit(t *testing.T) {
+func TestInit(_ *testing.T) {
 	utils.TestLoadEnv("conf/vmaas_sync.env")
 }
 

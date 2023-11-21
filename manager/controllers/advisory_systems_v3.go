@@ -100,16 +100,16 @@ func buildAdvisorySystemsData(fields []AdvisorySystemDBLookup) ([]AdvisorySystem
 		total = fields[0].Total
 	}
 	data := make([]AdvisorySystemItem, len(fields))
-	for i, as := range fields {
-		if err = parseSystemItems(as.TagsStr, &as.AdvisorySystemItemAttributes.Tags); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", as.ID, "system tags parsing failed")
+	for i := range fields {
+		if err = parseSystemItems(fields[i].TagsStr, &fields[i].AdvisorySystemItemAttributes.Tags); err != nil {
+			utils.LogDebug("err", err.Error(), "inventory_id", fields[i].ID, "system tags parsing failed")
 		}
-		if err = parseSystemItems(as.GroupsStr, &as.AdvisorySystemItemAttributes.Groups); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", as.ID, "system groups parsing failed")
+		if err = parseSystemItems(fields[i].GroupsStr, &fields[i].AdvisorySystemItemAttributes.Groups); err != nil {
+			utils.LogDebug("err", err.Error(), "inventory_id", fields[i].ID, "system groups parsing failed")
 		}
 		data[i] = AdvisorySystemItem{
-			Attributes: as.AdvisorySystemItemAttributes,
-			ID:         as.ID,
+			Attributes: fields[i].AdvisorySystemItemAttributes,
+			ID:         fields[i].ID,
 			Type:       "system",
 		}
 	}

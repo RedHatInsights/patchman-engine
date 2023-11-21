@@ -52,7 +52,7 @@ func BaselineDetailHandler(c *gin.Context) {
 	baselineIDstr := c.Param("baseline_id")
 	baselineID, err := strconv.ParseInt(baselineIDstr, 10, 64)
 	if err != nil {
-		LogAndRespBadRequest(c, err, "Invalid baseline_id: "+baselineIDstr)
+		LogAndRespBadRequest(c, err, InvalidBaselineID+baselineIDstr)
 		return
 	}
 
