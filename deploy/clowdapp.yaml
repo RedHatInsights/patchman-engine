@@ -733,7 +733,7 @@ parameters:
 - {name: ENABLE_REFRESH_ADVISORY_CACHES, value: 'true'} # Enable periodic refresh of account advisory caches
 - {name: SKIP_N_ACCOUNTS_REFRESH, value: '0'} # Skip advisory cache refresh for N first accounts in case the previous refresh didn't finish
 # Migrate system package data
-- {name: MIGRATE_SYSTEM_PACKAGE_DISABLED, value: 'true'}
+- {name: MIGRATE_SYSTEM_PACKAGE_DISABLED, value: 'false'}
 - {name: RES_REQUEST_CPU_MIGRATE_JOB, value: '1'}
 - {name: RES_LIMIT_CPU_MIGRATE_JOB, value: '2'}
 - {name: RES_REQUEST_MEM_MIGRATE_JOB, value: '512Mi'}
