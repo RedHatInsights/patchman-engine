@@ -8,6 +8,7 @@ import (
 	"app/tasks"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 
 	"gorm.io/gorm"
@@ -180,6 +181,7 @@ func getEvraApplicability(udpateData []UpdateData) (string, string) {
 	return latestApplicable, latestInstallable
 }
 
+// nolint: funlen
 func getPackageIDs(u SystemPackageRecord, i int, latestApplicable, latestInstallable string) (int64, int64) {
 	// get package_id for latest installable and applicable packages
 	if len(latestApplicable) == 0 && len(latestInstallable) == 0 {
@@ -196,6 +198,9 @@ func getPackageIDs(u SystemPackageRecord, i int, latestApplicable, latestInstall
 		installableInCache := true
 
 		if len(latestApplicable) > 0 {
+			if !strings.Contains(latestApplicable, ":") {
+				latestApplicable = fmt.Sprintf("0:%s", latestApplicable)
+			}
 			nevraApplicable := fmt.Sprintf("%s-%s", name, latestApplicable)
 			applicable, applicableInCache = memoryPackageCache.GetByNevra(nevraApplicable)
 			if applicableInCache {
@@ -204,6 +209,9 @@ func getPackageIDs(u SystemPackageRecord, i int, latestApplicable, latestInstall
 		}
 
 		if len(latestInstallable) > 0 {
+			if !strings.Contains(latestInstallable, ":") {
+				latestInstallable = fmt.Sprintf("0:%s", latestInstallable)
+			}
 			nevraInstallable := fmt.Sprintf("%s-%s", name, latestInstallable)
 			installable, installableInCache = memoryPackageCache.GetByNevra(nevraInstallable)
 			if installableInCache {
