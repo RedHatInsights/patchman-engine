@@ -2,6 +2,7 @@ package migration
 
 import (
 	"app/base/core"
+	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"app/evaluator"
@@ -49,7 +50,6 @@ type Package struct {
 }
 
 func MigrateSystemPackageData() {
-	var wg sync.WaitGroup
 	var partitions []string
 
 	err := tasks.WithReadReplicaTx(func(db *gorm.DB) error {
@@ -63,49 +63,57 @@ func MigrateSystemPackageData() {
 	}
 
 	for i, part := range partitions {
-		utils.LogInfo("#", i, "partition", part, "Migrating partition")
-		accSys := getAccSys(part, i)
+		processPartition(part, i)
+	}
+}
 
-		// process at most 4 systems at once
-		guard := make(chan struct{}, 4)
+func processPartition(part string, i int) {
+	utils.LogInfo("#", i, "partition", part, "Migrating partition")
 
-		for _, as := range accSys {
-			guard <- struct{}{}
-			wg.Add(1)
-			go func(as AccSys, i int, part string) {
-				defer func() {
-					<-guard
-					wg.Done()
-				}()
-				updates := getUpdates(as, part, i)
-				for _, u := range updates {
-					updateData := getUpdateData(u, as, part, i)
-					latestApplicable, latestInstallable := getEvraApplicability(updateData)
-					applicableID, installableID := getPackageIDs(u, i, latestApplicable, latestInstallable)
-					if applicableID != 0 && installableID != 0 {
-						// insert ids to system_package2
-						err = tasks.WithTx(func(db *gorm.DB) error {
-							return db.Table("system_package2").
-								Where("installable_id IS NULL AND applicable_id IS NULL").
-								Save(models.SystemPackage{
-									RhAccountID:   as.RhAccountID,
-									SystemID:      as.SystemID,
-									PackageID:     u.PackageID,
-									NameID:        u.NameID,
-									InstallableID: &installableID,
-									ApplicableID:  &applicableID,
-								}).Error
-						})
-						if err != nil {
-							utils.LogWarn("#", i, "Failed to update system_package2")
-						}
+	var wg sync.WaitGroup
+	tx := database.Db.Begin()
+	defer tx.Commit()
+
+	accSys := getAccSys(part, i)
+	// process at most 4 systems at once
+	guard := make(chan struct{}, 4)
+
+	for _, as := range accSys {
+		guard <- struct{}{}
+		wg.Add(1)
+		go func(as AccSys, i int, part string) {
+			defer func() {
+				<-guard
+				wg.Done()
+			}()
+			updates := getUpdates(as, part, i)
+			for _, u := range updates {
+				updateData := getUpdateData(u, as, part, i)
+				latestApplicable, latestInstallable := getEvraApplicability(updateData)
+				applicableID, installableID := getPackageIDs(u, i, latestApplicable, latestInstallable)
+				if applicableID != 0 && installableID != 0 {
+					// insert ids to system_package2
+					err := tasks.WithTx(func(db *gorm.DB) error {
+						return db.Table("system_package2").
+							Where("installable_id IS NULL AND applicable_id IS NULL").
+							Save(models.SystemPackage{
+								RhAccountID:   as.RhAccountID,
+								SystemID:      as.SystemID,
+								PackageID:     u.PackageID,
+								NameID:        u.NameID,
+								InstallableID: &installableID,
+								ApplicableID:  &applicableID,
+							}).Error
+					})
+					if err != nil {
+						utils.LogWarn("#", i, "Failed to update system_package2")
 					}
 				}
-			}(as, i, part)
-		}
-		wg.Wait()
-		utils.LogInfo("#", i, "partition", part, "Partition migrated")
+			}
+		}(as, i, part)
 	}
+	wg.Wait()
+	utils.LogInfo("#", i, "partition", part, "Partition migrated")
 }
 
 func getAccSys(part string, i int) []AccSys {
