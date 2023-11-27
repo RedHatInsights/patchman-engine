@@ -16,15 +16,25 @@ import (
 	"gorm.io/gorm"
 )
 
-var memoryPackageCache *evaluator.PackageCache
+var (
+	memoryPackageCache   *evaluator.PackageCache
+	packageCacheSize     int
+	packageNameCacheSize int
+	maxGoroutines        int
+)
 
-func RunSystemPackageDataMigration() {
-	tasks.HandleContextCancel(tasks.WaitAndExit)
+func configure() {
 	core.ConfigureApp()
-	packageCacheSize := utils.GetIntEnvOrDefault("PACKAGE_CACHE_SIZE", 1000000)
-	packageNameCacheSize := utils.GetIntEnvOrDefault("PACKAGE_NAME_CACHE_SIZE", 60000)
+	tasks.HandleContextCancel(tasks.WaitAndExit)
+	maxGoroutines = utils.GetIntEnvOrDefault("MAX_GOROUTINES", 4)
+	packageCacheSize = utils.GetIntEnvOrDefault("PACKAGE_CACHE_SIZE", 1000000)
+	packageNameCacheSize = utils.GetIntEnvOrDefault("PACKAGE_NAME_CACHE_SIZE", 60000)
 	memoryPackageCache = evaluator.NewPackageCache(true, true, packageCacheSize, packageNameCacheSize)
 	memoryPackageCache.Load()
+}
+
+func RunSystemPackageDataMigration() {
+	configure()
 	utils.LogInfo("Migrating installable/applicable advisories from system_package to system_package2")
 	MigrateSystemPackageData()
 }
@@ -76,8 +86,8 @@ func processPartition(part string, i int) {
 	defer tx.Rollback()
 
 	accSys := getAccSys(part, i)
-	// process at most 4 systems at once
-	guard := make(chan struct{}, 4)
+	// process at most `maxGoroutines` systems at once
+	guard := make(chan struct{}, maxGoroutines)
 
 	for sysIdx, as := range accSys {
 		guard <- struct{}{}

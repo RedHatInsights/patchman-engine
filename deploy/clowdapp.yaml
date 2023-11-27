@@ -510,6 +510,7 @@ objects:
                                                       key: vmaas-sync-database-password}}}
         - {name: PACKAGE_CACHE_SIZE, value: '${PACKAGE_CACHE_SIZE}'}
         - {name: PACKAGE_NAME_CACHE_SIZE, value: '${PACKAGE_NAME_CACHE_SIZE}'}
+        - {name: MAX_GOROUTINES, value: '${POC_MIGRATION_MAX_GOROUTINES}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_MIGRATE_JOB}', memory: '${RES_LIMIT_MEM_MIGRATE_JOB}'}
           requests: {cpu: '${RES_REQUEST_CPU_MIGRATE_JOB}', memory: '${RES_REQUEST_MEM_MIGRATE_JOB}'}
@@ -738,6 +739,7 @@ parameters:
 - {name: RES_LIMIT_CPU_MIGRATE_JOB, value: '2'}
 - {name: RES_REQUEST_MEM_MIGRATE_JOB, value: '512Mi'}
 - {name: RES_LIMIT_MEM_MIGRATE_JOB, value: '1024Mi'}
+- {name: POC_MIGRATION_MAX_GOROUTINES, value: '4'}
 
 # Database admin
 - {name: IMAGE_TAG_DATABASE_ADMIN, value: v3.5.34}
