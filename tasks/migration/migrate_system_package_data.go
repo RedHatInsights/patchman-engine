@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 var memoryPackageCache *evaluator.PackageCache
@@ -87,28 +88,32 @@ func processPartition(part string, i int) {
 				wg.Done()
 			}()
 			updates := getUpdates(as, part, i)
+			toInsert := make([]models.SystemPackage, 0, 1000)
 			for _, u := range updates {
 				updateData := getUpdateData(u, as, part, i)
 				latestApplicable, latestInstallable := getEvraApplicability(updateData)
 				applicableID, installableID := getPackageIDs(u, i, latestApplicable, latestInstallable)
-				if applicableID != 0 && installableID != 0 {
+				if applicableID != 0 || installableID != 0 {
 					// insert ids to system_package2
-					err := tasks.WithTx(func(db *gorm.DB) error {
-						return db.Table("system_package2").
-							Where("installable_id IS NULL AND applicable_id IS NULL").
-							Save(models.SystemPackage{
-								RhAccountID:   as.RhAccountID,
-								SystemID:      as.SystemID,
-								PackageID:     u.PackageID,
-								NameID:        u.NameID,
-								InstallableID: &installableID,
-								ApplicableID:  &applicableID,
-							}).Error
-					})
-					if err != nil {
-						utils.LogWarn("#", i, "Failed to update system_package2")
+					sp := models.SystemPackage{
+						RhAccountID: as.RhAccountID,
+						SystemID:    as.SystemID,
+						PackageID:   u.PackageID,
+						NameID:      u.NameID,
 					}
+					if installableID != 0 {
+						sp.InstallableID = &installableID
+					}
+					if applicableID != 0 {
+						sp.ApplicableID = &applicableID
+					}
+					toInsert = append(toInsert, sp)
 				}
+			}
+			tx = tx.Clauses(clause.OnConflict{DoNothing: true})
+			err := database.BulkInsert(tx, toInsert)
+			if err != nil {
+				utils.LogWarn("#", i, "Failed to update system_package2")
 			}
 		}(as, i, part)
 	}
