@@ -286,3 +286,62 @@ func getPprof(address, param, query string) ([]byte, error) {
 	}
 	return resBody, nil
 }
+
+// @Summary Migrate system_package data to system_package2
+// @Description Migrate system_package data to system_package2
+// @ID migrateSystemPackage
+// @Security RhIdentity
+// @Accept   json
+// @Produce  json
+// @Success 200 {object} string
+// @Failure 500 {object} map[string]interface{}
+// @Router /migrate_system_package [put]
+func MigrateSystemPackage(c *gin.Context) {
+	utils.LogInfo("starting system_package data migration")
+	var cnt int64
+	db := database.Db
+
+	db.Table("system_package2").Count(&cnt)
+	if cnt > 0 {
+		utils.LogInfo("System_package2 table is not empty")
+		c.JSON(http.StatusNoContent, "System_package2 table is not empty, nothing to do.")
+		return
+	}
+
+	go func() {
+		if err := db.Exec(`
+			ALTER TABLE system_package2 DROP CONSTRAINT system_package2_applicable_id_fkey;
+			ALTER TABLE system_package2 DROP CONSTRAINT system_package2_installable_id_fkey;
+			ALTER TABLE system_package2 DROP CONSTRAINT system_package2_name_id_fkey;
+			ALTER TABLE system_package2 DROP CONSTRAINT system_package2_package_id_fkey;
+			ALTER TABLE system_package2 DROP CONSTRAINT system_package2_rh_account_id_system_id_fkey;
+			DROP INDEX system_package2_account_pkg_name_idx;
+			DROP INDEX system_package2_package_id_idx;
+		`).Error; err != nil {
+			utils.LogError("err", err.Error(), "Couldn't remove constraints and indexes")
+			return
+		}
+
+		if err := db.Exec("CALL copy_system_packages();").Error; err != nil {
+			utils.LogError("err", err.Error(), "Migration failed")
+			return
+		}
+
+		// nolint:lll
+		if err := db.Exec(`
+			ALTER TABLE system_package2 ADD CONSTRAINT system_package2_applicable_id_fkey FOREIGN KEY (applicable_id) REFERENCES package(id);
+			ALTER TABLE system_package2 ADD CONSTRAINT system_package2_installable_id_fkey FOREIGN KEY (installable_id) REFERENCES package(id);
+			ALTER TABLE system_package2 ADD CONSTRAINT system_package2_name_id_fkey FOREIGN KEY (name_id) REFERENCES package_name(id);
+			ALTER TABLE system_package2 ADD CONSTRAINT system_package2_package_id_fkey FOREIGN KEY (package_id) REFERENCES package(id);
+			ALTER TABLE system_package2 ADD CONSTRAINT system_package2_rh_account_id_system_id_fkey FOREIGN KEY (rh_account_id, system_id) REFERENCES system_platform (rh_account_id, id);
+			CREATE INDEX IF NOT EXISTS system_package2_account_pkg_name_idx
+				ON system_package2 (rh_account_id, name_id) INCLUDE (system_id, package_id, installable_id, applicable_id);
+			CREATE INDEX IF NOT EXISTS system_package2_package_id_idx on system_package2 (package_id);
+		`).Error; err != nil {
+			utils.LogError("err", err.Error(), "Couldn't add constraints and indexes")
+			return
+		}
+		utils.LogInfo("System_package migration completed")
+	}()
+	c.JSON(http.StatusOK, "Migration started")
+}
