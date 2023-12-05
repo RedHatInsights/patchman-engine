@@ -57,24 +57,6 @@ services:
     security_opt:
       - label=disable
 
-  migrate_system_package2:
-    container_name: migrate_system_package2
-    image: patchman-engine-app
-    env_file:
-      - ./conf/common.env
-      - ./conf/admin_api.env
-    command: ./dev/scripts/docker-compose-entrypoint.sh job system_package_data_migration
-    depends_on:
-      - db
-      - patchimg
-      - db_feed
-    volumes:
-      - ./dev:/go/src/app/dev
-      - ./dev/database/secrets:/opt/postgresql
-      - ./dev/kafka/secrets:/opt/kafka
-    security_opt:
-      - label=disable
-
   kafka:
     container_name: kafka
     build:
