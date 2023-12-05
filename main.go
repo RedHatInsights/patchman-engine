@@ -10,7 +10,6 @@ import (
 	"app/platform"
 	"app/tasks/caches"
 	"app/tasks/cleaning"
-	"app/tasks/migration"
 	"app/tasks/system_culling"
 	"app/tasks/vmaas_sync"
 	"app/turnpike"
@@ -71,7 +70,5 @@ func runJob(name string) {
 		cleaning.RunDeleteUnusedData()
 	case "packages_cache_refresh":
 		caches.RunPackageRefresh()
-	case "system_package_data_migration":
-		migration.RunSystemPackageDataMigration()
 	}
 }
