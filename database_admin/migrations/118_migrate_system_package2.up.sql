@@ -1,5 +1,5 @@
 /*
-Loops through the PK(account_id, system_id, package_id) in chunks of 1000 and inserts it into the new table.
+Loops through the PK(account_id, system_id, package_id) in chunks of 5000 and inserts it into the new table.
 Assumptions:
 1. the system_packages2 table is empty.
 2. No new system_packages comes in when this is running.
@@ -14,6 +14,8 @@ DECLARE
     account_idx   integer := 0;
     system_idx    bigint  := 0;
     package_idx   bigint  := 0;
+    cnt           bigint  := 0;
+    prev_cnt      bigint  := 0;
 BEGIN
     LOOP
         INSERT INTO system_package2
@@ -34,7 +36,7 @@ BEGIN
         WHERE (rh_account_id = account_idx AND system_id = system_idx AND package_id > package_idx)
         OR (rh_account_id = account_idx AND system_id > system_idx)
         ORDER BY rh_account_id, system_id, package_id
-        LIMIT 1000;
+        LIMIT 5000;
 
         GET DIAGNOSTICS rows_inserted = ROW_COUNT;
 
@@ -65,7 +67,7 @@ BEGIN
             FROM system_package
             WHERE rh_account_id > account_idx
             ORDER BY rh_account_id, system_id, package_id
-            LIMIT 1000;
+            LIMIT 5000;
 
             GET DIAGNOSTICS rows_inserted = ROW_COUNT;
 
@@ -81,6 +83,12 @@ BEGIN
         FROM system_package2
         ORDER BY rh_account_id DESC, system_id DESC, package_id DESC
         LIMIT 1;
+
+        cnt := cnt + rows_inserted;
+        IF (cnt/1000000)::int > (prev_cnt/1000000)::int THEN
+            RAISE NOTICE 'inserted % rows, account: %, system: %, partition: %', cnt, account_idx, system_idx, hash_partition_id(account_idx, 128);
+            prev_cnt := cnt;
+        END IF;
 
     END LOOP;
 END
