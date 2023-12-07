@@ -35,10 +35,15 @@ func deleteUnusedPackages() {
 	// before changing the query below test its performance on big data otherwise it can lock database
 	subq := tx.Select("id").Table("package p").
 		Where("synced = ?", false).
-		Where("NOT EXISTS" +
-			" (SELECT 1 FROM system_package2 sp WHERE" +
-			" p.id = sp.package_id OR p.id = sp.installable_id OR p.id = sp.applicable_id)",
-		).Limit(deleteUnusedDataLimit)
+		Where(`NOT EXISTS (SELECT 1
+							 FROM (SELECT package_name_id,
+										  jsonb_path_query(update_data, '$.*') as update_data
+									 FROM package_system_data) as psd
+							WHERE p.name_id = psd.package_name_id
+							  AND p.evra in (psd.update_data->>'installed', psd.update_data->>'installable',
+											 psd.update_data->>'applicable')
+						  )`).
+		Limit(deleteUnusedDataLimit)
 
 	err := tx.Delete(&models.Package{}, "id IN (?)", subq).Error
 
