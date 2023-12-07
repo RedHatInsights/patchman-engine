@@ -318,11 +318,14 @@ func MigrateSystemPackage(c *gin.Context) {
 			DROP INDEX system_package2_account_pkg_name_idx;
 			DROP INDEX system_package2_package_id_idx;
 		`).Error; err != nil {
-			utils.LogError("err", err.Error(), "Couldn't remove constraints and indexes")
-			return
+			// don't fail when we couldn't remove constraints and indexes
+			// continue with migration
+			utils.LogWarn("err", err.Error(), "Couldn't remove constraints and indexes")
 		}
 
 		if err := db.Exec("CALL copy_system_packages();").Error; err != nil {
+			// truncate system_package2 table on failed migration
+			db.Exec("TRUNCATE TABLE system_package2;")
 			utils.LogError("err", err.Error(), "Migration failed")
 			return
 		}
