@@ -302,7 +302,6 @@ func MigrateSystemPackage(c *gin.Context) {
 	var cnt int64
 	db := database.Db
 
-	execQuery(db, "VACUUM ANALYZE system_package;")
 	db.Table("system_package2").Count(&cnt)
 	if cnt > 0 {
 		utils.LogInfo("System_package2 table is not empty")
@@ -312,6 +311,7 @@ func MigrateSystemPackage(c *gin.Context) {
 
 	// nolint:lll
 	go func() {
+		execQuery(db, "VACUUM ANALYZE system_package;")
 		execQuery(db, "ALTER TABLE system_package2 DROP CONSTRAINT system_package2_applicable_id_fkey;")
 		execQuery(db, "ALTER TABLE system_package2 DROP CONSTRAINT system_package2_installable_id_fkey;")
 		execQuery(db, "ALTER TABLE system_package2 DROP CONSTRAINT system_package2_name_id_fkey;")
