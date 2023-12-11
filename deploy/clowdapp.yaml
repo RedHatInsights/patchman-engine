@@ -505,6 +505,15 @@ objects:
       enabled: true
       appName: patch
       insightsOnly: true
+      additionalFilters:
+        - name: "nonCentOS"
+          type: "com.redhat.insights.kafka.connect.transforms.Filter"
+          if: "!record.headers().lastWithName('os_name').value().match(/centos/i)"
+          where: "COALESCE(system_profile_facts->'operating_system'->>'name', '') NOT ILIKE '%centos%'"
+        - name: "excludedReporters"
+          type: "com.redhat.insights.kafka.connect.transforms.Filter"
+          if: "!record.headers().lastWithName('reporter').value().match(/^(yupana|satellite|discovery|rhsm-conduit)$/i)"
+          where: "reporter NOT IN ('yupana', 'satellite', 'discovery', 'rhsm-conduit')"
     testing:
       iqePlugin: patchman
 
