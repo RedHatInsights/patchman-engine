@@ -97,7 +97,6 @@ func InitAdmin(app *gin.Engine) {
 	api.GET("/check-caches", admin.CheckCaches)
 	api.PUT("/refresh-packages", admin.RefreshPackagesHandler)
 	api.PUT("/refresh-packages/:account", admin.RefreshPackagesAccountHandler)
-	api.PUT("/migrate_system_package", admin.MigrateSystemPackage)
 	api.GET("/sessions", admin.GetActiveSessionsHandler)
 	api.GET("/sessions/:search", admin.GetActiveSessionsHandler)
 	api.DELETE("/sessions/:pid", admin.TerminateSessionHandler)
