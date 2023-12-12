@@ -1,6 +1,5 @@
 DELETE FROM system_advisories;
 DELETE FROM system_repo;
-DELETE FROM system_package;
 DELETE FROM system_package2;
 DELETE FROM system_platform;
 DELETE FROM deleted_system;
