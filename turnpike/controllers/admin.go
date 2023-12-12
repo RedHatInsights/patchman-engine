@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type Session struct {
@@ -286,63 +285,4 @@ func getPprof(address, param, query string) ([]byte, error) {
 		return nil, err
 	}
 	return resBody, nil
-}
-
-// @Summary Migrate system_package data to system_package2
-// @Description Migrate system_package data to system_package2
-// @ID migrateSystemPackage
-// @Security RhIdentity
-// @Accept   json
-// @Produce  json
-// @Success 200 {object} string
-// @Failure 500 {object} map[string]interface{}
-// @Router /migrate_system_package [put]
-func MigrateSystemPackage(c *gin.Context) {
-	utils.LogInfo("starting system_package data migration")
-	var cnt int64
-	db := database.Db
-
-	db.Table("system_package2").Count(&cnt)
-	if cnt > 0 {
-		utils.LogInfo("System_package2 table is not empty")
-		c.JSON(http.StatusNoContent, "System_package2 table is not empty, nothing to do.")
-		return
-	}
-
-	// nolint:lll
-	go func() {
-		execQuery(db, "VACUUM ANALYZE system_package;")
-		execQuery(db, "ALTER TABLE system_package2 DROP CONSTRAINT system_package2_applicable_id_fkey;")
-		execQuery(db, "ALTER TABLE system_package2 DROP CONSTRAINT system_package2_installable_id_fkey;")
-		execQuery(db, "ALTER TABLE system_package2 DROP CONSTRAINT system_package2_name_id_fkey;")
-		execQuery(db, "ALTER TABLE system_package2 DROP CONSTRAINT system_package2_package_id_fkey;")
-		execQuery(db, "ALTER TABLE system_package2 DROP CONSTRAINT system_package2_rh_account_id_system_id_fkey;")
-		execQuery(db, "DROP INDEX system_package2_account_pkg_name_idx;")
-		execQuery(db, "DROP INDEX system_package2_package_id_idx;")
-
-		if err := db.Exec("CALL copy_system_packages();").Error; err != nil {
-			// truncate system_package2 table on failed migration
-			execQuery(db, "TRUNCATE TABLE system_package2;")
-			utils.LogError("err", err.Error(), "Migration failed")
-			return
-		}
-
-		execQuery(db, "ALTER TABLE system_package2 ADD CONSTRAINT system_package2_applicable_id_fkey FOREIGN KEY (applicable_id) REFERENCES package(id);")
-		execQuery(db, "ALTER TABLE system_package2 ADD CONSTRAINT system_package2_installable_id_fkey FOREIGN KEY (installable_id) REFERENCES package(id);")
-		execQuery(db, "ALTER TABLE system_package2 ADD CONSTRAINT system_package2_name_id_fkey FOREIGN KEY (name_id) REFERENCES package_name(id);")
-		execQuery(db, "ALTER TABLE system_package2 ADD CONSTRAINT system_package2_package_id_fkey FOREIGN KEY (package_id) REFERENCES package(id);")
-		execQuery(db, "ALTER TABLE system_package2 ADD CONSTRAINT system_package2_rh_account_id_system_id_fkey FOREIGN KEY (rh_account_id, system_id) REFERENCES system_platform (rh_account_id, id);")
-		execQuery(db, `CREATE INDEX IF NOT EXISTS system_package2_account_pkg_name_idx
-			ON system_package2 (rh_account_id, name_id) INCLUDE (system_id, package_id, installable_id, applicable_id);`)
-		execQuery(db, "CREATE INDEX IF NOT EXISTS system_package2_package_id_idx on system_package2 (package_id);")
-		utils.LogInfo("System_package migration completed")
-	}()
-	c.JSON(http.StatusOK, "Migration started")
-}
-
-func execQuery(db *gorm.DB, query string) {
-	err := db.Exec(query).Error
-	if err != nil {
-		utils.LogWarn("err", err.Error(), "query", query, "Exec of query failed.")
-	}
 }
