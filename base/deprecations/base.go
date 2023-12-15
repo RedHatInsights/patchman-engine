@@ -28,6 +28,30 @@ type apiDeprecation struct {
 	message string
 }
 
+type limitDeprecation struct {
+	shouldDeprecate      func(c *gin.Context) bool
+	deprecationTimestamp time.Time
+	message              string
+}
+
+func (d limitDeprecation) Deprecate(c *gin.Context) {
+	if !utils.Cfg.LimitPageSize || !d.shouldDeprecate(c) {
+		return
+	}
+
+	now := time.Now()
+	httpDate := d.deprecationTimestamp.Format(time.RFC1123)
+	setDeprecationHeader(c, httpDate, d.message)
+
+	if now.Before(d.deprecationTimestamp) {
+		// allow unlimited `limit`
+		utils.Cfg.LimitPageSize = false
+		c.Next()
+		// reset LimitPageSize after all midllewares
+		utils.Cfg.LimitPageSize = true
+	}
+}
+
 func (d apiDeprecation) Deprecate(c *gin.Context) {
 	if !d.shouldDeprecate(c) {
 		return
@@ -48,14 +72,7 @@ func (d apiDeprecation) Deprecate(c *gin.Context) {
 func (d *apiDeprecation) setDeprecationHeader(c *gin.Context) {
 	// RFC1123 is HTTP-date format
 	httpDate := d.deprecationTimestamp.Format(time.RFC1123)
-
-	// set Deprecation header
-	// https://datatracker.ietf.org/doc/html/draft-ietf-httpapi-deprecation-header
-	c.Header("Deprecation", httpDate)
-
-	// set Sunset header
-	// https://datatracker.ietf.org/doc/html/rfc8594
-	c.Header("Sunset", httpDate)
+	setDeprecationHeader(c, httpDate, d.message)
 }
 
 func (d *apiDeprecation) redirect(c *gin.Context) {
@@ -78,4 +95,16 @@ func (d *apiDeprecation) redirect(c *gin.Context) {
 
 func (d *apiDeprecation) gone(c *gin.Context) {
 	c.AbortWithStatusJSON(http.StatusGone, utils.ErrorResponse{Error: d.message})
+}
+
+func setDeprecationHeader(c *gin.Context, httpDate string, message string) {
+	c.Header("Warning", message)
+
+	// set Deprecation header
+	// https://datatracker.ietf.org/doc/html/draft-ietf-httpapi-deprecation-header
+	c.Header("Deprecation", httpDate)
+
+	// set Sunset header
+	// https://datatracker.ietf.org/doc/html/rfc8594
+	c.Header("Sunset", httpDate)
 }

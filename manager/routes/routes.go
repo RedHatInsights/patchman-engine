@@ -17,6 +17,7 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	api.Use(middlewares.CheckReferer())
 	api.Use(middlewares.SetAPIVersion(api.BasePath()))
 	api.Use(middlewares.Deprecate(deprecations.DeprecateV1V2APIs()))
+	api.Use(middlewares.Deprecate(deprecations.DeprecateLimit()))
 	api.Use(middlewares.DatabaseWithContext())
 
 	advisories := api.Group("/advisories")

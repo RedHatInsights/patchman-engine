@@ -23,3 +23,18 @@ func DeprecateV1V2APIs() Deprecation {
 		},
 	}
 }
+
+// Deprecate maximum `limit`
+func DeprecateLimit() Deprecation {
+	return limitDeprecation{
+		deprecationTimestamp: time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC),
+		message:              "limit must be in [1, 100]",
+		shouldDeprecate: func(c *gin.Context) bool {
+			limit, err := utils.LoadParamInt(c, "limit", 20, true)
+			if err == nil && (limit < 1 || limit > 100) {
+				return true
+			}
+			return false
+		},
+	}
+}

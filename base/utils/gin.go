@@ -64,6 +64,11 @@ func CheckLimitOffset(limit int, offset int) error {
 	if offset < 0 {
 		return errors.New("offset must not be negative")
 	}
+	if Cfg.LimitPageSize {
+		if limit < 1 || limit > 100 {
+			return errors.New("limit must be in [1, 100]")
+		}
+	}
 	if limit < 1 && limit != -1 {
 		return errors.New("limit must not be less than 1, or should be -1 to return all items")
 	}
