@@ -707,31 +707,6 @@ func isFilterInURLValid(c *gin.Context) bool {
 	return true
 }
 
-// Pagination query for handlers where ListCommon is not used
-func Paginate(tx *gorm.DB, limit *int, offset *int) (int, int, error) {
-	var total int64
-	if limit == nil {
-		limit = &core.DefaultLimit
-	}
-	if offset == nil {
-		offset = &core.DefaultOffset
-	}
-	if err := utils.CheckLimitOffset(*limit, *offset); err != nil {
-		return *limit, *offset, err
-	}
-
-	tx.Count(&total)
-	if total < int64(*offset) {
-		return *limit, *offset, errors.New(InvalidOffsetMsg)
-	}
-	if *limit != -1 {
-		// consistency with ListCommon
-		tx.Limit(*limit)
-	}
-	tx.Offset(*offset)
-	return *limit, *offset, nil
-}
-
 // Return value for v3 api or return nil for previous versions
 func APIV3Compat[T any](x *T, apiver int) *T {
 	if apiver < 3 {
