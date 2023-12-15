@@ -127,6 +127,7 @@ objects:
         - {name: MAX_HEADER_COUNT, value: '${MAX_HEADER_COUNT}'}
         - {name: MAX_GIN_CONNECTIONS, value: '${MAX_GIN_CONNECTIONS}'}
         - {name: RATELIMIT, value: '${RATELIMIT}'}
+        - {name: LIMIT_PAGE_SIZE, value: '${LIMIT_PAGE_SIZE}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_MANAGER}', memory: '${RES_LIMIT_MEM_MANAGER}'}
@@ -594,6 +595,7 @@ parameters:
 - {name: MAX_HEADER_COUNT, value: '50'} # limit number of request headers
 - {name: MAX_GIN_CONNECTIONS, value: '50'}
 - {name: RATELIMIT, value: '100'} # requests per second for leaky bucket rate limiter
+- {name: LIMIT_PAGE_SIZE, value: 'true'}  # page size is limited to 100 items per page, set to `false` to use any limit
 
 # Listener
 - {name: REPLICAS_LISTENER, value: '1'}

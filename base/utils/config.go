@@ -41,6 +41,7 @@ type Config struct {
 	MaxHeaderCount     int
 	MaxGinConnections  int
 	Ratelimit          int
+	LimitPageSize      bool
 
 	// kafka
 	KafkaServers           []string
@@ -177,6 +178,7 @@ func initAPIromClowder() {
 	Cfg.MaxHeaderCount = GetIntEnvOrDefault("MAX_HEADER_COUNT", 50)
 	Cfg.MaxGinConnections = GetIntEnvOrDefault("MAX_GIN_CONNECTIONS", 50)
 	Cfg.Ratelimit = GetIntEnvOrDefault("RATELIMIT", 100)
+	Cfg.LimitPageSize = GetBoolEnvOrDefault("LIMIT_PAGE_SIZE", true)
 }
 
 func initKafkaFromClowder() {
