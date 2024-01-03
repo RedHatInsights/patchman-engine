@@ -12,6 +12,7 @@ require (
 	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a
 	github.com/golang-migrate/migrate/v4 v4.16.2
 	github.com/hashicorp/golang-lru/v2 v2.0.7
+	github.com/jinzhu/copier v0.4.0
 	github.com/joho/godotenv v1.5.1
 	github.com/lestrrat-go/backoff v1.0.1
 	github.com/lib/pq v1.10.9

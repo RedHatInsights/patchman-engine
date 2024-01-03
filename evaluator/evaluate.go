@@ -17,6 +17,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -312,10 +313,16 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 
 func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 	system *models.SystemPlatform) (*vmaas.UpdatesV3Response, error) {
+	var vmaasDataCopy vmaas.UpdatesV3Response
 	// first check if we have data in cache
 	vmaasData, ok := memoryVmaasCache.Get(system.JSONChecksum)
 	if ok {
-		return vmaasData, nil
+		// return copy of vmaasData to avoid modification of cached data e.g. by templates
+		err := copier.CopyWithOption(&vmaasDataCopy, vmaasData, copier.Option{DeepCopy: true})
+		if err != nil {
+			return nil, err
+		}
+		return &vmaasDataCopy, nil
 	}
 	updatesReq, err := tryGetVmaasRequest(system)
 	if err != nil {
@@ -343,7 +350,14 @@ func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 		return nil, errors.Wrap(err, "vmaas API call failed")
 	}
 
-	memoryVmaasCache.Add(system.JSONChecksum, vmaasData)
+	if memoryVmaasCache.enabled {
+		// store copy of vmaasData to cache to avoid modification of cached data e.g. by templates
+		err := copier.CopyWithOption(&vmaasDataCopy, vmaasData, copier.Option{DeepCopy: true})
+		if err != nil {
+			return nil, err
+		}
+		memoryVmaasCache.Add(system.JSONChecksum, &vmaasDataCopy)
+	}
 	return vmaasData, nil
 }
 
