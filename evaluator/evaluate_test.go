@@ -371,3 +371,44 @@ func TestGetUpdatesDataVmaas400(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, res)
 }
+
+func TestGetVmaasDataCached(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	utils.SkipWithoutPlatform(t)
+	configure()
+	loadCache()
+	req := vmaas.UpdatesV3Request{
+		PackageList: []string{"firefox-0:76.0.1-1.fc31.x86_64"}, RepositoryList: []string{"repo"},
+	}
+	reqJSON, _ := json.Marshal(req)
+	reqString := string(reqJSON)
+	chsum := "123"
+	sp := models.SystemPlatform{VmaasJSON: &reqString, JSONChecksum: &chsum}
+
+	var assertInstallable = func() (*vmaas.UpdatesV3Response, []vmaas.UpdatesV3ResponseAvailableUpdates) {
+		vmaasData, _ := getVmaasUpdates(context.Background(), database.Db, &sp)
+		updates := (*vmaasData.UpdateList)["firefox-0:76.0.1-1.fc31.x86_64"].GetAvailableUpdates()
+		assert.Equal(t, INSTALLABLE, updates[0].StatusID)
+		return vmaasData, updates
+	}
+	vmaasData, updates := assertInstallable()
+
+	// modify update status id, change data returned by vmaas
+	var setApplicable = func() {
+		updates[0].StatusID = APPLICABLE
+		modifiedUpdateList := vmaas.UpdatesV3ResponseUpdateList{AvailableUpdates: &updates}
+		(*vmaasData.UpdateList)["firefox-0:76.0.1-1.fc31.x86_64"] = &modifiedUpdateList
+		updates = (*vmaasData.UpdateList)["firefox-0:76.0.1-1.fc31.x86_64"].GetAvailableUpdates()
+		assert.Equal(t, APPLICABLE, updates[0].StatusID)
+	}
+	setApplicable()
+
+	// cached value mustn't be changed
+	vmaasData, updates = assertInstallable()
+
+	// modify data again to change data returned from cache
+	setApplicable()
+
+	// cached value mustn't be changed
+	assertInstallable()
+}
