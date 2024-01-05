@@ -38,7 +38,7 @@ func TestGetPackageCache(t *testing.T) {
 	assert.Equal(t, "11", string(val.DescriptionHash))
 	val, ok = pc.GetLatestByName("kernel")
 	assert.True(t, ok)
-	assert.Equal(t, int64(106), val.ID)
+	assert.Equal(t, int64(107), val.ID)
 	assert.Equal(t, "kernel", val.Name)
 	assert.Equal(t, "5.10.13-200.fc31.x86_64", val.Evra)
 	assert.Equal(t, int64(101), val.NameID)
