@@ -97,7 +97,15 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []st
 		if repos.LatestRepoChange == nil {
 			break
 		}
-		latestRepoChange = repos.LatestRepoChange.Time()
+		if latestRepoChange == nil || latestRepoChange.Before(*repos.LatestRepoChange.Time()) {
+			// add 1 second to avoid re-evaluation of the latest repo
+			// e.g. vmaas returns `2024-01-05T06:39:53.553807+00:00`
+			// 		but patch stores to DB `2024-01-05T06:39:53Z`
+			// 		then the next request to /repos is made with "modified_since": "2024-01-05T06:39:53Z"
+			// 		which again returns repo modified at 2024-01-05T06:39:53.553807
+			t := repos.LatestRepoChange.Time().Add(time.Second)
+			latestRepoChange = &t
+		}
 
 		utils.LogInfo("page", page, "pages", repos.Pages, "count", len(repos.RepositoryList),
 			"sync_duration", utils.SinceStr(syncStart, time.Second),
