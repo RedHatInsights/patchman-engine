@@ -26,11 +26,17 @@ func TestAnalyzePackages(t *testing.T) {
 	vmaasData := vmaas.UpdatesV3Response{UpdateList: &map[string]*vmaas.UpdatesV3ResponseUpdateList{
 		"kernel-0:5.6.13-200.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{}},
 		"firefox-0:12.0.1-1.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{{
-			Package: utils.PtrString("firefox-0:77.0.1-1.fc31.x86_64"),
-			EVRA:    utils.PtrString("0:77.0.1-1.fc31.x86_64"),
+			Package:     utils.PtrString("firefox-0:77.0.1-1.fc31.x86_64"),
+			PackageName: utils.PtrString("firefox"),
+			EVRA:        utils.PtrString("0:77.0.1-1.fc31.x86_64"),
 		}}},
 		// this custom-package will NOT be ignored
-		"custom-package-0:1.2.3-1.fc33.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{{}}}}}
+		"custom-package-0:1.2.3-1.fc33.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{
+			{
+				Package:     utils.PtrString("custom-package-0:2.2.3-1.fc33.x86_64"),
+				PackageName: utils.PtrString("custom-package"),
+				EVRA:        utils.PtrString("0:2.2.3-1.fc33.x86_64"),
+			}}}}}
 
 	installed, updatable, err := analyzePackages(database.Db, &system, &vmaasData)
 	assert.Nil(t, err)
