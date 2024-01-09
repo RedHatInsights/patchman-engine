@@ -38,10 +38,11 @@ func TestAnalyzePackages(t *testing.T) {
 				EVRA:        utils.PtrString("0:2.2.3-1.fc33.x86_64"),
 			}}}}}
 
-	installed, updatable, err := analyzePackages(database.Db, &system, &vmaasData)
+	installed, installable, applicable, err := analyzePackages(database.Db, &system, &vmaasData)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, installed)                                      // kernel, firefox, custom-package
-	assert.Equal(t, 2, updatable)                                      // firefox, custom-package have updates
+	assert.Equal(t, 2, installable)                                    // firefox, custom-package have updates
+	assert.Equal(t, 2, applicable)                                     // firefox, custom-package have updates
 	database.CheckEVRAsInDBSynced(t, 1, false, "12.0.1-1.fc31.x86_64") // lazy added package
 	database.CheckEVRAsInDB(t, 1, "1.2.3-1.fc33.x86_64")               // custom package is not ignored
 	database.CheckSystemPackages(t, system.RhAccountID, system.ID, 3)

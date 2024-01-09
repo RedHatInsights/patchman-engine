@@ -129,18 +129,24 @@ func CheckPackagesNamesInDB(t *testing.T, filter string, packageNames ...string)
 	assert.Equal(t, int64(len(packageNames)), count)
 }
 
-func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nAll, nEnh, nBug, nSec, nInstall, nUpdate int,
+func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nIAll, nIEnh, nIBug, nISec,
+	nAAll, nAEnh, nABug, nASec, nInstall, nInstallable, nApplicable int,
 	thirdParty bool) {
 	var system models.SystemPlatform
 	assert.Nil(t, Db.Where("inventory_id = ?::uuid", inventoryID).First(&system).Error)
 	assert.NotNil(t, system.LastEvaluation)
 	assert.True(t, system.LastEvaluation.After(time.Now().Add(-time.Second)))
-	assert.Equal(t, nAll, system.AdvisoryCountCache)
-	assert.Equal(t, nEnh, system.AdvisoryEnhCountCache)
-	assert.Equal(t, nBug, system.AdvisoryBugCountCache)
-	assert.Equal(t, nSec, system.AdvisorySecCountCache)
+	assert.Equal(t, nIAll, system.InstallableAdvisoryCountCache)
+	assert.Equal(t, nIEnh, system.InstallableAdvisoryEnhCountCache)
+	assert.Equal(t, nIBug, system.InstallableAdvisoryBugCountCache)
+	assert.Equal(t, nISec, system.InstallableAdvisorySecCountCache)
+	assert.Equal(t, nAAll, system.ApplicableAdvisoryCountCache)
+	assert.Equal(t, nAEnh, system.ApplicableAdvisoryEnhCountCache)
+	assert.Equal(t, nABug, system.ApplicableAdvisoryBugCountCache)
+	assert.Equal(t, nASec, system.ApplicableAdvisorySecCountCache)
 	assert.Equal(t, nInstall, system.PackagesInstalled)
-	assert.Equal(t, nUpdate, system.PackagesUpdatable)
+	assert.Equal(t, nInstallable, system.PackagesInstallable)
+	assert.Equal(t, nApplicable, system.PackagesApplicable)
 	assert.Equal(t, thirdParty, system.ThirdParty)
 }
 

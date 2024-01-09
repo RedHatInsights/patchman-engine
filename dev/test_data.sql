@@ -24,32 +24,32 @@ INSERT INTO baseline (id, rh_account_id, name, config, description) VALUES
 (3, 1, 'baseline_1-3', '{"to_time": "2000-01-01T00:00:00+00:00"}', NULL),
 (4, 3, 'baseline_3-4', '{"to_time": "2000-01-01T00:00:00+00:00"}', NULL);
 
-INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id, reporter_id, vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_updatable, third_party, baseline_id, baseline_uptodate) VALUES
-(1, '00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2020-09-22 12:00:00-04',0,0, true, 1, true),
-(2, '00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000002', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04',0,0, false, 1, true),
-(3, '00000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000003', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0, false, 2, false),
-(4, '00000000-0000-0000-0000-000000000004','00000000-0000-0000-0000-000000000004', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0, false, NULL, NULL),
-(5, '00000000-0000-0000-0000-000000000005','00000000-0000-0000-0000-000000000005', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0, false, NULL, NULL),
-(6, '00000000-0000-0000-0000-000000000006','00000000-0000-0000-0000-000000000006', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04',0,0, false, NULL, NULL);
+INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id, reporter_id, vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_installable, packages_applicable, third_party, baseline_id, baseline_uptodate) VALUES
+(1, '00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2020-09-22 12:00:00-04',0,0,0, true, 1, true),
+(2, '00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000002', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-09-22 12:00:00-04',0,0,0, false, 1, true),
+(3, '00000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000003', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0,0, false, 2, false),
+(4, '00000000-0000-0000-0000-000000000004','00000000-0000-0000-0000-000000000004', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0,0, false, NULL, NULL),
+(5, '00000000-0000-0000-0000-000000000005','00000000-0000-0000-0000-000000000005', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-09-18 12:00:00-04',0,0,0, false, NULL, NULL),
+(6, '00000000-0000-0000-0000-000000000006','00000000-0000-0000-0000-000000000006', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04',0,0,0, false, NULL, NULL);
 
-INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_updated, unchanged_since, last_upload, packages_installed, packages_updatable) VALUES
-(7, '00000000-0000-0000-0000-000000000007','00000000-0000-0000-0000-000000000007', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-10-04 14:13:12-04', '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04',0,0);
+INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_updated, unchanged_since, last_upload, packages_installed, packages_installable, packages_applicable) VALUES
+(7, '00000000-0000-0000-0000-000000000007','00000000-0000-0000-0000-000000000007', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-10-04 14:13:12-04', '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04',0,0,0);
 
-INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_updatable) VALUES
-(8, '00000000-0000-0000-0000-000000000008','00000000-0000-0000-0000-000000000008', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04',0,0),
-(9, '00000000-0000-0000-0000-000000000009','00000000-0000-0000-0000-000000000009', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',0,0),
-(10, '00000000-0000-0000-0000-000000000010','00000000-0000-0000-0000-000000000010', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',0,0),
-(11, '00000000-0000-0000-0000-000000000011','00000000-0000-0000-0000-000000000011', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',0,0),
-(12, '00000000-0000-0000-0000-000000000012','00000000-0000-0000-0000-000000000012', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',2,2);
+INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_installable, packages_applicable) VALUES
+(8, '00000000-0000-0000-0000-000000000008','00000000-0000-0000-0000-000000000008', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04',0,0,0),
+(9, '00000000-0000-0000-0000-000000000009','00000000-0000-0000-0000-000000000009', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',0,0,0),
+(10, '00000000-0000-0000-0000-000000000010','00000000-0000-0000-0000-000000000010', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',0,0,0),
+(11, '00000000-0000-0000-0000-000000000011','00000000-0000-0000-0000-000000000011', 2, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',0,0,0),
+(12, '00000000-0000-0000-0000-000000000012','00000000-0000-0000-0000-000000000012', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',2,2,2);
 
-INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_updatable, yum_updates) VALUES
-(13, '00000000-0000-0000-0000-000000000013','00000000-0000-0000-0000-000000000013', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 1,0, NULL),
-(14, '00000000-0000-0000-0000-000000000014','00000000-0000-0000-0000-000000000014', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 0,0, NULL),
-(15, '00000000-0000-0000-0000-000000000015','00000000-0000-0000-0000-000000000015', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 0,0,
+INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_installable, packages_applicable, yum_updates) VALUES
+(13, '00000000-0000-0000-0000-000000000013','00000000-0000-0000-0000-000000000013', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 1,0,0, NULL),
+(14, '00000000-0000-0000-0000-000000000014','00000000-0000-0000-0000-000000000014', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 0,0,0, NULL),
+(15, '00000000-0000-0000-0000-000000000015','00000000-0000-0000-0000-000000000015', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 0,0,0,
  '{"update_list": {"suricata-0:6.0.3-2.fc35.i686": {"available_updates": [{"erratum": "RHSA-2021:3801", "basearch": "i686", "releasever": "ser1", "repository": "group_oisf:suricata-6.0", "package": "suricata-0:6.0.4-2.fc35.i686"}]}}, "basearch": "i686", "releasever": "ser1"}');
 
-INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_updatable, yum_updates, baseline_id) VALUES
-(16, '00000000-0000-0000-0000-000000000016','00000000-0000-0000-0000-000000000016', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 1,0, NULL, 4);
+INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_installable, packages_applicable, yum_updates, baseline_id) VALUES
+(16, '00000000-0000-0000-0000-000000000016','00000000-0000-0000-0000-000000000016', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 1,1,1, NULL, 4);
 
 INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solution, advisory_type_id,
                                public_date, modified_date, url, severity_id, cve_list, release_versions) VALUES
@@ -155,15 +155,6 @@ INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_
 (11, 101, '5.6.13-201.fc31.x86_64', '11', '1', 7, true), -- kernel
 (12, 102, '76.0.1-2.fc31.x86_64', '22', '2', null, true), -- firefox
 (13, 102, '77.0.1-1.fc31.x86_64', '22', '2', null, true); -- firefox
-
-INSERT INTO system_package (rh_account_id, system_id, package_id, name_id, update_data) VALUES
-(3, 12, 1, 101, '[{"evra": "5.10.13-201.fc31.x86_64", "advisory": "RH-100", "status": "Installable"}]'),
-(3, 12, 2, 102, '[{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1", "status": "Installable"}, {"evra": "76.0.1-2.fc31.x86_64", "advisory": "RH-2", "status": "Installable"}]'),
-(3, 13, 1, 101, null),
-(3, 13, 2, 102, '[{"evra": "76.0.1-2.fc31.x86_64", "advisory": "RH-2", "status": "Installable"},{"evra": "77.0.1-1.fc31.x86_64", "advisory": "RH-1", "status": "Applicable"}]'),
-(3, 13, 3, 103, null),
-(3, 13, 4, 104, null),
-(3, 16, 1, 101, '[{"evra": "5.10.13-201.fc31.x86_64", "advisory": "RH-100", "status": "Installable"}]');
 
 INSERT INTO system_package2 (rh_account_id, system_id, name_id, package_id, installable_id, applicable_id) VALUES
 (3, 12, 101, 1, 11, null),

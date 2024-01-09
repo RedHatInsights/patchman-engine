@@ -67,8 +67,8 @@ func TestEvaluate(t *testing.T) {
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
 	database.CheckSystemAdvisories(t, systemID, advisoryIDs)
 	database.CheckSystemPackages(t, rhAccountID, systemID, len(expectedPackageIDs), expectedPackageIDs...)
-	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 3, 1, 1,
-		0, 2, 2, false)
+	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 3, 1, 1, 0,
+		3, 1, 1, 0, 2, 2, 2, false)
 	database.CheckCachesValid(t)
 
 	// test evaluation with third party repos
@@ -80,8 +80,8 @@ func TestEvaluate(t *testing.T) {
 		RequestIDs: []string{"request-1"},
 		AccountID:  rhAccountID})
 	assert.NoError(t, err)
-	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 3, 1, 1,
-		0, 2, 2, true)
+	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 3, 1, 1, 0,
+		3, 1, 1, 0, 2, 2, 2, true)
 
 	database.DeleteSystemAdvisories(t, systemID, advisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
@@ -126,7 +126,7 @@ func TestEvaluateYum(t *testing.T) {
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
 	database.CheckSystemPackages(t, rhAccountID, sysID, len(expectedPackageIDs), expectedPackageIDs...)
-	database.CheckSystemJustEvaluated(t, ID, 4, 1, 1, 1, 3, 3, false)
+	database.CheckSystemJustEvaluated(t, ID, 4, 1, 1, 1, 4, 1, 1, 1, 3, 3, 3, false)
 
 	database.DeleteSystemPackages(t, rhAccountID, sysID, expectedPackageIDs...)
 	database.DeleteSystemAdvisories(t, sysID, advisoryIDs)

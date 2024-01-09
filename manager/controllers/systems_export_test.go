@@ -47,15 +47,19 @@ func TestSystemsExportCSV(t *testing.T) {
 
 	assert.Equal(t, 10, len(lines))
 	assert.Equal(t,
-		"id,display_name,os,rhsm,tags,rhsa_count,rhba_count,rhea_count,other_count,packages_installed,baseline_name,"+
-			"last_upload,stale_timestamp,stale_warning_timestamp,culled_timestamp,created,stale,satellite_managed,"+
-			"built_pkgcache,baseline_id,groups",
+		"id,display_name,os,rhsm,tags,last_evaluation,rhsa_count,rhba_count,rhea_count,other_count,packages_installed,"+
+			"baseline_name,last_upload,stale_timestamp,stale_warning_timestamp,culled_timestamp,created,stale,"+
+			"satellite_managed,built_pkgcache,packages_installable,packages_applicable,"+
+			"installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count,"+
+			"applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count,"+
+			"baseline_id,groups",
 		lines[0])
 
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,RHEL 8.10,8.10,"+
 		"\"[{'key':'k1','namespace':'ns1','value':'val1'},{'key':'k2','namespace':'ns1','value':'val2'}]\","+
-		"2,2,1,0,0,baseline_1-1,2020-09-22T16:00:00Z,2018-08-26T16:00:00Z,2018-09-02T16:00:00Z,2018-09-09T16:00:00Z,"+
-		"2018-08-26T16:00:00Z,false,false,false,1,\"[{'id':'inventory-group-1','name':'group1'}]\"",
+		"2018-09-22T16:00:00Z,2,2,1,0,0,baseline_1-1,"+
+		"2020-09-22T16:00:00Z,2018-08-26T16:00:00Z,2018-09-02T16:00:00Z,2018-09-09T16:00:00Z,2018-08-26T16:00:00Z,"+
+		"false,false,false,0,0,2,2,1,0,2,3,3,3,1,\"[{'id':'inventory-group-1','name':'group1'}]\"",
 		lines[1])
 }
 
@@ -76,9 +80,12 @@ func TestSystemsExportCSVFilter(t *testing.T) {
 
 	assert.Equal(t, 2, len(lines))
 	assert.Equal(t,
-		"id,display_name,os,rhsm,tags,rhsa_count,rhba_count,rhea_count,other_count,packages_installed,baseline_name,"+
-			"last_upload,stale_timestamp,stale_warning_timestamp,culled_timestamp,created,stale,satellite_managed,"+
-			"built_pkgcache,baseline_id,groups",
+		"id,display_name,os,rhsm,tags,last_evaluation,rhsa_count,rhba_count,rhea_count,other_count,packages_installed,"+
+			"baseline_name,last_upload,stale_timestamp,stale_warning_timestamp,culled_timestamp,created,stale,"+
+			"satellite_managed,built_pkgcache,packages_installable,packages_applicable,"+
+			"installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count,"+
+			"applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count,"+
+			"baseline_id,groups",
 		lines[0])
 	assert.Equal(t, "", lines[1])
 }
