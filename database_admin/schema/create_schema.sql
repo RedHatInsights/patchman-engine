@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (120, false);
+VALUES (121, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -711,7 +711,7 @@ CREATE TABLE IF NOT EXISTS system_platform
     stale                    BOOLEAN                  NOT NULL DEFAULT false,
     display_name             TEXT                     NOT NULL CHECK (NOT empty(display_name)),
     packages_installed       INT                      NOT NULL DEFAULT 0,
-    packages_updatable       INT                      NOT NULL DEFAULT 0,
+    packages_installable     INT                      NOT NULL DEFAULT 0,
     reporter_id              INT,
     third_party              BOOLEAN                  NOT NULL DEFAULT false,
     baseline_id              BIGINT,
@@ -723,6 +723,7 @@ CREATE TABLE IF NOT EXISTS system_platform
     applicable_advisory_sec_count_cache  INT                      NOT NULL DEFAULT 0,
     satellite_managed                    BOOLEAN                  NOT NULL DEFAULT FALSE,
     built_pkgcache                       BOOLEAN                  NOT NULL DEFAULT FALSE,
+    packages_applicable      INT                      NOT NULL DEFAULT 0,
     PRIMARY KEY (rh_account_id, id),
     UNIQUE (rh_account_id, inventory_id),
     CONSTRAINT reporter_id FOREIGN KEY (reporter_id) REFERENCES reporter (id),
