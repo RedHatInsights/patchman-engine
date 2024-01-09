@@ -436,12 +436,12 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
 		return errors.Wrap(err, "Advisory analysis failed")
 	}
 
-	installed, updatable, err := analyzePackages(tx, system, vmaasData)
+	installed, installable, applicable, err := analyzePackages(tx, system, vmaasData)
 	if err != nil {
 		return errors.Wrap(err, "Package analysis failed")
 	}
 
-	err = updateSystemPlatform(tx, system, newSystemAdvisories, installed, updatable)
+	err = updateSystemPlatform(tx, system, newSystemAdvisories, installed, installable, applicable)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-update-system").Inc()
 		return errors.Wrap(err, "Unable to update system")
@@ -487,7 +487,7 @@ func analyzeRepos(tx *gorm.DB, system *models.SystemPlatform) (
 
 // nolint: funlen
 func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
-	new SystemAdvisoryMap, installed, updatable int) error {
+	new SystemAdvisoryMap, installed, installable, applicable int) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("system-update"))
 	defer utils.ObserveSecondsSince(*system.LastUpload, uploadEvaluationDelay)
@@ -546,7 +546,8 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 
 	if enablePackageAnalysis {
 		data["packages_installed"] = installed
-		data["packages_updatable"] = updatable
+		data["packages_installable"] = installable
+		data["packages_applicable"] = applicable
 	}
 
 	if enableRepoAnalysis {

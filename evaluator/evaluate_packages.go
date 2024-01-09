@@ -15,29 +15,29 @@ import (
 )
 
 func analyzePackages(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV3Response) (
-	installed, updatable int, err error) {
+	installed, installable, applicable int, err error) {
 	if !enablePackageAnalysis {
-		return 0, 0, nil
+		return 0, 0, 0, nil
 	}
 
 	err = lazySavePackages(tx, vmaasData)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-lazy-pkg-save").Inc()
-		return 0, 0, errors.Wrap(err, "lazy package save failed")
+		return 0, 0, 0, errors.Wrap(err, "lazy package save failed")
 	}
 
-	pkgByName, installed, updatable, err := loadPackages(tx, system, vmaasData)
+	pkgByName, installed, installable, applicable, err := loadPackages(tx, system, vmaasData)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-pkg-data").Inc()
-		return 0, 0, errors.Wrap(err, "Unable to load package data")
+		return 0, 0, 0, errors.Wrap(err, "Unable to load package data")
 	}
 
 	err = updateSystemPackages(tx, system, pkgByName)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-system-pkgs").Inc()
-		return 0, 0, errors.Wrap(err, "Unable to update system packages")
+		return 0, 0, 0, errors.Wrap(err, "Unable to update system packages")
 	}
-	return installed, updatable, nil
+	return installed, installable, applicable, nil
 }
 
 // Add unknown EVRAs into the db if needed
@@ -137,22 +137,23 @@ func updatePackageNameDB(missing *models.PackageName) error {
 
 // Find relevant package data based on vmaas results
 func loadPackages(tx *gorm.DB, system *models.SystemPlatform,
-	vmaasData *vmaas.UpdatesV3Response) (map[string]namedPackage, int, int, error) {
+	vmaasData *vmaas.UpdatesV3Response) (map[string]namedPackage, int, int, int, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-load"))
 
-	packages, installed, updatable := packagesFromUpdateList(system, vmaasData)
+	packages, installed, installable, applicable := packagesFromUpdateList(system, vmaasData)
 	err := loadSystemNEVRAsFromDB(tx, system, packages)
 	if err != nil {
-		return nil, 0, 0, errors.Wrap(err, "loading packages")
+		return nil, 0, 0, 0, errors.Wrap(err, "loading packages")
 	}
 
-	return packages, installed, updatable, nil
+	return packages, installed, installable, applicable, nil
 }
 
 func packagesFromUpdateList(system *models.SystemPlatform, vmaasData *vmaas.UpdatesV3Response) (
-	map[string]namedPackage, int, int) {
+	map[string]namedPackage, int, int, int) {
 	installed := 0
-	updatable := 0
+	installable := 0
+	applicable := 0
 	updates := vmaasData.GetUpdateList()
 	numUpdates := len(updates)
 	// allocate also space for removed packages
@@ -163,9 +164,6 @@ func packagesFromUpdateList(system *models.SystemPlatform, vmaasData *vmaas.Upda
 		}
 		installed++
 		availableUpdates := pkgUpdate.GetAvailableUpdates()
-		if len(availableUpdates) > 0 {
-			updatable++
-		}
 		pkgMeta, ok := memoryPackageCache.GetByNevra(nevra)
 		// before we used nevra.EVRAString() function which shows only non zero epoch, keep it consistent
 		// maybe we need here something like: evra := strings.TrimPrefix(upData.GetEVRA(), "0:")
@@ -180,10 +178,16 @@ func packagesFromUpdateList(system *models.SystemPlatform, vmaasData *vmaas.Upda
 				InstallableID: installableID,
 				ApplicableID:  applicableID,
 			}
+			if installableID != nil {
+				installable++
+			}
+			if installableID != nil || applicableID != nil {
+				applicable++
+			}
 		}
 	}
 	utils.LogInfo("inventoryID", system.InventoryID, "packages", numUpdates)
-	return packages, installed, updatable
+	return packages, installed, installable, applicable
 }
 
 func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform, packages map[string]namedPackage) error {

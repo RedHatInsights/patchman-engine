@@ -42,33 +42,38 @@ func (Baseline) TableName() string {
 
 // nolint: maligned
 type SystemPlatform struct {
-	ID                    int64  `gorm:"primaryKey"`
-	InventoryID           string `gorm:"unique"`
-	RhAccountID           int    `gorm:"primaryKey"`
-	VmaasJSON             *string
-	JSONChecksum          *string
-	LastUpdated           *time.Time `gorm:"default:null"`
-	UnchangedSince        *time.Time `gorm:"default:null"`
-	LastEvaluation        *time.Time `gorm:"default:null"`
-	AdvisoryCountCache    int        `gorm:"column:installable_advisory_count_cache"`
-	AdvisoryEnhCountCache int        `gorm:"column:installable_advisory_enh_count_cache"`
-	AdvisoryBugCountCache int        `gorm:"column:installable_advisory_bug_count_cache"`
-	AdvisorySecCountCache int        `gorm:"column:installable_advisory_sec_count_cache"`
-	LastUpload            *time.Time `gorm:"default:null"`
-	StaleTimestamp        *time.Time
-	StaleWarningTimestamp *time.Time
-	CulledTimestamp       *time.Time
-	Stale                 bool
-	DisplayName           string
-	PackagesInstalled     int
-	PackagesUpdatable     int
-	ThirdParty            bool
-	ReporterID            *int
-	BaselineID            *int64
-	BaselineUpToDate      *bool  `gorm:"column:baseline_uptodate"`
-	YumUpdates            []byte `gorm:"column:yum_updates"`
-	SatelliteManaged      bool   `gorm:"column:satellite_managed"`
-	BuiltPkgcache         bool   `gorm:"column:built_pkgcache"`
+	ID                               int64  `gorm:"primaryKey"`
+	InventoryID                      string `gorm:"unique"`
+	RhAccountID                      int    `gorm:"primaryKey"`
+	VmaasJSON                        *string
+	JSONChecksum                     *string
+	LastUpdated                      *time.Time `gorm:"default:null"`
+	UnchangedSince                   *time.Time `gorm:"default:null"`
+	LastEvaluation                   *time.Time `gorm:"default:null"`
+	InstallableAdvisoryCountCache    int
+	InstallableAdvisoryEnhCountCache int
+	InstallableAdvisoryBugCountCache int
+	InstallableAdvisorySecCountCache int
+	ApplicableAdvisoryCountCache     int
+	ApplicableAdvisoryEnhCountCache  int
+	ApplicableAdvisoryBugCountCache  int
+	ApplicableAdvisorySecCountCache  int
+	LastUpload                       *time.Time `gorm:"default:null"`
+	StaleTimestamp                   *time.Time
+	StaleWarningTimestamp            *time.Time
+	CulledTimestamp                  *time.Time
+	Stale                            bool
+	DisplayName                      string
+	PackagesInstalled                int
+	PackagesInstallable              int
+	PackagesApplicable               int
+	ThirdParty                       bool
+	ReporterID                       *int
+	BaselineID                       *int64
+	BaselineUpToDate                 *bool  `gorm:"column:baseline_uptodate"`
+	YumUpdates                       []byte `gorm:"column:yum_updates"`
+	SatelliteManaged                 bool   `gorm:"column:satellite_managed"`
+	BuiltPkgcache                    bool   `gorm:"column:built_pkgcache"`
 }
 
 func (SystemPlatform) TableName() string {
