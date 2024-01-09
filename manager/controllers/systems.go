@@ -45,8 +45,8 @@ type SystemsSatelliteManagedID struct {
 type SystemDBLookupCommon struct {
 	SystemIDAttribute
 	SystemsMetaTagTotal
-	TotalPatched   int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_updatable = 0) over ()" gorm:"column:total_patched"`
-	TotalUnpatched int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_updatable > 0) over ()" gorm:"column:total_unpatched"`
+	TotalPatched   int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_applicable = 0) over ()" gorm:"column:total_patched"`
+	TotalUnpatched int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_applicable > 0) over ()" gorm:"column:total_unpatched"`
 	TotalStale     int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = true) over ()" gorm:"column:total_stale"`
 }
 
@@ -71,10 +71,11 @@ type SystemItemAttributesCommon struct {
 	OSAttributes
 	SystemTags
 
-	RhsaCount  int `json:"rhsa_count" csv:"rhsa_count" query:"sp.installable_advisory_sec_count_cache" gorm:"column:rhsa_count"`
-	RhbaCount  int `json:"rhba_count" csv:"rhba_count" query:"sp.installable_advisory_bug_count_cache" gorm:"column:rhba_count"`
-	RheaCount  int `json:"rhea_count" csv:"rhea_count" query:"sp.installable_advisory_enh_count_cache" gorm:"column:rhea_count"`
-	OtherCount int `json:"other_count" csv:"other_count" query:"(sp.installable_advisory_count_cache - sp.installable_advisory_sec_count_cache - sp.installable_advisory_bug_count_cache - sp.installable_advisory_enh_count_cache)" gorm:"column:other_count"`
+	LastEvaluation *time.Time `json:"last_evaluation" csv:"last_evaluation" query:"sp.last_evaluation" gorm:"column:last_evaluation"`
+	RhsaCount      int        `json:"rhsa_count" csv:"rhsa_count" query:"sp.installable_advisory_sec_count_cache" gorm:"column:rhsa_count"`
+	RhbaCount      int        `json:"rhba_count" csv:"rhba_count" query:"sp.installable_advisory_bug_count_cache" gorm:"column:rhba_count"`
+	RheaCount      int        `json:"rhea_count" csv:"rhea_count" query:"sp.installable_advisory_enh_count_cache" gorm:"column:rhea_count"`
+	OtherCount     int        `json:"other_count" csv:"other_count" query:"(sp.installable_advisory_count_cache - sp.installable_advisory_sec_count_cache - sp.installable_advisory_bug_count_cache - sp.installable_advisory_enh_count_cache)" gorm:"column:other_count"`
 
 	PackagesInstalled int `json:"packages_installed" csv:"packages_installed" query:"sp.packages_installed" gorm:"column:packages_installed"`
 
@@ -89,10 +90,9 @@ type SystemItemAttributesCommon struct {
 
 // nolint: lll
 type SystemItemAttributesV2Only struct {
-	LastEvaluation    *time.Time `json:"last_evaluation" csv:"last_evaluation" query:"sp.last_evaluation" gorm:"column:last_evaluation"`
-	ThirdParty        bool       `json:"third_party" csv:"third_party" query:"sp.third_party" gorm:"column:third_party"`
-	InsightsID        string     `json:"insights_id" csv:"insights_id" query:"ih.insights_id" gorm:"column:insights_id"`
-	PackagesUpdatable int        `json:"packages_updatable" csv:"packages_updatable" query:"sp.packages_updatable" gorm:"column:packages_updatable"`
+	ThirdParty        bool   `json:"third_party" csv:"third_party" query:"sp.third_party" gorm:"column:third_party"`
+	InsightsID        string `json:"insights_id" csv:"insights_id" query:"ih.insights_id" gorm:"column:insights_id"`
+	PackagesUpdatable int    `json:"packages_updatable" csv:"packages_updatable" query:"sp.packages_installable" gorm:"column:packages_updatable"`
 
 	OSName  string `json:"os_name" csv:"os_name" query:"ih.system_profile->'operating_system'->>'name'" gorm:"column:osname"`
 	OSMajor string `json:"os_major" csv:"os_major" query:"ih.system_profile->'operating_system'->>'major'" gorm:"column:osmajor"`
@@ -100,7 +100,18 @@ type SystemItemAttributesV2Only struct {
 	BaselineUpToDateAttr
 }
 
+// nolint: lll
 type SystemItemAttributesV3Only struct {
+	PackagesInstallable   int `json:"packages_installable" csv:"packages_installable" query:"sp.packages_installable" gorm:"column:packages_installable"`
+	PackagesApplicable    int `json:"packages_applicable" csv:"packages_applicable" query:"sp.packages_applicable" gorm:"column:packages_applicable"`
+	InstallableRhsaCount  int `json:"installable_rhsa_count" csv:"installable_rhsa_count" query:"sp.installable_advisory_sec_count_cache" gorm:"column:installable_rhsa_count"`
+	InstallableRhbaCount  int `json:"installable_rhba_count" csv:"installable_rhba_count" query:"sp.installable_advisory_bug_count_cache" gorm:"column:installable_rhba_count"`
+	InstallableRheaCount  int `json:"installable_rhea_count" csv:"installable_rhea_count" query:"sp.installable_advisory_enh_count_cache" gorm:"column:installable_rhea_count"`
+	InstallableOtherCount int `json:"installable_other_count" csv:"installable_other_count" query:"(sp.installable_advisory_count_cache - sp.installable_advisory_sec_count_cache - sp.installable_advisory_bug_count_cache - sp.installable_advisory_enh_count_cache)" gorm:"column:installable_other_count"`
+	ApplicableRhsaCount   int `json:"applicable_rhsa_count" csv:"applicable_rhsa_count" query:"sp.applicable_advisory_sec_count_cache" gorm:"column:applicable_rhsa_count"`
+	ApplicableRhbaCount   int `json:"applicable_rhba_count" csv:"applicable_rhba_count" query:"sp.applicable_advisory_bug_count_cache" gorm:"column:applicable_rhba_count"`
+	ApplicableRheaCount   int `json:"applicable_rhea_count" csv:"applicable_rhea_count" query:"sp.applicable_advisory_enh_count_cache" gorm:"column:applicable_rhea_count"`
+	ApplicableOtherCount  int `json:"applicable_other_count" csv:"applicable_other_count" query:"(sp.applicable_advisory_count_cache - sp.installable_advisory_sec_count_cache - sp.installable_advisory_bug_count_cache - sp.installable_advisory_enh_count_cache)" gorm:"column:applicable_other_count"`
 	BaselineIDAttr
 	SystemGroups
 }
@@ -203,13 +214,24 @@ func systemsCommon(c *gin.Context, apiver int) (*gorm.DB, *ListMeta, []string, e
 // @Param    search     query   string  false   "Find matching text"
 // @Param    filter[id]                     query   string  false   "Filter"
 // @Param    filter[display_name]           query   string  false   "Filter"
+// @Param    filter[last_evaluation]        query   string  false   "Filter"
 // @Param    filter[last_upload]            query   string  false   "Filter"
 // @Param    filter[rhsa_count]             query   string  false   "Filter"
 // @Param    filter[rhba_count]             query   string  false   "Filter"
 // @Param    filter[rhea_count]             query   string  false   "Filter"
 // @Param    filter[other_count]            query   string  false   "Filter"
+// @Param    filter[installable_rhsa_count] query   string  false   "Filter"
+// @Param    filter[installable_rhba_count] query   string  false   "Filter"
+// @Param    filter[installable_rhea_count] query   string  false   "Filter"
+// @Param    filter[installable_other_count] query   string  false   "Filter"
+// @Param    filter[applicable_rhsa_count]  query   string  false   "Filter"
+// @Param    filter[applicable_rhba_count]  query   string  false   "Filter"
+// @Param    filter[applicable_rhea_count]  query   string  false   "Filter"
+// @Param    filter[applicable_other_count] query   string  false   "Filter"
 // @Param    filter[stale]                  query   string  false   "Filter"
 // @Param    filter[packages_installed]     query   string  false   "Filter"
+// @Param    filter[packages_installable]   query   string  false   "Filter"
+// @Param    filter[packages_applicable]    query   string  false   "Filter"
 // @Param    filter[stale_timestamp]        query   string  false   "Filter"
 // @Param    filter[stale_warning_timestamp] query  string  false   "Filter"
 // @Param    filter[culled_timestamp]       query   string  false   "Filter"
@@ -281,13 +303,24 @@ func SystemsListHandler(c *gin.Context) {
 // @Param    search     query   string  false   "Find matching text"
 // @Param    filter[id]                     query   string  false   "Filter"
 // @Param    filter[display_name]           query   string  false   "Filter"
+// @Param    filter[last_evaluation]        query   string  false   "Filter"
 // @Param    filter[last_upload]            query   string  false   "Filter"
 // @Param    filter[rhsa_count]             query   string  false   "Filter"
 // @Param    filter[rhba_count]             query   string  false   "Filter"
 // @Param    filter[rhea_count]             query   string  false   "Filter"
 // @Param    filter[other_count]            query   string  false   "Filter"
+// @Param    filter[installable_rhsa_count] query   string  false   "Filter"
+// @Param    filter[installable_rhba_count] query   string  false   "Filter"
+// @Param    filter[installable_rhea_count] query   string  false   "Filter"
+// @Param    filter[installable_other_count] query   string  false   "Filter"
+// @Param    filter[applicable_rhsa_count]  query   string  false   "Filter"
+// @Param    filter[applicable_rhba_count]  query   string  false   "Filter"
+// @Param    filter[applicable_rhea_count]  query   string  false   "Filter"
+// @Param    filter[applicable_other_count] query   string  false   "Filter"
 // @Param    filter[stale]                  query   string  false   "Filter"
 // @Param    filter[packages_installed]     query   string  false   "Filter"
+// @Param    filter[packages_installable]   query   string  false   "Filter"
+// @Param    filter[packages_applicable]    query   string  false   "Filter"
 // @Param    filter[stale_timestamp]        query   string  false   "Filter"
 // @Param    filter[stale_warning_timestamp] query  string  false   "Filter"
 // @Param    filter[culled_timestamp]       query   string  false   "Filter"
