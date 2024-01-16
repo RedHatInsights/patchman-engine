@@ -3,8 +3,7 @@
 set -e -o pipefail
 
 # Analyse generated docs/v2/openapi.json
-# FIXME: temporary disable openapi check, swagger converter returns 500
-# ./scripts/check-openapi-docs.sh
+./scripts/check-openapi-docs.sh
 
 # Check dockerfiles and docker-composes consistency
 ./scripts/check-dockercomposes.sh
