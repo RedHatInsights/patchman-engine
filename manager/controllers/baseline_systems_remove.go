@@ -27,7 +27,7 @@ type BaselineSystemsRemoveRequest struct {
 // @Accept   json
 // @Produce  json
 // @Param    body    body   BaselineSystemsRemoveRequest true "Request body"
-// @Success 200 {int}		http.StatusOK
+// @Success 200
 // @Failure 400 {object} 	utils.ErrorResponse
 // @Failure 404 {object} 	utils.ErrorResponse
 // @Failure 500 {object} 	utils.ErrorResponse

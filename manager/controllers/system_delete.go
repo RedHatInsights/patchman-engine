@@ -16,7 +16,7 @@ import (
 // @Accept   json
 // @Produce  json
 // @Param    inventory_id    path    string   true "Inventory ID"
-// @Success 200 {int}		http.StatusOK
+// @Success 200
 // @Failure 400 {object} 	utils.ErrorResponse
 // @Failure 404 {object} 	utils.ErrorResponse
 // @Failure 500 {object} 	utils.ErrorResponse
