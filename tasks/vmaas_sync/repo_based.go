@@ -25,6 +25,10 @@ func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {
 
 	now := time.Now()
 	redhatRepos, thirdPartyRepos, latestRepoChange, err := getUpdatedRepos(now, lastRepoBaseEval)
+	if latestRepoChange == nil {
+		return nil, nil
+	}
+
 	allRepos := append(redhatRepos, thirdPartyRepos...)
 
 	if err != nil {
