@@ -59,6 +59,9 @@ func ParseNevra(nevra string) (*Nevra, error) {
 		Release: parsed[7],
 		Arch:    parsed[8],
 	}
+	if res.StringE(true) != nevra {
+		return nil, errors.Errorf("couldn't parse nevra (%s)", nevra)
+	}
 	return &res, nil
 }
 
