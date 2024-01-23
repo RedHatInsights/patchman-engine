@@ -308,7 +308,8 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 		}
 	}
 
-	return utils.MergeVMaaSResponses(yumUpdates, vmaasData)
+	merged := utils.MergeVMaaSResponses(yumUpdates, vmaasData)
+	return merged, nil
 }
 
 func getVmaasUpdates(ctx context.Context, tx *gorm.DB,

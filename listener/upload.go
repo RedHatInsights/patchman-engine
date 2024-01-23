@@ -707,10 +707,7 @@ func getYumUpdates(event HostEvent, client *api.Client) (*YumUpdates, error) {
 		}
 	}
 	parsed.UpdateList = &updatesMap
-
-	if err := utils.RemoveNonLatestPackages(&parsed); err != nil {
-		return nil, errors.Wrap(err, "couldn't remove non-latest packages")
-	}
+	utils.RemoveNonLatestPackages(&parsed)
 	yumUpdates, err := json.Marshal(parsed)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to marshall yum updates")
