@@ -8,23 +8,20 @@ import (
 
 // Merge update data from vmaasDataB into vmaasDataA without duplicating.
 // Requires sorted update input and returns sorted output.
-func MergeVMaaSResponses(vmaasDataA, vmaasDataB *vmaas.UpdatesV3Response) (*vmaas.UpdatesV3Response, error) {
+func MergeVMaaSResponses(vmaasDataA, vmaasDataB *vmaas.UpdatesV3Response) *vmaas.UpdatesV3Response {
 	if vmaasDataA == nil {
-		return vmaasDataB, nil
+		return vmaasDataB
 	}
 	if vmaasDataB == nil {
-		return vmaasDataA, nil
+		return vmaasDataA
 	}
 	mergedList := vmaasDataA.GetUpdateList()
 	if mergedList == nil {
-		return vmaasDataB, nil
+		return vmaasDataB
 	}
 	for nevraB, updateListB := range vmaasDataB.GetUpdateList() {
 		if updateListA, ok := mergedList[nevraB]; ok {
-			merged, err := mergeUpdates(updateListA, updateListB)
-			if err != nil {
-				return nil, err
-			}
+			merged := mergeUpdates(updateListA, updateListB)
 			mergedList[nevraB] = merged
 		} else {
 			mergedList[nevraB] = updateListB
@@ -32,24 +29,24 @@ func MergeVMaaSResponses(vmaasDataA, vmaasDataB *vmaas.UpdatesV3Response) (*vmaa
 	}
 
 	vmaasDataA.UpdateList = &mergedList
-	if err := RemoveNonLatestPackages(vmaasDataA); err != nil {
-		return nil, err
-	}
-	return vmaasDataA, nil
+	RemoveNonLatestPackages(vmaasDataA)
+	return vmaasDataA
 }
 
-func mergeUpdates(listA, listB *vmaas.UpdatesV3ResponseUpdateList) (*vmaas.UpdatesV3ResponseUpdateList, error) {
+func mergeUpdates(listA, listB *vmaas.UpdatesV3ResponseUpdateList) *vmaas.UpdatesV3ResponseUpdateList {
 	updatesA, updatesB := listA.GetAvailableUpdates(), listB.GetAvailableUpdates()
 	newUpdates := make([]vmaas.UpdatesV3ResponseAvailableUpdates, 0)
 	a, b := 0, 0
 	for a < len(updatesA) && b < len(updatesB) {
 		nevraA, err := ParseNevra(updatesA[a].GetPackage())
 		if err != nil {
-			return nil, err
+			LogWarn("nevra", nevraA, "Skipping package in mergeUpdates")
+			continue
 		}
 		nevraB, err := ParseNevra(updatesB[b].GetPackage())
 		if err != nil {
-			return nil, err
+			LogWarn("nevra", nevraB, "Skipping package in mergeUpdates")
+			continue
 		}
 
 		cmp := nevraA.Cmp(nevraB)
@@ -79,11 +76,11 @@ func mergeUpdates(listA, listB *vmaas.UpdatesV3ResponseUpdateList) (*vmaas.Updat
 	}
 	return &vmaas.UpdatesV3ResponseUpdateList{
 		AvailableUpdates: &newUpdates,
-	}, nil
+	}
 }
 
 // Keep only updates for the latest package in update list
-func RemoveNonLatestPackages(updates *vmaas.UpdatesV3Response) error {
+func RemoveNonLatestPackages(updates *vmaas.UpdatesV3Response) {
 	var toDel []string
 	type nevraStruct struct {
 		nameString string
@@ -94,7 +91,9 @@ func RemoveNonLatestPackages(updates *vmaas.UpdatesV3Response) error {
 	for k := range updateList {
 		nevra, err := ParseNevra(k)
 		if err != nil {
-			return err
+			LogWarn("err", err.Error(), "Removing package because nevra is malformed")
+			toDel = append(toDel, k)
+			continue
 		}
 		if _, has := nameMap[nevra.Name]; has {
 			// mark older pkg for deletion
@@ -120,7 +119,6 @@ func RemoveNonLatestPackages(updates *vmaas.UpdatesV3Response) error {
 		delete(updateList, k)
 	}
 	updates.UpdateList = &updateList
-	return nil
 }
 
 func ParseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, error) {
