@@ -234,7 +234,15 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform, packages
 
 func isValidNevra(nevra string) bool {
 	// skip "phantom" package
-	return !strings.HasPrefix(nevra, "gpg-pubkey")
+	if strings.HasPrefix(nevra, "gpg-pubkey") {
+		return false
+	}
+
+	// Check whether we have that NEVRA in DB
+	// this may happen when package nevra can't be properly parsed
+	// e.g. oet-service-elasticsearch-0:14.0.5-TSIN-5527-1.noarch
+	_, ok := memoryPackageCache.GetByNevra(nevra)
+	return ok
 }
 
 func latestPkgsChanged(current, stored namedPackage) bool {
