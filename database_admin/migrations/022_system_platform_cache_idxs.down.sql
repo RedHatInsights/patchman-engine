@@ -1,4 +1,0 @@
-DROP INDEX IF EXISTS system_platform_advisory_count_cache_idx;
-DROP INDEX IF EXISTS system_platform_advisory_enh_count_cache_idx;
-DROP INDEX IF EXISTS system_platform_advisory_bug_count_cache_idx;
-DROP INDEX IF EXISTS system_platform_advisory_sec_count_cache_idx;

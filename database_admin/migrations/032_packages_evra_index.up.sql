@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX IF NOT EXISTS package_evra_idx on package(evra, name_id);
