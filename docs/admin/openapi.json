@@ -61,41 +61,6 @@
                 ]
             }
         },
-        "/migrate_system_package": {
-            "put": {
-                "summary": "Migrate system_package data to system_package2",
-                "description": "Migrate system_package data to system_package2",
-                "operationId": "migrateSystemPackage",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "RhIdentity": []
-                    }
-                ]
-            }
-        },
         "/pprof/evaluator_recalc/{param}": {
             "get": {
                 "summary": "Get profile info",
