@@ -5730,6 +5730,128 @@
                 ]
             }
         },
+        "/templates": {
+            "get": {
+                "summary": "Show all templates for an account",
+                "description": "Show all templates for an account",
+                "operationId": "listTemplate",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit for paging",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Offset for paging",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort field",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "id",
+                                "name",
+                                "systems",
+                                "published",
+                                "last_edited"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Find matching text",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[id]",
+                        "in": "query",
+                        "description": "Filter ",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[systems]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Tag filter",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controllers.TemplatesResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
         "/views/advisories/systems": {
             "post": {
                 "summary": "View advisory-system pairs for selected systems and installable advisories",
@@ -7853,6 +7975,140 @@
                     },
                     "meta": {
                         "$ref": "#/components/schemas/controllers.ListMeta"
+                    }
+                }
+            },
+            "controllers.TemplateItem": {
+                "type": "object",
+                "properties": {
+                    "attributes": {
+                        "type": "object",
+                        "description": "Additional template attributes",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/controllers.TemplateItemAttributes"
+                            }
+                        ]
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "Unique template id"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Document type name"
+                    }
+                }
+            },
+            "controllers.TemplateItemAttributes": {
+                "type": "object",
+                "properties": {
+                    "creator": {
+                        "type": "string"
+                    },
+                    "last_edited": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Template name"
+                    },
+                    "published": {
+                        "type": "string",
+                        "description": "Created and updated dates"
+                    },
+                    "systems": {
+                        "type": "integer",
+                        "description": "Count of the systems associated with the template"
+                    }
+                }
+            },
+            "controllers.TemplatesMeta": {
+                "type": "object",
+                "properties": {
+                    "creators": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "filter": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/controllers.FilterData"
+                        },
+                        "description": "Used filters"
+                    },
+                    "has_systems": {
+                        "type": "boolean",
+                        "description": "Show whether customer has some registered systems"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Used response limit (page size) - pagination",
+                        "example": 20
+                    },
+                    "offset": {
+                        "type": "integer",
+                        "description": "Used response offset - pagination",
+                        "example": 0
+                    },
+                    "search": {
+                        "type": "string",
+                        "description": "Used search terms",
+                        "example": "kernel"
+                    },
+                    "sort": {
+                        "type": "array",
+                        "description": "Used sorting fields",
+                        "example": [
+                            "name"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "subtotals": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer"
+                        },
+                        "description": "Some subtotals used by some endpoints"
+                    },
+                    "total_items": {
+                        "type": "integer",
+                        "description": "Total items count to return",
+                        "example": 1000
+                    }
+                }
+            },
+            "controllers.TemplatesResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "description": "Template items",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.TemplateItem"
+                        }
+                    },
+                    "links": {
+                        "type": "object",
+                        "description": "Pagination links",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/controllers.Links"
+                            }
+                        ]
+                    },
+                    "meta": {
+                        "type": "object",
+                        "description": "Generic response fields (pagination params, filters etc.)",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/controllers.TemplatesMeta"
+                            }
+                        ]
                     }
                 }
             },
