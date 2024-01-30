@@ -20,6 +20,7 @@ func TestValidateOpenAPI3DocStr(t *testing.T) {
 func TestFilterOpenAPIPaths1(t *testing.T) {
 	nRemovedPaths := filterOpenAPI(EndpointsConfig{
 		EnableBaselines: true,
+		EnableTemplates: true,
 	}, openAPIPath, "/tmp/openapi-filter-test.json")
 	assert.Equal(t, 0, nRemovedPaths)
 }
@@ -27,6 +28,7 @@ func TestFilterOpenAPIPaths1(t *testing.T) {
 func TestFilterOpenAPIPaths2(t *testing.T) {
 	nRemovedPaths := filterOpenAPI(EndpointsConfig{
 		EnableBaselines: false,
+		EnableTemplates: false,
 	}, openAPIPath, "/tmp/openapi-filter-test.json")
-	assert.Equal(t, 6, nRemovedPaths)
+	assert.Equal(t, 7, nRemovedPaths)
 }
