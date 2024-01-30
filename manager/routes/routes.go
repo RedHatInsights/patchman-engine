@@ -65,6 +65,21 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	if config.EnableBaselines {
 		export.GET("/baselines/:baseline_id/systems", controllers.BaselineSystemsExportHandler)
 	}
+	/*
+		if config.EnableTemplates {
+			export.GET("/templates/:template_id/systems", controllers.TemplateSystemsExportHandler)
+		}
+	*/
+
+	if config.EnableTemplates {
+		templates := api.Group("/templates")
+		templates.GET("", controllers.TemplatesListHandler)
+		/*
+			templates.GET("/:template_id", controllers.TemplateDetailHandler)
+			templates.GET("/:template_id/systems", controllers.TemplateSystemsListHandler)
+			templates.PUT("/:template_id", controllers.TemplateUpdateHandler)
+		*/
+	}
 
 	views := api.Group("/views")
 	views.POST("/systems/advisories", controllers.PostSystemsAdvisories)
@@ -79,6 +94,11 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	if config.EnableBaselines {
 		ids.GET("/baselines/:baseline_id/systems", controllers.BaselineSystemsListIDsHandler)
 	}
+	/*
+		if config.EnableTemplates {
+			export.GET("/templates/:template_id/systems", controllers.TemplateSystemsListIDsHandler)
+		}
+	*/
 
 	api.GET("/status", controllers.Status)
 }
