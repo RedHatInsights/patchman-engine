@@ -40,6 +40,21 @@ func (Baseline) TableName() string {
 	return "baseline"
 }
 
+type Template struct {
+	ID          int64 `gorm:"primaryKey"`
+	RhAccountID int   `gorm:"primaryKey"`
+	Name        string
+	Config      []byte
+	Description *string
+	Creator     *string // pointer for compatibility with previous API versions
+	Published   *time.Time
+	LastEdited  *time.Time
+}
+
+func (Template) TableName() string {
+	return "template"
+}
+
 // nolint: maligned
 type SystemPlatform struct {
 	ID                               int64  `gorm:"primaryKey"`
@@ -71,6 +86,7 @@ type SystemPlatform struct {
 	ReporterID                       *int
 	BaselineID                       *int64
 	BaselineUpToDate                 *bool  `gorm:"column:baseline_uptodate"`
+	TemplateID                       *int64 `gorm:"column:template_id"`
 	YumUpdates                       []byte `gorm:"column:yum_updates"`
 	SatelliteManaged                 bool   `gorm:"column:satellite_managed"`
 	BuiltPkgcache                    bool   `gorm:"column:built_pkgcache"`
