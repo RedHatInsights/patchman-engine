@@ -65,11 +65,9 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	if config.EnableBaselines {
 		export.GET("/baselines/:baseline_id/systems", controllers.BaselineSystemsExportHandler)
 	}
-	/*
-		if config.EnableTemplates {
-			export.GET("/templates/:template_id/systems", controllers.TemplateSystemsExportHandler)
-		}
-	*/
+	if config.EnableTemplates {
+		export.GET("/templates/:template_id/systems", controllers.TemplateSystemsExportHandler)
+	}
 
 	if config.EnableTemplates {
 		templates := api.Group("/templates")
