@@ -45,13 +45,12 @@ func TemplateSystemsExportHandler(c *gin.Context) {
 		return
 	} // Error handled in method itself
 
-	var templateSystems TemplateSystemsDBLookupSlice
+	var templateSystems []TemplateSystemsDBLookup
 	err = query.Find(&templateSystems).Error
 	if err != nil {
 		LogAndRespError(c, err, err.Error())
 		return
 	}
 
-	templateSystems.ParseAndFillTags()
 	OutputExportData(c, templateSystems)
 }
