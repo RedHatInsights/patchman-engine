@@ -27,7 +27,7 @@ var BaselineSystemOpts = ListOpts{
 type BaselineSystemsDBLookup struct {
 	SystemIDAttribute
 	// a helper to get total number of systems
-	SystemsMetaTagTotal
+	MetaTotalHelper
 	BaselineSystemAttributes
 }
 
@@ -223,12 +223,6 @@ func buildBaselineSystemData(baselineSystems []BaselineSystemsDBLookup) ([]Basel
 	}
 	data := make([]BaselineSystemItem, len(baselineSystems))
 	for i := 0; i < len(baselineSystems); i++ {
-		if err := parseSystemItems(baselineSystems[i].TagsStr, &baselineSystems[i].Tags); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", baselineSystems[i].ID, "system tags parsing failed")
-		}
-		if err := parseSystemItems(baselineSystems[i].GroupsStr, &baselineSystems[i].Groups); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", baselineSystems[i].ID, "system groups parsing failed")
-		}
 		data[i] = BaselineSystemItem{
 			Attributes:  baselineSystems[i].BaselineSystemAttributes,
 			InventoryID: baselineSystems[i].ID,

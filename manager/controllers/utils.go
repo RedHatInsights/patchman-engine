@@ -495,12 +495,6 @@ func systemDBLookups2SystemItems(systems []SystemDBLookup) ([]SystemItem, int, m
 	}
 
 	for i := range systems {
-		if err := parseSystemItems(systems[i].TagsStr, &systems[i].Tags); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", systems[i].ID, "system tags parsing failed")
-		}
-		if err := parseSystemItems(systems[i].GroupsStr, &systems[i].Groups); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", systems[i].ID, "system groups parsing failed")
-		}
 		data[i] = SystemItem{
 			Attributes: systems[i].SystemItemAttributes,
 			ID:         systems[i].ID,
@@ -581,49 +575,6 @@ func systemsSatelliteIDs(c *gin.Context, systems []SystemsSatelliteManagedID, me
 	resp.IDs = ids
 	resp.Data = data
 	return resp, nil
-}
-
-type SystemDBLookupSlice []SystemDBLookupExtended
-type AdvisorySystemDBLookupSlice []AdvisorySystemDBLookup
-type BaselineSystemsDBLookupSlice []BaselineSystemsDBLookup
-
-// Parse tags from TagsStr string attribute to Tags SystemTag array attribute.
-// It's used in /*systems endpoints as we can not map this attribute directly from database query result.
-func (s *SystemDBLookupSlice) ParseAndFillTags() {
-	for i, system := range *s {
-		if err := parseSystemItems(system.TagsStr, &(*s)[i].Tags); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system tags to export parsing failed")
-		}
-		if err := parseSystemItems(system.GroupsStr, &(*s)[i].Groups); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system groups to export parsing failed")
-		}
-	}
-}
-
-// Parse tags from TagsStr string attribute to Tags SystemTag array attribute.
-// It's used in /*systems endpoints as we can not map this attribute directly from database query result.
-func (s *AdvisorySystemDBLookupSlice) ParseAndFillTags() {
-	for i, system := range *s {
-		if err := parseSystemItems(system.TagsStr, &(*s)[i].Tags); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system tags to export parsing failed")
-		}
-		if err := parseSystemItems(system.GroupsStr, &(*s)[i].Groups); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system groups to export parsing failed")
-		}
-	}
-}
-
-// Parse tags from TagsStr string attribute to Tags SystemTag array attribute.
-// It's used in /*systems endpoints as we can not map this attribute directly from database query result.
-func (s *BaselineSystemsDBLookupSlice) ParseAndFillTags() {
-	for i, system := range *s {
-		if err := parseSystemItems(system.TagsStr, &(*s)[i].Tags); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system tags to export parsing failed")
-		}
-		if err := parseSystemItems(system.GroupsStr, &(*s)[i].Groups); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", system.ID, "system groups to export parsing failed")
-		}
-	}
 }
 
 func fillAdvisoryItemAttributeReleaseVersion(advisory AdvisoryItemAttributesCommon) AdvisoryItemAttributesCommon {

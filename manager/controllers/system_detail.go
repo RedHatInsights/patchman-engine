@@ -20,8 +20,6 @@ type SystemDetailResponse struct {
 
 type SystemDetailLookup struct {
 	SystemItemAttributesExtended
-	TagsStrHelper
-	GroupsStrHelper
 }
 
 type SystemVmaasJSONResponse struct {
@@ -80,14 +78,6 @@ func SystemDetailHandler(c *gin.Context) {
 	if err != nil {
 		LogAndRespError(c, err, "database error")
 		return
-	}
-
-	if err := parseSystemItems(systemDetail.TagsStr, &systemDetail.Tags); err != nil {
-		utils.LogDebug("err", err.Error(), "inventory_id", inventoryID, "system tags parsing failed")
-	}
-
-	if err := parseSystemItems(systemDetail.GroupsStr, &systemDetail.Groups); err != nil {
-		utils.LogDebug("err", err.Error(), "inventory_id", inventoryID, "system groups parsing failed")
 	}
 
 	resp := SystemDetailResponse{

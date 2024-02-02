@@ -45,13 +45,12 @@ func BaselineSystemsExportHandler(c *gin.Context) {
 		return
 	} // Error handled in method itself
 
-	var baselineSystems BaselineSystemsDBLookupSlice
+	var baselineSystems []BaselineSystemsDBLookup
 	err = query.Find(&baselineSystems).Error
 	if err != nil {
 		LogAndRespError(c, err, err.Error())
 		return
 	}
 
-	baselineSystems.ParseAndFillTags()
 	OutputExportData(c, baselineSystems)
 }

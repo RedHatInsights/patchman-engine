@@ -90,13 +90,12 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 }
 
 func outputExportData(c *gin.Context, query *gorm.DB) {
-	var systems AdvisorySystemDBLookupSlice
+	var systems []AdvisorySystemDBLookup
 	err := query.Find(&systems).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
 		return
 	}
 
-	systems.ParseAndFillTags()
 	OutputExportData(c, systems)
 }

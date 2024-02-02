@@ -26,10 +26,10 @@ var PackageSystemsOpts = ListOpts{
 type PackageSystemItem struct {
 	SystemIDAttribute
 	SystemDisplayName
-	InstalledEVRA string         `json:"installed_evra" csv:"installed_evra" query:"p.evra" gorm:"column:installed_evra"`
-	AvailableEVRA string         `json:"available_evra" csv:"available_evra" query:"null" gorm:"-"`
-	Updatable     bool           `json:"updatable" csv:"updatable" query:"(spkg.installable_id IS NOT NULL)" gorm:"column:updatable"`
-	Tags          SystemTagsList `json:"tags" csv:"tags" query:"null" gorm:"-"`
+	InstalledEVRA string `json:"installed_evra" csv:"installed_evra" query:"p.evra" gorm:"column:installed_evra"`
+	AvailableEVRA string `json:"available_evra" csv:"available_evra" query:"null" gorm:"-"`
+	Updatable     bool   `json:"updatable" csv:"updatable" query:"(spkg.installable_id IS NOT NULL)" gorm:"column:updatable"`
+	SystemTags
 	BaselineAttributes
 	// helper to get AvailableEVRA (latest_evra)
 	InstallableEVRA string `json:"-" csv:"-" query:"pi.evra" gorm:"column:installable_evra"`
@@ -42,7 +42,7 @@ type PackageSystemItem struct {
 }
 
 type PackageSystemDBLookup struct {
-	SystemsMetaTagTotal
+	MetaTotalHelper
 
 	PackageSystemItem
 }
@@ -212,12 +212,6 @@ func packageSystemDBLookups2PackageSystemItems(systems []PackageSystemDBLookup) 
 	}
 	data := make([]PackageSystemItem, len(systems))
 	for i := range systems {
-		if err := parseSystemItems(systems[i].TagsStr, &systems[i].PackageSystemItem.Tags); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", systems[i].ID, "system tags parsing failed")
-		}
-		if err := parseSystemItems(systems[i].GroupsStr, &systems[i].PackageSystemItem.Groups); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", systems[i].ID, "system groups parsing failed")
-		}
 		data[i] = systems[i].PackageSystemItem
 		data[i].AvailableEVRA = data[i].InstallableEVRA
 		if len(data[i].ApplicableEVRA) > 0 {
