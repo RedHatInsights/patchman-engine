@@ -11,13 +11,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// nolint: dupl
-func TestBaselineSystemsExportJSON(t *testing.T) {
-	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1", "", nil, "application/json",
-		BaselineSystemsExportHandler)
+var TemplateCsvHeader = "id,display_name,os,rhsm," +
+	"installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count," +
+	"applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count," +
+	"tags,groups,last_upload"
 
-	var output []BaselineSystemsDBLookup
+// nolint: dupl
+func TestTemplateSystemsExportJSON(t *testing.T) {
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/:template_id/systems", "99900000-0000-0000-0000-000000000001", "",
+		nil, "application/json", TemplateSystemsExportHandler)
+
+	var output []TemplateSystemsDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, len(output))
 
@@ -37,10 +42,10 @@ func TestBaselineSystemsExportJSON(t *testing.T) {
 	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output[1].DisplayName)
 }
 
-func TestBaselineSystemsExportCSV(t *testing.T) {
+func TestTemplateSystemsExportCSV(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1", "", nil, "text/csv",
-		BaselineSystemsExportHandler)
+	w := CreateRequestRouterWithPath("GET", "/:template_id/systems", "99900000-0000-0000-0000-000000000001", "",
+		nil, "text/csv", TemplateSystemsExportHandler)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
@@ -56,20 +61,20 @@ func TestBaselineSystemsExportCSV(t *testing.T) {
 		lines[1])
 }
 
-func TestBaselineSystemsExportWrongFormat(t *testing.T) {
+func TestTemplateSystemsExportWrongFormat(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1", "", nil, "test-format",
-		BaselineSystemsExportHandler)
+	w := CreateRequestRouterWithPath("GET", "/:template_id/systems", "99900000-0000-0000-0000-000000000001", "",
+		nil, "test-format", TemplateSystemsExportHandler)
 
 	assert.Equal(t, http.StatusUnsupportedMediaType, w.Code)
 	body := w.Body.String()
 	assert.Equal(t, InvalidContentTypeErr, body)
 }
 
-func TestBaselineSystemsExportCSVFilter(t *testing.T) {
+func TestTemplateSystemsExportCSVFilter(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1", "?filter[display_name]=nonexistant", nil,
-		"text/csv", BaselineSystemsExportHandler)
+	w := CreateRequestRouterWithPath("GET", "/:template_id/systems", "99900000-0000-0000-0000-000000000001",
+		"?filter[display_name]=nonexistent", nil, "text/csv", TemplateSystemsExportHandler)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
@@ -79,35 +84,35 @@ func TestBaselineSystemsExportCSVFilter(t *testing.T) {
 	assert.Equal(t, "", lines[1])
 }
 
-func TestExportBaselineSystemsTags(t *testing.T) {
+func TestExportTemplateSystemsTags(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1", "?tags=ns1/k2=val2", nil, "application/json",
-		BaselineSystemsExportHandler)
+	w := CreateRequestRouterWithPath("GET", "/:template_id/systems", "99900000-0000-0000-0000-000000000001",
+		"?tags=ns1/k2=val2", nil, "application/json", TemplateSystemsExportHandler)
 
-	var output []BaselineSystemsDBLookup
+	var output []TemplateSystemsDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 }
 
-func TestExportBaselineSystemsTagsInvalid(t *testing.T) {
+func TestExportTemplateSystemsTagsInvalid(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1", "?tags=ns1/k3=val4&tags=invalidTag", nil,
-		"application/json", BaselineSystemsExportHandler)
+	w := CreateRequestRouterWithPath("GET", "/:template_id/systems", "99900000-0000-0000-0000-000000000001",
+		"?tags=ns1/k3=val4&tags=invalidTag", nil, "application/json", TemplateSystemsExportHandler)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
-func TestBaselineSystemsExportWorkloads(t *testing.T) {
+func TestTemplateSystemsExportWorkloads(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1",
+	w := CreateRequestRouterWithPath("GET", "/:template_id/systems", "99900000-0000-0000-0000-000000000001",
 		"?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC", nil, "application/json",
-		BaselineSystemsExportHandler)
+		TemplateSystemsExportHandler)
 
-	var output []BaselineSystemsDBLookup
+	var output []TemplateSystemsDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	assert.Equal(t, 2, len(output))

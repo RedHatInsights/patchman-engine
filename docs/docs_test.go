@@ -30,5 +30,5 @@ func TestFilterOpenAPIPaths2(t *testing.T) {
 		EnableBaselines: false,
 		EnableTemplates: false,
 	}, openAPIPath, "/tmp/openapi-filter-test.json")
-	assert.Equal(t, 9, nRemovedPaths)
+	assert.Equal(t, 10, nRemovedPaths)
 }
