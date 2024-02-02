@@ -29,7 +29,7 @@ type AdvisorySystemItem struct {
 
 // nolint: lll
 type AdvisorySystemDBLookup struct {
-	SystemsMetaTagTotal
+	MetaTotalHelper
 	AdvisorySystemItemAttributes
 	SystemIDAttribute
 }
@@ -167,18 +167,11 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 
 func buildAdvisorySystemsData(fields []AdvisorySystemDBLookup) ([]AdvisorySystemItem, int) {
 	var total int
-	var err error
 	if len(fields) > 0 {
 		total = fields[0].Total
 	}
 	data := make([]AdvisorySystemItem, len(fields))
 	for i := range fields {
-		if err = parseSystemItems(fields[i].TagsStr, &fields[i].AdvisorySystemItemAttributes.Tags); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", fields[i].ID, "system tags parsing failed")
-		}
-		if err = parseSystemItems(fields[i].GroupsStr, &fields[i].AdvisorySystemItemAttributes.Groups); err != nil {
-			utils.LogDebug("err", err.Error(), "inventory_id", fields[i].ID, "system groups parsing failed")
-		}
 		data[i] = AdvisorySystemItem{
 			Attributes: fields[i].AdvisorySystemItemAttributes,
 			ID:         fields[i].ID,

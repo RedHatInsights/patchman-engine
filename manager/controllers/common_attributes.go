@@ -3,22 +3,6 @@ package controllers
 
 import "time"
 
-type SystemsMetaTagTotal struct {
-	MetaTotalHelper
-	TagsStrHelper
-	GroupsStrHelper
-}
-
-type TagsStrHelper struct {
-	// Just helper field to get tags from db in plain string, then parsed to "Tags" attr., excluded from output data.
-	TagsStr string `json:"-" csv:"-" query:"ih.tags" gorm:"column:tags_str"`
-}
-
-type GroupsStrHelper struct {
-	// Just helper field to get Groups from db in plain string, then parsed to "Groups" attr., excluded from output data.
-	GroupsStr string `json:"-" csv:"-" query:"ih.groups" gorm:"column:groups_str"`
-}
-
 type MetaTotalHelper struct {
 	// a helper to get total number of systems
 	Total int `json:"-" csv:"-" query:"count(*) over ()" gorm:"column:total"`
@@ -37,11 +21,11 @@ type SystemTimestamps struct {
 }
 
 type SystemTags struct {
-	Tags SystemTagsList `json:"tags" csv:"tags" gorm:"-"`
+	Tags SystemTagsList `json:"tags" csv:"tags" query:"ih.tags" gorm:"column:tags_json"`
 }
 
 type SystemGroups struct {
-	Groups SystemGroupsList `json:"groups" csv:"groups" gorm:"-" order_query:"ih.groups->0->>'name'"`
+	Groups SystemGroupsList `json:"groups" csv:"groups" query:"ih.groups" gorm:"column:groups_json" order_query:"ih.groups->0->>'name'"`
 }
 
 type BaselineAttributes struct {

@@ -4,12 +4,14 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"database/sql/driver"
 	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -43,7 +45,7 @@ type SystemsSatelliteManagedID struct {
 // nolint: lll
 type SystemDBLookupCommon struct {
 	SystemIDAttribute
-	SystemsMetaTagTotal
+	MetaTotalHelper
 	TotalPatched   int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_installable = 0) over ()" gorm:"column:total_patched"`
 	TotalUnpatched int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_installable > 0) over ()" gorm:"column:total_unpatched"`
 	TotalStale     int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = true) over ()" gorm:"column:total_stale"`
@@ -109,25 +111,55 @@ type SystemItemAttributesExtended struct {
 
 type SystemTagsList []SystemTag
 type SystemGroupsList []SystemGroup
-type SystemInventoryItemList[T SystemTagsList | SystemGroupsList] struct {
-	SystemInventoryItems T
+
+type SystemJSONBItemType interface {
+	SystemTagsList | SystemGroupsList
 }
 
 func (v SystemTagsList) String() string {
-	return SystemInventoryItemList[SystemTagsList]{v}.String()
+	return SystemJSONBItemString(v)
+}
+
+func (v SystemTagsList) Value() (driver.Value, error) {
+	return SystemJSONBItemValue(v)
+}
+
+func (v *SystemTagsList) Scan(value interface{}) error {
+	return SystemJSONBItemScan(v, value)
 }
 
 func (v SystemGroupsList) String() string {
-	return SystemInventoryItemList[SystemGroupsList]{v}.String()
+	return SystemJSONBItemString(v)
 }
 
-func (v SystemInventoryItemList[T]) String() string {
-	b, err := json.Marshal(v.SystemInventoryItems)
+func (v SystemGroupsList) Value() (driver.Value, error) {
+	return SystemJSONBItemValue(v)
+}
+
+func (v *SystemGroupsList) Scan(value interface{}) error {
+	return SystemJSONBItemScan(v, value)
+}
+
+func SystemJSONBItemString[T SystemJSONBItemType](v T) string {
+	b, err := json.Marshal(v)
 	if err != nil {
 		utils.LogError("err", err.Error(), "Unable to convert tags struct to json")
 	}
 	replacedQuotes := strings.ReplaceAll(string(b), `"`, `'`) // use the same way as "vulnerability app"
 	return replacedQuotes
+}
+
+func SystemJSONBItemValue[T SystemJSONBItemType](v T) (driver.Value, error) {
+	return json.Marshal(v)
+}
+
+func SystemJSONBItemScan[T SystemJSONBItemType](v *T, value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	err := json.Unmarshal(b, &v)
+	return err
 }
 
 type SystemItemExtended struct {
@@ -316,17 +348,4 @@ func querySystems(db *gorm.DB, account int, groups map[string]string) *gorm.DB {
 	q := database.Systems(db, account, groups).
 		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id")
 	return q.Select(SystemsSelect)
-}
-
-func parseSystemItems(jsonStr string, res interface{}) error {
-	js := json.RawMessage(jsonStr)
-	b, err := json.Marshal(js)
-	if err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(b, res); err != nil {
-		return err
-	}
-	return nil
 }
