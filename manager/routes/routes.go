@@ -73,9 +73,9 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 		templates := api.Group("/templates")
 		templates.GET("", controllers.TemplatesListHandler)
 		templates.GET("/:template_id/systems", controllers.TemplateSystemsListHandler)
+		templates.PUT("/:template_id/systems", controllers.TemplateSystemsUpdateHandler)
 		/*
 			templates.GET("/:template_id", controllers.TemplateDetailHandler)
-			templates.PUT("/:template_id/systems", controllers.TemplateSystemsUpdateHandler)
 		*/
 	}
 

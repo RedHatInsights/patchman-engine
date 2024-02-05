@@ -4396,7 +4396,7 @@
                         "description": "Template ID",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     },
                     {
@@ -6213,7 +6213,7 @@
                         "description": "Template ID",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     },
                     {
@@ -6406,6 +6406,75 @@
                         "RhIdentity": []
                     }
                 ]
+            },
+            "put": {
+                "summary": "Add systems to a template",
+                "description": "Add systems to a template",
+                "operationId": "updateTemplateSystems",
+                "parameters": [
+                    {
+                        "name": "template_id",
+                        "in": "path",
+                        "description": "Template ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Request body",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controllers.TemplateSystemsUpdateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {}
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ],
+                "x-codegen-request-body-name": "body"
             }
         },
         "/views/advisories/systems": {
@@ -8718,6 +8787,23 @@
                     },
                     "meta": {
                         "$ref": "#/components/schemas/controllers.ListMeta"
+                    }
+                }
+            },
+            "controllers.TemplateSystemsUpdateRequest": {
+                "type": "object",
+                "properties": {
+                    "systems": {
+                        "type": "array",
+                        "description": "List of inventory IDs to have templates removed",
+                        "example": [
+                            "system1-uuid",
+                            " system2-uuid",
+                            " ..."
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 }
             },

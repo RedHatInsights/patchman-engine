@@ -35,7 +35,7 @@ func TemplateSystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
-	query, err := templateSystemsQuery(c, account, groups)
+	query, _, err := templateSystemsQuery(c, account, groups)
 	if err != nil {
 		return
 	} // Error handled in method itself
