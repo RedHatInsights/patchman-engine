@@ -53,14 +53,19 @@ type TemplateSystemsResponse struct {
 	Meta  ListMeta             `json:"meta"`
 }
 
+func getTemplateID(tx *gorm.DB, account int, uuid string) (int64, error) {
+	var id int64
+	err := tx.Model(&models.Template{}).
+		Select("id").
+		Where("rh_account_id = ? AND uuid = ?::uuid ", account, uuid).First(&id).Error
+	return id, err
+}
+
 func templateSystemsQuery(c *gin.Context, account int, groups map[string]string) (*gorm.DB, Filters, error) {
 	templateUUID := c.Param("template_id")
 	db := middlewares.DBFromContext(c)
 
-	var templateID int64
-	err := db.Model(&models.Template{}).
-		Select("id").
-		Where("uuid = ?::uuid ", templateUUID).First(&templateID).Error
+	templateID, err := getTemplateID(db, account, templateUUID)
 	if err != nil {
 		LogAndRespError(c, err, "database error")
 		return nil, nil, err
@@ -122,7 +127,7 @@ func templateSystemData(templateSystems []TemplateSystemsDBLookup) ([]TemplateSy
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    template_id    path    int     true    "Template ID"
+// @Param    template_id    path    string  true    "Template ID"
 // @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,display_name,os,installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count,applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count,last_upload,groups)
@@ -178,7 +183,7 @@ func TemplateSystemsListHandler(c *gin.Context) {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    template_id    path    int     true    "Template ID"
+// @Param    template_id    path    string  true    "Template ID"
 // @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,display_name,os,installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count,applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count,last_upload)

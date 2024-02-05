@@ -43,6 +43,7 @@ func (Baseline) TableName() string {
 type Template struct {
 	ID          int64 `gorm:"primaryKey"`
 	RhAccountID int   `gorm:"primaryKey"`
+	UUID        string
 	Name        string
 	Config      []byte
 	Description *string
