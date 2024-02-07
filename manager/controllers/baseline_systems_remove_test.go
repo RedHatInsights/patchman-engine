@@ -17,8 +17,8 @@ func testBaselineSystemsRemove(t *testing.T, body BaselineSystemsRemoveRequest, 
 		panic(err)
 	}
 
-	w := CreateRequestRouterWithParams("POST", "/systems/remove", bytes.NewBuffer(bodyJSON), "",
-		BaselineSystemsRemoveHandler, 1, "POST", "/systems/remove")
+	w := CreateRequestRouterWithParams("POST", "/systems/remove", "", "", bytes.NewBuffer(bodyJSON), "",
+		BaselineSystemsRemoveHandler, 1)
 
 	assert.Equal(t, status, w.Code)
 }

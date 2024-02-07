@@ -24,7 +24,7 @@ func TestCreateBaseline(t *testing.T) {
         "config": {"to_time": "2022-12-31T12:00:00-04:00"},
 		"description": "desc"
 	}`
-	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
+	w := CreateRequestRouterWithParams("PUT", "/", "", "", bytes.NewBufferString(data), "", CreateBaselineHandler, 1)
 
 	var resp CreateBaselineResponse
 	ParseResponseBody(t, w.Body.Bytes(), &resp)
@@ -39,7 +39,7 @@ func TestCreateBaseline(t *testing.T) {
 func TestCreateBaselineNameOnly(t *testing.T) {
 	core.SetupTest(t)
 	data := `{"name": "my_empty_baseline"}`
-	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
+	w := CreateRequestRouterWithParams("PUT", "/", "", "", bytes.NewBufferString(data), "", CreateBaselineHandler, 1)
 
 	var resp CreateBaselineResponse
 	ParseResponseBody(t, w.Body.Bytes(), &resp)
@@ -50,7 +50,7 @@ func TestCreateBaselineNameOnly(t *testing.T) {
 func TestCreateBaselineNameEmptyString(t *testing.T) {
 	core.SetupTest(t)
 	data := `{"name": ""}`
-	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
+	w := CreateRequestRouterWithParams("PUT", "/", "", "", bytes.NewBufferString(data), "", CreateBaselineHandler, 1)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -60,7 +60,7 @@ func TestCreateBaselineNameEmptyString(t *testing.T) {
 func TestCreateBaselineMissingName(t *testing.T) {
 	core.SetupTest(t)
 	data := `{}`
-	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
+	w := CreateRequestRouterWithParams("PUT", "/", "", "", bytes.NewBufferString(data), "", CreateBaselineHandler, 1)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -70,7 +70,7 @@ func TestCreateBaselineMissingName(t *testing.T) {
 func TestCreateBaselineInvalidRequest(t *testing.T) {
 	core.SetupTest(t)
 	data := `{"name": 0}`
-	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
+	w := CreateRequestRouterWithParams("PUT", "/", "", "", bytes.NewBufferString(data), "", CreateBaselineHandler, 1)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -83,7 +83,7 @@ func TestCreateBaselineDuplicatedName(t *testing.T) {
 	data := `{
 		"name": "baseline_1-1"
 	}`
-	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
+	w := CreateRequestRouterWithParams("PUT", "/", "", "", bytes.NewBufferString(data), "", CreateBaselineHandler, 1)
 
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
@@ -93,7 +93,7 @@ func TestCreateBaselineDuplicatedName(t *testing.T) {
 func TestCreateBaselineDescriptionEmptyString(t *testing.T) {
 	core.SetupTest(t)
 	data := `{"name": "baseline_empty_desc", "description": ""}`
-	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
+	w := CreateRequestRouterWithParams("PUT", "/", "", "", bytes.NewBufferString(data), "", CreateBaselineHandler, 1)
 
 	var resp CreateBaselineResponse
 	CheckResponse(t, w, http.StatusOK, &resp)
@@ -104,7 +104,7 @@ func TestCreateBaselineDescriptionEmptyString(t *testing.T) {
 func TestCreateBaselineDescriptionSpaces(t *testing.T) {
 	core.SetupTest(t)
 	data := `{"name": "baseline_spaces_desc", "description": "   "}`
-	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "", CreateBaselineHandler, 1, "PUT", "/")
+	w := CreateRequestRouterWithParams("PUT", "/", "", "", bytes.NewBufferString(data), "", CreateBaselineHandler, 1)
 
 	var err utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &err)
@@ -134,8 +134,7 @@ func TestCreateBaselineSatelliteSystem(t *testing.T) {
 		"description": "desc"
 	}`
 
-	w := CreateRequestRouterWithParams("PUT", "/", bytes.NewBufferString(data), "",
-		CreateBaselineHandler, 1, "PUT", "/")
+	w := CreateRequestRouterWithParams("PUT", "/", "", "", bytes.NewBufferString(data), "", CreateBaselineHandler, 1)
 	var err utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &err)
 }

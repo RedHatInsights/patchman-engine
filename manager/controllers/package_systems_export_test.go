@@ -12,8 +12,8 @@ import (
 
 func TestPackageSystemsExportHandlerJSON(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", "/kernel/systems?sort=id", nil, "application/json",
-		PackageSystemsExportHandler, 3, "GET", "/:package_name/systems")
+	w := CreateRequestRouterWithParams("GET", "/:package_name/systems", "kernel", "?sort=id", nil, "application/json",
+		PackageSystemsExportHandler, 3)
 
 	var output []PackageSystemItemV3
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -28,8 +28,8 @@ func TestPackageSystemsExportHandlerJSON(t *testing.T) {
 
 func TestPackageSystemsExportHandlerCSV(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", "/kernel/systems?sort=id", nil, "text/csv",
-		PackageSystemsExportHandler, 3, "GET", "/:package_name/systems")
+	w := CreateRequestRouterWithParams("GET", "/:package_name/systems", "kernel", "?sort=id", nil, "text/csv",
+		PackageSystemsExportHandler, 3)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
@@ -49,8 +49,8 @@ func TestPackageSystemsExportHandlerCSV(t *testing.T) {
 
 func TestPackageSystemsExportInvalidName(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", "/unknown_package/systems", nil, "text/csv",
-		PackageSystemsExportHandler, 3, "GET", "/:package_name/systems")
+	w := CreateRequestRouterWithParams("GET", "/:package_name/systems", "unknown_package", "", nil, "text/csv",
+		PackageSystemsExportHandler, 3)
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
