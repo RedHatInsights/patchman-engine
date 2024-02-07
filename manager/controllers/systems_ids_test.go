@@ -29,7 +29,7 @@ func TestSystemsIDsOffsetLimit(t *testing.T) {
 }
 
 func TestSystemsIDsWrongOffset(t *testing.T) {
-	doTestWrongOffset(t, "/", "/?offset=13&limit=4", SystemsListIDsHandler)
+	doTestWrongOffset(t, "/", "", "?offset=13&limit=4", SystemsListIDsHandler)
 }
 
 func TestSystemsIDsWrongSort(t *testing.T) {

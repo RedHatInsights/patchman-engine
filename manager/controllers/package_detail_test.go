@@ -12,8 +12,7 @@ import (
 // nolint: dupl
 func TestLatestPackage(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", "/packages/kernel", nil, "", PackageDetailHandler, 3,
-		"GET", "/packages/:package_name")
+	w := CreateRequestRouterWithParams("GET", "/packages/:package_name", "kernel", "", nil, "", PackageDetailHandler, 3)
 
 	var output PackageDetailResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -29,8 +28,8 @@ func TestLatestPackage(t *testing.T) {
 // nolint: dupl
 func TestEvraPackage(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", "/packages/kernel-5.6.13-200.fc31.x86_64", nil, "",
-		PackageDetailHandler, 3, "GET", "/packages/:package_name")
+	w := CreateRequestRouterWithParams("GET", "/packages/:package_name", "kernel-5.6.13-200.fc31.x86_64", "", nil, "",
+		PackageDetailHandler, 3)
 
 	var output PackageDetailResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -45,8 +44,7 @@ func TestEvraPackage(t *testing.T) {
 
 func TestNonExitentPackage(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", "/packages/python", nil, "", PackageDetailHandler, 3,
-		"GET", "/packages/:package_name")
+	w := CreateRequestRouterWithParams("GET", "/packages/:package_name", "python", "", nil, "", PackageDetailHandler, 3)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -55,8 +53,8 @@ func TestNonExitentPackage(t *testing.T) {
 
 func TestNonExitentEvra(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", "/packages/kernel-5.6.13-202.fc31.x86_64", nil, "",
-		PackageDetailHandler, 3, "GET", "/packages/:package_name")
+	w := CreateRequestRouterWithParams("GET", "/packages/:package_name", "kernel-5.6.13-202.fc31.x86_64", "", nil, "",
+		PackageDetailHandler, 3)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusNotFound, &errResp)
@@ -74,8 +72,8 @@ func TestPackageDetailNoPackage(t *testing.T) {
 
 func TestPackageDetailFiltering(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("GET", "/packages/kernel-5.6.13-202.fc31.x86_64?filter[filter]=abcd",
-		nil, "", PackageDetailHandler, 3, "GET", "/packages/:package_name")
+	w := CreateRequestRouterWithParams("GET", "/packages/:package_name", "kernel-5.6.13-202.fc31.x86_64",
+		"?filter[filter]=abcd", nil, "", PackageDetailHandler, 3)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)

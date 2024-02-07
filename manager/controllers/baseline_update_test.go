@@ -33,10 +33,8 @@ func TestUpdateBaseline(t *testing.T) {
         "config": {"to_time": "2022-12-31T12:00:00-04:00"},
 		"description": "desc"
 	}`
-
-	path := fmt.Sprintf(`/%v`, baselineID)
-	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
-		"PUT", "/:baseline_id")
+	w := CreateRequestRouterWithParams("PUT", "/:baseline_id", fmt.Sprint(baselineID), "", bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1)
 
 	var resp UpdateBaselineResponse
 	CheckResponse(t, w, http.StatusOK, &resp)
@@ -56,9 +54,8 @@ func TestUpdateBaselineWithEmptyAssociations(t *testing.T) {
 
 	baselineID := database.CreateBaseline(t, "", testingInventoryIDs, nil)
 	data := `{"inventory_ids": {}}`
-	path := fmt.Sprintf(`/%v`, baselineID)
-	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
-		"PUT", "/:baseline_id")
+	w := CreateRequestRouterWithParams("PUT", "/:baseline_id", fmt.Sprint(baselineID), "", bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1)
 
 	var resp UpdateBaselineResponse
 	CheckResponse(t, w, http.StatusOK, &resp)
@@ -85,9 +82,8 @@ func TestUpdateBaselineShouldRemoveAllAssociations(t *testing.T) {
 			"00000000-0000-0000-0000-000000000007": false
 		}
 	}`
-	path := fmt.Sprintf(`/%v`, baselineID)
-	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
-		"PUT", "/:baseline_id")
+	w := CreateRequestRouterWithParams("PUT", "/:baseline_id", fmt.Sprint(baselineID), "", bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1)
 
 	var resp UpdateBaselineResponse
 	CheckResponse(t, w, http.StatusOK, &resp)
@@ -102,8 +98,8 @@ func TestUpdateBaselineInvalidPayload(t *testing.T) {
 	core.SetupTest(t)
 
 	data := `{"name": 0}`
-	w := CreateRequestRouterWithParams("PUT", "/1", bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
-		"PUT", "/:baseline_id")
+	w := CreateRequestRouterWithParams("PUT", "/:baseline_id", "1", "", bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1)
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.True(t, strings.Contains(errResp.Error, "name of type string"))
@@ -120,9 +116,8 @@ func TestUpdateBaselineInvalidSystem(t *testing.T) {
 			"00000000-0000-0000-0000-000000000009": true
 		}
 	}`
-	path := fmt.Sprintf(`/%v`, baselineID)
-	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
-		"PUT", "/:baseline_id")
+	w := CreateRequestRouterWithParams("PUT", "/:baseline_id", fmt.Sprint(baselineID), "", bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusNotFound, &errResp)
@@ -136,9 +131,8 @@ func TestUpdateBaselineNullValues(t *testing.T) {
 
 	baselineID := database.CreateBaseline(t, "", testingInventoryIDs, nil)
 	data := `{}`
-	path := fmt.Sprintf(`/%v`, baselineID)
-	w := CreateRequestRouterWithParams("PUT", path, bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
-		"PUT", "/:baseline_id")
+	w := CreateRequestRouterWithParams("PUT", "/:baseline_id", fmt.Sprint(baselineID), "", bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1)
 
 	var resp UpdateBaselineResponse
 	CheckResponse(t, w, http.StatusOK, &resp)
@@ -151,8 +145,8 @@ func TestUpdateBaselineNullValues(t *testing.T) {
 
 func TestUpdateBaselineInvalidBaselineID(t *testing.T) {
 	core.SetupTestEnvironment()
-	w := CreateRequestRouterWithParams("PUT", "/invalidBaseline", bytes.NewBufferString("{}"), "", BaselineUpdateHandler,
-		1, "PUT", "/:baseline_id")
+	w := CreateRequestRouterWithParams("PUT", "/:baseline_id", "invalidBaseline", "", bytes.NewBufferString("{}"), "",
+		BaselineUpdateHandler, 1)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -162,8 +156,8 @@ func TestUpdateBaselineInvalidBaselineID(t *testing.T) {
 func TestUpdateBaselineDuplicatedName(t *testing.T) {
 	core.SetupTest(t)
 	data := `{"name": "baseline_1-2"}`
-	w := CreateRequestRouterWithParams("PUT", "/1", bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
-		"PUT", "/:baseline_id")
+	w := CreateRequestRouterWithParams("PUT", "/:baseline_id", "1", "", bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1)
 
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)
@@ -183,8 +177,8 @@ func TestUpdateBaselineSystems(t *testing.T) {
 			"00000000-0000-0000-0000-000000000002": true
 		}
 	}`
-	w := CreateRequestRouterWithParams("PUT", "/1", bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
-		"PUT", "/:baseline_id")
+	w := CreateRequestRouterWithParams("PUT", "/:baseline_id", "1", "", bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1)
 
 	var resp UpdateBaselineResponse
 	CheckResponse(t, w, http.StatusOK, &resp)
@@ -203,8 +197,8 @@ func TestUpdateBaselineSystemsInvalid(t *testing.T) {
 			"00000000-0000-0000-0000-000000000003": false
 		}
 	}`
-	w := CreateRequestRouterWithParams("PUT", "/1", bytes.NewBufferString(data), "", BaselineUpdateHandler, 1,
-		"PUT", "/:baseline_id")
+	w := CreateRequestRouterWithParams("PUT", "/:baseline_id", "1", "", bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -219,8 +213,8 @@ func TestUpdateBaselineEmptyDescription(t *testing.T) {
 	defer database.DeleteBaseline(t, baselineID)
 
 	data := `{"description": ""}`
-	w := CreateRequestRouterWithParams("PUT", fmt.Sprintf(`/%v`, baselineID), bytes.NewBufferString(data), "",
-		BaselineUpdateHandler, 1, "PUT", "/:baseline_id")
+	w := CreateRequestRouterWithParams("PUT", "/:baseline_id", fmt.Sprint(baselineID), "", bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1)
 
 	var resp UpdateBaselineResponse
 	CheckResponse(t, w, http.StatusOK, &resp)
@@ -236,8 +230,8 @@ func TestUpdateBaselineNilDescription(t *testing.T) {
 	defer database.DeleteBaseline(t, baselineID)
 
 	data := `{"name": "new_name", "description": null}`
-	w := CreateRequestRouterWithParams("PUT", fmt.Sprintf(`/%v`, baselineID), bytes.NewBufferString(data), "",
-		BaselineUpdateHandler, 1, "PUT", "/:baseline_id")
+	w := CreateRequestRouterWithParams("PUT", "/:baseline_id", fmt.Sprint(baselineID), "", bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1)
 
 	var resp UpdateBaselineResponse
 	CheckResponse(t, w, http.StatusOK, &resp)
@@ -247,8 +241,8 @@ func TestUpdateBaselineNilDescription(t *testing.T) {
 
 	// missing description
 	data = `{"name": "new_name"}`
-	w = CreateRequestRouterWithParams("PUT", fmt.Sprintf(`/%v`, baselineID), bytes.NewBufferString(data), "",
-		BaselineUpdateHandler, 1, "PUT", "/:baseline_id")
+	w = CreateRequestRouterWithParams("PUT", "/:baseline_id", fmt.Sprint(baselineID), "", bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1)
 
 	CheckResponse(t, w, http.StatusOK, &resp)
 	assert.Equal(t, baselineID, resp.BaselineID)
@@ -264,8 +258,8 @@ func TestUpdateBaselineSpacesDescription(t *testing.T) {
 	defer database.DeleteBaseline(t, baselineID)
 
 	data := `{"description": "   "}`
-	w := CreateRequestRouterWithParams("PUT", fmt.Sprintf(`/%v`, baselineID), bytes.NewBufferString(data), "",
-		BaselineUpdateHandler, 1, "PUT", "/:baseline_id")
+	w := CreateRequestRouterWithParams("PUT", "/:baseline_id", fmt.Sprint(baselineID), "", bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1)
 
 	var err utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &err)
@@ -297,8 +291,8 @@ func TestUpdateBaselineSatelliteSystem(t *testing.T) {
 		}
 	}`
 
-	w := CreateRequestRouterWithParams("PUT", fmt.Sprintf("/%v", baselineID), bytes.NewBufferString(data), "",
-		BaselineUpdateHandler, 1, "PUT", "/:baseline_id")
+	w := CreateRequestRouterWithParams("PUT", "/:baseline_id", fmt.Sprint(baselineID), "", bytes.NewBufferString(data), "",
+		BaselineUpdateHandler, 1)
 	var err utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &err)
 }

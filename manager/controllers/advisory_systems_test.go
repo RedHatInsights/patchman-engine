@@ -141,7 +141,7 @@ func TestAdvisorySystemsTagsUnknown(t *testing.T) { //nolint:dupl
 }
 
 func TestAdvisorySystemsWrongOffset(t *testing.T) {
-	doTestWrongOffset(t, "/:advisory_id", "/RH-1?offset=1000", AdvisorySystemsListHandler)
+	doTestWrongOffset(t, "/:advisory_id", "RH-1", "?offset=1000", AdvisorySystemsListHandler)
 }
 
 func TestAdvisorySystemsTagsInMetadata(t *testing.T) {

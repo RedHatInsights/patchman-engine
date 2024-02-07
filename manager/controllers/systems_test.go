@@ -68,7 +68,7 @@ func TestSystemsOffsetLimit(t *testing.T) {
 }
 
 func TestSystemsWrongOffset(t *testing.T) {
-	doTestWrongOffset(t, "/", "/?offset=13&limit=4", SystemsListHandler)
+	doTestWrongOffset(t, "/", "", "?offset=13&limit=4", SystemsListHandler)
 }
 
 func TestSystemsWrongSort(t *testing.T) {

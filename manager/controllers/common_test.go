@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,12 @@ func acceptContentType(req *http.Request, ct string) {
 	if ct != "" {
 		req.Header.Add("Accept", ct)
 	}
+}
+
+// Fill params and append query string to routerPath to get url
+func getURLFromRouterPath(routerPath, param, queryString string) string {
+	pattern := regexp.MustCompile(":[a-zA-Z0-9_]+")
+	return pattern.ReplaceAllString(routerPath, param) + queryString
 }
 
 // Init request
@@ -36,11 +43,10 @@ func CreateRequest(method string, url string, body io.Reader, contentType string
 }
 
 // Create request and initialize router with params
-func CreateRequestRouterWithParams(method string, url string, body io.Reader, contentType string,
-	handler gin.HandlerFunc, routerAccount int, routerMethod string, routerPath string,
-	contextKVs ...core.ContextKV) (w *httptest.ResponseRecorder) {
-	w, req := prepareRequest(method, url, body, contentType)
-	core.InitRouterWithParams(handler, routerAccount, routerMethod, routerPath, contextKVs...).ServeHTTP(w, req)
+func CreateRequestRouterWithParams(method, routerPath, param, queryString string, body io.Reader, contentType string,
+	handler gin.HandlerFunc, routerAccount int, contextKVs ...core.ContextKV) (w *httptest.ResponseRecorder) {
+	w, req := prepareRequest(method, getURLFromRouterPath(routerPath, param, queryString), body, contentType)
+	core.InitRouterWithParams(handler, routerAccount, method, routerPath, contextKVs...).ServeHTTP(w, req)
 	return w
 }
 

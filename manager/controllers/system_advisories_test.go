@@ -140,7 +140,7 @@ func TestSystemAdvisoriesSearch(t *testing.T) {
 }
 
 func TestSystemAdvisoriesWrongOffset(t *testing.T) {
-	doTestWrongOffset(t, "/:inventory_id", "/00000000-0000-0000-0000-000000000001?offset=1000",
+	doTestWrongOffset(t, "/:inventory_id", "00000000-0000-0000-0000-000000000001", "?offset=1000",
 		SystemAdvisoriesHandler)
 }
 
