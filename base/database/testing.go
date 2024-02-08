@@ -486,3 +486,59 @@ func DeleteSystem(t *testing.T, inventoryID string) {
 	err = Db.Exec("DELETE FROM inventory.hosts WHERE id = ?", inventoryID).Error
 	assert.Nil(t, err)
 }
+
+func CreateTemplate(t *testing.T, account int, uuid string, inventoryIDs []string) {
+	template := &models.Template{
+		RhAccountID: account, UUID: uuid, Name: uuid,
+	}
+
+	tx := Db.Begin()
+	defer tx.Rollback()
+
+	err := tx.Create(template).Error
+	assert.Nil(t, err)
+
+	err = tx.Model(models.SystemPlatform{}).
+		Where("rh_account_id = ? AND inventory_id IN (?::uuid)", account, inventoryIDs).
+		Update("template_id", template.ID).Error
+	assert.Nil(t, err)
+	err = tx.Commit().Error
+	assert.Nil(t, err)
+}
+
+func DeleteTemplate(t *testing.T, account int, templateUUID string) {
+	tx := Db.Begin()
+	defer tx.Rollback()
+
+	err := tx.Model(models.SystemPlatform{}).
+		Where("rh_account_id = ? AND template_id = (SELECT id FROM template WHERE uuid = ?::uuid)", account, templateUUID).
+		Update("template_id", nil).Error
+
+	assert.Nil(t, err)
+
+	err = tx.Delete(models.Template{}, "rh_account_id = ? AND uuid = ?::uuid", account, templateUUID).Error
+	assert.Nil(t, err)
+
+	err = tx.Commit().Error
+	assert.Nil(t, err)
+}
+
+func CheckTemplateSystems(t *testing.T, account int, templateUUID string, inventoryIDs []string) {
+	var dbInventoryIDs []string
+	err := Db.Table("system_platform as sp").Select("sp.inventory_id as id").
+		Joins("JOIN template tp ON tp.id = sp.template_id").
+		Where("sp.rh_account_id = ? AND tp.uuid = ?::uuid", account, templateUUID).
+		Order("id").
+		Find(&dbInventoryIDs).Error
+
+	assert.Nil(t, err)
+
+	assert.Equal(t, len(inventoryIDs), len(dbInventoryIDs))
+	if len(inventoryIDs) == 0 {
+		assert.Equal(t, 0, len(dbInventoryIDs))
+	} else {
+		for index, inventoryID := range inventoryIDs {
+			assert.Equal(t, inventoryID, dbInventoryIDs[index])
+		}
+	}
+}
