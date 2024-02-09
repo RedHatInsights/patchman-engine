@@ -222,7 +222,7 @@ func shouldUseCache(db *gorm.DB, acc int, filters map[string]FilterData, groups 
 	if !enabledPackageCache {
 		return false
 	}
-	if HasInventoryFilter(filters) || len(groups[utils.KeyGrouped]) != 0 {
+	if HasInventoryFilter(filters) || len(groups) != 0 {
 		return false
 	}
 
