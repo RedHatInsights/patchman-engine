@@ -58,29 +58,8 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	missingIDs, satelliteManagedIDs, err := checkInventoryIDs(db, account, req.Systems, groups)
+	err = assignTemplateSystems(c, db, account, &templateID, req.Systems, groups)
 	if err != nil {
-		LogAndRespError(c, err, "Database error")
-		return
-	}
-
-	if enableSatelliteFunctionality && len(satelliteManagedIDs) > 0 {
-		msg := fmt.Sprintf("Attempting to add satellite managed systems to baseline: %v", satelliteManagedIDs)
-		LogAndRespBadRequest(c, errors.New(msg), msg)
-		return
-	} else if len(missingIDs) > 0 {
-		msg := fmt.Sprintf("Missing inventory_ids: %v", missingIDs)
-		LogAndRespNotFound(c, errors.New(msg), msg)
-		return
-	}
-	err = assignTemplateSystems(db, account, templateID, req.Systems)
-	if err != nil {
-		switch e := err.Error(); e {
-		case InvalidInventoryIDsErr:
-			LogAndRespBadRequest(c, err, e)
-		default:
-			LogAndRespError(c, err, "database error")
-		}
 		return
 	}
 
@@ -91,24 +70,50 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func assignTemplateSystems(db *gorm.DB, accountID int, templateID int64, inventoryIDs []string) error {
+func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, templateID *int64,
+	inventoryIDs []string, groups map[string]string) error {
 	if len(inventoryIDs) == 0 {
-		return errors.New(InvalidInventoryIDsErr)
+		err := errors.New(InvalidInventoryIDsErr)
+		LogAndRespBadRequest(c, err, InvalidInventoryIDsErr)
+		return err
 	}
 	tx := db.Begin()
 	defer tx.Rollback()
+
+	missingIDs, satelliteManagedIDs, err := checkInventoryIDs(db, accountID, inventoryIDs, groups)
+	if err != nil {
+		LogAndRespError(c, err, "Database error")
+		return err
+	}
+
+	if enableSatelliteFunctionality && len(satelliteManagedIDs) > 0 {
+		msg := fmt.Sprintf("Template can not contain satellite managed systems: %v", satelliteManagedIDs)
+		LogAndRespBadRequest(c, errors.New(msg), msg)
+		return err
+	} else if len(missingIDs) > 0 {
+		msg := fmt.Sprintf("Unknown inventory_ids: %v", missingIDs)
+		LogAndRespNotFound(c, errors.New(msg), msg)
+		return err
+	}
 
 	tx = tx.Model(models.SystemPlatform{}).
 		Where("rh_account_id = ? AND inventory_id IN (?::uuid)",
 			accountID, inventoryIDs).
 		Update("template_id", templateID)
 	if e := tx.Error; e != nil {
+		LogAndRespError(c, err, "Database error")
 		return e
 	}
 	if int(tx.RowsAffected) != len(inventoryIDs) {
-		return errors.New(InvalidInventoryIDsErr)
+		err = errors.New(InvalidInventoryIDsErr)
+		LogAndRespBadRequest(c, err, InvalidInventoryIDsErr)
+		return err
 	}
 
-	err := tx.Commit().Error
-	return err
+	err = tx.Commit().Error
+	if e := tx.Error; e != nil {
+		LogAndRespError(c, err, "Database error")
+		return err
+	}
+	return nil
 }
