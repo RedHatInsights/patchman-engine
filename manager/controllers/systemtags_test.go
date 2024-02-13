@@ -12,7 +12,7 @@ import (
 func TestSystemTagsListDefault(t *testing.T) {
 	core.SetupTest(t)
 
-	w := CreateRequestRouterWithAccount("GET", "/", nil, "", SystemTagListHandler, "/", 1)
+	w := CreateRequestRouterWithAccount("GET", "/", "", "", nil, "", SystemTagListHandler, 1)
 
 	var output SystemTagsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -29,7 +29,7 @@ func TestSystemTagsListDefault(t *testing.T) {
 func TestSystemTagsListPagination(t *testing.T) {
 	core.SetupTest(t)
 
-	w := CreateRequestRouterWithAccount("GET", "/?offset=1&limit=1", nil, "", SystemTagListHandler, "/", 1)
+	w := CreateRequestRouterWithAccount("GET", "/", "", "?offset=1&limit=1", nil, "", SystemTagListHandler, 1)
 
 	var output SystemTagsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -46,7 +46,7 @@ func TestSystemTagsListPagination(t *testing.T) {
 func TestSystemTagsTotalItems(t *testing.T) {
 	core.SetupTest(t)
 
-	w := CreateRequestRouterWithAccount("GET", "/", nil, "", SystemTagListHandler, "/", 1)
+	w := CreateRequestRouterWithAccount("GET", "/", "", "", nil, "", SystemTagListHandler, 1)
 
 	var output SystemTagsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -56,7 +56,7 @@ func TestSystemTagsTotalItems(t *testing.T) {
 func TestSystemTagsListSort(t *testing.T) {
 	core.SetupTest(t)
 
-	w := CreateRequestRouterWithAccount("GET", "/?sort=count", nil, "", SystemTagListHandler, "/", 1)
+	w := CreateRequestRouterWithAccount("GET", "/", "", "?sort=count", nil, "", SystemTagListHandler, 1)
 
 	var output SystemTagsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -73,6 +73,6 @@ func TestSystemTagsListSort(t *testing.T) {
 func TestSystemTagsListBadRequestOnIdtSort(t *testing.T) {
 	core.SetupTest(t)
 
-	w := CreateRequestRouterWithAccount("GET", "/?sort=id", nil, "", SystemTagListHandler, "/", 1)
+	w := CreateRequestRouterWithAccount("GET", "/", "", "?sort=id", nil, "", SystemTagListHandler, 1)
 	assert.Equal(t, 400, w.Code)
 }

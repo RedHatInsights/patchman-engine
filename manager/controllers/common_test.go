@@ -59,10 +59,9 @@ func CreateRequestRouterWithPath(method, routerPath, param, queryString string, 
 }
 
 // Create request and initialize router with account
-func CreateRequestRouterWithAccount(method string, url string, body io.Reader, contentType string,
-	handler gin.HandlerFunc, routerPath string, routerAccount int,
-	contextKVs ...core.ContextKV) (w *httptest.ResponseRecorder) {
-	w, req := prepareRequest(method, url, body, contentType)
+func CreateRequestRouterWithAccount(method, routerPath, param, queryString string, body io.Reader, contentType string,
+	handler gin.HandlerFunc, routerAccount int, contextKVs ...core.ContextKV) (w *httptest.ResponseRecorder) {
+	w, req := prepareRequest(method, getURLFromRouterPath(routerPath, param, queryString), body, contentType)
 	core.InitRouterWithAccount(handler, routerPath, routerAccount, contextKVs...).ServeHTTP(w, req)
 	return w
 }
