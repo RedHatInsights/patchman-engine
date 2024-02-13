@@ -11,8 +11,8 @@ import (
 
 func TestAdvisorySystemsExportJSON(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, "application/json", AdvisorySystemsExportHandler,
-		"/:advisory_id")
+	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "", nil, "application/json",
+		AdvisorySystemsExportHandler)
 
 	var output []SystemDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -23,7 +23,7 @@ func TestAdvisorySystemsExportJSON(t *testing.T) {
 
 func TestAdvisorySystemsExportCSV(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/RH-1", nil, "text/csv", AdvisorySystemsExportHandler, "/:advisory_id")
+	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "", nil, "text/csv", AdvisorySystemsExportHandler)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()

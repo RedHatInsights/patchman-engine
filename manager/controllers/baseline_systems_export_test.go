@@ -13,8 +13,8 @@ import (
 
 func TestBaselineSystemsExportJSON(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/1/systems", nil, "application/json", BaselineSystemsExportHandler,
-		"/:baseline_id/systems")
+	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1", "", nil, "application/json",
+		BaselineSystemsExportHandler)
 
 	var output []BaselineSystemsDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -38,8 +38,8 @@ func TestBaselineSystemsExportJSON(t *testing.T) {
 
 func TestBaselineSystemsExportCSV(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/1/systems", nil, "text/csv", BaselineSystemsExportHandler,
-		"/:baseline_id/systems")
+	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1", "", nil, "text/csv",
+		BaselineSystemsExportHandler)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
@@ -61,8 +61,8 @@ func TestBaselineSystemsExportCSV(t *testing.T) {
 
 func TestBaselineSystemsExportWrongFormat(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/1/systems", nil, "test-format", BaselineSystemsExportHandler,
-		"/:baseline_id/systems")
+	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1", "", nil, "test-format",
+		BaselineSystemsExportHandler)
 
 	assert.Equal(t, http.StatusUnsupportedMediaType, w.Code)
 	body := w.Body.String()
@@ -71,8 +71,8 @@ func TestBaselineSystemsExportWrongFormat(t *testing.T) {
 
 func TestBaselineSystemsExportCSVFilter(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/1/systems?filter[display_name]=nonexistant", nil, "text/csv",
-		BaselineSystemsExportHandler, "/:baseline_id/systems")
+	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1", "?filter[display_name]=nonexistant", nil,
+		"text/csv", BaselineSystemsExportHandler)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	body := w.Body.String()
@@ -88,8 +88,8 @@ func TestBaselineSystemsExportCSVFilter(t *testing.T) {
 
 func TestExportBaselineSystemsTags(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/1/systems?tags=ns1/k2=val2", nil, "application/json",
-		BaselineSystemsExportHandler, "/:baseline_id/systems")
+	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1", "?tags=ns1/k2=val2", nil, "application/json",
+		BaselineSystemsExportHandler)
 
 	var output []BaselineSystemsDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -100,8 +100,8 @@ func TestExportBaselineSystemsTags(t *testing.T) {
 
 func TestExportBaselineSystemsTagsInvalid(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/1/systems?tags=ns1/k3=val4&tags=invalidTag", nil, "application/json",
-		BaselineSystemsExportHandler, "/:baseline_id/systems")
+	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1", "?tags=ns1/k3=val4&tags=invalidTag", nil,
+		"application/json", BaselineSystemsExportHandler)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -110,14 +110,9 @@ func TestExportBaselineSystemsTagsInvalid(t *testing.T) {
 
 func TestBaselineSystemsExportWorkloads(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath(
-		"GET",
-		"/1/systems?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC",
-		nil,
-		"application/json",
-		BaselineSystemsExportHandler,
-		"/:baseline_id/systems",
-	)
+	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1",
+		"?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC", nil, "application/json",
+		BaselineSystemsExportHandler)
 
 	var output []BaselineSystemsDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)

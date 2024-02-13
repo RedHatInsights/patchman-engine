@@ -9,9 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testBaselineSystems(t *testing.T, url string) BaselineSystemsResponse {
+func testBaselineSystems(t *testing.T, param, queryString string) BaselineSystemsResponse {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", url, nil, "", BaselineSystemsListHandler, "/:baseline_id/systems")
+	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", param, queryString, nil, "",
+		BaselineSystemsListHandler)
 
 	var output BaselineSystemsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -20,7 +21,7 @@ func testBaselineSystems(t *testing.T, url string) BaselineSystemsResponse {
 }
 
 func TestBaselineSystemsDefault(t *testing.T) {
-	output := testBaselineSystems(t, "/1/systems")
+	output := testBaselineSystems(t, "1", "")
 
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "baseline_system", output.Data[0].Type)
@@ -42,7 +43,7 @@ func TestBaselineSystemsDefault(t *testing.T) {
 }
 
 func TestBaselinesystemsEmpty(t *testing.T) {
-	output := testBaselineSystems(t, "/3/systems")
+	output := testBaselineSystems(t, "3", "")
 
 	assert.Equal(t, 0, len(output.Data))
 	// links
@@ -58,7 +59,7 @@ func TestBaselinesystemsEmpty(t *testing.T) {
 }
 
 func TestBaselineSystemsOffsetLimit(t *testing.T) {
-	output := testBaselineSystems(t, "/1/systems?offset=0&limit=1")
+	output := testBaselineSystems(t, "1", "?offset=0&limit=1")
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, 0, output.Meta.Offset)
 	assert.Equal(t, 1, output.Meta.Limit)
@@ -66,7 +67,7 @@ func TestBaselineSystemsOffsetLimit(t *testing.T) {
 }
 
 func TestBaselineSystemsUnlimited(t *testing.T) {
-	output := testBaselineSystems(t, "/1/systems?offset=0&limit=-1")
+	output := testBaselineSystems(t, "1", "?offset=0&limit=-1")
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, -1, output.Meta.Limit)
 	assert.Equal(t, 2, output.Meta.TotalItems)
@@ -74,8 +75,8 @@ func TestBaselineSystemsUnlimited(t *testing.T) {
 
 func TestBaselineSystemOffsetOverflow(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/1/systems?offset=10&limit=4", nil, "", BaselineSystemsListHandler,
-		"/:baseline_id/systems")
+	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1", "?offset=10&limit=4", nil, "",
+		BaselineSystemsListHandler)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -83,28 +84,28 @@ func TestBaselineSystemOffsetOverflow(t *testing.T) {
 }
 
 func TestBaselinesFilterDisplayName(t *testing.T) {
-	output := testBaselineSystems(t, "/1/systems?filter[display_name]=00000000-0000-0000-0000-000000000001")
+	output := testBaselineSystems(t, "1", "?filter[display_name]=00000000-0000-0000-0000-000000000001")
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].InventoryID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].Attributes.DisplayName)
 }
 
 func TestBaselinesFilterTag(t *testing.T) {
-	output := testBaselineSystems(t, "/1/systems?tags=ns1/k3=val3")
+	output := testBaselineSystems(t, "1", "?tags=ns1/k3=val3")
 	assert.Equal(t, 1, len(output.Data))
 }
 
 func TestBaselineSystemsWrongSort(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/1/systems?sort=unknown_key", nil, "", BaselineSystemsListHandler,
-		"/:baseline_id/systems")
+	w := CreateRequestRouterWithPath("GET", "/:baseline_id/systems", "1", "?sort=unknown_key", nil, "",
+		BaselineSystemsListHandler)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 //nolint:lll
 func TestBaselineSystemsSearch(t *testing.T) {
-	output := testBaselineSystems(t, "/1/systems?search=00000000-0000-0000-0000-000000000001")
+	output := testBaselineSystems(t, "1", "?search=00000000-0000-0000-0000-000000000001")
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "baseline_system", output.Data[0].Type)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].InventoryID)

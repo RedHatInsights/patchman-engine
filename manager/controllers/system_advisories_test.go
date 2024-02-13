@@ -12,8 +12,8 @@ import (
 
 func TestSystemAdvisoriesDefault(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil, "",
-		SystemAdvisoriesHandler, "/:inventory_id")
+	w := CreateRequestRouterWithPath("GET", "/:inventory_id", "00000000-0000-0000-0000-000000000001", "", nil, "",
+		SystemAdvisoriesHandler)
 
 	var output SystemAdvisoriesResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -33,8 +33,8 @@ func TestSystemAdvisoriesDefault(t *testing.T) {
 
 func TestSystemAdvisoriesIDsDefault(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil, "",
-		SystemAdvisoriesIDsHandler, "/:inventory_id")
+	w := CreateRequestRouterWithPath("GET", "/:inventory_id", "00000000-0000-0000-0000-000000000001", "", nil, "",
+		SystemAdvisoriesIDsHandler)
 
 	var output IDsStatusResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -47,24 +47,24 @@ func TestSystemAdvisoriesIDsDefault(t *testing.T) {
 
 func TestSystemAdvisoriesNotFound(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/nonexistant/advisories", nil, "",
-		SystemAdvisoriesHandler, "/:inventory_id")
+	w := CreateRequestRouterWithPath("GET", "/:inventory_id", "nonexistant/advisories", "", nil, "",
+		SystemAdvisoriesHandler)
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestSystemAdvisoriesIDsNotFound(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/nonexistant/advisories", nil, "",
-		SystemAdvisoriesIDsHandler, "/:inventory_id")
+	w := CreateRequestRouterWithPath("GET", "/:inventory_id", "nonexistant/advisories", "", nil, "",
+		SystemAdvisoriesIDsHandler)
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestSystemAdvisoriesOffsetLimit(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?offset=4&limit=3", nil, "",
-		SystemAdvisoriesHandler, "/:inventory_id")
+	w := CreateRequestRouterWithPath("GET", "/:inventory_id", "00000000-0000-0000-0000-000000000001",
+		"?offset=4&limit=3", nil, "", SystemAdvisoriesHandler)
 
 	var output SystemAdvisoriesResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -74,8 +74,8 @@ func TestSystemAdvisoriesOffsetLimit(t *testing.T) {
 
 func TestSystemAdvisoriesIDsOffsetLimit(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?offset=4&limit=3", nil, "",
-		SystemAdvisoriesIDsHandler, "/:inventory_id")
+	w := CreateRequestRouterWithPath("GET", "/:inventory_id", "00000000-0000-0000-0000-000000000001",
+		"?offset=4&limit=3", nil, "", SystemAdvisoriesIDsHandler)
 
 	var output IDsStatusResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -88,8 +88,8 @@ func TestSystemAdvisoriesIDsOffsetLimit(t *testing.T) {
 
 func TestSystemAdvisoriesOffsetOverflow(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?offset=100&limit=3", nil, "",
-		SystemAdvisoriesHandler, "/:inventory_id")
+	w := CreateRequestRouterWithPath("GET", "/:inventory_id", "00000000-0000-0000-0000-000000000001",
+		"?offset=100&limit=3", nil, "", SystemAdvisoriesHandler)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -104,8 +104,8 @@ func TestSystemAdvisoriesPossibleSorts(t *testing.T) {
 			// this field is not sortable, skip it
 			continue
 		}
-		w := CreateRequestRouterWithPath("GET", fmt.Sprintf("/00000000-0000-0000-0000-000000000001?sort=%v", sort),
-			nil, "", SystemAdvisoriesHandler, "/:inventory_id")
+		w := CreateRequestRouterWithPath("GET", "/:inventory_id", "00000000-0000-0000-0000-000000000001",
+			fmt.Sprintf("?sort=%v", sort), nil, "", SystemAdvisoriesHandler)
 
 		var output SystemAdvisoriesResponse
 		CheckResponse(t, w, http.StatusOK, &output)
@@ -115,16 +115,16 @@ func TestSystemAdvisoriesPossibleSorts(t *testing.T) {
 
 func TestSystemAdvisoriesWrongSort(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?sort=unknown_key", nil, "",
-		SystemAdvisoriesHandler, "/:inventory_id")
+	w := CreateRequestRouterWithPath("GET", "/:inventory_id", "00000000-0000-0000-0000-000000000001",
+		"?sort=unknown_key", nil, "", SystemAdvisoriesHandler)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 func TestSystemAdvisoriesSearch(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001?search=h-3", nil, "",
-		SystemAdvisoriesHandler, "/:inventory_id")
+	w := CreateRequestRouterWithPath("GET", "/:inventory_id", "00000000-0000-0000-0000-000000000001",
+		"?search=h-3", nil, "", SystemAdvisoriesHandler)
 
 	var output SystemAdvisoriesResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -146,7 +146,7 @@ func TestSystemAdvisoriesWrongOffset(t *testing.T) {
 
 func TestSystemAdvisoriesExportUnknown(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/unknownsystem", nil, "", SystemAdvisoriesHandler, "/:inventory_id")
+	w := CreateRequestRouterWithPath("GET", "/:inventory_id", "unknownsystem", "", nil, "", SystemAdvisoriesHandler)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

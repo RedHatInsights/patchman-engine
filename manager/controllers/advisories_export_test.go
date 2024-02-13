@@ -69,7 +69,8 @@ func TestAdvisoriesExportCSVFilter(t *testing.T) {
 
 func TestAdvisoriesExportTagsInvalid(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil, "", AdvisoriesExportHandler, "/")
+	w := CreateRequestRouterWithPath("GET", "/", "", "?tags=ns1/k3=val4&tags=invalidTag", nil, "",
+		AdvisoriesExportHandler)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -78,8 +79,8 @@ func TestAdvisoriesExportTagsInvalid(t *testing.T) {
 
 func TestAdvisoriesExportIncorrectFilter(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/?filter[filteriamnotexitst]=abcd", nil, "text/csv",
-		AdvisoriesExportHandler, "/")
+	w := CreateRequestRouterWithPath("GET", "/", "", "?filter[filteriamnotexitst]=abcd", nil, "text/csv",
+		AdvisoriesExportHandler)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

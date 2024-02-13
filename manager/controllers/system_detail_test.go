@@ -11,8 +11,8 @@ import (
 
 func TestSystemDetailDefault1(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/00000000-0000-0000-0000-000000000001", nil, "",
-		SystemDetailHandler, "/:inventory_id")
+	w := CreateRequestRouterWithPath("GET", "/:inventory_id", "00000000-0000-0000-0000-000000000001", "", nil, "",
+		SystemDetailHandler)
 
 	var output SystemDetailResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -59,8 +59,8 @@ func TestSystemDetailNoIdProvided(t *testing.T) {
 
 func TestSystemDetailNotFound(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/ffffffff-ffff-ffff-ffff-ffffffffffff", nil, "",
-		SystemDetailHandler, "/:inventory_id")
+	w := CreateRequestRouterWithPath("GET", "/:inventory_id", "ffffffff-ffff-ffff-ffff-ffffffffffff", "", nil, "",
+		SystemDetailHandler)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusNotFound, &errResp)

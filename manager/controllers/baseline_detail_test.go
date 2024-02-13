@@ -12,15 +12,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testBaselineDetail(t *testing.T, url string, expectedStatus int, output interface{}) {
+func testBaselineDetail(t *testing.T, param string, expectedStatus int, output interface{}) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", url, nil, "", BaselineDetailHandler, "/:baseline_id")
+	w := CreateRequestRouterWithPath("GET", "/:baseline_id", param, "", nil, "", BaselineDetailHandler)
 	CheckResponse(t, w, expectedStatus, &output)
 }
 
 func TestBaselineDetailDefault(t *testing.T) {
 	var output BaselineDetailResponse
-	testBaselineDetail(t, "/1", http.StatusOK, &output)
+	testBaselineDetail(t, "1", http.StatusOK, &output)
 	assert.Equal(t, int64(1), output.Data.ID)
 	assert.Equal(t, "baseline", output.Data.Type)
 	assert.Equal(t, "baseline_1-1", output.Data.Attributes.Name)
@@ -31,13 +31,13 @@ func TestBaselineDetailDefault(t *testing.T) {
 
 func TestBaselineDetailNotFound(t *testing.T) {
 	var output utils.ErrorResponse
-	testBaselineDetail(t, "/10000", http.StatusNotFound, &output)
+	testBaselineDetail(t, "10000", http.StatusNotFound, &output)
 	assert.Equal(t, "baseline not found", output.Error)
 }
 
 func TestBaselineDetailInvalid(t *testing.T) {
 	var output utils.ErrorResponse
-	testBaselineDetail(t, "/invalidID", http.StatusBadRequest, &output)
+	testBaselineDetail(t, "invalidID", http.StatusBadRequest, &output)
 	assert.Equal(t, "Invalid baseline_id: invalidID", output.Error)
 }
 
@@ -45,8 +45,7 @@ func TestBaselineDetailEmptyConfig(t *testing.T) {
 	core.SetupTest(t)
 	baselineID := database.CreateBaselineWithConfig(t, "", nil, nil, nil)
 	var output BaselineDetailResponse
-	url := fmt.Sprintf("/%d", baselineID)
-	testBaselineDetail(t, url, http.StatusOK, &output)
+	testBaselineDetail(t, fmt.Sprintf("%d", baselineID), http.StatusOK, &output)
 	assert.Equal(t, baselineID, output.Data.ID)
 	assert.Equal(t, "baseline", output.Data.Type)
 	assert.Equal(t, "temporary_baseline", output.Data.Attributes.Name)

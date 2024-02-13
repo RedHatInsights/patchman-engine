@@ -283,7 +283,8 @@ func TestAdvisoriesTags(t *testing.T) {
 
 func TestListAdvisoriesTagsInvalid(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/?tags=ns1/k3=val4&tags=invalidTag", nil, "", AdvisoriesListHandler, "/")
+	w := CreateRequestRouterWithPath("GET", "/", "", "?tags=ns1/k3=val4&tags=invalidTag", nil, "",
+		AdvisoriesListHandler)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
@@ -304,8 +305,8 @@ func TestAdvisoriesWrongOffset(t *testing.T) {
 
 func TestAdvisoryTagsInMetadata(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/RH-1?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "", AdvisoriesListHandler,
-		"/:advisory_id")
+	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "",
+		AdvisoriesListHandler)
 
 	var output AdvisoriesResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
