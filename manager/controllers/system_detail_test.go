@@ -39,8 +39,8 @@ func TestSystemDetailDefault1(t *testing.T) {
 func TestSystemDetailDefault2(t *testing.T) {
 	core.SetupTest(t)
 	// get system with some installable/updatable packages
-	w := CreateRequestRouterWithAccount("GET", "/00000000-0000-0000-0000-000000000012", nil, "",
-		SystemDetailHandler, "/:inventory_id", 3)
+	w := CreateRequestRouterWithAccount("GET", "/:inventory_id", "00000000-0000-0000-0000-000000000012", "", nil, "",
+		SystemDetailHandler, 3)
 
 	var output SystemDetailResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -69,8 +69,8 @@ func TestSystemDetailNotFound(t *testing.T) {
 
 func TestSystemsNoRHSM(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithAccount("GET", "/00000000-0000-0000-0000-000000000014", nil, "",
-		SystemDetailHandler, "/:inventory_id", 3)
+	w := CreateRequestRouterWithAccount("GET", "/:inventory_id", "00000000-0000-0000-0000-000000000014", "", nil, "",
+		SystemDetailHandler, 3)
 
 	var output SystemDetailResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -81,8 +81,8 @@ func TestSystemsNoRHSM(t *testing.T) {
 
 func TestRHSMLessThanOS(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithAccount("GET", "/00000000-0000-0000-0000-000000000003", nil, "",
-		SystemDetailHandler, "/:inventory_id", 1)
+	w := CreateRequestRouterWithAccount("GET", "/:inventory_id", "00000000-0000-0000-0000-000000000003", "", nil, "",
+		SystemDetailHandler, 1)
 
 	var output SystemDetailResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -94,8 +94,8 @@ func TestRHSMLessThanOS(t *testing.T) {
 
 func TestRHSMGreaterThanOS(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithAccount("GET", "/00000000-0000-0000-0000-000000000004", nil, "",
-		SystemDetailHandler, "/:inventory_id", 1)
+	w := CreateRequestRouterWithAccount("GET", "/:inventory_id", "00000000-0000-0000-0000-000000000004", "", nil, "",
+		SystemDetailHandler, 1)
 
 	var output SystemDetailResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -107,14 +107,14 @@ func TestRHSMGreaterThanOS(t *testing.T) {
 
 func TestSystemUnknown(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithAccount("GET", "/unknownsystem", nil, "", SystemDetailHandler, "/:inventory_id", 1)
+	w := CreateRequestRouterWithAccount("GET", "/:inventory_id", "unknownsystem", "", nil, "", SystemDetailHandler, 1)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 func TestSystemDetailFiltering(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithAccount("GET", "/00000000-0000-0000-0000-000000000001?filter[filter]=abcd",
-		nil, "", SystemDetailHandler, "/:inventory_id", 1)
+	w := CreateRequestRouterWithAccount("GET", "/:inventory_id", "00000000-0000-0000-0000-000000000001",
+		"?filter[filter]=abcd", nil, "", SystemDetailHandler, 1)
 
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)

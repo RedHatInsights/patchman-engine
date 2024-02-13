@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const sapABCFilter = "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC"
+const sapABCFilter = "?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC"
 
 func TestSystemsDefault(t *testing.T) {
-	output := testSystems(t, `/`, 1)
+	output := testSystems(t, ``, 1)
 
 	// data
 	assert.Equal(t, 8, len(output.Data))
@@ -52,7 +52,7 @@ func TestSystemsDefault(t *testing.T) {
 }
 
 func TestSystemsOffset(t *testing.T) {
-	output := testSystems(t, `/?offset=0&limit=4`, 1)
+	output := testSystems(t, `?offset=0&limit=4`, 1)
 	assert.Equal(t, 4, len(output.Data))
 	assert.Equal(t, 0, output.Meta.Offset)
 	assert.Equal(t, 4, output.Meta.Limit)
@@ -60,7 +60,7 @@ func TestSystemsOffset(t *testing.T) {
 }
 
 func TestSystemsOffsetLimit(t *testing.T) {
-	output := testSystems(t, `/?offset=4&limit=4`, 1)
+	output := testSystems(t, `?offset=4&limit=4`, 1)
 	assert.Equal(t, 4, len(output.Data))
 	assert.Equal(t, 4, output.Meta.Offset)
 	assert.Equal(t, 4, output.Meta.Limit)
@@ -78,7 +78,7 @@ func TestSystemsWrongSort(t *testing.T) {
 }
 
 func TestSystemsSearch(t *testing.T) {
-	output := testSystems(t, "/?search=001", 1)
+	output := testSystems(t, "?search=001", 1)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
@@ -86,24 +86,24 @@ func TestSystemsSearch(t *testing.T) {
 }
 
 func TestSystemsTags(t *testing.T) {
-	output := testSystems(t, "/?tags=ns1/k2=val2", 1)
+	output := testSystems(t, "?tags=ns1/k2=val2", 1)
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 }
 
 func TestSystemsTagsMultiple(t *testing.T) {
-	output := testSystems(t, "/?tags=ns1/k3=val4&tags=ns1/k1=val1", 1)
+	output := testSystems(t, "?tags=ns1/k3=val4&tags=ns1/k1=val1", 1)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data[0].ID)
 }
 
 func TestSystemsTagsUnknown(t *testing.T) {
-	output := testSystems(t, "/?tags=ns1/k3=val4&tags=ns1/k1=unk", 1)
+	output := testSystems(t, "?tags=ns1/k3=val4&tags=ns1/k1=unk", 1)
 	assert.Equal(t, 0, len(output.Data))
 }
 
 func TestSystemsTagsNoVal(t *testing.T) {
-	output := testSystems(t, "/?tags=ns1/k3=val4&tags=ns1/k1", 1)
+	output := testSystems(t, "?tags=ns1/k3=val4&tags=ns1/k1", 1)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data[0].ID)
 }
@@ -115,57 +115,53 @@ func TestSystemsTagsInvalid(t *testing.T) {
 }
 
 func TestSystemsTagsEscaping1(t *testing.T) {
-	output := testSystems(t, `/?tags=ns1/k3=val4&tags="ns/key=quote"`, 1)
+	output := testSystems(t, `?tags=ns1/k3=val4&tags="ns/key=quote"`, 1)
 	assert.Equal(t, 0, len(output.Data))
 }
 
 func TestSystemsTagsEscaping2(t *testing.T) {
-	output := testSystems(t, `/?tags=ns1/k3=val4&tags='ns/key=singlequote'`, 1)
+	output := testSystems(t, `?tags=ns1/k3=val4&tags='ns/key=singlequote'`, 1)
 	assert.Equal(t, 0, len(output.Data))
 }
 
 func TestSystemsTagsEscaping3(t *testing.T) {
-	output := testSystems(t, `/?tags=ns1/k3=val4&tags='ns/key=inside""quote'`, 1)
+	output := testSystems(t, `?tags=ns1/k3=val4&tags='ns/key=inside""quote'`, 1)
 	assert.Equal(t, 0, len(output.Data))
 }
 
 func TestSystemsTagsEscaping4(t *testing.T) {
-	output := testSystems(t, `/?tags=ns1/k3=val4&tags=ne/key="{{malformed json}}"`, 1)
+	output := testSystems(t, `?tags=ns1/k3=val4&tags=ne/key="{{malformed json}}"`, 1)
 	assert.Equal(t, 0, len(output.Data))
 }
 
 func TestSystemsWorkloads1(t *testing.T) {
-	url := "/?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC"
-	output := testSystems(t, url, 1)
+	output := testSystems(t, "?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC", 1)
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 }
 
 func TestSystemsWorkloads2(t *testing.T) {
-	url := sapABCFilter
-	output := testSystems(t, url, 1)
+	output := testSystems(t, sapABCFilter, 1)
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 }
 
 func TestSystemsWorkloads3(t *testing.T) {
-	output := testSystems(t, "/?filter[system_profile][sap_system]=false", 1)
+	output := testSystems(t, "?filter[system_profile][sap_system]=false", 1)
 	assert.Equal(t, 0, len(output.Data))
 }
 
 func TestSystemsWorkloadEscaping1(t *testing.T) {
-	url := "/?filter[system_profile][sap_sids]='singlequote'"
-	output := testSystems(t, url, 1)
+	output := testSystems(t, "?filter[system_profile][sap_sids]='singlequote'", 1)
 	assert.Equal(t, 0, len(output.Data))
 }
 
 func TestSystemsWorkloadEscaping2(t *testing.T) {
-	url := `/?filter[system_profile][sap_sids]="{{malformed json}}"`
-	output := testSystems(t, url, 1)
+	output := testSystems(t, `?filter[system_profile][sap_sids]="{{malformed json}}"`, 1)
 	assert.Equal(t, 0, len(output.Data))
 }
 func TestSystemsPackagesCount(t *testing.T) {
-	output := testSystems(t, "/?sort=-packages_installed,id", 3)
+	output := testSystems(t, "?sort=-packages_installed,id", 3)
 	assert.Equal(t, 5, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000015", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
@@ -174,31 +170,31 @@ func TestSystemsPackagesCount(t *testing.T) {
 }
 
 func TestSystemsFilterAdvCount1(t *testing.T) {
-	output := testSystems(t, "/?filter[rhba_count]=2", 1)
+	output := testSystems(t, "?filter[rhba_count]=2", 1)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, 2, output.Data[0].Attributes.RhbaCount)
 }
 
 func TestSystemsFilterAdvCount2(t *testing.T) {
-	output := testSystems(t, "/?filter[rhea_count]=1", 1)
+	output := testSystems(t, "?filter[rhea_count]=1", 1)
 	assert.Equal(t, 4, len(output.Data))
 	assert.Equal(t, 1, output.Data[0].Attributes.RheaCount)
 }
 
 func TestSystemsFilterAdvCount3(t *testing.T) {
-	output := testSystems(t, "/?filter[rhsa_count]=2", 1)
+	output := testSystems(t, "?filter[rhsa_count]=2", 1)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, 2, output.Data[0].Attributes.RhsaCount)
 }
 
 func TestSystemsFilterAdvCount4(t *testing.T) {
-	output := testSystems(t, "/?filter[other_count]=4", 1)
+	output := testSystems(t, "?filter[other_count]=4", 1)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, 4, output.Data[0].Attributes.OtherCount)
 }
 
 func TestSystemsFilterBaseline(t *testing.T) {
-	output := testSystems(t, "/?filter[baseline_name]=baseline_1-1", 1)
+	output := testSystems(t, "?filter[baseline_name]=baseline_1-1", 1)
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.Data[1].ID)
@@ -211,7 +207,7 @@ func TestSystemsFilterNotExisting(t *testing.T) {
 }
 
 func TestSystemsFilterOS(t *testing.T) {
-	output := testSystems(t, `/?filter[os]=in:RHEL 8.1,RHEL 7.3&sort=os`, 1)
+	output := testSystems(t, `?filter[os]=in:RHEL 8.1,RHEL 7.3&sort=os`, 1)
 	assert.Equal(t, 3, len(output.Data))
 	assert.Equal(t, "RHEL 7.3", output.Data[0].Attributes.OS)
 	assert.Equal(t, "RHEL 8.1", output.Data[1].Attributes.OS)
@@ -219,7 +215,7 @@ func TestSystemsFilterOS(t *testing.T) {
 }
 
 func TestSystemsOrderOS(t *testing.T) {
-	output := testSystems(t, `/?sort=os`, 1)
+	output := testSystems(t, `?sort=os`, 1)
 	assert.Equal(t, "RHEL 7.3", output.Data[0].Attributes.OS)
 	assert.Equal(t, "RHEL 8.1", output.Data[1].Attributes.OS)
 	assert.Equal(t, "RHEL 8.1", output.Data[2].Attributes.OS)
@@ -230,9 +226,9 @@ func TestSystemsOrderOS(t *testing.T) {
 	assert.Equal(t, "RHEL 8.x", output.Data[7].Attributes.OS) // yes, we should be robust against this
 }
 
-func testSystems(t *testing.T, url string, account int) SystemsResponseV3 {
+func testSystems(t *testing.T, queryString string, account int) SystemsResponseV3 {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithAccount("GET", url, nil, "", SystemsListHandler, "/", account)
+	w := CreateRequestRouterWithAccount("GET", "/", "", queryString, nil, "", SystemsListHandler, account)
 
 	var output SystemsResponseV3
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -250,7 +246,8 @@ func testSystemsError(t *testing.T, queryString string) (int, utils.ErrorRespons
 
 func TestSystemsTagsInMetadata(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithAccount("GET", "/?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "", SystemsListHandler, "/", 3)
+	w := CreateRequestRouterWithAccount("GET", "/", "", "?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "",
+		SystemsListHandler, 3)
 
 	var output SystemsResponseV3
 	ParseResponseBody(t, w.Body.Bytes(), &output)
@@ -264,8 +261,7 @@ func TestSystemsTagsInMetadata(t *testing.T) {
 }
 
 func TestSAPSystemMeta1(t *testing.T) {
-	url := "/?filter[system_profile][sap_sids]=ABC"
-	output := testSystems(t, url, 1)
+	output := testSystems(t, "?filter[system_profile][sap_sids]=ABC", 1)
 	testMap := map[string]FilterData{
 		"system_profile][sap_sids": {Operator: "eq", Values: []string{"ABC"}},
 		"stale":                    {Operator: "eq", Values: []string{"false"}},
@@ -274,8 +270,7 @@ func TestSAPSystemMeta1(t *testing.T) {
 }
 
 func TestSAPSystemMeta2(t *testing.T) {
-	url := "/?filter[system_profile][sap_sids]=ABC"
-	output := testSystems(t, url, 1)
+	output := testSystems(t, "?filter[system_profile][sap_sids]=ABC", 1)
 	testMap := map[string]FilterData{
 		"system_profile][sap_sids": {Operator: "eq", Values: []string{"ABC"}},
 		"stale":                    {Operator: "eq", Values: []string{"false"}},
@@ -284,8 +279,7 @@ func TestSAPSystemMeta2(t *testing.T) {
 }
 
 func TestSAPSystemMeta3(t *testing.T) {
-	url := sapABCFilter
-	output := testSystems(t, url, 1)
+	output := testSystems(t, sapABCFilter, 1)
 	testMap := map[string]FilterData{
 		"system_profile][sap_system": {Operator: "eq", Values: []string{"true"}},
 		"system_profile][sap_sids":   {Operator: "eq", Values: []string{"ABC"}},
@@ -295,8 +289,7 @@ func TestSAPSystemMeta3(t *testing.T) {
 }
 
 func TestSAPSystemMeta4(t *testing.T) {
-	url := "/?filter[system_profile][sap_sids]=ABC&filter[system_profile][sap_sids]=GHI"
-	output := testSystems(t, url, 1)
+	output := testSystems(t, "?filter[system_profile][sap_sids]=ABC&filter[system_profile][sap_sids]=GHI", 1)
 	testMap := map[string]FilterData{
 		"system_profile][sap_sids": {Operator: "eq", Values: []string{"GHI", "ABC"}},
 		"stale":                    {Operator: "eq", Values: []string{"false"}},
@@ -305,8 +298,7 @@ func TestSAPSystemMeta4(t *testing.T) {
 }
 
 func TestAAPSystemMeta(t *testing.T) {
-	url := `/?filter[system_profile][ansible][controller_version]=1.0`
-	output := testSystems(t, url, 1)
+	output := testSystems(t, `?filter[system_profile][ansible][controller_version]=1.0`, 1)
 	testMap := map[string]FilterData{
 		"system_profile][ansible][controller_version": {Operator: "eq", Values: []string{"1.0"}},
 		"stale": {Operator: "eq", Values: []string{"false"}},
@@ -315,8 +307,7 @@ func TestAAPSystemMeta(t *testing.T) {
 }
 
 func TestAAPSystemMeta2(t *testing.T) {
-	url := `/?filter[system_profile][ansible]=not_nil`
-	output := testSystems(t, url, 1)
+	output := testSystems(t, `?filter[system_profile][ansible]=not_nil`, 1)
 	testMap := map[string]FilterData{
 		"system_profile][ansible": {Operator: "eq", Values: []string{"not_nil"}},
 		"stale":                   {Operator: "eq", Values: []string{"false"}},
@@ -329,15 +320,13 @@ func TestAAPSystemMeta3(t *testing.T) {
 		ID         = "00000000-0000-0000-0000-000000000007"
 		totalItems = 1
 	)
-	url := `/?filter[system_profile][ansible][controller_version]=1.0`
-	output := testSystems(t, url, 1)
+	output := testSystems(t, `?filter[system_profile][ansible][controller_version]=1.0`, 1)
 	assert.Equal(t, ID, output.Data[0].ID)
 	assert.Equal(t, totalItems, output.Meta.TotalItems)
 }
 
 func TestMSSQLSystemMeta(t *testing.T) {
-	url := `/?filter[system_profile][mssql][version]=15.3.0`
-	output := testSystems(t, url, 1)
+	output := testSystems(t, `?filter[system_profile][mssql][version]=15.3.0`, 1)
 	testMap := map[string]FilterData{
 		"system_profile][mssql][version": {Operator: "eq", Values: []string{"15.3.0"}},
 		"stale":                          {Operator: "eq", Values: []string{"false"}},
@@ -346,8 +335,7 @@ func TestMSSQLSystemMeta(t *testing.T) {
 }
 
 func TestMSSQLSystemMeta2(t *testing.T) {
-	url := `/?filter[system_profile][mssql]=not_nil`
-	output := testSystems(t, url, 1)
+	output := testSystems(t, `?filter[system_profile][mssql]=not_nil`, 1)
 	testMap := map[string]FilterData{
 		"system_profile][mssql": {Operator: "eq", Values: []string{"not_nil"}},
 		"stale":                 {Operator: "eq", Values: []string{"false"}},
@@ -360,8 +348,7 @@ func TestMSSQLSystemMeta3(t *testing.T) {
 		ID         = "00000000-0000-0000-0000-000000000006"
 		totalItems = 1
 	)
-	url := `/?filter[system_profile][mssql][version]=15.3.0`
-	output := testSystems(t, url, 1)
+	output := testSystems(t, `?filter[system_profile][mssql][version]=15.3.0`, 1)
 	assert.Equal(t, ID, output.Data[0].ID)
 	assert.Equal(t, totalItems, output.Meta.TotalItems)
 }
