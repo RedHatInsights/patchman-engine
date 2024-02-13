@@ -51,9 +51,9 @@ func CreateRequestRouterWithParams(method, routerPath, param, queryString string
 }
 
 // Create request and initialize router with path
-func CreateRequestRouterWithPath(method string, url string, body io.Reader, contentType string,
-	handler gin.HandlerFunc, routerPath string, contextKVs ...core.ContextKV) (w *httptest.ResponseRecorder) {
-	w, req := prepareRequest(method, url, body, contentType)
+func CreateRequestRouterWithPath(method, routerPath, param, queryString string, body io.Reader, contentType string,
+	handler gin.HandlerFunc, contextKVs ...core.ContextKV) (w *httptest.ResponseRecorder) {
+	w, req := prepareRequest(method, getURLFromRouterPath(routerPath, param, queryString), body, contentType)
 	core.InitRouterWithPath(handler, routerPath, contextKVs...).ServeHTTP(w, req)
 	return w
 }

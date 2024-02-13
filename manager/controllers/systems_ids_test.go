@@ -33,7 +33,7 @@ func TestSystemsIDsWrongOffset(t *testing.T) {
 }
 
 func TestSystemsIDsWrongSort(t *testing.T) {
-	statusCode, errResp := testSystemsIDsError(t, "/?sort=unknown_key")
+	statusCode, errResp := testSystemsIDsError(t, "?sort=unknown_key")
 	assert.Equal(t, http.StatusBadRequest, statusCode)
 	assert.Equal(t, "Invalid sort field: unknown_key", errResp.Error)
 }
@@ -68,7 +68,7 @@ func TestSystemsIDsTagsNoVal(t *testing.T) {
 }
 
 func TestSystemsIDsTagsInvalid(t *testing.T) {
-	statusCode, errResp := testSystemsIDsError(t, "/?tags=ns1/k3=val4&tags=invalidTag")
+	statusCode, errResp := testSystemsIDsError(t, "?tags=ns1/k3=val4&tags=invalidTag")
 	assert.Equal(t, http.StatusBadRequest, statusCode)
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
@@ -134,7 +134,7 @@ func TestSystemsIDsFilterBaseline(t *testing.T) {
 }
 
 func TestSystemsIDsFilterNotExisting(t *testing.T) {
-	statusCode, errResp := testSystemsIDsError(t, "/?filter[not-existing]=1")
+	statusCode, errResp := testSystemsIDsError(t, "?filter[not-existing]=1")
 	assert.Equal(t, http.StatusBadRequest, statusCode)
 	assert.Equal(t, "cannot parse inventory filters: Invalid filter field: not-existing", errResp.Error)
 }
@@ -178,9 +178,9 @@ func testSystemsIDs(t *testing.T, url string, account int) IDsResponse {
 	return output
 }
 
-func testSystemsIDsError(t *testing.T, url string) (int, utils.ErrorResponse) {
+func testSystemsIDsError(t *testing.T, queryString string) (int, utils.ErrorResponse) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", url, nil, "", SystemsListIDsHandler, "/")
+	w := CreateRequestRouterWithPath("GET", "/", "", queryString, nil, "", SystemsListIDsHandler)
 
 	var errResp utils.ErrorResponse
 	ParseResponseBody(t, w.Body.Bytes(), &errResp)

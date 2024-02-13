@@ -19,8 +19,8 @@ func TestBaselineDelete(t *testing.T) {
 		"00000000-0000-0000-0000-000000000007"}
 	baselineID := database.CreateBaseline(t, "", inventoryIDs, nil)
 
-	w := CreateRequestRouterWithPath("GET", fmt.Sprintf(`/%v`, baselineID), nil, "", BaselineDeleteHandler,
-		"/:baseline_id")
+	w := CreateRequestRouterWithPath("GET", "/:baseline_id", fmt.Sprintf(`%v`, baselineID), "", nil, "",
+		BaselineDeleteHandler)
 
 	var resp DeleteBaselineResponse
 	CheckResponse(t, w, http.StatusOK, &resp)
@@ -29,7 +29,7 @@ func TestBaselineDelete(t *testing.T) {
 
 func TestBaselineDeleteNonExisting(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/88888", nil, "", BaselineDeleteHandler, "/:baseline_id")
+	w := CreateRequestRouterWithPath("GET", "/:baseline_id", "88888", "", nil, "", BaselineDeleteHandler)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusNotFound, &errResp)
@@ -38,7 +38,7 @@ func TestBaselineDeleteNonExisting(t *testing.T) {
 
 func TestBaselineDeleteInvalid(t *testing.T) {
 	core.SetupTestEnvironment()
-	w := CreateRequestRouterWithPath("GET", "/invalidBaseline", nil, "", BaselineDeleteHandler, "/:baseline_id")
+	w := CreateRequestRouterWithPath("GET", "/:baseline_id", "invalidBaseline", "", nil, "", BaselineDeleteHandler)
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
