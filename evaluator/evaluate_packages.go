@@ -278,7 +278,7 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 	for _, pkg := range packagesByNEVRA {
 		switch pkg.Change {
 		case Remove:
-			removedPkgIDs = append(removedPkgIDs, pkg.NameID)
+			removedPkgIDs = append(removedPkgIDs, pkg.PackageID)
 		case Add:
 			fallthrough
 		case Update:

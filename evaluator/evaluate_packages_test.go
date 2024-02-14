@@ -50,6 +50,48 @@ func TestAnalyzePackages(t *testing.T) {
 	database.DeleteNewlyAddedPackages(t)
 }
 
+func TestSystemPackageRemoval(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+	loadCache()
+
+	system := models.SystemPlatform{ID: 11, RhAccountID: 2}
+	database.CheckSystemPackages(t, system.RhAccountID, system.ID, 0)
+
+	vmaasData := vmaas.UpdatesV3Response{UpdateList: &map[string]*vmaas.UpdatesV3ResponseUpdateList{
+		"kernel-0:5.6.14-200.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{}},
+	}}
+
+	installed, installable, applicable, err := analyzePackages(database.Db, &system, &vmaasData)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, installed)
+	assert.Equal(t, 0, installable)
+	assert.Equal(t, 0, applicable)
+	database.CheckSystemPackages(t, system.RhAccountID, system.ID, 1)
+
+	// downgrade kernel
+	vmaasData = vmaas.UpdatesV3Response{UpdateList: &map[string]*vmaas.UpdatesV3ResponseUpdateList{
+		"kernel-0:5.6.13-200.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{{
+			Package:     utils.PtrString("kernel-0:5.6.14-200.fc31.x86_64"),
+			PackageName: utils.PtrString("kernel"),
+			EVRA:        utils.PtrString("0:5.6.14-200.fc31.x86_64"),
+		}}}}}
+
+	installed, installable, applicable, err = analyzePackages(database.Db, &system, &vmaasData)
+	assert.Nil(t, err)
+	// only 1 package should be analyzed
+	assert.Equal(t, 1, installed)
+	assert.Equal(t, 1, installable)
+	assert.Equal(t, 1, applicable)
+	// previous kernel package needs to be deleted, we expect only 1 package in system_package2
+	database.CheckSystemPackages(t, system.RhAccountID, system.ID, 1)
+
+	// cleanup
+	database.DeleteSystemPackages(t, system.RhAccountID, system.ID)
+	database.DeleteNewlyAddedPackages(t)
+}
+
 // New EVRAs for known package names will be added
 func TestLazySavePackages(t *testing.T) {
 	utils.SkipWithoutDB(t)
