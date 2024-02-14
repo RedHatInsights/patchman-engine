@@ -346,9 +346,10 @@ func CreateBaselineWithConfig(t *testing.T, name string, inventoryIDs []string,
 	}
 
 	err := tx.Model(models.SystemPlatform{}).
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
-		Where("rh_account_id = (?) AND inventory_id::text IN (?)", 1, inventoryIDs).
+		Where("rh_account_id = (?) AND inventory_id::text IN (?) AND EXISTS (SELECT * FROM inventory.hosts WHERE id IN (?))",
+			1, inventoryIDs, inventoryIDs).
 		Update("baseline_id", temporaryBaseline.ID).Error
+
 	assert.Nil(t, err)
 	err = tx.Commit().Error
 	assert.Nil(t, err)
@@ -366,7 +367,6 @@ func DeleteBaseline(t *testing.T, baselineID int64) {
 	defer tx.Rollback()
 
 	err := tx.Model(models.SystemPlatform{}).
-		Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id").
 		Where("rh_account_id = (?) AND baseline_id = (?)", 1, baselineID).
 		Update("baseline_id", nil).Error
 
