@@ -438,3 +438,22 @@ func GetAllSystems(t *testing.T) (systems []*models.SystemPlatform) {
 	assert.Nil(t, Db.Model(&models.SystemPlatform{}).Order("rh_account_id").Scan(&systems).Error)
 	return systems
 }
+
+func GetPackageIDs(nevras ...string) []int64 {
+	ids := make([]int64, 0, len(nevras))
+	for _, nevra := range nevras {
+		var packageID int64
+		nevra, err := utils.ParseNevra(nevra)
+		if err != nil {
+			continue
+		}
+		Db.Model(models.Package{}).
+			Joins("JOIN package_name pn ON package.name_id = pn.id").
+			Where("name = ? and evra = ?", nevra.Name, nevra.EVRAString()).
+			Pluck("package.id", &packageID)
+		if packageID != 0 {
+			ids = append(ids, packageID)
+		}
+	}
+	return ids
+}
