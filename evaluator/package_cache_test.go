@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"app/base/core"
+	"app/base/database"
 	"app/base/utils"
 	"testing"
 
@@ -29,8 +30,9 @@ func TestGetPackageCache(t *testing.T) {
 	assert.Equal(t, "11", string(val.DescriptionHash))
 	// ask for a package already in cache
 	val, ok = pc.GetByNevra("kernel-0:5.6.13-201.fc31.x86_64")
+	pkgIDs := database.GetPackageIDs("kernel-0:5.6.13-201.fc31.x86_64", "kernel-0:5.10.13-200.fc31.x86_64")
 	assert.True(t, ok)
-	assert.Equal(t, int64(11), val.ID)
+	assert.Equal(t, pkgIDs[0], val.ID)
 	assert.Equal(t, "kernel", val.Name)
 	assert.Equal(t, "5.6.13-201.fc31.x86_64", val.Evra)
 	assert.Equal(t, int64(101), val.NameID)
@@ -38,7 +40,7 @@ func TestGetPackageCache(t *testing.T) {
 	assert.Equal(t, "11", string(val.DescriptionHash))
 	val, ok = pc.GetLatestByName("kernel")
 	assert.True(t, ok)
-	assert.Equal(t, int64(107), val.ID)
+	assert.Equal(t, pkgIDs[1], val.ID)
 	assert.Equal(t, "kernel", val.Name)
 	assert.Equal(t, "5.10.13-200.fc31.x86_64", val.Evra)
 	assert.Equal(t, int64(101), val.NameID)
