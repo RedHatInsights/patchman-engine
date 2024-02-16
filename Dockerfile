@@ -5,14 +5,11 @@ FROM ${BUILDIMG} as buildimg
 ARG INSTALL_TOOLS=no
 
 # install build, development and test environment
-RUN FULL_RHEL=$(dnf repolist rhel-8-for-x86_64-baseos-rpms --enabled -q) ; \
-    if [ -z "$FULL_RHEL" ] ; then \
-        rpm -Uvh http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/Packages/centos-stream-repos-8-4.el8.noarch.rpm \
-                 http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/Packages/centos-gpg-keys-8-4.el8.noarch.rpm && \
-        sed -i 's/^\(enabled.*\)/\1\npriority=200/;' /etc/yum.repos.d/CentOS*.repo ; \
-    fi
+RUN rpm -Uvh http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/Packages/centos-stream-repos-8-4.el8.noarch.rpm \
+        http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/Packages/centos-gpg-keys-8-4.el8.noarch.rpm && \
+    sed -i 's/^\(enabled.*\)/\1\npriority=200/;' /etc/yum.repos.d/CentOS*.repo
 
-RUN dnf module -y enable postgresql:12 && \
+RUN dnf module -y enable postgresql:16 && \
     dnf install -y go-toolset postgresql git-core diffutils rpm-devel && \
     ln -s /usr/libexec/platform-python /usr/bin/python3
 

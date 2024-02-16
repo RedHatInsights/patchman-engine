@@ -1,4 +1,4 @@
-FROM docker.io/library/postgres:12
+FROM docker.io/library/postgres:16.1
 
 ADD /dev/database/init.sh /docker-entrypoint-initdb.d/
 
