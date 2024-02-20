@@ -12,7 +12,6 @@ import (
 )
 
 var AdvisoriesFields = database.MustGetQueryAttrs(&AdvisoriesDBLookupV3{})
-var AdvisoriesSelectV2 = database.MustGetSelect(&AdvisoriesDBLookupV2{})
 var AdvisoriesSelectV3 = database.MustGetSelect(&AdvisoriesDBLookupV3{})
 var AdvisoriesOpts = ListOpts{
 	Fields: AdvisoriesFields,
@@ -46,11 +45,6 @@ type AdvisoriesDBLookupCommon struct {
 	AdvisoryMetaTotalHelper
 }
 
-type AdvisoriesDBLookupV2 struct {
-	AdvisoriesDBLookupCommon
-	AdvisoryItemAttributesV2
-}
-
 type AdvisoriesDBLookupV3 struct {
 	AdvisoriesDBLookupCommon
 	AdvisoryItemAttributesV3
@@ -72,20 +66,9 @@ type AdvisoryItemAttributesCommon struct {
 }
 
 // nolint: lll
-type AdvisoryItemAttributesV2Only struct {
-	// this is not typo, v2 applicable_systems are instalable systems in v3
-	ApplicableSystems int `json:"applicable_systems" query:"COALESCE(aad.systems_installable, 0)" csv:"applicable_systems" gorm:"column:installable_systems"`
-}
-
-// nolint: lll
 type AdvisoryItemAttributesV3Only struct {
 	InstallableSystems int `json:"installable_systems" query:"COALESCE(aad.systems_installable, 0)" csv:"installable_systems" gorm:"column:installable_systems"`
 	ApplicableSystems  int `json:"applicable_systems" query:"COALESCE(aad.systems_applicable, 0)" csv:"applicable_systems" gorm:"column:applicable_systems"`
-}
-
-type AdvisoryItemAttributesV2 struct {
-	AdvisoryItemAttributesCommon
-	AdvisoryItemAttributesV2Only
 }
 
 type AdvisoryItemAttributesV3 struct {
@@ -93,22 +76,10 @@ type AdvisoryItemAttributesV3 struct {
 	AdvisoryItemAttributesV3Only
 }
 
-type AdvisoryItemV2 struct {
-	Attributes AdvisoryItemAttributesV2 `json:"attributes"`
-	AdvisoryID
-	Type string `json:"type"`
-}
-
 type AdvisoryItemV3 struct {
 	Attributes AdvisoryItemAttributesV3 `json:"attributes"`
 	AdvisoryID
 	Type string `json:"type"`
-}
-
-type AdvisoriesResponseV2 struct {
-	Data  []AdvisoryItemV2 `json:"data"`
-	Links Links            `json:"links"`
-	Meta  ListMeta         `json:"meta"`
 }
 
 type AdvisoriesResponseV3 struct {
@@ -175,7 +146,6 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /advisories [get]
 func AdvisoriesListHandler(c *gin.Context) {
-	apiver := c.GetInt(utils.KeyApiver)
 	query, meta, params, err := advisoriesCommon(c)
 	if err != nil {
 		return
@@ -190,16 +160,6 @@ func AdvisoriesListHandler(c *gin.Context) {
 	meta, links, err := UpdateMetaLinks(c, meta, total, subtotals, params...)
 	if err != nil {
 		return // Error handled in method itself
-	}
-	if apiver < 3 {
-		dataV2 := advisoryItemV3toV2(data)
-		var resp = AdvisoriesResponseV2{
-			Data:  dataV2,
-			Links: *links,
-			Meta:  *meta,
-		}
-		c.JSON(http.StatusOK, &resp)
-		return
 	}
 	var resp = AdvisoriesResponseV3{
 		Data:  data,
@@ -323,23 +283,4 @@ func buildAdvisoriesData(advisories []AdvisoriesDBLookupV3) ([]AdvisoryItemV3, i
 		}
 	}
 	return data, total, subtotals
-}
-
-func advisoryItemV3toV2(items []AdvisoryItemV3) []AdvisoryItemV2 {
-	nItems := len(items)
-	itemsV2 := make([]AdvisoryItemV2, nItems)
-	for i := 0; i < nItems; i++ {
-		itemsV2[i] = AdvisoryItemV2{
-			Attributes: AdvisoryItemAttributesV2{
-				AdvisoryItemAttributesCommon: items[i].Attributes.AdvisoryItemAttributesCommon,
-				AdvisoryItemAttributesV2Only: AdvisoryItemAttributesV2Only{
-					// this is not typo, v2 applicable_systems are instalable systems in v3
-					ApplicableSystems: items[i].Attributes.InstallableSystems,
-				},
-			},
-			AdvisoryID: items[i].AdvisoryID,
-			Type:       items[i].Type,
-		}
-	}
-	return itemsV2
 }

@@ -15,35 +15,12 @@ import (
 
 func TestAdvisoryDetailDefault(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-9", "", nil, "", AdvisoryDetailHandler, core.V1APICtx)
-
-	var outputV1 AdvisoryDetailResponseV1
-	CheckResponse(t, w, http.StatusOK, &outputV1)
-	// data
-	outputV1.checkRH9Fields(t)
-
-	w = CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-9", "", nil, "", AdvisoryDetailHandler, core.V2APICtx)
+	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-9", "", nil, "", AdvisoryDetailHandler, core.V2APICtx)
 
 	var outputV2 AdvisoryDetailResponseV2
 	CheckResponse(t, w, http.StatusOK, &outputV2)
 	// data
 	outputV2.checkRH9Fields(t)
-}
-
-func (r *AdvisoryDetailResponseV1) checkRH9Fields(t *testing.T) {
-	assert.Equal(t, "advisory", r.Data.Type)
-	assert.Equal(t, "RH-9", r.Data.ID)
-	assert.Equal(t, "adv-9-syn", r.Data.Attributes.Synopsis)
-	assert.Equal(t, "adv-9-des", r.Data.Attributes.Description)
-	assert.Equal(t, "adv-9-sol", *r.Data.Attributes.Solution)
-	assert.Equal(t, "security", r.Data.Attributes.AdvisoryTypeName)
-	assert.Equal(t, "2016-09-22 20:00:00 +0000 UTC", r.Data.Attributes.PublicDate.String())
-	assert.Equal(t, "2018-09-22 20:00:00 +0000 UTC", r.Data.Attributes.ModifiedDate.String())
-	assert.Equal(t, 1, len(r.Data.Attributes.Packages))
-	assert.Equal(t, "77.0.1-1.fc31.x86_64", r.Data.Attributes.Packages["firefox"])
-	assert.Equal(t, false, r.Data.Attributes.RebootRequired)
-	assert.Equal(t, []string{"8.2", "8.4"}, r.Data.Attributes.ReleaseVersions)
-	assert.Nil(t, r.Data.Attributes.Severity)
 }
 
 func (r *AdvisoryDetailResponseV2) checkRH9Fields(t *testing.T) {
@@ -67,15 +44,7 @@ func (r *AdvisoryDetailResponseV2) checkRH9Fields(t *testing.T) {
 
 func TestAdvisoryDetailCVE(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-3", "", nil, "", AdvisoryDetailHandler, core.V1APICtx)
-
-	var outputV1 AdvisoryDetailResponseV1
-	CheckResponse(t, w, http.StatusOK, &outputV1)
-	assert.Equal(t, 2, len(outputV1.Data.Attributes.Cves))
-	assert.Equal(t, "CVE-1", outputV1.Data.Attributes.Cves[0])
-	assert.Equal(t, "CVE-2", outputV1.Data.Attributes.Cves[1])
-
-	w = CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-3", "", nil, "", AdvisoryDetailHandler, core.V2APICtx)
+	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-3", "", nil, "", AdvisoryDetailHandler, core.V2APICtx)
 
 	var outputV2 AdvisoryDetailResponseV2
 	CheckResponse(t, w, http.StatusOK, &outputV2)
@@ -114,11 +83,6 @@ func TestAdvisoryNotFound(t *testing.T) {
 	assert.Equal(t, "advisory not found", errResp.Error)
 }
 
-func testReqV1() *httptest.ResponseRecorder {
-	return CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-9", "", nil, "", AdvisoryDetailHandler,
-		core.V1APICtx)
-}
-
 func testReqV2() *httptest.ResponseRecorder {
 	return CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-9", "", nil, "", AdvisoryDetailHandler,
 		core.V2APICtx)
@@ -130,21 +94,13 @@ func TestAdvisoryDetailCached(t *testing.T) {
 	var hook = utils.NewTestLogHook()
 	log.AddHook(hook)
 
-	testReqV1()      // load from db and save to cache
-	w := testReqV1() // load from cache
-
-	var output AdvisoryDetailResponseV1
-	CheckResponse(t, w, http.StatusOK, &output)
-	output.checkRH9Fields(t)
-	assert.Equal(t, "found in cache", hook.LogEntries[4].Message)
-
-	testReqV2()     // load from db and save to cache
-	w = testReqV2() // load from cache
+	testReqV2()      // load from db and save to cache
+	w := testReqV2() // load from cache
 
 	var outputV2 AdvisoryDetailResponseV2
 	CheckResponse(t, w, http.StatusOK, &outputV2)
-	output.checkRH9Fields(t)
-	assert.Equal(t, "found in cache", hook.LogEntries[7].Message)
+	outputV2.checkRH9Fields(t)
+	assert.Equal(t, "found in cache", hook.LogEntries[4].Message)
 }
 
 func TestAdvisoryDetailCachePreloading(t *testing.T) {
