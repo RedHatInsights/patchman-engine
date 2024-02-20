@@ -706,11 +706,3 @@ func isFilterInURLValid(c *gin.Context) bool {
 	}
 	return true
 }
-
-// Return value for v3 api or return nil for previous versions
-func APIV3Compat[T any](x *T, apiver int) *T {
-	if apiver < 3 {
-		return nil
-	}
-	return x
-}

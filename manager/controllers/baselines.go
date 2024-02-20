@@ -82,7 +82,6 @@ type BaselinesResponse struct {
 // @Router /baselines [get]
 func BaselinesListHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	apiver := c.GetInt(utils.KeyApiver)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	filters, err := ParseAllFilters(c, BaselineOpts)
 	if err != nil {
@@ -114,7 +113,7 @@ func BaselinesListHandler(c *gin.Context) {
 		return
 	}
 
-	data, total := buildBaselinesData(baselines, apiver)
+	data, total := buildBaselinesData(baselines)
 	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
 	if err != nil {
 		return // Error handled in method itself
@@ -144,7 +143,7 @@ func buildQueryBaselines(db *gorm.DB, filters map[string]FilterData, account int
 	return query
 }
 
-func buildBaselinesData(baselines []BaselinesDBLookup, apiver int) ([]BaselineItem, int) {
+func buildBaselinesData(baselines []BaselinesDBLookup) ([]BaselineItem, int) {
 	var total int
 	if len(baselines) > 0 {
 		total = baselines[0].Total
@@ -156,9 +155,9 @@ func buildBaselinesData(baselines []BaselinesDBLookup, apiver int) ([]BaselineIt
 			Attributes: BaselineItemAttributes{
 				Name:       baseline.Name,
 				Systems:    baseline.Systems,
-				Published:  APIV3Compat(baseline.Published, apiver),
-				LastEdited: APIV3Compat(baseline.LastEdited, apiver),
-				Creator:    APIV3Compat(baseline.Creator, apiver),
+				Published:  baseline.Published,
+				LastEdited: baseline.LastEdited,
+				Creator:    baseline.Creator,
 			},
 			ID:   baseline.ID,
 			Type: "baseline",
