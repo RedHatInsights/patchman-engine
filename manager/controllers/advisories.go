@@ -11,8 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
-var AdvisoriesFields = database.MustGetQueryAttrs(&AdvisoriesDBLookupV3{})
-var AdvisoriesSelectV3 = database.MustGetSelect(&AdvisoriesDBLookupV3{})
+var AdvisoriesFields = database.MustGetQueryAttrs(&AdvisoriesDBLookup{})
+var AdvisoriesSelect = database.MustGetSelect(&AdvisoriesDBLookup{})
 var AdvisoriesOpts = ListOpts{
 	Fields: AdvisoriesFields,
 	DefaultFilters: map[string]FilterData{
@@ -39,15 +39,11 @@ type AdvisoryMetaTotalHelper struct {
 	TotalSecurty     int `json:"-" csv:"-" query:"count(*) filter (where am.advisory_type_id = 3) over ()" gorm:"column:total_security"`
 }
 
-type AdvisoriesDBLookupCommon struct {
+type AdvisoriesDBLookup struct {
 	AdvisoryID
 	// a helper to get total number of systems
 	AdvisoryMetaTotalHelper
-}
-
-type AdvisoriesDBLookupV3 struct {
-	AdvisoriesDBLookupCommon
-	AdvisoryItemAttributesV3
+	AdvisoryItemAttributes
 }
 
 // nolint:lll
@@ -71,21 +67,21 @@ type AdvisoryItemAttributesV3Only struct {
 	ApplicableSystems  int `json:"applicable_systems" query:"COALESCE(aad.systems_applicable, 0)" csv:"applicable_systems" gorm:"column:applicable_systems"`
 }
 
-type AdvisoryItemAttributesV3 struct {
+type AdvisoryItemAttributes struct {
 	AdvisoryItemAttributesCommon
 	AdvisoryItemAttributesV3Only
 }
 
-type AdvisoryItemV3 struct {
-	Attributes AdvisoryItemAttributesV3 `json:"attributes"`
+type AdvisoryItem struct {
+	Attributes AdvisoryItemAttributes `json:"attributes"`
 	AdvisoryID
 	Type string `json:"type"`
 }
 
-type AdvisoriesResponseV3 struct {
-	Data  []AdvisoryItemV3 `json:"data"`
-	Links Links            `json:"links"`
-	Meta  ListMeta         `json:"meta"`
+type AdvisoriesResponse struct {
+	Data  []AdvisoryItem `json:"data"`
+	Links Links          `json:"links"`
+	Meta  ListMeta       `json:"meta"`
 }
 
 func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
@@ -140,7 +136,7 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
-// @Success 200 {object} AdvisoriesResponseV3
+// @Success 200 {object} AdvisoriesResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
@@ -151,7 +147,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 		return
 	} // Error handled in method itself
 
-	var advisories []AdvisoriesDBLookupV3
+	var advisories []AdvisoriesDBLookup
 	err = query.Find(&advisories).Error
 	if err != nil {
 		LogAndRespError(c, err, "db error")
@@ -161,7 +157,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 	if err != nil {
 		return // Error handled in method itself
 	}
-	var resp = AdvisoriesResponseV3{
+	var resp = AdvisoriesResponse{
 		Data:  data,
 		Links: *links,
 		Meta:  *meta,
@@ -220,7 +216,7 @@ func AdvisoriesListIDsHandler(c *gin.Context) {
 
 func buildQueryAdvisories(db *gorm.DB, account int) *gorm.DB {
 	query := db.Table("advisory_metadata am").
-		Select(AdvisoriesSelectV3).
+		Select(AdvisoriesSelect).
 		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id").
 		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
 		Where("aad.rh_account_id = ?", account)
@@ -244,14 +240,14 @@ func buildQueryAdvisoriesTagged(db *gorm.DB, filters map[string]FilterData, acco
 	subq, _ = ApplyInventoryFilter(filters, subq, "sp.inventory_id")
 
 	query := db.Table("advisory_metadata am").
-		Select(AdvisoriesSelectV3).
+		Select(AdvisoriesSelect).
 		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
 		Joins("JOIN (?) aad ON am.id = aad.advisory_id", subq)
 
 	return query
 }
 
-func buildAdvisoriesData(advisories []AdvisoriesDBLookupV3) ([]AdvisoryItemV3, int, map[string]int) {
+func buildAdvisoriesData(advisories []AdvisoriesDBLookup) ([]AdvisoryItem, int, map[string]int) {
 	var total int
 	subtotals := map[string]int{
 		"other":       0,
@@ -266,12 +262,12 @@ func buildAdvisoriesData(advisories []AdvisoriesDBLookupV3) ([]AdvisoryItemV3, i
 		subtotals["bugfix"] = advisories[0].TotalBugfix
 		subtotals["security"] = advisories[0].TotalSecurty
 	}
-	data := make([]AdvisoryItemV3, len(advisories))
+	data := make([]AdvisoryItem, len(advisories))
 	for i := 0; i < len(advisories); i++ {
 		advisory := (advisories)[i]
 		advisory.AdvisoryItemAttributesCommon = fillAdvisoryItemAttributeReleaseVersion(advisory.AdvisoryItemAttributesCommon)
-		data[i] = AdvisoryItemV3{
-			Attributes: AdvisoryItemAttributesV3{
+		data[i] = AdvisoryItem{
+			Attributes: AdvisoryItemAttributes{
 				AdvisoryItemAttributesCommon: advisory.AdvisoryItemAttributesCommon,
 				AdvisoryItemAttributesV3Only: AdvisoryItemAttributesV3Only{
 					InstallableSystems: advisory.InstallableSystems,

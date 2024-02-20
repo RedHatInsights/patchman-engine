@@ -213,7 +213,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.AdvisoriesResponseV3"
+                                    "$ref": "#/components/schemas/controllers.AdvisoriesResponse"
                                 }
                             }
                         }
@@ -278,7 +278,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.AdvisoryDetailResponseV2"
+                                    "$ref": "#/components/schemas/controllers.AdvisoryDetailResponse"
                                 }
                             }
                         }
@@ -1317,7 +1317,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.AdvisoriesDBLookupV3"
+                                        "$ref": "#/components/schemas/controllers.AdvisoriesDBLookup"
                                     }
                                 }
                             },
@@ -1325,7 +1325,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.AdvisoriesDBLookupV3"
+                                        "$ref": "#/components/schemas/controllers.AdvisoriesDBLookup"
                                     }
                                 }
                             }
@@ -6030,7 +6030,7 @@
     },
     "components": {
         "schemas": {
-            "controllers.AdvisoriesDBLookupV3": {
+            "controllers.AdvisoriesDBLookup": {
                 "type": "object",
                 "properties": {
                     "advisory_type_name": {
@@ -6072,13 +6072,13 @@
                     }
                 }
             },
-            "controllers.AdvisoriesResponseV3": {
+            "controllers.AdvisoriesResponse": {
                 "type": "object",
                 "properties": {
                     "data": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/controllers.AdvisoryItemV3"
+                            "$ref": "#/components/schemas/controllers.AdvisoryItem"
                         }
                     },
                     "links": {
@@ -6109,7 +6109,7 @@
                     }
                 }
             },
-            "controllers.AdvisoryDetailAttributesV2": {
+            "controllers.AdvisoryDetailAttributes": {
                 "type": "object",
                 "properties": {
                     "advisory_type_name": {
@@ -6168,11 +6168,11 @@
                     }
                 }
             },
-            "controllers.AdvisoryDetailItemV2": {
+            "controllers.AdvisoryDetailItem": {
                 "type": "object",
                 "properties": {
                     "attributes": {
-                        "$ref": "#/components/schemas/controllers.AdvisoryDetailAttributesV2"
+                        "$ref": "#/components/schemas/controllers.AdvisoryDetailAttributes"
                     },
                     "id": {
                         "type": "string"
@@ -6182,15 +6182,29 @@
                     }
                 }
             },
-            "controllers.AdvisoryDetailResponseV2": {
+            "controllers.AdvisoryDetailResponse": {
                 "type": "object",
                 "properties": {
                     "data": {
-                        "$ref": "#/components/schemas/controllers.AdvisoryDetailItemV2"
+                        "$ref": "#/components/schemas/controllers.AdvisoryDetailItem"
                     }
                 }
             },
-            "controllers.AdvisoryItemAttributesV3": {
+            "controllers.AdvisoryItem": {
+                "type": "object",
+                "properties": {
+                    "attributes": {
+                        "$ref": "#/components/schemas/controllers.AdvisoryItemAttributes"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "controllers.AdvisoryItemAttributes": {
                 "type": "object",
                 "properties": {
                     "advisory_type_name": {
@@ -6225,20 +6239,6 @@
                         "type": "integer"
                     },
                     "synopsis": {
-                        "type": "string"
-                    }
-                }
-            },
-            "controllers.AdvisoryItemV3": {
-                "type": "object",
-                "properties": {
-                    "attributes": {
-                        "$ref": "#/components/schemas/controllers.AdvisoryItemAttributesV3"
-                    },
-                    "id": {
-                        "type": "string"
-                    },
-                    "type": {
                         "type": "string"
                     }
                 }

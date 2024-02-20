@@ -15,7 +15,7 @@ func TestAdvisoriesExportJSON(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequest("GET", "/", nil, "application/json", AdvisoriesExportHandler)
 
-	var output []AdvisoriesDBLookupV3
+	var output []AdvisoriesDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	assert.Equal(t, 12, len(output))
