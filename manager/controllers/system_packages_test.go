@@ -13,7 +13,7 @@ func TestSystemPackages(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/:inventory_id/packages", "00000000-0000-0000-0000-000000000013", "",
 		nil, "", SystemPackagesHandler, 3)
 
-	var output SystemPackageResponseV3
+	var output SystemPackageResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Len(t, output.Data, 4)
 	assert.Equal(t, output.Data[0].Name, "bash")
@@ -32,7 +32,7 @@ func TestPackagesSearch(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/:inventory_id/packages", "00000000-0000-0000-0000-000000000012",
 		"?search=kernel", nil, "", SystemPackagesHandler, 3)
 
-	var output SystemPackageResponseV3
+	var output SystemPackageResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Len(t, output.Data, 1)
 	assert.Equal(t, output.Data[0].Name, "kernel")
@@ -51,7 +51,7 @@ func TestSystemPackagesUpdatableOnly(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/:inventory_id/packages", "00000000-0000-0000-0000-000000000013",
 		"?filter[updatable]=true", nil, "", SystemPackagesHandler, 3)
 
-	var output SystemPackageResponseV3
+	var output SystemPackageResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Len(t, output.Data, 1)
 	assert.Equal(t, output.Data[0].Name, "firefox")
@@ -62,7 +62,7 @@ func TestSystemPackagesName(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/:inventory_id/packages", "00000000-0000-0000-0000-000000000013",
 		"?filter[name]=firefox", nil, "", SystemPackagesHandler, 3)
 
-	var output SystemPackageResponseV3
+	var output SystemPackageResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Len(t, output.Data, 1)
 	assert.Equal(t, output.Data[0].Name, "firefox")
@@ -73,7 +73,7 @@ func TestSystemPackagesNonUpdatableOnly(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/:inventory_id/packages", "00000000-0000-0000-0000-000000000013",
 		"?filter[updatable]=false", nil, "", SystemPackagesHandler, 3)
 
-	var output SystemPackageResponseV3
+	var output SystemPackageResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Len(t, output.Data, 3)
 	assert.Equal(t, output.Data[0].Name, "bash")

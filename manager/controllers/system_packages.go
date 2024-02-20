@@ -12,38 +12,33 @@ import (
 	"gorm.io/gorm"
 )
 
-// nolint: lll
-type SystemPackagesAttrsCommon struct {
-	Name        string `json:"name" csv:"name" query:"pn.name" gorm:"column:name"`
-	EVRA        string `json:"evra" csv:"evra" query:"p.evra" gorm:"column:evra"`
-	Summary     string `json:"summary" csv:"summary" query:"sum.value" gorm:"column:summary"`
-	Description string `json:"description" csv:"description" query:"descr.value" gorm:"column:description"`
-	Updatable   bool   `json:"updatable" csv:"updatable" query:"(spkg.installable_id is not null)" gorm:"column:updatable"`
-}
-
 type SystemPackageUpdates struct {
 	Updates []models.PackageUpdate `json:"updates"`
 }
 
 // nolint: lll
-type SystemPackagesAttrsV3 struct {
-	SystemPackagesAttrsCommon
+type SystemPackagesAttrs struct {
+	Name         string `json:"name" csv:"name" query:"pn.name" gorm:"column:name"`
+	EVRA         string `json:"evra" csv:"evra" query:"p.evra" gorm:"column:evra"`
+	Summary      string `json:"summary" csv:"summary" query:"sum.value" gorm:"column:summary"`
+	Description  string `json:"description" csv:"description" query:"descr.value" gorm:"column:description"`
+	Updatable    bool   `json:"updatable" csv:"updatable" query:"(spkg.installable_id is not null)" gorm:"column:updatable"`
 	UpdateStatus string `json:"update_status" csv:"update_status" query:"CASE WHEN spkg.installable_id is not null THEN 'Installable' WHEN spkg.applicable_id is not null THEN 'Applicable' ELSE 'None' END" gorm:"column:update_status"`
 }
 
-type SystemPackageDataV3 struct {
-	SystemPackagesAttrsV3
+type SystemPackageData struct {
+	SystemPackagesAttrs
 	SystemPackageUpdates
 }
 
-type SystemPackageResponseV3 struct {
-	Data  []SystemPackageDataV3 `json:"data"`
-	Meta  ListMeta              `json:"meta"`
-	Links Links                 `json:"links"`
+type SystemPackageResponse struct {
+	Data  []SystemPackageData `json:"data"`
+	Meta  ListMeta            `json:"meta"`
+	Links Links               `json:"links"`
 }
 
 var SystemPackagesSelect = database.MustGetSelect(&SystemPackageDBLoad{})
-var SystemPackagesFields = database.MustGetQueryAttrs(&SystemPackagesAttrsV3{})
+var SystemPackagesFields = database.MustGetQueryAttrs(&SystemPackagesAttrs{})
 var SystemPackagesOpts = ListOpts{
 	Fields:         SystemPackagesFields,
 	DefaultFilters: nil,
@@ -53,7 +48,7 @@ var SystemPackagesOpts = ListOpts{
 }
 
 type SystemPackageDBLoad struct {
-	SystemPackagesAttrsV3
+	SystemPackagesAttrs
 	// helper to get Updates
 	InstallableEVRA string `json:"-" csv:"-" query:"pi.evra" gorm:"column:installable_evra"`
 	ApplicableEVRA  string `json:"-" csv:"-" query:"pa.evra" gorm:"column:applicable_evra"`
@@ -89,7 +84,7 @@ func systemPackageQuery(db *gorm.DB, account int, groups map[string]string, inve
 // @Param    filter[summary]         query   string  false "Filter"
 // @Param    filter[updatable]       query   bool    false "Filter"
 // @Param    filter[update_status]   query   string  false "Filter"
-// @Success 200 {object} SystemPackageResponseV3
+// @Success 200 {object} SystemPackageResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
@@ -137,7 +132,7 @@ func SystemPackagesHandler(c *gin.Context) {
 	if err != nil {
 		return // Error handled in method itself
 	}
-	response := SystemPackageResponseV3{
+	response := SystemPackageResponse{
 		Data:  data,
 		Meta:  *meta,
 		Links: *links,
@@ -146,14 +141,14 @@ func SystemPackagesHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func buildSystemPackageData(loaded []SystemPackageDBLoad) (int, []SystemPackageDataV3) {
+func buildSystemPackageData(loaded []SystemPackageDBLoad) (int, []SystemPackageData) {
 	var total int
 	if len(loaded) > 0 {
 		total = loaded[0].Total
 	}
-	data := make([]SystemPackageDataV3, len(loaded))
+	data := make([]SystemPackageData, len(loaded))
 	for i, sp := range loaded {
-		data[i].SystemPackagesAttrsV3 = sp.SystemPackagesAttrsV3
+		data[i].SystemPackagesAttrs = sp.SystemPackagesAttrs
 		// keep only latest installable and applicable
 		if len(sp.InstallableEVRA) > 0 && sp.InstallableEVRA != sp.EVRA {
 			data[i].Updates = append(data[i].Updates, models.PackageUpdate{

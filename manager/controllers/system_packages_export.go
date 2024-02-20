@@ -10,8 +10,8 @@ import (
 	"gorm.io/gorm"
 )
 
-type SystemPackageInlineV3 struct {
-	SystemPackagesAttrsV3
+type SystemPackageInline struct {
+	SystemPackagesAttrs
 	LatestInstallable string `json:"latest_installable" csv:"latest_installable"`
 	LatestApplicable  string `json:"latest_applicable" csv:"latest_applicable"`
 }
@@ -29,7 +29,7 @@ type SystemPackageInlineV3 struct {
 // @Param    filter[evra]            query   string  false "Filter"
 // @Param    filter[summary]         query   string  false "Filter"
 // @Param    filter[updatable]       query   bool    false "Filter"
-// @Success 200 {array} SystemPackageInlineV3
+// @Success 200 {array} SystemPackageInline
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 415 {object} utils.ErrorResponse
@@ -70,14 +70,14 @@ func SystemPackagesExportHandler(c *gin.Context) {
 		return
 	}
 
-	data := buildSystemPackageInlineV3(loaded)
+	data := buildSystemPackageInline(loaded)
 	OutputExportData(c, data)
 }
 
-func buildSystemPackageInlineV3(pkgs []SystemPackageDBLoad) []SystemPackageInlineV3 {
-	data := make([]SystemPackageInlineV3, len(pkgs))
+func buildSystemPackageInline(pkgs []SystemPackageDBLoad) []SystemPackageInline {
+	data := make([]SystemPackageInline, len(pkgs))
 	for i, v := range pkgs {
-		data[i].SystemPackagesAttrsV3 = v.SystemPackagesAttrsV3
+		data[i].SystemPackagesAttrs = v.SystemPackagesAttrs
 		data[i].LatestInstallable = v.EVRA
 		if len(v.InstallableEVRA) > 0 {
 			data[i].LatestInstallable = v.InstallableEVRA
