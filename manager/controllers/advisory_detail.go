@@ -22,10 +22,6 @@ var advisoryDetailCacheV2 = initAdvisoryDetailCache()
 
 const logProgressDuration = 2 * time.Second
 
-type AdvisoryDetailResponseV1 struct {
-	Data AdvisoryDetailItemV1 `json:"data"`
-}
-
 type AdvisoryDetailResponseV2 struct {
 	Data AdvisoryDetailItemV2 `json:"data"`
 }
@@ -110,12 +106,7 @@ func AdvisoryDetailHandler(c *gin.Context) {
 		return
 	}
 
-	if c.GetInt(utils.KeyApiver) < 2 {
-		respV1 := advisoryRespV2toV1(respV2)
-		c.JSON(http.StatusOK, respV1)
-	} else {
-		c.JSON(http.StatusOK, respV2)
-	}
+	c.JSON(http.StatusOK, respV2)
 }
 
 func getAdvisoryFromDB(db *gorm.DB, advisoryName string) (*models.AdvisoryMetadata, *AdvisoryDetailAttributes, error) {
@@ -152,22 +143,6 @@ func getAdvisoryFromDB(db *gorm.DB, advisoryName string) (*models.AdvisoryMetada
 		ReleaseVersions:  releaseVersions,
 	}
 	return &advisory, &ada, err
-}
-
-func advisoryRespV2toV1(respV2 *AdvisoryDetailResponseV2) *AdvisoryDetailResponseV1 {
-	pkgsV1 := pkgsV2topkgsV1(respV2.Data.Attributes.Packages)
-	respV1 := AdvisoryDetailResponseV1{
-		Data: AdvisoryDetailItemV1{
-			AdvisoryDetailItem: AdvisoryDetailItem{
-				ID:   respV2.Data.ID,
-				Type: "advisory",
-			},
-			Attributes: AdvisoryDetailAttributesV1{
-				AdvisoryDetailAttributes: respV2.Data.Attributes.AdvisoryDetailAttributes,
-				Packages:                 pkgsV1,
-			},
-		}}
-	return &respV1
 }
 
 func getAdvisoryFromDBV2(db *gorm.DB, advisoryName string) (*AdvisoryDetailResponseV2, error) {

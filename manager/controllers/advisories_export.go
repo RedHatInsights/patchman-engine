@@ -68,29 +68,5 @@ func AdvisoriesExportHandler(c *gin.Context) {
 			fillAdvisoryItemAttributeReleaseVersion(advisories[i].AdvisoryItemAttributesCommon)
 	}
 
-	apiver := c.GetInt(utils.KeyApiver)
-	if apiver < 3 {
-		advisoriesV2 := advisoriesDBLookupV3toV2(advisories)
-		OutputExportData(c, advisoriesV2)
-		return
-	}
-
 	OutputExportData(c, advisories)
-}
-
-func advisoriesDBLookupV3toV2(advisories []AdvisoriesDBLookupV3) []AdvisoriesDBLookupV2 {
-	dataV2 := make([]AdvisoriesDBLookupV2, len(advisories))
-	for i, v := range advisories {
-		dataV2[i] = AdvisoriesDBLookupV2{
-			AdvisoriesDBLookupCommon: v.AdvisoriesDBLookupCommon,
-			AdvisoryItemAttributesV2: AdvisoryItemAttributesV2{
-				AdvisoryItemAttributesCommon: v.AdvisoryItemAttributesCommon,
-				AdvisoryItemAttributesV2Only: AdvisoryItemAttributesV2Only{
-					// this is not typo, v2 applicable_systems are instalable systems in v3
-					ApplicableSystems: v.InstallableSystems,
-				},
-			},
-		}
-	}
-	return dataV2
 }

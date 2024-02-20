@@ -127,7 +127,6 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesHandler(c *gin.Context) {
-	apiver := c.GetInt(utils.KeyApiver)
 	query, meta, params, err := systemAdvisoriesCommon(c)
 	if err != nil {
 		return
@@ -140,7 +139,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 		return
 	}
 
-	data, total := buildSystemAdvisoriesData(dbItems, apiver)
+	data, total := buildSystemAdvisoriesData(dbItems)
 	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
 	if err != nil {
 		return // Error handled in method itself
@@ -178,7 +177,6 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesIDsHandler(c *gin.Context) {
-	apiver := c.GetInt(utils.KeyApiver)
 	query, _, _, err := systemAdvisoriesCommon(c)
 	if err != nil {
 		return
@@ -191,10 +189,6 @@ func SystemAdvisoriesIDsHandler(c *gin.Context) {
 	}
 
 	resp := advisoriesStatusIDs(aids)
-	if apiver < 3 {
-		c.JSON(http.StatusOK, &resp.IDsResponse)
-		return
-	}
 	c.JSON(http.StatusOK, &resp)
 }
 
@@ -207,7 +201,7 @@ func buildSystemAdvisoriesQuery(db *gorm.DB, account int, groups map[string]stri
 	return query
 }
 
-func buildSystemAdvisoriesData(models []SystemAdvisoriesDBLookup, apiver int) ([]SystemAdvisoryItem, int) {
+func buildSystemAdvisoriesData(models []SystemAdvisoriesDBLookup) ([]SystemAdvisoryItem, int) {
 	var total int
 	if len(models) > 0 {
 		total = models[0].Total
@@ -215,10 +209,6 @@ func buildSystemAdvisoriesData(models []SystemAdvisoriesDBLookup, apiver int) ([
 	data := make([]SystemAdvisoryItem, len(models))
 	for i, advisory := range models {
 		advisory.AdvisoryItemAttributesCommon = fillAdvisoryItemAttributeReleaseVersion(advisory.AdvisoryItemAttributesCommon)
-		if apiver < 3 {
-			// status is only in API v3+
-			advisory.Status = nil
-		}
 		item := SystemAdvisoryItem{
 			ID:         advisory.ID,
 			Type:       "advisory",
