@@ -32,7 +32,6 @@ import (
 // @Router /export/packages/{package_name}/systems [get]
 func PackageSystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	apiver := c.GetInt(utils.KeyApiver)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	packageName := c.Param("package_name")
@@ -72,11 +71,5 @@ func PackageSystemsExportHandler(c *gin.Context) {
 	}
 
 	outputItems, _ := packageSystemDBLookups2PackageSystemItemsV3(systems)
-	if apiver < 3 {
-		itemsV2 := packageSystemItemV3toV2(outputItems)
-		OutputExportData(c, itemsV2)
-		return
-	}
-
 	OutputExportData(c, outputItems)
 }

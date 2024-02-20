@@ -25,7 +25,6 @@ import (
 // @Router /export/packages [get]
 func PackagesExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	apiver := c.GetInt(utils.KeyApiver)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	filters, err := ParseAllFilters(c, PackagesOpts)
 	if err != nil {
@@ -54,11 +53,6 @@ func PackagesExportHandler(c *gin.Context) {
 	items, _ := PackageDBLookup2Item(data)
 	if err != nil {
 		LogAndRespError(c, err, "db error")
-		return
-	}
-	if apiver < 3 {
-		itemsV2 := packages2PackagesV2(items)
-		OutputExportData(c, itemsV2)
 		return
 	}
 
