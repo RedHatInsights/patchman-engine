@@ -10,11 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type SystemPackageInlineV2 struct {
-	SystemPackagesAttrsV2
-	LatestEVRA string `json:"latest_evra" csv:"latest_evra"`
-}
-
 type SystemPackageInlineV3 struct {
 	SystemPackagesAttrsV3
 	LatestInstallable string `json:"latest_installable" csv:"latest_installable"`
@@ -42,7 +37,6 @@ type SystemPackageInlineV3 struct {
 // @Router /export/systems/{inventory_id}/packages [get]
 func SystemPackagesExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	apiver := c.GetInt(utils.KeyApiver)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	inventoryID := c.Param("inventory_id")
@@ -76,25 +70,8 @@ func SystemPackagesExportHandler(c *gin.Context) {
 		return
 	}
 
-	if apiver < 3 {
-		data := buildSystemPackageInlineV2(loaded)
-		OutputExportData(c, data)
-		return
-	}
 	data := buildSystemPackageInlineV3(loaded)
 	OutputExportData(c, data)
-}
-
-func buildSystemPackageInlineV2(pkgs []SystemPackageDBLoad) []SystemPackageInlineV2 {
-	data := make([]SystemPackageInlineV2, len(pkgs))
-	for i, v := range pkgs {
-		data[i].SystemPackagesAttrsCommon = v.SystemPackagesAttrsCommon
-		data[i].LatestEVRA = v.EVRA
-		if len(v.InstallableEVRA) > 0 {
-			data[i].LatestEVRA = v.InstallableEVRA
-		}
-	}
-	return data
 }
 
 func buildSystemPackageInlineV3(pkgs []SystemPackageDBLoad) []SystemPackageInlineV3 {

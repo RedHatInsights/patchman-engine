@@ -25,29 +25,17 @@ type SystemPackageUpdates struct {
 	Updates []models.PackageUpdate `json:"updates"`
 }
 
-type SystemPackagesAttrsV2 struct {
-	SystemPackagesAttrsCommon
-}
-
 // nolint: lll
 type SystemPackagesAttrsV3 struct {
 	SystemPackagesAttrsCommon
 	UpdateStatus string `json:"update_status" csv:"update_status" query:"CASE WHEN spkg.installable_id is not null THEN 'Installable' WHEN spkg.applicable_id is not null THEN 'Applicable' ELSE 'None' END" gorm:"column:update_status"`
 }
 
-type SystemPackageDataV2 struct {
-	SystemPackagesAttrsV2
-	SystemPackageUpdates
-}
 type SystemPackageDataV3 struct {
 	SystemPackagesAttrsV3
 	SystemPackageUpdates
 }
-type SystemPackageResponseV2 struct {
-	Data  []SystemPackageDataV2 `json:"data"`
-	Meta  ListMeta              `json:"meta"`
-	Links Links                 `json:"links"`
-}
+
 type SystemPackageResponseV3 struct {
 	Data  []SystemPackageDataV3 `json:"data"`
 	Meta  ListMeta              `json:"meta"`
@@ -108,7 +96,6 @@ func systemPackageQuery(db *gorm.DB, account int, groups map[string]string, inve
 // @Router /systems/{inventory_id}/packages [get]
 func SystemPackagesHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	apiver := c.GetInt(utils.KeyApiver)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	inventoryID := c.Param("inventory_id")
@@ -150,16 +137,6 @@ func SystemPackagesHandler(c *gin.Context) {
 	if err != nil {
 		return // Error handled in method itself
 	}
-	if apiver < 3 {
-		dataV2 := systemPackageV3toV2(data)
-		var resp = SystemPackageResponseV2{
-			Data:  dataV2,
-			Links: *links,
-			Meta:  *meta,
-		}
-		c.JSON(http.StatusOK, &resp)
-		return
-	}
 	response := SystemPackageResponseV3{
 		Data:  data,
 		Meta:  *meta,
@@ -190,18 +167,4 @@ func buildSystemPackageData(loaded []SystemPackageDBLoad) (int, []SystemPackageD
 		}
 	}
 	return total, data
-}
-
-func systemPackageV3toV2(pkgs []SystemPackageDataV3) []SystemPackageDataV2 {
-	nPkgs := len(pkgs)
-	pkgsV2 := make([]SystemPackageDataV2, nPkgs)
-	for i := 0; i < nPkgs; i++ {
-		pkgsV2[i] = SystemPackageDataV2{
-			SystemPackagesAttrsV2: SystemPackagesAttrsV2{
-				SystemPackagesAttrsCommon: pkgs[i].SystemPackagesAttrsCommon,
-			},
-			SystemPackageUpdates: pkgs[i].SystemPackageUpdates,
-		}
-	}
-	return pkgsV2
 }
