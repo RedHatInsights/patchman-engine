@@ -36,10 +36,6 @@ type PackageSystemItemCommon struct {
 	ApplicableEVRA  string `json:"-" csv:"-" query:"pa.evra" gorm:"column:applicable_evra"`
 }
 
-type PackageSystemItemV2 struct {
-	PackageSystemItemCommon
-}
-
 //nolint:lll
 type PackageSystemItem struct {
 	PackageSystemItemCommon
@@ -54,12 +50,6 @@ type PackageSystemDBLookup struct {
 	SystemsMetaTagTotal
 
 	PackageSystemItem
-}
-
-type PackageSystemsResponseV2 struct {
-	Data  []PackageSystemItemV2 `json:"data"`
-	Links Links                 `json:"links"`
-	Meta  ListMeta              `json:"meta"`
 }
 
 type PackageSystemsResponseV3 struct {
@@ -147,7 +137,6 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 // @Router /packages/{package_name}/systems [get]
 func PackageSystemsListHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
-	apiver := c.GetInt(utils.KeyApiver)
 
 	query, meta, params, err := packageSystemsCommon(db, c)
 	if err != nil {
@@ -166,16 +155,6 @@ func PackageSystemsListHandler(c *gin.Context) {
 	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
 	if err != nil {
 		return // Error handled in method itself
-	}
-	if apiver < 3 {
-		dataV2 := packageSystemItemV3toV2(outputItems)
-		var resp = PackageSystemsResponseV2{
-			Data:  dataV2,
-			Links: *links,
-			Meta:  *meta,
-		}
-		c.JSON(http.StatusOK, &resp)
-		return
 	}
 
 	response := PackageSystemsResponseV3{
@@ -251,15 +230,4 @@ func packageSystemDBLookups2PackageSystemItems(systems []PackageSystemDBLookup) 
 		}
 	}
 	return data, total
-}
-
-func packageSystemItemV3toV2(systems []PackageSystemItem) []PackageSystemItemV2 {
-	nSystems := len(systems)
-	systemsV2 := make([]PackageSystemItemV2, nSystems)
-	for i := 0; i < nSystems; i++ {
-		systemsV2[i] = PackageSystemItemV2{
-			PackageSystemItemCommon: systems[i].PackageSystemItemCommon,
-		}
-	}
-	return systemsV2
 }

@@ -50,10 +50,9 @@ import (
 // @Router /export/systems [get]
 func SystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	apiver := c.GetInt(utils.KeyApiver)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
-	query := querySystems(db, account, apiver, groups)
+	query := querySystems(db, account, groups)
 	filters, err := ParseAllFilters(c, SystemOpts)
 	if err != nil {
 		return
@@ -75,26 +74,8 @@ func SystemsExportHandler(c *gin.Context) {
 	}
 
 	systems.ParseAndFillTags()
-	if apiver < 3 {
-		dataV2 := systemDBLookups2SystemDBLookupsV2(systems)
-		OutputExportData(c, dataV2)
-		return
-	}
 	dataV3 := systemDBLookups2SystemDBLookupsV3(systems)
 	OutputExportData(c, dataV3)
-}
-
-func systemDBLookups2SystemDBLookupsV2(data []SystemDBLookup) []SystemDBLookupV2 {
-	res := make([]SystemDBLookupV2, 0, len(data))
-	for _, x := range data {
-		res = append(res, SystemDBLookupV2{
-			SystemDBLookupCommon: x.SystemDBLookupCommon,
-			SystemItemAttributesV2: SystemItemAttributesV2{
-				x.SystemItemAttributesCommon, x.SystemItemAttributesV2Only,
-			},
-		})
-	}
-	return res
 }
 
 func systemDBLookups2SystemDBLookupsV3(data []SystemDBLookup) []SystemDBLookupV3 {

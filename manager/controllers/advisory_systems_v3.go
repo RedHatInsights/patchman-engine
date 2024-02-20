@@ -3,7 +3,6 @@ package controllers
 import (
 	"app/base/database"
 	"app/base/utils"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -64,33 +63,6 @@ var AdvisorySystemOptsV3 = ListOpts{
 	DefaultSort:  "-last_upload",
 	StableSort:   "sp.id",
 	SearchFields: []string{"sp.display_name"},
-}
-
-func advisorySystemsListHandlerV3(c *gin.Context) {
-	query, meta, params, err := advisorySystemsCommon(c)
-	if err != nil {
-		return
-	} // Error handled in method itself
-
-	var dbItems []AdvisorySystemDBLookup
-
-	if err = query.Scan(&dbItems).Error; err != nil {
-		LogAndRespError(c, err, "database error")
-		return
-	}
-
-	data, total := buildAdvisorySystemsData(dbItems)
-
-	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
-	if err != nil {
-		return // Error handled in method itself
-	}
-	var resp = AdvisorySystemsResponseV3{
-		Data:  data,
-		Links: *links,
-		Meta:  *meta,
-	}
-	c.JSON(http.StatusOK, &resp)
 }
 
 func buildAdvisorySystemsData(fields []AdvisorySystemDBLookup) ([]AdvisorySystemItem, int) {

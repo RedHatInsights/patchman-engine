@@ -14,10 +14,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type SystemDetailResponseV2 struct {
-	Data SystemItemV2 `json:"data"`
-}
-
 type SystemDetailResponse struct {
 	// use SystemItem not SystemItemV3 to display more info about system
 	Data SystemItem `json:"data"`
@@ -52,7 +48,6 @@ type SystemYumUpdatesResponse struct {
 // @Router /systems/{inventory_id} [get]
 func SystemDetailHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	apiver := c.GetInt(utils.KeyApiver)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	inventoryID := c.Param("inventory_id")
@@ -96,19 +91,6 @@ func SystemDetailHandler(c *gin.Context) {
 		utils.LogDebug("err", err.Error(), "inventory_id", inventoryID, "system groups parsing failed")
 	}
 
-	if apiver < 3 {
-		resp := SystemDetailResponseV2{
-			Data: SystemItemV2{
-				Attributes: SystemItemAttributesV2{
-					systemDetail.SystemItemAttributesCommon,
-					systemDetail.SystemItemAttributesV2Only,
-				},
-				ID:   inventoryID,
-				Type: "system",
-			}}
-		c.JSON(http.StatusOK, &resp)
-		return
-	}
 	resp := SystemDetailResponse{
 		Data: SystemItem{
 			Attributes: systemDetail.SystemItemAttributesAll,

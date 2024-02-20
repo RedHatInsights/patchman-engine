@@ -14,7 +14,6 @@ import (
 )
 
 var SystemsFields = database.MustGetQueryAttrs(&SystemDBLookup{})
-var SystemsSelectV2 = database.MustGetSelect(&SystemDBLookupV2{})
 var SystemsSelectV3 = database.MustGetSelect(&SystemDBLookupV3{})
 var SystemOpts = ListOpts{
 	Fields: SystemsFields,
@@ -48,11 +47,6 @@ type SystemDBLookupCommon struct {
 	TotalPatched   int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_installable = 0) over ()" gorm:"column:total_patched"`
 	TotalUnpatched int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_installable > 0) over ()" gorm:"column:total_unpatched"`
 	TotalStale     int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = true) over ()" gorm:"column:total_stale"`
-}
-
-type SystemDBLookupV2 struct {
-	SystemDBLookupCommon
-	SystemItemAttributesV2
 }
 
 type SystemDBLookupV3 struct {
@@ -116,11 +110,6 @@ type SystemItemAttributesV3Only struct {
 	SystemGroups
 }
 
-type SystemItemAttributesV2 struct {
-	SystemItemAttributesCommon
-	SystemItemAttributesV2Only
-}
-
 type SystemItemAttributesV3 struct {
 	SystemItemAttributesCommon
 	SystemItemAttributesV3Only
@@ -161,22 +150,10 @@ type SystemItem struct {
 	Type       string                  `json:"type"`
 }
 
-type SystemItemV2 struct {
-	Attributes SystemItemAttributesV2 `json:"attributes"`
-	ID         string                 `json:"id"`
-	Type       string                 `json:"type"`
-}
-
 type SystemItemV3 struct {
 	Attributes SystemItemAttributesV3 `json:"attributes"`
 	ID         string                 `json:"id"`
 	Type       string                 `json:"type"`
-}
-
-type SystemsResponseV2 struct {
-	Data  []SystemItemV2 `json:"data"`
-	Links Links          `json:"links"`
-	Meta  ListMeta       `json:"meta"`
 }
 
 type SystemsResponseV3 struct {
@@ -185,12 +162,12 @@ type SystemsResponseV3 struct {
 	Meta  ListMeta       `json:"meta"`
 }
 
-func systemsCommon(c *gin.Context, apiver int) (*gorm.DB, *ListMeta, []string, error) {
+func systemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	var err error
 	account := c.GetInt(utils.KeyAccount)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
-	query := querySystems(db, account, apiver, groups)
+	query := querySystems(db, account, groups)
 	filters, err := ParseAllFilters(c, SystemOpts)
 	if err != nil {
 		return nil, nil, nil, err
@@ -253,8 +230,7 @@ func systemsCommon(c *gin.Context, apiver int) (*gorm.DB, *ListMeta, []string, e
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /systems [get]
 func SystemsListHandler(c *gin.Context) {
-	apiver := c.GetInt(utils.KeyApiver)
-	query, meta, params, err := systemsCommon(c, apiver)
+	query, meta, params, err := systemsCommon(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -270,16 +246,6 @@ func SystemsListHandler(c *gin.Context) {
 	meta, links, err := UpdateMetaLinks(c, meta, total, subtotals, params...)
 	if err != nil {
 		return // Error handled in method itself
-	}
-	if apiver < 3 {
-		dataV2 := systemItems2SystemItemsV2(data)
-		respV2 := SystemsResponseV2{
-			Data:  dataV2,
-			Links: *links,
-			Meta:  *meta,
-		}
-		c.JSON(http.StatusOK, &respV2)
-		return
 	}
 	dataV3 := systemItems2SystemItemsV3(data)
 	resp := SystemsResponseV3{
@@ -342,8 +308,7 @@ func SystemsListHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/systems [get]
 func SystemsListIDsHandler(c *gin.Context) {
-	apiver := c.GetInt(utils.KeyApiver)
-	query, meta, _, err := systemsCommon(c, apiver)
+	query, meta, _, err := systemsCommon(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -362,12 +327,9 @@ func SystemsListIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func querySystems(db *gorm.DB, account, apiver int, groups map[string]string) *gorm.DB {
+func querySystems(db *gorm.DB, account int, groups map[string]string) *gorm.DB {
 	q := database.Systems(db, account, groups).
 		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id")
-	if apiver < 3 {
-		return q.Select(SystemsSelectV2)
-	}
 	return q.Select(SystemsSelectV3)
 }
 

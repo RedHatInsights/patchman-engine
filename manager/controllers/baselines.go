@@ -107,7 +107,7 @@ func BaselinesListHandler(c *gin.Context) {
 		return
 	}
 
-	baselinesMeta, err := creatorsMeta(c, db, account)
+	baselinesMeta, err := creatorsMeta(db, account)
 	if err != nil {
 		LogAndRespError(c, err, err.Error())
 		return
@@ -166,8 +166,7 @@ func buildBaselinesData(baselines []BaselinesDBLookup) ([]BaselineItem, int) {
 	return data, total
 }
 
-func creatorsMeta(c *gin.Context, db *gorm.DB, account int) (BaselinesMeta, error) {
-	apiver := c.GetInt(utils.KeyApiver)
+func creatorsMeta(db *gorm.DB, account int) (BaselinesMeta, error) {
 	// list of creators for account
 	baselinesMeta := BaselinesMeta{}
 	err := db.Table("baseline bl").
@@ -188,8 +187,5 @@ func creatorsMeta(c *gin.Context, db *gorm.DB, account int) (BaselinesMeta, erro
 		creators = []*string{}
 	}
 	baselinesMeta.Creators = creators
-	if apiver < 3 {
-		baselinesMeta.Creators = nil
-	}
 	return baselinesMeta, nil
 }
