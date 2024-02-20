@@ -15,11 +15,11 @@ func TestInit(_ *testing.T) {
 	utils.TestLoadEnv("conf/manager.env")
 }
 
-func testAdvisories(t *testing.T, url string) AdvisoriesResponseV3 {
+func testAdvisories(t *testing.T, url string) AdvisoriesResponse {
 	core.SetupTest(t)
 	w := CreateRequest("GET", url, nil, "", AdvisoriesListHandler)
 
-	var output AdvisoriesResponseV3
+	var output AdvisoriesResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	return output
 }
@@ -218,7 +218,7 @@ func TestAdvisoriesPossibleSorts(t *testing.T) {
 
 		w := CreateRequest("GET", fmt.Sprintf("/?sort=%v", sort), nil, "", AdvisoriesListHandler)
 
-		var output AdvisoriesResponseV3
+		var output AdvisoriesResponse
 		CheckResponse(t, w, http.StatusOK, &output)
 		assert.Equal(t, 1, len(output.Meta.Sort))
 		assert.Equal(t, output.Meta.Sort[0], sort)
@@ -308,7 +308,7 @@ func TestAdvisoryTagsInMetadata(t *testing.T) {
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "",
 		AdvisoriesListHandler)
 
-	var output AdvisoriesResponseV3
+	var output AdvisoriesResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	testMap := map[string]FilterData{

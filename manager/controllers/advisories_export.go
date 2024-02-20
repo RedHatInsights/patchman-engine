@@ -23,7 +23,7 @@ import (
 // @Param    filter[advisory_type_name] query   string  false "Filter"
 // @Param    filter[severity]           query   string  false "Filter"
 // @Param    filter[applicable_systems] query   string  false "Filter"
-// @Success 200 {array} AdvisoriesDBLookupV3
+// @Success 200 {array} AdvisoriesDBLookup
 // @Failure 415 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /export/advisories [get]
@@ -47,7 +47,7 @@ func AdvisoriesExportHandler(c *gin.Context) {
 		query = buildQueryAdvisories(db, account)
 	}
 
-	var advisories []AdvisoriesDBLookupV3
+	var advisories []AdvisoriesDBLookup
 
 	query = query.Order("id")
 	query, err = ExportListCommon(query, c, AdvisoriesOpts)

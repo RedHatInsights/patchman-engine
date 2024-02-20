@@ -3,10 +3,8 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"sort"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
@@ -17,13 +15,13 @@ func TestAdvisoryDetailDefault(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-9", "", nil, "", AdvisoryDetailHandler, core.V2APICtx)
 
-	var outputV2 AdvisoryDetailResponseV2
+	var outputV2 AdvisoryDetailResponse
 	CheckResponse(t, w, http.StatusOK, &outputV2)
 	// data
 	outputV2.checkRH9Fields(t)
 }
 
-func (r *AdvisoryDetailResponseV2) checkRH9Fields(t *testing.T) {
+func (r *AdvisoryDetailResponse) checkRH9Fields(t *testing.T) {
 	assert.Equal(t, "advisory", r.Data.Type)
 	assert.Equal(t, "RH-9", r.Data.ID)
 	assert.Equal(t, "adv-9-syn", r.Data.Attributes.Synopsis)
@@ -34,7 +32,7 @@ func (r *AdvisoryDetailResponseV2) checkRH9Fields(t *testing.T) {
 	assert.Equal(t, "2018-09-22 20:00:00 +0000 UTC", r.Data.Attributes.ModifiedDate.String())
 	assert.Equal(t, 2, len(r.Data.Attributes.Packages))
 	assert.Equal(
-		t, packagesV2{"firefox-77.0.1-1.fc31.x86_64", "firefox-77.0.1-1.fc31.s390"},
+		t, packages{"firefox-77.0.1-1.fc31.x86_64", "firefox-77.0.1-1.fc31.s390"},
 		r.Data.Attributes.Packages,
 	)
 	assert.Equal(t, false, r.Data.Attributes.RebootRequired)
@@ -46,7 +44,7 @@ func TestAdvisoryDetailCVE(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-3", "", nil, "", AdvisoryDetailHandler, core.V2APICtx)
 
-	var outputV2 AdvisoryDetailResponseV2
+	var outputV2 AdvisoryDetailResponse
 	CheckResponse(t, w, http.StatusOK, &outputV2)
 	assert.Equal(t, 2, len(outputV2.Data.Attributes.Cves))
 	assert.Equal(t, "CVE-1", outputV2.Data.Attributes.Cves[0])
@@ -97,7 +95,7 @@ func TestAdvisoryDetailCached(t *testing.T) {
 	testReqV2()      // load from db and save to cache
 	w := testReqV2() // load from cache
 
-	var outputV2 AdvisoryDetailResponseV2
+	var outputV2 AdvisoryDetailResponse
 	CheckResponse(t, w, http.StatusOK, &outputV2)
 	outputV2.checkRH9Fields(t)
 	assert.Equal(t, "found in cache", hook.LogEntries[4].Message)
@@ -106,15 +104,15 @@ func TestAdvisoryDetailCached(t *testing.T) {
 func TestAdvisoryDetailCachePreloading(t *testing.T) {
 	core.SetupTest(t)
 
-	advisoryDetailCacheV2.Purge()
+	advisoryDetailCache.Purge()
 	var hook = utils.NewTestLogHook()
 	log.AddHook(hook)
 
 	PreloadAdvisoryCacheItems()
 
-	_, ok := advisoryDetailCacheV2.Get("RH-8") // ensure some advisory in cache
+	_, ok := advisoryDetailCache.Get("RH-8") // ensure some advisory in cache
 	assert.True(t, ok)
-	advisoryDetailCacheV2.Purge()
+	advisoryDetailCache.Purge()
 }
 
 func TestAdvisoryDetailFiltering(t *testing.T) {
@@ -132,20 +130,4 @@ func TestAdvisoryDetailFiltering(t *testing.T) {
 
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
-}
-
-func TestParsePackagesV1V2(t *testing.T) {
-	// test SPM-1619
-	inV1 := json.RawMessage("{\"pkg1\": \"1.0.0-1.el8.x86_64\", \"pkg2\": \"2.0.0-1.el8.x86_64\"}")
-	inV2 := json.RawMessage("[\"pkg1-1.0.0-1.el8.x86_64\", \"pkg2-2.0.0-1.el8.x86_64\"]")
-
-	p2InV1, errInV1 := parsePackages(inV1)
-	p2InV2, errInV2 := parsePackages(inV2)
-	sort.Strings(p2InV1)
-	assert.Nil(t, errInV1)
-	assert.Nil(t, errInV2)
-	p1InV1 := pkgsV2topkgsV1(p2InV1)
-	p1InV2 := pkgsV2topkgsV1(p2InV2)
-	assert.Equal(t, p1InV1, p1InV2)
-	assert.Equal(t, p2InV1, p2InV2)
 }
