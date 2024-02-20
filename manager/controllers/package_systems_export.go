@@ -24,7 +24,7 @@ import (
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Param    tags            query   []string  false "Tag filter"
-// @Success 200 {array} PackageSystemItemV3
+// @Success 200 {array} PackageSystemItem
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 415 {object} utils.ErrorResponse
@@ -70,6 +70,6 @@ func PackageSystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	outputItems, _ := packageSystemDBLookups2PackageSystemItemsV3(systems)
+	outputItems, _ := packageSystemDBLookups2PackageSystemItems(systems)
 	OutputExportData(c, outputItems)
 }

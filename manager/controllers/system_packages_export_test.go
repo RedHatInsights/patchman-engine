@@ -14,7 +14,7 @@ func TestSystemPackagesExportHandlerJSON(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/:inventory_id/packages", "00000000-0000-0000-0000-000000000013", "",
 		nil, "application/json", SystemPackagesExportHandler, 3)
 
-	var output []SystemPackageInlineV3
+	var output []SystemPackageInline
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 4, len(output))
 	assert.Equal(t, output[0].Name, "kernel")
