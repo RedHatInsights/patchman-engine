@@ -47,7 +47,6 @@ type BaselineDetailAttributes struct {
 // @Router /baselines/{baseline_id} [get]
 func BaselineDetailHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	apiver := c.GetInt(utils.KeyApiver)
 
 	baselineIDstr := c.Param("baseline_id")
 	baselineID, err := strconv.ParseInt(baselineIDstr, 10, 64)
@@ -57,7 +56,7 @@ func BaselineDetailHandler(c *gin.Context) {
 	}
 
 	db := middlewares.DBFromContext(c)
-	respItem, err := getBaseline(db, account, baselineID, apiver)
+	respItem, err := getBaseline(db, account, baselineID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			LogAndRespNotFound(c, err, "baseline not found")
@@ -71,7 +70,7 @@ func BaselineDetailHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func getBaseline(db *gorm.DB, accountID int, baselineID int64, apiver int) (*BaselineDetailItem, error) {
+func getBaseline(db *gorm.DB, accountID int, baselineID int64) (*BaselineDetailItem, error) {
 	var baseline models.Baseline
 	err := db.Model(&models.Baseline{}).
 		Where("rh_account_id = ? AND id = ?", accountID, baselineID).
@@ -92,9 +91,9 @@ func getBaseline(db *gorm.DB, accountID int, baselineID int64, apiver int) (*Bas
 			Name:        baseline.Name,
 			Config:      config,
 			Description: description,
-			Published:   APIV3Compat(baseline.Published, apiver),
-			LastEdited:  APIV3Compat(baseline.LastEdited, apiver),
-			Creator:     APIV3Compat(baseline.Creator, apiver),
+			Published:   baseline.Published,
+			LastEdited:  baseline.LastEdited,
+			Creator:     baseline.Creator,
 		},
 		Type: "baseline",
 	}
