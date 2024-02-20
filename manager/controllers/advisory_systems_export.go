@@ -39,7 +39,6 @@ import (
 // @Router /export/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	apiver := c.GetInt(utils.KeyApiver)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	advisoryName := c.Param("advisory_id")
@@ -60,7 +59,7 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	query := buildAdvisorySystemsQuery(db, account, groups, advisoryName, apiver)
+	query := buildAdvisorySystemsQuery(db, account, groups, advisoryName)
 	filters, err := ParseAllFilters(c, AdvisorySystemOpts)
 	if err != nil {
 		return
@@ -73,23 +72,7 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 		return
 	} // Error handled in method itself
 
-	if apiver < 3 {
-		outputExportData(c, query)
-		return
-	}
 	outputExportDataV3(c, query)
-}
-
-func outputExportData(c *gin.Context, query *gorm.DB) {
-	var systems SystemDBLookupSlice
-	err := query.Find(&systems).Error
-	if err != nil {
-		LogAndRespError(c, err, "db error")
-		return
-	}
-
-	systems.ParseAndFillTags()
-	OutputExportData(c, systemDBLookups2SystemDBLookupsV2(systems))
 }
 
 func outputExportDataV3(c *gin.Context, query *gorm.DB) {

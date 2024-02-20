@@ -16,20 +16,12 @@ import (
 
 var BaselineSystemFields = database.MustGetQueryAttrs(&BaselineSystemsDBLookup{})
 var BaselineSystemSelect = database.MustGetSelect(&BaselineSystemsDBLookup{})
-var BaselineSystemSelectV2 = database.MustGetSelect(&BaselineSystemsDBLookupV2{})
 var BaselineSystemOpts = ListOpts{
 	Fields:         BaselineSystemFields,
 	DefaultFilters: map[string]FilterData{},
 	DefaultSort:    "-display_name",
 	StableSort:     "id",
 	SearchFields:   []string{"sp.display_name"},
-}
-
-type BaselineSystemsDBLookupV2 struct {
-	SystemIDAttribute
-	// a helper to get total number of systems
-	MetaTotalHelper
-	BaselineSystemAttributesV2
 }
 
 type BaselineSystemsDBLookup struct {
@@ -68,25 +60,13 @@ type BaselineSystemItem struct {
 	BaselineSystemItemCommon
 }
 
-type BaselineSystemItemV2 struct {
-	// Additional baseline system attributes
-	Attributes BaselineSystemAttributesV2 `json:"attributes"`
-	BaselineSystemItemCommon
-}
-
-type BaselineSystemsResponseV2 struct {
-	Data  []BaselineSystemItemV2 `json:"data"`
-	Links Links                  `json:"links"`
-	Meta  ListMeta               `json:"meta"`
-}
-
 type BaselineSystemsResponse struct {
 	Data  []BaselineSystemItem `json:"data"`
 	Links Links                `json:"links"`
 	Meta  ListMeta             `json:"meta"`
 }
 
-func queryBaselineSystems(c *gin.Context, account, apiver int, groups map[string]string) (*gorm.DB, error) {
+func queryBaselineSystems(c *gin.Context, account int, groups map[string]string) (*gorm.DB, error) {
 	baselineID := c.Param("baseline_id")
 	id, err := strconv.ParseInt(baselineID, 10, 64)
 	if err != nil {
@@ -107,7 +87,7 @@ func queryBaselineSystems(c *gin.Context, account, apiver int, groups map[string
 		return nil, err
 	}
 
-	query := buildQueryBaselineSystems(db, account, groups, id, apiver)
+	query := buildQueryBaselineSystems(db, account, groups, id)
 	filters, err := ParseAllFilters(c, BaselineSystemOpts)
 	if err != nil {
 		return nil, err
@@ -116,9 +96,9 @@ func queryBaselineSystems(c *gin.Context, account, apiver int, groups map[string
 	return query, nil
 }
 
-func baselineSystemsCommon(c *gin.Context, account, apiver int, groups map[string]string,
+func baselineSystemsCommon(c *gin.Context, account int, groups map[string]string,
 ) (*gorm.DB, *ListMeta, []string, error) {
-	query, err := queryBaselineSystems(c, account, apiver, groups)
+	query, err := queryBaselineSystems(c, account, groups)
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled in method itself
@@ -166,10 +146,9 @@ func baselineSystemsCommon(c *gin.Context, account, apiver int, groups map[strin
 // @Router /baselines/{baseline_id}/systems [get]
 func BaselineSystemsListHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	apiver := c.GetInt(utils.KeyApiver)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
-	query, meta, params, err := baselineSystemsCommon(c, account, apiver, groups)
+	query, meta, params, err := baselineSystemsCommon(c, account, groups)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -190,11 +169,6 @@ func BaselineSystemsListHandler(c *gin.Context) {
 		Data:  data,
 		Links: *links,
 		Meta:  *meta,
-	}
-	if apiver < 3 {
-		respV2 := baselineSystemResponse2V2(&resp)
-		c.JSON(http.StatusOK, respV2)
-		return
 	}
 	c.JSON(http.StatusOK, &resp)
 }
@@ -221,14 +195,9 @@ func BaselineSystemsListHandler(c *gin.Context) {
 // @Router /ids/baselines/{baseline_id}/systems [get]
 func BaselineSystemsListIDsHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	apiver := c.GetInt(utils.KeyApiver)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
-	if apiver < 3 {
-		c.AbortWithStatus(404)
-		return
-	}
 
-	query, meta, _, err := baselineSystemsCommon(c, account, apiver, groups)
+	query, meta, _, err := baselineSystemsCommon(c, account, groups)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -248,15 +217,10 @@ func BaselineSystemsListIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildQueryBaselineSystems(db *gorm.DB, account int, groups map[string]string, baselineID int64, apiver int,
-) *gorm.DB {
+func buildQueryBaselineSystems(db *gorm.DB, account int, groups map[string]string, baselineID int64) *gorm.DB {
 	query := database.Systems(db, account, groups).
 		Where("sp.baseline_id = ?", baselineID)
-	if apiver < 3 {
-		query.Select(BaselineSystemSelectV2)
-	} else {
-		query.Select(BaselineSystemSelect)
-	}
+	query.Select(BaselineSystemSelect)
 	return query
 }
 
@@ -282,20 +246,4 @@ func buildBaselineSystemData(baselineSystems []BaselineSystemsDBLookup) ([]Basel
 		}
 	}
 	return data, total
-}
-
-func baselineSystemResponse2V2(resp *BaselineSystemsResponse) *BaselineSystemsResponseV2 {
-	v2Items := make([]BaselineSystemItemV2, 0, len(resp.Data))
-	for _, v := range resp.Data {
-		v2Items = append(v2Items, BaselineSystemItemV2{
-			Attributes:               v.Attributes.BaselineSystemAttributesV2,
-			BaselineSystemItemCommon: v.BaselineSystemItemCommon,
-		})
-	}
-	respV2 := BaselineSystemsResponseV2{
-		Data:  v2Items,
-		Links: resp.Links,
-		Meta:  resp.Meta,
-	}
-	return &respV2
 }

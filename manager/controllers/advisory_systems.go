@@ -12,12 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type AdvisorySystemsResponseV2 struct {
-	Data  []SystemItemV2 `json:"data"`
-	Links Links          `json:"links"`
-	Meta  ListMeta       `json:"meta"`
-}
-
 var AdvisorySystemOpts = ListOpts{
 	Fields: SystemsFields,
 	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
@@ -34,7 +28,6 @@ var AdvisorySystemOpts = ListOpts{
 
 func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(utils.KeyAccount)
-	apiver := c.GetInt(utils.KeyApiver)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	advisoryName := c.Param("advisory_id")
@@ -57,11 +50,8 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error
 		return nil, nil, nil, err
 	}
 
-	query := buildAdvisorySystemsQuery(db, account, groups, advisoryName, apiver)
+	query := buildAdvisorySystemsQuery(db, account, groups, advisoryName)
 	opts := AdvisorySystemOptsV3
-	if apiver < 3 {
-		opts = AdvisorySystemOpts
-	}
 	filters, err := ParseAllFilters(c, opts)
 	if err != nil {
 		return nil, nil, nil, err
@@ -106,36 +96,26 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListHandler(c *gin.Context) {
-	apiver := c.GetInt(utils.KeyApiver)
-	if apiver < 3 {
-		advisorySystemsListHandler(c)
-		return
-	}
-	advisorySystemsListHandlerV3(c)
-}
-
-func advisorySystemsListHandler(c *gin.Context) {
 	query, meta, params, err := advisorySystemsCommon(c)
 	if err != nil {
 		return
 	} // Error handled in method itself
 
-	var dbItems []SystemDBLookup
+	var dbItems []AdvisorySystemDBLookup
 
 	if err = query.Scan(&dbItems).Error; err != nil {
 		LogAndRespError(c, err, "database error")
 		return
 	}
 
-	data, total, subtotals := systemDBLookups2SystemItems(dbItems)
+	data, total := buildAdvisorySystemsData(dbItems)
 
-	meta, links, err := UpdateMetaLinks(c, meta, total, subtotals, params...)
+	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
 	if err != nil {
 		return // Error handled in method itself
 	}
-	dataV2 := systemItems2SystemItemsV2(data)
-	var resp = AdvisorySystemsResponseV2{
-		Data:  dataV2,
+	var resp = AdvisorySystemsResponseV3{
+		Data:  data,
 		Links: *links,
 		Meta:  *meta,
 	}
@@ -188,7 +168,6 @@ func advisorySystemsListHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsListIDsHandler(c *gin.Context) {
-	apiver := c.GetInt(utils.KeyApiver)
 	query, meta, _, err := advisorySystemsCommon(c)
 	if err != nil {
 		return
@@ -205,19 +184,11 @@ func AdvisorySystemsListIDsHandler(c *gin.Context) {
 	if err != nil {
 		return // Error handled in method itself
 	}
-	if apiver < 3 {
-		c.JSON(http.StatusOK, &resp.IDsResponse)
-		return
-	}
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildAdvisorySystemsQuery(db *gorm.DB, account int, groups map[string]string, advisoryName string, apiver int,
-) *gorm.DB {
+func buildAdvisorySystemsQuery(db *gorm.DB, account int, groups map[string]string, advisoryName string) *gorm.DB {
 	selectQuery := AdvisorySystemsSelect
-	if apiver < 3 {
-		selectQuery = SystemsSelectV2
-	}
 	query := database.SystemAdvisories(db, account, groups).
 		Select(selectQuery).
 		Joins("JOIN advisory_metadata am ON am.id = sa.advisory_id").

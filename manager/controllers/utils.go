@@ -57,10 +57,9 @@ func LogAndRespNotFound(c *gin.Context, err error, respMsg string) {
 	c.AbortWithStatusJSON(http.StatusNotFound, utils.ErrorResponse{Error: respMsg})
 }
 
-// nolint: prealloc
+// nolint: prealloc, lll
 func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 	defaultSort, stableSort string) (*gorm.DB, []string, error) {
-	apiver := c.GetInt(utils.KeyApiver)
 	query := c.DefaultQuery("sort", defaultSort)
 	fields := strings.Split(query, ",")
 	var appliedFields []string
@@ -74,12 +73,7 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 
 	// We sort by a column expression and not the column name. The column expression is retrieved from fieldExprs
 	for _, enteredField := range fields {
-		origEnteredField := enteredField // needed for showing correct info in `meta` section
-		if apiver < 3 && strings.Contains(enteredField, "applicable_systems") {
-			// `applicable_systems` is used in v1 and v2 API for consistency, in fact it is installable_systems
-			// therefore, if user wants to sort by `applicable_systems`, we need to sort `installable_systems` in DB
-			enteredField = strings.Replace(enteredField, "applicable", "installable", 1)
-		}
+		origEnteredField := enteredField                                               // needed for showing correct info in `meta` section
 		if strings.HasPrefix(enteredField, "-") && allowedFieldSet[enteredField[1:]] { //nolint:gocritic
 			tx = tx.Order(fmt.Sprintf("%s DESC NULLS LAST", fieldExprs[enteredField[1:]].OrderQuery))
 		} else if allowedFieldSet[enteredField] {
@@ -111,7 +105,7 @@ var nestedFilters = NestedFilterMap{
 }
 
 func ParseFilters(c *gin.Context, filters Filters, allowedFields database.AttrMap,
-	defaultFilters map[string]FilterData, apiver int) error {
+	defaultFilters map[string]FilterData) error {
 	params := c.Request.URL.Query() // map[string][]string
 	for name, values := range params {
 		if strings.HasPrefix(name, "filter[") {
@@ -138,15 +132,6 @@ func ParseFilters(c *gin.Context, filters Filters, allowedFields database.AttrMa
 		}
 	}
 
-	// backward compatibility for v2 api and applicable_systems filter
-	if apiver < 3 {
-		if _, ok := filters["applicable_systems"]; ok {
-			// replace with `installable_systems`
-			filters["installable_systems"] = filters["applicable_systems"]
-			delete(filters, "applicable_systems")
-		}
-	}
-
 	return nil
 }
 
@@ -159,9 +144,8 @@ type ListOpts struct {
 }
 
 func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, error) {
-	apiver := c.GetInt(utils.KeyApiver)
 	filters := Filters{}
-	err := ParseFilters(c, filters, opts.Fields, opts.DefaultFilters, apiver)
+	err := ParseFilters(c, filters, opts.Fields, opts.DefaultFilters)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())
 		return nil, errors.Wrap(err, "filters parsing failed")
@@ -338,8 +322,7 @@ func ParseAllFilters(c *gin.Context, opts ListOpts) (Filters, error) {
 		return nil, err
 	}
 
-	apiver := c.GetInt(utils.KeyApiver)
-	err = ParseFilters(c, filters, opts.Fields, opts.DefaultFilters, apiver)
+	err = ParseFilters(c, filters, opts.Fields, opts.DefaultFilters)
 	if err != nil {
 		err = errors.Wrap(err, "cannot parse inventory filters")
 		LogAndRespBadRequest(c, err, err.Error())
@@ -530,20 +513,6 @@ func systemDBLookups2SystemItems(systems []SystemDBLookup) ([]SystemItem, int, m
 		}
 	}
 	return data, total, subtotals
-}
-
-func systemItems2SystemItemsV2(items []SystemItem) []SystemItemV2 {
-	res := make([]SystemItemV2, 0, len(items))
-	for _, x := range items {
-		res = append(res, SystemItemV2{
-			Attributes: SystemItemAttributesV2{
-				x.Attributes.SystemItemAttributesCommon, x.Attributes.SystemItemAttributesV2Only,
-			},
-			ID:   x.ID,
-			Type: x.Type,
-		})
-	}
-	return res
 }
 
 func systemItems2SystemItemsV3(items []SystemItem) []SystemItemV3 {
