@@ -18,27 +18,18 @@ import (
 
 var enableAdvisoryDetailCache = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_DETAIL_CACHE", true)
 var advisoryDetailCacheSize = utils.GetIntEnvOrDefault("ADVISORY_DETAIL_CACHE_SIZE", 100)
-var advisoryDetailCacheV2 = initAdvisoryDetailCache()
+var advisoryDetailCache = initAdvisoryDetailCache()
 
 const logProgressDuration = 2 * time.Second
 
-type AdvisoryDetailResponseV2 struct {
-	Data AdvisoryDetailItemV2 `json:"data"`
+type AdvisoryDetailResponse struct {
+	Data AdvisoryDetailItem `json:"data"`
 }
 
 type AdvisoryDetailItem struct {
-	ID   string `json:"id"`
-	Type string `json:"type"`
-}
-
-type AdvisoryDetailItemV1 struct {
-	AdvisoryDetailItem
-	Attributes AdvisoryDetailAttributesV1 `json:"attributes"`
-}
-
-type AdvisoryDetailItemV2 struct {
-	AdvisoryDetailItem
-	Attributes AdvisoryDetailAttributesV2 `json:"attributes"`
+	ID         string                   `json:"id"`
+	Type       string                   `json:"type"`
+	Attributes AdvisoryDetailAttributes `json:"attributes"`
 }
 
 type AdvisoryDetailAttributes struct {
@@ -55,20 +46,11 @@ type AdvisoryDetailAttributes struct {
 	References       []string  `json:"references"`
 	RebootRequired   bool      `json:"reboot_required"`
 	ReleaseVersions  []string  `json:"release_versions"`
-}
-
-type AdvisoryDetailAttributesV1 struct {
-	AdvisoryDetailAttributes
-	Packages packagesV1 `json:"packages"`
-}
-
-type AdvisoryDetailAttributesV2 struct {
-	AdvisoryDetailAttributes
-	Packages packagesV2 `json:"packages"`
+	Packages         packages  `json:"packages"`
 }
 
 type packagesV1 map[string]string
-type packagesV2 []string
+type packages []string
 
 // @Summary Show me details an advisory by given advisory name
 // @Description Show me details an advisory by given advisory name
@@ -77,7 +59,7 @@ type packagesV2 []string
 // @Accept   json
 // @Produce  json
 // @Param    advisory_id    path    string   true "Advisory ID"
-// @Success 200 {object} AdvisoryDetailResponseV2
+// @Success 200 {object} AdvisoryDetailResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
@@ -94,9 +76,9 @@ func AdvisoryDetailHandler(c *gin.Context) {
 	}
 
 	var err error
-	var respV2 *AdvisoryDetailResponseV2
+	var resp *AdvisoryDetailResponse
 	db := middlewares.DBFromContext(c)
-	respV2, err = getAdvisoryV2(db, advisoryName, false)
+	resp, err = getAdvisory(db, advisoryName, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			LogAndRespNotFound(c, err, "advisory not found")
@@ -106,25 +88,25 @@ func AdvisoryDetailHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, respV2)
+	c.JSON(http.StatusOK, resp)
 }
 
-func getAdvisoryFromDB(db *gorm.DB, advisoryName string) (*models.AdvisoryMetadata, *AdvisoryDetailAttributes, error) {
+func getAdvisoryFromDB(db *gorm.DB, advisoryName string) (*AdvisoryDetailResponse, error) {
 	var advisory models.AdvisoryMetadata
 	err := db.Table(advisory.TableName()).
 		Take(&advisory, "name = ?", advisoryName).Error
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	cves, err := parseJSONList(advisory.CveList)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "CVEs parsing error")
+		return nil, errors.Wrap(err, "CVEs parsing error")
 	}
 
 	releaseVersions, err := parseJSONList(advisory.ReleaseVersions)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "release_versions parsing error")
+		return nil, errors.Wrap(err, "release_versions parsing error")
 	}
 
 	ada := AdvisoryDetailAttributes{
@@ -142,57 +124,49 @@ func getAdvisoryFromDB(db *gorm.DB, advisoryName string) (*models.AdvisoryMetada
 		RebootRequired:   advisory.RebootRequired,
 		ReleaseVersions:  releaseVersions,
 	}
-	return &advisory, &ada, err
-}
-
-func getAdvisoryFromDBV2(db *gorm.DB, advisoryName string) (*AdvisoryDetailResponseV2, error) {
-	advisory, ada, err := getAdvisoryFromDB(db, advisoryName)
-	if err != nil {
-		return nil, err
-	}
 
 	pkgs, err := parsePackages(advisory.PackageData)
 	if err != nil {
 		return nil, errors.Wrap(err, "packages parsing error")
 	}
 
-	var resp = AdvisoryDetailResponseV2{Data: AdvisoryDetailItemV2{
-		AdvisoryDetailItem: AdvisoryDetailItem{ID: advisory.Name, Type: "advisory"},
-		Attributes: AdvisoryDetailAttributesV2{
-			AdvisoryDetailAttributes: *ada,
-			Packages:                 pkgs,
-		},
+	var resp = AdvisoryDetailResponse{Data: AdvisoryDetailItem{
+		ID:         advisory.Name,
+		Type:       "advisory",
+		Attributes: ada,
 	}}
+	resp.Data.Attributes.Packages = pkgs
+
 	return &resp, nil
 }
 
-func parsePackages(jsonb []byte) (packagesV2, error) {
+func parsePackages(jsonb []byte) (packages, error) {
 	if jsonb == nil {
-		return packagesV2{}, nil
+		return packages{}, nil
 	}
 
 	var err error
-	pkgsV2, err := parseJSONList(jsonb)
+	pkgs, err := parseJSONList(jsonb)
 	if err != nil {
 		// HACK!
 		// Until vmaas-sync syncs new data, `jsonb` has '{"<name>": "<evra>"}' format
-		// what we need for V2 api is ["<name>-<evra>", ...]
+		// what we need for V3 api is ["<name>-<evra>", ...]
 		// 1. try to unmarshal to packagesV1 struct
 		var tmpPkgV1 packagesV1
 		if v1err := json.Unmarshal(jsonb, &tmpPkgV1); v1err != nil {
-			// cannot unmarshal to neither V1 nor V2
+			// cannot unmarshal to neither V1 nor V3
 			return nil, err
 		}
-		// 2. create `packagesV2` from `packagesV1` data
+		// 2. create `packages` from `packagesV1` data
 		for k, v := range tmpPkgV1 {
-			// NOTE: V2 now shows the same data as V1 api until vmaas is synced
-			pkgsV2 = append(pkgsV2, fmt.Sprintf("%s-%s", k, v))
+			// NOTE: V3 now shows the same data as V1 api until vmaas is synced
+			pkgs = append(pkgs, fmt.Sprintf("%s-%s", k, v))
 		}
 	}
-	return pkgsV2, nil
+	return pkgs, nil
 }
 
-func pkgsV2topkgsV1(pkgsV2 packagesV2) packagesV1 {
+func pkgsV2topkgsV1(pkgsV2 packages) packagesV1 {
 	// assigning first pkg to packages map in api/v1
 	// it shows incorrect packages info
 	// but we need to maintain backward compatibility
@@ -209,13 +183,13 @@ func pkgsV2topkgsV1(pkgsV2 packagesV2) packagesV1 {
 	return pkgsV1
 }
 
-func initAdvisoryDetailCache() *lru.Cache[string, AdvisoryDetailResponseV2] {
+func initAdvisoryDetailCache() *lru.Cache[string, AdvisoryDetailResponse] {
 	middlewares.AdvisoryDetailGauge.Set(0)
 	if !enableAdvisoryDetailCache {
 		return nil
 	}
 
-	cache, err := lru.New[string, AdvisoryDetailResponseV2](advisoryDetailCacheSize)
+	cache, err := lru.New[string, AdvisoryDetailResponse](advisoryDetailCacheSize)
 	if err != nil {
 		panic(err)
 	}
@@ -240,21 +214,21 @@ func PreloadAdvisoryCacheItems() {
 	progress, count := utils.LogProgress("Advisory detail cache preload", logProgressDuration, int64(len(advisoryNames)))
 
 	for _, advisoryName := range advisoryNames {
-		_, err = getAdvisoryV2(database.Db, advisoryName, true)
+		_, err = getAdvisory(database.Db, advisoryName, true)
 		if err != nil {
-			utils.LogError("advisoryName", advisoryName, "err", err.Error(), "can not re-load item to cache - V2")
+			utils.LogError("advisoryName", advisoryName, "err", err.Error(), "can not re-load item to cache - V3")
 		}
 		*count++
 	}
 	progress.Stop()
 }
 
-func tryGetAdvisoryFromCacheV2(advisoryName string) *AdvisoryDetailResponseV2 {
-	if advisoryDetailCacheV2 == nil {
+func tryGetAdvisoryFromCache(advisoryName string) *AdvisoryDetailResponse {
+	if advisoryDetailCache == nil {
 		return nil
 	}
 
-	val, ok := advisoryDetailCacheV2.Get(advisoryName)
+	val, ok := advisoryDetailCache.Get(advisoryName)
 	if !ok {
 		middlewares.AdvisoryDetailCnt.WithLabelValues("miss").Inc()
 		return nil
@@ -263,31 +237,31 @@ func tryGetAdvisoryFromCacheV2(advisoryName string) *AdvisoryDetailResponseV2 {
 	return &val
 }
 
-func tryAddAdvisoryToCacheV2(advisoryName string, resp *AdvisoryDetailResponseV2) {
-	if advisoryDetailCacheV2 == nil {
+func tryAddAdvisoryToCache(advisoryName string, resp *AdvisoryDetailResponse) {
+	if advisoryDetailCache == nil {
 		return
 	}
-	evicted := advisoryDetailCacheV2.Add(advisoryName, *resp)
+	evicted := advisoryDetailCache.Add(advisoryName, *resp)
 	if !evicted {
 		middlewares.AdvisoryDetailGauge.Inc()
 	}
-	utils.LogDebug("evictedV2", evicted, "advisoryName", advisoryName, "saved to cache")
+	utils.LogDebug("evictedV3", evicted, "advisoryName", advisoryName, "saved to cache")
 }
 
-func getAdvisoryV2(db *gorm.DB, advisoryName string, isPreload bool) (*AdvisoryDetailResponseV2, error) {
+func getAdvisory(db *gorm.DB, advisoryName string, isPreload bool) (*AdvisoryDetailResponse, error) {
 	if !isPreload {
-		resp := tryGetAdvisoryFromCacheV2(advisoryName)
+		resp := tryGetAdvisoryFromCache(advisoryName)
 		if resp != nil {
 			utils.LogDebug("advisoryName", advisoryName, "found in cache")
 			return resp, nil // return data found in cache
 		}
 	}
 
-	resp, err := getAdvisoryFromDBV2(db, advisoryName) // search for data in database
+	resp, err := getAdvisoryFromDB(db, advisoryName) // search for data in database
 	if err != nil {
 		return nil, err
 	}
 
-	tryAddAdvisoryToCacheV2(advisoryName, resp) // save data to cache if initialized
+	tryAddAdvisoryToCache(advisoryName, resp) // save data to cache if initialized
 	return resp, nil
 }
