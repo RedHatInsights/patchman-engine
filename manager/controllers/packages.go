@@ -55,17 +55,6 @@ type PackageItemV2Only struct {
 	SystemsUpdatable int `json:"systems_updatable" csv:"systems_updatable" query:"res.systems_installable" gorm:"column:systems_updatable"`
 }
 
-type PackageItemV2 struct {
-	PackageItemCommon
-	PackageItemV2Only
-}
-
-type PackagesResponseV2 struct {
-	Data  []PackageItemV2 `json:"data"`
-	Links Links           `json:"links"`
-	Meta  ListMeta        `json:"meta"`
-}
-
 type PackagesResponse struct {
 	Data  []PackageItem `json:"data"`
 	Links Links         `json:"links"`
@@ -141,7 +130,6 @@ func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, groups m
 func PackagesListHandler(c *gin.Context) {
 	var filters map[string]FilterData
 	account := c.GetInt(utils.KeyAccount)
-	apiver := c.GetInt(utils.KeyApiver)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	filters, err := ParseAllFilters(c, PackagesOpts)
@@ -177,15 +165,6 @@ func PackagesListHandler(c *gin.Context) {
 	if err != nil {
 		return // Error handled in method itself
 	}
-	if apiver < 3 {
-		dataV2 := packages2PackagesV2(data)
-		c.JSON(http.StatusOK, PackagesResponseV2{
-			Data:  dataV2,
-			Links: *links,
-			Meta:  *meta,
-		})
-		return
-	}
 
 	c.JSON(http.StatusOK, PackagesResponse{
 		Data:  data,
@@ -204,17 +183,6 @@ func PackageDBLookup2Item(packages []PackageDBLookup) ([]PackageItem, int) {
 		data[i] = PackageItem{v.PackageItemCommon, v.PackageItemV3Only}
 	}
 	return data, total
-}
-
-func packages2PackagesV2(data []PackageItem) []PackageItemV2 {
-	v2 := make([]PackageItemV2, len(data))
-	for i, x := range data {
-		v2[i] = PackageItemV2{
-			PackageItemCommon: x.PackageItemCommon,
-			PackageItemV2Only: PackageItemV2Only{x.SystemsInstallable},
-		}
-	}
-	return v2
 }
 
 // use cache only when tag filter is not used, there are no inventory groups and cache is valid

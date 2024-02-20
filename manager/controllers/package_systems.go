@@ -212,7 +212,6 @@ func PackageSystemsListHandler(c *gin.Context) {
 // @Router /ids/packages/{package_name}/systems [get]
 func PackageSystemsListIDsHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
-	apiver := c.GetInt(utils.KeyApiver)
 	query, meta, _, err := packageSystemsCommon(db, c)
 	if err != nil {
 		return
@@ -228,10 +227,6 @@ func PackageSystemsListIDsHandler(c *gin.Context) {
 	resp, err := systemsIDsStatus(c, sids, meta)
 	if err != nil {
 		return // Error handled in method itself
-	}
-	if apiver < 3 {
-		c.JSON(http.StatusOK, &resp.IDsResponse)
-		return
 	}
 	c.JSON(http.StatusOK, &resp)
 }
