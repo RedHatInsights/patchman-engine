@@ -2027,7 +2027,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.PackageSystemItemV3"
+                                        "$ref": "#/components/schemas/controllers.PackageSystemItem"
                                     }
                                 }
                             }
@@ -2653,7 +2653,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.SystemPackageInlineV3"
+                                        "$ref": "#/components/schemas/controllers.SystemPackageInline"
                                     }
                                 }
                             }
@@ -5474,7 +5474,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.SystemPackageResponseV3"
+                                    "$ref": "#/components/schemas/controllers.SystemPackageResponse"
                                 }
                             }
                         }
@@ -7038,7 +7038,7 @@
                     }
                 }
             },
-            "controllers.PackageSystemItemV3": {
+            "controllers.PackageSystemItem": {
                 "type": "object",
                 "properties": {
                     "available_evra": {
@@ -7097,7 +7097,7 @@
                     "data": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/controllers.PackageSystemItemV3"
+                            "$ref": "#/components/schemas/controllers.PackageSystemItem"
                         }
                     },
                     "links": {
@@ -7646,7 +7646,7 @@
                     }
                 }
             },
-            "controllers.SystemPackageDataV3": {
+            "controllers.SystemPackageData": {
                 "type": "object",
                 "properties": {
                     "description": {
@@ -7675,7 +7675,7 @@
                     }
                 }
             },
-            "controllers.SystemPackageInlineV3": {
+            "controllers.SystemPackageInline": {
                 "type": "object",
                 "properties": {
                     "description": {
@@ -7704,13 +7704,13 @@
                     }
                 }
             },
-            "controllers.SystemPackageResponseV3": {
+            "controllers.SystemPackageResponse": {
                 "type": "object",
                 "properties": {
                     "data": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/controllers.SystemPackageDataV3"
+                            "$ref": "#/components/schemas/controllers.SystemPackageData"
                         }
                     },
                     "links": {

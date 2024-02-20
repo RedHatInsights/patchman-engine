@@ -15,7 +15,7 @@ func TestPackageSystemsExportHandlerJSON(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/:package_name/systems", "kernel", "?sort=id", nil, "application/json",
 		PackageSystemsExportHandler, 3)
 
-	var output []PackageSystemItemV3
+	var output []PackageSystemItem
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 3, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output[0].ID)

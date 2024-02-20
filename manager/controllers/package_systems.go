@@ -41,7 +41,7 @@ type PackageSystemItemV2 struct {
 }
 
 //nolint:lll
-type PackageSystemItemV3 struct {
+type PackageSystemItem struct {
 	PackageSystemItemCommon
 	SystemSatelliteManaged
 	BaselineIDAttr
@@ -53,7 +53,7 @@ type PackageSystemItemV3 struct {
 type PackageSystemDBLookup struct {
 	SystemsMetaTagTotal
 
-	PackageSystemItemV3
+	PackageSystemItem
 }
 
 type PackageSystemsResponseV2 struct {
@@ -63,9 +63,9 @@ type PackageSystemsResponseV2 struct {
 }
 
 type PackageSystemsResponseV3 struct {
-	Data  []PackageSystemItemV3 `json:"data"`
-	Links Links                 `json:"links"`
-	Meta  ListMeta              `json:"meta"`
+	Data  []PackageSystemItem `json:"data"`
+	Links Links               `json:"links"`
+	Meta  ListMeta            `json:"meta"`
 }
 
 func packagesByNameQuery(db *gorm.DB, pkgName string) *gorm.DB {
@@ -161,7 +161,7 @@ func PackageSystemsListHandler(c *gin.Context) {
 		return
 	}
 
-	outputItems, total := packageSystemDBLookups2PackageSystemItemsV3(systems)
+	outputItems, total := packageSystemDBLookups2PackageSystemItems(systems)
 
 	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
 	if err != nil {
@@ -231,20 +231,20 @@ func PackageSystemsListIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func packageSystemDBLookups2PackageSystemItemsV3(systems []PackageSystemDBLookup) ([]PackageSystemItemV3, int) {
+func packageSystemDBLookups2PackageSystemItems(systems []PackageSystemDBLookup) ([]PackageSystemItem, int) {
 	var total int
 	if len(systems) > 0 {
 		total = systems[0].Total
 	}
-	data := make([]PackageSystemItemV3, len(systems))
+	data := make([]PackageSystemItem, len(systems))
 	for i := range systems {
-		if err := parseSystemItems(systems[i].TagsStr, &systems[i].PackageSystemItemV3.Tags); err != nil {
+		if err := parseSystemItems(systems[i].TagsStr, &systems[i].PackageSystemItem.Tags); err != nil {
 			utils.LogDebug("err", err.Error(), "inventory_id", systems[i].ID, "system tags parsing failed")
 		}
-		if err := parseSystemItems(systems[i].GroupsStr, &systems[i].PackageSystemItemV3.Groups); err != nil {
+		if err := parseSystemItems(systems[i].GroupsStr, &systems[i].PackageSystemItem.Groups); err != nil {
 			utils.LogDebug("err", err.Error(), "inventory_id", systems[i].ID, "system groups parsing failed")
 		}
-		data[i] = systems[i].PackageSystemItemV3
+		data[i] = systems[i].PackageSystemItem
 		data[i].AvailableEVRA = data[i].InstallableEVRA
 		if len(data[i].ApplicableEVRA) > 0 {
 			data[i].AvailableEVRA = data[i].ApplicableEVRA
@@ -253,7 +253,7 @@ func packageSystemDBLookups2PackageSystemItemsV3(systems []PackageSystemDBLookup
 	return data, total
 }
 
-func packageSystemItemV3toV2(systems []PackageSystemItemV3) []PackageSystemItemV2 {
+func packageSystemItemV3toV2(systems []PackageSystemItem) []PackageSystemItemV2 {
 	nSystems := len(systems)
 	systemsV2 := make([]PackageSystemItemV2, nSystems)
 	for i := 0; i < nSystems; i++ {
