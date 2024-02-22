@@ -123,7 +123,7 @@ func tryCreateSecuredDialerFromEnv() *kafka.Dialer {
 	kafkaSslSkipVerify := utils.Cfg.KafkaSslSkipVerify
 	tlsConfig := &tls.Config{InsecureSkipVerify: true} // nolint:gosec
 	if !kafkaSslSkipVerify {
-		tlsConfig = caCertTLSConfigFromEnv()
+		tlsConfig = caCertTLSConfig()
 	}
 
 	dialer := &kafka.Dialer{
@@ -166,16 +166,18 @@ func getSaslMechanism() sasl.Mechanism {
 	panic(fmt.Sprintf("Unknown sasl type '%s', options: {scram, scram-sha-256, scram-sha-512, plain}", saslType))
 }
 
-func caCertTLSConfigFromEnv() *tls.Config {
-	caCertPath := utils.FailIfEmpty(utils.Cfg.KafkaSslCert, "KAFKA_SSL_CERT")
-	caCert, err := os.ReadFile(caCertPath)
-	if err != nil {
-		panic(err)
+func caCertTLSConfig() *tls.Config {
+	caCertPool, _ := x509.SystemCertPool()
+	if caCertPool == nil {
+		caCertPool = x509.NewCertPool()
 	}
-
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-
+	if len(utils.Cfg.KafkaSslCert) > 0 {
+		caCert, err := os.ReadFile(utils.Cfg.KafkaSslCert)
+		if err != nil {
+			panic(err)
+		}
+		caCertPool.AppendCertsFromPEM(caCert)
+	}
 	tlsConfig := tls.Config{RootCAs: caCertPool} // nolint:gosec
 	return &tlsConfig
 }

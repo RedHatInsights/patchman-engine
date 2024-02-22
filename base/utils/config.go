@@ -189,8 +189,10 @@ func initKafkaFromClowder() {
 		kafkaHost := brokerCfg.Hostname
 		kafkaPort := *brokerCfg.Port
 		Cfg.KafkaAddress = fmt.Sprintf("%s:%d", kafkaHost, kafkaPort)
-		if brokerCfg.Cacert != nil && len(*brokerCfg.Cacert) > 0 {
+		if brokerCfg.SecurityProtocol != nil && strings.Contains(*brokerCfg.SecurityProtocol, "SSL") {
 			Cfg.KafkaSslEnabled = true
+		}
+		if brokerCfg.Cacert != nil && len(*brokerCfg.Cacert) > 0 {
 			if strings.HasPrefix(*brokerCfg.Cacert, "-----BEGIN CERTIFICATE-----") {
 				certPath, err := clowder.LoadedConfig.KafkaCa(brokerCfg)
 				if err != nil {
@@ -200,11 +202,11 @@ func initKafkaFromClowder() {
 			} else {
 				Cfg.KafkaSslCert = *brokerCfg.Cacert
 			}
-			if brokerCfg.Sasl.Username != nil {
-				Cfg.KafkaUsername = *brokerCfg.Sasl.Username
-				Cfg.KafkaPassword = *brokerCfg.Sasl.Password
-				Cfg.KafkaSaslType = brokerCfg.Sasl.SaslMechanism
-			}
+		}
+		if brokerCfg.Sasl != nil && brokerCfg.Sasl.Username != nil {
+			Cfg.KafkaUsername = *brokerCfg.Sasl.Username
+			Cfg.KafkaPassword = *brokerCfg.Sasl.Password
+			Cfg.KafkaSaslType = brokerCfg.Sasl.SaslMechanism
 		}
 
 		// translate kafka topic names
