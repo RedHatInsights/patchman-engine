@@ -21,6 +21,7 @@
                 "port": 9093,
                 "cacert": "/opt/kafka/ca.crt",
                 "authtype": "sasl",
+                "securityProtocol": "SSL",
                 "sasl": {
                     "username": "",
                     "password": "",
