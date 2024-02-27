@@ -73,7 +73,7 @@ func totalItems(tx *gorm.DB, cols string) (int, error) {
 }
 
 func systemsAdvisoriesQuery(c *gin.Context, db *gorm.DB, acc int, groups map[string]string,
-	req SystemsAdvisoriesRequest, apiver int) (*gorm.DB, *ListMeta, *Links, error) {
+	req SystemsAdvisoriesRequest) (*gorm.DB, *ListMeta, *Links, error) {
 	systems := req.Systems
 	advisories := req.Advisories
 	sysq := database.Systems(db, acc, groups).
@@ -102,16 +102,10 @@ func systemsAdvisoriesQuery(c *gin.Context, db *gorm.DB, acc int, groups map[str
 		return nil, nil, nil, err
 	}
 
-	installableOnly := ""
-	if apiver > 2 {
-		// display only installable advisories in v3 api
-		installableOnly = "AND sa.status_id = 0"
-	}
-
 	query := db.Table("(?) as sp", sysq).
 		Select(systemsAdvisoriesSelect).
-		Joins(fmt.Sprintf(`LEFT JOIN system_advisories sa ON sa.system_id = sp.id
-			AND sa.rh_account_id = sp.rh_account_id AND sa.rh_account_id = ? %s`, installableOnly), acc)
+		Joins(`LEFT JOIN system_advisories sa ON sa.system_id = sp.id
+			AND sa.rh_account_id = sp.rh_account_id AND sa.rh_account_id = ? AND sa.status_id = 0`, acc)
 	if len(advisories) > 0 {
 		query = query.Joins("LEFT JOIN advisory_metadata am ON am.id = sa.advisory_id AND am.name in (?)", advisories)
 	} else {
@@ -124,7 +118,7 @@ func systemsAdvisoriesQuery(c *gin.Context, db *gorm.DB, acc int, groups map[str
 }
 
 func advisoriesSystemsQuery(c *gin.Context, db *gorm.DB, acc int, groups map[string]string,
-	req SystemsAdvisoriesRequest, apiver int) (*gorm.DB, *ListMeta, *Links, error) {
+	req SystemsAdvisoriesRequest) (*gorm.DB, *ListMeta, *Links, error) {
 	systems := req.Systems
 	advisories := req.Advisories
 	// get all advisories for all systems in the account (with inventory.hosts join)
@@ -153,22 +147,10 @@ func advisoriesSystemsQuery(c *gin.Context, db *gorm.DB, acc int, groups map[str
 		return nil, nil, nil, err
 	}
 
-	installableOnly := ""
-	if apiver > 2 {
-		// display only systems with installable advisories in v3 api
-		installableOnly = "AND sa.status_id = 0"
-	}
-
 	spJoin := "LEFT JOIN system_platform sp ON sp.id = sa.system_id AND sa.rh_account_id = sp.rh_account_id"
 	query := db.Table("(?) as am", advq).
 		Distinct(systemsAdvisoriesSelect).
-		Joins(
-			fmt.Sprintf(
-				"LEFT JOIN system_advisories sa ON am.id = sa.advisory_id AND sa.rh_account_id = ? %s",
-				installableOnly,
-			),
-			acc,
-		)
+		Joins("LEFT JOIN system_advisories sa ON am.id = sa.advisory_id AND sa.rh_account_id = ? AND sa.status_id = 0", acc)
 	if len(systems) > 0 {
 		query = query.Joins(fmt.Sprintf("%s AND sp.inventory_id::text in (?)", spJoin), systems)
 	} else {
@@ -191,7 +173,6 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListM
 		return nil, nil, nil, err
 	}
 	acc := c.GetInt(utils.KeyAccount)
-	apiver := c.GetInt(utils.KeyApiver)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
 	// backward compatibility, put limit/offset from json into querystring
@@ -203,9 +184,9 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListM
 	}
 	switch endpoint {
 	case "SystemsAdvisories":
-		q, meta, links, err = systemsAdvisoriesQuery(c, db, acc, groups, req, apiver)
+		q, meta, links, err = systemsAdvisoriesQuery(c, db, acc, groups, req)
 	case "AdvisoriesSystems":
-		q, meta, links, err = advisoriesSystemsQuery(c, db, acc, groups, req, apiver)
+		q, meta, links, err = advisoriesSystemsQuery(c, db, acc, groups, req)
 	default:
 		return nil, nil, nil, fmt.Errorf("unknown endpoint '%s'", endpoint)
 	}
