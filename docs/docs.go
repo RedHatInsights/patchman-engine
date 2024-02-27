@@ -11,20 +11,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const exposedOpenapiPathV1 = "/tmp/openapi.v1.json"
-const exposedOpenapiPathV2 = "/tmp/openapi.v2.json"
 const exposedOpenapiPathV3 = "/tmp/openapi.v3.json"
 const exposedOpenapiPathAdmin = "/tmp/openapi.admin.json"
 
 var appVersions = map[int]openapiData{
-	1: {
-		in: "./docs/v1/openapi.json", out: exposedOpenapiPathV1,
-		url: "/api/patch/v1/openapi.json",
-	},
-	2: {
-		in: "./docs/v2/openapi.json", out: exposedOpenapiPathV2,
-		url: "/api/patch/v2/openapi.json",
-	},
 	3: {
 		in: "./docs/v3/openapi.json", out: exposedOpenapiPathV3,
 		url: "/api/patch/v3/openapi.json",

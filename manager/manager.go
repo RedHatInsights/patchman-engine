@@ -15,7 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var basepaths = []string{"/api/patch/v1", "/api/patch/v2", "/api/patch/v3"}
+var basepaths = []string{"/api/patch/v3"}
 
 // nolint: lll
 // @title Patchman-engine API

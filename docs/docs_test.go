@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const openAPIPath = "v2/openapi.json"
+const openAPIPath = "v3/openapi.json"
 
 func TestValidateOpenAPI3DocStr(t *testing.T) {
 	doc, err := os.ReadFile(openAPIPath)
@@ -28,5 +28,5 @@ func TestFilterOpenAPIPaths2(t *testing.T) {
 	nRemovedPaths := filterOpenAPI(EndpointsConfig{
 		EnableBaselines: false,
 	}, openAPIPath, "/tmp/openapi-filter-test.json")
-	assert.Equal(t, 4, nRemovedPaths)
+	assert.Equal(t, 6, nRemovedPaths)
 }
