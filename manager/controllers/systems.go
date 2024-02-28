@@ -13,8 +13,8 @@ import (
 	"gorm.io/gorm"
 )
 
-var SystemsFields = database.MustGetQueryAttrs(&SystemDBLookup{})
-var SystemsSelectV3 = database.MustGetSelect(&SystemDBLookupV3{})
+var SystemsFields = database.MustGetQueryAttrs(&SystemDBLookupExtended{})
+var SystemsSelect = database.MustGetSelect(&SystemDBLookup{})
 var SystemOpts = ListOpts{
 	Fields: SystemsFields,
 	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
@@ -49,18 +49,18 @@ type SystemDBLookupCommon struct {
 	TotalStale     int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = true) over ()" gorm:"column:total_stale"`
 }
 
-type SystemDBLookupV3 struct {
-	SystemDBLookupCommon
-	SystemItemAttributesV3
-}
-
 type SystemDBLookup struct {
 	SystemDBLookupCommon
-	SystemItemAttributesAll
+	SystemItemAttributes
+}
+
+type SystemDBLookupExtended struct {
+	SystemDBLookupCommon
+	SystemItemAttributesExtended
 }
 
 // nolint: lll
-type SystemItemAttributesCommon struct {
+type SystemItemAttributes struct {
 	SystemDisplayName
 	OSAttributes
 	SystemTags
@@ -80,22 +80,6 @@ type SystemItemAttributesCommon struct {
 	SystemStale
 	SystemSatelliteManaged
 	SystemBuiltPkgcache
-}
-
-// nolint: lll
-type SystemItemAttributesV2Only struct {
-	ThirdParty        bool   `json:"third_party" csv:"third_party" query:"sp.third_party" gorm:"column:third_party"`
-	InsightsID        string `json:"insights_id" csv:"insights_id" query:"ih.insights_id" gorm:"column:insights_id"`
-	PackagesUpdatable int    `json:"packages_updatable" csv:"packages_updatable" query:"sp.packages_installable" gorm:"column:packages_updatable"`
-
-	OSName  string `json:"os_name" csv:"os_name" query:"ih.system_profile->'operating_system'->>'name'" gorm:"column:osname"`
-	OSMajor string `json:"os_major" csv:"os_major" query:"ih.system_profile->'operating_system'->>'major'" gorm:"column:osmajor"`
-	OSMinor string `json:"os_minor" csv:"os_minor" query:"ih.system_profile->'operating_system'->>'minor'" gorm:"column:osminor"`
-	BaselineUpToDateAttr
-}
-
-// nolint: lll
-type SystemItemAttributesV3Only struct {
 	PackagesInstallable   int `json:"packages_installable" csv:"packages_installable" query:"sp.packages_installable" gorm:"column:packages_installable"`
 	PackagesApplicable    int `json:"packages_applicable" csv:"packages_applicable" query:"sp.packages_applicable" gorm:"column:packages_applicable"`
 	InstallableRhsaCount  int `json:"installable_rhsa_count" csv:"installable_rhsa_count" query:"sp.installable_advisory_sec_count_cache" gorm:"column:installable_rhsa_count"`
@@ -110,15 +94,17 @@ type SystemItemAttributesV3Only struct {
 	SystemGroups
 }
 
-type SystemItemAttributesV3 struct {
-	SystemItemAttributesCommon
-	SystemItemAttributesV3Only
-}
+// nolint: lll
+type SystemItemAttributesExtended struct {
+	SystemItemAttributes
+	ThirdParty        bool   `json:"third_party" csv:"third_party" query:"sp.third_party" gorm:"column:third_party"`
+	InsightsID        string `json:"insights_id" csv:"insights_id" query:"ih.insights_id" gorm:"column:insights_id"`
+	PackagesUpdatable int    `json:"packages_updatable" csv:"packages_updatable" query:"sp.packages_installable" gorm:"column:packages_updatable"`
 
-type SystemItemAttributesAll struct {
-	SystemItemAttributesCommon
-	SystemItemAttributesV2Only
-	SystemItemAttributesV3Only
+	OSName  string `json:"os_name" csv:"os_name" query:"ih.system_profile->'operating_system'->>'name'" gorm:"column:osname"`
+	OSMajor string `json:"os_major" csv:"os_major" query:"ih.system_profile->'operating_system'->>'major'" gorm:"column:osmajor"`
+	OSMinor string `json:"os_minor" csv:"os_minor" query:"ih.system_profile->'operating_system'->>'minor'" gorm:"column:osminor"`
+	BaselineUpToDateAttr
 }
 
 type SystemTagsList []SystemTag
@@ -144,22 +130,22 @@ func (v SystemInventoryItemList[T]) String() string {
 	return replacedQuotes
 }
 
+type SystemItemExtended struct {
+	Attributes SystemItemAttributesExtended `json:"attributes"`
+	ID         string                       `json:"id"`
+	Type       string                       `json:"type"`
+}
+
 type SystemItem struct {
-	Attributes SystemItemAttributesAll `json:"attributes"`
-	ID         string                  `json:"id"`
-	Type       string                  `json:"type"`
+	Attributes SystemItemAttributes `json:"attributes"`
+	ID         string               `json:"id"`
+	Type       string               `json:"type"`
 }
 
-type SystemItemV3 struct {
-	Attributes SystemItemAttributesV3 `json:"attributes"`
-	ID         string                 `json:"id"`
-	Type       string                 `json:"type"`
-}
-
-type SystemsResponseV3 struct {
-	Data  []SystemItemV3 `json:"data"`
-	Links Links          `json:"links"`
-	Meta  ListMeta       `json:"meta"`
+type SystemsResponse struct {
+	Data  []SystemItem `json:"data"`
+	Links Links        `json:"links"`
+	Meta  ListMeta     `json:"meta"`
 }
 
 func systemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
@@ -225,7 +211,7 @@ func systemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 // @Param    filter[system_profile][ansible][controller_version]    query   string  false   "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]                          query   string  false   "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]                 query   string  false   "Filter systems by mssql version"
-// @Success 200 {object} SystemsResponseV3
+// @Success 200 {object} SystemsResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /systems [get]
@@ -247,9 +233,8 @@ func SystemsListHandler(c *gin.Context) {
 	if err != nil {
 		return // Error handled in method itself
 	}
-	dataV3 := systemItems2SystemItemsV3(data)
-	resp := SystemsResponseV3{
-		Data:  dataV3,
+	resp := SystemsResponse{
+		Data:  data,
 		Links: *links,
 		Meta:  *meta,
 	}
@@ -330,7 +315,7 @@ func SystemsListIDsHandler(c *gin.Context) {
 func querySystems(db *gorm.DB, account int, groups map[string]string) *gorm.DB {
 	q := database.Systems(db, account, groups).
 		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id")
-	return q.Select(SystemsSelectV3)
+	return q.Select(SystemsSelect)
 }
 
 func parseSystemItems(jsonStr string, res interface{}) error {

@@ -31,14 +31,10 @@ type BaselineSystemsDBLookup struct {
 	BaselineSystemAttributes
 }
 
-type BaselineSystemAttributesV2 struct {
-	// Baseline system display name
-	DisplayName string `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name" example:"my-baselined-system"` // nolint: lll
-}
-
 // nolint: lll
 type BaselineSystemAttributes struct {
-	BaselineSystemAttributesV2
+	// Baseline system display name
+	DisplayName string `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name" example:"my-baselined-system"` // nolint: lll
 	OSAttributes
 	InstallableAdvisories
 	ApplicableAdvisories
@@ -47,17 +43,13 @@ type BaselineSystemAttributes struct {
 	SystemLastUpload
 }
 
-type BaselineSystemItemCommon struct {
+type BaselineSystemItem struct {
+	// Additional baseline system attributes
+	Attributes BaselineSystemAttributes `json:"attributes"`
 	// Baseline system inventory ID (uuid format)
 	InventoryID string `json:"inventory_id" example:"00000000-0000-0000-0000-000000000001"`
 	// Document type name
 	Type string `json:"type" example:"baseline_system"`
-}
-
-type BaselineSystemItem struct {
-	// Additional baseline system attributes
-	Attributes BaselineSystemAttributes `json:"attributes"`
-	BaselineSystemItemCommon
 }
 
 type BaselineSystemsResponse struct {
@@ -238,11 +230,9 @@ func buildBaselineSystemData(baselineSystems []BaselineSystemsDBLookup) ([]Basel
 			utils.LogDebug("err", err.Error(), "inventory_id", baselineSystems[i].ID, "system groups parsing failed")
 		}
 		data[i] = BaselineSystemItem{
-			Attributes: baselineSystems[i].BaselineSystemAttributes,
-			BaselineSystemItemCommon: BaselineSystemItemCommon{
-				InventoryID: baselineSystems[i].ID,
-				Type:        "baseline_system",
-			},
+			Attributes:  baselineSystems[i].BaselineSystemAttributes,
+			InventoryID: baselineSystems[i].ID,
+			Type:        "baseline_system",
 		}
 	}
 	return data, total

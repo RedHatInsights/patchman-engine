@@ -226,11 +226,11 @@ func TestSystemsOrderOS(t *testing.T) {
 	assert.Equal(t, "RHEL 8.x", output.Data[7].Attributes.OS) // yes, we should be robust against this
 }
 
-func testSystems(t *testing.T, queryString string, account int) SystemsResponseV3 {
+func testSystems(t *testing.T, queryString string, account int) SystemsResponse {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithAccount("GET", "/", "", queryString, nil, "", SystemsListHandler, account)
 
-	var output SystemsResponseV3
+	var output SystemsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	return output
 }
@@ -249,7 +249,7 @@ func TestSystemsTagsInMetadata(t *testing.T) {
 	w := CreateRequestRouterWithAccount("GET", "/", "", "?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "",
 		SystemsListHandler, 3)
 
-	var output SystemsResponseV3
+	var output SystemsResponse
 	ParseResponseBody(t, w.Body.Bytes(), &output)
 
 	testMap := map[string]FilterData{

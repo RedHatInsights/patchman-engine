@@ -44,7 +44,7 @@ import (
 // @Param    filter[baseline_name]   query   string false "Filter"
 // @Param    filter[os]              query   string    false "Filter OS version"
 // @Param    tags                    query   []string  false "Tag filter"
-// @Success 200 {array} SystemDBLookupV3
+// @Success 200 {array} SystemDBLookup
 // @Failure 415 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /export/systems [get]
@@ -74,18 +74,16 @@ func SystemsExportHandler(c *gin.Context) {
 	}
 
 	systems.ParseAndFillTags()
-	dataV3 := systemDBLookups2SystemDBLookupsV3(systems)
-	OutputExportData(c, dataV3)
+	data := systemDBLookupsExtended2SystemDBLookups(systems)
+	OutputExportData(c, data)
 }
 
-func systemDBLookups2SystemDBLookupsV3(data []SystemDBLookup) []SystemDBLookupV3 {
-	res := make([]SystemDBLookupV3, 0, len(data))
+func systemDBLookupsExtended2SystemDBLookups(data []SystemDBLookupExtended) []SystemDBLookup {
+	res := make([]SystemDBLookup, 0, len(data))
 	for _, x := range data {
-		res = append(res, SystemDBLookupV3{
+		res = append(res, SystemDBLookup{
 			SystemDBLookupCommon: x.SystemDBLookupCommon,
-			SystemItemAttributesV3: SystemItemAttributesV3{
-				x.SystemItemAttributesCommon, x.SystemItemAttributesV3Only,
-			},
+			SystemItemAttributes: x.SystemItemAttributesExtended.SystemItemAttributes,
 		})
 	}
 	return res

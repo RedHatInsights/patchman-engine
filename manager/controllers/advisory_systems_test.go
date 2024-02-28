@@ -14,7 +14,7 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "", nil, "", AdvisorySystemsListHandler)
 
-	var output AdvisorySystemsResponseV3
+	var output AdvisorySystemsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 6, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
@@ -60,7 +60,7 @@ func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "?offset=5&limit=3", nil, "",
 		AdvisorySystemsListHandler)
 
-	var output AdvisorySystemsResponseV3
+	var output AdvisorySystemsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000006", output.Data[0].ID)
@@ -85,7 +85,7 @@ func TestAdvisorySystemsSorts(t *testing.T) {
 		w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", fmt.Sprintf("?sort=%v", sort), nil, "",
 			AdvisorySystemsListHandler)
 
-		var output AdvisorySystemsResponseV3
+		var output AdvisorySystemsResponse
 		CheckResponse(t, w, http.StatusOK, &output)
 		assert.Equal(t, 1, len(output.Meta.Sort))
 		assert.Equal(t, output.Meta.Sort[0], sort)
@@ -105,7 +105,7 @@ func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "?tags=ns1/k1=val1", nil, "",
 		AdvisorySystemsListHandler)
 
-	var output AdvisorySystemsResponseV3
+	var output AdvisorySystemsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 5, len(output.Data))
 }
@@ -115,7 +115,7 @@ func TestAdvisorySystemsTagsMultiple(t *testing.T) { //nolint:dupl
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "",
 		AdvisorySystemsListHandler)
 
-	var output AdvisorySystemsResponseV3
+	var output AdvisorySystemsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data[0].ID)
@@ -136,7 +136,7 @@ func TestAdvisorySystemsTagsUnknown(t *testing.T) { //nolint:dupl
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "?tags=ns1/k3=val4&tags=ns1/k1=unk", nil, "",
 		AdvisorySystemsListHandler)
 
-	var output AdvisorySystemsResponseV3
+	var output AdvisorySystemsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 0, len(output.Data))
 }
@@ -150,7 +150,7 @@ func TestAdvisorySystemsTagsInMetadata(t *testing.T) {
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "",
 		AdvisorySystemsListHandler)
 
-	var output AdvisorySystemsResponseV3
+	var output AdvisorySystemsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	testMap := map[string]FilterData{

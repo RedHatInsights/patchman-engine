@@ -14,11 +14,11 @@ func TestAdvisorySystemsExportJSON(t *testing.T) {
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "", nil, "application/json",
 		AdvisorySystemsExportHandler)
 
-	var output []SystemDBLookup
+	var output []SystemDBLookupExtended
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 6, len(output))
 	assert.Equal(t, output[0].ID, "00000000-0000-0000-0000-000000000001")
-	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output[0].SystemItemAttributesCommon.Tags) // nolint: lll
+	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output[0].SystemItemAttributes.Tags) // nolint: lll
 }
 
 func TestAdvisorySystemsExportCSV(t *testing.T) {

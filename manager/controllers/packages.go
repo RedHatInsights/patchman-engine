@@ -26,33 +26,16 @@ var enabledPackageCache = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_CACHE", fals
 type PackageDBLookup struct {
 	// a helper to get total number of systems
 	MetaTotalHelper
-
-	PackageItemCommon
-	PackageItemV2Only
-	PackageItemV3Only
+	PackageItem
 }
 
 // nolint: lll
-type PackageItemCommon struct {
-	Name             string `json:"name" csv:"name" query:"pn.name" gorm:"column:name"`
-	Summary          string `json:"summary" csv:"summary" query:"pn.summary" gorm:"column:summary"`
-	SystemsInstalled int    `json:"systems_installed" csv:"systems_installed" query:"res.systems_installed" gorm:"column:systems_installed"`
-}
-
-// nolint: lll
-type PackageItemV3Only struct {
-	SystemsInstallable int `json:"systems_installable" csv:"systems_installable" query:"res.systems_installable" gorm:"column:systems_installable"`
-	SystemsApplicable  int `json:"systems_applicable" csv:"systems_applicable" query:"res.systems_applicable" gorm:"column:systems_applicable"`
-}
-
 type PackageItem struct {
-	PackageItemCommon
-	PackageItemV3Only
-}
-
-// nolint: lll
-type PackageItemV2Only struct {
-	SystemsUpdatable int `json:"systems_updatable" csv:"systems_updatable" query:"res.systems_installable" gorm:"column:systems_updatable"`
+	Name               string `json:"name" csv:"name" query:"pn.name" gorm:"column:name"`
+	Summary            string `json:"summary" csv:"summary" query:"pn.summary" gorm:"column:summary"`
+	SystemsInstalled   int    `json:"systems_installed" csv:"systems_installed" query:"res.systems_installed" gorm:"column:systems_installed"`
+	SystemsInstallable int    `json:"systems_installable" csv:"systems_installable" query:"res.systems_installable" gorm:"column:systems_installable"`
+	SystemsApplicable  int    `json:"systems_applicable" csv:"systems_applicable" query:"res.systems_applicable" gorm:"column:systems_applicable"`
 }
 
 type PackagesResponse struct {
@@ -180,7 +163,7 @@ func PackageDBLookup2Item(packages []PackageDBLookup) ([]PackageItem, int) {
 	}
 	data := make([]PackageItem, len(packages))
 	for i, v := range packages {
-		data[i] = PackageItem{v.PackageItemCommon, v.PackageItemV3Only}
+		data[i] = v.PackageItem
 	}
 	return data, total
 }
