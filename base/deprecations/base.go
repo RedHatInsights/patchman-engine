@@ -14,6 +14,7 @@ type Deprecation interface {
 	Deprecate(*gin.Context)
 }
 
+//lint:ignore U1000 ignore unused, may be used in the future
 type apiDeprecation struct {
 	shouldDeprecate func(c *gin.Context) bool
 	// datetime when API will be deprecated
