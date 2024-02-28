@@ -228,5 +228,33 @@ services:
     security_opt:
       - label=disable
 
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:v2.50.0
+    volumes:
+      - ./dashboards/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - 9090:9090
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  grafana:
+    container_name: grafana
+    build:
+      context: ./
+      dockerfile: ./dev/grafana/Dockerfile
+    image: patchman-grafana:latest
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    volumes:
+      - grafana-data:/var/lib/grafana
+    profiles:
+      - monitoring
+
 volumes:
   db-data:
+  grafana-data:
+  prometheus-data:
