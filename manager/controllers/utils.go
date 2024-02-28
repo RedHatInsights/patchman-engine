@@ -171,11 +171,6 @@ func ListCommon(tx *gorm.DB, c *gin.Context, filters Filters, opts ListOpts, par
 	}
 	tx, searchQ := ApplySearch(c, tx, opts.SearchFields...)
 
-	if err != nil {
-		LogAndRespBadRequest(c, err, err.Error())
-		return nil, nil, nil, errors.Wrap(err, "filters parsing failed")
-	}
-
 	tx, err = filters.Apply(tx, opts.Fields)
 	if err != nil {
 		LogAndRespBadRequest(c, err, err.Error())

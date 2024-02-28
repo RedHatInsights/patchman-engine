@@ -38,10 +38,6 @@ func PackagesExportHandler(c *gin.Context) {
 		defer db.Exec("RESET work_mem")
 	}
 	query := packagesQuery(db, filters, account, groups, useCache)
-	if err != nil {
-		return
-	}
-
 	query, err = ExportListCommon(query, c, PackagesOpts)
 	var data []PackageDBLookup
 
