@@ -3,4 +3,4 @@
 IDENTITY="$($(dirname "$0")/identity.sh)"
 ADVISORY=${1:-RH-1}
 
-curl -v -H "x-rh-identity: $IDENTITY" http://localhost:8080/api/patch/v1/advisories/$ADVISORY | python3 -m json.tool
+curl -v -H "x-rh-identity: $IDENTITY" http://localhost:8080/api/patch/v3/advisories/$ADVISORY | python3 -m json.tool
