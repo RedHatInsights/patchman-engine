@@ -15,8 +15,7 @@ type ContextKV struct {
 	Value any
 }
 
-var V1APICtx = ContextKV{Key: utils.KeyApiver, Value: 1}
-var V2APICtx = ContextKV{Key: utils.KeyApiver, Value: 2}
+var V3APICtx = ContextKV{Key: utils.KeyApiver, Value: 3}
 
 func InitRouter(handler gin.HandlerFunc, contextKVs ...ContextKV) *gin.Engine {
 	return InitRouterWithPath(handler, "/", contextKVs...)
