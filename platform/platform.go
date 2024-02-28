@@ -8,11 +8,17 @@ import (
 	"app/manager/middlewares"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/redhatinsights/identity"
 	"modernc.org/strutil"
 )
@@ -158,6 +164,7 @@ func platformMock() {
 	app.POST("/control/upload", mockUploadHandler)
 	app.POST("/control/delete", mockDeleteHandler)
 	app.POST("/control/toggle_upload", mockToggleUpload)
+	app.POST("/control/upload/:count", mockUploadManyHandler)
 
 	// Mock yum_updates_s3
 	app.GET("/yum_updates", mockYumUpdatesS3)
@@ -190,6 +197,38 @@ func upload(randomPkgs bool) {
 	SendMessageToTopic("platform.inventory.events", event)
 }
 
+func uploadMany(count int) {
+	fd, err := os.Open("/go/src/app/dev/kafka/upload.json")
+	if err != nil {
+		panic(err)
+	}
+	defer fd.Close()
+
+	_msg, err := io.ReadAll(fd)
+	if err != nil {
+		panic(err)
+	}
+
+	msg := string(_msg)
+	wg := sync.WaitGroup{}
+	guard := make(chan struct{}, 20)
+	for i := 0; i < count; i++ {
+		wg.Add(1)
+		guard <- struct{}{}
+		systemID := uuid.New().String()
+		hostname := fmt.Sprintf("system_upload_%d", i)
+		go func(i int, systemID, hostname string) {
+			utils.LogDebug("i", i, "uuid", systemID, "hostname", hostname, "upload")
+			replaced := strings.ReplaceAll(msg, "<system_id>", systemID)
+			replaced = strings.ReplaceAll(replaced, "<hostname>", hostname)
+			SendMessageToTopic("platform.inventory.events", replaced)
+			<-guard
+			wg.Done()
+		}(i, systemID, hostname)
+	}
+	wg.Wait()
+}
+
 func SendMessageToTopic(topic, message string) {
 	writer := mqueue.NewKafkaWriterFromEnv(topic)
 
@@ -206,6 +245,19 @@ func SendMessageToTopic(topic, message string) {
 func mockUploadHandler(c *gin.Context) {
 	utils.LogInfo("Mocking platform upload event")
 	upload(false)
+	c.Status(http.StatusOK)
+}
+
+func mockUploadManyHandler(c *gin.Context) {
+	utils.LogInfo("Uploading multiple mocked upload events")
+	countParam := c.Param("count")
+	count, err := strconv.Atoi(countParam)
+	if err != nil {
+		utils.LogError("err", err.Error())
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	go uploadMany(count)
 	c.Status(http.StatusOK)
 }
 
