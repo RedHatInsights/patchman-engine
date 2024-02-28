@@ -6602,8 +6602,8 @@ data:
                 {
                     "current": {
                         "selected": false,
-                        "text": "GET/api/patch/v2/advisories",
-                        "value": "GET/api/patch/v2/advisories"
+                        "text": "GET/api/patch/v3/advisories",
+                        "value": "GET/api/patch/v3/advisories"
                     },
                     "datasource": {
                         "type": "prometheus",
