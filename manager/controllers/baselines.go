@@ -90,9 +90,6 @@ func BaselinesListHandler(c *gin.Context) {
 
 	db := middlewares.DBFromContext(c)
 	query := buildQueryBaselines(db, filters, account, groups)
-	if err != nil {
-		return
-	} // Error handled in method itself
 
 	query, meta, params, err := ListCommon(query, c, filters, BaselineOpts)
 	if err != nil {

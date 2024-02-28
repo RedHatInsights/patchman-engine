@@ -91,11 +91,7 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	}
 
 	if disableCachedCounts || HasInventoryFilter(filters) || len(groups) != 0 {
-		var err error
 		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
-		if err != nil {
-			return nil, nil, nil, err
-		} // Error handled in method itself
 	} else {
 		query = buildQueryAdvisories(db, account)
 	}
