@@ -531,6 +531,7 @@ objects:
     logLevel: ${FLOORIST_LOGLEVEL}
     queries:
       - prefix: insights/patch/advisories
+        chunksize: ${{FLOORIST_CHUNKSIZE}}
         query: >-
           SELECT ra.name AS rh_account_id, am.name AS advisory_name, at.name AS advisory_type,
           count(sp.inventory_id) as applicable_systems
@@ -766,3 +767,4 @@ parameters:
 - {name: FLOORIST_BUCKET_SECRET_NAME, value: dummy-secret, required: true} # Bucket secret name
 - {name: FLOORIST_DB_SECRET_NAME, value: patchman-db} # DB secret name
 - {name: FLOORIST_LOGLEVEL, value: INFO} # Floorist loglevel config
+- {name: FLOORIST_CHUNKSIZE, value: '1000000'}
