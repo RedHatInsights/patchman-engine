@@ -11,6 +11,20 @@ import (
 	"gorm.io/gorm"
 )
 
+var AdvisorySystemExportOpts = ListOpts{
+	Fields: SystemsFields,
+	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
+	DefaultFilters: map[string]FilterData{
+		"stale": {
+			Operator: "eq",
+			Values:   []string{"false"},
+		},
+	},
+	DefaultSort:  "-last_upload",
+	StableSort:   "sp.id",
+	SearchFields: []string{"sp.display_name"},
+}
+
 // @Summary Export systems for my account
 // @Description  Export systems for my account
 // @ID exportAdvisorySystems
@@ -60,22 +74,22 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 	}
 
 	query := buildAdvisorySystemsQuery(db, account, groups, advisoryName)
-	filters, err := ParseAllFilters(c, AdvisorySystemOpts)
+	filters, err := ParseAllFilters(c, AdvisorySystemExportOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself
 	query, _ = ApplyInventoryFilter(filters, query, "sp.inventory_id")
 
 	query = query.Order("sp.id")
-	query, err = ExportListCommon(query, c, AdvisorySystemOpts)
+	query, err = ExportListCommon(query, c, AdvisorySystemExportOpts)
 	if err != nil {
 		return
 	} // Error handled in method itself
 
-	outputExportDataV3(c, query)
+	outputExportData(c, query)
 }
 
-func outputExportDataV3(c *gin.Context, query *gorm.DB) {
+func outputExportData(c *gin.Context, query *gorm.DB) {
 	var systems AdvisorySystemDBLookupSlice
 	err := query.Find(&systems).Error
 	if err != nil {

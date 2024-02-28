@@ -44,12 +44,12 @@ func TestPackageSystemsInvalidName(t *testing.T) {
 	assert.Equal(t, "package not found", errResp.Error)
 }
 
-func testPackageSystems(t *testing.T, param, queryString string, account int) PackageSystemsResponseV3 {
+func testPackageSystems(t *testing.T, param, queryString string, account int) PackageSystemsResponse {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/:package_name/systems", param, queryString, nil, "",
 		PackageSystemsListHandler, account)
 
-	var output PackageSystemsResponseV3
+	var output PackageSystemsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	return output
 }
@@ -79,7 +79,7 @@ func TestPackageSystemsTagsInMetadata(t *testing.T) {
 	w := CreateRequestRouterWithParams("GET", "/:package_name/systems", "kernel", "?tags=ns1/k3=val4&tags=ns1/k1=val1",
 		nil, "", PackageSystemsListHandler, 3)
 
-	var output PackageSystemsResponseV3
+	var output PackageSystemsResponse
 	ParseResponseBody(t, w.Body.Bytes(), &output)
 
 	testMap := map[string]FilterData{

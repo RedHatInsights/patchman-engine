@@ -507,26 +507,12 @@ func systemDBLookups2SystemItems(systems []SystemDBLookup) ([]SystemItem, int, m
 			utils.LogDebug("err", err.Error(), "inventory_id", systems[i].ID, "system groups parsing failed")
 		}
 		data[i] = SystemItem{
-			Attributes: systems[i].SystemItemAttributesAll,
+			Attributes: systems[i].SystemItemAttributes,
 			ID:         systems[i].ID,
 			Type:       "system",
 		}
 	}
 	return data, total, subtotals
-}
-
-func systemItems2SystemItemsV3(items []SystemItem) []SystemItemV3 {
-	res := make([]SystemItemV3, 0, len(items))
-	for _, x := range items {
-		res = append(res, SystemItemV3{
-			Attributes: SystemItemAttributesV3{
-				x.Attributes.SystemItemAttributesCommon, x.Attributes.SystemItemAttributesV3Only,
-			},
-			ID:   x.ID,
-			Type: x.Type,
-		})
-	}
-	return res
 }
 
 func advisoriesIDs(advisories []AdvisoryID) []string {
@@ -602,7 +588,7 @@ func systemsSatelliteIDs(c *gin.Context, systems []SystemsSatelliteManagedID, me
 	return resp, nil
 }
 
-type SystemDBLookupSlice []SystemDBLookup
+type SystemDBLookupSlice []SystemDBLookupExtended
 type AdvisorySystemDBLookupSlice []AdvisorySystemDBLookup
 type BaselineSystemsDBLookupSlice []BaselineSystemsDBLookup
 

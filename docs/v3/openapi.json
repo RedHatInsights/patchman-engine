@@ -530,7 +530,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.AdvisorySystemsResponseV3"
+                                    "$ref": "#/components/schemas/controllers.AdvisorySystemsResponse"
                                 }
                             }
                         }
@@ -2359,7 +2359,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.SystemDBLookupV3"
+                                        "$ref": "#/components/schemas/controllers.SystemDBLookup"
                                     }
                                 }
                             },
@@ -2367,7 +2367,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/controllers.SystemDBLookupV3"
+                                        "$ref": "#/components/schemas/controllers.SystemDBLookup"
                                     }
                                 }
                             }
@@ -4578,7 +4578,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.PackageSystemsResponseV3"
+                                    "$ref": "#/components/schemas/controllers.PackageSystemsResponse"
                                 }
                             }
                         }
@@ -5065,7 +5065,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.SystemsResponseV3"
+                                    "$ref": "#/components/schemas/controllers.SystemsResponse"
                                 }
                             }
                         }
@@ -6378,7 +6378,7 @@
                     }
                 }
             },
-            "controllers.AdvisorySystemsResponseV3": {
+            "controllers.AdvisorySystemsResponse": {
                 "type": "object",
                 "properties": {
                     "data": {
@@ -7091,7 +7091,7 @@
                     }
                 }
             },
-            "controllers.PackageSystemsResponseV3": {
+            "controllers.PackageSystemsResponse": {
                 "type": "object",
                 "properties": {
                     "data": {
@@ -7257,7 +7257,7 @@
                     }
                 }
             },
-            "controllers.SystemDBLookupV3": {
+            "controllers.SystemDBLookup": {
                 "type": "object",
                 "properties": {
                     "applicable_other_count": {
@@ -7368,13 +7368,7 @@
                 "type": "object",
                 "properties": {
                     "data": {
-                        "type": "object",
-                        "description": "use SystemItem not SystemItemV3 to display more info about system",
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/controllers.SystemItem"
-                            }
-                        ]
+                        "$ref": "#/components/schemas/controllers.SystemItemExtended"
                     }
                 }
             },
@@ -7393,7 +7387,7 @@
                 "type": "object",
                 "properties": {
                     "attributes": {
-                        "$ref": "#/components/schemas/controllers.SystemItemAttributesAll"
+                        "$ref": "#/components/schemas/controllers.SystemItemAttributes"
                     },
                     "id": {
                         "type": "string"
@@ -7403,7 +7397,111 @@
                     }
                 }
             },
-            "controllers.SystemItemAttributesAll": {
+            "controllers.SystemItemAttributes": {
+                "type": "object",
+                "properties": {
+                    "applicable_other_count": {
+                        "type": "integer"
+                    },
+                    "applicable_rhba_count": {
+                        "type": "integer"
+                    },
+                    "applicable_rhea_count": {
+                        "type": "integer"
+                    },
+                    "applicable_rhsa_count": {
+                        "type": "integer"
+                    },
+                    "baseline_id": {
+                        "type": "integer"
+                    },
+                    "baseline_name": {
+                        "type": "string"
+                    },
+                    "built_pkgcache": {
+                        "type": "boolean"
+                    },
+                    "created": {
+                        "type": "string"
+                    },
+                    "culled_timestamp": {
+                        "type": "string"
+                    },
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemGroup"
+                        }
+                    },
+                    "installable_other_count": {
+                        "type": "integer"
+                    },
+                    "installable_rhba_count": {
+                        "type": "integer"
+                    },
+                    "installable_rhea_count": {
+                        "type": "integer"
+                    },
+                    "installable_rhsa_count": {
+                        "type": "integer"
+                    },
+                    "last_evaluation": {
+                        "type": "string"
+                    },
+                    "last_upload": {
+                        "type": "string"
+                    },
+                    "os": {
+                        "type": "string"
+                    },
+                    "other_count": {
+                        "type": "integer"
+                    },
+                    "packages_applicable": {
+                        "type": "integer"
+                    },
+                    "packages_installable": {
+                        "type": "integer"
+                    },
+                    "packages_installed": {
+                        "type": "integer"
+                    },
+                    "rhba_count": {
+                        "type": "integer"
+                    },
+                    "rhea_count": {
+                        "type": "integer"
+                    },
+                    "rhsa_count": {
+                        "type": "integer"
+                    },
+                    "rhsm": {
+                        "type": "string"
+                    },
+                    "satellite_managed": {
+                        "type": "boolean"
+                    },
+                    "stale": {
+                        "type": "boolean"
+                    },
+                    "stale_timestamp": {
+                        "type": "string"
+                    },
+                    "stale_warning_timestamp": {
+                        "type": "string"
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.SystemTag"
+                        }
+                    }
+                }
+            },
+            "controllers.SystemItemAttributesExtended": {
                 "type": "object",
                 "properties": {
                     "applicable_other_count": {
@@ -7528,115 +7626,11 @@
                     }
                 }
             },
-            "controllers.SystemItemAttributesV3": {
-                "type": "object",
-                "properties": {
-                    "applicable_other_count": {
-                        "type": "integer"
-                    },
-                    "applicable_rhba_count": {
-                        "type": "integer"
-                    },
-                    "applicable_rhea_count": {
-                        "type": "integer"
-                    },
-                    "applicable_rhsa_count": {
-                        "type": "integer"
-                    },
-                    "baseline_id": {
-                        "type": "integer"
-                    },
-                    "baseline_name": {
-                        "type": "string"
-                    },
-                    "built_pkgcache": {
-                        "type": "boolean"
-                    },
-                    "created": {
-                        "type": "string"
-                    },
-                    "culled_timestamp": {
-                        "type": "string"
-                    },
-                    "display_name": {
-                        "type": "string"
-                    },
-                    "groups": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/controllers.SystemGroup"
-                        }
-                    },
-                    "installable_other_count": {
-                        "type": "integer"
-                    },
-                    "installable_rhba_count": {
-                        "type": "integer"
-                    },
-                    "installable_rhea_count": {
-                        "type": "integer"
-                    },
-                    "installable_rhsa_count": {
-                        "type": "integer"
-                    },
-                    "last_evaluation": {
-                        "type": "string"
-                    },
-                    "last_upload": {
-                        "type": "string"
-                    },
-                    "os": {
-                        "type": "string"
-                    },
-                    "other_count": {
-                        "type": "integer"
-                    },
-                    "packages_applicable": {
-                        "type": "integer"
-                    },
-                    "packages_installable": {
-                        "type": "integer"
-                    },
-                    "packages_installed": {
-                        "type": "integer"
-                    },
-                    "rhba_count": {
-                        "type": "integer"
-                    },
-                    "rhea_count": {
-                        "type": "integer"
-                    },
-                    "rhsa_count": {
-                        "type": "integer"
-                    },
-                    "rhsm": {
-                        "type": "string"
-                    },
-                    "satellite_managed": {
-                        "type": "boolean"
-                    },
-                    "stale": {
-                        "type": "boolean"
-                    },
-                    "stale_timestamp": {
-                        "type": "string"
-                    },
-                    "stale_warning_timestamp": {
-                        "type": "string"
-                    },
-                    "tags": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/controllers.SystemTag"
-                        }
-                    }
-                }
-            },
-            "controllers.SystemItemV3": {
+            "controllers.SystemItemExtended": {
                 "type": "object",
                 "properties": {
                     "attributes": {
-                        "$ref": "#/components/schemas/controllers.SystemItemAttributesV3"
+                        "$ref": "#/components/schemas/controllers.SystemItemAttributesExtended"
                     },
                     "id": {
                         "type": "string"
@@ -7822,13 +7816,13 @@
                     }
                 }
             },
-            "controllers.SystemsResponseV3": {
+            "controllers.SystemsResponse": {
                 "type": "object",
                 "properties": {
                     "data": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/controllers.SystemItemV3"
+                            "$ref": "#/components/schemas/controllers.SystemItem"
                         }
                     },
                     "links": {

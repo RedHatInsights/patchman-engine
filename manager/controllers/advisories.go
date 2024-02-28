@@ -62,14 +62,10 @@ type AdvisoryItemAttributesCommon struct {
 }
 
 // nolint: lll
-type AdvisoryItemAttributesV3Only struct {
-	InstallableSystems int `json:"installable_systems" query:"COALESCE(aad.systems_installable, 0)" csv:"installable_systems" gorm:"column:installable_systems"`
-	ApplicableSystems  int `json:"applicable_systems" query:"COALESCE(aad.systems_applicable, 0)" csv:"applicable_systems" gorm:"column:applicable_systems"`
-}
-
 type AdvisoryItemAttributes struct {
 	AdvisoryItemAttributesCommon
-	AdvisoryItemAttributesV3Only
+	InstallableSystems int `json:"installable_systems" query:"COALESCE(aad.systems_installable, 0)" csv:"installable_systems" gorm:"column:installable_systems"`
+	ApplicableSystems  int `json:"applicable_systems" query:"COALESCE(aad.systems_applicable, 0)" csv:"applicable_systems" gorm:"column:applicable_systems"`
 }
 
 type AdvisoryItem struct {
@@ -269,10 +265,8 @@ func buildAdvisoriesData(advisories []AdvisoriesDBLookup) ([]AdvisoryItem, int, 
 		data[i] = AdvisoryItem{
 			Attributes: AdvisoryItemAttributes{
 				AdvisoryItemAttributesCommon: advisory.AdvisoryItemAttributesCommon,
-				AdvisoryItemAttributesV3Only: AdvisoryItemAttributesV3Only{
-					InstallableSystems: advisory.InstallableSystems,
-					ApplicableSystems:  advisory.ApplicableSystems,
-				},
+				InstallableSystems:           advisory.InstallableSystems,
+				ApplicableSystems:            advisory.ApplicableSystems,
 			},
 			AdvisoryID: advisory.AdvisoryID,
 			Type:       "advisory",

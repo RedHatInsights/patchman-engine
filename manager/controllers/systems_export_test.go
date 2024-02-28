@@ -20,22 +20,22 @@ func makeRequest(t *testing.T, path string, contentType string) *httptest.Respon
 func TestSystemsExportJSON(t *testing.T) {
 	w := makeRequest(t, "/", "application/json")
 
-	var output []SystemDBLookupV3
+	var output []SystemDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 8, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
-	assert.Equal(t, 2, output[0].SystemItemAttributesCommon.RhsaCount)
-	assert.Equal(t, 2, output[0].SystemItemAttributesCommon.RhbaCount)
-	assert.Equal(t, 1, output[0].SystemItemAttributesCommon.RheaCount)
-	assert.Equal(t, "RHEL 8.10", output[0].SystemItemAttributesCommon.OS)
-	assert.Equal(t, "8.10", output[0].SystemItemAttributesCommon.Rhsm)
-	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output[0].SystemItemAttributesCommon.StaleTimestamp.String())
-	assert.Equal(t, "2018-09-02 16:00:00 +0000 UTC", output[0].SystemItemAttributesCommon.StaleWarningTimestamp.String())
-	assert.Equal(t, "2018-09-09 16:00:00 +0000 UTC", output[0].SystemItemAttributesCommon.CulledTimestamp.String())
-	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output[0].SystemItemAttributesCommon.Created.String())
-	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output[0].SystemItemAttributesCommon.Tags) // nolint: lll
-	assert.Equal(t, "baseline_1-1", output[0].SystemItemAttributesCommon.BaselineName)
-	assert.Equal(t, int64(1), output[0].SystemItemAttributesV3Only.BaselineID)
+	assert.Equal(t, 2, output[0].SystemItemAttributes.RhsaCount)
+	assert.Equal(t, 2, output[0].SystemItemAttributes.RhbaCount)
+	assert.Equal(t, 1, output[0].SystemItemAttributes.RheaCount)
+	assert.Equal(t, "RHEL 8.10", output[0].SystemItemAttributes.OS)
+	assert.Equal(t, "8.10", output[0].SystemItemAttributes.Rhsm)
+	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output[0].SystemItemAttributes.StaleTimestamp.String())
+	assert.Equal(t, "2018-09-02 16:00:00 +0000 UTC", output[0].SystemItemAttributes.StaleWarningTimestamp.String())
+	assert.Equal(t, "2018-09-09 16:00:00 +0000 UTC", output[0].SystemItemAttributes.CulledTimestamp.String())
+	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output[0].SystemItemAttributes.Created.String())
+	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output[0].SystemItemAttributes.Tags) // nolint: lll
+	assert.Equal(t, "baseline_1-1", output[0].SystemItemAttributes.BaselineName)
+	assert.Equal(t, int64(1), output[0].SystemItemAttributes.BaselineID)
 }
 
 func TestSystemsExportCSV(t *testing.T) {
@@ -93,7 +93,7 @@ func TestSystemsExportCSVFilter(t *testing.T) {
 func TestExportSystemsTags(t *testing.T) {
 	w := makeRequest(t, "/?tags=ns1/k2=val2", "application/json")
 
-	var output []SystemDBLookupV3
+	var output []SystemDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
@@ -114,7 +114,7 @@ func TestSystemsExportWorkloads(t *testing.T) {
 		"application/json",
 	)
 
-	var output []SystemDBLookupV3
+	var output []SystemDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
@@ -123,7 +123,7 @@ func TestSystemsExportWorkloads(t *testing.T) {
 func TestSystemsExportBaselineFilter(t *testing.T) {
 	w := makeRequest(t, "/?filter[baseline_name]=baseline_1-1", "application/json")
 
-	var output []SystemDBLookupV3
+	var output []SystemDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	assert.Equal(t, 2, len(output))

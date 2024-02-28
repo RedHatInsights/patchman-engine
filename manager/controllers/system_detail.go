@@ -15,12 +15,11 @@ import (
 )
 
 type SystemDetailResponse struct {
-	// use SystemItem not SystemItemV3 to display more info about system
-	Data SystemItem `json:"data"`
+	Data SystemItemExtended `json:"data"`
 }
 
 type SystemDetailLookup struct {
-	SystemItemAttributesAll
+	SystemItemAttributesExtended
 	TagsStrHelper
 	GroupsStrHelper
 }
@@ -92,8 +91,8 @@ func SystemDetailHandler(c *gin.Context) {
 	}
 
 	resp := SystemDetailResponse{
-		Data: SystemItem{
-			Attributes: systemDetail.SystemItemAttributesAll,
+		Data: SystemItemExtended{
+			Attributes: systemDetail.SystemItemAttributesExtended,
 			ID:         inventoryID,
 			Type:       "system",
 		}}

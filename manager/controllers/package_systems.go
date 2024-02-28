@@ -23,7 +23,7 @@ var PackageSystemsOpts = ListOpts{
 }
 
 //nolint:lll
-type PackageSystemItemCommon struct {
+type PackageSystemItem struct {
 	SystemIDAttribute
 	SystemDisplayName
 	InstalledEVRA string         `json:"installed_evra" csv:"installed_evra" query:"p.evra" gorm:"column:installed_evra"`
@@ -34,11 +34,6 @@ type PackageSystemItemCommon struct {
 	// helper to get AvailableEVRA (latest_evra)
 	InstallableEVRA string `json:"-" csv:"-" query:"pi.evra" gorm:"column:installable_evra"`
 	ApplicableEVRA  string `json:"-" csv:"-" query:"pa.evra" gorm:"column:applicable_evra"`
-}
-
-//nolint:lll
-type PackageSystemItem struct {
-	PackageSystemItemCommon
 	SystemSatelliteManaged
 	BaselineIDAttr
 	OSAttributes
@@ -52,7 +47,7 @@ type PackageSystemDBLookup struct {
 	PackageSystemItem
 }
 
-type PackageSystemsResponseV3 struct {
+type PackageSystemsResponse struct {
 	Data  []PackageSystemItem `json:"data"`
 	Links Links               `json:"links"`
 	Meta  ListMeta            `json:"meta"`
@@ -130,7 +125,7 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Param    filter[satellite_managed] 								query string  	false "Filter systems managed by satellite"
 // @Param    filter[updatable]       								query   bool    false "Filter"
-// @Success 200 {object} PackageSystemsResponseV3
+// @Success 200 {object} PackageSystemsResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
@@ -157,7 +152,7 @@ func PackageSystemsListHandler(c *gin.Context) {
 		return // Error handled in method itself
 	}
 
-	response := PackageSystemsResponseV3{
+	response := PackageSystemsResponse{
 		Data:  outputItems,
 		Links: *links,
 		Meta:  *meta,
