@@ -120,9 +120,8 @@ func TestCreateBaselineSatelliteSystem(t *testing.T) {
 		BuiltPkgcache:    true,
 		SatelliteManaged: true,
 	}
-	tx := database.Db.Create(&system)
-	assert.Nil(t, tx.Error)
-	defer database.Db.Delete(system)
+	database.CreateSystem(t, system)
+	defer database.DeleteSystem(t, system.InventoryID)
 
 	data := `{
 		"name": "baseline_satellite",
