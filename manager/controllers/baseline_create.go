@@ -58,6 +58,7 @@ type SystemBaselineDBLookup struct {
 func CreateBaselineHandler(c *gin.Context) {
 	accountID := c.GetInt(utils.KeyAccount)
 	creator := c.GetString(utils.KeyUser)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	var request CreateBaselineRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -79,7 +80,7 @@ func CreateBaselineHandler(c *gin.Context) {
 	request.Description = utils.EmptyToNil(request.Description)
 
 	db := middlewares.DBFromContext(c)
-	missingIDs, satelliteManagedIDs, err := checkInventoryIDs(db, accountID, request.InventoryIDs)
+	missingIDs, satelliteManagedIDs, err := checkInventoryIDs(db, accountID, request.InventoryIDs, groups)
 	if err != nil {
 		LogAndRespError(c, err, "Database error")
 		return
@@ -150,11 +151,11 @@ func buildCreateBaselineQuery(db *gorm.DB, request CreateBaselineRequest, accoun
 	return baseline.ID, err
 }
 
-func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string,
+func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string, groups map[string]string,
 ) (missingIDs, satelliteManagedIDs []string, err error) {
 	var containingSystems []SystemBaselineDBLookup
-	err = db.Table("system_platform sp").
-		Where("rh_account_id = ? AND inventory_id::text IN (?)", accountID, inventoryIDs).
+	err = database.Systems(db, accountID, groups).
+		Where("inventory_id::text IN (?)", inventoryIDs).
 		Scan(&containingSystems).Error
 	if err != nil {
 		return nil, nil, err

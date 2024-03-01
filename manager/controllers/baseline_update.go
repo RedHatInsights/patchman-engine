@@ -52,6 +52,7 @@ type UpdateBaselineResponse struct {
 // @Router /baselines/{baseline_id} [put]
 func BaselineUpdateHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	var req UpdateBaselineRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -90,7 +91,7 @@ func BaselineUpdateHandler(c *gin.Context) {
 	}
 
 	inventoryIDsList := map2list(req.InventoryIDs)
-	missingIDs, satelliteManagedIDs, err := checkInventoryIDs(db, account, inventoryIDsList)
+	missingIDs, satelliteManagedIDs, err := checkInventoryIDs(db, account, inventoryIDsList, groups)
 	if err != nil {
 		LogAndRespError(c, err, "Database error")
 		return
