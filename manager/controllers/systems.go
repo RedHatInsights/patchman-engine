@@ -45,8 +45,8 @@ type SystemsSatelliteManagedID struct {
 type SystemDBLookupCommon struct {
 	SystemIDAttribute
 	SystemsMetaTagTotal
-	TotalPatched   int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_applicable = 0) over ()" gorm:"column:total_patched"`
-	TotalUnpatched int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_applicable > 0) over ()" gorm:"column:total_unpatched"`
+	TotalPatched   int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_installable = 0) over ()" gorm:"column:total_patched"`
+	TotalUnpatched int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = false and sp.packages_installable > 0) over ()" gorm:"column:total_unpatched"`
 	TotalStale     int `json:"-" csv:"-" query:"count(*) filter (where sp.stale = true) over ()" gorm:"column:total_stale"`
 }
 
