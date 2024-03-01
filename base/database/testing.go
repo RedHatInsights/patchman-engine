@@ -457,3 +457,32 @@ func GetPackageIDs(nevras ...string) []int64 {
 	}
 	return ids
 }
+
+func CreateSystem(t *testing.T, system models.SystemPlatform) {
+	ts := time.Now()
+	err := Db.Create(&system).Error
+	assert.Nil(t, err)
+	err = Db.Table("inventory.hosts").
+		Create(map[string]any{
+			"id":                     system.InventoryID,
+			"account":                fmt.Sprint(system.RhAccountID),
+			"display_name":           system.DisplayName,
+			"tags":                   "{}",
+			"updated":                ts,
+			"created":                ts,
+			"stale_timestamp":        ts,
+			"system_profile":         "{}",
+			"reporter":               "puptoo",
+			"per_reporter_staleness": "{}",
+			"org_id":                 "dummy_org",
+			"groups":                 "[]",
+		}).Error
+	assert.Nil(t, err)
+}
+
+func DeleteSystem(t *testing.T, inventoryID string) {
+	err := Db.Delete(models.SystemPlatform{}, "inventory_id = ?", inventoryID).Error
+	assert.Nil(t, err)
+	err = Db.Exec("DELETE FROM inventory.hosts WHERE id = ?", inventoryID).Error
+	assert.Nil(t, err)
+}
