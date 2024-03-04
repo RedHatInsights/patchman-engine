@@ -152,6 +152,29 @@ var yumUpdates = `{
 	"metadata_time": "2022-05-30T14:00:25Z"
 }`
 
+var templates = []mqueue.TemplateResponse{
+	{
+		UUID:            "10000000-0000-0000-0000-000000000001",
+		Name:            "template_1",
+		OrgID:           "org_1",
+		Description:     "template_1_description",
+		Arch:            "x86_64",
+		Version:         "1",
+		Date:            time.Now(),
+		RepositoryUUIDS: []string{"20000000-0000-0000-0000-000000000001"},
+	},
+	{
+		UUID:            "10000000-0000-0000-0000-000000000002",
+		Name:            "template_2",
+		OrgID:           "org_1",
+		Description:     "template_2_description",
+		Arch:            "x86_64",
+		Version:         "1",
+		Date:            time.Now(),
+		RepositoryUUIDS: []string{"20000000-0000-0000-0000-000000000001", "20000000-0000-0000-0000-000000000002"},
+	},
+}
+
 func platformMock() {
 	utils.LogInfo("Platform mock starting")
 	app := gin.New()
@@ -165,6 +188,9 @@ func platformMock() {
 	app.POST("/control/delete", mockDeleteHandler)
 	app.POST("/control/toggle_upload", mockToggleUpload)
 	app.POST("/control/upload/:count", mockUploadManyHandler)
+	app.POST("/control/templates", mockCreatedTemplates)
+	app.PUT("/control/templates", mockUpdatedTemplates)
+	app.DELETE("/control/templates", mockDeletedTemplates)
 
 	// Mock yum_updates_s3
 	app.GET("/yum_updates", mockYumUpdatesS3)
@@ -291,6 +317,60 @@ func mockYumUpdatesS3(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, &updates)
+}
+
+func mockCreatedTemplates(c *gin.Context) {
+	err := sendTemplateMsg("template-created", templates)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.Status(http.StatusOK)
+}
+
+func mockUpdatedTemplates(c *gin.Context) {
+	updated := templates
+	updated[0].Version = "2"
+	updated[1].Version = "2"
+	err := sendTemplateMsg("template-updated", templates)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.Status(http.StatusOK)
+}
+
+func mockDeletedTemplates(c *gin.Context) {
+	err := sendTemplateMsg("template-deleted", templates)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.Status(http.StatusOK)
+}
+
+func sendTemplateMsg(eventName string, templates []mqueue.TemplateResponse) error {
+	newUUID, err := uuid.NewRandom()
+	if err != nil {
+		return err
+	}
+
+	event := mqueue.TemplateEvent{
+		ID:      newUUID.String(),
+		Source:  "urn:redhat:source:console:app:repositories",
+		Type:    "com.redhat.console.repositories." + eventName,
+		Subject: "urn:redhat:subject:console:rhel:" + eventName,
+		Time:    time.Now(),
+		OrgID:   templates[0].OrgID,
+		Data:    templates,
+	}
+
+	msg, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	SendMessageToTopic(utils.Cfg.TemplateTopic, string(msg))
+	return nil
 }
 
 func uploader() {
