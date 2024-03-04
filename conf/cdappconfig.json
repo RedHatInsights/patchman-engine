@@ -46,6 +46,10 @@
             {
                 "requestedName": "platform.notifications.ingress",
                 "name": "platform.notifications.ingress"
+            },
+            {
+                "requestedName": "platform.content-sources.template",
+                "name": "platform.content-sources.template"
             }
         ]
     },

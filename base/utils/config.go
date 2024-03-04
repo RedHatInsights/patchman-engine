@@ -62,6 +62,7 @@ type Config struct {
 	PayloadTrackerTopic    string
 	RemediationUpdateTopic string
 	NotificationsTopic     string
+	TemplateTopic          string
 
 	// services
 	VmaasAddress                  string
@@ -139,6 +140,7 @@ func initTopicsFromEnv() {
 	Cfg.PayloadTrackerTopic = Getenv("PAYLOAD_TRACKER_TOPIC", "")
 	Cfg.RemediationUpdateTopic = Getenv("REMEDIATIONS_UPDATE_TOPIC", "")
 	Cfg.NotificationsTopic = Getenv("NOTIFICATIONS_TOPIC", "")
+	Cfg.TemplateTopic = Getenv("TEMPLATE_TOPIC", "")
 }
 
 func initServicesFromEnv() {
@@ -215,6 +217,7 @@ func initKafkaFromClowder() {
 		translateTopic(&Cfg.PayloadTrackerTopic)
 		translateTopic(&Cfg.RemediationUpdateTopic)
 		translateTopic(&Cfg.NotificationsTopic)
+		translateTopic(&Cfg.TemplateTopic)
 	}
 }
 
@@ -345,6 +348,7 @@ func printKafkaParams() {
 	fmt.Printf("PAYLOAD_TRACKER_TOPIC=%s\n", Cfg.PayloadTrackerTopic)
 	fmt.Printf("REMEDIATIONS_UPDATE_TOPIC=%s\n", Cfg.RemediationUpdateTopic)
 	fmt.Printf("NOTIFICATIONS_TOPIC=%s\n", Cfg.NotificationsTopic)
+	fmt.Printf("TEMPLATE_TOPIC=%s\n", Cfg.TemplateTopic)
 }
 
 func printServicesParams() {

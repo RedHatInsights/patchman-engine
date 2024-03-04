@@ -495,6 +495,7 @@ objects:
     - {replicas: 3, partitions: 8, topicName: platform.payload-status}
     - {replicas: 3, partitions: 10, topicName: platform.remediation-updates.patch}
     - {replicas: 3, partitions: 10, topicName: platform.notifications.ingress}
+    - {replicas: 3, partitions: 10, topicName: platform.content-sources.template}
 
     dependencies:
     - host-inventory
