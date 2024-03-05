@@ -69,6 +69,8 @@ func TestSystemAdvisoriesViewOffsetLimit(t *testing.T) {
 	var output SystemsAdvisoriesResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, limit, output.Meta.Limit)
+	assert.Equal(t, offset, output.Meta.Offset)
 	_, has := output.Data["00000000-0000-0000-0000-000000000001"]
 	assert.True(t, has)
 }
@@ -97,6 +99,8 @@ func TestAvisorySystemsViewOffsetLimit(t *testing.T) {
 	var output AdvisoriesSystemsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, limit, output.Meta.Limit)
+	assert.Equal(t, offset, output.Meta.Offset)
 	_, has := output.Data["RH-1"]
 	assert.True(t, has)
 }
