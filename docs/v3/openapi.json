@@ -2911,7 +2911,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.IDsResponse"
+                                    "$ref": "#/components/schemas/controllers.IDsPlainResponse"
                                 }
                             }
                         }
@@ -3400,7 +3400,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/controllers.IDsResponse"
+                                    "$ref": "#/components/schemas/controllers.IDsPlainResponse"
                                 }
                             }
                         }
@@ -6835,6 +6835,14 @@
                     }
                 }
             },
+            "controllers.IDPlain": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    }
+                }
+            },
             "controllers.IDSatelliteManaged": {
                 "type": "object",
                 "properties": {
@@ -6857,9 +6865,15 @@
                     }
                 }
             },
-            "controllers.IDsResponse": {
+            "controllers.IDsPlainResponse": {
                 "type": "object",
                 "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/controllers.IDPlain"
+                        }
+                    },
                     "ids": {
                         "type": "array",
                         "items": {

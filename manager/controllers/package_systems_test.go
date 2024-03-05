@@ -54,12 +54,12 @@ func testPackageSystems(t *testing.T, param, queryString string, account int) Pa
 	return output
 }
 
-func testPackageIDsSystems(t *testing.T, param, queryString string, account int) IDsResponse {
+func testPackageIDsSystems(t *testing.T, param, queryString string, account int) IDsStatusResponse {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/:package_name/systems", param, queryString, nil, "",
 		PackageSystemsListIDsHandler, account)
 
-	var output IDsResponse
+	var output IDsStatusResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	return output
 }

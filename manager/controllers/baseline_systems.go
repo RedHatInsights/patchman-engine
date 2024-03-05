@@ -180,7 +180,7 @@ func BaselineSystemsListHandler(c *gin.Context) {
 // @Param    filter[display_name]           query   string  false "Filter"
 // @Param    filter[os]           			query   string  false "Filter"
 // @Param    tags           query   []string  false "Tag filter"
-// @Success 200 {object} IDsResponse
+// @Success 200 {object} IDsPlainResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
@@ -201,11 +201,10 @@ func BaselineSystemsListIDsHandler(c *gin.Context) {
 		return
 	}
 
-	ids, err := systemsIDs(c, sids, meta)
+	resp, err := systemsIDs(c, sids, meta)
 	if err != nil {
 		return // Error handled in method itself
 	}
-	var resp = IDsResponse{IDs: ids}
 	c.JSON(http.StatusOK, &resp)
 }
 
