@@ -517,15 +517,18 @@ func systemDBLookups2SystemItems(systems []SystemDBLookup) ([]SystemItem, int, m
 	return data, total, subtotals
 }
 
-func advisoriesIDs(advisories []AdvisoryID) []string {
+func advisoriesIDs(advisories []AdvisoryID) IDsPlainResponse {
+	var resp IDsPlainResponse
 	if advisories == nil {
-		return []string{}
+		return resp
 	}
-	ids := make([]string, len(advisories))
-	for i, x := range advisories {
-		ids[i] = x.ID
+	resp.IDs = make([]string, 0, len(advisories))
+	resp.Data = make([]IDPlain, 0, len(advisories))
+	for _, x := range advisories {
+		resp.IDs = append(resp.IDs, x.ID)
+		resp.Data = append(resp.Data, IDPlain(x))
 	}
-	return ids
+	return resp
 }
 
 func advisoriesStatusIDs(advisories []AdvisoryStatusID) IDsStatusResponse {
@@ -544,24 +547,27 @@ func advisoriesStatusIDs(advisories []AdvisoryStatusID) IDsStatusResponse {
 	return resp
 }
 
-func systemsIDs(c *gin.Context, systems []SystemsID, meta *ListMeta) ([]string, error) {
+func systemsIDs(c *gin.Context, systems []SystemsID, meta *ListMeta) (IDsPlainResponse, error) {
 	var total int
+	var resp IDsPlainResponse
 	if len(systems) > 0 {
 		total = systems[0].Total
 	}
 	if meta.Offset > total {
 		err := errors.New("Offset")
 		LogAndRespBadRequest(c, err, InvalidOffsetMsg)
-		return []string{}, err
+		return resp, err
 	}
 	if systems == nil {
-		return []string{}, nil
+		return resp, nil
 	}
-	ids := make([]string, len(systems))
-	for i, x := range systems {
-		ids[i] = x.ID
+	resp.IDs = make([]string, 0, len(systems))
+	resp.Data = make([]IDPlain, 0, len(systems))
+	for _, x := range systems {
+		resp.IDs = append(resp.IDs, x.ID)
+		resp.Data = append(resp.Data, IDPlain{ID: x.ID})
 	}
-	return ids, nil
+	return resp, nil
 }
 
 func systemsSatelliteIDs(c *gin.Context, systems []SystemsSatelliteManagedID, meta *ListMeta,

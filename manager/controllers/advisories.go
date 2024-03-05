@@ -185,7 +185,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
-// @Success 200 {object} IDsResponse
+// @Success 200 {object} IDsPlainResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
@@ -201,8 +201,7 @@ func AdvisoriesListIDsHandler(c *gin.Context) {
 		LogAndRespError(c, err, "db error")
 	}
 
-	ids := advisoriesIDs(aids)
-	var resp = IDsResponse{IDs: ids}
+	resp := advisoriesIDs(aids)
 	c.JSON(http.StatusOK, &resp)
 }
 

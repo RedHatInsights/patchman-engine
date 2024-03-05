@@ -33,8 +33,8 @@ type ListMeta struct {
 	HasSystems *bool `json:"has_systems,omitempty"`
 }
 
-type IDsResponse struct {
-	IDs []string `json:"ids"`
+type IDPlain struct {
+	ID string `json:"id"`
 }
 
 type IDStatus struct {
@@ -47,18 +47,27 @@ type IDSatelliteManaged struct {
 	SatelliteManaged bool   `json:"satellite_managed"`
 }
 
+type IDsResponseCommon struct {
+	IDs []string `json:"ids"`
+}
+
+type IDsPlainResponse struct {
+	Data []IDPlain
+	IDsResponseCommon
+}
+
 type IDsStatusResponse struct {
 	Data []IDStatus `json:"data"`
 	// backward compatibility
 	// TODO: delete later once UI is using only the new `data` field
-	IDsResponse
+	IDsResponseCommon
 }
 
 type IDsSatelliteManagedResponse struct {
 	Data []IDSatelliteManaged `json:"data"`
 	// backward compatibility
 	// TODO: delete later once UI is using only the new `data` field
-	IDsResponse
+	IDsResponseCommon
 }
 
 type SystemGroup struct {

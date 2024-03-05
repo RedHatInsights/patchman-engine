@@ -24,11 +24,11 @@ func testAdvisories(t *testing.T, url string) AdvisoriesResponse {
 	return output
 }
 
-func testAdvisoriesIDs(t *testing.T, url string) IDsResponse {
+func testAdvisoriesIDs(t *testing.T, url string) IDsPlainResponse {
 	core.SetupTest(t)
 	w := CreateRequest("GET", url, nil, "", AdvisoriesListIDsHandler)
 
-	var output IDsResponse
+	var output IDsPlainResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	return output
 }
@@ -62,6 +62,8 @@ func TestAdvisoriesIDsDefault(t *testing.T) {
 	output := testAdvisoriesIDs(t, "/")
 	assert.Equal(t, 12, len(output.IDs))
 	assert.Equal(t, "RH-7", output.IDs[0])
+	assert.Equal(t, 12, len(output.Data))
+	assert.Equal(t, "RH-7", output.Data[0].ID)
 }
 
 func TestAdvisoriesOffsetLimit(t *testing.T) {
@@ -75,6 +77,7 @@ func TestAdvisoriesOffsetLimit(t *testing.T) {
 func TestAdvisoriesIDsOffsetLimit(t *testing.T) {
 	output := testAdvisoriesIDs(t, "/?offset=0&limit=2")
 	assert.Equal(t, 2, len(output.IDs))
+	assert.Equal(t, 2, len(output.Data))
 }
 
 func TestAdvisoriesUnlimited(t *testing.T) {
@@ -119,6 +122,8 @@ func TestAdvisoriesIDsOrderDate(t *testing.T) {
 	// Advisory RH-7 has latest public date
 	assert.Equal(t, 12, len(output.IDs))
 	assert.Equal(t, "RH-7", output.IDs[0])
+	assert.Equal(t, 12, len(output.Data))
+	assert.Equal(t, "RH-7", output.Data[0].ID)
 }
 
 func TestAdvisoriesOrderTypeID(t *testing.T) {

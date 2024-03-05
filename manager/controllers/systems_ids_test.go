@@ -167,11 +167,11 @@ func TestSystemsIDsOrderOS(t *testing.T) {
 	assert.Equal(t, output.Data[7].ID, outputIDs.IDs[7])
 }
 
-func testSystemsIDs(t *testing.T, queryString string, account int) IDsResponse {
+func testSystemsIDs(t *testing.T, queryString string, account int) IDsSatelliteManagedResponse {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithAccount("GET", "/", "", queryString, nil, "", SystemsListIDsHandler, account)
 
-	var output IDsResponse
+	var output IDsSatelliteManagedResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	return output
 }
