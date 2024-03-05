@@ -26,7 +26,10 @@ const (
 func LoadParamInt(c *gin.Context, param string, defaultValue int, query bool) (int, error) {
 	var valueStr string
 	if query {
-		valueStr = c.Query(param)
+		// don't use c.Query(), it caches query parameters in context
+		// and data changed directly in c.Request.URL won't be returned
+		// as they are not present in the cache
+		valueStr = c.Request.URL.Query().Get(param)
 	} else {
 		valueStr = c.Param(param)
 	}
