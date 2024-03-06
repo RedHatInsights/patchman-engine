@@ -92,7 +92,7 @@ func systemsAdvisoriesQuery(c *gin.Context, db *gorm.DB, acc int, groups map[str
 	} // Error handled by method itself
 
 	sysq, _ = ApplyInventoryFilter(filters, sysq, "sp.inventory_id")
-	sysq, meta, params, err := ListCommon(sysq, c, filters, systemsAdvisoriesViewOpts)
+	sysq, meta, params, err := ListCommonNoLimitOffset(sysq, c, filters, systemsAdvisoriesViewOpts)
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled by method itself
@@ -101,6 +101,8 @@ func systemsAdvisoriesQuery(c *gin.Context, db *gorm.DB, acc int, groups map[str
 	if err != nil {
 		return nil, nil, nil, err
 	}
+
+	sysq = ApplyLimitOffset(sysq, meta)
 
 	query := db.Table("(?) as sp", sysq).
 		Select(systemsAdvisoriesSelect).
@@ -137,7 +139,7 @@ func advisoriesSystemsQuery(c *gin.Context, db *gorm.DB, acc int, groups map[str
 		return nil, nil, nil, err
 	} // Error handled by method itself
 
-	advq, meta, params, err := ListCommon(advq, c, filters, advisoriesSystemsViewOpts)
+	advq, meta, params, err := ListCommonNoLimitOffset(advq, c, filters, advisoriesSystemsViewOpts)
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled by method itself
@@ -146,6 +148,8 @@ func advisoriesSystemsQuery(c *gin.Context, db *gorm.DB, acc int, groups map[str
 	if err != nil {
 		return nil, nil, nil, err
 	}
+
+	advq = ApplyLimitOffset(advq, meta)
 
 	spJoin := "LEFT JOIN system_platform sp ON sp.id = sa.system_id AND sa.rh_account_id = sp.rh_account_id"
 	query := db.Table("(?) as am", advq).
