@@ -486,7 +486,7 @@ objects:
 
     database:
       name: patchman
-      version: 12
+      version: 16
 
     kafkaTopics:
     - {replicas: 3, partitions: 10, topicName: platform.inventory.events}
