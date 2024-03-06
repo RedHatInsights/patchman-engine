@@ -160,8 +160,7 @@ func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, err
 	return tx, nil
 }
 
-// nolint: funlen, lll
-func ListCommon(tx *gorm.DB, c *gin.Context, filters Filters, opts ListOpts, params ...string) (
+func ListCommonNoLimitOffset(tx *gorm.DB, c *gin.Context, filters Filters, opts ListOpts, params ...string) (
 	*gorm.DB, *ListMeta, []string, error) {
 	hasSystems := true
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
@@ -199,12 +198,26 @@ func ListCommon(tx *gorm.DB, c *gin.Context, filters Filters, opts ListOpts, par
 	}
 
 	params = append(params, filters.ToQueryParams(), sortQ, searchQ)
-
-	if limit != -1 {
-		tx = tx.Limit(limit)
-	}
-	tx = tx.Offset(offset)
 	return tx, &meta, params, nil
+}
+
+func ListCommon(tx *gorm.DB, c *gin.Context, filters Filters, opts ListOpts, params ...string) (
+	*gorm.DB, *ListMeta, []string, error) {
+	tx, meta, params, err := ListCommonNoLimitOffset(tx, c, filters, opts, params...)
+	if err != nil {
+		// error handled in ListCommonNoLimitOffset
+		return nil, nil, nil, err
+	}
+	tx = ApplyLimitOffset(tx, meta)
+	return tx, meta, params, nil
+}
+
+func ApplyLimitOffset(tx *gorm.DB, meta *ListMeta) *gorm.DB {
+	if meta.Limit != -1 {
+		tx = tx.Limit(meta.Limit)
+	}
+	tx = tx.Offset(meta.Offset)
+	return tx
 }
 
 func UpdateMetaLinks(c *gin.Context, meta *ListMeta, total int, subTotals map[string]int, params ...string) (
