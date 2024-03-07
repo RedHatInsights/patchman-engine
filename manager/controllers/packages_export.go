@@ -7,17 +7,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// nolint: lll
 // @Summary Show me all installed packages across my systems
 // @Description Show me all installed packages across my systems
 // @ID exportPackages
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json,text/csv
-// @Param    sort           query      string  false   "Sort field" Enums(id,name,systems_installed,systems_updatable)
+// @Param    sort           query      string  false   "Sort field" Enums(id,name,systems_installed,systems_installable,systems_applicable)
 // @Param    search         query      string  false   "Find matching text"
 // @Param    filter[name]    query     string  false "Filter"
-// @Param    filter[systems_installed] query   string  false "Filter"
-// @Param    filter[systems_updatable] query   string  false "Filter"
+// @Param    filter[systems_installed]   query string  false "Filter"
+// @Param    filter[systems_installable] query string  false "Filter"
+// @Param    filter[systems_applicable]  query string  false "Filter"
 // @Param    filter[summary]           query   string  false "Filter"
 // @Success 200 {array} PackageItem
 // @Failure 415 {object} utils.ErrorResponse

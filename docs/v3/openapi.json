@@ -1819,7 +1819,8 @@
                                 "id",
                                 "name",
                                 "systems_installed",
-                                "systems_updatable"
+                                "systems_installable",
+                                "systems_applicable"
                             ]
                         }
                     },
@@ -1848,7 +1849,15 @@
                         }
                     },
                     {
-                        "name": "filter[systems_updatable]",
+                        "name": "filter[systems_installable]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[systems_applicable]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
