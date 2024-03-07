@@ -37,7 +37,9 @@ func HTTPCallRetry(ctx context.Context, httpCallFun func() (outputDataPtr interf
 		}
 
 		responseDetails := tryGetResponseDetails(resp)
-		resp.Body.Close()
+		if resp != nil {
+			resp.Body.Close()
+		}
 		return nil, errors.Wrap(callErr, "HTTP call failed"+responseDetails)
 	}
 	return nil, errors.Errorf("HTTP retry call failed, attempts: %d", attempt)
