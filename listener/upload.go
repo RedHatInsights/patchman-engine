@@ -51,6 +51,7 @@ const (
 var (
 	DeletionThreshold = time.Hour * time.Duration(utils.GetIntEnvOrDefault("SYSTEM_DELETE_HRS", 4))
 	repoPathRegex     = regexp.MustCompile(RepoPathPattern)
+	spacesRegex       = regexp.MustCompile(`^\s*$`)
 	httpClient        *api.Client
 )
 
@@ -310,7 +311,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 
 	now := time.Now()
 	displayName := inventoryID
-	if host.DisplayName != nil && len(*host.DisplayName) > 0 {
+	if host.DisplayName != nil && len(*host.DisplayName) > 0 && !spacesRegex.MatchString(*host.DisplayName) {
 		displayName = *host.DisplayName
 	}
 
