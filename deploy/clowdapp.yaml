@@ -170,7 +170,7 @@ objects:
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: CONSUMER_COUNT, value: '${CONSUMER_COUNT_LISTENER}'}
         - {name: ENABLE_BYPASS, value: '${ENABLE_BYPASS_LISTENER}'}
-        - {name: EXCLUDED_REPORTERS, value: '${EXCLUDED_REPORTERS}'}
+        - {name: ALLOWED_REPORTERS, value: '${ALLOWED_REPORTERS}'}
         - {name: EXCLUDED_HOST_TYPES, value: '${EXCLUDED_HOST_TYPES}'}
         - {name: ENABLE_PAYLOAD_TRACKER, value: '${ENABLE_PAYLOAD_TRACKER}'}
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_LISTENER}'}
@@ -606,7 +606,7 @@ parameters:
 - {name: DB_DEBUG_LISTENER, value: 'false'}
 - {name: CONSUMER_COUNT_LISTENER, value: '8'}
 - {name: ENABLE_BYPASS_LISTENER, value: 'false'} # Enable only bypass (fake) messages processing
-- {name: EXCLUDED_REPORTERS, value: 'yupana,rhsm-conduit,satellite,discovery'} # Comma-separated list of reporters to exclude from processing
+- {name: ALLOWED_REPORTERS, value: 'puptoo,rhsm-system-profile-bridge'} # Comma-separated list of reporters to exclude from processing
 - {name: EXCLUDED_HOST_TYPES, value: 'edge'} # Comma-separated list of host types to exclude from processing
 - {name: RES_LIMIT_CPU_LISTENER, value: 250m}
 - {name: RES_LIMIT_MEM_LISTENER, value: 192Mi}

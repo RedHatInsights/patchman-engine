@@ -18,7 +18,7 @@ var (
 	evalWriter        mqueue.Writer
 	ptWriter          mqueue.Writer
 	validReporters    map[string]int
-	excludedReporters map[string]bool
+	allowedReporters  map[string]bool
 	excludedHostTypes map[string]bool
 	enableBypass      bool
 	uploadEvalTimeout time.Duration
@@ -37,7 +37,7 @@ func configure() {
 	ptWriter = mqueue.NewKafkaWriterFromEnv(ptTopic)
 
 	validReporters = loadValidReporters()
-	excludedReporters = getEnvVarStringsSet("EXCLUDED_REPORTERS")
+	allowedReporters = getEnvVarStringsSet("ALLOWED_REPORTERS")
 	excludedHostTypes = getEnvVarStringsSet("EXCLUDED_HOST_TYPES")
 
 	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
