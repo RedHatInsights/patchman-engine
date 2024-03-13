@@ -124,7 +124,7 @@ func HandleUpload(event HostEvent) error {
 		Status:      "received",
 	}
 
-	if _, ok := excludedReporters[event.Host.Reporter]; ok {
+	if _, ok := allowedReporters[event.Host.Reporter]; !ok {
 		utils.LogWarn("inventoryID", event.Host.ID, "reporter", event.Host.Reporter, WarnSkippingReporter)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedReporter).Inc()
 		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
