@@ -52,7 +52,7 @@ type IDsResponseCommon struct {
 }
 
 type IDsPlainResponse struct {
-	Data []IDPlain
+	Data []IDPlain `json:"data"`
 	IDsResponseCommon
 }
 
