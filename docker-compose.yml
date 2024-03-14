@@ -223,7 +223,7 @@ services:
 
   prometheus:
     container_name: prometheus
-    image: prom/prometheus:v2.50.0
+    image: docker.io/prom/prometheus:v2.50.0
     volumes:
       - ./dashboards/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
@@ -232,6 +232,8 @@ services:
     restart: unless-stopped
     profiles:
       - monitoring
+    security_opt:
+      - label=disable
 
   grafana:
     container_name: grafana
