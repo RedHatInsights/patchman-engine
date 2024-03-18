@@ -530,6 +530,13 @@ objects:
       secretName: ${FLOORIST_BUCKET_SECRET_NAME}
     suspend: ${{FLOORIST_SUSPEND}}
     logLevel: ${FLOORIST_LOGLEVEL}
+    resources:
+      limits:
+        cpu: ${{RES_LIMIT_CPU_FLOORIST}}
+        memory: ${{RES_LIMIT_MEM_FLOORIST}}
+      requests:
+        cpu: ${{RES_REQUEST_CPU_FLOORIST}}
+        memory: ${{RES_REQUEST_MEM_FLOORIST}}
     queries:
       - prefix: insights/patch/advisories
         chunksize: ${{FLOORIST_CHUNKSIZE}}
@@ -769,3 +776,7 @@ parameters:
 - {name: FLOORIST_DB_SECRET_NAME, value: patchman-db} # DB secret name
 - {name: FLOORIST_LOGLEVEL, value: INFO} # Floorist loglevel config
 - {name: FLOORIST_CHUNKSIZE, value: '1000000'}
+- {name: RES_REQUEST_CPU_FLOORIST, value: 250m}
+- {name: RES_REQUEST_MEM_FLOORIST, value: 1Gi}
+- {name: RES_LIMIT_CPU_FLOORIST, value: 500m}
+- {name: RES_LIMIT_MEM_FLOORIST, value: 2Gi}
