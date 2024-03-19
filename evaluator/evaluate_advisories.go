@@ -227,20 +227,6 @@ func ensureSystemAdvisories(tx *gorm.DB, rhAccountID int, systemID int64, instal
 	return err
 }
 
-func lockAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, deleteIDs, installableIDs,
-	applicableIDs []int64) error {
-	// Lock advisory-account data, so it's not changed by other concurrent queries
-	var aads []models.AdvisoryAccountData
-	err := tx.Clauses(clause.Locking{
-		Strength: "UPDATE",
-		Table:    clause.Table{Name: clause.CurrentTable},
-	}).Order("advisory_id").
-		Find(&aads, "rh_account_id = ? AND (advisory_id in (?) OR advisory_id in (?) OR advisory_id in (?))",
-			system.RhAccountID, deleteIDs, installableIDs, applicableIDs).Error
-
-	return err
-}
-
 func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs, installableIDs,
 	applicableIDs []int64) []models.AdvisoryAccountData {
 	// If system is stale, we won't change any rows  in advisory_account_data
@@ -332,11 +318,6 @@ func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
 
 func updateAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, deleteIDs, installableIDs,
 	applicableIDs []int64) error {
-	err := lockAdvisoryAccountData(tx, system, deleteIDs, installableIDs, applicableIDs)
-	if err != nil {
-		return err
-	}
-
 	changes := calcAdvisoryChanges(system, deleteIDs, installableIDs, applicableIDs)
 
 	if len(changes) == 0 {
