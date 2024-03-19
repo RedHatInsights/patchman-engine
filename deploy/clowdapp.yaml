@@ -594,7 +594,7 @@ parameters:
 - {name: PKG_REFRESH_SCHEDULE, value: '5 11-20/2 * * *'} # Cronjob schedule definition
 - {name: PKG_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
 - {name: ADVISORY_REFRESH_SCHEDULE, value: '*/15 * * * *'} # Cronjob schedule definition
-- {name: ADVISORY_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
+- {name: ADVISORY_REFRESH_SUSPEND, value: 'true'} # Disable cronjob execution
 
 # Database admin
 - {name: IMAGE_TAG_DATABASE_ADMIN, value: v3.6.99}
