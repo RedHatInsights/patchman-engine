@@ -113,6 +113,7 @@ objects:
         - {name: ADVISORY_DETAIL_CACHE_SIZE, value: '${ADVISORY_DETAIL_CACHE_SIZE}'}
         - {name: PRELOAD_ADVISORY_DETAIL_CACHE, value: '${PRELOAD_ADVISORY_DETAIL_CACHE}'}
         - {name: ENABLE_BASELINES_API, value: '${ENABLE_BASELINES_API}'}
+        - {name: ENABLE_TEMPLATES_API, value: '${ENABLE_TEMPLATES_API}'}
         - {name: ENABLE_BASELINE_CHANGE_EVAL, value: '${ENABLE_BASELINE_CHANGE_EVAL}'}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
@@ -589,6 +590,7 @@ parameters:
 - {name: ADVISORY_DETAIL_CACHE_SIZE, value: '100'} # Advisory detail cache size (cached items count)
 - {name: PRELOAD_ADVISORY_DETAIL_CACHE, value: 'true'} # Enable advisory detail cache preloading
 - {name: ENABLE_BASELINES_API, value: 'true'} # Enable baselines API endpoints
+- {name: ENABLE_TEMPLATES_API, value: 'true'} # Enable baselines API endpoints
 - {name: ENABLE_BASELINE_CHANGE_EVAL, value: 'true'} # Send Kafka eval messages on baseline update
 - {name: ENABLE_PACKAGE_CACHE_MANAGER, value: 'true'} # Enable caching for /packages endpoint
 - {name: EVAL_TOPIC_MANAGER, value: patchman.evaluator.upload}

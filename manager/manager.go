@@ -81,6 +81,7 @@ func RunManager() {
 func getEndpointsConfig() docs.EndpointsConfig {
 	config := docs.EndpointsConfig{
 		EnableBaselines: utils.GetBoolEnvOrDefault("ENABLE_BASELINES_API", true),
+		EnableTemplates: utils.GetBoolEnvOrDefault("ENABLE_TEMPLATES_API", true),
 	}
 	return config
 }
