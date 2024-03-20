@@ -94,7 +94,7 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 		ids.GET("/baselines/:baseline_id/systems", controllers.BaselineSystemsListIDsHandler)
 	}
 	if config.EnableTemplates {
-		export.GET("/templates/:template_id/systems", controllers.TemplateSystemsListIDsHandler)
+		ids.GET("/templates/:template_id/systems", controllers.TemplateSystemsListIDsHandler)
 	}
 
 	api.GET("/status", controllers.Status)
