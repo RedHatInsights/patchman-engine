@@ -45,7 +45,7 @@ type Template struct {
 	RhAccountID int   `gorm:"primaryKey"`
 	UUID        string
 	Name        string
-	Config      []byte
+	// Config      pgtype.JSONB // currently unused
 	Description *string
 	Creator     *string // pointer for compatibility with previous API versions
 	Published   *time.Time
