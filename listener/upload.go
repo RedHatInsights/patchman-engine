@@ -128,7 +128,7 @@ func HandleUpload(event HostEvent) error {
 
 	if _, ok := allowedReporters[event.Host.Reporter]; !ok {
 		utils.LogWarn("inventoryID", event.Host.ID, "reporter", event.Host.Reporter, WarnSkippingReporter)
-		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedReporter).Inc()
+		eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedReporter).Inc()
 		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, "", WarnSkippingReporter)
 		return nil
@@ -136,7 +136,7 @@ func HandleUpload(event HostEvent) error {
 
 	if _, ok := excludedHostTypes[event.Host.SystemProfile.HostType]; ok {
 		utils.LogWarn("inventoryID", event.Host.ID, "hostType", event.Host.SystemProfile.HostType, WarnSkippingHostType)
-		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedHostType).Inc()
+		eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedHostType).Inc()
 		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, "", WarnSkippingHostType)
 		return nil
@@ -144,7 +144,7 @@ func HandleUpload(event HostEvent) error {
 
 	if event.Host.OrgID == nil || *event.Host.OrgID == "" {
 		utils.LogError("inventoryID", event.Host.ID, ErrorNoAccountProvided)
-		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
+		eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
 		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, "", ErrorNoAccountProvided)
 		return nil
@@ -156,7 +156,7 @@ func HandleUpload(event HostEvent) error {
 		_, err := utils.ParseNevra(installedPackages[0])
 		if err != nil {
 			utils.LogError("inventoryID", event.Host.ID, "err", err.Error(), WarnSkippingBadPackages)
-			messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnBadPackages).Inc()
+			eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnBadPackages).Inc()
 			utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
 			sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, WarnSkippingBadPackages)
 			return nil
@@ -173,7 +173,7 @@ func HandleUpload(event HostEvent) error {
 
 	if len(installedPackages) == 0 && yumUpdates == nil {
 		utils.LogWarn("inventoryID", event.Host.ID, WarnSkippingNoPackages)
-		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
+		eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
 		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedWarnNoPackages))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, WarnSkippingNoPackages)
 		return nil
@@ -183,7 +183,7 @@ func HandleUpload(event HostEvent) error {
 
 	if err != nil {
 		utils.LogError("inventoryID", event.Host.ID, "err", err.Error(), ErrorProcessUpload)
-		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
+		eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
 		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedErrorProcessing))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, ErrorProcessUpload)
 		return errors.Wrap(err, "Could not process upload")
@@ -191,7 +191,7 @@ func HandleUpload(event HostEvent) error {
 
 	// Deleted system, return nil
 	if sys == nil {
-		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedDeleted).Inc()
+		eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedDeleted).Inc()
 		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedDeleted))
 		sendPayloadStatus(ptWriter, payloadTrackerEvent, SuccessStatus, ReceivedDeleted)
 		return nil
@@ -199,7 +199,7 @@ func HandleUpload(event HostEvent) error {
 
 	if sys.UnchangedSince != nil && sys.LastEvaluation != nil {
 		if sys.UnchangedSince.Before(*sys.LastEvaluation) {
-			messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccessNoEval).Inc()
+			eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccessNoEval).Inc()
 			utils.LogInfo("inventoryID", event.Host.ID, UploadSuccessNoEval)
 			utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedSuccessNoEval))
 			sendPayloadStatus(ptWriter, payloadTrackerEvent, SuccessStatus, ReceivedSuccessNoEval)
@@ -209,7 +209,7 @@ func HandleUpload(event HostEvent) error {
 
 	bufferEvalEvents(sys.InventoryID, sys.RhAccountID, &payloadTrackerEvent)
 
-	messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
+	eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
 	utils.LogInfo("inventoryID", event.Host.ID, UploadSuccess)
 	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedSuccess))
 	return nil
