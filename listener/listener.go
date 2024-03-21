@@ -14,7 +14,7 @@ import (
 
 var (
 	eventsTopic       string
-	consumerCount     int
+	eventsConsumers   int
 	evalWriter        mqueue.Writer
 	ptWriter          mqueue.Writer
 	validReporters    map[string]int
@@ -28,7 +28,7 @@ func configure() {
 	core.ConfigureApp()
 	eventsTopic = utils.FailIfEmpty(utils.Cfg.EventsTopic, "EVENTS_TOPIC")
 
-	consumerCount = utils.GetIntEnvOrDefault("CONSUMER_COUNT", 1)
+	eventsConsumers = utils.GetIntEnvOrDefault("CONSUMER_COUNT", 1)
 
 	evalTopic := utils.FailIfEmpty(utils.Cfg.EvalTopic, "EVAL_TOPIC")
 	ptTopic := utils.FailIfEmpty(utils.Cfg.PayloadTrackerTopic, "PAYLOAD_TRACKER_TOPIC")
@@ -79,7 +79,7 @@ func runReaders(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 
 	// We create multiple consumers, and hope that the partition rebalancing
 	// algorithm assigns each consumer a single partition
-	for i := 0; i < consumerCount; i++ {
+	for i := 0; i < eventsConsumers; i++ {
 		mqueue.SpawnReader(wg, eventsTopic, readerBuilder, mqueue.MakeRetryingHandler(EventsMessageHandler))
 	}
 }

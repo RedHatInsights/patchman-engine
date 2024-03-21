@@ -28,13 +28,13 @@ func EventsMessageHandler(m mqueue.KafkaMessage) error {
 	}
 	if msgData["type"] == nil {
 		utils.LogWarn("inventoryID", msgData["id"], WarnEmptyEventType)
-		messagesReceivedCnt.WithLabelValues("", ReceivedErrorOtherType).Inc()
+		eventMsgsReceivedCnt.WithLabelValues("", ReceivedErrorOtherType).Inc()
 		return nil
 	}
 
 	if enableBypass {
 		utils.LogInfo("inventoryID", msgData["id"], "Processing bypassed")
-		messagesReceivedCnt.WithLabelValues(msgData["type"].(string), ReceivedBypassed).Inc()
+		eventMsgsReceivedCnt.WithLabelValues(msgData["type"].(string), ReceivedBypassed).Inc()
 		return nil
 	}
 
@@ -74,7 +74,7 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 
 	if err != nil {
 		utils.LogError("inventoryID", event.ID, "err", err.Error(), "Could not delete system")
-		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorProcessing).Inc()
+		eventMsgsReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorProcessing).Inc()
 		return errors.Wrap(err, "Could not delete system")
 	}
 
@@ -82,18 +82,18 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 	err = query.Error
 	if err != nil {
 		utils.LogError("inventoryID", event.ID, "err", err.Error(), "Could not delete system")
-		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorProcessing).Inc()
+		eventMsgsReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorProcessing).Inc()
 		return errors.Wrap(err, "Could not opt_out system")
 	}
 
 	if query.RowsAffected == 0 {
 		utils.LogWarn("inventoryID", event.ID, WarnNoRowsModified)
-		messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedWarnNoRows).Inc()
+		eventMsgsReceivedCnt.WithLabelValues(EventDelete, ReceivedWarnNoRows).Inc()
 		return nil
 	}
 
 	utils.LogInfo("inventoryID", event.ID, "count", query.RowsAffected, "Systems deleted")
-	messagesReceivedCnt.WithLabelValues(EventDelete, ReceivedSuccess).Inc()
+	eventMsgsReceivedCnt.WithLabelValues(EventDelete, ReceivedSuccess).Inc()
 
 	err = database.Db.
 		Delete(&models.DeletedSystem{}, "when_deleted < ?", time.Now().Add(-DeletionThreshold)).Error

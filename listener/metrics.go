@@ -28,7 +28,7 @@ const (
 )
 
 var (
-	messagesReceivedCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+	eventMsgsReceivedCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Help:      "How many messages received by listener, which event type, which process result",
 		Namespace: "patchman_engine",
 		Subsystem: "listener",
@@ -65,7 +65,7 @@ var (
 )
 
 func RunMetrics() {
-	prometheus.MustRegister(messagesReceivedCnt, messageHandlingDuration, reposAddedCnt, receivedFromReporter,
+	prometheus.MustRegister(eventMsgsReceivedCnt, messageHandlingDuration, reposAddedCnt, receivedFromReporter,
 		messagePartDuration)
 
 	// create web app
