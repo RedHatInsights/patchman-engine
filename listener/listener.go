@@ -13,22 +13,30 @@ import (
 )
 
 var (
-	eventsTopic       string
-	eventsConsumers   int
-	evalWriter        mqueue.Writer
-	ptWriter          mqueue.Writer
-	validReporters    map[string]int
-	allowedReporters  map[string]bool
-	excludedHostTypes map[string]bool
-	enableBypass      bool
-	uploadEvalTimeout time.Duration
+	eventsTopic        string
+	eventsConsumers    int
+	enableTemplates    bool
+	templatesTopic     string
+	templatesConsumers int
+	evalWriter         mqueue.Writer
+	ptWriter           mqueue.Writer
+	validReporters     map[string]int
+	allowedReporters   map[string]bool
+	excludedHostTypes  map[string]bool
+	enableBypass       bool
+	uploadEvalTimeout  time.Duration
 )
 
 func configure() {
 	core.ConfigureApp()
 	eventsTopic = utils.FailIfEmpty(utils.Cfg.EventsTopic, "EVENTS_TOPIC")
-
 	eventsConsumers = utils.GetIntEnvOrDefault("CONSUMER_COUNT", 1)
+
+	enableTemplates = utils.GetBoolEnvOrDefault("ENABLE_TEMPLATES_API", true)
+	if enableTemplates {
+		templatesTopic = utils.FailIfEmpty(utils.Cfg.TemplateTopic, "TEMPLATE_TOPIC")
+		templatesConsumers = utils.GetIntEnvOrDefault("TEMPLATE_CONSUMERS", 1)
+	}
 
 	evalTopic := utils.FailIfEmpty(utils.Cfg.EvalTopic, "EVAL_TOPIC")
 	ptTopic := utils.FailIfEmpty(utils.Cfg.PayloadTrackerTopic, "PAYLOAD_TRACKER_TOPIC")
@@ -81,6 +89,13 @@ func runReaders(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 	// algorithm assigns each consumer a single partition
 	for i := 0; i < eventsConsumers; i++ {
 		mqueue.SpawnReader(wg, eventsTopic, readerBuilder, mqueue.MakeRetryingHandler(EventsMessageHandler))
+		utils.LogTrace("spawned eventsTopic reader", i)
+	}
+	if enableTemplates {
+		for i := 0; i < templatesConsumers; i++ {
+			mqueue.SpawnReader(wg, templatesTopic, readerBuilder, mqueue.MakeRetryingHandler(TemplatesMessageHandler))
+			utils.LogTrace("spawned templatesTopic reader", i)
+		}
 	}
 }
 

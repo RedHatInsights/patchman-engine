@@ -35,6 +35,13 @@ var (
 		Name:      "kafka_message_received",
 	}, []string{"event", "type"})
 
+	templateMsgReceivedCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help:      "Number of template messages received by type",
+		Namespace: "patchman_engine",
+		Subsystem: "listener",
+		Name:      "template_message_received",
+	}, []string{"event", "type"})
+
 	messageHandlingDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Help:      "How long it took to process the message",
 		Namespace: "patchman_engine",
@@ -42,6 +49,12 @@ var (
 		Name:      "kafka_message_handling_duration_seconds",
 	}, []string{"event"})
 
+	templateMsgHandlingDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Help:      "How long it took to process the message",
+		Namespace: "patchman_engine",
+		Subsystem: "listener",
+		Name:      "template_message_handling_duration_seconds",
+	}, []string{"event"})
 	reposAddedCnt = prometheus.NewCounter(prometheus.CounterOpts{
 		Help:      "How many repositories were added",
 		Namespace: "patchman_engine",
