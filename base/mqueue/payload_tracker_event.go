@@ -30,9 +30,6 @@ func (event *PayloadTrackerEvent) write(ctx context.Context, w Writer) error {
 		return errors.Wrap(err, "Serializing event")
 	}
 	msg := KafkaMessage{Value: data}
-	if err != nil {
-		return err
-	}
 	return w.WriteMessages(ctx, msg)
 }
 
