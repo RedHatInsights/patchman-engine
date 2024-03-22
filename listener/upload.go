@@ -399,10 +399,9 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 }
 
 func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsToUpdate []string) error {
-	var err error
-	if errSelect := tx.Where("rh_account_id = ? AND inventory_id = ?", system.RhAccountID, system.InventoryID).
-		Select("id").Find(system).Error; errSelect != nil {
-		utils.LogWarn("err", errSelect, "couldn't find system for update")
+	if err := tx.Where("rh_account_id = ? AND inventory_id = ?", system.RhAccountID, system.InventoryID).
+		Select("id").Find(system).Error; err != nil {
+		utils.LogWarn("err", err, "couldn't find system for update")
 	}
 
 	// return system_platform record after update
@@ -415,11 +414,11 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 
 	if system.ID != 0 {
 		// update system
-		err = tx.Select(colsToUpdate).Updates(system).Error
+		err := tx.Select(colsToUpdate).Updates(system).Error
 		return errors.Wrap(err, "unable to update system_platform")
 	}
 	// insert system
-	err = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
+	err := database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
 		Save(system).Error
 	return errors.Wrap(err, "unable to insert to system_platform")
 }
