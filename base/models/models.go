@@ -86,11 +86,12 @@ type SystemPlatform struct {
 	ThirdParty                       bool
 	ReporterID                       *int
 	BaselineID                       *int64
-	BaselineUpToDate                 *bool  `gorm:"column:baseline_uptodate"`
-	TemplateID                       *int64 `gorm:"column:template_id"`
-	YumUpdates                       []byte `gorm:"column:yum_updates"`
-	SatelliteManaged                 bool   `gorm:"column:satellite_managed"`
-	BuiltPkgcache                    bool   `gorm:"column:built_pkgcache"`
+	BaselineUpToDate                 *bool   `gorm:"column:baseline_uptodate"`
+	TemplateID                       *int64  `gorm:"column:template_id"`
+	YumUpdates                       []byte  `gorm:"column:yum_updates"`
+	YumChecksum                      *string `gorm:"column:yum_checksum"`
+	SatelliteManaged                 bool    `gorm:"column:satellite_managed"`
+	BuiltPkgcache                    bool    `gorm:"column:built_pkgcache"`
 }
 
 func (SystemPlatform) TableName() string {

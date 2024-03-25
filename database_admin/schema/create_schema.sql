@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (124, false);
+VALUES (125, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -70,7 +70,7 @@ BEGIN
         NEW.unchanged_since := CURRENT_TIMESTAMP;
     END IF;
     IF (TG_OP = 'UPDATE') AND
-       (NEW.json_checksum <> OLD.json_checksum OR NEW.yum_updates <> OLD.yum_updates) THEN
+       (NEW.json_checksum <> OLD.json_checksum OR NEW.yum_checksum <> OLD.yum_checksum) THEN
         NEW.unchanged_since := CURRENT_TIMESTAMP;
     END IF;
     RETURN NEW;
@@ -740,6 +740,7 @@ CREATE TABLE IF NOT EXISTS system_platform
     built_pkgcache                       BOOLEAN                  NOT NULL DEFAULT FALSE,
     packages_applicable      INT                      NOT NULL DEFAULT 0,
     template_id              BIGINT,
+    yum_checksum             TEXT                     CHECK (NOT empty(yum_checksum)),
     PRIMARY KEY (rh_account_id, id),
     UNIQUE (rh_account_id, inventory_id),
     CONSTRAINT reporter_id FOREIGN KEY (reporter_id) REFERENCES reporter (id),
