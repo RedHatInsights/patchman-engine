@@ -330,6 +330,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		Stale:                 staleWarning != nil && staleWarning.Before(time.Now()),
 		ReporterID:            getReporterID(host.Reporter),
 		YumUpdates:            yumUpdates.GetRawParsed(),
+		YumChecksum:           utils.EmptyToNil(&yumChecksum),
 		SatelliteManaged:      host.SystemProfile.SatelliteManaged,
 		BuiltPkgcache:         yumUpdates.GetBuiltPkgcache(),
 	}
@@ -344,7 +345,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		Model(models.SystemPlatform{}).
 		Where("inventory_id = ?::uuid", inventoryID).
 		Where("rh_account_id = ?", accountID).
-		Select("json_checksum, encode(digest(yum_updates::text,'sha256'), 'hex') as yum_checksum").
+		Select("json_checksum, yum_checksum").
 		First(&oldChecksums)
 
 	shouldUpdateRepos := false
@@ -358,7 +359,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 
 	// Skip updating yum_updates if the checksum haven't changed.
 	if oldChecksums.YumChecksum != yumChecksum {
-		colsToUpdate = append(colsToUpdate, "yum_updates")
+		colsToUpdate = append(colsToUpdate, "yum_updates", "yum_checksum")
 	}
 
 	if err := storeOrUpdateSysPlatform(tx, &systemPlatform, colsToUpdate); err != nil {
