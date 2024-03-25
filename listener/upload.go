@@ -334,25 +334,30 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		BuiltPkgcache:         yumUpdates.GetBuiltPkgcache(),
 	}
 
-	var oldChecksums map[string]string
+	type OldChecksums struct {
+		JSONChecksum string `gorm:"column:json_checksum"`
+		YumChecksum  string `gorm:"column:yum_checksum"`
+	}
+	var oldChecksums OldChecksums
 	// Lock the row for update & return checksum
 	tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-		Table("system_platform").
+		Model(models.SystemPlatform{}).
 		Where("inventory_id = ?::uuid", inventoryID).
 		Where("rh_account_id = ?", accountID).
-		First("json_checksum, digest(yum_updates,'sha256') as yum_checksum", &oldChecksums)
+		Select("json_checksum, encode(digest(yum_updates::text,'sha256'), 'hex') as yum_checksum").
+		First(&oldChecksums)
 
 	shouldUpdateRepos := false
 	var addedRepos, addedSysRepos, deletedSysRepos int64
 
 	// Skip updating vmaas_json if the checksum haven't changed. Should reduce TOAST trashing
-	if oldChecksums["json_checksum"] != jsonChecksum {
+	if oldChecksums.JSONChecksum != jsonChecksum {
 		colsToUpdate = append(colsToUpdate, "vmaas_json", "json_checksum", "reporter_id")
 		shouldUpdateRepos = true
 	}
 
 	// Skip updating yum_updates if the checksum haven't changed.
-	if oldChecksums["yum_checksum"] != yumChecksum {
+	if oldChecksums.YumChecksum != yumChecksum {
 		colsToUpdate = append(colsToUpdate, "yum_updates")
 	}
 
