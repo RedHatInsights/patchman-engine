@@ -387,7 +387,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsToUpdate []string) error {
 	var err error
 	if errSelect := tx.Where("rh_account_id = ? AND inventory_id = ?", system.RhAccountID, system.InventoryID).
-		Select("id").Find(system).Error; err != nil {
+		Select("id").Find(system).Error; errSelect != nil {
 		utils.LogWarn("err", errSelect, "couldn't find system for update")
 	}
 
