@@ -1,15 +1,6 @@
 version: '3.4'
 
 services:
-  patchimg:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - INSTALL_TOOLS=yes
-      target: buildimg
-    image: patchman-engine-app
-
   db:
     container_name: db
     build:
@@ -23,37 +14,6 @@ services:
       - 5433:5432
     env_file:
       - ./conf/database.env
-
-  db_admin:
-    container_name: db_admin
-    image: patchman-engine-app
-    env_file:
-      - ./conf/common.env
-      - ./conf/database_admin.env
-      - ./conf/gorun.env
-    command: ./database_admin/entrypoint.sh
-    depends_on:
-      - db
-      - patchimg
-    volumes:
-      - ./:/go/src/app
-    security_opt:
-      - label=disable
-
-  db_feed:
-    container_name: db_feed
-    image: patchman-engine-app
-    env_file:
-      - ./conf/test.env
-      - ./conf/gorun.env
-    command: go run ./scripts/feed_db.go
-    depends_on:
-      - db
-      - patchimg
-    volumes:
-      - ./:/go/src/app
-    security_opt:
-      - label=disable
 
   kafka:
     container_name: kafka
@@ -79,6 +39,12 @@ services:
 
   platform:
     container_name: platform
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - INSTALL_TOOLS=yes
+      target: buildimg
     image: patchman-engine-app
     env_file:
       - ./conf/platform.env
@@ -88,9 +54,39 @@ services:
     depends_on:
       - db
       - kafka
-      - patchimg
     ports:
       - 9001:9001
+    volumes:
+      - ./:/go/src/app
+    security_opt:
+      - label=disable
+
+  db_admin:
+    container_name: db_admin
+    image: patchman-engine-app
+    env_file:
+      - ./conf/common.env
+      - ./conf/database_admin.env
+      - ./conf/gorun.env
+    command: ./database_admin/entrypoint.sh
+    depends_on:
+      - db
+      - platform
+    volumes:
+      - ./:/go/src/app
+    security_opt:
+      - label=disable
+
+  db_feed:
+    container_name: db_feed
+    image: patchman-engine-app
+    env_file:
+      - ./conf/test.env
+      - ./conf/gorun.env
+    command: go run ./scripts/feed_db.go
+    depends_on:
+      - db
+      - platform
     volumes:
       - ./:/go/src/app
     security_opt:
@@ -111,7 +107,6 @@ services:
     depends_on:
       - db
       - platform
-      - patchimg
     volumes:
       - ./:/go/src/app
     security_opt:
@@ -132,7 +127,6 @@ services:
     depends_on:
       - db
       - platform
-      - patchimg
     volumes:
       - ./:/go/src/app
     security_opt:
@@ -153,7 +147,6 @@ services:
     depends_on:
       - db
       - platform
-      - patchimg
     volumes:
       - ./:/go/src/app
     security_opt:
@@ -174,7 +167,6 @@ services:
     depends_on:
       - db
       - platform
-      - patchimg
     volumes:
       - ./:/go/src/app
     security_opt:
@@ -195,7 +187,6 @@ services:
       - db
       - kafka
       - platform
-      - patchimg
     volumes:
       - ./:/go/src/app
     security_opt:
@@ -215,7 +206,6 @@ services:
       - db
       - kafka
       - platform
-      - patchimg
     volumes:
       - ./:/go/src/app
     security_opt:
