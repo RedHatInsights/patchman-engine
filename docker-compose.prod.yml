@@ -1,15 +1,6 @@
 version: '3.4'
 
 services:
-  patchimg:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - INSTALL_TOOLS=no
-      target: runtimeimg
-    image: patchman-engine-app
-
   db:
     container_name: db
     build:
@@ -23,39 +14,6 @@ services:
       - 5433:5432
     env_file:
       - ./conf/database.env
-
-  db_admin:
-    container_name: db_admin
-    image: patchman-engine-app
-    env_file:
-      - ./conf/common.env
-      - ./conf/database_admin.env
-    command: ./database_admin/entrypoint.sh
-    depends_on:
-      - db
-      - patchimg
-    volumes:
-      - ./dev:/go/src/app/dev
-      - ./dev/database/secrets:/opt/postgresql
-      - ./dev/kafka/secrets:/opt/kafka
-    security_opt:
-      - label=disable
-
-  db_feed:
-    container_name: db_feed
-    image: patchman-engine-app
-    env_file:
-      - ./conf/test.env
-    command: go run ./scripts/feed_db.go
-    depends_on:
-      - db
-      - patchimg
-    volumes:
-      - ./dev:/go/src/app/dev
-      - ./dev/database/secrets:/opt/postgresql
-      - ./dev/kafka/secrets:/opt/kafka
-    security_opt:
-      - label=disable
 
   kafka:
     container_name: kafka
@@ -81,6 +39,12 @@ services:
 
   platform:
     container_name: platform
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - INSTALL_TOOLS=no
+      target: runtimeimg
     image: patchman-engine-app
     env_file:
       - ./conf/platform.env
@@ -89,11 +53,43 @@ services:
     depends_on:
       - db
       - kafka
-      - patchimg
     ports:
       - 9001:9001
     volumes:
       - ./:/go/src/app
+    security_opt:
+      - label=disable
+
+  db_admin:
+    container_name: db_admin
+    image: patchman-engine-app
+    env_file:
+      - ./conf/common.env
+      - ./conf/database_admin.env
+    command: ./database_admin/entrypoint.sh
+    depends_on:
+      - db
+      - platform
+    volumes:
+      - ./dev:/go/src/app/dev
+      - ./dev/database/secrets:/opt/postgresql
+      - ./dev/kafka/secrets:/opt/kafka
+    security_opt:
+      - label=disable
+
+  db_feed:
+    container_name: db_feed
+    image: patchman-engine-app
+    env_file:
+      - ./conf/test.env
+    command: go run ./scripts/feed_db.go
+    depends_on:
+      - db
+      - platform
+    volumes:
+      - ./dev:/go/src/app/dev
+      - ./dev/database/secrets:/opt/postgresql
+      - ./dev/kafka/secrets:/opt/kafka
     security_opt:
       - label=disable
 
@@ -111,7 +107,6 @@ services:
     depends_on:
       - db
       - platform
-      - patchimg
     volumes:
       - ./dev:/go/src/app/dev
       - ./dev/database/secrets:/opt/postgresql
@@ -133,7 +128,6 @@ services:
     depends_on:
       - db
       - platform
-      - patchimg
     volumes:
       - ./dev:/go/src/app/dev
       - ./dev/database/secrets:/opt/postgresql
@@ -155,7 +149,6 @@ services:
     depends_on:
       - db
       - platform
-      - patchimg
     volumes:
       - ./dev:/go/src/app/dev
       - ./dev/database/secrets:/opt/postgresql
@@ -177,7 +170,6 @@ services:
     depends_on:
       - db
       - platform
-      - patchimg
     volumes:
       - ./dev:/go/src/app/dev
       - ./dev/database/secrets:/opt/postgresql
@@ -199,7 +191,6 @@ services:
       - db
       - kafka
       - platform
-      - patchimg
     volumes:
       - ./dev:/go/src/app/dev
       - ./dev/database/secrets:/opt/postgresql
@@ -220,7 +211,6 @@ services:
       - db
       - kafka
       - platform
-      - patchimg
     volumes:
       - ./dev:/go/src/app/dev
       - ./dev/database/secrets:/opt/postgresql
