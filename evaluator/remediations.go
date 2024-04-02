@@ -55,6 +55,20 @@ func getReportedAdvisories(vmaasData *vmaas.UpdatesV3Response) map[string]int {
 	return advisories
 }
 
+func getReportedAdvisoryNames(vmaasData *vmaas.UpdatesV3Response) []string {
+	updateList := vmaasData.GetUpdateList()
+	reportedNames := make([]string, 0, len(updateList))
+	for _, updates := range updateList {
+		for _, update := range updates.GetAvailableUpdates() {
+			advisoryName := update.GetErratum()
+			if len(advisoryName) > 0 {
+				reportedNames = append(reportedNames, advisoryName)
+			}
+		}
+	}
+	return reportedNames
+}
+
 func getReportedPackageUpdates(vmaasData *vmaas.UpdatesV3Response) map[string]bool {
 	updateList := vmaasData.GetUpdateList()
 	packages := make(map[string]bool, len(updateList))

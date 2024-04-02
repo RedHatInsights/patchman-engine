@@ -227,6 +227,10 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 		return nil, nil, nil
 	}
 
+	// load and evaluate advisories for system
+	// posunut spred `updateAdvisoryAccountData`
+	// update in `storeAdvisoryData`
+
 	vmaasData, err := evaluateWithVmaas(updatesData, system, event)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluation with vmaas failed")
@@ -296,8 +300,7 @@ func evaluateWithVmaas(updatesData *vmaas.UpdatesV3Response,
 	return updatesData, nil
 }
 
-func getUpdatesData(ctx context.Context, system *models.SystemPlatform) (
-	*vmaas.UpdatesV3Response, error) {
+func getUpdatesData(ctx context.Context, system *models.SystemPlatform) (*vmaas.UpdatesV3Response, error) {
 	var yumUpdates *vmaas.UpdatesV3Response
 	var yumErr error
 	if enableYumUpdatesEval {
@@ -450,21 +453,33 @@ func commitWithObserve(tx *gorm.DB) error {
 
 func evaluateAndStore(system *models.SystemPlatform,
 	vmaasData *vmaas.UpdatesV3Response, event *mqueue.PlatformEvent) error {
+	deleteIDs, installableIDs, applicableIDs, err := lazySaveAndLoadAdvisories(system, vmaasData)
+	if err != nil {
+		return errors.Wrap(err, "Advisory loading failed")
+	}
+
+	pkgByName, installed, installable, applicable, err := lazySaveAndLoadPackages(system, vmaasData)
+	if err != nil {
+		return errors.Wrap(err, "Package loading failed")
+	}
+
 	tx := database.DB.WithContext(base.Context).Begin()
 	// Don't allow requested TX to hang around locking the rows
 	defer tx.Rollback()
 
-	newSystemAdvisories, err := analyzeAdvisories(tx, system, vmaasData)
+	systemAdvisoriesNew, err := storeAdvisoryData(tx, system, deleteIDs, installableIDs, applicableIDs)
 	if err != nil {
-		return errors.Wrap(err, "Advisory analysis failed")
+		evaluationCnt.WithLabelValues("error-store-advisories").Inc()
+		return errors.Wrap(err, "Unable to store advisory data")
 	}
 
-	installed, installable, applicable, err := analyzePackages(tx, system, vmaasData)
+	err = updateSystemPackages(tx, system, pkgByName)
 	if err != nil {
-		return errors.Wrap(err, "Package analysis failed")
+		evaluationCnt.WithLabelValues("error-system-pkgs").Inc()
+		return errors.Wrap(err, "Unable to update system packages")
 	}
 
-	err = updateSystemPlatform(tx, system, newSystemAdvisories, installed, installable, applicable)
+	err = updateSystemPlatform(tx, system, systemAdvisoriesNew, installed, installable, applicable)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-update-system").Inc()
 		return errors.Wrap(err, "Unable to update system")
@@ -472,7 +487,7 @@ func evaluateAndStore(system *models.SystemPlatform,
 
 	// Send instant notification with new advisories
 	if enableInstantNotifications {
-		err = publishNewAdvisoriesNotification(tx, system, event, system.RhAccountID, newSystemAdvisories)
+		err = publishNewAdvisoriesNotification(tx, system, event, system.RhAccountID, systemAdvisoriesNew)
 		if err != nil {
 			evaluationCnt.WithLabelValues("error-advisory-notification").Inc()
 			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err.Error(),
