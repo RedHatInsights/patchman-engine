@@ -74,7 +74,7 @@ func TestGetStoredAdvisoriesMap(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemAdvisories, err := getStoredAdvisoriesMap(database.DB, 1, 1)
+	systemAdvisories, err := loadSystemAdvisories(database.DB, 1, 1)
 	assert.Nil(t, err)
 	assert.NotNil(t, systemAdvisories)
 	assert.Equal(t, 8, len(systemAdvisories))
@@ -124,7 +124,7 @@ func TestGetAdvisoriesFromDB(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	advisories := []string{"ER-1", "RH-1", "ER-2", "RH-2"}
-	advisoryIDs, missingNames, err := getAdvisoriesFromDB(database.DB, advisories)
+	advisoryIDs, missingNames, err := getAdvisoriesFromDB(advisories)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(advisoryIDs))
 	assert.Equal(t, 2, len(missingNames))
@@ -135,7 +135,7 @@ func TestGetAdvisoriesFromDBEmptyString(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	advisories := []string{""}
-	advisoryIDs, missingNames, err := getAdvisoriesFromDB(database.DB, advisories)
+	advisoryIDs, missingNames, err := getAdvisoriesFromDB(advisories)
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(advisoryIDs))
 	assert.Equal(t, 1, len(missingNames))
