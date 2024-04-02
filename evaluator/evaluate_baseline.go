@@ -5,12 +5,10 @@ import (
 	"app/base/models"
 	"app/base/vmaas"
 	"time"
-
-	"gorm.io/gorm"
 )
 
-func limitVmaasToBaseline(tx *gorm.DB, system *models.SystemPlatform, vmaasData *vmaas.UpdatesV3Response) error {
-	baselineConfig := database.GetBaselineConfig(tx, system)
+func limitVmaasToBaseline(system *models.SystemPlatform, vmaasData *vmaas.UpdatesV3Response) error {
+	baselineConfig := database.GetBaselineConfig(system)
 	if baselineConfig == nil {
 		return nil // no baseline config, nothing to change
 	}
@@ -22,7 +20,7 @@ func limitVmaasToBaseline(tx *gorm.DB, system *models.SystemPlatform, vmaasData 
 	}
 
 	var filterOutNames []string
-	err := tx.Model(&models.AdvisoryMetadata{}).Where("name IN (?)", reportedNames).
+	err := database.DB.Model(&models.AdvisoryMetadata{}).Where("name IN (?)", reportedNames).
 		Where("public_date >= ?", baselineConfig.ToTime.Truncate(24*time.Hour)).
 		Pluck("name", &filterOutNames).Error
 	if err != nil {
