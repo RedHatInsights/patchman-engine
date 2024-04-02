@@ -19,7 +19,6 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -204,11 +203,7 @@ func runEvaluate(
 
 func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, inventoryID string) (
 	*models.SystemPlatform, *vmaas.UpdatesV3Response, error) {
-	tx := database.DB.WithContext(base.Context).Begin()
-	// Don't allow requested TX to hang around locking the rows
-	defer tx.Rollback()
-
-	system, err := tryGetSystem(tx, event.AccountID, inventoryID, event.Timestamp)
+	system, err := tryGetSystem(event.AccountID, inventoryID, event.Timestamp)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to get system")
 	}
@@ -217,7 +212,7 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 		return nil, nil, nil
 	}
 
-	thirdParty, err := analyzeRepos(tx, system)
+	thirdParty, err := analyzeRepos(system)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Repo analysis failed")
 	}
@@ -232,7 +227,7 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 		return nil, nil, nil
 	}
 
-	vmaasData, err := evaluateWithVmaas(tx, updatesData, system, event)
+	vmaasData, err := evaluateWithVmaas(updatesData, system, event)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluation with vmaas failed")
 	}
@@ -283,26 +278,20 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV3Response, 
 	return &resp, nil
 }
 
-func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV3Response,
+func evaluateWithVmaas(updatesData *vmaas.UpdatesV3Response,
 	system *models.SystemPlatform, event *mqueue.PlatformEvent) (*vmaas.UpdatesV3Response, error) {
 	if enableBaselineEval {
 		if !system.SatelliteManaged || (system.SatelliteManaged && !enableSatelliteFunctionality) {
-			err := limitVmaasToBaseline(tx, system, updatesData)
+			err := limitVmaasToBaseline(system, updatesData)
 			if err != nil {
 				return nil, errors.Wrap(err, "Failed to evaluate baseline")
 			}
 		}
 	}
 
-	err := evaluateAndStore(tx, system, updatesData, event)
+	err := evaluateAndStore(system, updatesData, event)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to evaluate and store results")
-	}
-
-	err = commitWithObserve(tx)
-	if err != nil {
-		evaluationCnt.WithLabelValues("error-database-commit").Inc()
-		return nil, errors.New("database commit failed")
 	}
 	return updatesData, nil
 }
@@ -421,9 +410,9 @@ func tryGetVmaasRequest(system *models.SystemPlatform) (*vmaas.UpdatesV3Request,
 	return &updatesReq, nil
 }
 
-func tryGetSystem(tx *gorm.DB, accountID int, inventoryID string,
+func tryGetSystem(accountID int, inventoryID string,
 	requested *types.Rfc3339Timestamp) (*models.SystemPlatform, error) {
-	system, err := loadSystemData(tx, accountID, inventoryID)
+	system, err := loadSystemData(accountID, inventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
 		return nil, errors.Wrap(err, "error loading system from DB")
@@ -459,8 +448,12 @@ func commitWithObserve(tx *gorm.DB) error {
 	return nil
 }
 
-func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
+func evaluateAndStore(system *models.SystemPlatform,
 	vmaasData *vmaas.UpdatesV3Response, event *mqueue.PlatformEvent) error {
+	tx := database.DB.WithContext(base.Context).Begin()
+	// Don't allow requested TX to hang around locking the rows
+	defer tx.Rollback()
+
 	newSystemAdvisories, err := analyzeAdvisories(tx, system, vmaasData)
 	if err != nil {
 		return errors.Wrap(err, "Advisory analysis failed")
@@ -487,11 +480,16 @@ func evaluateAndStore(tx *gorm.DB, system *models.SystemPlatform,
 		}
 	}
 
+	err = commitWithObserve(tx)
+	if err != nil {
+		evaluationCnt.WithLabelValues("error-database-commit").Inc()
+		return errors.New("database commit failed")
+	}
+
 	return nil
 }
 
-func analyzeRepos(tx *gorm.DB, system *models.SystemPlatform) (
-	thirdParty bool, err error) {
+func analyzeRepos(system *models.SystemPlatform) (thirdParty bool, err error) {
 	if !enableRepoAnalysis {
 		utils.LogInfo("repo analysis disabled, skipping")
 		return false, nil
@@ -500,7 +498,7 @@ func analyzeRepos(tx *gorm.DB, system *models.SystemPlatform) (
 	// if system has associated at least one third party repo
 	// it's marked as third party system
 	var thirdPartyCount int64
-	err = tx.Table("system_repo sr").
+	err = database.DB.Table("system_repo sr").
 		Joins("join repo r on r.id = sr.repo_id").
 		Where("sr.rh_account_id = ?", system.RhAccountID).
 		Where("sr.system_id = ?", system.ID).
@@ -624,15 +622,12 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 	return vmaasDataPtr.(*vmaas.UpdatesV3Response), nil
 }
 
-func loadSystemData(tx *gorm.DB, accountID int, inventoryID string) (*models.SystemPlatform, error) {
+func loadSystemData(accountID int, inventoryID string) (*models.SystemPlatform, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("data-loading"))
 
 	var system models.SystemPlatform
-	err := tx.Clauses(clause.Locking{
-		Strength: "UPDATE",
-		Table:    clause.Table{Name: clause.CurrentTable},
-	}).Where("rh_account_id = ?", accountID).
+	err := database.DB.Where("rh_account_id = ?", accountID).
 		Where("inventory_id = ?::uuid", inventoryID).
 		Find(&system).Error
 	return &system, err
