@@ -21,11 +21,11 @@ type SystemTimestamps struct {
 }
 
 type SystemTags struct {
-	Tags SystemTagsList `json:"tags" csv:"tags" query:"ih.tags" gorm:"column:tags_json"`
+	Tags SystemTagsList `json:"tags" csv:"tags" query:"ih.tags" gorm:"column:tags"`
 }
 
 type SystemGroups struct {
-	Groups SystemGroupsList `json:"groups" csv:"groups" query:"ih.groups" gorm:"column:groups_json" order_query:"ih.groups->0->>'name'"`
+	Groups SystemGroupsList `json:"groups" csv:"groups" query:"ih.groups" gorm:"column:groups" order_query:"ih.groups->0->>'name'"`
 }
 
 type BaselineAttributes struct {
