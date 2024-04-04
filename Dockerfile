@@ -19,12 +19,12 @@ ENV GOPATH=/go \
     PATH=$PATH:/go/bin
 
 # now add patchman sources and build app
-RUN adduser --gid 0 -d /go --no-create-home insights
-RUN mkdir -p /go/src/app && chown -R insights:root /go
+RUN adduser -d /go --no-create-home insights
+RUN mkdir -p /go/src/app && chown -R insights:insights /go
 USER insights
 WORKDIR /go/src/app
 
-ADD --chown=insights:root go.mod go.sum     /go/src/app/
+ADD --chown=insights:insights go.mod go.sum     /go/src/app/
 
 RUN go mod download
 
@@ -35,21 +35,21 @@ RUN if [ "$INSTALL_TOOLS" == "yes" ] ; then \
         | sh -s -- -b $(go env GOPATH)/bin v1.55.2 ; \
     fi
 
-ADD --chown=insights:root dev/kafka/secrets/ca.crt /opt/kafka/
-ADD --chown=insights:root dev/database/secrets/pgca.crt /opt/postgresql/
-ADD --chown=insights:root dev/scripts              /go/src/app/dev/scripts
-ADD --chown=insights:root main.go                  /go/src/app/
-ADD --chown=insights:root turnpike                 /go/src/app/turnpike
-ADD --chown=insights:root platform                 /go/src/app/platform
-ADD --chown=insights:root scripts                  /go/src/app/scripts
-ADD --chown=insights:root database_admin           /go/src/app/database_admin
-ADD --chown=insights:root docs                     /go/src/app/docs
-ADD --chown=insights:root evaluator                /go/src/app/evaluator
-ADD --chown=insights:root listener                 /go/src/app/listener
-ADD --chown=insights:root tasks                    /go/src/app/tasks
-ADD --chown=insights:root base                     /go/src/app/base
-ADD --chown=insights:root manager                  /go/src/app/manager
-ADD --chown=insights:root VERSION                  /go/src/app/
+ADD --chown=insights:insights dev/kafka/secrets/ca.crt /opt/kafka/
+ADD --chown=insights:insights dev/database/secrets/pgca.crt /opt/postgresql/
+ADD --chown=insights:insights dev/scripts              /go/src/app/dev/scripts
+ADD --chown=insights:insights main.go                  /go/src/app/
+ADD --chown=insights:insights turnpike                 /go/src/app/turnpike
+ADD --chown=insights:insights platform                 /go/src/app/platform
+ADD --chown=insights:insights scripts                  /go/src/app/scripts
+ADD --chown=insights:insights database_admin           /go/src/app/database_admin
+ADD --chown=insights:insights docs                     /go/src/app/docs
+ADD --chown=insights:insights evaluator                /go/src/app/evaluator
+ADD --chown=insights:insights listener                 /go/src/app/listener
+ADD --chown=insights:insights tasks                    /go/src/app/tasks
+ADD --chown=insights:insights base                     /go/src/app/base
+ADD --chown=insights:insights manager                  /go/src/app/manager
+ADD --chown=insights:insights VERSION                  /go/src/app/
 
 RUN go build -v main.go
 
@@ -69,9 +69,10 @@ EXPOSE 8080
 FROM ${RUNIMG} as runtimeimg
 
 # create insights user
-RUN echo "insights:x:1000:0::/go:/bin/bash" >>/etc/passwd && \
+RUN echo "insights:x:1000:1000::/go:/bin/bash" >>/etc/passwd && \
+    echo "insights:x:1000:insights" >>/etc/group && \
     mkdir /go && \
-    chown insights:root /go
+    chown insights:insights /go
 
 # copy root ca certs so we can access https://logs.us-east-1.amazonaws.com/
 COPY --from=buildimg /etc/pki/tls/certs/ca-bundle.crt /etc/pki/tls/certs/
@@ -84,17 +85,17 @@ COPY --from=buildimg /usr/lib64/libssl* /usr/lib64/
 # copy libs needed by main
 COPY --from=buildimg /go/lib64/* /lib64/
 
-ADD --chown=insights:root go.sum                     /go/src/app/
-ADD --chown=insights:root scripts                    /go/src/app/scripts
-ADD --chown=insights:root database_admin/*.sh        /go/src/app/database_admin/
-ADD --chown=insights:root database_admin/*.sql       /go/src/app/database_admin/
-ADD --chown=insights:root database_admin/schema      /go/src/app/database_admin/schema
-ADD --chown=insights:root database_admin/migrations  /go/src/app/database_admin/migrations
-ADD --chown=insights:root docs/v3/openapi.json       /go/src/app/docs/v3/
-ADD --chown=insights:root docs/admin/openapi.json    /go/src/app/docs/admin/
-ADD --chown=insights:root VERSION                    /go/src/app/
+ADD --chown=insights:insights go.sum                     /go/src/app/
+ADD --chown=insights:insights scripts                    /go/src/app/scripts
+ADD --chown=insights:insights database_admin/*.sh        /go/src/app/database_admin/
+ADD --chown=insights:insights database_admin/*.sql       /go/src/app/database_admin/
+ADD --chown=insights:insights database_admin/schema      /go/src/app/database_admin/schema
+ADD --chown=insights:insights database_admin/migrations  /go/src/app/database_admin/migrations
+ADD --chown=insights:insights docs/v3/openapi.json       /go/src/app/docs/v3/
+ADD --chown=insights:insights docs/admin/openapi.json    /go/src/app/docs/admin/
+ADD --chown=insights:insights VERSION                    /go/src/app/
 
-COPY --from=buildimg /go/src/app/main /go/src/app/
+COPY --from=buildimg --chown=insights:insights /go/src/app/main /go/src/app/
 
 USER insights
 WORKDIR /go/src/app
