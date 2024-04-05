@@ -274,14 +274,20 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 	nPkgs := len(packagesByNEVRA)
 	removedPkgIDs := make([]int64, 0, nPkgs)
 	updatedPackages := make([]models.SystemPackage, 0, nPkgs)
+	uniqPackageIDs := make(map[int64]string, nPkgs)
 
-	for _, pkg := range packagesByNEVRA {
+	for nevra, pkg := range packagesByNEVRA {
 		switch pkg.Change {
 		case Remove:
 			removedPkgIDs = append(removedPkgIDs, pkg.PackageID)
 		case Add:
 			fallthrough
 		case Update:
+			if nevra2, ok := uniqPackageIDs[pkg.PackageID]; ok {
+				utils.LogWarn("nevra1", nevra, "nevra2", nevra2, "packageID", pkg.PackageID, "Duplicate packageID")
+				continue
+			}
+			uniqPackageIDs[pkg.PackageID] = nevra
 			systemPackage := createSystemPackage(system, pkg)
 			updatedPackages = append(updatedPackages, systemPackage)
 		}
