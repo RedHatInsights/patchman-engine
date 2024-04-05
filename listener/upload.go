@@ -31,6 +31,7 @@ const (
 	WarnSkippingNoPackages    = "skipping profile with no packages"
 	WarnSkippingReporter      = "skipping excluded reporter"
 	WarnSkippingHostType      = "skipping excluded host type"
+	WarnSkippingBadPackages   = "skipping profile with malformed packages"
 	WarnPayloadTracker        = "unable to send message to payload tracker"
 	ErrorNoAccountProvided    = "no account provided in host message"
 	ErrorKafkaSend            = "unable to send evaluation message"
@@ -149,6 +150,19 @@ func HandleUpload(event HostEvent) error {
 		return nil
 	}
 
+	installedPackages := event.Host.SystemProfile.GetInstalledPackages()
+	if len(installedPackages) > 0 {
+		// parse first package from list and skip upload if pkg is malformed, e.g. without epoch
+		_, err := utils.ParseNevra(installedPackages[0])
+		if err != nil {
+			utils.LogError("inventoryID", event.Host.ID, "err", err.Error(), WarnSkippingBadPackages)
+			messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnBadPackages).Inc()
+			utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
+			sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, WarnSkippingBadPackages)
+			return nil
+		}
+	}
+
 	sendPayloadStatus(ptWriter, payloadTrackerEvent, "", "")
 	yumUpdates, err := getYumUpdates(event, httpClient)
 	if err != nil {
@@ -157,7 +171,7 @@ func HandleUpload(event HostEvent) error {
 	}
 	utils.LogTrace("inventoryID", event.Host.ID, "yum_updates", string(yumUpdates.GetRawParsed()))
 
-	if len(event.Host.SystemProfile.GetInstalledPackages()) == 0 && yumUpdates == nil {
+	if len(installedPackages) == 0 && yumUpdates == nil {
 		utils.LogWarn("inventoryID", event.Host.ID, WarnSkippingNoPackages)
 		messagesReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
 		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedWarnNoPackages))
