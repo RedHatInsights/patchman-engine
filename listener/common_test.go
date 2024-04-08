@@ -87,7 +87,7 @@ func createTestUploadEvent(orgID, inventoryID, reporter string, packages, yum bo
 		},
 	}
 	if packages {
-		ev.Host.SystemProfile.InstalledPackages = &[]string{"kernel-54321.rhel8.x86_64"}
+		ev.Host.SystemProfile.InstalledPackages = &[]string{"kernel-0:54321-1.rhel8.x86_64"}
 	}
 	ev.Host.SystemProfile.DnfModules = &[]inventory.DnfModule{{
 		Name:   "modName",
