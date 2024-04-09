@@ -169,6 +169,7 @@ objects:
         - {name: EVENTS_TOPIC, value: platform.inventory.events}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
+        - {name: TEMPLATE_TOPIC, value: platform.content-sources.template}
         - {name: CONSUMER_COUNT, value: '${CONSUMER_COUNT_LISTENER}'}
         - {name: ENABLE_BYPASS, value: '${ENABLE_BYPASS_LISTENER}'}
         - {name: ALLOWED_REPORTERS, value: '${ALLOWED_REPORTERS}'}
@@ -504,6 +505,7 @@ objects:
     - vmaas
     - ingress
     - puptoo
+    - content-sources-backend
     cyndi:
       enabled: true
       appName: patch
