@@ -20,7 +20,18 @@ if [[ -z "$RH_REGISTRY_USER" || -z "$RH_REGISTRY_TOKEN" ]]; then
     exit 1
 fi
 
-AUTH_CONF_DIR="$(pwd)/.podman"
+# Create tmp dir to store data in during job run (do NOT store in $WORKSPACE)
+export TMP_JOB_DIR=$(mktemp -d -p "$HOME" -t "jenkins-${JOB_NAME}-${BUILD_NUMBER}-XXXXXX")
+echo "job tmp dir location: $TMP_JOB_DIR"
+
+function job_cleanup() {
+    echo "cleaning up job tmp dir: $TMP_JOB_DIR"
+    rm -fr $TMP_JOB_DIR
+}
+
+trap job_cleanup EXIT ERR SIGINT SIGTERM
+
+AUTH_CONF_DIR="$TMP_JOB_DIR/.podman"
 mkdir -p $AUTH_CONF_DIR
 export REGISTRY_AUTH_FILE="$AUTH_CONF_DIR/auth.json"
 podman login -u="$QUAY_USER" -p="$QUAY_TOKEN" quay.io
