@@ -104,8 +104,6 @@ func TemplateUpdate(template mqueue.TemplateResponse) error {
 
 	err = database.OnConflictUpdateMulti(database.Db, []string{"rh_account_id", "uuid"},
 		"name", "description", "creator", "published").Save(&row).Error
-	// err = database.Db.
-	//	Create(&row).Error
 	if err != nil {
 		return errors.Wrap(err, "creating template from message")
 	}
