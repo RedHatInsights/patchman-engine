@@ -161,7 +161,7 @@ func templatesCreators(db *gorm.DB, account int) ([]*string, error) {
 	err := db.Table("template bl").
 		Distinct("creator").
 		Joins("JOIN rh_account acc ON bl.rh_account_id = acc.id").
-		Where("bl.rh_account_id = ?", account).
+		Where("bl.rh_account_id = ? and creator IS NOT NULL", account).
 		Scan(&creators).Error
 	if err != nil {
 		return nil, err
