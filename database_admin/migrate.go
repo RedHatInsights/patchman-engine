@@ -118,7 +118,7 @@ func migrateAction(conn database.Driver, sourceURL string) int {
 	fmt.Printf("DB migration in progress, waiting for schema=%d\n", expectedSchema)
 	dbSchema, err := dbSchemaVersion(conn, sourceURL)
 	if err != nil {
-		if errors.Is(err, migrate.ErrDirty{}) && forceMigrationVersion != "" {
+		if errors.As(err, &migrate.ErrDirty{}) && forceMigrationVersion != "" {
 			return MIGRATE
 		}
 		fmt.Fprintf(os.Stderr, "Error getting current DB version: %v\n", err.Error())
