@@ -139,7 +139,7 @@ podman-compose -f dev/sonar/docker-compose.yml up --build
 ## Update Grafana config map
 Copy Grafana board json config to the temporary file, e.g. `grafana.json` and run:
 ~~~bash
-./scripts/grafana-json-to-yaml.sh grafana.json > ./dashboards/grafana-dashboard-insights-patchman-engine-general.configmap.yaml
+./scripts/grafana-json-to-yaml.sh grafana.json > ./dashboards/app-sre/grafana-dashboard-insights-patchman-engine-general.configmap.yaml
 ~~~
 
 ## Profiling
