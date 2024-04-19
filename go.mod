@@ -31,7 +31,7 @@ require (
 	github.com/zsais/go-gin-prometheus v0.1.0
 	go.uber.org/automaxprocs v1.5.3
 	go.uber.org/ratelimit v0.3.0
-	golang.org/x/net v0.18.0
+	golang.org/x/net v0.23.0
 	gorm.io/driver/postgres v1.5.4
 	gorm.io/gorm v1.25.5
 	modernc.org/strutil v1.2.0
@@ -91,9 +91,9 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/arch v0.6.0 // indirect
-	golang.org/x/crypto v0.17.0 // indirect
+	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.15.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
