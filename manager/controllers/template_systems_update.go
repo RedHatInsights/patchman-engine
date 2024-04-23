@@ -1,11 +1,15 @@
 package controllers
 
 import (
+	"app/base"
+	"app/base/api"
+	"app/base/candlepin"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/config"
 	"app/manager/middlewares"
+	"context"
 	"fmt"
 	"net/http"
 
@@ -16,6 +20,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+var errCandlepin = errors.New("candlepin error")
+var candlepinClient = api.Client{
+	HTTPClient: &http.Client{Transport: &http.Transport{DisableCompression: !config.CandlepinCallCmp}},
+	Debug:      config.DebugRequest,
+}
 
 type TemplateSystemsUpdateRequest struct {
 	// List of inventory IDs to have templates removed
@@ -54,6 +64,11 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 	}
 
 	err = assignTemplateSystems(c, db, account, template, req.Systems, groups)
+	if err != nil {
+		return
+	}
+
+	err = assignCandlepinEnvironment(c, template.EnvironmentID, req.Systems)
 	if err != nil {
 		return
 	}
@@ -153,5 +168,47 @@ func templateArchVersionMatch(
 	if err != nil {
 		err = errors2.Join(fmt.Errorf("template arch: %s, version: %s", template.Arch, template.Version), err)
 	}
+	return err
+}
+
+func callCandlepin(ctx context.Context, env string, request *candlepin.EnvironmentsConsumersRequest) (
+	*candlepin.EnvironmentsConsumersResponse, error) {
+	candlepinEnvConsumersURL := config.CandlepinEnvURL + env + "/consumers"
+	candlepinFunc := func() (interface{}, *http.Response, error) {
+		utils.LogTrace("request", *request, "candlepin /environments/consumers request")
+		candlepinResp := candlepin.EnvironmentsConsumersResponse{}
+		resp, err := candlepinClient.Request(&ctx, http.MethodPost, candlepinEnvConsumersURL, request, &candlepinResp)
+		statusCode := utils.TryGetStatusCode(resp)
+		utils.LogDebug("status_code", statusCode, "candlepin /environments/consumers call")
+		utils.LogTrace("response", resp, "candlepin /environments/consumers response")
+		if err != nil && statusCode == 400 {
+			err = errors.Wrap(errCandlepin, err.Error())
+		}
+		return &candlepinResp, resp, err
+	}
+
+	candlepinRespPtr, err := utils.HTTPCallRetry(base.Context, candlepinFunc, config.CandlepinExpRetries,
+		config.CandlepinRetries, http.StatusServiceUnavailable)
+	if err != nil {
+		return nil, errors.Wrap(err, "candlepin /environments/consumers call failed")
+	}
+	return candlepinRespPtr.(*candlepin.EnvironmentsConsumersResponse), nil
+}
+
+func assignCandlepinEnvironment(c context.Context, env string, inventoryIDs []string) error {
+	guests := make([]candlepin.EnvironmentsConsumersRequestGuestID, 0, len(inventoryIDs))
+	for _, id := range inventoryIDs {
+		guests = append(guests, candlepin.EnvironmentsConsumersRequestGuestID{
+			ID:      id,
+			GuestID: id,
+		})
+	}
+	req := candlepin.EnvironmentsConsumersRequest{
+		ID:       env,
+		UUID:     env,
+		GuestIds: guests,
+	}
+	_, err := callCandlepin(c, env, &req)
+	// check response
 	return err
 }
