@@ -43,6 +43,7 @@ services:
       target: buildimg
     image: patchman-engine-app
     env_file:
+      - ./conf/common.env
       - ./conf/platform.env
     command: ./dev/scripts/docker-compose-entrypoint.sh platform
     restart: unless-stopped
