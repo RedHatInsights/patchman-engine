@@ -33,5 +33,12 @@ var (
 	// Expose templates API (feature flag)
 	EnableTemplates = utils.PodConfig.GetBool("templates_api", true)
 
+	// Toggle compression when calling Candlepi API
+	CandlepinCallCmp = utils.PodConfig.GetBool("candlepin_call_compression", true)
+	// Number of retries on Candlepin API
+	CandlepinRetries = utils.PodConfig.GetInt("candlepin_retries", 5)
+	// Toggle exponential retries on Candlepin API
+	CandlepinExpRetries = utils.PodConfig.GetBool("candlepin_exp_retries", true)
+	// Debug flag for API calls
 	DebugRequest = log.IsLevelEnabled(log.TraceLevel)
 )

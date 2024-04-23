@@ -70,6 +70,7 @@ type coreConfig struct {
 	// services
 	VmaasAddress                  string
 	RbacAddress                   string
+	CandlepinAddress              string
 	ManagerPrivateAddress         string
 	ListenerPrivateAddress        string
 	EvaluatorUploadPrivateAddress string
@@ -154,6 +155,7 @@ func initTopicsFromEnv() {
 func initServicesFromEnv() {
 	CoreCfg.VmaasAddress = Getenv("VMAAS_ADDRESS", CoreCfg.VmaasAddress)
 	CoreCfg.RbacAddress = Getenv("RBAC_ADDRESS", CoreCfg.RbacAddress)
+	CoreCfg.CandlepinAddress = Getenv("CANDLEPIN_ADDRESS", CoreCfg.CandlepinAddress)
 }
 
 func initDBFromClowder() {
