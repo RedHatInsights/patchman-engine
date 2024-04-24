@@ -216,6 +216,7 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform, packages
 			} else {
 				p.Change = Keep
 			}
+			packages[nevra] = p
 		} else {
 			packages[nevra] = namedPackage{
 				NameID:        columns.NameID,
@@ -248,10 +249,10 @@ func isValidNevra(nevra string) bool {
 func latestPkgsChanged(current, stored namedPackage) bool {
 	installableEqual := (current.InstallableID == nil && stored.InstallableID == nil) ||
 		(current.InstallableID != nil && stored.InstallableID != nil &&
-			current.InstallableID == stored.InstallableID)
+			*current.InstallableID == *stored.InstallableID)
 	applicableEqual := (current.ApplicableID == nil && stored.ApplicableID == nil) ||
 		(current.ApplicableID != nil && stored.ApplicableID != nil &&
-			current.ApplicableID == stored.ApplicableID)
+			*current.ApplicableID == *stored.ApplicableID)
 	return !(installableEqual && applicableEqual)
 }
 
