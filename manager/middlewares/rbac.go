@@ -32,6 +32,8 @@ var granularPerms = map[string]string{
 	"BaselineUpdateHandler":        "patch:template:write",
 	"BaselineDeleteHandler":        "patch:template:write",
 	"BaselineSystemsRemoveHandler": "patch:template:write",
+	"TemplateSystemsUpdateHandler": "patch:template:write",
+	"TemplateSystemsDeleteHandler": "patch:template:write",
 	"SystemDeleteHandler":          "patch:system:write",
 }
 
