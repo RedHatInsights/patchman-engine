@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slices"
 )
 
 var (
@@ -22,27 +23,17 @@ var (
 
 const xRHIdentity = "x-rh-identity"
 
-var allPerms = "patch:*:*"
-var readPerms = map[string]bool{allPerms: true, "patch:*:read": true}
-var writePerms = map[string]bool{allPerms: true, "patch:*:write": true}
-var inventoryReadPerms = map[string]bool{
-	"inventory:*:*":        true,
-	"inventory:*:read":     true,
-	"inventory:hosts:*":    true,
-	"inventory:hosts:read": true,
-}
+const inventoryHostsReadPerm = "inventory:hosts:read"
+const patchReadPerm = "patch:*:read"
+const patchWritePerm = "patch:*:write"
 
 // handlerName to permissions mapping
-var granularPerms = map[string]struct {
-	Permission string
-	Read       bool
-	Write      bool
-}{
-	"CreateBaselineHandler":        {"patch:template:write", false, true},
-	"BaselineUpdateHandler":        {"patch:template:write", false, true},
-	"BaselineDeleteHandler":        {"patch:template:write", false, true},
-	"BaselineSystemsRemoveHandler": {"patch:template:write", false, true},
-	"SystemDeleteHandler":          {"patch:system:write", false, true},
+var granularPerms = map[string]string{
+	"CreateBaselineHandler":        "patch:template:write",
+	"BaselineUpdateHandler":        "patch:template:write",
+	"BaselineDeleteHandler":        "patch:template:write",
+	"BaselineSystemsRemoveHandler": "patch:template:write",
+	"SystemDeleteHandler":          "patch:system:write",
 }
 
 // Make RBAC client on demand, with specified identity
@@ -59,54 +50,56 @@ func makeClient(identity string) *api.Client {
 	return &client
 }
 
+// nolint: goconst
+// for short lists like that is slice.Contains() faster than map lookup _, ok := map[key]
+func expandedPermission(perm string) []string {
+	comp := strings.SplitAfterN(perm, ":", 3)
+	expandedPerm := []string{perm,
+		comp[0] + comp[1] + "*",
+		comp[0] + "*:" + comp[2],
+		"*:" + comp[1] + comp[2],
+		comp[0] + "*:*",
+		"*:" + comp[1] + "*",
+		"*:*:" + comp[2],
+		"*:*:*",
+	}
+	return expandedPerm
+}
+
 func checkPermissions(access *rbac.AccessPagination, handlerName, method string) bool {
-	grantedPatch := false
+	// always need inventory:hosts:read
 	grantedInventory := false
+	inventoryHostsReadPerms := expandedPermission(inventoryHostsReadPerm)
+
+	// API handler specific permission
+	grantedPatch := false
+	patchNeededPerms := []string{}
+	if p, has := granularPerms[handlerName]; has {
+		patchNeededPerms = expandedPermission(p)
+	} else {
+		// not granular
+		// require read permissions for GET and POST
+		// require write permissions for PUT and DELETE
+		switch method {
+		case "GET", "POST":
+			patchNeededPerms = expandedPermission(patchReadPerm)
+		case "PUT", "DELETE":
+			patchNeededPerms = expandedPermission(patchWritePerm)
+		}
+	}
+
 	for _, a := range access.Data {
+		if !grantedInventory {
+			grantedInventory = slices.Contains(inventoryHostsReadPerms, a.Permission)
+		}
+		if !grantedPatch {
+			grantedPatch = slices.Contains(patchNeededPerms, a.Permission)
+		}
 		if grantedPatch && grantedInventory {
 			return true
 		}
-
-		if !grantedInventory {
-			grantedInventory = inventoryReadPerms[a.Permission]
-		}
-
-		if !grantedPatch {
-			if p, has := granularPerms[handlerName]; has {
-				// API handler requires granular permissions
-				if a.Permission == p.Permission {
-					// the required permission is present, e.g. patch:template:write
-					grantedPatch = true
-					continue
-				}
-				if p.Read && !p.Write && readPerms[a.Permission] {
-					// required permission is read permission
-					// check whether we have either patch:*:read or patch:*:*
-					grantedPatch = true
-					continue
-				}
-				if p.Write && !p.Read && writePerms[a.Permission] {
-					// required permission is write permission
-					// check whether we have either patch:*:write or patch:*:*
-					grantedPatch = true
-					continue
-				}
-				// we need both read and write permissions - patch:*:*
-				grantedPatch = (a.Permission == allPerms)
-			} else {
-				// not granular
-				// require read permissions for GET and POST
-				// require write permissions for PUT and DELETE
-				switch method {
-				case "GET", "POST":
-					grantedPatch = readPerms[a.Permission]
-				case "PUT", "DELETE":
-					grantedPatch = writePerms[a.Permission]
-				}
-			}
-		}
 	}
-	return grantedPatch && grantedInventory
+	return false
 }
 
 func isAccessGranted(c *gin.Context) bool {
@@ -143,9 +136,11 @@ func findInventoryGroups(access *rbac.AccessPagination) map[string]string {
 	if len(access.Data) == 0 {
 		return res
 	}
+	inventoryHostsReadPerms := expandedPermission(inventoryHostsReadPerm)
 	groups := []string{}
 	for _, a := range access.Data {
-		if !inventoryReadPerms[a.Permission] {
+		// look for groups only on inventory:hosts:read permissions
+		if !slices.Contains(inventoryHostsReadPerms, a.Permission) {
 			continue
 		}
 
