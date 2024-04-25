@@ -24,17 +24,14 @@ const (
 )
 
 func TemplatesMessageHandler(m mqueue.KafkaMessage) error {
-	var event mqueue.TemplateEvent
-	utils.LogTrace("kafka message data", string(m.Value))
-	if err := json.Unmarshal(m.Value, &event); err != nil {
-		utils.LogError("msg", string(m.Value), "message is not a valid JSON")
+	eType, event, err := processTemplateEvent(m.Value)
+	if err != nil {
+		utils.LogError("msg", err.Error(), "skipping template event")
 		// Skip invalid messages
 		return nil
 	}
-	eType := strings.TrimPrefix(event.Type, "com.redhat.console.repositories.")
 
 	errs := []error{}
-	var err error
 	for _, template := range event.Data {
 		if enableBypass {
 			utils.LogInfo("template", template.UUID, "Processing bypassed")
@@ -97,7 +94,7 @@ func TemplateUpdate(template mqueue.TemplateResponse) error {
 		UUID:        template.UUID,
 		Name:        template.Name,
 		//Config:      nil,
-		Description: &template.Description,
+		Description: template.Description,
 		Creator:     nil,
 		Published:   &template.Date,
 	}
@@ -108,4 +105,20 @@ func TemplateUpdate(template mqueue.TemplateResponse) error {
 		return errors.Wrap(err, "creating template from message")
 	}
 	return nil
+}
+
+func processTemplateEvent(value json.RawMessage) (eType string, event mqueue.TemplateEvent, err error) {
+	utils.LogTrace("kafka message data", string(value))
+	if err := json.Unmarshal(value, &event); err != nil {
+		err = errors.Wrap(err, fmt.Sprintf("value: %s", string(value)))
+		return "", event, errors.Wrap(err, "message is not a valid JSON")
+	}
+
+	for i, d := range event.Data {
+		if d.Description != nil && (len(*d.Description) == 0 || spacesRegex.MatchString(*d.Description)) {
+			d.Description = nil
+			event.Data[i] = d
+		}
+	}
+	return strings.TrimPrefix(event.Type, "com.redhat.console.repositories."), event, nil
 }
