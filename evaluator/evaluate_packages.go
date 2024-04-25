@@ -171,9 +171,7 @@ func packagesFromUpdateList(system *models.SystemPlatform, vmaasData *vmaas.Upda
 			installableID, applicableID := latestPackagesFromUpdatesList(availableUpdates)
 			packages[nevra] = namedPackage{
 				NameID:        pkgMeta.NameID,
-				Name:          pkgMeta.Name,
 				PackageID:     pkgMeta.ID,
-				EVRA:          pkgMeta.Evra,
 				Change:        Add,
 				InstallableID: installableID,
 				ApplicableID:  applicableID,
@@ -223,7 +221,6 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform, packages
 			packages[nevra] = namedPackage{
 				NameID:        columns.NameID,
 				PackageID:     columns.PackageID,
-				EVRA:          columns.EVRA,
 				Change:        Remove,
 				ApplicableID:  columns.ApplicableID,
 				InstallableID: columns.InstallableID,
@@ -361,9 +358,7 @@ const (
 
 type namedPackage struct {
 	NameID        int64
-	Name          string
 	PackageID     int64
-	EVRA          string
 	InstallableID *int64
 	ApplicableID  *int64
 	Change        ChangeType
