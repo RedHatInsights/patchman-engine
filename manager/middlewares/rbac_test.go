@@ -100,11 +100,7 @@ func TestPermissionsSingleWrite(t *testing.T) {
 func TestPermissionsSingleRead(t *testing.T) {
 	// handler needs `patch:single:read`
 	handler := "SingleRead"
-	granularPerms = map[string]struct {
-		Permission string
-		Read       bool
-		Write      bool
-	}{"SingleRead": {"patch:single:read", true, false}}
+	granularPerms = map[string]string{"SingleRead": "patch:single:read"}
 	access := rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:*"},
@@ -158,11 +154,7 @@ func TestPermissionsSingleRead(t *testing.T) {
 func TestPermissionsSingleReadWrite(t *testing.T) {
 	// handler needs `patch:single:read`
 	handler := "SingleReadWrite"
-	granularPerms = map[string]struct {
-		Permission string
-		Read       bool
-		Write      bool
-	}{"SingleReadWrite": {"patch:single:*", true, true}}
+	granularPerms = map[string]string{"SingleReadWrite": "patch:single:*"}
 	access := rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:*"},
@@ -223,11 +215,7 @@ func TestPermissionsSingleReadWrite(t *testing.T) {
 func TestPermissionsRead(t *testing.T) {
 	// handler needs `patch:single:read`
 	handler := "Read"
-	granularPerms = map[string]struct {
-		Permission string
-		Read       bool
-		Write      bool
-	}{"Read": {"patch:*:read", true, false}}
+	granularPerms = map[string]string{"Read": "patch:*:read"}
 	access := rbac.AccessPagination{
 		Data: []rbac.Access{
 			{Permission: "patch:*:*"},
