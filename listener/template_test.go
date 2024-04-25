@@ -23,11 +23,12 @@ func createTempateMsg(t *testing.T, eventName, orgID string, nTemplates int) mqu
 
 	templates := make([]mqueue.TemplateResponse, nTemplates)
 	for i := 0; i < nTemplates; i++ {
+		description := fmt.Sprintf("Template%d description", i)
 		templates[i] = mqueue.TemplateResponse{
 			UUID:        fmt.Sprintf("77777777-0000-0000-0000-00000000000%1d", i),
 			Name:        fmt.Sprintf("Template%d", i),
 			OrgID:       orgID,
-			Description: fmt.Sprintf("Template%d description", i),
+			Description: &description,
 			Date:        time.Now(),
 		}
 	}
@@ -87,7 +88,8 @@ func TestCreateTemplate(t *testing.T) {
 
 	updateEvent := createTempateMsg(t, "template-updated", "org_1", 2)
 	updateEvent.Data[0].Name = "Updated Template0"
-	updateEvent.Data[1].Description = "Updated Template1 description"
+	description := "Updated Template1 description"
+	updateEvent.Data[1].Description = &description
 	msg, err = json.Marshal(updateEvent)
 	assert.Nil(t, err)
 
@@ -141,5 +143,33 @@ func TestTemplateErrors(t *testing.T) {
 	// cleanup
 	after := testTemplatesInDB(t)
 	assert.Equal(t, 1, len(after))
+	deleteTemplatesInDB(t, after)
+}
+
+func TestTemplateEmptyDescription(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	event := createTempateMsg(t, "template-created", "org_1", 3)
+	empty := ""
+	spaces := "   "
+	event.Data[0].Description = &empty
+	event.Data[1].Description = &spaces
+	event.Data[2].Description = nil
+	msg, err := json.Marshal(event)
+	assert.Nil(t, err)
+
+	// process message
+	err = TemplatesMessageHandler(mqueue.KafkaMessage{Value: msg})
+	assert.Nil(t, err)
+
+	after := testTemplatesInDB(t)
+	assert.Equal(t, 3, len(after))
+	for _, event := range after {
+		assert.Nil(t, event.Description)
+	}
+
+	// cleanup
 	deleteTemplatesInDB(t, after)
 }

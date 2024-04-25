@@ -12,7 +12,7 @@ type TemplateResponse struct {
 	UUID            string    `json:"uuid" readonly:"true"`
 	Name            string    `json:"name"`             // Name of the template
 	OrgID           string    `json:"org_id"`           // Organization ID of the owner
-	Description     string    `json:"description"`      // Description of the template
+	Description     *string   `json:"description"`      // Description of the template
 	Arch            string    `json:"arch"`             // Architecture of the template
 	Version         string    `json:"version"`          // Version of the template
 	Date            time.Time `json:"date"`             // Latest date to include snapshots for

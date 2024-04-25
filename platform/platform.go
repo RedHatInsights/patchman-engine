@@ -152,12 +152,14 @@ var yumUpdates = `{
 	"metadata_time": "2022-05-30T14:00:25Z"
 }`
 
+var desc1 = "template_1_description"
+var desc2 = "template_2_description"
 var templates = []mqueue.TemplateResponse{
 	{
 		UUID:            "10000000-0000-0000-0000-000000000001",
 		Name:            "template_1",
 		OrgID:           "org_1",
-		Description:     "template_1_description",
+		Description:     &desc1,
 		Arch:            "x86_64",
 		Version:         "1",
 		Date:            time.Now(),
@@ -167,7 +169,7 @@ var templates = []mqueue.TemplateResponse{
 		UUID:            "10000000-0000-0000-0000-000000000002",
 		Name:            "template_2",
 		OrgID:           "org_1",
-		Description:     "template_2_description",
+		Description:     &desc2,
 		Arch:            "x86_64",
 		Version:         "1",
 		Date:            time.Now(),
