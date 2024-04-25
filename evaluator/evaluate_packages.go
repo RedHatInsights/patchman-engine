@@ -192,9 +192,7 @@ func packagesFromUpdateList(system *models.SystemPlatform, vmaasData *vmaas.Upda
 
 func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform, packages map[string]namedPackage) error {
 	rows, err := tx.Table("system_package2 sp2").
-		Select("sp2.name_id, pn.name, sp2.package_id, p.evra, sp2.installable_id, sp2.applicable_id").
-		Joins("JOIN package p ON p.id = sp2.package_id").
-		Joins("JOIN package_name pn on pn.id = sp2.name_id").
+		Select("sp2.name_id, sp2.package_id, sp2.installable_id, sp2.applicable_id").
 		Where("rh_account_id = ? AND system_id = ?", system.RhAccountID, system.ID).
 		Rows()
 	if err != nil {
@@ -209,7 +207,11 @@ func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatform, packages
 			return err
 		}
 		numStored++
-		nevra := utils.NEVRAStringE(columns.Name, columns.EVRA, true)
+		pkgCache, ok := memoryPackageCache.GetByID(columns.PackageID)
+		if !ok {
+			return fmt.Errorf("package missing in cache, package_id: %d", columns.PackageID)
+		}
+		nevra := utils.NEVRAStringE(pkgCache.Name, pkgCache.Evra, true)
 		if p, ok := packages[nevra]; ok {
 			if latestPkgsChanged(p, columns) {
 				p.Change = Update
