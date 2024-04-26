@@ -18,7 +18,7 @@ func TestInit(_ *testing.T) {
 	utils.TestLoadEnv("conf/vmaas_sync.env")
 }
 
-//nolint:lll,misspell
+//nolint:lll
 const testAdvisories = `
 {
    "errata_list":{
@@ -57,7 +57,7 @@ const testAdvisories = `
          "summary":"Updated rusers packages that remove the requirement for procps are now\navailable.",
          "type":"bugfix",
          "severity":"None",
-         "description":"The rusers program allows users to find out who is logged into certain\nmachines on the local network. The 'rusers' command produces output\nsimilar to 'who', but for a specified list of hosts or for all machines\non the local network.\n\nPrevious versions of the rusers package, and the included rstatd\napplication, had a requirement such that the procps package and the\nlibraries therein were required for rusers to function properly. This\ncaused problems when updated versions of procps were released. These\nupdated rusers packages contain a fix that removes the procps package\ndependancy.\n\nAll users of rusers and rstatd should upgrade to these updated packages,\nwhich resolve this issue.",
+         "description":"The rusers program allows users to find out who is logged into certain\nmachines on the local network. The 'rusers' command produces output\nsimilar to 'who', but for a specified list of hosts or for all machines\non the local network.\n\nPrevious versions of the rusers package, and the included rstatd\napplication, had a requirement such that the procps package and the\nlibraries therein were required for rusers to function properly. This\ncaused problems when updated versions of procps were released. These\nupdated rusers packages contain a fix that removes the procps package\ndepend\u0061ncy.\n\nAll users of rusers and rstatd should upgrade to these updated packages,\nwhich resolve this issue.",
          "solution":"Before applying this update, make sure that all previously-released\nerrata relevant to your system have been applied.  Use Red Hat\nNetwork to download and update your packages.  To launch the Red Hat\nUpdate Agent, use the following command:\n\n    up2date\n\nFor information on how to install packages manually, refer to the\nfollowing Web page for the System Administration or Customization\nguide specific to your system:\n\n    http://www.redhat.com/docs/manuals/enterprise/",
          "issued":"2004-09-02T00:00:00+00:00",
          "updated":"2004-09-02T00:00:00+00:00",
