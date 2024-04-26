@@ -14,7 +14,7 @@ func TestSystemsIDsDefault(t *testing.T) {
 	output := testSystemsIDs(t, ``, 1)
 
 	// data
-	assert.Equal(t, 8, len(output.IDs))
+	assert.Equal(t, 9, len(output.IDs))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.IDs[0])
 }
 
@@ -40,7 +40,7 @@ func TestSystemsIDsWrongSort(t *testing.T) {
 
 func TestSystemsIDsSearch(t *testing.T) {
 	output := testSystemsIDs(t, "?search=001", 1)
-	assert.Equal(t, 1, len(output.IDs))
+	assert.Equal(t, 2, len(output.IDs))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.IDs[0])
 }
 
@@ -140,7 +140,7 @@ func TestSystemsIDsFilterNotExisting(t *testing.T) {
 func TestSystemsIDsFilterPartialOS(t *testing.T) {
 	outputIDs := testSystemsIDs(t, "?filter[osname]=RHEL&filter[osmajor]=8&filter[osminor]=1", 1)
 	output := testSystems(t, "?filter[osname]=RHEL&filter[osmajor]=8&filter[osminor]=1", 1)
-	assert.Equal(t, 2, len(outputIDs.IDs))
+	assert.Equal(t, 3, len(outputIDs.IDs))
 	assert.Equal(t, output.Data[0].ID, outputIDs.IDs[0])
 	assert.Equal(t, output.Data[1].ID, outputIDs.IDs[1])
 }
@@ -148,7 +148,7 @@ func TestSystemsIDsFilterPartialOS(t *testing.T) {
 func TestSystemsIDsFilterOS(t *testing.T) {
 	outputIDs := testSystemsIDs(t, `?filter[os]=in:RHEL 8.1,RHEL 7.3&sort=os`, 1)
 	output := testSystems(t, `?filter[os]=in:RHEL 8.1,RHEL 7.3&sort=os`, 1)
-	assert.Equal(t, 3, len(outputIDs.IDs))
+	assert.Equal(t, 4, len(outputIDs.IDs))
 	assert.Equal(t, output.Data[0].ID, outputIDs.IDs[0])
 	assert.Equal(t, output.Data[1].ID, outputIDs.IDs[1])
 	assert.Equal(t, output.Data[2].ID, outputIDs.IDs[2])

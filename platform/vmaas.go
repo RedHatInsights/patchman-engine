@@ -205,7 +205,7 @@ func reposHandler(c *gin.Context) {
     "repository_list": {
         "repo1": [],
         "repo2": [],
-        "repo3": []
+        "repo3": [{"updated_package_names": ["kernel", "firefox"]}]
     }}`
 	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
 }

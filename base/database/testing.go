@@ -322,6 +322,10 @@ func DeleteNewlyAddedPackages(t *testing.T) {
 
 func DeleteNewlyAddedAdvisories(t *testing.T) {
 	query := DB.Model(models.AdvisoryMetadata{}).Where("id >= 100")
+	querySa := DB.Model(models.SystemAdvisories{}).Where("advisory_id >= 100")
+	queryAad := DB.Model(models.AdvisoryAccountData{}).Where("advisory_id >= 100")
+	assert.Nil(t, querySa.Delete(models.SystemAdvisories{}).Error)
+	assert.Nil(t, queryAad.Delete(models.AdvisoryAccountData{}).Error)
 	assert.Nil(t, query.Delete(models.AdvisoryMetadata{}).Error)
 	var cnt int64
 	assert.Nil(t, query.Count(&cnt).Error)

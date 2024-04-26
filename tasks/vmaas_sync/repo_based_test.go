@@ -12,17 +12,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var orgID1 = "org_1"
+
 func TestGetCurrentRepoBasedInventoryIDs(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	Configure()
 
-	orgID := "org_1"
 	inventoryAIDs, err := getCurrentRepoBasedInventoryIDs()
 	assert.Nil(t, err)
 	assert.Equal(t, []mqueue.EvalData{
-		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID},
-		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1, OrgID: &orgID}},
+		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID1},
+		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1, OrgID: &orgID1},
+		{InventoryID: "00000000-0000-0000-0000-000000000017", RhAccountID: 1, OrgID: &orgID1}},
 		inventoryAIDs)
 	resetLastEvalTimestamp(t)
 }
@@ -66,17 +68,53 @@ func TestUpdateRepoBaseEvalTimestamp(t *testing.T) {
 	resetLastEvalTimestamp(t)
 }
 
+func TestGetRepoOnlyBasedInventoryIDs(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	repos := []string{"repo1", "repo2"}
+	inventoryAIDs, err := getRepoBasedInventoryIDs(nil, repos)
+	assert.Nil(t, err)
+	assert.Equal(t, []mqueue.EvalData{
+		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID1},
+		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1, OrgID: &orgID1},
+		{InventoryID: "00000000-0000-0000-0000-000000000017", RhAccountID: 1, OrgID: &orgID1}},
+		inventoryAIDs)
+}
+
+func TestGetRepoPackageBasedInventoryIDs(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	repos := [][]string{{"repo1", "not_installed_pkg"}, {"repo2", "not_installed_pkg"}, {"repo2", "kernel"}}
+	inventoryAIDs, err := getRepoBasedInventoryIDs(repos, nil)
+	assert.Nil(t, err)
+	assert.Equal(t, []mqueue.EvalData{
+		// "kernel" in "repo2"
+		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID1}},
+		// 00000000-0000-0000-0000-000000000017 does not have "not_installed_pkg" in "repo1"
+		inventoryAIDs)
+
+	repos = [][]string{{"repo1", "not_installed_pkg"}, {"repo2", "not_installed_pkg"}}
+	inventoryAIDs, err = getRepoBasedInventoryIDs(repos, nil)
+	assert.Nil(t, err)
+	assert.Len(t, inventoryAIDs, 0)
+}
+
 func TestGetRepoBasedInventoryIDs(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	orgID := "org_1"
-	repos := []string{"repo1", "repo2"}
-	inventoryAIDs, err := getRepoBasedInventoryIDs(repos)
+	repos := []string{"repo1"}
+	repoPackages := [][]string{{"repo1", "not_installed_pkg"}, {"repo2", "not_installed_pkg"}, {"repo2", "kernel"}}
+	inventoryAIDs, err := getRepoBasedInventoryIDs(repoPackages, repos)
 	assert.Nil(t, err)
 	assert.Equal(t, []mqueue.EvalData{
-		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID},
-		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1, OrgID: &orgID}},
+		// from repoPackages
+		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID1},
+		// systems added from repos
+		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1, OrgID: &orgID1},
+		{InventoryID: "00000000-0000-0000-0000-000000000017", RhAccountID: 1, OrgID: &orgID1}},
 		inventoryAIDs)
 }
 
@@ -85,7 +123,8 @@ func TestGetRepoBasedInventoryIDsEmpty(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	repos := []string{}
-	inventoryIDs, err := getRepoBasedInventoryIDs(repos)
+	repoPackages := [][]string{}
+	inventoryIDs, err := getRepoBasedInventoryIDs(repoPackages, repos)
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(inventoryIDs))
 }
@@ -95,10 +134,11 @@ func TestGetUpdatedRepos(t *testing.T) {
 	Configure()
 
 	modifiedSince := time.Now().Format(types.Rfc3339NoTz)
-	redhat, thirdparty, _, err := getUpdatedRepos(time.Now(), &modifiedSince)
+	thirdParty := true
+	repoPackages, repoNoPackages, _, err := getUpdatedRepos(time.Now(), &modifiedSince, &thirdParty)
 	assert.Nil(t, err)
-	assert.Equal(t, 3, len(redhat))
-	assert.Equal(t, 0, len(thirdparty))
+	assert.Equal(t, 2, len(repoPackages[0]))
+	assert.Equal(t, 2, len(repoNoPackages))
 }
 
 func resetLastEvalTimestamp(t *testing.T) {

@@ -16,7 +16,7 @@ func TestSystemsDefault(t *testing.T) {
 	output := testSystems(t, ``, 1)
 
 	// data
-	assert.Equal(t, 8, len(output.Data))
+	assert.Equal(t, 9, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2020-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
@@ -45,9 +45,9 @@ func TestSystemsDefault(t *testing.T) {
 	// test meta
 	assert.Equal(t, 0, output.Meta.Offset)
 	assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
-	assert.Equal(t, 8, output.Meta.TotalItems)
+	assert.Equal(t, 9, output.Meta.TotalItems)
 	assert.Equal(t, 8, output.Meta.SubTotals["patched"])
-	assert.Equal(t, 0, output.Meta.SubTotals["unpatched"])
+	assert.Equal(t, 1, output.Meta.SubTotals["unpatched"])
 	assert.Equal(t, 0, output.Meta.SubTotals["stale"])
 }
 
@@ -56,7 +56,7 @@ func TestSystemsOffset(t *testing.T) {
 	assert.Equal(t, 4, len(output.Data))
 	assert.Equal(t, 0, output.Meta.Offset)
 	assert.Equal(t, 4, output.Meta.Limit)
-	assert.Equal(t, 8, output.Meta.TotalItems)
+	assert.Equal(t, 9, output.Meta.TotalItems)
 }
 
 func TestSystemsOffsetLimit(t *testing.T) {
@@ -64,7 +64,7 @@ func TestSystemsOffsetLimit(t *testing.T) {
 	assert.Equal(t, 4, len(output.Data))
 	assert.Equal(t, 4, output.Meta.Offset)
 	assert.Equal(t, 4, output.Meta.Limit)
-	assert.Equal(t, 8, output.Meta.TotalItems)
+	assert.Equal(t, 9, output.Meta.TotalItems)
 }
 
 func TestSystemsWrongOffset(t *testing.T) {
@@ -79,7 +79,7 @@ func TestSystemsWrongSort(t *testing.T) {
 
 func TestSystemsSearch(t *testing.T) {
 	output := testSystems(t, "?search=001", 1)
-	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].Attributes.DisplayName)
@@ -208,7 +208,7 @@ func TestSystemsFilterNotExisting(t *testing.T) {
 
 func TestSystemsFilterOS(t *testing.T) {
 	output := testSystems(t, `?filter[os]=in:RHEL 8.1,RHEL 7.3&sort=os`, 1)
-	assert.Equal(t, 3, len(output.Data))
+	assert.Equal(t, 4, len(output.Data))
 	assert.Equal(t, "RHEL 7.3", output.Data[0].Attributes.OS)
 	assert.Equal(t, "RHEL 8.1", output.Data[1].Attributes.OS)
 	assert.Equal(t, "RHEL 8.1", output.Data[2].Attributes.OS)
@@ -219,11 +219,12 @@ func TestSystemsOrderOS(t *testing.T) {
 	assert.Equal(t, "RHEL 7.3", output.Data[0].Attributes.OS)
 	assert.Equal(t, "RHEL 8.1", output.Data[1].Attributes.OS)
 	assert.Equal(t, "RHEL 8.1", output.Data[2].Attributes.OS)
-	assert.Equal(t, "RHEL 8.2", output.Data[3].Attributes.OS)
-	assert.Equal(t, "RHEL 8.3", output.Data[4].Attributes.OS)
+	assert.Equal(t, "RHEL 8.1", output.Data[3].Attributes.OS)
+	assert.Equal(t, "RHEL 8.2", output.Data[4].Attributes.OS)
 	assert.Equal(t, "RHEL 8.3", output.Data[5].Attributes.OS)
-	assert.Equal(t, "RHEL 8.10", output.Data[6].Attributes.OS)
-	assert.Equal(t, "RHEL 8.x", output.Data[7].Attributes.OS) // yes, we should be robust against this
+	assert.Equal(t, "RHEL 8.3", output.Data[6].Attributes.OS)
+	assert.Equal(t, "RHEL 8.10", output.Data[7].Attributes.OS)
+	assert.Equal(t, "RHEL 8.x", output.Data[8].Attributes.OS) // yes, we should be robust against this
 }
 
 func testSystems(t *testing.T, queryString string, account int) SystemsResponse {
@@ -318,7 +319,7 @@ func TestAAPSystemMeta2(t *testing.T) {
 func TestAAPSystemMeta3(t *testing.T) {
 	const (
 		ID         = "00000000-0000-0000-0000-000000000007"
-		totalItems = 1
+		totalItems = 2
 	)
 	output := testSystems(t, `?filter[system_profile][ansible][controller_version]=1.0`, 1)
 	assert.Equal(t, ID, output.Data[0].ID)
@@ -346,7 +347,7 @@ func TestMSSQLSystemMeta2(t *testing.T) {
 func TestMSSQLSystemMeta3(t *testing.T) {
 	const (
 		ID         = "00000000-0000-0000-0000-000000000006"
-		totalItems = 1
+		totalItems = 2
 	)
 	output := testSystems(t, `?filter[system_profile][mssql][version]=15.3.0`, 1)
 	assert.Equal(t, ID, output.Data[0].ID)
