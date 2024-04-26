@@ -17,6 +17,18 @@ const (
 	TagFilter
 )
 
+const (
+	OpEq      = "eq"
+	OpNeq     = "neq"
+	OpGt      = "gt"
+	OpLt      = "lt"
+	OpGeq     = "geq"
+	OpLeq     = "leq"
+	OpBetween = "between"
+	OpIn      = "in"
+	OpNotIn   = "notin"
+)
+
 type FilterData struct {
 	Type     FilterType `json:"-"`
 	Operator string     `json:"op"`
@@ -33,7 +45,7 @@ func ParseFilterValue(ftype FilterType, val string) FilterData {
 	var value string
 
 	if idx < 0 {
-		operator = "eq"
+		operator = OpEq
 		value = val
 	} else {
 		operator = val[:idx]
@@ -51,11 +63,11 @@ func ParseFilterValue(ftype FilterType, val string) FilterData {
 
 func checkValueCount(operator string, nValues int) bool {
 	switch operator {
-	case "between":
+	case OpBetween:
 		return nValues == 2
-	case "in":
+	case OpIn:
 		fallthrough
-	case "notin": // nolint: goconst
+	case OpNotIn:
 		return nValues > 0
 	default:
 		return nValues == 1
@@ -86,23 +98,23 @@ func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (str
 	// We need to look up expression used to create the attribute, because FROM clause can't contain
 	// column aliases
 	switch transformedOperator {
-	case "eq":
+	case OpEq:
 		return fmt.Sprintf("%s = ? ", attributes[fieldName].DataQuery), values, nil
-	case "neq":
+	case OpNeq:
 		return fmt.Sprintf("%s <> ? ", attributes[fieldName].DataQuery), values, nil
-	case "gt":
+	case OpGt:
 		return fmt.Sprintf("%s > ? ", attributes[fieldName].DataQuery), values, nil
-	case "lt":
+	case OpLt:
 		return fmt.Sprintf("%s < ? ", attributes[fieldName].DataQuery), values, nil
-	case "geq":
+	case OpGeq:
 		return fmt.Sprintf("%s >= ? ", attributes[fieldName].DataQuery), values, nil
-	case "leq":
+	case OpLeq:
 		return fmt.Sprintf("%s <= ? ", attributes[fieldName].DataQuery), values, nil
-	case "between":
+	case OpBetween:
 		return fmt.Sprintf("%s BETWEEN ? AND ? ", attributes[fieldName].DataQuery), values, nil
-	case "in":
+	case OpIn:
 		return fmt.Sprintf("%s IN (?) ", attributes[fieldName].DataQuery), []interface{}{values}, nil
-	case "notin":
+	case OpNotIn:
 		return fmt.Sprintf("%s NOT IN (?) ", attributes[fieldName].DataQuery), []interface{}{values}, nil
 	default:
 		return "", []interface{}{}, errors.Errorf("Unknown filter : %s", t.Operator)
@@ -130,10 +142,10 @@ func transformFilterParams(fieldName string, originalValues []string, originalOp
 	}
 
 	switch originalOperator {
-	case "eq":
-		transformedOperator = "in"
-	case "neq":
-		transformedOperator = "notin"
+	case OpEq:
+		transformedOperator = OpIn
+	case OpNeq:
+		transformedOperator = OpNotIn
 	default:
 		transformedOperator = originalOperator
 	}
