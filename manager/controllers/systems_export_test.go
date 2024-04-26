@@ -30,7 +30,7 @@ func TestSystemsExportJSON(t *testing.T) {
 
 	var output []SystemDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
-	assert.Equal(t, 8, len(output))
+	assert.Equal(t, 9, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 	assert.Equal(t, 2, output[0].SystemItemAttributes.RhsaCount)
 	assert.Equal(t, 2, output[0].SystemItemAttributes.RhbaCount)
@@ -53,7 +53,7 @@ func TestSystemsExportCSV(t *testing.T) {
 	body := w.Body.String()
 	lines := strings.Split(body, "\r\n")
 
-	assert.Equal(t, 10, len(lines))
+	assert.Equal(t, 11, len(lines))
 	assert.Equal(t, SystemCsvHeader, lines[0])
 
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,RHEL 8.10,8.10,"+

@@ -11,8 +11,8 @@ var (
 	// counts of systems from system_platform JOIN inventory.hosts
 	nGroup1    int64 = 6
 	nGroup2    int64 = 2
-	nUngrouped int64 = 6
-	nAll       int64 = 16
+	nUngrouped int64 = 7
+	nAll       int64 = 17
 )
 
 var testCases = []map[int64]map[string]string{

@@ -56,7 +56,8 @@ INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vma
  '{"update_list": {"suricata-0:6.0.3-2.fc35.i686": {"available_updates": [{"erratum": "RHSA-2021:3801", "basearch": "i686", "releasever": "ser1", "repository": "group_oisf:suricata-6.0", "package": "suricata-0:6.0.4-2.fc35.i686"}]}}, "basearch": "i686", "releasever": "ser1"}');
 
 INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_installable, packages_applicable, yum_updates, baseline_id, template_id) VALUES
-(16, '00000000-0000-0000-0000-000000000016','00000000-0000-0000-0000-000000000016', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 1,1,1, NULL, 4, 4);
+(16, '00000000-0000-0000-0000-000000000016','00000000-0000-0000-0000-000000000016', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 1,1,1, NULL, 4, 4),
+(17, '00000000-0000-0000-0000-000000000017','00000000-0000-0000-0000-000000000017', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',2,2,2, NULL, NULL, NULL);
 
 INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solution, advisory_type_id,
                                public_date, modified_date, url, severity_id, cve_list, release_versions) VALUES
@@ -111,7 +112,8 @@ INSERT INTO repo (id, name, third_party) VALUES
 INSERT INTO system_repo (rh_account_id, system_id, repo_id) VALUES
 (1, 2, 1),
 (1, 3, 1),
-(1, 2, 2);
+(1, 2, 2),
+(1, 17, 1);
 
 
 INSERT INTO package_name(id, name, summary) VALUES
@@ -164,13 +166,19 @@ INSERT INTO package(id, name_id, evra, description_hash, summary_hash, advisory_
 (13, 102, '77.0.1-1.fc31.x86_64', '22', '2', null, true); -- firefox
 
 INSERT INTO system_package2 (rh_account_id, system_id, name_id, package_id, installable_id, applicable_id) VALUES
+(1, 2, 101, 1, 11, null),
+(1, 2, 102, 2, 12, null),
+(1, 3, 101, 1, 11, null),
+(1, 3, 102, 2, 12, null),
 (3, 12, 101, 1, 11, null),
 (3, 12, 102, 2, 12, null),
 (3, 13, 101, 1, null, null),
 (3, 13, 102, 2, 12, 13),
 (3, 13, 103, 3, null, null),
 (3, 13, 104, 4, null, null),
-(3, 16, 101, 1, 11, 11);
+(3, 16, 101, 1, 11, 11),
+(1, 17, 101, 1, 11, null),
+(1, 17, 102, 2, 12, null);
 
 INSERT INTO timestamp_kv (name, value) VALUES
 ('last_eval_repo_based', '2018-04-05T01:23:45+02:00');
