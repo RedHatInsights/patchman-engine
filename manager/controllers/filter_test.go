@@ -40,7 +40,6 @@ func TestFilterParse(t *testing.T) {
 	}
 }
 
-// nolint: govet
 func TestFilterToSql(t *testing.T) {
 	queries := []string{
 		"test = ? ",
@@ -60,7 +59,6 @@ func TestFilterToSql(t *testing.T) {
 	}
 }
 
-// nolint: govet
 func TestFilterToSqlAdvanced(t *testing.T) {
 	queries := []string{
 		"(NOT test) = ? ",

@@ -17,7 +17,6 @@ var defaultValues = TestTableSlice{
 	{Name: "M", Email: "N"},
 }
 
-// nolint: errcheck
 func TestBatchInsert(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()

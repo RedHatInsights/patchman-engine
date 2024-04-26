@@ -56,7 +56,6 @@ func (Template) TableName() string {
 	return "template"
 }
 
-// nolint: maligned
 type SystemPlatform struct {
 	ID                               int64  `gorm:"primaryKey"`
 	InventoryID                      string `gorm:"unique"`

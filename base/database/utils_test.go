@@ -15,7 +15,6 @@ var (
 	nAll       int64 = 16
 )
 
-// nolint: lll
 var testCases = []map[int64]map[string]string{
 	{nGroup1: {utils.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]"}`}},
 	{nGroup2: {utils.KeyGrouped: `{"[{\"id\":\"inventory-group-2\"}]"}`}},

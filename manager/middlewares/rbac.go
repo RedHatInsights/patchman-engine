@@ -50,7 +50,6 @@ func makeClient(identity string) *api.Client {
 	return &client
 }
 
-// nolint: goconst
 // for short lists like that is slice.Contains() faster than map lookup _, ok := map[key]
 func expandedPermission(perm string) []string {
 	comp := strings.SplitAfterN(perm, ":", 3)

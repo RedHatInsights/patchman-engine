@@ -205,7 +205,6 @@ func updatePackageMetrics() {
 	packageNameCnt.Set(float64(nPackageNames))
 }
 
-// nolint: lll
 type advisoryColumns struct {
 	Other       int64 `query:"count(*) filter (where advisory_type_id not in (1,2,3))" gorm:"column:other"`
 	Enhancement int64 `query:"count(*) filter (where advisory_type_id = 1)" gorm:"column:enhancement"`

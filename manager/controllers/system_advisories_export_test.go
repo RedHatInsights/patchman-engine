@@ -1,4 +1,4 @@
-package controllers // nolint: dupl
+package controllers
 
 import (
 	"app/base/core"

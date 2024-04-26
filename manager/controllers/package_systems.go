@@ -105,7 +105,6 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 	return query, meta, params, err
 }
 
-// nolint: dupl
 // @Summary Show me all my systems which have a package installed
 // @Description  Show me all my systems which have a package installed
 // @ID packageSystems
@@ -160,7 +159,6 @@ func PackageSystemsListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// nolint: dupl
 // @Summary Show me all my systems which have a package installed
 // @Description  Show me all my systems which have a package installed
 // @ID packageSystemsIds

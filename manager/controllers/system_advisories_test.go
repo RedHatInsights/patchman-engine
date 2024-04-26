@@ -45,7 +45,7 @@ func TestSystemAdvisoriesIDsDefault(t *testing.T) {
 	assert.Equal(t, "Applicable", output.Data[0].Status)
 }
 
-func TestSystemAdvisoriesNotFound(t *testing.T) { //nolint:dupl
+func TestSystemAdvisoriesNotFound(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/:inventory_id", "nonexistant/advisories", "", nil, "",
 		SystemAdvisoriesHandler)
@@ -53,7 +53,7 @@ func TestSystemAdvisoriesNotFound(t *testing.T) { //nolint:dupl
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
-func TestSystemAdvisoriesIDsNotFound(t *testing.T) { //nolint:dupl
+func TestSystemAdvisoriesIDsNotFound(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/:inventory_id", "nonexistant/advisories", "", nil, "",
 		SystemAdvisoriesIDsHandler)

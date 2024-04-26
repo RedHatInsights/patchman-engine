@@ -25,7 +25,7 @@ type PayloadTrackerEvents []PayloadTrackerEvent
 var enablePayloadTracker = utils.GetBoolEnvOrDefault("ENABLE_PAYLOAD_TRACKER", true)
 
 func (event *PayloadTrackerEvent) write(ctx context.Context, w Writer) error {
-	data, err := json.Marshal(event) //nolint:gosec
+	data, err := json.Marshal(event)
 	if err != nil {
 		return errors.Wrap(err, "Serializing event")
 	}

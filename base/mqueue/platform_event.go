@@ -36,7 +36,7 @@ type accountRequests map[int][]string
 type orgIDs map[int]*string
 
 func (event *PlatformEvent) createKafkaMessage() (KafkaMessage, error) {
-	data, err := json.Marshal(event) //nolint:gosec
+	data, err := json.Marshal(event)
 	if err != nil {
 		return KafkaMessage{}, errors.Wrap(err, "Serializing event")
 	}

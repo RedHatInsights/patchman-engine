@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// nolint: dupl
 func TestLatestPackage(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/packages/:package_name", "kernel", "", nil, "", PackageDetailHandler, 3)
@@ -25,7 +24,6 @@ func TestLatestPackage(t *testing.T) {
 	assert.Equal(t, "package", output.Data.Type)
 }
 
-// nolint: dupl
 func TestEvraPackage(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/packages/:package_name", "kernel-5.6.13-200.fc31.x86_64", "", nil, "",

@@ -31,7 +31,6 @@ type BaselineSystemsDBLookup struct {
 	BaselineSystemAttributes
 }
 
-// nolint: lll
 type BaselineSystemAttributes struct {
 	// Baseline system display name
 	DisplayName string `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name" example:"my-baselined-system"` // nolint: lll

@@ -27,14 +27,12 @@ type AdvisorySystemItem struct {
 	Type       string                       `json:"type"`
 }
 
-// nolint: lll
 type AdvisorySystemDBLookup struct {
 	MetaTotalHelper
 	AdvisorySystemItemAttributes
 	SystemIDAttribute
 }
 
-// nolint: lll
 type AdvisorySystemItemAttributes struct {
 	SystemDisplayName
 	SystemLastUpload

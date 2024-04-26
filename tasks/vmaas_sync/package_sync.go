@@ -234,7 +234,6 @@ func storePackageDetailsFrmPkgListItems(tx *gorm.DB, nameIDs map[string]int64, p
 	return err
 }
 
-//nolint:funlen
 func storeOrUpdate(tx *gorm.DB, pkgs models.PackageSlice) error {
 	var toUpdate models.PackageSlice
 

@@ -34,7 +34,6 @@ type SystemAdvisoriesDBLookup struct {
 	SystemAdvisoryItemAttributes
 }
 
-// nolint:lll
 type SystemAdvisoryItemAttributes struct {
 	AdvisoryItemAttributesCommon
 	Status *string `json:"status" csv:"status,omitempty" query:"status.name" gorm:"column:status"`
@@ -102,7 +101,6 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 	return query, meta, params, err
 }
 
-// nolint:lll
 // @Summary Show me advisories for a system by given inventory id
 // @Description Show me advisories for a system by given inventory id
 // @ID listSystemAdvisories
@@ -152,7 +150,6 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-// nolint:lll
 // @Summary Show me advisories for a system by given inventory id
 // @Description Show me advisories for a system by given inventory id
 // @ID listSystemAdvisoriesIds
