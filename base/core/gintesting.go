@@ -26,7 +26,7 @@ func InitRouterWithParams(handler gin.HandlerFunc, account int, method, path str
 	router := gin.Default()
 	router.Use(middlewares.RequestResponseLogger())
 	router.Use(middlewares.MockAuthenticator(account))
-	if database.Db != nil {
+	if database.DB != nil {
 		router.Use(middlewares.DatabaseWithContext())
 	}
 	router.Use(func(c *gin.Context) {

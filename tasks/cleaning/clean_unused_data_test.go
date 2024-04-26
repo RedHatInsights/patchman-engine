@@ -16,7 +16,7 @@ func TestCleanUnusedPackages(t *testing.T) {
 
 	// package count before test
 	var beforePkgCount int64
-	err := database.Db.Model(models.Package{}).Count(&beforePkgCount).Error
+	err := database.DB.Model(models.Package{}).Count(&beforePkgCount).Error
 	assert.Nil(t, err)
 
 	// create unused package
@@ -26,7 +26,7 @@ func TestCleanUnusedPackages(t *testing.T) {
 		EVRA:   evra,
 		Synced: false,
 	}
-	err = database.Db.Create(&customPkg).Error
+	err = database.DB.Create(&customPkg).Error
 	assert.Nil(t, err)
 
 	// package is there
@@ -45,7 +45,7 @@ func TestCleanUnusedPackages(t *testing.T) {
 	// it is affected by test order
 	// there are multiple packages with synced=false
 	var afterPkgCount int64
-	err = database.Db.Model(models.Package{}).Count(&afterPkgCount).Error
+	err = database.DB.Model(models.Package{}).Count(&afterPkgCount).Error
 	assert.Nil(t, err)
 	assert.Equal(t, beforePkgCount, afterPkgCount+2)
 }
@@ -57,7 +57,7 @@ func TestCleanUnusedAdvisories(t *testing.T) {
 
 	// advisory count before test
 	var beforeAdvCount int64
-	err := database.Db.Model(models.AdvisoryMetadata{}).Count(&beforeAdvCount).Error
+	err := database.DB.Model(models.AdvisoryMetadata{}).Count(&beforeAdvCount).Error
 	assert.Nil(t, err)
 
 	// create unused advisory
@@ -72,7 +72,7 @@ func TestCleanUnusedAdvisories(t *testing.T) {
 		RebootRequired: false,
 		Synced:         false,
 	}
-	err = database.Db.Create(&customAdv).Error
+	err = database.DB.Create(&customAdv).Error
 	assert.Nil(t, err)
 
 	// advisory is there
@@ -80,7 +80,7 @@ func TestCleanUnusedAdvisories(t *testing.T) {
 
 	// lazy saved RH-100 remains in AdvisoryMetadata after evaluator tests
 	var rh100count int64
-	database.Db.Model(models.AdvisoryMetadata{}).Where("name = ?", "RH-100").Count(&rh100count)
+	database.DB.Model(models.AdvisoryMetadata{}).Where("name = ?", "RH-100").Count(&rh100count)
 
 	// delete unused
 	currentDeleteStatus := enableUnusedDataDelete
@@ -90,14 +90,14 @@ func TestCleanUnusedAdvisories(t *testing.T) {
 
 	// is custom advisory deleted?
 	var count int64
-	err = database.Db.Model(models.AdvisoryMetadata{}).Where("name = ?", advisory).
+	err = database.DB.Model(models.AdvisoryMetadata{}).Where("name = ?", advisory).
 		Count(&count).Error
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), count)
 
 	// anything else deleted by mistake?
 	var afterAdvCount int64
-	err = database.Db.Model(models.AdvisoryMetadata{}).Count(&afterAdvCount).Error
+	err = database.DB.Model(models.AdvisoryMetadata{}).Count(&afterAdvCount).Error
 	assert.Nil(t, err)
 	assert.Equal(t, beforeAdvCount-rh100count, afterAdvCount)
 }

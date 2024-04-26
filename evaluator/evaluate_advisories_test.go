@@ -74,7 +74,7 @@ func TestGetStoredAdvisoriesMap(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemAdvisories, err := getStoredAdvisoriesMap(database.Db, 1, 1)
+	systemAdvisories, err := getStoredAdvisoriesMap(database.DB, 1, 1)
 	assert.Nil(t, err)
 	assert.NotNil(t, systemAdvisories)
 	assert.Equal(t, 8, len(systemAdvisories))
@@ -104,14 +104,14 @@ func TestUpdatePatchedSystemAdvisories(t *testing.T) {
 	database.CreateSystemAdvisories(t, system.RhAccountID, system.ID, advisoryIDs)
 	database.CreateAdvisoryAccountData(t, system.RhAccountID, advisoryIDs, 1)
 	// Update as-if the advisories had become patched
-	err := updateAdvisoryAccountData(database.Db, &system, advisoryIDs, []int64{}, []int64{})
+	err := updateAdvisoryAccountData(database.DB, &system, advisoryIDs, []int64{}, []int64{})
 	assert.NoError(t, err)
 
 	database.CheckSystemAdvisories(t, system.ID, advisoryIDs)
 	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 0)
 
 	// Update as-if the advisories had become unpatched
-	err = updateAdvisoryAccountData(database.Db, &system, []int64{}, advisoryIDs, []int64{})
+	err = updateAdvisoryAccountData(database.DB, &system, []int64{}, advisoryIDs, []int64{})
 	assert.NoError(t, err)
 
 	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 1)
@@ -124,7 +124,7 @@ func TestGetAdvisoriesFromDB(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	advisories := []string{"ER-1", "RH-1", "ER-2", "RH-2"}
-	advisoryIDs, missingNames, err := getAdvisoriesFromDB(database.Db, advisories)
+	advisoryIDs, missingNames, err := getAdvisoriesFromDB(database.DB, advisories)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(advisoryIDs))
 	assert.Equal(t, 2, len(missingNames))
@@ -135,7 +135,7 @@ func TestGetAdvisoriesFromDBEmptyString(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	advisories := []string{""}
-	advisoryIDs, missingNames, err := getAdvisoriesFromDB(database.Db, advisories)
+	advisoryIDs, missingNames, err := getAdvisoriesFromDB(database.DB, advisories)
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(advisoryIDs))
 	assert.Equal(t, 1, len(missingNames))
@@ -148,7 +148,7 @@ func TestEnsureSystemAdvisories(t *testing.T) {
 	rhAccountID := 1
 	systemID := int64(2)
 	advisoryIDs := []int64{2, 3, 4}
-	err := ensureSystemAdvisories(database.Db, rhAccountID, systemID, advisoryIDs, []int64{})
+	err := ensureSystemAdvisories(database.DB, rhAccountID, systemID, advisoryIDs, []int64{})
 	assert.Nil(t, err)
 	database.CheckSystemAdvisories(t, systemID, advisoryIDs)
 	database.DeleteSystemAdvisories(t, systemID, advisoryIDs)

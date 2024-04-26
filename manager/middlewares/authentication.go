@@ -38,7 +38,7 @@ func GetOrCreateAccount(orgID string) (int, error) {
 	}
 
 	// Find account by OrgID
-	err := database.Db.Where("org_id = ?", *rhAccount.OrgID).Find(&rhAccount).Error
+	err := database.DB.Where("org_id = ?", *rhAccount.OrgID).Find(&rhAccount).Error
 	if err != nil {
 		utils.LogWarn("err", err, "org_id", *rhAccount.OrgID, "Error in finding account")
 	}
@@ -47,7 +47,7 @@ func GetOrCreateAccount(orgID string) (int, error) {
 	}
 
 	// create new rhAccount with OrgID
-	err = database.OnConflictUpdate(database.Db, "org_id", "org_id").Select("org_id").Create(&rhAccount).Error
+	err = database.OnConflictUpdate(database.DB, "org_id", "org_id").Select("org_id").Create(&rhAccount).Error
 	if err != nil {
 		utils.LogWarn("err", err, "org_id", *rhAccount.OrgID, "Error creating account")
 	}

@@ -156,12 +156,12 @@ func TestSaveAdvisories(t *testing.T) {
 		assert.NoError(t, err)
 		var count int64
 
-		assert.Nil(t, database.Db.Model(&models.AdvisoryMetadata{}).Where("url = ?", "TEST").Count(&count).Error)
+		assert.Nil(t, database.DB.Model(&models.AdvisoryMetadata{}).Where("url = ?", "TEST").Count(&count).Error)
 
 		assert.Equal(t, count, int64(len(data.ErrataList)))
 	}
 
-	assert.Nil(t, database.Db.Unscoped().Where("url = ?", "TEST").Delete(&models.AdvisoryMetadata{}).Error)
+	assert.Nil(t, database.DB.Unscoped().Where("url = ?", "TEST").Delete(&models.AdvisoryMetadata{}).Error)
 }
 
 func TestSyncAdvisories(t *testing.T) {
@@ -196,7 +196,7 @@ func TestSyncAdvisoriesCheck(t *testing.T) {
 	database.CheckAdvisoriesInDB(t, expected)
 
 	var am models.AdvisoryMetadata
-	assert.Nil(t, database.Db.Model(&models.AdvisoryMetadata{}).Where("name in (?)", expected).Find(&am).Error)
+	assert.Nil(t, database.DB.Model(&models.AdvisoryMetadata{}).Where("name in (?)", expected).Find(&am).Error)
 	assert.Equal(t, "adv-100-des", am.Description)
 	assert.Equal(t, "adv-100-sum", am.Summary)
 	assert.Equal(t, "adv-100-syn", am.Synopsis)
@@ -224,7 +224,7 @@ func TestSyncEpelAdvisories(t *testing.T) {
 	database.CheckAdvisoriesInDB(t, expected)
 
 	var am models.AdvisoryMetadata
-	assert.Nil(t, database.Db.Model(&models.AdvisoryMetadata{}).Where("name in (?)", expected).Find(&am).Error)
+	assert.Nil(t, database.DB.Model(&models.AdvisoryMetadata{}).Where("name in (?)", expected).Find(&am).Error)
 	assert.Equal(t, "epel-des", am.Description)
 	assert.Equal(t, "epel-sum", am.Summary)
 	assert.Equal(t, "epel-syn", am.Synopsis)

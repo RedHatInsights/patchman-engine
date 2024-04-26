@@ -69,7 +69,7 @@ func getEnvVarStringsSet(envVarName string) map[string]bool {
 
 func loadValidReporters() map[string]int {
 	var reporters []models.Reporter
-	database.Db.Find(&reporters)
+	database.DB.Find(&reporters)
 	reportersMap := make(map[string]int, len(reporters))
 	for _, reporter := range reporters {
 		reportersMap[reporter.Name] = reporter.ID

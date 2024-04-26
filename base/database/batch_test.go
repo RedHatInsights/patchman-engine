@@ -21,17 +21,17 @@ func TestBatchInsert(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
 
-	err := Db.AutoMigrate(&TestTable{})
+	err := DB.AutoMigrate(&TestTable{})
 	assert.NoError(t, err)
-	err = Db.Unscoped().Delete(&TestTable{}, "true").Error
+	err = DB.Unscoped().Delete(&TestTable{}, "true").Error
 	assert.NoError(t, err)
 
 	// Bulk insert should create new rows
-	err = BulkInsert(Db, defaultValues)
+	err = BulkInsert(DB, defaultValues)
 	assert.NoError(t, err)
 
 	var res []TestTable
-	assert.NoError(t, Db.Find(&res).Error)
+	assert.NoError(t, DB.Find(&res).Error)
 
 	// Reading rows should return same data as the inserted rows
 	assert.Equal(t, len(defaultValues), len(res))
@@ -45,11 +45,11 @@ func TestBatchInsert(t *testing.T) {
 func TestBatchInsertOnConflictUpdate(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
-	db := Db
+	db := DB
 
-	err := Db.AutoMigrate(&TestTable{})
+	err := DB.AutoMigrate(&TestTable{})
 	assert.NoError(t, err)
-	err = Db.Unscoped().Delete(&TestTable{}, "true").Error
+	err = DB.Unscoped().Delete(&TestTable{}, "true").Error
 	assert.NoError(t, err)
 
 	// Perform first insert

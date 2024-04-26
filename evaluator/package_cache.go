@@ -78,7 +78,7 @@ func (c *PackageCache) Load() {
 	}
 
 	utils.LogInfo("size", c.size, "PackageCache.Load")
-	tx := database.Db.Begin()
+	tx := database.DB.Begin()
 	defer tx.Rollback()
 
 	// load N last recently added packages, i.e. newest
@@ -259,7 +259,7 @@ func (c *PackageCache) addNameByID(pkg *PackageCacheMetadata) {
 }
 
 func readPackageFromDB(where string, order string, args ...interface{}) *PackageCacheMetadata {
-	tx := database.Db.Begin()
+	tx := database.DB.Begin()
 	defer tx.Rollback()
 
 	var pkg PackageCacheMetadata

@@ -15,9 +15,9 @@ const DBReadReplicaKey = "DBReadReplica"
 // Apply gin context to database so queries within context are canceled when request is aborted
 func DatabaseWithContext() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set(DBKey, database.Db.WithContext(c))
-		if database.DbReadReplica != nil {
-			c.Set(DBReadReplicaKey, database.DbReadReplica.WithContext(c))
+		c.Set(DBKey, database.DB.WithContext(c))
+		if database.DBReadReplica != nil {
+			c.Set(DBReadReplicaKey, database.DBReadReplica.WithContext(c))
 		}
 		c.Next()
 	}

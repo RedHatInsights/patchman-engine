@@ -19,19 +19,19 @@ func TestPkgListSyncPackages(t *testing.T) {
 	var oldNameCount, oldPkgCount, newNameCount, newPkgCount int
 	var pkgNextval, nameNextval, pkgCurrval, nameCurrval int
 
-	database.Db.Model(&models.PackageName{}).Select("count(*)").Find(&oldNameCount)
-	database.Db.Model(&models.Package{}).Select("count(*)").Find(&oldPkgCount)
-	database.Db.Raw("select nextval('package_id_seq')").Find(&pkgNextval)
-	database.Db.Raw("select nextval('package_name_id_seq')").Find(&nameNextval)
+	database.DB.Model(&models.PackageName{}).Select("count(*)").Find(&oldNameCount)
+	database.DB.Model(&models.Package{}).Select("count(*)").Find(&oldPkgCount)
+	database.DB.Raw("select nextval('package_id_seq')").Find(&pkgNextval)
+	database.DB.Raw("select nextval('package_name_id_seq')").Find(&nameNextval)
 
 	err := syncPackages(time.Now(), nil)
 	assert.NoError(t, err)
 
 	// make sure we are not creating gaps in id sequences
-	database.Db.Model(&models.PackageName{}).Select("count(*)").Find(&newNameCount)
-	database.Db.Model(&models.Package{}).Select("count(*)").Find(&newPkgCount)
-	database.Db.Raw("select currval('package_id_seq')").Find(&pkgCurrval)
-	database.Db.Raw("select currval('package_name_id_seq')").Find(&nameCurrval)
+	database.DB.Model(&models.PackageName{}).Select("count(*)").Find(&newNameCount)
+	database.DB.Model(&models.Package{}).Select("count(*)").Find(&newPkgCount)
+	database.DB.Raw("select currval('package_id_seq')").Find(&pkgCurrval)
+	database.DB.Raw("select currval('package_name_id_seq')").Find(&nameCurrval)
 
 	nameCountInc := newNameCount - oldNameCount
 	nameMaxInc := nameCurrval - nameNextval

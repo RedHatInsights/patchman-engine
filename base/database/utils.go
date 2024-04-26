@@ -84,7 +84,7 @@ func GetTimestampKVValueStr(key string) (*string, error) {
 
 func GetTimestampKVValue(key string) (*types.Rfc3339TimestampWithZ, error) {
 	var timestamps []*types.Rfc3339TimestampWithZ
-	err := Db.Model(&models.TimestampKV{}).
+	err := DB.Model(&models.TimestampKV{}).
 		Where("name = ?", key).
 		Pluck("value", &timestamps).Error
 	if err != nil {
@@ -107,7 +107,7 @@ func UpdateTimestampKVValue(key string, value time.Time) {
 }
 
 func UpdateTimestampKVValueStr(key, value string) error {
-	err := Db.Exec("INSERT INTO timestamp_kv (name, value) values (?, ?)"+
+	err := DB.Exec("INSERT INTO timestamp_kv (name, value) values (?, ?)"+
 		"ON CONFLICT (name) DO UPDATE SET value = ?", key, value, value).Error
 	return err
 }
@@ -127,7 +127,7 @@ func ExecFile(filename string) error {
 		panic(err)
 	}
 
-	sqldb, _ := Db.DB()
+	sqldb, _ := DB.DB()
 	_, err = sqldb.Exec(string(sql))
 	return err
 }
@@ -201,7 +201,7 @@ func DBWait(waitForDB string) {
 					logAndWait(query)
 				}
 			}()
-			db, _ := Db.DB()
+			db, _ := DB.DB()
 			if db != nil {
 				if _, err := db.Exec(query); err == nil {
 					log.Info("Everything is up - executing command")
@@ -229,7 +229,7 @@ func InventoryHostsJoin(tx *gorm.DB, groups map[string]string) *gorm.DB {
 		return tx
 	}
 
-	db := Db.Where("ih.groups @> ANY (?::jsonb[])", groups[utils.KeyGrouped])
+	db := DB.Where("ih.groups @> ANY (?::jsonb[])", groups[utils.KeyGrouped])
 	if _, ok := groups[utils.KeyUngrouped]; ok {
 		db = db.Or("ih.groups = '[]'")
 	}

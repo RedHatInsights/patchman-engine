@@ -40,7 +40,7 @@ func TestInventoryHostsJoin(t *testing.T) {
 	for _, tc := range testCases {
 		for expectedCount, groups := range tc {
 			var count int64
-			InventoryHostsJoin(Db.Table("system_platform sp"), groups).Count(&count)
+			InventoryHostsJoin(DB.Table("system_platform sp"), groups).Count(&count)
 			assert.Equal(t, expectedCount, count)
 		}
 	}

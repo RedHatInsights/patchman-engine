@@ -68,7 +68,7 @@ var advisoriesSystemsViewOpts = ListOpts{
 
 func totalItems(tx *gorm.DB, cols string) (int, error) {
 	var count int64
-	err := database.Db.Table("(?) AS cq", tx.Select(cols)).Count(&count).Error
+	err := database.DB.Table("(?) AS cq", tx.Select(cols)).Count(&count).Error
 	return int(count), err
 }
 

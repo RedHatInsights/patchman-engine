@@ -48,7 +48,7 @@ func createTempateMsg(t *testing.T, eventName, orgID string, nTemplates int) mqu
 
 func testTemplatesInDB(t *testing.T) []models.Template {
 	var templates []models.Template
-	tx := database.Db.Model(&models.Template{}).
+	tx := database.DB.Model(&models.Template{}).
 		Where("uuid::text like '77777777-%'").
 		Order("uuid").
 		Find(&templates)
@@ -57,7 +57,7 @@ func testTemplatesInDB(t *testing.T) []models.Template {
 }
 
 func deleteTemplatesInDB(t *testing.T, templates []models.Template) {
-	tx := database.Db.Delete(&templates)
+	tx := database.DB.Delete(&templates)
 	assert.Nil(t, tx.Error)
 }
 

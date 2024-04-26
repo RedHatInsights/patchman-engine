@@ -25,26 +25,26 @@ func TestSingleSystemStale(t *testing.T) {
 
 	database.DebugWithCachesCheck("stale-trigger", func() {
 		assert.NotNil(t, staleDate)
-		assert.NoError(t, database.Db.Find(&accountData, "systems_installable > 1 ").
+		assert.NoError(t, database.DB.Find(&accountData, "systems_installable > 1 ").
 			Order("systems_installable DESC").Error)
-		assert.NoError(t, database.Db.Find(&systems,
+		assert.NoError(t, database.DB.Find(&systems,
 			"rh_account_id = ? AND stale = false AND installable_advisory_count_cache > 0",
 			accountData[0].RhAccountID).Order("id").Error)
 
 		systems[0].StaleTimestamp = &staleDate
 		systems[0].StaleWarningTimestamp = &staleDate
-		assert.NoError(t, database.Db.Save(&systems[0]).Error)
+		assert.NoError(t, database.DB.Save(&systems[0]).Error)
 
-		nMarked, err := markSystemsStale(database.Db, 0)
+		nMarked, err := markSystemsStale(database.DB, 0)
 		assert.Nil(t, err)
 		assert.Equal(t, 0, nMarked)
 
-		nMarked, err = markSystemsStale(database.Db, 1)
+		nMarked, err = markSystemsStale(database.DB, 1)
 		assert.Nil(t, err)
 		assert.Equal(t, 1, nMarked)
 
 		oldAffected = accountData[0].SystemsInstallable
-		assert.NoError(t, database.Db.Find(&accountData, "rh_account_id = ? AND advisory_id = ?",
+		assert.NoError(t, database.DB.Find(&accountData, "rh_account_id = ? AND advisory_id = ?",
 			accountData[0].RhAccountID, accountData[0].AdvisoryID).Error)
 
 		assert.Equal(t, oldAffected-1, accountData[0].SystemsInstallable,
@@ -55,8 +55,8 @@ func TestSingleSystemStale(t *testing.T) {
 		systems[0].StaleTimestamp = nil
 		systems[0].StaleWarningTimestamp = nil
 		systems[0].Stale = false
-		assert.NoError(t, database.Db.Save(&systems[0]).Error)
-		assert.NoError(t, database.Db.Find(&accountData, "rh_account_id = ? AND advisory_id = ?",
+		assert.NoError(t, database.DB.Save(&systems[0]).Error)
+		assert.NoError(t, database.DB.Find(&accountData, "rh_account_id = ? AND advisory_id = ?",
 			accountData[0].RhAccountID, accountData[0].AdvisoryID).Error)
 
 		assert.Equal(t, oldAffected, accountData[0].SystemsInstallable,
@@ -72,8 +72,8 @@ func TestMarkSystemsStale(t *testing.T) {
 	var systems []models.SystemPlatform
 	var accountData []models.AdvisoryAccountData
 	assert.NotNil(t, staleDate)
-	assert.NoError(t, database.Db.Find(&systems).Error)
-	assert.NoError(t, database.Db.Find(&accountData).Error)
+	assert.NoError(t, database.DB.Find(&systems).Error)
+	assert.NoError(t, database.DB.Find(&accountData).Error)
 	for i := range systems {
 		assert.NotEqual(t, 0, systems[i].ID)
 		// Check for valid state before modifying the systems in DB
@@ -87,13 +87,13 @@ func TestMarkSystemsStale(t *testing.T) {
 		assert.True(t, a.SystemsInstallable+a.SystemsApplicable > 0, "We should have some systems affected")
 	}
 	for i := range systems {
-		assert.NoError(t, database.Db.Save(&systems[i]).Error)
+		assert.NoError(t, database.DB.Save(&systems[i]).Error)
 	}
-	nMarked, err := markSystemsStale(database.Db, 500)
+	nMarked, err := markSystemsStale(database.DB, 500)
 	assert.Nil(t, err)
 	assert.Equal(t, 16, nMarked)
 
-	assert.NoError(t, database.Db.Find(&systems).Error)
+	assert.NoError(t, database.DB.Find(&systems).Error)
 	for i, s := range systems {
 		assert.Equal(t, true, s.Stale, "All systems should be stale")
 		s.StaleTimestamp = nil
@@ -102,7 +102,7 @@ func TestMarkSystemsStale(t *testing.T) {
 		systems[i] = s
 	}
 
-	assert.NoError(t, database.Db.Find(&accountData).Error)
+	assert.NoError(t, database.DB.Find(&accountData).Error)
 	sumAffected := 0
 	for _, a := range accountData {
 		sumAffected += a.SystemsInstallable + a.SystemsApplicable
@@ -117,7 +117,7 @@ func TestMarkSystemsNotStale(t *testing.T) {
 	var systems []models.SystemPlatform
 	var accountData []models.AdvisoryAccountData
 
-	assert.NoError(t, database.Db.Find(&systems).Error)
+	assert.NoError(t, database.DB.Find(&systems).Error)
 	for i, s := range systems {
 		assert.Equal(t, true, s.Stale, "All systems should be stale at the start of the test")
 		s.StaleTimestamp = nil
@@ -127,10 +127,10 @@ func TestMarkSystemsNotStale(t *testing.T) {
 	}
 
 	for i := range systems {
-		assert.NoError(t, database.Db.Save(&systems[i]).Error)
+		assert.NoError(t, database.DB.Save(&systems[i]).Error)
 	}
 
-	assert.NoError(t, database.Db.Find(&accountData).Error)
+	assert.NoError(t, database.DB.Find(&accountData).Error)
 	assert.True(t, len(accountData) > 0, "We should have some systems affected by advisories")
 	for _, a := range accountData {
 		assert.True(t, a.SystemsInstallable+a.SystemsApplicable > 0, "We should have some systems affected")
@@ -146,7 +146,7 @@ func TestCullSystems(t *testing.T) {
 	nToDelete := 4
 	for i := 0; i < nToDelete; i++ {
 		invID := fmt.Sprintf("00000000-0000-0000-0000-000000000de%d", i+1)
-		assert.NoError(t, database.Db.Create(&models.SystemPlatform{
+		assert.NoError(t, database.DB.Create(&models.SystemPlatform{
 			InventoryID:     invID,
 			RhAccountID:     1,
 			DisplayName:     invID,
@@ -157,18 +157,18 @@ func TestCullSystems(t *testing.T) {
 	var cnt int64
 	var cntAfter int64
 	database.DebugWithCachesCheck("delete-culled", func() {
-		assert.NoError(t, database.Db.Model(&models.SystemPlatform{}).Count(&cnt).Error)
+		assert.NoError(t, database.DB.Model(&models.SystemPlatform{}).Count(&cnt).Error)
 		// first batch
-		nDeleted, err := deleteCulledSystems(database.Db, 3)
+		nDeleted, err := deleteCulledSystems(database.DB, 3)
 		assert.Nil(t, err)
 		assert.Equal(t, 3, nDeleted)
 
 		// second batch
-		nDeleted, err = deleteCulledSystems(database.Db, 3)
+		nDeleted, err = deleteCulledSystems(database.DB, 3)
 		assert.Nil(t, err)
 		assert.Equal(t, 1, nDeleted)
 
-		assert.NoError(t, database.Db.Model(&models.SystemPlatform{}).Count(&cntAfter).Error)
+		assert.NoError(t, database.DB.Model(&models.SystemPlatform{}).Count(&cntAfter).Error)
 		assert.Equal(t, cnt-int64(nToDelete), cntAfter)
 	})
 }
