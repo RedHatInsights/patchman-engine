@@ -30,7 +30,6 @@ type SystemYumUpdatesResponse struct {
 	Data vmaas.UpdatesV3Response `json:"data"`
 }
 
-// nolint: funlen
 // @Summary Show me details about a system by given inventory id
 // @Description Show me details about a system by given inventory id
 // @ID detailSystem

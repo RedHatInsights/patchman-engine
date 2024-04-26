@@ -55,8 +55,8 @@ type queryItem struct {
 
 var queryItemSelect = database.MustGetSelect(&queryItem{})
 
-// nolint: lll
-func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, groups map[string]string, useCache bool) *gorm.DB {
+func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, groups map[string]string,
+	useCache bool) *gorm.DB {
 	if useCache {
 		q := db.Table("package_account_data res").
 			Select(PackagesSelect).

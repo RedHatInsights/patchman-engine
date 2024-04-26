@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
+func TestAdvisorySystemsDefault(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "", nil, "", AdvisorySystemsListHandler)
 
@@ -34,7 +34,7 @@ func TestAdvisorySystemsDefault(t *testing.T) { //nolint:dupl
 	assert.False(t, output.Data[0].Attributes.BuiltPkgcache)
 }
 
-func TestAdvisorySystemsIDsDefault(t *testing.T) { //nolint:dupl
+func TestAdvisorySystemsIDsDefault(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "", nil, "", AdvisorySystemsListIDsHandler)
 
@@ -47,7 +47,7 @@ func TestAdvisorySystemsIDsDefault(t *testing.T) { //nolint:dupl
 	assert.Equal(t, "Installable", output.Data[0].Status)
 }
 
-func TestAdvisorySystemsNotFound(t *testing.T) { //nolint:dupl
+func TestAdvisorySystemsNotFound(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "nonexistant/systems", "", nil, "",
 		AdvisorySystemsListHandler)
@@ -55,7 +55,7 @@ func TestAdvisorySystemsNotFound(t *testing.T) { //nolint:dupl
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
-func TestAdvisorySystemsOffsetLimit(t *testing.T) { //nolint:dupl
+func TestAdvisorySystemsOffsetLimit(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "?offset=5&limit=3", nil, "",
 		AdvisorySystemsListHandler)
@@ -92,7 +92,7 @@ func TestAdvisorySystemsSorts(t *testing.T) {
 	}
 }
 
-func TestAdvisorySystemsWrongSort(t *testing.T) { //nolint:dupl
+func TestAdvisorySystemsWrongSort(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "?sort=unknown_key", nil, "",
 		AdvisorySystemsListHandler)
@@ -100,7 +100,7 @@ func TestAdvisorySystemsWrongSort(t *testing.T) { //nolint:dupl
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
-func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
+func TestAdvisorySystemsTags(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "?tags=ns1/k1=val1", nil, "",
 		AdvisorySystemsListHandler)
@@ -110,7 +110,7 @@ func TestAdvisorySystemsTags(t *testing.T) { //nolint:dupl
 	assert.Equal(t, 5, len(output.Data))
 }
 
-func TestAdvisorySystemsTagsMultiple(t *testing.T) { //nolint:dupl
+func TestAdvisorySystemsTagsMultiple(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "?tags=ns1/k3=val4&tags=ns1/k1=val1", nil, "",
 		AdvisorySystemsListHandler)
@@ -131,7 +131,7 @@ func TestAdvisorySystemsTagsInvalid(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf(InvalidTagMsg, "invalidTag"), errResp.Error)
 }
 
-func TestAdvisorySystemsTagsUnknown(t *testing.T) { //nolint:dupl
+func TestAdvisorySystemsTagsUnknown(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", "?tags=ns1/k3=val4&tags=ns1/k1=unk", nil, "",
 		AdvisorySystemsListHandler)

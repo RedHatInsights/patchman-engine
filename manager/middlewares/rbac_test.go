@@ -282,7 +282,6 @@ func TestFindInventoryGroupsUnrouped(t *testing.T) {
 	assert.Equal(t, "[]", groups[utils.KeyUngrouped])
 }
 
-// nolint:lll
 func TestFindInventoryGroups(t *testing.T) {
 	access := &rbac.AccessPagination{
 		Data: []rbac.Access{{

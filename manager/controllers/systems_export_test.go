@@ -41,7 +41,7 @@ func TestSystemsExportJSON(t *testing.T) {
 	assert.Equal(t, "2018-09-02 16:00:00 +0000 UTC", output[0].SystemItemAttributes.StaleWarningTimestamp.String())
 	assert.Equal(t, "2018-09-09 16:00:00 +0000 UTC", output[0].SystemItemAttributes.CulledTimestamp.String())
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output[0].SystemItemAttributes.Created.String())
-	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output[0].SystemItemAttributes.Tags) // nolint: lll
+	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output[0].SystemItemAttributes.Tags)
 	assert.Equal(t, "baseline_1-1", output[0].SystemItemAttributes.BaselineName)
 	assert.Equal(t, int64(1), output[0].SystemItemAttributes.BaselineID)
 }

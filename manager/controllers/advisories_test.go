@@ -33,7 +33,6 @@ func testAdvisoriesIDs(t *testing.T, url string) IDsPlainResponse {
 	return output
 }
 
-//nolint:dupl
 func TestAdvisoriesDefault(t *testing.T) {
 	output := testAdvisories(t, "/")
 	assert.Equal(t, 12, len(output.Data))
@@ -236,7 +235,6 @@ func TestAdvisoriesWrongSort(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
-//nolint:dupl
 func TestAdvisoriesSearch(t *testing.T) {
 	output := testAdvisories(t, "/?search=h-3")
 	assert.Equal(t, 1, len(output.Data))

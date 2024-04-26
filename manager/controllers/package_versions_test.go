@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// nolint: dupl
 func TestPackageVersions(t *testing.T) {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithParams("GET", "/:package_name/versions", "firefox", "", nil, "",

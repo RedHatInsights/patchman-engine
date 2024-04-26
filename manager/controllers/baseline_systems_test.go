@@ -103,7 +103,6 @@ func TestBaselineSystemsWrongSort(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
-//nolint:lll
 func TestBaselineSystemsSearch(t *testing.T) {
 	output := testBaselineSystems(t, "1", "?search=00000000-0000-0000-0000-000000000001")
 	assert.Equal(t, 1, len(output.Data))

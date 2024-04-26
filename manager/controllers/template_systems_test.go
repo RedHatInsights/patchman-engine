@@ -106,7 +106,6 @@ func TestTemplateSystemsWrongSort(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
-//nolint:lll
 func TestTemplateSystemsSearch(t *testing.T) {
 	output := testTemplateSystems(t, "99900000-0000-0000-0000-000000000001",
 		"?search=00000000-0000-0000-0000-000000000001")

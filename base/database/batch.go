@@ -22,7 +22,6 @@ import (
 // CreatedAt and UpdatedAt value if they're empty. This value will be set to the
 // value from gorm.NowFunc() in scopeFromObjects to ensure all objects get the
 // same value.
-// nolint: gochecknoglobals
 var bulkNow time.Time
 
 func UnnestInsert(db *gorm.DB, query string, objects interface{}) error {
@@ -206,7 +205,7 @@ func parseClause(clauseOnConflict clause.Expression) string {
 	}
 	valStr := strings.Join(updateStrs, ", ")
 
-	SQLstring := fmt.Sprintf("ON CONFLICT (%v) DO UPDATE SET %v", keyStrs, valStr) // nolint:gosimple
+	SQLstring := fmt.Sprintf("ON CONFLICT (%v) DO UPDATE SET %v", keyStrs, valStr)
 	return SQLstring
 }
 

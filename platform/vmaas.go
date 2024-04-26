@@ -13,7 +13,7 @@ func updatesHandler(c *gin.Context) {
 		ReturnStatus int `json:"return_status"`
 	}
 	jsonData, _ := io.ReadAll(c.Request.Body)
-	json.Unmarshal(jsonData, &body) // nolint:errcheck
+	_ = json.Unmarshal(jsonData, &body)
 	if body.ReturnStatus > 200 {
 		c.AbortWithStatus(body.ReturnStatus)
 		return

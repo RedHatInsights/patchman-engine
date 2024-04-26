@@ -71,7 +71,6 @@ func TemplateDelete(template mqueue.TemplateResponse) error {
 	return err
 }
 
-// nolint: revive
 func TemplateUpdate(template mqueue.TemplateResponse) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, templateMsgHandlingDuration.WithLabelValues(TemplateEventCreate))

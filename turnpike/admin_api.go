@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// nolint: lll
 // @title Patch Admin API
 // @version  {{.Version}}
 // @description Admin API of the Patch application on [internal.console.redhat.com](https://internal.console.redhat.com)
