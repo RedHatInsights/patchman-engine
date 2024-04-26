@@ -16,7 +16,6 @@ const LastSync = "last_sync"
 const LastFullSync = "last_full_sync"
 const VmaasExported = "vmaas_exported"
 
-// nolint: gocritic
 func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {
 	lastRepoBaseEval, err := database.GetTimestampKVValueStr(LastEvalRepoBased)
 	if err != nil {
@@ -28,12 +27,13 @@ func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {
 	if latestRepoChange == nil {
 		return nil, nil
 	}
-
-	allRepos := append(redhatRepos, thirdPartyRepos...)
-
 	if err != nil {
 		return nil, err
 	}
+
+	allRepos := make([]string, 0, len(redhatRepos)+len(thirdPartyRepos))
+	allRepos = append(allRepos, redhatRepos...)
+	allRepos = append(allRepos, thirdPartyRepos...)
 
 	inventoryAIDs, err := getRepoBasedInventoryIDs(allRepos)
 	if err != nil {
