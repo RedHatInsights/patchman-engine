@@ -23,7 +23,8 @@ func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {
 	}
 
 	now := time.Now()
-	redhatRepos, thirdPartyRepos, latestRepoChange, err := getUpdatedRepos(now, lastRepoBaseEval)
+	thirdParty := true
+	repoPackages, repoNoPackages, latestRepoChange, err := getUpdatedRepos(now, lastRepoBaseEval, &thirdParty)
 	if latestRepoChange == nil {
 		return nil, nil
 	}
@@ -31,11 +32,7 @@ func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {
 		return nil, err
 	}
 
-	allRepos := make([]string, 0, len(redhatRepos)+len(thirdPartyRepos))
-	allRepos = append(allRepos, redhatRepos...)
-	allRepos = append(allRepos, thirdPartyRepos...)
-
-	inventoryAIDs, err := getRepoBasedInventoryIDs(allRepos)
+	inventoryAIDs, err := getRepoBasedInventoryIDs(repoPackages, repoNoPackages)
 	if err != nil {
 		return nil, err
 	}
@@ -45,40 +42,55 @@ func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {
 	return inventoryAIDs, nil
 }
 
-func getRepoBasedInventoryIDs(repos []string) ([]mqueue.EvalData, error) {
+func getRepoBasedInventoryIDs(repoPackages [][]string, repos []string) ([]mqueue.EvalData, error) {
 	var ids []mqueue.EvalData
-	if len(repos) == 0 {
+	if len(repoPackages) == 0 && len(repos) == 0 {
 		return ids, nil
 	}
 
-	err := tasks.CancelableDB().Table("system_repo sr").
+	query := tasks.CancelableDB().Table("system_repo sr").
 		Joins("JOIN repo ON repo.id = sr.repo_id").
 		Joins("JOIN system_platform sp ON  sp.rh_account_id = sr.rh_account_id AND sp.id = sr.system_id").
 		Joins("JOIN rh_account ra ON ra.id = sp.rh_account_id").
-		Where("repo.name IN (?)", repos).
 		Order("sp.rh_account_id").
-		Select("distinct sp.inventory_id, sp.rh_account_id, ra.org_id").
-		Scan(&ids).Error
-	if err != nil {
+		Select("distinct sp.inventory_id, sp.rh_account_id, ra.org_id")
+	whereQ := database.DB
+
+	if len(repoPackages) > 0 {
+		query = query.
+			Joins("JOIN system_package2 spkg ON spkg.rh_account_id = sp.rh_account_id AND spkg.system_id = sp.id").
+			Joins("JOIN package_name pn ON pn.id = spkg.name_id")
+		whereQ = whereQ.Where("(repo.name, pn.name) IN (?)", repoPackages)
+	}
+
+	if len(repos) > 0 {
+		whereQ = whereQ.Or("repo.name IN (?)", repos)
+	}
+
+	if err := query.Where(whereQ).Scan(&ids).Error; err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // nolint: funlen
-func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []string, *time.Time, error) {
+func getUpdatedRepos(syncStart time.Time, modifiedSince *string, thirdParty *bool,
+) ([][]string, []string, *time.Time, error) {
 	page := 1
-	var reposRedHat []string
-	var reposThirdParty []string
+	var repoPackages [][]string
+	var repoNoPackages []string
 	var latestRepoChange *time.Time
+	var nReposRedhat int
+	var nReposThirdParty int
 	reposSyncStart := time.Now()
 	for {
 		reposReq := vmaas.ReposRequest{
 			Page:           page,
 			RepositoryList: []string{".*"},
 			PageSize:       advisoryPageSize,
-			ThirdParty:     utils.PtrBool(true),
+			ThirdParty:     thirdParty,
 			ModifiedSince:  modifiedSince,
+			ShowPackages:   true,
 		}
 
 		vmaasCallFunc := func() (interface{}, *http.Response, error) {
@@ -118,16 +130,21 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []st
 
 		for k, contentSet := range repos.RepositoryList {
 			thirdParty := false
+			packages := make(map[string]bool)
 			for _, repo := range contentSet {
 				if repo["third_party"] == (interface{})(true) {
 					thirdParty = true
 				}
+				repoPackages = append(repoPackages, getRepoUpdatedPackages(k, repo, packages)...)
+			}
+			if len(packages) == 0 {
+				repoNoPackages = append(repoNoPackages, k)
 			}
 
 			if thirdParty {
-				reposThirdParty = append(reposThirdParty, k)
+				nReposThirdParty++
 			} else {
-				reposRedHat = append(reposRedHat, k)
+				nReposRedhat++
 			}
 		}
 
@@ -137,6 +154,21 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string) ([]string, []st
 		page++
 	}
 
-	utils.LogInfo("redhat", len(reposRedHat), "thirdparty", len(reposThirdParty), "Repos downloading complete")
-	return reposRedHat, reposThirdParty, latestRepoChange, nil
+	utils.LogInfo("redhat", nReposRedhat, "thirdparty", nReposThirdParty, "Repos downloading complete")
+	return repoPackages, repoNoPackages, latestRepoChange, nil
+}
+
+func getRepoUpdatedPackages(contentSetName string, repo map[string]interface{}, packages map[string]bool) [][]string {
+	var repoPackages [][]string
+	if value, ok := repo["updated_package_names"]; ok {
+		if updatedPkgs, ok := value.([]interface{}); ok {
+			for _, p := range updatedPkgs {
+				if pkg, ok := p.(string); ok && !packages[pkg] {
+					packages[pkg] = true
+					repoPackages = append(repoPackages, []string{contentSetName, pkg})
+				}
+			}
+		}
+	}
+	return repoPackages
 }

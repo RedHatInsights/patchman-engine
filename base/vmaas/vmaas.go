@@ -261,7 +261,8 @@ type ReposRequest struct {
 	// Return only repositories changed after the given date
 	ModifiedSince *string `json:"modified_since,omitempty"`
 	// Include content from \"third party\" repositories into the response, disabled by default.
-	ThirdParty *bool `json:"third_party,omitempty"`
+	ThirdParty   *bool `json:"third_party,omitempty"`
+	ShowPackages bool  `json:"show_packages"`
 }
 
 type ReposResponse struct {
