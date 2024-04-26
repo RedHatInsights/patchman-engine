@@ -15,7 +15,7 @@ type statusRow struct {
 func configureStatus() {
 	var rows []statusRow
 
-	err := database.Db.Table("status s").Select("id, name").Scan(&rows).Error
+	err := database.DB.Table("status s").Select("id, name").Scan(&rows).Error
 	if err != nil {
 		panic(err)
 	}

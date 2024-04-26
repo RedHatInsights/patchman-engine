@@ -28,7 +28,7 @@ func createInventoryHosts() {
 	if err != nil {
 		panic(err)
 	}
-	err = database.Db.Exec(string(query)).Error
+	err = database.DB.Exec(string(query)).Error
 	if err != nil {
 		panic(err)
 	}
@@ -40,7 +40,7 @@ func feed() {
 	if err != nil {
 		panic(err)
 	}
-	err = database.Db.Exec(string(query)).Error
+	err = database.DB.Exec(string(query)).Error
 	if err != nil {
 		panic(err)
 	}

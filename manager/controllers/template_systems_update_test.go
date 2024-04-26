@@ -137,9 +137,9 @@ func TestUpdateTemplateSatelliteSystem(t *testing.T) {
 		BuiltPkgcache:    true,
 		SatelliteManaged: true,
 	}
-	tx := database.Db.Create(&system)
+	tx := database.DB.Create(&system)
 	assert.Nil(t, tx.Error)
-	defer database.Db.Delete(system)
+	defer database.DB.Delete(system)
 
 	data := `{
 		"systems": {

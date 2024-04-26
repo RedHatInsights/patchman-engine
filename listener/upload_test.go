@@ -64,7 +64,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 		Basearch:       utils.PtrString("x86_64"),
 	}
 
-	sys1, err := updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(t), nil, &req)
+	sys1, err := updateSystemPlatform(database.DB, id, accountID1, createTestInvHost(t), nil, &req)
 	assert.Nil(t, err)
 
 	reporterID1 := 1
@@ -74,7 +74,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	host2 := createTestInvHost(t)
 	host2.Reporter = "yupana"
 	req.PackageList = []string{"package0", "package1"}
-	sys2, err := updateSystemPlatform(database.Db, id, accountID2, host2, nil, &req)
+	sys2, err := updateSystemPlatform(database.DB, id, accountID2, host2, nil, &req)
 	assert.Nil(t, err)
 
 	reporterID2 := 3
@@ -112,10 +112,10 @@ func TestUploadHandler(t *testing.T) {
 	assertSystemInDB(t, id, nil, &reporterID)
 
 	var sys models.SystemPlatform
-	assert.NoError(t, database.Db.Where("inventory_id::text = ?", id).Find(&sys).Error)
+	assert.NoError(t, database.DB.Where("inventory_id::text = ?", id).Find(&sys).Error)
 	after := time.Now().Add(time.Hour)
 	sys.LastEvaluation = &after
-	assert.NoError(t, database.Db.Save(&sys).Error)
+	assert.NoError(t, database.DB.Save(&sys).Error)
 	// Test that second upload did not cause re-evaluation
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
@@ -202,7 +202,7 @@ func TestEnsureReposInDB(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	repos := []string{"repo1", "repo10", "repo20"}
-	repoIDs, nAdded, err := ensureReposInDB(database.Db, repos)
+	repoIDs, nAdded, err := ensureReposInDB(database.DB, repos)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(2), nAdded)
 	assert.Equal(t, 3, len(repoIDs))
@@ -215,7 +215,7 @@ func TestEnsureReposEmpty(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	var repos []string
-	repoIDs, nAdded, err := ensureReposInDB(database.Db, repos)
+	repoIDs, nAdded, err := ensureReposInDB(database.DB, repos)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), nAdded)
 	assert.Equal(t, 0, len(repoIDs))
@@ -228,16 +228,16 @@ func TestUpdateSystemRepos1(t *testing.T) {
 
 	systemID := int64(5)
 	rhAccountID := 1
-	database.Db.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 1})
-	database.Db.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 2})
+	database.DB.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 1})
+	database.DB.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 2})
 
 	repos := []string{"repo1", "repo10", "repo20"}
-	repoIDs, nReposAdded, err := ensureReposInDB(database.Db, repos)
+	repoIDs, nReposAdded, err := ensureReposInDB(database.DB, repos)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(repoIDs))
 	assert.Equal(t, int64(2), nReposAdded)
 
-	nAdded, nDeleted, err := updateSystemRepos(database.Db, rhAccountID, systemID, repoIDs)
+	nAdded, nDeleted, err := updateSystemRepos(database.DB, rhAccountID, systemID, repoIDs)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(2), nAdded)
 	assert.Equal(t, int64(1), nDeleted)
@@ -251,10 +251,10 @@ func TestUpdateSystemRepos2(t *testing.T) {
 
 	systemID := int64(5)
 	rhAccountID := 1
-	database.Db.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 1})
-	database.Db.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 2})
+	database.DB.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 1})
+	database.DB.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 2})
 
-	nAdded, nDeleted, err := updateSystemRepos(database.Db, rhAccountID, systemID, []int64{})
+	nAdded, nDeleted, err := updateSystemRepos(database.DB, rhAccountID, systemID, []int64{})
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), nAdded)
 	assert.Equal(t, int64(2), nDeleted)
@@ -287,7 +287,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 
 	req := vmaas.UpdatesV3Request{}
 
-	_, err = updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(t), yumUpdates, &req)
+	_, err = updateSystemPlatform(database.DB, id, accountID1, createTestInvHost(t), yumUpdates, &req)
 	assert.Nil(t, err)
 
 	reporterID1 := 1
@@ -297,7 +297,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 
 	// check that yumUpdates has been updated
 	yumUpdates.RawParsed = []byte("{}")
-	_, err = updateSystemPlatform(database.Db, id, accountID1, createTestInvHost(t), yumUpdates, &req)
+	_, err = updateSystemPlatform(database.DB, id, accountID1, createTestInvHost(t), yumUpdates, &req)
 	assert.Nil(t, err)
 	assertYumUpdatesInDB(t, id, yumUpdates)
 
@@ -312,8 +312,8 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 
 	var oldCount, newCount int
 	var nextval, currval int
-	database.Db.Model(&models.SystemPlatform{}).Select("count(*)").Find(&oldCount)
-	database.Db.Raw("select nextval('system_platform_id_seq')").Find(&nextval)
+	database.DB.Model(&models.SystemPlatform{}).Select("count(*)").Find(&oldCount)
+	database.DB.Raw("select nextval('system_platform_id_seq')").Find(&nextval)
 
 	colsToUpdate := []string{"vmaas_json", "json_checksum", "reporter_id", "satellite_managed"}
 	json := "this_is_json"
@@ -325,12 +325,12 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 		SatelliteManaged: false,
 	}
 	// insert new row
-	err := storeOrUpdateSysPlatform(database.Db, &inStore, colsToUpdate)
+	err := storeOrUpdateSysPlatform(database.DB, &inStore, colsToUpdate)
 	assert.Nil(t, err)
 
 	var outStore models.SystemPlatform
-	database.Db.Model(models.SystemPlatform{}).Find(&outStore, inStore.ID)
-	defer database.Db.Model(models.SystemPlatform{}).Delete(outStore)
+	database.DB.Model(models.SystemPlatform{}).Find(&outStore, inStore.ID)
+	defer database.DB.Model(models.SystemPlatform{}).Delete(outStore)
 
 	assert.Equal(t, inStore.InventoryID, outStore.InventoryID)
 	assert.Equal(t, inStore.RhAccountID, outStore.RhAccountID)
@@ -347,11 +347,11 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	inUpdate.SatelliteManaged = true
 
 	// update row
-	err = storeOrUpdateSysPlatform(database.Db, &inUpdate, colsToUpdate)
+	err = storeOrUpdateSysPlatform(database.DB, &inUpdate, colsToUpdate)
 	assert.Nil(t, err)
 
 	var outUpdate models.SystemPlatform
-	database.Db.Model(models.SystemPlatform{}).Find(&outUpdate, inUpdate.ID)
+	database.DB.Model(models.SystemPlatform{}).Find(&outUpdate, inUpdate.ID)
 	assert.Equal(t, inUpdate.InventoryID, outUpdate.InventoryID)
 	assert.Equal(t, inUpdate.RhAccountID, outUpdate.RhAccountID)
 	assert.Equal(t, *inUpdate.VmaasJSON, *outUpdate.VmaasJSON)
@@ -364,8 +364,8 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	assert.Equal(t, outStore.DisplayName, outUpdate.DisplayName)
 
 	// make sure we are not creating gaps in id sequences
-	database.Db.Model(&models.SystemPlatform{}).Select("count(*)").Find(&newCount)
-	database.Db.Raw("select currval('system_platform_id_seq')").Find(&currval)
+	database.DB.Model(&models.SystemPlatform{}).Select("count(*)").Find(&newCount)
+	database.DB.Raw("select currval('system_platform_id_seq')").Find(&currval)
 	countInc := newCount - oldCount
 	maxInc := currval - nextval
 	assert.Equal(t, countInc, maxInc)

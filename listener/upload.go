@@ -663,7 +663,7 @@ func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatform, 
 		updatesReq.SetReleasever(releasever)
 	}
 
-	tx := database.Db.WithContext(base.Context).Begin()
+	tx := database.DB.WithContext(base.Context).Begin()
 	defer tx.Rollback()
 
 	var deleted models.DeletedSystem

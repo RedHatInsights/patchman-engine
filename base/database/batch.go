@@ -225,7 +225,7 @@ func objectToMap(schema *schema.Schema, object interface{}) (map[string]interfac
 	}
 
 	if now.IsZero() {
-		now = Db.NowFunc()
+		now = DB.NowFunc()
 	}
 
 	for _, field := range schema.Fields {

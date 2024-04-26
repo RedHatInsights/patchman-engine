@@ -116,7 +116,7 @@ func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV3Response) models.
 func updatePackageDB(missing *models.PackageSlice) error {
 	// autonomous transaction needs to be committed even if evaluation fails
 	if len(*missing) > 0 {
-		tx := database.Db.Begin()
+		tx := database.DB.Begin()
 		defer tx.Commit()
 		// tx.Create() also updates packages with their IDs
 		return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(missing).Error
@@ -127,7 +127,7 @@ func updatePackageDB(missing *models.PackageSlice) error {
 func updatePackageNameDB(missing *models.PackageName) error {
 	// autonomous transaction needs to be committed even if evaluation fails
 	if missing != nil {
-		tx := database.Db.Begin()
+		tx := database.DB.Begin()
 		defer tx.Commit()
 		// tx.Create() also updates packages with their IDs
 		return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(missing).Error

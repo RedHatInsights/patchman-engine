@@ -39,7 +39,7 @@ func TestSchemaCompatiblity(t *testing.T) {
 	err := database.ExecFile("./schema/clear_db.sql")
 	assert.NoError(t, err)
 
-	sqlDB, _ := database.Db.DB()
+	sqlDB, _ := database.DB.DB()
 	driver, err := postgres.WithInstance(sqlDB, &cfg)
 	assert.NoError(t, err)
 
@@ -109,7 +109,7 @@ func TestSchemaEmptyText(t *testing.T) {
 									FROM pg_catalog.pg_constraint
 								   WHERE conname = c.relname || '_' || a.attname || '_check'
 								);`
-	err := database.Db.Raw(query).Find(&cols).Error
+	err := database.DB.Raw(query).Find(&cols).Error
 	assert.NoError(t, err)
 	var msg string
 	for _, col := range cols {
@@ -137,13 +137,13 @@ func TestMigrateAction(t *testing.T) {
 
 	// db is actual but there are new migrations
 	os.Setenv("SCHEMA_MIGRATION", "1")
-	assert.Nil(t, database.Db.Exec(update, 1).Error)
+	assert.Nil(t, database.DB.Exec(update, 1).Error)
 	what = migrateAction(conn, sourceURL)
 	assert.Equal(t, BLOCK, what)
 
 	// db is actual
 	os.Setenv("SCHEMA_MIGRATION", "-1")
-	assert.Nil(t, database.Db.Exec(update, origMigrationSchema).Error)
+	assert.Nil(t, database.DB.Exec(update, origMigrationSchema).Error)
 	what = migrateAction(conn, sourceURL)
 	assert.Equal(t, CONTINUE, what)
 	// db is actual
@@ -153,11 +153,11 @@ func TestMigrateAction(t *testing.T) {
 
 	// db is actual
 	os.Setenv("SCHEMA_MIGRATION", fmt.Sprint(origMigrationSchema))
-	assert.Nil(t, database.Db.Exec(update, origMigrationSchema-1).Error)
+	assert.Nil(t, database.DB.Exec(update, origMigrationSchema-1).Error)
 	what = migrateAction(conn, sourceURL)
 	assert.Equal(t, MIGRATE, what)
 
 	// cleanup
 	os.Setenv("SCHEMA_MIGRATION", origSchemaMigration)
-	assert.Nil(t, database.Db.Exec(update, origDBSchema).Error)
+	assert.Nil(t, database.DB.Exec(update, origDBSchema).Error)
 }

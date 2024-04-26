@@ -66,7 +66,7 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventDelete))
 	// TODO: Do we need locking here ?
-	err := database.OnConflictUpdate(database.Db, "inventory_id", "when_deleted").
+	err := database.OnConflictUpdate(database.DB, "inventory_id", "when_deleted").
 		Create(models.DeletedSystem{
 			InventoryID: event.ID,
 			WhenDeleted: time.Now(),
@@ -78,7 +78,7 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 		return errors.Wrap(err, "Could not delete system")
 	}
 
-	query := database.Db.Exec("select deleted_inventory_id from delete_system(?::uuid)", event.ID)
+	query := database.DB.Exec("select deleted_inventory_id from delete_system(?::uuid)", event.ID)
 	err = query.Error
 	if err != nil {
 		utils.LogError("inventoryID", event.ID, "err", err.Error(), "Could not delete system")
@@ -95,7 +95,7 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 	utils.LogInfo("inventoryID", event.ID, "count", query.RowsAffected, "Systems deleted")
 	eventMsgsReceivedCnt.WithLabelValues(EventDelete, ReceivedSuccess).Inc()
 
-	err = database.Db.
+	err = database.DB.
 		Delete(&models.DeletedSystem{}, "when_deleted < ?", time.Now().Add(-DeletionThreshold)).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		utils.LogWarn("inventoryID", event.ID, WarnNoRowsModified)

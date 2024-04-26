@@ -16,7 +16,7 @@ func TestSystemAdvisories(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	var systemAdvisories []models.SystemAdvisories
-	err := database.Db.Model(models.SystemAdvisories{}).Preload("Advisory").
+	err := database.DB.Model(models.SystemAdvisories{}).Preload("Advisory").
 		Where("system_id = ?", 1).Find(&systemAdvisories).Error
 	assert.Nil(t, err)
 	assert.Equal(t, 8, len(systemAdvisories))

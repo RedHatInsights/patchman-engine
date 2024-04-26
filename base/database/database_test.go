@@ -12,9 +12,9 @@ func TestOnConflictDoUpdate(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
 
-	err := Db.AutoMigrate(&TestTable{})
+	err := DB.AutoMigrate(&TestTable{})
 	assert.NoError(t, err)
-	err = Db.Unscoped().Delete(&TestTable{}, "true").Error
+	err = DB.Unscoped().Delete(&TestTable{}, "true").Error
 	assert.NoError(t, err)
 
 	obj := TestTable{
@@ -22,10 +22,10 @@ func TestOnConflictDoUpdate(t *testing.T) {
 		Email: "Bla",
 	}
 
-	assert.Equal(t, nil, OnConflictUpdate(Db, "id", "name", "email").Create(&obj).Error)
+	assert.Equal(t, nil, OnConflictUpdate(DB, "id", "name", "email").Create(&obj).Error)
 
 	var read TestTable
-	Db.Find(&read, obj.ID)
+	DB.Find(&read, obj.ID)
 
 	assert.Equal(t, obj.ID, read.ID)
 	assert.Equal(t, obj.Name, read.Name)
@@ -33,9 +33,9 @@ func TestOnConflictDoUpdate(t *testing.T) {
 
 	obj.Name = ""
 
-	assert.Equal(t, nil, OnConflictUpdate(Db, "id", "name", "email").Create(&obj).Error)
+	assert.Equal(t, nil, OnConflictUpdate(DB, "id", "name", "email").Create(&obj).Error)
 
-	Db.Find(&read, obj.ID)
+	DB.Find(&read, obj.ID)
 
 	assert.Equal(t, obj.ID, read.ID)
 	assert.Equal(t, obj.Name, read.Name)
@@ -46,7 +46,7 @@ func TestCancelContext(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
 
-	tx := Db.WithContext(base.Context).Begin()
+	tx := DB.WithContext(base.Context).Begin()
 	base.CancelContext()
 	err := tx.Exec("select pg_sleep(1)").Error
 	assert.NotNil(t, err)
@@ -58,7 +58,7 @@ func TestStatementTimeout(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
 
-	err := Db.Exec("select pg_sleep(10)").Error
+	err := DB.Exec("select pg_sleep(10)").Error
 	assert.NotNil(t, err)
 	assert.Equal(t, "ERROR: canceling statement due to statement timeout (SQLSTATE 57014)", err.Error())
 }

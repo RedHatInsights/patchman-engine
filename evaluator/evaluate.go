@@ -175,7 +175,7 @@ func runEvaluate(
 
 func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, inventoryID string) (
 	*models.SystemPlatform, *vmaas.UpdatesV3Response, error) {
-	tx := database.Db.WithContext(base.Context).Begin()
+	tx := database.DB.WithContext(base.Context).Begin()
 	// Don't allow requested TX to hang around locking the rows
 	defer tx.Rollback()
 
@@ -616,7 +616,7 @@ func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, erro
 }
 
 func invalidateCaches(orgID string) error {
-	err := database.Db.Model(models.RhAccount{}).
+	err := database.DB.Model(models.RhAccount{}).
 		Where("org_id = ?", orgID).
 		Where("valid_package_cache = true OR valid_advisory_cache = true").
 		// use map because struct updates only non-zero values and we need to update it to `false`

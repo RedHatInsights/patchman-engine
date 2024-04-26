@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	Db                 *gorm.DB //nolint:stylecheck
-	DbReadReplica      *gorm.DB //nolint:stylecheck
+	DB                 *gorm.DB
+	DBReadReplica      *gorm.DB
 	OtherAdvisoryTypes []string
 	AdvisoryTypes      map[int]string
 	globalPgConfig     *PostgreSQLConfig
@@ -21,18 +21,18 @@ var (
 
 func InitDB() {
 	pgConfig := loadEnvPostgreSQLConfig(false)
-	if Db != nil && pgConfig == globalPgConfig {
+	if DB != nil && pgConfig == globalPgConfig {
 		// reuse connection
-		check(Db)
+		check(DB)
 		return
 	}
 	globalPgConfig = pgConfig
-	Db = openPostgreSQL(pgConfig)
-	check(Db)
+	DB = openPostgreSQL(pgConfig)
+	check(DB)
 	if utils.Cfg.DBReadReplicaEnabled {
 		pgConfig := loadEnvPostgreSQLConfig(ReadReplicaConfigured())
-		DbReadReplica = openPostgreSQL(pgConfig)
-		check(DbReadReplica)
+		DBReadReplica = openPostgreSQL(pgConfig)
+		check(DBReadReplica)
 	}
 }
 
@@ -141,7 +141,7 @@ func dataSourceName(dbConfig *PostgreSQLConfig) string {
 
 func loadAdditionalParamsFromDB() {
 	// Load OtherAdvisoryTypes list
-	err := Db.Table("advisory_type").
+	err := DB.Table("advisory_type").
 		Where("name NOT IN ('enhancement', 'bugfix', 'security')").
 		Order("name").
 		Pluck("name", &OtherAdvisoryTypes).Error
@@ -153,7 +153,7 @@ func loadAdditionalParamsFromDB() {
 	// Load AdvisoryTypes
 	var types []models.AdvisoryType
 
-	err = Db.Table("advisory_type").
+	err = DB.Table("advisory_type").
 		Select("id, name").
 		Scan(&types).Error
 	utils.LogDebug("advisory_types", types, "Advisory types loaded from DB")

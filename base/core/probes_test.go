@@ -28,7 +28,7 @@ func TestReadiness(t *testing.T) {
 func TestReadinessFail(t *testing.T) {
 	SetupTest(t)
 
-	sqlDB, _ := database.Db.DB()
+	sqlDB, _ := database.DB.DB()
 	assert.Nil(t, sqlDB.Close())
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/", nil)

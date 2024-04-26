@@ -61,7 +61,7 @@ func TemplateDelete(template mqueue.TemplateResponse) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, templateMsgHandlingDuration.WithLabelValues(TemplateEventDelete))
 
-	err := database.Db.
+	err := database.DB.
 		Delete(&models.Template{}, "uuid = ?::uuid AND rh_account_id = (SELECT id FROM rh_account WHERE org_id = ?)",
 			template.UUID, template.OrgID).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -98,7 +98,7 @@ func TemplateUpdate(template mqueue.TemplateResponse) error {
 		Published:   &template.Date,
 	}
 
-	err = database.OnConflictUpdateMulti(database.Db, []string{"rh_account_id", "uuid"},
+	err = database.OnConflictUpdateMulti(database.DB, []string{"rh_account_id", "uuid"},
 		"name", "description", "creator", "published").Save(&row).Error
 	if err != nil {
 		return errors.Wrap(err, "creating template from message")

@@ -25,7 +25,7 @@ func TestGroupNameFilter(t *testing.T) {
 	groups := map[string]string{
 		utils.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]","[{\"id\":\"inventory-group-2\"}]"}`,
 	}
-	tx := database.Systems(database.Db, 1, groups)
+	tx := database.Systems(database.DB, 1, groups)
 	tx, _ = ApplyInventoryFilter(filters, tx, "sp.inventory_id")
 	tx.Scan(&systems)
 
@@ -48,7 +48,7 @@ func TestGroupNameFilter2(t *testing.T) {
 	groups := map[string]string{
 		utils.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]","[{\"id\":\"inventory-group-2\"}]"}`,
 	}
-	tx := database.Systems(database.Db, 1, groups)
+	tx := database.Systems(database.DB, 1, groups)
 	tx, _ = ApplyInventoryFilter(filters, tx, "sp.inventory_id")
 	tx.Scan(&systems)
 

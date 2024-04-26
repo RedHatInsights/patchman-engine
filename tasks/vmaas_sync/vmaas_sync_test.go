@@ -52,7 +52,7 @@ func TestSync(t *testing.T) {
 	Configure()
 
 	// ensure all repos to be marked "third_party" = true
-	assert.NoError(t, database.Db.Table("repo").Where("name IN (?)", []string{"repo1", "repo2", "repo3"}).
+	assert.NoError(t, database.DB.Table("repo").Where("name IN (?)", []string{"repo1", "repo2", "repo3"}).
 		Update("third_party", true).Error)
 	database.CheckThirdPartyRepos(t, []string{"repo1", "repo2", "repo3", "repo4"}, true) // ensure testing set
 
@@ -64,7 +64,7 @@ func TestSync(t *testing.T) {
 	database.CheckAdvisoriesInDB(t, expected)
 
 	var repos []models.Repo
-	assert.NoError(t, database.Db.Model(&repos).Error)
+	assert.NoError(t, database.DB.Model(&repos).Error)
 
 	database.CheckThirdPartyRepos(t, []string{"repo1", "repo2", "repo3"}, false) // sync updated the flag
 	database.CheckThirdPartyRepos(t, []string{"repo4"}, true)                    // third party repo4 has correct flag

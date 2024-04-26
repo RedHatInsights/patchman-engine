@@ -26,26 +26,26 @@ func TestInit(_ *testing.T) {
 
 func deleteData(t *testing.T) {
 	// Delete test data from previous run
-	assert.Nil(t, database.Db.Unscoped().Exec("DELETE FROM advisory_account_data aad "+
+	assert.Nil(t, database.DB.Unscoped().Exec("DELETE FROM advisory_account_data aad "+
 		"USING rh_account ra WHERE ra.id = aad.rh_account_id AND ra.name = ?", id).Error)
-	assert.Nil(t, database.Db.Unscoped().Where("first_reported > timestamp '2020-01-01'").
+	assert.Nil(t, database.DB.Unscoped().Where("first_reported > timestamp '2020-01-01'").
 		Delete(&models.SystemAdvisories{}).Error)
-	assert.Nil(t, database.Db.Unscoped().Where("repo_id NOT IN (1) OR system_id NOT IN (2, 3)").
+	assert.Nil(t, database.DB.Unscoped().Where("repo_id NOT IN (1) OR system_id NOT IN (2, 3)").
 		Delete(&models.SystemRepo{}).Error)
-	assert.Nil(t, database.Db.Unscoped().Where("name NOT IN ('repo1', 'repo2', 'repo3', 'repo4')").
+	assert.Nil(t, database.DB.Unscoped().Where("name NOT IN ('repo1', 'repo2', 'repo3', 'repo4')").
 		Delete(&models.Repo{}).Error)
-	assert.Nil(t, database.Db.Unscoped().Where("inventory_id = ?::uuid", id).Delete(&models.SystemPlatform{}).Error)
-	assert.Nil(t, database.Db.Unscoped().Where("name = ?", id).Delete(&models.RhAccount{}).Error)
+	assert.Nil(t, database.DB.Unscoped().Where("inventory_id = ?::uuid", id).Delete(&models.SystemPlatform{}).Error)
+	assert.Nil(t, database.DB.Unscoped().Where("name = ?", id).Delete(&models.RhAccount{}).Error)
 }
 
 // nolint: unparam
 func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int, reporterID *int) {
 	var system models.SystemPlatform
-	assert.NoError(t, database.Db.Where("inventory_id = ?::uuid", inventoryID).Find(&system).Error)
+	assert.NoError(t, database.DB.Where("inventory_id = ?::uuid", inventoryID).Find(&system).Error)
 	assert.Equal(t, system.InventoryID, inventoryID)
 
 	var account models.RhAccount
-	assert.NoError(t, database.Db.Where("id = ?", system.RhAccountID).Find(&account).Error)
+	assert.NoError(t, database.DB.Where("id = ?", system.RhAccountID).Find(&account).Error)
 	if account.Name == nil || *account.Name == "" {
 		assert.Equal(t, inventoryID, *account.OrgID)
 	} else {
@@ -64,7 +64,7 @@ func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int, report
 
 func assertSystemNotInDB(t *testing.T) {
 	var systemCount int64
-	assert.Nil(t, database.Db.Model(models.SystemPlatform{}).
+	assert.Nil(t, database.DB.Model(models.SystemPlatform{}).
 		Where("inventory_id = ?::uuid", id).Count(&systemCount).Error)
 
 	assert.Equal(t, int(systemCount), 0)
@@ -114,7 +114,7 @@ func createTestDeleteEvent(inventoryID string) mqueue.PlatformEvent {
 
 func assertReposInDB(t *testing.T, repos []string) {
 	var n []string
-	err := database.Db.Model(&models.Repo{}).Where("name IN (?)", repos).Pluck("name", &n).Error
+	err := database.DB.Model(&models.Repo{}).Where("name IN (?)", repos).Pluck("name", &n).Error
 	fmt.Println(n)
 	assert.Nil(t, err)
 	assert.Equal(t, len(repos), len(n))
@@ -123,7 +123,7 @@ func assertReposInDB(t *testing.T, repos []string) {
 func assertSystemReposInDB(t *testing.T, systemID int64, repos []string) {
 	var c int64
 
-	err := database.Db.Table("repo r").
+	err := database.DB.Table("repo r").
 		Joins("JOIN system_repo sr on sr.repo_id = r.id and sr.system_id = ? ", systemID).
 		Where("r.name in (?)", repos).
 		Count(&c).Error
@@ -133,7 +133,7 @@ func assertSystemReposInDB(t *testing.T, systemID int64, repos []string) {
 
 func assertYumUpdatesInDB(t *testing.T, inventoryID string, yumUpdates *YumUpdates) {
 	var system models.SystemPlatform
-	assert.NoError(t, database.Db.Where("inventory_id = ?::uuid", inventoryID).Find(&system).Error)
+	assert.NoError(t, database.DB.Where("inventory_id = ?::uuid", inventoryID).Find(&system).Error)
 	assert.Equal(t, system.InventoryID, inventoryID)
 	var systemYumUpdatesParsed vmaas.UpdatesV3Response
 	var yumUpdatesParsed vmaas.UpdatesV3Response

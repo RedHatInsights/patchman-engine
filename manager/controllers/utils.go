@@ -379,7 +379,7 @@ func ApplyInventoryFilter(filters map[string]FilterData, tx *gorm.DB, systemIDEx
 		return tx, false
 	}
 
-	subq := database.Db.
+	subq := database.DB.
 		Table("inventory.hosts ih").
 		Select("ih.id")
 

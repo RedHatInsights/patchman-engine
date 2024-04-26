@@ -191,7 +191,7 @@ func lazySaveAdvisories(missing models.AdvisoryMetadataSlice) ([]int64, error) {
 	var err error
 	ret := make([]int64, 0, len(missing))
 	if len(missing) > 0 {
-		tx := database.Db.Begin()
+		tx := database.DB.Begin()
 		defer tx.Commit()
 		err = tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&missing).Error
 		if err != nil {
