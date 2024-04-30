@@ -2,6 +2,8 @@ package utils
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -9,6 +11,7 @@ import (
 )
 
 var CoreCfg = coreConfig{}
+var PodConfig = ReadPodConfig("POD_CONFIG")
 
 type coreConfig struct {
 	// database
@@ -372,4 +375,61 @@ func translateTopic(topic *string) {
 	if v, ok := clowder.KafkaTopics[*topic]; ok {
 		*topic = v.Name
 	}
+}
+
+type podConfig map[string]string
+
+// nolint: revive
+func ReadPodConfig(varname string) podConfig {
+	pc := make(podConfig)
+	pc.Read(varname)
+	return pc
+}
+
+func (p podConfig) Read(varname string) {
+	line, _ := os.LookupEnv(varname)
+	params := strings.Split(line, ";")
+	for _, param := range params {
+		val := strings.SplitN(param, "=", 2)
+		if len(val) < 2 { // if there's no value assume true
+			val = append(val, "true")
+		}
+		p[val[0]] = val[1]
+	}
+}
+
+func (p podConfig) GetBool(key string, defval bool) bool {
+	valueStr := p[key]
+	if valueStr == "" {
+		return defval
+	}
+	parsedBool, err := strconv.ParseBool(valueStr)
+	if err != nil { // if value can't be parsed, return default
+		parsedBool = defval
+	}
+	return parsedBool
+}
+
+func (p podConfig) GetString(key string, defval string) string {
+	valueStr := p[key]
+	if valueStr == "" {
+		return defval
+	}
+	return valueStr
+}
+
+func (p podConfig) GetInt(key string, defval int) int {
+	valueStr := p[key]
+	if valueStr == "" {
+		return defval
+	}
+	return parseIntOrFail(key, valueStr)
+}
+
+func (p podConfig) GetInt64(key string, defval int64) int64 {
+	valueStr := p[key]
+	if valueStr == "" {
+		return defval
+	}
+	return parseInt64OrFail(key, valueStr)
 }
