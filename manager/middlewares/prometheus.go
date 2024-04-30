@@ -49,7 +49,7 @@ func Prometheus() *ginprometheus.Prometheus {
 		AdvisoryDetailCnt, AdvisoryDetailGauge)
 
 	p := ginprometheus.NewPrometheus("patchman_engine")
-	p.MetricsPath = utils.Cfg.MetricsPath
+	p.MetricsPath = utils.CoreCfg.MetricsPath
 	unifyParametrizedUrlsCounters(p)
 	return p
 }

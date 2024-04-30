@@ -136,7 +136,7 @@ func TestLoadEnv(files ...string) {
 	err := godotenv.Overload(files...)
 
 	LogDebug("files", files, "Loading new env file")
-	LogDebug("dbuser", Cfg.DBUser, "passwd", Cfg.DBPassword, "Db auth info")
+	LogDebug("dbuser", CoreCfg.DBUser, "passwd", CoreCfg.DBPassword, "Db auth info")
 	if err != nil {
 		LogPanic("Could not load env file")
 	}

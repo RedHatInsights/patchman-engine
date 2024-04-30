@@ -29,17 +29,17 @@ var (
 
 func configure() {
 	core.ConfigureApp()
-	eventsTopic = utils.FailIfEmpty(utils.Cfg.EventsTopic, "EVENTS_TOPIC")
+	eventsTopic = utils.FailIfEmpty(utils.CoreCfg.EventsTopic, "EVENTS_TOPIC")
 	eventsConsumers = utils.GetIntEnvOrDefault("CONSUMER_COUNT", 1)
 
 	enableTemplates = utils.GetBoolEnvOrDefault("ENABLE_TEMPLATES_API", true)
 	if enableTemplates {
-		templatesTopic = utils.FailIfEmpty(utils.Cfg.TemplateTopic, "TEMPLATE_TOPIC")
+		templatesTopic = utils.FailIfEmpty(utils.CoreCfg.TemplateTopic, "TEMPLATE_TOPIC")
 		templatesConsumers = utils.GetIntEnvOrDefault("TEMPLATE_CONSUMERS", 1)
 	}
 
-	evalTopic := utils.FailIfEmpty(utils.Cfg.EvalTopic, "EVAL_TOPIC")
-	ptTopic := utils.FailIfEmpty(utils.Cfg.PayloadTrackerTopic, "PAYLOAD_TRACKER_TOPIC")
+	evalTopic := utils.FailIfEmpty(utils.CoreCfg.EvalTopic, "EVAL_TOPIC")
+	ptTopic := utils.FailIfEmpty(utils.CoreCfg.PayloadTrackerTopic, "PAYLOAD_TRACKER_TOPIC")
 
 	evalWriter = mqueue.NewKafkaWriterFromEnv(evalTopic)
 	ptWriter = mqueue.NewKafkaWriterFromEnv(ptTopic)

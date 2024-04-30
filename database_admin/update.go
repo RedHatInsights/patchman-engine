@@ -56,13 +56,13 @@ func waitForSessionClosed(db *sql.DB) {
 }
 
 func setPgEnv() {
-	os.Setenv("PGHOST", utils.Cfg.DBHost)
-	os.Setenv("PGUSER", utils.Cfg.DBAdminUser)
-	os.Setenv("PGPASSWORD", utils.Cfg.DBAdminPassword)
-	os.Setenv("PGDATABASE", utils.Cfg.DBName)
-	os.Setenv("PGPORT", fmt.Sprint(utils.Cfg.DBPort))
-	os.Setenv("PGSSLMODE", utils.Cfg.DBSslMode)
-	os.Setenv("PGSSLROOTCERT", utils.Cfg.DBSslRootCert)
+	os.Setenv("PGHOST", utils.CoreCfg.DBHost)
+	os.Setenv("PGUSER", utils.CoreCfg.DBAdminUser)
+	os.Setenv("PGPASSWORD", utils.CoreCfg.DBAdminPassword)
+	os.Setenv("PGDATABASE", utils.CoreCfg.DBName)
+	os.Setenv("PGPORT", fmt.Sprint(utils.CoreCfg.DBPort))
+	os.Setenv("PGSSLMODE", utils.CoreCfg.DBSslMode)
+	os.Setenv("PGSSLROOTCERT", utils.CoreCfg.DBSslRootCert)
 }
 
 func startMigration(conn database.Driver, db *sql.DB, migrationFilesURL string) {
@@ -81,11 +81,11 @@ func startMigration(conn database.Driver, db *sql.DB, migrationFilesURL string) 
 }
 
 func dbConn() (database.Driver, *sql.DB) {
-	sslModeCert := utils.Cfg.DBSslMode
-	if utils.Cfg.DBSslRootCert != "" {
-		sslModeCert += "&sslrootcert=" + utils.Cfg.DBSslRootCert
+	sslModeCert := utils.CoreCfg.DBSslMode
+	if utils.CoreCfg.DBSslRootCert != "" {
+		sslModeCert += "&sslrootcert=" + utils.CoreCfg.DBSslRootCert
 	}
-	databaseURL := fmt.Sprintf("postgres://%s/%s?sslmode=%s", utils.Cfg.DBHost, utils.Cfg.DBName, sslModeCert)
+	databaseURL := fmt.Sprintf("postgres://%s/%s?sslmode=%s", utils.CoreCfg.DBHost, utils.CoreCfg.DBName, sslModeCert)
 	setPgEnv()
 
 	conn, db, err := NewConn(databaseURL)
@@ -105,7 +105,7 @@ func UpdateDB(migrationFilesURL string) {
 	if utils.GetBoolEnvOrDefault("RESET_SCHEMA", false) {
 		execOrPanic(db, "DROP SCHEMA IF EXISTS public CASCADE")
 		execOrPanic(db, "CREATE SCHEMA IF NOT EXISTS public")
-		execOrPanic(db, "GRANT ALL ON SCHEMA public TO ?", utils.Cfg.DBUser)
+		execOrPanic(db, "GRANT ALL ON SCHEMA public TO ?", utils.CoreCfg.DBUser)
 		execOrPanic(db, "GRANT ALL ON SCHEMA public TO public")
 	}
 

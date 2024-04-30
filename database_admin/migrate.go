@@ -160,7 +160,7 @@ func (t logger) Verbose() bool {
 }
 
 func createMigrate(conn database.Driver, sourceURL string) *migrate.Migrate {
-	m, err := migrate.NewWithDatabaseInstance(sourceURL, utils.FailIfEmpty(utils.Cfg.DBName, "DB_NAME"), conn)
+	m, err := migrate.NewWithDatabaseInstance(sourceURL, utils.FailIfEmpty(utils.CoreCfg.DBName, "DB_NAME"), conn)
 	if err != nil {
 		panic(err)
 	}

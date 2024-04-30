@@ -68,13 +68,13 @@ func (t *kafkaGoWriterImpl) WriteMessages(ctx context.Context, msgs ...KafkaMess
 }
 
 func NewKafkaReaderFromEnv(topic string) Reader {
-	kafkaGroup := utils.FailIfEmpty(utils.Cfg.KafkaGroup, "KAFKA_GROUP")
-	minBytes := utils.Cfg.KafkaReaderMinBytes
-	maxBytes := utils.Cfg.KafkaReaderMaxBytes
-	maxAttempts := utils.Cfg.KafkaReaderMaxAttempts
+	kafkaGroup := utils.FailIfEmpty(utils.CoreCfg.KafkaGroup, "KAFKA_GROUP")
+	minBytes := utils.CoreCfg.KafkaReaderMinBytes
+	maxBytes := utils.CoreCfg.KafkaReaderMaxBytes
+	maxAttempts := utils.CoreCfg.KafkaReaderMaxAttempts
 
 	config := kafka.ReaderConfig{
-		Brokers:     utils.Cfg.KafkaServers,
+		Brokers:     utils.CoreCfg.KafkaServers,
 		Topic:       topic,
 		GroupID:     kafkaGroup,
 		MinBytes:    minBytes,
@@ -89,10 +89,10 @@ func NewKafkaReaderFromEnv(topic string) Reader {
 }
 
 func NewKafkaWriterFromEnv(topic string) Writer {
-	maxAttempts := utils.Cfg.KafkaWriterMaxAttempts
+	maxAttempts := utils.CoreCfg.KafkaWriterMaxAttempts
 
 	config := kafka.WriterConfig{
-		Brokers: utils.Cfg.KafkaServers,
+		Brokers: utils.CoreCfg.KafkaServers,
 		Topic:   topic,
 		// By default the writer will wait for a second (or until the buffer is filled by different goroutines)
 		// before sending the batch of messages. Disable this, and use it in 'non-batched' mode
@@ -115,12 +115,12 @@ func NewKafkaWriterFromEnv(topic string) Writer {
 
 // Init encrypting dialer if env var configured or return nil
 func tryCreateSecuredDialerFromEnv() *kafka.Dialer {
-	enableKafkaSsl := utils.Cfg.KafkaSslEnabled
+	enableKafkaSsl := utils.CoreCfg.KafkaSslEnabled
 	if !enableKafkaSsl {
 		return nil
 	}
 
-	kafkaSslSkipVerify := utils.Cfg.KafkaSslSkipVerify
+	kafkaSslSkipVerify := utils.CoreCfg.KafkaSslSkipVerify
 	tlsConfig := &tls.Config{InsecureSkipVerify: true} // nolint:gosec
 	if !kafkaSslSkipVerify {
 		tlsConfig = caCertTLSConfig()
@@ -137,15 +137,15 @@ func tryCreateSecuredDialerFromEnv() *kafka.Dialer {
 }
 
 func getSaslMechanism() sasl.Mechanism {
-	if utils.Cfg.KafkaSaslType == nil {
+	if utils.CoreCfg.KafkaSaslType == nil {
 		return nil
 	}
-	kafkaUsername := utils.Cfg.KafkaUsername
+	kafkaUsername := utils.CoreCfg.KafkaUsername
 	if kafkaUsername == "" {
 		return nil
 	}
-	kafkaPassword := utils.FailIfEmpty(utils.Cfg.KafkaPassword, "KAFKA_PASSWORD")
-	saslType := strings.ToLower(*utils.Cfg.KafkaSaslType)
+	kafkaPassword := utils.FailIfEmpty(utils.CoreCfg.KafkaPassword, "KAFKA_PASSWORD")
+	saslType := strings.ToLower(*utils.CoreCfg.KafkaSaslType)
 	switch saslType {
 	case "scram", "scram-sha-512":
 		mechanism, err := kafkaScram.Mechanism(kafkaScram.SHA512, kafkaUsername, kafkaPassword)
@@ -171,8 +171,8 @@ func caCertTLSConfig() *tls.Config {
 	if caCertPool == nil {
 		caCertPool = x509.NewCertPool()
 	}
-	if len(utils.Cfg.KafkaSslCert) > 0 {
-		caCert, err := os.ReadFile(utils.Cfg.KafkaSslCert)
+	if len(utils.CoreCfg.KafkaSslCert) > 0 {
+		caCert, err := os.ReadFile(utils.CoreCfg.KafkaSslCert)
 		if err != nil {
 			panic(err)
 		}

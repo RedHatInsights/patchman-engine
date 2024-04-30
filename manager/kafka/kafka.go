@@ -23,7 +23,7 @@ func TryStartEvalQueue(createWriter mqueue.CreateWriter) {
 	if !enableBaselineChangeEval {
 		return
 	}
-	evalTopic := utils.FailIfEmpty(utils.Cfg.EvalTopic, "EVAL_TOPIC")
+	evalTopic := utils.FailIfEmpty(utils.CoreCfg.EvalTopic, "EVAL_TOPIC")
 	evalWriter = createWriter(evalTopic)
 	inventoryIDsChan = make(chan inventoryIDsBatch)
 	go runBaselineRecalcLoop()

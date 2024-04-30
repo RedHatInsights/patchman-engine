@@ -140,10 +140,10 @@ func IsPgErrorCode(db *gorm.DB, err error, expectedGormErr error) bool {
 
 func logAndWait(query string) {
 	utils.LogInfo(
-		"host", utils.Cfg.DBHost,
-		"port", utils.Cfg.DBPort,
-		"user", utils.Cfg.DBUser,
-		"db_name", utils.Cfg.DBName,
+		"host", utils.CoreCfg.DBHost,
+		"port", utils.CoreCfg.DBPort,
+		"user", utils.CoreCfg.DBUser,
+		"db_name", utils.CoreCfg.DBName,
 		"command", query,
 		"PostgreSQL is unavailable - sleeping")
 	time.Sleep(time.Second)
@@ -176,7 +176,7 @@ func findLatestMigration() int {
 // Wait for database service
 func DBWait(waitForDB string) {
 	var query string
-	if utils.Cfg.DBHost == "UNSET" {
+	if utils.CoreCfg.DBHost == "UNSET" {
 		log.Info("Skipping PostgreSQL check")
 		return
 	}
@@ -215,7 +215,7 @@ func DBWait(waitForDB string) {
 }
 
 func ReadReplicaConfigured() bool {
-	return len(utils.Cfg.DBReadReplicaHost) > 0 && utils.Cfg.DBReadReplicaPort != 0
+	return len(utils.CoreCfg.DBReadReplicaHost) > 0 && utils.CoreCfg.DBReadReplicaPort != 0
 }
 
 func InventoryHostsJoin(tx *gorm.DB, groups map[string]string) *gorm.DB {

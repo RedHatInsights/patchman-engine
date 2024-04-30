@@ -44,7 +44,7 @@ func makeClient(identity string) *api.Client {
 		DefaultHeaders: map[string]string{xRHIdentity: identity},
 	}
 	if rbacURL == "" {
-		rbacURL = utils.FailIfEmpty(utils.Cfg.RbacAddress, "RBAC_ADDRESS") + base.RBACApiPrefix +
+		rbacURL = utils.FailIfEmpty(utils.CoreCfg.RbacAddress, "RBAC_ADDRESS") + base.RBACApiPrefix +
 			"/access/?application=patch,inventory"
 	}
 	return &client

@@ -26,7 +26,7 @@ var (
 )
 
 func init() {
-	if utils.Cfg.KafkaAddress != "" {
+	if utils.CoreCfg.KafkaAddress != "" {
 		prometheus.MustRegister(KafkaConnectionErrorCnt)
 	}
 	prometheus.MustRegister(EngineVersion)
@@ -35,7 +35,7 @@ func init() {
 }
 
 func Configure() {
-	if utils.Cfg.KafkaAddress != "" {
+	if utils.CoreCfg.KafkaAddress != "" {
 		mqueue.SetKafkaErrorReadCnt(KafkaConnectionErrorCnt.WithLabelValues("read"))
 		mqueue.SetKafkaErrorWriteCnt(KafkaConnectionErrorCnt.WithLabelValues("write"))
 	}

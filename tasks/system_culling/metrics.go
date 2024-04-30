@@ -25,6 +25,6 @@ var (
 func Metrics() *push.Pusher {
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(deletedCulledSystemsCnt, staleSystemsMarkedCnt)
-	pusher := push.New(utils.Cfg.PrometheusPushGateway, "system_culling").Gatherer(registry)
+	pusher := push.New(utils.CoreCfg.PrometheusPushGateway, "system_culling").Gatherer(registry)
 	return pusher
 }

@@ -208,7 +208,7 @@ func TerminateSessionHandler(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{}
 // @Router /pprof/evaluator_upload/{param} [get]
 func GetEvaluatorUploadPprof(c *gin.Context) {
-	pprofHandler(c, utils.Cfg.EvaluatorUploadPrivateAddress)
+	pprofHandler(c, utils.CoreCfg.EvaluatorUploadPrivateAddress)
 }
 
 // @Summary Get profile info
@@ -221,7 +221,7 @@ func GetEvaluatorUploadPprof(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{}
 // @Router /pprof/evaluator_recalc/{param} [get]
 func GetEvaluatorRecalcPprof(c *gin.Context) {
-	pprofHandler(c, utils.Cfg.EvaluatorRecalcPrivateAddress)
+	pprofHandler(c, utils.CoreCfg.EvaluatorRecalcPrivateAddress)
 }
 
 // @Summary Get profile info
@@ -234,7 +234,7 @@ func GetEvaluatorRecalcPprof(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{}
 // @Router /pprof/listener/{param} [get]
 func GetListenerPprof(c *gin.Context) {
-	pprofHandler(c, utils.Cfg.ListenerPrivateAddress)
+	pprofHandler(c, utils.CoreCfg.ListenerPrivateAddress)
 }
 
 // @Summary Get profile info
@@ -247,7 +247,7 @@ func GetListenerPprof(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{}
 // @Router /pprof/manager/{param} [get]
 func GetManagerPprof(c *gin.Context) {
-	pprofHandler(c, utils.Cfg.ManagerPrivateAddress)
+	pprofHandler(c, utils.CoreCfg.ManagerPrivateAddress)
 }
 
 func pprofHandler(c *gin.Context, address string) {

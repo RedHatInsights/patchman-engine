@@ -46,7 +46,7 @@ func RemoveInvalidChars(s string) string {
 
 // TryExposeOnMetricsPort Expose app on required port if set
 func TryExposeOnMetricsPort(app *gin.Engine) {
-	metricsPort := utils.Cfg.MetricsPort
+	metricsPort := utils.CoreCfg.MetricsPort
 	if metricsPort == -1 {
 		return // Do not expose extra metrics port if not set
 	}

@@ -36,7 +36,7 @@ var basepaths = []string{"/api/patch/v3"}
 func RunManager() {
 	core.ConfigureApp()
 
-	port := utils.Cfg.PublicPort
+	port := utils.CoreCfg.PublicPort
 	utils.LogInfo("port", port, "Manager starting at port")
 	// create web app
 	app := gin.New()
@@ -44,15 +44,15 @@ func RunManager() {
 	// middlewares
 	app.Use(gin.Recovery())
 	middlewares.Prometheus().Use(app)
-	app.Use(middlewares.MaxConnections(utils.Cfg.MaxGinConnections))
-	app.Use(middlewares.Ratelimit(utils.Cfg.Ratelimit))
+	app.Use(middlewares.MaxConnections(utils.CoreCfg.MaxGinConnections))
+	app.Use(middlewares.Ratelimit(utils.CoreCfg.Ratelimit))
 	app.Use(middlewares.RequestResponseLogger())
 	app.Use(gzip.Gzip(gzip.DefaultCompression))
 	endpointsConfig := getEndpointsConfig()
 	middlewares.SetSwagger(app, endpointsConfig)
-	app.Use(middlewares.WithTimeout(utils.Cfg.ResponseTimeout))
-	app.Use(middlewares.LimitRequestBodySize(utils.Cfg.MaxRequestBodySize))
-	app.Use(middlewares.LimitRequestHeaders(utils.Cfg.MaxHeaderCount))
+	app.Use(middlewares.WithTimeout(utils.CoreCfg.ResponseTimeout))
+	app.Use(middlewares.LimitRequestBodySize(utils.CoreCfg.MaxRequestBodySize))
+	app.Use(middlewares.LimitRequestHeaders(utils.CoreCfg.MaxHeaderCount))
 	app.HandleMethodNotAllowed = true
 
 	// routes

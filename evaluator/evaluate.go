@@ -66,9 +66,9 @@ const WarnPayloadTracker = "unable to send message to payload tracker"
 
 func configure() {
 	core.ConfigureApp()
-	evalTopic = utils.FailIfEmpty(utils.Cfg.EvalTopic, "EVAL_TOPIC")
+	evalTopic = utils.FailIfEmpty(utils.CoreCfg.EvalTopic, "EVAL_TOPIC")
 	evalLabel = utils.GetenvOrFail("EVAL_LABEL")
-	ptTopic = utils.FailIfEmpty(utils.Cfg.PayloadTrackerTopic, "PAYLOAD_TRACKER_TOPIC")
+	ptTopic = utils.FailIfEmpty(utils.CoreCfg.PayloadTrackerTopic, "PAYLOAD_TRACKER_TOPIC")
 	ptWriter = mqueue.NewKafkaWriterFromEnv(ptTopic)
 	consumerCount = utils.GetIntEnvOrDefault("CONSUMER_COUNT", 1)
 	disableCompression := !utils.GetBoolEnvOrDefault("ENABLE_VMAAS_CALL_COMPRESSION", true)
@@ -84,7 +84,7 @@ func configure() {
 		HTTPClient: &http.Client{Transport: &http.Transport{DisableCompression: disableCompression}},
 		Debug:      useTraceLevel,
 	}
-	vmaasUpdatesURL = utils.FailIfEmpty(utils.Cfg.VmaasAddress, "VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/updates"
+	vmaasUpdatesURL = utils.FailIfEmpty(utils.CoreCfg.VmaasAddress, "VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/updates"
 	enablePackageCache = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_CACHE", true)
 	preloadPackageCache = utils.GetBoolEnvOrDefault("PRELOAD_PACKAGE_CACHE", true)
 	packageCacheSize = utils.GetIntEnvOrDefault("PACKAGE_CACHE_SIZE", 1000000)

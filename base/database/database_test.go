@@ -54,7 +54,7 @@ func TestCancelContext(t *testing.T) {
 }
 
 func TestStatementTimeout(t *testing.T) {
-	utils.Cfg.DBStatementTimeoutMs = 100
+	utils.CoreCfg.DBStatementTimeoutMs = 100
 	utils.SkipWithoutDB(t)
 	Configure()
 

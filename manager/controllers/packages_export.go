@@ -36,7 +36,7 @@ func PackagesExportHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
 	useCache := shouldUseCache(db, account, filters, groups)
 	if !useCache {
-		db.Exec("SET work_mem TO '?'", utils.Cfg.DBWorkMem)
+		db.Exec("SET work_mem TO '?'", utils.CoreCfg.DBWorkMem)
 		defer db.Exec("RESET work_mem")
 	}
 	query := packagesQuery(db, filters, account, groups, useCache)
