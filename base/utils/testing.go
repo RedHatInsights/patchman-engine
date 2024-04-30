@@ -15,7 +15,7 @@ func SkipWithoutDB(t *testing.T) {
 }
 
 func SkipWithoutPlatform(t *testing.T) {
-	if Cfg.VmaasAddress == "" {
+	if CoreCfg.VmaasAddress == "" {
 		t.Skip("testing platform instance not used - skipping")
 	}
 }

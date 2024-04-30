@@ -117,9 +117,9 @@ func statusCodeFound(response *http.Response, statusCodes []int) bool {
 
 // run net/http/pprof on privatePort
 func RunProfiler() {
-	if Cfg.ProfilerEnabled {
+	if CoreCfg.ProfilerEnabled {
 		go func() {
-			err := http.ListenAndServe(fmt.Sprintf(":%d", Cfg.PrivatePort), nil) //nolint:gosec
+			err := http.ListenAndServe(fmt.Sprintf(":%d", CoreCfg.PrivatePort), nil) //nolint:gosec
 			if err != nil {
 				LogWarn("err", err.Error(), "couldn't start profiler")
 			}

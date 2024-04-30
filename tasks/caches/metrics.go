@@ -18,5 +18,5 @@ func Metrics() *push.Pusher {
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(packageRefreshPartDuration)
 
-	return push.New(utils.Cfg.PrometheusPushGateway, "caches").Gatherer(registry)
+	return push.New(utils.CoreCfg.PrometheusPushGateway, "caches").Gatherer(registry)
 }

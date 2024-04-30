@@ -15,7 +15,7 @@ import (
 var remediationsPublisher mqueue.Writer
 
 func configureRemediations() {
-	if topic := utils.Cfg.RemediationUpdateTopic; topic != "" {
+	if topic := utils.CoreCfg.RemediationUpdateTopic; topic != "" {
 		remediationsPublisher = mqueue.NewKafkaWriterFromEnv(topic)
 	}
 }

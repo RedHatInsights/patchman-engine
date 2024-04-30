@@ -33,7 +33,7 @@ func CancelableDB() *gorm.DB {
 // return read replica (if available) database handler with base context
 // which will be properly canceled in case of service shutdown
 func CancelableReadReplicaDB() *gorm.DB {
-	if utils.Cfg.DBReadReplicaEnabled && database.ReadReplicaConfigured() {
+	if utils.CoreCfg.DBReadReplicaEnabled && database.ReadReplicaConfigured() {
 		return database.DBReadReplica.WithContext(base.Context)
 	}
 	return database.DB.WithContext(base.Context)

@@ -29,7 +29,7 @@ func InitDB() {
 	globalPgConfig = pgConfig
 	DB = openPostgreSQL(pgConfig)
 	check(DB)
-	if utils.Cfg.DBReadReplicaEnabled {
+	if utils.CoreCfg.DBReadReplicaEnabled {
 		pgConfig := loadEnvPostgreSQLConfig(ReadReplicaConfigured())
 		DBReadReplica = openPostgreSQL(pgConfig)
 		check(DBReadReplica)
@@ -105,25 +105,25 @@ func check(db *gorm.DB) {
 
 // load database config from environment vars using inserted prefix
 func loadEnvPostgreSQLConfig(useReadReplica bool) *PostgreSQLConfig {
-	host := utils.Cfg.DBHost
-	port := utils.Cfg.DBPort
+	host := utils.CoreCfg.DBHost
+	port := utils.CoreCfg.DBPort
 	if useReadReplica {
-		host = utils.Cfg.DBReadReplicaHost
-		port = utils.Cfg.DBReadReplicaPort
+		host = utils.CoreCfg.DBReadReplicaHost
+		port = utils.CoreCfg.DBReadReplicaPort
 	}
 	config := PostgreSQLConfig{
-		User:                   utils.Cfg.DBUser,
+		User:                   utils.CoreCfg.DBUser,
 		Host:                   host,
 		Port:                   port,
-		Database:               utils.Cfg.DBName,
-		Passwd:                 utils.Cfg.DBPassword,
-		SSLMode:                utils.Cfg.DBSslMode,
-		SSLRootCert:            utils.Cfg.DBSslRootCert,
-		Debug:                  utils.Cfg.DBDebug,
-		StatementTimeoutMs:     utils.Cfg.DBStatementTimeoutMs,
-		MaxConnections:         utils.Cfg.DBMaxConnections,
-		MaxIdleConnections:     utils.Cfg.DBMaxIdleConnections,
-		MaxConnectionLifetimeS: utils.Cfg.DBMaxConnectionLifetimeS,
+		Database:               utils.CoreCfg.DBName,
+		Passwd:                 utils.CoreCfg.DBPassword,
+		SSLMode:                utils.CoreCfg.DBSslMode,
+		SSLRootCert:            utils.CoreCfg.DBSslRootCert,
+		Debug:                  utils.CoreCfg.DBDebug,
+		StatementTimeoutMs:     utils.CoreCfg.DBStatementTimeoutMs,
+		MaxConnections:         utils.CoreCfg.DBMaxConnections,
+		MaxIdleConnections:     utils.CoreCfg.DBMaxIdleConnections,
+		MaxConnectionLifetimeS: utils.CoreCfg.DBMaxConnectionLifetimeS,
 	}
 	return &config
 }

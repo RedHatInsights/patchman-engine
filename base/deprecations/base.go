@@ -36,7 +36,7 @@ type limitDeprecation struct {
 }
 
 func (d limitDeprecation) Deprecate(c *gin.Context) {
-	if !utils.Cfg.LimitPageSize || !d.shouldDeprecate(c) {
+	if !utils.CoreCfg.LimitPageSize || !d.shouldDeprecate(c) {
 		return
 	}
 
@@ -46,10 +46,10 @@ func (d limitDeprecation) Deprecate(c *gin.Context) {
 
 	if now.Before(d.deprecationTimestamp) {
 		// allow unlimited `limit`
-		utils.Cfg.LimitPageSize = false
+		utils.CoreCfg.LimitPageSize = false
 		c.Next()
 		// reset LimitPageSize after all midllewares
-		utils.Cfg.LimitPageSize = true
+		utils.CoreCfg.LimitPageSize = true
 	}
 }
 

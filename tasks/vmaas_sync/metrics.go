@@ -110,7 +110,7 @@ func Metrics() *push.Pusher {
 
 	// update advanced metrics
 	update()
-	pusher := push.New(utils.Cfg.PrometheusPushGateway, "vmaas_sync").Gatherer(registry)
+	pusher := push.New(utils.CoreCfg.PrometheusPushGateway, "vmaas_sync").Gatherer(registry)
 	return pusher
 }
 

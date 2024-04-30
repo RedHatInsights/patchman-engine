@@ -371,7 +371,7 @@ func sendTemplateMsg(eventName string, templates []mqueue.TemplateResponse) erro
 	if err != nil {
 		return err
 	}
-	SendMessageToTopic(utils.Cfg.TemplateTopic, string(msg))
+	SendMessageToTopic(utils.CoreCfg.TemplateTopic, string(msg))
 	return nil
 }
 

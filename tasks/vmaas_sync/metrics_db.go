@@ -61,7 +61,7 @@ func getTableSizes() []keyValue {
 }
 
 func getDatabaseSize() []keyValue {
-	dbName := utils.Cfg.DBName
+	dbName := utils.CoreCfg.DBName
 	var dbSize []keyValue
 	err := tasks.CancelableDB().Raw(
 		fmt.Sprintf(`SELECT 'database' as key, pg_database_size('%s') as value;`, dbName)).

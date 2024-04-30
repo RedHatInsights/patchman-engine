@@ -32,7 +32,7 @@ func DBFromContext(c *gin.Context) *gorm.DB {
 }
 
 func useReadReplica(c *gin.Context) bool {
-	if utils.Cfg.DBReadReplicaEnabled && c.Request.Method == http.MethodGet {
+	if utils.CoreCfg.DBReadReplicaEnabled && c.Request.Method == http.MethodGet {
 		// if Host or Port is not set, don't use read replica
 		return database.ReadReplicaConfigured()
 	}

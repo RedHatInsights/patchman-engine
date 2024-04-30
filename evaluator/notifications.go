@@ -18,7 +18,7 @@ const NewAdvisoryEvent = "new-advisory"
 var notificationsPublisher mqueue.Writer
 
 func configureNotifications() {
-	if topic := utils.Cfg.NotificationsTopic; topic != "" {
+	if topic := utils.CoreCfg.NotificationsTopic; topic != "" {
 		notificationsPublisher = mqueue.NewKafkaWriterFromEnv(topic)
 	}
 }

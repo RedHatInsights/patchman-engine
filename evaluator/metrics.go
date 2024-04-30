@@ -96,7 +96,7 @@ func RunMetrics() {
 
 	go base.TryExposeOnMetricsPort(app)
 
-	publicPort := utils.Cfg.PublicPort
+	publicPort := utils.CoreCfg.PublicPort
 	err := utils.RunServer(base.Context, app, publicPort)
 	if err != nil {
 		utils.LogError("err", err.Error())
