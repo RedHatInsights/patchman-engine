@@ -6,13 +6,14 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 
+	"app/manager/config"
+
 	"gorm.io/gorm"
 )
 
 var (
-	evalWriter               mqueue.Writer
-	inventoryIDsChan         chan inventoryIDsBatch
-	enableBaselineChangeEval = utils.GetBoolEnvOrDefault("ENABLE_BASELINE_CHANGE_EVAL", true)
+	evalWriter       mqueue.Writer
+	inventoryIDsChan chan inventoryIDsBatch
 )
 
 type inventoryIDsBatch struct {
@@ -20,7 +21,7 @@ type inventoryIDsBatch struct {
 }
 
 func TryStartEvalQueue(createWriter mqueue.CreateWriter) {
-	if !enableBaselineChangeEval {
+	if !config.EnableBaselineChangeEval {
 		return
 	}
 	evalTopic := utils.FailIfEmpty(utils.CoreCfg.EvalTopic, "EVAL_TOPIC")
@@ -38,7 +39,7 @@ func runBaselineRecalcLoop() {
 
 func GetInventoryIDsToEvaluate(db *gorm.DB, baselineID *int64, accountID int,
 	configUpdated bool, updatedInventoryIDs []string) []mqueue.EvalData {
-	if !enableBaselineChangeEval {
+	if !config.EnableBaselineChangeEval {
 		return nil
 	}
 
@@ -100,7 +101,7 @@ func sendInventoryIDs(inventoryIDs mqueue.EvalDataSlice) {
 // Send all account systems of given baseline to evaluation.
 // Evaluate all account systems with no baseline if baselineID is nil (used for deleted baseline).
 func EvaluateBaselineSystems(inventoryAIDs []mqueue.EvalData) {
-	if !enableBaselineChangeEval {
+	if !config.EnableBaselineChangeEval {
 		return
 	}
 

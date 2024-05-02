@@ -6,6 +6,7 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"app/docs"
+	"app/manager/config"
 	"app/manager/controllers"
 	"app/manager/kafka"
 	"app/manager/middlewares"
@@ -66,6 +67,7 @@ func RunManager() {
 	go utils.RunProfiler()
 
 	go base.TryExposeOnMetricsPort(app)
+	controllers.InitAdvisoryDetailCache()
 	go controllers.PreloadAdvisoryCacheItems()
 
 	kafka.TryStartEvalQueue(mqueue.NewKafkaWriterFromEnv)
@@ -80,8 +82,8 @@ func RunManager() {
 
 func getEndpointsConfig() docs.EndpointsConfig {
 	config := docs.EndpointsConfig{
-		EnableBaselines: utils.GetBoolEnvOrDefault("ENABLE_BASELINES_API", true),
-		EnableTemplates: utils.GetBoolEnvOrDefault("ENABLE_TEMPLATES_API", true),
+		EnableBaselines: config.EnableBaselines,
+		EnableTemplates: config.EnableTemplates,
 	}
 	return config
 }

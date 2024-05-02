@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/models"
 	"app/base/utils"
+	"app/manager/config"
 	"app/manager/middlewares"
 	"fmt"
 	"net/http"
@@ -77,7 +78,7 @@ func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, templateI
 		return err
 	}
 
-	if enableSatelliteFunctionality && len(satelliteManagedIDs) > 0 {
+	if config.EnableSatelliteFunctionality && len(satelliteManagedIDs) > 0 {
 		msg := fmt.Sprintf("Template can not contain satellite managed systems: %v", satelliteManagedIDs)
 		LogAndRespBadRequest(c, errors.New(msg), msg)
 		return err

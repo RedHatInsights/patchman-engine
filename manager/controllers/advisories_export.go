@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"app/base/utils"
+	"app/manager/config"
 	"app/manager/middlewares"
 
 	"github.com/gin-gonic/gin"
@@ -37,7 +38,7 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
 	var query *gorm.DB
 
-	if disableCachedCounts || HasInventoryFilter(filters) || len(groups) != 0 {
+	if config.DisableCachedCounts || HasInventoryFilter(filters) || len(groups) != 0 {
 		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
 	} else {
 		query = buildQueryAdvisories(db, account)

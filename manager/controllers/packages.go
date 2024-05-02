@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/database"
 	"app/base/utils"
+	"app/manager/config"
 	"app/manager/middlewares"
 	"net/http"
 
@@ -20,8 +21,6 @@ var PackagesOpts = ListOpts{
 	StableSort:     "pn.id",
 	SearchFields:   []string{"pn.name", "pn.summary"},
 }
-
-var enabledPackageCache = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_CACHE", false)
 
 type PackageDBLookup struct {
 	// a helper to get total number of systems
@@ -167,7 +166,7 @@ func PackageDBLookup2Item(packages []PackageDBLookup) ([]PackageItem, int) {
 
 // use cache only when tag filter is not used, there are no inventory groups and cache is valid
 func shouldUseCache(db *gorm.DB, acc int, filters map[string]FilterData, groups map[string]string) bool {
-	if !enabledPackageCache {
+	if !config.EnabledPackageCache {
 		return false
 	}
 	if HasInventoryFilter(filters) || len(groups) != 0 {

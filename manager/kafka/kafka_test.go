@@ -5,6 +5,7 @@ import (
 	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
+	"app/manager/config"
 	"encoding/json"
 	"testing"
 
@@ -15,7 +16,7 @@ func testEvaluateBaselineSystems(t *testing.T, baselineID *int64, accountID int,
 	configUpdated bool, inventoryIDs []string) mqueue.PlatformEvent {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	enableBaselineChangeEval = true
+	config.EnableBaselineChangeEval = true
 
 	writerMock := mqueue.MockKafkaWriter{}
 	TryStartEvalQueue(mqueue.MockCreateKafkaWriter(&writerMock))
