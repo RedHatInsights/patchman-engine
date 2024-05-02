@@ -106,29 +106,19 @@ objects:
                                                                   name: patchman-db-readonly}}}
         - {name: DB_READ_REPLICA_ENABLED, value: '${DB_READ_REPLICA_ENABLED}'}
         - {name: DB_WORK_MEM, value: '${DB_WORK_MEM}'}
-        - {name: ENABLE_CYNDI_TAGS, value: '${ENABLE_CYNDI_TAGS}'}
-        - {name: ENABLE_RBAC, value: '${ENABLE_RBAC}'}
-        - {name: DISABLE_CACHE_COUNTS, value: '${DISABLE_CACHE_COUNTS}'}
-        - {name: ENABLE_ADVISORY_DETAIL_CACHE, value: '${ENABLE_ADVISORY_DETAIL_CACHE}'}
-        - {name: ADVISORY_DETAIL_CACHE_SIZE, value: '${ADVISORY_DETAIL_CACHE_SIZE}'}
-        - {name: PRELOAD_ADVISORY_DETAIL_CACHE, value: '${PRELOAD_ADVISORY_DETAIL_CACHE}'}
-        - {name: ENABLE_BASELINES_API, value: '${ENABLE_BASELINES_API}'}
-        - {name: ENABLE_TEMPLATES_API, value: '${ENABLE_TEMPLATES_API}'}
-        - {name: ENABLE_BASELINE_CHANGE_EVAL, value: '${ENABLE_BASELINE_CHANGE_EVAL}'}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: '${EVAL_TOPIC_MANAGER}'}
-        - {name: ENABLE_PACKAGE_CACHE, value: '${ENABLE_PACKAGE_CACHE_MANAGER}'}
         - {name: RESPONSE_TIMEOUT, value: '${RESPONSE_TIMEOUT}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_MANAGER}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_MANAGER}'}
-        - {name: ENABLE_SATELLITE_FUNCTIONALITY, value: '${ENABLE_SATELLITE_FUNCTIONALITY}'}
         - {name: MAX_REQUEST_BODY_SIZE, value: '${MAX_REQUEST_BODY_SIZE}'}
         - {name: MAX_HEADER_COUNT, value: '${MAX_HEADER_COUNT}'}
         - {name: MAX_GIN_CONNECTIONS, value: '${MAX_GIN_CONNECTIONS}'}
         - {name: RATELIMIT, value: '${RATELIMIT}'}
         - {name: LIMIT_PAGE_SIZE, value: '${LIMIT_PAGE_SIZE}'}
+        - {name: POD_CONFIG, value: '${MANAGER_CONFIG}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_MANAGER}', memory: '${RES_LIMIT_MEM_MANAGER}'}
@@ -587,16 +577,6 @@ parameters:
 - {name: IMAGE_TAG_MANAGER, value: v3.6.68}
 - {name: LOG_LEVEL_MANAGER, value: debug}
 - {name: DB_DEBUG_MANAGER, value: 'false'} # Log database queries if enabled
-- {name: ENABLE_CYNDI_TAGS, value: 'true'} # Enable filtering with Cyndi tags
-- {name: ENABLE_RBAC, value: 'true'} # Enable requesting RBAC service
-- {name: DISABLE_CACHE_COUNTS, value: 'false'} # Don't use advisory cache counts
-- {name: ENABLE_ADVISORY_DETAIL_CACHE, value: 'true'} # Use LRU cache in advisory detail endpoint
-- {name: ADVISORY_DETAIL_CACHE_SIZE, value: '100'} # Advisory detail cache size (cached items count)
-- {name: PRELOAD_ADVISORY_DETAIL_CACHE, value: 'true'} # Enable advisory detail cache preloading
-- {name: ENABLE_BASELINES_API, value: 'true'} # Enable baselines API endpoints
-- {name: ENABLE_TEMPLATES_API, value: 'true'} # Enable baselines API endpoints
-- {name: ENABLE_BASELINE_CHANGE_EVAL, value: 'true'} # Send Kafka eval messages on baseline update
-- {name: ENABLE_PACKAGE_CACHE_MANAGER, value: 'true'} # Enable caching for /packages endpoint
 - {name: EVAL_TOPIC_MANAGER, value: patchman.evaluator.upload}
 - {name: RES_LIMIT_CPU_MANAGER, value: 200m}
 - {name: RES_LIMIT_MEM_MANAGER, value: 256Mi}
@@ -611,6 +591,7 @@ parameters:
 - {name: MAX_GIN_CONNECTIONS, value: '50'}
 - {name: RATELIMIT, value: '100'} # requests per second for leaky bucket rate limiter
 - {name: LIMIT_PAGE_SIZE, value: 'true'}  # page size is limited to 100 items per page, set to `false` to use any limit
+- {name: MANAGER_CONFIG, value: ''}
 
 # Listener
 - {name: REPLICAS_LISTENER, value: '1'}
