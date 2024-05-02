@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/manager/config"
 	"app/manager/middlewares"
 	"net/http"
 	"time"
@@ -14,9 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var enableAdvisoryDetailCache = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_DETAIL_CACHE", true)
-var advisoryDetailCacheSize = utils.GetIntEnvOrDefault("ADVISORY_DETAIL_CACHE_SIZE", 100)
-var advisoryDetailCache = initAdvisoryDetailCache()
+var advisoryDetailCache *lru.Cache[string, AdvisoryDetailResponse]
 
 const logProgressDuration = 2 * time.Second
 
@@ -150,29 +149,27 @@ func parsePackages(jsonb []byte) (packages, error) {
 	return pkgs, nil
 }
 
-func initAdvisoryDetailCache() *lru.Cache[string, AdvisoryDetailResponse] {
+func InitAdvisoryDetailCache() {
 	middlewares.AdvisoryDetailGauge.Set(0)
-	if !enableAdvisoryDetailCache {
-		return nil
-	}
-
-	cache, err := lru.New[string, AdvisoryDetailResponse](advisoryDetailCacheSize)
-	if err != nil {
-		panic(err)
-	}
-
-	return cache
-}
-
-func PreloadAdvisoryCacheItems() {
-	preLoadCache := utils.GetBoolEnvOrDefault("PRELOAD_ADVISORY_DETAIL_CACHE", true)
-	if !preLoadCache {
+	if !config.EnableAdvisoryDetailCache {
 		return
 	}
 
-	utils.LogInfo("cacheSize", advisoryDetailCacheSize, "loading items to advisory detail cache...")
+	var err error
+	advisoryDetailCache, err = lru.New[string, AdvisoryDetailResponse](config.AdvisoryDetailCacheSize)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func PreloadAdvisoryCacheItems() {
+	if !config.PreLoadCache {
+		return
+	}
+
+	utils.LogInfo("cacheSize", config.AdvisoryDetailCacheSize, "loading items to advisory detail cache...")
 	var advisoryNames []string
-	err := database.DB.Table("advisory_metadata").Limit(advisoryDetailCacheSize).Order("public_date DESC").
+	err := database.DB.Table("advisory_metadata").Limit(config.AdvisoryDetailCacheSize).Order("public_date DESC").
 		Pluck("name", &advisoryNames).Error // preload first N most recent advisories to cache
 	if err != nil {
 		panic(err)

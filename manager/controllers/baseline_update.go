@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"app/manager/config"
 	"app/manager/kafka"
 	"app/manager/middlewares"
 	"encoding/json"
@@ -97,7 +98,7 @@ func BaselineUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	if enableSatelliteFunctionality && len(satelliteManagedIDs) > 0 {
+	if config.EnableSatelliteFunctionality && len(satelliteManagedIDs) > 0 {
 		msg := fmt.Sprintf("Attempting to add satellite managed systems to baseline: %v", satelliteManagedIDs)
 		LogAndRespBadRequest(c, errors.New(msg), msg)
 		return

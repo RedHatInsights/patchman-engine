@@ -5,6 +5,7 @@ import (
 	"app/base/core"
 	"app/base/database"
 	"app/base/utils"
+	"app/manager/config"
 	"app/manager/middlewares"
 	"encoding/csv"
 	"encoding/json"
@@ -28,9 +29,6 @@ const InvalidNestedFilter = "Nested operators not yet implemented for standard f
 const FilterNotSupportedMsg = "filtering not supported on this endpoint"
 
 var tagRegex = regexp.MustCompile(`([^/=]+)/([^/=]+)(=([^/=]+))?`)
-var enableCyndiTags = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_TAGS", false)
-var disableCachedCounts = utils.GetBoolEnvOrDefault("DISABLE_CACHE_COUNTS", false)
-var enableSatelliteFunctionality = utils.GetBoolEnvOrDefault("ENABLE_SATELLITE_FUNCTIONALITY", true)
 
 func LogAndRespError(c *gin.Context, err error, respMsg string) {
 	utils.LogError("err", err.Error(), respMsg)
@@ -264,7 +262,7 @@ type Tag struct {
 }
 
 func HasInventoryFilter(filters Filters) bool {
-	if !enableCyndiTags {
+	if !config.EnableCyndiTags {
 		return false
 	}
 	for _, data := range filters {
@@ -375,7 +373,7 @@ func parseTags(c *gin.Context, filters Filters) error {
 
 // Filter systems by tags with subquery
 func ApplyInventoryFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
-	if !enableCyndiTags {
+	if !config.EnableCyndiTags {
 		return tx, false
 	}
 

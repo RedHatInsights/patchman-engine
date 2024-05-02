@@ -3,6 +3,7 @@ package controllers
 import (
 	"app/base/database"
 	"app/base/utils"
+	"app/manager/config"
 	"app/manager/middlewares"
 	"net/http"
 	"time"
@@ -90,7 +91,7 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 		return nil, nil, nil, err
 	}
 
-	if disableCachedCounts || HasInventoryFilter(filters) || len(groups) != 0 {
+	if config.DisableCachedCounts || HasInventoryFilter(filters) || len(groups) != 0 {
 		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
 	} else {
 		query = buildQueryAdvisories(db, account)

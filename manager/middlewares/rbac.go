@@ -5,9 +5,9 @@ import (
 	"app/base/api"
 	"app/base/rbac"
 	"app/base/utils"
+	"app/manager/config"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 
@@ -16,9 +16,8 @@ import (
 )
 
 var (
-	rbacURL      = ""
-	debugRequest = os.Getenv("LOG_LEVEL") == "trace"
-	httpClient   = &http.Client{}
+	rbacURL    = ""
+	httpClient = &http.Client{}
 )
 
 const xRHIdentity = "x-rh-identity"
@@ -40,7 +39,7 @@ var granularPerms = map[string]string{
 func makeClient(identity string) *api.Client {
 	client := api.Client{
 		HTTPClient:     httpClient,
-		Debug:          debugRequest,
+		Debug:          config.DebugRequest,
 		DefaultHeaders: map[string]string{xRHIdentity: identity},
 	}
 	if rbacURL == "" {
@@ -173,8 +172,7 @@ func findInventoryGroups(access *rbac.AccessPagination) map[string]string {
 }
 
 func RBAC() gin.HandlerFunc {
-	enableRBACCHeck := utils.GetBoolEnvOrDefault("ENABLE_RBAC", true)
-	if !enableRBACCHeck {
+	if !config.EnableRBACCHeck {
 		return func(c *gin.Context) {}
 	}
 
