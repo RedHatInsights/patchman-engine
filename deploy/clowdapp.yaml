@@ -26,7 +26,7 @@ objects:
             command:
               - ./database_admin/check-upgraded.sh
             env:
-            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
         command:
           - ./scripts/entrypoint.sh
           - admin
@@ -72,13 +72,7 @@ objects:
             - {name: GIN_MODE, value: '${GIN_MODE}'}
             - {name: SHOW_CLOWDER_VARS, value: ''}
             - {name: SHOW_CLOWDER_VARS, value: ''}
-            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
-            - {name: RESET_SCHEMA, value: '${RESET_SCHEMA}'}
-            - {name: FORCE_SCHEMA_VERSION, value: '${FORCE_SCHEMA_VERSION}'}
-            - {name: UPDATE_CYNDI_PASSWD, value: '${UPDATE_CYNDI_PASSWD}'}
             - {name: WAIT_FOR_DB, value: 'empty'}
-            - {name: UPDATE_USERS, value: '${UPDATE_USERS}'}
-            - {name: UPDATE_DB_CONFIG, value: '${UPDATE_DB_CONFIG}'}
             - {name: MANAGER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                                   key: manager-database-password}}}
             - {name: LISTENER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
@@ -89,6 +83,7 @@ objects:
                                                                     key: vmaas-sync-database-password}}}
             - {name: CYNDI_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                                 key: cyndi-database-password}}}
+            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
         command:
           - ./scripts/entrypoint.sh
           - manager
@@ -141,7 +136,7 @@ objects:
             command:
               - ./database_admin/check-upgraded.sh
             env:
-            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
         command:
           - ./scripts/entrypoint.sh
           - listener
@@ -191,7 +186,7 @@ objects:
             command:
               - ./database_admin/check-upgraded.sh
             env:
-            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
         command:
           - ./scripts/entrypoint.sh
           - evaluator
@@ -259,7 +254,7 @@ objects:
             command:
               - ./database_admin/check-upgraded.sh
             env:
-            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
         command:
           - ./scripts/entrypoint.sh
           - evaluator
@@ -324,7 +319,7 @@ objects:
             command:
               - ./database_admin/check-upgraded.sh
             env:
-            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
         command:
           - ./scripts/entrypoint.sh
           - job
@@ -372,7 +367,7 @@ objects:
             command:
               - ./database_admin/check-upgraded.sh
             env:
-            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
         command:
           - ./scripts/entrypoint.sh
           - job
@@ -402,7 +397,7 @@ objects:
             command:
               - ./database_admin/check-upgraded.sh
             env:
-            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
         command:
           - ./scripts/entrypoint.sh
           - job
@@ -435,7 +430,7 @@ objects:
             command:
               - ./database_admin/check-upgraded.sh
             env:
-            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
         command:
           - ./scripts/entrypoint.sh
           - job
@@ -463,7 +458,7 @@ objects:
             command:
               - ./database_admin/check-upgraded.sh
             env:
-            - {name: SCHEMA_MIGRATION, value: '${SCHEMA_MIGRATION}'}
+            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
         command:
           - ./scripts/entrypoint.sh
           - job
@@ -721,17 +716,13 @@ parameters:
 - {name: IMAGE_TAG_DATABASE_ADMIN, value: v3.6.68}
 - {name: LOG_LEVEL_DATABASE_ADMIN, value: debug}
 - {name: DB_DEBUG_DATABASE_ADMIN, value: 'false'}
-- {name: SCHEMA_MIGRATION, value: '-1'} # Set specific database schema version or use the last schema version (-1)
-- {name: RESET_SCHEMA, value: 'false'} # Drop and recreate database schema, use SCHEMA_MIGRATION to create specific schema version
-- {name: FORCE_SCHEMA_VERSION, value: ''} # Reset the dirty flag to false and force set the specific version, it will follow up with the schema upgrade defined by SCHEMA_MIGRATION
-- {name: UPDATE_CYNDI_PASSWD, value: ''} # Do update cyndi database password, use "true" to enable it
 - {name: RES_LIMIT_CPU_DATABASE_ADMIN, value: 100m}
 - {name: RES_LIMIT_MEM_DATABASE_ADMIN, value: 128Mi}
 - {name: RES_REQUEST_CPU_DATABASE_ADMIN, value: 100m}
 - {name: RES_REQUEST_MEM_DATABASE_ADMIN, value: 128Mi}
-- {name: UPDATE_USERS, value: 'false'} # set to true if we need to change user or passwords
-- {name: UPDATE_DB_CONFIG, value: 'false'} # set to true if we need to load new './database_admin/config.sql'
 - {name: GOMEMLIMIT_DATABASE_ADMIN, value: '115MiB'} # set to 90% of the default memory limit 128Mi (don't forget `B`)
+- {name: DATABASE_ADMIN_CONFIG, value: ''} # Set 'schema_version=XXX' if need specific database schema
+                                           # 'force_schema_version=XXX' to reset the dirty flag to false and force the specific version, it will follow up with the schema upgrade defined by schema_version
 
 # Common parameters
 - {name: IMAGE, value: quay.io/cloudservices/patchman-engine-app}
