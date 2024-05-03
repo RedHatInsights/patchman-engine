@@ -128,36 +128,36 @@ func TestMigrateAction(t *testing.T) {
 	assert.Nil(t, err)
 	origMigrationSchema, err := latestSchemaMigrationFileVersion(sourceURL)
 	assert.Nil(t, err)
-	origSchemaMigration := os.Getenv("SCHEMA_MIGRATION")
+	origSchemaMigration := schemaMigration
 	// db has higher version then migration files
 
-	os.Setenv("SCHEMA_MIGRATION", fmt.Sprint(origMigrationSchema+100))
+	schemaMigration = origMigrationSchema + 100
 	what := migrateAction(conn, sourceURL)
 	assert.Equal(t, BLOCK, what)
 
 	// db is actual but there are new migrations
-	os.Setenv("SCHEMA_MIGRATION", "1")
+	schemaMigration = 1
 	assert.Nil(t, database.DB.Exec(update, 1).Error)
 	what = migrateAction(conn, sourceURL)
 	assert.Equal(t, BLOCK, what)
 
 	// db is actual
-	os.Setenv("SCHEMA_MIGRATION", "-1")
+	schemaMigration = -1
 	assert.Nil(t, database.DB.Exec(update, origMigrationSchema).Error)
 	what = migrateAction(conn, sourceURL)
 	assert.Equal(t, CONTINUE, what)
 	// db is actual
-	os.Setenv("SCHEMA_MIGRATION", fmt.Sprint(origMigrationSchema))
+	schemaMigration = origMigrationSchema
 	what = migrateAction(conn, sourceURL)
 	assert.Equal(t, CONTINUE, what)
 
 	// db is actual
-	os.Setenv("SCHEMA_MIGRATION", fmt.Sprint(origMigrationSchema))
+	schemaMigration = origMigrationSchema
 	assert.Nil(t, database.DB.Exec(update, origMigrationSchema-1).Error)
 	what = migrateAction(conn, sourceURL)
 	assert.Equal(t, MIGRATE, what)
 
 	// cleanup
-	os.Setenv("SCHEMA_MIGRATION", origSchemaMigration)
+	schemaMigration = origSchemaMigration
 	assert.Nil(t, database.DB.Exec(update, origDBSchema).Error)
 }
