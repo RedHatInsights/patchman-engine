@@ -11,6 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestMain(m *testing.M) {
+	InitAdvisoryDetailCache()
+	m.Run()
+}
+
 func TestInit(_ *testing.T) {
 	utils.TestLoadEnv("conf/manager.env")
 }
