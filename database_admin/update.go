@@ -102,14 +102,14 @@ func UpdateDB(migrationFilesURL string) {
 	getAdvisoryLock(db)
 	defer releaseAdvisoryLock(db)
 
-	if utils.GetBoolEnvOrDefault("RESET_SCHEMA", false) {
+	if resetSchema {
 		execOrPanic(db, "DROP SCHEMA IF EXISTS public CASCADE")
 		execOrPanic(db, "CREATE SCHEMA IF NOT EXISTS public")
 		execOrPanic(db, "GRANT ALL ON SCHEMA public TO ?", utils.CoreCfg.DBUser)
 		execOrPanic(db, "GRANT ALL ON SCHEMA public TO public")
 	}
 
-	if utils.GetBoolEnvOrDefault("UPDATE_USERS", false) {
+	if updateUsers {
 		log.Info("Creating application components users")
 		execFromFile(db, "./database_admin/schema/create_users.sql")
 	}
@@ -126,7 +126,7 @@ func UpdateDB(migrationFilesURL string) {
 		startMigration(conn, db, migrationFilesURL)
 	}
 
-	if utils.GetBoolEnvOrDefault("UPDATE_USERS", false) {
+	if updateUsers {
 		log.Info("Setting user passwords")
 		// Set specific password for each user. If the users are already created, change the password.
 		// This is performed on each startup in order to ensure users have latest pasword
@@ -134,12 +134,12 @@ func UpdateDB(migrationFilesURL string) {
 		execOrPanic(db, "ALTER USER evaluator WITH PASSWORD '"+utils.GetenvOrFail("EVALUATOR_PASSWORD")+"'")
 		execOrPanic(db, "ALTER USER manager WITH PASSWORD '"+utils.GetenvOrFail("MANAGER_PASSWORD")+"'")
 		execOrPanic(db, "ALTER USER vmaas_sync WITH PASSWORD '"+utils.GetenvOrFail("VMAAS_SYNC_PASSWORD")+"'")
-		if utils.GetBoolEnvOrDefault("UPDATE_CYNDI_PASSWD", false) {
+		if updateCyndiPasswd {
 			execOrPanic(db, "ALTER USER cyndi WITH PASSWORD '"+utils.GetenvOrFail("CYNDI_PASSWORD")+"'")
 		}
 	}
 
-	if utils.GetBoolEnvOrDefault("UPDATE_DB_CONFIG", false) {
+	if updateDBConfig {
 		log.Info("Setting database config")
 		execFromFile(db, "./database_admin/config.sql")
 	}

@@ -46,15 +46,9 @@ func NewConn(databaseURL string) (database.Driver, *sql.DB, error) {
 func MigrateUp(conn database.Driver, sourceURL string) {
 	var err error
 	m := createMigrate(conn, sourceURL)
-	forceMigrationVersion := utils.Getenv("FORCE_SCHEMA_VERSION", "")
-	schemaMigration := utils.GetIntEnvOrDefault("SCHEMA_MIGRATION", -1)
-	if forceMigrationVersion != "" {
+	if forceMigrationVersion > 0 {
 		// reset dirty flag and force set the current schema version
-		var ver int
-		ver, err = strconv.Atoi(forceMigrationVersion)
-		if err == nil {
-			err = m.Force(ver)
-		}
+		err = m.Force(forceMigrationVersion)
 	}
 
 	if err == nil {
@@ -113,12 +107,11 @@ func dbSchemaVersion(conn database.Driver, sourceURL string) (int, error) {
 }
 
 func migrateAction(conn database.Driver, sourceURL string) int {
-	forceMigrationVersion := utils.Getenv("FORCE_SCHEMA_VERSION", "")
-	expectedSchema := utils.GetIntEnvOrDefault("SCHEMA_MIGRATION", -1)
+	expectedSchema := schemaMigration
 	fmt.Printf("DB migration in progress, waiting for schema=%d\n", expectedSchema)
 	dbSchema, err := dbSchemaVersion(conn, sourceURL)
 	if err != nil {
-		if errors.As(err, &migrate.ErrDirty{}) && forceMigrationVersion != "" {
+		if errors.As(err, &migrate.ErrDirty{}) && forceMigrationVersion > 0 {
 			return MIGRATE
 		}
 		fmt.Fprintf(os.Stderr, "Error getting current DB version: %v\n", err.Error())
