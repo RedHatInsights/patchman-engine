@@ -205,34 +205,14 @@ objects:
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: NOTIFICATIONS_TOPIC, value: 'platform.notifications.ingress'}
-        - {name: EVAL_LABEL, value: upload}
-        - {name: CONSUMER_COUNT, value: '${CONSUMER_COUNT_EVALUATOR_UPLOAD}'}
-        - {name: ENABLE_BYPASS, value: '${ENABLE_BYPASS_EVALUATOR_UPLOAD}'}
-        - {name: ENABLE_LAZY_PACKAGE_SAVE, value: '${ENABLE_LAZY_PACKAGE_SAVE_EVALUATOR_UPLOAD}'}
-        - {name: ENABLE_BASELINE_EVAL, value: '${ENABLE_BASELINE_EVAL_EVALUATOR_UPLOAD}'}
-        - {name: ENABLE_ADVISORY_ANALYSIS, value: '${ENABLE_ADVISORY_ANALYSIS_SAVE_EVALUATOR_UPLOAD}'}
-        - {name: ENABLE_PACKAGE_ANALYSIS, value: '${ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_UPLOAD}'}
-        - {name: ENABLE_REPO_ANALYSIS, value: '${ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_UPLOAD}'}
-        - {name: ENABLE_STALE_SYSTEM_EVALUATION, value: '${ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_UPLOAD}'}
-        - {name: ENABLE_PACKAGE_CACHE, value: '${ENABLE_PACKAGE_CACHE_EVALUATOR_UPLOAD}'}
-        - {name: PRELOAD_PACKAGE_CACHE, value: '${PRELOAD_PACKAGE_CACHE_EVALUATOR_UPLOAD}'}
-        - {name: PACKAGE_CACHE_SIZE, value: '${PACKAGE_CACHE_SIZE}'}
-        - {name: PACKAGE_NAME_CACHE_SIZE, value: '${PACKAGE_NAME_CACHE_SIZE}'}
-        - {name: ENABLE_VMAAS_CACHE, value: '${ENABLE_VMAAS_CACHE_EVALUATOR_UPLOAD}'}
-        - {name: VMAAS_CACHE_SIZE, value: '${VMAAS_CACHE_SIZE}'}
-        - {name: VMAAS_CALL_MAX_RETRIES, value: '${VMAAS_CALL_MAX_RETRIES}'}
-        - {name: VMAAS_CALL_USE_EXP_RETRY, value: '${VMAAS_CALL_USE_EXP_RETRY}'}
-        - {name: VMAAS_CALL_USE_OPTIMISTIC_UPDATES, value: '${VMAAS_CALL_USE_OPTIMISTIC_UPDATES}'}
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
-        - {name: MAX_EVAL_GOROUTINES, value: '${MAX_EVAL_GOROUTINES_UPLOAD}'}
         - {name: ENABLE_PAYLOAD_TRACKER, value: '${ENABLE_PAYLOAD_TRACKER}'}
-        - {name: ENABLE_INSTANT_NOTIFICATIONS, value: '${ENABLE_INSTANT_NOTIFICATIONS}'}
         - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_UPLOAD}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
-        - {name: ENABLE_SATELLITE_FUNCTIONALITY, value: '${ENABLE_SATELLITE_FUNCTIONALITY}'}
+        - {name: POD_CONFIG, value: 'label=upload;${EVALUATOR_UPLOAD_CONFIG}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_UPLOAD}', memory: '${RES_LIMIT_MEM_EVALUATOR_UPLOAD}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_UPLOAD}', memory: '${RES_REQUEST_MEM_EVALUATOR_UPLOAD}'}
@@ -273,34 +253,14 @@ objects:
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: NOTIFICATIONS_TOPIC, value: 'platform.notifications.ingress'}
-        - {name: EVAL_LABEL, value: recalc}
-        - {name: CONSUMER_COUNT, value: '${CONSUMER_COUNT_EVALUATOR_RECALC}'}
-        - {name: ENABLE_BYPASS, value: '${ENABLE_BYPASS_EVALUATOR_RECALC}'}
-        - {name: ENABLE_LAZY_PACKAGE_SAVE, value: '${ENABLE_LAZY_PACKAGE_SAVE_EVALUATOR_RECALC}'}
-        - {name: ENABLE_BASELINE_EVAL, value: '${ENABLE_BASELINE_EVAL_EVALUATOR_RECALC}'}
-        - {name: ENABLE_ADVISORY_ANALYSIS, value: '${ENABLE_ADVISORY_ANALYSIS_SAVE_EVALUATOR_RECALC}'}
-        - {name: ENABLE_PACKAGE_ANALYSIS, value: '${ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_RECALC}'}
-        - {name: ENABLE_REPO_ANALYSIS, value: '${ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_RECALC}'}
-        - {name: ENABLE_STALE_SYSTEM_EVALUATION, value: '${ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_RECALC}'}
-        - {name: ENABLE_PACKAGE_CACHE, value: '${ENABLE_PACKAGE_CACHE_EVALUATOR_RECALC}'}
-        - {name: PRELOAD_PACKAGE_CACHE, value: '${PRELOAD_PACKAGE_CACHE_EVALUATOR_RECALC}'}
-        - {name: PACKAGE_CACHE_SIZE, value: '${PACKAGE_CACHE_SIZE}'}
-        - {name: PACKAGE_NAME_CACHE_SIZE, value: '${PACKAGE_NAME_CACHE_SIZE}'}
-        - {name: ENABLE_VMAAS_CACHE, value: '${ENABLE_VMAAS_CACHE_EVALUATOR_RECALC}'}
-        - {name: VMAAS_CACHE_SIZE, value: '${VMAAS_CACHE_SIZE}'}
-        - {name: VMAAS_CALL_MAX_RETRIES, value: '${VMAAS_CALL_MAX_RETRIES}'}
-        - {name: VMAAS_CALL_USE_EXP_RETRY, value: '${VMAAS_CALL_USE_EXP_RETRY}'}
-        - {name: VMAAS_CALL_USE_OPTIMISTIC_UPDATES, value: '${VMAAS_CALL_USE_OPTIMISTIC_UPDATES}'}
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
-        - {name: MAX_EVAL_GOROUTINES, value: '${MAX_EVAL_GOROUTINES_RECALC}'}
         - {name: ENABLE_PAYLOAD_TRACKER, value: 'false'}  # we don't need to send payload tracker messages from recalc
-        - {name: ENABLE_INSTANT_NOTIFICATIONS, value: '${ENABLE_INSTANT_NOTIFICATIONS}'}
         - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_RECALC}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
-        - {name: ENABLE_SATELLITE_FUNCTIONALITY, value: '${ENABLE_SATELLITE_FUNCTIONALITY}'}
+        - {name: POD_CONFIG, value: 'label=recalc;${EVALUATOR_RECALC_CONFIG}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_RECALC}', memory: '${RES_LIMIT_MEM_EVALUATOR_RECALC}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_RECALC}', memory: '${RES_REQUEST_MEM_EVALUATOR_RECALC}'}
@@ -615,50 +575,24 @@ parameters:
 - {name: IMAGE_TAG_EVALUATOR_UPLOAD, value: v3.6.68}
 - {name: LOG_LEVEL_EVALUATOR_UPLOAD, value: debug}
 - {name: DB_DEBUG_EVALUATOR_UPLOAD, value: 'false'}
-- {name: CONSUMER_COUNT_EVALUATOR_UPLOAD, value: '8'}
-- {name: ENABLE_BYPASS_EVALUATOR_UPLOAD, value: 'false'} # Enable only bypass (fake) messages processing
-- {name: ENABLE_LAZY_PACKAGE_SAVE_EVALUATOR_UPLOAD, value: 'false'} # Enable unknown EVRAs saving during the evaluation
-- {name: ENABLE_BASELINE_EVAL_EVALUATOR_UPLOAD, value: 'true'} # Take baselines into account during the evaluation
-- {name: ENABLE_ADVISORY_ANALYSIS_SAVE_EVALUATOR_UPLOAD, value: 'true'}
-- {name: ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_UPLOAD, value: 'true'}
-- {name: ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_UPLOAD, value: 'true'}
-- {name: ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_UPLOAD, value: 'true'}
-- {name: ENABLE_PACKAGE_CACHE_EVALUATOR_UPLOAD, value: 'true'}
-- {name: PRELOAD_PACKAGE_CACHE_EVALUATOR_UPLOAD, value: 'true'}
-- {name: ENABLE_VMAAS_CACHE_EVALUATOR_UPLOAD, value: 'true'}
 - {name: RES_LIMIT_CPU_EVALUATOR_UPLOAD, value: 256m}
 - {name: RES_LIMIT_MEM_EVALUATOR_UPLOAD, value: 1024Mi}
 - {name: RES_REQUEST_CPU_EVALUATOR_UPLOAD, value: 256m}
 - {name: RES_REQUEST_MEM_EVALUATOR_UPLOAD, value: 1024Mi}
-- {name: MAX_EVAL_GOROUTINES_UPLOAD, value: '1'}
-- {name: ENABLE_INSTANT_NOTIFICATIONS, value: 'true'}
-- {name: VMAAS_CACHE_SIZE, value: '10000'}
 - {name: ENABLE_PROFILER_EVALUATOR_UPLOAD, value: 'false'}
-- {name: ENABLE_SATELLITE_FUNCTIONALITY, value: 'false'}
+- {name: EVALUATOR_UPLOAD_CONFIG, value: ''}
 
 # Evaluator - recalc
 - {name: REPLICAS_EVALUATOR_RECALC, value: '1'}
 - {name: IMAGE_TAG_EVALUATOR_RECALC, value: v3.6.68}
 - {name: LOG_LEVEL_EVALUATOR_RECALC, value: debug}
 - {name: DB_DEBUG_EVALUATOR_RECALC, value: 'false'}
-- {name: CONSUMER_COUNT_EVALUATOR_RECALC, value: '8'}
-- {name: ENABLE_BYPASS_EVALUATOR_RECALC, value: 'false'} # Enable only bypass (fake) messages processing
-- {name: ENABLE_LAZY_PACKAGE_SAVE_EVALUATOR_RECALC, value: 'false'} # Enable unknown EVRAs saving during the evaluation
-- {name: ENABLE_BASELINE_EVAL_EVALUATOR_RECALC, value: 'true'} # Take baselines into account during the evaluation
-- {name: ENABLE_ADVISORY_ANALYSIS_SAVE_EVALUATOR_RECALC, value: 'true'}
-- {name: ENABLE_PACKAGE_ANALYSIS_SAVE_EVALUATOR_RECALC, value: 'true'}
-- {name: ENABLE_REPO_ANALYSIS_SAVE_EVALUATOR_RECALC, value: 'true'}
-- {name: ENABLE_STALE_SYSTEM_EVALUATION_SAVE_EVALUATOR_RECALC, value: 'true'}
-- {name: ENABLE_PACKAGE_CACHE_EVALUATOR_RECALC, value: 'true'}
-- {name: PRELOAD_PACKAGE_CACHE_EVALUATOR_RECALC, value: 'true'}
-- {name: ENABLE_VMAAS_CACHE_EVALUATOR_RECALC, value: 'true'}
 - {name: RES_LIMIT_CPU_EVALUATOR_RECALC, value: 256m}
 - {name: RES_LIMIT_MEM_EVALUATOR_RECALC, value: 1024Mi}
 - {name: RES_REQUEST_CPU_EVALUATOR_RECALC, value: 256m}
 - {name: RES_REQUEST_MEM_EVALUATOR_RECALC, value: 1024Mi}
-- {name: MAX_EVAL_GOROUTINES_RECALC, value: '1'}
-- {name: ENABLE_INSTANT_NOTIFICATIONS, value: 'true'}
 - {name: ENABLE_PROFILER_EVALUATOR_RECALC, value: 'false'}
+- {name: EVALUATOR_RECALC_CONFIG, value: 'consumer_count=8'}
 
 # JOBS
 - {name: IMAGE_TAG_JOBS, value: v3.6.68}
@@ -728,13 +662,10 @@ parameters:
 - {name: IMAGE, value: quay.io/cloudservices/patchman-engine-app}
 - {name: ENV_NAME, required: false}
 - {name: GIN_MODE, value: 'release'} # Gin webframework running mode
-- {name: PACKAGE_CACHE_SIZE, value: '1000000'}
-- {name: PACKAGE_NAME_CACHE_SIZE, value: '60000'}
 - {name: KAFKA_READER_MAX_ATTEMPTS, value: '3'} # Limit of how many attempts will be made before kafka read error.
 - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '10'} # Limit of how many attempts will be made before kafka write error.
 - {name: VMAAS_CALL_MAX_RETRIES, value: '8'} # Limit of how many unsuccessful vmaas calls are allowed before panic.
 - {name: VMAAS_CALL_USE_EXP_RETRY, value: 'true'} # Use exponential retry policy for vmaas call.
-- {name: VMAAS_CALL_USE_OPTIMISTIC_UPDATES, value: 'true'} # Always use "optimistic_updates" in vmaas request (not only for third party usage).
 - {name: MSG_BATCH_SIZE, value: '4000'} # BatchSize for PlatformEvent message
 - {name: ENABLE_PAYLOAD_TRACKER, value: 'true'} # Send status messages to payload tracker
 - {name: SSL_CERT_DIR, value: '/etc/ssl/certs:/etc/pki/tls/certs:/system/etc/security/cacerts:/cdapp/certs'}
