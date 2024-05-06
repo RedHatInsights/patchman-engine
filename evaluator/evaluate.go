@@ -13,7 +13,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 
@@ -21,6 +20,8 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -55,6 +56,7 @@ var (
 	vmaasCallMaxRetries           int
 	vmaasCallUseExpRetry          bool
 	vmaasCallUseOptimisticUpdates bool
+	disableCompression            bool
 	enableYumUpdatesEval          bool
 	nEvalGoroutines               int
 	enableInstantNotifications    bool
@@ -66,42 +68,69 @@ const WarnPayloadTracker = "unable to send message to payload tracker"
 
 func configure() {
 	core.ConfigureApp()
+	confugureEvaluator()
 	evalTopic = utils.FailIfEmpty(utils.CoreCfg.EvalTopic, "EVAL_TOPIC")
-	evalLabel = utils.GetenvOrFail("EVAL_LABEL")
 	ptTopic = utils.FailIfEmpty(utils.CoreCfg.PayloadTrackerTopic, "PAYLOAD_TRACKER_TOPIC")
 	ptWriter = mqueue.NewKafkaWriterFromEnv(ptTopic)
-	consumerCount = utils.GetIntEnvOrDefault("CONSUMER_COUNT", 1)
-	disableCompression := !utils.GetBoolEnvOrDefault("ENABLE_VMAAS_CALL_COMPRESSION", true)
-	enableAdvisoryAnalysis = utils.GetBoolEnvOrDefault("ENABLE_ADVISORY_ANALYSIS", true)
-	enablePackageAnalysis = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_ANALYSIS", true)
-	enableRepoAnalysis = utils.GetBoolEnvOrDefault("ENABLE_REPO_ANALYSIS", true)
-	enableStaleSysEval = utils.GetBoolEnvOrDefault("ENABLE_STALE_SYSTEM_EVALUATION", true)
-	enableLazyPackageSave = utils.GetBoolEnvOrDefault("ENABLE_LAZY_PACKAGE_SAVE", true)
-	enableBaselineEval = utils.GetBoolEnvOrDefault("ENABLE_BASELINE_EVAL", true)
-	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
-	useTraceLevel := strings.ToLower(utils.Getenv("LOG_LEVEL", "INFO")) == "trace"
+	useTraceLevel := log.IsLevelEnabled(log.TraceLevel)
 	vmaasClient = &api.Client{
 		HTTPClient: &http.Client{Transport: &http.Transport{DisableCompression: disableCompression}},
 		Debug:      useTraceLevel,
 	}
 	vmaasUpdatesURL = utils.FailIfEmpty(utils.CoreCfg.VmaasAddress, "VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/updates"
-	enablePackageCache = utils.GetBoolEnvOrDefault("ENABLE_PACKAGE_CACHE", true)
-	preloadPackageCache = utils.GetBoolEnvOrDefault("PRELOAD_PACKAGE_CACHE", true)
-	packageCacheSize = utils.GetIntEnvOrDefault("PACKAGE_CACHE_SIZE", 1000000)
-	packageNameCacheSize = utils.GetIntEnvOrDefault("PACKAGE_NAME_CACHE_SIZE", 60000)
-	enableVmaasCache = utils.GetBoolEnvOrDefault("ENABLE_VMAAS_CACHE", true)
-	vmaasCacheSize = utils.GetIntEnvOrDefault("VMAAS_CACHE_SIZE", 10000)
-	vmaasCacheCheckDuration = time.Duration(utils.GetIntEnvOrDefault("VMAAS_CACHE_CHECK_DURATION_SEC", 60)) * time.Second
-	vmaasCallMaxRetries = utils.GetIntEnvOrDefault("VMAAS_CALL_MAX_RETRIES", 8)
-	vmaasCallUseExpRetry = utils.GetBoolEnvOrDefault("VMAAS_CALL_USE_EXP_RETRY", true)
-	vmaasCallUseOptimisticUpdates = utils.GetBoolEnvOrDefault("VMAAS_CALL_USE_OPTIMISTIC_UPDATES", true)
-	enableYumUpdatesEval = utils.GetBoolEnvOrDefault("ENABLE_YUM_UPDATES_EVAL", true)
-	nEvalGoroutines = utils.GetIntEnvOrDefault("MAX_EVAL_GOROUTINES", 1)
-	enableInstantNotifications = utils.GetBoolEnvOrDefault("ENABLE_INSTANT_NOTIFICATIONS", true)
-	enableSatelliteFunctionality = utils.GetBoolEnvOrDefault("ENABLE_SATELLITE_FUNCTIONALITY", true)
 	configureRemediations()
 	configureNotifications()
 	configureStatus()
+}
+
+func confugureEvaluator() {
+	evalLabel = utils.FailIfEmpty(utils.PodConfig.GetString("label", ""), "label")
+	// Number of kafka readers for upload topic
+	consumerCount = utils.PodConfig.GetInt("consumer_count", 1)
+	// Toggle compression on vmass API HTTP call
+	disableCompression = !utils.PodConfig.GetBool("vmaas_call_compression", true)
+	// Evaluate advisories
+	enableAdvisoryAnalysis = utils.PodConfig.GetBool("advisory_analysis", true)
+	// evaluate packages
+	enablePackageAnalysis = utils.PodConfig.GetBool("package_analysis", true)
+	// Look for third party repos
+	enableRepoAnalysis = utils.PodConfig.GetBool("repo_analysis", true)
+	// Evaluate stale systems
+	enableStaleSysEval = utils.PodConfig.GetBool("stale_system_evaluation", true)
+	// Process (and save to db) previously unknown packages (typically third party packages)
+	enableLazyPackageSave = utils.PodConfig.GetBool("lazy_package_save", true)
+	// Toggle baseline evaluation
+	enableBaselineEval = utils.PodConfig.GetBool("baseline_eval", true)
+	// Toggle bypass (fake) messages processing
+	enableBypass = utils.PodConfig.GetBool("bypass", false)
+	// Toggle in-memory cache to speed up package lookups
+	enablePackageCache = utils.PodConfig.GetBool("package_cache", true)
+	// Should evaluator load all packages into cache at startup?
+	preloadPackageCache = utils.PodConfig.GetBool("package_cache_preload", true)
+	// Size of package cache
+	packageCacheSize = utils.PodConfig.GetInt("package_cache_size", 1000000)
+	// Size of package name cache
+	packageNameCacheSize = utils.PodConfig.GetInt("package_name_cache_size", 60000)
+	// Toggle caching of vmaas responses
+	enableVmaasCache = utils.PodConfig.GetBool("vmaas_cache", true)
+	// Size of vmaas response cache
+	vmaasCacheSize = utils.PodConfig.GetInt("vmaas_cache_size", 10000)
+	// Interval to check vmaas API if there was a data change thus if cache is still valid
+	vmaasCacheCheckDuration = time.Duration(utils.PodConfig.GetInt("vmaas_cache_check_duration_sec", 60)) * time.Second
+	// How many tries before we consider vmaad API call failed
+	vmaasCallMaxRetries = utils.PodConfig.GetInt("vmaas_call_max_retries", 8)
+	// Use exponential delay between two vmaas calls
+	vmaasCallUseExpRetry = utils.PodConfig.GetBool("vmaas_call_use_exp_retry", true)
+	// Set optimistic_update in vmaas API request
+	vmaasCallUseOptimisticUpdates = utils.PodConfig.GetBool("vmaas_call_optimistic_updates", true)
+	// Include data reported by systems yum/dnf into evaluation
+	enableYumUpdatesEval = utils.PodConfig.GetBool("yum_updates_eval", true)
+	// How parallel system evaluation we can run
+	nEvalGoroutines = utils.PodConfig.GetInt("max_goroutines", 1)
+	// Send advisory notification immediately
+	enableInstantNotifications = utils.PodConfig.GetBool("instant_notifications", true)
+	// Ignore baselines/templates for satellite managed systems
+	enableSatelliteFunctionality = utils.PodConfig.GetBool("satellite_functionality", true)
 }
 
 func Evaluate(ctx context.Context, event *mqueue.PlatformEvent, inventoryID, evaluationType string) error {
@@ -686,7 +715,7 @@ func loadCache() {
 func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 	utils.LogInfo("evaluator starting")
 	configure()
-	utils.LogDebug("MAX_EVAL_GOROUTINES", nEvalGoroutines, "evaluation running in goroutines")
+	utils.LogDebug("max_goroutines", nEvalGoroutines, "evaluation running in goroutines")
 
 	go RunMetrics()
 
