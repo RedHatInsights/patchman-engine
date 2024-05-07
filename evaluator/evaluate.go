@@ -217,7 +217,13 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 		return nil, nil, nil
 	}
 
-	updatesData, err := getUpdatesData(ctx, tx, system)
+	thirdParty, err := analyzeRepos(tx, system)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "Repo analysis failed")
+	}
+	system.ThirdParty = thirdParty // to set "system_platform.third_party" column
+
+	updatesData, err := getUpdatesData(ctx, system)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to get updates data")
 	}
@@ -301,7 +307,7 @@ func evaluateWithVmaas(tx *gorm.DB, updatesData *vmaas.UpdatesV3Response,
 	return updatesData, nil
 }
 
-func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatform) (
+func getUpdatesData(ctx context.Context, system *models.SystemPlatform) (
 	*vmaas.UpdatesV3Response, error) {
 	var yumUpdates *vmaas.UpdatesV3Response
 	var yumErr error
@@ -313,7 +319,7 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 		}
 	}
 
-	vmaasData, vmaasErr := getVmaasUpdates(ctx, tx, system)
+	vmaasData, vmaasErr := getVmaasUpdates(ctx, system)
 	if vmaasErr != nil {
 		if errors.Is(vmaasErr, errVmaasBadRequest) {
 			// vmaas bad request means we either created wrong vmaas request
@@ -341,8 +347,7 @@ func getUpdatesData(ctx context.Context, tx *gorm.DB, system *models.SystemPlatf
 	return merged, nil
 }
 
-func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
-	system *models.SystemPlatform) (*vmaas.UpdatesV3Response, error) {
+func getVmaasUpdates(ctx context.Context, system *models.SystemPlatform) (*vmaas.UpdatesV3Response, error) {
 	var vmaasDataCopy vmaas.UpdatesV3Response
 	// first check if we have data in cache
 	vmaasData, ok := memoryVmaasCache.Get(system.JSONChecksum)
@@ -364,13 +369,8 @@ func getVmaasUpdates(ctx context.Context, tx *gorm.DB,
 		return nil, nil
 	}
 
-	thirdParty, err := analyzeRepos(tx, system)
-	if err != nil {
-		return nil, errors.Wrap(err, "Repo analysis failed")
-	}
-	system.ThirdParty = thirdParty                    // to set "system_platform.third_party" column
-	updatesReq.ThirdParty = utils.PtrBool(thirdParty) // enable "third_party" updates in VMaaS if needed
-	useOptimisticUpdates := thirdParty || vmaasCallUseOptimisticUpdates
+	updatesReq.ThirdParty = utils.PtrBool(system.ThirdParty) // enable "third_party" updates in VMaaS if needed
+	useOptimisticUpdates := system.ThirdParty || vmaasCallUseOptimisticUpdates
 	updatesReq.OptimisticUpdates = utils.PtrBool(useOptimisticUpdates)
 	updatesReq.EpochRequired = utils.PtrBool(true)
 

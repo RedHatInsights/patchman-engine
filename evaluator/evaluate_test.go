@@ -325,7 +325,7 @@ func TestSatelliteSystemAdvisories(t *testing.T) {
 	tx := database.DB.Create(&system)
 	assert.Nil(t, tx.Error)
 
-	result, err := getUpdatesData(context.Background(), database.DB, &system)
+	result, err := getUpdatesData(context.Background(), &system)
 	assert.Nil(t, err)
 
 	// result should have 2 git advisories,    1 is installable (taken from yum updates and vmaas, merged)
@@ -368,7 +368,7 @@ func TestGetUpdatesDataVmaas400(t *testing.T) {
 	reqJSON, _ := json.Marshal(req)
 	reqString := string(reqJSON)
 	sp := models.SystemPlatform{VmaasJSON: &reqString}
-	res, err := getUpdatesData(context.Background(), database.DB, &sp)
+	res, err := getUpdatesData(context.Background(), &sp)
 	// response and error should be nil, system is skipped due to VMaaS 400
 	assert.Nil(t, err)
 	assert.Nil(t, res)
@@ -388,7 +388,7 @@ func TestGetVmaasDataCached(t *testing.T) {
 	sp := models.SystemPlatform{VmaasJSON: &reqString, JSONChecksum: &chsum}
 
 	var assertInstallable = func() (*vmaas.UpdatesV3Response, []vmaas.UpdatesV3ResponseAvailableUpdates) {
-		vmaasData, _ := getVmaasUpdates(context.Background(), database.DB, &sp)
+		vmaasData, _ := getVmaasUpdates(context.Background(), &sp)
 		updates := (*vmaasData.UpdateList)["firefox-0:76.0.1-1.fc31.x86_64"].GetAvailableUpdates()
 		assert.Equal(t, INSTALLABLE, updates[0].StatusID)
 		return vmaasData, updates
