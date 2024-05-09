@@ -44,8 +44,8 @@ objects:
         - {name: ERRATA_PAGE_SIZE, value: '${ERRATA_PAGE_SIZE}'}
         - {name: PACKAGES_PAGE_SIZE, value: '${PACKAGES_PAGE_SIZE}'}
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
-        - {name: ENABLE_TURNPIKE_AUTH, value: '${ENABLE_TURNPIKE_AUTH}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_DATABASE_ADMIN}'}
+        - {name: POD_CONFIG, value: '${ADMIN_CONFIG}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_ADMIN}', memory: '${RES_LIMIT_MEM_ADMIN}'}
@@ -664,12 +664,12 @@ parameters:
 
 # Turnpike
 - {name: IMAGE_TAG_ADMIN, value: v3.6.68}
-- {name: ENABLE_TURNPIKE_AUTH, value: 'true'} # Enable Turnpike authentication for internal API (manual sync, re-calc)
 - {name: REPLICAS_ADMIN, value: '1'}
 - {name: RES_LIMIT_CPU_ADMIN, value: 100m}
 - {name: RES_LIMIT_MEM_ADMIN, value: 256Mi}
 - {name: RES_REQUEST_CPU_ADMIN, value: 50m}
 - {name: RES_REQUEST_MEM_ADMIN, value: 128Mi}
+- {name: ADMIN_CONFIG, value: 'turnpike_auth'}
 
 # Floorist parameters
 - {name: FLOORIST_SUSPEND, value: 'true', required: true} # Disable Floorist cronjob execution
