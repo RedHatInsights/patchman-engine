@@ -50,10 +50,9 @@ const (
 )
 
 var (
-	DeletionThreshold = time.Hour * time.Duration(utils.GetIntEnvOrDefault("SYSTEM_DELETE_HRS", 4))
-	repoPathRegex     = regexp.MustCompile(RepoPathPattern)
-	spacesRegex       = regexp.MustCompile(`^\s*$`)
-	httpClient        *api.Client
+	repoPathRegex = regexp.MustCompile(RepoPathPattern)
+	spacesRegex   = regexp.MustCompile(`^\s*$`)
+	httpClient    *api.Client
 )
 
 type Host struct {
@@ -112,7 +111,6 @@ func HandleUpload(event HostEvent) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventUpload))
 
-	useTraceLevel := strings.ToLower(utils.Getenv("LOG_LEVEL", "INFO")) == "trace"
 	httpClient = &api.Client{
 		HTTPClient: &http.Client{},
 		Debug:      useTraceLevel,
@@ -673,7 +671,7 @@ func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatform, 
 	}
 
 	// If the system was deleted in last hour, don't register this upload
-	if deleted.InventoryID != "" && deleted.WhenDeleted.After(time.Now().Add(-DeletionThreshold)) {
+	if deleted.InventoryID != "" && deleted.WhenDeleted.After(time.Now().Add(-deletionThreshold)) {
 		utils.LogInfo("inventoryID", host.ID, "Received recently deleted system")
 		return nil, nil
 	}

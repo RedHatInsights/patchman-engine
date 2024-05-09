@@ -6,10 +6,10 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
-	"os"
-	"strings"
 	"sync"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -25,46 +25,45 @@ var (
 	excludedHostTypes  map[string]bool
 	enableBypass       bool
 	uploadEvalTimeout  time.Duration
+	deletionThreshold  time.Duration
+	useTraceLevel      bool
 )
 
 func configure() {
 	core.ConfigureApp()
 	eventsTopic = utils.FailIfEmpty(utils.CoreCfg.EventsTopic, "EVENTS_TOPIC")
-	eventsConsumers = utils.GetIntEnvOrDefault("CONSUMER_COUNT", 1)
-
-	enableTemplates = utils.GetBoolEnvOrDefault("ENABLE_TEMPLATES_API", true)
-	if enableTemplates {
-		templatesTopic = utils.FailIfEmpty(utils.CoreCfg.TemplateTopic, "TEMPLATE_TOPIC")
-		templatesConsumers = utils.GetIntEnvOrDefault("TEMPLATE_CONSUMERS", 1)
-	}
-
 	evalTopic := utils.FailIfEmpty(utils.CoreCfg.EvalTopic, "EVAL_TOPIC")
 	ptTopic := utils.FailIfEmpty(utils.CoreCfg.PayloadTrackerTopic, "PAYLOAD_TRACKER_TOPIC")
-
 	evalWriter = mqueue.NewKafkaWriterFromEnv(evalTopic)
 	ptWriter = mqueue.NewKafkaWriterFromEnv(ptTopic)
 
-	validReporters = loadValidReporters()
-	allowedReporters = getEnvVarStringsSet("ALLOWED_REPORTERS")
-	excludedHostTypes = getEnvVarStringsSet("EXCLUDED_HOST_TYPES")
-
-	enableBypass = utils.GetBoolEnvOrDefault("ENABLE_BYPASS", false)
-
-	uploadEvalTimeout = time.Duration(utils.GetIntEnvOrDefault("UPLOAD_EVAL_TIMEOUT_MS", 500)) * time.Millisecond
+	configureListener()
 }
 
-func getEnvVarStringsSet(envVarName string) map[string]bool {
-	strValue := os.Getenv(envVarName)
-	mapValue := make(map[string]bool)
-	if strValue == "" {
-		return mapValue
+func configureListener() {
+	// Number of kafka readers for upload topic
+	eventsConsumers = utils.PodConfig.GetInt("consumer_count", 1)
+	// Toggle template message processing
+	enableTemplates = utils.PodConfig.GetBool("templates_api", true)
+	if enableTemplates {
+		// Name of kafka template topic
+		templatesTopic = utils.FailIfEmpty(utils.CoreCfg.TemplateTopic, "TEMPLATE_TOPIC")
+		// Number of kafka readers for template topic
+		templatesConsumers = utils.PodConfig.GetInt("template_consumers", 1)
 	}
-	arr := strings.Split(strValue, ",")
+	// Comma-separated list of reporters to include into processing
+	allowedReporters = utils.PodConfig.GetStringSet("allowed_reporters", "")
+	// Comma-separated list of host types to exclude from processing
+	excludedHostTypes = utils.PodConfig.GetStringSet("excluded_host_types", "")
+	// Toggle bypass (fake) messages processing
+	enableBypass = utils.PodConfig.GetBool("bypass", false)
+	// How long to collect upload messages before grouping them and sending to evaluator
+	uploadEvalTimeout = time.Duration(utils.PodConfig.GetInt("upload_eval_timeout_ms", 500)) * time.Millisecond
+	// Ignore a system if there was a delete message in the last X hours
+	deletionThreshold = time.Hour * time.Duration(utils.PodConfig.GetInt("system_delete_hrs", 4))
+	useTraceLevel = log.IsLevelEnabled(log.TraceLevel)
 
-	for _, m := range arr {
-		mapValue[m] = true
-	}
-	return mapValue
+	validReporters = loadValidReporters()
 }
 
 func loadValidReporters() map[string]int {
