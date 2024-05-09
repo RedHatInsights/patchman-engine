@@ -155,15 +155,10 @@ objects:
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: TEMPLATE_TOPIC, value: platform.content-sources.template}
-        - {name: ENABLE_TEMPLATES_API, value: '${ENABLE_TEMPLATES_API}'}
-        - {name: CONSUMER_COUNT, value: '${CONSUMER_COUNT_LISTENER}'}
-        - {name: TEMPLATE_CONSUMERS, value: '${TEMPLATE_CONSUMERS_LISTENER}'}
-        - {name: ENABLE_BYPASS, value: '${ENABLE_BYPASS_LISTENER}'}
-        - {name: ALLOWED_REPORTERS, value: '${ALLOWED_REPORTERS}'}
-        - {name: EXCLUDED_HOST_TYPES, value: '${EXCLUDED_HOST_TYPES}'}
         - {name: ENABLE_PAYLOAD_TRACKER, value: '${ENABLE_PAYLOAD_TRACKER}'}
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_LISTENER}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_LISTENER}'}
+        - {name: POD_CONFIG, value: '${LISTENER_CONFIG}'}
 
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_LISTENER}', memory: '${RES_LIMIT_MEM_LISTENER}'}
@@ -553,17 +548,13 @@ parameters:
 - {name: IMAGE_TAG_LISTENER, value: v3.6.68}
 - {name: LOG_LEVEL_LISTENER, value: debug}
 - {name: DB_DEBUG_LISTENER, value: 'false'}
-- {name: CONSUMER_COUNT_LISTENER, value: '8'}
-- {name: TEMPLATE_CONSUMERS_LISTENER, value: '1'}
-- {name: ENABLE_BYPASS_LISTENER, value: 'false'} # Enable only bypass (fake) messages processing
-- {name: ALLOWED_REPORTERS, value: 'puptoo,rhsm-system-profile-bridge'} # Comma-separated list of reporters to exclude from processing
-- {name: EXCLUDED_HOST_TYPES, value: 'edge'} # Comma-separated list of host types to exclude from processing
 - {name: RES_LIMIT_CPU_LISTENER, value: 250m}
 - {name: RES_LIMIT_MEM_LISTENER, value: 192Mi}
 - {name: RES_REQUEST_CPU_LISTENER, value: 250m}
 - {name: RES_REQUEST_MEM_LISTENER, value: 192Mi}
 - {name: ENABLE_PROFILER_LISTENER, value: 'false'}
 - {name: GOMEMLIMIT_LISTENER, value: '172MiB'} # set to 90% of the default memory limit 192Mi (don't forget `B`)
+- {name: LISTENER_CONFIG, value: 'consumer_count=8;allowed_reporters=puptoo,rhsm-system-profile-bridge;excluded_host_types=edge'}
 
 # Evaluator
 - {name: USE_VMAAS_GO, value: 'true'}
