@@ -433,3 +433,17 @@ func (p podConfig) GetInt64(key string, defval int64) int64 {
 	}
 	return parseInt64OrFail(key, valueStr)
 }
+
+func (p podConfig) GetStringSet(key string, defval string) map[string]bool {
+	valueStr := p[key]
+	if valueStr == "" {
+		valueStr = defval
+	}
+
+	mapValue := make(map[string]bool)
+	arr := strings.Split(valueStr, ",")
+	for _, m := range arr {
+		mapValue[m] = true
+	}
+	return mapValue
+}
