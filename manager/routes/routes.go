@@ -2,7 +2,6 @@ package routes
 
 import (
 	"app/base/deprecations"
-	"app/base/utils"
 	"app/docs"
 	"app/manager/controllers"
 	"app/manager/middlewares"
@@ -100,9 +99,7 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	api.GET("/status", controllers.Status)
 }
 
-func InitAdmin(app *gin.Engine) {
-	enableTurnpikeAuth := utils.GetBoolEnvOrDefault("ENABLE_TURNPIKE_AUTH", false)
-
+func InitAdmin(app *gin.Engine, enableTurnpikeAuth bool) {
 	api := app.Group("/api/patch/admin")
 	if enableTurnpikeAuth {
 		api.Use(middlewares.TurnpikeAuthenticator())

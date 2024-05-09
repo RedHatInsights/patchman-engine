@@ -26,13 +26,16 @@ import (
 func RunAdminAPI() {
 	core.ConfigureApp()
 
+	// Toggle Turnpike authentication for internal API (manual sync, re-calc)
+	enableTurnpikeAuth := utils.PodConfig.GetBool("turnpike_auth", false)
+
 	utils.LogInfo("port", utils.CoreCfg.PublicPort, "Manager-admin starting")
 	app := gin.New()
 	app.Use(middlewares.RequestResponseLogger())
 	middlewares.SetAdminSwagger(app)
 
 	core.InitProbes(app)
-	routes.InitAdmin(app)
+	routes.InitAdmin(app, enableTurnpikeAuth)
 
 	err := utils.RunServer(base.Context, app, utils.CoreCfg.PublicPort)
 	if err != nil {
