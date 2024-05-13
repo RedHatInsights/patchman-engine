@@ -170,6 +170,7 @@ objects:
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: TEMPLATE_TOPIC, value: platform.content-sources.template}
+        - {name: ENABLE_TEMPLATES_API, value: '${ENABLE_TEMPLATES_API}'}
         - {name: CONSUMER_COUNT, value: '${CONSUMER_COUNT_LISTENER}'}
         - {name: TEMPLATE_CONSUMERS, value: '${TEMPLATE_CONSUMERS_LISTENER}'}
         - {name: ENABLE_BYPASS, value: '${ENABLE_BYPASS_LISTENER}'}
