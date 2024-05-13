@@ -89,14 +89,15 @@ func runReaders(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 	// algorithm assigns each consumer a single partition
 	for i := 0; i < eventsConsumers; i++ {
 		mqueue.SpawnReader(wg, eventsTopic, readerBuilder, mqueue.MakeRetryingHandler(EventsMessageHandler))
-		utils.LogTrace("spawned eventsTopic reader", i)
+		utils.LogDebug("spawned eventsTopic reader", i)
 	}
 	if enableTemplates {
 		for i := 0; i < templatesConsumers; i++ {
 			mqueue.SpawnReader(wg, templatesTopic, readerBuilder, mqueue.MakeRetryingHandler(TemplatesMessageHandler))
-			utils.LogTrace("spawned templatesTopic reader", i)
+			utils.LogDebug("spawned templatesTopic reader", i)
 		}
 	}
+	utils.LogInfo("connected to kafka topics")
 }
 
 func RunListener() {
