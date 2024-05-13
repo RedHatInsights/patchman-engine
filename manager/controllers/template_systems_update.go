@@ -36,11 +36,6 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 	templateUUID := c.Param("template_id")
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
-	if !utils.IsValidUUID(templateUUID) {
-		errmsg := "Invalid template uuid: " + templateUUID
-		LogAndRespNotFound(c, errors.New(errmsg), errmsg)
-		return
-	}
 	var req TemplateSystemsUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		LogAndRespBadRequest(c, err, "Invalid template update request "+err.Error())
@@ -48,13 +43,9 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 	}
 
 	db := middlewares.DBFromContext(c)
-	templateID, err := getTemplateID(db, account, templateUUID)
+	templateID, err := getTemplateID(c, db, account, templateUUID)
 	if err != nil {
-		LogAndRespError(c, err, "database error")
-		return
-	}
-	if templateID == 0 {
-		LogAndRespNotFound(c, errors.New("Template not found"), "Template not found")
+		// respose set in getTemplateID()
 		return
 	}
 
