@@ -127,3 +127,21 @@ func TestTemplateSystemsSearch(t *testing.T) {
 	assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
 	assert.Equal(t, 1, output.Meta.TotalItems)
 }
+
+func TestTemplateSystemsInvalidUUID(t *testing.T) {
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/:template_id/systems", "InvalidTemplateUUID",
+		"?sort=unknown_key", nil, "", TemplateSystemsListHandler)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	assert.Equal(t, `{"error":"Invalid template uuid: InvalidTemplateUUID"}`, w.Body.String())
+}
+
+func TestTemplateSystemsUnknownUUID(t *testing.T) {
+	core.SetupTest(t)
+	w := CreateRequestRouterWithPath("GET", "/:template_id/systems", "99999999-9999-9999-9999-999999990001",
+		"?sort=unknown_key", nil, "", TemplateSystemsListHandler)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	assert.Equal(t, `{"error":"Template not found"}`, w.Body.String())
+}

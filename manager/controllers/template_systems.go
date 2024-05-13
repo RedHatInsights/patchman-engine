@@ -53,25 +53,37 @@ type TemplateSystemsResponse struct {
 	Meta  ListMeta             `json:"meta"`
 }
 
-func getTemplateID(tx *gorm.DB, account int, uuid string) (int64, error) {
+func getTemplateID(c *gin.Context, tx *gorm.DB, account int, uuid string) (int64, error) {
 	var id int64
+	if !utils.IsValidUUID(uuid) {
+		err := errors.Errorf("Invalid template uuid: %s", uuid)
+		LogAndRespNotFound(c, err, err.Error())
+		return 0, err
+	}
 	err := tx.Model(&models.Template{}).
 		Select("id").
-		Where("rh_account_id = ? AND uuid = ?::uuid ", account, uuid).First(&id).Error
-	return id, err
+		Where("rh_account_id = ? AND uuid = ?::uuid ", account, uuid).
+		// use Find() not First() otherwise it returns error "no rows found" if uuid is not present
+		Find(&id).Error
+	if err != nil {
+		LogAndRespError(c, err, "database error")
+		return 0, err
+	}
+	if id == 0 {
+		err := errors.New("Template not found")
+		LogAndRespNotFound(c, err, err.Error())
+		return 0, err
+	}
+	return id, nil
 }
 
 func templateSystemsQuery(c *gin.Context, account int, groups map[string]string) (*gorm.DB, Filters, error) {
 	templateUUID := c.Param("template_id")
 	db := middlewares.DBFromContext(c)
 
-	templateID, err := getTemplateID(db, account, templateUUID)
+	templateID, err := getTemplateID(c, db, account, templateUUID)
 	if err != nil {
-		LogAndRespError(c, err, "database error")
-		return nil, nil, err
-	}
-	if templateID == 0 {
-		LogAndRespNotFound(c, errors.New("Template not found"), "Template not found")
+		// respose set in getTemplateID()
 		return nil, nil, err
 	}
 
