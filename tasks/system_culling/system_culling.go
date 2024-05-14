@@ -12,24 +12,20 @@ func runSystemCulling() {
 	defer utils.LogPanics(true)
 
 	err := tasks.WithTx(func(tx *gorm.DB) error {
-		if enableCulledSystemDelete {
-			nDeleted, err := deleteCulledSystems(tx, deleteCulledSystemsLimit)
-			if err != nil {
-				return errors.Wrap(err, "Delete culled")
-			}
-			utils.LogInfo("nDeleted", nDeleted, "Culled systems deleted")
-			deletedCulledSystemsCnt.Add(float64(nDeleted))
+		nDeleted, err := deleteCulledSystems(tx, deleteCulledSystemsLimit)
+		if err != nil {
+			return errors.Wrap(err, "Delete culled")
 		}
+		utils.LogInfo("nDeleted", nDeleted, "Culled systems deleted")
+		deletedCulledSystemsCnt.Add(float64(nDeleted))
 
-		if enableSystemStaling {
-			// marking systems as "stale"
-			nMarked, err := markSystemsStale(tx, deleteCulledSystemsLimit)
-			if err != nil {
-				return errors.Wrap(err, "Mark stale")
-			}
-			utils.LogInfo("nMarked", nMarked, "Stale systems marked")
-			staleSystemsMarkedCnt.Add(float64(nMarked))
+		// marking systems as "stale"
+		nMarked, err := markSystemsStale(tx, deleteCulledSystemsLimit)
+		if err != nil {
+			return errors.Wrap(err, "Mark stale")
 		}
+		utils.LogInfo("nMarked", nMarked, "Stale systems marked")
+		staleSystemsMarkedCnt.Add(float64(nMarked))
 
 		return nil
 	})

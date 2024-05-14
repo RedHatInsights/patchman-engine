@@ -10,10 +10,6 @@ import (
 )
 
 func RefreshAdvisoryCaches() {
-	if !enableRefreshAdvisoryCaches {
-		return
-	}
-
 	var wg sync.WaitGroup
 	refreshAdvisoryCachesPerAccounts(&wg)
 	wg.Wait()
