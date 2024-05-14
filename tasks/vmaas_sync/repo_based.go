@@ -87,7 +87,7 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string, thirdParty *boo
 		reposReq := vmaas.ReposRequest{
 			Page:           page,
 			RepositoryList: []string{".*"},
-			PageSize:       advisoryPageSize,
+			PageSize:       tasks.AdvisoryPageSize,
 			ThirdParty:     thirdParty,
 			ModifiedSince:  modifiedSince,
 			ShowPackages:   true,
@@ -99,7 +99,8 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string, thirdParty *boo
 			return &vmaasData, resp, err
 		}
 
-		vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc, vmaasCallExpRetry, vmaasCallMaxRetries)
+		vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc,
+			tasks.VmaasCallExpRetry, tasks.VmaasCallMaxRetries)
 		if err != nil {
 			return nil, nil, nil, err
 		}

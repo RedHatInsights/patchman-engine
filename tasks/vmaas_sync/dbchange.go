@@ -5,6 +5,7 @@ import (
 	"app/base/types"
 	"app/base/utils"
 	"app/base/vmaas"
+	"app/tasks"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -29,7 +30,8 @@ func vmaasDBChangeRequest() (*vmaas.DBChangeResponse, error) {
 		return &response, resp, err
 	}
 
-	vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc, vmaasCallExpRetry, vmaasCallMaxRetries)
+	vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc,
+		tasks.VmaasCallExpRetry, tasks.VmaasCallMaxRetries)
 	if err != nil {
 		vmaasCallCnt.WithLabelValues("error-dbchange").Inc()
 		return nil, errors.Wrap(err, "Checking DBChange")
