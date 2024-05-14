@@ -593,13 +593,6 @@ parameters:
 - {name: PKG_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
 - {name: ADVISORY_REFRESH_SCHEDULE, value: '*/15 * * * *'} # Cronjob schedule definition
 - {name: ADVISORY_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
-# Migrate system package data
-- {name: MIGRATE_SYSTEM_PACKAGE_DISABLED, value: 'false'}
-- {name: RES_REQUEST_CPU_MIGRATE_JOB, value: '1'}
-- {name: RES_LIMIT_CPU_MIGRATE_JOB, value: '2'}
-- {name: RES_REQUEST_MEM_MIGRATE_JOB, value: '512Mi'}
-- {name: RES_LIMIT_MEM_MIGRATE_JOB, value: '1024Mi'}
-- {name: POC_MIGRATION_MAX_GOROUTINES, value: '4'}
 
 # Database admin
 - {name: IMAGE_TAG_DATABASE_ADMIN, value: v3.6.68}
