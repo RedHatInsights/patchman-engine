@@ -35,14 +35,6 @@ objects:
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
-        - {name: ENABLE_REPO_BASED_RE_EVALUATION, value: '${ENABLE_REPO_BASED_RE_EVALUATION}'}
-        - {name: ENABLE_RECALC_MESSAGES_SEND, value: '${ENABLE_RECALC_MESSAGES_SEND}'}
-        - {name: ENABLE_ADVISORIES_SYNC, value: '${ENABLE_ADVISORIES_SYNC}'}
-        - {name: ENABLE_PACKAGES_SYNC, value: '${ENABLE_PACKAGES_SYNC}'}
-        - {name: ENABLE_REPOS_SYNC, value: '${ENABLE_REPOS_SYNC}'}
-        - {name: ENABLE_MODIFIED_SINCE_SYNC, value: '${ENABLE_MODIFIED_SINCE_SYNC}'}
-        - {name: ERRATA_PAGE_SIZE, value: '${ERRATA_PAGE_SIZE}'}
-        - {name: PACKAGES_PAGE_SIZE, value: '${PACKAGES_PAGE_SIZE}'}
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_DATABASE_ADMIN}'}
         - {name: POD_CONFIG, value: '${ADMIN_CONFIG}'}
@@ -290,21 +282,12 @@ objects:
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
-        - {name: ENABLE_REPO_BASED_RE_EVALUATION, value: '${ENABLE_REPO_BASED_RE_EVALUATION}'}
-        - {name: ENABLE_RECALC_MESSAGES_SEND, value: '${ENABLE_RECALC_MESSAGES_SEND}'}
-        - {name: ENABLE_ADVISORIES_SYNC, value: '${ENABLE_ADVISORIES_SYNC}'}
-        - {name: ENABLE_PACKAGES_SYNC, value: '${ENABLE_PACKAGES_SYNC}'}
-        - {name: ENABLE_REPOS_SYNC, value: '${ENABLE_REPOS_SYNC}'}
-        - {name: ENABLE_MODIFIED_SINCE_SYNC, value: '${ENABLE_MODIFIED_SINCE_SYNC}'}
-        - {name: ERRATA_PAGE_SIZE, value: '${ERRATA_PAGE_SIZE}'}
-        - {name: PACKAGES_PAGE_SIZE, value: '${PACKAGES_PAGE_SIZE}'}
-        - {name: ENABLE_CYNDI_METRICS, value: '${ENABLE_CYNDI_METRICS}'}
         - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
-        - {name: FULL_SYNC_CADENCE,value: '${FULL_SYNC_CADENCE}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_VMAAS_SYNC}'}
+        - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_VMAAS_SYNC}', memory: '${RES_LIMIT_MEM_VMAAS_SYNC}'}
           requests: {cpu: '${RES_REQUEST_CPU_VMAAS_SYNC}', memory: '${RES_REQUEST_MEM_VMAAS_SYNC}'}
@@ -334,8 +317,8 @@ objects:
         - {name: DB_USER, value: vmaas_sync}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                       key: vmaas-sync-database-password}}}
-        - {name: DELETE_CULLED_SYSTEMS_LIMIT, value: '${DELETE_CULLED_SYSTEMS_LIMIT}'}
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
+        - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
 
     - name: package-refresh
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -369,6 +352,7 @@ objects:
         - {name: DB_READ_REPLICA_ENABLED, value: '${DB_READ_REPLICA_ENABLED_JOBS}'}
         - {name: DB_WORK_MEM, value: '${DB_WORK_MEM}'}
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
+        - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
 
     - name: advisory-refresh
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -395,7 +379,7 @@ objects:
         - {name: DB_USER, value: vmaas_sync}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                       key: vmaas-sync-database-password}}}
-        - {name: SKIP_N_ACCOUNTS_REFRESH, value: '${SKIP_N_ACCOUNTS_REFRESH}'}
+        - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
 
     - name: delete-unused
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -422,7 +406,7 @@ objects:
         - {name: DB_USER, value: vmaas_sync}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                       key: vmaas-sync-database-password}}}
-        - {name: DELETE_UNUSED_DATA_LIMIT, value: '${DELETE_UNUSED_DATA_LIMIT}'}
+        - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
 
     database:
       name: patchman
@@ -588,39 +572,27 @@ parameters:
 - {name: JOBS_TIMEOUT, value: '1800'}  # 30 min timeout for jobs
 - {name: PROMETHEUS_PUSHGATEWAY, required: true, value: "pushgateway"}
 - {name: DB_READ_REPLICA_ENABLED_JOBS, value: 'TRUE'}
+- {name: JOBS_CONFIG, value: 'vmaas_call_max_retries=8;vmaas_call_exp_retry'}
 
 # VMaaS sync
 - {name: VMAAS_SYNC_SCHEDULE, value: '*/5 * * * *'} # Cronjob schedule definition
 - {name: VMAAS_SYNC_SUSPEND, value: 'false'} # Disable cronjob execution
-- {name: ENABLE_REPO_BASED_RE_EVALUATION, value: 'true'} # Optimize re-evaluation using repositories
-- {name: ENABLE_RECALC_MESSAGES_SEND, value: 'true'} # Send re-calc messages after sync
-- {name: ENABLE_ADVISORIES_SYNC, value: 'true'} # Enable advisories sync - part of sync process.
-- {name: ENABLE_PACKAGES_SYNC, value: 'true'} # Enable packages sync - part of sync process.
-- {name: ENABLE_REPOS_SYNC, value: 'true'} # Enable repos sync - part of sync process.
-- {name: ENABLE_MODIFIED_SINCE_SYNC, value: 'false'} # Enable incremental sync using 'modified_since' param.
-- {name: ERRATA_PAGE_SIZE, value: '500'} # Requested Vmaas response page size for advisories sync
-- {name: PACKAGES_PAGE_SIZE, value: '5'} # Requested Vmaas response page size for packages sync
-- {name: ENABLE_CYNDI_METRICS, value: 'true'} # Calculate and expose metrics about Cyndi data
 - {name: RES_LIMIT_CPU_VMAAS_SYNC, value: 500m}
 - {name: RES_LIMIT_MEM_VMAAS_SYNC, value: 384Mi}
 - {name: RES_REQUEST_CPU_VMAAS_SYNC, value: 500m}
 - {name: RES_REQUEST_MEM_VMAAS_SYNC, value: 384Mi}
-- {name: FULL_SYNC_CADENCE, value: '168'}  # run full vmaas sync (default: 168h)
 - {name: GOMEMLIMIT_VMAAS_SYNC, value: '345MiB'} # set to 90% of the default memory limit 384Mi (don't forget `B`)
 # Delete unused data
 - {name: DELETE_UNUSED_SCHEDULE, value: '10 */6 * * *'} # Cronjob schedule definition
 - {name: DELETE_UNUSED_SUSPEND, value: 'true'} # Disable cronjob execution
-- {name: DELETE_UNUSED_DATA_LIMIT, value: '1000'}  # Unused data deletion limit
 # System culling
 - {name: CULLING_SCHEDULE, value: '*/10 * * * *'} # Cronjob schedule definition
 - {name: CULLING_SUSPEND, value: 'false'} # Disable cronjob execution
-- {name: DELETE_CULLED_SYSTEMS_LIMIT, value: '1000'} # Culled systems deletion limit
 # Cache refresh
 - {name: PKG_REFRESH_SCHEDULE, value: '5 11-20/2 * * *'} # Cronjob schedule definition
 - {name: PKG_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
 - {name: ADVISORY_REFRESH_SCHEDULE, value: '*/15 * * * *'} # Cronjob schedule definition
 - {name: ADVISORY_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
-- {name: SKIP_N_ACCOUNTS_REFRESH, value: '0'} # Skip advisory cache refresh for N first accounts in case the previous refresh didn't finish
 # Migrate system package data
 - {name: MIGRATE_SYSTEM_PACKAGE_DISABLED, value: 'false'}
 - {name: RES_REQUEST_CPU_MIGRATE_JOB, value: '1'}
@@ -647,8 +619,6 @@ parameters:
 - {name: GIN_MODE, value: 'release'} # Gin webframework running mode
 - {name: KAFKA_READER_MAX_ATTEMPTS, value: '3'} # Limit of how many attempts will be made before kafka read error.
 - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '10'} # Limit of how many attempts will be made before kafka write error.
-- {name: VMAAS_CALL_MAX_RETRIES, value: '8'} # Limit of how many unsuccessful vmaas calls are allowed before panic.
-- {name: VMAAS_CALL_USE_EXP_RETRY, value: 'true'} # Use exponential retry policy for vmaas call.
 - {name: MSG_BATCH_SIZE, value: '4000'} # BatchSize for PlatformEvent message
 - {name: ENABLE_PAYLOAD_TRACKER, value: 'true'} # Send status messages to payload tracker
 - {name: SSL_CERT_DIR, value: '/etc/ssl/certs:/etc/pki/tls/certs:/system/etc/security/cacerts:/cdapp/certs'}
