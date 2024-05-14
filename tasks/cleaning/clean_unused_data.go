@@ -7,13 +7,11 @@ import (
 )
 
 var (
-	enableUnusedDataDelete bool
-	deleteUnusedDataLimit  int
+	deleteUnusedDataLimit int
 )
 
 func init() {
 	deleteUnusedDataLimit = utils.GetIntEnvOrDefault("DELETE_UNUSED_DATA_LIMIT", 1000)
-	enableUnusedDataDelete = utils.GetBoolEnvOrDefault("ENABLE_UNUSED_DATA_DELETE", true)
 }
 
 func RunDeleteUnusedData() {
@@ -25,9 +23,6 @@ func RunDeleteUnusedData() {
 }
 
 func deleteUnusedPackages() {
-	if !enableUnusedDataDelete {
-		return
-	}
 	tx := tasks.CancelableDB().Begin()
 	defer tx.Rollback()
 
@@ -52,9 +47,6 @@ func deleteUnusedPackages() {
 }
 
 func deleteUnusedAdvisories() {
-	if !enableUnusedDataDelete {
-		return
-	}
 	tx := tasks.CancelableDB().Begin()
 	defer tx.Rollback()
 
