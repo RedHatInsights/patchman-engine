@@ -9,7 +9,7 @@ import (
 )
 
 func SendReevaluationMessages() error {
-	if !enableRecalcMessagesSend {
+	if !tasks.EnableRecalcMessagesSend {
 		utils.LogInfo("Recalc messages sending disabled, skipping...")
 		return nil
 	}
@@ -17,7 +17,7 @@ func SendReevaluationMessages() error {
 	var inventoryAIDs mqueue.EvalDataSlice
 	var err error
 
-	if enabledRepoBasedReeval {
+	if tasks.EnabledRepoBasedReeval {
 		inventoryAIDs, err = getCurrentRepoBasedInventoryIDs()
 	} else {
 		inventoryAIDs, err = getAllInventoryIDs()

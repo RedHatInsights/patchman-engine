@@ -97,8 +97,6 @@ var (
 		Subsystem: "vmaas_sync",
 		Name:      "advisory_incermental_sync_mismatch",
 	})
-
-	enableCyndiMetrics = utils.GetBoolEnvOrDefault("ENABLE_CYNDI_METRICS", true)
 )
 
 func Metrics() *push.Pusher {
@@ -121,7 +119,7 @@ func update() {
 	updateSystemAdvisoriesStats()
 	updateDBMetrics()
 
-	if enableCyndiMetrics {
+	if tasks.EnableCyndiMetrics {
 		updateCyndiData()
 	}
 }

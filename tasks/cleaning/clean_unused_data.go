@@ -6,14 +6,6 @@ import (
 	"app/tasks"
 )
 
-var (
-	deleteUnusedDataLimit int
-)
-
-func init() {
-	deleteUnusedDataLimit = utils.GetIntEnvOrDefault("DELETE_UNUSED_DATA_LIMIT", 1000)
-}
-
 func RunDeleteUnusedData() {
 	defer utils.LogPanics(true)
 	utils.LogInfo("Deleting unused data")
@@ -33,7 +25,7 @@ func deleteUnusedPackages() {
 		Where("NOT EXISTS" +
 			" (SELECT 1 FROM system_package2 sp WHERE" +
 			" p.id = sp.package_id OR p.id = sp.installable_id OR p.id = sp.applicable_id)",
-		).Limit(deleteUnusedDataLimit)
+		).Limit(tasks.DeleteUnusedDataLimit)
 
 	err := tx.Delete(&models.Package{}, "id IN (?)", subq).Error
 
@@ -58,7 +50,7 @@ func deleteUnusedAdvisories() {
 		Where("NOT EXISTS (SELECT 1 FROM system_advisories sa WHERE am.id = sa.advisory_id)").
 		Where("NOT EXISTS (SELECT 1 FROM package p WHERE am.id = p.advisory_id)").
 		Where("NOT EXISTS (SELECT 1 FROM advisory_account_data aad WHERE am.id = aad.advisory_id)").
-		Limit(deleteUnusedDataLimit)
+		Limit(tasks.DeleteUnusedDataLimit)
 
 	err := tx.Delete(&models.AdvisoryMetadata{}, "id IN (?)", subq).Error
 

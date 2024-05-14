@@ -6,13 +6,8 @@ import (
 	"app/tasks"
 )
 
-var (
-	deleteCulledSystemsLimit int
-)
-
 func configure() {
 	core.ConfigureApp()
-	deleteCulledSystemsLimit = utils.GetIntEnvOrDefault("DELETE_CULLED_SYSTEMS_LIMIT", 1000)
 }
 
 func RunSystemCulling() {

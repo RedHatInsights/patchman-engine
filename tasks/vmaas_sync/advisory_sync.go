@@ -269,7 +269,7 @@ func storeAdvisories(data map[string]vmaas.ErrataResponseErrataList) error {
 }
 
 func downloadAndProcessErratasPage(iPage int, modifiedSince *string) (*vmaas.ErrataResponse, error) {
-	errataResponse, err := vmaasErrataRequest(iPage, modifiedSince, advisoryPageSize)
+	errataResponse, err := vmaasErrataRequest(iPage, modifiedSince, tasks.AdvisoryPageSize)
 	if err != nil {
 		return nil, errors.Wrap(err, "Advisories sync failed on vmaas request")
 	}
@@ -296,7 +296,8 @@ func vmaasErrataRequest(iPage int, modifiedSince *string, pageSize int) (*vmaas.
 		return &vmaasData, resp, err
 	}
 
-	vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc, vmaasCallExpRetry, vmaasCallMaxRetries)
+	vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc,
+		tasks.VmaasCallExpRetry, tasks.VmaasCallMaxRetries)
 	if err != nil {
 		vmaasCallCnt.WithLabelValues("error-download-errata").Inc()
 		return nil, errors.Wrap(err, "Downloading erratas")

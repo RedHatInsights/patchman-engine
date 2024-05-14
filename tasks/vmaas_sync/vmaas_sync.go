@@ -12,38 +12,25 @@ import (
 	"app/tasks/caches"
 	"net/http"
 
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 )
 
 var (
-	vmaasClient              *api.Client
-	vmaasErratasURL          string
-	vmaasPkgListURL          string
-	vmaasReposURL            string
-	vmaasDBChangeURL         string
-	evalWriter               mqueue.Writer
-	advisoryPageSize         int
-	packagesPageSize         int
-	enabledRepoBasedReeval   bool
-	enableRecalcMessagesSend bool
-	enableAdvisoriesSync     bool
-	enablePackagesSync       bool
-	enableReposSync          bool
-	enableModifiedSinceSync  bool
-	vmaasCallExpRetry        bool
-	vmaasCallMaxRetries      int
-	fullSyncCadence          int
+	vmaasClient      *api.Client
+	vmaasErratasURL  string
+	vmaasPkgListURL  string
+	vmaasReposURL    string
+	vmaasDBChangeURL string
+	evalWriter       mqueue.Writer
 )
 
 func Configure() {
 	core.ConfigureApp()
-	useTraceLevel := strings.ToLower(utils.Getenv("LOG_LEVEL", "INFO")) == "trace"
 	vmaasClient = &api.Client{
 		HTTPClient: &http.Client{},
-		Debug:      useTraceLevel,
+		Debug:      tasks.UseTraceLevel,
 	}
 	vmaasAddress := utils.FailIfEmpty(utils.CoreCfg.VmaasAddress, "VMAAS_ADDRESS")
 	vmaasErratasURL = vmaasAddress + base.VMaaSAPIPrefix + "/errata"
@@ -52,28 +39,13 @@ func Configure() {
 	vmaasDBChangeURL = vmaasAddress + base.VMaaSAPIPrefix + "/dbchange"
 	evalTopic := utils.FailIfEmpty(utils.CoreCfg.EvalTopic, "EVAL_TOPIC")
 	evalWriter = mqueue.NewKafkaWriterFromEnv(evalTopic)
-	enabledRepoBasedReeval = utils.GetBoolEnvOrDefault("ENABLE_REPO_BASED_RE_EVALUATION", true)
-	enableRecalcMessagesSend = utils.GetBoolEnvOrDefault("ENABLE_RECALC_MESSAGES_SEND", true)
-
-	enableAdvisoriesSync = utils.GetBoolEnvOrDefault("ENABLE_ADVISORIES_SYNC", true)
-	enablePackagesSync = utils.GetBoolEnvOrDefault("ENABLE_PACKAGES_SYNC", true)
-	enableReposSync = utils.GetBoolEnvOrDefault("ENABLE_REPOS_SYNC", true)
-	enableModifiedSinceSync = utils.GetBoolEnvOrDefault("ENABLE_MODIFIED_SINCE_SYNC", true)
-
-	advisoryPageSize = utils.GetIntEnvOrDefault("ERRATA_PAGE_SIZE", 500)
-	packagesPageSize = utils.GetIntEnvOrDefault("PACKAGES_PAGE_SIZE", 5)
-
-	vmaasCallMaxRetries = utils.GetIntEnvOrDefault("VMAAS_CALL_MAX_RETRIES", 0)  // 0 - retry forever
-	vmaasCallExpRetry = utils.GetBoolEnvOrDefault("VMAAS_CALL_EXP_RETRY", false) // false - retry periodically
-
-	fullSyncCadence = utils.GetIntEnvOrDefault("FULL_SYNC_CADENCE", 24*7) // run full sync once in 7 days by default
 }
 
 func runSync() {
 	utils.LogInfo("Starting vmaas-sync job")
 
 	var lastModified *types.Rfc3339TimestampWithZ
-	if enableModifiedSinceSync {
+	if tasks.EnableModifiedSinceSync {
 		lastModified = GetLastSync(VmaasExported)
 	}
 	vmaasExportedTS := VmaasDBExported()
@@ -108,25 +80,25 @@ func SyncData(lastModifiedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *type
 
 	lastModified := database.Timestamp2Str(lastModifiedTS)
 	if lastFullSyncTS != nil {
-		nextFullSync := lastFullSyncTS.Time().Add(time.Duration(fullSyncCadence) * time.Hour)
+		nextFullSync := lastFullSyncTS.Time().Add(time.Duration(tasks.FullSyncCadence) * time.Hour)
 		if syncStart.After(nextFullSync) {
 			lastModified = nil // set to `nil` to do a full vmaas sync
 		}
 	}
 
-	if enableAdvisoriesSync {
+	if tasks.EnableAdvisoriesSync {
 		if err := syncAdvisories(syncStart, lastModified); err != nil {
 			return errors.Wrap(err, "Failed to sync advisories")
 		}
 	}
 
-	if enablePackagesSync {
+	if tasks.EnablePackagesSync {
 		if err := syncPackages(syncStart, lastModified); err != nil {
 			return errors.Wrap(err, "Failed to sync packages")
 		}
 	}
 
-	if enableReposSync {
+	if tasks.EnableReposSync {
 		if err := syncRepos(syncStart); err != nil {
 			return errors.Wrap(err, "Failed to sync repos")
 		}

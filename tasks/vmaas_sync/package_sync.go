@@ -89,7 +89,7 @@ func downloadAndProcessPkgListPage(iPage int, modifiedSince *string) (*vmaas.Pkg
 func vmaasPkgListRequest(iPage int, modifiedSince *string) (*vmaas.PkgListResponse, error) {
 	request := vmaas.PkgListRequest{
 		Page:          iPage,
-		PageSize:      packagesPageSize,
+		PageSize:      tasks.PackagesPageSize,
 		ModifiedSince: modifiedSince,
 	}
 
@@ -99,7 +99,8 @@ func vmaasPkgListRequest(iPage int, modifiedSince *string) (*vmaas.PkgListRespon
 		return &vmaasData, resp, err
 	}
 
-	vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc, vmaasCallExpRetry, vmaasCallMaxRetries)
+	vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc,
+		tasks.VmaasCallExpRetry, tasks.VmaasCallMaxRetries)
 	if err != nil {
 		vmaasCallCnt.WithLabelValues("error-download-pkglist-response").Inc()
 		return nil, errors.Wrap(err, "Downloading pkglist response")

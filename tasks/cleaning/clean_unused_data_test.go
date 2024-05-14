@@ -33,10 +33,7 @@ func TestCleanUnusedPackages(t *testing.T) {
 	database.CheckEVRAsInDBSynced(t, 1, false, evra)
 
 	// delete unused
-	currentDeleteStatus := enableUnusedDataDelete
-	enableUnusedDataDelete = true
 	deleteUnusedPackages()
-	enableUnusedDataDelete = currentDeleteStatus
 
 	// is package deleted?
 	database.CheckEVRAsInDB(t, 0, evra)
@@ -83,10 +80,7 @@ func TestCleanUnusedAdvisories(t *testing.T) {
 	database.DB.Model(models.AdvisoryMetadata{}).Where("name = ?", "RH-100").Count(&rh100count)
 
 	// delete unused
-	currentDeleteStatus := enableUnusedDataDelete
-	enableUnusedDataDelete = true
 	deleteUnusedAdvisories()
-	enableUnusedDataDelete = currentDeleteStatus
 
 	// is custom advisory deleted?
 	var count int64
