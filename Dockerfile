@@ -10,7 +10,7 @@ RUN rpm -Uvh http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/Packages/
     sed -i 's/^\(enabled.*\)/\1\npriority=200/;' /etc/yum.repos.d/CentOS*.repo
 
 RUN dnf module -y enable postgresql:16 && \
-    dnf install -y go-toolset postgresql git-core diffutils rpm-devel && \
+    dnf install -y go-toolset postgresql diffutils rpm-devel && \
     ln -s /usr/libexec/platform-python /usr/bin/python3
 
 ENV GOPATH=/go \
