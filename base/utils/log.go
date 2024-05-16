@@ -11,11 +11,9 @@ import (
 // configure logging using env variables
 func ConfigureLogging() {
 	InitLogging(log.DebugLevel)
-	strlevel := Getenv("LOG_LEVEL", "INFO")
-	level := parseLogLevel(strlevel)
+	level := parseLogLevel(CoreCfg.LogLevel)
 	log.SetLevel(level)
-	style := os.Getenv("LOG_STYLE")
-	if style == "json" {
+	if CoreCfg.LogStyle == "json" {
 		initJSONLogStyle()
 	}
 	trySetupCloudWatchLogging()

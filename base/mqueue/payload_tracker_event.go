@@ -22,7 +22,7 @@ type PayloadTrackerEvent struct {
 
 type PayloadTrackerEvents []PayloadTrackerEvent
 
-var enablePayloadTracker = utils.GetBoolEnvOrDefault("ENABLE_PAYLOAD_TRACKER", true)
+var enablePayloadTracker = utils.PodConfig.GetBool("payload_tracker", true)
 
 func (event *PayloadTrackerEvent) write(ctx context.Context, w Writer) error {
 	data, err := json.Marshal(event)
