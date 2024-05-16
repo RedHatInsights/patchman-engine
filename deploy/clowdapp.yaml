@@ -35,7 +35,6 @@ objects:
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
-        - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_DATABASE_ADMIN}'}
         - {name: POD_CONFIG, value: '${ADMIN_CONFIG}'}
 
@@ -63,8 +62,6 @@ objects:
             - {name: DB_DEBUG, value: '${DB_DEBUG_DATABASE_ADMIN}'}
             - {name: GIN_MODE, value: '${GIN_MODE}'}
             - {name: SHOW_CLOWDER_VARS, value: ''}
-            - {name: SHOW_CLOWDER_VARS, value: ''}
-            - {name: WAIT_FOR_DB, value: 'empty'}
             - {name: MANAGER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                                   key: manager-database-password}}}
             - {name: LISTENER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
@@ -147,7 +144,6 @@ objects:
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: TEMPLATE_TOPIC, value: platform.content-sources.template}
-        - {name: ENABLE_PAYLOAD_TRACKER, value: '${ENABLE_PAYLOAD_TRACKER}'}
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_LISTENER}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_LISTENER}'}
         - {name: POD_CONFIG, value: '${LISTENER_CONFIG}'}
@@ -192,9 +188,6 @@ objects:
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: NOTIFICATIONS_TOPIC, value: 'platform.notifications.ingress'}
-        - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
-        - {name: ENABLE_PAYLOAD_TRACKER, value: '${ENABLE_PAYLOAD_TRACKER}'}
-        - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_UPLOAD}'}
@@ -240,14 +233,11 @@ objects:
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: NOTIFICATIONS_TOPIC, value: 'platform.notifications.ingress'}
-        - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
-        - {name: ENABLE_PAYLOAD_TRACKER, value: 'false'}  # we don't need to send payload tracker messages from recalc
-        - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_RECALC}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
-        - {name: POD_CONFIG, value: 'label=recalc;${EVALUATOR_RECALC_CONFIG}'}
+        - {name: POD_CONFIG, value: 'label=recalc;payload_tracker=false;${EVALUATOR_RECALC_CONFIG}'}
         resources:
           limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_RECALC}', memory: '${RES_LIMIT_MEM_EVALUATOR_RECALC}'}
           requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_RECALC}', memory: '${RES_REQUEST_MEM_EVALUATOR_RECALC}'}
@@ -282,10 +272,8 @@ objects:
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
-        - {name: MSG_BATCH_SIZE, value: '${MSG_BATCH_SIZE}'}
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
-        - {name: USE_VMAAS_GO, value: '${USE_VMAAS_GO}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_VMAAS_SYNC}'}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
         resources:
@@ -537,7 +525,6 @@ parameters:
 - {name: LISTENER_CONFIG, value: 'consumer_count=8;allowed_reporters=puptoo,rhsm-system-profile-bridge;excluded_host_types=edge'}
 
 # Evaluator
-- {name: USE_VMAAS_GO, value: 'true'}
 - {name: GOGC, value: '100'}
 - {name: GOMEMLIMIT_EVALUATOR, value: '922MiB'} # set to 90% of the default memory limit 1024Mi (don't forget `B`)
 
@@ -603,7 +590,7 @@ parameters:
 - {name: RES_REQUEST_CPU_DATABASE_ADMIN, value: 100m}
 - {name: RES_REQUEST_MEM_DATABASE_ADMIN, value: 128Mi}
 - {name: GOMEMLIMIT_DATABASE_ADMIN, value: '115MiB'} # set to 90% of the default memory limit 128Mi (don't forget `B`)
-- {name: DATABASE_ADMIN_CONFIG, value: ''} # Set 'schema_version=XXX' if need specific database schema
+- {name: DATABASE_ADMIN_CONFIG, value: 'wait_for_db=empty'} # Set 'schema_version=XXX' if need specific database schema
                                            # 'force_schema_version=XXX' to reset the dirty flag to false and force the specific version, it will follow up with the schema upgrade defined by schema_version
 
 # Common parameters
@@ -612,8 +599,6 @@ parameters:
 - {name: GIN_MODE, value: 'release'} # Gin webframework running mode
 - {name: KAFKA_READER_MAX_ATTEMPTS, value: '3'} # Limit of how many attempts will be made before kafka read error.
 - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '10'} # Limit of how many attempts will be made before kafka write error.
-- {name: MSG_BATCH_SIZE, value: '4000'} # BatchSize for PlatformEvent message
-- {name: ENABLE_PAYLOAD_TRACKER, value: 'true'} # Send status messages to payload tracker
 - {name: SSL_CERT_DIR, value: '/etc/ssl/certs:/etc/pki/tls/certs:/system/etc/security/cacerts:/cdapp/certs'}
 - {name: DB_WORK_MEM, value: '512000'} # How much memory can query use (used for packages queries) in kB - 500MB, postgres default is 4MB
 

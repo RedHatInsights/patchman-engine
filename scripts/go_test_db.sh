@@ -12,7 +12,7 @@ go run main.go migrate $MIGRATION_FILES
 gotestsum --format=standard-verbose -- -v app/database_admin
 
 # Fill database with testing data
-WAIT_FOR_DB=full go run ./scripts/feed_db.go feed
+go run ./scripts/feed_db.go feed
 
 # Normal test run - everything except database schema test
 TEST_DIRS=$(go list -buildvcs=false ./... | grep -v "app/database_admin")
