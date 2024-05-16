@@ -86,6 +86,10 @@ type coreConfig struct {
 
 	// profiler
 	ProfilerEnabled bool
+
+	// logging
+	LogLevel string
+	LogStyle string
 }
 
 func init() {
@@ -104,6 +108,7 @@ func init() {
 	initServicesFromEnv()
 	initPrometheusPushGatewayFromEnv()
 	initProfilerFromEnv()
+	initLoggerFromEnv()
 }
 
 func initDBFromEnv() {
@@ -229,7 +234,7 @@ type PrivateEndpoint clowder.PrivateDependencyEndpoint
 
 func initServicesFromClowder() {
 	webappName := "webapp-service"
-	if GetBoolEnvOrDefault("USE_VMAAS_GO", false) {
+	if PodConfig.GetBool("use_vmaas_go", true) {
 		webappName = "webapp-go"
 	}
 	for _, endpoint := range clowder.LoadedConfig.Endpoints {
@@ -301,6 +306,11 @@ func initPrometheusPushGatewayFromEnv() {
 
 func initProfilerFromEnv() {
 	CoreCfg.ProfilerEnabled = GetBoolEnvOrDefault("ENABLE_PROFILER", false)
+}
+
+func initLoggerFromEnv() {
+	CoreCfg.LogLevel = Getenv("LOG_LEVEL", "INFO")
+	CoreCfg.LogStyle = Getenv("LOG_STYLE", "plain")
 }
 
 // PrintClowderParams Print Clowder params to export environment variables.

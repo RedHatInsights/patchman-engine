@@ -9,7 +9,7 @@ import (
 )
 
 func SkipWithoutDB(t *testing.T) {
-	if !GetBoolEnvOrDefault("USE_TESTING_DB", false) {
+	if !PodConfig.GetBool("use_testing_db", false) {
 		t.Skip("testing database not used - skipping")
 	}
 }

@@ -9,7 +9,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-var BatchSize = utils.GetIntEnvOrDefault("MSG_BATCH_SIZE", 4000)
+var BatchSize = utils.PodConfig.GetInt("msg_batch_size", 4000)
 
 var policy = backoff.NewExponential(
 	backoff.WithInterval(time.Second),

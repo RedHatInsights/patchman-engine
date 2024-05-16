@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var rbacPermissions = utils.Getenv("RBAC_PERMISSIONS", "patch:*:read")
+var rbacPermissions = utils.PodConfig.GetString("rbac_permissions", "patch:*:read")
 
 var inventoryGroup = "inventory-group-1"
 

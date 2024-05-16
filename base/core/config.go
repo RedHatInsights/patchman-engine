@@ -11,13 +11,14 @@ var (
 	DefaultLimit  = 20
 	DefaultOffset = 0
 	testSetupRan  = false
+	dbWait        = utils.PodConfig.GetString("wait_for_db", "UNSET")
 )
 
 func ConfigureApp() {
 	utils.ConfigureLogging()
 	database.Configure()
 	metrics.Configure()
-	database.DBWait(utils.Getenv("WAIT_FOR_DB", "UNSET"))
+	database.DBWait(dbWait)
 }
 
 func SetupTestEnvironment() {
