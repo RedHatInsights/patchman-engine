@@ -522,7 +522,7 @@ parameters:
 - {name: RES_REQUEST_MEM_LISTENER, value: 192Mi}
 - {name: ENABLE_PROFILER_LISTENER, value: 'false'}
 - {name: GOMEMLIMIT_LISTENER, value: '172MiB'} # set to 90% of the default memory limit 192Mi (don't forget `B`)
-- {name: LISTENER_CONFIG, value: 'consumer_count=8;allowed_reporters=puptoo,rhsm-system-profile-bridge;excluded_host_types=edge'}
+- {name: LISTENER_CONFIG, value: 'allowed_reporters=puptoo,rhsm-system-profile-bridge;excluded_host_types=edge'}
 
 # Evaluator
 - {name: GOGC, value: '100'}
@@ -550,7 +550,7 @@ parameters:
 - {name: RES_REQUEST_CPU_EVALUATOR_RECALC, value: 256m}
 - {name: RES_REQUEST_MEM_EVALUATOR_RECALC, value: 1024Mi}
 - {name: ENABLE_PROFILER_EVALUATOR_RECALC, value: 'false'}
-- {name: EVALUATOR_RECALC_CONFIG, value: 'consumer_count=8'}
+- {name: EVALUATOR_RECALC_CONFIG, value: ''}
 
 # JOBS
 - {name: IMAGE_TAG_JOBS, value: v3.6.68}
