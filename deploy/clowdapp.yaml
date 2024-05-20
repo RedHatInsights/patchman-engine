@@ -559,7 +559,7 @@ parameters:
 - {name: JOBS_TIMEOUT, value: '1800'}  # 30 min timeout for jobs
 - {name: PROMETHEUS_PUSHGATEWAY, required: true, value: "pushgateway"}
 - {name: DB_READ_REPLICA_ENABLED_JOBS, value: 'TRUE'}
-- {name: JOBS_CONFIG, value: 'vmaas_call_max_retries=8;vmaas_call_exp_retry'}
+- {name: JOBS_CONFIG, value: ''}
 
 # VMaaS sync
 - {name: VMAAS_SYNC_SCHEDULE, value: '*/5 * * * *'} # Cronjob schedule definition
