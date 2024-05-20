@@ -33,9 +33,9 @@ var (
 	// Page size for /packages vmass API call
 	PackagesPageSize = utils.PodConfig.GetInt("packages_page_size", 5)
 	// Number of retries for vmaas API calls, 0 - retry forever
-	VmaasCallMaxRetries = utils.PodConfig.GetInt("vmaas_call_max_retries", 0)
+	VmaasCallMaxRetries = utils.PodConfig.GetInt("vmaas_call_max_retries", 8)
 	// Use eponential retry timeouts, false - retry periodically
-	VmaasCallExpRetry = utils.PodConfig.GetBool("vmaas_call_exp_retry", false)
+	VmaasCallExpRetry = utils.PodConfig.GetBool("vmaas_call_exp_retry", true)
 	// How ofter run full vmaas sync, 7 days by default
 	FullSyncCadence = utils.PodConfig.GetInt("full_sync_cadence", 24*7)
 )
