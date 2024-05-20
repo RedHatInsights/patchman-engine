@@ -144,7 +144,7 @@ func TestRun(t *testing.T) {
 	wg := sync.WaitGroup{}
 	run(&wg, mqueue.CreateCountedMockReader(&nReaders))
 	wg.Wait()
-	assert.Equal(t, 8, int(nReaders)) // 8 - is default
+	assert.Equal(t, consumerCount, int(nReaders)) // 1 - is default
 }
 
 func TestVMaaSUpdatesCall(t *testing.T) {
