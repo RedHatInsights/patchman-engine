@@ -11,7 +11,7 @@ var (
 	DefaultLimit  = 20
 	DefaultOffset = 0
 	testSetupRan  = false
-	dbWait        = utils.PodConfig.GetString("wait_for_db", "UNSET")
+	dbWait        = utils.PodConfig.GetString("wait_for_db", "empty")
 )
 
 func ConfigureApp() {

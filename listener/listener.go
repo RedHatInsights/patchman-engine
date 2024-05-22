@@ -52,9 +52,9 @@ func configureListener() {
 		templatesConsumers = utils.PodConfig.GetInt("template_consumers", 1)
 	}
 	// Comma-separated list of reporters to include into processing
-	allowedReporters = utils.PodConfig.GetStringSet("allowed_reporters", "")
+	allowedReporters = utils.PodConfig.GetStringSet("allowed_reporters", "puptoo,rhsm-system-profile-bridge")
 	// Comma-separated list of host types to exclude from processing
-	excludedHostTypes = utils.PodConfig.GetStringSet("excluded_host_types", "")
+	excludedHostTypes = utils.PodConfig.GetStringSet("excluded_host_types", "edge")
 	// Toggle bypass (fake) messages processing
 	enableBypass = utils.PodConfig.GetBool("bypass", false)
 	// How long to collect upload messages before grouping them and sending to evaluator
