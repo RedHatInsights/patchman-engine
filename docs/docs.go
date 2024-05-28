@@ -80,7 +80,7 @@ func filterOpenAPI(config EndpointsConfig, inputOpenapiPath, outputOpenapiPath s
 	panicErr(err)
 
 	filteredPaths := openapi3.Paths{}
-	for path := range sw.Paths {
+	for path := range sw.Paths.Map() {
 		if !config.EnableBaselines && strings.Contains(path, "/baselines") {
 			removedPaths++
 			continue
@@ -89,10 +89,10 @@ func filterOpenAPI(config EndpointsConfig, inputOpenapiPath, outputOpenapiPath s
 			removedPaths++
 			continue
 		}
-		filteredPaths[path] = sw.Paths[path]
+		filteredPaths.Set(path, sw.Paths.Value(path))
 	}
 
-	sw.Paths = filteredPaths
+	sw.Paths = &filteredPaths
 	outputBytes, err := sw.MarshalJSON()
 	panicErr(err)
 
