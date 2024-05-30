@@ -48,23 +48,39 @@ func getRepoBasedInventoryIDs(repoPackages [][]string, repos []string) ([]mqueue
 		return ids, nil
 	}
 
-	query := tasks.CancelableDB().Table("system_repo sr").
+	// unique repo names from both repoPackages and repos
+	uniqRepos := make(map[string]bool)
+	for _, r := range repoPackages {
+		uniqRepos[r[0]] = true
+	}
+	for _, r := range repos {
+		uniqRepos[r] = true
+	}
+	uniqRepoList := make([]string, 0, len(uniqRepos))
+	for k := range uniqRepos {
+		uniqRepoList = append(uniqRepoList, k)
+	}
+
+	innerQuery := database.DB.Table("system_repo sr").
 		Joins("JOIN repo ON repo.id = sr.repo_id").
 		Joins("JOIN system_platform sp ON  sp.rh_account_id = sr.rh_account_id AND sp.id = sr.system_id").
 		Joins("JOIN rh_account ra ON ra.id = sp.rh_account_id").
-		Order("sp.rh_account_id").
-		Select("distinct sp.inventory_id, sp.rh_account_id, ra.org_id")
+		Select("distinct sp.id, sp.inventory_id, sp.rh_account_id, ra.org_id, repo.name").
+		Where("repo.name IN (?)", uniqRepoList)
+	query := tasks.CancelableDB().Table("(?) as rb", innerQuery).
+		Order("rb.rh_account_id").
+		Select("distinct rb.inventory_id, rb.rh_account_id, rb.org_id")
 	whereQ := database.DB
 
 	if len(repoPackages) > 0 {
 		query = query.
-			Joins("JOIN system_package2 spkg ON spkg.rh_account_id = sp.rh_account_id AND spkg.system_id = sp.id").
+			Joins("JOIN system_package2 spkg ON spkg.rh_account_id = rb.rh_account_id AND spkg.system_id = rb.id").
 			Joins("JOIN package_name pn ON pn.id = spkg.name_id")
-		whereQ = whereQ.Where("(repo.name, pn.name) IN (?)", repoPackages)
+		whereQ = whereQ.Where("(rb.name, pn.name) IN (?)", repoPackages)
 	}
 
 	if len(repos) > 0 {
-		whereQ = whereQ.Or("repo.name IN (?)", repos)
+		whereQ = whereQ.Or("rb.name IN (?)", repos)
 	}
 
 	if err := query.Where(whereQ).Scan(&ids).Error; err != nil {
