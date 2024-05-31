@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (125, false);
+VALUES (126, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -692,6 +692,7 @@ CREATE TABLE IF NOT EXISTS template
     creator       TEXT              CHECK (NOT empty(creator)),
     published     TIMESTAMP WITH TIME ZONE,
     last_edited   TIMESTAMP WITH TIME ZONE,
+    environment_id TEXT             NOT NULL CHECK (not empty(environment_id)),
     PRIMARY KEY (rh_account_id, id),
     UNIQUE(rh_account_id, uuid)
 ) PARTITION BY HASH (rh_account_id);
