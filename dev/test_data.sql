@@ -25,11 +25,11 @@ INSERT INTO baseline (id, rh_account_id, name, config, description) VALUES
 (3, 1, 'baseline_1-3', '{"to_time": "2000-01-01T00:00:00+00:00"}', NULL),
 (4, 3, 'baseline_3-4', '{"to_time": "2000-01-01T00:00:00+00:00"}', NULL);
 
-INSERT INTO template (id, rh_account_id, uuid, name, description, config, creator) VALUES
-(1, 1, '99900000-0000-0000-0000-000000000001', 'temp1-1', 'desc1', '{"to_time": "2010-09-22T00:00:00+00:00"}', 'user1'),
-(2, 1, '99900000-0000-0000-0000-000000000002', 'temp2-1', 'desc2', '{"to_time": "2021-01-01T00:00:00+00:00"}', 'user2'),
-(3, 1, '99900000-0000-0000-0000-000000000003', 'temp3-1',    NULL, '{"to_time": "2000-01-01T00:00:00+00:00"}', 'user3'),
-(4, 3, '99900000-0000-0000-0000-000000000004', 'temp4-3', 'desc4', '{"to_time": "2000-01-01T00:00:00+00:00"}', 'user4');
+INSERT INTO template (id, rh_account_id, uuid, environment_id, name, description, config, creator) VALUES
+(1, 1, '99900000-0000-0000-0000-000000000001', '99900000000000000000000000000001', 'temp1-1', 'desc1', '{"to_time": "2010-09-22T00:00:00+00:00"}', 'user1'),
+(2, 1, '99900000-0000-0000-0000-000000000002', '99900000000000000000000000000002', 'temp2-1', 'desc2', '{"to_time": "2021-01-01T00:00:00+00:00"}', 'user2'),
+(3, 1, '99900000-0000-0000-0000-000000000003', '99900000000000000000000000000003', 'temp3-1',    NULL, '{"to_time": "2000-01-01T00:00:00+00:00"}', 'user3'),
+(4, 3, '99900000-0000-0000-0000-000000000004', '99900000000000000000000000000004', 'temp4-3', 'desc4', '{"to_time": "2000-01-01T00:00:00+00:00"}', 'user4');
 
 INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id, reporter_id, vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_installable, packages_applicable, third_party, baseline_id, baseline_uptodate, template_id) VALUES
 (1, '00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2020-09-22 12:00:00-04',0,0,0, true, 1, true, 1),

@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -24,12 +25,14 @@ func createTempateMsg(t *testing.T, eventName, orgID string, nTemplates int) mqu
 	templates := make([]mqueue.TemplateResponse, nTemplates)
 	for i := 0; i < nTemplates; i++ {
 		description := fmt.Sprintf("Template%d description", i)
+		uuid := fmt.Sprintf("77777777-0000-0000-0000-00000000000%1d", i)
 		templates[i] = mqueue.TemplateResponse{
-			UUID:        fmt.Sprintf("77777777-0000-0000-0000-00000000000%1d", i),
-			Name:        fmt.Sprintf("Template%d", i),
-			OrgID:       orgID,
-			Description: &description,
-			Date:        time.Now(),
+			UUID:          uuid,
+			EnvironmentID: strings.ReplaceAll(uuid, "-", ""),
+			Name:          fmt.Sprintf("Template%d", i),
+			OrgID:         orgID,
+			Description:   &description,
+			Date:          time.Now(),
 		}
 	}
 

@@ -164,6 +164,7 @@ var templates = []mqueue.TemplateResponse{
 		Version:         "1",
 		Date:            time.Now(),
 		RepositoryUUIDS: []string{"20000000-0000-0000-0000-000000000001"},
+		EnvironmentID:   "10000000000000000000000000000001",
 	},
 	{
 		UUID:            "10000000-0000-0000-0000-000000000002",
@@ -174,6 +175,7 @@ var templates = []mqueue.TemplateResponse{
 		Version:         "1",
 		Date:            time.Now(),
 		RepositoryUUIDS: []string{"20000000-0000-0000-0000-000000000001", "20000000-0000-0000-0000-000000000002"},
+		EnvironmentID:   "10000000000000000000000000000002",
 	},
 }
 

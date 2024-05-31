@@ -6,6 +6,7 @@ import (
 	"app/base/utils"
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -493,7 +494,7 @@ func DeleteSystem(t *testing.T, inventoryID string) {
 
 func CreateTemplate(t *testing.T, account int, uuid string, inventoryIDs []string) {
 	template := &models.Template{
-		RhAccountID: account, UUID: uuid, Name: uuid,
+		RhAccountID: account, UUID: uuid, Name: uuid, EnvironmentID: strings.ReplaceAll(uuid, "-", ""),
 	}
 
 	tx := DB.Begin()
