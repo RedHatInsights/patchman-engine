@@ -41,10 +41,11 @@ func (Baseline) TableName() string {
 }
 
 type Template struct {
-	ID          int64 `gorm:"primaryKey"`
-	RhAccountID int   `gorm:"primaryKey"`
-	UUID        string
-	Name        string
+	ID            int64 `gorm:"primaryKey"`
+	RhAccountID   int   `gorm:"primaryKey"`
+	UUID          string
+	EnvironmentID string
+	Name          string
 	// Config      pgtype.JSONB // currently unused
 	Description *string
 	Creator     *string // pointer for compatibility with previous API versions
