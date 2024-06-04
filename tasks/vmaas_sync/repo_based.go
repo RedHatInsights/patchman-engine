@@ -72,11 +72,13 @@ func getRepoBasedInventoryIDs(repoPackages [][]string, repos []string) ([]mqueue
 		Select("distinct rb.inventory_id, rb.rh_account_id, rb.org_id")
 	whereQ := database.DB
 
-	if len(repoPackages) > 0 {
+	if len(repoPackages) > 0 && len(repoPackages) < tasks.MaxChangedPackages {
 		query = query.
 			Joins("JOIN system_package2 spkg ON spkg.rh_account_id = rb.rh_account_id AND spkg.system_id = rb.id").
 			Joins("JOIN package_name pn ON pn.id = spkg.name_id")
 		whereQ = whereQ.Where("(rb.name, pn.name) IN (?)", repoPackages)
+	} else {
+		whereQ = whereQ.Where("rb.name IN (?)", uniqRepoList)
 	}
 
 	if len(repos) > 0 {

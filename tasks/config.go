@@ -37,5 +37,6 @@ var (
 	// Use eponential retry timeouts, false - retry periodically
 	VmaasCallExpRetry = utils.PodConfig.GetBool("vmaas_call_exp_retry", true)
 	// How ofter run full vmaas sync, 7 days by default
-	FullSyncCadence = utils.PodConfig.GetInt("full_sync_cadence", 24*7)
+	FullSyncCadence    = utils.PodConfig.GetInt("full_sync_cadence", 24*7)
+	MaxChangedPackages = utils.PodConfig.GetInt("max_changed_packages", 30000)
 )
