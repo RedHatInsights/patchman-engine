@@ -43,6 +43,7 @@ func BaselineDeleteHandler(c *gin.Context) {
 	tx := middlewares.DBFromContext(c).Begin()
 	defer tx.Rollback()
 
+	inventoryAIDs := kafka.GetInventoryIDsToEvaluate(tx, &baselineID, account, true, nil)
 	err = tx.Model(models.SystemPlatform{}).
 		Where("rh_account_id = ? AND baseline_id = ?", account, baselineID).
 		Select("baseline_id").
@@ -53,7 +54,6 @@ func BaselineDeleteHandler(c *gin.Context) {
 		return
 	}
 
-	inventoryAIDs := kafka.GetInventoryIDsToEvaluate(tx, &baselineID, account, true, nil)
 	deleteQuery := tx.Where("rh_account_id = ? AND id = ?", account, baselineID).
 		Delete(&models.Baseline{})
 	err = deleteQuery.Error
