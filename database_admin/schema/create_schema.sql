@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (126, false);
+VALUES (127, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -693,6 +693,8 @@ CREATE TABLE IF NOT EXISTS template
     published     TIMESTAMP WITH TIME ZONE,
     last_edited   TIMESTAMP WITH TIME ZONE,
     environment_id TEXT             NOT NULL CHECK (not empty(environment_id)),
+    arch           TEXT             CHECK (not empty(arch)),
+    version        TEXT             CHECK (not empty(version)),
     PRIMARY KEY (rh_account_id, id),
     UNIQUE(rh_account_id, uuid)
 ) PARTITION BY HASH (rh_account_id);
@@ -742,6 +744,7 @@ CREATE TABLE IF NOT EXISTS system_platform
     packages_applicable      INT                      NOT NULL DEFAULT 0,
     template_id              BIGINT,
     yum_checksum             TEXT                     CHECK (NOT empty(yum_checksum)),
+    arch                     TEXT                     CHECK (NOT empty(arch)),
     PRIMARY KEY (rh_account_id, id),
     UNIQUE (rh_account_id, inventory_id),
     CONSTRAINT reporter_id FOREIGN KEY (reporter_id) REFERENCES reporter (id),
