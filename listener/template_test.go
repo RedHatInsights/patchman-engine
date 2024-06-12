@@ -33,6 +33,8 @@ func createTempateMsg(t *testing.T, eventName, orgID string, nTemplates int) mqu
 			OrgID:         orgID,
 			Description:   &description,
 			Date:          time.Now(),
+			Arch:          "x86_64",
+			Version:       "8",
 		}
 	}
 
