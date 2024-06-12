@@ -601,14 +601,13 @@ func processRepos(systemProfile *inventory.SystemProfile) ([]string, []string) {
 
 		if r.Enabled {
 			repos = append(repos, rID)
-		}
-
-		repoPath, err := getRepoPath(systemProfile, &r)
-		if err != nil {
-			utils.LogWarn("repo", rID, "mirrorlist", r.Mirrorlist, "base_url", r.BaseURL, "invalid repository_path")
-		}
-		if len(repoPath) > 0 {
-			repoPaths = append(repoPaths, repoPath)
+			repoPath, err := getRepoPath(systemProfile, &r)
+			if err != nil {
+				utils.LogWarn("repo", rID, "mirrorlist", r.Mirrorlist, "base_url", r.BaseURL, "invalid repository_path")
+			}
+			if len(repoPath) > 0 {
+				repoPaths = append(repoPaths, repoPath)
+			}
 		}
 	}
 	fixEpelRepos(systemProfile, repos)
