@@ -319,6 +319,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		"culled_timestamp",
 		"satellite_managed",
 		"built_pkgcache",
+		"arch",
 	}
 
 	now := time.Now()
@@ -345,6 +346,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		YumChecksum:           utils.EmptyToNil(&yumChecksum),
 		SatelliteManaged:      host.SystemProfile.SatelliteManaged,
 		BuiltPkgcache:         yumUpdates.GetBuiltPkgcache(),
+		Arch:                  host.SystemProfile.Arch,
 	}
 
 	type OldChecksums struct {

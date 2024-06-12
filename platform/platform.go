@@ -161,7 +161,7 @@ var templates = []mqueue.TemplateResponse{
 		OrgID:           "org_1",
 		Description:     &desc1,
 		Arch:            "x86_64",
-		Version:         "1",
+		Version:         "8",
 		Date:            time.Now(),
 		RepositoryUUIDS: []string{"20000000-0000-0000-0000-000000000001"},
 		EnvironmentID:   "10000000000000000000000000000001",
@@ -172,7 +172,7 @@ var templates = []mqueue.TemplateResponse{
 		OrgID:           "org_1",
 		Description:     &desc2,
 		Arch:            "x86_64",
-		Version:         "1",
+		Version:         "8",
 		Date:            time.Now(),
 		RepositoryUUIDS: []string{"20000000-0000-0000-0000-000000000001", "20000000-0000-0000-0000-000000000002"},
 		EnvironmentID:   "10000000000000000000000000000002",
@@ -334,8 +334,8 @@ func mockCreatedTemplates(c *gin.Context) {
 
 func mockUpdatedTemplates(c *gin.Context) {
 	updated := templates
-	updated[0].Version = "2"
-	updated[1].Version = "2"
+	updated[0].Version = "9"
+	updated[1].Version = "9"
 	err := sendTemplateMsg("template-updated", templates)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
