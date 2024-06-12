@@ -1,12 +1,15 @@
 package controllers
 
 import (
+	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/config"
 	"app/manager/middlewares"
 	"fmt"
 	"net/http"
+
+	errors2 "errors"
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -44,13 +47,13 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 	}
 
 	db := middlewares.DBFromContext(c)
-	templateID, err := getTemplateID(c, db, account, templateUUID)
+	template, err := getTemplate(c, db, account, templateUUID)
 	if err != nil {
 		// respose set in getTemplateID()
 		return
 	}
 
-	err = assignTemplateSystems(c, db, account, &templateID, req.Systems, groups)
+	err = assignTemplateSystems(c, db, account, template, req.Systems, groups)
 	if err != nil {
 		return
 	}
@@ -62,7 +65,7 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, templateID *int64,
+func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template *models.Template,
 	inventoryIDs []string, groups map[string]string) error {
 	if len(inventoryIDs) == 0 {
 		err := errors.New(InvalidInventoryIDsErr)
@@ -88,6 +91,18 @@ func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, templateI
 		return err
 	}
 
+	if err := templateArchVersionMatch(db, inventoryIDs, template, accountID, groups); err != nil {
+		msg := fmt.Sprintf("Incompatible template and system version or architecture: %s", err.Error())
+		LogAndRespBadRequest(c, err, msg)
+		return err
+	}
+
+	// if we want to unassign system from template, we need to set template_id=null
+	var templateID *int64
+	if template != nil && template.ID != 0 {
+		templateID = &template.ID
+	}
+
 	tx = tx.Model(models.SystemPlatform{}).
 		Where("rh_account_id = ? AND inventory_id IN (?::uuid)",
 			accountID, inventoryIDs).
@@ -108,4 +123,29 @@ func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, templateI
 		return err
 	}
 	return nil
+}
+
+func templateArchVersionMatch(
+	db *gorm.DB, inventoryIDs []string, template *models.Template, acc int, groups map[string]string,
+) error {
+	var sysArchVersions = []struct {
+		InventoryID string
+		Arch        string
+		Version     string
+	}{}
+	var err error
+	database.Systems(db, acc, groups).
+		Select("ih.id as inventory_id, ih.system_profile->'operating_system'->>'major' as version, sp.arch as arch").
+		Where("id in (?)", inventoryIDs).Find(&sysArchVersions)
+
+	for _, sys := range sysArchVersions {
+		if sys.Version != template.Version && sys.Arch != template.Arch {
+			if err == nil {
+				err = fmt.Errorf("template arch: %s, version: %s", template.Arch, template.Version)
+			}
+			systemErr := fmt.Errorf("system uuid: %s, arch: %s, version: %s", sys.InventoryID, sys.Arch, sys.Version)
+			err = errors2.Join(err, systemErr)
+		}
+	}
+	return err
 }
