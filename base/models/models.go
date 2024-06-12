@@ -46,6 +46,8 @@ type Template struct {
 	UUID          string
 	EnvironmentID string
 	Name          string
+	Arch          string
+	Version       string
 	// Config      pgtype.JSONB // currently unused
 	Description *string
 	Creator     *string // pointer for compatibility with previous API versions
@@ -92,6 +94,7 @@ type SystemPlatform struct {
 	YumChecksum                      *string `gorm:"column:yum_checksum"`
 	SatelliteManaged                 bool    `gorm:"column:satellite_managed"`
 	BuiltPkgcache                    bool    `gorm:"column:built_pkgcache"`
+	Arch                             *string
 }
 
 func (SystemPlatform) TableName() string {

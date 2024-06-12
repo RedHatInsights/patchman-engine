@@ -93,6 +93,8 @@ func TemplateUpdate(template mqueue.TemplateResponse) error {
 		UUID:          template.UUID,
 		EnvironmentID: template.EnvironmentID,
 		Name:          template.Name,
+		Arch:          template.Arch,
+		Version:       template.Version,
 		//Config:      nil,
 		Description: template.Description,
 		Creator:     nil,
