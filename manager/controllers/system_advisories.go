@@ -108,7 +108,7 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 // @Accept   json
 // @Produce  json
 // @Param    inventory_id   path    string  true    "Inventory ID"
-// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,name,type,synopsis,public_date)
 // @Param    search         query   string  false   "Find matching text"
@@ -157,7 +157,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 // @Accept   json
 // @Produce  json
 // @Param    inventory_id   path    string  true    "Inventory ID"
-// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,name,type,synopsis,public_date)
 // @Param    search         query   string  false   "Find matching text"

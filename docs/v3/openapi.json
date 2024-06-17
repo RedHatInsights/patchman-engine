@@ -25,7 +25,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -339,7 +339,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -582,7 +582,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -1041,7 +1041,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -2934,7 +2934,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -3190,7 +3190,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -3539,7 +3539,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -3670,7 +3670,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -3838,7 +3838,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -4242,7 +4242,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -4402,7 +4402,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -4533,7 +4533,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -4812,7 +4812,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -4988,7 +4988,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -5069,7 +5069,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -5596,7 +5596,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -5756,7 +5756,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -6026,7 +6026,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -6546,7 +6546,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }
@@ -6699,7 +6699,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Limit for paging, set -1 to return all",
+                        "description": "Limit for paging",
                         "schema": {
                             "type": "integer"
                         }

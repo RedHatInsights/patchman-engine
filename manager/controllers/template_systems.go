@@ -196,7 +196,7 @@ func TemplateSystemsListHandler(c *gin.Context) {
 // @Accept   json
 // @Produce  json
 // @Param    template_id    path    string  true    "Template ID"
-// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,display_name,os,installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count,applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count,last_upload)
 // @Param    search         query   string  false   "Find matching text"

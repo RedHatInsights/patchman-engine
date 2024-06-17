@@ -203,7 +203,7 @@ func systemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    limit      query   int     false   "Limit for paging, set -1 to return all"
+// @Param    limit      query   int     false   "Limit for paging"
 // @Param    offset     query   int     false   "Offset for paging"
 // @Param    sort       query   string  false   "Sort field" Enums(id,display_name,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale,packages_installed,baseline_name,groups,satellite_managed,built_pkgcache)
 // @Param    search     query   string  false   "Find matching text"
@@ -280,7 +280,7 @@ func SystemsListHandler(c *gin.Context) {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    limit      query   int     false   "Limit for paging, set -1 to return all"
+// @Param    limit      query   int     false   "Limit for paging"
 // @Param    offset     query   int     false   "Offset for paging"
 // @Param    sort       query   string  false   "Sort field" Enums(id,display_name,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale,packages_installed,baseline_name,satellite_managed,built_pkgcache)
 // @Param    search     query   string  false   "Find matching text"

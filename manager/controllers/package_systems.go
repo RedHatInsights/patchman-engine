@@ -111,7 +111,7 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    package_name    path    string    true  "Package name"
 // @Param    tags            query   []string  false "Tag filter"
@@ -165,7 +165,7 @@ func PackageSystemsListHandler(c *gin.Context) {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    package_name    path    string    true  "Package name"
 // @Param    tags            query   []string  false "Tag filter"

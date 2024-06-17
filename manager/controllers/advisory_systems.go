@@ -111,7 +111,7 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error
 // @Accept   json
 // @Produce  json
 // @Param    advisory_id    path    string  true    "Advisory ID"
-// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,stale,status,template,groups,satellite_managed,built_pkgcache)
 // @Param    search         query   string  false   "Find matching text"
@@ -212,7 +212,7 @@ func systemsIDsStatus(c *gin.Context, systems []SystemsStatusID, meta *ListMeta)
 // @Accept   json
 // @Produce  json
 // @Param    advisory_id    path    string  true    "Advisory ID"
-// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort    query   string  false   "Sort field" Enums(id,display_name,last_evaluation,last_upload,rhsa_count,rhba_count,rhea_count,other_count,satellite_managed,stale,built_pkgcache)
 // @Param    search         query   string  false   "Find matching text"
