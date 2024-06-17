@@ -213,7 +213,7 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListM
 // @Accept   json
 // @Produce  json
 // @Param    body    body    SystemsAdvisoriesRequest true "Request body"
-// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    tags                    query   []string  false "Tag filter"
 // @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
@@ -260,7 +260,7 @@ func PostSystemsAdvisories(c *gin.Context) {
 // @Accept   json
 // @Produce  json
 // @Param    body    body    SystemsAdvisoriesRequest true "Request body"
-// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    tags                    query   []string  false "Tag filter"
 // @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"

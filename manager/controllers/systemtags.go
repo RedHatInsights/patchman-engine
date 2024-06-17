@@ -56,7 +56,7 @@ var SystemTagsOpts = ListOpts{
 // @Security RhIdentity
 // @Produce  json
 // @Param	sort	query	string	false	"Sort field" Enums(tag, count)
-// @Param	limit	query	int		fals	"Limit for paging, set -1 to return all"
+// @Param	limit	query	int		fals	"Limit for paging"
 // @Param 	offset	query	int		false	"Offset for paging"
 // @Success 200 {object} SystemTagsResponse
 // @Failure 400 {object} utils.ErrorResponse

@@ -87,7 +87,7 @@ func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, groups m
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    limit          query        int     false   "Limit for paging, set -1 to return all"
+// @Param    limit          query        int     false   "Limit for paging"
 // @Param    offset         query        int     false   "Offset for paging"
 // @Param    sort           query        string  false   "Sort field" Enums(id,name,systems_installed,systems_installable,systems_applicable)
 // @Param    search         query        string  false   "Find matching text"

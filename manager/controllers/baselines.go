@@ -68,7 +68,7 @@ type BaselinesResponse struct {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    limit          query   int     false   "Limit for paging, set -1 to return all"
+// @Param    limit          query   int     false   "Limit for paging"
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,name,systems,published,last_edited,creator)
 // @Param    search         query   string  false   "Find matching text"
