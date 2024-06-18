@@ -143,12 +143,12 @@ func templateArchVersionMatch(
 
 	for _, sys := range sysArchVersions {
 		if sys.Version != template.Version && sys.Arch != template.Arch {
-			if err == nil {
-				err = fmt.Errorf("template arch: %s, version: %s", template.Arch, template.Version)
-			}
 			systemErr := fmt.Errorf("system uuid: %s, arch: %s, version: %s", sys.InventoryID, sys.Arch, sys.Version)
 			err = errors2.Join(err, systemErr)
 		}
+	}
+	if err != nil {
+		err = errors2.Join(fmt.Errorf("template arch: %s, version: %s", template.Arch, template.Version), err)
 	}
 	return err
 }
