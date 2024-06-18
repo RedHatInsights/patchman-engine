@@ -44,7 +44,7 @@ var PackageSelect = database.MustGetSelect(&PackageDetailAttributes{})
 
 func packageLatestHandler(c *gin.Context, packageName string) {
 	db := middlewares.DBFromContext(c)
-	query := database.PackageByName(db, packageName)
+	query := database.PackageByName(db, packageName, database.JoinPackageDetails)
 	var pkg PackageDetailAttributes
 	// Perform 'soft-filtering' by ordering on boolean column first
 	err := query.Select(PackageSelect).
@@ -72,7 +72,7 @@ func packageEvraHandler(c *gin.Context, nevra *utils.Nevra) {
 		return
 	}
 
-	query := database.PackageByName(db, nevra.Name)
+	query := database.PackageByName(db, nevra.Name, database.JoinPackageDetails)
 	var pkg PackageDetailAttributes
 	err := query.Select(PackageSelect).Where("p.evra = ?", nevra.EVRAString()).Take(&pkg).Error
 	if err != nil {

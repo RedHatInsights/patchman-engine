@@ -54,12 +54,6 @@ type PackageSystemsResponse struct {
 	Meta  ListMeta            `json:"meta"`
 }
 
-func packagesByNameQuery(db *gorm.DB, pkgName string) *gorm.DB {
-	return db.Table("package p").
-		Joins("INNER JOIN package_name pn ON p.name_id = pn.id").
-		Where("pn.name = ?", pkgName)
-}
-
 func packageSystemsQuery(db *gorm.DB, acc int, groups map[string]string, packageName string, packageIDs []int,
 ) *gorm.DB {
 	query := database.SystemPackages(db, acc, groups,
@@ -83,7 +77,7 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 	}
 
 	var packageIDs []int
-	if err := packagesByNameQuery(db, packageName).Pluck("p.id", &packageIDs).Error; err != nil {
+	if err := database.PackageByName(db, packageName).Pluck("p.id", &packageIDs).Error; err != nil {
 		LogAndRespError(c, err, "database error")
 		return nil, nil, nil, err
 	}
