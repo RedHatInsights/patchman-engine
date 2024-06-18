@@ -62,10 +62,9 @@ func packagesByNameQuery(db *gorm.DB, pkgName string) *gorm.DB {
 
 func packageSystemsQuery(db *gorm.DB, acc int, groups map[string]string, packageName string, packageIDs []int,
 ) *gorm.DB {
-	query := database.SystemPackages(db, acc, groups, database.JoinTemplates).
+	query := database.SystemPackages(db, acc, groups,
+		database.JoinTemplates, database.JoinInstallableApplicablePackages).
 		Select(PackageSystemsSelect).
-		Joins("LEFT JOIN package pi ON pi.id = spkg.installable_id").
-		Joins("LEFT JOIN package pa ON pa.id = spkg.applicable_id").
 		Where("sp.stale = false").
 		Where("pn.name = ?", packageName).
 		Where("spkg.package_id in (?)", packageIDs)

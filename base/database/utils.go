@@ -273,3 +273,8 @@ func JoinAdvisoryMetadata(tx *gorm.DB) *gorm.DB {
 func JoinAdvisoryType(tx *gorm.DB) *gorm.DB {
 	return tx.Joins("JOIN advisory_type at ON am.advisory_type_id = at.id")
 }
+
+func JoinInstallableApplicablePackages(tx *gorm.DB) *gorm.DB {
+	return tx.Joins("LEFT JOIN package pi ON pi.id = spkg.installable_id").
+		Joins("LEFT JOIN package pa ON pa.id = spkg.applicable_id")
+}
