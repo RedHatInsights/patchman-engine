@@ -31,6 +31,7 @@ type PackageSystemItem struct {
 	Updatable     bool   `json:"updatable" csv:"updatable" query:"(spkg.installable_id IS NOT NULL)" gorm:"column:updatable"`
 	SystemTags
 	BaselineAttributes
+	TemplateAttibutes
 	// helper to get AvailableEVRA (latest_evra)
 	InstallableEVRA string `json:"-" csv:"-" query:"pi.evra" gorm:"column:installable_evra"`
 	ApplicableEVRA  string `json:"-" csv:"-" query:"pa.evra" gorm:"column:applicable_evra"`
@@ -61,11 +62,10 @@ func packagesByNameQuery(db *gorm.DB, pkgName string) *gorm.DB {
 
 func packageSystemsQuery(db *gorm.DB, acc int, groups map[string]string, packageName string, packageIDs []int,
 ) *gorm.DB {
-	query := database.SystemPackages(db, acc, groups).
+	query := database.SystemPackages(db, acc, groups, database.JoinTemplates).
 		Select(PackageSystemsSelect).
 		Joins("LEFT JOIN package pi ON pi.id = spkg.installable_id").
 		Joins("LEFT JOIN package pa ON pa.id = spkg.applicable_id").
-		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
 		Where("sp.stale = false").
 		Where("pn.name = ?", packageName).
 		Where("spkg.package_id in (?)", packageIDs)

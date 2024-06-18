@@ -63,9 +63,8 @@ func SystemDetailHandler(c *gin.Context) {
 
 	var systemDetail SystemDetailLookup
 	db := middlewares.DBFromContext(c)
-	query := database.Systems(db, account, groups).
+	query := database.Systems(db, account, groups, database.JoinTemplates).
 		Select(database.MustGetSelect(&systemDetail)).
-		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
 		Where("sp.inventory_id = ?::uuid", inventoryID)
 
 	err := query.Take(&systemDetail).Error

@@ -45,6 +45,11 @@ type BaselineIDAttr struct {
 	BaselineID int64 `json:"baseline_id" csv:"baseline_id" query:"bl.id" gorm:"column:baseline_id"`
 }
 
+type TemplateAttibutes struct {
+	TemplateName string `json:"template_name" csv:"template_name" query:"t.name" gorm:"column:template_name"`
+	TemplateID   int64  `json:"template_id" csv:"template_id" query:"t.id" gorm:"column:template_id"`
+}
+
 type SystemDisplayName struct {
 	DisplayName string `json:"display_name" csv:"display_name" query:"sp.display_name" gorm:"column:display_name"`
 }

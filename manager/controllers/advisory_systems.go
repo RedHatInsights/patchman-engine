@@ -43,6 +43,7 @@ type AdvisorySystemItemAttributes struct {
 	SystemGroups
 	BaselineIDAttr
 	BaselineNameAttr
+	TemplateAttibutes
 	SystemAdvisoryStatus
 	SystemSatelliteManaged
 	SystemBuiltPkgcache
@@ -271,11 +272,10 @@ func AdvisorySystemsListIDsHandler(c *gin.Context) {
 
 func buildAdvisorySystemsQuery(db *gorm.DB, account int, groups map[string]string, advisoryName string) *gorm.DB {
 	selectQuery := AdvisorySystemsSelect
-	query := database.SystemAdvisories(db, account, groups).
+	query := database.SystemAdvisories(db, account, groups, database.JoinTemplates).
 		Select(selectQuery).
 		Joins("JOIN advisory_metadata am ON am.id = sa.advisory_id").
 		Joins("LEFT JOIN status st ON sa.status_id = st.id").
-		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
 		Where("am.name = ?", advisoryName).
 		Where("sp.stale = false")
 
