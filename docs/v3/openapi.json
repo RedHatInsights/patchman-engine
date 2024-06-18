@@ -7118,6 +7118,12 @@
                         "items": {
                             "$ref": "#/components/schemas/controllers.SystemTag"
                         }
+                    },
+                    "template_id": {
+                        "type": "integer"
+                    },
+                    "template_name": {
+                        "type": "string"
                     }
                 }
             },
@@ -7191,6 +7197,12 @@
                         "items": {
                             "$ref": "#/components/schemas/controllers.SystemTag"
                         }
+                    },
+                    "template_id": {
+                        "type": "integer"
+                    },
+                    "template_name": {
+                        "type": "string"
                     }
                 }
             },
@@ -7913,6 +7925,12 @@
                             "$ref": "#/components/schemas/controllers.SystemTag"
                         }
                     },
+                    "template_id": {
+                        "type": "integer"
+                    },
+                    "template_name": {
+                        "type": "string"
+                    },
                     "updatable": {
                         "type": "boolean"
                     },
@@ -8191,6 +8209,12 @@
                         "items": {
                             "$ref": "#/components/schemas/controllers.SystemTag"
                         }
+                    },
+                    "template_id": {
+                        "type": "integer"
+                    },
+                    "template_name": {
+                        "type": "string"
                     }
                 }
             },
@@ -8328,6 +8352,12 @@
                         "items": {
                             "$ref": "#/components/schemas/controllers.SystemTag"
                         }
+                    },
+                    "template_id": {
+                        "type": "integer"
+                    },
+                    "template_name": {
+                        "type": "string"
                     }
                 }
             },
@@ -8450,6 +8480,12 @@
                         "items": {
                             "$ref": "#/components/schemas/controllers.SystemTag"
                         }
+                    },
+                    "template_id": {
+                        "type": "integer"
+                    },
+                    "template_name": {
+                        "type": "string"
                     },
                     "third_party": {
                         "type": "boolean"

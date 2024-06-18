@@ -93,6 +93,7 @@ type SystemItemAttributes struct {
 	ApplicableRheaCount   int `json:"applicable_rhea_count" csv:"applicable_rhea_count" query:"sp.applicable_advisory_enh_count_cache" gorm:"column:applicable_rhea_count"`
 	ApplicableOtherCount  int `json:"applicable_other_count" csv:"applicable_other_count" query:"(sp.applicable_advisory_count_cache - sp.installable_advisory_sec_count_cache - sp.installable_advisory_bug_count_cache - sp.installable_advisory_enh_count_cache)" gorm:"column:applicable_other_count"`
 	BaselineIDAttr
+	TemplateAttibutes
 	SystemGroups
 }
 
@@ -345,7 +346,5 @@ func SystemsListIDsHandler(c *gin.Context) {
 }
 
 func querySystems(db *gorm.DB, account int, groups map[string]string) *gorm.DB {
-	q := database.Systems(db, account, groups).
-		Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id")
-	return q.Select(SystemsSelect)
+	return database.Systems(db, account, groups, database.JoinTemplates).Select(SystemsSelect)
 }
