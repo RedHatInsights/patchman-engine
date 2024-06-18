@@ -128,6 +128,9 @@ func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template 
 func templateArchVersionMatch(
 	db *gorm.DB, inventoryIDs []string, template *models.Template, acc int, groups map[string]string,
 ) error {
+	if template == nil {
+		return nil
+	}
 	var sysArchVersions = []struct {
 		InventoryID string
 		Arch        string
