@@ -190,9 +190,8 @@ func SystemAdvisoriesIDsHandler(c *gin.Context) {
 }
 
 func buildSystemAdvisoriesQuery(db *gorm.DB, account int, groups map[string]string, inventoryID string) *gorm.DB {
-	query := database.SystemAdvisoriesByInventoryID(db, account, groups, inventoryID).
-		Joins("JOIN advisory_metadata am on am.id = sa.advisory_id").
-		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
+	query := database.SystemAdvisoriesByInventoryID(db, account, groups, inventoryID,
+		database.JoinAdvisoryMetadata, database.JoinAdvisoryType).
 		Joins("JOIN status ON sa.status_id = status.id").
 		Select(SystemAdvisoriesSelect)
 	return query
