@@ -124,12 +124,10 @@ func advisoriesSystemsQuery(c *gin.Context, db *gorm.DB, acc int, groups map[str
 	systems := req.Systems
 	advisories := req.Advisories
 	// get all advisories for all systems in the account (with inventory.hosts join)
-	advq := database.Systems(db, acc, groups).
-		Distinct("am.id, am.name").
+	advq := database.SystemAdvisories(db, acc, groups, database.JoinAdvisoryMetadata).
+		Distinct("am.id, am.name")
 		// we need to join system_advisories to make `limit` work properly
 		// without this join it can happen that we display less items on some pages
-		Joins("JOIN system_advisories sa ON sp.id = sa.system_id AND sa.rh_account_id = ?", acc).
-		Joins("JOIN advisory_metadata am ON am.id = sa.advisory_id")
 	if len(advisories) > 0 {
 		advq = advq.Where("am.name in (?)", advisories)
 	}

@@ -207,10 +207,9 @@ func AdvisoriesListIDsHandler(c *gin.Context) {
 }
 
 func buildQueryAdvisories(db *gorm.DB, account int) *gorm.DB {
-	query := db.Table("advisory_metadata am").
+	query := database.AdvisoryMetadata(db).
 		Select(AdvisoriesSelect).
 		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id").
-		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
 		Where("aad.rh_account_id = ?", account)
 	return query
 }
@@ -231,9 +230,8 @@ func buildQueryAdvisoriesTagged(db *gorm.DB, filters map[string]FilterData, acco
 	subq := buildAdvisoryAccountDataQuery(db, account, groups)
 	subq, _ = ApplyInventoryFilter(filters, subq, "sp.inventory_id")
 
-	query := db.Table("advisory_metadata am").
+	query := database.AdvisoryMetadata(db).
 		Select(AdvisoriesSelect).
-		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
 		Joins("JOIN (?) aad ON am.id = aad.advisory_id", subq)
 
 	return query

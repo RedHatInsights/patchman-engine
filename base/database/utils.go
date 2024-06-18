@@ -65,13 +65,20 @@ func PackageByName(tx *gorm.DB, pkgName string) *gorm.DB {
 	return Packages(tx).Where("pn.name = ?", pkgName)
 }
 
-func SystemAdvisoriesByInventoryID(tx *gorm.DB, accountID int, groups map[string]string, inventoryID string) *gorm.DB {
-	return SystemAdvisories(tx, accountID, groups).Where("sp.inventory_id = ?::uuid", inventoryID)
+func SystemAdvisoriesByInventoryID(tx *gorm.DB, accountID int, groups map[string]string, inventoryID string,
+	joins ...join) *gorm.DB {
+	tx = SystemAdvisories(tx, accountID, groups).Where("sp.inventory_id = ?::uuid", inventoryID)
+	return (joinsT)(joins).apply(tx)
 }
 
 func SystemAdvisoriesBySystemID(tx *gorm.DB, accountID int, systemID int64) *gorm.DB {
 	query := systemAdvisoriesQuery(tx, accountID).Where("sp.id = ?", systemID)
 	return query
+}
+
+func AdvisoryMetadata(tx *gorm.DB) *gorm.DB {
+	tx = tx.Table("advisory_metadata am")
+	return JoinAdvisoryType(tx)
 }
 
 func systemAdvisoriesQuery(tx *gorm.DB, accountID int) *gorm.DB {
@@ -255,4 +262,14 @@ func InventoryHostsJoin(tx *gorm.DB, groups map[string]string) *gorm.DB {
 func JoinTemplates(tx *gorm.DB) *gorm.DB {
 	return tx.Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
 		Joins("LEFT JOIN template t ON sp.template_id = t.id AND sp.rh_account_id = t.rh_account_id")
+}
+
+// JOIN advisory_metadata to sa (system_advisories)
+func JoinAdvisoryMetadata(tx *gorm.DB) *gorm.DB {
+	return tx.Joins("JOIN advisory_metadata am ON am.id = sa.advisory_id")
+}
+
+// JOIN advisory_type to am (advisory_metadata)
+func JoinAdvisoryType(tx *gorm.DB) *gorm.DB {
+	return tx.Joins("JOIN advisory_type at ON am.advisory_type_id = at.id")
 }
