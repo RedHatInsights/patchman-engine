@@ -17,7 +17,6 @@ var templatePath = "/:template_id/systems"
 var templateAccount = 1
 var templateSystems = []string{
 	"00000000-0000-0000-0000-000000000004",
-	"00000000-0000-0000-0000-000000000006",
 	"00000000-0000-0000-0000-000000000007",
 	"00000000-0000-0000-0000-000000000008",
 }
@@ -27,7 +26,6 @@ func TestUpdateTemplateSystems(t *testing.T) {
 	data := `{
 		"systems": [
 			"00000000-0000-0000-0000-000000000004",
-			"00000000-0000-0000-0000-000000000006",
 			"00000000-0000-0000-0000-000000000008"
 		]
 	}`
@@ -40,6 +38,29 @@ func TestUpdateTemplateSystems(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	database.CheckTemplateSystems(t, templateAccount, templateUUID, templateSystems)
+	database.DeleteTemplate(t, templateAccount, templateUUID)
+}
+
+func TestUpdateTemplateInvalidVersion(t *testing.T) {
+	core.SetupTest(t)
+	data := `{
+		"systems": [
+			"00000000-0000-0000-0000-000000000006"
+		]
+	}`
+
+	database.CreateTemplate(t, templateAccount, templateUUID, []string{
+		"00000000-0000-0000-0000-000000000007",
+	})
+	w := CreateRequestRouterWithParams("PUT", templatePath, templateUUID, "", bytes.NewBufferString(data), "",
+		TemplateSystemsUpdateHandler, templateAccount)
+
+	var errResp utils.ErrorResponse
+	CheckResponse(t, w, http.StatusBadRequest, &errResp)
+	// 00000000-0000-0000-0000-000000000006 is RHEL 7
+	assert.Equal(t, "Incompatible template and system version or architecture: template arch: x86_64, version: 8\n"+
+		"system uuid: 00000000-0000-0000-0000-000000000006, arch: x86_64, version: 7",
+		errResp.Error)
 	database.DeleteTemplate(t, templateAccount, templateUUID)
 }
 
@@ -102,8 +123,7 @@ func TestReassignTemplateSystems2(t *testing.T) {
 	data := `{
 		"systems": [
 			"00000000-0000-0000-0000-000000000004",
-			"00000000-0000-0000-0000-000000000005",
-			"00000000-0000-0000-0000-000000000006"
+			"00000000-0000-0000-0000-000000000005"
 		]
 	}`
 	w := CreateRequestRouterWithParams("PUT", templatePath, template2, "", bytes.NewBufferString(data), "",
@@ -114,7 +134,6 @@ func TestReassignTemplateSystems2(t *testing.T) {
 	database.CheckTemplateSystems(t, templateAccount, template2, []string{
 		"00000000-0000-0000-0000-000000000004",
 		"00000000-0000-0000-0000-000000000005",
-		"00000000-0000-0000-0000-000000000006",
 	})
 	database.CheckTemplateSystems(t, templateAccount, templateUUID, []string{
 		"00000000-0000-0000-0000-000000000007",
