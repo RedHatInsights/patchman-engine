@@ -134,9 +134,12 @@ func templateArchVersionMatch(
 		Version     string
 	}{}
 	var err error
-	database.Systems(db, acc, groups).
+	err = database.Systems(db, acc, groups).
 		Select("ih.id as inventory_id, ih.system_profile->'operating_system'->>'major' as version, sp.arch as arch").
-		Where("id in (?)", inventoryIDs).Find(&sysArchVersions)
+		Where("id in (?)", inventoryIDs).Find(&sysArchVersions).Error
+	if err != nil {
+		return err
+	}
 
 	for _, sys := range sysArchVersions {
 		if sys.Version != template.Version && sys.Arch != template.Arch {
