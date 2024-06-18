@@ -82,9 +82,8 @@ func (c *PackageCache) Load() {
 	defer tx.Rollback()
 
 	// load N last recently added packages, i.e. newest
-	rows, err := tx.Table("package p").
+	rows, err := database.Packages(tx).
 		Select("p.id, p.name_id, pn.name, p.evra, p.summary_hash, p.description_hash").
-		Joins("JOIN package_name pn ON pn.id = p.name_id").
 		Order("id DESC").
 		Limit(c.size).
 		Rows()
@@ -263,9 +262,8 @@ func readPackageFromDB(where string, order string, args ...interface{}) *Package
 	defer tx.Rollback()
 
 	var pkg PackageCacheMetadata
-	query := tx.Table("package p").
+	query := database.Packages(tx).
 		Select("p.id, p.name_id, pn.name, p.evra, p.summary_hash, p.description_hash").
-		Joins("JOIN package_name pn ON pn.id = p.name_id").
 		Where(where, args...)
 	if order != "" {
 		query = query.Order(order)

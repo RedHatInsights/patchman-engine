@@ -54,15 +54,13 @@ func SystemPackages(tx *gorm.DB, accountID int, groups map[string]string, joins 
 
 func Packages(tx *gorm.DB, joins ...join) *gorm.DB {
 	tx = tx.Table("package p").
-		Joins("JOIN package_name pn on p.name_id = pn.id").
-		Joins("JOIN strings descr ON p.description_hash = descr.id").
-		Joins("JOIN strings sum ON p.summary_hash = sum.id").
-		Joins("LEFT JOIN advisory_metadata am ON p.advisory_id = am.id")
+		Joins("JOIN package_name pn on p.name_id = pn.id")
 	return (joinsT)(joins).apply(tx)
 }
 
-func PackageByName(tx *gorm.DB, pkgName string) *gorm.DB {
-	return Packages(tx).Where("pn.name = ?", pkgName)
+func PackageByName(tx *gorm.DB, pkgName string, joins ...join) *gorm.DB {
+	tx = Packages(tx).Where("pn.name = ?", pkgName)
+	return (joinsT)(joins).apply(tx)
 }
 
 func SystemAdvisoriesByInventoryID(tx *gorm.DB, accountID int, groups map[string]string, inventoryID string,
@@ -277,4 +275,11 @@ func JoinAdvisoryType(tx *gorm.DB) *gorm.DB {
 func JoinInstallableApplicablePackages(tx *gorm.DB) *gorm.DB {
 	return tx.Joins("LEFT JOIN package pi ON pi.id = spkg.installable_id").
 		Joins("LEFT JOIN package pa ON pa.id = spkg.applicable_id")
+}
+
+// JOIN package description, summary, advisory
+func JoinPackageDetails(tx *gorm.DB) *gorm.DB {
+	return tx.Joins("JOIN strings descr ON p.description_hash = descr.id").
+		Joins("JOIN strings sum ON p.summary_hash = sum.id").
+		Joins("LEFT JOIN advisory_metadata am ON p.advisory_id = am.id")
 }

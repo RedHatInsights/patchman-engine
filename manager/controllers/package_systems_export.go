@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base/database"
 	"app/base/utils"
 	"app/manager/middlewares"
 	"errors"
@@ -42,7 +43,7 @@ func PackageSystemsExportHandler(c *gin.Context) {
 
 	db := middlewares.DBFromContext(c)
 	var packageIDs []int
-	if err := packagesByNameQuery(db, packageName).Pluck("p.id", &packageIDs).Error; err != nil {
+	if err := database.PackageByName(db, packageName).Pluck("p.id", &packageIDs).Error; err != nil {
 		LogAndRespError(c, err, "database error")
 		return
 	}
