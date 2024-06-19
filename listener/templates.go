@@ -88,6 +88,11 @@ func TemplateUpdate(template mqueue.TemplateResponse) error {
 		return errors.Wrap(err, "saving account into the database")
 	}
 
+	// fix empty EnvironmentID until Content Sources will start sending it
+	if template.EnvironmentID == "" {
+		template.EnvironmentID = strings.ReplaceAll(template.UUID, "-", "")
+	}
+
 	row := models.Template{
 		RhAccountID:   accountID,
 		UUID:          template.UUID,
