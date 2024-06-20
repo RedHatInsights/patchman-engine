@@ -11,10 +11,7 @@ import (
 	"strings"
 	"time"
 
-	errors2 "errors"
-
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 const (
@@ -31,7 +28,6 @@ func TemplatesMessageHandler(m mqueue.KafkaMessage) error {
 		return nil
 	}
 
-	errs := []error{}
 	for _, template := range event.Data {
 		if enableBypass {
 			utils.LogInfo("template", template.UUID, "Processing bypassed")
@@ -50,25 +46,52 @@ func TemplatesMessageHandler(m mqueue.KafkaMessage) error {
 			utils.LogWarn("msg", fmt.Sprintf("%v", template), WarnUnknownType)
 			err = nil
 		}
-		errs = append(errs, err)
+		if err != nil {
+			utils.LogError("err", err, "template", fmt.Sprintf("%v", template))
+		}
 	}
-	err = errors2.Join(errs...)
-	// join errors and return
-	return err
+	return nil
 }
 
 func TemplateDelete(template mqueue.TemplateResponse) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, templateMsgHandlingDuration.WithLabelValues(TemplateEventDelete))
 
-	err := database.DB.
-		Delete(&models.Template{}, "uuid = ?::uuid AND rh_account_id = (SELECT id FROM rh_account WHERE org_id = ?)",
-			template.UUID, template.OrgID).Error
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		utils.LogWarn("template", template.UUID, WarnNoRowsModified)
+	// check account
+	accountID, err := middlewares.GetOrCreateAccount(template.OrgID)
+	if err != nil {
+		return errors.Wrap(err, "when getting account")
+	}
+
+	var templateID int64
+	err = database.DB.Model(&models.Template{}).
+		Select("id").
+		Where("rh_account_id = ? AND uuid = ?::uuid ", accountID, template.UUID).
+		// use Find() not First() otherwise it returns error "no rows found" if uuid is not present
+		Find(&templateID).Error
+	if err != nil {
+		return errors.Wrap(err, "getting template_id")
+	}
+	if templateID == 0 {
+		utils.LogWarn("template", template, "template not found")
 		return nil
 	}
-	return err
+
+	// unassign systems from the template
+	err = database.DB.Model(&models.SystemPlatform{}).
+		Where("rh_account_id = ? AND template_id = ?", accountID, templateID).
+		Update("template_id", nil).Error
+	if err != nil {
+		return errors.Wrap(err, "removing systems from template")
+	}
+
+	err = database.DB.
+		Delete(&models.Template{}, "id = ? AND rh_account_id = ?", templateID, accountID).Error
+	if err != nil {
+		return errors.Wrap(err, "deleting template")
+	}
+
+	return nil
 }
 
 func TemplateUpdate(template mqueue.TemplateResponse) error {
