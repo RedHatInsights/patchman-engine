@@ -453,7 +453,12 @@ func commitWithObserve(tx *gorm.DB) error {
 
 func evaluateAndStore(system *models.SystemPlatform,
 	vmaasData *vmaas.UpdatesV3Response, event *mqueue.PlatformEvent) error {
-	deleteIDs, installableIDs, applicableIDs, err := lazySaveAndLoadAdvisories(system, vmaasData)
+	// deleteIDs, installableIDs, applicableIDs, err := lazySaveAndLoadAdvisories(system, vmaasData)
+	// if err != nil {
+	// 	return errors.Wrap(err, "Advisory loading failed")
+	// }
+
+	advisoriesByName, err := lazySaveAndLoadAdvisories2(system, vmaasData)
 	if err != nil {
 		return errors.Wrap(err, "Advisory loading failed")
 	}
@@ -467,7 +472,12 @@ func evaluateAndStore(system *models.SystemPlatform,
 	// Don't allow requested TX to hang around locking the rows
 	defer tx.Rollback()
 
-	systemAdvisoriesNew, err := storeAdvisoryData(tx, system, deleteIDs, installableIDs, applicableIDs)
+	// systemAdvisoriesNew, err := storeAdvisoryData(tx, system, deleteIDs, installableIDs, applicableIDs)
+	// if err != nil {
+	// 	evaluationCnt.WithLabelValues("error-store-advisories").Inc()
+	// 	return errors.Wrap(err, "Unable to store advisory data")
+	// }
+	systemAdvisoriesNew, err := storeAdvisoryData2(tx, system, advisoriesByName) // TODO: what to do with `systemAdvNew`?
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-store-advisories").Inc()
 		return errors.Wrap(err, "Unable to store advisory data")

@@ -28,22 +28,101 @@ func lazySaveAndLoadAdvisories(system *models.SystemPlatform, vmaasData *vmaas.U
 }
 
 func lazySaveAndLoadAdvisories2(system *models.SystemPlatform, vmaasData *vmaas.UpdatesV3Response) (
-	SystemAdvisoryMap, error) {
+	ExtendedAdvisoryMap, error) {
 	if !enableAdvisoryAnalysis {
 		utils.LogInfo("advisory analysis disabled, skipping lazy saving and loading")
 		return nil, nil
 	}
 
+	// TODO: should this first evaluate missing and lazy-save just the missing?
 	err := lazySaveAdvisories2(vmaasData, system.InventoryID)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to store unknown advisories in DB")
 	}
 
-	// TODO: load system advisories
-	// rename loadSystemAdvisories -> loadAdvisories(system)
+	stored, err := loadSystemAdvisories(database.Db, system.RhAccountID, system.ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to load system advisories")
+	}
 
-	// spracovat advisories ako packages
-	return FIXMEAdvisories, nil
+	merged, err := evaluateChanges(vmaasData, stored, system.RhAccountID, system.ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to evaluate advisory changes")
+	}
+
+	return merged, nil
+}
+
+func evaluateChanges(vmaasData *vmaas.UpdatesV3Response, stored SystemAdvisoryMap, accountID int, systemID int64) (
+	ExtendedAdvisoryMap, error) {
+	reported := getReportedAdvisories(vmaasData)
+
+	// TODO: check this func for errors and efficiency
+
+	// -> map[string]int: "erratum -> helper column to diferentiate installable/applicable"
+	// --> moze sa porovnavat if statusID == INSTALLABLE {...} else {APPLICABLE...}
+
+	extendedAdvisories := make(ExtendedAdvisoryMap, len(reported)+len(stored))
+	missingNames := make([]string, 0, len(reported))
+	for reportedName, reportedStatusID := range reported {
+		if storedAdvisory, found := stored[reportedName]; found {
+			if reportedStatusID != storedAdvisory.StatusID {
+				extendedAdvisories[reportedName] = ExtendedAdvisory{
+					Change:           Update,
+					SystemAdvisories: storedAdvisory,
+				}
+			} else {
+				extendedAdvisories[reportedName] = ExtendedAdvisory{
+					Change:           Keep,
+					SystemAdvisories: storedAdvisory,
+				}
+			}
+		} else {
+			extendedAdvisories[reportedName] = ExtendedAdvisory{
+				Change: Add,
+				SystemAdvisories: models.SystemAdvisories{
+					RhAccountID: accountID,
+					SystemID:    systemID,
+					StatusID:    reportedStatusID,
+				},
+			}
+			missingNames = append(missingNames, reportedName)
+		}
+	}
+
+	advisoryMetadata := make(models.AdvisoryMetadataSlice, 0, len(missingNames))
+	err := database.Db.Model(&models.AdvisoryMetadata{}).
+		Where("name IN (?)", missingNames).
+		Select("id, name").
+		Scan(&advisoryMetadata).Error
+	if err != nil {
+		return nil, err
+	}
+
+	name2AdvisoryID := make(map[string]int64, len(missingNames))
+	for _, am := range advisoryMetadata {
+		name2AdvisoryID[am.Name] = am.ID
+	}
+
+	for _, name := range missingNames {
+		if _, found := name2AdvisoryID[name]; !found {
+			return nil, errors.New("Failed to evaluate changes because an advisory was not lazy-saved")
+		}
+		extendedAdvisory := extendedAdvisories[name]
+		extendedAdvisory.AdvisoryID = name2AdvisoryID[name]
+		extendedAdvisories[name] = extendedAdvisory
+	}
+
+	for storedName, storedAdvisory := range stored {
+		if _, found := reported[storedName]; !found {
+			extendedAdvisories[storedName] = ExtendedAdvisory{
+				Change:           Remove,
+				SystemAdvisories: storedAdvisory,
+			}
+		}
+	}
+
+	return extendedAdvisories, nil
 }
 
 func lazySaveAdvisories2(vmaasData *vmaas.UpdatesV3Response, inventoryID string) error {
@@ -70,8 +149,6 @@ func lazySaveAdvisories2(vmaasData *vmaas.UpdatesV3Response, inventoryID string)
 	if err != nil {
 		return errors.Wrap(err, "failed to save missing advisory_metadata")
 	}
-
-	// FIXME: treba updatnut aj models.SystemAdvisories??
 
 	return nil
 }
@@ -100,6 +177,7 @@ func storeMissingAdvisories2(missingNames []string) error {
 		if err != nil {
 			return err
 		}
+		// TODO: created toStore objects will have hadded a .ID
 	}
 	return nil
 }
@@ -179,6 +257,34 @@ func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform,
 		utils.LogInfo("advisory analysis disabled, skipping storing")
 		return nil, nil
 	}
+
+	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("advisories-store"))
+	err := updateSystemAdvisoriesTODO(tx, system, deleteIDs, installableIDs, applicableIDs)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to update system advisories")
+	}
+	systemAdvisoriesNew, err := loadSystemAdvisories(tx, system.RhAccountID, system.ID) // reload system advisories after update
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to load new system advisories")
+	}
+
+	err = updateAdvisoryAccountData(tx, system, deleteIDs, installableIDs, applicableIDs)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to update advisory_account_data caches")
+	}
+	return systemAdvisoriesNew, nil
+}
+
+func storeAdvisoryData2(tx *gorm.DB, system *models.SystemPlatform, advisoriesByName ExtendedAdvisoryMap) (
+	SystemAdvisoryMap, error) {
+	if !enableAdvisoryAnalysis {
+		utils.LogInfo("advisory analysis disabled, skipping storing")
+		return nil, nil
+	}
+
+	// TODO: toto prerobit, aby sa spravit DB update a zaroven aj update v `advisoriesByName`
+	// => zbavime sa znovunacitania
+	// => co s updateAdvisoryAccountData?
 
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("advisories-store"))
 	err := updateSystemAdvisoriesTODO(tx, system, deleteIDs, installableIDs, applicableIDs)
@@ -425,3 +531,10 @@ func updateAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, delet
 
 	return database.BulkInsert(txOnConflict, changes)
 }
+
+type ExtendedAdvisory struct {
+	Change ChangeType
+	models.SystemAdvisories
+}
+
+type ExtendedAdvisoryMap map[string]ExtendedAdvisory
