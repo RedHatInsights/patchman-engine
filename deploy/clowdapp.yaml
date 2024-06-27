@@ -88,6 +88,9 @@ objects:
                                                                   name: patchman-db-readonly}}}
         - {name: DB_PORT_READ_REPLICA, valueFrom: {secretKeyRef: {key: db.port,
                                                                   name: patchman-db-readonly}}}
+        - {name: CANDLEPIN_ADDRESS, value: '${CANDLEPIN_ADDRESS}'}
+        - {name: CANDLEPIN_CERT, valueFrom: {secretKeyRef: {name: candlepin, key: cert}}}
+        - {name: CANDLEPIN_KEY, valueFrom: {secretKeyRef: {name: candlepin, key: key}}}
         - {name: DB_READ_REPLICA_ENABLED, value: '${DB_READ_REPLICA_ENABLED}'}
         - {name: DB_WORK_MEM, value: '${DB_WORK_MEM}'}
         - {name: KAFKA_GROUP, value: patchman}
@@ -501,6 +504,7 @@ parameters:
 - {name: RES_REQUEST_CPU_MANAGER, value: 200m}
 - {name: RES_REQUEST_MEM_MANAGER, value: 256Mi}
 - {name: RESPONSE_TIMEOUT, value: '60'}
+- {name: CANDLEPIN_ADDRESS, value: 'http://candlepin'}
 - {name: DB_READ_REPLICA_ENABLED, value: 'TRUE'}
 - {name: ENABLE_PROFILER_MANAGER, value: 'false'}
 - {name: GOMEMLIMIT_MANAGER, value: '230MiB'} # set to 90% of the default memory limit 256Mi (don't forget `B`)
