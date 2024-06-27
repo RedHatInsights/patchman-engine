@@ -44,11 +44,6 @@ var PackageSelect = database.MustGetSelect(&PackageDetailAttributes{})
 
 func packageLatestHandler(c *gin.Context, packageName string) {
 	db := middlewares.DBFromContext(c)
-	if !packageNameIsValid(db, packageName) {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "invalid package name"})
-		return
-	}
-
 	query := database.PackageByName(db, packageName)
 	var pkg PackageDetailAttributes
 	// Perform 'soft-filtering' by ordering on boolean column first
@@ -117,10 +112,16 @@ func PackageDetailHandler(c *gin.Context) {
 		return
 	}
 
-	nevra, err := utils.ParseNevra(parameter)
-	if err == nil {
-		packageEvraHandler(c, nevra)
-	} else {
+	db := middlewares.DBFromContext(c)
+	if packageNameIsValid(db, parameter) {
 		packageLatestHandler(c, parameter)
+		return
 	}
+
+	nevra, err := utils.ParseNevra(parameter)
+	if err != nil {
+		LogAndRespBadRequest(c, err, "invalid package name")
+		return
+	}
+	packageEvraHandler(c, nevra)
 }
