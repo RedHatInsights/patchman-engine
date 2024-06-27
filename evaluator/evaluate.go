@@ -227,10 +227,6 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 		return nil, nil, nil
 	}
 
-	// load and evaluate advisories for system
-	// posunut spred `updateAdvisoryAccountData`
-	// update in `storeAdvisoryData`
-
 	vmaasData, err := evaluateWithVmaas(updatesData, system, event)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluation with vmaas failed")
@@ -251,7 +247,7 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV3Response, 
 	}
 	updatesMap := resp.GetUpdateList()
 	if len(updatesMap) == 0 {
-		// TODO: do we need evaluationCnt.WithLabelValues("error-no-yum-packages").Inc()?
+		// FIXME: do we need evaluationCnt.WithLabelValues("error-no-yum-packages").Inc()?
 		utils.LogWarn("inventoryID", system.GetInventoryID(), "No yum_updates")
 		return nil, nil
 	}
@@ -453,12 +449,7 @@ func commitWithObserve(tx *gorm.DB) error {
 
 func evaluateAndStore(system *models.SystemPlatform,
 	vmaasData *vmaas.UpdatesV3Response, event *mqueue.PlatformEvent) error {
-	// deleteIDs, installableIDs, applicableIDs, err := lazySaveAndLoadAdvisories(system, vmaasData)
-	// if err != nil {
-	// 	return errors.Wrap(err, "Advisory loading failed")
-	// }
-
-	advisoriesByName, err := lazySaveAndLoadAdvisories2(system, vmaasData)
+	advisoriesByName, err := lazySaveAndLoadAdvisories(system, vmaasData)
 	if err != nil {
 		return errors.Wrap(err, "Advisory loading failed")
 	}
@@ -472,12 +463,7 @@ func evaluateAndStore(system *models.SystemPlatform,
 	// Don't allow requested TX to hang around locking the rows
 	defer tx.Rollback()
 
-	// systemAdvisoriesNew, err := storeAdvisoryData(tx, system, deleteIDs, installableIDs, applicableIDs)
-	// if err != nil {
-	// 	evaluationCnt.WithLabelValues("error-store-advisories").Inc()
-	// 	return errors.Wrap(err, "Unable to store advisory data")
-	// }
-	systemAdvisoriesNew, err := storeAdvisoryData2(tx, system, advisoriesByName) // TODO: what to do with `systemAdvNew`?
+	systemAdvisoriesNew, err := storeAdvisoryData(tx, system, advisoriesByName)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-store-advisories").Inc()
 		return errors.Wrap(err, "Unable to store advisory data")
@@ -538,9 +524,20 @@ func analyzeRepos(system *models.SystemPlatform) (thirdParty bool, err error) {
 	return thirdParty, nil
 }
 
+func incrementAdvisoryTypeCounts(advisory models.AdvisoryMetadata, enhCount, bugCount, secCount *int) {
+	switch advisory.AdvisoryTypeID {
+	case Enhancement:
+		*enhCount++
+	case Bugfix:
+		*bugCount++
+	case Security:
+		*secCount++
+	}
+}
+
 // nolint: funlen
 func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
-	new SystemAdvisoryMap, installed, installable, applicable int) error {
+	advisories SystemAdvisoryMap, installed, installable, applicable int) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("system-update"))
 	defer utils.ObserveSecondsSince(*system.LastUpload, uploadEvaluationDelay)
@@ -552,7 +549,7 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 	data["last_evaluation"] = time.Now()
 
 	if enableAdvisoryAnalysis {
-		if new == nil {
+		if advisories == nil {
 			return errors.New("Invalid args")
 		}
 		installableCount := 0
@@ -563,26 +560,12 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 		applicableEnhCount := 0
 		applicableBugCount := 0
 		applicableSecCount := 0
-		for _, sa := range new {
+		for _, sa := range advisories {
 			if sa.StatusID == INSTALLABLE {
-				switch sa.Advisory.AdvisoryTypeID {
-				case 1:
-					installableEnhCount++
-				case 2:
-					installableBugCount++
-				case 3:
-					installableSecCount++
-				}
+				incrementAdvisoryTypeCounts(sa.Advisory, &installableEnhCount, &installableBugCount, &installableSecCount)
 				installableCount++
 			}
-			switch sa.Advisory.AdvisoryTypeID {
-			case 1:
-				applicableEnhCount++
-			case 2:
-				applicableBugCount++
-			case 3:
-				applicableSecCount++
-			}
+			incrementAdvisoryTypeCounts(sa.Advisory, &applicableEnhCount, &applicableBugCount, &applicableSecCount)
 			applicableCount++
 		}
 
