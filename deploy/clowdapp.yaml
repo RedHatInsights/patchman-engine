@@ -492,6 +492,16 @@ objects:
     namespace: test  # namespace is overwritten by bonfire
   type: Opaque
 
+- apiVersion: v1
+  data:
+    cert: ""
+    key: ""
+  kind: Secret
+  metadata:
+    name: candlepin
+    namespace: test  # namespace is overwritten by bonfire
+  type: Opaque
+
 parameters:
 # Manager
 - {name: REPLICAS_MANAGER, value: '1'}
