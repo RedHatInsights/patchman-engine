@@ -38,6 +38,11 @@ func TemplateSystemsDeleteHandler(c *gin.Context) {
 		return
 	}
 
+	err = assignCandlepinEnvironment(c, db, account, nil, req.Systems, groups)
+	if err != nil {
+		return
+	}
+
 	// TODO: re-evaluate systems removed from templates
 	// inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, req.Systems)
 	// kafka.EvaluateBaselineSystems(inventoryAIDs)

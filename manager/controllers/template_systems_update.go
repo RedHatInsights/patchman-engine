@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"app/base"
-	"app/base/api"
 	"app/base/candlepin"
 	"app/base/database"
 	"app/base/models"
@@ -22,10 +21,7 @@ import (
 )
 
 var errCandlepin = errors.New("candlepin error")
-var candlepinClient = api.Client{
-	HTTPClient: &http.Client{Transport: &http.Transport{DisableCompression: !config.CandlepinCallCmp}},
-	Debug:      config.DebugRequest,
-}
+var candlepinClient = config.CreateCandlepinClient()
 
 type TemplateSystemsUpdateRequest struct {
 	// List of inventory IDs to have templates removed
@@ -68,7 +64,7 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	err = assignCandlepinEnvironment(c, db, account, template.EnvironmentID, req.Systems, groups)
+	err = assignCandlepinEnvironment(c, db, account, &template.EnvironmentID, req.Systems, groups)
 	if err != nil {
 		return
 	}
@@ -195,7 +191,7 @@ func callCandlepin(ctx context.Context, consumer string, request *candlepin.Cons
 	return candlepinRespPtr.(*candlepin.ConsumersUpdateResponse), nil
 }
 
-func assignCandlepinEnvironment(c context.Context, db *gorm.DB, accountID int, env string, inventoryIDs []string,
+func assignCandlepinEnvironment(c context.Context, db *gorm.DB, accountID int, env *string, inventoryIDs []string,
 	groups map[string]string) error {
 	var consumers = []struct {
 		InventoryID string
@@ -209,8 +205,12 @@ func assignCandlepinEnvironment(c context.Context, db *gorm.DB, accountID int, e
 		return err
 	}
 
+	environments := []candlepin.ConsumersUpdateEnvironment{}
+	if env != nil {
+		environments = []candlepin.ConsumersUpdateEnvironment{{ID: *env}}
+	}
 	updateReq := candlepin.ConsumersUpdateRequest{
-		Environments: []candlepin.ConsumersUpdateEnvironment{{ID: env}},
+		Environments: environments,
 	}
 	for _, consumer := range consumers {
 		if consumer.Consumer == nil {

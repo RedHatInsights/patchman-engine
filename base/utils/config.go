@@ -71,6 +71,8 @@ type coreConfig struct {
 	VmaasAddress                  string
 	RbacAddress                   string
 	CandlepinAddress              string
+	CandlepinCert                 string
+	CandlepinKey                  string
 	ManagerPrivateAddress         string
 	ListenerPrivateAddress        string
 	EvaluatorUploadPrivateAddress string
@@ -156,6 +158,8 @@ func initServicesFromEnv() {
 	CoreCfg.VmaasAddress = Getenv("VMAAS_ADDRESS", CoreCfg.VmaasAddress)
 	CoreCfg.RbacAddress = Getenv("RBAC_ADDRESS", CoreCfg.RbacAddress)
 	CoreCfg.CandlepinAddress = Getenv("CANDLEPIN_ADDRESS", CoreCfg.CandlepinAddress)
+	CoreCfg.CandlepinCert = Getenv("CANDLEPIN_CERT", CoreCfg.CandlepinCert)
+	CoreCfg.CandlepinKey = Getenv("CANDLEPIN_KEY", CoreCfg.CandlepinKey)
 }
 
 func initDBFromClowder() {
