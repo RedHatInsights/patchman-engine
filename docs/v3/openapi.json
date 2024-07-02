@@ -1233,7 +1233,7 @@
         "/export/advisories": {
             "get": {
                 "summary": "Export applicable advisories for all my systems",
-                "description": "Export applicable advisories for all my systems",
+                "description": "Export applicable advisories for all my systems. Export endpoints are not paginated.",
                 "operationId": "exportAdvisories",
                 "parameters": [
                     {
@@ -1372,7 +1372,7 @@
         "/export/advisories/{advisory_id}/systems": {
             "get": {
                 "summary": "Export systems for my account",
-                "description": "Export systems for my account",
+                "description": "Export systems for my account. Export endpoints are not paginated.",
                 "operationId": "exportAdvisorySystems",
                 "parameters": [
                     {
@@ -1597,7 +1597,7 @@
         "/export/baselines/{baseline_id}/systems": {
             "get": {
                 "summary": "Export systems belonging to a baseline",
-                "description": "Export systems applicable to a baseline",
+                "description": "Export systems applicable to a baseline. Export endpoints are not paginated.",
                 "operationId": "exportBaselineSystems",
                 "parameters": [
                     {
@@ -1806,7 +1806,7 @@
         "/export/packages": {
             "get": {
                 "summary": "Show me all installed packages across my systems",
-                "description": "Show me all installed packages across my systems",
+                "description": "Show me all installed packages across my systems. Export endpoints are not paginated.",
                 "operationId": "exportPackages",
                 "parameters": [
                     {
@@ -1936,7 +1936,7 @@
         "/export/packages/{package_name}/systems": {
             "get": {
                 "summary": "Show me all my systems which have a package installed",
-                "description": "Show me all my systems which have a package installed",
+                "description": "Show me all my systems which have a package installed. Export endpoints are not paginated.",
                 "operationId": "exportPackageSystems",
                 "parameters": [
                     {
@@ -2093,7 +2093,7 @@
         "/export/systems": {
             "get": {
                 "summary": "Export systems for my account",
-                "description": "Export systems for my account",
+                "description": "Export systems for my account. Export endpoints are not paginated.",
                 "operationId": "exportSystems",
                 "parameters": [
                     {
@@ -2423,7 +2423,7 @@
         "/export/systems/{inventory_id}/advisories": {
             "get": {
                 "summary": "Export applicable advisories for all my systems",
-                "description": "Export applicable advisories for all my systems",
+                "description": "Export applicable advisories for all my systems. Export endpoints are not paginated.",
                 "operationId": "exportSystemAdvisories",
                 "parameters": [
                     {
@@ -2593,7 +2593,7 @@
         "/export/systems/{inventory_id}/packages": {
             "get": {
                 "summary": "Show me details about a system packages by given inventory id",
-                "description": "Show me details about a system packages by given inventory id",
+                "description": "Show me details about a system packages by given inventory id. Export endpoints are not paginated.",
                 "operationId": "exportSystemPackages",
                 "parameters": [
                     {
@@ -2719,7 +2719,7 @@
         "/export/templates/{template_id}/systems": {
             "get": {
                 "summary": "Export systems belonging to a template",
-                "description": "Export systems applicable to a template",
+                "description": "Export systems applicable to a template. Export endpoints are not paginated.",
                 "operationId": "exportTemplateSystems",
                 "parameters": [
                     {

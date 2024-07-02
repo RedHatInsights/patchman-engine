@@ -9,7 +9,7 @@ import (
 
 // nolint: lll
 // @Summary Show me all installed packages across my systems
-// @Description Show me all installed packages across my systems
+// @Description Show me all installed packages across my systems. Export endpoints are not paginated.
 // @ID exportPackages
 // @Security RhIdentity
 // @Accept   json

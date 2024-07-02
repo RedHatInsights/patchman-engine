@@ -11,7 +11,7 @@ import (
 )
 
 // @Summary Export applicable advisories for all my systems
-// @Description  Export applicable advisories for all my systems
+// @Description  Export applicable advisories for all my systems. Export endpoints are not paginated.
 // @ID exportSystemAdvisories
 // @Security RhIdentity
 // @Accept   json

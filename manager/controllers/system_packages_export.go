@@ -17,7 +17,7 @@ type SystemPackageInline struct {
 }
 
 // @Summary Show me details about a system packages by given inventory id
-// @Description Show me details about a system packages by given inventory id
+// @Description Show me details about a system packages by given inventory id. Export endpoints are not paginated.
 // @ID exportSystemPackages
 // @Security RhIdentity
 // @Accept   json

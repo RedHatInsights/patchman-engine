@@ -8,7 +8,7 @@ import (
 )
 
 // @Summary Export systems for my account
-// @Description  Export systems for my account
+// @Description  Export systems for my account. Export endpoints are not paginated.
 // @ID exportSystems
 // @Security RhIdentity
 // @Accept   json
