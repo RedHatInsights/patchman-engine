@@ -1,7 +1,11 @@
 package config
 
 import (
+	"app/base/api"
 	"app/base/utils"
+	"crypto/tls"
+	"crypto/x509"
+	"net/http"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -42,3 +46,39 @@ var (
 	// Debug flag for API calls
 	DebugRequest = log.IsLevelEnabled(log.TraceLevel)
 )
+
+func CreateCandlepinClient() api.Client {
+	getTLSConfig := func() (*tls.Config, error) {
+		var tlsConfig *tls.Config
+		if utils.CoreCfg.CandlepinCert != "" && utils.CoreCfg.CandlepinKey != "" {
+			clientCert, err := tls.X509KeyPair([]byte(utils.CoreCfg.CandlepinCert), []byte(utils.CoreCfg.CandlepinKey))
+			if err != nil {
+				return nil, err
+			}
+			certPool, err := x509.SystemCertPool()
+			if err != nil {
+				return nil, err
+			}
+			tlsConfig = &tls.Config{
+				Certificates: []tls.Certificate{clientCert},
+				RootCAs:      certPool,
+				MinVersion:   tls.VersionTLS12,
+			}
+			utils.LogInfo("using cert to access candlepin")
+		}
+		return tlsConfig, nil
+	}
+
+	tlsConfig, err := getTLSConfig()
+	if err != nil {
+		utils.LogError("err", err, "parsing candlepin cert")
+	}
+
+	return api.Client{
+		HTTPClient: &http.Client{Transport: &http.Transport{
+			DisableCompression: !CandlepinCallCmp,
+			TLSClientConfig:    tlsConfig,
+		}},
+		Debug: DebugRequest,
+	}
+}

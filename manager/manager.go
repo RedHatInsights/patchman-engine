@@ -2,7 +2,6 @@ package manager
 
 import (
 	"app/base"
-	"app/base/candlepin"
 	"app/base/core"
 	"app/base/mqueue"
 	"app/base/utils"
@@ -36,8 +35,6 @@ var basepaths = []string{"/api/patch/v3"}
 // @BasePath /api/patch/v3
 func RunManager() {
 	core.ConfigureApp()
-	config.CandlepinEnvURL = utils.FailIfEmpty(utils.CoreCfg.CandlepinAddress, "CANDLEPIN_ADDRESS") +
-		candlepin.APIPrefix + "/environments/"
 
 	port := utils.CoreCfg.PublicPort
 	utils.LogInfo("port", port, "Manager starting at port")
