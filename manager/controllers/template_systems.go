@@ -60,8 +60,7 @@ func getTemplate(c *gin.Context, tx *gorm.DB, account int, uuid string) (*models
 		LogAndRespNotFound(c, err, err.Error())
 		return &template, err
 	}
-	err := tx.Model(&models.Template{}).
-		Where("rh_account_id = ? AND uuid = ?::uuid ", account, uuid).
+	err := tx.Where("rh_account_id = ? AND uuid = ?::uuid ", account, uuid).
 		// use Find() not First() otherwise it returns error "no rows found" if uuid is not present
 		Find(&template).Error
 	if err != nil {
