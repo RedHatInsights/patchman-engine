@@ -11,7 +11,7 @@ import (
 )
 
 // @Summary Show me all my systems which have a package installed
-// @Description  Show me all my systems which have a package installed
+// @Description  Show me all my systems which have a package installed. Export endpoints are not paginated.
 // @ID exportPackageSystems
 // @Security RhIdentity
 // @Accept   json

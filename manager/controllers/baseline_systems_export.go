@@ -8,7 +8,7 @@ import (
 
 // nolint: lll
 // @Summary Export systems belonging to a baseline
-// @Description  Export systems applicable to a baseline
+// @Description  Export systems applicable to a baseline. Export endpoints are not paginated.
 // @ID exportBaselineSystems
 // @Security RhIdentity
 // @Accept   json

@@ -8,7 +8,7 @@ import (
 
 // nolint: lll
 // @Summary Export systems belonging to a template
-// @Description  Export systems applicable to a template
+// @Description  Export systems applicable to a template. Export endpoints are not paginated.
 // @ID exportTemplateSystems
 // @Security RhIdentity
 // @Accept   json
