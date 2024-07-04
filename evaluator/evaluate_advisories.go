@@ -24,7 +24,7 @@ func lazySaveAndLoadAdvisories(system *models.SystemPlatform, vmaasData *vmaas.U
 		return nil, errors.Wrap(err, "Unable to store unknown advisories in DB")
 	}
 
-	stored, err := loadSystemAdvisories(database.DB, system.RhAccountID, system.ID)
+	stored, err := loadSystemAdvisories(system.RhAccountID, system.ID)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to load system advisories")
 	}
@@ -175,6 +175,7 @@ func storeMissingAdvisories(missingNames []string) error {
 		if err != nil {
 			return err
 		}
+		// after creation, toStore will include newly added .ID attributes
 	}
 
 	return nil
@@ -182,8 +183,6 @@ func storeMissingAdvisories(missingNames []string) error {
 
 // Determine if advisories from DB are properly stored based on advisory metadata existence.
 func getMissingAdvisories(advisoryNames []string) ([]string, error) {
-	utils.LogInfo("reported", len(advisoryNames), "reported advisories")
-
 	advisoryMetadata := make(models.AdvisoryMetadataSlice, 0, len(advisoryNames))
 	err := database.DB.Model(&models.AdvisoryMetadata{}).
 		Where("name IN (?)", advisoryNames).
@@ -192,7 +191,6 @@ func getMissingAdvisories(advisoryNames []string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	utils.LogInfo("advisory_metadata", len(advisoryMetadata), "found advisory metadata")
 
 	found := make(map[string]bool, len(advisoryNames))
 	for _, am := range advisoryMetadata {
@@ -344,9 +342,9 @@ func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
 	return deleteIDs, updatedAdvisories, nil
 }
 
-func loadSystemAdvisories(tx *gorm.DB, accountID int, systemID int64) (SystemAdvisoryMap, error) {
+func loadSystemAdvisories(accountID int, systemID int64) (SystemAdvisoryMap, error) {
 	var data []models.SystemAdvisories
-	err := tx.Preload("Advisory").Find(&data, "system_id = ? AND rh_account_id = ?", systemID, accountID).Error
+	err := database.DB.Preload("Advisory").Find(&data, "system_id = ? AND rh_account_id = ?", systemID, accountID).Error
 	if err != nil {
 		return nil, err
 	}
