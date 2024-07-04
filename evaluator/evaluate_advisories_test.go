@@ -3,9 +3,11 @@ package evaluator
 import (
 	"app/base/core"
 	"app/base/database"
+	"app/base/models"
 	"app/base/utils"
 	"app/base/vmaas"
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -73,7 +75,7 @@ func TestGetStoredAdvisoriesMap(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemAdvisories, err := loadSystemAdvisories(database.DB, 1, 1)
+	systemAdvisories, err := loadSystemAdvisories(1, 1)
 	assert.Nil(t, err)
 	assert.NotNil(t, systemAdvisories)
 	assert.Equal(t, 8, len(systemAdvisories))
@@ -82,81 +84,117 @@ func TestGetStoredAdvisoriesMap(t *testing.T) {
 	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", (systemAdvisories)["RH-1"].Advisory.PublicDate.String())
 }
 
-// FIXME
-// func TestAdvisoryChanges(t *testing.T) {
-// 	stored := database.CreateStoredAdvisories([]int64{1, 2, 3})
-// 	reported := database.CreateReportedAdvisories([]string{"ER-1", "ER-3", "ER-4"},
-// 		[]int{INSTALLABLE, INSTALLABLE, INSTALLABLE})
-// 	patchedAIDs, installableNames, applicableNames := getAdvisoryChanges(reported, stored)
-// 	assert.Equal(t, 1, len(installableNames))
-// 	assert.Equal(t, "ER-4", installableNames[0])
-// 	assert.Equal(t, 0, len(applicableNames))
-// 	assert.Equal(t, 1, len(patchedAIDs))
-// 	assert.Equal(t, int64(2), patchedAIDs[0])
-// }
+func TestAdvisoryChanges(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
 
-// FIXME
-// func TestUpdatePatchedSystemAdvisories(t *testing.T) {
-// 	utils.SkipWithoutDB(t)
-// 	core.SetupTestEnvironment()
+	stored := database.CreateStoredAdvisories([]int64{1, 2, 3})
+	// create vmaasData with reported names: "ER-1", "ER-3", and "ER-4"
+	updates := []vmaas.UpdatesV3ResponseAvailableUpdates{
+		{Erratum: utils.PtrString("ER-1"), StatusID: INSTALLABLE},
+		{Erratum: utils.PtrString("ER-3"), StatusID: APPLICABLE},
+		{Erratum: utils.PtrString("ER-4"), StatusID: INSTALLABLE},
+	}
+	updateList := map[string]*vmaas.UpdatesV3ResponseUpdateList{
+		"pkg-a": {AvailableUpdates: &updates},
+	}
+	vmaasData := vmaas.UpdatesV3Response{UpdateList: &updateList}
 
-// 	system := models.SystemPlatform{ID: 12, RhAccountID: 3}
-// 	advisoryIDs := []int64{2, 3, 4}
-// 	database.CreateSystemAdvisories(t, system.RhAccountID, system.ID, advisoryIDs)
-// 	database.CreateAdvisoryAccountData(t, system.RhAccountID, advisoryIDs, 1)
-// 	// Update as-if the advisories had become patched
-// 	err := updateAdvisoryAccountData(database.DB, &system, advisoryIDs, []int64{}, []int64{})
-// 	assert.NoError(t, err)
+	// advisories must be lazy saved before evaluating changes
+	err := lazySaveAdvisories(&vmaasData, inventoryID)
+	defer database.DeleteNewlyAddedAdvisories(t)
+	assert.Nil(t, err)
 
-// 	database.CheckSystemAdvisories(t, system.ID, advisoryIDs)
-// 	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 0)
+	extendedAdvisories, err := evaluateChanges(&vmaasData, stored)
+	assert.Nil(t, err)
+	assert.Equal(t, 4, len(extendedAdvisories))
 
-// 	// Update as-if the advisories had become unpatched
-// 	err = updateAdvisoryAccountData(database.DB, &system, []int64{}, advisoryIDs, []int64{})
-// 	assert.NoError(t, err)
+	assert.Equal(t, Keep, extendedAdvisories["ER-1"].Change)
+	assert.Equal(t, Remove, extendedAdvisories["ER-2"].Change)
+	assert.Equal(t, Update, extendedAdvisories["ER-3"].Change)
+	assert.Equal(t, Add, extendedAdvisories["ER-4"].Change)
+}
 
-// 	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 1)
-// 	database.DeleteSystemAdvisories(t, system.ID, advisoryIDs)
-// 	database.DeleteAdvisoryAccountData(t, system.RhAccountID, advisoryIDs)
-// }
+func TestUpdatePatchedSystemAdvisories(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
 
-func TestGetAdvisoriesFromDB(t *testing.T) {
+	system := models.SystemPlatform{ID: 12, RhAccountID: 3}
+	advisoryIDs := []int64{2, 3, 4}
+	database.CreateSystemAdvisories(t, system.RhAccountID, system.ID, advisoryIDs)
+	database.CreateAdvisoryAccountData(t, system.RhAccountID, advisoryIDs, 1)
+
+	// Update as if the advisories became patched
+	err := updateAdvisoryAccountData(database.DB, &system, advisoryIDs, SystemAdvisoryMap{})
+	assert.NoError(t, err)
+	database.CheckSystemAdvisories(t, system.ID, advisoryIDs)
+	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 0)
+
+	// Update as if the advisories became unpatched
+	systemAdvisories := make(SystemAdvisoryMap, len(advisoryIDs))
+	for _, id := range advisoryIDs {
+		systemAdvisories[fmt.Sprintf("ER-%v", id)] = models.SystemAdvisories{AdvisoryID: id}
+	}
+	err = updateAdvisoryAccountData(database.DB, &system, []int64{}, systemAdvisories)
+	assert.NoError(t, err)
+	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 1)
+
+	database.DeleteSystemAdvisories(t, system.ID, advisoryIDs)
+	database.DeleteAdvisoryAccountData(t, system.RhAccountID, advisoryIDs)
+}
+
+func TestGetMissingAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
 	advisories := []string{"ER-1", "RH-1", "ER-2", "RH-2"}
-	// advisoryIDs, missingNames, err := getAdvisoriesFromDB(advisories)
+	advisoryIDs := getAdvisoriesFromDB(advisories)
 	missingNames, err := getMissingAdvisories(advisories)
 	assert.Nil(t, err)
-	// assert.Equal(t, 2, len(advisoryIDs)) // FIXME
+	assert.Equal(t, 2, len(advisoryIDs))
 	assert.Equal(t, 2, len(missingNames))
 }
 
-func TestGetAdvisoriesFromDBEmptyString(t *testing.T) {
+func TestGetMissingAdvisoriesEmptyString(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
 	advisories := []string{""}
-	// advisoryIDs, missingNames, err := getAdvisoriesFromDB(advisories)
+	advisoryIDs := getAdvisoriesFromDB(advisories)
 	missingNames, err := getMissingAdvisories(advisories)
 	assert.Nil(t, err)
-	// assert.Equal(t, 0, len(advisoryIDs)) // FIXME
+	assert.Equal(t, 0, len(advisoryIDs))
 	assert.Equal(t, 1, len(missingNames))
 }
 
-// FIXME
-// func TestEnsureSystemAdvisories(t *testing.T) {
-// 	utils.SkipWithoutDB(t)
-// 	core.SetupTestEnvironment()
+func TestProcessAndUpsertSystemAdvisories(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
 
-// 	rhAccountID := 1
-// 	systemID := int64(2)
-// 	advisoryIDs := []int64{2, 3, 4}
-// 	err := ensureSystemAdvisories(database.DB, rhAccountID, systemID, advisoryIDs, []int64{})
-// 	assert.Nil(t, err)
-// 	database.CheckSystemAdvisories(t, systemID, advisoryIDs)
-// 	database.DeleteSystemAdvisories(t, systemID, advisoryIDs)
-// }
+	systemID := int64(2)
+	system := models.SystemPlatform{RhAccountID: 1, ID: systemID}
+	extendedAdvisories := ExtendedAdvisoryMap{
+		"ER-2": ExtendedAdvisory{Change: Keep, SystemAdvisories: models.SystemAdvisories{
+			AdvisoryID: int64(2),
+		}},
+		"ER-3": ExtendedAdvisory{Change: Add, SystemAdvisories: models.SystemAdvisories{
+			AdvisoryID: int64(3),
+		}},
+		"ER-4": ExtendedAdvisory{Change: Update, SystemAdvisories: models.SystemAdvisories{
+			AdvisoryID: int64(4),
+		}},
+	}
+
+	deleteIDs, advisoryObjs, updatedAdvisories := processAdvisories(&system, extendedAdvisories)
+	assert.Equal(t, 0, len(deleteIDs))
+	assert.Equal(t, 2, len(advisoryObjs))
+	assert.Equal(t, len(updatedAdvisories), len(extendedAdvisories)-len(deleteIDs))
+
+	err := upsertSystemAdvisories(database.DB, advisoryObjs)
+	assert.Nil(t, err)
+	database.CheckSystemAdvisories(t, systemID, []int64{3, 4})
+	database.DeleteSystemAdvisories(t, systemID, []int64{3, 4})
+}
 
 func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV3Response {
 	ctx := context.Background()
@@ -166,4 +204,21 @@ func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV3Response {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Nil(t, resp.Body.Close())
 	return vmaasData
+}
+
+func getAdvisoriesFromDB(advisories []string) []int64 {
+	advisoryMetadata := make(models.AdvisoryMetadataSlice, 0, len(advisories))
+	err := database.Db.Model(&models.AdvisoryMetadata{}).
+		Where("name IN (?)", advisories).
+		Select("id, name").
+		Scan(&advisoryMetadata).Error
+	if err != nil {
+		return nil
+	}
+
+	advisoryIDs := make([]int64, 0, len(advisories))
+	for _, am := range advisoryMetadata {
+		advisoryIDs = append(advisoryIDs, am.ID)
+	}
+	return advisoryIDs
 }
