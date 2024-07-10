@@ -18,7 +18,7 @@ var SystemCsvHeader = "id,display_name,os,rhsm,tags,last_evaluation," +
 	"satellite_managed,built_pkgcache,packages_installable,packages_applicable," +
 	"installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count," +
 	"applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count," +
-	"baseline_id,template_name,template_id,groups,arch"
+	"baseline_id,template_name,template_uuid,groups,arch"
 
 func makeRequest(t *testing.T, path string, contentType string) *httptest.ResponseRecorder {
 	core.SetupTest(t)
@@ -60,7 +60,8 @@ func TestSystemsExportCSV(t *testing.T) {
 		"\"[{'key':'k1','namespace':'ns1','value':'val1'},{'key':'k2','namespace':'ns1','value':'val2'}]\","+
 		"2018-09-22T16:00:00Z,2,2,1,0,0,baseline_1-1,"+
 		"2020-09-22T16:00:00Z,2018-08-26T16:00:00Z,2018-09-02T16:00:00Z,2018-09-09T16:00:00Z,2018-08-26T16:00:00Z,"+
-		"false,false,false,0,0,2,2,1,0,2,3,3,3,1,temp1-1,1,\"[{'id':'inventory-group-1','name':'group1'}]\",x86_64",
+		"false,false,false,0,0,2,2,1,0,2,3,3,3,1,temp1-1,99900000-0000-0000-0000-000000000001,"+
+		"\"[{'id':'inventory-group-1','name':'group1'}]\",x86_64",
 		lines[1])
 }
 
