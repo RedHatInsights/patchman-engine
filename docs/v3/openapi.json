@@ -7215,10 +7215,10 @@
                             "$ref": "#/components/schemas/controllers.SystemTag"
                         }
                     },
-                    "template_id": {
-                        "type": "integer"
-                    },
                     "template_name": {
+                        "type": "string"
+                    },
+                    "template_uuid": {
                         "type": "string"
                     }
                 }
@@ -7294,10 +7294,10 @@
                             "$ref": "#/components/schemas/controllers.SystemTag"
                         }
                     },
-                    "template_id": {
-                        "type": "integer"
-                    },
                     "template_name": {
+                        "type": "string"
+                    },
+                    "template_uuid": {
                         "type": "string"
                     }
                 }
@@ -8021,10 +8021,10 @@
                             "$ref": "#/components/schemas/controllers.SystemTag"
                         }
                     },
-                    "template_id": {
-                        "type": "integer"
-                    },
                     "template_name": {
+                        "type": "string"
+                    },
+                    "template_uuid": {
                         "type": "string"
                     },
                     "updatable": {
@@ -8309,10 +8309,10 @@
                             "$ref": "#/components/schemas/controllers.SystemTag"
                         }
                     },
-                    "template_id": {
-                        "type": "integer"
-                    },
                     "template_name": {
+                        "type": "string"
+                    },
+                    "template_uuid": {
                         "type": "string"
                     }
                 }
@@ -8455,10 +8455,10 @@
                             "$ref": "#/components/schemas/controllers.SystemTag"
                         }
                     },
-                    "template_id": {
-                        "type": "integer"
-                    },
                     "template_name": {
+                        "type": "string"
+                    },
+                    "template_uuid": {
                         "type": "string"
                     }
                 }
@@ -8586,10 +8586,10 @@
                             "$ref": "#/components/schemas/controllers.SystemTag"
                         }
                     },
-                    "template_id": {
-                        "type": "integer"
-                    },
                     "template_name": {
+                        "type": "string"
+                    },
+                    "template_uuid": {
                         "type": "string"
                     },
                     "third_party": {
