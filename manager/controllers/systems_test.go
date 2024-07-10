@@ -214,6 +214,14 @@ func TestSystemsFilterOS(t *testing.T) {
 	assert.Equal(t, "RHEL 8.1", output.Data[2].Attributes.OS)
 }
 
+func TestSystemsFilterPartialOS(t *testing.T) {
+	output := testSystems(t, "?filter[osname]=RHEL&filter[osmajor]=8&filter[osminor]=1", 1)
+	assert.Equal(t, 3, len(output.Data))
+	for _, d := range output.Data {
+		assert.Equal(t, "RHEL 8.1", d.Attributes.OS)
+	}
+}
+
 func TestSystemsOrderOS(t *testing.T) {
 	output := testSystems(t, `?sort=os`, 1)
 	assert.Equal(t, "RHEL 7.3", output.Data[0].Attributes.OS)

@@ -2347,6 +2347,30 @@
                         }
                     },
                     {
+                        "name": "filter[osname]",
+                        "in": "query",
+                        "description": "Filter OS name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osmajor]",
+                        "in": "query",
+                        "description": "Filter OS major version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osminor]",
+                        "in": "query",
+                        "description": "Filter OS minor version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "tags",
                         "in": "query",
                         "description": "Tag filter",
@@ -4090,6 +4114,30 @@
                         }
                     },
                     {
+                        "name": "filter[osname]",
+                        "in": "query",
+                        "description": "Filter OS name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osmajor]",
+                        "in": "query",
+                        "description": "Filter OS major version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osminor]",
+                        "in": "query",
+                        "description": "Filter OS minor version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[satellite_managed]",
                         "in": "query",
                         "description": "Filter",
@@ -5333,6 +5381,30 @@
                         "name": "filter[os]",
                         "in": "query",
                         "description": "Filter OS version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osname]",
+                        "in": "query",
+                        "description": "Filter OS name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osmajor]",
+                        "in": "query",
+                        "description": "Filter OS major version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[osminor]",
+                        "in": "query",
+                        "description": "Filter OS minor version",
                         "schema": {
                             "type": "string"
                         }

@@ -124,3 +124,15 @@ func TestSystemsExportBaselineFilter(t *testing.T) {
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output[1].ID)
 }
+
+func TestSystemsExportFilterPartialOS(t *testing.T) {
+	w := makeRequest(t, "/?filter[osname]=RHEL&filter[osmajor]=8&filter[osminor]=1", "application/json")
+
+	var output []SystemDBLookup
+	CheckResponse(t, w, http.StatusOK, &output)
+
+	assert.Equal(t, 3, len(output))
+	for _, o := range output {
+		assert.Equal(t, "RHEL 8.1", o.OS)
+	}
+}
