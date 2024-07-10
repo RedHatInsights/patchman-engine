@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
@@ -42,6 +43,7 @@ type CreateBaselineResponse struct {
 type SystemBaselineDBLookup struct {
 	InventoryID      string `query:"sp.inventory_id"`
 	SatelliteManaged bool   `query:"sp.satellite_managed"`
+	Bootc            bool   `query:"sp.bootc"`
 }
 
 // @Summary Create a baseline for my set of systems
@@ -56,6 +58,7 @@ type SystemBaselineDBLookup struct {
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines [put]
+// nolint: funlen
 func CreateBaselineHandler(c *gin.Context) {
 	accountID := c.GetInt(utils.KeyAccount)
 	creator := c.GetString(utils.KeyUser)
@@ -81,20 +84,19 @@ func CreateBaselineHandler(c *gin.Context) {
 	request.Description = utils.EmptyToNil(request.Description)
 
 	db := middlewares.DBFromContext(c)
-	missingIDs, satelliteManagedIDs, err := checkInventoryIDs(db, accountID, request.InventoryIDs, groups)
+	err := checkInventoryIDs(db, accountID, request.InventoryIDs, groups)
 	if err != nil {
-		LogAndRespError(c, err, "Database error")
-		return
-	}
-
-	if config.EnableSatelliteFunctionality && len(satelliteManagedIDs) > 0 {
-		msg := fmt.Sprintf("Attempting to add satellite managed systems to baseline: %v", satelliteManagedIDs)
-		LogAndRespBadRequest(c, errors.New(msg), msg)
-		return
-	} else if len(missingIDs) > 0 {
-		msg := fmt.Sprintf("Missing inventory_ids: %v", missingIDs)
-		LogAndRespNotFound(c, errors.New(msg), msg)
-		return
+		switch {
+		case errors.Is(err, base.ErrBadRequest):
+			LogAndRespBadRequest(c, err, err.Error())
+			return
+		case errors.Is(err, base.ErrNotFound):
+			LogAndRespNotFound(c, err, err.Error())
+			return
+		default:
+			LogAndRespError(c, err, "Database error")
+			return
+		}
 	}
 
 	baselineID, err := buildCreateBaselineQuery(db, request, accountID)
@@ -152,14 +154,16 @@ func buildCreateBaselineQuery(db *gorm.DB, request CreateBaselineRequest, accoun
 	return baseline.ID, err
 }
 
-func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string, groups map[string]string,
-) (missingIDs, satelliteManagedIDs []string, err error) {
+func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string, groups map[string]string) (err error) {
 	var containingSystems []SystemBaselineDBLookup
+	var missingIDs []string
+	var satelliteIDs []string
+	var bootcIDs []string
 	err = database.Systems(db, accountID, groups).
 		Where("inventory_id::text IN (?)", inventoryIDs).
 		Scan(&containingSystems).Error
 	if err != nil {
-		return nil, nil, err
+		return errors.Join(base.ErrDatabase, err)
 	}
 
 	containingIDsMap := make(map[string]bool, len(containingSystems))
@@ -167,7 +171,10 @@ func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string, groups
 		containingIDsMap[containingSystem.InventoryID] = true
 
 		if containingSystem.SatelliteManaged {
-			satelliteManagedIDs = append(satelliteManagedIDs, containingSystem.InventoryID)
+			satelliteIDs = append(satelliteIDs, containingSystem.InventoryID)
+		}
+		if containingSystem.Bootc {
+			bootcIDs = append(bootcIDs, containingSystem.InventoryID)
 		}
 	}
 
@@ -178,7 +185,20 @@ func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string, groups
 	}
 
 	sort.Strings(missingIDs)
-	sort.Strings(satelliteManagedIDs)
+	sort.Strings(satelliteIDs)
+	sort.Strings(bootcIDs)
 
-	return missingIDs, satelliteManagedIDs, nil
+	switch {
+	case config.EnableSatelliteFunctionality && len(satelliteIDs) > 0:
+		errIDs := fmt.Errorf("template can not contain satellite managed systems: %v", satelliteIDs)
+		err = errors.Join(err, base.ErrBadRequest, errIDs)
+	case len(bootcIDs) > 0:
+		errIDs := fmt.Errorf("template can not contain bootc systems: %v", bootcIDs)
+		err = errors.Join(err, base.ErrBadRequest, errIDs)
+	case len(missingIDs) > 0:
+		errIDs := fmt.Errorf("unknown inventory_ids: %v", missingIDs)
+		err = errors.Join(err, base.ErrNotFound, errIDs)
+	}
+
+	return err
 }

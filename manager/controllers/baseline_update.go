@@ -1,14 +1,13 @@
 package controllers
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
-	"app/manager/config"
 	"app/manager/kafka"
 	"app/manager/middlewares"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -92,20 +91,19 @@ func BaselineUpdateHandler(c *gin.Context) {
 	}
 
 	inventoryIDsList := map2list(req.InventoryIDs)
-	missingIDs, satelliteManagedIDs, err := checkInventoryIDs(db, account, inventoryIDsList, groups)
+	err = checkInventoryIDs(db, account, inventoryIDsList, groups)
 	if err != nil {
-		LogAndRespError(c, err, "Database error")
-		return
-	}
-
-	if config.EnableSatelliteFunctionality && len(satelliteManagedIDs) > 0 {
-		msg := fmt.Sprintf("Attempting to add satellite managed systems to baseline: %v", satelliteManagedIDs)
-		LogAndRespBadRequest(c, errors.New(msg), msg)
-		return
-	} else if len(missingIDs) > 0 {
-		msg := fmt.Sprintf("Missing inventory_ids: %v", missingIDs)
-		LogAndRespNotFound(c, errors.New(msg), msg)
-		return
+		switch {
+		case errors.Is(err, base.ErrBadRequest):
+			LogAndRespBadRequest(c, err, err.Error())
+			return
+		case errors.Is(err, base.ErrNotFound):
+			LogAndRespNotFound(c, err, err.Error())
+			return
+		default:
+			LogAndRespError(c, err, "Database error")
+			return
+		}
 	}
 
 	newAssociations, obsoleteAssociations := sortInventoryIDs(req.InventoryIDs)

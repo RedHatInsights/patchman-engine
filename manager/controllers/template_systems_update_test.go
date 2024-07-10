@@ -6,6 +6,7 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"bytes"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -82,7 +83,7 @@ func TestUpdateTemplateInvalidSystem(t *testing.T) {
 	CheckResponse(t, w, http.StatusNotFound, &errResp)
 	// 00000000-0000-0000-0000-000000000009 is from different account and should not be added
 	// this-is-not-a-uuid is not a valid uuid
-	assert.Equal(t, "Unknown inventory_ids: [00000000-0000-0000-0000-000000000009 this-is-not-a-uuid]",
+	assert.Equal(t, "not found\nunknown inventory_ids: [00000000-0000-0000-0000-000000000009 this-is-not-a-uuid]",
 		errResp.Error)
 	database.DeleteTemplate(t, templateAccount, templateUUID)
 }
@@ -143,19 +144,12 @@ func TestReassignTemplateSystems2(t *testing.T) {
 	database.DeleteTemplate(t, templateAccount, template2)
 }
 
-func TestUpdateTemplateSatelliteSystem(t *testing.T) {
+func testUpdateTemplateBadRequest(t *testing.T, system models.SystemPlatform) {
 	core.SetupTestEnvironment()
 
 	database.CreateTemplate(t, templateAccount, templateUUID, templateSystems)
 	defer database.DeleteTemplate(t, templateAccount, templateUUID)
 
-	system := models.SystemPlatform{
-		InventoryID:      "99999999-0000-0000-0000-000000000015",
-		DisplayName:      "satellite_system_test",
-		RhAccountID:      templateAccount,
-		BuiltPkgcache:    true,
-		SatelliteManaged: true,
-	}
 	tx := database.DB.Create(&system)
 	assert.Nil(t, tx.Error)
 	defer database.DB.Delete(system)
@@ -171,4 +165,26 @@ func TestUpdateTemplateSatelliteSystem(t *testing.T) {
 		TemplateSystemsUpdateHandler, templateAccount)
 	var err utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &err)
+}
+
+func TestUpdateTemplateBadRequest(t *testing.T) {
+	system := models.SystemPlatform{
+		InventoryID:   "99999999-0000-0000-0000-000000000015",
+		RhAccountID:   templateAccount,
+		BuiltPkgcache: true,
+	}
+	satelliteSystem := system
+	satelliteSystem.DisplayName = "satellite_system_test"
+	satelliteSystem.SatelliteManaged = true
+
+	bootcSystem := system
+	bootcSystem.DisplayName = "bootc_system_test"
+	bootcSystem.Bootc = true
+
+	systems := []models.SystemPlatform{satelliteSystem, bootcSystem}
+	for _, system := range systems {
+		t.Run(fmt.Sprint(system.DisplayName), func(t *testing.T) {
+			testUpdateTemplateBadRequest(t, system)
+		})
+	}
 }
