@@ -2339,6 +2339,14 @@
                         }
                     },
                     {
+                        "name": "filter[arch]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[os]",
                         "in": "query",
                         "description": "Filter OS version",
@@ -4154,6 +4162,14 @@
                         }
                     },
                     {
+                        "name": "filter[arch]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "tags",
                         "in": "query",
                         "description": "Tag filter",
@@ -5371,6 +5387,14 @@
                     },
                     {
                         "name": "filter[built_pkgcache]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[arch]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
@@ -8192,6 +8216,9 @@
                     "applicable_rhsa_count": {
                         "type": "integer"
                     },
+                    "arch": {
+                        "type": "string"
+                    },
                     "baseline_id": {
                         "type": "integer"
                     },
@@ -8338,6 +8365,9 @@
                     "applicable_rhsa_count": {
                         "type": "integer"
                     },
+                    "arch": {
+                        "type": "string"
+                    },
                     "baseline_id": {
                         "type": "integer"
                     },
@@ -8447,6 +8477,9 @@
                     },
                     "applicable_rhsa_count": {
                         "type": "integer"
+                    },
+                    "arch": {
+                        "type": "string"
                     },
                     "baseline_id": {
                         "type": "integer"

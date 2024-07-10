@@ -95,6 +95,7 @@ type SystemItemAttributes struct {
 	BaselineIDAttr
 	TemplateAttibutes
 	SystemGroups
+	SystemArch
 }
 
 // nolint: lll
@@ -235,6 +236,7 @@ func systemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 // @Param    filter[baseline_name]          query   string  false   "Filter"
 // @Param    filter[satellite_managed] 		query   string  false   "Filter"
 // @Param    filter[built_pkgcache]         query   string  false   "Filter"
+// @Param    filter[arch]                   query   string  false   "Filter"
 // @Param    filter[os]                     query   string  false   "Filter OS version"
 // @Param    filter[osname]                 query   string  false   "Filter OS name"
 // @Param    filter[osmajor]                query   string  false   "Filter OS major version"
@@ -319,6 +321,7 @@ func SystemsListHandler(c *gin.Context) {
 // @Param    filter[osminor]                query   string  false   "Filter OS minor version"
 // @Param    filter[satellite_managed]      query   string  false   "Filter"
 // @Param    filter[built_pkgcache]         query   string  false   "Filter"
+// @Param    filter[arch]                   query   string  false   "Filter"
 // @Param    tags                           query   []string false  "Tag filter"
 // @Param    filter[group_name] 									query	[]string 	false "Filter systems by inventory groups"
 // @Param    filter[system_profile][sap_system]                     query   string  false   "Filter only SAP systems"
