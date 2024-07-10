@@ -1,10 +1,10 @@
 package controllers
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
-	"app/manager/config"
 	"app/manager/middlewares"
 	"fmt"
 	"net/http"
@@ -65,6 +65,7 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// nolint:funlen
 func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template *models.Template,
 	inventoryIDs []string, groups map[string]string) error {
 	if len(inventoryIDs) == 0 {
@@ -75,20 +76,19 @@ func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template 
 	tx := db.Begin()
 	defer tx.Rollback()
 
-	missingIDs, satelliteManagedIDs, err := checkInventoryIDs(db, accountID, inventoryIDs, groups)
+	err := checkInventoryIDs(db, accountID, inventoryIDs, groups)
 	if err != nil {
-		LogAndRespError(c, err, "Database error")
-		return err
-	}
-
-	if config.EnableSatelliteFunctionality && len(satelliteManagedIDs) > 0 {
-		msg := fmt.Sprintf("Template can not contain satellite managed systems: %v", satelliteManagedIDs)
-		LogAndRespBadRequest(c, errors.New(msg), msg)
-		return err
-	} else if len(missingIDs) > 0 {
-		msg := fmt.Sprintf("Unknown inventory_ids: %v", missingIDs)
-		LogAndRespNotFound(c, errors.New(msg), msg)
-		return err
+		switch {
+		case errors.Is(err, base.ErrBadRequest):
+			LogAndRespBadRequest(c, err, err.Error())
+			return err
+		case errors.Is(err, base.ErrNotFound):
+			LogAndRespNotFound(c, err, err.Error())
+			return err
+		default:
+			LogAndRespError(c, err, "Database error")
+			return err
+		}
 	}
 
 	if err := templateArchVersionMatch(db, inventoryIDs, template, accountID, groups); err != nil {
