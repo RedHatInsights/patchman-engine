@@ -35,6 +35,7 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, int64(1), output.Data[0].Attributes.BaselineID)
 	assert.False(t, output.Data[0].Attributes.SatelliteManaged)
 	assert.False(t, output.Data[0].Attributes.BuiltPkgcache)
+	assert.Equal(t, "x86_64", output.Data[0].Attributes.Arch)
 
 	// links
 	assert.Equal(t, "/?offset=0&limit=20&filter[stale]=eq:false&sort=-last_upload", output.Links.First)
@@ -233,6 +234,14 @@ func TestSystemsOrderOS(t *testing.T) {
 	assert.Equal(t, "RHEL 8.3", output.Data[6].Attributes.OS)
 	assert.Equal(t, "RHEL 8.10", output.Data[7].Attributes.OS)
 	assert.Equal(t, "RHEL 8.x", output.Data[8].Attributes.OS) // yes, we should be robust against this
+}
+
+func TestSystemsFilterArch(t *testing.T) {
+	output := testSystems(t, `?filter[arch]=x86_64`, 1)
+	assert.Equal(t, 8, len(output.Data))
+	for _, d := range output.Data {
+		assert.Equal(t, "x86_64", d.Attributes.Arch)
+	}
 }
 
 func testSystems(t *testing.T, queryString string, account int) SystemsResponse {

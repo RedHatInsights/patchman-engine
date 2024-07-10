@@ -42,6 +42,7 @@ import (
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Param    filter[baseline_name]   query   string false "Filter"
+// @Param    filter[arch]            query   string false "Filter"
 // @Param    filter[os]              query   string    false "Filter OS version"
 // @Param    filter[osname]          query   string  false   "Filter OS name"
 // @Param    filter[osmajor]         query   string  false   "Filter OS major version"

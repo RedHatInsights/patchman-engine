@@ -78,6 +78,10 @@ type SystemBuiltPkgcache struct {
 	BuiltPkgcache bool `json:"built_pkgcache" csv:"built_pkgcache" query:"sp.built_pkgcache" gorm:"column:built_pkgcache"`
 }
 
+type SystemArch struct {
+	Arch string `json:"arch" csv:"arch" query:"sp.arch" gorm:"column:arch"`
+}
+
 // nolint: lll
 type InstallableAdvisories struct {
 	InstallableRhsaCount  int `json:"installable_rhsa_count" csv:"installable_rhsa_count" query:"sp.installable_advisory_sec_count_cache" gorm:"column:installable_rhsa_count"`
