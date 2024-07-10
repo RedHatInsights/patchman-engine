@@ -7,7 +7,7 @@ export APP_NAME="patchman"  # name of app-sre "application" folder this componen
 export COMPONENT_NAME="patchman"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 export IMAGE="quay.io/cloudservices/patchman-engine-app"
 export DOCKERFILE="Dockerfile"
-export COMPONENTS_W_RESOURCES="vmaas"
+export COMPONENTS_W_RESOURCES="vmaas content-sources-backend"
 
 export IQE_PLUGINS="patchman"
 export IQE_MARKER_EXPRESSION="patch_smoke"
