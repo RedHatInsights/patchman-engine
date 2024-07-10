@@ -43,6 +43,9 @@ import (
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
 // @Param    filter[baseline_name]   query   string false "Filter"
 // @Param    filter[os]              query   string    false "Filter OS version"
+// @Param    filter[osname]          query   string  false   "Filter OS name"
+// @Param    filter[osmajor]         query   string  false   "Filter OS major version"
+// @Param    filter[osminor]         query   string  false   "Filter OS minor version"
 // @Param    tags                    query   []string  false "Tag filter"
 // @Success 200 {array} SystemDBLookup
 // @Failure 415 {object} utils.ErrorResponse
