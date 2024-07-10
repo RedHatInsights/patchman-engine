@@ -10,6 +10,7 @@ type SystemProfile struct {
 	Rhsm              Rhsm            `json:"rhsm,omitempty"`
 	Releasever        *string         `json:"releasever,omitempty"`
 	SatelliteManaged  bool            `json:"satellite_managed,omitempty"`
+	BootcStatus       Bootc           `json:"bootc_status,omitempty"`
 }
 
 func (t *SystemProfile) GetInstalledPackages() []string {
@@ -54,4 +55,12 @@ type DnfModule struct {
 
 type Rhsm struct {
 	Version string `json:"version,omitempty"`
+}
+
+type Bootc struct {
+	Booted BootcBooted `json:"booted,omitempty"`
+}
+
+type BootcBooted struct {
+	Image string `json:"image,omitempty"`
 }
