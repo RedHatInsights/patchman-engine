@@ -2339,6 +2339,22 @@
                         }
                     },
                     {
+                        "name": "filter[template_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[template_uuid]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[arch]",
                         "in": "query",
                         "description": "Filter",
@@ -4114,6 +4130,22 @@
                         }
                     },
                     {
+                        "name": "filter[template_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[template_uuid]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "filter[os]",
                         "in": "query",
                         "description": "Filter OS version",
@@ -5371,6 +5403,22 @@
                     },
                     {
                         "name": "filter[baseline_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[template_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[template_uuid]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
