@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (127, false);
+VALUES (128, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -745,6 +745,7 @@ CREATE TABLE IF NOT EXISTS system_platform
     template_id              BIGINT,
     yum_checksum             TEXT                     CHECK (NOT empty(yum_checksum)),
     arch                     TEXT                     CHECK (NOT empty(arch)),
+    bootc                    BOOLEAN                  NOT NULL DEFAULT false,
     PRIMARY KEY (rh_account_id, id),
     UNIQUE (rh_account_id, inventory_id),
     CONSTRAINT reporter_id FOREIGN KEY (reporter_id) REFERENCES reporter (id),
