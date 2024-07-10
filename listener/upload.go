@@ -320,12 +320,18 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		"satellite_managed",
 		"built_pkgcache",
 		"arch",
+		"bootc",
 	}
 
 	now := time.Now()
 	displayName := inventoryID
 	if host.DisplayName != nil && len(*host.DisplayName) > 0 && !spacesRegex.MatchString(*host.DisplayName) {
 		displayName = *host.DisplayName
+	}
+
+	isBootc := false
+	if len(host.SystemProfile.BootcStatus.Booted.Image) > 0 {
+		isBootc = true
 	}
 
 	staleWarning := host.StaleWarningTimestamp.Time()
@@ -347,6 +353,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		SatelliteManaged:      host.SystemProfile.SatelliteManaged,
 		BuiltPkgcache:         yumUpdates.GetBuiltPkgcache(),
 		Arch:                  host.SystemProfile.Arch,
+		Bootc:                 isBootc,
 	}
 
 	type OldChecksums struct {

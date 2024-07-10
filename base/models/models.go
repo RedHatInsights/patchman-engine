@@ -95,6 +95,7 @@ type SystemPlatform struct {
 	SatelliteManaged                 bool    `gorm:"column:satellite_managed"`
 	BuiltPkgcache                    bool    `gorm:"column:built_pkgcache"`
 	Arch                             *string
+	Bootc                            bool
 }
 
 func (SystemPlatform) TableName() string {
