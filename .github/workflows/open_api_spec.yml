@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Spec validation with OpenAPIv3 (docs/v3/openapi.json)
       run: docker run --rm -v ${PWD}/docs:/docs:Z openapitools/openapi-generator-cli:v6.0.1 validate -i /docs/v3/openapi.json
 
@@ -23,7 +23,7 @@ jobs:
     needs: [spec_validation]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Generate Python client with OpenAPIv3 (docs/v3/openapi.json)
       run: docker run --rm -v ${PWD}/docs/v3:/local:Z openapitools/openapi-generator-cli:v6.0.1 generate -i /local/openapi.json -g python -o /local/client
     - uses: actions/upload-artifact@v2

@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: increment version, commit, push
       run: |
         DOC_FILE="docs/v3/openapi.json docs/admin/openapi.json"
