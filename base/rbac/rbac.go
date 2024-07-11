@@ -20,8 +20,9 @@ type ResourceDefinition struct {
 type AttributeFilterValue []*string
 
 type AttributeFilter struct {
-	Key   string               `json:"key"`
-	Value AttributeFilterValue `json:"value"`
+	Key       string               `json:"key"`
+	Value     AttributeFilterValue `json:"value"`
+	Operation string               `json:"operation"`
 }
 
 type inventoryGroup struct {

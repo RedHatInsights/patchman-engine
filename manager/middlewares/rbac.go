@@ -123,16 +123,21 @@ func isAccessGranted(c *gin.Context) bool {
 	granted := checkPermissions(&access, handlerName, c.Request.Method)
 	if granted {
 		// collect inventory groups
-		c.Set(utils.KeyInventoryGroups, findInventoryGroups(&access))
+		groups, err := findInventoryGroups(&access)
+		if err != nil {
+			utils.LogError("err", err.Error(), "RBAC")
+			granted = false
+		}
+		c.Set(utils.KeyInventoryGroups, groups)
 	}
 	return granted
 }
 
-func findInventoryGroups(access *rbac.AccessPagination) map[string]string {
+func findInventoryGroups(access *rbac.AccessPagination) (map[string]string, error) {
 	res := make(map[string]string)
 
 	if len(access.Data) == 0 {
-		return res
+		return res, nil
 	}
 	inventoryHostsReadPerms := expandedPermission(inventoryHostsReadPerm)
 	groups := []string{}
@@ -144,11 +149,21 @@ func findInventoryGroups(access *rbac.AccessPagination) map[string]string {
 
 		if len(a.ResourceDefinitions) == 0 {
 			// access to all groups
-			return nil
+			return nil, nil
 		}
 		for _, rd := range a.ResourceDefinitions {
 			if rd.AttributeFilter.Key != "group.id" {
 				continue
+			}
+
+			// https://github.com/RedHatInsights/insights-host-inventory/
+			//     blob/a7c8a7c980012c89e18ec0f7074609e216b37a8d/lib/middleware.py#L124
+			if rd.AttributeFilter.Operation != "in" {
+				err := fmt.Errorf(
+					"invalid value '%s' for attributeFilter.Operation",
+					rd.AttributeFilter.Operation,
+				)
+				return nil, err
 			}
 			for _, v := range rd.AttributeFilter.Value {
 				if v == nil {
@@ -168,7 +183,7 @@ func findInventoryGroups(access *rbac.AccessPagination) map[string]string {
 	if len(groups) > 0 {
 		res[utils.KeyGrouped] = fmt.Sprintf("{%s}", strings.Join(groups, ","))
 	}
-	return res
+	return res, nil
 }
 
 func RBAC() gin.HandlerFunc {
