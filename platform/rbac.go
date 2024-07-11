@@ -20,8 +20,9 @@ func rbacHandler(c *gin.Context) {
 				Permission: "inventory:hosts:read",
 				ResourceDefinitions: []rbac.ResourceDefinition{{
 					AttributeFilter: rbac.AttributeFilter{
-						Key:   "group.id",
-						Value: []*string{&inventoryGroup, nil},
+						Key:       "group.id",
+						Operation: "in",
+						Value:     []*string{&inventoryGroup, nil},
 					},
 				}},
 			},

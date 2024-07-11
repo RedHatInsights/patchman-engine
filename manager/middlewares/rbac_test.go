@@ -247,20 +247,23 @@ func TestFindInventoryGroupsGrouped(t *testing.T) {
 			Permission: "inventory:hosts:read",
 			ResourceDefinitions: []rbac.ResourceDefinition{{
 				AttributeFilter: rbac.AttributeFilter{
-					Key:   "group.id",
-					Value: []*string{&group1},
+					Key:       "group.id",
+					Value:     []*string{&group1},
+					Operation: "in",
 				},
 			}},
 		}},
 	}
-	groups := findInventoryGroups(access)
-	assert.Equal(t,
-		`{"[{\"id\":\"df57820e-965c-49a6-b0bc-797b7dd60581\"}]"}`,
-		groups[utils.KeyGrouped],
-	)
-	val, ok := groups[utils.KeyUngrouped]
-	assert.Equal(t, "", val)
-	assert.Equal(t, false, ok)
+	groups, err := findInventoryGroups(access)
+	if assert.NoError(t, err) {
+		assert.Equal(t,
+			`{"[{\"id\":\"df57820e-965c-49a6-b0bc-797b7dd60581\"}]"}`,
+			groups[utils.KeyGrouped],
+		)
+		val, ok := groups[utils.KeyUngrouped]
+		assert.Equal(t, "", val)
+		assert.Equal(t, false, ok)
+	}
 }
 
 func TestFindInventoryGroupsUnrouped(t *testing.T) {
@@ -269,17 +272,20 @@ func TestFindInventoryGroupsUnrouped(t *testing.T) {
 			Permission: "inventory:hosts:read",
 			ResourceDefinitions: []rbac.ResourceDefinition{{
 				AttributeFilter: rbac.AttributeFilter{
-					Key:   "group.id",
-					Value: []*string{nil},
+					Key:       "group.id",
+					Value:     []*string{nil},
+					Operation: "in",
 				},
 			}},
 		}},
 	}
-	groups := findInventoryGroups(access)
-	val, ok := groups[utils.KeyGrouped]
-	assert.Equal(t, "", val)
-	assert.Equal(t, false, ok)
-	assert.Equal(t, "[]", groups[utils.KeyUngrouped])
+	groups, err := findInventoryGroups(access)
+	if assert.NoError(t, err) {
+		val, ok := groups[utils.KeyGrouped]
+		assert.Equal(t, "", val)
+		assert.Equal(t, false, ok)
+		assert.Equal(t, "[]", groups[utils.KeyUngrouped])
+	}
 }
 
 func TestFindInventoryGroups(t *testing.T) {
@@ -288,18 +294,21 @@ func TestFindInventoryGroups(t *testing.T) {
 			Permission: "inventory:hosts:read",
 			ResourceDefinitions: []rbac.ResourceDefinition{{
 				AttributeFilter: rbac.AttributeFilter{
-					Key:   "group.id",
-					Value: []*string{&group1, &group2, nil},
+					Key:       "group.id",
+					Value:     []*string{&group1, &group2, nil},
+					Operation: "in",
 				},
 			}},
 		}},
 	}
-	groups := findInventoryGroups(access)
-	assert.Equal(t,
-		`{"[{\"id\":\"df57820e-965c-49a6-b0bc-797b7dd60581\"}]","[{\"id\":\"df3f0efd-c853-41b5-80a1-86881d5343d1\"}]"}`,
-		groups[utils.KeyGrouped],
-	)
-	assert.Equal(t, "[]", groups[utils.KeyUngrouped])
+	groups, err := findInventoryGroups(access)
+	if assert.NoError(t, err) {
+		assert.Equal(t,
+			`{"[{\"id\":\"df57820e-965c-49a6-b0bc-797b7dd60581\"}]","[{\"id\":\"df3f0efd-c853-41b5-80a1-86881d5343d1\"}]"}`,
+			groups[utils.KeyGrouped],
+		)
+		assert.Equal(t, "[]", groups[utils.KeyUngrouped])
+	}
 }
 
 func TestFindInventoryGroupsOverwrite(t *testing.T) {
@@ -309,8 +318,9 @@ func TestFindInventoryGroupsOverwrite(t *testing.T) {
 				Permission: "inventory:hosts:read",
 				ResourceDefinitions: []rbac.ResourceDefinition{{
 					AttributeFilter: rbac.AttributeFilter{
-						Key:   "group.id",
-						Value: []*string{&group1, nil},
+						Key:       "group.id",
+						Value:     []*string{&group1, nil},
+						Operation: "in",
 					},
 				}},
 			},
@@ -320,9 +330,11 @@ func TestFindInventoryGroupsOverwrite(t *testing.T) {
 			},
 		},
 	}
-	groups := findInventoryGroups(access)
-	// we expect access to all groups (empty map)
-	assert.Equal(t, 0, len(groups))
+	groups, err := findInventoryGroups(access)
+	if assert.NoError(t, err) {
+		// we expect access to all groups (empty map)
+		assert.Equal(t, 0, len(groups))
+	}
 }
 
 func TestFindInventoryGroupsOverwrite2(t *testing.T) {
@@ -336,16 +348,39 @@ func TestFindInventoryGroupsOverwrite2(t *testing.T) {
 				Permission: "inventory:hosts:read",
 				ResourceDefinitions: []rbac.ResourceDefinition{{
 					AttributeFilter: rbac.AttributeFilter{
-						Key:   "group.id",
-						Value: []*string{&group1, nil},
+						Key:       "group.id",
+						Value:     []*string{&group1, nil},
+						Operation: "in",
 					},
 				}},
 			},
 		},
 	}
-	groups := findInventoryGroups(access)
-	// we expect access to all groups (empty map)
-	assert.Equal(t, 0, len(groups))
+	groups, err := findInventoryGroups(access)
+	if assert.NoError(t, err) {
+		// we expect access to all groups (empty map)
+		assert.Equal(t, 0, len(groups))
+	}
+}
+
+func TestFindInventoryGroupsInvalidOp(t *testing.T) {
+	access := &rbac.AccessPagination{
+		Data: []rbac.Access{
+			{
+				Permission: "inventory:hosts:read",
+				ResourceDefinitions: []rbac.ResourceDefinition{{
+					AttributeFilter: rbac.AttributeFilter{
+						Key:       "group.id",
+						Value:     []*string{},
+						Operation: "equal",
+					},
+				}},
+			},
+		},
+	}
+	groups, err := findInventoryGroups(access)
+	assert.Error(t, err)
+	assert.Nil(t, groups)
 }
 
 func TestMultiplePermissions(t *testing.T) {
