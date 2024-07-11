@@ -36,6 +36,8 @@ func TestSystemsDefault(t *testing.T) {
 	assert.False(t, output.Data[0].Attributes.SatelliteManaged)
 	assert.False(t, output.Data[0].Attributes.BuiltPkgcache)
 	assert.Equal(t, "x86_64", output.Data[0].Attributes.Arch)
+	assert.Equal(t, "temp1-1", output.Data[0].Attributes.TemplateName)
+	assert.Equal(t, "99900000-0000-0000-0000-000000000001", output.Data[0].Attributes.TemplateUUID)
 
 	// links
 	assert.Equal(t, "/?offset=0&limit=20&filter[stale]=eq:false&sort=-last_upload", output.Links.First)
@@ -241,6 +243,22 @@ func TestSystemsFilterArch(t *testing.T) {
 	assert.Equal(t, 8, len(output.Data))
 	for _, d := range output.Data {
 		assert.Equal(t, "x86_64", d.Attributes.Arch)
+	}
+}
+
+func TestSystemsFilterTemplateName(t *testing.T) {
+	output := testSystems(t, `?filter[template_name]=temp1-1`, 1)
+	assert.Equal(t, 2, len(output.Data))
+	for _, d := range output.Data {
+		assert.Equal(t, "temp1-1", d.Attributes.TemplateName)
+	}
+}
+
+func TestSystemsFilterTemplateUUID(t *testing.T) {
+	output := testSystems(t, `?filter[template_uuid]=99900000-0000-0000-0000-000000000001`, 1)
+	assert.Equal(t, 2, len(output.Data))
+	for _, d := range output.Data {
+		assert.Equal(t, "99900000-0000-0000-0000-000000000001", d.Attributes.TemplateUUID)
 	}
 }
 
