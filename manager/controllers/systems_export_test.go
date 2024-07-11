@@ -149,3 +149,27 @@ func TestSystemsExportArchFilter(t *testing.T) {
 		assert.Equal(t, "x86_64", o.Arch)
 	}
 }
+
+func TestSystemsExportTemplateNameFilter(t *testing.T) {
+	w := makeRequest(t, "/?filter[template_name]=temp1-1", "application/json")
+
+	var output []SystemDBLookup
+	CheckResponse(t, w, http.StatusOK, &output)
+
+	assert.Equal(t, 2, len(output))
+	for _, o := range output {
+		assert.Equal(t, "temp1-1", o.TemplateName)
+	}
+}
+
+func TestSystemsExportTemplateUUID(t *testing.T) {
+	w := makeRequest(t, "/?filter[template_uuid]=99900000-0000-0000-0000-000000000001", "application/json")
+
+	var output []SystemDBLookup
+	CheckResponse(t, w, http.StatusOK, &output)
+
+	assert.Equal(t, 2, len(output))
+	for _, o := range output {
+		assert.Equal(t, "99900000-0000-0000-0000-000000000001", o.TemplateUUID)
+	}
+}

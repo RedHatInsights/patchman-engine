@@ -177,6 +177,26 @@ func TestSystemsIDsFilterArch(t *testing.T) {
 	}
 }
 
+func TestSystemsIDsFilterTemplateName(t *testing.T) {
+	output := testSystems(t, `?filter[template_name]=temp1-1`, 1)
+	outputIDs := testSystemsIDs(t, `?filter[template_name]=temp1-1`, 1)
+	assert.Equal(t, 2, len(outputIDs.Data))
+	assert.Equal(t, 2, len(output.Data))
+	for i, d := range outputIDs.Data {
+		assert.Equal(t, output.Data[i].ID, d.ID)
+	}
+}
+
+func TestSystemsIDsFilterTemplateUUID(t *testing.T) {
+	output := testSystems(t, `?filter[template_uuid]=99900000-0000-0000-0000-000000000001`, 1)
+	outputIDs := testSystemsIDs(t, `?filter[template_uuid]=99900000-0000-0000-0000-000000000001`, 1)
+	assert.Equal(t, 2, len(outputIDs.Data))
+	assert.Equal(t, 2, len(output.Data))
+	for i, d := range outputIDs.Data {
+		assert.Equal(t, output.Data[i].ID, d.ID)
+	}
+}
+
 func testSystemsIDs(t *testing.T, queryString string, account int) IDsSatelliteManagedResponse {
 	core.SetupTest(t)
 	w := CreateRequestRouterWithAccount("GET", "/", "", queryString, nil, "", SystemsListIDsHandler, account)
