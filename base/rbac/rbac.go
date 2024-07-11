@@ -1,5 +1,9 @@
 package rbac
 
+import (
+	"encoding/json"
+)
+
 type AccessPagination struct {
 	Data []Access `json:"data"`
 }
@@ -13,9 +17,11 @@ type ResourceDefinition struct {
 	AttributeFilter AttributeFilter `json:"attributeFilter,omitempty"`
 }
 
+type AttributeFilterValue []*string
+
 type AttributeFilter struct {
-	Key   string    `json:"key"`
-	Value []*string `json:"value"`
+	Key   string               `json:"key"`
+	Value AttributeFilterValue `json:"value"`
 }
 
 type inventoryGroup struct {
@@ -24,3 +30,33 @@ type inventoryGroup struct {
 }
 
 type InventoryGroup []inventoryGroup
+
+func (a *AttributeFilterValue) UnmarshalJSON(data []byte) error {
+	var (
+		array []*string
+		value *string
+		err   error
+	)
+
+	if err = json.Unmarshal(data, &array); err != nil {
+		// parsing of AttributeFilter Value into []*string failed
+		// try to parse it as *string
+		if err = json.Unmarshal(data, &value); err != nil {
+			// fail, the value is neither []*string nor *string
+			return err
+		}
+		if value != nil {
+			// according to RBAC team, value is a single string value
+			// not comma delimited strings, multiple values are always in array
+			array = append(array, value)
+		}
+	}
+	if array == nil && value == nil {
+		// in this case we got `"value": null`
+		// we should apply the permission to systems with no inventory groups
+		array = append(array, value)
+	}
+
+	*a = array
+	return nil
+}
