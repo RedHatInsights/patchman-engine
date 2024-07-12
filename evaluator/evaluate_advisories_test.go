@@ -39,18 +39,7 @@ func TestGetReportedAdvisories1(t *testing.T) {
 }
 
 func TestGetReportedAdvisories2(t *testing.T) {
-	aUpdates := []vmaas.UpdatesV3ResponseAvailableUpdates{
-		{Erratum: utils.PtrString("ER1")}, {Erratum: utils.PtrString("ER2")}}
-	bUpdates := []vmaas.UpdatesV3ResponseAvailableUpdates{
-		{Erratum: utils.PtrString("ER2")}, {Erratum: utils.PtrString("ER3")}}
-	cUpdates := []vmaas.UpdatesV3ResponseAvailableUpdates{
-		{Erratum: utils.PtrString("ER3")}, {Erratum: utils.PtrString("ER4")}}
-	updateList := map[string]*vmaas.UpdatesV3ResponseUpdateList{
-		"pkg-a": {AvailableUpdates: &aUpdates},
-		"pkg-b": {AvailableUpdates: &bUpdates},
-		"pkg-c": {AvailableUpdates: &cUpdates},
-	}
-	vmaasData := vmaas.UpdatesV3Response{UpdateList: &updateList}
+	vmaasData := mockVMaaSResponse()
 	advisories := getReportedAdvisories(&vmaasData)
 	assert.Equal(t, 4, len(advisories))
 }
@@ -71,7 +60,7 @@ func TestGetReportedAdvisoriesEmpty(t *testing.T) {
 	assert.Equal(t, 0, len(advisories))
 }
 
-func TestGetStoredAdvisoriesMap(t *testing.T) {
+func TestLoadSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
@@ -84,7 +73,7 @@ func TestGetStoredAdvisoriesMap(t *testing.T) {
 	assert.Equal(t, "2016-09-22 16:00:00 +0000 UTC", (systemAdvisories)["RH-1"].Advisory.PublicDate.String())
 }
 
-func TestAdvisoryChanges(t *testing.T) {
+func TestEvaluateChanges(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
@@ -115,7 +104,48 @@ func TestAdvisoryChanges(t *testing.T) {
 	assert.Equal(t, Add, extendedAdvisories["ER-4"].Change)
 }
 
-func TestUpdatePatchedSystemAdvisories(t *testing.T) {
+func TestLoadMissingNamesIDs(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	vmaasData := mockVMaaSResponse()
+	missingNames := []string{"ER1", "ER2", "ER3", "ER4"}
+	extendedAdvisories := ExtendedAdvisoryMap{"ER1": {}, "ER2": {}, "ER3": {}, "ER4": {}}
+
+	// test error if not lazy saved
+	err := loadMissingNamesIDs(missingNames, &extendedAdvisories)
+	assert.Error(t, err)
+
+	// test OK if lazy saved
+	err = lazySaveAdvisories(&vmaasData, inventoryID)
+	defer database.DeleteNewlyAddedAdvisories(t)
+	assert.NoError(t, err)
+	err = loadMissingNamesIDs(missingNames, &extendedAdvisories)
+	assert.NoError(t, err)
+	assert.NotEqual(t, int64(0), extendedAdvisories["ER1"].AdvisoryID)
+	assert.NotEqual(t, int64(0), extendedAdvisories["ER2"].AdvisoryID)
+	assert.NotEqual(t, int64(0), extendedAdvisories["ER3"].AdvisoryID)
+	assert.NotEqual(t, int64(0), extendedAdvisories["ER4"].AdvisoryID)
+}
+
+func TestParseStored(t *testing.T) {
+	stored := SystemAdvisoryMap{
+		"ER-42": models.SystemAdvisories{},
+		"ER-43": models.SystemAdvisories{},
+	}
+	reported := map[string]int{
+		"ER-43": 43,
+	}
+	extendedAdvisories := ExtendedAdvisoryMap{
+		"ER-43": ExtendedAdvisory{Change: Keep, SystemAdvisories: stored["ER-43"]},
+	}
+	parseStored(stored, reported, &extendedAdvisories)
+	assert.Equal(t, 2, len(extendedAdvisories))
+	assert.Equal(t, Remove, extendedAdvisories["ER-42"].Change)
+	assert.Equal(t, Keep, extendedAdvisories["ER-43"].Change)
+}
+
+func TestUpdateAdvisoryAccountData(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
@@ -148,7 +178,7 @@ func TestGetMissingAdvisories(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	advisories := []string{"ER-1", "RH-1", "ER-2", "RH-2"}
-	advisoryIDs := getAdvisoriesFromDB(advisories)
+	advisoryIDs := getAdvisoryIDsByNames(t, advisories)
 	missingNames, err := getMissingAdvisories(advisories)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(advisoryIDs))
@@ -160,14 +190,14 @@ func TestGetMissingAdvisoriesEmptyString(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	advisories := []string{""}
-	advisoryIDs := getAdvisoriesFromDB(advisories)
+	advisoryIDs := getAdvisoryIDsByNames(t, advisories)
 	missingNames, err := getMissingAdvisories(advisories)
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(advisoryIDs))
 	assert.Equal(t, 1, len(missingNames))
 }
 
-func TestProcessAndUpsertSystemAdvisories(t *testing.T) {
+func TestProcessAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
@@ -189,11 +219,68 @@ func TestProcessAndUpsertSystemAdvisories(t *testing.T) {
 	assert.Equal(t, 0, len(deleteIDs))
 	assert.Equal(t, 2, len(advisoryObjs))
 	assert.Equal(t, len(updatedAdvisories), len(extendedAdvisories)-len(deleteIDs))
+}
 
+func TestUpsertSystemAdvisories(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	// ensure consistent environment
+	database.DeleteSystemAdvisories(t, systemID, []int64{3, 4})
+	database.CreateSystemAdvisories(t, rhAccountID, systemID, []int64{3})
+
+	// mock data: the system advisory with ID=3 exists and will be updated,
+	// the system advisory with ID=4 will be created
+	advisoryObjs := models.SystemAdvisoriesSlice{
+		models.SystemAdvisories{SystemID: systemID, RhAccountID: rhAccountID,
+			AdvisoryID: int64(3),
+			StatusID:   APPLICABLE,
+		},
+		models.SystemAdvisories{SystemID: systemID, RhAccountID: rhAccountID,
+			AdvisoryID: int64(4),
+		},
+	}
+
+	// check insert
 	err := upsertSystemAdvisories(database.DB, advisoryObjs)
 	assert.Nil(t, err)
 	database.CheckSystemAdvisories(t, systemID, []int64{3, 4})
+
+	// check update
+	var updatedAdvisory models.SystemAdvisories
+	err = database.DB.Model(models.SystemAdvisories{}).Find(&updatedAdvisory, []int64{3}).Error
+	assert.Nil(t, err)
+	assert.Equal(t, APPLICABLE, updatedAdvisory.StatusID)
+
+	// cleanup
 	database.DeleteSystemAdvisories(t, systemID, []int64{3, 4})
+}
+
+func TestCalcAdvisoryChanges(t *testing.T) {
+	// TODO: finish creating the data and add asserts
+	// mock data
+	deleteIDs := []int64{103, 104}
+	system := models.SystemPlatform{ID: systemID, RhAccountID: rhAccountID}
+	systemAdvisories := SystemAdvisoryMap{
+		"ER-102": models.SystemAdvisories{AdvisoryID: int64(102), StatusID: INSTALLABLE},
+		"ER-103": models.SystemAdvisories{AdvisoryID: int64(103), StatusID: INSTALLABLE},
+		"ER-104": models.SystemAdvisories{AdvisoryID: int64(104), StatusID: APPLICABLE},
+		"ER-105": models.SystemAdvisories{AdvisoryID: int64(105), StatusID: APPLICABLE},
+	}
+
+	changes := calcAdvisoryChanges(&system, deleteIDs, systemAdvisories)
+	expected := map[int64]models.AdvisoryAccountData{
+		102: {SystemsApplicable: 1, SystemsInstallable: 1},
+		103: {SystemsApplicable: -1, SystemsInstallable: -1},
+		104: {SystemsInstallable: -1},
+		105: {SystemsApplicable: 1},
+	}
+	assert.Equal(t, len(expected), len(changes))
+	for _, change := range changes {
+		advisoryID := change.AdvisoryID
+		assert.Equal(t, change.SystemsApplicable, expected[advisoryID].SystemsApplicable)
+		assert.Equal(t, change.SystemsInstallable, expected[advisoryID].SystemsInstallable)
+	}
 }
 
 func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV3Response {
@@ -206,19 +293,26 @@ func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV3Response {
 	return vmaasData
 }
 
-func getAdvisoriesFromDB(advisories []string) []int64 {
-	advisoryMetadata := make(models.AdvisoryMetadataSlice, 0, len(advisories))
-	err := database.Db.Model(&models.AdvisoryMetadata{}).
-		Where("name IN (?)", advisories).
-		Select("id, name").
-		Scan(&advisoryMetadata).Error
-	if err != nil {
-		return nil
+func mockVMaaSResponse() vmaas.UpdatesV3Response {
+	aUpdates := []vmaas.UpdatesV3ResponseAvailableUpdates{
+		{Erratum: utils.PtrString("ER1")}, {Erratum: utils.PtrString("ER2")}}
+	bUpdates := []vmaas.UpdatesV3ResponseAvailableUpdates{
+		{Erratum: utils.PtrString("ER2")}, {Erratum: utils.PtrString("ER3")}}
+	cUpdates := []vmaas.UpdatesV3ResponseAvailableUpdates{
+		{Erratum: utils.PtrString("ER3")}, {Erratum: utils.PtrString("ER4")}}
+	updateList := map[string]*vmaas.UpdatesV3ResponseUpdateList{
+		"pkg-a": {AvailableUpdates: &aUpdates},
+		"pkg-b": {AvailableUpdates: &bUpdates},
+		"pkg-c": {AvailableUpdates: &cUpdates},
 	}
+	return vmaas.UpdatesV3Response{UpdateList: &updateList}
+}
 
-	advisoryIDs := make([]int64, 0, len(advisories))
-	for _, am := range advisoryMetadata {
-		advisoryIDs = append(advisoryIDs, am.ID)
-	}
-	return advisoryIDs
+func getAdvisoryIDsByNames(t *testing.T, names []string) []int64 {
+	ids := make([]int64, 0, len(names))
+	err := database.DB.Model(&models.AdvisoryMetadata{}).
+		Where("name IN (?)", names).
+		Pluck("id", &ids).Error
+	assert.NoError(t, err)
+	return ids
 }

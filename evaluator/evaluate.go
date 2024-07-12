@@ -247,7 +247,7 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV3Response, 
 	}
 	updatesMap := resp.GetUpdateList()
 	if len(updatesMap) == 0 {
-		// FIXME: do we need evaluationCnt.WithLabelValues("error-no-yum-packages").Inc()?
+		// TODO: do we need evaluationCnt.WithLabelValues("error-no-yum-packages").Inc()?
 		utils.LogWarn("inventoryID", system.GetInventoryID(), "No yum_updates")
 		return nil, nil
 	}
