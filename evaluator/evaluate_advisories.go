@@ -68,11 +68,7 @@ func pasrseReported(stored SystemAdvisoryMap, reported map[string]int) (Extended
 }
 
 func loadMissingNamesIDs(missingNames []string, extendedAdvisories *ExtendedAdvisoryMap) error {
-	advisoryMetadata := make(models.AdvisoryMetadataSlice, 0, len(missingNames))
-	err := database.DB.Model(&models.AdvisoryMetadata{}).
-		Where("name IN (?)", missingNames).
-		Select("id, name").
-		Scan(&advisoryMetadata).Error
+	advisoryMetadata, err := getAdvisoryMetadataByNames(missingNames)
 	if err != nil {
 		return err
 	}
@@ -122,20 +118,18 @@ func evaluateChanges(vmaasData *vmaas.UpdatesV3Response, stored SystemAdvisoryMa
 	return extendedAdvisories, nil
 }
 
-// Find missing advisories from names reported by VMaaS and lazy-save them.
+// From names reported by VMaaS, find advisories missing in the DB and lazy-save them.
 func lazySaveAdvisories(vmaasData *vmaas.UpdatesV3Response, inventoryID string) error {
-	// -> load reported advisories, advisories to lazy-save can only appear in VmaasData
 	reportedNames := getReportedAdvisoryNames(vmaasData)
 	if len(reportedNames) < 1 {
 		return nil
 	}
 
-	// -> get missing from reported
 	missingNames, err := getMissingAdvisories(reportedNames)
 	if err != nil {
 		return errors.Wrap(err, "Unable to get missing system advisories")
 	}
-	// -> log missing found
+
 	nUnknown := len(missingNames)
 	if nUnknown > 0 {
 		utils.LogInfo("inventoryID", inventoryID, "unknown", nUnknown, "unknown advisories")
@@ -143,7 +137,7 @@ func lazySaveAdvisories(vmaasData *vmaas.UpdatesV3Response, inventoryID string) 
 	} else {
 		return nil
 	}
-	// -> store missing advisories
+
 	err = storeMissingAdvisories(missingNames)
 	if err != nil {
 		return errors.Wrap(err, "Failed to save missing advisory_metadata")
@@ -175,19 +169,24 @@ func storeMissingAdvisories(missingNames []string) error {
 		if err != nil {
 			return err
 		}
-		// after creation, toStore will include newly added .ID attributes
+		// FIXME: after creation, toStore will include newly added .ID attributes
 	}
 
 	return nil
 }
 
+func getAdvisoryMetadataByNames(names []string) (models.AdvisoryMetadataSlice, error) {
+	metadata := make(models.AdvisoryMetadataSlice, 0, len(names))
+	err := database.DB.Model(&models.AdvisoryMetadata{}).
+		Where("name IN (?)", names).
+		Select("id, name").
+		Scan(&metadata).Error
+	return metadata, err
+}
+
 // Determine if advisories from DB are properly stored based on advisory metadata existence.
 func getMissingAdvisories(advisoryNames []string) ([]string, error) {
-	advisoryMetadata := make(models.AdvisoryMetadataSlice, 0, len(advisoryNames))
-	err := database.DB.Model(&models.AdvisoryMetadata{}).
-		Where("name IN (?)", advisoryNames).
-		Select("id, name").
-		Scan(&advisoryMetadata).Error
+	advisoryMetadata, err := getAdvisoryMetadataByNames(advisoryNames)
 	if err != nil {
 		return nil, err
 	}
@@ -220,6 +219,7 @@ func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform, advisoriesByN
 		return nil, errors.Wrap(err, "Unable to update system advisories")
 	}
 
+	// FIXME: Advisory account data should calculate changes from the before-update data
 	err = updateAdvisoryAccountData(tx, system, deleteIDs, systemAdvisoriesNew)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to update advisory_account_data caches")
@@ -235,9 +235,8 @@ func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs []int64,
 	}
 
 	aadMap := make(map[int64]models.AdvisoryAccountData, len(systemAdvisories))
-	isApplicable := make(map[int64]bool, len(systemAdvisories))
+	isApplicableOnly := make(map[int64]bool, len(systemAdvisories))
 	for _, advisory := range systemAdvisories {
-		isApplicable[advisory.AdvisoryID] = true
 		if advisory.StatusID == INSTALLABLE {
 			aadMap[advisory.AdvisoryID] = models.AdvisoryAccountData{
 				AdvisoryID:         advisory.AdvisoryID,
@@ -247,6 +246,7 @@ func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs []int64,
 				SystemsApplicable: 1,
 			}
 		} else { // APPLICABLE
+			isApplicableOnly[advisory.AdvisoryID] = true
 			// add advisories which are only applicable and not installable to `aadMap`
 			if _, ok := aadMap[advisory.AdvisoryID]; !ok {
 				// FIXME: this check can be removed if advisories don't repeat.
@@ -267,7 +267,7 @@ func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs []int64,
 			RhAccountID:        system.RhAccountID,
 			SystemsInstallable: -1,
 		}
-		if !isApplicable[id] {
+		if !isApplicableOnly[id] {
 			// advisory is no longer applicable
 			aad := aadMap[id]
 			aad.SystemsApplicable = -1
