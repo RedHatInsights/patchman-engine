@@ -98,10 +98,10 @@ func TestEvaluateChanges(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 4, len(extendedAdvisories))
 
-	assert.Equal(t, Keep, extendedAdvisories["ER-1"].Change)
-	assert.Equal(t, Remove, extendedAdvisories["ER-2"].Change)
-	assert.Equal(t, Update, extendedAdvisories["ER-3"].Change)
-	assert.Equal(t, Add, extendedAdvisories["ER-4"].Change)
+	assert.Equal(t, Keep, extendedAdvisories["ER-1"].change)
+	assert.Equal(t, Remove, extendedAdvisories["ER-2"].change)
+	assert.Equal(t, Update, extendedAdvisories["ER-3"].change)
+	assert.Equal(t, Add, extendedAdvisories["ER-4"].change)
 }
 
 func TestLoadMissingNamesIDs(t *testing.T) {
@@ -110,7 +110,7 @@ func TestLoadMissingNamesIDs(t *testing.T) {
 
 	vmaasData := mockVMaaSResponse()
 	missingNames := []string{"ER1", "ER2", "ER3", "ER4"}
-	extendedAdvisories := ExtendedAdvisoryMap{"ER1": {}, "ER2": {}, "ER3": {}, "ER4": {}}
+	extendedAdvisories := extendedAdvisoryMap{"ER1": {}, "ER2": {}, "ER3": {}, "ER4": {}}
 
 	// test error if not lazy saved
 	err := loadMissingNamesIDs(missingNames, &extendedAdvisories)
@@ -128,21 +128,59 @@ func TestLoadMissingNamesIDs(t *testing.T) {
 	assert.NotEqual(t, int64(0), extendedAdvisories["ER4"].AdvisoryID)
 }
 
+func TestParseReported(t *testing.T) {
+	stored := SystemAdvisoryMap{
+		"ER-42": models.SystemAdvisories{StatusID: INSTALLABLE},
+		"ER-43": models.SystemAdvisories{StatusID: INSTALLABLE},
+	}
+	reported := map[string]int{
+		"ER-42": INSTALLABLE,
+		"ER-43": APPLICABLE,
+		"ER-44": INSTALLABLE,
+	}
+	extendedAdvisories, missingNames := pasrseReported(stored, reported)
+	assert.Equal(t, 3, len(extendedAdvisories))
+	assert.Equal(t, Keep, extendedAdvisories["ER-42"].change)
+	assert.Equal(t, Update, extendedAdvisories["ER-43"].change)
+	assert.Equal(t, Add, extendedAdvisories["ER-44"].change)
+	assert.Equal(t, []string{"ER-44"}, missingNames)
+}
+
 func TestParseStored(t *testing.T) {
 	stored := SystemAdvisoryMap{
 		"ER-42": models.SystemAdvisories{},
-		"ER-43": models.SystemAdvisories{},
+		"ER-43": models.SystemAdvisories{StatusID: INSTALLABLE},
 	}
 	reported := map[string]int{
-		"ER-43": 43,
+		"ER-43": INSTALLABLE,
 	}
-	extendedAdvisories := ExtendedAdvisoryMap{
-		"ER-43": ExtendedAdvisory{Change: Keep, SystemAdvisories: stored["ER-43"]},
+	extendedAdvisories := extendedAdvisoryMap{
+		"ER-43": extendedAdvisory{change: Keep, SystemAdvisories: stored["ER-43"]},
 	}
 	parseStored(stored, reported, &extendedAdvisories)
 	assert.Equal(t, 2, len(extendedAdvisories))
-	assert.Equal(t, Remove, extendedAdvisories["ER-42"].Change)
-	assert.Equal(t, Keep, extendedAdvisories["ER-43"].Change)
+	assert.Equal(t, Remove, extendedAdvisories["ER-42"].change)
+	assert.Equal(t, Keep, extendedAdvisories["ER-43"].change)
+}
+
+func TestIncrementAdvisoryTypeCounts(t *testing.T) {
+	var (
+		enhCount int
+		bugCount int
+		secCount int
+	)
+	advisories := []models.AdvisoryMetadata{
+		{AdvisoryTypeID: enhancement},
+		{AdvisoryTypeID: bugfix},
+		{AdvisoryTypeID: security},
+	}
+
+	for _, advisory := range advisories {
+		incrementAdvisoryTypeCounts(advisory, &enhCount, &bugCount, &secCount)
+	}
+	assert.Equal(t, 1, enhCount)
+	assert.Equal(t, 1, bugCount)
+	assert.Equal(t, 1, secCount)
 }
 
 func TestUpdateAdvisoryAccountData(t *testing.T) {
@@ -203,14 +241,14 @@ func TestProcessAdvisories(t *testing.T) {
 
 	systemID := int64(2)
 	system := models.SystemPlatform{RhAccountID: 1, ID: systemID}
-	extendedAdvisories := ExtendedAdvisoryMap{
-		"ER-2": ExtendedAdvisory{Change: Keep, SystemAdvisories: models.SystemAdvisories{
+	extendedAdvisories := extendedAdvisoryMap{
+		"ER-2": extendedAdvisory{change: Keep, SystemAdvisories: models.SystemAdvisories{
 			AdvisoryID: int64(2),
 		}},
-		"ER-3": ExtendedAdvisory{Change: Add, SystemAdvisories: models.SystemAdvisories{
+		"ER-3": extendedAdvisory{change: Add, SystemAdvisories: models.SystemAdvisories{
 			AdvisoryID: int64(3),
 		}},
-		"ER-4": ExtendedAdvisory{Change: Update, SystemAdvisories: models.SystemAdvisories{
+		"ER-4": extendedAdvisory{change: Update, SystemAdvisories: models.SystemAdvisories{
 			AdvisoryID: int64(4),
 		}},
 	}
