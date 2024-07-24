@@ -12,7 +12,8 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// Lazy save missing advisories from reported, load stored ones, and evaluate changes between the two.
+// LazySaveAndLoadAdvisories lazy saves missing advisories from reported, loads stored ones from DB,
+// and evaluates changes between the two.
 func lazySaveAndLoadAdvisories(system *models.SystemPlatform, vmaasData *vmaas.UpdatesV3Response) (
 	extendedAdvisoryMap, error) {
 	if !enableAdvisoryAnalysis {
@@ -38,7 +39,7 @@ func lazySaveAndLoadAdvisories(system *models.SystemPlatform, vmaasData *vmaas.U
 	return merged, nil
 }
 
-// Create extendedAdvisoryMap from `stored` and `reported` advisories. It tracks changes between the two.
+// PasrseReported evaluates changes of type Add/Update/Keep and tracks them in extendedAdvisoryMap.
 func pasrseReported(stored SystemAdvisoryMap, reported map[string]int) (extendedAdvisoryMap, []string) {
 	extendedAdvisories := make(extendedAdvisoryMap, len(reported)+len(stored))
 	missingNames := make([]string, 0, len(reported))
@@ -104,7 +105,8 @@ func parseStored(stored SystemAdvisoryMap, reported map[string]int, extendedAdvi
 	}
 }
 
-// Evaluate changes to all advisories based on `stored` advisories from DB and `reported` advisories from VMaaS.
+// EvaluateChanges calls functions that evaluate all types of changes between stored advisories from DB
+// and reported advisories from VMaaS.
 func evaluateChanges(vmaasData *vmaas.UpdatesV3Response, stored SystemAdvisoryMap) (
 	extendedAdvisoryMap, error) {
 	reported := getReportedAdvisories(vmaasData)
@@ -120,7 +122,7 @@ func evaluateChanges(vmaasData *vmaas.UpdatesV3Response, stored SystemAdvisoryMa
 	return extendedAdvisories, nil
 }
 
-// From names reported by VMaaS, find advisories missing in the DB and lazy-save them.
+// LazySaveAdvisories finds advisories reported by VMaaS and missing in the DB and lazy saves them.
 func lazySaveAdvisories(vmaasData *vmaas.UpdatesV3Response, inventoryID string) error {
 	reportedNames := getReportedAdvisoryNames(vmaasData)
 	if len(reportedNames) < 1 {
@@ -186,7 +188,7 @@ func getAdvisoryMetadataByNames(names []string) (models.AdvisoryMetadataSlice, e
 	return metadata, err
 }
 
-// Determine if advisories from DB are properly stored based on advisory metadata existence.
+// GetMissingAdvisories determines if advisories from DB are properly stored based on advisory metadata existence.
 func getMissingAdvisories(advisoryNames []string) ([]string, error) {
 	advisoryMetadata, err := getAdvisoryMetadataByNames(advisoryNames)
 	if err != nil {

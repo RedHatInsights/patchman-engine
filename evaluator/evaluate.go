@@ -165,7 +165,7 @@ func Evaluate(ctx context.Context, event *mqueue.PlatformEvent, inventoryID, eva
 	return nil
 }
 
-// Runs Evaluate method in Goroutines
+// RunEvaluate runs Evaluate method in Goroutines
 func runEvaluate(
 	ctx context.Context,
 	event mqueue.PlatformEvent, // makes a copy to avoid races
@@ -447,8 +447,8 @@ func commitWithObserve(tx *gorm.DB) error {
 	return nil
 }
 
-// First, load advisories and packages (including change evaluation).
-// Then, in a single transaction, do the deletions, updates, and insertions.
+// EvaluateAndStore first loads advisories and packages (including change evaluation)
+// and then executes all deletions, updates, and insertions in a single transaction.
 func evaluateAndStore(system *models.SystemPlatform,
 	vmaasData *vmaas.UpdatesV3Response, event *mqueue.PlatformEvent) error {
 	advisoriesByName, err := lazySaveAndLoadAdvisories(system, vmaasData)
