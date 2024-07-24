@@ -35,7 +35,7 @@ func lazySaveAndLoadPackages(system *models.SystemPlatform, vmaasData *vmaas.Upd
 	return pkgByName, installed, installable, applicable, nil
 }
 
-// Add unknown EVRAs into the db if needed
+// LazySavePackages adds unknown EVRAs into the db if needed.
 func lazySavePackages(vmaasData *vmaas.UpdatesV3Response) error {
 	if !enableLazyPackageSave {
 		return nil
@@ -89,7 +89,7 @@ func getMissingPackage(nevra string) *models.Package {
 	return &pkg
 }
 
-// Get packages with known name but version missing in db/cache
+// GetMissingPackages gets packages with a known name but a version missing in db/cache.
 func getMissingPackages(vmaasData *vmaas.UpdatesV3Response) models.PackageSlice {
 	updates := vmaasData.GetUpdateList()
 	packages := make(models.PackageSlice, 0, len(updates))
@@ -130,7 +130,7 @@ func updatePackageNameDB(missing *models.PackageName) error {
 	return nil
 }
 
-// Find relevant package data based on vmaas results
+// LoadPackages finds relevant package data based on vmaas results.
 func loadPackages(system *models.SystemPlatform, vmaasData *vmaas.UpdatesV3Response) (
 	map[string]namedPackage, int, int, int, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-load"))
