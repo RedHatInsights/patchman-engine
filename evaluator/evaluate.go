@@ -447,6 +447,8 @@ func commitWithObserve(tx *gorm.DB) error {
 	return nil
 }
 
+// First, load advisories and packages (including change evaluation).
+// Then, in a single transaction, do the deletions, updates, and insertions.
 func evaluateAndStore(system *models.SystemPlatform,
 	vmaasData *vmaas.UpdatesV3Response, event *mqueue.PlatformEvent) error {
 	advisoriesByName, err := lazySaveAndLoadAdvisories(system, vmaasData)
@@ -526,11 +528,11 @@ func analyzeRepos(system *models.SystemPlatform) (thirdParty bool, err error) {
 
 func incrementAdvisoryTypeCounts(advisory models.AdvisoryMetadata, enhCount, bugCount, secCount *int) {
 	switch advisory.AdvisoryTypeID {
-	case Enhancement:
+	case enhancement:
 		*enhCount++
-	case Bugfix:
+	case bugfix:
 		*bugCount++
-	case Security:
+	case security:
 		*secCount++
 	}
 }

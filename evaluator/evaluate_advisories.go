@@ -12,8 +12,9 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// Lazy save missing advisories from reported, load stored ones, and evaluate changes between the two.
 func lazySaveAndLoadAdvisories(system *models.SystemPlatform, vmaasData *vmaas.UpdatesV3Response) (
-	ExtendedAdvisoryMap, error) {
+	extendedAdvisoryMap, error) {
 	if !enableAdvisoryAnalysis {
 		utils.LogInfo("advisory analysis disabled, skipping lazy saving and loading")
 		return nil, nil
@@ -37,26 +38,27 @@ func lazySaveAndLoadAdvisories(system *models.SystemPlatform, vmaasData *vmaas.U
 	return merged, nil
 }
 
-func pasrseReported(stored SystemAdvisoryMap, reported map[string]int) (ExtendedAdvisoryMap, []string) {
-	extendedAdvisories := make(ExtendedAdvisoryMap, len(reported)+len(stored))
+// Create extendedAdvisoryMap from `stored` and `reported` advisories. It tracks changes between the two.
+func pasrseReported(stored SystemAdvisoryMap, reported map[string]int) (extendedAdvisoryMap, []string) {
+	extendedAdvisories := make(extendedAdvisoryMap, len(reported)+len(stored))
 	missingNames := make([]string, 0, len(reported))
 	for reportedName, reportedStatusID := range reported {
 		if storedAdvisory, found := stored[reportedName]; found {
 			if reportedStatusID != storedAdvisory.StatusID {
 				storedAdvisory.StatusID = reportedStatusID
-				extendedAdvisories[reportedName] = ExtendedAdvisory{
-					Change:           Update,
+				extendedAdvisories[reportedName] = extendedAdvisory{
+					change:           Update,
 					SystemAdvisories: storedAdvisory,
 				}
 			} else {
-				extendedAdvisories[reportedName] = ExtendedAdvisory{
-					Change:           Keep,
+				extendedAdvisories[reportedName] = extendedAdvisory{
+					change:           Keep,
 					SystemAdvisories: storedAdvisory,
 				}
 			}
 		} else {
-			extendedAdvisories[reportedName] = ExtendedAdvisory{
-				Change: Add,
+			extendedAdvisories[reportedName] = extendedAdvisory{
+				change: Add,
 				SystemAdvisories: models.SystemAdvisories{
 					StatusID: reportedStatusID,
 				},
@@ -67,7 +69,7 @@ func pasrseReported(stored SystemAdvisoryMap, reported map[string]int) (Extended
 	return extendedAdvisories, missingNames
 }
 
-func loadMissingNamesIDs(missingNames []string, extendedAdvisories *ExtendedAdvisoryMap) error {
+func loadMissingNamesIDs(missingNames []string, extendedAdvisories *extendedAdvisoryMap) error {
 	advisoryMetadata, err := getAdvisoryMetadataByNames(missingNames)
 	if err != nil {
 		return err
@@ -90,12 +92,12 @@ func loadMissingNamesIDs(missingNames []string, extendedAdvisories *ExtendedAdvi
 	return nil
 }
 
-// Set change for advisories that are in `stored` but not in `reported` to Remove.
-func parseStored(stored SystemAdvisoryMap, reported map[string]int, extendedAdvisories *ExtendedAdvisoryMap) {
+// ParseStored sets Change for advisories that are in stored but not in reported to Remove.
+func parseStored(stored SystemAdvisoryMap, reported map[string]int, extendedAdvisories *extendedAdvisoryMap) {
 	for storedName, storedAdvisory := range stored {
 		if _, found := reported[storedName]; !found {
-			(*extendedAdvisories)[storedName] = ExtendedAdvisory{
-				Change:           Remove,
+			(*extendedAdvisories)[storedName] = extendedAdvisory{
+				change:           Remove,
 				SystemAdvisories: storedAdvisory,
 			}
 		}
@@ -104,7 +106,7 @@ func parseStored(stored SystemAdvisoryMap, reported map[string]int, extendedAdvi
 
 // Evaluate changes to all advisories based on `stored` advisories from DB and `reported` advisories from VMaaS.
 func evaluateChanges(vmaasData *vmaas.UpdatesV3Response, stored SystemAdvisoryMap) (
-	ExtendedAdvisoryMap, error) {
+	extendedAdvisoryMap, error) {
 	reported := getReportedAdvisories(vmaasData)
 	extendedAdvisories, missingNames := pasrseReported(stored, reported)
 
@@ -206,7 +208,7 @@ func getMissingAdvisories(advisoryNames []string) ([]string, error) {
 	return missingNames, nil
 }
 
-func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform, advisoriesByName ExtendedAdvisoryMap) (
+func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform, advisoriesByName extendedAdvisoryMap) (
 	SystemAdvisoryMap, error) {
 	if !enableAdvisoryAnalysis {
 		utils.LogInfo("advisory analysis disabled, skipping storing")
@@ -229,7 +231,7 @@ func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform, advisoriesByN
 
 func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs []int64,
 	systemAdvisories SystemAdvisoryMap) []models.AdvisoryAccountData {
-	// If system is stale, we won't change any rows  in advisory_account_data
+	// If system is stale, we won't change any rows in advisory_account_data
 	if system.Stale {
 		return []models.AdvisoryAccountData{}
 	}
@@ -295,13 +297,13 @@ func upsertSystemAdvisories(tx *gorm.DB, advisoryObjs models.SystemAdvisoriesSli
 	return database.BulkInsert(tx, advisoryObjs)
 }
 
-func processAdvisories(system *models.SystemPlatform, advisoriesByName ExtendedAdvisoryMap) ([]int64,
+func processAdvisories(system *models.SystemPlatform, advisoriesByName extendedAdvisoryMap) ([]int64,
 	models.SystemAdvisoriesSlice, SystemAdvisoryMap) {
 	deleteIDs := make([]int64, 0, len(advisoriesByName))
 	advisoryObjs := make(models.SystemAdvisoriesSlice, 0, len(advisoriesByName))
 	updatedAdvisories := make(SystemAdvisoryMap, len(advisoriesByName))
 	for name, advisory := range advisoriesByName {
-		switch advisory.Change {
+		switch advisory.change {
 		case Remove:
 			deleteIDs = append(deleteIDs, advisory.AdvisoryID)
 		case Update:
@@ -325,7 +327,7 @@ func processAdvisories(system *models.SystemPlatform, advisoriesByName ExtendedA
 }
 
 func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
-	advisoriesByName ExtendedAdvisoryMap) ([]int64, SystemAdvisoryMap, error) {
+	advisoriesByName extendedAdvisoryMap) ([]int64, SystemAdvisoryMap, error) {
 	deleteIDs, advisoryObjs, updatedAdvisories := processAdvisories(system, advisoriesByName)
 
 	// this will remove many many old items from our "system_advisories" table
@@ -356,8 +358,8 @@ func loadSystemAdvisories(accountID int, systemID int64) (SystemAdvisoryMap, err
 	return systemAdvisories, nil
 }
 
-func updateAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform,
-	deleteIDs []int64, systemAdvisories SystemAdvisoryMap) error {
+func updateAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, deleteIDs []int64,
+	systemAdvisories SystemAdvisoryMap) error {
 	changes := calcAdvisoryChanges(system, deleteIDs, systemAdvisories)
 
 	if len(changes) == 0 {
@@ -373,16 +375,16 @@ func updateAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform,
 	return database.BulkInsert(txOnConflict, changes)
 }
 
-type ExtendedAdvisory struct {
-	Change ChangeType
+type extendedAdvisory struct {
+	change ChangeType
 	models.SystemAdvisories
 }
 
-type ExtendedAdvisoryMap map[string]ExtendedAdvisory
+type extendedAdvisoryMap map[string]extendedAdvisory
 
 const (
-	UnknownFixme int = iota
-	Enhancement
-	Bugfix
-	Security
+	undefinedChangeType int = iota
+	enhancement
+	bugfix
+	security
 )
