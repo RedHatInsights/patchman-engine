@@ -76,14 +76,14 @@ func loadMissingNamesIDs(missingNames []string, extendedAdvisories *extendedAdvi
 		return err
 	}
 
-	name2AdvisoryID := make(map[string]int64, len(missingNames))
+	name2AdvisoryID := make(map[string]int64, len(advisoryMetadata))
 	for _, am := range advisoryMetadata {
 		name2AdvisoryID[am.Name] = am.ID
 	}
 
 	for _, name := range missingNames {
 		if _, found := name2AdvisoryID[name]; !found {
-			return errors.New("Failed to evaluate changes because an advisory was not lazy-saved")
+			return errors.New("Failed to evaluate changes because an advisory was not lazy saved")
 		}
 		extendedAdvisory := (*extendedAdvisories)[name]
 		extendedAdvisory.AdvisoryID = name2AdvisoryID[name]
@@ -135,12 +135,11 @@ func lazySaveAdvisories(vmaasData *vmaas.UpdatesV3Response, inventoryID string) 
 	}
 
 	nUnknown := len(missingNames)
-	if nUnknown > 0 {
-		utils.LogInfo("inventoryID", inventoryID, "unknown", nUnknown, "unknown advisories")
-		updatesCnt.WithLabelValues("unknown").Add(float64(nUnknown))
-	} else {
+	if nUnknown <= 0 {
 		return nil
 	}
+	utils.LogInfo("inventoryID", inventoryID, "unknown", nUnknown, "unknown advisories")
+	updatesCnt.WithLabelValues("unknown").Add(float64(nUnknown))
 
 	err = storeMissingAdvisories(missingNames)
 	if err != nil {
@@ -223,7 +222,6 @@ func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform, advisoriesByN
 		return nil, errors.Wrap(err, "Unable to update system advisories")
 	}
 
-	// FIXME: Advisory account data should calculate changes from the before-update data
 	err = updateAdvisoryAccountData(tx, system, deleteIDs, systemAdvisoriesNew)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to update advisory_account_data caches")
