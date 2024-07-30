@@ -7,7 +7,6 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -64,7 +63,7 @@ func TestLoadSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemAdvisories, err := loadSystemAdvisories(1, 1)
+	systemAdvisories, err := loadSystemAdvisories(database.DB, 1, 1)
 	assert.Nil(t, err)
 	assert.NotNil(t, systemAdvisories)
 	assert.Equal(t, 8, len(systemAdvisories))
@@ -191,19 +190,33 @@ func TestUpdateAdvisoryAccountData(t *testing.T) {
 	advisoryIDs := []int64{2, 3, 4}
 	database.CreateSystemAdvisories(t, system.RhAccountID, system.ID, advisoryIDs)
 	database.CreateAdvisoryAccountData(t, system.RhAccountID, advisoryIDs, 1)
+	advisoriesByName := extendedAdvisoryMap{
+		"ER-2": {
+			change:           Remove,
+			SystemAdvisories: models.SystemAdvisories{AdvisoryID: 2, SystemID: system.ID, RhAccountID: system.RhAccountID},
+		},
+		"ER-3": {
+			change:           Remove,
+			SystemAdvisories: models.SystemAdvisories{AdvisoryID: 3, SystemID: system.ID, RhAccountID: system.RhAccountID},
+		},
+		"ER-4": {
+			change:           Remove,
+			SystemAdvisories: models.SystemAdvisories{AdvisoryID: 4, SystemID: system.ID, RhAccountID: system.RhAccountID},
+		},
+	}
 
 	// Update as if the advisories became patched
-	err := updateAdvisoryAccountData(database.DB, &system, advisoryIDs, SystemAdvisoryMap{})
+	err := updateAdvisoryAccountData(database.DB, &system, advisoriesByName)
 	assert.NoError(t, err)
 	database.CheckSystemAdvisories(t, system.ID, advisoryIDs)
 	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 0)
 
 	// Update as if the advisories became unpatched
-	systemAdvisories := make(SystemAdvisoryMap, len(advisoryIDs))
-	for _, id := range advisoryIDs {
-		systemAdvisories[fmt.Sprintf("ER-%v", id)] = models.SystemAdvisories{AdvisoryID: id}
+	for name, ea := range advisoriesByName {
+		ea.change = Add
+		advisoriesByName[name] = ea
 	}
-	err = updateAdvisoryAccountData(database.DB, &system, []int64{}, systemAdvisories)
+	err = updateAdvisoryAccountData(database.DB, &system, advisoriesByName)
 	assert.NoError(t, err)
 	database.CheckAdvisoriesAccountData(t, system.RhAccountID, advisoryIDs, 1)
 
@@ -253,10 +266,9 @@ func TestProcessAdvisories(t *testing.T) {
 		}},
 	}
 
-	deleteIDs, advisoryObjs, updatedAdvisories := processAdvisories(&system, extendedAdvisories)
+	deleteIDs, advisoryObjs := processAdvisories(&system, extendedAdvisories)
 	assert.Equal(t, 0, len(deleteIDs))
 	assert.Equal(t, 2, len(advisoryObjs))
-	assert.Equal(t, len(updatedAdvisories), len(extendedAdvisories)-len(deleteIDs))
 }
 
 func TestUpsertSystemAdvisories(t *testing.T) {
@@ -295,18 +307,27 @@ func TestUpsertSystemAdvisories(t *testing.T) {
 }
 
 func TestCalcAdvisoryChanges(t *testing.T) {
-	// TODO: finish creating the data and add asserts
-	// mock data
-	deleteIDs := []int64{103, 104}
 	system := models.SystemPlatform{ID: systemID, RhAccountID: rhAccountID}
-	systemAdvisories := SystemAdvisoryMap{
-		"ER-102": models.SystemAdvisories{AdvisoryID: int64(102), StatusID: INSTALLABLE},
-		"ER-103": models.SystemAdvisories{AdvisoryID: int64(103), StatusID: INSTALLABLE},
-		"ER-104": models.SystemAdvisories{AdvisoryID: int64(104), StatusID: APPLICABLE},
-		"ER-105": models.SystemAdvisories{AdvisoryID: int64(105), StatusID: APPLICABLE},
+	advisoriesByName := extendedAdvisoryMap{
+		"ER-102": {
+			change:           Update,
+			SystemAdvisories: models.SystemAdvisories{AdvisoryID: int64(102), StatusID: INSTALLABLE},
+		},
+		"ER-103": {
+			change:           Remove,
+			SystemAdvisories: models.SystemAdvisories{AdvisoryID: int64(103), StatusID: INSTALLABLE},
+		},
+		"ER-104": {
+			change:           Remove,
+			SystemAdvisories: models.SystemAdvisories{AdvisoryID: int64(104), StatusID: APPLICABLE},
+		},
+		"ER-105": {
+			change:           Add,
+			SystemAdvisories: models.SystemAdvisories{AdvisoryID: int64(105), StatusID: APPLICABLE},
+		},
 	}
 
-	changes := calcAdvisoryChanges(&system, deleteIDs, systemAdvisories)
+	changes := calcAdvisoryChanges(&system, advisoriesByName)
 	expected := map[int64]models.AdvisoryAccountData{
 		102: {SystemsApplicable: 1, SystemsInstallable: 1},
 		103: {SystemsApplicable: -1, SystemsInstallable: -1},

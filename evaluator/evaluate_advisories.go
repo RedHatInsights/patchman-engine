@@ -26,7 +26,7 @@ func lazySaveAndLoadAdvisories(system *models.SystemPlatform, vmaasData *vmaas.U
 		return nil, errors.Wrap(err, "Unable to store unknown advisories in DB")
 	}
 
-	stored, err := loadSystemAdvisories(system.RhAccountID, system.ID)
+	stored, err := loadSystemAdvisories(database.DB, system.RhAccountID, system.ID)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to load system advisories")
 	}
@@ -135,7 +135,7 @@ func lazySaveAdvisories(vmaasData *vmaas.UpdatesV3Response, inventoryID string) 
 	}
 
 	nUnknown := len(missingNames)
-	if nUnknown <= 0 {
+	if nUnknown == 0 {
 		return nil
 	}
 	utils.LogInfo("inventoryID", inventoryID, "unknown", nUnknown, "unknown advisories")
@@ -165,17 +165,13 @@ func storeMissingAdvisories(missingNames []string) error {
 		}
 	}
 
-	if len(toStore) > 0 {
-		tx := database.DB.Begin()
-		defer tx.Commit()
-		err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&toStore).Error
-		if err != nil {
-			return err
-		}
-		// FIXME: after creation, toStore will include newly added .ID attributes
+	if len(toStore) == 0 {
+		return nil
 	}
 
-	return nil
+	tx := database.DB.Begin()
+	defer tx.Commit()
+	return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&toStore).Error
 }
 
 func getAdvisoryMetadataByNames(names []string) (models.AdvisoryMetadataSlice, error) {
@@ -217,71 +213,80 @@ func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform, advisoriesByN
 	}
 
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("advisories-store"))
-	deleteIDs, systemAdvisoriesNew, err := updateSystemAdvisories(tx, system, advisoriesByName)
+	err := updateSystemAdvisories(tx, system, advisoriesByName)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to update system advisories")
 	}
 
-	err = updateAdvisoryAccountData(tx, system, deleteIDs, systemAdvisoriesNew)
+	// reload all after updates
+	systemAdvisoriesNew, err := loadSystemAdvisories(tx, system.RhAccountID, system.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = updateAdvisoryAccountData(tx, system, advisoriesByName)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to update advisory_account_data caches")
 	}
 	return systemAdvisoriesNew, nil
 }
 
-func calcAdvisoryChanges(system *models.SystemPlatform, deleteIDs []int64,
-	systemAdvisories SystemAdvisoryMap) []models.AdvisoryAccountData {
+func calcAdvisoryChanges(system *models.SystemPlatform,
+	advisoriesByName extendedAdvisoryMap) []models.AdvisoryAccountData {
 	// If system is stale, we won't change any rows in advisory_account_data
 	if system.Stale {
 		return []models.AdvisoryAccountData{}
 	}
 
-	aadMap := make(map[int64]models.AdvisoryAccountData, len(systemAdvisories))
-	isApplicableOnly := make(map[int64]bool, len(systemAdvisories))
-	for _, advisory := range systemAdvisories {
-		if advisory.StatusID == INSTALLABLE {
+	aadMap := make(map[int64]models.AdvisoryAccountData, len(advisoriesByName))
+	for _, advisory := range advisoriesByName {
+		switch advisory.change {
+		case Remove:
 			aadMap[advisory.AdvisoryID] = models.AdvisoryAccountData{
 				AdvisoryID:         advisory.AdvisoryID,
 				RhAccountID:        system.RhAccountID,
-				SystemsInstallable: 1,
-				// every installable advisory is also applicable advisory
-				SystemsApplicable: 1,
+				SystemsInstallable: -1,
 			}
-		} else { // APPLICABLE
-			isApplicableOnly[advisory.AdvisoryID] = true
-			// add advisories which are only applicable and not installable to `aadMap`
-			if _, ok := aadMap[advisory.AdvisoryID]; !ok {
-				// FIXME: this check can be removed if advisories don't repeat.
-				// Is it possible that there would be 2 advisories with the same AdvisoryID \
-				// where one would be one INSTALLABLE and the other APPLICABLE?
+			if advisory.StatusID != APPLICABLE { // advisory is no longer applicable
+				aad := aadMap[advisory.AdvisoryID]
+				aad.SystemsApplicable = -1
+				aadMap[advisory.AdvisoryID] = aad
+			}
+		case Keep:
+			continue
+		case Add:
+			fallthrough
+		case Update:
+			if advisory.StatusID == INSTALLABLE {
 				aadMap[advisory.AdvisoryID] = models.AdvisoryAccountData{
-					AdvisoryID:        advisory.AdvisoryID,
-					RhAccountID:       system.RhAccountID,
+					AdvisoryID:         advisory.AdvisoryID,
+					RhAccountID:        system.RhAccountID,
+					SystemsInstallable: 1,
+					// every installable advisory is also applicable advisory
 					SystemsApplicable: 1,
+				}
+			} else { // APPLICABLE
+				// add advisories which are only applicable and not installable to `aadMap`
+				if _, ok := aadMap[advisory.AdvisoryID]; !ok {
+					// FIXME: this check can be removed if advisories don't repeat.
+					// Is it possible that there would be 2 advisories with the same AdvisoryID \
+					// where one would be one INSTALLABLE and the other APPLICABLE?
+					aadMap[advisory.AdvisoryID] = models.AdvisoryAccountData{
+						AdvisoryID:        advisory.AdvisoryID,
+						RhAccountID:       system.RhAccountID,
+						SystemsApplicable: 1,
+					}
 				}
 			}
 		}
 	}
 
-	for _, id := range deleteIDs {
-		aadMap[id] = models.AdvisoryAccountData{
-			AdvisoryID:         id,
-			RhAccountID:        system.RhAccountID,
-			SystemsInstallable: -1,
-		}
-		if !isApplicableOnly[id] {
-			// advisory is no longer applicable
-			aad := aadMap[id]
-			aad.SystemsApplicable = -1
-			aadMap[id] = aad
-		}
-	}
-
-	deltas := make([]models.AdvisoryAccountData, 0, len(deleteIDs)+len(systemAdvisories))
+	// aadMap into aadSlice
+	aadSlice := make([]models.AdvisoryAccountData, 0, len(advisoriesByName))
 	for _, aad := range aadMap {
-		deltas = append(deltas, aad)
+		aadSlice = append(aadSlice, aad)
 	}
-	return deltas
+	return aadSlice
 }
 
 func deleteOldSystemAdvisories(tx *gorm.DB, accountID int, systemID int64, patched []int64) error {
@@ -298,11 +303,10 @@ func upsertSystemAdvisories(tx *gorm.DB, advisoryObjs models.SystemAdvisoriesSli
 }
 
 func processAdvisories(system *models.SystemPlatform, advisoriesByName extendedAdvisoryMap) ([]int64,
-	models.SystemAdvisoriesSlice, SystemAdvisoryMap) {
+	models.SystemAdvisoriesSlice) {
 	deleteIDs := make([]int64, 0, len(advisoriesByName))
 	advisoryObjs := make(models.SystemAdvisoriesSlice, 0, len(advisoriesByName))
-	updatedAdvisories := make(SystemAdvisoryMap, len(advisoriesByName))
-	for name, advisory := range advisoriesByName {
+	for _, advisory := range advisoriesByName {
 		switch advisory.change {
 		case Remove:
 			deleteIDs = append(deleteIDs, advisory.AdvisoryID)
@@ -318,35 +322,26 @@ func processAdvisories(system *models.SystemPlatform, advisoriesByName extendedA
 				StatusID:    advisory.StatusID,
 			}
 			advisoryObjs = append(advisoryObjs, adv)
-			updatedAdvisories[name] = adv
-		case Keep:
-			updatedAdvisories[name] = advisory.SystemAdvisories
 		}
 	}
-	return deleteIDs, advisoryObjs, updatedAdvisories
+	return deleteIDs, advisoryObjs
 }
 
 func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
-	advisoriesByName extendedAdvisoryMap) ([]int64, SystemAdvisoryMap, error) {
-	deleteIDs, advisoryObjs, updatedAdvisories := processAdvisories(system, advisoriesByName)
+	advisoriesByName extendedAdvisoryMap) error {
+	deleteIDs, advisoryObjs := processAdvisories(system, advisoriesByName)
 
-	// this will remove many many old items from our "system_advisories" table
 	err := deleteOldSystemAdvisories(tx, system.RhAccountID, system.ID, deleteIDs)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 
-	err = upsertSystemAdvisories(tx, advisoryObjs)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return deleteIDs, updatedAdvisories, nil
+	return upsertSystemAdvisories(tx, advisoryObjs)
 }
 
-func loadSystemAdvisories(accountID int, systemID int64) (SystemAdvisoryMap, error) {
+func loadSystemAdvisories(tx *gorm.DB, accountID int, systemID int64) (SystemAdvisoryMap, error) {
 	var data []models.SystemAdvisories
-	err := database.DB.Preload("Advisory").Find(&data, "system_id = ? AND rh_account_id = ?", systemID, accountID).Error
+	err := tx.Preload("Advisory").Find(&data, "system_id = ? AND rh_account_id = ?", systemID, accountID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -358,9 +353,8 @@ func loadSystemAdvisories(accountID int, systemID int64) (SystemAdvisoryMap, err
 	return systemAdvisories, nil
 }
 
-func updateAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, deleteIDs []int64,
-	systemAdvisories SystemAdvisoryMap) error {
-	changes := calcAdvisoryChanges(system, deleteIDs, systemAdvisories)
+func updateAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, advisoriesByName extendedAdvisoryMap) error {
+	changes := calcAdvisoryChanges(system, advisoriesByName)
 
 	if len(changes) == 0 {
 		return nil
