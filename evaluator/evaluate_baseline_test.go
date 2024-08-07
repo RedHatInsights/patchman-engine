@@ -2,7 +2,6 @@ package evaluator
 
 import (
 	"app/base/core"
-	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"app/base/vmaas"
@@ -22,20 +21,20 @@ func TestLimitVmaasToBaseline(t *testing.T) {
 	system := models.SystemPlatform{ID: 5, RhAccountID: 1, BaselineID: nil}
 	originalVmaasData := getVMaaSUpdates(t)
 	vmaasData := getVMaaSUpdates(t)
-	err := limitVmaasToBaseline(database.DB, &system, &vmaasData)
+	err := limitVmaasToBaseline(&system, &vmaasData)
 	assert.Nil(t, err)
 	assert.Equal(t, originalVmaasData, vmaasData)
 
 	// a system with baseline but nothing filtered out
 	system = models.SystemPlatform{ID: 3, RhAccountID: 1, BaselineID: utils.PtrInt64(2)}
-	err = limitVmaasToBaseline(database.DB, &system, &vmaasData)
+	err = limitVmaasToBaseline(&system, &vmaasData)
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"RH-1", "RH-100", "RH-2"}, errataInVmaasData(vmaasData, INSTALLABLE))
 
 	// a system with baseline and filtered errata
 	system = models.SystemPlatform{ID: 1, RhAccountID: 1, BaselineID: utils.PtrInt64(1)}
 	vmaasData = getVMaaSUpdates(t)
-	err = limitVmaasToBaseline(database.DB, &system, &vmaasData)
+	err = limitVmaasToBaseline(&system, &vmaasData)
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"RH-100"}, errataInVmaasData(vmaasData, INSTALLABLE))
 	assert.Equal(t, []string{"RH-1", "RH-2"}, errataInVmaasData(vmaasData, APPLICABLE))

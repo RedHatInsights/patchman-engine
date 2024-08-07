@@ -5,8 +5,6 @@ import (
 	"app/base/utils"
 	"encoding/json"
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type BaselineConfig struct {
@@ -14,13 +12,13 @@ type BaselineConfig struct {
 	ToTime time.Time `json:"to_time" example:"2022-12-31T12:00:00-04:00"`
 }
 
-func GetBaselineConfig(tx *gorm.DB, system *models.SystemPlatform) *BaselineConfig {
+func GetBaselineConfig(system *models.SystemPlatform) *BaselineConfig {
 	if system.BaselineID == nil {
 		return nil
 	}
 
 	var jsonb [][]byte
-	err := tx.Table("baseline").
+	err := DB.Table("baseline").
 		Where("id = ? and rh_account_id = ?", system.BaselineID, system.RhAccountID).
 		Pluck("config", &jsonb).Error
 	if err != nil {

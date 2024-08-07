@@ -69,8 +69,8 @@ func SystemAdvisoriesByInventoryID(tx *gorm.DB, accountID int, groups map[string
 	return (joinsT)(joins).apply(tx)
 }
 
-func SystemAdvisoriesBySystemID(tx *gorm.DB, accountID int, systemID int64) *gorm.DB {
-	query := systemAdvisoriesQuery(tx, accountID).Where("sp.id = ?", systemID)
+func SystemAdvisoriesBySystemID(accountID int, systemID int64) *gorm.DB {
+	query := systemAdvisoriesQuery(accountID).Where("sp.id = ?", systemID)
 	return query
 }
 
@@ -79,8 +79,8 @@ func AdvisoryMetadata(tx *gorm.DB) *gorm.DB {
 	return JoinAdvisoryType(tx)
 }
 
-func systemAdvisoriesQuery(tx *gorm.DB, accountID int) *gorm.DB {
-	query := tx.Table("system_advisories sa").Select("sa.*").
+func systemAdvisoriesQuery(accountID int) *gorm.DB {
+	query := DB.Table("system_advisories sa").Select("sa.*").
 		Joins("join system_platform sp ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id").
 		Where("sa.rh_account_id = ? AND sp.rh_account_id = ?", accountID, accountID)
 	return query
