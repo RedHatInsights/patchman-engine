@@ -418,6 +418,7 @@ objects:
     - vmaas
     - ingress
     - puptoo
+    optionalDependencies:
     - content-sources-backend
     cyndi:
       enabled: true
