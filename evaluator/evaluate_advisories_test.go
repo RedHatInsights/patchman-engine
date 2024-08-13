@@ -112,54 +112,19 @@ func TestLoadMissingNamesIDs(t *testing.T) {
 	extendedAdvisories := extendedAdvisoryMap{"ER1": {}, "ER2": {}, "ER3": {}, "ER4": {}}
 
 	// test error if not lazy saved
-	err := loadMissingNamesIDs(missingNames, &extendedAdvisories)
+	err := loadMissingNamesIDs(missingNames, extendedAdvisories)
 	assert.Error(t, err)
 
 	// test OK if lazy saved
 	err = lazySaveAdvisories(&vmaasData, inventoryID)
 	defer database.DeleteNewlyAddedAdvisories(t)
 	assert.NoError(t, err)
-	err = loadMissingNamesIDs(missingNames, &extendedAdvisories)
+	err = loadMissingNamesIDs(missingNames, extendedAdvisories)
 	assert.NoError(t, err)
 	assert.NotEqual(t, int64(0), extendedAdvisories["ER1"].AdvisoryID)
 	assert.NotEqual(t, int64(0), extendedAdvisories["ER2"].AdvisoryID)
 	assert.NotEqual(t, int64(0), extendedAdvisories["ER3"].AdvisoryID)
 	assert.NotEqual(t, int64(0), extendedAdvisories["ER4"].AdvisoryID)
-}
-
-func TestParseReported(t *testing.T) {
-	stored := SystemAdvisoryMap{
-		"ER-42": models.SystemAdvisories{StatusID: INSTALLABLE},
-		"ER-43": models.SystemAdvisories{StatusID: INSTALLABLE},
-	}
-	reported := map[string]int{
-		"ER-42": INSTALLABLE,
-		"ER-43": APPLICABLE,
-		"ER-44": INSTALLABLE,
-	}
-	extendedAdvisories, missingNames := pasrseReported(stored, reported)
-	assert.Equal(t, 3, len(extendedAdvisories))
-	assert.Equal(t, Keep, extendedAdvisories["ER-42"].change)
-	assert.Equal(t, Update, extendedAdvisories["ER-43"].change)
-	assert.Equal(t, Add, extendedAdvisories["ER-44"].change)
-	assert.Equal(t, []string{"ER-44"}, missingNames)
-}
-
-func TestParseStored(t *testing.T) {
-	stored := SystemAdvisoryMap{
-		"ER-42": models.SystemAdvisories{},
-		"ER-43": models.SystemAdvisories{StatusID: INSTALLABLE},
-	}
-	reported := map[string]int{
-		"ER-43": INSTALLABLE,
-	}
-	extendedAdvisories := extendedAdvisoryMap{
-		"ER-43": extendedAdvisory{change: Keep, SystemAdvisories: stored["ER-43"]},
-	}
-	parseStored(stored, reported, &extendedAdvisories)
-	assert.Equal(t, 2, len(extendedAdvisories))
-	assert.Equal(t, Remove, extendedAdvisories["ER-42"].change)
-	assert.Equal(t, Keep, extendedAdvisories["ER-43"].change)
 }
 
 func TestIncrementAdvisoryTypeCounts(t *testing.T) {

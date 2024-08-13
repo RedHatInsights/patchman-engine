@@ -39,8 +39,35 @@ func lazySaveAndLoadAdvisories(system *models.SystemPlatform, vmaasData *vmaas.U
 	return merged, nil
 }
 
-// PasrseReported evaluates changes of type Add/Update/Keep and tracks them in extendedAdvisoryMap.
-func pasrseReported(stored SystemAdvisoryMap, reported map[string]int) (extendedAdvisoryMap, []string) {
+func loadMissingNamesIDs(missingNames []string, extendedAdvisories extendedAdvisoryMap) error {
+	advisoryMetadata, err := getAdvisoryMetadataByNames(missingNames)
+	if err != nil {
+		return err
+	}
+
+	name2AdvisoryID := make(map[string]int64, len(advisoryMetadata))
+	for _, am := range advisoryMetadata {
+		name2AdvisoryID[am.Name] = am.ID
+	}
+
+	for _, name := range missingNames {
+		if _, found := name2AdvisoryID[name]; !found {
+			return errors.New("Failed to evaluate changes because an advisory was not lazy saved")
+		}
+		extendedAdvisory := extendedAdvisories[name]
+		extendedAdvisory.AdvisoryID = name2AdvisoryID[name]
+		extendedAdvisories[name] = extendedAdvisory
+	}
+
+	return nil
+}
+
+// EvaluateChanges evaluates all types of changes (Keep, Add, Update, Remove)
+// between the stored advisories from DB and the reported advisories from VMaaS,
+// and tracks them in extendedAdvisoryMap.
+func evaluateChanges(vmaasData *vmaas.UpdatesV3Response, stored SystemAdvisoryMap) (
+	extendedAdvisoryMap, error) {
+	reported := getReportedAdvisories(vmaasData)
 	extendedAdvisories := make(extendedAdvisoryMap, len(reported)+len(stored))
 	missingNames := make([]string, 0, len(reported))
 	for reportedName, reportedStatusID := range reported {
@@ -67,57 +94,20 @@ func pasrseReported(stored SystemAdvisoryMap, reported map[string]int) (extended
 			missingNames = append(missingNames, reportedName)
 		}
 	}
-	return extendedAdvisories, missingNames
-}
 
-func loadMissingNamesIDs(missingNames []string, extendedAdvisories *extendedAdvisoryMap) error {
-	advisoryMetadata, err := getAdvisoryMetadataByNames(missingNames)
+	err := loadMissingNamesIDs(missingNames, extendedAdvisories)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	name2AdvisoryID := make(map[string]int64, len(advisoryMetadata))
-	for _, am := range advisoryMetadata {
-		name2AdvisoryID[am.Name] = am.ID
-	}
-
-	for _, name := range missingNames {
-		if _, found := name2AdvisoryID[name]; !found {
-			return errors.New("Failed to evaluate changes because an advisory was not lazy saved")
-		}
-		extendedAdvisory := (*extendedAdvisories)[name]
-		extendedAdvisory.AdvisoryID = name2AdvisoryID[name]
-		(*extendedAdvisories)[name] = extendedAdvisory
-	}
-
-	return nil
-}
-
-// ParseStored sets Change for advisories that are in stored but not in reported to Remove.
-func parseStored(stored SystemAdvisoryMap, reported map[string]int, extendedAdvisories *extendedAdvisoryMap) {
 	for storedName, storedAdvisory := range stored {
 		if _, found := reported[storedName]; !found {
-			(*extendedAdvisories)[storedName] = extendedAdvisory{
+			extendedAdvisories[storedName] = extendedAdvisory{
 				change:           Remove,
 				SystemAdvisories: storedAdvisory,
 			}
 		}
 	}
-}
-
-// EvaluateChanges calls functions that evaluate all types of changes between stored advisories from DB
-// and reported advisories from VMaaS.
-func evaluateChanges(vmaasData *vmaas.UpdatesV3Response, stored SystemAdvisoryMap) (
-	extendedAdvisoryMap, error) {
-	reported := getReportedAdvisories(vmaasData)
-	extendedAdvisories, missingNames := pasrseReported(stored, reported)
-
-	err := loadMissingNamesIDs(missingNames, &extendedAdvisories)
-	if err != nil {
-		return nil, err
-	}
-
-	parseStored(stored, reported, &extendedAdvisories)
 
 	return extendedAdvisories, nil
 }
