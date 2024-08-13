@@ -12,6 +12,20 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+const (
+	undefinedChangeType int = iota
+	enhancement
+	bugfix
+	security
+)
+
+type extendedAdvisory struct {
+	change ChangeType
+	models.SystemAdvisories
+}
+
+type extendedAdvisoryMap map[string]extendedAdvisory
+
 // LazySaveAndLoadAdvisories lazy saves missing advisories from reported, loads stored ones from DB,
 // and evaluates changes between the two.
 func lazySaveAndLoadAdvisories(system *models.SystemPlatform, vmaasData *vmaas.UpdatesV3Response) (
@@ -356,17 +370,3 @@ func updateAdvisoryAccountData(tx *gorm.DB, system *models.SystemPlatform, advis
 
 	return database.BulkInsert(txOnConflict, changes)
 }
-
-type extendedAdvisory struct {
-	change ChangeType
-	models.SystemAdvisories
-}
-
-type extendedAdvisoryMap map[string]extendedAdvisory
-
-const (
-	undefinedChangeType int = iota
-	enhancement
-	bugfix
-	security
-)
