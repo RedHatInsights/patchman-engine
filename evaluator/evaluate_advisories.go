@@ -40,14 +40,9 @@ func lazySaveAndLoadAdvisories(system *models.SystemPlatform, vmaasData *vmaas.U
 }
 
 func loadMissingNamesIDs(missingNames []string, extendedAdvisories extendedAdvisoryMap) error {
-	advisoryMetadata, err := getAdvisoryMetadataByNames(missingNames)
+	name2AdvisoryID, err := getAdvisoryMetadataIDs(missingNames)
 	if err != nil {
 		return err
-	}
-
-	name2AdvisoryID := make(map[string]int64, len(advisoryMetadata))
-	for _, am := range advisoryMetadata {
-		name2AdvisoryID[am.Name] = am.ID
 	}
 
 	for _, name := range missingNames {
@@ -164,30 +159,33 @@ func storeMissingAdvisories(missingNames []string) error {
 	return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&toStore).Error
 }
 
-func getAdvisoryMetadataByNames(names []string) (models.AdvisoryMetadataSlice, error) {
+func getAdvisoryMetadataIDs(names []string) (map[string]int64, error) {
 	metadata := make(models.AdvisoryMetadataSlice, 0, len(names))
 	err := database.DB.Model(&models.AdvisoryMetadata{}).
 		Where("name IN (?)", names).
 		Select("id, name").
 		Scan(&metadata).Error
-	return metadata, err
-}
-
-// GetMissingAdvisories determines if advisories from DB are properly stored based on advisory metadata existence.
-func getMissingAdvisories(advisoryNames []string) ([]string, error) {
-	advisoryMetadata, err := getAdvisoryMetadataByNames(advisoryNames)
 	if err != nil {
 		return nil, err
 	}
 
-	found := make(map[string]bool, len(advisoryNames))
-	for _, am := range advisoryMetadata {
-		found[am.Name] = true
+	name2AdvisoryID := make(map[string]int64, len(metadata))
+	for _, am := range metadata {
+		name2AdvisoryID[am.Name] = am.ID
+	}
+	return name2AdvisoryID, err
+}
+
+// GetMissingAdvisories determines if advisories from DB are properly stored based on advisory metadata existence.
+func getMissingAdvisories(advisoryNames []string) ([]string, error) {
+	name2AdvisoryID, err := getAdvisoryMetadataIDs(advisoryNames)
+	if err != nil {
+		return nil, err
 	}
 
-	missingNames := make([]string, 0, len(advisoryNames)-len(advisoryMetadata))
+	missingNames := make([]string, 0, len(advisoryNames)-len(name2AdvisoryID))
 	for _, name := range advisoryNames {
-		if !found[name] {
+		if _, found := name2AdvisoryID[name]; !found {
 			missingNames = append(missingNames, name)
 		}
 	}
