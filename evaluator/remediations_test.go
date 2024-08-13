@@ -44,9 +44,3 @@ func TestCreateRemediationsState(t *testing.T) {
 		"patch:firefox-0:77.0.1-1.fc31.x86_64", "patch:firefox-1:76.0.1-1.fc31.x86_64",
 		"patch:kernel-5.10.13-200.fc31.x86_64"})
 }
-
-func TestGetReportedAdvisoryNames(t *testing.T) {
-	vmaasData := mockVMaaSResponse()
-	names := getReportedAdvisoryNames(&vmaasData)
-	assert.Equal(t, 4, len(names))
-}

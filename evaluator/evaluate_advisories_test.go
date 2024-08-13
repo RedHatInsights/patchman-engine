@@ -193,9 +193,10 @@ func TestGetMissingAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	advisories := []string{"ER-1", "RH-1", "ER-2", "RH-2"}
-	advisoryIDs := getAdvisoryIDsByNames(t, advisories)
-	missingNames, err := getMissingAdvisories(advisories)
+	advisoryNames := []string{"ER-1", "RH-1", "ER-2", "RH-2"}
+	advisoryMap := map[string]int{"ER-1": 0, "RH-1": 0, "ER-2": 0, "RH-2": 0}
+	advisoryIDs := getAdvisoryIDsByNames(t, advisoryNames)
+	missingNames, err := getMissingAdvisories(advisoryMap)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(advisoryIDs))
 	assert.Equal(t, 2, len(missingNames))
@@ -207,7 +208,7 @@ func TestGetMissingAdvisoriesEmptyString(t *testing.T) {
 
 	advisories := []string{""}
 	advisoryIDs := getAdvisoryIDsByNames(t, advisories)
-	missingNames, err := getMissingAdvisories(advisories)
+	missingNames, err := getMissingAdvisories(map[string]int{"": 0})
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(advisoryIDs))
 	assert.Equal(t, 1, len(missingNames))

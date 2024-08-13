@@ -123,7 +123,7 @@ func evaluateChanges(vmaasData *vmaas.UpdatesV3Response, stored SystemAdvisoryMa
 
 // LazySaveAdvisories finds advisories reported by VMaaS and missing in the DB and lazy saves them.
 func lazySaveAdvisories(vmaasData *vmaas.UpdatesV3Response, inventoryID string) error {
-	reportedNames := getReportedAdvisoryNames(vmaasData)
+	reportedNames := getReportedAdvisories(vmaasData)
 	if len(reportedNames) < 1 {
 		return nil
 	}
@@ -191,14 +191,27 @@ func getAdvisoryMetadataIDs(names []string) (map[string]int64, error) {
 }
 
 // GetMissingAdvisories determines if advisories from DB are properly stored based on advisory metadata existence.
-func getMissingAdvisories(advisoryNames []string) ([]string, error) {
+func getMissingAdvisories(advisoriesMap map[string]int) ([]string, error) {
+	advisoryNames := make([]string, 0, len(advisoriesMap))
+	present := make(map[string]bool, len(advisoriesMap))
+	for name := range advisoriesMap {
+		if len(name) > 0 && !present[name] {
+			advisoryNames = append(advisoryNames, name)
+			present[name] = true
+		}
+	}
+
 	name2AdvisoryID, err := getAdvisoryMetadataIDs(advisoryNames)
 	if err != nil {
 		return nil, err
 	}
 
-	missingNames := make([]string, 0, len(advisoryNames)-len(name2AdvisoryID))
-	for _, name := range advisoryNames {
+	if len(advisoriesMap) == len(name2AdvisoryID) {
+		return []string{}, nil
+	}
+
+	missingNames := make([]string, 0, len(advisoriesMap)-len(name2AdvisoryID))
+	for name := range advisoriesMap {
 		if _, found := name2AdvisoryID[name]; !found {
 			missingNames = append(missingNames, name)
 		}
