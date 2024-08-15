@@ -76,6 +76,7 @@ func loadMissingNamesIDs(missingNames []string, extendedAdvisories extendedAdvis
 // and tracks them in extendedAdvisoryMap.
 func evaluateChanges(vmaasData *vmaas.UpdatesV3Response, stored SystemAdvisoryMap) (
 	extendedAdvisoryMap, error) {
+	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("advisories-evaluate"))
 	reported := getReportedAdvisories(vmaasData)
 	extendedAdvisories := make(extendedAdvisoryMap, len(reported)+len(stored))
 	missingNames := make([]string, 0, len(reported))
@@ -123,6 +124,7 @@ func evaluateChanges(vmaasData *vmaas.UpdatesV3Response, stored SystemAdvisoryMa
 
 // LazySaveAdvisories finds advisories reported by VMaaS and missing in the DB and lazy saves them.
 func lazySaveAdvisories(vmaasData *vmaas.UpdatesV3Response, inventoryID string) error {
+	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("advisories-lazy-save"))
 	reportedNames := getReportedAdvisories(vmaasData)
 	if len(reportedNames) < 1 {
 		return nil
@@ -321,6 +323,8 @@ func processAdvisories(system *models.SystemPlatform, advisoriesByName extendedA
 	models.SystemAdvisoriesSlice) {
 	deleteIDs := make([]int64, 0, len(advisoriesByName))
 	advisoryObjs := make(models.SystemAdvisoriesSlice, 0, len(advisoriesByName))
+	installableCnt := 0
+	applicableCnt := 0
 	for _, advisory := range advisoriesByName {
 		switch advisory.change {
 		case Remove:
@@ -337,8 +341,21 @@ func processAdvisories(system *models.SystemPlatform, advisoriesByName extendedA
 				StatusID:    advisory.StatusID,
 			}
 			advisoryObjs = append(advisoryObjs, adv)
+			fallthrough
+		case Keep:
+			if advisory.StatusID == INSTALLABLE {
+				installableCnt++
+			} else { // APPLICABLE
+				applicableCnt++
+			}
 		}
 	}
+	updatesCnt.WithLabelValues("installable").Add(float64(installableCnt))
+	utils.LogInfo("inventoryID", system.InventoryID, "installable", installableCnt, "installable advisories")
+	updatesCnt.WithLabelValues("applicable").Add(float64(applicableCnt))
+	utils.LogInfo("inventoryID", system.InventoryID, "applicable", applicableCnt, "applicable advisories")
+	updatesCnt.WithLabelValues("patched").Add(float64(len(deleteIDs)))
+	utils.LogInfo("inventoryID", system.InventoryID, "fixed", len(deleteIDs), "fixed advisories")
 	return deleteIDs, advisoryObjs
 }
 
@@ -355,6 +372,7 @@ func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
 }
 
 func loadSystemAdvisories(tx *gorm.DB, accountID int, systemID int64) (SystemAdvisoryMap, error) {
+	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("advisories-load"))
 	var data []models.SystemAdvisories
 	err := tx.Preload("Advisory").Find(&data, "system_id = ? AND rh_account_id = ?", systemID, accountID).Error
 	if err != nil {
