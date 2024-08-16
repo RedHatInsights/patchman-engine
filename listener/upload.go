@@ -22,26 +22,27 @@ import (
 	"sync"
 	"time"
 
+	stdErrors "errors"
+
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
 const (
-	WarnSkippingNoPackages    = "skipping profile with no packages"
-	WarnSkippingReporter      = "skipping excluded reporter"
-	WarnSkippingHostType      = "skipping excluded host type"
-	WarnSkippingBadPackages   = "skipping profile with malformed packages"
 	WarnPayloadTracker        = "unable to send message to payload tracker"
 	ErrorNoAccountProvided    = "no account provided in host message"
 	ErrorKafkaSend            = "unable to send evaluation message"
 	ErrorProcessUpload        = "unable to process upload"
 	UploadSuccessNoEval       = "upload event handled successfully, no eval required"
 	UploadSuccess             = "upload event handled successfully"
+	DeleteSuccess             = "delete event handled successfully"
 	FlushedFullBuffer         = "flushing full eval event buffer"
 	FlushedTimeoutBuffer      = "flushing eval event buffer after timeout"
 	ErrorUnmarshalMetadata    = "unable to unmarshall platform metadata value"
 	ErrorStatus               = "error"
+	ProcessingStatus          = "processing"
+	ReceivedStatus            = "received"
 	SuccessStatus             = "success"
 	RhuiPathPart              = "/rhui/"
 	RepoPathPattern           = "(/content/.*)"
@@ -50,9 +51,27 @@ const (
 )
 
 var (
+	ErrNoPackages        = errors.New("skipping profile with no packages")
+	ErrReporter          = errors.New("skipping excluded reporter")
+	ErrHostType          = errors.New("skipping excluded host type")
+	ErrBadPackages       = errors.New("skipping profile with malformed packages")
+	ErrNoAccountProvided = errors.New("no account provided in host message")
+	ErrKafkaSend         = errors.New("unable to send evaluation message")
+	ErrProcessUpload     = errors.New("unable to process upload")
+)
+
+var (
 	repoPathRegex = regexp.MustCompile(RepoPathPattern)
 	spacesRegex   = regexp.MustCompile(`^\s*$`)
 	httpClient    *api.Client
+	metricByErr   = map[error]string{
+		ErrNoPackages:        ReceivedWarnNoPackages,
+		ErrReporter:          ReceivedWarnExcludedReporter,
+		ErrHostType:          ReceivedWarnExcludedHostType,
+		ErrBadPackages:       ReceivedWarnBadPackages,
+		ErrNoAccountProvided: ReceivedErrorIdentity,
+		ErrProcessUpload:     ReceivedErrorProcessing,
+	}
 )
 
 type Host struct {
@@ -64,6 +83,7 @@ type Host struct {
 	CulledTimestamp       *types.Rfc3339Timestamp `json:"culled_timestamp,omitempty"`
 	Reporter              string                  `json:"reporter,omitempty"`
 	SystemProfile         inventory.SystemProfile `json:"system_profile,omitempty"`
+	ParsedYumUpdates      *YumUpdates             `json:"-"`
 }
 
 type HostMetadata struct {
@@ -106,7 +126,6 @@ func (y *YumUpdates) GetBuiltPkgcache() bool {
 	return y.BuiltPkgcache
 }
 
-//nolint:funlen
 func HandleUpload(event HostEvent) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventUpload))
@@ -117,99 +136,107 @@ func HandleUpload(event HostEvent) error {
 	}
 	updateReporterCounter(event.Host.Reporter)
 
-	payloadTrackerEvent := mqueue.PayloadTrackerEvent{
+	ptEvent := mqueue.PayloadTrackerEvent{
 		OrgID:       event.Host.OrgID,
 		RequestID:   &event.Metadata.RequestID,
 		InventoryID: event.Host.ID,
-		Status:      "received",
+		Status:      ReceivedStatus,
 	}
 
-	if _, ok := allowedReporters[event.Host.Reporter]; !ok {
-		utils.LogWarn("inventoryID", event.Host.ID, "reporter", event.Host.Reporter, WarnSkippingReporter)
-		eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedReporter).Inc()
-		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
-		sendPayloadStatus(ptWriter, payloadTrackerEvent, "", WarnSkippingReporter)
-		return nil
+	if err := validateHost(&event.Host); err != nil {
+		return handleListenerErrors(err, &event, &ptEvent, tStart, ReceivedStatus)
 	}
 
-	if _, ok := excludedHostTypes[event.Host.SystemProfile.HostType]; ok {
-		utils.LogWarn("inventoryID", event.Host.ID, "hostType", event.Host.SystemProfile.HostType, WarnSkippingHostType)
-		eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnExcludedHostType).Inc()
-		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
-		sendPayloadStatus(ptWriter, payloadTrackerEvent, "", WarnSkippingHostType)
-		return nil
-	}
-
-	if event.Host.OrgID == nil || *event.Host.OrgID == "" {
-		utils.LogError("inventoryID", event.Host.ID, ErrorNoAccountProvided)
-		eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorIdentity).Inc()
-		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
-		sendPayloadStatus(ptWriter, payloadTrackerEvent, "", ErrorNoAccountProvided)
-		return nil
-	}
-
-	installedPackages := event.Host.SystemProfile.GetInstalledPackages()
-	if len(installedPackages) > 0 {
-		// parse first package from list and skip upload if pkg is malformed, e.g. without epoch
-		_, err := utils.ParseNevra(installedPackages[0])
-		if err != nil {
-			utils.LogError("inventoryID", event.Host.ID, "err", err.Error(), WarnSkippingBadPackages)
-			eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnBadPackages).Inc()
-			utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("message-skip"))
-			sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, WarnSkippingBadPackages)
-			return nil
-		}
-	}
-
-	sendPayloadStatus(ptWriter, payloadTrackerEvent, "", "")
+	sendPayloadStatus(ptWriter, ptEvent, "", "Received by listener")
 	yumUpdates, err := getYumUpdates(event, httpClient)
 	if err != nil {
 		// don't fail, use vmaas evaluation
 		utils.LogError("err", err, "Could not get yum updates")
 	}
-	utils.LogTrace("inventoryID", event.Host.ID, "yum_updates", string(yumUpdates.GetRawParsed()))
-
-	if len(installedPackages) == 0 && yumUpdates == nil {
-		utils.LogWarn("inventoryID", event.Host.ID, WarnSkippingNoPackages)
-		eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedWarnNoPackages).Inc()
-		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedWarnNoPackages))
-		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, WarnSkippingNoPackages)
-		return nil
-	}
 
 	sys, err := processUpload(&event.Host, yumUpdates)
-
 	if err != nil {
-		utils.LogError("inventoryID", event.Host.ID, "err", err.Error(), ErrorProcessUpload)
-		eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedErrorProcessing).Inc()
-		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedErrorProcessing))
-		sendPayloadStatus(ptWriter, payloadTrackerEvent, ErrorStatus, ErrorProcessUpload)
-		return errors.Wrap(err, "Could not process upload")
+		return handleListenerErrors(stdErrors.Join(ErrProcessUpload, err), &event, &ptEvent, tStart, ErrorStatus)
 	}
-
 	// Deleted system, return nil
 	if sys == nil {
-		eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedDeleted).Inc()
-		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedDeleted))
-		sendPayloadStatus(ptWriter, payloadTrackerEvent, SuccessStatus, ReceivedDeleted)
+		logAndObserve(DeleteSuccess, ReceivedDeleted, &event, &ptEvent, tStart, SuccessStatus, true)
 		return nil
 	}
 
 	if sys.UnchangedSince != nil && sys.LastEvaluation != nil {
 		if sys.UnchangedSince.Before(*sys.LastEvaluation) {
-			eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccessNoEval).Inc()
-			utils.LogInfo("inventoryID", event.Host.ID, UploadSuccessNoEval)
-			utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedSuccessNoEval))
-			sendPayloadStatus(ptWriter, payloadTrackerEvent, SuccessStatus, ReceivedSuccessNoEval)
+			logAndObserve(UploadSuccessNoEval, ReceivedSuccessNoEval, &event, &ptEvent, tStart, SuccessStatus, true)
 			return nil
 		}
 	}
 
-	bufferEvalEvents(sys.InventoryID, sys.RhAccountID, &payloadTrackerEvent)
+	ptEvent.StatusMsg = ProcessingStatus
+	bufferEvalEvents(sys.InventoryID, sys.RhAccountID, &ptEvent)
+	logAndObserve(UploadSuccess, ReceivedSuccess, &event, &ptEvent, tStart, SuccessStatus, false)
+	return nil
+}
 
-	eventMsgsReceivedCnt.WithLabelValues(EventUpload, ReceivedSuccess).Inc()
-	utils.LogInfo("inventoryID", event.Host.ID, UploadSuccess)
-	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(ReceivedSuccess))
+func handleListenerErrors(err error, event *HostEvent, ptEvent *mqueue.PayloadTrackerEvent,
+	tStart time.Time, status string) error {
+	if err != nil {
+		if errors.Is(err, base.ErrFatal) {
+			// fatal error which should restart the pod
+			utils.LogError("inventoryID", event.Host.ID, "err", err.Error())
+		} else {
+			utils.LogWarn("inventoryID", event.Host.ID, "reporter", event.Host.Reporter,
+				"hostType", event.Host.SystemProfile.HostType, "err", err.Error())
+		}
+	}
+	metric, ok := metricByErr[err]
+	if !ok {
+		metric = "internal-error"
+	}
+	logAndObserve(err.Error(), metric, event, ptEvent, tStart, status, true)
+
+	return err
+}
+
+func logAndObserve(msg, metric string, event *HostEvent, ptEvent *mqueue.PayloadTrackerEvent,
+	tStart time.Time, status string, withPayloadTracker bool) {
+	eventMsgsReceivedCnt.WithLabelValues(EventUpload, metric).Inc()
+	utils.LogInfo("inventoryID", event.Host.ID, msg)
+	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues(metric))
+	if withPayloadTracker {
+		sendPayloadStatus(ptWriter, *ptEvent, status, metric)
+	}
+}
+
+func validateHost(host *Host) error {
+	if _, ok := allowedReporters[host.Reporter]; !ok {
+		return ErrReporter
+	}
+	if host.OrgID == nil || *host.OrgID == "" {
+		return ErrNoAccountProvided
+	}
+
+	if _, ok := excludedHostTypes[host.SystemProfile.HostType]; ok {
+		return ErrHostType
+	}
+
+	installedPackages := host.SystemProfile.GetInstalledPackages()
+	if len(installedPackages) == 0 {
+		return ErrNoPackages
+	}
+	if err := checkPackagesEpoch(installedPackages); err != nil {
+		err = stdErrors.Join(ErrBadPackages, err)
+		return err
+	}
+	return nil
+}
+
+func checkPackagesEpoch(packages []string) error {
+	if len(packages) > 0 {
+		// parse first package from list and skip upload if pkg is malformed, e.g. without epoch
+		if _, err := utils.ParseNevra(packages[0]); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -741,6 +768,7 @@ func getYumUpdates(event HostEvent, client *api.Client) (*YumUpdates, error) {
 	res.RawParsed = yumUpdates
 	res.BuiltPkgcache = parsed.GetBuildPkgcache()
 
+	utils.LogTrace("inventoryID", event.Host.ID, "yum_updates", string(res.GetRawParsed()))
 	return res, nil
 }
 
