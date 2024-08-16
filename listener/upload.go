@@ -449,12 +449,12 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 	if system.ID != 0 {
 		// update system
 		err := tx.Select(colsToUpdate).Updates(system).Error
-		return errors.Wrap(err, "unable to update system_platform")
+		return base.WrapFatalDBError(err, "unable to update system_platform")
 	}
 	// insert system
 	err := database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
 		Save(system).Error
-	return errors.Wrap(err, "unable to insert to system_platform")
+	return base.WrapFatalDBError(err, "unable to insert to system_platform")
 }
 
 func getReporterID(reporter string) *int {
@@ -506,7 +506,10 @@ func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int64, added int64,
 	var existingRepos models.RepoSlice
 	err = tx.Model(&models.Repo{}).Where("name IN (?)", repos).Find(&existingRepos).Error
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "unable to load repos")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, 0, errors.Wrapf(err, "couldn't find repos: %s", repos)
+		}
+		return nil, 0, base.WrapFatalDBError(err, "unable to load repos")
 	}
 
 	inDBIDs := make(map[string]int64)
@@ -529,7 +532,7 @@ func ensureReposInDB(tx *gorm.DB, repos []string) (repoIDs []int64, added int64,
 		})
 		err = txOnConflict.Create(&toStore).Error
 		if err != nil {
-			return nil, 0, errors.Wrap(err, "unable to update repos")
+			return nil, 0, base.WrapFatalDBError(err, "unable to update repos")
 		}
 		added = txOnConflict.RowsAffected
 		for _, repo := range toStore {
@@ -553,13 +556,13 @@ func updateSystemRepos(tx *gorm.DB, rhAccountID int, systemID int64, repoIDs []i
 	})
 	err = database.BulkInsert(txOnConflict, repoSystemObjs)
 	if err != nil {
-		return 0, 0, errors.Wrap(err, "unable to update system repos")
+		return 0, 0, base.WrapFatalDBError(err, "unable to update system repos")
 	}
 	nAdded = txOnConflict.RowsAffected
 
 	nDeleted, err = deleteOtherSystemRepos(tx, rhAccountID, systemID, repoIDs)
 	if err != nil {
-		return nAdded, 0, errors.Wrap(err, "unable to delete out-of-date system repos")
+		return nAdded, 0, base.WrapFatalDBError(err, "unable to delete out-of-date system repos")
 	}
 
 	return nAdded, nDeleted, nil
@@ -702,7 +705,7 @@ func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatform, 
 	var deleted models.DeletedSystem
 	if err := tx.Find(&deleted, "inventory_id = ?", host.ID).Error; err != nil &&
 		!errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errors.Wrap(err, "Checking deleted systems")
+		return nil, base.WrapFatalDBError(err, "checking deleted systems")
 	}
 
 	// If the system was deleted in last hour, don't register this upload
@@ -716,7 +719,7 @@ func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatform, 
 	}
 	err = tx.Commit().Error
 	if err != nil {
-		return nil, errors.Wrap(err, "Committing changes")
+		return nil, base.WrapFatalDBError(err, "committing changes")
 	}
 	return sys, nil
 }
