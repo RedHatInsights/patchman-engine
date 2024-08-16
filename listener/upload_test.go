@@ -133,8 +133,10 @@ func TestUploadHandlerWarn(t *testing.T) {
 	log.AddHook(logHook)
 	noPkgsEvent := createTestUploadEvent("1", id, "puptoo", false, false)
 	err := HandleUpload(noPkgsEvent)
-	assert.NoError(t, err)
-	assertInLogs(t, WarnSkippingNoPackages, logHook.LogEntries...)
+	if assert.Error(t, err) {
+		assert.ErrorIs(t, err, ErrNoPackages)
+	}
+	assertInLogs(t, ErrNoPackages.Error(), logHook.LogEntries...)
 }
 
 func TestUploadHandlerWarnSkipReporter(t *testing.T) {
@@ -144,8 +146,10 @@ func TestUploadHandlerWarnSkipReporter(t *testing.T) {
 	log.AddHook(logHook)
 	noPkgsEvent := createTestUploadEvent("1", id, "yupana", false, false)
 	err := HandleUpload(noPkgsEvent)
-	assert.NoError(t, err)
-	assertInLogs(t, WarnSkippingReporter, logHook.LogEntries...)
+	if assert.Error(t, err) {
+		assert.ErrorIs(t, err, ErrReporter)
+	}
+	assertInLogs(t, ErrReporter.Error(), logHook.LogEntries...)
 }
 
 func TestUploadHandlerWarnSkipHostType(t *testing.T) {
@@ -156,8 +160,10 @@ func TestUploadHandlerWarnSkipHostType(t *testing.T) {
 	event := createTestUploadEvent("1", id, "puptoo", true, false)
 	event.Host.SystemProfile.HostType = "edge"
 	err := HandleUpload(event)
-	assert.NoError(t, err)
-	assertInLogs(t, WarnSkippingHostType, logHook.LogEntries...)
+	if assert.Error(t, err) {
+		assert.ErrorIs(t, err, ErrHostType)
+	}
+	assertInLogs(t, ErrHostType.Error(), logHook.LogEntries...)
 }
 
 // error when parsing identity
@@ -169,8 +175,10 @@ func TestUploadHandlerError1(t *testing.T) {
 	event := createTestUploadEvent("1", id, "puptoo", true, false)
 	*event.Host.OrgID = ""
 	err := HandleUpload(event)
-	assert.NoError(t, err)
-	assertInLogs(t, ErrorNoAccountProvided, logHook.LogEntries...)
+	if assert.Error(t, err) {
+		assert.ErrorIs(t, err, ErrNoAccountProvided)
+	}
+	assertInLogs(t, ErrNoAccountProvided.Error(), logHook.LogEntries...)
 }
 
 type erroringWriter struct{}
