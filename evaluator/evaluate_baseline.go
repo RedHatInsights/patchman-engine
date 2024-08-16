@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/models"
 	"app/base/vmaas"
@@ -24,7 +25,7 @@ func limitVmaasToBaseline(system *models.SystemPlatform, vmaasData *vmaas.Update
 		Where("public_date >= ?", baselineConfig.ToTime.Truncate(24*time.Hour)).
 		Pluck("name", &filterOutNames).Error
 	if err != nil {
-		return err
+		return base.WrapFatalDBError(err, "load reported advisories")
 	}
 
 	// create map of advisories we need to filter out

@@ -214,7 +214,7 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 
 	thirdParty, err := analyzeRepos(system)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "Repo analysis failed")
+		return nil, nil, errors.Wrap(err, "repo analysis failed")
 	}
 	system.ThirdParty = thirdParty // to set "system_platform.third_party" column
 
@@ -414,7 +414,7 @@ func tryGetSystem(accountID int, inventoryID string,
 	system, err := loadSystemData(accountID, inventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
-		return nil, errors.Wrap(err, "error loading system from DB")
+		return nil, base.WrapFatalDBError(err, "error loading system from DB")
 	}
 	if system.ID == 0 {
 		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
@@ -496,7 +496,7 @@ func evaluateAndStore(system *models.SystemPlatform,
 	err = commitWithObserve(tx)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-database-commit").Inc()
-		return errors.New("database commit failed")
+		return base.WrapFatalDBError(err, "database commit failed")
 	}
 
 	return nil

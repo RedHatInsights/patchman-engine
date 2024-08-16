@@ -82,7 +82,8 @@ func publishRemediationsState(system *models.SystemPlatform, response *vmaas.Upd
 	state := createRemediationsStateMsg(system.InventoryID, response)
 	msg, err := mqueue.MessageFromJSON(system.InventoryID, state)
 	if err != nil {
-		return errors.Wrap(err, "Formatting message")
+		return errors.Wrap(err, "formatting message")
 	}
-	return remediationsPublisher.WriteMessages(base.Context, msg)
+	err = remediationsPublisher.WriteMessages(base.Context, msg)
+	return base.WrapFatalKafkaError(err, "write message")
 }
