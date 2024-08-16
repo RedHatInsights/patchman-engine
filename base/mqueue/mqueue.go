@@ -5,6 +5,7 @@ import (
 	"app/base"
 	"app/base/utils"
 	"context"
+	"errors"
 	format "fmt"
 	"io"
 	"strings"
@@ -55,13 +56,16 @@ func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 		backoffState, cancel := policy.Start(base.Context)
 		defer cancel()
 		for backoff.Continue(backoffState) {
-			if err = handler(message); err == nil {
+			if err = handler(message); err == nil || !errors.Is(err, base.ErrFatal) {
 				return nil
 			}
 			utils.LogError("err", err.Error(), "attempt", attempt, "Try failed")
 			attempt++
 		}
-		return err
+		if err != nil && errors.Is(err, base.ErrFatal) {
+			return err
+		}
+		return nil
 	}
 }
 
