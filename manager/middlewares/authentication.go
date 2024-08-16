@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
@@ -9,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	stdErrors "errors"
 
 	"github.com/pkg/errors"
 	"github.com/redhatinsights/identity"
@@ -50,6 +53,7 @@ func GetOrCreateAccount(orgID string) (int, error) {
 	err = database.OnConflictUpdate(database.DB, "org_id", "org_id").Select("org_id").Create(&rhAccount).Error
 	if err != nil {
 		utils.LogWarn("err", err, "org_id", *rhAccount.OrgID, "Error creating account")
+		err = stdErrors.Join(base.ErrFatal, base.ErrDatabase, err)
 	}
 	return rhAccount.ID, err
 }
