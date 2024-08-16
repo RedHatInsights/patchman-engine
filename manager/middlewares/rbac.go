@@ -104,6 +104,12 @@ func isAccessGranted(c *gin.Context) bool {
 	client := makeClient(c.GetHeader("x-rh-identity"))
 	access := rbac.AccessPagination{}
 	res, err := client.Request(&base.Context, http.MethodGet, rbacURL, nil, &access)
+	if res != nil {
+		utils.LogDebug("response_headers", res.Header, "request_headers", res.Request.Header, "isAccessGranted rbac")
+	}
+	if c.Request != nil {
+		utils.LogDebug("gin_context_req", *c.Request, "isAccessGranted rbac")
+	}
 	if res != nil && res.Body != nil {
 		defer res.Body.Close()
 	}
@@ -194,6 +200,9 @@ func RBAC() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if isAccessGranted(c) {
 			return
+		}
+		if c.Request != nil {
+			utils.LogDebug("context_req", c.Request, "RBAC")
 		}
 		c.AbortWithStatusJSON(http.StatusUnauthorized,
 			utils.ErrorResponse{Error: "You don't have access to this application"})
