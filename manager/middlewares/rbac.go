@@ -108,7 +108,7 @@ func isAccessGranted(c *gin.Context) bool {
 		utils.LogDebug("response_headers", res.Header, "request_headers", res.Request.Header, "isAccessGranted rbac")
 	}
 	if c.Request != nil {
-		utils.LogDebug("gin_context_req", *c.Request, "isAccessGranted rbac")
+		utils.LogDebug("gin_context_req_header", c.Request.Header, "isAccessGranted rbac")
 	}
 	if res != nil && res.Body != nil {
 		defer res.Body.Close()
@@ -202,7 +202,7 @@ func RBAC() gin.HandlerFunc {
 			return
 		}
 		if c.Request != nil {
-			utils.LogDebug("context_req", c.Request, "RBAC")
+			utils.LogDebug("context_req_header", c.Request.Header, "RBAC")
 		}
 		c.AbortWithStatusJSON(http.StatusUnauthorized,
 			utils.ErrorResponse{Error: "You don't have access to this application"})
