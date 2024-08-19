@@ -1,4 +1,4 @@
-FROM docker.io/library/postgres:16.1
+FROM quay.io/cloudservices/postgresql-rds:16-4649c84
 
 ADD /dev/database/init.sh /docker-entrypoint-initdb.d/
 
