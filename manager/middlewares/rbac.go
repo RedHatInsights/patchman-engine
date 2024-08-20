@@ -104,12 +104,6 @@ func isAccessGranted(c *gin.Context) bool {
 	client := makeClient(c.GetHeader("x-rh-identity"))
 	access := rbac.AccessPagination{}
 	res, err := client.Request(&base.Context, http.MethodGet, rbacURL, nil, &access)
-	if res != nil {
-		utils.LogDebug("response_headers", res.Header, "request_headers", res.Request.Header, "isAccessGranted rbac")
-	}
-	if c.Request != nil {
-		utils.LogDebug("gin_context_req_header", c.Request.Header, "isAccessGranted rbac")
-	}
 	if res != nil && res.Body != nil {
 		defer res.Body.Close()
 	}
@@ -198,13 +192,23 @@ func RBAC() gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
+		tempLogDebugGinContextRequestHeader(c, "RBAC")
 		if isAccessGranted(c) {
 			return
 		}
-		if c.Request != nil {
-			utils.LogDebug("context_req_header", c.Request.Header, "RBAC")
-		}
 		c.AbortWithStatusJSON(http.StatusUnauthorized,
 			utils.ErrorResponse{Error: "You don't have access to this application"})
+	}
+}
+
+func tempLogDebugGinContextRequestHeader(c *gin.Context, origin string) {
+	if c != nil {
+		if c.Request != nil {
+			utils.LogDebug("origin", origin, "gin_context_req_header", c.Request.Header, "gin context request handler")
+		} else {
+			utils.LogDebug("origin", origin, "gin_context_req", nil, "gin context request handler")
+		}
+	} else {
+		utils.LogDebug("origin", origin, "gin_context", nil, "gin context request handler")
 	}
 }
