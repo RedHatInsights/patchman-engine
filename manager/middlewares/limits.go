@@ -10,7 +10,6 @@ import (
 
 func LimitRequestBodySize(size int64) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tempLogDebugGinContextRequestHeader(c, "LimitRequestBodySize")
 		if c.Request != nil && c.Request.Body != nil {
 			c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, size)
 		}
@@ -20,7 +19,6 @@ func LimitRequestBodySize(size int64) gin.HandlerFunc {
 
 func LimitRequestHeaders(maxHeaderCount int) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tempLogDebugGinContextRequestHeader(c, "LimitRequestHeaders")
 		if len(c.Request.Header) > maxHeaderCount {
 			c.AbortWithStatusJSON(http.StatusRequestEntityTooLarge, utils.ErrorResponse{Error: "too many headers"})
 		}
@@ -30,7 +28,6 @@ func LimitRequestHeaders(maxHeaderCount int) gin.HandlerFunc {
 func MaxConnections(max int) gin.HandlerFunc {
 	conns := make(chan struct{}, max)
 	return func(c *gin.Context) {
-		tempLogDebugGinContextRequestHeader(c, "MaxConnections")
 		conns <- struct{}{}
 		defer func() { <-conns }()
 		c.Next()
@@ -40,7 +37,6 @@ func MaxConnections(max int) gin.HandlerFunc {
 func Ratelimit(max int) gin.HandlerFunc {
 	rl := ratelimit.New(max)
 	return func(c *gin.Context) {
-		tempLogDebugGinContextRequestHeader(c, "Ratelimit")
 		rl.Take()
 		c.Next()
 	}

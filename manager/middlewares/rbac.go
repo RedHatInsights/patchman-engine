@@ -192,7 +192,8 @@ func RBAC() gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
-		tempLogDebugGinContextRequestHeader(c, "RBAC")
+		tempLogDebugGinContextRequestHeader(c, "RBAC before")
+		defer tempLogDebugGinContextRequestHeader(c, "RBAC after")
 		if isAccessGranted(c) {
 			return
 		}
