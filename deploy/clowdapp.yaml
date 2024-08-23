@@ -400,6 +400,34 @@ objects:
                                                       key: vmaas-sync-database-password}}}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
 
+    - name: repack
+      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
+      schedule: ${REPACK_SCHEDULE}
+      suspend: ${{REPACK_SUSPEND}}
+      concurrencyPolicy: Forbid
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG_JOBS}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
+        command:
+          - ./scripts/entrypoint.sh
+          - job
+          - repack
+        env:
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
+        - {name: DB_USER, value: vmaas_sync}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                       key: vmaas-sync-database-password}}}
+        - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
+        - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
+
     database:
       name: patchman
       version: 16
@@ -597,6 +625,10 @@ parameters:
 - {name: PKG_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
 - {name: ADVISORY_REFRESH_SCHEDULE, value: '*/15 * * * *'} # Cronjob schedule definition
 - {name: ADVISORY_REFRESH_SUSPEND, value: 'true'} # Disable cronjob execution
+# Repack
+- {name: REPACK_SCHEDULE, value: '0 11 * * 1'} # Cronjob schedule definition
+- {name: REPACK_SUSPEND, value: 'false'} # Disable cronjob execution
+
 
 # Database admin
 - {name: IMAGE_TAG_DATABASE_ADMIN, value: v3.7.1}
