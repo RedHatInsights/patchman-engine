@@ -8,6 +8,7 @@ import (
 	"app/manager/config"
 	"fmt"
 	"net/http"
+	"net/http/httputil"
 	"strconv"
 	"strings"
 
@@ -204,12 +205,10 @@ func RBAC() gin.HandlerFunc {
 
 func tempLogDebugGinContextRequestHeader(c *gin.Context, origin string) {
 	if c != nil {
-		if c.Request != nil {
-			utils.LogDebug("origin", origin, "gin_context_req_header", c.Request.Header, "gin context request handler")
-		} else {
-			utils.LogDebug("origin", origin, "gin_context_req", nil, "gin context request handler")
+		dump, err := httputil.DumpRequest(c.Request, false)
+		if err != nil {
+			utils.LogDebug("origin", origin, "err", err.Error(), "gin_context_req", nil, "gin context request handler")
 		}
-	} else {
-		utils.LogDebug("origin", origin, "gin_context", nil, "gin context request handler")
+		utils.LogDebug("origin", origin, "gin_context_req", string(dump), "gin context request handler")
 	}
 }
