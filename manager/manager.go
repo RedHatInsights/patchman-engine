@@ -12,6 +12,7 @@ import (
 	"app/manager/middlewares"
 	"app/manager/routes"
 
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 )
 
@@ -47,7 +48,7 @@ func RunManager() {
 	app.Use(middlewares.MaxConnections(utils.CoreCfg.MaxGinConnections))
 	app.Use(middlewares.Ratelimit(utils.CoreCfg.Ratelimit))
 	app.Use(middlewares.RequestResponseLogger())
-	app.Use(middlewares.Gzip())
+	app.Use(gzip.Gzip(gzip.DefaultCompression))
 	endpointsConfig := getEndpointsConfig()
 	middlewares.SetSwagger(app, endpointsConfig)
 	app.Use(middlewares.WithTimeout(utils.CoreCfg.ResponseTimeout))

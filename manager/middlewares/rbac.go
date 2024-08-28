@@ -8,7 +8,6 @@ import (
 	"app/manager/config"
 	"fmt"
 	"net/http"
-	"net/http/httputil"
 	"strconv"
 	"strings"
 
@@ -193,22 +192,10 @@ func RBAC() gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
-		tempLogDebugGinContextRequestHeader(c, "RBAC before")
-		defer tempLogDebugGinContextRequestHeader(c, "RBAC after")
 		if isAccessGranted(c) {
 			return
 		}
 		c.AbortWithStatusJSON(http.StatusUnauthorized,
 			utils.ErrorResponse{Error: "You don't have access to this application"})
-	}
-}
-
-func tempLogDebugGinContextRequestHeader(c *gin.Context, origin string) {
-	if c != nil {
-		dump, err := httputil.DumpRequest(c.Request, false)
-		if err != nil {
-			utils.LogDebug("origin", origin, "err", err.Error(), "gin_context_req", nil, "gin context request handler")
-		}
-		utils.LogDebug("origin", origin, "gin_context_req", string(dump), "gin context request handler")
 	}
 }
