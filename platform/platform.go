@@ -16,7 +16,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/redhatinsights/identity"
@@ -183,7 +182,6 @@ func platformMock() {
 	utils.LogInfo("Platform mock starting")
 	app := gin.New()
 	app.Use(middlewares.RequestResponseLogger())
-	app.Use(gzip.Gzip(gzip.DefaultCompression))
 	initVMaaS(app)
 	initRbac(app)
 
