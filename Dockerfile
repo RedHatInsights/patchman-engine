@@ -8,7 +8,7 @@ ARG INSTALL_TOOLS=no
 RUN dnf module enable -y postgresql:16 || curl -o /etc/yum.repos.d/postgresql.repo \
         https://copr.fedorainfracloud.org/coprs/mmraka/postgresql-16/repo/epel-8/mmraka-postgresql-16-epel-8.repo
 
-RUN dnf install -y go-toolset postgresql diffutils rpm-devel && \
+RUN dnf install -y go-toolset postgresql diffutils rpm-devel pg_repack && \
     ln -s /usr/libexec/platform-python /usr/bin/python3
 
 ENV GOPATH=/go \
@@ -53,7 +53,7 @@ RUN go build -v main.go
 
 # libs to be copied into runtime
 RUN mkdir -p /go/lib64 && \
-    ldd /go/src/app/main \
+    ldd /go/src/app/main /usr/bin/pg_repack \
     | awk '/=>/ {print $3}' \
     | sort -u \
     | while read lib ; do \
@@ -79,6 +79,7 @@ COPY --from=buildimg /etc/pki/tls/certs/ca-bundle.crt /etc/pki/tls/certs/
 COPY --from=buildimg /etc/crypto-policies/ /etc/crypto-policies/
 COPY --from=buildimg /usr/lib64/.lib* /usr/lib64/
 COPY --from=buildimg /usr/lib64/libssl* /usr/lib64/
+COPY --from=buildimg /usr/bin/pg_repack /usr/bin/
 
 # copy libs needed by main
 COPY --from=buildimg /go/lib64/* /lib64/
