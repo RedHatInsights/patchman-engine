@@ -28,7 +28,7 @@ func GetBaselineConfig(system *models.SystemPlatform) *BaselineConfig {
 	}
 
 	var config BaselineConfig
-	if len(jsonb[0]) == 0 {
+	if len(jsonb) > 0 && len(jsonb[0]) == 0 {
 		utils.LogDebug("baseline_id", system.BaselineID, "Empty baseline config found")
 		return nil
 	}
