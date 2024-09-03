@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"app/base/utils"
+	"app/manager/config"
+	"app/manager/kafka"
 	"app/manager/middlewares"
 	"net/http"
 
@@ -43,9 +45,10 @@ func TemplateSystemsDeleteHandler(c *gin.Context) {
 		return
 	}
 
-	// TODO: re-evaluate systems removed from templates
-	// inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, req.Systems)
-	// kafka.EvaluateBaselineSystems(inventoryAIDs)
-
+	// re-evaluate systems removed from templates
+	if config.EnableTemplateChangeEval {
+		inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, req.Systems)
+		kafka.EvaluateBaselineSystems(inventoryAIDs)
+	}
 	c.Status(http.StatusOK)
 }

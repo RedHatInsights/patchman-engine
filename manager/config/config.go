@@ -29,6 +29,8 @@ var (
 
 	// Send recalc message for systems which have been assigned to a different baseline
 	EnableBaselineChangeEval = utils.PodConfig.GetBool("baseline_change_eval", true)
+	// Send recalc message for systems which have been assigned to a different template
+	EnableTemplateChangeEval = utils.PodConfig.GetBool("template_change_eval", true)
 	// Honor rbac permissions (can be disabled for tests)
 	EnableRBACCHeck = utils.PodConfig.GetBool("rbac", true)
 
