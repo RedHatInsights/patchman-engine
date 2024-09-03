@@ -7,6 +7,7 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/config"
+	"app/manager/kafka"
 	"app/manager/middlewares"
 	"context"
 	"fmt"
@@ -69,10 +70,11 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	// TODO: re-evaluate systems added/removed from templates
-	// inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, req.InventoryIDs)
-	// kafka.EvaluateBaselineSystems(inventoryAIDs)
-
+	// re-evaluate systems added/removed from templates
+	if config.EnableTemplateChangeEval {
+		inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, req.Systems)
+		kafka.EvaluateBaselineSystems(inventoryAIDs)
+	}
 	c.Status(http.StatusOK)
 }
 
@@ -219,7 +221,7 @@ func assignCandlepinEnvironment(c context.Context, db *gorm.DB, accountID int, e
 		}
 		resp, apiErr := callCandlepin(c, *consumer.Consumer, &updateReq)
 		// check response
-		if err != nil {
+		if apiErr != nil {
 			err = errors2.Join(err, apiErr, errors.New(resp.Message))
 		}
 	}
