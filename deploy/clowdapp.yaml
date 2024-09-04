@@ -39,8 +39,8 @@ objects:
         - {name: POD_CONFIG, value: '${ADMIN_CONFIG}'}
 
         resources:
-          limits: {cpu: '${RES_LIMIT_CPU_ADMIN}', memory: '${RES_LIMIT_MEM_ADMIN}'}
-          requests: {cpu: '${RES_REQUEST_CPU_ADMIN}', memory: '${RES_REQUEST_MEM_ADMIN}'}
+          limits: {cpu: '${CPU_LIMIT_ADMIN}', memory: '${MEM_LIMIT_ADMIN}'}
+          requests: {cpu: '${CPU_REQUEST_ADMIN}', memory: '${MEM_REQUEST_ADMIN}'}
 
     - name: manager
       minReplicas: ${{REPLICAS_MANAGER}}
@@ -109,8 +109,8 @@ objects:
         - {name: POD_CONFIG, value: '${MANAGER_CONFIG}'}
 
         resources:
-          limits: {cpu: '${RES_LIMIT_CPU_MANAGER}', memory: '${RES_LIMIT_MEM_MANAGER}'}
-          requests: {cpu: '${RES_REQUEST_CPU_MANAGER}', memory: '${RES_REQUEST_MEM_MANAGER}'}
+          limits: {cpu: '${CPU_LIMIT_MANAGER}', memory: '${MEM_LIMIT_MANAGER}'}
+          requests: {cpu: '${CPU_REQUEST_MANAGER}', memory: '${MEM_REQUEST_MANAGER}'}
 
     - name: listener
       minReplicas: ${{REPLICAS_LISTENER}}
@@ -153,8 +153,8 @@ objects:
         - {name: POD_CONFIG, value: '${LISTENER_CONFIG}'}
 
         resources:
-          limits: {cpu: '${RES_LIMIT_CPU_LISTENER}', memory: '${RES_LIMIT_MEM_LISTENER}'}
-          requests: {cpu: '${RES_REQUEST_CPU_LISTENER}', memory: '${RES_REQUEST_MEM_LISTENER}'}
+          limits: {cpu: '${CPU_LIMIT_LISTENER}', memory: '${MEM_LIMIT_LISTENER}'}
+          requests: {cpu: '${CPU_REQUEST_LISTENER}', memory: '${MEM_REQUEST_LISTENER}'}
 
     - name: evaluator-upload
       minReplicas: ${{REPLICAS_EVALUATOR_UPLOAD}}
@@ -198,8 +198,8 @@ objects:
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
         - {name: POD_CONFIG, value: 'label=upload;${EVALUATOR_UPLOAD_CONFIG}'}
         resources:
-          limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_UPLOAD}', memory: '${RES_LIMIT_MEM_EVALUATOR_UPLOAD}'}
-          requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_UPLOAD}', memory: '${RES_REQUEST_MEM_EVALUATOR_UPLOAD}'}
+          limits: {cpu: '${CPU_LIMIT_EVALUATOR_UPLOAD}', memory: '${MEM_LIMIT_EVALUATOR_UPLOAD}'}
+          requests: {cpu: '${CPU_REQUEST_EVALUATOR_UPLOAD}', memory: '${MEM_REQUEST_EVALUATOR_UPLOAD}'}
 
     - name: evaluator-recalc
       minReplicas: ${{REPLICAS_EVALUATOR_RECALC}}
@@ -243,8 +243,8 @@ objects:
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
         - {name: POD_CONFIG, value: 'label=recalc;payload_tracker=false;${EVALUATOR_RECALC_CONFIG}'}
         resources:
-          limits: {cpu: '${RES_LIMIT_CPU_EVALUATOR_RECALC}', memory: '${RES_LIMIT_MEM_EVALUATOR_RECALC}'}
-          requests: {cpu: '${RES_REQUEST_CPU_EVALUATOR_RECALC}', memory: '${RES_REQUEST_MEM_EVALUATOR_RECALC}'}
+          limits: {cpu: '${CPU_LIMIT_EVALUATOR_RECALC}', memory: '${MEM_LIMIT_EVALUATOR_RECALC}'}
+          requests: {cpu: '${CPU_REQUEST_EVALUATOR_RECALC}', memory: '${MEM_REQUEST_EVALUATOR_RECALC}'}
 
     jobs:
     - name: vmaas-sync
@@ -281,8 +281,8 @@ objects:
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_VMAAS_SYNC}'}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
         resources:
-          limits: {cpu: '${RES_LIMIT_CPU_VMAAS_SYNC}', memory: '${RES_LIMIT_MEM_VMAAS_SYNC}'}
-          requests: {cpu: '${RES_REQUEST_CPU_VMAAS_SYNC}', memory: '${RES_REQUEST_MEM_VMAAS_SYNC}'}
+          limits: {cpu: '${CPU_LIMIT_VMAAS_SYNC}', memory: '${MEM_LIMIT_VMAAS_SYNC}'}
+          requests: {cpu: '${CPU_REQUEST_VMAAS_SYNC}', memory: '${MEM_REQUEST_VMAAS_SYNC}'}
 
     - name: system-culling
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -474,11 +474,11 @@ objects:
     logLevel: ${FLOORIST_LOGLEVEL}
     resources:
       limits:
-        cpu: ${{RES_LIMIT_CPU_FLOORIST}}
-        memory: ${{RES_LIMIT_MEM_FLOORIST}}
+        cpu: ${CPU_LIMIT_FLOORIST}
+        memory: ${MEM_LIMIT_FLOORIST}
       requests:
-        cpu: ${{RES_REQUEST_CPU_FLOORIST}}
-        memory: ${{RES_REQUEST_MEM_FLOORIST}}
+        cpu: ${CPU_REQUEST_FLOORIST}
+        memory: ${MEM_REQUEST_FLOORIST}
     queries:
       - prefix: insights/patch/advisories
         chunksize: ${{FLOORIST_CHUNKSIZE}}
@@ -535,10 +535,10 @@ parameters:
 - {name: LOG_LEVEL_MANAGER, value: debug}
 - {name: DB_DEBUG_MANAGER, value: 'false'} # Log database queries if enabled
 - {name: EVAL_TOPIC_MANAGER, value: patchman.evaluator.upload}
-- {name: RES_LIMIT_CPU_MANAGER, value: 200m}
-- {name: RES_LIMIT_MEM_MANAGER, value: 256Mi}
-- {name: RES_REQUEST_CPU_MANAGER, value: 200m}
-- {name: RES_REQUEST_MEM_MANAGER, value: 256Mi}
+- {name: CPU_LIMIT_MANAGER, value: 1000m}
+- {name: MEM_LIMIT_MANAGER, value: 2Gi}
+- {name: CPU_REQUEST_MANAGER, value: 500m}
+- {name: MEM_REQUEST_MANAGER, value: 1Gi}
 - {name: RESPONSE_TIMEOUT, value: '60'}
 - {name: CANDLEPIN_ADDRESS, value: 'http://candlepin'}
 - {name: DB_READ_REPLICA_ENABLED, value: 'TRUE'}
@@ -555,10 +555,10 @@ parameters:
 - {name: REPLICAS_LISTENER, value: '1'}
 - {name: LOG_LEVEL_LISTENER, value: debug}
 - {name: DB_DEBUG_LISTENER, value: 'false'}
-- {name: RES_LIMIT_CPU_LISTENER, value: 250m}
-- {name: RES_LIMIT_MEM_LISTENER, value: 192Mi}
-- {name: RES_REQUEST_CPU_LISTENER, value: 250m}
-- {name: RES_REQUEST_MEM_LISTENER, value: 192Mi}
+- {name: CPU_LIMIT_LISTENER, value: 500m}
+- {name: MEM_LIMIT_LISTENER, value: 512Mi}
+- {name: CPU_REQUEST_LISTENER, value: 250m}
+- {name: MEM_REQUEST_LISTENER, value: 256Mi}
 - {name: ENABLE_PROFILER_LISTENER, value: 'false'}
 - {name: GOMEMLIMIT_LISTENER, value: '172MiB'} # set to 90% of the default memory limit 192Mi (don't forget `B`)
 - {name: LISTENER_CONFIG, value: ''}
@@ -571,10 +571,10 @@ parameters:
 - {name: REPLICAS_EVALUATOR_UPLOAD, value: '1'}
 - {name: LOG_LEVEL_EVALUATOR_UPLOAD, value: debug}
 - {name: DB_DEBUG_EVALUATOR_UPLOAD, value: 'false'}
-- {name: RES_LIMIT_CPU_EVALUATOR_UPLOAD, value: 256m}
-- {name: RES_LIMIT_MEM_EVALUATOR_UPLOAD, value: 1024Mi}
-- {name: RES_REQUEST_CPU_EVALUATOR_UPLOAD, value: 256m}
-- {name: RES_REQUEST_MEM_EVALUATOR_UPLOAD, value: 1024Mi}
+- {name: CPU_LIMIT_EVALUATOR_UPLOAD, value: '2'}
+- {name: MEM_LIMIT_EVALUATOR_UPLOAD, value: 3000Mi}
+- {name: CPU_REQUEST_EVALUATOR_UPLOAD, value: '1'}
+- {name: MEM_REQUEST_EVALUATOR_UPLOAD, value: 1500Mi}
 - {name: ENABLE_PROFILER_EVALUATOR_UPLOAD, value: 'false'}
 - {name: EVALUATOR_UPLOAD_CONFIG, value: ''}
 
@@ -582,10 +582,10 @@ parameters:
 - {name: REPLICAS_EVALUATOR_RECALC, value: '1'}
 - {name: LOG_LEVEL_EVALUATOR_RECALC, value: debug}
 - {name: DB_DEBUG_EVALUATOR_RECALC, value: 'false'}
-- {name: RES_LIMIT_CPU_EVALUATOR_RECALC, value: 256m}
-- {name: RES_LIMIT_MEM_EVALUATOR_RECALC, value: 1024Mi}
-- {name: RES_REQUEST_CPU_EVALUATOR_RECALC, value: 256m}
-- {name: RES_REQUEST_MEM_EVALUATOR_RECALC, value: 1024Mi}
+- {name: CPU_LIMIT_EVALUATOR_RECALC, value: '2'}
+- {name: MEM_LIMIT_EVALUATOR_RECALC, value: 3000Mi}
+- {name: CPU_REQUEST_EVALUATOR_RECALC, value: '1'}
+- {name: MEM_REQUEST_EVALUATOR_RECALC, value: 1500Mi}
 - {name: ENABLE_PROFILER_EVALUATOR_RECALC, value: 'false'}
 - {name: EVALUATOR_RECALC_CONFIG, value: ''}
 
@@ -600,10 +600,10 @@ parameters:
 # VMaaS sync
 - {name: VMAAS_SYNC_SCHEDULE, value: '*/5 * * * *'} # Cronjob schedule definition
 - {name: VMAAS_SYNC_SUSPEND, value: 'false'} # Disable cronjob execution
-- {name: RES_LIMIT_CPU_VMAAS_SYNC, value: 500m}
-- {name: RES_LIMIT_MEM_VMAAS_SYNC, value: 384Mi}
-- {name: RES_REQUEST_CPU_VMAAS_SYNC, value: 500m}
-- {name: RES_REQUEST_MEM_VMAAS_SYNC, value: 384Mi}
+- {name: CPU_LIMIT_VMAAS_SYNC, value: 500m}
+- {name: MEM_LIMIT_VMAAS_SYNC, value: 384Mi}
+- {name: CPU_REQUEST_VMAAS_SYNC, value: 500m}
+- {name: MEM_REQUEST_VMAAS_SYNC, value: 384Mi}
 - {name: GOMEMLIMIT_VMAAS_SYNC, value: '345MiB'} # set to 90% of the default memory limit 384Mi (don't forget `B`)
 # Delete unused data
 - {name: DELETE_UNUSED_SCHEDULE, value: '10 */6 * * *'} # Cronjob schedule definition
@@ -624,10 +624,10 @@ parameters:
 # Database admin
 - {name: LOG_LEVEL_DATABASE_ADMIN, value: debug}
 - {name: DB_DEBUG_DATABASE_ADMIN, value: 'false'}
-- {name: RES_LIMIT_CPU_DATABASE_ADMIN, value: 100m}
-- {name: RES_LIMIT_MEM_DATABASE_ADMIN, value: 128Mi}
-- {name: RES_REQUEST_CPU_DATABASE_ADMIN, value: 100m}
-- {name: RES_REQUEST_MEM_DATABASE_ADMIN, value: 128Mi}
+- {name: CPU_LIMIT_DATABASE_ADMIN, value: 100m}
+- {name: MEM_LIMIT_DATABASE_ADMIN, value: 128Mi}
+- {name: CPU_REQUEST_DATABASE_ADMIN, value: 100m}
+- {name: MEM_REQUEST_DATABASE_ADMIN, value: 128Mi}
 - {name: GOMEMLIMIT_DATABASE_ADMIN, value: '115MiB'} # set to 90% of the default memory limit 128Mi (don't forget `B`)
 - {name: DATABASE_ADMIN_CONFIG, value: ''} # Set 'schema_version=XXX' if need specific database schema
                                            # 'force_schema_version=XXX' to reset the dirty flag to false and force the specific version, it will follow up with the schema upgrade defined by schema_version
@@ -644,10 +644,10 @@ parameters:
 
 # Turnpike
 - {name: REPLICAS_ADMIN, value: '1'}
-- {name: RES_LIMIT_CPU_ADMIN, value: 100m}
-- {name: RES_LIMIT_MEM_ADMIN, value: 256Mi}
-- {name: RES_REQUEST_CPU_ADMIN, value: 50m}
-- {name: RES_REQUEST_MEM_ADMIN, value: 128Mi}
+- {name: CPU_LIMIT_ADMIN, value: 100m}
+- {name: MEM_LIMIT_ADMIN, value: 256Mi}
+- {name: CPU_REQUEST_ADMIN, value: 50m}
+- {name: MEM_REQUEST_ADMIN, value: 128Mi}
 - {name: ADMIN_CONFIG, value: 'turnpike_auth'}
 
 # Floorist parameters
@@ -656,7 +656,7 @@ parameters:
 - {name: FLOORIST_DB_SECRET_NAME, value: patchman-db} # DB secret name
 - {name: FLOORIST_LOGLEVEL, value: INFO} # Floorist loglevel config
 - {name: FLOORIST_CHUNKSIZE, value: '1000000'}
-- {name: RES_REQUEST_CPU_FLOORIST, value: 250m}
-- {name: RES_REQUEST_MEM_FLOORIST, value: 1Gi}
-- {name: RES_LIMIT_CPU_FLOORIST, value: 500m}
-- {name: RES_LIMIT_MEM_FLOORIST, value: 2Gi}
+- {name: CPU_REQUEST_FLOORIST, value: 250m}
+- {name: MEM_REQUEST_FLOORIST, value: 2Gi}
+- {name: CPU_LIMIT_FLOORIST, value: 500m}
+- {name: MEM_LIMIT_FLOORIST, value: 4Gi}
