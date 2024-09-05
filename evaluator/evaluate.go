@@ -323,8 +323,8 @@ func getUpdatesData(ctx context.Context, system *models.SystemPlatform) (*vmaas.
 		utils.LogWarn("Vmaas response error, continuing with yum updates only", vmaasErr.Error())
 	}
 
-	if system.SatelliteManaged {
-		// satellite managed systems has vmaas updates APPLICABLE instead of INSTALLABLE
+	if system.SatelliteManaged || system.TemplateID != nil {
+		// satellite managed systems and systems using template has vmaas updates APPLICABLE instead of INSTALLABLE
 		mergedUpdateList := vmaasData.GetUpdateList()
 		for nevra := range mergedUpdateList {
 			(*mergedUpdateList[nevra]).SetUpdatesInstallability(APPLICABLE)
