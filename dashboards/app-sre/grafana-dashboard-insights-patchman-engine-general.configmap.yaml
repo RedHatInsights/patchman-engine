@@ -29,7 +29,7 @@ data:
         "editable": true,
         "fiscalYearStartMonth": 0,
         "graphTooltip": 0,
-        "id": 365074,
+        "id": 934005,
         "links": [
 
         ],
@@ -7557,8 +7557,8 @@ data:
                 {
                     "current": {
                         "selected": true,
-                        "text": "app-sre-prod-01-prometheus",
-                        "value": "P465885893AA82E04"
+                        "text": "appsrep07ue1-prometheus",
+                        "value": "P7E8E1698DF0AC988"
                     },
                     "hide": 0,
                     "includeAll": false,
@@ -7571,7 +7571,7 @@ data:
                     "query": "prometheus",
                     "queryValue": "",
                     "refresh": 1,
-                    "regex": "app-sre.*-prometheus",
+                    "regex": "appsre[ps]07ue1-prometheus",
                     "skipUrlSync": false,
                     "type": "datasource"
                 },
