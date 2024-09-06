@@ -113,6 +113,7 @@ func InitAdmin(app *gin.Engine, enableTurnpikeAuth bool) {
 	api.GET("/sessions", admin.GetActiveSessionsHandler)
 	api.GET("/sessions/:search", admin.GetActiveSessionsHandler)
 	api.DELETE("/sessions/:pid", admin.TerminateSessionHandler)
+	api.GET("/repack/:table_name", admin.RepackHandler)
 
 	pprof := api.Group("/pprof")
 	pprof.GET("/evaluator_upload/:param", admin.GetEvaluatorUploadPprof)

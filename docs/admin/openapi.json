@@ -357,6 +357,62 @@
                 ]
             }
         },
+        "/repack/{table_name}": {
+            "get": {
+                "summary": "Reindex DB with pg_repack",
+                "description": "Reindex DB with pg_repack",
+                "operationId": "repack",
+                "parameters": [
+                    {
+                        "name": "table_name",
+                        "in": "path",
+                        "description": "Table to reindex",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
         "/sessions/{pid}": {
             "delete": {
                 "summary": "Terminate db session",

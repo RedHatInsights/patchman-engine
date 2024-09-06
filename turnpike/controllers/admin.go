@@ -4,6 +4,7 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"app/tasks/caches"
+	"app/tasks/repack"
 	sync "app/tasks/vmaas_sync"
 	"fmt"
 	"io"
@@ -196,6 +197,37 @@ func TerminateSessionHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, fmt.Sprintf("pid: %s terminated", param))
+}
+
+// @Summary Reindex DB with pg_repack
+// @Description Reindex DB with pg_repack
+// @ID repack
+// @Security RhIdentity
+// @Accept   json
+// @Produce  json
+// @Param    table_name path string true "Table to reindex"
+// @Success 200 {object} string
+// @Failure 409 {object} string
+// @Failure 500 {object} map[string]interface{}
+// @Router /repack/{table_name} [get]
+func RepackHandler(c *gin.Context) {
+	utils.LogInfo("manual repack called...")
+
+	param := c.Param("table_name")
+	if param == "" {
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "table_name param not found"})
+		return
+	}
+
+	err := repack.Repack(param)
+	if err != nil {
+		utils.LogError("err", err.Error(), "manual repack call failed")
+		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		return
+	}
+
+	utils.LogInfo("manual repack finished successfully")
+	c.JSON(http.StatusOK, "OK")
 }
 
 // @Summary Get profile info
