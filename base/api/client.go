@@ -44,9 +44,11 @@ func (o *Client) Request(ctx *context.Context, method, url string,
 		return httpResp, errors.Wrap(err, "Response body reading failed")
 	}
 
-	err = json.Unmarshal(bodyBytes, responseOutPtr)
-	if err != nil {
-		return httpResp, errors.Wrap(err, "Response json parsing failed")
+	if len(bodyBytes) > 0 {
+		err = json.Unmarshal(bodyBytes, responseOutPtr)
+		if err != nil {
+			return httpResp, errors.Wrap(err, "Response json parsing failed")
+		}
 	}
 	return httpResp, nil
 }
