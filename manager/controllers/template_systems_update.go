@@ -173,12 +173,11 @@ func callCandlepin(ctx context.Context, consumer string, request *candlepin.Cons
 	*candlepin.ConsumersUpdateResponse, error) {
 	candlepinEnvConsumersURL := utils.CoreCfg.CandlepinAddress + "/consumers/" + consumer
 	candlepinFunc := func() (interface{}, *http.Response, error) {
-		utils.LogTrace("request", *request, "candlepin /consumers request")
 		candlepinResp := candlepin.ConsumersUpdateResponse{}
 		resp, err := candlepinClient.Request(&ctx, http.MethodPut, candlepinEnvConsumersURL, request, &candlepinResp)
 		statusCode := utils.TryGetStatusCode(resp)
-		utils.LogDebug("status_code", statusCode, "candlepin /consumers call")
-		utils.LogTrace("response", resp, "candlepin /consumers response")
+		utils.LogDebug("request", *request, "candlepin_url", candlepinEnvConsumersURL,
+			"status_code", statusCode, "err", err)
 		if err != nil && statusCode == 400 {
 			err = errors.Wrap(errCandlepin, err.Error())
 		}
