@@ -65,7 +65,7 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	err = assignCandlepinEnvironment(c, db, account, &template.EnvironmentID, req.Systems, groups)
+	err = assignCandlepinEnvironment(db, account, &template.EnvironmentID, req.Systems, groups)
 	if err != nil {
 		return
 	}
@@ -193,7 +193,7 @@ func callCandlepin(ctx context.Context, consumer string, request *candlepin.Cons
 	return candlepinRespPtr.(*candlepin.ConsumersUpdateResponse), nil
 }
 
-func assignCandlepinEnvironment(c context.Context, db *gorm.DB, accountID int, env *string, inventoryIDs []string,
+func assignCandlepinEnvironment(db *gorm.DB, accountID int, env *string, inventoryIDs []string,
 	groups map[string]string) error {
 	var consumers = []struct {
 		InventoryID string
@@ -219,7 +219,7 @@ func assignCandlepinEnvironment(c context.Context, db *gorm.DB, accountID int, e
 			err = errors2.Join(err, errors.Errorf("Missing owner_id for '%s'", consumer.InventoryID))
 			continue
 		}
-		resp, apiErr := callCandlepin(c, *consumer.Consumer, &updateReq)
+		resp, apiErr := callCandlepin(base.Context, *consumer.Consumer, &updateReq)
 		// check response
 		if apiErr != nil {
 			err = errors2.Join(err, apiErr, errors.New(resp.Message))
