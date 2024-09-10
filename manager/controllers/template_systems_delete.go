@@ -40,7 +40,7 @@ func TemplateSystemsDeleteHandler(c *gin.Context) {
 		return
 	}
 
-	err = assignCandlepinEnvironment(c, db, account, nil, req.Systems, groups)
+	err = assignCandlepinEnvironment(db, account, nil, req.Systems, groups)
 	if err != nil {
 		return
 	}
