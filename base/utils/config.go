@@ -73,6 +73,7 @@ type coreConfig struct {
 	CandlepinAddress              string
 	CandlepinCert                 string
 	CandlepinKey                  string
+	CandlepinCA                   string
 	ManagerPrivateAddress         string
 	ListenerPrivateAddress        string
 	EvaluatorUploadPrivateAddress string
@@ -160,6 +161,7 @@ func initServicesFromEnv() {
 	CoreCfg.CandlepinAddress = Getenv("CANDLEPIN_ADDRESS", CoreCfg.CandlepinAddress)
 	CoreCfg.CandlepinCert = Getenv("CANDLEPIN_CERT", CoreCfg.CandlepinCert)
 	CoreCfg.CandlepinKey = Getenv("CANDLEPIN_KEY", CoreCfg.CandlepinKey)
+	CoreCfg.CandlepinCA = Getenv("CANDLEPIN_CA", CoreCfg.CandlepinCA)
 }
 
 func initDBFromClowder() {
