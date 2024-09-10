@@ -5,6 +5,7 @@ import (
 	"app/base/utils"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -60,6 +61,12 @@ func CreateCandlepinClient() api.Client {
 			certPool, err := x509.SystemCertPool()
 			if err != nil {
 				return nil, err
+			}
+			if utils.CoreCfg.CandlepinCA != "" {
+				ok := certPool.AppendCertsFromPEM([]byte(utils.CoreCfg.CandlepinCA))
+				if !ok {
+					return nil, fmt.Errorf("could not parse candlepin ca cert")
+				}
 			}
 			tlsConfig = &tls.Config{
 				Certificates: []tls.Certificate{clientCert},
