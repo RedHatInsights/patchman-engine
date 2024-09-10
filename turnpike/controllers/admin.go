@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -199,27 +200,34 @@ func TerminateSessionHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, fmt.Sprintf("pid: %s terminated", param))
 }
 
-// @Summary Reindex DB with pg_repack
-// @Description Reindex DB with pg_repack
+// @Summary Reindex and cluster DB with pg_repack
+// @Description Reindex the table from `table_name`. If `columns` are provided, clustering is performed as well.
 // @ID repack
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
 // @Param    table_name path string true "Table to reindex"
+// @Param    columns query string false "Comma-separated columns to cluster by (optional)"
 // @Success 200 {object} string
-// @Failure 409 {object} string
+// @Failure 400 {object} string
 // @Failure 500 {object} map[string]interface{}
 // @Router /repack/{table_name} [get]
 func RepackHandler(c *gin.Context) {
 	utils.LogInfo("manual repack called...")
 
-	param := c.Param("table_name")
-	if param == "" {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "table_name param not found"})
+	tableName := c.Param("table_name")
+	if ok, _ := regexp.MatchString(`^\w+$`, tableName); !ok {
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "invalid table_name"})
 		return
 	}
 
-	err := repack.Repack(param)
+	columns := c.Query("columns")
+	if ok, _ := regexp.MatchString(`^[\w,]*$`, columns); !ok {
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "invalid columns"})
+		return
+	}
+
+	err := repack.Repack(tableName, columns)
 	if err != nil {
 		utils.LogError("err", err.Error(), "manual repack call failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})

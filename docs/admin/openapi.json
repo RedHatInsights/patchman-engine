@@ -359,8 +359,8 @@
         },
         "/repack/{table_name}": {
             "get": {
-                "summary": "Reindex DB with pg_repack",
-                "description": "Reindex DB with pg_repack",
+                "summary": "Reindex and cluster DB with pg_repack",
+                "description": "Reindex the table from `table_name`. If `columns` are provided, clustering is performed as well.",
                 "operationId": "repack",
                 "parameters": [
                     {
@@ -368,6 +368,14 @@
                         "in": "path",
                         "description": "Table to reindex",
                         "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "columns",
+                        "in": "query",
+                        "description": "Comma-separated columns to cluster by (optional)",
                         "schema": {
                             "type": "string"
                         }
@@ -384,8 +392,8 @@
                             }
                         }
                     },
-                    "409": {
-                        "description": "Conflict",
+                    "400": {
+                        "description": "Bad Request",
                         "content": {
                             "application/json": {
                                 "schema": {
