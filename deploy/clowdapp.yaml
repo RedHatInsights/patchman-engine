@@ -91,6 +91,7 @@ objects:
         - {name: CANDLEPIN_ADDRESS, value: '${CANDLEPIN_ADDRESS}'}
         - {name: CANDLEPIN_CERT, valueFrom: {secretKeyRef: {name: candlepin, key: cert}}}
         - {name: CANDLEPIN_KEY, valueFrom: {secretKeyRef: {name: candlepin, key: key}}}
+        - {name: CANDLEPIN_CA, valueFrom: {secretKeyRef: {name: candlepin, key: ca}}}
         - {name: DB_READ_REPLICA_ENABLED, value: '${DB_READ_REPLICA_ENABLED}'}
         - {name: DB_WORK_MEM, value: '${DB_WORK_MEM}'}
         - {name: KAFKA_GROUP, value: patchman}
@@ -497,6 +498,7 @@ objects:
   data:
     cert: ""
     key: ""
+    ca: ""
   kind: Secret
   metadata:
     name: candlepin
