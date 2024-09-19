@@ -15,7 +15,7 @@ var pgRepackArgs = []string{
 	"-d", utils.CoreCfg.DBName,
 	"-h", utils.CoreCfg.DBHost,
 	"-p", fmt.Sprintf("%d", utils.CoreCfg.DBPort),
-	"-U", utils.CoreCfg.DBUser,
+	"-U", utils.CoreCfg.DBAdminUser,
 }
 
 func configure() {
@@ -29,7 +29,7 @@ func getCmd(table string, args ...string) *exec.Cmd {
 	fullArgs = append(fullArgs, "-I", table)
 	fullArgs = append(fullArgs, args...)
 	cmd := exec.Command("pg_repack", fullArgs...)
-	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", utils.CoreCfg.DBPassword))
+	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", utils.CoreCfg.DBAdminPassword))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd

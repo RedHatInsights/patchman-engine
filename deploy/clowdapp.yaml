@@ -422,10 +422,6 @@ objects:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
-        - {name: DB_USER, value: vmaas_sync}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                       key: vmaas-sync-database-password}}}
-        - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
 
     database:
