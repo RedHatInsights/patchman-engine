@@ -622,7 +622,7 @@ parameters:
 - {name: ADVISORY_REFRESH_SCHEDULE, value: '*/15 * * * *'} # Cronjob schedule definition
 - {name: ADVISORY_REFRESH_SUSPEND, value: 'true'} # Disable cronjob execution
 # Repack
-- {name: REPACK_SCHEDULE, value: '0 11 * * 1'} # Cronjob schedule definition
+- {name: REPACK_SCHEDULE, value: '0 11 * * 5'} # Cronjob schedule definition
 - {name: REPACK_SUSPEND, value: 'false'} # Disable cronjob execution
 
 
