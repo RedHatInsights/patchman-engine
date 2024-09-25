@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -73,7 +74,7 @@ func MigrateUp(conn database.Driver, sourceURL string) {
 func latestSchemaMigrationFileVersion(sourceURL string) (int, error) {
 	latestVer := 0
 	dir := sourceURL[len("file://"):]
-	files, err := os.ReadDir(dir)
+	files, err := os.ReadDir(filepath.Clean(dir))
 	if err != nil {
 		return 0, errors.Wrap(err, fmt.Sprintf("Error reading migration files %s in %s", files, dir))
 	}
