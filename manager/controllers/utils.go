@@ -71,15 +71,16 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 	// We sort by a column expression and not the column name. The column expression is retrieved from fieldExprs
 	for _, enteredField := range fields {
 		origEnteredField := enteredField // needed for showing correct info in `meta` section
-		switch {
-		case strings.HasPrefix(enteredField, "-") && allowedFieldSet[enteredField[1:]]:
-			tx = tx.Order(fmt.Sprintf("%s DESC NULLS LAST", fieldExprs[enteredField[1:]].OrderQuery))
-		case allowedFieldSet[enteredField]:
-			tx = tx.Order(fmt.Sprintf("%s ASC NULLS LAST", fieldExprs[enteredField].OrderQuery))
-		default:
-			// We have not found any matches in allowed fields, return an error
+		ascDesc := "ASC"
+		if strings.HasPrefix(enteredField, "-") {
+			ascDesc = "DESC"
+			enteredField = enteredField[1:]
+		}
+		if !allowedFieldSet[enteredField] {
 			return nil, nil, errors.Errorf("Invalid sort field: %v", enteredField)
 		}
+		column := fmt.Sprintf("%s %s NULLS LAST", fieldExprs[enteredField].OrderQuery, ascDesc)
+		tx = tx.Order(column)
 		appliedFields = append(appliedFields, origEnteredField)
 	}
 	tx.Order(stableSort + " ASC")
