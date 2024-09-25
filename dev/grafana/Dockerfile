@@ -14,4 +14,4 @@ ADD /dashboards/grafana/dashboards /etc/grafana/provisioning/dashboards
 
 ADD /dashboards/app-sre/grafana-dashboard-insights-patchman-engine-general.configmap.yaml /etc/grafana
 
-RUN extract_dashboard.py /etc/grafana/grafana-dashboard-insights-patchman-engine-general.configmap.yaml > /etc/grafana/provisioning/dashboards/grafana-dashboard-insights-patchman-engine-general.json
+RUN extract_dashboard.py </etc/grafana/grafana-dashboard-insights-patchman-engine-general.configmap.yaml > /etc/grafana/provisioning/dashboards/grafana-dashboard-insights-patchman-engine-general.json
