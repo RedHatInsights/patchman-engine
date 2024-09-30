@@ -19,10 +19,10 @@ objects:
         private:
           enabled: false
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG_ADMIN}
+        image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            image: ${IMAGE}:${IMAGE_TAG}
             command:
               - ./database_admin/check-upgraded.sh
             env:
@@ -51,10 +51,10 @@ objects:
         private:
           enabled: true
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG_MANAGER}
+        image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - name: db-migration
-            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            image: ${IMAGE}:${IMAGE_TAG}
             command:
               - ./database_admin/entrypoint.sh
             env:
@@ -122,10 +122,10 @@ objects:
         metrics:
           enabled: true
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG_LISTENER}
+        image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            image: ${IMAGE}:${IMAGE_TAG}
             command:
               - ./database_admin/check-upgraded.sh
             env:
@@ -166,10 +166,10 @@ objects:
         metrics:
           enabled: true
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG_EVALUATOR_UPLOAD}
+        image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            image: ${IMAGE}:${IMAGE_TAG}
             command:
               - ./database_admin/check-upgraded.sh
             env:
@@ -211,10 +211,10 @@ objects:
         metrics:
           enabled: true
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG_EVALUATOR_RECALC}
+        image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            image: ${IMAGE}:${IMAGE_TAG}
             command:
               - ./database_admin/check-upgraded.sh
             env:
@@ -253,10 +253,10 @@ objects:
       suspend: ${{VMAAS_SYNC_SUSPEND}}
       concurrencyPolicy: Forbid
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG_JOBS}
+        image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            image: ${IMAGE}:${IMAGE_TAG}
             command:
               - ./database_admin/check-upgraded.sh
             env:
@@ -290,10 +290,10 @@ objects:
       suspend: ${{CULLING_SUSPEND}}
       concurrencyPolicy: Forbid
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG_JOBS}
+        image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            image: ${IMAGE}:${IMAGE_TAG}
             command:
               - ./database_admin/check-upgraded.sh
             env:
@@ -318,10 +318,10 @@ objects:
       suspend: ${{PKG_REFRESH_SUSPEND}}
       concurrencyPolicy: Forbid
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG_JOBS}
+        image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            image: ${IMAGE}:${IMAGE_TAG}
             command:
               - ./database_admin/check-upgraded.sh
             env:
@@ -352,10 +352,10 @@ objects:
       suspend: ${{ADVISORY_REFRESH_SUSPEND}}
       concurrencyPolicy: Forbid
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG_JOBS}
+        image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            image: ${IMAGE}:${IMAGE_TAG}
             command:
               - ./database_admin/check-upgraded.sh
             env:
@@ -379,10 +379,10 @@ objects:
       suspend: ${{DELETE_UNUSED_SUSPEND}}
       concurrencyPolicy: Forbid
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG_JOBS}
+        image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            image: ${IMAGE}:${IMAGE_TAG}
             command:
               - ./database_admin/check-upgraded.sh
             env:
@@ -406,10 +406,10 @@ objects:
       suspend: ${{REPACK_SUSPEND}}
       concurrencyPolicy: Forbid
       podSpec:
-        image: ${IMAGE}:${IMAGE_TAG_JOBS}
+        image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG_DATABASE_ADMIN}
+            image: ${IMAGE}:${IMAGE_TAG}
             command:
               - ./database_admin/check-upgraded.sh
             env:
@@ -532,7 +532,6 @@ objects:
 parameters:
 # Manager
 - {name: REPLICAS_MANAGER, value: '1'}
-- {name: IMAGE_TAG_MANAGER, value: v3.7.20}
 - {name: LOG_LEVEL_MANAGER, value: debug}
 - {name: DB_DEBUG_MANAGER, value: 'false'} # Log database queries if enabled
 - {name: EVAL_TOPIC_MANAGER, value: patchman.evaluator.upload}
@@ -554,7 +553,6 @@ parameters:
 
 # Listener
 - {name: REPLICAS_LISTENER, value: '1'}
-- {name: IMAGE_TAG_LISTENER, value: v3.7.20}
 - {name: LOG_LEVEL_LISTENER, value: debug}
 - {name: DB_DEBUG_LISTENER, value: 'false'}
 - {name: RES_LIMIT_CPU_LISTENER, value: 250m}
@@ -571,7 +569,6 @@ parameters:
 
 # Evaluator - upload
 - {name: REPLICAS_EVALUATOR_UPLOAD, value: '1'}
-- {name: IMAGE_TAG_EVALUATOR_UPLOAD, value: v3.7.20}
 - {name: LOG_LEVEL_EVALUATOR_UPLOAD, value: debug}
 - {name: DB_DEBUG_EVALUATOR_UPLOAD, value: 'false'}
 - {name: RES_LIMIT_CPU_EVALUATOR_UPLOAD, value: 256m}
@@ -583,7 +580,6 @@ parameters:
 
 # Evaluator - recalc
 - {name: REPLICAS_EVALUATOR_RECALC, value: '1'}
-- {name: IMAGE_TAG_EVALUATOR_RECALC, value: v3.7.20}
 - {name: LOG_LEVEL_EVALUATOR_RECALC, value: debug}
 - {name: DB_DEBUG_EVALUATOR_RECALC, value: 'false'}
 - {name: RES_LIMIT_CPU_EVALUATOR_RECALC, value: 256m}
@@ -594,7 +590,6 @@ parameters:
 - {name: EVALUATOR_RECALC_CONFIG, value: ''}
 
 # JOBS
-- {name: IMAGE_TAG_JOBS, value: v3.7.20}
 - {name: LOG_LEVEL_JOBS, value: debug}
 - {name: DB_DEBUG_JOBS, value: 'false'}
 - {name: JOBS_TIMEOUT, value: '1800'}  # 30 min timeout for jobs
@@ -627,7 +622,6 @@ parameters:
 
 
 # Database admin
-- {name: IMAGE_TAG_DATABASE_ADMIN, value: v3.7.20}
 - {name: LOG_LEVEL_DATABASE_ADMIN, value: debug}
 - {name: DB_DEBUG_DATABASE_ADMIN, value: 'false'}
 - {name: RES_LIMIT_CPU_DATABASE_ADMIN, value: 100m}
@@ -640,6 +634,7 @@ parameters:
 
 # Common parameters
 - {name: IMAGE, value: quay.io/redhat-services-prod/insights-management-tenant/insights-patch/patchman-engine}
+- {name: IMAGE_TAG, required: true}
 - {name: ENV_NAME, required: false}
 - {name: GIN_MODE, value: 'release'} # Gin webframework running mode
 - {name: KAFKA_READER_MAX_ATTEMPTS, value: '3'} # Limit of how many attempts will be made before kafka read error.
@@ -648,7 +643,6 @@ parameters:
 - {name: DB_WORK_MEM, value: '512000'} # How much memory can query use (used for packages queries) in kB - 500MB, postgres default is 4MB
 
 # Turnpike
-- {name: IMAGE_TAG_ADMIN, value: v3.7.20}
 - {name: REPLICAS_ADMIN, value: '1'}
 - {name: RES_LIMIT_CPU_ADMIN, value: 100m}
 - {name: RES_LIMIT_MEM_ADMIN, value: 256Mi}
