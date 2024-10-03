@@ -2,20 +2,11 @@
 version: v1.25.0
 ignore:
   SNYK-GOLANG-GITHUBCOMJACKCPGPROTO3-6371506:
-    - "*"
+    - "*":
         reason: Not a runtime dependency
   SNYK-GOLANG-GITHUBCOMMATTNGOSQLITE3-6139875
-    - "*"
+    - "*":
         reason: Not a runtime dependency
   SNYK-GOLANG-GITHUBCOMDOCKERDOCKERLIBNETWORK-6474507:
-    - "*"
+    - "*":
         reason: Not a runtime dependency
-  CWE-89:
-    - manager > controllers > utils.go:
-        reason: Parameter input is checked in a map, not used directly
-  CWE-918:
-    - turnpike>controllers>admin.go:
-        reason: Internal API
-  CWE-295:
-    - base>mqueue>mqueue_impl_gokafka.go:
-        reason: Allowed only if explicitly set
