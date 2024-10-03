@@ -121,10 +121,8 @@ func tryCreateSecuredDialerFromEnv() *kafka.Dialer {
 	}
 
 	kafkaSslSkipVerify := utils.CoreCfg.KafkaSslSkipVerify
-	var tlsConfig *tls.Config
-	if kafkaSslSkipVerify {
-		tlsConfig = &tls.Config{InsecureSkipVerify: true} // nolint:gosec
-	} else {
+	tlsConfig := &tls.Config{InsecureSkipVerify: kafkaSslSkipVerify} // nolint:gosec
+	if !kafkaSslSkipVerify {
 		tlsConfig = caCertTLSConfig()
 	}
 
