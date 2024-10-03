@@ -290,10 +290,17 @@ func GetManagerPprof(c *gin.Context) {
 	pprofHandler(c, utils.CoreCfg.ManagerPrivateAddress)
 }
 
+var paramRegexp = regexp.MustCompile("^(heap|profile|block|mutex|trace)$")
+
 func pprofHandler(c *gin.Context, address string) {
 	query := c.Request.URL.RawQuery
 	param := c.Param("param")
-	data, err := getPprof(address, param, query)
+	match := paramRegexp.FindStringSubmatch(param)
+	if len(match) < 1 {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+	data, err := getPprof(address, match[0], query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
