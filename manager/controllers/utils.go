@@ -20,6 +20,7 @@ import (
 	"github.com/gocarina/gocsv"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const InvalidOffsetMsg = "Invalid offset"
@@ -79,7 +80,11 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 		if !allowedFieldSet[enteredField] {
 			return nil, nil, errors.Errorf("Invalid sort field: %v", enteredField)
 		}
-		column := fmt.Sprintf("%s %s NULLS LAST", fieldExprs[enteredField].OrderQuery, ascDesc)
+		column := clause.OrderByColumn{
+			Column: clause.Column{Name: fmt.Sprintf("%s %s NULLS LAST", fieldExprs[enteredField].OrderQuery, ascDesc),
+				Raw: true},
+		}
+
 		tx = tx.Order(column)
 		appliedFields = append(appliedFields, origEnteredField)
 	}
