@@ -27,7 +27,7 @@ func RunAdminAPI() {
 	core.ConfigureApp()
 
 	// Toggle Turnpike authentication for internal API (manual sync, re-calc)
-	enableTurnpikeAuth := utils.PodConfig.GetBool("turnpike_auth", false)
+	enableTurnpikeAuth := utils.PodConfig.GetBool("turnpike_auth", true)
 
 	utils.LogInfo("port", utils.CoreCfg.PublicPort, "Manager-admin starting")
 	app := gin.New()

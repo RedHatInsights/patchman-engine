@@ -648,7 +648,7 @@ parameters:
 - {name: MEM_LIMIT_ADMIN, value: 256Mi}
 - {name: CPU_REQUEST_ADMIN, value: 50m}
 - {name: MEM_REQUEST_ADMIN, value: 128Mi}
-- {name: ADMIN_CONFIG, value: 'turnpike_auth'}
+- {name: ADMIN_CONFIG, value: ''}
 
 # Floorist parameters
 - {name: FLOORIST_SUSPEND, value: 'true', required: true} # Disable Floorist cronjob execution
