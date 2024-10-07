@@ -121,6 +121,7 @@ func tryCreateSecuredDialerFromEnv() *kafka.Dialer {
 	}
 
 	kafkaSslSkipVerify := utils.CoreCfg.KafkaSslSkipVerify
+	// used only in development mode
 	tlsConfig := &tls.Config{InsecureSkipVerify: kafkaSslSkipVerify} // nolint:gosec
 	if !kafkaSslSkipVerify {
 		tlsConfig = caCertTLSConfig()
@@ -178,6 +179,6 @@ func caCertTLSConfig() *tls.Config {
 		}
 		caCertPool.AppendCertsFromPEM(caCert)
 	}
-	tlsConfig := tls.Config{RootCAs: caCertPool} // nolint:gosec
+	tlsConfig := tls.Config{RootCAs: caCertPool, MinVersion: tls.VersionTLS12}
 	return &tlsConfig
 }

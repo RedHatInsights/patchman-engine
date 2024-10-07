@@ -10,6 +10,7 @@ import (
 	"github.com/lestrrat-go/backoff"
 	"github.com/pkg/errors"
 
+	// used only in developer mode
 	_ "net/http/pprof" //nolint:gosec
 )
 
@@ -119,7 +120,8 @@ func statusCodeFound(response *http.Response, statusCodes []int) bool {
 func RunProfiler() {
 	if CoreCfg.ProfilerEnabled {
 		go func() {
-			err := http.ListenAndServe(fmt.Sprintf(":%d", CoreCfg.PrivatePort), nil) //nolint:gosec
+			server := &http.Server{Addr: fmt.Sprintf(":%d", CoreCfg.PrivatePort), ReadHeaderTimeout: 120 * time.Second}
+			err := server.ListenAndServe()
 			if err != nil {
 				LogWarn("err", err.Error(), "couldn't start profiler")
 			}

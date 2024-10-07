@@ -27,6 +27,18 @@ func setCmdAuth(cmd *exec.Cmd) {
 	cmd.Env = append(cmd.Env, fmt.Sprintf("PGPASSWORD=%v", utils.FailIfEmpty(utils.CoreCfg.DBPassword, "DB_PASSWD")))
 }
 
+func writeTemp(dir, filename string, data []byte) {
+	file, err := os.CreateTemp(dir, filename)
+	if err != nil {
+		utils.LogError(err)
+		return
+	}
+	if _, err := file.Write(data); err != nil {
+		utils.LogError(err)
+	}
+	file.Close()
+}
+
 func TestSchemaCompatiblity(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	cfg := postgres.Config{
@@ -75,15 +87,10 @@ func TestSchemaCompatiblity(t *testing.T) {
 	diff, err := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{A: migratedLines, B: scratchLines})
 	assert.NoError(t, err)
 
-	// nolint:gosec
 	if len(diff) > 0 {
 		fmt.Print(diff)
-		if err := os.WriteFile("/tmp/schema-1-migrated.dump", migrated, 0600); err != nil {
-			utils.LogError(err)
-		}
-		if err := os.WriteFile("/tmp/schema-2-fromscratch.dump", fromScratch, 0600); err != nil {
-			utils.LogError(err)
-		}
+		writeTemp("/tmp", "schema-1-migrated.*.dump", migrated)
+		writeTemp("/tmp", "schema-2-fromscratch.*.dump", fromScratch)
 	}
 	assert.Equal(t, len(diff), 0)
 }
