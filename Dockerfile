@@ -6,7 +6,7 @@ ARG INSTALL_TOOLS=no
 
 # install build, development and test environment
 RUN curl -o /etc/yum.repos.d/postgresql.repo \
-        https://copr.fedorainfracloud.org/coprs/mmraka/postgresql-16/repo/epel-9/mmraka-postgresql-16-epel-9.repo
+        https://copr.fedorainfracloud.org/coprs/g/insights/postgresql-16/repo/epel-9/group_insights-postgresql-16-epel-9.repo
 
 RUN dnf install -y go-toolset postgresql diffutils rpm-devel pg_repack
 
