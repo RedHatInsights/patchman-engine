@@ -3,7 +3,8 @@ package platform
 import (
 	"app/base/inventory"
 	"app/base/utils"
-	"math/rand"
+	"crypto/rand"
+	"math/big"
 )
 
 var pkgs = []string{
@@ -28,15 +29,14 @@ var pkgs = []string{
 	"iproute-2.6.18-13.el5.i386",
 	"libbonobo-2.24.2-5.el6.i686"}
 
-// nolint: gosec
 // Create bare system profile
 func makeSystemProfile(id string, randomPkgs bool) inventory.SystemProfile {
 	_pkgs := pkgs
 	if id == "TEST-NO-PKGS" {
 		_pkgs = []string{}
 	} else if randomPkgs {
-		nPkgs := rand.Intn(len(pkgs))
-		_pkgs = pkgs[0:nPkgs]
+		nPkgs, _ := rand.Int(rand.Reader, big.NewInt(int64(len(pkgs))))
+		_pkgs = pkgs[0:nPkgs.Int64()]
 	}
 
 	yumRepos := []inventory.YumRepo{
