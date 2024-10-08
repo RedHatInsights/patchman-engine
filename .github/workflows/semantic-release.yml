@@ -17,6 +17,7 @@ jobs:
         DOC_FILE="docs/v3/openapi.json docs/admin/openapi.json"
         CLOWDER_FILE=deploy/clowdapp.yaml
         VERSION=$(cat VERSION)
+        [ "$(git log -1 --pretty=%B)" == "$VERSION" ] && exit 0
         RELEASE_TYPE=$(git log -1 | tail -n1) # Check release type (/major, /minor, /patch (default))
         VERSION_NEXT=$(./scripts/increment_version.sh $VERSION $RELEASE_TYPE)
         sed -i 's|\("version": "\)[^"]*\("\)$|'"\1$VERSION_NEXT\2|;" $DOC_FILE
