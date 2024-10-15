@@ -60,12 +60,14 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	err = assignTemplateSystems(c, db, account, template, req.Systems, groups)
+	err = checkTemplateSystems(c, db, account, template, req.Systems, groups)
 	if err != nil {
 		return
 	}
 
-	err = assignCandlepinEnvironment(db, account, &template.EnvironmentID, req.Systems, groups)
+	modified := assignCandlepinEnvironment(db, account, &template.EnvironmentID, req.Systems, groups)
+
+	err = assignTemplateSystems(c, db, account, template, modified)
 	if err != nil {
 		return
 	}
@@ -78,16 +80,13 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-// nolint:funlen
-func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template *models.Template,
+func checkTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template *models.Template,
 	inventoryIDs []string, groups map[string]string) error {
 	if len(inventoryIDs) == 0 {
 		err := errors.New(InvalidInventoryIDsErr)
 		LogAndRespBadRequest(c, err, InvalidInventoryIDsErr)
 		return err
 	}
-	tx := db.Begin()
-	defer tx.Rollback()
 
 	err := checkInventoryIDs(db, accountID, inventoryIDs, groups)
 	if err != nil {
@@ -110,6 +109,14 @@ func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template 
 		return err
 	}
 
+	return nil
+}
+
+func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template *models.Template,
+	inventoryIDs []string) error {
+	tx := db.Begin()
+	defer tx.Rollback()
+
 	// if we want to unassign system from template, we need to set template_id=null
 	var templateID *int64
 	if template != nil && template.ID != 0 {
@@ -120,18 +127,18 @@ func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template 
 		Where("rh_account_id = ? AND inventory_id IN (?::uuid)",
 			accountID, inventoryIDs).
 		Update("template_id", templateID)
-	if e := tx.Error; e != nil {
+	if err := tx.Error; err != nil {
 		LogAndRespError(c, err, "Database error")
-		return e
+		return err
 	}
 	if int(tx.RowsAffected) != len(inventoryIDs) {
-		err = errors.New(InvalidInventoryIDsErr)
+		err := errors.New(InvalidInventoryIDsErr)
 		LogAndRespBadRequest(c, err, InvalidInventoryIDsErr)
 		return err
 	}
 
-	err = tx.Commit().Error
-	if e := tx.Error; e != nil {
+	err := tx.Commit().Error
+	if err != nil {
 		LogAndRespError(c, err, "Database error")
 		return err
 	}
@@ -178,7 +185,7 @@ func callCandlepin(ctx context.Context, consumer string, request *candlepin.Cons
 		statusCode := utils.TryGetStatusCode(resp)
 		utils.LogDebug("request", *request, "candlepin_url", candlepinEnvConsumersURL,
 			"status_code", statusCode, "err", err)
-		if err != nil && statusCode == 400 {
+		if err != nil || statusCode != http.StatusOK {
 			err = errors.Wrap(errCandlepin, err.Error())
 		}
 		return &candlepinResp, resp, err
@@ -193,7 +200,8 @@ func callCandlepin(ctx context.Context, consumer string, request *candlepin.Cons
 }
 
 func assignCandlepinEnvironment(db *gorm.DB, accountID int, env *string, inventoryIDs []string,
-	groups map[string]string) error {
+	groups map[string]string) []string {
+	var assignedIDs []string
 	var consumers = []struct {
 		InventoryID string
 		Consumer    *string
@@ -203,7 +211,8 @@ func assignCandlepinEnvironment(db *gorm.DB, accountID int, env *string, invento
 		Select("ih.id as inventory_id, ih.system_profile->>'owner_id' as consumer").
 		Where("ih.id in (?)", inventoryIDs).Find(&consumers).Error
 	if err != nil {
-		return err
+		utils.LogWarn(err)
+		return nil
 	}
 
 	environments := []candlepin.ConsumersUpdateEnvironment{}
@@ -222,8 +231,13 @@ func assignCandlepinEnvironment(db *gorm.DB, accountID int, env *string, invento
 		// check response
 		if apiErr != nil {
 			err = errors2.Join(err, apiErr, errors.New(resp.Message))
+		} else {
+			assignedIDs = append(assignedIDs, consumer.InventoryID)
 		}
 	}
 
-	return err
+	if err != nil {
+		utils.LogWarn(err)
+	}
+	return assignedIDs
 }
