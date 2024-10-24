@@ -1,14 +1,16 @@
-ARG BUILDIMG=registry.access.redhat.com/ubi9
-ARG RUNIMG=registry.access.redhat.com/ubi9-micro
+ARG BUILDIMG=registry.access.redhat.com/ubi8
+ARG RUNIMG=registry.access.redhat.com/ubi8-micro
 FROM ${BUILDIMG} as buildimg
 
 ARG INSTALL_TOOLS=no
 
 # install build, development and test environment
 RUN curl -o /etc/yum.repos.d/postgresql.repo \
-        https://copr.fedorainfracloud.org/coprs/g/insights/postgresql-16/repo/epel-9/group_insights-postgresql-16-epel-9.repo
+        https://copr.fedorainfracloud.org/coprs/g/insights/postgresql-16/repo/epel-8/group_insights-postgresql-16-epel-8.repo
 
+RUN dnf module disable -y postgresql || :
 RUN dnf install -y go-toolset postgresql diffutils rpm-devel pg_repack
+RUN ln -s /usr/libexec/platform-python /usr/bin/python3
 
 ENV GOPATH=/go \
     GO111MODULE=on \
