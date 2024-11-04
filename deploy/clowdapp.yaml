@@ -12,7 +12,7 @@ objects:
     envName: ${ENV_NAME}
     deployments:
     - name: admin
-      minReplicas: ${{REPLICAS_ADMIN}}
+      replicas: ${{REPLICAS_ADMIN}}
       webServices:
         public:
           enabled: true
@@ -43,7 +43,7 @@ objects:
           requests: {cpu: '${CPU_REQUEST_ADMIN}', memory: '${MEM_REQUEST_ADMIN}'}
 
     - name: manager
-      minReplicas: ${{REPLICAS_MANAGER}}
+      replicas: ${{REPLICAS_MANAGER}}
       webServices:
         public:
           enabled: true
@@ -113,7 +113,7 @@ objects:
           requests: {cpu: '${CPU_REQUEST_MANAGER}', memory: '${MEM_REQUEST_MANAGER}'}
 
     - name: listener
-      minReplicas: ${{REPLICAS_LISTENER}}
+      replicas: ${{REPLICAS_LISTENER}}
       webServices:
         public:
           enabled: true
@@ -157,7 +157,7 @@ objects:
           requests: {cpu: '${CPU_REQUEST_LISTENER}', memory: '${MEM_REQUEST_LISTENER}'}
 
     - name: evaluator-upload
-      minReplicas: ${{REPLICAS_EVALUATOR_UPLOAD}}
+      replicas: ${{REPLICAS_EVALUATOR_UPLOAD}}
       webServices:
         public:
           enabled: true
@@ -202,7 +202,7 @@ objects:
           requests: {cpu: '${CPU_REQUEST_EVALUATOR_UPLOAD}', memory: '${MEM_REQUEST_EVALUATOR_UPLOAD}'}
 
     - name: evaluator-recalc
-      minReplicas: ${{REPLICAS_EVALUATOR_RECALC}}
+      replicas: ${{REPLICAS_EVALUATOR_RECALC}}
       webServices:
         public:
           enabled: true
