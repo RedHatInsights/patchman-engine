@@ -601,10 +601,10 @@ parameters:
 - {name: VMAAS_SYNC_SCHEDULE, value: '*/5 * * * *'} # Cronjob schedule definition
 - {name: VMAAS_SYNC_SUSPEND, value: 'false'} # Disable cronjob execution
 - {name: CPU_LIMIT_VMAAS_SYNC, value: 500m}
-- {name: MEM_LIMIT_VMAAS_SYNC, value: 384Mi}
+- {name: MEM_LIMIT_VMAAS_SYNC, value: 1Gi}
 - {name: CPU_REQUEST_VMAAS_SYNC, value: 500m}
-- {name: MEM_REQUEST_VMAAS_SYNC, value: 384Mi}
-- {name: GOMEMLIMIT_VMAAS_SYNC, value: '345MiB'} # set to 90% of the default memory limit 384Mi (don't forget `B`)
+- {name: MEM_REQUEST_VMAAS_SYNC, value: 512Mi}
+- {name: GOMEMLIMIT_VMAAS_SYNC, value: '920MiB'} # set to 90% of the default memory limit 1Gi (don't forget `B`)
 # Delete unused data
 - {name: DELETE_UNUSED_SCHEDULE, value: '10 */6 * * *'} # Cronjob schedule definition
 - {name: DELETE_UNUSED_SUSPEND, value: 'true'} # Disable cronjob execution
