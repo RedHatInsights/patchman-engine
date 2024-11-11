@@ -7,6 +7,7 @@ import (
 	"app/base/mqueue"
 	ntf "app/base/notification"
 	"app/base/utils"
+	"encoding/json"
 	"time"
 
 	"github.com/pkg/errors"
@@ -63,6 +64,29 @@ func getUnnotifiedAdvisories(tx *gorm.DB, accountID int, newAdvs SystemAdvisoryM
 	return unAdvs, nil
 }
 
+func getSystemTags(tx *gorm.DB, system *models.SystemPlatform) ([]ntf.SystemTag, error) {
+	if system == nil {
+		return nil, nil
+	}
+
+	var tags []ntf.SystemTag
+	var tagsJSON string
+	err := tx.Table("system_platform sp").
+		Select("ih.tags").
+		Joins("JOIN inventory.hosts ih ON sp.inventory_id = ih.id").
+		Where("sp.rh_account_id = ?", system.RhAccountID).
+		Where("sp.id = ?", system.ID).
+		Scan(&tagsJSON).Error
+	if err != nil {
+		return nil, errors.Wrap(err, "system tags query failed")
+	}
+	if err = json.Unmarshal([]byte(tagsJSON), &tags); err != nil {
+		return nil, errors.Wrap(err, "system tags unmarshal failed")
+	}
+
+	return tags, nil
+}
+
 func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform, event *mqueue.PlatformEvent,
 	accountID int, newAdvisories SystemAdvisoryMap) error {
 	if notificationsPublisher == nil {
@@ -83,7 +107,12 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 		events = append(events, ntf.Event{Payload: advisory, Metadata: ntf.Metadata{}})
 	}
 
-	notif, err := ntf.MakeNotification(system, event, NewAdvisoryEvent, events)
+	tags, err := getSystemTags(tx, system)
+	if err != nil {
+		return errors.Wrap(err, "getting system tags failed")
+	}
+
+	notif, err := ntf.MakeNotification(system, tags, event, NewAdvisoryEvent, events)
 	if err != nil {
 		return errors.Wrap(err, "creating notification failed")
 	}

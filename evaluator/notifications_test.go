@@ -101,6 +101,7 @@ func TestAdvisoriesNotificationMessage(t *testing.T) {
 		InventoryID: inventoryID,
 		DisplayName: displayName,
 	}
+	tags := []ntf.SystemTag{{Key: "key", Namespace: "namespace", Value: "value"}}
 
 	orgID := "1234567"
 	url := fmt.Sprintf("www.console.redhat.com/insights/inventory/%s", inventoryID)
@@ -109,12 +110,13 @@ func TestAdvisoriesNotificationMessage(t *testing.T) {
 		URL:   &url,
 	}
 
-	notification, err := ntf.MakeNotification(system, event, NewAdvisoryEvent, events)
+	notification, err := ntf.MakeNotification(system, tags, event, NewAdvisoryEvent, events)
 	assert.Nil(t, err)
 	assert.Equal(t, orgID, notification.OrgID)
 	assert.Equal(t, url, notification.Context.HostURL)
 	assert.Equal(t, inventoryID, notification.Context.InventoryID)
 	assert.Equal(t, displayName, notification.Context.DisplayName)
+	assert.Equal(t, tags, notification.Context.Tags)
 
 	msg, err := mqueue.MessageFromJSON(inventoryID, notification)
 	assert.Nil(t, err)
@@ -123,4 +125,25 @@ func TestAdvisoriesNotificationMessage(t *testing.T) {
 	notificationJSON, err := json.Marshal(notification)
 	assert.Nil(t, err)
 	assert.Equal(t, notificationJSON, msg.Value)
+}
+
+func TestGetSystemTags(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	system := models.SystemPlatform{
+		ID:          1,
+		RhAccountID: 1,
+		InventoryID: "00000000-0000-0000-0000-000000000001",
+		DisplayName: "display name",
+	}
+	tags, err := getSystemTags(database.DB, &system)
+	expected := []ntf.SystemTag{
+		{Key: "k1", Value: "val1", Namespace: "ns1"},
+		{Key: "k2", Value: "val2", Namespace: "ns1"},
+	}
+	if assert.NoError(t, err) {
+		assert.Equal(t, expected, tags)
+	}
 }
