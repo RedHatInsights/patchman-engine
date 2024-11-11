@@ -88,12 +88,12 @@ func getSystemTags(tx *gorm.DB, system *models.SystemPlatform) ([]ntf.SystemTag,
 }
 
 func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform, event *mqueue.PlatformEvent,
-	accountID int, newAdvisories SystemAdvisoryMap) error {
+	newAdvisories SystemAdvisoryMap) error {
 	if notificationsPublisher == nil {
 		return nil
 	}
 
-	advisories, err := getUnnotifiedAdvisories(tx, accountID, newAdvisories)
+	advisories, err := getUnnotifiedAdvisories(tx, system.RhAccountID, newAdvisories)
 	if err != nil {
 		return errors.Wrap(err, "getting unnotified advisories failed")
 	}
@@ -136,7 +136,7 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 		"notification sent successfully")
 
 	err = tx.Table("advisory_account_data").
-		Where("rh_account_id = ? AND advisory_id IN (?)", accountID, advisoryIDs).
+		Where("rh_account_id = ? AND advisory_id IN (?)", system.RhAccountID, advisoryIDs).
 		Update("notified", time.Now()).Error
 	if err != nil {
 		return errors.Wrap(err, "updating notified column failed")
