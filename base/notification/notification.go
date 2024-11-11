@@ -15,9 +15,10 @@ const (
 )
 
 type Context struct {
-	InventoryID string `json:"inventory_id"`
-	DisplayName string `json:"display_name"`
-	HostURL     string `json:"host_url"`
+	InventoryID string      `json:"inventory_id"`
+	DisplayName string      `json:"display_name"`
+	HostURL     string      `json:"host_url"`
+	Tags        []SystemTag `json:"tags"`
 }
 
 type Metadata struct{}
@@ -73,7 +74,13 @@ type Advisory struct {
 	Synopsis     string `json:"synopsis"`
 }
 
-func MakeNotification(system *models.SystemPlatform, event *mqueue.PlatformEvent,
+type SystemTag struct {
+	Key       string `json:"key,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+	Value     string `json:"value,omitempty"`
+}
+
+func MakeNotification(system *models.SystemPlatform, systemTags []SystemTag, event *mqueue.PlatformEvent,
 	eventType string, events []Event) (*Notification, error) {
 	orgID := event.GetOrgID()
 	if orgID == "" || orgID == "null" {
@@ -91,6 +98,7 @@ func MakeNotification(system *models.SystemPlatform, event *mqueue.PlatformEvent
 			InventoryID: system.InventoryID,
 			DisplayName: system.DisplayName,
 			HostURL:     event.GetURL(),
+			Tags:        systemTags,
 		},
 		Events: events,
 		OrgID:  orgID,
