@@ -633,7 +633,7 @@ parameters:
                                            # 'force_schema_version=XXX' to reset the dirty flag to false and force the specific version, it will follow up with the schema upgrade defined by schema_version
 
 # Common parameters
-- {name: IMAGE, value: quay.io/redhat-services-prod/insights-management-tenant/insights-patch/patchman-engine}
+- {name: IMAGE, value: quay.io/cloudservices/patchman-engine-app}
 - {name: IMAGE_TAG, required: true}
 - {name: ENV_NAME, required: false}
 - {name: GIN_MODE, value: 'release'} # Gin webframework running mode
