@@ -5,6 +5,8 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/base/vmaas"
+	"cmp"
+	"slices"
 	"time"
 
 	"github.com/pkg/errors"
@@ -248,7 +250,7 @@ func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatform, advisoriesByN
 	return systemAdvisoriesNew, nil
 }
 
-func calcAdvisoryChanges(system *models.SystemPlatform,
+func calcAdvisoryChanges(system *models.SystemPlatform, //nolint: funlen
 	advisoriesByName extendedAdvisoryMap) []models.AdvisoryAccountData {
 	// If system is stale, we won't change any rows in advisory_account_data
 	if system.Stale {
@@ -303,6 +305,12 @@ func calcAdvisoryChanges(system *models.SystemPlatform,
 	for _, aad := range aadMap {
 		aadSlice = append(aadSlice, aad)
 	}
+	slices.SortStableFunc(aadSlice, func(x, y models.AdvisoryAccountData) int {
+		if n := cmp.Compare(x.RhAccountID, y.RhAccountID); n != 0 {
+			return n
+		}
+		return cmp.Compare(x.AdvisoryID, y.AdvisoryID)
+	})
 	return aadSlice
 }
 
