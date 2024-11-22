@@ -210,7 +210,8 @@ func buildQueryAdvisories(db *gorm.DB, account int) *gorm.DB {
 	query := database.AdvisoryMetadata(db).
 		Select(AdvisoriesSelect).
 		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id").
-		Where("aad.rh_account_id = ?", account)
+		Where("aad.rh_account_id = ?", account).
+		Where("aad.systems_applicable > 0")
 	return query
 }
 
