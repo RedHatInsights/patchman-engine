@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (131, false);
+VALUES (132, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -107,38 +107,26 @@ BEGIN
         RETURN NEW;
     END IF;
 
-    -- find advisories linked to the server and lock them
+    -- find advisories linked to the server
     WITH to_update_advisories AS (
         SELECT aad.advisory_id,
                aad.rh_account_id,
-               -- Desired count depends on old count + change
-               aad.systems_installable + case when sa.status_id = 0 then change else 0 end as systems_installable_dst,
-               aad.systems_applicable + change as systems_applicable_dst
+               case when sa.status_id = 0 then change else 0 end as systems_installable_change,
+               change as systems_applicable_change
           FROM advisory_account_data aad
           JOIN system_advisories sa ON aad.advisory_id = sa.advisory_id
           -- Filter advisory_account_data only for advisories affectign this system & belonging to system account
          WHERE aad.rh_account_id =  NEW.rh_account_id
            AND sa.system_id = NEW.id AND sa.rh_account_id = NEW.rh_account_id
-         ORDER BY aad.advisory_id FOR UPDATE OF aad),
-         -- Where count > 0, update existing rows
+         ORDER BY aad.advisory_id),
+         -- update existing rows
          update AS (
             UPDATE advisory_account_data aad
-               SET systems_installable = ta.systems_installable_dst,
-                   systems_applicable = ta.systems_applicable_dst
+               SET systems_installable = aad.systems_installable + ta.systems_installable_change,
+                   systems_applicable = aad.systems_applicable + ta.systems_applicable_change
               FROM to_update_advisories ta
              WHERE aad.advisory_id = ta.advisory_id
                AND aad.rh_account_id = NEW.rh_account_id
-               AND (ta.systems_installable_dst > 0 OR ta.systems_applicable_dst > 0)
-         ),
-         -- Where count = 0, delete existing rows
-         delete AS (
-            DELETE
-              FROM advisory_account_data aad
-             USING to_update_advisories ta
-             WHERE aad.rh_account_id = ta.rh_account_id
-               AND aad.advisory_id = ta.advisory_id
-               AND ta.systems_installable_dst <= 0
-               AND ta.systems_applicable_dst <= 0
          )
     -- If we have system affected && no exisiting advisory_account_data entry, we insert new rows
     INSERT
@@ -949,6 +937,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO evaluator;
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO listener;
 -- vmaas_sync needs to update stale mark, which creates and deletes advisory_account_data
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO vmaas_sync;
+
+-- indexes for filtering systems_applicable, systems_installable
+CREATE INDEX ON advisory_account_data (systems_applicable);
+CREATE INDEX ON advisory_account_data (systems_installable);
 
 -- repo
 CREATE TABLE IF NOT EXISTS repo
