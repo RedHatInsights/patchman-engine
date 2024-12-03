@@ -14,7 +14,7 @@ import (
 	stdErrors "errors"
 
 	"github.com/pkg/errors"
-	"github.com/redhatinsights/identity"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 
 	"github.com/gin-gonic/gin"
 )
