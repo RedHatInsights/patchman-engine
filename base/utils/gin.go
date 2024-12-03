@@ -16,6 +16,7 @@ const (
 	KeyApiver          = "apiver"
 	KeyAccount         = "account"
 	KeyUser            = "user"
+	KeySystem          = "system_cn"
 	KeyInventoryGroups = "inventoryGroups"
 	KeyGrouped         = "grouped"
 	KeyUngrouped       = "ungrouped"

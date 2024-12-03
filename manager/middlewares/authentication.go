@@ -7,6 +7,7 @@ import (
 	"app/base/utils"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -116,6 +117,27 @@ func TurnpikeAuthenticator() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Invalid x-rh-identity header"})
 			return
 		}
+	}
+}
+
+var validSystemCertTypes = []string{"system", "satellite", "hypervisor", "rhui", "sam"}
+
+func SystemCertAuthenticator() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		xrhid := (*ginContext)(c).GetXRHID()
+		if xrhid == nil {
+			// aborted by GetXRHID
+			return
+		}
+		// SystemAuth endpoints only support system
+		if !(xrhid.Identity.Type == "System" &&
+			slices.Contains(validSystemCertTypes, xrhid.Identity.System.CertType) &&
+			findAccount(c, xrhid.Identity.OrgID)) {
+			c.AbortWithStatusJSON(http.StatusUnauthorized,
+				utils.ErrorResponse{Error: "Invalid x-rh-identity system header"})
+			return
+		}
+		c.Set(utils.KeySystem, xrhid.Identity.System.CommonName)
 	}
 }
 
