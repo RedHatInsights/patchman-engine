@@ -41,7 +41,7 @@ type TemplateSystemsUpdateRequest struct {
 // @Failure 400 {object} 	utils.ErrorResponse
 // @Failure 404 {object} 	utils.ErrorResponse
 // @Failure 500 {object} 	utils.ErrorResponse
-// @Router /templates/{template_id}/systems [PUT]
+// @Router /templates/{template_id}/systems [PATCH]
 func TemplateSystemsUpdateHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
 	templateUUID := c.Param("template_id")
