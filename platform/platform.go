@@ -18,7 +18,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/redhatinsights/identity"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"modernc.org/strutil"
 )
 

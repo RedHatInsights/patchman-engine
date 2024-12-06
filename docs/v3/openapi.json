@@ -6405,6 +6405,77 @@
                 "x-codegen-request-body-name": "body"
             }
         },
+        "/templates/{template_id}/subscribed-systems": {
+            "patch": {
+                "summary": "Add a system to a template",
+                "description": "Add a system authenticated by  its client identity certificate to a template",
+                "operationId": "addTemplateSystem",
+                "parameters": [
+                    {
+                        "name": "template_id",
+                        "in": "path",
+                        "description": "Template ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Request body",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controllers.TemplateSystemsUpdateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {}
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ],
+                "x-codegen-request-body-name": "body"
+            }
+        },
         "/templates/{template_id}/systems": {
             "get": {
                 "summary": "Show me all systems belonging to a template",
@@ -6611,7 +6682,7 @@
                     }
                 ]
             },
-            "put": {
+            "patch": {
                 "summary": "Add systems to a template",
                 "description": "Add systems to a template",
                 "operationId": "updateTemplateSystems",
