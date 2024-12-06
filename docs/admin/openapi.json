@@ -61,6 +61,51 @@
                 ]
             }
         },
+        "/clean-advisory-account-data": {
+            "put": {
+                "summary": "Clean advisory_account_data",
+                "description": "Delete rows with no installable and applicable systems",
+                "operationId": "cleanAdvisoryAccountData",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "RhIdentity": []
+                    }
+                ]
+            }
+        },
         "/pprof/evaluator_recalc/{param}": {
             "get": {
                 "summary": "Get profile info",
