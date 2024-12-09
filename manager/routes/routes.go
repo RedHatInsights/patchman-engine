@@ -11,20 +11,25 @@ import (
 )
 
 func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: funlen
-	api.Use(middlewares.RBAC())
-	api.Use(middlewares.PublicAuthenticator())
 	api.Use(middlewares.CheckReferer())
 	api.Use(middlewares.SetAPIVersion(api.BasePath()))
 	api.Use(middlewares.Deprecate(deprecations.DeprecateLimit()))
 	api.Use(middlewares.DatabaseWithContext())
 
-	advisories := api.Group("/advisories")
+	userAuth := api.Group("/")
+	userAuth.Use(middlewares.RBAC())
+	userAuth.Use(middlewares.PublicAuthenticator())
+
+	systemAuth := api.Group("/")
+	systemAuth.Use(middlewares.SystemCertAuthenticator())
+
+	advisories := userAuth.Group("/advisories")
 	advisories.GET("", controllers.AdvisoriesListHandler)
 	advisories.GET("/:advisory_id", controllers.AdvisoryDetailHandler)
 	advisories.GET("/:advisory_id/systems", controllers.AdvisorySystemsListHandler)
 
 	if config.EnableBaselines {
-		baselines := api.Group("/baselines")
+		baselines := userAuth.Group("/baselines")
 		baselines.GET("", controllers.BaselinesListHandler)
 		baselines.GET("/:baseline_id", controllers.BaselineDetailHandler)
 		baselines.GET("/:baseline_id/systems", controllers.BaselineSystemsListHandler)
@@ -34,7 +39,7 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 		baselines.POST("/systems/remove", controllers.BaselineSystemsRemoveHandler)
 	}
 
-	systems := api.Group("/systems")
+	systems := userAuth.Group("/systems")
 	systems.GET("", controllers.SystemsListHandler)
 	systems.GET("/:inventory_id", controllers.SystemDetailHandler)
 	systems.GET("/:inventory_id/advisories", controllers.SystemAdvisoriesHandler)
@@ -43,15 +48,15 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	systems.GET("/:inventory_id/yum_updates", controllers.SystemYumUpdatesHandler)
 	systems.DELETE("/:inventory_id", controllers.SystemDeleteHandler)
 
-	api.GET("/tags", controllers.SystemTagListHandler)
+	userAuth.GET("/tags", controllers.SystemTagListHandler)
 
-	packages := api.Group("/packages")
+	packages := userAuth.Group("/packages")
 	packages.GET("", controllers.PackagesListHandler)
 	packages.GET("/:package_name/systems", controllers.PackageSystemsListHandler)
 	packages.GET("/:package_name/versions", controllers.PackageVersionsListHandler)
 	packages.GET("/:package_name", controllers.PackageDetailHandler)
 
-	export := api.Group("export")
+	export := userAuth.Group("export")
 	export.GET("/advisories", controllers.AdvisoriesExportHandler)
 	export.GET("/advisories/:advisory_id/systems", controllers.AdvisorySystemsExportHandler)
 
@@ -69,21 +74,23 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	}
 
 	if config.EnableTemplates {
-		templates := api.Group("/templates")
+		templates := userAuth.Group("/templates")
 		templates.GET("", controllers.TemplatesListHandler)
 		templates.GET("/:template_id/systems", controllers.TemplateSystemsListHandler)
+		templates.PATCH("/:template_id/systems", controllers.TemplateSystemsUpdateHandler)
+		// update should be PATCH but keep PUT for backard compatibility
 		templates.PUT("/:template_id/systems", controllers.TemplateSystemsUpdateHandler)
 		templates.DELETE("/systems", controllers.TemplateSystemsDeleteHandler)
-		/*
-			templates.GET("/:template_id", controllers.TemplateDetailHandler)
-		*/
+
+		systemTemplates := systemAuth.Group("/templates")
+		systemTemplates.PATCH("/:template_id/subscribed-systems", controllers.TemplateSubscribedSystemsUpdateHandler)
 	}
 
-	views := api.Group("/views")
+	views := userAuth.Group("/views")
 	views.POST("/systems/advisories", controllers.PostSystemsAdvisories)
 	views.POST("/advisories/systems", controllers.PostAdvisoriesSystems)
 
-	ids := api.Group("/ids")
+	ids := userAuth.Group("/ids")
 	ids.GET("/advisories", controllers.AdvisoriesListIDsHandler)
 	ids.GET("/advisories/:advisory_id/systems", controllers.AdvisorySystemsListIDsHandler)
 	ids.GET("/packages/:package_name/systems", controllers.PackageSystemsListIDsHandler)
@@ -96,7 +103,7 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 		ids.GET("/templates/:template_id/systems", controllers.TemplateSystemsListIDsHandler)
 	}
 
-	api.GET("/status", controllers.Status)
+	userAuth.GET("/status", controllers.Status)
 }
 
 func InitAdmin(app *gin.Engine, enableTurnpikeAuth bool) {
