@@ -2,6 +2,7 @@
 [![OpenAPI Status](https://github.com/RedHatInsights/patchman-engine/actions/workflows/open_api_spec.yml/badge.svg)](https://github.com/RedHatInsights/patchman-engine/actions/workflows/open_api_spec.yml)
 [![Code Coverage](https://codecov.io/gh/RedHatInsights/patchman-engine/branch/master/graph/badge.svg)](https://codecov.io/gh/RedHatInsights/patchman-engine)
 
+
 # patchman-engine
 System Patch Manager is one of the applications for [console.redhat.com](https://console.redhat.com). This application allows users to display and manage available patches for their registered systems. This code repo stores sources for the backend part of the application which provides the REST API to the frontend.
 
