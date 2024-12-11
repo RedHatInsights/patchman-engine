@@ -14,11 +14,10 @@ import (
 
 // @Summary Add a system to a template
 // @Description Add a system authenticated by  its client identity certificate to a template
-// @ID addTemplateSystem
+// @ID addTemplateSubscribedSystem
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    body    body   TemplateSystemsUpdateRequest true "Request body"
 // @Param    template_id    path  string   true  "Template ID"
 // @Success 200
 // @Failure 400 {object} 	utils.ErrorResponse

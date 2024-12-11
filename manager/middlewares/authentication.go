@@ -134,7 +134,7 @@ func SystemCertAuthenticator() gin.HandlerFunc {
 			slices.Contains(validSystemCertTypes, xrhid.Identity.System.CertType) &&
 			findAccount(c, xrhid.Identity.OrgID)) {
 			c.AbortWithStatusJSON(http.StatusUnauthorized,
-				utils.ErrorResponse{Error: "Invalid x-rh-identity system header"})
+				utils.ErrorResponse{Error: "Invalid system identity header"})
 			return
 		}
 		c.Set(utils.KeySystem, xrhid.Identity.System.CommonName)
