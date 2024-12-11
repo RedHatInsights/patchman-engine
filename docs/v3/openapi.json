@@ -6409,7 +6409,7 @@
             "patch": {
                 "summary": "Add a system to a template",
                 "description": "Add a system authenticated by  its client identity certificate to a template",
-                "operationId": "addTemplateSystem",
+                "operationId": "addTemplateSubscribedSystem",
                 "parameters": [
                     {
                         "name": "template_id",
@@ -6421,17 +6421,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "description": "Request body",
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/controllers.TemplateSystemsUpdateRequest"
-                            }
-                        }
-                    },
-                    "required": true
-                },
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -6472,8 +6461,7 @@
                     {
                         "RhIdentity": []
                     }
-                ],
-                "x-codegen-request-body-name": "body"
+                ]
             }
         },
         "/templates/{template_id}/systems": {
