@@ -185,8 +185,10 @@ func callCandlepin(ctx context.Context, consumer string, request *candlepin.Cons
 		statusCode := utils.TryGetStatusCode(resp)
 		utils.LogDebug("request", *request, "candlepin_url", candlepinEnvConsumersURL,
 			"status_code", statusCode, "err", err)
-		if err != nil || statusCode != http.StatusOK {
+		if err != nil {
 			err = errors.Wrap(errCandlepin, err.Error())
+		} else if statusCode != http.StatusOK && statusCode != http.StatusNoContent {
+			err = errors.Errorf("candlepin API status %d", statusCode)
 		}
 		return &candlepinResp, resp, err
 	}
