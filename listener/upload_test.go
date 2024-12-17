@@ -112,7 +112,7 @@ func TestUploadHandler(t *testing.T) {
 	assertSystemInDB(t, id, nil, &reporterID)
 
 	var sys models.SystemPlatform
-	assert.NoError(t, database.DB.Where("inventory_id::text = ?", id).Find(&sys).Error)
+	assert.NoError(t, database.DB.Where("inventory_id = ?::uuid", id).Find(&sys).Error)
 	after := time.Now().Add(time.Hour)
 	sys.LastEvaluation = &after
 	assert.NoError(t, database.DB.Save(&sys).Error)

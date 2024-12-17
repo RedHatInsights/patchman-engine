@@ -154,7 +154,7 @@ func advisoriesSystemsQuery(c *gin.Context, db *gorm.DB, acc int, groups map[str
 		Distinct(systemsAdvisoriesSelect).
 		Joins("LEFT JOIN system_advisories sa ON am.id = sa.advisory_id AND sa.rh_account_id = ? AND sa.status_id = 0", acc)
 	if len(systems) > 0 {
-		query = query.Joins(fmt.Sprintf("%s AND sp.inventory_id::text in (?)", spJoin), systems)
+		query = query.Joins(fmt.Sprintf("%s AND sp.inventory_id in (?::uuid)", spJoin), systems)
 	} else {
 		query = query.Joins(spJoin)
 	}
