@@ -57,5 +57,6 @@ func TestTemplateSystemsDeleteInvalid(t *testing.T) {
 		testTemplateSystemsDelete(t, req, http.StatusBadRequest)
 	}
 
-	testTemplateSystemsDelete(t, TemplateSystemsUpdateRequest{Systems: []string{"foo"}}, http.StatusNotFound)
+	testTemplateSystemsDelete(t, TemplateSystemsUpdateRequest{
+		Systems: []string{"c0ffeec0-ffee-c0ff-eec0-ffeec0ffee00"}}, http.StatusNotFound)
 }

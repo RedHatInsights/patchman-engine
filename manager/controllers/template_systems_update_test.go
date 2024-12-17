@@ -71,7 +71,7 @@ func TestUpdateTemplateInvalidSystem(t *testing.T) {
 	data := `{
 		"systems": [
 			"00000000-0000-0000-0000-000000000005",
-			"this-is-not-a-uuid",
+			"c0ffeec0-ffee-c0ff-eec0-ffeec0ffee00",
 			"00000000-0000-0000-0000-000000000009"
 		]
 	}`
@@ -82,8 +82,9 @@ func TestUpdateTemplateInvalidSystem(t *testing.T) {
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusNotFound, &errResp)
 	// 00000000-0000-0000-0000-000000000009 is from different account and should not be added
-	// this-is-not-a-uuid is not a valid uuid
-	assert.Equal(t, "not found\nunknown inventory_ids: [00000000-0000-0000-0000-000000000009 this-is-not-a-uuid]",
+	// c0ffeec0-ffee-c0ff-eec0-ffeec0ffee00 is not a valid uuid
+	assert.Equal(t, "not found\n"+
+		"unknown inventory_ids: [00000000-0000-0000-0000-000000000009 c0ffeec0-ffee-c0ff-eec0-ffeec0ffee00]",
 		errResp.Error)
 	database.DeleteTemplate(t, templateAccount, templateUUID)
 }
