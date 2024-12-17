@@ -160,7 +160,7 @@ func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string, groups
 	var satelliteIDs []string
 	var bootcIDs []string
 	err = database.Systems(db, accountID, groups).
-		Where("inventory_id::text IN (?)", inventoryIDs).
+		Where("inventory_id IN (?::uuid)", inventoryIDs).
 		Scan(&containingSystems).Error
 	if err != nil {
 		return errors.Join(base.ErrDatabase, err)
