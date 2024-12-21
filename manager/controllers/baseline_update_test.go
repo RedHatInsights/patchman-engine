@@ -112,7 +112,7 @@ func TestUpdateBaselineInvalidSystem(t *testing.T) {
 	data := `{
 		"inventory_ids": {
 			"00000000-0000-0000-0000-000000000005": false,
-			"incorrect_id": false,
+			"c0ffeec0-ffee-c0ff-eec0-ffeec0ffee00": false,
 			"00000000-0000-0000-0000-000000000009": true
 		}
 	}`
@@ -121,7 +121,8 @@ func TestUpdateBaselineInvalidSystem(t *testing.T) {
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusNotFound, &errResp)
-	assert.Equal(t, "not found\nunknown inventory_ids: [00000000-0000-0000-0000-000000000009 incorrect_id]",
+	assert.Equal(t, "not found\n"+
+		"unknown inventory_ids: [00000000-0000-0000-0000-000000000009 c0ffeec0-ffee-c0ff-eec0-ffeec0ffee00]",
 		errResp.Error)
 	database.DeleteBaseline(t, baselineID)
 }

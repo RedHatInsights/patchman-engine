@@ -151,7 +151,7 @@ func updateSystemsBaselineID(tx *gorm.DB, rhAccountID int, inventoryIDs []string
 	newBaselineID, oldBaselineID *int64) error {
 	updateFields := map[string]interface{}{"baseline_id": newBaselineID, "unchanged_since": time.Now()}
 	tx = tx.Model(models.SystemPlatform{}).
-		Where("rh_account_id = (?) AND inventory_id::text IN (?)", rhAccountID, inventoryIDs)
+		Where("rh_account_id = (?) AND inventory_id IN (?::uuid)", rhAccountID, inventoryIDs)
 
 	// oldBaselineID is used to prevent overwriting inventory IDs of another baseline
 	if oldBaselineID != nil {

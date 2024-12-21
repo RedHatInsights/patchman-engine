@@ -351,7 +351,7 @@ func CreateBaselineWithConfig(t *testing.T, name string, inventoryIDs []string,
 	}
 
 	err := tx.Model(models.SystemPlatform{}).
-		Where("rh_account_id = (?) AND inventory_id::text IN (?) AND EXISTS (SELECT * FROM inventory.hosts WHERE id IN (?))",
+		Where("rh_account_id = (?) AND inventory_id IN (?::uuid) AND EXISTS (SELECT * FROM inventory.hosts WHERE id IN (?))",
 			1, inventoryIDs, inventoryIDs).
 		Update("baseline_id", temporaryBaseline.ID).Error
 
