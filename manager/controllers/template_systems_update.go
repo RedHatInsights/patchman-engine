@@ -65,7 +65,10 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	modified := assignCandlepinEnvironment(db, account, &template.EnvironmentID, req.Systems, groups)
+	modified, err := assignCandlepinEnvironment(c, db, account, &template.EnvironmentID, req.Systems, groups)
+	if err != nil {
+		return
+	}
 
 	err = assignTemplateSystems(c, db, account, template, modified)
 	if err != nil {
@@ -201,8 +204,8 @@ func callCandlepin(ctx context.Context, consumer string, request *candlepin.Cons
 	return candlepinRespPtr.(*candlepin.ConsumersUpdateResponse), nil
 }
 
-func assignCandlepinEnvironment(db *gorm.DB, accountID int, env *string, inventoryIDs []string,
-	groups map[string]string) []string {
+func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env *string, inventoryIDs []string,
+	groups map[string]string) ([]string, error) {
 	var assignedIDs []string
 	var consumers = []struct {
 		InventoryID string
@@ -213,8 +216,20 @@ func assignCandlepinEnvironment(db *gorm.DB, accountID int, env *string, invento
 		Select("ih.id as inventory_id, ih.system_profile->>'owner_id' as consumer").
 		Where("ih.id in (?)", inventoryIDs).Find(&consumers).Error
 	if err != nil {
-		utils.LogWarn(err)
-		return nil
+		LogAndRespError(c, err, "Database error")
+		return nil, err
+	}
+
+	// check if all systems have owner_id
+	for _, consumer := range consumers {
+		if consumer.Consumer == nil {
+			err = errors2.Join(err, errors.Errorf("'%s'", consumer.InventoryID))
+		}
+	}
+	if err != nil {
+		err = errors2.Join(errors.New("missing owner_id for systems"), err)
+		LogAndRespBadRequest(c, err, err.Error())
+		return nil, err
 	}
 
 	environments := []candlepin.ConsumersUpdateEnvironment{}
@@ -225,10 +240,6 @@ func assignCandlepinEnvironment(db *gorm.DB, accountID int, env *string, invento
 		Environments: environments,
 	}
 	for _, consumer := range consumers {
-		if consumer.Consumer == nil {
-			err = errors2.Join(err, errors.Errorf("Missing owner_id for '%s'", consumer.InventoryID))
-			continue
-		}
 		resp, apiErr := callCandlepin(base.Context, *consumer.Consumer, &updateReq)
 		// check response
 		if apiErr != nil {
@@ -238,8 +249,10 @@ func assignCandlepinEnvironment(db *gorm.DB, accountID int, env *string, invento
 		}
 	}
 
+	// we do not want to fail whole API if a single call to candlepin fails
+	// just log the error
 	if err != nil {
 		utils.LogWarn(err)
 	}
-	return assignedIDs
+	return assignedIDs, nil
 }

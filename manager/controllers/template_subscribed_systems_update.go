@@ -46,7 +46,10 @@ func TemplateSubscribedSystemsUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	modified := assignCandlepinEnvironment(db, account, &template.EnvironmentID, systemList, nil)
+	modified, err := assignCandlepinEnvironment(c, db, account, &template.EnvironmentID, systemList, nil)
+	if err != nil {
+		return
+	}
 
 	err = assignTemplateSystems(c, db, account, template, modified)
 	if err != nil {
