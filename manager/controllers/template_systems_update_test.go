@@ -89,6 +89,27 @@ func TestUpdateTemplateInvalidSystem(t *testing.T) {
 	database.DeleteTemplate(t, templateAccount, templateUUID)
 }
 
+func TestUpdateTemplateSystemNotInCandlepin(t *testing.T) {
+	core.SetupTest(t)
+
+	data := `{
+		"systems": [
+			"00000000-0000-0000-0000-000000000005",
+			"00000000-0000-0000-0000-000000000003"
+		]
+	}`
+	database.CreateTemplate(t, templateAccount, templateUUID, []string{})
+	w := CreateRequestRouterWithParams("PUT", templatePath, templateUUID, "", bytes.NewBufferString(data), "",
+		TemplateSystemsUpdateHandler, templateAccount)
+
+	var errResp utils.ErrorResponse
+	CheckResponse(t, w, http.StatusBadRequest, &errResp)
+	// 00000000-0000-0000-0000-000000000003 is not in candlepin
+	assert.Equal(t, "missing owner_id for systems\n'00000000-0000-0000-0000-000000000003'",
+		errResp.Error)
+	database.DeleteTemplate(t, templateAccount, templateUUID)
+}
+
 func TestUpdateTemplateNullValues(t *testing.T) {
 	core.SetupTest(t)
 
