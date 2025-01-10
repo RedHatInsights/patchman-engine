@@ -190,7 +190,7 @@ func findInventoryGroups(access *rbac.AccessPagination) (map[string]string, erro
 
 func RBAC() gin.HandlerFunc {
 	if !config.EnableRBACCHeck {
-		return func(c *gin.Context) {}
+		return func(_ *gin.Context) {}
 	}
 
 	return func(c *gin.Context) {

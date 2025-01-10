@@ -51,14 +51,14 @@ func TestSpawnReader(t *testing.T) {
 	var nReaders int32
 	wg := sync.WaitGroup{}
 	SpawnReader(&wg, "", CreateCountedMockReader(&nReaders),
-		MakeMessageHandler(func(event PlatformEvent) error { return nil }))
+		MakeMessageHandler(func(_ PlatformEvent) error { return nil }))
 	wg.Wait()
 	assert.Equal(t, 1, int(nReaders))
 }
 
 func TestRetry(t *testing.T) {
 	i := 0
-	handler := func(message PlatformEvent) error {
+	handler := func(_ PlatformEvent) error {
 		i++
 		if i < 2 {
 			return errors.New("Failed")

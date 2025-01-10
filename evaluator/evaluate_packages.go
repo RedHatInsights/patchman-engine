@@ -336,10 +336,10 @@ func latestPackagesFromUpdatesList(updatePkgData []vmaas.UpdatesV3ResponseAvaila
 	return installableID, applicableID
 }
 
-func deleteOldSystemPackages(tx *gorm.DB, system *models.SystemPlatform, pkgIds []int64) error {
+func deleteOldSystemPackages(tx *gorm.DB, system *models.SystemPlatform, pkgIDs []int64) error {
 	err := tx.Where("rh_account_id = ? ", system.RhAccountID).
 		Where("system_id = ?", system.ID).
-		Where("package_id in (?)", pkgIds).
+		Where("package_id in (?)", pkgIDs).
 		Delete(&models.SystemPackage{}).Error
 
 	return errors.Wrap(err, "Deleting outdated system packages")
