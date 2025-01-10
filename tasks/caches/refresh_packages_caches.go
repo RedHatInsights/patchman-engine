@@ -28,7 +28,6 @@ func RefreshPackagesCaches(accID *int) error {
 
 	utils.LogInfo("count", len(accs), "Refreshing accounts")
 	for i, acc := range accs {
-		acc := acc
 		utils.LogInfo("account", acc, "#", i, "Refreshing account")
 		if err = getCounts(&pkgSysCounts, &acc); err != nil {
 			utils.LogError("err", err.Error(), "Refresh failed")

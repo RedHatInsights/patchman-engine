@@ -246,7 +246,6 @@ func initServicesFromClowder() {
 		webappName = "webapp-go"
 	}
 	for _, endpoint := range clowder.LoadedConfig.Endpoints {
-		endpoint := endpoint
 		switch endpoint.App {
 		case "vmaas":
 			if strings.Contains(endpoint.Name, webappName) {
@@ -258,7 +257,6 @@ func initServicesFromClowder() {
 	}
 
 	for _, e := range clowder.LoadedConfig.PrivateEndpoints {
-		e := e // re-assign iteration variable to use a new memory pointer
 		if e.App == "patchman" {
 			switch e.Name {
 			case "manager":
