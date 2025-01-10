@@ -626,7 +626,6 @@ func processRepos(systemProfile *inventory.SystemProfile) ([]string, []string) {
 	repos := make([]string, 0, len(yumRepos))
 	repoPaths := make([]string, 0, len(yumRepos))
 	for _, r := range yumRepos {
-		r := r
 		rID := r.ID
 		if seen[rID] {
 			// remove duplicate repos
