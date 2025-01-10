@@ -28,10 +28,10 @@ ADD --chown=insights:insights go.mod go.sum     /go/src/app/
 RUN go mod download
 
 RUN if [ "$INSTALL_TOOLS" == "yes" ] ; then \
-        go install github.com/swaggo/swag/cmd/swag@v1.16.2 && \
-        go install gotest.tools/gotestsum@v1.10.1 && \
+        go install github.com/swaggo/swag/cmd/swag@v1.16.4 && \
+        go install gotest.tools/gotestsum@v1.12.0 && \
         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
-        | sh -s -- -b $(go env GOPATH)/bin v1.55.2 ; \
+        | sh -s -- -b $(go env GOPATH)/bin v1.63.4 ; \
     fi
 
 ADD --chown=insights:insights dev/kafka/secrets/ca.crt /opt/kafka/
