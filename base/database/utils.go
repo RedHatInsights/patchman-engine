@@ -179,18 +179,18 @@ func findLatestMigration() int {
 		panic("Can't read migration directory")
 	}
 
-	max := 0
+	latest := 0
 	for _, v := range files {
 		s := strings.Split(v.Name(), "_")
 		i, err := strconv.Atoi(s[0])
 		if err != nil {
 			panic("Migration file does not start with number")
 		}
-		if i > max {
-			max = i
+		if i > latest {
+			latest = i
 		}
 	}
-	return max
+	return latest
 }
 
 // Wait for database service
