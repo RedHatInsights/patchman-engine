@@ -102,9 +102,9 @@ func dbSchemaVersion(conn database.Driver, sourceURL string) (int, error) {
 		return 0, errors.Wrap(err, "Error getting current DB version")
 	}
 	if dirty {
-		return 0, migrate.ErrDirty{Version: int(curVersion)}
+		return 0, migrate.ErrDirty{Version: int(curVersion)} //nolint:gosec
 	}
-	return int(curVersion), nil
+	return int(curVersion), nil //nolint:gosec
 }
 
 func migrateAction(conn database.Driver, sourceURL string) int {
