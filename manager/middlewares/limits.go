@@ -25,8 +25,8 @@ func LimitRequestHeaders(maxHeaderCount int) gin.HandlerFunc {
 	}
 }
 
-func MaxConnections(max int) gin.HandlerFunc {
-	conns := make(chan struct{}, max)
+func MaxConnections(limit int) gin.HandlerFunc {
+	conns := make(chan struct{}, limit)
 	return func(c *gin.Context) {
 		conns <- struct{}{}
 		defer func() { <-conns }()
@@ -34,8 +34,8 @@ func MaxConnections(max int) gin.HandlerFunc {
 	}
 }
 
-func Ratelimit(max int) gin.HandlerFunc {
-	rl := ratelimit.New(max)
+func Ratelimit(limit int) gin.HandlerFunc {
+	rl := ratelimit.New(limit)
 	return func(c *gin.Context) {
 		rl.Take()
 		c.Next()
