@@ -521,6 +521,34 @@ objects:
           GROUP BY ra.name, am.name, at.name
           ORDER BY ra.name ASC, applicable_systems DESC;
 
+- apiVersion: metrics.console.redhat.com/v1alpha1
+  kind: FloorPlan
+  metadata:
+    name: patchman-hms
+  spec:
+    database:
+      secretName: ${FLOORIST_DB_SECRET_NAME}
+    objectStore:
+      secretName: ${FLOORIST_HMS_BUCKET_SECRET_NAME}
+    suspend: ${{FLOORIST_SUSPEND}}
+    logLevel: ${FLOORIST_LOGLEVEL}
+    resources:
+      limits:
+        cpu: ${CPU_LIMIT_FLOORIST}
+        memory: ${MEM_LIMIT_FLOORIST}
+      requests:
+        cpu: ${CPU_REQUEST_FLOORIST}
+        memory: ${MEM_REQUEST_FLOORIST}
+    queries:
+      - prefix: hms_analytics/content-sources/unknown
+        query: >-
+          SELECT a.org_id, sp.inventory_id, sp.display_name, t.uuid as template_uuid, t.environment_id, t.name as template_name
+            FROM system_platform sp
+            JOIN inventory.hosts ih ON sp.inventory_id = ih.id
+            JOIN rh_account a ON a.id = sp.rh_account_id
+            LEFT JOIN template t on t.id = sp.template_id
+          ORDER BY a.org_id, sp.inventory_id;
+
 
 - apiVersion: v1
   kind: Secret
@@ -682,6 +710,7 @@ parameters:
 # Floorist parameters
 - {name: FLOORIST_SUSPEND, value: 'true', required: true} # Disable Floorist cronjob execution
 - {name: FLOORIST_BUCKET_SECRET_NAME, value: dummy-secret, required: true} # Bucket secret name
+- {name: FLOORIST_HMS_BUCKET_SECRET_NAME, value: dummy-secret, required: true} # Bucket secret name
 - {name: FLOORIST_DB_SECRET_NAME, value: patchman-db} # DB secret name
 - {name: FLOORIST_LOGLEVEL, value: INFO} # Floorist loglevel config
 - {name: FLOORIST_CHUNKSIZE, value: '1000000'}
