@@ -14,13 +14,15 @@ import (
 var (
 	DB                 *gorm.DB
 	DBReadReplica      *gorm.DB
+	DBLogicalReplica   *gorm.DB
 	OtherAdvisoryTypes []string
 	AdvisoryTypes      map[int]string
 	globalPgConfig     *PostgreSQLConfig
+	LReplicaPgConfig   *PostgreSQLConfig
 )
 
 func InitDB() {
-	pgConfig := loadEnvPostgreSQLConfig(false)
+	pgConfig := loadEnvPostgreSQLConfig(false, false)
 	if DB != nil && pgConfig == globalPgConfig {
 		// reuse connection
 		check(DB)
@@ -30,9 +32,15 @@ func InitDB() {
 	DB = openPostgreSQL(pgConfig)
 	check(DB)
 	if utils.CoreCfg.DBReadReplicaEnabled {
-		pgConfig := loadEnvPostgreSQLConfig(ReadReplicaConfigured())
+		pgConfig := loadEnvPostgreSQLConfig(ReadReplicaConfigured(), false)
 		DBReadReplica = openPostgreSQL(pgConfig)
 		check(DBReadReplica)
+	}
+
+	if utils.CoreCfg.DBLogicalReplicaEnabled {
+		LReplicaPgConfig = loadEnvPostgreSQLConfig(false, LogicalReplicaConfigured())
+		DBLogicalReplica = openPostgreSQL(LReplicaPgConfig)
+		check(DBLogicalReplica)
 	}
 }
 
@@ -70,7 +78,7 @@ func createGormConfig(debug bool) *gorm.Config {
 
 // open database connection
 func openPostgreSQL(dbConfig *PostgreSQLConfig) *gorm.DB {
-	connectString := dataSourceName(dbConfig)
+	connectString := DataSourceName(dbConfig)
 	db, err := gorm.Open(postgres.Open(connectString), createGormConfig(dbConfig.Debug))
 	if err != nil {
 		panic(err)
@@ -104,12 +112,16 @@ func check(db *gorm.DB) {
 }
 
 // load database config from environment vars using inserted prefix
-func loadEnvPostgreSQLConfig(useReadReplica bool) *PostgreSQLConfig {
+func loadEnvPostgreSQLConfig(useReadReplica, useLogicalReplica bool) *PostgreSQLConfig {
 	host := utils.CoreCfg.DBHost
 	port := utils.CoreCfg.DBPort
 	if useReadReplica {
 		host = utils.CoreCfg.DBReadReplicaHost
 		port = utils.CoreCfg.DBReadReplicaPort
+	}
+	if useLogicalReplica {
+		host = utils.CoreCfg.DBLogicalReplicaHost
+		port = utils.CoreCfg.DBLogicalReplicaPort
 	}
 	config := PostgreSQLConfig{
 		User:                   utils.CoreCfg.DBUser,
@@ -129,7 +141,7 @@ func loadEnvPostgreSQLConfig(useReadReplica bool) *PostgreSQLConfig {
 }
 
 // create "data source" config string needed for database connection opening
-func dataSourceName(dbConfig *PostgreSQLConfig) string {
+func DataSourceName(dbConfig *PostgreSQLConfig) string {
 	dbsource := fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=%s statement_timeout=%d",
 		dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Database, dbConfig.Passwd, dbConfig.SSLMode,
 		dbConfig.StatementTimeoutMs)

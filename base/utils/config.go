@@ -32,6 +32,9 @@ type coreConfig struct {
 	DBReadReplicaHost        string
 	DBReadReplicaPort        int
 	DBReadReplicaEnabled     bool
+	DBLogicalReplicaHost     string
+	DBLogicalReplicaPort     int
+	DBLogicalReplicaEnabled  bool
 	DBWorkMem                int
 
 	// API
@@ -130,6 +133,11 @@ func initDBFromEnv() {
 	if CoreCfg.DBReadReplicaEnabled {
 		CoreCfg.DBReadReplicaHost = Getenv("DB_HOST_READ_REPLICA", "")
 		CoreCfg.DBReadReplicaPort = GetIntEnvOrDefault("DB_PORT_READ_REPLICA", 0)
+	}
+	CoreCfg.DBLogicalReplicaEnabled = GetBoolEnvOrDefault("DB_LOGICAL_REPLICA_ENABLED", false)
+	if CoreCfg.DBLogicalReplicaEnabled {
+		CoreCfg.DBLogicalReplicaHost = Getenv("DB_HOST_LOGICAL_REPLICA", "")
+		CoreCfg.DBLogicalReplicaPort = GetIntEnvOrDefault("DB_PORT_LOGICAL_REPLICA", 0)
 	}
 	CoreCfg.DBWorkMem = GetIntEnvOrDefault("DB_WORK_MEM", 4096) // 4MB is DB default
 }

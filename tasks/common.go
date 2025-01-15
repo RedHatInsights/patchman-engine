@@ -39,6 +39,15 @@ func CancelableReadReplicaDB() *gorm.DB {
 	return database.DB.WithContext(base.Context)
 }
 
+// return logical replica (if available) database handler with base context
+// which will be properly canceled in case of service shutdown
+func CancelableLogicalReplicaDB() *gorm.DB {
+	if utils.CoreCfg.DBLogicalReplicaEnabled && database.LogicalReplicaConfigured() {
+		return database.DBLogicalReplica.WithContext(base.Context)
+	}
+	return database.DB.WithContext(base.Context)
+}
+
 func withTx(do func(db *gorm.DB) error, cancelableDB func() *gorm.DB) error {
 	tx := cancelableDB().Begin()
 	defer tx.Rollback()
@@ -56,4 +65,8 @@ func WithTx(do func(db *gorm.DB) error) error {
 // Need to run code within a function, because defer can't be used in loops
 func WithReadReplicaTx(do func(db *gorm.DB) error) error {
 	return withTx(do, CancelableReadReplicaDB)
+}
+
+func WithLogicalReplicaTx(do func(db *gorm.DB) error) error {
+	return withTx(do, CancelableLogicalReplicaDB)
 }

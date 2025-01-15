@@ -238,6 +238,10 @@ func ReadReplicaConfigured() bool {
 	return len(utils.CoreCfg.DBReadReplicaHost) > 0 && utils.CoreCfg.DBReadReplicaPort != 0
 }
 
+func LogicalReplicaConfigured() bool {
+	return len(utils.CoreCfg.DBLogicalReplicaHost) > 0 && utils.CoreCfg.DBLogicalReplicaPort != 0
+}
+
 func InventoryHostsJoin(tx *gorm.DB, groups map[string]string) *gorm.DB {
 	tx = tx.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
 	if _, ok := groups[utils.KeyGrouped]; !ok {
