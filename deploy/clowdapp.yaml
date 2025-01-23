@@ -540,9 +540,11 @@ objects:
         cpu: ${CPU_REQUEST_FLOORIST}
         memory: ${MEM_REQUEST_FLOORIST}
     queries:
-      - prefix: hms_analytics/content-sources/unknown
+      - prefix: hms_analytics/content-sources/system-template
         query: >-
-          SELECT a.org_id, sp.inventory_id, sp.display_name, t.uuid as template_uuid, t.environment_id, t.name as template_name, sp.last_upload
+          SELECT a.org_id, sp.inventory_id, sp.display_name,
+                 t.uuid::text as template_uuid, t.environment_id, t.name as template_name,
+                 sp.last_upload
             FROM system_platform sp
             JOIN inventory.hosts ih ON sp.inventory_id = ih.id
             JOIN rh_account a ON a.id = sp.rh_account_id
