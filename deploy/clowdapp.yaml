@@ -541,6 +541,7 @@ objects:
         memory: ${MEM_REQUEST_FLOORIST}
     queries:
       - prefix: hms_analytics/content-sources/system-template
+        chunksize: ${{FLOORIST_HMS_CHUNKSIZE}}
         query: >-
           SELECT a.org_id, sp.inventory_id, sp.display_name,
                  t.uuid::text as template_uuid, t.environment_id, t.name as template_name,
@@ -716,6 +717,7 @@ parameters:
 - {name: FLOORIST_DB_SECRET_NAME, value: patchman-db} # DB secret name
 - {name: FLOORIST_LOGLEVEL, value: INFO} # Floorist loglevel config
 - {name: FLOORIST_CHUNKSIZE, value: '1000000'}
+- {name: FLOORIST_HMS_CHUNKSIZE, value: '100000'}
 - {name: CPU_REQUEST_FLOORIST, value: 250m}
 - {name: MEM_REQUEST_FLOORIST, value: 2Gi}
 - {name: CPU_LIMIT_FLOORIST, value: 500m}
