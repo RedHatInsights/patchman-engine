@@ -40,9 +40,14 @@ func createTestInvHost(t *testing.T) *Host {
 	correctTime := types.Rfc3339Timestamp(correctTimestamp)
 	assert.NoError(t, err)
 
+	now := time.Now()
 	host := Host{
 		StaleTimestamp: &correctTime,
-		Reporter:       "puptoo"}
+		Reporter:       "puptoo",
+		PerReporterStaleness: map[string]inventory.ReporterStaleness{
+			"puptoo": {LastCheckIn: types.Rfc3339TimestampWithZ(now)},
+		},
+	}
 	return &host
 }
 

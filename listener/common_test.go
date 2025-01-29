@@ -5,6 +5,7 @@ import (
 	"app/base/inventory"
 	"app/base/models"
 	"app/base/mqueue"
+	"app/base/types"
 	"app/base/utils"
 	"app/base/vmaas"
 	"app/manager/middlewares"
@@ -78,12 +79,16 @@ func getOrCreateTestAccount(t *testing.T) int {
 
 // nolint: unparam
 func createTestUploadEvent(orgID, inventoryID, reporter string, packages, yum bool) HostEvent {
+	now := time.Now()
 	ev := HostEvent{
 		Type: "created",
 		Host: Host{
 			ID:       inventoryID,
 			OrgID:    &orgID,
 			Reporter: reporter,
+			PerReporterStaleness: map[string]inventory.ReporterStaleness{
+				reporter: {LastCheckIn: types.Rfc3339TimestampWithZ(now)},
+			},
 		},
 	}
 	if packages {
