@@ -75,15 +75,16 @@ var (
 )
 
 type Host struct {
-	ID                    string                  `json:"id,omitempty"`
-	DisplayName           *string                 `json:"display_name,omitempty"`
-	OrgID                 *string                 `json:"org_id,omitempty"`
-	StaleTimestamp        *types.Rfc3339Timestamp `json:"stale_timestamp,omitempty"`
-	StaleWarningTimestamp *types.Rfc3339Timestamp `json:"stale_warning_timestamp,omitempty"`
-	CulledTimestamp       *types.Rfc3339Timestamp `json:"culled_timestamp,omitempty"`
-	Reporter              string                  `json:"reporter,omitempty"`
-	SystemProfile         inventory.SystemProfile `json:"system_profile,omitempty"`
-	ParsedYumUpdates      *YumUpdates             `json:"-"`
+	ID                    string                                 `json:"id,omitempty"`
+	DisplayName           *string                                `json:"display_name,omitempty"`
+	OrgID                 *string                                `json:"org_id,omitempty"`
+	StaleTimestamp        *types.Rfc3339Timestamp                `json:"stale_timestamp,omitempty"`
+	StaleWarningTimestamp *types.Rfc3339Timestamp                `json:"stale_warning_timestamp,omitempty"`
+	CulledTimestamp       *types.Rfc3339Timestamp                `json:"culled_timestamp,omitempty"`
+	Reporter              string                                 `json:"reporter,omitempty"`
+	SystemProfile         inventory.SystemProfile                `json:"system_profile,omitempty"`
+	PerReporterStaleness  map[string]inventory.ReporterStaleness `json:"per_reporter_staleness,omitempty"`
+	ParsedYumUpdates      *YumUpdates                            `json:"-"`
 }
 
 type HostMetadata struct {
@@ -350,7 +351,6 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		"bootc",
 	}
 
-	now := time.Now()
 	displayName := inventoryID
 	if host.DisplayName != nil && len(*host.DisplayName) > 0 && !spacesRegex.MatchString(*host.DisplayName) {
 		displayName = *host.DisplayName
@@ -369,7 +369,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		DisplayName:           displayName,
 		VmaasJSON:             utils.EmptyToNil(&updatesReqJSONString),
 		JSONChecksum:          utils.EmptyToNil(&jsonChecksum),
-		LastUpload:            &now,
+		LastUpload:            host.GetLastUpload(),
 		StaleTimestamp:        host.StaleTimestamp.Time(),
 		StaleWarningTimestamp: host.StaleWarningTimestamp.Time(),
 		CulledTimestamp:       host.CulledTimestamp.Time(),
@@ -779,4 +779,18 @@ func (host *Host) GetOrgID() string {
 		return ""
 	}
 	return *host.OrgID
+}
+
+func (host *Host) GetLastUpload() *time.Time {
+	var lastUpload *time.Time
+	if host == nil {
+		return lastUpload
+	}
+
+	for reporter, rs := range host.PerReporterStaleness {
+		if allowedReporters[reporter] && (lastUpload == nil || lastUpload.Before(*rs.LastCheckIn.Time())) {
+			lastUpload = rs.LastCheckIn.Time()
+		}
+	}
+	return lastUpload
 }

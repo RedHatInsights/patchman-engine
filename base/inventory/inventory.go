@@ -1,5 +1,7 @@
 package inventory
 
+import "app/base/types"
+
 type SystemProfile struct {
 	Arch              *string         `json:"arch,omitempty"`
 	HostType          string          `json:"host_type,omitempty"`
@@ -63,4 +65,8 @@ type Bootc struct {
 
 type BootcBooted struct {
 	Image string `json:"image,omitempty"`
+}
+
+type ReporterStaleness struct {
+	LastCheckIn types.Rfc3339TimestampWithZ `json:"last_check_in"`
 }
