@@ -226,12 +226,12 @@ func TestUpdateTemplateSystemsCandlepin404(t *testing.T) {
 	})
 	defer database.DeleteTemplate(t, templateAccount, templateUUID)
 	w := CreateRequestRouterWithParams("PUT", templatePath, templateUUID, "", bytes.NewBufferString(data), "",
-		TemplateSystemsUpdateHandler, templateAccount)
+		TemplateSystemsUpdateHandler, templateAccount, core.ContextKV{Key: utils.KeyOrgID, Value: orgID})
 
-	assert.Equal(t, http.StatusFailedDependency, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 	database.CheckTemplateSystems(t, templateAccount, templateUUID, []string{"00000000-0000-0000-0000-000000000007"})
 
-	// Expect HTTP 200 status code when only 1 system causes candlepin call error
+	// Expect HTTP 400 status code even when only 1 system causes candlepin call error
 	data = `{
 		"systems": [
 			"00000000-0000-0000-0000-000000000004",
@@ -239,9 +239,9 @@ func TestUpdateTemplateSystemsCandlepin404(t *testing.T) {
 		]
 	}`
 	w = CreateRequestRouterWithParams("PUT", templatePath, templateUUID, "", bytes.NewBufferString(data), "",
-		TemplateSystemsUpdateHandler, templateAccount)
+		TemplateSystemsUpdateHandler, templateAccount, core.ContextKV{Key: utils.KeyOrgID, Value: orgID})
 
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 	database.CheckTemplateSystems(t, templateAccount, templateUUID,
-		[]string{"00000000-0000-0000-0000-000000000004", "00000000-0000-0000-0000-000000000007"})
+		[]string{"00000000-0000-0000-0000-000000000007"})
 }

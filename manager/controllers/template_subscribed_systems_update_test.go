@@ -15,6 +15,7 @@ import (
 var subscriptionUUID = "cccccccc-0000-0000-0001-000000000004"
 var templateSystemUUID = "00000000-0000-0000-0000-000000000004"
 var subscriptionInvalidUUID = "99999999-9999-8888-8888-888888888888"
+var orgID = "org_1"
 
 func TestSubscribedSystemID(t *testing.T) {
 	core.SetupTest(t)
@@ -49,7 +50,8 @@ func TestUpdateTemplateSubscribedSystems(t *testing.T) {
 
 	w := CreateRequestRouterWithParams("PATCH", "/:template_id/subscribed-systems", templateUUID, "", nil, "",
 		TemplateSubscribedSystemsUpdateHandler, templateAccount,
-		core.ContextKV{Key: utils.KeySystem, Value: subscriptionUUID})
+		core.ContextKV{Key: utils.KeySystem, Value: subscriptionUUID},
+		core.ContextKV{Key: utils.KeyOrgID, Value: orgID})
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	database.CheckTemplateSystems(t, templateAccount, templateUUID, []string{templateSystemUUID})
