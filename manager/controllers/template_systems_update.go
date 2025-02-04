@@ -253,6 +253,9 @@ func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env 
 	resp, err := callCandlepin(base.Context, c.GetString(utils.KeyOrgID), &updateReq)
 	// check response
 	if err != nil {
+		if resp == nil {
+			resp = &candlepin.ConsumersUpdateResponse{Message: "call to candlepin failed"}
+		}
 		LogAndRespBadRequest(c, err, resp.Message)
 		return err
 	}
