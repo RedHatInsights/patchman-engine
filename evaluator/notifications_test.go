@@ -104,7 +104,7 @@ func TestAdvisoriesNotificationMessage(t *testing.T) {
 	tags := []ntf.SystemTag{{Key: "key", Namespace: "namespace", Value: "value"}}
 
 	orgID := "1234567"
-	url := fmt.Sprintf("www.console.redhat.com/insights/inventory/%s", inventoryID)
+	url := fmt.Sprintf("https://localhost/insights/inventory/%s", inventoryID)
 	event := &mqueue.PlatformEvent{
 		OrgID: &orgID,
 		URL:   &url,
