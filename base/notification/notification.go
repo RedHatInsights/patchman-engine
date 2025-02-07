@@ -3,6 +3,8 @@ package notification
 import (
 	"app/base/models"
 	"app/base/mqueue"
+	"app/base/utils"
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -87,6 +89,8 @@ func MakeNotification(system *models.SystemPlatform, systemTags []SystemTag, eve
 		return nil, errors.New("invalid orgID")
 	}
 
+	hostURL := fmt.Sprintf("https://%s/insights/inventory/%s", utils.CoreCfg.ConsoledotHostname, system.InventoryID)
+
 	return &Notification{
 		Version:     Version,
 		Bundle:      Bundle,
@@ -97,7 +101,7 @@ func MakeNotification(system *models.SystemPlatform, systemTags []SystemTag, eve
 		Context: Context{
 			InventoryID: system.InventoryID,
 			DisplayName: system.DisplayName,
-			HostURL:     event.GetURL(),
+			HostURL:     hostURL,
 			Tags:        systemTags,
 		},
 		Events: events,
