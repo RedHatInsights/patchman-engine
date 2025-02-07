@@ -2,7 +2,6 @@ package notification
 
 import (
 	"app/base/models"
-	"app/base/mqueue"
 	"app/base/utils"
 	"fmt"
 	"time"
@@ -82,9 +81,8 @@ type SystemTag struct {
 	Value     string `json:"value,omitempty"`
 }
 
-func MakeNotification(system *models.SystemPlatform, systemTags []SystemTag, event *mqueue.PlatformEvent,
+func MakeNotification(system *models.SystemPlatform, systemTags []SystemTag, orgID string,
 	eventType string, events []Event) (*Notification, error) {
-	orgID := event.GetOrgID()
 	if orgID == "" || orgID == "null" {
 		return nil, errors.New("invalid orgID")
 	}

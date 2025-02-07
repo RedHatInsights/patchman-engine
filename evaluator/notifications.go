@@ -87,7 +87,7 @@ func getSystemTags(tx *gorm.DB, system *models.SystemPlatform) ([]ntf.SystemTag,
 	return tags, nil
 }
 
-func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform, event *mqueue.PlatformEvent,
+func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform, orgID string,
 	newAdvisories SystemAdvisoryMap) error {
 	if notificationsPublisher == nil {
 		return nil
@@ -112,7 +112,7 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 		return errors.Wrap(err, "getting system tags failed")
 	}
 
-	notif, err := ntf.MakeNotification(system, tags, event, NewAdvisoryEvent, events)
+	notif, err := ntf.MakeNotification(system, tags, orgID, NewAdvisoryEvent, events)
 	if err != nil {
 		return errors.Wrap(err, "creating notification failed")
 	}
@@ -132,7 +132,7 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 		advisoryIDs = append(advisoryIDs, a.AdvisoryID)
 	}
 
-	utils.LogInfo("inventoryID", system.InventoryID, "advisoryIDs", advisoryIDs, "orgID", event.GetOrgID(),
+	utils.LogInfo("inventoryID", system.InventoryID, "advisoryIDs", advisoryIDs, "orgID", orgID,
 		"notification sent successfully")
 
 	err = tx.Table("advisory_account_data").
