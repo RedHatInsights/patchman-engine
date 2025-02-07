@@ -197,6 +197,7 @@ objects:
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_UPLOAD}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
         - {name: POD_CONFIG, value: 'label=upload;${EVALUATOR_UPLOAD_CONFIG}'}
+        - {name: CONSOLEDOT_HOSTNAME, value: '${CONSOLEDOT_HOSTNAME}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_EVALUATOR_UPLOAD}', memory: '${MEM_LIMIT_EVALUATOR_UPLOAD}'}
           requests: {cpu: '${CPU_REQUEST_EVALUATOR_UPLOAD}', memory: '${MEM_REQUEST_EVALUATOR_UPLOAD}'}
@@ -242,6 +243,7 @@ objects:
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_RECALC}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
         - {name: POD_CONFIG, value: 'label=recalc;payload_tracker=false;${EVALUATOR_RECALC_CONFIG}'}
+        - {name: CONSOLEDOT_HOSTNAME, value: '${CONSOLEDOT_HOSTNAME}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_EVALUATOR_RECALC}', memory: '${MEM_LIMIT_EVALUATOR_RECALC}'}
           requests: {cpu: '${CPU_REQUEST_EVALUATOR_RECALC}', memory: '${MEM_REQUEST_EVALUATOR_RECALC}'}
@@ -624,6 +626,7 @@ parameters:
 # Evaluator
 - {name: GOGC, value: '100'}
 - {name: GOMEMLIMIT_EVALUATOR, value: '922MiB'} # set to 90% of the default memory limit 1024Mi (don't forget `B`)
+- {name: CONSOLEDOT_HOSTNAME, value: localhost}
 
 # Evaluator - upload
 - {name: REPLICAS_EVALUATOR_UPLOAD, value: '1'}

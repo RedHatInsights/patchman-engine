@@ -94,6 +94,8 @@ type coreConfig struct {
 	// logging
 	LogLevel string
 	LogStyle string
+
+	ConsoledotHostname string
 }
 
 func init() {
@@ -112,6 +114,7 @@ func init() {
 	initServicesFromEnv()
 	initPrometheusPushGatewayFromEnv()
 	initProfilerFromEnv()
+	initConsoledotFromEnv()
 	initLoggerFromEnv()
 }
 
@@ -312,6 +315,10 @@ func initPrometheusPushGatewayFromEnv() {
 
 func initProfilerFromEnv() {
 	CoreCfg.ProfilerEnabled = GetBoolEnvOrDefault("ENABLE_PROFILER", false)
+}
+
+func initConsoledotFromEnv() {
+	CoreCfg.ConsoledotHostname = Getenv("CONSOLEDOT_HOSTNAME", "localhost")
 }
 
 func initLoggerFromEnv() {

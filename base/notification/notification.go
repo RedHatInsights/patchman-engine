@@ -2,7 +2,8 @@ package notification
 
 import (
 	"app/base/models"
-	"app/base/mqueue"
+	"app/base/utils"
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -80,12 +81,13 @@ type SystemTag struct {
 	Value     string `json:"value,omitempty"`
 }
 
-func MakeNotification(system *models.SystemPlatform, systemTags []SystemTag, event *mqueue.PlatformEvent,
+func MakeNotification(system *models.SystemPlatform, systemTags []SystemTag, orgID string,
 	eventType string, events []Event) (*Notification, error) {
-	orgID := event.GetOrgID()
 	if orgID == "" || orgID == "null" {
 		return nil, errors.New("invalid orgID")
 	}
+
+	hostURL := fmt.Sprintf("https://%s/insights/inventory/%s", utils.CoreCfg.ConsoledotHostname, system.InventoryID)
 
 	return &Notification{
 		Version:     Version,
@@ -97,7 +99,7 @@ func MakeNotification(system *models.SystemPlatform, systemTags []SystemTag, eve
 		Context: Context{
 			InventoryID: system.InventoryID,
 			DisplayName: system.DisplayName,
-			HostURL:     event.GetURL(),
+			HostURL:     hostURL,
 			Tags:        systemTags,
 		},
 		Events: events,

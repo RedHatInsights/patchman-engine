@@ -104,13 +104,9 @@ func TestAdvisoriesNotificationMessage(t *testing.T) {
 	tags := []ntf.SystemTag{{Key: "key", Namespace: "namespace", Value: "value"}}
 
 	orgID := "1234567"
-	url := fmt.Sprintf("www.console.redhat.com/insights/inventory/%s", inventoryID)
-	event := &mqueue.PlatformEvent{
-		OrgID: &orgID,
-		URL:   &url,
-	}
+	url := fmt.Sprintf("https://localhost/insights/inventory/%s", inventoryID)
 
-	notification, err := ntf.MakeNotification(system, tags, event, NewAdvisoryEvent, events)
+	notification, err := ntf.MakeNotification(system, tags, orgID, NewAdvisoryEvent, events)
 	assert.Nil(t, err)
 	assert.Equal(t, orgID, notification.OrgID)
 	assert.Equal(t, url, notification.Context.HostURL)
