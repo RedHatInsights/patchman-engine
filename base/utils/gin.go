@@ -15,7 +15,6 @@ import (
 const (
 	KeyApiver          = "apiver"
 	KeyAccount         = "account"
-	KeyOrgID           = "org_id"
 	KeyUser            = "user"
 	KeySystem          = "system_cn"
 	KeyInventoryGroups = "inventoryGroups"

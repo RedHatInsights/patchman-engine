@@ -74,7 +74,6 @@ func findAccount(c *gin.Context, orgID string) bool {
 		AccountIDCache.Values[orgID] = accID
 		c.Set(utils.KeyAccount, accID)
 	}
-	c.Set(utils.KeyOrgID, orgID)
 	return true
 }
 

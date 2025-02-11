@@ -39,13 +39,13 @@ func TemplateSystemsDeleteHandler(c *gin.Context) {
 		return
 	}
 
-	err = assignCandlepinEnvironment(c, db, account, nil, req.Systems, groups)
+	modified, err := assignCandlepinEnvironment(c, db, account, nil, req.Systems, groups)
 	if err != nil {
 		return
 	}
 
 	// unassign system from template => assign NULL as template_id
-	err = assignTemplateSystems(c, db, account, nil, req.Systems)
+	err = assignTemplateSystems(c, db, account, nil, modified)
 	if err != nil {
 		return
 	}

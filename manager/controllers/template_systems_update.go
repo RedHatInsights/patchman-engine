@@ -65,12 +65,12 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	err = assignCandlepinEnvironment(c, db, account, &template.EnvironmentID, req.Systems, groups)
+	modified, err := assignCandlepinEnvironment(c, db, account, &template.EnvironmentID, req.Systems, groups)
 	if err != nil {
 		return
 	}
 
-	err = assignTemplateSystems(c, db, account, template, req.Systems)
+	err = assignTemplateSystems(c, db, account, template, modified)
 	if err != nil {
 		return
 	}
@@ -179,9 +179,9 @@ func templateArchVersionMatch(
 	return err
 }
 
-func callCandlepin(ctx context.Context, owner string, request *candlepin.ConsumersEnvironmentsRequest) (
+func callCandlepin(ctx context.Context, consumer string, request *candlepin.ConsumersUpdateRequest) (
 	*candlepin.ConsumersUpdateResponse, error) {
-	candlepinEnvConsumersURL := utils.CoreCfg.CandlepinAddress + "/owner/" + owner + "/consumers/environments"
+	candlepinEnvConsumersURL := utils.CoreCfg.CandlepinAddress + "/consumers/" + consumer
 	candlepinFunc := func() (interface{}, *http.Response, error) {
 		candlepinResp := candlepin.ConsumersUpdateResponse{}
 		resp, err := candlepinClient.Request(&ctx, http.MethodPut, candlepinEnvConsumersURL, request, &candlepinResp)
@@ -199,55 +199,60 @@ func callCandlepin(ctx context.Context, owner string, request *candlepin.Consume
 	candlepinRespPtr, err := utils.HTTPCallRetry(base.Context, candlepinFunc, config.CandlepinExpRetries,
 		config.CandlepinRetries, http.StatusServiceUnavailable)
 	if err != nil {
-		return nil, errors.Wrap(err, "candlepin call "+candlepinEnvConsumersURL+" failed")
+		return nil, errors.Wrap(err, "candlepin /consumers call failed")
 	}
 	return candlepinRespPtr.(*candlepin.ConsumersUpdateResponse), nil
 }
 
 func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env *string, inventoryIDs []string,
-	groups map[string]string) error {
-	var hosts = []struct {
+	groups map[string]string) ([]string, error) {
+	var assignedIDs []string
+	var consumers = []struct {
 		InventoryID string
 		Consumer    *string
 	}{}
 
 	err := database.Systems(db, accountID, groups).
 		Select("ih.id as inventory_id, ih.system_profile->>'owner_id' as consumer").
-		Where("ih.id in (?)", inventoryIDs).Find(&hosts).Error
+		Where("ih.id in (?)", inventoryIDs).Find(&consumers).Error
 	if err != nil {
 		LogAndRespError(c, err, "Database error")
-		return err
+		return nil, err
 	}
 
 	// check if all systems have owner_id
-	consumers := make([]string, 0, len(hosts))
-	for _, host := range hosts {
-		if host.Consumer == nil {
-			err = errors2.Join(err, errors.Errorf("'%s'", host.InventoryID))
-			continue
+	for _, consumer := range consumers {
+		if consumer.Consumer == nil {
+			err = errors2.Join(err, errors.Errorf("'%s'", consumer.InventoryID))
 		}
-		consumers = append(consumers, *host.Consumer)
 	}
 	if err != nil {
 		err = errors2.Join(errors.New("missing owner_id for systems"), err)
 		LogAndRespBadRequest(c, err, err.Error())
-		return err
+		return nil, err
 	}
 
-	environments := []string{}
+	environments := []candlepin.ConsumersUpdateEnvironment{}
 	if env != nil {
-		environments = []string{*env}
+		environments = []candlepin.ConsumersUpdateEnvironment{{ID: *env}}
 	}
-	updateReq := candlepin.ConsumersEnvironmentsRequest{
-		EnvironmentIDs: environments,
-		ConsumerUuids:  consumers,
+	updateReq := candlepin.ConsumersUpdateRequest{
+		Environments: environments,
 	}
-	resp, err := callCandlepin(base.Context, c.GetString(utils.KeyOrgID), &updateReq)
-	// check response
-	if err != nil {
-		LogAndRespBadRequest(c, err, resp.Message)
-		return err
+	for _, consumer := range consumers {
+		resp, apiErr := callCandlepin(base.Context, *consumer.Consumer, &updateReq)
+		// check response
+		if apiErr != nil {
+			err = errors2.Join(err, apiErr, errors.New(resp.Message))
+		} else {
+			assignedIDs = append(assignedIDs, consumer.InventoryID)
+		}
 	}
 
-	return nil
+	// we do not want to fail whole API if a single call to candlepin fails
+	// just log the error
+	if err != nil {
+		utils.LogWarn(err)
+	}
+	return assignedIDs, nil
 }
