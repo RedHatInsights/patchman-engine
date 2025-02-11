@@ -1,8 +1,11 @@
 package candlepin
 
-type ConsumersEnvironmentsRequest struct {
-	ConsumerUuids  []string `json:"consumerUuids"`
-	EnvironmentIDs []string `json:"environmentIds"`
+type ConsumersUpdateRequest struct {
+	Environments []ConsumersUpdateEnvironment `json:"environments"`
+}
+
+type ConsumersUpdateEnvironment struct {
+	ID string `json:"id"`
 }
 
 type ConsumersUpdateResponse struct {

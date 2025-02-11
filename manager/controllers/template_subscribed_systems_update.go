@@ -46,19 +46,19 @@ func TemplateSubscribedSystemsUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	err = assignCandlepinEnvironment(c, db, account, &template.EnvironmentID, systemList, nil)
+	modified, err := assignCandlepinEnvironment(c, db, account, &template.EnvironmentID, systemList, nil)
 	if err != nil {
 		return
 	}
 
-	err = assignTemplateSystems(c, db, account, template, systemList)
+	err = assignTemplateSystems(c, db, account, template, modified)
 	if err != nil {
 		return
 	}
 
 	// re-evaluate systems added/removed from templates
 	if config.EnableTemplateChangeEval {
-		inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, systemList)
+		inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, modified)
 		kafka.EvaluateBaselineSystems(inventoryAIDs)
 	}
 	c.Status(http.StatusOK)
