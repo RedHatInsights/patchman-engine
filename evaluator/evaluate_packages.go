@@ -6,6 +6,7 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -275,7 +276,14 @@ func updateSystemPackages(tx *gorm.DB, system *models.SystemPlatform,
 	updatedPackages := make([]models.SystemPackage, 0, nPkgs)
 	uniqPackageIDs := make(map[int64]string, nPkgs)
 
-	for nevra, pkg := range packagesByNEVRA {
+	nevras := make([]string, 0, len(packagesByNEVRA))
+	for nevra := range packagesByNEVRA {
+		nevras = append(nevras, nevra)
+	}
+	slices.Sort(nevras)
+
+	for _, nevra := range nevras {
+		pkg := packagesByNEVRA[nevra]
 		switch pkg.Change {
 		case Remove:
 			removedPkgIDs = append(removedPkgIDs, pkg.PackageID)
