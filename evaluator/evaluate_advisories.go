@@ -376,6 +376,13 @@ func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatform,
 		return err
 	}
 
+	// check wherther system has not been deleted in the meanwhile
+	// fixes 'insert or update on table "system_advisories_31" violates foreign key constraint "system_platform_id"'
+	if !validSystem(system.RhAccountID, system.ID) {
+		// system does not exist anymore, skip system_advisory insert
+		return nil
+	}
+
 	return upsertSystemAdvisories(tx, advisoryObjs)
 }
 

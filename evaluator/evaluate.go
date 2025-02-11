@@ -643,6 +643,18 @@ func loadSystemData(accountID int, inventoryID string) (*models.SystemPlatform, 
 	return &system, err
 }
 
+func validSystem(accountID int, systemID int64) bool {
+	var foundID int64
+	err := database.DB.Model(models.SystemPlatform{}).
+		Where("rh_account_id = ? and id = ?", accountID, systemID).
+		Select("id").
+		First(&foundID).Error
+	if err != nil {
+		return false
+	}
+	return systemID == foundID
+}
+
 func parseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("parse-vmaas-json"))
