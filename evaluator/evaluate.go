@@ -19,6 +19,7 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -648,6 +649,7 @@ func validSystem(accountID int, systemID int64) bool {
 	err := database.DB.Model(models.SystemPlatform{}).
 		Where("rh_account_id = ? and id = ?", accountID, systemID).
 		Select("id").
+		Clauses(clause.Locking{Strength: "SHARE", Table: clause.Table{Name: clause.CurrentTable}}).
 		First(&foundID).Error
 	if err != nil {
 		return false
