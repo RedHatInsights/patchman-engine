@@ -3,7 +3,7 @@ module app
 go 1.22.9
 
 require (
-	github.com/aws/aws-sdk-go v1.55.5
+	github.com/aws/aws-sdk-go v1.55.6
 	github.com/ezamriy/gorpm v0.0.0-20160905202458-25f7273cbf51
 	github.com/getkin/kin-openapi v0.128.0
 	github.com/gin-contrib/timeout v1.0.2
