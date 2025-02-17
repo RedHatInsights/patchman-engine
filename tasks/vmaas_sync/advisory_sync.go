@@ -99,7 +99,11 @@ func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataRespons
 	severities, advisoryTypes map[string]int) (*models.AdvisoryMetadata, error) {
 	issued, err := time.Parse(types.Rfc3339NoTz, vmaasData.Issued)
 	if err != nil {
-		return nil, errors.Wrap(err, "Invalid errata issued date")
+		// try to parse timestamp with Z
+		issued, err = time.Parse(time.RFC3339, vmaasData.Issued)
+		if err != nil {
+			return nil, errors.Wrap(err, "Invalid errata issued date")
+		}
 	}
 	modified, success := checkUpdatedSummaryDescription(errataName, vmaasData)
 	if !success {
@@ -135,8 +139,11 @@ func checkUpdatedSummaryDescription(errataName string, vmaasData vmaas.ErrataRes
 	modified time.Time, success bool) {
 	modified, err := time.Parse(types.Rfc3339NoTz, vmaasData.Updated)
 	if err != nil {
-		utils.LogError("err", err.Error(), "erratum", errataName, "Invalid errata modified date")
-		return time.Time{}, false
+		modified, err = time.Parse(time.RFC3339, vmaasData.Updated)
+		if err != nil {
+			utils.LogError("err", err.Error(), "erratum", errataName, "Invalid errata modified date")
+			return time.Time{}, false
+		}
 	}
 
 	if vmaasData.Description == "" || vmaasData.Summary == "" {
