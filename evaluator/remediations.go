@@ -48,6 +48,9 @@ func getReportedAdvisories(vmaasData *vmaas.UpdatesV3Response) map[string]int {
 		for _, u := range updates.GetAvailableUpdates() {
 			erratum := u.GetErratum()
 			if len(erratum) > 0 {
+				if status, ok := advisories[erratum]; ok && status == INSTALLABLE {
+					continue
+				}
 				advisories[erratum] = u.StatusID
 			}
 		}
