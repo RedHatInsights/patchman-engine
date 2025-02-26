@@ -78,6 +78,7 @@ COPY --from=buildimg /etc/pki/tls/certs/ca-bundle.crt /etc/pki/tls/certs/
 COPY --from=buildimg /etc/crypto-policies/ /etc/crypto-policies/
 COPY --from=buildimg /usr/lib64/.lib* /usr/lib64/
 COPY --from=buildimg /usr/lib64/libssl* /usr/lib64/
+COPY --from=buildimg /usr/lib64/ossl-modules/ /usr/lib64/ossl-modules/
 COPY --from=buildimg /usr/bin/pg_repack /usr/bin/
 
 # copy libs needed by main
