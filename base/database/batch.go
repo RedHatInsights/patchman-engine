@@ -15,6 +15,19 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+type bulkInsertConfig struct {
+	returningStmt string
+}
+
+type BulkInsertOption func(*bulkInsertConfig)
+
+// Sets RETURNING statement for BulkInsert
+func WithReturning(statement string) BulkInsertOption {
+	return func(c *bulkInsertConfig) {
+		c.returningStmt = statement
+	}
+}
+
 // We no longer need BulkInsertChunk as GORMv2 supports batch insert by default
 // However we still need to use BulkInsert when using UPSERT
 
@@ -46,19 +59,24 @@ func UnnestInsert(db *gorm.DB, query string, objects interface{}) error {
 	return db.Exec(query, column...).Error
 }
 
-func BulkInsert(db *gorm.DB, objects interface{}) error {
+func BulkInsert(db *gorm.DB, objects interface{}, opts ...BulkInsertOption) error {
+	var config bulkInsertConfig
+	for _, opt := range opts {
+		opt(&config)
+	}
+
 	if reflect.TypeOf(objects).Kind() != reflect.Slice {
 		return errors.New("This method only works on slices")
 	}
 	// Reflect the objects array into generic value
 	objectsVal := reflect.ValueOf(objects)
 
-	return bulkExec(db, objectsVal)
+	return bulkExec(db, objectsVal, &config)
 }
 
 // bulkExec will convert a slice of interfaces to bulk SQL statement.
-func bulkExec(db *gorm.DB, objects reflect.Value) error {
-	statement, err := statementFromObjects(db, objects)
+func bulkExec(db *gorm.DB, objects reflect.Value, config *bulkInsertConfig) error {
+	statement, err := statementFromObjects(db, objects, config)
 	if err != nil {
 		return err
 	}
@@ -86,7 +104,7 @@ func bulkExec(db *gorm.DB, objects reflect.Value) error {
 	return nil
 }
 
-func statementFromObjects(db *gorm.DB, objects reflect.Value) (*gorm.Statement, error) {
+func statementFromObjects(db *gorm.DB, objects reflect.Value, config *bulkInsertConfig) (*gorm.Statement, error) {
 	if objects.Len() < 1 {
 		return nil, nil
 	}
@@ -137,7 +155,7 @@ func statementFromObjects(db *gorm.DB, objects reflect.Value) (*gorm.Statement, 
 		groups[i] = fmt.Sprintf("(%s)", strings.Join(placeholders, ", "))
 	}
 
-	query := insertFunc(db, statement.Quote(tableName), quotedColumnNames, groups)
+	query := insertFunc(db, statement.Quote(tableName), quotedColumnNames, groups, config)
 	statement.SQL.WriteString(query)
 	return &statement, nil
 }
@@ -162,7 +180,7 @@ func buildColumnsAndPlaceholders(firstObjectFields map[string]interface{}) ([]st
 	return columnNames, placeholders
 }
 
-func insertFunc(db *gorm.DB, quotedTableName string, columnNames, groups []string) string {
+func insertFunc(db *gorm.DB, quotedTableName string, columnNames, groups []string, config *bulkInsertConfig) string {
 	var extraOptions string
 	if clauseOnConflict, ok := db.Statement.Clauses["ON CONFLICT"]; ok {
 		// Add the extra insert option
@@ -170,11 +188,12 @@ func insertFunc(db *gorm.DB, quotedTableName string, columnNames, groups []strin
 	}
 
 	query := fmt.Sprintf(
-		"INSERT INTO %s (%s) VALUES %s %s RETURNING *",
+		"INSERT INTO %s (%s) VALUES %s %s %s",
 		quotedTableName,
 		strings.Join(columnNames, ", "),
 		strings.Join(groups, ", "),
 		extraOptions,
+		config.returningStmt,
 	)
 
 	return query
