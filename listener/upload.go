@@ -554,7 +554,7 @@ func updateSystemRepos(tx *gorm.DB, rhAccountID int, systemID int64, repoIDs []i
 	txOnConflict := tx.Clauses(clause.OnConflict{
 		DoNothing: true,
 	})
-	err = database.BulkInsert(txOnConflict, repoSystemObjs)
+	err = database.BulkInsert(txOnConflict, repoSystemObjs, database.WithReturning("RETURNING repo_id"))
 	if err != nil {
 		return 0, 0, base.WrapFatalDBError(err, "unable to update system repos")
 	}
