@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/lestrrat-go/backoff"
+	"github.com/lestrrat-go/backoff/v2"
 )
 
 const errContextCanceled = "context canceled"

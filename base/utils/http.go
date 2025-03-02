@@ -7,7 +7,7 @@ import (
 	"net/http/httputil"
 	"time"
 
-	"github.com/lestrrat-go/backoff"
+	"github.com/lestrrat-go/backoff/v2"
 	"github.com/pkg/errors"
 
 	// used only in developer mode
