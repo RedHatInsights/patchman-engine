@@ -33,8 +33,12 @@ func (d Rfc3339Timestamp) MarshalJSON() ([]byte, error) {
 func (d *Rfc3339Timestamp) UnmarshalJSON(data []byte) error {
 	t, err := unmarshalTimestamp(data, Rfc3339NoTz)
 	if err != nil {
-		// parsing fail, try to parse timestamp without T
+		// parsing failed, try to parse timestamp without T
 		t, err = unmarshalTimestamp(data, Rfc3339NoT)
+		if err != nil {
+			// parsing failed, try to parse timestamp with Z
+			t, err = unmarshalTimestamp(data, time.RFC3339)
+		}
 	}
 	*d = Rfc3339Timestamp(t)
 	return err
