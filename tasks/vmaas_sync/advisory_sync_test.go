@@ -122,8 +122,8 @@ func TestParseAdvisories(t *testing.T) {
 
 	time, err := time.Parse(types.Rfc3339NoTz, "2004-09-02T00:00:00+00:00")
 	assert.Nil(t, err)
-	assert.Equal(t, time, adv.PublicDate)
-	assert.Equal(t, time, adv.ModifiedDate)
+	assert.Equal(t, time, *adv.PublicDate)
+	assert.Equal(t, time, *adv.ModifiedDate)
 	assert.Equal(t, "DESC", adv.Description)
 	assert.Equal(t, "SOL", *adv.Solution)
 	assert.Equal(t, "SUM", adv.Summary)

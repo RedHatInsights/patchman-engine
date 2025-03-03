@@ -197,8 +197,8 @@ type AdvisoryMetadata struct {
 	Summary         string
 	Solution        *string
 	AdvisoryTypeID  int
-	PublicDate      time.Time
-	ModifiedDate    time.Time
+	PublicDate      *time.Time
+	ModifiedDate    *time.Time
 	URL             *string
 	SeverityID      *int
 	PackageData     []byte

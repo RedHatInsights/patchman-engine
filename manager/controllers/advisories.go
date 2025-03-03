@@ -49,14 +49,14 @@ type AdvisoriesDBLookup struct {
 
 // nolint:lll
 type AdvisoryItemAttributesCommon struct {
-	Description      string    `json:"description" csv:"description" query:"am.description" gorm:"column:description"`
-	PublicDate       time.Time `json:"public_date" csv:"public_date" query:"am.public_date" gorm:"column:public_date"`
-	Synopsis         string    `json:"synopsis" csv:"synopsis" query:"am.synopsis" gorm:"column:synopsis"`
-	AdvisoryTypeName string    `json:"advisory_type_name" csv:"advisory_type_name" query:"at.name" order_query:"at.preference" gorm:"column:advisory_type_name"` // Advisory type name, proper ordering ensured (unknown, unspecified, other, enhancement, bugfix, security)
-	Severity         *int      `json:"severity,omitempty" csv:"severity" query:"am.severity_id" gorm:"column:severity"`
-	CveCount         int       `json:"cve_count" csv:"cve_count" query:"CASE WHEN jsonb_typeof(am.cve_list) = 'array' THEN jsonb_array_length(am.cve_list) ELSE 0 END" gorm:"column:cve_count"`
-	RebootRequired   bool      `json:"reboot_required" csv:"reboot_required" query:"am.reboot_required" gorm:"column:reboot_required"`
-	ReleaseVersions  RelList   `json:"release_versions" csv:"release_versions" query:"null" gorm:"-"`
+	Description      string     `json:"description" csv:"description" query:"am.description" gorm:"column:description"`
+	PublicDate       *time.Time `json:"public_date" csv:"public_date" query:"am.public_date" gorm:"column:public_date"`
+	Synopsis         string     `json:"synopsis" csv:"synopsis" query:"am.synopsis" gorm:"column:synopsis"`
+	AdvisoryTypeName string     `json:"advisory_type_name" csv:"advisory_type_name" query:"at.name" order_query:"at.preference" gorm:"column:advisory_type_name"` // Advisory type name, proper ordering ensured (unknown, unspecified, other, enhancement, bugfix, security)
+	Severity         *int       `json:"severity,omitempty" csv:"severity" query:"am.severity_id" gorm:"column:severity"`
+	CveCount         int        `json:"cve_count" csv:"cve_count" query:"CASE WHEN jsonb_typeof(am.cve_list) = 'array' THEN jsonb_array_length(am.cve_list) ELSE 0 END" gorm:"column:cve_count"`
+	RebootRequired   bool       `json:"reboot_required" csv:"reboot_required" query:"am.reboot_required" gorm:"column:reboot_required"`
+	ReleaseVersions  RelList    `json:"release_versions" csv:"release_versions" query:"null" gorm:"-"`
 
 	// helper field to get release_version json from db and parse it to ReleaseVersions field
 	ReleaseVersionsJSONB []byte `json:"-" csv:"-" query:"am.release_versions" gorm:"column:release_versions_json"`
