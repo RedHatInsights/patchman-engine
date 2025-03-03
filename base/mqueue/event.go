@@ -5,14 +5,14 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/lestrrat-go/backoff"
+	"github.com/lestrrat-go/backoff/v2"
 	"golang.org/x/net/context"
 )
 
 var BatchSize = utils.PodConfig.GetInt("msg_batch_size", 4000)
 
-var policy = backoff.NewExponential(
-	backoff.WithInterval(time.Second),
+var policy = backoff.Exponential(
+	backoff.WithMinInterval(time.Second),
 	backoff.WithMaxRetries(5),
 )
 
