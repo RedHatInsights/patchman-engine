@@ -30,8 +30,7 @@ func vmaasDBChangeRequest() (*vmaas.DBChangeResponse, error) {
 		return &response, resp, err
 	}
 
-	vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc,
-		tasks.VmaasCallExpRetry, tasks.VmaasCallMaxRetries)
+	vmaasDataPtr, err := utils.HTTPCallRetry(vmaasCallFunc, tasks.VmaasCallExpRetry, tasks.VmaasCallMaxRetries)
 	if err != nil {
 		vmaasCallCnt.WithLabelValues("error-dbchange").Inc()
 		return nil, errors.Wrap(err, "Checking DBChange")

@@ -625,8 +625,8 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 		return &vmaasData, resp, err
 	}
 
-	vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc, vmaasCallUseExpRetry, vmaasCallMaxRetries,
-		http.StatusServiceUnavailable)
+	vmaasDataPtr, err := utils.HTTPCallRetry(vmaasCallFunc, vmaasCallUseExpRetry,
+		vmaasCallMaxRetries, http.StatusServiceUnavailable)
 	if err != nil {
 		return nil, errors.Wrap(err, "vmaas /v3/updates API call failed")
 	}

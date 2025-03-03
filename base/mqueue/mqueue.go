@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/lestrrat-go/backoff"
+	"github.com/lestrrat-go/backoff/v2"
 )
 
 const errContextCanceled = "context canceled"
@@ -53,8 +53,8 @@ func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 		var err error
 		var attempt int
 
-		backoffState, cancel := policy.Start(base.Context)
-		defer cancel()
+		backoffState := policy.Start(base.Context)
+		defer base.CancelContext()
 		for backoff.Continue(backoffState) {
 			if err = handler(message); err == nil || !errors.Is(err, base.ErrFatal) {
 				return nil

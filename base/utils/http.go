@@ -7,16 +7,17 @@ import (
 	"net/http/httputil"
 	"time"
 
-	"github.com/lestrrat-go/backoff"
+	"github.com/lestrrat-go/backoff/v2"
 	"github.com/pkg/errors"
 
 	// used only in developer mode
 	_ "net/http/pprof" //nolint:gosec
 )
 
-func HTTPCallRetry(ctx context.Context, httpCallFun func() (outputDataPtr interface{}, resp *http.Response, err error),
+func HTTPCallRetry(httpCallFun func() (outputDataPtr interface{}, resp *http.Response, err error),
 	exponentialRetry bool, maxRetries int, codesToRetry ...int) (outputDataPtr interface{}, err error) {
-	backoffState, cancel := startBackoff(ctx, exponentialRetry, maxRetries)
+	ctx, cancel := context.WithCancel(context.Background())
+	backoffState := startBackoff(ctx, exponentialRetry, maxRetries)
 	defer cancel()
 	attempt := 0
 	for backoff.Continue(backoffState) {
@@ -91,16 +92,15 @@ func TryGetStatusCode(response *http.Response) int {
 	return response.StatusCode
 }
 
-func startBackoff(ctx context.Context, exponential bool, maxRetries int) (backoff.Backoff, backoff.CancelFunc) {
-	opts := []backoff.Option{backoff.WithInterval(time.Second), backoff.WithMaxRetries(maxRetries)}
+func startBackoff(ctx context.Context, exponential bool, maxRetries int) backoff.Controller {
 	if exponential {
-		var policy = backoff.NewExponential(opts...)
-		backoffState, cancel := policy.Start(ctx)
-		return backoffState, cancel
+		var policy = backoff.Exponential(backoff.WithMinInterval(time.Second), backoff.WithMaxRetries(maxRetries))
+		backoffState := policy.Start(ctx)
+		return backoffState
 	}
-	var policy = backoff.NewConstant(time.Second, opts...)
-	backoffState, cancel := policy.Start(ctx)
-	return backoffState, cancel
+	var policy = backoff.Constant(backoff.WithInterval(time.Second), backoff.WithMaxRetries(maxRetries))
+	backoffState := policy.Start(ctx)
+	return backoffState
 }
 
 func statusCodeFound(response *http.Response, statusCodes []int) bool {
