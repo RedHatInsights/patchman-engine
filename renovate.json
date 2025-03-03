@@ -14,5 +14,11 @@
     "enabled": true,
     "ignoreTests": true,
     "platformAutomerge": true
-  }
+  },
+  "packageRules": [
+    {
+      "matchPackageNames": ["go"],
+      "updateTypes": ["patch"]
+    }
+  ]
 }
