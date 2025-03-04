@@ -196,8 +196,8 @@ func callCandlepin(ctx context.Context, consumer string, request *candlepin.Cons
 		return &candlepinResp, resp, err
 	}
 
-	candlepinRespPtr, err := utils.HTTPCallRetry(base.Context, candlepinFunc, config.CandlepinExpRetries,
-		config.CandlepinRetries, http.StatusServiceUnavailable)
+	candlepinRespPtr, err := utils.HTTPCallRetry(candlepinFunc,
+		config.CandlepinExpRetries, config.CandlepinRetries, http.StatusServiceUnavailable)
 	if err != nil {
 		return nil, errors.Wrap(err, "candlepin /consumers call failed")
 	}

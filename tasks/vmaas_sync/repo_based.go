@@ -117,8 +117,7 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string, thirdParty *boo
 			return &vmaasData, resp, err
 		}
 
-		vmaasDataPtr, err := utils.HTTPCallRetry(base.Context, vmaasCallFunc,
-			tasks.VmaasCallExpRetry, tasks.VmaasCallMaxRetries)
+		vmaasDataPtr, err := utils.HTTPCallRetry(vmaasCallFunc, tasks.VmaasCallExpRetry, tasks.VmaasCallMaxRetries)
 		if err != nil {
 			return nil, nil, nil, err
 		}
