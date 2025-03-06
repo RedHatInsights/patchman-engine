@@ -19,6 +19,11 @@
     {
       "matchPackageNames": ["go"],
       "updateTypes": ["patch"]
+    },
+    {
+      "matchCategories": ["golang"],
+      "matchDepTypes": ["toolchain"],
+      "enabled": false
     }
   ]
 }
