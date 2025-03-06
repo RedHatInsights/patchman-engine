@@ -53,8 +53,9 @@ func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 		var err error
 		var attempt int
 
-		backoffState := policy.Start(base.Context)
-		defer base.CancelContext()
+		ctx, cancel := context.WithCancel(context.Background())
+		backoffState := policy.Start(ctx)
+		defer cancel()
 		for backoff.Continue(backoffState) {
 			if err = handler(message); err == nil || !errors.Is(err, base.ErrFatal) {
 				return nil
