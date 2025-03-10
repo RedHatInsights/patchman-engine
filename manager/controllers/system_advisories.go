@@ -101,6 +101,7 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 	return query, meta, params, err
 }
 
+// nolint:lll
 // @Summary Show me advisories for a system by given inventory id
 // @Description Show me advisories for a system by given inventory id
 // @ID listSystemAdvisories
@@ -108,7 +109,7 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 // @Accept   json
 // @Produce  json
 // @Param    inventory_id   path    string  true    "Inventory ID"
-// @Param    limit          query   int     false   "Limit for paging"
+// @Param    limit          query   int     false   "Limit for paging" minimum(1) maximum(100)
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,name,type,synopsis,public_date)
 // @Param    search         query   string  false   "Find matching text"
@@ -117,8 +118,8 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 // @Param    filter[public_date]         query   string  false "Filter"
 // @Param    filter[synopsis]            query   string  false "Filter"
 // @Param    filter[advisory_type]       query   string  false "Filter"
-// @Param    filter[advisory_type_name]  query   string  false "Filter"
-// @Param    filter[severity]            query   string  false "Filter"
+// @Param    filter[advisory_type_name]  query   string  false "Filter" Enums(unknown,unspecified,other,enhancement,bugfix,security)
+// @Param    filter[severity]            query   int  	 false "Filter" minimum(1) maximum(4)
 // @Success 200 {object} SystemAdvisoriesResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
@@ -150,6 +151,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
+// nolint:lll
 // @Summary Show me advisories for a system by given inventory id
 // @Description Show me advisories for a system by given inventory id
 // @ID listSystemAdvisoriesIds
@@ -157,7 +159,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 // @Accept   json
 // @Produce  json
 // @Param    inventory_id   path    string  true    "Inventory ID"
-// @Param    limit          query   int     false   "Limit for paging"
+// @Param    limit          query   int     false   "Limit for paging" minimum(1) maximum(100)
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,name,type,synopsis,public_date)
 // @Param    search         query   string  false   "Find matching text"
@@ -166,8 +168,8 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 // @Param    filter[public_date]         query   string  false "Filter"
 // @Param    filter[synopsis]            query   string  false "Filter"
 // @Param    filter[advisory_type]       query   string  false "Filter"
-// @Param    filter[advisory_type_name]  query   string  false "Filter"
-// @Param    filter[severity]            query   string  false "Filter"
+// @Param    filter[advisory_type_name]  query   string  false "Filter" Enums(unknown,unspecified,other,enhancement,bugfix,security)
+// @Param    filter[severity]            query   int  	 false "Filter" minimum(1) maximum(4)
 // @Success 200 {object} IDsStatusResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse

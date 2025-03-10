@@ -59,7 +59,7 @@ func packageVersionsQuery(db *gorm.DB, acc int, groups map[string]string, packag
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    limit          query   int     false   "Limit for paging"
+// @Param    limit          query   int     false   "Limit for paging" minimum(1) maximum(100)
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    package_name    path    string    true  "Package name"
 // @Success 200 {object} PackageVersionsResponse

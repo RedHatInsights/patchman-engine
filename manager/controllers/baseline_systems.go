@@ -116,7 +116,7 @@ func baselineSystemsCommon(c *gin.Context, account int, groups map[string]string
 // @Accept   json
 // @Produce  json
 // @Param    baseline_id    path    int     true    "Baseline ID"
-// @Param    limit          query   int     false   "Limit for paging"
+// @Param    limit          query   int     false   "Limit for paging" minimum(1) maximum(100)
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,display_name,os,installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count,applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count,last_upload,groups)
 // @Param    search         query   string  false   "Find matching text"
@@ -124,7 +124,7 @@ func baselineSystemsCommon(c *gin.Context, account int, groups map[string]string
 // @Param    filter[os]           			query   string  false "Filter"
 // @Param    tags           query   []string  false "Tag filter"
 // @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
-// @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_system]						query bool  	false "Filter only SAP systems"
 // @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
@@ -172,7 +172,7 @@ func BaselineSystemsListHandler(c *gin.Context) {
 // @Accept   json
 // @Produce  json
 // @Param    baseline_id    path    int     true    "Baseline ID"
-// @Param    limit          query   int     false   "Limit for paging"
+// @Param    limit          query   int     false   "Limit for paging" minimum(1) maximum(100)
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,display_name,os,installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count,applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count,last_upload)
 // @Param    search         query   string  false   "Find matching text"

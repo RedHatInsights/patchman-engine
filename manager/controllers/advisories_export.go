@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// nolint:lll
 // @Summary Export applicable advisories for all my systems
 // @Description  Export applicable advisories for all my systems. Export endpoints are not paginated.
 // @ID exportAdvisories
@@ -21,9 +22,9 @@ import (
 // @Param    filter[public_date]        query   string  false "Filter"
 // @Param    filter[synopsis]           query   string  false "Filter"
 // @Param    filter[advisory_type]      query   string  false "Filter"
-// @Param    filter[advisory_type_name] query   string  false "Filter"
-// @Param    filter[severity]           query   string  false "Filter"
-// @Param    filter[applicable_systems] query   string  false "Filter"
+// @Param    filter[advisory_type_name] query   string  false "Filter" Enums(unknown,unspecified,other,enhancement,bugfix,security)
+// @Param    filter[severity]           query   int     false "Filter" minimum(1) maximum(4)
+// @Param    filter[applicable_systems] query   int     false "Filter"
 // @Success 200 {array} AdvisoriesDBLookup
 // @Failure 415 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
