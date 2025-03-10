@@ -109,7 +109,7 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    limit          query   int     false   "Limit for paging"
+// @Param    limit          query   int     false   "Limit for paging" minimum(1) maximum(100)
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,advisory_type_name,synopsis,public_date,severity,installable_systems,applicable_systems)
 // @Param    search         query   string  false   "Find matching text"
@@ -117,13 +117,13 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 // @Param    filter[description]         query   string  false "Filter"
 // @Param    filter[public_date]         query   string  false "Filter"
 // @Param    filter[synopsis]            query   string  false "Filter"
-// @Param    filter[advisory_type_name]  query   string  false "Filter"
-// @Param    filter[severity]            query   string  false "Filter"
-// @Param    filter[installable_systems] query   string  false "Filter"
-// @Param    filter[applicable_systems]  query   string  false "Filter"
+// @Param    filter[advisory_type_name]  query   string  false "Filter" Enums(unknown,unspecified,other,enhancement,bugfix,security)
+// @Param    filter[severity]            query   int     false "Filter" minimum(1) maximum(4)
+// @Param    filter[installable_systems] query   int     false "Filter"
+// @Param    filter[applicable_systems]  query   int     false "Filter"
 // @Param    tags                        query   []string  false "Tag filter"
 // @Param    filter[group_name]  									query []string 	false "Filter systems by inventory groups"
-// @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_system]						query bool  	false "Filter only SAP systems"
 // @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
@@ -165,7 +165,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    limit          query   int     false   "Limit for paging"
+// @Param    limit          query   int     false   "Limit for paging" minimum(1) maximum(100)
 // @Param    offset         query   int     false   "Offset for paging"
 // @Param    sort           query   string  false   "Sort field"    Enums(id,name,advisory_type,synopsis,public_date,applicable_systems)
 // @Param    search         query   string  false   "Find matching text"
@@ -174,13 +174,13 @@ func AdvisoriesListHandler(c *gin.Context) {
 // @Param    filter[public_date]         query   string  false "Filter"
 // @Param    filter[synopsis]            query   string  false "Filter"
 // @Param    filter[advisory_type]       query   string  false "Filter"
-// @Param    filter[advisory_type_name]  query   string  false "Filter"
-// @Param    filter[severity]            query   string  false "Filter"
-// @Param    filter[installable_systems] query   string  false "Filter"
-// @Param    filter[applicable_systems]  query   string  false "Filter"
+// @Param    filter[advisory_type_name]  query   string  false "Filter" Enums(unknown,unspecified,other,enhancement,bugfix,security)
+// @Param    filter[severity]            query   int     false "Filter" minimum(1) maximum(4)
+// @Param    filter[installable_systems] query   int     false "Filter"
+// @Param    filter[applicable_systems]  query   int     false "Filter"
 // @Param    tags                        query   []string  false "Tag filter"
 // @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
-// @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_system]						query bool  	false "Filter only SAP systems"
 // @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"

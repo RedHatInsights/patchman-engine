@@ -87,18 +87,18 @@ func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, groups m
 // @Security RhIdentity
 // @Accept   json
 // @Produce  json
-// @Param    limit          query        int     false   "Limit for paging"
+// @Param    limit          query        int     false   "Limit for paging" minimum(1) maximum(100)
 // @Param    offset         query        int     false   "Offset for paging"
 // @Param    sort           query        string  false   "Sort field" Enums(id,name,systems_installed,systems_installable,systems_applicable)
 // @Param    search         query        string  false   "Find matching text"
 // @Param    filter[name]   query        string  false "Filter"
-// @Param    filter[systems_installed]   query   string  false "Filter"
-// @Param    filter[systems_installable] query   string  false "Filter"
-// @Param    filter[systems_applicable]  query   string  false "Filter"
+// @Param    filter[systems_installed]   query   int     false "Filter"
+// @Param    filter[systems_installable] query   int     false "Filter"
+// @Param    filter[systems_applicable]  query   int     false "Filter"
 // @Param    filter[summary]             query   string  false "Filter"
 // @Param    tags                        query   []string  false "Tag filter"
 // @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
-// @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_system]						query bool  	false "Filter only SAP systems"
 // @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"

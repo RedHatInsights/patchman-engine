@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// nolint:lll
 // @Summary Export applicable advisories for all my systems
 // @Description  Export applicable advisories for all my systems. Export endpoints are not paginated.
 // @ID exportSystemAdvisories
@@ -23,8 +24,8 @@ import (
 // @Param    filter[public_date]         query   string  false "Filter"
 // @Param    filter[synopsis]            query   string  false "Filter"
 // @Param    filter[advisory_type]       query   string  false "Filter"
-// @Param    filter[advisory_type_name]  query   string  false "Filter"
-// @Param    filter[severity]            query   string  false "Filter"
+// @Param    filter[advisory_type_name]  query   string  false "Filter" Enums(unknown,unspecified,other,enhancement,bugfix,security)
+// @Param    filter[severity]            query   int  	 false "Filter" minimum(1) maximum(4)
 // @Success 200 {array} SystemAdvisoriesDBLookup
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse

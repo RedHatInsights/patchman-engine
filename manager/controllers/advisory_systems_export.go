@@ -37,7 +37,7 @@ var AdvisorySystemExportOpts = ListOpts{
 // @Param    filter[display_name]    query   string  false "Filter"
 // @Param    filter[stale]           query   string  false "Filter"
 // @Param    filter[group_name] 									query []string 	false "Filter systems by inventory groups"
-// @Param    filter[system_profile][sap_system]						query string  	false "Filter only SAP systems"
+// @Param    filter[system_profile][sap_system]						query bool  	false "Filter only SAP systems"
 // @Param    filter[system_profile][sap_sids]						query []string  false "Filter systems by their SAP SIDs"
 // @Param    filter[system_profile][ansible]						query string 	false "Filter systems by ansible"
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
