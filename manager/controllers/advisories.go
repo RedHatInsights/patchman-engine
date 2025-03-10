@@ -173,7 +173,6 @@ func AdvisoriesListHandler(c *gin.Context) {
 // @Param    filter[description]         query   string  false "Filter"
 // @Param    filter[public_date]         query   string  false "Filter"
 // @Param    filter[synopsis]            query   string  false "Filter"
-// @Param    filter[advisory_type]       query   string  false "Filter"
 // @Param    filter[advisory_type_name]  query   string  false "Filter" Enums(unknown,unspecified,other,enhancement,bugfix,security)
 // @Param    filter[severity]            query   int     false "Filter" minimum(1) maximum(4)
 // @Param    filter[installable_systems] query   int     false "Filter"
