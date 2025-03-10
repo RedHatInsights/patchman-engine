@@ -117,7 +117,6 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 // @Param    filter[description]         query   string  false "Filter"
 // @Param    filter[public_date]         query   string  false "Filter"
 // @Param    filter[synopsis]            query   string  false "Filter"
-// @Param    filter[advisory_type]       query   string  false "Filter"
 // @Param    filter[advisory_type_name]  query   string  false "Filter" Enums(unknown,unspecified,other,enhancement,bugfix,security)
 // @Param    filter[severity]            query   int  	 false "Filter" minimum(1) maximum(4)
 // @Success 200 {object} SystemAdvisoriesResponse
@@ -167,7 +166,6 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 // @Param    filter[description]         query   string  false "Filter"
 // @Param    filter[public_date]         query   string  false "Filter"
 // @Param    filter[synopsis]            query   string  false "Filter"
-// @Param    filter[advisory_type]       query   string  false "Filter"
 // @Param    filter[advisory_type_name]  query   string  false "Filter" Enums(unknown,unspecified,other,enhancement,bugfix,security)
 // @Param    filter[severity]            query   int  	 false "Filter" minimum(1) maximum(4)
 // @Success 200 {object} IDsStatusResponse
