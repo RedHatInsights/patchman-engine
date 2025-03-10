@@ -27,6 +27,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -100,7 +102,15 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "unknown",
+                                "unspecified",
+                                "other",
+                                "enhancement",
+                                "bugfix",
+                                "security"
+                            ]
                         }
                     },
                     {
@@ -108,7 +118,9 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "maximum": 4,
+                            "minimum": 1,
+                            "type": "integer"
                         }
                     },
                     {
@@ -116,7 +128,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -124,7 +136,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -158,7 +170,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -341,6 +353,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -433,7 +447,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -441,7 +455,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -475,7 +489,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -584,6 +598,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -1043,6 +1059,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -1132,7 +1150,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -1277,19 +1295,19 @@
                         }
                     },
                     {
-                        "name": "filter[advisory_type]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "filter[advisory_type_name]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "unknown",
+                                "unspecified",
+                                "other",
+                                "enhancement",
+                                "bugfix",
+                                "security"
+                            ]
                         }
                     },
                     {
@@ -1297,7 +1315,9 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "maximum": 4,
+                            "minimum": 1,
+                            "type": "integer"
                         }
                     },
                     {
@@ -1305,7 +1325,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     }
                 ],
@@ -1434,7 +1454,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -1664,7 +1684,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -1966,7 +1986,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -2141,7 +2161,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -2149,7 +2169,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -2157,7 +2177,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -2165,7 +2185,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -2173,7 +2193,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -2181,7 +2201,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -2189,7 +2209,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -2197,7 +2217,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -2205,7 +2225,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -2213,7 +2233,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -2221,7 +2241,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -2229,7 +2249,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -2237,7 +2257,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -2245,7 +2265,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -2253,7 +2273,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -2261,7 +2281,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -2282,7 +2302,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -2524,19 +2544,19 @@
                         }
                     },
                     {
-                        "name": "filter[advisory_type]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "filter[advisory_type_name]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "unknown",
+                                "unspecified",
+                                "other",
+                                "enhancement",
+                                "bugfix",
+                                "security"
+                            ]
                         }
                     },
                     {
@@ -2544,7 +2564,9 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "maximum": 4,
+                            "minimum": 1,
+                            "type": "integer"
                         }
                     }
                 ],
@@ -2834,7 +2856,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -2984,6 +3006,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -3052,19 +3076,19 @@
                         }
                     },
                     {
-                        "name": "filter[advisory_type]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "filter[advisory_type_name]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "unknown",
+                                "unspecified",
+                                "other",
+                                "enhancement",
+                                "bugfix",
+                                "security"
+                            ]
                         }
                     },
                     {
@@ -3072,7 +3096,9 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "maximum": 4,
+                            "minimum": 1,
+                            "type": "integer"
                         }
                     },
                     {
@@ -3080,7 +3106,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -3088,7 +3114,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -3122,7 +3148,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -3240,6 +3266,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -3325,7 +3353,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -3333,7 +3361,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -3341,7 +3369,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -3349,7 +3377,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -3357,7 +3385,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -3365,7 +3393,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -3437,7 +3465,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -3471,7 +3499,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -3589,6 +3617,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -3720,6 +3750,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -3771,7 +3803,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -3888,6 +3920,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -3966,7 +4000,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -3974,7 +4008,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -3982,7 +4016,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -3990,7 +4024,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -3998,7 +4032,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -4006,7 +4040,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -4014,7 +4048,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -4022,7 +4056,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -4030,7 +4064,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -4038,7 +4072,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -4046,7 +4080,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -4054,7 +4088,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -4062,7 +4096,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -4070,7 +4104,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -4078,7 +4112,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -4086,7 +4120,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -4182,7 +4216,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -4190,7 +4224,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -4232,7 +4266,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -4340,6 +4374,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -4407,19 +4443,19 @@
                         }
                     },
                     {
-                        "name": "filter[advisory_type]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "filter[advisory_type_name]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "unknown",
+                                "unspecified",
+                                "other",
+                                "enhancement",
+                                "bugfix",
+                                "security"
+                            ]
                         }
                     },
                     {
@@ -4427,7 +4463,9 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "maximum": 4,
+                            "minimum": 1,
+                            "type": "integer"
                         }
                     }
                 ],
@@ -4500,6 +4538,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -4631,6 +4671,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -4678,7 +4720,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -4686,7 +4728,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -4694,7 +4736,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -4736,7 +4778,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -4910,6 +4952,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -4961,7 +5005,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -5086,6 +5130,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -5167,6 +5213,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -5246,7 +5294,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -5254,7 +5302,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -5262,7 +5310,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -5270,7 +5318,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -5278,7 +5326,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -5286,7 +5334,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -5294,7 +5342,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -5302,7 +5350,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -5310,7 +5358,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -5318,7 +5366,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -5326,7 +5374,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -5334,7 +5382,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -5342,7 +5390,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -5350,7 +5398,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -5358,7 +5406,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -5366,7 +5414,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -5430,7 +5478,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -5438,7 +5486,7 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -5512,7 +5560,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -5742,6 +5790,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -5809,19 +5859,19 @@
                         }
                     },
                     {
-                        "name": "filter[advisory_type]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "filter[advisory_type_name]",
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "unknown",
+                                "unspecified",
+                                "other",
+                                "enhancement",
+                                "bugfix",
+                                "security"
+                            ]
                         }
                     },
                     {
@@ -5829,7 +5879,9 @@
                         "in": "query",
                         "description": "Filter",
                         "schema": {
-                            "type": "string"
+                            "maximum": 4,
+                            "minimum": 1,
+                            "type": "integer"
                         }
                     }
                 ],
@@ -5902,6 +5954,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -6234,6 +6288,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -6484,6 +6540,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -6573,7 +6631,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -6751,6 +6809,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -6793,7 +6853,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
@@ -6904,6 +6964,8 @@
                         "in": "query",
                         "description": "Limit for paging",
                         "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
                             "type": "integer"
                         }
                     },
@@ -6946,7 +7008,7 @@
                         "in": "query",
                         "description": "Filter only SAP systems",
                         "schema": {
-                            "type": "string"
+                            "type": "boolean"
                         }
                     },
                     {
