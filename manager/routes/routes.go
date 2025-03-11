@@ -127,4 +127,7 @@ func InitAdmin(app *gin.Engine, enableTurnpikeAuth bool) {
 	pprof.GET("/evaluator_recalc/:param", admin.GetEvaluatorRecalcPprof)
 	pprof.GET("/listener/:param", admin.GetListenerPprof)
 	pprof.GET("/manager/:param", admin.GetManagerPprof)
+
+	dbgroup := api.Group("/database")
+	dbgroup.PUT("/pg_repack/recreate", admin.RepackRecreateHandler)
 }
