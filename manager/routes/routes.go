@@ -117,9 +117,6 @@ func InitAdmin(app *gin.Engine, enableTurnpikeAuth bool) {
 	api.GET("/check-caches", admin.CheckCaches)
 	api.PUT("/refresh-packages", admin.RefreshPackagesHandler)
 	api.PUT("/refresh-packages/:account", admin.RefreshPackagesAccountHandler)
-	api.GET("/sessions", admin.GetActiveSessionsHandler)
-	api.GET("/sessions/:search", admin.GetActiveSessionsHandler)
-	api.DELETE("/sessions/:pid", admin.TerminateSessionHandler)
 	api.GET("/repack/:table_name", admin.RepackHandler)
 
 	pprof := api.Group("/pprof")
@@ -130,4 +127,7 @@ func InitAdmin(app *gin.Engine, enableTurnpikeAuth bool) {
 
 	dbgroup := api.Group("/database")
 	dbgroup.PUT("/pg_repack/recreate", admin.RepackRecreateHandler)
+	dbgroup.GET("/sessions", admin.GetActiveSessionsHandler)
+	dbgroup.GET("/sessions/:search", admin.GetActiveSessionsHandler)
+	dbgroup.DELETE("/sessions/:pid", admin.TerminateSessionHandler)
 }
