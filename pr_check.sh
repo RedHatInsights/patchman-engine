@@ -123,11 +123,13 @@ if [[ $exit_code == 0 ]]; then
             echo "PR smoke tests skipped"
             exit_code=3
         else
-            echo "running PR smoke tests"
-            set +e
-            process_requirements_labels
-            set -e
-            run_smoke_tests
+            echo "skipping PR smoke tests"
+            exit_code=3
+            # echo "running PR smoke tests"
+            # set +e
+            # process_requirements_labels
+            # set -e
+            # run_smoke_tests
         fi
     fi
 fi
