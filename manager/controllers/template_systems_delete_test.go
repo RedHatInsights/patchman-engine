@@ -4,15 +4,15 @@ import (
 	"app/base/core"
 	"app/base/database"
 	"bytes"
-	"encoding/json"
 	"net/http"
 	"testing"
 
+	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/assert"
 )
 
 func testTemplateSystemsDelete(t *testing.T, body TemplateSystemsUpdateRequest, status int) {
-	bodyJSON, err := json.Marshal(&body)
+	bodyJSON, err := sonic.Marshal(&body)
 	if err != nil {
 		panic(err)
 	}

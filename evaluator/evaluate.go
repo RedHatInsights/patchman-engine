@@ -11,11 +11,11 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"context"
-	"encoding/json"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -242,7 +242,7 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV3Response, 
 	}
 
 	var resp vmaas.UpdatesV3Response
-	err := json.Unmarshal(system.YumUpdates, &resp)
+	err := sonic.Unmarshal(system.YumUpdates, &resp)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to unmarshall yum updates")
 	}

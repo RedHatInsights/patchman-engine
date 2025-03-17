@@ -6,13 +6,13 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -72,7 +72,7 @@ func TestCreateTemplate(t *testing.T) {
 	configure()
 
 	createEvent := createTempateMsg(t, "template-created", "org_1", 3)
-	msg, err := json.Marshal(createEvent)
+	msg, err := sonic.Marshal(createEvent)
 	assert.Nil(t, err)
 
 	// assert templates don't exist
@@ -95,7 +95,7 @@ func TestCreateTemplate(t *testing.T) {
 	updateEvent.Data[0].Name = "Updated Template0"
 	description := "Updated Template1 description"
 	updateEvent.Data[1].Description = &description
-	msg, err = json.Marshal(updateEvent)
+	msg, err = sonic.Marshal(updateEvent)
 	assert.Nil(t, err)
 
 	// process update
@@ -109,7 +109,7 @@ func TestCreateTemplate(t *testing.T) {
 	assert.Equal(t, "Updated Template1 description", *postUpdatedTemplates[1].Description)
 
 	deleteEvent := createTempateMsg(t, "template-deleted", "org_1", 1)
-	msg, err = json.Marshal(deleteEvent)
+	msg, err = sonic.Marshal(deleteEvent)
 	assert.Nil(t, err)
 
 	// process update
@@ -134,7 +134,7 @@ func TestTemplateErrors(t *testing.T) {
 	event := createTempateMsg(t, "template-created", "org_1", 3)
 	event.Data[0].UUID = "not-an-uuid"
 	event.Data[1].UUID = "neither-an-uuid"
-	msg, err := json.Marshal(event)
+	msg, err := sonic.Marshal(event)
 	assert.Nil(t, err)
 
 	// process message
@@ -162,7 +162,7 @@ func TestTemplateEmptyDescription(t *testing.T) {
 	event.Data[0].Description = &empty
 	event.Data[1].Description = &spaces
 	event.Data[2].Description = nil
-	msg, err := json.Marshal(event)
+	msg, err := sonic.Marshal(event)
 	assert.Nil(t, err)
 
 	// process message

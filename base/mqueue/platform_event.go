@@ -2,9 +2,9 @@ package mqueue
 
 import (
 	"app/base/types"
-	"encoding/json"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
@@ -36,7 +36,7 @@ type accountRequests map[int][]string
 type orgIDs map[int]*string
 
 func (event *PlatformEvent) createKafkaMessage() (KafkaMessage, error) {
-	data, err := json.Marshal(event)
+	data, err := sonic.Marshal(event)
 	if err != nil {
 		return KafkaMessage{}, errors.Wrap(err, "Serializing event")
 	}

@@ -8,13 +8,13 @@ import (
 	"app/manager/config"
 	"app/manager/kafka"
 	"app/manager/middlewares"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"sort"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -132,7 +132,7 @@ func buildCreateBaselineQuery(db *gorm.DB, request CreateBaselineRequest, accoun
 	}
 
 	if request.Config != nil {
-		config, err := json.Marshal(request.Config)
+		config, err := sonic.Marshal(request.Config)
 		if err != nil {
 			return 0, err
 		}

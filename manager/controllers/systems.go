@@ -5,11 +5,11 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"database/sql/driver"
-	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -143,7 +143,7 @@ func (v *SystemGroupsList) Scan(value interface{}) error {
 }
 
 func SystemJSONBItemString[T SystemJSONBItemType](v T) string {
-	b, err := json.Marshal(v)
+	b, err := sonic.Marshal(v)
 	if err != nil {
 		utils.LogError("err", err.Error(), "Unable to convert tags struct to json")
 	}
@@ -152,7 +152,7 @@ func SystemJSONBItemString[T SystemJSONBItemType](v T) string {
 }
 
 func SystemJSONBItemValue[T SystemJSONBItemType](v T) (driver.Value, error) {
-	return json.Marshal(v)
+	return sonic.Marshal(v)
 }
 
 func SystemJSONBItemScan[T SystemJSONBItemType](v *T, value interface{}) error {
@@ -160,7 +160,7 @@ func SystemJSONBItemScan[T SystemJSONBItemType](v *T, value interface{}) error {
 	if !ok {
 		return errors.New("type assertion to []byte failed")
 	}
-	err := json.Unmarshal(b, &v)
+	err := sonic.Unmarshal(b, &v)
 	return err
 }
 

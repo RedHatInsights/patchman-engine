@@ -6,9 +6,9 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
-	"encoding/json"
 	"testing"
 
+	"github.com/bytedance/sonic"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -59,7 +59,7 @@ func TestDeleteSystemWarn1(t *testing.T) {
 	deleteEvent := createTestDeleteEvent(id)
 	deleteEvent.Type = nil
 
-	data, err := json.Marshal(deleteEvent)
+	data, err := sonic.Marshal(deleteEvent)
 	assert.NoError(t, err)
 
 	err = EventsMessageHandler(mqueue.KafkaMessage{Value: data})
@@ -75,7 +75,7 @@ func TestDeleteSystemWarn2(t *testing.T) {
 	nonDeleteType := "no-delete"
 	deleteEvent.Type = &nonDeleteType
 
-	data, err := json.Marshal(deleteEvent)
+	data, err := sonic.Marshal(deleteEvent)
 	assert.NoError(t, err)
 
 	err = EventsMessageHandler(mqueue.KafkaMessage{Value: data})

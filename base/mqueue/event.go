@@ -2,9 +2,9 @@ package mqueue
 
 import (
 	"app/base/utils"
-	"encoding/json"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/lestrrat-go/backoff/v2"
 	"golang.org/x/net/context"
 )
@@ -26,7 +26,7 @@ type MessageData interface {
 func MakeMessageHandler(eventHandler EventHandler) MessageHandler {
 	return func(m KafkaMessage) error {
 		var event PlatformEvent
-		err := json.Unmarshal(m.Value, &event)
+		err := sonic.Unmarshal(m.Value, &event)
 		// Not a fatal error, invalid data format, log and skip
 		if err != nil {
 			utils.LogError("err", err.Error(), "Could not deserialize platform event")

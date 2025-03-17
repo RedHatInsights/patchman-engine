@@ -8,7 +8,6 @@ import (
 	"app/manager/config"
 	"app/manager/middlewares"
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/gocarina/gocsv"
 	"github.com/pkg/errors"
@@ -322,7 +322,7 @@ func (t *Tag) ApplyTag(tx *gorm.DB) *gorm.DB {
 		return tx
 	}
 
-	tagStr, _ := json.Marshal([]Tag{*t})
+	tagStr, _ := sonic.Marshal([]Tag{*t})
 	return tx.Where("ih.tags @> ?::jsonb", tagStr)
 }
 
@@ -445,7 +445,7 @@ func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
 		cmp = " is not null"
 	case strings.Contains(key, "[sap_sids"):
 		cmp = "::jsonb @> ?::jsonb"
-		bval, _ := json.Marshal(values)
+		bval, _ := sonic.Marshal(values)
 		val = string(bval)
 	default:
 		cmp = "::text = ?"
@@ -616,7 +616,7 @@ func parseJSONList(jsonb []byte) ([]string, error) {
 	}
 
 	var items []string
-	err := json.Unmarshal(jsonb, &items)
+	err := sonic.Unmarshal(jsonb, &items)
 	if err != nil {
 		return nil, err
 	}

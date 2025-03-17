@@ -3,7 +3,6 @@ package utils
 import (
 	"app/base/rbac"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"math"
 	"os"
@@ -15,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/joho/godotenv"
 )
 
@@ -186,7 +186,7 @@ func GetGorutineID() uint64 {
 
 func ParseInventoryGroup(id *string, name *string) (string, error) {
 	group := rbac.InventoryGroup{{ID: id, Name: name}}
-	groupJSON, err := json.Marshal(&group)
+	groupJSON, err := sonic.Marshal(&group)
 	if err != nil {
 		LogError("group", group, "err", err.Error(), "Cannot Marshal Inventory group")
 		return "", err
