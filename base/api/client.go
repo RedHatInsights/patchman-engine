@@ -4,7 +4,6 @@ import (
 	"app/base/utils"
 	"bytes"
 	"context"
-	"encoding/json"
 	"io"
 	"net/http"
 
@@ -22,7 +21,7 @@ func (o *Client) Request(ctx *context.Context, method, url string,
 	requestPtr interface{}, responseOutPtr interface{}) (*http.Response, error) {
 	body := &bytes.Buffer{}
 	if requestPtr != nil {
-		err := json.NewEncoder(body).Encode(requestPtr)
+		err := sonic.ConfigDefault.NewEncoder(body).Encode(requestPtr)
 		if err != nil {
 			return nil, errors.Wrap(err, "JSON encoding failed")
 		}
@@ -40,17 +39,15 @@ func (o *Client) Request(ctx *context.Context, method, url string,
 		return httpResp, errors.Wrap(err, "Request failed")
 	}
 
-	bodyBytes, err := io.ReadAll(httpResp.Body)
+	err = sonic.ConfigDefault.NewDecoder(httpResp.Body).Decode(responseOutPtr)
 	if err != nil {
+		if errors.Is(err, io.EOF) {
+			// empty response body
+			return httpResp, nil
+		}
 		return httpResp, errors.Wrap(err, "Response body reading failed")
 	}
 
-	if len(bodyBytes) > 0 {
-		err = sonic.Unmarshal(bodyBytes, responseOutPtr)
-		if err != nil {
-			return httpResp, errors.Wrap(err, "Response json parsing failed")
-		}
-	}
 	return httpResp, nil
 }
 
