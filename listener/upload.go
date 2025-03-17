@@ -25,6 +25,7 @@ import (
 	stdErrors "errors"
 
 	"github.com/bytedance/sonic"
+	"github.com/bytedance/sonic/encoder"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -329,6 +330,8 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	yumUpdates *YumUpdates, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("update-system-platform"))
+	// NOTE: if we add a map to vmaas.UpdatesV3Request in the future, we need to use
+	//  	 `encoder.Encode(updatesReq, encoder.SortMapKeys)` to compute the hash correctly
 	updatesReqJSON, err := sonic.Marshal(updatesReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "Serializing vmaas request")
@@ -764,7 +767,7 @@ func getYumUpdates(event HostEvent, client *api.Client) (*YumUpdates, error) {
 	}
 	parsed.UpdateList = &updatesMap
 	utils.RemoveNonLatestPackages(&parsed)
-	yumUpdates, err := sonic.Marshal(parsed)
+	yumUpdates, err := encoder.Encode(parsed, encoder.SortMapKeys)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to marshall yum updates")
 	}
