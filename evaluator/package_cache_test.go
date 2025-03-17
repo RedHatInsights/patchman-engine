@@ -51,6 +51,48 @@ func TestGetPackageCache(t *testing.T) {
 	assert.Equal(t, "curl", valStr)
 }
 
+func TestGetByNevras(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	pc := NewPackageCache(true, true, 11, 11)
+	assert.NotNil(t, pc)
+	pc.Load()
+	// ask for a package not in cache
+	val, missingDB, ok := pc.GetByNevras([]string{"kernel-0:5.6.13-201.fc31.x86_64"})
+	assert.True(t, ok)
+	assert.Len(t, val, 1)
+	assert.Len(t, missingDB, 0)
+	assert.Equal(t, "kernel", val[0].Name)
+	assert.Equal(t, "5.6.13-201.fc31.x86_64", val[0].Evra)
+
+	// ask for a package in cache and a new package not in DB
+	val, missingDB, ok = pc.GetByNevras([]string{
+		"kernel-0:5.6.13-201.fc31.x86_64",
+		"get-by-nevras-test-0:1.1.1-1.el9.x86_64",
+		"invalidnevra-1.1",
+	})
+	assert.True(t, ok)
+	assert.Len(t, val, 1)
+	assert.Equal(t, "kernel", val[0].Name)
+	assert.Equal(t, "5.6.13-201.fc31.x86_64", val[0].Evra)
+	assert.Len(t, missingDB, 1)
+	for nevra, pkg := range missingDB {
+		assert.Equal(t, "get-by-nevras-test-0:1.1.1-1.el9.x86_64", nevra)
+		assert.Equal(t, "get-by-nevras-test", pkg.Name)
+		assert.Equal(t, 0, pkg.Epoch)
+		assert.Equal(t, "1.1.1", pkg.Version)
+		assert.Equal(t, "1.el9", pkg.Release)
+		assert.Equal(t, "x86_64", pkg.Arch)
+	}
+
+	// ask for a package not in cache and not in db
+	val, missingDB, ok = pc.GetByNevras([]string{"get-by-nevras-test-0:1.1.1-1.el9.x86_64"})
+	assert.False(t, ok)
+	assert.Empty(t, val)
+	assert.Len(t, missingDB, 1)
+}
+
 func TestMissPackageCache(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
