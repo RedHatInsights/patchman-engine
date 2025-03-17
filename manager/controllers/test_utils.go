@@ -11,6 +11,6 @@ const InvalidContentTypeErr = `{"error":"Invalid content type 'test-format', use
 
 func ParseResponseBody(t *testing.T, bytes []byte, out interface{}) {
 	// don't use sonic.Unmarshal as some tests receive empty output
-	err := json.Unmarshal(bytes, out)
+	err := json.Unmarshal(bytes, &out)
 	assert.Nil(t, err, string(bytes))
 }
