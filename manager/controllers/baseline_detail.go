@@ -4,12 +4,12 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -107,7 +107,7 @@ func tryParseBaselineConfig(configBytes []byte) *BaselineConfig {
 	}
 
 	var baselineConfig BaselineConfig
-	err := json.Unmarshal(configBytes, &baselineConfig)
+	err := sonic.Unmarshal(configBytes, &baselineConfig)
 	if err != nil {
 		utils.LogWarn("err", err.Error(), "Unable to parse baseline config json")
 		return nil

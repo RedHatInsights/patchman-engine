@@ -3,9 +3,9 @@ package mqueue
 import (
 	"app/base/types"
 	"app/base/utils"
-	"encoding/json"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
@@ -25,7 +25,7 @@ type PayloadTrackerEvents []PayloadTrackerEvent
 var enablePayloadTracker = utils.PodConfig.GetBool("payload_tracker", true)
 
 func (event *PayloadTrackerEvent) write(ctx context.Context, w Writer) error {
-	data, err := json.Marshal(event)
+	data, err := sonic.Marshal(event)
 	if err != nil {
 		return errors.Wrap(err, "Serializing event")
 	}

@@ -7,9 +7,9 @@ import (
 	"app/base/mqueue"
 	ntf "app/base/notification"
 	"app/base/utils"
-	"encoding/json"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -80,7 +80,7 @@ func getSystemTags(tx *gorm.DB, system *models.SystemPlatform) ([]ntf.SystemTag,
 	if err != nil {
 		return nil, errors.Wrap(err, "system tags query failed")
 	}
-	if err = json.Unmarshal([]byte(tagsJSON), &tags); err != nil {
+	if err = sonic.Unmarshal([]byte(tagsJSON), &tags); err != nil {
 		return nil, errors.Wrap(err, "system tags unmarshal failed")
 	}
 

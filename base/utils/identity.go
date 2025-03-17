@@ -2,8 +2,8 @@ package utils
 
 import (
 	"encoding/base64"
-	"encoding/json"
 
+	"github.com/bytedance/sonic"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
@@ -14,7 +14,7 @@ func ParseXRHID(identityString string) (*identity.XRHID, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal(decoded, &xrhid)
+	err = sonic.Unmarshal(decoded, &xrhid)
 	if err != nil {
 		return nil, err
 	}

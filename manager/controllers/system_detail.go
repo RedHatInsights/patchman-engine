@@ -6,10 +6,10 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"app/manager/middlewares"
-	"encoding/json"
 	"errors"
 	"net/http"
 
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -138,7 +138,7 @@ func SystemYumUpdatesHandler(c *gin.Context) {
 		return
 	}
 
-	err := json.Unmarshal(system.YumUpdates, &resp.Data)
+	err := sonic.Unmarshal(system.YumUpdates, &resp.Data)
 	if err != nil {
 		LogAndRespError(c, err, "unable to unmarshall yum updates")
 		return

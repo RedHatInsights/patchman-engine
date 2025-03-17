@@ -7,11 +7,11 @@ import (
 	"app/base/utils"
 	"app/manager/kafka"
 	"app/manager/middlewares"
-	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -179,7 +179,7 @@ func buildUpdateBaselineQuery(db *gorm.DB, baselineID int64, req UpdateBaselineR
 	}
 
 	if req.Config != nil {
-		config, err := json.Marshal(req.Config)
+		config, err := sonic.Marshal(req.Config)
 		if err != nil {
 			return err
 		}

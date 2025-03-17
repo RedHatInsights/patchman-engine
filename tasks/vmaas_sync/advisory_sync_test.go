@@ -7,10 +7,10 @@ import (
 	"app/base/types"
 	"app/base/utils"
 	"app/base/vmaas"
-	"encoding/json"
 	"testing"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -142,7 +142,7 @@ func TestSaveAdvisories(t *testing.T) {
 
 	var data vmaas.ErrataResponse
 
-	assert.Nil(t, json.Unmarshal([]byte(testAdvisories), &data))
+	assert.Nil(t, sonic.Unmarshal([]byte(testAdvisories), &data))
 	errataList := data.ErrataList
 	testString := "TEST"
 	for i, v := range errataList {

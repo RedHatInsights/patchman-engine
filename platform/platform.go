@@ -6,7 +6,6 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"app/manager/middlewares"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
@@ -209,7 +209,7 @@ func mockIdentity() string {
 		Type:  "User",
 		OrgID: "org_1",
 	}
-	js, err := json.Marshal(&ident)
+	js, err := sonic.Marshal(&ident)
 	if err != nil {
 		panic(err)
 	}
@@ -218,7 +218,7 @@ func mockIdentity() string {
 
 func upload(randomPkgs bool) {
 	packages := makeSystemProfile("TEST-0000", randomPkgs)
-	pkgJSON, err := json.Marshal(packages)
+	pkgJSON, err := sonic.Marshal(packages)
 	if err != nil {
 		panic(err)
 	}
@@ -299,7 +299,7 @@ func mockDeleteHandler(c *gin.Context) {
 		"type":         "delete",
 		"b64_identity": identity,
 	}
-	msg, err := json.Marshal(event)
+	msg, err := sonic.Marshal(event)
 	if err != nil {
 		panic(err)
 	}
@@ -315,7 +315,7 @@ func mockToggleUpload(c *gin.Context) {
 func mockYumUpdatesS3(c *gin.Context) {
 	utils.LogInfo("Mocking S3 for providing yum updates")
 	updates := vmaas.UpdatesV3Response{}
-	if err := json.Unmarshal([]byte(yumUpdates), &updates); err != nil {
+	if err := sonic.Unmarshal([]byte(yumUpdates), &updates); err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -368,7 +368,7 @@ func sendTemplateMsg(eventName string, templates []mqueue.TemplateResponse) erro
 		Data:    templates,
 	}
 
-	msg, err := json.Marshal(event)
+	msg, err := sonic.Marshal(event)
 	if err != nil {
 		return err
 	}

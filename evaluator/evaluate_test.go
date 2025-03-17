@@ -8,11 +8,11 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"context"
-	"encoding/json"
 	"net/http"
 	"sync"
 	"testing"
 
+	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -274,7 +274,7 @@ func TestSatelliteSystemAdvisories(t *testing.T) {
 	`
 
 	var vmaasData vmaas.UpdatesV3Response
-	err := json.Unmarshal([]byte(vmaasDataResp), &vmaasData)
+	err := sonic.Unmarshal([]byte(vmaasDataResp), &vmaasData)
 	assert.Nil(t, err)
 
 	// lets add the checksum to the cache, so we do not actually call vmaas
@@ -365,7 +365,7 @@ func TestGetUpdatesDataVmaas400(t *testing.T) {
 	req := vmaas.UpdatesV3Request{
 		TestReturnStatus: 400, PackageList: []string{"pkg"}, RepositoryList: []string{"repo"},
 	}
-	reqJSON, _ := json.Marshal(req)
+	reqJSON, _ := sonic.Marshal(req)
 	reqString := string(reqJSON)
 	sp := models.SystemPlatform{VmaasJSON: &reqString}
 	res, err := getUpdatesData(context.Background(), &sp)
@@ -382,7 +382,7 @@ func TestGetVmaasDataCached(t *testing.T) {
 	req := vmaas.UpdatesV3Request{
 		PackageList: []string{"firefox-0:76.0.1-1.fc31.x86_64"}, RepositoryList: []string{"repo"},
 	}
-	reqJSON, _ := json.Marshal(req)
+	reqJSON, _ := sonic.Marshal(req)
 	reqString := string(reqJSON)
 	chsum := "123"
 	sp := models.SystemPlatform{VmaasJSON: &reqString, JSONChecksum: &chsum}

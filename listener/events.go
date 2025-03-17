@@ -5,9 +5,9 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
-	"encoding/json"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -21,7 +21,7 @@ const (
 func EventsMessageHandler(m mqueue.KafkaMessage) error {
 	var msgData map[string]interface{}
 	utils.LogTrace("kafka message data", string(m.Value))
-	if err := json.Unmarshal(m.Value, &msgData); err != nil {
+	if err := sonic.Unmarshal(m.Value, &msgData); err != nil {
 		utils.LogError("msg", string(m.Value), "message is not a valid JSON")
 		// Skip invalid messages
 		return nil
@@ -41,7 +41,7 @@ func EventsMessageHandler(m mqueue.KafkaMessage) error {
 	switch msgData["type"] {
 	case "delete":
 		var event mqueue.PlatformEvent
-		if err := json.Unmarshal(m.Value, &event); err != nil {
+		if err := sonic.Unmarshal(m.Value, &event); err != nil {
 			utils.LogError("inventoryID", msgData["id"], "msg", string(m.Value),
 				"Invalid 'delete' message format")
 		}
@@ -50,7 +50,7 @@ func EventsMessageHandler(m mqueue.KafkaMessage) error {
 		fallthrough
 	case "created":
 		var event HostEvent
-		if err := json.Unmarshal(m.Value, &event); err != nil {
+		if err := sonic.Unmarshal(m.Value, &event); err != nil {
 			utils.LogError("inventoryID", msgData["id"], "err", err, "msg", string(m.Value),
 				"Invalid 'updated' message format")
 			return nil

@@ -1,9 +1,9 @@
 package rbac
 
 import (
-	"encoding/json"
 	"testing"
 
+	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -66,7 +66,7 @@ func TestParsing(t *testing.T) {
 	}
 
 	var v Access
-	err := json.Unmarshal(data, &v)
+	err := sonic.Unmarshal(data, &v)
 	if assert.NoError(t, err) {
 		assert.Equal(t, expected, v.ResourceDefinitions)
 	}

@@ -8,11 +8,11 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"app/tasks"
-	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 )
 
@@ -159,14 +159,14 @@ func getJSONFields(vmaasData *vmaas.ErrataResponseErrataList) ([]byte, []byte, [
 		return nil, nil, nil, errors.Wrap(err, "unable to get package data")
 	}
 
-	cvesData, err := json.Marshal(vmaasData.CveList)
+	cvesData, err := sonic.Marshal(vmaasData.CveList)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "Could not serialize CVEs data")
 	}
 
 	var releaseVersionsData []byte
 	if vmaasData.ReleaseVersions != nil {
-		releaseVersionsData, err = json.Marshal(vmaasData.ReleaseVersions)
+		releaseVersionsData, err = sonic.Marshal(vmaasData.ReleaseVersions)
 		if err != nil {
 			return nil, nil, nil, errors.Wrap(err, "Could not serialize release_versions data")
 		}
@@ -176,7 +176,7 @@ func getJSONFields(vmaasData *vmaas.ErrataResponseErrataList) ([]byte, []byte, [
 }
 
 func getPackageData(vmaasData *vmaas.ErrataResponseErrataList) ([]byte, error) {
-	packageData, err := json.Marshal(vmaasData.PackageList)
+	packageData, err := sonic.Marshal(vmaasData.PackageList)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not serialize package data")
 	}

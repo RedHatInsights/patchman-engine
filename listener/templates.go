@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 )
 
@@ -139,7 +140,7 @@ func TemplateUpdate(template mqueue.TemplateResponse) error {
 
 func processTemplateEvent(value json.RawMessage) (eType string, event mqueue.TemplateEvent, err error) {
 	utils.LogTrace("kafka message data", string(value))
-	if err := json.Unmarshal(value, &event); err != nil {
+	if err := sonic.Unmarshal(value, &event); err != nil {
 		err = errors.Wrap(err, fmt.Sprintf("value: %s", string(value)))
 		return "", event, errors.Wrap(err, "message is not a valid JSON")
 	}

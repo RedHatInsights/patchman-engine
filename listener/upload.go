@@ -24,6 +24,7 @@ import (
 
 	stdErrors "errors"
 
+	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -328,7 +329,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	yumUpdates *YumUpdates, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("update-system-platform"))
-	updatesReqJSON, err := json.Marshal(updatesReq)
+	updatesReqJSON, err := sonic.Marshal(updatesReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "Serializing vmaas request")
 	}
@@ -741,7 +742,7 @@ func getYumUpdates(event HostEvent, client *api.Client) (*YumUpdates, error) {
 
 	if (parsed == vmaas.UpdatesV3Response{}) {
 		utils.LogWarn("yum_updates_s3url", yumUpdatesURL, "No yum updates on S3, getting legacy yum_updates field")
-		err := json.Unmarshal(yumUpdates, &parsed)
+		err := sonic.Unmarshal(yumUpdates, &parsed)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to unmarshall yum updates")
 		}
@@ -763,7 +764,7 @@ func getYumUpdates(event HostEvent, client *api.Client) (*YumUpdates, error) {
 	}
 	parsed.UpdateList = &updatesMap
 	utils.RemoveNonLatestPackages(&parsed)
-	yumUpdates, err := json.Marshal(parsed)
+	yumUpdates, err := sonic.Marshal(parsed)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to marshall yum updates")
 	}

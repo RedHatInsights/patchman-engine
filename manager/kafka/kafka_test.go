@@ -6,9 +6,9 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"app/manager/config"
-	"encoding/json"
 	"testing"
 
+	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,7 +26,7 @@ func testEvaluateBaselineSystems(t *testing.T, baselineID *int64, accountID int,
 		return 1, len(writerMock.Messages)
 	})
 	var event mqueue.PlatformEvent
-	assert.Nil(t, json.Unmarshal(writerMock.Messages[0].Value, &event))
+	assert.Nil(t, sonic.Unmarshal(writerMock.Messages[0].Value, &event))
 	return event
 }
 

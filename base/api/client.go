@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 )
 
@@ -45,7 +46,7 @@ func (o *Client) Request(ctx *context.Context, method, url string,
 	}
 
 	if len(bodyBytes) > 0 {
-		err = json.Unmarshal(bodyBytes, responseOutPtr)
+		err = sonic.Unmarshal(bodyBytes, responseOutPtr)
 		if err != nil {
 			return httpResp, errors.Wrap(err, "Response json parsing failed")
 		}

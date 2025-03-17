@@ -2,9 +2,10 @@ package mqueue
 
 import (
 	"context"
-	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/bytedance/sonic"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWriteEventsOfInventoryAccounts(t *testing.T) {
@@ -27,7 +28,7 @@ func TestWriteEventsOfInventoryAccounts(t *testing.T) {
 	assert.True(t, len(mockWriter.Messages) > 0)
 
 	var event PlatformEvent
-	assert.Nil(t, json.Unmarshal(mockWriter.Messages[0].Value, &event))
+	assert.Nil(t, sonic.Unmarshal(mockWriter.Messages[0].Value, &event))
 	assert.Equal(t, orgID, event.GetOrgID())
 	assert.Equal(t, acc, event.AccountID)
 	assert.True(t, len(event.SystemIDs) == 2)

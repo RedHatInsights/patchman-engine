@@ -2,23 +2,23 @@ package utils
 
 import (
 	"app/base/vmaas"
-	"encoding/json"
 	"testing"
 
+	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func compareUpdatesMerge(t *testing.T, jsonA, jsonB, merged []byte) {
 	var listA, listB vmaas.UpdatesV3ResponseUpdateList
-	err := json.Unmarshal(jsonA, &listA)
+	err := sonic.Unmarshal(jsonA, &listA)
 	assert.Nil(t, err)
-	err = json.Unmarshal(jsonB, &listB)
+	err = sonic.Unmarshal(jsonB, &listB)
 	assert.Nil(t, err)
 
 	listMerged := mergeUpdates(&listA, &listB)
 
-	res, err := json.Marshal(listMerged)
+	res, err := sonic.Marshal(listMerged)
 	assert.Nil(t, err)
 
 	require.JSONEq(t, string(merged), string(res))
@@ -52,14 +52,14 @@ func TestMergeDifferentAttrs(t *testing.T) {
 func compareResponseMerge(t *testing.T, jsonA, jsonB, merged []byte) {
 	var respA, respB vmaas.UpdatesV3Response
 
-	err := json.Unmarshal(jsonA, &respA)
+	err := sonic.Unmarshal(jsonA, &respA)
 	assert.Nil(t, err)
-	err = json.Unmarshal(jsonB, &respB)
+	err = sonic.Unmarshal(jsonB, &respB)
 	assert.Nil(t, err)
 
 	respMerged := MergeVMaaSResponses(&respA, &respB)
 
-	res, err := json.Marshal(respMerged)
+	res, err := sonic.Marshal(respMerged)
 	assert.Nil(t, err)
 
 	require.JSONEq(t, string(merged), string(res))

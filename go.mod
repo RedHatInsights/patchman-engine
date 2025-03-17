@@ -4,6 +4,7 @@ go 1.22.9
 
 require (
 	github.com/aws/aws-sdk-go v1.55.6
+	github.com/bytedance/sonic v1.12.7
 	github.com/ezamriy/gorpm v0.0.0-20160905202458-25f7273cbf51
 	github.com/getkin/kin-openapi v0.130.0
 	github.com/gin-contrib/timeout v1.0.2
@@ -40,7 +41,6 @@ require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/bytedance/sonic v1.12.7 // indirect
 	github.com/bytedance/sonic/loader v0.2.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
