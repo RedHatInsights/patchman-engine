@@ -12,6 +12,8 @@ import (
 var pgRepackArgs = []string{
 	"--no-superuser-check",
 	"--no-password",
+	"-T", "600",
+	"--no-kill-backend",
 	"-d", utils.CoreCfg.DBName,
 	"-h", utils.CoreCfg.DBHost,
 	"-p", fmt.Sprintf("%d", utils.CoreCfg.DBPort),
