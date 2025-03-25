@@ -56,7 +56,8 @@ type DnfModule struct {
 }
 
 type Rhsm struct {
-	Version string `json:"version,omitempty"`
+	Version      string   `json:"version,omitempty"`
+	Environments []string `json:"environment_ids,omitempty"`
 }
 
 type Bootc struct {
