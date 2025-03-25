@@ -4,6 +4,7 @@
     "on Monday after 3am and before 10am"
   ],
   "timezone": "Europe/Prague",
+  "semanticCommits": "disabled",
   "tekton": {
     "automerge": true,
     "automergeStrategy": "rebase",
