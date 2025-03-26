@@ -365,6 +365,12 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		isBootc = true
 	}
 
+	templateID, err := getTemplate(tx, accountID, host.SystemProfile.Rhsm.Environments)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to assign templates")
+	}
+	colsToUpdate = append(colsToUpdate, "template_id")
+
 	staleWarning := host.StaleWarningTimestamp.Time()
 	updatesReqJSONString := string(updatesReqJSON)
 	systemPlatform := models.SystemPlatform{
@@ -385,6 +391,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		BuiltPkgcache:         yumUpdates.GetBuiltPkgcache(),
 		Arch:                  host.SystemProfile.Arch,
 		Bootc:                 isBootc,
+		TemplateID:            templateID,
 	}
 
 	type OldChecksums struct {
