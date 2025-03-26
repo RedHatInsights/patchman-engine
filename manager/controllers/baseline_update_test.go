@@ -281,7 +281,7 @@ func TestUpdateBaselineSatelliteSystem(t *testing.T) {
 		BuiltPkgcache:    true,
 		SatelliteManaged: true,
 	}
-	database.CreateSystem(t, system)
+	database.CreateSystem(t, &system)
 	defer database.DeleteSystem(t, system.InventoryID)
 
 	data := `{
