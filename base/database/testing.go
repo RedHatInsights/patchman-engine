@@ -463,7 +463,7 @@ func GetPackageIDs(nevras ...string) []int64 {
 	return ids
 }
 
-func CreateSystem(t *testing.T, system models.SystemPlatform) {
+func CreateSystem(t *testing.T, system *models.SystemPlatform) {
 	ts := time.Now()
 	err := DB.Create(&system).Error
 	assert.Nil(t, err)
