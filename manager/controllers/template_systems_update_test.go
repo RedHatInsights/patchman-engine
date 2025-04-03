@@ -228,6 +228,20 @@ func TestUpdateTemplateSystemsCandlepin404(t *testing.T) {
 	w := CreateRequestRouterWithParams("PUT", templatePath, templateUUID, "", bytes.NewBufferString(data), "",
 		TemplateSystemsUpdateHandler, templateAccount)
 
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusFailedDependency, w.Code)
 	database.CheckTemplateSystems(t, templateAccount, templateUUID, []string{"00000000-0000-0000-0000-000000000007"})
+
+	// Expect HTTP 200 status code when only 1 system causes candlepin call error
+	data = `{
+		"systems": [
+			"00000000-0000-0000-0000-000000000004",
+			"00000000-0000-0000-0000-000000000018"
+		]
+	}`
+	w = CreateRequestRouterWithParams("PUT", templatePath, templateUUID, "", bytes.NewBufferString(data), "",
+		TemplateSystemsUpdateHandler, templateAccount)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	database.CheckTemplateSystems(t, templateAccount, templateUUID,
+		[]string{"00000000-0000-0000-0000-000000000004", "00000000-0000-0000-0000-000000000007"})
 }

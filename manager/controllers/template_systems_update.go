@@ -252,10 +252,15 @@ func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env 
 		}
 	}
 
-	// we do not want to fail whole API if a single call to candlepin fails
-	// just log the error
 	if err != nil {
+		// we do not want to fail whole API if a single call to candlepin fails
+		// just log the error
 		utils.LogWarn(err)
+		if len(assignedIDs) == 0 {
+			// fail if none of the systems could be assigned to a template
+			LogAndRespStatusError(c, http.StatusFailedDependency, err, "candlepin call failed, no systems assigned")
+			return nil, err
+		}
 	}
 	return assignedIDs, nil
 }
