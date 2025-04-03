@@ -9,10 +9,10 @@ import (
 
 var (
 	// counts of systems from system_platform JOIN inventory.hosts
-	nGroup1    int64 = 6
+	nGroup1    int64 = 7
 	nGroup2    int64 = 2
 	nUngrouped int64 = 7
-	nAll       int64 = 17
+	nAll       int64 = 18
 )
 
 var testCases = []map[int64]map[string]string{

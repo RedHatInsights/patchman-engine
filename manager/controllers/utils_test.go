@@ -52,5 +52,5 @@ func TestGroupNameFilter2(t *testing.T) {
 	tx, _ = ApplyInventoryFilter(filters, tx, "sp.inventory_id")
 	tx.Scan(&systems)
 
-	assert.Equal(t, 8, len(systems)) // 2 systems with `group2`, 6 with `group1` in test_data
+	assert.Equal(t, 9, len(systems)) // 2 systems with `group2`, 6 with `group1` in test_data
 }

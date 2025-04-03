@@ -14,7 +14,7 @@ func TestSystemsIDsDefault(t *testing.T) {
 	output := testSystemsIDs(t, ``, 1)
 
 	// data
-	assert.Equal(t, 9, len(output.IDs))
+	assert.Equal(t, 10, len(output.IDs))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.IDs[0])
 }
 
@@ -40,7 +40,7 @@ func TestSystemsIDsWrongSort(t *testing.T) {
 
 func TestSystemsIDsSearch(t *testing.T) {
 	output := testSystemsIDs(t, "?search=001", 1)
-	assert.Equal(t, 2, len(output.IDs))
+	assert.Equal(t, 3, len(output.IDs))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.IDs[0])
 }
 
@@ -126,9 +126,10 @@ func TestSystemsIDsFilterAdvCount4(t *testing.T) {
 
 func TestSystemsIDsFilterBaseline(t *testing.T) {
 	output := testSystemsIDs(t, "?filter[baseline_name]=baseline_1-1", 1)
-	assert.Equal(t, 2, len(output.IDs))
+	assert.Equal(t, 3, len(output.IDs))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.IDs[0])
-	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.IDs[1])
+	assert.Equal(t, "00000000-0000-0000-0000-000000000018", output.IDs[1])
+	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.IDs[2])
 }
 
 func TestSystemsIDsFilterNotExisting(t *testing.T) {
@@ -170,8 +171,8 @@ func TestSystemsIDsOrderOS(t *testing.T) {
 func TestSystemsIDsFilterArch(t *testing.T) {
 	output := testSystems(t, `?filter[arch]=x86_64`, 1)
 	outputIDs := testSystemsIDs(t, `?filter[arch]=x86_64`, 1)
-	assert.Equal(t, 8, len(outputIDs.Data))
-	assert.Equal(t, 8, len(output.Data))
+	assert.Equal(t, 9, len(outputIDs.Data))
+	assert.Equal(t, 9, len(output.Data))
 	for i, d := range outputIDs.Data {
 		assert.Equal(t, output.Data[i].ID, d.ID)
 	}
