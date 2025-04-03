@@ -243,6 +243,9 @@ func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env 
 		resp, apiErr := callCandlepin(base.Context, *consumer.Consumer, &updateReq)
 		// check response
 		if apiErr != nil {
+			if resp == nil {
+				resp = &candlepin.ConsumersUpdateResponse{Message: "call to candlepin failed"}
+			}
 			err = errors2.Join(err, apiErr, errors.New(resp.Message))
 		} else {
 			assignedIDs = append(assignedIDs, consumer.InventoryID)

@@ -59,6 +59,9 @@ INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id,  vma
 (16, '00000000-0000-0000-0000-000000000016','00000000-0000-0000-0000-000000000016', 3, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04', 1,1,1, NULL, 4, 4),
 (17, '00000000-0000-0000-0000-000000000017','00000000-0000-0000-0000-000000000017', 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2018-01-22 12:00:00-04',2,2,2, NULL, NULL, NULL);
 
+INSERT INTO system_platform (id, inventory_id, display_name, rh_account_id, reporter_id, vmaas_json, json_checksum, last_evaluation, last_upload, packages_installed, packages_installable, packages_applicable, third_party, baseline_id, baseline_uptodate, template_id, arch) VALUES
+(18, '00000000-0000-0000-0000-000000000018','00000000-0000-0000-0000-000000000018', 1, 1, '{ "package_list": [ "kernel-2.6.32-696.20.1.el6.x86_64" ], "repository_list": [ "rhel-6-server-rpms" ] }', '1', '2018-09-22 12:00:00-04', '2020-09-22 12:00:00-04',0,0,0, true, 1, true, NULL, 'x86_64');
+
 INSERT INTO advisory_metadata (id, name, description, synopsis, summary, solution, advisory_type_id,
                                public_date, modified_date, url, severity_id, cve_list, release_versions) VALUES
 (1, 'RH-1', 'adv-1-des', 'adv-1-syn', 'adv-1-sum', 'adv-1-sol', 1, '2016-09-22 12:00:00-04', '2017-09-22 12:00:00-04', 'url1', NULL, NULL, '["7.0","7Server"]'),
@@ -235,7 +238,10 @@ INSERT INTO inventory.hosts_v1_0 (id, insights_id, account, display_name, tags, 
 ('00000000000000000000000000000017', '00000000-0000-0000-0017-000000000001', '3', '00000000-0000-0000-0000-000000000017', '[]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04',
  '{"rhsm": {"version": "8.1"}, "operating_system": {"name": "RHEL", "major": 8, "minor": 1}, "ansible": {"controller_version": "1.0", "hub_version": "3.4.1", "catalog_worker_version": "100.387.9846.12", "sso_version": "1.28.3.52641.10000513168495123"}, "mssql": { "version": "15.3.0"}}',
- 'puptoo', '{}', 'org_3', '[]');
+ 'puptoo', '{}', 'org_3', '[]'),
+ ('00000000000000000000000000000018', '00000000-0000-0000-0018-000000000001', '1', '00000000-0000-0000-0000-000000000018', '[{"key": "k3", "value": "val4", "namespace": "ns1"}]',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"sap_system": true, "operating_system": {"name": "RHEL", "major": 8, "minor": 2}, "rhsm": {"version": "8.3"}, "owner_id": "return_404"}',
+ 'puptoo', '{}', 'org_1', '[{"id": "inventory-group-1", "name": "group1"}]');
 
 SELECT refresh_all_cached_counts();
 
