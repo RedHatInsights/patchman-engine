@@ -210,3 +210,24 @@ func TestUpdateTemplateBadRequest(t *testing.T) {
 		})
 	}
 }
+
+func TestUpdateTemplateSystemsCandlepin404(t *testing.T) {
+	core.SetupTest(t)
+	// 00000000-0000-0000-0000-000000000018 will force candlepin mock to return 404
+	// because owner_id=return_404
+	data := `{
+		"systems": [
+			"00000000-0000-0000-0000-000000000018"
+		]
+	}`
+
+	database.CreateTemplate(t, templateAccount, templateUUID, []string{
+		"00000000-0000-0000-0000-000000000007",
+	})
+	defer database.DeleteTemplate(t, templateAccount, templateUUID)
+	w := CreateRequestRouterWithParams("PUT", templatePath, templateUUID, "", bytes.NewBufferString(data), "",
+		TemplateSystemsUpdateHandler, templateAccount)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	database.CheckTemplateSystems(t, templateAccount, templateUUID, []string{"00000000-0000-0000-0000-000000000007"})
+}
