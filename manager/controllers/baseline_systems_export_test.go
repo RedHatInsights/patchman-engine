@@ -19,7 +19,7 @@ func TestBaselineSystemsExportJSON(t *testing.T) {
 
 	var output []BaselineSystemsDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
-	assert.Equal(t, 2, len(output))
+	assert.Equal(t, 3, len(output))
 
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].DisplayName)
@@ -46,7 +46,7 @@ func TestBaselineSystemsExportCSV(t *testing.T) {
 	body := w.Body.String()
 	lines := strings.Split(body, "\r\n")
 
-	assert.Equal(t, 4, len(lines))
+	assert.Equal(t, 5, len(lines))
 	assert.Equal(t, TemplateCsvHeader, lines[0])
 
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,RHEL 8.10,"+
