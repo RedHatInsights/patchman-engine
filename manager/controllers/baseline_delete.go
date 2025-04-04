@@ -30,6 +30,7 @@ type DeleteBaselineResponse struct {
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines/{baseline_id} [delete]
+// @Deprecated
 func BaselineDeleteHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
 

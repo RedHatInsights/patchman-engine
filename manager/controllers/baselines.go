@@ -80,6 +80,7 @@ type BaselinesResponse struct {
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines [get]
+// @Deprecated
 func BaselinesListHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)

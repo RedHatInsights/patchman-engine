@@ -32,6 +32,7 @@ type BaselineSystemsRemoveRequest struct {
 // @Failure 404 {object} 	utils.ErrorResponse
 // @Failure 500 {object} 	utils.ErrorResponse
 // @Router /baselines/systems/remove [POST]
+// @Deprecated
 func BaselineSystemsRemoveHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
 

@@ -30,6 +30,7 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 
 	if config.EnableBaselines {
 		baselines := userAuth.Group("/baselines")
+		baselines.Use(middlewares.Deprecate(deprecations.DeprecateBaselines()))
 		baselines.GET("", controllers.BaselinesListHandler)
 		baselines.GET("/:baseline_id", controllers.BaselineDetailHandler)
 		baselines.GET("/:baseline_id/systems", controllers.BaselineSystemsListHandler)

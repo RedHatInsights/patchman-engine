@@ -58,6 +58,7 @@ type SystemBaselineDBLookup struct {
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines [put]
+// @Deprecated
 // nolint: funlen
 func CreateBaselineHandler(c *gin.Context) {
 	accountID := c.GetInt(utils.KeyAccount)

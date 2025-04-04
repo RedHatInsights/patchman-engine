@@ -50,6 +50,7 @@ type UpdateBaselineResponse struct {
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines/{baseline_id} [put]
+// @Deprecated
 func BaselineUpdateHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
