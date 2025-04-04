@@ -100,7 +100,7 @@ func confugureEvaluator() {
 	// Process (and save to db) previously unknown packages (typically third party packages)
 	enableLazyPackageSave = utils.PodConfig.GetBool("lazy_package_save", true)
 	// Toggle baseline evaluation
-	enableBaselineEval = utils.PodConfig.GetBool("baseline_eval", true)
+	enableBaselineEval = utils.PodConfig.GetBool("baseline_eval", false)
 	// Toggle bypass (fake) messages processing
 	enableBypass = utils.PodConfig.GetBool("bypass", false)
 	// Toggle in-memory cache to speed up package lookups
