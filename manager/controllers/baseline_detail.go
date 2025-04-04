@@ -45,6 +45,7 @@ type BaselineDetailAttributes struct {
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines/{baseline_id} [get]
+// @Deprecated
 func BaselineDetailHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
 

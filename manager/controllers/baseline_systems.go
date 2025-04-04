@@ -135,6 +135,7 @@ func baselineSystemsCommon(c *gin.Context, account int, groups map[string]string
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines/{baseline_id}/systems [get]
+// @Deprecated
 func BaselineSystemsListHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
