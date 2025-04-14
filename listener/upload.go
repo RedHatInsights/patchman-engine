@@ -371,7 +371,9 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		if err != nil {
 			return nil, errors.Wrap(err, "Unable to assign templates")
 		}
-		colsToUpdate = append(colsToUpdate, "template_id")
+		if templateID != nil {
+			colsToUpdate = append(colsToUpdate, "template_id")
+		}
 	}
 
 	staleWarning := host.StaleWarningTimestamp.Time()
