@@ -11,11 +11,11 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"context"
-	"encoding/json"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -100,7 +100,7 @@ func confugureEvaluator() {
 	// Process (and save to db) previously unknown packages (typically third party packages)
 	enableLazyPackageSave = utils.PodConfig.GetBool("lazy_package_save", true)
 	// Toggle baseline evaluation
-	enableBaselineEval = utils.PodConfig.GetBool("baseline_eval", true)
+	enableBaselineEval = utils.PodConfig.GetBool("baseline_eval", false)
 	// Toggle bypass (fake) messages processing
 	enableBypass = utils.PodConfig.GetBool("bypass", false)
 	// Toggle in-memory cache to speed up package lookups
@@ -242,7 +242,7 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV3Response, 
 	}
 
 	var resp vmaas.UpdatesV3Response
-	err := json.Unmarshal(system.YumUpdates, &resp)
+	err := sonic.Unmarshal(system.YumUpdates, &resp)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to unmarshall yum updates")
 	}

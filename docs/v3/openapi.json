@@ -8,7 +8,7 @@
             "name": "GPLv3",
             "url": "https://www.gnu.org/licenses/gpl-3.0.en.html"
         },
-        "version": "v3.7.112"
+        "version": "v3.7.138"
     },
     "servers": [
         {
@@ -705,6 +705,7 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "security": [
                     {
                         "RhIdentity": []
@@ -768,6 +769,7 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "security": [
                     {
                         "RhIdentity": []
@@ -828,6 +830,7 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "security": [
                     {
                         "RhIdentity": []
@@ -894,6 +897,7 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "security": [
                     {
                         "RhIdentity": []
@@ -968,6 +972,7 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "security": [
                     {
                         "RhIdentity": []
@@ -1032,6 +1037,7 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "security": [
                     {
                         "RhIdentity": []
@@ -1241,6 +1247,7 @@
                         }
                     }
                 },
+                "deprecated": true,
                 "security": [
                     {
                         "RhIdentity": []

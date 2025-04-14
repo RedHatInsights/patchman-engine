@@ -8,13 +8,13 @@ import (
 	"app/manager/config"
 	"app/manager/kafka"
 	"app/manager/middlewares"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"sort"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -58,6 +58,7 @@ type SystemBaselineDBLookup struct {
 // @Failure 404 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /baselines [put]
+// @Deprecated
 // nolint: funlen
 func CreateBaselineHandler(c *gin.Context) {
 	accountID := c.GetInt(utils.KeyAccount)
@@ -132,7 +133,7 @@ func buildCreateBaselineQuery(db *gorm.DB, request CreateBaselineRequest, accoun
 	}
 
 	if request.Config != nil {
-		config, err := json.Marshal(request.Config)
+		config, err := sonic.Marshal(request.Config)
 		if err != nil {
 			return 0, err
 		}

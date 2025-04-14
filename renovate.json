@@ -1,12 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "github>konflux-ci/mintmaker//config/renovate/renovate.json"
-  ],
   "schedule": [
     "on Monday after 3am and before 10am"
   ],
   "timezone": "Europe/Prague",
+  "semanticCommits": "disabled",
   "tekton": {
     "automerge": true,
     "automergeStrategy": "rebase",
@@ -16,14 +14,5 @@
     "platformAutomerge": true
   },
   "packageRules": [
-    {
-      "matchPackageNames": ["go"],
-      "updateTypes": ["patch"]
-    },
-    {
-      "matchCategories": ["golang"],
-      "matchDepTypes": ["toolchain"],
-      "enabled": false
-    }
   ]
 }

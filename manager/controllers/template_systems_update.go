@@ -243,16 +243,24 @@ func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env 
 		resp, apiErr := callCandlepin(base.Context, *consumer.Consumer, &updateReq)
 		// check response
 		if apiErr != nil {
+			if resp == nil {
+				resp = &candlepin.ConsumersUpdateResponse{Message: "call to candlepin failed"}
+			}
 			err = errors2.Join(err, apiErr, errors.New(resp.Message))
 		} else {
 			assignedIDs = append(assignedIDs, consumer.InventoryID)
 		}
 	}
 
-	// we do not want to fail whole API if a single call to candlepin fails
-	// just log the error
 	if err != nil {
+		// we do not want to fail whole API if a single call to candlepin fails
+		// just log the error
 		utils.LogWarn(err)
+		if len(assignedIDs) == 0 {
+			// fail if none of the systems could be assigned to a template
+			LogAndRespStatusError(c, http.StatusFailedDependency, err, "candlepin call failed, no systems assigned")
+			return nil, err
+		}
 	}
 	return assignedIDs, nil
 }

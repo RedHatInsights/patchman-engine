@@ -34,7 +34,7 @@ func TestBaselinesDefault(t *testing.T) {
 
 	assert.Equal(t, 3, len(output.Data))
 	assert.Equal(t, "baseline_1-1", output.Data[0].Attributes.Name)
-	assert.Equal(t, 2, output.Data[0].Attributes.Systems)
+	assert.Equal(t, 3, output.Data[0].Attributes.Systems)
 	assert.Equal(t, "baseline_1-2", output.Data[1].Attributes.Name)
 	assert.Equal(t, 1, output.Data[1].Attributes.Systems)
 	assert.Equal(t, "baseline", output.Data[2].Type)
@@ -106,7 +106,7 @@ func TestBaselinesFilterSystems(t *testing.T) {
 func TestBaselinesFilterTags(t *testing.T) {
 	output := testBaselines(t, "/?tags=ns1/k3=val4")
 	assert.Equal(t, 3, len(output.Data))
-	assert.Equal(t, 0, output.Data[0].Attributes.Systems)
+	assert.Equal(t, 1, output.Data[0].Attributes.Systems)
 	assert.Equal(t, 1, output.Data[1].Attributes.Systems)
 	assert.Equal(t, 0, output.Data[2].Attributes.Systems)
 }
@@ -136,7 +136,7 @@ func TestBaselinesSearch(t *testing.T) {
 	assert.Equal(t, 1, output.Data[0].ID)
 	assert.Equal(t, "baseline", output.Data[0].Type)
 	assert.Equal(t, "baseline_1-1", output.Data[0].Attributes.Name)
-	assert.Equal(t, 2, output.Data[0].Attributes.Systems)
+	assert.Equal(t, 3, output.Data[0].Attributes.Systems)
 
 	// links
 	assert.Equal(t, "/?offset=0&limit=20&sort=name&search=baseline_1-1",

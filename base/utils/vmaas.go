@@ -3,7 +3,8 @@ package utils
 import (
 	"app/base/models"
 	"app/base/vmaas"
-	"encoding/json"
+
+	"github.com/bytedance/sonic"
 )
 
 // Merge update data from vmaasDataB into vmaasDataA without duplicating.
@@ -123,6 +124,6 @@ func RemoveNonLatestPackages(updates *vmaas.UpdatesV3Response) {
 
 func ParseVmaasJSON(system *models.SystemPlatform) (vmaas.UpdatesV3Request, error) {
 	var updatesReq vmaas.UpdatesV3Request
-	err := json.Unmarshal([]byte(*system.VmaasJSON), &updatesReq)
+	err := sonic.Unmarshal([]byte(*system.VmaasJSON), &updatesReq)
 	return updatesReq, err
 }

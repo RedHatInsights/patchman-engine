@@ -51,19 +51,8 @@ func lazySavePackages(vmaasData *vmaas.UpdatesV3Response) error {
 	return nil
 }
 
-func getMissingPackage(nevra string) *models.Package {
-	_, found := memoryPackageCache.GetByNevra(nevra)
-	if found {
-		// package is already in db/cache, nothing needed
-		return nil
-	}
-
+func getMissingPackage(nevra string, parsed *utils.Nevra) *models.Package {
 	utils.LogTrace("missing nevra", nevra, "getMissingPackages")
-	parsed, err := utils.ParseNevra(nevra)
-	if err != nil {
-		utils.LogWarn("err", err.Error(), "nevra", nevra, "Unable to parse nevra")
-		return nil
-	}
 
 	latestName, found := memoryPackageCache.GetLatestByName(parsed.Name)
 	pkg := models.Package{EVRA: parsed.EVRAString()}
@@ -94,16 +83,19 @@ func getMissingPackage(nevra string) *models.Package {
 func getMissingPackages(vmaasData *vmaas.UpdatesV3Response) models.PackageSlice {
 	updates := vmaasData.GetUpdateList()
 	packages := make(models.PackageSlice, 0, len(updates))
+	nevras := make([]string, 0, len(updates))
 	for nevra, update := range updates {
-		if pkg := getMissingPackage(nevra); pkg != nil {
-			packages = append(packages, *pkg)
-		}
+		nevras = append(nevras, nevra)
 		for _, pkgUpdate := range update.GetAvailableUpdates() {
 			// don't use pkgUpdate.Package since it might be missing epoch, construct it from name and evra
 			updateNevra := fmt.Sprintf("%s-%s", pkgUpdate.GetPackageName(), pkgUpdate.GetEVRA())
-			if pkg := getMissingPackage(updateNevra); pkg != nil {
-				packages = append(packages, *pkg)
-			}
+			nevras = append(nevras, updateNevra)
+		}
+	}
+	_, missingNevras, _ := memoryPackageCache.GetByNevras(nevras)
+	for nevra, parsed := range missingNevras {
+		if pkg := getMissingPackage(nevra, &parsed); pkg != nil {
+			packages = append(packages, *pkg)
 		}
 	}
 	return packages

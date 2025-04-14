@@ -7,10 +7,10 @@ import (
 	"app/base/mqueue"
 	ntf "app/base/notification"
 	"app/base/utils"
-	"encoding/json"
 	"fmt"
 	"testing"
 
+	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -72,7 +72,7 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 	assert.Equal(t, 1, len(mockWriter.Messages))
 
 	var notificationSent ntf.Notification
-	assert.Nil(t, json.Unmarshal(mockWriter.Messages[0].Value, &notificationSent))
+	assert.Nil(t, sonic.Unmarshal(mockWriter.Messages[0].Value, &notificationSent))
 	checkNotificationPayload(t, notificationSent, "RH-1", "enhancement", "adv-1-syn")
 	checkNotificationPayload(t, notificationSent, "RH-2", "bugfix", "adv-2-syn")
 
@@ -118,7 +118,7 @@ func TestAdvisoriesNotificationMessage(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, inventoryID, string(msg.Key))
 
-	notificationJSON, err := json.Marshal(notification)
+	notificationJSON, err := sonic.Marshal(notification)
 	assert.Nil(t, err)
 	assert.Equal(t, notificationJSON, msg.Value)
 }

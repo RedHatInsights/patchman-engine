@@ -4,7 +4,9 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"errors"
+	"fmt"
 	"runtime"
+	"strings"
 	"time"
 
 	rpm "github.com/ezamriy/gorpm"
@@ -162,6 +164,49 @@ func (c *PackageCache) GetByNevra(nevra string) (*PackageCacheMetadata, bool) {
 	return nil, false
 }
 
+// return slice of found packages, map of missing packages and if we found some packages
+func (c *PackageCache) GetByNevras(nevras []string) ([]PackageCacheMetadata, map[string]utils.Nevra, bool) {
+	missingCache := make([]string, 0, len(nevras))
+	cached := make([]PackageCacheMetadata, 0, len(nevras))
+	if c.enabled {
+		for _, nevra := range nevras {
+			val, ok := c.byNevra.Get(nevra)
+			if ok {
+				packageCacheCnt.WithLabelValues("hit", "nevra").Inc()
+				utils.LogTrace("nevra", nevra, "PackageCache.GetByNevras cache hit")
+				cached = append(cached, *val)
+			} else {
+				missingCache = append(missingCache, nevra)
+			}
+		}
+		if len(missingCache) == 0 {
+			return cached, nil, true
+		}
+	}
+
+	if len(missingCache) == 0 {
+		missingCache = nevras
+	}
+
+	metadata, missingDB := c.ReadByNevras(missingCache)
+	if c.enabled && (len(metadata)+len(cached)) > 0 {
+		for _, m := range metadata {
+			c.Add(&m)
+			utils.LogTrace("name", m.Name, "evra", m.Evra, "PackageCache.GetByNevras read from db")
+		}
+		metadata = append(metadata, cached...)
+		return metadata, missingDB, true
+	}
+	for i := 0; i < len(missingDB); i++ {
+		packageCacheCnt.WithLabelValues("miss", "nevra").Inc()
+	}
+	utils.LogTrace("len(misses)", len(missingDB), "PackageCache.GetByNevras not found")
+	if len(metadata) > 0 {
+		return metadata, missingDB, true // there are some missed packages but we don't want to fail
+	}
+	return nil, missingDB, false
+}
+
 func (c *PackageCache) GetLatestByName(name string) (*PackageCacheMetadata, bool) {
 	if c.enabled {
 		val, ok := c.latestByName.Get(name)
@@ -257,17 +302,22 @@ func (c *PackageCache) addNameByID(pkg *PackageCacheMetadata) {
 	}
 }
 
-func readPackageFromDB(where string, order string, args ...interface{}) *PackageCacheMetadata {
-	tx := database.DB.Begin()
-	defer tx.Rollback()
-
-	var pkg PackageCacheMetadata
+func buildPackagesQuery(tx *gorm.DB, where string, order string, args ...any) *gorm.DB {
 	query := database.Packages(tx).
 		Select("p.id, p.name_id, pn.name, p.evra, p.summary_hash, p.description_hash").
 		Where(where, args...)
 	if order != "" {
 		query = query.Order(order)
 	}
+	return query
+}
+
+func readPackageFromDB(where string, order string, args ...interface{}) *PackageCacheMetadata {
+	tx := database.DB.Begin()
+	defer tx.Rollback()
+
+	var pkg PackageCacheMetadata
+	query := buildPackagesQuery(tx, where, order, args...)
 	err := query.Take(&pkg).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -276,6 +326,22 @@ func readPackageFromDB(where string, order string, args ...interface{}) *Package
 		panic(err)
 	}
 	return &pkg
+}
+
+func readPackagesFromDB(where string, order string, args ...any) []PackageCacheMetadata {
+	tx := database.DB.Begin()
+	defer tx.Rollback()
+
+	var pkgs []PackageCacheMetadata
+	query := buildPackagesQuery(tx, where, order, args...)
+	err := query.Scan(&pkgs).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		panic(err)
+	}
+	return pkgs
 }
 
 func (c *PackageCache) ReadByID(id int64) *PackageCacheMetadata {
@@ -290,6 +356,47 @@ func (c *PackageCache) ReadByNevra(nevraString string) *PackageCacheMetadata {
 	}
 	utils.LogTrace("nevra.Name", nevra.Name, "nevra.EVRAString", nevra.EVRAString(), "PackageCache.ReadByNevra")
 	return readPackageFromDB("pn.name = ? and p.evra = ?", "", nevra.Name, nevra.EVRAString())
+}
+
+// return slice of packages found in DB and map of packages missing in DB
+func (c *PackageCache) ReadByNevras(nevraStrings []string) ([]PackageCacheMetadata, map[string]utils.Nevra) {
+	parsed := make(map[string]utils.Nevra, len(nevraStrings))
+	invalid := make(map[string]bool)
+	missing := make(map[string]utils.Nevra, len(nevraStrings))
+	for _, nevraString := range nevraStrings {
+		nevra, err := utils.ParseNevra(nevraString)
+		if err != nil {
+			utils.LogWarn("nevra", nevraString, "PackageCache.ReadByNevra: cannot parse evra")
+			invalid[nevraString] = true
+			continue
+		}
+		parsed[nevraString] = *nevra
+	}
+	nevras := make([][]interface{}, 0, len(parsed))
+	for _, n := range parsed {
+		nevras = append(nevras, []interface{}{n.Name, n.EVRAString()})
+	}
+	utils.LogTrace("nevras", nevras, "PackageCache.ReadByNevra")
+	res := readPackagesFromDB("(pn.name,p.evra) IN ?", "", nevras)
+
+	resNevras := make(map[string]bool)
+	for _, pkg := range res {
+		// nevra always with epoch
+		evra := pkg.Evra
+		if !strings.Contains(evra, ":") {
+			evra = "0:" + evra
+		}
+		nevra := fmt.Sprintf("%s-%s", pkg.Name, evra)
+		resNevras[nevra] = true
+	}
+
+	for nevra, pkg := range parsed {
+		if !invalid[nevra] && !resNevras[nevra] {
+			missing[nevra] = pkg
+		}
+	}
+
+	return res, missing
 }
 
 func (c *PackageCache) ReadLatestByName(name string) *PackageCacheMetadata {

@@ -1,8 +1,9 @@
 package types
 
 import (
-	"encoding/json"
 	"time"
+
+	"github.com/bytedance/sonic"
 )
 
 // Go datetime parser does not like slightly incorrect RFC 3339 which we are using (missing Z )
@@ -19,7 +20,7 @@ func unmarshalTimestamp(data []byte, format string) (time.Time, error) {
 	var jd string
 	var err error
 	var t time.Time
-	if err = json.Unmarshal(data, &jd); err != nil {
+	if err = sonic.Unmarshal(data, &jd); err != nil {
 		return t, err
 	}
 	t, err = time.Parse(format, jd)
@@ -27,7 +28,7 @@ func unmarshalTimestamp(data []byte, format string) (time.Time, error) {
 }
 
 func (d Rfc3339Timestamp) MarshalJSON() ([]byte, error) {
-	return json.Marshal(d.Time().Format(Rfc3339NoTz))
+	return sonic.Marshal(d.Time().Format(Rfc3339NoTz))
 }
 
 func (d *Rfc3339Timestamp) UnmarshalJSON(data []byte) error {
@@ -52,7 +53,7 @@ func (d *Rfc3339Timestamp) Time() *time.Time {
 }
 
 func (d Rfc3339TimestampWithZ) MarshalJSON() ([]byte, error) {
-	return json.Marshal(d.Time().Format(time.RFC3339))
+	return sonic.Marshal(d.Time().Format(time.RFC3339))
 }
 
 func (d *Rfc3339TimestampWithZ) UnmarshalJSON(data []byte) error {

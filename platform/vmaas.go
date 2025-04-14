@@ -1,10 +1,10 @@
 package platform
 
 import (
-	"encoding/json"
 	"io"
 	"net/http"
 
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,7 +13,7 @@ func updatesHandler(c *gin.Context) {
 		ReturnStatus int `json:"return_status"`
 	}
 	jsonData, _ := io.ReadAll(c.Request.Body)
-	_ = json.Unmarshal(jsonData, &body)
+	_ = sonic.Unmarshal(jsonData, &body)
 	if body.ReturnStatus > 200 {
 		c.AbortWithStatus(body.ReturnStatus)
 		return

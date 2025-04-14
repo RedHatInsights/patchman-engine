@@ -23,12 +23,14 @@ func testBaselineSystems(t *testing.T, param, queryString string) BaselineSystem
 func TestBaselineSystemsDefault(t *testing.T) {
 	output := testBaselineSystems(t, "1", "")
 
-	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, 3, len(output.Data))
 	assert.Equal(t, "baseline_system", output.Data[0].Type)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.Data[0].InventoryID)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.Data[0].Attributes.DisplayName)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[1].InventoryID)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[1].Attributes.DisplayName)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000018", output.Data[0].InventoryID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000018", output.Data[0].Attributes.DisplayName)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.Data[1].InventoryID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.Data[1].Attributes.DisplayName)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[2].InventoryID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[2].Attributes.DisplayName)
 
 	// links
 	assert.Equal(t, "/1/systems?offset=0&limit=20&sort=-display_name", output.Links.First)
@@ -39,7 +41,7 @@ func TestBaselineSystemsDefault(t *testing.T) {
 	// meta
 	assert.Equal(t, 0, output.Meta.Offset)
 	assert.Equal(t, core.DefaultLimit, output.Meta.Limit)
-	assert.Equal(t, 2, output.Meta.TotalItems)
+	assert.Equal(t, 3, output.Meta.TotalItems)
 }
 
 func TestBaselinesystemsEmpty(t *testing.T) {
@@ -63,14 +65,14 @@ func TestBaselineSystemsOffsetLimit(t *testing.T) {
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, 0, output.Meta.Offset)
 	assert.Equal(t, 1, output.Meta.Limit)
-	assert.Equal(t, 2, output.Meta.TotalItems)
+	assert.Equal(t, 3, output.Meta.TotalItems)
 }
 
 func TestBaselineSystemsUnlimited(t *testing.T) {
 	output := testBaselineSystems(t, "1", "?offset=0&limit=-1")
-	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, 3, len(output.Data))
 	assert.Equal(t, -1, output.Meta.Limit)
-	assert.Equal(t, 2, output.Meta.TotalItems)
+	assert.Equal(t, 3, output.Meta.TotalItems)
 }
 
 func TestBaselineSystemOffsetOverflow(t *testing.T) {

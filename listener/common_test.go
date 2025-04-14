@@ -9,11 +9,11 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"app/manager/middlewares"
-	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -142,9 +142,9 @@ func assertYumUpdatesInDB(t *testing.T, inventoryID string, yumUpdates *YumUpdat
 	assert.Equal(t, system.InventoryID, inventoryID)
 	var systemYumUpdatesParsed vmaas.UpdatesV3Response
 	var yumUpdatesParsed vmaas.UpdatesV3Response
-	err := json.Unmarshal(system.YumUpdates, &systemYumUpdatesParsed)
+	err := sonic.Unmarshal(system.YumUpdates, &systemYumUpdatesParsed)
 	assert.Nil(t, err)
-	err = json.Unmarshal(yumUpdates.RawParsed, &yumUpdatesParsed)
+	err = sonic.Unmarshal(yumUpdates.RawParsed, &yumUpdatesParsed)
 	assert.Nil(t, err)
 	assert.Equal(t, systemYumUpdatesParsed, yumUpdatesParsed)
 	assert.Equal(t, yumUpdates.BuiltPkgcache, system.BuiltPkgcache)

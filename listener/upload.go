@@ -24,6 +24,8 @@ import (
 
 	stdErrors "errors"
 
+	"github.com/bytedance/sonic"
+	"github.com/bytedance/sonic/encoder"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -328,7 +330,9 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	yumUpdates *YumUpdates, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("update-system-platform"))
-	updatesReqJSON, err := json.Marshal(updatesReq)
+	// NOTE: if we add a map to vmaas.UpdatesV3Request in the future, we need to use
+	//  	 `encoder.Encode(updatesReq, encoder.SortMapKeys)` to compute the hash correctly
+	updatesReqJSON, err := sonic.Marshal(updatesReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "Serializing vmaas request")
 	}
@@ -361,6 +365,12 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		isBootc = true
 	}
 
+	templateID, err := getTemplate(tx, accountID, host.SystemProfile.Rhsm.Environments)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to assign templates")
+	}
+	colsToUpdate = append(colsToUpdate, "template_id")
+
 	staleWarning := host.StaleWarningTimestamp.Time()
 	updatesReqJSONString := string(updatesReqJSON)
 	systemPlatform := models.SystemPlatform{
@@ -381,6 +391,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		BuiltPkgcache:         yumUpdates.GetBuiltPkgcache(),
 		Arch:                  host.SystemProfile.Arch,
 		Bootc:                 isBootc,
+		TemplateID:            templateID,
 	}
 
 	type OldChecksums struct {
@@ -741,7 +752,7 @@ func getYumUpdates(event HostEvent, client *api.Client) (*YumUpdates, error) {
 
 	if (parsed == vmaas.UpdatesV3Response{}) {
 		utils.LogWarn("yum_updates_s3url", yumUpdatesURL, "No yum updates on S3, getting legacy yum_updates field")
-		err := json.Unmarshal(yumUpdates, &parsed)
+		err := sonic.Unmarshal(yumUpdates, &parsed)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to unmarshall yum updates")
 		}
@@ -763,7 +774,7 @@ func getYumUpdates(event HostEvent, client *api.Client) (*YumUpdates, error) {
 	}
 	parsed.UpdateList = &updatesMap
 	utils.RemoveNonLatestPackages(&parsed)
-	yumUpdates, err := json.Marshal(parsed)
+	yumUpdates, err := encoder.Encode(parsed, encoder.SortMapKeys)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to marshall yum updates")
 	}

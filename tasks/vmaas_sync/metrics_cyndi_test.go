@@ -17,8 +17,8 @@ func TestCyndiMetrics(t *testing.T) {
 	assert.Equal(t, int64(0), systemCounts[lastUploadLast1D])
 	assert.Equal(t, int64(0), systemCounts[lastUploadLast7D])
 	assert.Equal(t, int64(0), systemCounts[lastUploadLast30D])
-	assert.Equal(t, int64(17), systemCounts[lastUploadAll])
-	assert.Equal(t, int64(17), tagCounts[allSystemCount])
-	assert.Equal(t, int64(14), tagCounts[systemsSapSystemCount])
-	assert.Equal(t, int64(15), tagCounts[systemsWithTagsCount])
+	assert.Equal(t, int64(18), systemCounts[lastUploadAll])
+	assert.Equal(t, int64(18), tagCounts[allSystemCount])
+	assert.Equal(t, int64(15), tagCounts[systemsSapSystemCount])
+	assert.Equal(t, int64(16), tagCounts[systemsWithTagsCount])
 }

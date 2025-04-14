@@ -3,8 +3,9 @@ package database
 import (
 	"app/base/models"
 	"app/base/utils"
-	"encoding/json"
 	"time"
+
+	"github.com/bytedance/sonic"
 )
 
 type BaselineConfig struct {
@@ -33,7 +34,7 @@ func GetBaselineConfig(system *models.SystemPlatform) *BaselineConfig {
 		return nil
 	}
 
-	err = json.Unmarshal(jsonb[0], &config)
+	err = sonic.Unmarshal(jsonb[0], &config)
 	if err != nil {
 		utils.LogError("err", err.Error(), "baseline_id", system.BaselineID,
 			"config", string(jsonb[0]), "Can't parse baseline")

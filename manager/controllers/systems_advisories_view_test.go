@@ -4,11 +4,11 @@ import (
 	"app/base/core"
 	"app/base/utils"
 	"bytes"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
@@ -21,7 +21,7 @@ func doTestView(t *testing.T, handler gin.HandlerFunc, q string, limit, offset *
 		Limit:      limit,
 		Offset:     offset,
 	}
-	bodyJSON, err := json.Marshal(&body)
+	bodyJSON, err := sonic.Marshal(&body)
 	if err != nil {
 		panic(err)
 	}

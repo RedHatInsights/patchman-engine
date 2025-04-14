@@ -6,9 +6,9 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"app/manager/config"
-	"encoding/json"
 	"testing"
 
+	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,14 +26,14 @@ func testEvaluateBaselineSystems(t *testing.T, baselineID *int64, accountID int,
 		return 1, len(writerMock.Messages)
 	})
 	var event mqueue.PlatformEvent
-	assert.Nil(t, json.Unmarshal(writerMock.Messages[0].Value, &event))
+	assert.Nil(t, sonic.Unmarshal(writerMock.Messages[0].Value, &event))
 	return event
 }
 
 // Evaluate all baseline systems - config was updated, nothing added
 func TestEvaluateBaselineSystemsDefault(t *testing.T) {
 	event := testEvaluateBaselineSystems(t, utils.PtrInt64(1), 1, true, nil)
-	assert.Equal(t, 2, len(event.SystemIDs))
+	assert.Equal(t, 3, len(event.SystemIDs))
 	assert.Equal(t, 1, event.AccountID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", event.SystemIDs[0])
 	assert.Equal(t, "00000000-0000-0000-0000-000000000002", event.SystemIDs[1])
@@ -53,7 +53,7 @@ func TestEvaluateBaselineUpdatedSystems(t *testing.T) {
 func TestEvaluateBaselineAllAndUpdatedSystems(t *testing.T) {
 	inventoryIDs := []string{"00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000004"}
 	event := testEvaluateBaselineSystems(t, utils.PtrInt64(1), 1, true, inventoryIDs)
-	assert.Equal(t, 3, len(event.SystemIDs))
+	assert.Equal(t, 4, len(event.SystemIDs))
 	assert.Equal(t, 1, event.AccountID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", event.SystemIDs[0])
 	assert.Equal(t, "00000000-0000-0000-0000-000000000002", event.SystemIDs[1])

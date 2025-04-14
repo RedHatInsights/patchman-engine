@@ -1,8 +1,6 @@
 package rbac
 
-import (
-	"encoding/json"
-)
+import "github.com/bytedance/sonic"
 
 type AccessPagination struct {
 	Data []Access `json:"data"`
@@ -39,10 +37,10 @@ func (a *AttributeFilterValue) UnmarshalJSON(data []byte) error {
 		err   error
 	)
 
-	if err = json.Unmarshal(data, &array); err != nil {
+	if err = sonic.Unmarshal(data, &array); err != nil {
 		// parsing of AttributeFilter Value into []*string failed
 		// try to parse it as *string
-		if err = json.Unmarshal(data, &value); err != nil {
+		if err = sonic.Unmarshal(data, &value); err != nil {
 			// fail, the value is neither []*string nor *string
 			return err
 		}
