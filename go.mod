@@ -6,7 +6,7 @@ toolchain go1.23.8
 
 require (
 	github.com/aws/aws-sdk-go v1.55.6
-	github.com/bytedance/sonic v1.12.7
+	github.com/bytedance/sonic v1.13.2
 	github.com/ezamriy/gorpm v0.0.0-20160905202458-25f7273cbf51
 	github.com/getkin/kin-openapi v0.130.0
 	github.com/gin-contrib/timeout v1.0.2
