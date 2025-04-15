@@ -6,6 +6,7 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+	"strings"
 	"sync"
 	"time"
 
@@ -27,6 +28,11 @@ var (
 	uploadEvalTimeout  time.Duration
 	deletionThreshold  time.Duration
 	useTraceLevel      bool
+)
+
+const (
+	puptooReporter = "puptoo"
+	rhsmReporter   = "rhsm-system-profile-bridge"
 )
 
 func configure() {
@@ -52,7 +58,8 @@ func configureListener() {
 		templatesConsumers = utils.PodConfig.GetInt("template_consumers", 1)
 	}
 	// Comma-separated list of reporters to include into processing
-	allowedReporters = utils.PodConfig.GetStringSet("allowed_reporters", "puptoo,rhsm-system-profile-bridge")
+	reporters := strings.Join([]string{puptooReporter, rhsmReporter}, ",")
+	allowedReporters = utils.PodConfig.GetStringSet("allowed_reporters", reporters)
 	// Comma-separated list of host types to exclude from processing
 	excludedHostTypes = utils.PodConfig.GetStringSet("excluded_host_types", "edge")
 	// Toggle bypass (fake) messages processing

@@ -365,11 +365,16 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 		isBootc = true
 	}
 
-	templateID, err := getTemplate(tx, accountID, host.SystemProfile.Rhsm.Environments)
-	if err != nil {
-		return nil, errors.Wrap(err, "Unable to assign templates")
+	var templateID *int64
+	if host.Reporter == rhsmReporter {
+		templateID, err = getTemplate(tx, accountID, host.SystemProfile.Rhsm.Environments)
+		if err != nil {
+			return nil, errors.Wrap(err, "Unable to assign templates")
+		}
+		if templateID != nil {
+			colsToUpdate = append(colsToUpdate, "template_id")
+		}
 	}
-	colsToUpdate = append(colsToUpdate, "template_id")
 
 	staleWarning := host.StaleWarningTimestamp.Time()
 	updatesReqJSONString := string(updatesReqJSON)
