@@ -429,3 +429,48 @@ func TestGetRepoPath(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "/content/dist/rhel8/rhui/8.4/x86_64/baseos/os", repoPath)
 }
+
+func TestHostTemplateRhsmReporter(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	accountID := int(1)
+	host := &Host{
+		ID:       id,
+		Reporter: rhsmReporter,
+		SystemProfile: inventory.SystemProfile{
+			Rhsm: inventory.Rhsm{
+				Environments: []string{"99900000000000000000000000000001", "99900000000000000000000000000002"},
+			},
+		},
+	}
+
+	templateID := hostTemplate(database.DB, accountID, host)
+	assert.NotNil(t, templateID)
+	assert.Equal(t, int64(1), *templateID)
+}
+
+func TestHostTemplatePuptoo(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	accountID := int(1)
+	host := &Host{
+		ID:       id,
+		Reporter: puptooReporter,
+		SystemProfile: inventory.SystemProfile{
+			ConsumerID: "00000000-0000-0000-0000-000000000002",
+			YumRepos: &[]inventory.YumRepo{{
+				ID:      "base",
+				Enabled: true,
+				BaseURL: "https://cert.console.example.com/api/pulp-content/abcdef/templates/" +
+					"12345678-90ab-cdef-1234-567890abcdef/content/dist/rhel9/$releasever/x86_64/baseos/os"}},
+		},
+	}
+
+	templateID := hostTemplate(database.DB, accountID, host)
+	assert.NotNil(t, templateID)
+	assert.Equal(t, int64(2), *templateID)
+}
