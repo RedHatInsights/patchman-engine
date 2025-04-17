@@ -42,6 +42,7 @@ func createTestInvHost(t *testing.T) *Host {
 
 	now := time.Now()
 	host := Host{
+		ID:             id,
 		StaleTimestamp: &correctTime,
 		Reporter:       "puptoo",
 		PerReporterStaleness: map[string]inventory.ReporterStaleness{
@@ -69,7 +70,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 		Basearch:       utils.PtrString("x86_64"),
 	}
 
-	sys1, err := updateSystemPlatform(database.DB, id, accountID1, createTestInvHost(t), nil, &req)
+	sys1, err := updateSystemPlatform(database.DB, accountID1, createTestInvHost(t), nil, &req)
 	assert.Nil(t, err)
 
 	reporterID1 := 1
@@ -79,7 +80,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	host2 := createTestInvHost(t)
 	host2.Reporter = "yupana"
 	req.PackageList = []string{"package0", "package1"}
-	sys2, err := updateSystemPlatform(database.DB, id, accountID2, host2, nil, &req)
+	sys2, err := updateSystemPlatform(database.DB, accountID2, host2, nil, &req)
 	assert.Nil(t, err)
 
 	reporterID2 := 3
@@ -300,7 +301,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 
 	req := vmaas.UpdatesV3Request{}
 
-	_, err = updateSystemPlatform(database.DB, id, accountID1, createTestInvHost(t), yumUpdates, &req)
+	_, err = updateSystemPlatform(database.DB, accountID1, createTestInvHost(t), yumUpdates, &req)
 	assert.Nil(t, err)
 
 	reporterID1 := 1
@@ -310,7 +311,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 
 	// check that yumUpdates has been updated
 	yumUpdates.RawParsed = []byte("{}")
-	_, err = updateSystemPlatform(database.DB, id, accountID1, createTestInvHost(t), yumUpdates, &req)
+	_, err = updateSystemPlatform(database.DB, accountID1, createTestInvHost(t), yumUpdates, &req)
 	assert.Nil(t, err)
 	assertYumUpdatesInDB(t, id, yumUpdates)
 

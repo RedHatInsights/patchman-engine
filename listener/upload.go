@@ -363,7 +363,7 @@ func hostTemplate(tx *gorm.DB, accountID int, host *Host) *int64 {
 
 // nolint: funlen
 // Stores or updates base system profile, returing internal system id
-func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *Host,
+func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 	yumUpdates *YumUpdates, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatform, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("update-system-platform"))
@@ -373,7 +373,7 @@ func updateSystemPlatform(tx *gorm.DB, inventoryID string, accountID int, host *
 	if err != nil {
 		return nil, errors.Wrap(err, "Serializing vmaas request")
 	}
-
+	inventoryID := host.ID
 	hash := sha256.Sum256(updatesReqJSON)
 	jsonChecksum := hex.EncodeToString(hash[:])
 	hash = sha256.Sum256(yumUpdates.GetRawParsed())
@@ -769,7 +769,7 @@ func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatform, 
 		utils.LogInfo("inventoryID", host.ID, "Received recently deleted system")
 		return nil, nil
 	}
-	sys, err := updateSystemPlatform(tx, host.ID, accountID, host, yumUpdates, &updatesReq)
+	sys, err := updateSystemPlatform(tx, accountID, host, yumUpdates, &updatesReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "saving system into the database")
 	}
