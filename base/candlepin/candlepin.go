@@ -5,6 +5,7 @@ import (
 	"app/base/utils"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -22,6 +23,16 @@ type ConsumersUpdateEnvironment struct {
 type ConsumersUpdateResponse struct {
 	Message string `json:"displayMessage"`
 }
+
+type ConsumersDetailResponse struct {
+	Environments []ConsumersEnvironment `json:"environments"`
+}
+
+type ConsumersEnvironment struct {
+	ID string `json:"id"`
+}
+
+var ErrCandlepin = errors.New("candlepin error")
 
 var (
 	// Toggle compression when calling Candlepi API
