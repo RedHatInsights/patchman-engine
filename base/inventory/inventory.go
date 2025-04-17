@@ -13,6 +13,7 @@ type SystemProfile struct {
 	Releasever        *string         `json:"releasever,omitempty"`
 	SatelliteManaged  bool            `json:"satellite_managed,omitempty"`
 	BootcStatus       Bootc           `json:"bootc_status,omitempty"`
+	ConsumerID        string          `json:"owner_id,omitempty"`
 }
 
 func (t *SystemProfile) GetInstalledPackages() []string {
