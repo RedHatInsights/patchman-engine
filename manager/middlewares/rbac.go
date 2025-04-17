@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/exp/slices"
 )
 
@@ -39,9 +40,11 @@ var granularPerms = map[string]string{
 
 // Make RBAC client on demand, with specified identity
 func makeClient(identity string) *api.Client {
+	debugRequest := log.IsLevelEnabled(log.TraceLevel)
+
 	client := api.Client{
 		HTTPClient:     httpClient,
-		Debug:          config.DebugRequest,
+		Debug:          debugRequest,
 		DefaultHeaders: map[string]string{xRHIdentity: identity},
 	}
 	if rbacURL == "" {

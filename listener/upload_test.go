@@ -42,6 +42,7 @@ func createTestInvHost(t *testing.T) *Host {
 
 	now := time.Now()
 	host := Host{
+		ID:             id,
 		StaleTimestamp: &correctTime,
 		Reporter:       "puptoo",
 		PerReporterStaleness: map[string]inventory.ReporterStaleness{
@@ -69,7 +70,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 		Basearch:       utils.PtrString("x86_64"),
 	}
 
-	sys1, err := updateSystemPlatform(database.DB, id, accountID1, createTestInvHost(t), nil, &req)
+	sys1, err := updateSystemPlatform(database.DB, accountID1, createTestInvHost(t), nil, &req)
 	assert.Nil(t, err)
 
 	reporterID1 := 1
@@ -79,7 +80,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	host2 := createTestInvHost(t)
 	host2.Reporter = "yupana"
 	req.PackageList = []string{"package0", "package1"}
-	sys2, err := updateSystemPlatform(database.DB, id, accountID2, host2, nil, &req)
+	sys2, err := updateSystemPlatform(database.DB, accountID2, host2, nil, &req)
 	assert.Nil(t, err)
 
 	reporterID2 := 3
@@ -300,7 +301,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 
 	req := vmaas.UpdatesV3Request{}
 
-	_, err = updateSystemPlatform(database.DB, id, accountID1, createTestInvHost(t), yumUpdates, &req)
+	_, err = updateSystemPlatform(database.DB, accountID1, createTestInvHost(t), yumUpdates, &req)
 	assert.Nil(t, err)
 
 	reporterID1 := 1
@@ -310,7 +311,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 
 	// check that yumUpdates has been updated
 	yumUpdates.RawParsed = []byte("{}")
-	_, err = updateSystemPlatform(database.DB, id, accountID1, createTestInvHost(t), yumUpdates, &req)
+	_, err = updateSystemPlatform(database.DB, accountID1, createTestInvHost(t), yumUpdates, &req)
 	assert.Nil(t, err)
 	assertYumUpdatesInDB(t, id, yumUpdates)
 
@@ -427,4 +428,49 @@ func TestGetRepoPath(t *testing.T) {
 	repoPath, err = getRepoPath(&sp, &repo)
 	assert.Nil(t, err)
 	assert.Equal(t, "/content/dist/rhel8/rhui/8.4/x86_64/baseos/os", repoPath)
+}
+
+func TestHostTemplateRhsmReporter(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	accountID := int(1)
+	host := &Host{
+		ID:       id,
+		Reporter: rhsmReporter,
+		SystemProfile: inventory.SystemProfile{
+			Rhsm: inventory.Rhsm{
+				Environments: []string{"99900000000000000000000000000001", "99900000000000000000000000000002"},
+			},
+		},
+	}
+
+	templateID := hostTemplate(database.DB, accountID, host)
+	assert.NotNil(t, templateID)
+	assert.Equal(t, int64(1), *templateID)
+}
+
+func TestHostTemplatePuptoo(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	accountID := int(1)
+	host := &Host{
+		ID:       id,
+		Reporter: puptooReporter,
+		SystemProfile: inventory.SystemProfile{
+			ConsumerID: "00000000-0000-0000-0000-000000000002",
+			YumRepos: &[]inventory.YumRepo{{
+				ID:      "base",
+				Enabled: true,
+				BaseURL: "https://cert.console.example.com/api/pulp-content/abcdef/templates/" +
+					"12345678-90ab-cdef-1234-567890abcdef/content/dist/rhel9/$releasever/x86_64/baseos/os"}},
+		},
+	}
+
+	templateID := hostTemplate(database.DB, accountID, host)
+	assert.NotNil(t, templateID)
+	assert.Equal(t, int64(2), *templateID)
 }

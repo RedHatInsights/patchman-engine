@@ -21,8 +21,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var errCandlepin = errors.New("candlepin error")
-var candlepinClient = config.CreateCandlepinClient()
+var candlepinClient = candlepin.CreateCandlepinClient()
 
 type TemplateSystemsUpdateRequest struct {
 	// List of inventory IDs to have templates removed
@@ -189,7 +188,7 @@ func callCandlepin(ctx context.Context, consumer string, request *candlepin.Cons
 		utils.LogDebug("request", *request, "candlepin_url", candlepinEnvConsumersURL,
 			"status_code", statusCode, "err", err)
 		if err != nil {
-			err = errors.Wrap(errCandlepin, err.Error())
+			err = errors.Wrap(candlepin.ErrCandlepin, err.Error())
 		} else if statusCode != http.StatusOK && statusCode != http.StatusNoContent {
 			err = errors.Errorf("candlepin API status %d", statusCode)
 		}
@@ -197,7 +196,7 @@ func callCandlepin(ctx context.Context, consumer string, request *candlepin.Cons
 	}
 
 	candlepinRespPtr, err := utils.HTTPCallRetry(candlepinFunc,
-		config.CandlepinExpRetries, config.CandlepinRetries, http.StatusServiceUnavailable)
+		candlepin.CandlepinExpRetries, candlepin.CandlepinRetries, http.StatusServiceUnavailable)
 	if err != nil {
 		return nil, errors.Wrap(err, "candlepin /consumers call failed")
 	}
