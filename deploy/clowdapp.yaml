@@ -141,6 +141,10 @@ objects:
         - {name: DB_USER, value: listener}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                         key: listener-database-password}}}
+        - {name: CANDLEPIN_ADDRESS, value: '${CANDLEPIN_ADDRESS}'}
+        - {name: CANDLEPIN_CERT, valueFrom: {secretKeyRef: {name: candlepin, key: cert}}}
+        - {name: CANDLEPIN_KEY, valueFrom: {secretKeyRef: {name: candlepin, key: key}}}
+        - {name: CANDLEPIN_CA, valueFrom: {secretKeyRef: {name: candlepin, key: ca}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
