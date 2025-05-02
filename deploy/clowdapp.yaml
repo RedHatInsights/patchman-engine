@@ -557,6 +557,20 @@ objects:
             JOIN rh_account a ON a.id = sp.rh_account_id
             LEFT JOIN template t on t.id = sp.template_id
           ORDER BY a.org_id, sp.inventory_id;
+    queries:
+      - prefix: hms_analytics/content-sources/system-template-grouped
+        chunksize: ${{FLOORIST_HMS_CHUNKSIZE}}
+        query: >-
+          SELECT a.org_id,
+                 count(ih.id),
+                 t.uuid::text as template_uuid, t.environment_id, t.name as template_name
+            FROM system_platform sp
+            JOIN inventory.hosts ih ON sp.inventory_id = ih.id
+            JOIN rh_account a ON a.id = sp.rh_account_id
+            LEFT JOIN template t on t.id = sp.template_id
+            where sp.last_upload >= date_trunc('month', CURRENT_DATE)
+            group by a.org_id, template_uuid, t.environment_id, template_name
+            ORDER BY a.org_id;
 
 
 - apiVersion: v1
