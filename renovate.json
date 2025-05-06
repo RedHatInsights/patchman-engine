@@ -2,9 +2,10 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": "run on Monday after 3am and before 10am",
   "schedule": [ "* 3-10 * * 1" ],
-  "automergeSchedule": [ "* 3-10 * * 1" ],
   "timezone": "Europe/Prague",
   "semanticCommits": "disabled",
+  "extends": ["config:base"],
+  "automerge": true,
   "tekton": {
     "automerge": true,
     "automergeStrategy": "rebase",
