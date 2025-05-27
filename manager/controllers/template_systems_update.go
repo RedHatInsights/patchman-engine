@@ -12,6 +12,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sort"
 
 	errors2 "errors"
 
@@ -23,9 +24,17 @@ import (
 
 var candlepinClient = candlepin.CreateCandlepinClient()
 
+const InvalidInventoryIDsErr = "invalid list of inventory IDs"
+
 type TemplateSystemsUpdateRequest struct {
 	// List of inventory IDs to have templates removed
 	Systems []string `json:"systems" example:"system1-uuid, system2-uuid, ..."`
+}
+
+type SystemTemplateDBLookup struct {
+	InventoryID      string `query:"sp.inventory_id"`
+	SatelliteManaged bool   `query:"sp.satellite_managed"`
+	Bootc            bool   `query:"sp.bootc"`
 }
 
 // @Summary Add systems to a template
@@ -262,4 +271,53 @@ func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env 
 		}
 	}
 	return assignedIDs, nil
+}
+
+func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string, groups map[string]string) (err error) {
+	var containingSystems []SystemTemplateDBLookup
+	var missingIDs []string
+	var satelliteIDs []string
+	var bootcIDs []string
+	err = database.Systems(db, accountID, groups).
+		Where("inventory_id IN (?::uuid)", inventoryIDs).
+		Scan(&containingSystems).Error
+	if err != nil {
+		return errors2.Join(base.ErrDatabase, err)
+	}
+
+	containingIDsMap := make(map[string]bool, len(containingSystems))
+	for _, containingSystem := range containingSystems {
+		containingIDsMap[containingSystem.InventoryID] = true
+
+		if containingSystem.SatelliteManaged {
+			satelliteIDs = append(satelliteIDs, containingSystem.InventoryID)
+		}
+		if containingSystem.Bootc {
+			bootcIDs = append(bootcIDs, containingSystem.InventoryID)
+		}
+	}
+
+	for _, inventoryID := range inventoryIDs {
+		if _, ok := containingIDsMap[inventoryID]; !ok {
+			missingIDs = append(missingIDs, inventoryID)
+		}
+	}
+
+	sort.Strings(missingIDs)
+	sort.Strings(satelliteIDs)
+	sort.Strings(bootcIDs)
+
+	switch {
+	case config.EnableSatelliteFunctionality && len(satelliteIDs) > 0:
+		errIDs := fmt.Errorf("template can not contain satellite managed systems: %v", satelliteIDs)
+		err = errors2.Join(err, base.ErrBadRequest, errIDs)
+	case len(bootcIDs) > 0:
+		errIDs := fmt.Errorf("template can not contain bootc systems: %v", bootcIDs)
+		err = errors2.Join(err, base.ErrBadRequest, errIDs)
+	case len(missingIDs) > 0:
+		errIDs := fmt.Errorf("unknown inventory_ids: %v", missingIDs)
+		err = errors2.Join(err, base.ErrNotFound, errIDs)
+	}
+
+	return err
 }
