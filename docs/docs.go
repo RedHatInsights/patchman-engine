@@ -32,7 +32,6 @@ type openapiData struct {
 }
 
 type EndpointsConfig struct {
-	EnableBaselines bool
 	EnableTemplates bool
 }
 
@@ -81,10 +80,6 @@ func filterOpenAPI(config EndpointsConfig, inputOpenapiPath, outputOpenapiPath s
 
 	filteredPaths := openapi3.Paths{}
 	for path := range sw.Paths.Map() {
-		if !config.EnableBaselines && strings.Contains(path, "/baselines") {
-			removedPaths++
-			continue
-		}
 		if !config.EnableTemplates && strings.Contains(path, "/templates") {
 			removedPaths++
 			continue

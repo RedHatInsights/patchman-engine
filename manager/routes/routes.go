@@ -28,18 +28,6 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	advisories.GET("/:advisory_id", controllers.AdvisoryDetailHandler)
 	advisories.GET("/:advisory_id/systems", controllers.AdvisorySystemsListHandler)
 
-	if config.EnableBaselines {
-		baselines := userAuth.Group("/baselines")
-		baselines.Use(middlewares.Deprecate(deprecations.DeprecateBaselines()))
-		baselines.GET("", controllers.BaselinesListHandler)
-		baselines.GET("/:baseline_id", controllers.BaselineDetailHandler)
-		baselines.GET("/:baseline_id/systems", controllers.BaselineSystemsListHandler)
-		baselines.PUT("/", controllers.CreateBaselineHandler)
-		baselines.PUT("/:baseline_id", controllers.BaselineUpdateHandler)
-		baselines.DELETE("/:baseline_id", controllers.BaselineDeleteHandler)
-		baselines.POST("/systems/remove", controllers.BaselineSystemsRemoveHandler)
-	}
-
 	systems := userAuth.Group("/systems")
 	systems.GET("", controllers.SystemsListHandler)
 	systems.GET("/:inventory_id", controllers.SystemDetailHandler)
@@ -67,9 +55,6 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 
 	export.GET("/packages", controllers.PackagesExportHandler)
 	export.GET("/packages/:package_name/systems", controllers.PackageSystemsExportHandler)
-	if config.EnableBaselines {
-		export.GET("/baselines/:baseline_id/systems", controllers.BaselineSystemsExportHandler)
-	}
 	if config.EnableTemplates {
 		export.GET("/templates/:template_id/systems", controllers.TemplateSystemsExportHandler)
 	}
@@ -97,9 +82,6 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	ids.GET("/packages/:package_name/systems", controllers.PackageSystemsListIDsHandler)
 	ids.GET("/systems", controllers.SystemsListIDsHandler)
 	ids.GET("/systems/:inventory_id/advisories", controllers.SystemAdvisoriesIDsHandler)
-	if config.EnableBaselines {
-		ids.GET("/baselines/:baseline_id/systems", controllers.BaselineSystemsListIDsHandler)
-	}
 	if config.EnableTemplates {
 		ids.GET("/templates/:template_id/systems", controllers.TemplateSystemsListIDsHandler)
 	}

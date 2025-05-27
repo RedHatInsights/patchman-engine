@@ -28,8 +28,6 @@ var (
 	// Honor rbac permissions (can be disabled for tests)
 	EnableRBACCHeck = utils.PodConfig.GetBool("rbac", true)
 
-	// Expose baselines API (feature flag)
-	EnableBaselines = utils.PodConfig.GetBool("baselines_api", true)
 	// Expose templates API (feature flag)
 	EnableTemplates = utils.PodConfig.GetBool("templates_api", true)
 )

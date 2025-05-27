@@ -80,7 +80,6 @@ func RunManager() {
 
 func getEndpointsConfig() docs.EndpointsConfig {
 	config := docs.EndpointsConfig{
-		EnableBaselines: config.EnableBaselines,
 		EnableTemplates: config.EnableTemplates,
 	}
 	return config
