@@ -540,9 +540,7 @@ func CheckTemplateSystems(t *testing.T, account int, templateUUID string, invent
 	assert.Nil(t, err)
 
 	assert.Equal(t, len(inventoryIDs), len(dbInventoryIDs))
-	if len(inventoryIDs) == 0 {
-		assert.Equal(t, 0, len(dbInventoryIDs))
-	} else {
+	if len(inventoryIDs) == len(dbInventoryIDs) {
 		for index, inventoryID := range inventoryIDs {
 			assert.Equal(t, inventoryID, dbInventoryIDs[index])
 		}
