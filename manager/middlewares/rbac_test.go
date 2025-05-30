@@ -47,11 +47,11 @@ func TestRBACPut(t *testing.T) {
 }
 
 func TestPermissionsSingleWrite(t *testing.T) {
-	// handler needs `patch:template:write`
-	handler := "CreateBaselineHandler"
+	// handler needs `content-sources:templates:write`
+	handler := "TemplateSystemsUpdateHandler"
 	access := rbac.AccessPagination{
 		Data: []rbac.Access{
-			{Permission: "patch:*:*"},
+			{Permission: "content-sources:*:*"},
 			{Permission: "inventory:*:*"},
 		},
 	}
@@ -59,7 +59,7 @@ func TestPermissionsSingleWrite(t *testing.T) {
 
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
-			{Permission: "patch:*:write"},
+			{Permission: "content-sources:*:write"},
 			{Permission: "inventory:*:*"},
 		},
 	}
@@ -67,7 +67,7 @@ func TestPermissionsSingleWrite(t *testing.T) {
 
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
-			{Permission: "patch:template:write"},
+			{Permission: "content-sources:templates:write"},
 			{Permission: "inventory:*:*"},
 		},
 	}
@@ -75,14 +75,14 @@ func TestPermissionsSingleWrite(t *testing.T) {
 
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
-			{Permission: "patch:asdf:write"},
+			{Permission: "content-sources:asdf:write"},
 		},
 	}
 	assert.False(t, checkPermissions(&access, handler, "PUT"))
 
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
-			{Permission: "patch:asdf:read"},
+			{Permission: "content-sources:asdf:read"},
 			{Permission: "inventory:*:*"},
 		},
 	}
@@ -90,7 +90,7 @@ func TestPermissionsSingleWrite(t *testing.T) {
 
 	access = rbac.AccessPagination{
 		Data: []rbac.Access{
-			{Permission: "patch:*:read"},
+			{Permission: "content-sources:*:read"},
 			{Permission: "inventory:*:*"},
 		},
 	}
