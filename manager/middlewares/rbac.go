@@ -29,10 +29,6 @@ const patchWritePerm = "patch:*:write"
 
 // handlerName to permissions mapping
 var granularPerms = map[string]string{
-	"CreateBaselineHandler":        "patch:template:write",
-	"BaselineUpdateHandler":        "patch:template:write",
-	"BaselineDeleteHandler":        "patch:template:write",
-	"BaselineSystemsRemoveHandler": "patch:template:write",
 	"TemplateSystemsUpdateHandler": "content-sources:templates:write",
 	"TemplateSystemsDeleteHandler": "content-sources:templates:write",
 	"SystemDeleteHandler":          "patch:system:write",
