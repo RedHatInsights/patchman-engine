@@ -3,6 +3,7 @@ package middlewares
 import (
 	"app/base/rbac"
 	"app/base/utils"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -372,7 +373,7 @@ func TestFindInventoryGroupsInvalidOp(t *testing.T) {
 					AttributeFilter: rbac.AttributeFilter{
 						Key:       "group.id",
 						Value:     []*string{},
-						Operation: "equal",
+						Operation: "unsupported",
 					},
 				}},
 			},
@@ -411,4 +412,76 @@ func TestMultiplePermissions(t *testing.T) {
 	}
 	assert.True(t, checkPermissions(&access, handler, "GET"))
 	assert.False(t, checkPermissions(&access, handler, "DELETE"))
+}
+
+var allowedOperations = `{"data": [
+    {
+      "resourceDefinitions": [],
+      "permission": "patch:*:read"
+    },
+    {
+      "resourceDefinitions": [
+        {
+          "attributeFilter": {
+            "key": "group.id",
+            "value": "00000000-f688-49d4-a8e2-87394f1ac1b1",
+            "operation": "equal"
+          }
+        }
+      ],
+      "permission": "inventory:hosts:read"
+    },
+    {
+      "resourceDefinitions": [
+        {
+          "attributeFilter": {
+            "key": "group.id",
+            "value": [ "00000000-f7a6-45a1-b5a8-410f20052fb1", "00000000-78e0-4cad-bf01-63cf1e4b1dca" ],
+            "operation": "in"
+          }
+        }
+      ],
+      "permission": "inventory:hosts:read"
+    },
+    {
+      "resourceDefinitions": [
+        {
+          "attributeFilter": {
+            "key": "group.id",
+            "value": [ "00000000-f688-49d4-a8e2-ee394f1ac1b1" ],
+            "operation": "in"
+          }
+        }
+      ],
+      "permission": "inventory:hosts:read"
+    },
+    {
+      "resourceDefinitions": [
+        {
+          "attributeFilter": {
+            "key": "group.id",
+            "value": null,
+            "operation": "equal"
+          }
+        }
+      ],
+      "permission": "inventory:hosts:read"
+    }
+  ]
+}
+`
+
+func TestPermissionsAllowedOperations(t *testing.T) {
+	handler := "SystemsListHandler"
+	access := rbac.AccessPagination{}
+	err := json.Unmarshal([]byte(allowedOperations), &access)
+	assert.NoError(t, err)
+	assert.True(t, checkPermissions(&access, handler, "GET"))
+	groups, err := findInventoryGroups(&access)
+	assert.NoError(t, err)
+	assert.Equal(t, "[]", groups["ungrouped"])
+	assert.Equal(t, `{"[{\"id\":\"00000000-f688-49d4-a8e2-87394f1ac1b1\"}]",`+
+		`"[{\"id\":\"00000000-f7a6-45a1-b5a8-410f20052fb1\"}]",`+
+		`"[{\"id\":\"00000000-78e0-4cad-bf01-63cf1e4b1dca\"}]",`+
+		`"[{\"id\":\"00000000-f688-49d4-a8e2-ee394f1ac1b1\"}]"}`, groups["grouped"])
 }
