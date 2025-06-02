@@ -157,9 +157,7 @@ func findInventoryGroups(access *rbac.AccessPagination) (map[string]string, erro
 				continue
 			}
 
-			// https://github.com/RedHatInsights/insights-host-inventory/
-			//     blob/a7c8a7c980012c89e18ec0f7074609e216b37a8d/lib/middleware.py#L124
-			if rd.AttributeFilter.Operation != "in" {
+			if rd.AttributeFilter.Operation != "in" && rd.AttributeFilter.Operation != "equal" {
 				err := fmt.Errorf(
 					"invalid value '%s' for attributeFilter.Operation",
 					rd.AttributeFilter.Operation,
