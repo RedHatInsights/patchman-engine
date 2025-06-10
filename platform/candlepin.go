@@ -3,34 +3,14 @@ package platform
 import (
 	"app/base/candlepin"
 	"app/base/utils"
-	"fmt"
+	"encoding/json"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
-
-func candlepinEnvHandler(c *gin.Context) {
-	envID := c.Param("envid")
-	/*
-		jsonData, _ := io.ReadAll(c.Request.Body)
-		json.Unmarshal(jsonData, &body) // nolint:errcheck
-		if body.ReturnStatus > 200 {
-			c.AbortWithStatus(body.ReturnStatus)
-			return
-		}
-	*/
-	data := fmt.Sprintf(`{
-        "environment": "%s"
-    }`, envID)
-	utils.LogInfo(data)
-	if envID == "return_404" {
-		c.Data(http.StatusNotFound, gin.MIMEJSON, []byte{})
-		return
-	}
-	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
-}
 
 func candlepinConsumersPutHandler(c *gin.Context) {
 	consumer := c.Param("consumer")
@@ -56,8 +36,26 @@ func candlepinConsumersGetHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func candlepinConsumersEnvironmentsHandler(c *gin.Context) {
+	owner := c.Param("owner")
+	jsonData, _ := io.ReadAll(c.Request.Body)
+	utils.LogInfo("owner", owner, "body", string(jsonData))
+	var req candlepin.ConsumersEnvironmentsRequest
+	err := json.Unmarshal(jsonData, &req)
+	if err != nil {
+		c.Data(http.StatusInternalServerError, gin.MIMEJSON, []byte{})
+		return
+	}
+	utils.LogInfo("ConsumerUuids", req.ConsumerUuids)
+	if slices.Contains(req.ConsumerUuids, "return_404") {
+		c.Data(http.StatusNotFound, gin.MIMEJSON, []byte{})
+		return
+	}
+	c.Data(http.StatusOK, gin.MIMEJSON, []byte{})
+}
+
 func initCandlepin(app *gin.Engine) {
-	app.POST("/candlepin/environments/:envid/consumers", candlepinEnvHandler)
 	app.PUT("/candlepin/consumers/:consumer", candlepinConsumersPutHandler)
 	app.GET("/candlepin/consumers/:consumer", candlepinConsumersGetHandler)
+	app.PUT("/candlepin/owner/:owner/consumers/environments", candlepinConsumersEnvironmentsHandler)
 }
