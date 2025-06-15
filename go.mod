@@ -35,7 +35,7 @@ require (
 	golang.org/x/exp v0.0.0-20250606033433-dcc06ee1d476
 	golang.org/x/net v0.41.0
 	gorm.io/driver/postgres v1.5.11
-	gorm.io/gorm v1.26.0
+	gorm.io/gorm v1.30.0
 	modernc.org/strutil v1.2.1
 )
 
