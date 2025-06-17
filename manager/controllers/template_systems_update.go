@@ -189,7 +189,7 @@ func templateArchVersionMatch(
 
 func callCandlepin(ctx context.Context, owner string, request *candlepin.ConsumersEnvironmentsRequest) (
 	*candlepin.ConsumersUpdateResponse, error) {
-	candlepinEnvConsumersURL := utils.CoreCfg.CandlepinAddress + "/owner/" + owner + "/consumers/environments"
+	candlepinEnvConsumersURL := utils.CoreCfg.CandlepinAddress + "/owners/" + owner + "/consumers/environments"
 	candlepinFunc := func() (interface{}, *http.Response, error) {
 		candlepinResp := candlepin.ConsumersUpdateResponse{}
 		resp, err := candlepinClient.Request(&ctx, http.MethodPut, candlepinEnvConsumersURL, request, &candlepinResp)

@@ -57,5 +57,5 @@ func candlepinConsumersEnvironmentsHandler(c *gin.Context) {
 func initCandlepin(app *gin.Engine) {
 	app.PUT("/candlepin/consumers/:consumer", candlepinConsumersPutHandler)
 	app.GET("/candlepin/consumers/:consumer", candlepinConsumersGetHandler)
-	app.PUT("/candlepin/owner/:owner/consumers/environments", candlepinConsumersEnvironmentsHandler)
+	app.PUT("/candlepin/owners/:owner/consumers/environments", candlepinConsumersEnvironmentsHandler)
 }
