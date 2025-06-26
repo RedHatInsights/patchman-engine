@@ -49,6 +49,7 @@ services:
     restart: unless-stopped
     ports:
       - 9001:9001
+      - 9005:9005
     volumes:
       - ./conf/cdappconfig.json:/go/src/app/conf/cdappconfig.json
     depends_on:
