@@ -391,7 +391,12 @@ func uploader() {
 	}
 }
 
+func platformGrpcMock() {
+	initKessel()
+}
+
 func RunPlatformMock() {
 	go uploader()
+	go platformGrpcMock()
 	platformMock()
 }

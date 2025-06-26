@@ -54,6 +54,7 @@ services:
       - kafka
     ports:
       - 9001:9001
+      - 9005:9005
     volumes:
       - ./:/go/src/app
     security_opt:
