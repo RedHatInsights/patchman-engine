@@ -1,8 +1,8 @@
 module app
 
-go 1.23.0
+go 1.24.3
 
-toolchain go1.23.8
+toolchain go1.24.4
 
 require (
 	github.com/aws/aws-sdk-go v1.55.7
@@ -29,7 +29,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
-	github.com/zsais/go-gin-prometheus v0.1.0
+	github.com/zsais/go-gin-prometheus v1.0.0
 	go.uber.org/automaxprocs v1.6.0
 	go.uber.org/ratelimit v0.3.1
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b
