@@ -30,4 +30,6 @@ var (
 
 	// Expose templates API (feature flag)
 	EnableTemplates = utils.PodConfig.GetBool("templates_api", true)
+
+	EnableKessel = utils.PodConfig.GetBool("KESSEL_ENABLED", false)
 )

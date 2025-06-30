@@ -17,7 +17,8 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	api.Use(middlewares.DatabaseWithContext())
 
 	userAuth := api.Group("/")
-	userAuth.Use(middlewares.RBAC())
+	// userAuth.Use(middlewares.RBAC())
+	userAuth.Use(middlewares.Kessel())
 	userAuth.Use(middlewares.PublicAuthenticator())
 
 	systemAuth := api.Group("/")
