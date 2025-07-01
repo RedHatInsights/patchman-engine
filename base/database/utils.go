@@ -90,7 +90,7 @@ func Timestamp2Str(ts *types.Rfc3339TimestampWithZ) *string {
 	if ts == nil {
 		return nil
 	}
-	ret := ts.Time().Format(time.RFC3339)
+	ret := ts.Time().Format(time.RFC3339Nano)
 	return &ret
 }
 
@@ -119,7 +119,7 @@ func GetTimestampKVValue(key string) (*types.Rfc3339TimestampWithZ, error) {
 }
 
 func UpdateTimestampKVValue(key string, value time.Time) {
-	ts := value.Format(time.RFC3339)
+	ts := value.Format(time.RFC3339Nano)
 	err := UpdateTimestampKVValueStr(key, ts)
 	if err != nil {
 		utils.LogError("err", err.Error(), "key", key, "Unable to updated timestamp KV value")
