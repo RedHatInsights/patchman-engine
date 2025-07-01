@@ -53,7 +53,7 @@ func (d *Rfc3339Timestamp) Time() *time.Time {
 }
 
 func (d Rfc3339TimestampWithZ) MarshalJSON() ([]byte, error) {
-	return sonic.Marshal(d.Time().Format(time.RFC3339))
+	return sonic.Marshal(d.Time().Format(time.RFC3339Nano))
 }
 
 func (d *Rfc3339TimestampWithZ) UnmarshalJSON(data []byte) error {

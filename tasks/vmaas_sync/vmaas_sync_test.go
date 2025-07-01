@@ -33,6 +33,9 @@ func TestSyncDates(t *testing.T) {
 	Configure()
 	evalWriter = &mockKafkaWriter{}
 
+	// ensure timestamp_kv is empty
+	assert.NoError(t, database.DB.Table("timestamp_kv").Delete(&models.TimestampKV{}).Error)
+
 	// there's no timestamp before first sync
 	ts := GetLastSync(VmaasExported)
 	assert.Nil(t, ts)
@@ -40,7 +43,7 @@ func TestSyncDates(t *testing.T) {
 	runSync()
 
 	ts = GetLastSync(VmaasExported)
-	assert.Equal(t, "2222-04-16 20:07:59 +0000 UTC", ts.Time().String())
+	assert.Equal(t, "2222-04-16 20:07:59.235962 +0000 UTC", ts.Time().String())
 	database.DeleteNewlyAddedPackages(t)
 	database.DeleteNewlyAddedAdvisories(t)
 	msgs = nil
@@ -50,6 +53,9 @@ func TestSync(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	Configure()
+
+	// ensure timestamp_kv is empty
+	assert.NoError(t, database.DB.Table("timestamp_kv").Delete(&models.TimestampKV{}).Error)
 
 	// ensure all repos to be marked "third_party" = true
 	assert.NoError(t, database.DB.Table("repo").Where("name IN (?)", []string{"repo1", "repo2", "repo3"}).
