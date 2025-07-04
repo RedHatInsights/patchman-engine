@@ -30,4 +30,14 @@ var (
 
 	// Expose templates API (feature flag)
 	EnableTemplates = utils.PodConfig.GetBool("templates_api", true)
+
+	// Kessel
+	KesselEnabled          = utils.GetBoolEnvOrDefault("KESSEL_ENABLED", false)
+	KesselURL              = utils.Getenv("KESSEL_URL", "platform:9005")
+	KesselAuthEnabled      = utils.GetBoolEnvOrDefault("KESSEL_AUTH_ENABLED", false)
+	KesselInsecure         = utils.GetBoolEnvOrDefault("KESSEL_INSECURE", true)
+	KesselAuthClientID     = utils.Getenv("KESSEL_AUTH_CLIENT_ID", "")
+	KesselAuthClientSecret = utils.Getenv("KESSEL_AUTH_CLIENT_SECRET", "")
+	KesselAuthOIDCIssuer   = utils.Getenv("KESSEL_AUTH_OIDC_ISSUER",
+		"https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token")
 )
