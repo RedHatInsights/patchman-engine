@@ -21,14 +21,6 @@ type ConsumersUpdateResponse struct {
 	Message string `json:"displayMessage"`
 }
 
-type ConsumersDetailResponse struct {
-	Environments []ConsumersEnvironment `json:"environments"`
-}
-
-type ConsumersEnvironment struct {
-	ID string `json:"id"`
-}
-
 var ErrCandlepin = errors.New("candlepin error")
 
 var (
