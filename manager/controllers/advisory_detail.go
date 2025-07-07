@@ -200,7 +200,7 @@ func tryGetAdvisoryFromCache(advisoryName string) *AdvisoryDetailResponse {
 	middlewares.AdvisoryDetailCnt.WithLabelValues("hit").Inc()
 
 	emptyTime := time.Time{}
-	if val.Data.Attributes.PublicDate == nil || *val.Data.Attributes.PublicDate == emptyTime {
+	if val.Data.Attributes.PublicDate == nil || val.Data.Attributes.PublicDate.Equal(emptyTime) {
 		// advisory is found in cache but was inserted from yum_updates
 		// it is missing all attributes such as description, public_date, modified_date, etc.
 		// these attributes are added after the advisory is synced by vmaas-sync
