@@ -462,11 +462,9 @@ func TestHostTemplatePuptoo(t *testing.T) {
 		Reporter: puptooReporter,
 		SystemProfile: inventory.SystemProfile{
 			ConsumerID: "00000000-0000-0000-0000-000000000002",
-			YumRepos: &[]inventory.YumRepo{{
-				ID:      "base",
-				Enabled: true,
-				BaseURL: "https://cert.console.example.com/api/pulp-content/abcdef/templates/" +
-					"12345678-90ab-cdef-1234-567890abcdef/content/dist/rhel9/$releasever/x86_64/baseos/os"}},
+			Rhsm: inventory.Rhsm{
+				Environments: []string{"99900000000000000000000000000002"},
+			},
 		},
 	}
 
