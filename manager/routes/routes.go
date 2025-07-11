@@ -3,6 +3,7 @@ package routes
 import (
 	"app/base/deprecations"
 	"app/docs"
+	"app/manager/config"
 	"app/manager/controllers"
 	"app/manager/middlewares"
 	admin "app/turnpike/controllers"
@@ -10,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: funlen
+func InitAPI(api *gin.RouterGroup, cfg docs.EndpointsConfig) { // nolint: funlen
 	api.Use(middlewares.CheckReferer())
 	api.Use(middlewares.SetAPIVersion(api.BasePath()))
 	api.Use(middlewares.Deprecate(deprecations.DeprecateLimit()))
@@ -18,6 +19,9 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 
 	userAuth := api.Group("/")
 	userAuth.Use(middlewares.RBAC())
+	if config.KesselEnabled {
+		userAuth.Use(middlewares.Kessel())
+	}
 	userAuth.Use(middlewares.PublicAuthenticator())
 
 	systemAuth := api.Group("/")
@@ -55,11 +59,11 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 
 	export.GET("/packages", controllers.PackagesExportHandler)
 	export.GET("/packages/:package_name/systems", controllers.PackageSystemsExportHandler)
-	if config.EnableTemplates {
+	if cfg.EnableTemplates {
 		export.GET("/templates/:template_id/systems", controllers.TemplateSystemsExportHandler)
 	}
 
-	if config.EnableTemplates {
+	if cfg.EnableTemplates {
 		templates := userAuth.Group("/templates")
 		templates.GET("", controllers.TemplatesListHandler)
 		templates.GET("/:template_id/systems", controllers.TemplateSystemsListHandler)
@@ -82,7 +86,7 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	ids.GET("/packages/:package_name/systems", controllers.PackageSystemsListIDsHandler)
 	ids.GET("/systems", controllers.SystemsListIDsHandler)
 	ids.GET("/systems/:inventory_id/advisories", controllers.SystemAdvisoriesIDsHandler)
-	if config.EnableTemplates {
+	if cfg.EnableTemplates {
 		ids.GET("/templates/:template_id/systems", controllers.TemplateSystemsListIDsHandler)
 	}
 
