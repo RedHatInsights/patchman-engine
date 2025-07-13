@@ -10,7 +10,7 @@ import (
 
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	swaggerFiles "github.com/swaggo/files"
+	swaggerFiles "github.com/swaggo/files/v2"
 )
 
 var apiRegexp = regexp.MustCompile(`/v(\d)`)
