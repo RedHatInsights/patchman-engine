@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 
 	"github.com/bytedance/sonic"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 func ParseXRHID(identityString string) (*identity.XRHID, error) {
