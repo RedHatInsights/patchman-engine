@@ -21,11 +21,17 @@ import (
 type ListObjectStreamingClient = grpc.ServerStreamingClient[kesselAPIv2.StreamedListObjectsResponse]
 
 func setupClient() (*kesselClientV2.InventoryClient, error) {
-	// TODO: use secure credentials
 	options := []func(*kesselClientCommon.Config){
 		kesselClientCommon.WithgRPCUrl(utils.CoreCfg.KesselURL),
 		kesselClientCommon.WithTLSInsecure(utils.CoreCfg.KesselInsecure),
 	}
+
+	if utils.CoreCfg.KesselAuthEnabled {
+		options = append(options, kesselClientCommon.WithAuthEnabled(
+			utils.CoreCfg.KesselAuthClientID, utils.CoreCfg.KesselAuthClientSecret, utils.CoreCfg.KesselAuthOIDCIssuer,
+		))
+	}
+
 	return kesselClientV2.New(kesselClientCommon.NewConfig(options...))
 }
 
