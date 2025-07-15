@@ -93,6 +93,7 @@ type coreConfig struct {
 	KesselAuthClientID     string
 	KesselAuthClientSecret string
 	KesselAuthOIDCIssuer   string
+	RbacURL                string
 
 	// prometheus pushgateway
 	PrometheusPushGateway string
@@ -266,6 +267,8 @@ func initServicesFromClowder() {
 			}
 		case "rbac":
 			CoreCfg.RbacAddress = (*Endpoint)(&endpoint).buildURL()
+		case "rbac-service":
+			CoreCfg.RbacURL = (*Endpoint)(&endpoint).buildURL()
 		}
 	}
 
@@ -337,13 +340,14 @@ func initLoggerFromEnv() {
 }
 
 func initKesselFromEnv() {
-	CoreCfg.KesselEnabled = GetBoolEnvOrDefault("KESSEL_ENABLED", false)
-	CoreCfg.KesselURL = Getenv("KESSEL_URL", "")
-	CoreCfg.KesselAuthEnabled = GetBoolEnvOrDefault("KESSEL_AUTH_ENABLED", false)
-	CoreCfg.KesselInsecure = GetBoolEnvOrDefault("KESSEL_INSECURE", true)
-	CoreCfg.KesselAuthClientID = Getenv("KESSEL_AUTH_CLIENT_ID", "")
-	CoreCfg.KesselAuthClientSecret = Getenv("KESSEL_AUTH_CLIENT_SECRET", "")
-	CoreCfg.KesselAuthOIDCIssuer = Getenv("KESSEL_AUTH_OIDC_ISSUER", "")
+	CoreCfg.KesselEnabled = GetBoolEnvOrDefault("KESSEL_ENABLED", CoreCfg.KesselEnabled)
+	CoreCfg.KesselURL = Getenv("KESSEL_URL", CoreCfg.KesselURL)
+	CoreCfg.KesselAuthEnabled = GetBoolEnvOrDefault("KESSEL_AUTH_ENABLED", CoreCfg.KesselAuthEnabled)
+	CoreCfg.KesselInsecure = GetBoolEnvOrDefault("KESSEL_INSECURE", CoreCfg.KesselInsecure)
+	CoreCfg.KesselAuthClientID = Getenv("KESSEL_AUTH_CLIENT_ID", CoreCfg.KesselAuthClientID)
+	CoreCfg.KesselAuthClientSecret = Getenv("KESSEL_AUTH_CLIENT_SECRET", CoreCfg.KesselAuthClientSecret)
+	CoreCfg.KesselAuthOIDCIssuer = Getenv("KESSEL_AUTH_OIDC_ISSUER", CoreCfg.KesselAuthOIDCIssuer)
+	CoreCfg.RbacURL = Getenv("RBAC_URL", CoreCfg.RbacURL)
 }
 
 // PrintClowderParams Print Clowder params to export environment variables.

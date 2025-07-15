@@ -16,8 +16,45 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSetupClient(_ *testing.T) {
-	// TODO: implement test after client setup is added
+func TestSetupClient(t *testing.T) {
+	originalKesselInsecure := utils.CoreCfg.KesselInsecure
+	originalKesselAuthEnabled := utils.CoreCfg.KesselAuthEnabled
+	originalKesselAuthClientID := utils.CoreCfg.KesselAuthClientID
+	originalKesselAuthClientSecret := utils.CoreCfg.KesselAuthClientSecret
+
+	// insecure TLS and no auth
+	utils.CoreCfg.KesselInsecure = true
+	utils.CoreCfg.KesselAuthEnabled = false
+	client, err := setupClient()
+	assert.NoError(t, err)
+	assert.NotNil(t, client)
+
+	// secure TLS and no auth
+	utils.CoreCfg.KesselInsecure = false
+	client, err = setupClient()
+	assert.NoError(t, err)
+	assert.NotNil(t, client)
+
+	// insecure TLS and auth
+	utils.CoreCfg.KesselInsecure = true
+	utils.CoreCfg.KesselAuthEnabled = true
+	utils.CoreCfg.KesselAuthClientID = "test-client-id"
+	utils.CoreCfg.KesselAuthClientSecret = "test-client-secret"
+	client, err = setupClient()
+	assert.NoError(t, err)
+	assert.NotNil(t, client)
+
+	// secure TLS and auth
+	utils.CoreCfg.KesselInsecure = false
+	client, err = setupClient()
+	assert.NoError(t, err)
+	assert.NotNil(t, client)
+
+	// cleanup
+	utils.CoreCfg.KesselInsecure = originalKesselInsecure
+	utils.CoreCfg.KesselAuthEnabled = originalKesselAuthEnabled
+	utils.CoreCfg.KesselAuthClientID = originalKesselAuthClientID
+	utils.CoreCfg.KesselAuthClientSecret = originalKesselAuthClientSecret
 }
 
 func TestBuildRequest(t *testing.T) {
