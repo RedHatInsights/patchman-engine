@@ -1,4 +1,4 @@
-package system_culling //nolint:revive,stylecheck
+package system_culling
 
 import (
 	"app/base/utils"

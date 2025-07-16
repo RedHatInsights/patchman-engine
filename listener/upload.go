@@ -372,10 +372,7 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 		displayName = *host.DisplayName
 	}
 
-	isBootc := false
-	if len(host.SystemProfile.BootcStatus.Booted.Image) > 0 {
-		isBootc = true
-	}
+	isBootc := len(host.SystemProfile.BootcStatus.Booted.Image) > 0
 
 	templateID := hostTemplate(tx, accountID, host)
 	if templateID != nil {
