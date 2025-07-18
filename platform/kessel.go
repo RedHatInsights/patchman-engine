@@ -7,8 +7,6 @@ import (
 
 	kesselv2 "github.com/project-kessel/inventory-api/api/kessel/inventory/v1beta2"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type ListObjectStreamingServer = grpc.ServerStreamingServer[kesselv2.StreamedListObjectsResponse]
@@ -18,13 +16,13 @@ type MockKesselServer struct {
 }
 
 func (server MockKesselServer) Check(_ context.Context, _ *kesselv2.CheckRequest) (*kesselv2.CheckResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Check not implemented")
+	return &kesselv2.CheckResponse{Allowed: kesselv2.Allowed_ALLOWED_TRUE}, nil
 }
 
 func (server MockKesselServer) CheckForUpdate(_ context.Context, _ *kesselv2.CheckForUpdateRequest) (
 	*kesselv2.CheckForUpdateResponse, error,
 ) {
-	return nil, status.Errorf(codes.Unimplemented, "method CheckForUpdate not implemented")
+	return &kesselv2.CheckForUpdateResponse{Allowed: kesselv2.Allowed_ALLOWED_TRUE}, nil
 }
 
 func (server MockKesselServer) StreamedListObjects(_ *kesselv2.StreamedListObjectsRequest,
