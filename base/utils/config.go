@@ -85,6 +85,15 @@ type coreConfig struct {
 	CloudWatchRegion          string
 	CloudWatchLogGroup        string
 
+	// Kessel
+	KesselEnabled          bool
+	KesselURL              string
+	KesselAuthEnabled      bool
+	KesselInsecure         bool
+	KesselAuthClientID     string
+	KesselAuthClientSecret string
+	KesselAuthOIDCIssuer   string
+
 	// prometheus pushgateway
 	PrometheusPushGateway string
 
@@ -116,6 +125,7 @@ func init() {
 	initProfilerFromEnv()
 	initConsoledotFromEnv()
 	initLoggerFromEnv()
+	initKesselFromEnv()
 }
 
 func initDBFromEnv() {
@@ -324,6 +334,16 @@ func initConsoledotFromEnv() {
 func initLoggerFromEnv() {
 	CoreCfg.LogLevel = Getenv("LOG_LEVEL", "INFO")
 	CoreCfg.LogStyle = Getenv("LOG_STYLE", "plain")
+}
+
+func initKesselFromEnv() {
+	CoreCfg.KesselEnabled = GetBoolEnvOrDefault("KESSEL_ENABLED", false)
+	CoreCfg.KesselURL = Getenv("KESSEL_URL", "")
+	CoreCfg.KesselAuthEnabled = GetBoolEnvOrDefault("KESSEL_AUTH_ENABLED", false)
+	CoreCfg.KesselInsecure = GetBoolEnvOrDefault("KESSEL_INSECURE", true)
+	CoreCfg.KesselAuthClientID = Getenv("KESSEL_AUTH_CLIENT_ID", "")
+	CoreCfg.KesselAuthClientSecret = Getenv("KESSEL_AUTH_CLIENT_SECRET", "")
+	CoreCfg.KesselAuthOIDCIssuer = Getenv("KESSEL_AUTH_OIDC_ISSUER", "")
 }
 
 // PrintClowderParams Print Clowder params to export environment variables.
