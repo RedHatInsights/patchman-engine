@@ -335,9 +335,10 @@ func TestSatelliteSystemAdvisories(t *testing.T) {
 	var installableCnt, applicableCnt int
 	for _, updates := range result.GetUpdateList() {
 		for _, update := range updates.GetAvailableUpdates() {
-			if update.StatusID == INSTALLABLE {
+			switch update.StatusID {
+			case INSTALLABLE:
 				installableCnt++
-			} else if update.StatusID == APPLICABLE {
+			case APPLICABLE:
 				applicableCnt++
 			}
 		}

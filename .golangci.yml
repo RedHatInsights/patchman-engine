@@ -1,14 +1,12 @@
+version: "2"
 linters:
-  disable-all: true
+  default: none
   enable:
     # default linters
     - errcheck # Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases [fast: true, auto-fix: false]
-    - gosimple # (megacheck): Linter for Go source code that specializes in simplifying a code [fast: true, auto-fix: false]
     - govet # (vet, vetshadow): Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string [fast: true, auto-fix: false]
     - ineffassign # Detects when assignments to existing variables are not used [fast: true, auto-fix: false]
     - staticcheck # (megacheck): Staticcheck is a go vet on steroids, applying a ton of static analysis checks [fast: true, auto-fix: false]
-    - typecheck # Like the front-end of a Go compiler, parses and type-checks Go code [fast: true, auto-fix: false]
-    - unused # (megacheck): Checks Go code for unused constants, variables, functions and types [fast: false, auto-fix: false]
 
     # extra linters
     - bodyclose # checks whether HTTP response body is closed successfully [fast: true, auto-fix: false]
@@ -19,7 +17,6 @@ linters:
     - goconst # Finds repeated strings that could be replaced by a constant [fast: true, auto-fix: false]
     - gocritic # The most opinionated Go source code linter [fast: true, auto-fix: false]
     - gocyclo # Computes and checks the cyclomatic complexity of functions [fast: true, auto-fix: false]
-    - gofmt # Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification [fast: true, auto-fix: true]
     - revive #Fast, configurable, extensible, flexible, and beautiful linter for Go. Drop-in replacement of golint. [fast: false, auto-fix: false]
     - gosec # (gas): Inspects source code for security problems [fast: true, auto-fix: false]
     - lll # Reports long lines [fast: true, auto-fix: false]
@@ -27,51 +24,81 @@ linters:
     - nakedret # Finds naked returns in functions greater than a specified function length [fast: true, auto-fix: false]
     - prealloc # Finds slice declarations that could potentially be preallocated [fast: true, auto-fix: false]
     - copyloopvar # checks for pointers to enclosing loop variables [fast: false, auto-fix: false]
-    - stylecheck # Stylecheck is a replacement for golint [fast: true, auto-fix: false]
     - unconvert # Remove unnecessary type conversions [fast: true, auto-fix: false]
     - unparam # Reports unused function parameters [fast: true, auto-fix: false]
     - whitespace # Tool for detection of leading and trailing whitespace [fast: true, auto-fix: true]
+  settings:
+    depguard:
+      # Rules to apply.
+      #
+      # Variables:
+      # - File Variables
+      #   Use an exclamation mark `!` to negate a variable.
+      #   Example: `!$test` matches any file that is not a go test file.
+      #
+      #   `$all` - matches all go files
+      #   `$test` - matches all go test files
+      #
+      # - Package Variables
+      #
+      #   `$gostd` - matches all of go's standard library (Pulled from `GOROOT`)
+      #
+      # Default (applies if no custom rules are defined): Only allow $gostd in all files.
+      rules:
+        # Name of a rule.
+        main:
+          # Defines package matching behavior. Available modes:
+          # - `original`: allowed if it doesn't match the deny list and either matches the allow list or the allow list is empty.
+          # - `strict`: allowed only if it matches the allow list and either doesn't match the deny list or the allow rule is more specific (longer) than the deny rule.
+          # - `lax`: allowed if it doesn't match the deny list or the allow rule is more specific (longer) than the deny rule.
+          # Default: "original"
+          list-mode: lax
+          # List of file globs that will match this list of settings to compare against.
+          # Default: $all
+          # files:
+          #  - "!**/*_a _file.go"
+          # List of allowed packages.
+          # allow:
+          #  - $gostd
+          #  - github.com/OpenPeeDeeP
+          # List of packages that are not allowed.
+          deny:
+            - pkg: github.com/unsafe/unsafe
+              desc: not allowed
+            # - pkg: "github.com/pkg/errors"
+            #   desc: Should be replaced by standard lib errors package
+    # govet:
+    #   enable:
+    #     - fieldalignment # TODO enable and optimize fields alignment in structs:
+    # # see: https://medium.com/@felipedutratine/how-to-organize-the-go-struct-in-order-to-save-memory-c78afcf59ec2
+    staticcheck:
+      # Default: ["all", "-ST1000", "-ST1003", "-ST1016", "-ST1020", "-ST1021", "-ST1022"]
+      checks: ["all", "-ST1000", "-ST1003", "-ST1016", "-ST1020", "-ST1021", "-ST1022", "-QF1001", "-QF1008"]
+    revive:
+      rules:
+        - name: var-naming
+          arguments:
+            - []
+            - []
+            - - skip-package-name-checks: true
 
-
-linters-settings:
-  depguard:
-    # Rules to apply.
-    #
-    # Variables:
-    # - File Variables
-    #   you can still use and exclamation mark ! in front of a variable to say not to use it.
-    #   Example !$test will match any file that is not a go test file.
-    #
-    #   `$all` - matches all go files
-    #   `$test` - matches all go test files
-    #
-    # - Package Variables
-    #
-    #  `$gostd` - matches all of go's standard library (Pulled from `GOROOT`)
-    #
-    # Default: Only allow $gostd in all files.
-    rules:
-      # Name of a rule.
-      main:
-        # Used to determine the package matching priority.
-        # There are three different modes: `original`, `strict`, and `lax`.
-        # Default: "original"
-        list-mode: lax
-        # List of file globs that will match this list of settings to compare against.
-        # Default: $all
-        #files:
-        #  - "!**/*_a _file.go"
-        # List of allowed packages.
-        #allow:
-        #  - $gostd
-        #  - github.com/OpenPeeDeeP
-        # Packages that are not allowed where the value is a suggestion.
-        deny:
-          - pkg: "github.com/unsafe/unsafe"
-            desc: not allowed
-        #  - pkg: "github.com/pkg/errors"
-        #    desc: Should be replaced by standard lib errors package
-#  govet:
-#    enable:
-#      - fieldalignment # TODO enable and optimize fields alignment in structs:
-# see: https://medium.com/@felipedutratine/how-to-organize-the-go-struct-in-order-to-save-memory-c78afcf59ec2
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt # Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification [fast: true, auto-fix: true]
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

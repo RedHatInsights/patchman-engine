@@ -29,7 +29,7 @@ RUN if [ "$INSTALL_TOOLS" == "yes" ] ; then \
         go install github.com/swaggo/swag/cmd/swag@v1.16.4 && \
         go install gotest.tools/gotestsum@v1.12.0 && \
         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
-        | sh -s -- -b $(go env GOPATH)/bin v1.64.8 ; \
+        | sh -s -- -b $(go env GOPATH)/bin v2.2.2 ; \
     fi
 
 ADD --chown=insights:insights dev/kafka/secrets/ca.crt /opt/kafka/
