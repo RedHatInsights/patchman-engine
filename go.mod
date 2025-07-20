@@ -1,8 +1,6 @@
 module app
 
-go 1.23.9
-
-toolchain go1.23.10
+go 1.24.4
 
 require (
 	github.com/aws/aws-sdk-go v1.55.7
@@ -21,7 +19,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
-	github.com/project-kessel/inventory-api v0.0.0-20250703165500-01cd4fd220ad
+	github.com/project-kessel/inventory-api v0.0.0-20250718111349-82ab5a29e725
 	github.com/prometheus/client_golang v1.22.0
 	github.com/redhatinsights/app-common-go v1.6.8
 	github.com/redhatinsights/platform-go-middlewares v1.0.0

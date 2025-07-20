@@ -221,8 +221,8 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/prashantv/gostub v1.1.0 h1:BTyx3RfQjRHnUWaGF9oQos79AlQ5k8WNktv7VGvVH4g=
 github.com/prashantv/gostub v1.1.0/go.mod h1:A5zLQHz7ieHGG7is6LLXLz7I8+3LZzsrV0P1IAHhP5U=
-github.com/project-kessel/inventory-api v0.0.0-20250703165500-01cd4fd220ad h1:XBYDUq0NGJguUW2tIkjHQE7CuTVVPvDV7P+u/qfrgbg=
-github.com/project-kessel/inventory-api v0.0.0-20250703165500-01cd4fd220ad/go.mod h1:JKQ5H9OwR4aUaUzIDbX5PO/fTtnGxPyIzKjeq+RuZe8=
+github.com/project-kessel/inventory-api v0.0.0-20250718111349-82ab5a29e725 h1:eM5qnFP8p193Q4Ih9uU1uYN1U9wFzsiw+ArVZenFomw=
+github.com/project-kessel/inventory-api v0.0.0-20250718111349-82ab5a29e725/go.mod h1:BkMmRVBUS1poh39Bvr9DQqHtOIijDTpfvwNnoS52hJk=
 github.com/prometheus/client_golang v1.22.0 h1:rb93p9lokFEsctTys46VnV1kLCDpVZ0a/Y92Vm0Zc6Q=
 github.com/prometheus/client_golang v1.22.0/go.mod h1:R7ljNsLXhuQXYZYtw6GAE9AZg8Y7vEW5scdCXrWRXC0=
 github.com/prometheus/client_model v0.6.2 h1:oBsgwpGs7iVziMvrGhE53c/GrLUsZdHnqNwqPLxwZyk=
