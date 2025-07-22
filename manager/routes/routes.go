@@ -2,6 +2,7 @@ package routes
 
 import (
 	"app/base/deprecations"
+	"app/base/utils"
 	"app/docs"
 	"app/manager/controllers"
 	"app/manager/middlewares"
@@ -18,6 +19,9 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 
 	userAuth := api.Group("/")
 	userAuth.Use(middlewares.RBAC())
+	if utils.CoreCfg.KesselEnabled {
+		userAuth.Use(middlewares.Kessel())
+	}
 	userAuth.Use(middlewares.PublicAuthenticator())
 
 	systemAuth := api.Group("/")
