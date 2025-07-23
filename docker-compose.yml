@@ -26,8 +26,6 @@ services:
       - ./dev/kafka/secrets:/etc/kafka/secrets
       - ./dev/kafka:/app
     ports:
-      - 29092:29092
-      - 29093:29093
       - 9092:9092
       - 9093:9093
       - 9099:9099
