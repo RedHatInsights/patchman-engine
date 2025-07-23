@@ -1,9 +1,10 @@
-FROM quay.io/cloudservices/postgresql-rds:16-4649c84
+FROM quay.io/cloudservices/postgresql-rds:16
 
 # install pg_repack
 USER root
 RUN curl -o /etc/yum.repos.d/postgresql.repo \
-        https://copr.fedorainfracloud.org/coprs/g/insights/postgresql-16/repo/epel-8/group_insights-postgresql-16-epel-8.repo
+        https://copr.fedorainfracloud.org/coprs/g/insights/postgresql-16/repo/epel-9/group_insights-postgresql-16-epel-9.repo
+RUN dnf module disable -y postgresql
 RUN dnf install -y pg_repack
 
 ADD /dev/database/init.sh /docker-entrypoint-initdb.d/
