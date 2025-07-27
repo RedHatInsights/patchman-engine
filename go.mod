@@ -36,7 +36,7 @@ require (
 	golang.org/x/net v0.42.0
 	google.golang.org/grpc v1.74.2
 	gorm.io/driver/postgres v1.6.0
-	gorm.io/gorm v1.30.0
+	gorm.io/gorm v1.30.1
 	modernc.org/strutil v1.2.1
 )
 
