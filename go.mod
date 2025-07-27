@@ -4,7 +4,7 @@ go 1.24.4
 
 require (
 	github.com/aws/aws-sdk-go v1.55.7
-	github.com/bytedance/sonic v1.13.3
+	github.com/bytedance/sonic v1.14.0
 	github.com/ezamriy/gorpm v0.0.0-20160905202458-25f7273cbf51
 	github.com/getkin/kin-openapi v0.132.0
 	github.com/gin-contrib/timeout v1.0.2
