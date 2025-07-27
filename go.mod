@@ -7,7 +7,7 @@ require (
 	github.com/bytedance/sonic v1.14.0
 	github.com/ezamriy/gorpm v0.0.0-20160905202458-25f7273cbf51
 	github.com/getkin/kin-openapi v0.132.0
-	github.com/gin-contrib/timeout v1.0.2
+	github.com/gin-contrib/timeout v1.1.0
 	github.com/gin-gonic/gin v1.10.1
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
 	github.com/golang-migrate/migrate/v4 v4.18.3
