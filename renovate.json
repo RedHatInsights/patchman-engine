@@ -5,6 +5,7 @@
   "timezone": "Europe/Prague",
   "semanticCommits": "disabled",
   "extends": ["config:base"],
+  "baseBranches": ["master"],
   "automerge": true,
   "tekton": {
     "automerge": true,
