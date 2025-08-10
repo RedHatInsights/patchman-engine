@@ -19,7 +19,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
-	github.com/project-kessel/inventory-api v0.0.0-20250730190340-bc3d073446fe
+	github.com/project-kessel/inventory-api v0.0.0-20250806184926-62ac72c27d17
 	github.com/project-kessel/inventory-client-go v0.0.0-20250703155410-0ece2b1f2d03
 	github.com/prometheus/client_golang v1.23.0
 	github.com/redhatinsights/app-common-go v1.6.8
