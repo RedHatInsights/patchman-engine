@@ -1,8 +1,10 @@
 package system_culling
 
 import (
+	"app/base/models"
 	"app/base/utils"
 	"app/tasks"
+	"time"
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -26,6 +28,13 @@ func runSystemCulling() {
 		}
 		utils.LogInfo("nMarked", nMarked, "Stale systems marked")
 		staleSystemsMarkedCnt.Add(float64(nMarked))
+
+		// pruning deleted_system
+		nPruned, err := pruneDeletedSystems(tx, tasks.DeleteCulledSystemsLimit)
+		if err != nil {
+			return errors.Wrap(err, "Prune deleted_systems")
+		}
+		utils.LogInfo("nPruned", nPruned, "Deleted_systems items pruned")
 
 		return nil
 	})
@@ -58,4 +67,14 @@ func markSystemsStale(tx *gorm.DB, markedLimit int) (nMarked int, err error) {
 	}
 
 	return nMarked, err
+}
+
+func pruneDeletedSystems(tx *gorm.DB, limitDeleted int) (int64, error) {
+	// postgres delete does not support limit
+	subQ := tx.Model(&models.DeletedSystem{}).
+		Where("when_deleted < ?", time.Now().Add(-tasks.DeletedSystemsThreshold)).
+		Limit(limitDeleted).
+		Select("inventory_id")
+	query := tx.Delete(&models.DeletedSystem{}, "inventory_id in (?)", subQ)
+	return query.RowsAffected, query.Error
 }
