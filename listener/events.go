@@ -78,12 +78,19 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 		return errors.Wrap(err, "Could not delete system")
 	}
 
-	query := database.DB.Exec("select deleted_inventory_id from delete_system(?::uuid)", event.ID)
+	// mark system as stale and let system_culling job remove it later
+	query := database.DB.Model(&models.SystemPlatform{}).Where("inventory_id = ?::uuid", event.ID).
+		Updates(map[string]interface{}{
+			"stale":            true,
+			"stale_timestamp":  gorm.Expr("NOW()"),
+			"culled_timestamp": gorm.Expr("NOW()"),
+		})
 	err = query.Error
 	if err != nil {
-		utils.LogError("inventoryID", event.ID, "err", err.Error(), "Could not delete system")
+		wrappedErr := errors.Wrap(err, "Could not mark system as deleted")
+		utils.LogError("inventoryID", event.ID, "err", wrappedErr.Error())
 		eventMsgsReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorProcessing).Inc()
-		return errors.Wrap(err, "Could not opt_out system")
+		return wrappedErr
 	}
 
 	if query.RowsAffected == 0 {
