@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"app/base/utils"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -39,4 +40,6 @@ var (
 	// How ofter run full vmaas sync, 7 days by default
 	FullSyncCadence    = utils.PodConfig.GetInt("full_sync_cadence", 24*7)
 	MaxChangedPackages = utils.PodConfig.GetInt("max_changed_packages", 30000)
+	// prune deleted_system table records older than threshold
+	DeletedSystemsThreshold = time.Hour * time.Duration(utils.PodConfig.GetInt("system_delete_hrs", 4))
 )

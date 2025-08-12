@@ -102,11 +102,5 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 	utils.LogInfo("inventoryID", event.ID, "count", query.RowsAffected, "Systems deleted")
 	eventMsgsReceivedCnt.WithLabelValues(EventDelete, ReceivedSuccess).Inc()
 
-	err = database.DB.
-		Delete(&models.DeletedSystem{}, "when_deleted < ?", time.Now().Add(-deletionThreshold)).Error
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		utils.LogWarn("inventoryID", event.ID, WarnNoRowsModified)
-		return nil
-	}
 	return nil
 }
