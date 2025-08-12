@@ -172,3 +172,41 @@ func TestCullSystems(t *testing.T) {
 		assert.Equal(t, cnt-int64(nToDelete), cntAfter)
 	})
 }
+
+func TestPruneDeletedSystems(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	nToDelete := 4
+	for i := 0; i < nToDelete; i++ {
+		invID := fmt.Sprintf("00000000-0000-0000-0000-000000000de%d", i+1)
+		assert.NoError(t, database.DB.Create(&models.DeletedSystem{
+			InventoryID: invID,
+			WhenDeleted: staleDate,
+		}).Error)
+	}
+	assert.NoError(t, database.DB.Create(&models.DeletedSystem{
+		InventoryID: "00000000-0000-0000-0000-000000000deff",
+		WhenDeleted: time.Now(),
+	}).Error)
+
+	var cnt int64
+	var cntAfter int64
+	assert.NoError(t, database.DB.Model(&models.DeletedSystem{}).Count(&cnt).Error)
+	assert.Equal(t, int64(nToDelete+1), cnt)
+
+	nDeleted, err := pruneDeletedSystems(database.DB, 3)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(3), nDeleted)
+
+	// remove rest except last system (below threshold)
+	nDeleted, err = pruneDeletedSystems(database.DB, 3)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(1), nDeleted)
+
+	assert.NoError(t, database.DB.Model(&models.DeletedSystem{}).Count(&cntAfter).Error)
+	assert.Equal(t, int64(1), cntAfter)
+
+	// clean data from table
+	assert.NoError(t, database.DB.Delete(&models.DeletedSystem{}, "1=1").Error)
+}

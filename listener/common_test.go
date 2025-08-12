@@ -37,6 +37,7 @@ func deleteData(t *testing.T) {
 		Delete(&models.Repo{}).Error)
 	assert.Nil(t, database.DB.Unscoped().Where("inventory_id = ?::uuid", id).Delete(&models.SystemPlatform{}).Error)
 	assert.Nil(t, database.DB.Unscoped().Where("name = ?", id).Delete(&models.RhAccount{}).Error)
+	assert.Nil(t, database.DB.Unscoped().Where("inventory_id = ?", id).Delete(&models.DeletedSystem{}).Error)
 }
 
 // nolint: unparam
@@ -68,7 +69,17 @@ func assertSystemNotInDB(t *testing.T) {
 	assert.Nil(t, database.DB.Model(models.SystemPlatform{}).
 		Where("inventory_id = ?::uuid", id).Count(&systemCount).Error)
 
-	assert.Equal(t, int(systemCount), 0)
+	assert.Equal(t, 0, int(systemCount))
+}
+
+func assertSystemStaleAndCulled(t *testing.T) {
+	var systemCount int64
+	now := time.Now()
+	assert.Nil(t, database.DB.Model(models.SystemPlatform{}).
+		Where("stale = true AND stale_timestamp < ? AND culled_timestamp < ?", now, now).
+		Where("inventory_id = ?::uuid", id).Count(&systemCount).Error)
+
+	assert.Equal(t, 1, int(systemCount))
 }
 
 func getOrCreateTestAccount(t *testing.T) int {
