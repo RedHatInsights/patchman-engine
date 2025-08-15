@@ -96,12 +96,13 @@ type NestedFilterMap map[string]string
 
 var nestedFilters = NestedFilterMap{
 	"group_name":                                  "group_name",
-	"system_profile][sap_system":                  "system_profile][sap_system",
-	"system_profile][sap_sids":                    "system_profile][sap_sids",
-	"system_profile][ansible":                     "system_profile][ansible",
-	"system_profile][ansible][controller_version": "system_profile][ansible][controller_version",
-	"system_profile][mssql":                       "system_profile][mssql",
-	"system_profile][mssql][version":              "system_profile][mssql][version",
+	"system_profile][sap_system":                  "(ih.system_profile->'workloads'->'sap'->>'sap_system')",
+	"system_profile][sap_sids":                    "(ih.system_profile->'workloads'->'sap'->>'sids')",
+	"system_profile][sap_sids][in]":               "(ih.system_profile->'workloads'->'sap'->>'sids')",
+	"system_profile][ansible":                     "(ih.system_profile->'workloads'->>'ansible')",
+	"system_profile][ansible][controller_version": "(ih.system_profile->'workloads'->'ansible'->>'controller_version')",
+	"system_profile][mssql":                       "(ih.system_profile->'workloads'->>'mssql')",
+	"system_profile][mssql][version":              "(ih.system_profile->'workloads'->'mssql'->>'version')",
 }
 
 func ParseFilters(c *gin.Context, filters Filters, allowedFields database.AttrMap,
@@ -112,8 +113,7 @@ func ParseFilters(c *gin.Context, filters Filters, allowedFields database.AttrMa
 			subject := name[7 : len(name)-1] // strip key from "filter[...]"
 			for _, v := range values {
 				if _, ok := nestedFilters[subject]; ok {
-					nested := nestedFilters[subject]
-					filters.Update(InventoryFilter, nested, v)
+					filters.Update(InventoryFilter, subject, v)
 					continue
 				}
 				if _, ok := allowedFields[subject]; !ok {
@@ -413,10 +413,10 @@ func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, 
 	return tx, applied
 }
 
-// Builds inventory sub query in generic way.
+// Builds inventory sub query
 // Example:
-// buildSystemProfileQuery("mssql->version", "1.0")
-// returns "(ih.system_profile -> 'mssql' ->> 'version')::text = 1.0"
+// buildSystemProfileQuery("system_profile][mssql][version", "1.0")
+// returns "(ih.system_profile->'workloads'->'mssql'->>'version') = 1.0"
 func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
 	if strings.Contains(key, "group_name") {
 		groups := []string{}
@@ -444,20 +444,10 @@ func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
 		bval, _ := sonic.Marshal(values)
 		val = string(bval)
 	default:
-		cmp = "::text = ?"
+		cmp = " = ?"
 	}
 
-	sbkeys := strings.Split(key, "][")
-	subq := fmt.Sprintf("(ih.%s", sbkeys[0])
-	nSbkeys := len(sbkeys)
-	if nSbkeys > 2 {
-		subq = fmt.Sprintf("%s -> '%s'", subq, strings.Join(sbkeys[1:nSbkeys-1], "' -> '"))
-	}
-	if nSbkeys > 1 {
-		subq = fmt.Sprintf("%s ->> '%s')", subq, sbkeys[nSbkeys-1])
-	}
-
-	subq = fmt.Sprintf("%s%s", subq, cmp)
+	subq := fmt.Sprintf("%s%s", nestedFilters[key], cmp)
 	if val == "not_nil" {
 		return tx.Where(subq)
 	}
