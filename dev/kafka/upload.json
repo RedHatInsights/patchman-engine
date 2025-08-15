@@ -3,7 +3,6 @@
     "host": {
         "id": "<system_id>",
         "display_name": "<hostname>",
-        "ansible_host": null,
         "account": "acc-1",
         "org_id": "org_1",
         "insights_id": "4bdcb1d0-6b34-42a8-be90-481c5634da6b",
@@ -28,6 +27,9 @@
         "culled_timestamp": "2024-03-12T10:35:18.111571+00:00",
         "reporter": "puptoo",
         "tags": [],
+        "workloads":{
+            "ansible_host": null
+        },
         "system_profile": {
             "arch": "x86_64",
             "rhsm": {
