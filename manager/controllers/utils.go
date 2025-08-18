@@ -96,12 +96,8 @@ type NestedFilterMap map[string]string
 
 var nestedFilters = NestedFilterMap{
 	"group_name":                                  "group_name",
-	"group_name][in":                              "group_name", // obsoleted, backward compatible
 	"system_profile][sap_system":                  "system_profile][sap_system",
 	"system_profile][sap_sids":                    "system_profile][sap_sids",
-	"system_profile][sap_sids][":                  "system_profile][sap_sids", // obsoleted, backward compatible
-	"system_profile][sap_sids][in":                "system_profile][sap_sids", // obsoleted, backward compatible
-	"system_profile][sap_sids][in][":              "system_profile][sap_sids", // obsoleted, backward compatible
 	"system_profile][ansible":                     "system_profile][ansible",
 	"system_profile][ansible][controller_version": "system_profile][ansible][controller_version",
 	"system_profile][mssql":                       "system_profile][mssql",
