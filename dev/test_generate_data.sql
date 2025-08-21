@@ -106,9 +106,13 @@ do $$
         rnd_date1 := now() - make_interval(days => (rnd*30)::int);
         rnd_date2 := rnd_date1 + make_interval(days => (rnd*10)::int);
         insert into system_platform
-            (inventory_id, display_name, rh_account_id, vmaas_json, json_checksum, last_updated, unchanged_since, last_upload, packages_installed, packages_updatable)
+            (inventory_id, display_name, rh_account_id, vmaas_json, json_checksum,
+             last_updated, unchanged_since, last_upload, last_evaluation,
+             packages_installed, packages_installable, packages_applicable)
         values
-            (gen_uuid, gen_uuid, trunc(rnd*rh_accounts)+1, json_data[trunc(rnd*3)], json_hash[trunc(rnd*3)], rnd_date2, rnd_date1, rnd_date2, trunc(rnd*1000), trunc(rnd*50))
+            (gen_uuid, gen_uuid, trunc(rnd*rh_accounts)+1, json_data[trunc(rnd*3)], json_hash[trunc(rnd*3)],
+             rnd_date2, rnd_date1, rnd_date2, rnd_date2,
+             trunc(rnd*1000), trunc(rnd*50), trunc(rnd*50))
         on conflict do nothing;
         if mod(cnt, (wanted*progress/100)::int) = 0 then
             raise notice 'created % system_platforms', cnt;
@@ -121,7 +125,7 @@ $$
 ;
 
 -- fill inventory.hosts from system platform
-delete from inventory.hosts;
+truncate table inventory.hosts;
 insert into inventory.hosts (id, account, display_name, tags, updated, created, stale_timestamp,
                              system_profile, reporter, per_reporter_staleness, org_id, groups )
   select sp.inventory_id, substr(ac.name, 0, 10), sp.display_name, '{}', sp.last_updated, sp.last_updated, coalesce(sp.stale_timestamp, now()),
@@ -350,7 +354,6 @@ do $$
     progress int;
     pkgs int;
     accounts int;
-    update_data jsonb := '[{"evra": "5.10.13-200.fc31.x86_64", "advisory": "RH-100", "status": "Applicable"}]'::jsonb;
     rnd float;
     rnd1 float;
     rnd2 float;
@@ -369,8 +372,8 @@ do $$
       rnd1 := (0.8 + rnd * 0.4) * pkg_per_system;
       rnd2 := (pkgs-rnd-1) * rnd;
 
-      insert into system_package (rh_account_id, system_id, package_id, update_data,  name_id)
-        (select row.id, sp.id, p.id, update_data, p.name_id
+      insert into system_package2 (rh_account_id, system_id, name_id, package_id, installable_id,  applicable_id)
+        (select row.id, sp.id, p.name_id, p.id, p.id, p.id
            from (select id, name_id from package limit rnd1::int offset rnd2::int) p,
                 (select id from system_platform where rh_account_id = row.id) sp
         )
@@ -386,9 +389,6 @@ do $$
 $$
 ;
 
--- copy data from old system_package to new
-insert into system_package2 (select rh_account_id, system_id, name_id, package_id, package_id, package_id from system_package);
-
 -- show size of whole system_platform table
 SELECT
     parent.relname      AS parent,
@@ -398,4 +398,4 @@ SELECT
 FROM pg_inherits
     JOIN pg_class parent            ON pg_inherits.inhparent = parent.oid
     JOIN pg_class child             ON pg_inherits.inhrelid   = child.oid
-WHERE parent.relname in ('system_package', 'system_package2');
+WHERE parent.relname in ('system_platform', 'system_package2');
