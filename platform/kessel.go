@@ -7,6 +7,7 @@ import (
 
 	kesselv2 "github.com/project-kessel/inventory-api/api/kessel/inventory/v1beta2"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type ListObjectStreamingServer = grpc.ServerStreamingServer[kesselv2.StreamedListObjectsResponse]
@@ -51,6 +52,7 @@ func initKessel() {
 
 	grpcServer := grpc.NewServer()
 	kesselv2.RegisterKesselInventoryServiceServer(grpcServer, &MockKesselServer{})
+	reflection.Register(grpcServer)
 	err = grpcServer.Serve(listener)
 	if err != nil {
 		utils.LogFatal("err", err, "failed to serve gRPC Kessel mock server")
