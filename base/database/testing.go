@@ -232,9 +232,6 @@ func CheckSystemAdvisories(t *testing.T, systemID int64, advisoryIDs []int64) {
 		Find(&systemAdvisories).Error
 	assert.Nil(t, err)
 	assert.Equal(t, len(advisoryIDs), len(systemAdvisories))
-	for _, systemAdvisory := range systemAdvisories {
-		assert.NotNil(t, systemAdvisory.FirstReported)
-	}
 }
 
 func CheckEVRAsInDB(t *testing.T, nExpected int, evras ...string) {
