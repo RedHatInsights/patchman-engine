@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (134, false);
+VALUES (135, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -32,19 +32,6 @@ AS
 $$
 SELECT CASE WHEN cond = TRUE THEN iftrue else iffalse END;
 $$ LANGUAGE SQL IMMUTABLE;
-
--- set_first_reported
-CREATE OR REPLACE FUNCTION set_first_reported()
-    RETURNS TRIGGER AS
-$set_first_reported$
-BEGIN
-    IF NEW.first_reported IS NULL THEN
-        NEW.first_reported := CURRENT_TIMESTAMP;
-    END IF;
-    RETURN NEW;
-END;
-$set_first_reported$
-    LANGUAGE 'plpgsql';
 
 -- set_last_updated
 CREATE OR REPLACE FUNCTION set_last_updated()
@@ -857,7 +844,7 @@ CREATE TABLE IF NOT EXISTS system_advisories
     rh_account_id  INT                      NOT NULL,
     system_id      BIGINT                   NOT NULL,
     advisory_id    BIGINT                   NOT NULL,
-    first_reported TIMESTAMP WITH TIME ZONE NOT NULL,
+    first_reported TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status_id      INT                      NOT NULL,
     PRIMARY KEY (rh_account_id, system_id, advisory_id),
     CONSTRAINT advisory_metadata_id
@@ -867,11 +854,6 @@ CREATE TABLE IF NOT EXISTS system_advisories
 
 SELECT create_table_partitions('system_advisories', 32,
                                $$WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')$$);
-
-SELECT create_table_partition_triggers('system_advisories_set_first_reported',
-                                       $$BEFORE INSERT$$,
-                                       'system_advisories',
-                                       $$FOR EACH ROW EXECUTE PROCEDURE set_first_reported()$$);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO evaluator;
 -- manager needs to be able to update things like 'status' on a sysid/advisory combination, also needs to delete
