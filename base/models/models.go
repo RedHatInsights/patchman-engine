@@ -215,12 +215,11 @@ func (AdvisoryMetadata) TableName() string {
 type AdvisoryMetadataSlice []AdvisoryMetadata
 
 type SystemAdvisories struct {
-	RhAccountID   int   `gorm:"primaryKey"`
-	SystemID      int64 `gorm:"primaryKey"`
-	AdvisoryID    int64 `gorm:"primaryKey"`
-	Advisory      AdvisoryMetadata
-	FirstReported *time.Time
-	StatusID      int
+	RhAccountID int   `gorm:"primaryKey"`
+	SystemID    int64 `gorm:"primaryKey"`
+	AdvisoryID  int64 `gorm:"primaryKey"`
+	Advisory    AdvisoryMetadata
+	StatusID    int
 }
 
 func (SystemAdvisories) TableName() string {

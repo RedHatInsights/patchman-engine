@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (133, false);
+VALUES (135, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -32,19 +32,6 @@ AS
 $$
 SELECT CASE WHEN cond = TRUE THEN iftrue else iffalse END;
 $$ LANGUAGE SQL IMMUTABLE;
-
--- set_first_reported
-CREATE OR REPLACE FUNCTION set_first_reported()
-    RETURNS TRIGGER AS
-$set_first_reported$
-BEGIN
-    IF NEW.first_reported IS NULL THEN
-        NEW.first_reported := CURRENT_TIMESTAMP;
-    END IF;
-    RETURN NEW;
-END;
-$set_first_reported$
-    LANGUAGE 'plpgsql';
 
 -- set_last_updated
 CREATE OR REPLACE FUNCTION set_last_updated()
@@ -107,44 +94,17 @@ BEGIN
         RETURN NEW;
     END IF;
 
-    -- find advisories linked to the server
-    WITH to_update_advisories AS (
-        SELECT aad.advisory_id,
-               aad.rh_account_id,
-               case when sa.status_id = 0 then change else 0 end as systems_installable_change,
-               change as systems_applicable_change
-          FROM advisory_account_data aad
-          JOIN system_advisories sa ON aad.advisory_id = sa.advisory_id
-          -- Filter advisory_account_data only for advisories affectign this system & belonging to system account
-         WHERE aad.rh_account_id =  NEW.rh_account_id
-           AND sa.system_id = NEW.id AND sa.rh_account_id = NEW.rh_account_id
-         ORDER BY aad.advisory_id),
-         -- update existing rows
-         update AS (
-            UPDATE advisory_account_data aad
-               SET systems_installable = aad.systems_installable + ta.systems_installable_change,
-                   systems_applicable = aad.systems_applicable + ta.systems_applicable_change
-              FROM to_update_advisories ta
-             WHERE aad.advisory_id = ta.advisory_id
-               AND aad.rh_account_id = NEW.rh_account_id
-         )
-    -- If we have system affected && no exisiting advisory_account_data entry, we insert new rows
+    -- insert/update advisories linked to the server
     INSERT
       INTO advisory_account_data (advisory_id, rh_account_id, systems_installable, systems_applicable)
     SELECT sa.advisory_id, NEW.rh_account_id,
-           case when sa.status_id = 0 then 1 else 0 end as systems_installable,
-           1 as systems_applicable
-    FROM system_advisories sa
-    WHERE sa.system_id = NEW.id AND sa.rh_account_id = NEW.rh_account_id
-      AND change > 0
-      -- create only rows which are not already in to_update_advisories
-      AND (NEW.rh_account_id, sa.advisory_id) NOT IN (
-            SELECT ta.rh_account_id, ta.advisory_id
-              FROM to_update_advisories ta
-    )
-    ON CONFLICT (advisory_id, rh_account_id) DO UPDATE
-        SET systems_installable = advisory_account_data.systems_installable + EXCLUDED.systems_installable,
-            systems_applicable = advisory_account_data.systems_applicable + EXCLUDED.systems_applicable;
+           case when sa.status_id = 0 then change else 0 end as systems_installable,
+           change as systems_applicable
+      FROM system_advisories sa
+     WHERE sa.system_id = NEW.id AND sa.rh_account_id = NEW.rh_account_id
+        ON CONFLICT (advisory_id, rh_account_id) DO UPDATE
+           SET systems_installable = advisory_account_data.systems_installable + EXCLUDED.systems_installable,
+               systems_applicable = advisory_account_data.systems_applicable + EXCLUDED.systems_applicable;
     RETURN NEW;
 END;
 $system_update$ LANGUAGE plpgsql;
@@ -884,7 +844,7 @@ CREATE TABLE IF NOT EXISTS system_advisories
     rh_account_id  INT                      NOT NULL,
     system_id      BIGINT                   NOT NULL,
     advisory_id    BIGINT                   NOT NULL,
-    first_reported TIMESTAMP WITH TIME ZONE NOT NULL,
+    first_reported TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status_id      INT                      NOT NULL,
     PRIMARY KEY (rh_account_id, system_id, advisory_id),
     CONSTRAINT advisory_metadata_id
@@ -894,11 +854,6 @@ CREATE TABLE IF NOT EXISTS system_advisories
 
 SELECT create_table_partitions('system_advisories', 32,
                                $$WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')$$);
-
-SELECT create_table_partition_triggers('system_advisories_set_first_reported',
-                                       $$BEFORE INSERT$$,
-                                       'system_advisories',
-                                       $$FOR EACH ROW EXECUTE PROCEDURE set_first_reported()$$);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO evaluator;
 -- manager needs to be able to update things like 'status' on a sysid/advisory combination, also needs to delete
