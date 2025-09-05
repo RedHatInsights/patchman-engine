@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"app/base/utils"
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -77,15 +78,27 @@ func TestProcessWorkspaces(t *testing.T) {
 	}
 }
 
-func TestUseStreamedListObjects(t *testing.T) {
-	conn, _ := grpc.NewClient(utils.CoreCfg.KesselURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+func TestGetDefaultWorkspaceID(t *testing.T) {
+	workspaceID, err := getDefaultWorkspaceID(context.Background(), mockXRHID())
+	if assert.NoError(t, err) {
+		assert.NotEqual(t, "", workspaceID)
+	}
+}
+
+func TestUseCheckForUpdate(t *testing.T) {
+	client, conn := mockClient(t)
 	defer conn.Close()
 
-	client := kesselv2.NewKesselInventoryServiceClient(conn)
+	err := useCheckForUpdate(&gin.Context{}, client, mockXRHID(), "patch_template_view")
+	assert.Nil(t, err)
+}
+
+func TestUseStreamedListObjects(t *testing.T) {
+	client, conn := mockClient(t)
+	defer conn.Close()
+
 	c := &gin.Context{Request: &http.Request{Method: http.MethodGet}}
-	err := useStreamedListObjects(c, client, &identity.XRHID{
-		Identity: identity.Identity{User: identity.User{UserID: "12345"}},
-	})
+	err := useStreamedListObjects(c, client, mockXRHID())
 	if assert.NoError(t, err) {
 		inventoryGroups, found := c.Get(utils.KeyInventoryGroups)
 		assert.True(t, found)
@@ -100,4 +113,21 @@ func TestHasPermissionKessel(t *testing.T) {
 	hasPermissionKessel(c)
 	_, exists := c.Get(utils.KeyInventoryGroups)
 	assert.True(t, exists)
+}
+
+func mockXRHID() *identity.XRHID {
+	return &identity.XRHID{
+		Identity: identity.Identity{
+			OrgID: "12345",
+			User:  identity.User{UserID: "12345"},
+		},
+	}
+}
+
+func mockClient(t *testing.T) (kesselv2.KesselInventoryServiceClient, *grpc.ClientConn) {
+	conn, err := grpc.NewClient(utils.CoreCfg.KesselURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		t.Fail()
+	}
+	return kesselv2.NewKesselInventoryServiceClient(conn), conn
 }
