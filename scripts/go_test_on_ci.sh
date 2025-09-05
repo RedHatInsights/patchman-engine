@@ -15,5 +15,13 @@ set -e -o pipefail
 golangci-lint run --timeout 5m
 echo "Go code analysed successfully."
 
+if [[ -n $DB_HOST ]] ; then
+    ./dev/scripts/wait-for-services.sh
+fi
+
+if [[ -n $KAFKA_READY_ADDRESS ]] ; then
+   ./dev/scripts/wait-for-kafka.sh
+fi
+
 # Run project tests
 ./scripts/go_test_db.sh | ./scripts/colorize.sh
