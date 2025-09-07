@@ -288,8 +288,8 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/prashantv/gostub v1.1.0 h1:BTyx3RfQjRHnUWaGF9oQos79AlQ5k8WNktv7VGvVH4g=
 github.com/prashantv/gostub v1.1.0/go.mod h1:A5zLQHz7ieHGG7is6LLXLz7I8+3LZzsrV0P1IAHhP5U=
-github.com/project-kessel/inventory-api v0.0.0-20250829154004-4937e11ce74e h1:dxWEX1XBfSSsNwvlNeTPsqAKAogFeOGeb9Tiz1RvB94=
-github.com/project-kessel/inventory-api v0.0.0-20250829154004-4937e11ce74e/go.mod h1:+Mdmui4aJvnm6deDeQTQyNyb62LtD9dvFw7Bg7YbhiE=
+github.com/project-kessel/inventory-api v0.0.0-20250905175117-55326a68361e h1:del9QbJqNBZuEwbMKe7+l2NSCfuwNHIBfUClNoIEoWc=
+github.com/project-kessel/inventory-api v0.0.0-20250905175117-55326a68361e/go.mod h1:+Mdmui4aJvnm6deDeQTQyNyb62LtD9dvFw7Bg7YbhiE=
 github.com/project-kessel/inventory-client-go v0.0.0-20250703155410-0ece2b1f2d03 h1:j6niKjfj0NmN/R30JJeX/1KwszvrlIklCQB0EDXvAgk=
 github.com/project-kessel/inventory-client-go v0.0.0-20250703155410-0ece2b1f2d03/go.mod h1:SyQfr20EDYld5nVQK/K2aLj2Uu9DETwvWzAZDCYB1yM=
 github.com/prometheus/client_golang v1.23.0 h1:ust4zpdl9r4trLY/gSjlm07PuiBq2ynaXXlptpfy8Uc=
