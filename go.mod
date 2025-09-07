@@ -108,7 +108,7 @@ require (
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/common v0.65.0 // indirect
+	github.com/prometheus/common v0.66.1 // indirect
 	github.com/prometheus/procfs v0.17.0 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/swaggo/swag v1.16.6 // indirect
@@ -119,6 +119,7 @@ require (
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
+	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/arch v0.20.0 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/mod v0.27.0 // indirect
