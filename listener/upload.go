@@ -379,7 +379,6 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 		colsToUpdate = append(colsToUpdate, "template_id")
 	}
 
-	staleWarning := host.StaleWarningTimestamp.Time()
 	updatesReqJSONString := string(updatesReqJSON)
 	systemPlatform := models.SystemPlatform{
 		InventoryID:           inventoryID,
@@ -391,7 +390,6 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 		StaleTimestamp:        host.StaleTimestamp.Time(),
 		StaleWarningTimestamp: host.StaleWarningTimestamp.Time(),
 		CulledTimestamp:       host.CulledTimestamp.Time(),
-		Stale:                 staleWarning != nil && staleWarning.Before(time.Now()),
 		ReporterID:            getReporterID(host.Reporter),
 		YumUpdates:            yumUpdates.GetRawParsed(),
 		YumChecksum:           utils.EmptyToNil(&yumChecksum),
