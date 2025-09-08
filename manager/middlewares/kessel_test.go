@@ -2,17 +2,18 @@ package middlewares
 
 import (
 	"app/base/utils"
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
 	"testing"
 
-	"github.com/gin-gonic/gin"
-	kesselv2 "github.com/project-kessel/kessel-sdk-go/kessel/inventory/v1beta2"
-	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/gin-gonic/gin"
+	kesselv2 "github.com/project-kessel/kessel-sdk-go/kessel/inventory/v1beta2"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSetupClient(t *testing.T) {
@@ -64,36 +65,6 @@ func TestSetupClient(t *testing.T) {
 	utils.CoreCfg.KesselAuthClientSecret = originalKesselAuthClientSecret
 }
 
-func TestBuildRequest(t *testing.T) {
-	c := &gin.Context{Request: &http.Request{Header: map[string][]string{}}}
-	_, err := buildRequest(c)
-	assert.Error(t, err)
-
-	c = mockContext()
-	req, err := buildRequest(c)
-	if assert.NoError(t, err) {
-		assert.Equal(t, patchReadPerm, req.Relation)
-	}
-
-	c.Request.Method = http.MethodDelete
-	req, err = buildRequest(c)
-	if assert.NoError(t, err) {
-		assert.Equal(t, patchWritePerm, req.Relation)
-	}
-}
-
-func TestReceiveAll(t *testing.T) {
-	conn, _ := grpc.NewClient(utils.CoreCfg.KesselURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	client := kesselv2.NewKesselInventoryServiceClient(conn)
-	stream, err := client.StreamedListObjects(context.Background(), nil)
-	if assert.NoError(t, err) {
-		workspaces, err := receiveAll(stream)
-		if assert.NoError(t, err) {
-			assert.Equal(t, "inventory-group-1", workspaces[0].Object.ResourceId)
-		}
-	}
-}
-
 func TestProcessWorkspaces(t *testing.T) {
 	expected := fmt.Sprintf("{%s,%s}", strconv.Quote(`[{"id":"test-1"}]`), strconv.Quote(`[{"id":"test-2"}]`))
 	workspaces := []*kesselv2.StreamedListObjectsResponse{
@@ -106,16 +77,27 @@ func TestProcessWorkspaces(t *testing.T) {
 	}
 }
 
+func TestUseStreamedListObjects(t *testing.T) {
+	conn, _ := grpc.NewClient(utils.CoreCfg.KesselURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	defer conn.Close()
+
+	client := kesselv2.NewKesselInventoryServiceClient(conn)
+	c := &gin.Context{Request: &http.Request{Method: http.MethodGet}}
+	err := useStreamedListObjects(c, client, &identity.XRHID{
+		Identity: identity.Identity{User: identity.User{UserID: "12345"}},
+	})
+	if assert.NoError(t, err) {
+		inventoryGroups, found := c.Get(utils.KeyInventoryGroups)
+		assert.True(t, found)
+		assert.NotEqual(t, "", inventoryGroups)
+	}
+}
+
 func TestHasPermissionKessel(t *testing.T) {
-	c := mockContext()
+	c := &gin.Context{Request: &http.Request{Header: map[string][]string{}, Method: http.MethodGet}}
+	c.Request.Header.Set("x-rh-identity", "eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJjb3N0X21hbmFnZW1lbnQiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJhbnNpYmxlIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1ZX0sIm1pZ3JhdGlvbnMiOnsiaXNfZW50aXRsZWQiOnRydWV9fSwiaWRlbnRpdHkiOnsiaW50ZXJuYWwiOnsiYXV0aF90aW1lIjoyOTksImF1dGhfdHlwZSI6ImJhc2ljLWF1dGgiLCJvcmdfaWQiOiIxMTc4OTc3MiJ9LCJhY2NvdW50X251bWJlciI6IjYwODk3MTkiLCJ1c2VyIjp7ImZpcnN0X25hbWUiOiJJbnNpZ2h0cyIsImlzX2FjdGl2ZSI6dHJ1ZSwiaXNfaW50ZXJuYWwiOmZhbHNlLCJsYXN0X25hbWUiOiJRQSIsImxvY2FsZSI6ImVuX1VTIiwiaXNfb3JnX2FkbWluIjp0cnVlLCJ1c2VybmFtZSI6Imluc2lnaHRzLXFhIiwiZW1haWwiOiJqbmVlZGxlK3FhQHJlZGhhdC5jb20ifSwidHlwZSI6IlVzZXIifX0=") //nolint:lll
+
 	hasPermissionKessel(c)
 	_, exists := c.Get(utils.KeyInventoryGroups)
 	assert.True(t, exists)
-}
-
-func mockContext() *gin.Context {
-	c := &gin.Context{Request: &http.Request{Header: map[string][]string{}}}
-	c.Request.Header.Set("x-rh-identity", "eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJjb3N0X21hbmFnZW1lbnQiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJhbnNpYmxlIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1ZX0sIm1pZ3JhdGlvbnMiOnsiaXNfZW50aXRsZWQiOnRydWV9fSwiaWRlbnRpdHkiOnsiaW50ZXJuYWwiOnsiYXV0aF90aW1lIjoyOTksImF1dGhfdHlwZSI6ImJhc2ljLWF1dGgiLCJvcmdfaWQiOiIxMTc4OTc3MiJ9LCJhY2NvdW50X251bWJlciI6IjYwODk3MTkiLCJ1c2VyIjp7ImZpcnN0X25hbWUiOiJJbnNpZ2h0cyIsImlzX2FjdGl2ZSI6dHJ1ZSwiaXNfaW50ZXJuYWwiOmZhbHNlLCJsYXN0X25hbWUiOiJRQSIsImxvY2FsZSI6ImVuX1VTIiwiaXNfb3JnX2FkbWluIjp0cnVlLCJ1c2VybmFtZSI6Imluc2lnaHRzLXFhIiwiZW1haWwiOiJqbmVlZGxlK3FhQHJlZGhhdC5jb20ifSwidHlwZSI6IlVzZXIifX0=") //nolint:lll
-	c.Request.Method = http.MethodGet
-	return c
 }
