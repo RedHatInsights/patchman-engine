@@ -7,13 +7,12 @@ import (
 	"net/http"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	kesselAPIv2 "github.com/project-kessel/inventory-api/api/kessel/inventory/v1beta2"
-	kesselClientCommon "github.com/project-kessel/inventory-client-go/common"
-	kesselClientV2 "github.com/project-kessel/inventory-client-go/v1beta2"
+	kesselv2 "github.com/project-kessel/kessel-sdk-go/kessel/inventory/v1beta2"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func TestSetupClient(t *testing.T) {
@@ -25,30 +24,38 @@ func TestSetupClient(t *testing.T) {
 	// insecure TLS and no auth
 	utils.CoreCfg.KesselInsecure = true
 	utils.CoreCfg.KesselAuthEnabled = false
-	client, err := setupClient()
-	assert.NoError(t, err)
-	assert.NotNil(t, client)
+	client, conn, err := setupClient()
+	defer conn.Close()
+	if assert.NoError(t, err) {
+		assert.NotNil(t, client)
+	}
 
 	// secure TLS and no auth
 	utils.CoreCfg.KesselInsecure = false
-	client, err = setupClient()
-	assert.NoError(t, err)
-	assert.NotNil(t, client)
+	client, conn, err = setupClient()
+	defer conn.Close()
+	if assert.NoError(t, err) {
+		assert.NotNil(t, client)
+	}
 
 	// insecure TLS and auth
 	utils.CoreCfg.KesselInsecure = true
 	utils.CoreCfg.KesselAuthEnabled = true
 	utils.CoreCfg.KesselAuthClientID = "test-client-id"
 	utils.CoreCfg.KesselAuthClientSecret = "test-client-secret"
-	client, err = setupClient()
-	assert.NoError(t, err)
-	assert.NotNil(t, client)
+	client, conn, err = setupClient()
+	defer conn.Close()
+	if assert.NoError(t, err) {
+		assert.NotNil(t, client)
+	}
 
 	// secure TLS and auth
 	utils.CoreCfg.KesselInsecure = false
-	client, err = setupClient()
-	assert.NoError(t, err)
-	assert.NotNil(t, client)
+	client, conn, err = setupClient()
+	defer conn.Close()
+	if assert.NoError(t, err) {
+		assert.NotNil(t, client)
+	}
 
 	// cleanup
 	utils.CoreCfg.KesselInsecure = originalKesselInsecure
@@ -76,14 +83,9 @@ func TestBuildRequest(t *testing.T) {
 }
 
 func TestReceiveAll(t *testing.T) {
-	options := []func(*kesselClientCommon.Config){
-		kesselClientCommon.WithgRPCUrl(utils.CoreCfg.KesselURL),
-		kesselClientCommon.WithTLSInsecure(true),
-	}
-	client, _ := kesselClientV2.New(kesselClientCommon.NewConfig(options...))
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	stream, err := client.KesselInventoryService.StreamedListObjects(ctx, nil)
+	conn, _ := grpc.NewClient(utils.CoreCfg.KesselURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	client := kesselv2.NewKesselInventoryServiceClient(conn)
+	stream, err := client.StreamedListObjects(context.Background(), nil)
 	if assert.NoError(t, err) {
 		workspaces, err := receiveAll(stream)
 		if assert.NoError(t, err) {
@@ -94,9 +96,9 @@ func TestReceiveAll(t *testing.T) {
 
 func TestProcessWorkspaces(t *testing.T) {
 	expected := fmt.Sprintf("{%s,%s}", strconv.Quote(`[{"id":"test-1"}]`), strconv.Quote(`[{"id":"test-2"}]`))
-	workspaces := []*kesselAPIv2.StreamedListObjectsResponse{
-		{Object: &kesselAPIv2.ResourceReference{ResourceId: "test-1"}},
-		{Object: &kesselAPIv2.ResourceReference{ResourceId: "test-2"}},
+	workspaces := []*kesselv2.StreamedListObjectsResponse{
+		{Object: &kesselv2.ResourceReference{ResourceId: "test-1"}},
+		{Object: &kesselv2.ResourceReference{ResourceId: "test-2"}},
 	}
 	processed, err := processWorkspaces(workspaces)
 	if assert.NoError(t, err) {

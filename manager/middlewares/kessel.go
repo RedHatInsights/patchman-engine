@@ -13,45 +13,46 @@ import (
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
 
-	kesselAPIv2 "github.com/project-kessel/inventory-api/api/kessel/inventory/v1beta2"
-	kesselClientCommon "github.com/project-kessel/inventory-client-go/common"
-	kesselClientV2 "github.com/project-kessel/inventory-client-go/v1beta2"
+	"github.com/project-kessel/kessel-sdk-go/kessel/auth"
+	kesselv2 "github.com/project-kessel/kessel-sdk-go/kessel/inventory/v1beta2"
 )
 
-type ListObjectStreamingClient = grpc.ServerStreamingClient[kesselAPIv2.StreamedListObjectsResponse]
+type ListObjectStreamingClient = grpc.ServerStreamingClient[kesselv2.StreamedListObjectsResponse]
 
-func setupClient() (*kesselClientV2.InventoryClient, error) {
-	options := []func(*kesselClientCommon.Config){
-		kesselClientCommon.WithgRPCUrl(utils.CoreCfg.KesselURL),
-		kesselClientCommon.WithTLSInsecure(utils.CoreCfg.KesselInsecure),
-	}
+var credentials = auth.NewOAuth2ClientCredentials(
+	utils.CoreCfg.KesselAuthClientID,
+	utils.CoreCfg.KesselAuthClientSecret,
+	utils.CoreCfg.KesselAuthOIDCIssuer,
+)
 
+func setupClient() (kesselv2.KesselInventoryServiceClient, *grpc.ClientConn, error) {
+	clientBuilder := kesselv2.NewClientBuilder(utils.CoreCfg.KesselURL)
 	if utils.CoreCfg.KesselAuthEnabled {
-		options = append(options, kesselClientCommon.WithAuthEnabled(
-			utils.CoreCfg.KesselAuthClientID, utils.CoreCfg.KesselAuthClientSecret, utils.CoreCfg.KesselAuthOIDCIssuer,
-		))
+		clientBuilder = clientBuilder.OAuth2ClientAuthenticated(&credentials, nil)
 	}
-
-	return kesselClientV2.New(kesselClientCommon.NewConfig(options...))
+	if utils.CoreCfg.KesselInsecure { // insecure TLS
+		clientBuilder = clientBuilder.Insecure()
+	}
+	return clientBuilder.Build()
 }
 
-func buildRequest(c *gin.Context) (*kesselAPIv2.StreamedListObjectsRequest, error) {
+func buildRequest(c *gin.Context) (*kesselv2.StreamedListObjectsRequest, error) {
 	xrhid, err := utils.ParseXRHID(c.GetHeader("x-rh-identity"))
 	if err != nil {
 		return nil, err
 	}
 
 	reporterType := "rbac"
-	req := &kesselAPIv2.StreamedListObjectsRequest{
-		ObjectType: &kesselAPIv2.RepresentationType{
+	req := &kesselv2.StreamedListObjectsRequest{
+		ObjectType: &kesselv2.RepresentationType{
 			ResourceType: "workspace",
 			ReporterType: &reporterType,
 		},
-		Subject: &kesselAPIv2.SubjectReference{
-			Resource: &kesselAPIv2.ResourceReference{
+		Subject: &kesselv2.SubjectReference{
+			Resource: &kesselv2.ResourceReference{
 				ResourceType: "principal",
 				ResourceId:   fmt.Sprintf("redhat/%s", xrhid.Identity.User.UserID),
-				Reporter: &kesselAPIv2.ReporterReference{
+				Reporter: &kesselv2.ReporterReference{
 					Type: "rbac",
 				},
 			},
@@ -68,8 +69,8 @@ func buildRequest(c *gin.Context) (*kesselAPIv2.StreamedListObjectsRequest, erro
 	return req, nil
 }
 
-func receiveAll(stream ListObjectStreamingClient) ([]*kesselAPIv2.StreamedListObjectsResponse, error) {
-	responses := make([]*kesselAPIv2.StreamedListObjectsResponse, 0)
+func receiveAll(stream ListObjectStreamingClient) ([]*kesselv2.StreamedListObjectsResponse, error) {
+	responses := make([]*kesselv2.StreamedListObjectsResponse, 0)
 	for res, err := stream.Recv(); err != io.EOF; res, err = stream.Recv() {
 		if err != nil {
 			return nil, err
@@ -79,7 +80,7 @@ func receiveAll(stream ListObjectStreamingClient) ([]*kesselAPIv2.StreamedListOb
 	return responses, nil
 }
 
-func processWorkspaces(workspaces []*kesselAPIv2.StreamedListObjectsResponse) (map[string]string, error) {
+func processWorkspaces(workspaces []*kesselv2.StreamedListObjectsResponse) (map[string]string, error) {
 	groups := make([]string, 0, len(workspaces))
 	for _, workspace := range workspaces {
 		group, err := utils.ParseInventoryGroup(&workspace.Object.ResourceId, nil)
@@ -97,14 +98,15 @@ func processWorkspaces(workspaces []*kesselAPIv2.StreamedListObjectsResponse) (m
 }
 
 func hasPermissionKessel(c *gin.Context) {
-	client, err := setupClient()
+	client, conn, err := setupClient()
 	if err != nil {
-		utils.LogError("err", err.Error(), "failed to setup a Kessel service client")
+		utils.LogError("err", err.Error(), "failed to setup Kessel service client")
 		c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{
-			Error: "Unexpecred server error", // missing cert or failed to make a new gRPC client
+			Error: "Unexpected server error", // missing cert or failed to make a new gRPC client
 		})
 		return
 	}
+	defer conn.Close()
 
 	req, err := buildRequest(c)
 	if err != nil {
@@ -115,7 +117,7 @@ func hasPermissionKessel(c *gin.Context) {
 	// TODO: how long should the timeout be
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	stream, err := client.KesselInventoryService.StreamedListObjects(ctx, req)
+	stream, err := client.StreamedListObjects(ctx, req)
 	if err != nil {
 		utils.LogError("err", err.Error(), "failed to establish a gRPC stream with Kessel")
 		c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{
