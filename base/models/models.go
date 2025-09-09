@@ -25,21 +25,6 @@ func (Reporter) TableName() string {
 	return "reporter"
 }
 
-type Baseline struct {
-	ID          int64 `gorm:"primaryKey"`
-	RhAccountID int   `gorm:"primaryKey"`
-	Name        string
-	Config      []byte
-	Description *string
-	Creator     *string // pointer for compatibility with previous API versions
-	Published   *time.Time
-	LastEdited  *time.Time
-}
-
-func (Baseline) TableName() string {
-	return "baseline"
-}
-
 type Template struct {
 	ID            int64 `gorm:"primaryKey"`
 	RhAccountID   int   `gorm:"primaryKey"`
@@ -87,8 +72,6 @@ type SystemPlatform struct {
 	PackagesApplicable               int
 	ThirdParty                       bool
 	ReporterID                       *int
-	BaselineID                       *int64
-	BaselineUpToDate                 *bool   `gorm:"column:baseline_uptodate"`
 	TemplateID                       *int64  `gorm:"column:template_id"`
 	YumUpdates                       []byte  `gorm:"column:yum_updates"`
 	YumChecksum                      *string `gorm:"column:yum_checksum"`
