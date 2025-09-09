@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (135, false);
+VALUES (136, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -752,6 +752,7 @@ CREATE TABLE IF NOT EXISTS deleted_system
 CREATE INDEX ON deleted_system (when_deleted);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON deleted_system TO listener;
+
 -- advisory_type
 CREATE TABLE IF NOT EXISTS advisory_type
 (
@@ -1067,6 +1068,7 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO manager;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO vmaas_sync;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO vmaas_sync;
 GRANT SELECT, UPDATE ON repo TO vmaas_sync;
+GRANT SELECT, INSERT, UPDATE, DELETE ON deleted_system TO vmaas_sync;
 
 
 CREATE SCHEMA IF NOT EXISTS inventory;

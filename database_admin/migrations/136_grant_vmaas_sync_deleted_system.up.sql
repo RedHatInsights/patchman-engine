@@ -1,0 +1,1 @@
+GRANT SELECT, INSERT, UPDATE, DELETE ON deleted_system TO vmaas_sync;
