@@ -258,8 +258,7 @@ func InventoryHostsJoin(tx *gorm.DB, groups map[string]string) *gorm.DB {
 
 // LEFT JOIN templates to sp (system_platform)
 func JoinTemplates(tx *gorm.DB) *gorm.DB {
-	return tx.Joins("LEFT JOIN baseline bl ON sp.baseline_id = bl.id AND sp.rh_account_id = bl.rh_account_id").
-		Joins("LEFT JOIN template t ON sp.template_id = t.id AND sp.rh_account_id = t.rh_account_id")
+	return tx.Joins("LEFT JOIN template t ON sp.template_id = t.id AND sp.rh_account_id = t.rh_account_id")
 }
 
 // JOIN advisory_metadata to sa (system_advisories)
