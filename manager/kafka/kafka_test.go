@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"app/base/core"
-	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
 	"app/manager/config"
@@ -12,15 +11,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testEvaluateBaselineSystems(t *testing.T, baselineID *int64, accountID int,
-	configUpdated bool, inventoryIDs []string) mqueue.PlatformEvent {
+func testRecalcSystems(t *testing.T, accountID int, inventoryIDs []string) mqueue.PlatformEvent {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	config.EnableTemplateChangeEval = true
 
 	writerMock := mqueue.MockKafkaWriter{}
 	TryStartEvalQueue(mqueue.MockCreateKafkaWriter(&writerMock))
-	inventoryAIDs := GetInventoryIDsToEvaluate(database.DB, baselineID, accountID, configUpdated, inventoryIDs)
+	inventoryAIDs := InventoryIDs2InventoryAIDs(accountID, inventoryIDs)
 	RecalcSystems(inventoryAIDs)
 	utils.AssertEqualWait(t, 1, func() (exp, act interface{}) {
 		return 1, len(writerMock.Messages)
@@ -30,38 +28,12 @@ func testEvaluateBaselineSystems(t *testing.T, baselineID *int64, accountID int,
 	return event
 }
 
-// Evaluate all baseline systems - config was updated, nothing added
-func TestEvaluateBaselineSystemsDefault(t *testing.T) {
-	event := testEvaluateBaselineSystems(t, utils.PtrInt64(1), 1, true, nil)
-	assert.Equal(t, 3, len(event.SystemIDs))
-	assert.Equal(t, 1, event.AccountID)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", event.SystemIDs[0])
-	assert.Equal(t, "00000000-0000-0000-0000-000000000002", event.SystemIDs[1])
-}
-
-// Evaluate just updated systems - config was not updated
-func TestEvaluateBaselineUpdatedSystems(t *testing.T) {
+// Evaluate updated systems
+func TestRecalcUpdatedSystems(t *testing.T) {
 	inventoryIDs := []string{"00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000004"}
-	event := testEvaluateBaselineSystems(t, utils.PtrInt64(1), 1, false, inventoryIDs)
+	event := testRecalcSystems(t, 1, inventoryIDs)
 	assert.Equal(t, 2, len(event.SystemIDs))
 	assert.Equal(t, 1, event.AccountID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", event.SystemIDs[0])
 	assert.Equal(t, "00000000-0000-0000-0000-000000000004", event.SystemIDs[1])
-}
-
-// Evaluate both all baseline systems and added ones - config updated, systems added
-func TestEvaluateBaselineAllAndUpdatedSystems(t *testing.T) {
-	inventoryIDs := []string{"00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000004"}
-	event := testEvaluateBaselineSystems(t, utils.PtrInt64(1), 1, true, inventoryIDs)
-	assert.Equal(t, 4, len(event.SystemIDs))
-	assert.Equal(t, 1, event.AccountID)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", event.SystemIDs[0])
-	assert.Equal(t, "00000000-0000-0000-0000-000000000002", event.SystemIDs[1])
-	assert.Equal(t, "00000000-0000-0000-0000-000000000004", event.SystemIDs[2])
-}
-
-// No systems needed to evaluate - e.g. just baseline name changed
-func TestEvaluateBaselineNoSystems(t *testing.T) {
-	inventoryAIDs := GetInventoryIDsToEvaluate(database.DB, utils.PtrInt64(1), 1, false, nil)
-	assert.Equal(t, 0, len(inventoryAIDs))
 }
