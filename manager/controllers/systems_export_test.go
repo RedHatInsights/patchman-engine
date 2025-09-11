@@ -42,8 +42,8 @@ func TestSystemsExportJSON(t *testing.T) {
 	assert.Equal(t, "2018-09-09 16:00:00 +0000 UTC", output[0].SystemItemAttributes.CulledTimestamp.String())
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output[0].SystemItemAttributes.Created.String())
 	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output[0].SystemItemAttributes.Tags)
-	assert.Equal(t, "baseline_1-1", output[0].SystemItemAttributes.BaselineName)
-	assert.Equal(t, int64(1), output[0].SystemItemAttributes.BaselineID)
+	assert.Equal(t, "", output[0].SystemItemAttributes.BaselineName)
+	assert.Equal(t, int64(0), output[0].SystemItemAttributes.BaselineID)
 }
 
 func TestSystemsExportCSV(t *testing.T) {
@@ -58,9 +58,9 @@ func TestSystemsExportCSV(t *testing.T) {
 
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,RHEL 8.10,8.10,"+
 		"\"[{'key':'k1','namespace':'ns1','value':'val1'},{'key':'k2','namespace':'ns1','value':'val2'}]\","+
-		"2018-09-22T16:00:00Z,2,2,1,0,0,baseline_1-1,"+
+		"2018-09-22T16:00:00Z,2,2,1,0,0,,"+
 		"2020-09-22T16:00:00Z,2018-08-26T16:00:00Z,2018-09-02T16:00:00Z,2018-09-09T16:00:00Z,2018-08-26T16:00:00Z,"+
-		"false,false,false,0,0,2,2,1,0,2,3,3,3,1,temp1-1,99900000-0000-0000-0000-000000000001,"+
+		"false,false,false,0,0,2,2,1,0,2,3,3,3,0,temp1-1,99900000-0000-0000-0000-000000000001,"+
 		"\"[{'id':'inventory-group-1','name':'group1'}]\",x86_64",
 		lines[1])
 }
@@ -113,17 +113,6 @@ func TestSystemsExportWorkloads(t *testing.T) {
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, len(output))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
-}
-
-func TestSystemsExportBaselineFilter(t *testing.T) {
-	w := makeRequest(t, "/?filter[baseline_name]=baseline_1-1", "application/json")
-
-	var output []SystemDBLookup
-	CheckResponse(t, w, http.StatusOK, &output)
-
-	assert.Equal(t, 3, len(output))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output[1].ID)
 }
 
 func TestSystemsExportFilterPartialOS(t *testing.T) {

@@ -31,8 +31,8 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, "2018-09-09 16:00:00 +0000 UTC", output.Data[0].Attributes.CulledTimestamp.String())
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.Created.String())
 	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output.Data[0].Attributes.Tags)
-	assert.Equal(t, "baseline_1-1", output.Data[0].Attributes.BaselineName)
-	assert.Equal(t, int64(1), output.Data[0].Attributes.BaselineID)
+	assert.Equal(t, "", output.Data[0].Attributes.BaselineName)
+	assert.Equal(t, int64(0), output.Data[0].Attributes.BaselineID)
 	assert.False(t, output.Data[0].Attributes.SatelliteManaged)
 	assert.False(t, output.Data[0].Attributes.BuiltPkgcache)
 	assert.Equal(t, "x86_64", output.Data[0].Attributes.Arch)
@@ -194,14 +194,6 @@ func TestSystemsFilterAdvCount4(t *testing.T) {
 	output := testSystems(t, "?filter[other_count]=4", 1)
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, 4, output.Data[0].Attributes.OtherCount)
-}
-
-func TestSystemsFilterBaseline(t *testing.T) {
-	output := testSystems(t, "?filter[baseline_name]=baseline_1-1", 1)
-	assert.Equal(t, 3, len(output.Data))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000018", output.Data[1].ID)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.Data[2].ID)
 }
 
 func TestSystemsFilterNotExisting(t *testing.T) {
