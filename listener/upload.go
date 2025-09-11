@@ -357,7 +357,6 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 	var colsToUpdate = []string{
 		"display_name",
 		"last_upload",
-		"stale",
 		"stale_timestamp",
 		"stale_warning_timestamp",
 		"culled_timestamp",
