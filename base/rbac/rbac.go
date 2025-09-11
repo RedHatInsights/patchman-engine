@@ -1,6 +1,8 @@
 package rbac
 
-import "github.com/bytedance/sonic"
+import (
+	"github.com/bytedance/sonic"
+)
 
 type AccessPagination struct {
 	Data []Access `json:"data"`
@@ -58,4 +60,12 @@ func (a *AttributeFilterValue) UnmarshalJSON(data []byte) error {
 
 	*a = array
 	return nil
+}
+
+type WorkspaceResponseData struct {
+	ID string `json:"id"`
+}
+
+type DefaultWorkspaceResponse struct {
+	Data []WorkspaceResponseData `json:"data"`
 }

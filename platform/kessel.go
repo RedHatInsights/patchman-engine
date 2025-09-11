@@ -5,7 +5,7 @@ import (
 	"context"
 	"net"
 
-	kesselv2 "github.com/project-kessel/inventory-api/api/kessel/inventory/v1beta2"
+	kesselv2 "github.com/project-kessel/kessel-sdk-go/kessel/inventory/v1beta2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
