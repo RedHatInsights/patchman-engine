@@ -16,12 +16,12 @@ func testEvaluateBaselineSystems(t *testing.T, baselineID *int64, accountID int,
 	configUpdated bool, inventoryIDs []string) mqueue.PlatformEvent {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	config.EnableBaselineChangeEval = true
+	config.EnableTemplateChangeEval = true
 
 	writerMock := mqueue.MockKafkaWriter{}
 	TryStartEvalQueue(mqueue.MockCreateKafkaWriter(&writerMock))
 	inventoryAIDs := GetInventoryIDsToEvaluate(database.DB, baselineID, accountID, configUpdated, inventoryIDs)
-	EvaluateBaselineSystems(inventoryAIDs)
+	RecalcSystems(inventoryAIDs)
 	utils.AssertEqualWait(t, 1, func() (exp, act interface{}) {
 		return 1, len(writerMock.Messages)
 	})
