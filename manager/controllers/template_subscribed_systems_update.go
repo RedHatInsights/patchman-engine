@@ -59,7 +59,7 @@ func TemplateSubscribedSystemsUpdateHandler(c *gin.Context) {
 	// re-evaluate systems added/removed from templates
 	if config.EnableTemplateChangeEval {
 		inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, systemList)
-		kafka.EvaluateBaselineSystems(inventoryAIDs)
+		kafka.RecalcSystems(inventoryAIDs)
 	}
 	c.Status(http.StatusOK)
 }

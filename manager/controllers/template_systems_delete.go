@@ -53,7 +53,7 @@ func TemplateSystemsDeleteHandler(c *gin.Context) {
 	// re-evaluate systems removed from templates
 	if config.EnableTemplateChangeEval {
 		inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, req.Systems)
-		kafka.EvaluateBaselineSystems(inventoryAIDs)
+		kafka.RecalcSystems(inventoryAIDs)
 	}
 	c.Status(http.StatusOK)
 }
