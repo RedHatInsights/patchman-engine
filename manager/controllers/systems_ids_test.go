@@ -124,14 +124,6 @@ func TestSystemsIDsFilterAdvCount4(t *testing.T) {
 	assert.Equal(t, output.Data[0].ID, outputIDs.IDs[0])
 }
 
-func TestSystemsIDsFilterBaseline(t *testing.T) {
-	output := testSystemsIDs(t, "?filter[baseline_name]=baseline_1-1", 1)
-	assert.Equal(t, 3, len(output.IDs))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.IDs[0])
-	assert.Equal(t, "00000000-0000-0000-0000-000000000018", output.IDs[1])
-	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.IDs[2])
-}
-
 func TestSystemsIDsFilterNotExisting(t *testing.T) {
 	statusCode, errResp := testSystemsIDsError(t, "?filter[not-existing]=1")
 	assert.Equal(t, http.StatusBadRequest, statusCode)
