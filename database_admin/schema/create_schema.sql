@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (136, false);
+VALUES (137, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -102,6 +102,7 @@ BEGIN
            change as systems_applicable
       FROM system_advisories sa
      WHERE sa.system_id = NEW.id AND sa.rh_account_id = NEW.rh_account_id
+     ORDER BY sa.advisory_id
         ON CONFLICT (advisory_id, rh_account_id) DO UPDATE
            SET systems_installable = advisory_account_data.systems_installable + EXCLUDED.systems_installable,
                systems_applicable = advisory_account_data.systems_applicable + EXCLUDED.systems_applicable;
