@@ -28,21 +28,23 @@ type SystemGroups struct {
 	Groups SystemGroupsList `json:"groups" csv:"groups" query:"ih.groups" gorm:"column:groups" order_query:"ih.groups->0->>'name'"`
 }
 
+// baseline attributes are obsoleted and we keep them only for backward API compatibility
+// now they always return default value
 type BaselineAttributes struct {
 	BaselineNameAttr
 	BaselineUpToDateAttr
 }
 
 type BaselineUpToDateAttr struct {
-	BaselineUpToDate *bool `json:"baseline_uptodate" csv:"baseline_uptodate" query:"sp.baseline_uptodate" gorm:"column:baseline_uptodate"`
+	BaselineUpToDate *bool `json:"baseline_uptodate" csv:"baseline_uptodate" query:"null" gorm:"column:baseline_uptodate"`
 }
 
 type BaselineNameAttr struct {
-	BaselineName string `json:"baseline_name" csv:"baseline_name" query:"bl.name" gorm:"column:baseline_name"`
+	BaselineName string `json:"baseline_name" csv:"baseline_name" query:"''" gorm:"column:baseline_name"`
 }
 
 type BaselineIDAttr struct {
-	BaselineID int64 `json:"baseline_id" csv:"baseline_id" query:"bl.id" gorm:"column:baseline_id"`
+	BaselineID int64 `json:"baseline_id" csv:"baseline_id" query:"0" gorm:"column:baseline_id"`
 }
 
 type TemplateAttibutes struct {
