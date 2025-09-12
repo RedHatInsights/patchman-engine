@@ -70,6 +70,8 @@ RUN echo "insights:x:1000:1000::/go:/bin/bash" >>/etc/passwd && \
     mkdir /go && \
     chown insights:insights /go
 
+ENV XDG_CACHE_HOME=/tmp
+
 # copy root ca certs so we can access https://logs.us-east-1.amazonaws.com/
 COPY --from=buildimg /etc/pki/tls/certs/ca-bundle.crt /etc/pki/tls/certs/
 
