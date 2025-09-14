@@ -19,7 +19,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
-	github.com/project-kessel/inventory-api v0.0.0-20250905175117-55326a68361e
+	github.com/project-kessel/inventory-api v0.0.0-20250912214945-e9400d4f6e2a
 	github.com/project-kessel/inventory-client-go v0.0.0-20250703155410-0ece2b1f2d03
 	github.com/prometheus/client_golang v1.23.0
 	github.com/redhatinsights/app-common-go v1.6.8
@@ -36,7 +36,7 @@ require (
 	golang.org/x/net v0.44.0
 	google.golang.org/grpc v1.75.0
 	gorm.io/driver/postgres v1.6.0
-	gorm.io/gorm v1.30.3
+	gorm.io/gorm v1.31.0
 	modernc.org/strutil v1.2.1
 )
 
