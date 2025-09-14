@@ -34,7 +34,7 @@ require (
 	go.uber.org/ratelimit v0.3.1
 	golang.org/x/exp v0.0.0-20250911091902-df9299821621
 	golang.org/x/net v0.44.0
-	google.golang.org/grpc v1.75.0
+	google.golang.org/grpc v1.75.1
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.0
 	modernc.org/strutil v1.2.1
