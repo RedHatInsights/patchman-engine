@@ -599,6 +599,16 @@ objects:
     namespace: test  # namespace is overwritten by bonfire
   type: Opaque
 
+- apiVersion: v1
+  data:
+    id: ""
+    secret: ""
+  kind: Secret
+  metadata:
+    name: kessel-service-client
+    namespace: test  # namespace is overwritten by bonfire
+  type: Opaque
+
 parameters:
 # Manager
 - {name: REPLICAS_MANAGER, value: '1'}
