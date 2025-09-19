@@ -45,7 +45,6 @@ var (
 	enableBypass                  bool
 	enableStaleSysEval            bool
 	enableLazyPackageSave         bool
-	enableBaselineEval            bool
 	enablePackageCache            bool
 	preloadPackageCache           bool
 	packageCacheSize              int
@@ -99,8 +98,6 @@ func confugureEvaluator() {
 	enableStaleSysEval = utils.PodConfig.GetBool("stale_system_evaluation", true)
 	// Process (and save to db) previously unknown packages (typically third party packages)
 	enableLazyPackageSave = utils.PodConfig.GetBool("lazy_package_save", true)
-	// Toggle baseline evaluation
-	enableBaselineEval = utils.PodConfig.GetBool("baseline_eval", false)
 	// Toggle bypass (fake) messages processing
 	enableBypass = utils.PodConfig.GetBool("bypass", false)
 	// Toggle in-memory cache to speed up package lookups
@@ -129,7 +126,7 @@ func confugureEvaluator() {
 	nEvalGoroutines = utils.PodConfig.GetInt("max_goroutines", 1)
 	// Send advisory notification immediately
 	enableInstantNotifications = utils.PodConfig.GetBool("instant_notifications", true)
-	// Ignore baselines/templates for satellite managed systems
+	// Ignore templates for satellite managed systems
 	enableSatelliteFunctionality = utils.PodConfig.GetBool("satellite_functionality", true)
 }
 
@@ -281,15 +278,6 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV3Response, 
 
 func evaluateWithVmaas(updatesData *vmaas.UpdatesV3Response,
 	system *models.SystemPlatform, event *mqueue.PlatformEvent) (*vmaas.UpdatesV3Response, error) {
-	if enableBaselineEval {
-		if !system.SatelliteManaged || (system.SatelliteManaged && !enableSatelliteFunctionality) {
-			err := limitVmaasToBaseline(system, updatesData)
-			if err != nil {
-				return nil, errors.Wrap(err, "Failed to evaluate baseline")
-			}
-		}
-	}
-
 	err := evaluateAndStore(system, updatesData, event)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to evaluate and store results")
@@ -591,11 +579,6 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 
 	if enableRepoAnalysis {
 		data["third_party"] = system.ThirdParty
-	}
-
-	if enableSatelliteFunctionality && system.SatelliteManaged && system.BaselineID != nil {
-		data["baseline_id"] = nil
-		data["baseline_uptodate"] = nil
 	}
 
 	err := tx.Model(system).Updates(data).Error

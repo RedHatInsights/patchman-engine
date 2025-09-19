@@ -5,6 +5,7 @@ import (
 	"app/base/utils"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,8 +29,8 @@ func TestAdvisorySystemsDefault(t *testing.T) {
 	assert.Equal(t, "2018-09-09 16:00:00 +0000 UTC", output.Data[0].Attributes.CulledTimestamp.String())
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.Created.String())
 	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output.Data[0].Attributes.Tags)
-	assert.Equal(t, "baseline_1-1", output.Data[0].Attributes.BaselineName)
-	assert.Equal(t, int64(1), output.Data[0].Attributes.BaselineID)
+	assert.Equal(t, "", output.Data[0].Attributes.BaselineName)
+	assert.Equal(t, int64(0), output.Data[0].Attributes.BaselineID)
 	assert.False(t, output.Data[0].Attributes.SatelliteManaged)
 	assert.False(t, output.Data[0].Attributes.BuiltPkgcache)
 }
@@ -82,6 +83,9 @@ func TestAdvisorySystemsSorts(t *testing.T) {
 	core.SetupTest(t)
 
 	for sort := range AdvisorySystemsFields {
+		if strings.HasPrefix(sort, "baseline") {
+			continue // ignore obsoleted baseline attributes
+		}
 		w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-1", fmt.Sprintf("?sort=%v", sort), nil, "",
 			AdvisorySystemsListHandler)
 
