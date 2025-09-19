@@ -18,13 +18,15 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-func setCmdAuth(cmd *exec.Cmd) {
+func dumpSchema() ([]byte, error) {
+	cmd := exec.Command("pg_dump", "--restrict-key", "testupgradekey", "-O")
 	cmd.Args = append(cmd.Args,
 		"-h", utils.FailIfEmpty(utils.CoreCfg.DBHost, "DB_HOST"),
 		"-p", strconv.Itoa(utils.CoreCfg.DBPort),
 		"-U", utils.FailIfEmpty(utils.CoreCfg.DBUser, "DB_USER"),
 		"-d", utils.FailIfEmpty(utils.CoreCfg.DBName, "DB_NAME"))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("PGPASSWORD=%v", utils.FailIfEmpty(utils.CoreCfg.DBPassword, "DB_PASSWD")))
+	return cmd.Output()
 }
 
 func writeTemp(dir, filename string, data []byte) {
@@ -63,10 +65,7 @@ func TestSchemaCompatiblity(t *testing.T) {
 	err = m.Up()
 	assert.NoError(t, err)
 
-	dumpCmd := exec.Command("pg_dump", "-O")
-	setCmdAuth(dumpCmd)
-
-	migrated, err := dumpCmd.Output()
+	migrated, err := dumpSchema()
 	assert.NoError(t, err)
 	err = m.Drop()
 	assert.NoError(t, err)
@@ -74,11 +73,7 @@ func TestSchemaCompatiblity(t *testing.T) {
 	err = database.ExecFile("./schema/create_schema.sql")
 
 	assert.NoError(t, err)
-
-	dumpCmd = exec.Command("pg_dump", "-O")
-	setCmdAuth(dumpCmd)
-
-	fromScratch, err := dumpCmd.Output()
+	fromScratch, err := dumpSchema()
 	assert.NoError(t, err)
 
 	migratedLines := strings.SplitAfter(string(migrated), "\n")
