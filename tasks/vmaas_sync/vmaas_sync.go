@@ -104,9 +104,6 @@ func SyncData(lastModifiedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *type
 		}
 	}
 
-	// refresh caches
-	caches.RefreshAdvisoryCaches()
-
 	database.UpdateTimestampKVValue(LastSync, syncStart)
 	if lastModified == nil {
 		database.UpdateTimestampKVValue(LastFullSync, syncStart)
@@ -114,6 +111,10 @@ func SyncData(lastModifiedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *type
 	if vmaasExportedTS != nil {
 		database.UpdateTimestampKVValue(VmaasExported, *vmaasExportedTS.Time())
 	}
+
+	// refresh caches
+	caches.RefreshAdvisoryCaches()
+
 	utils.LogInfo("Data sync finished successfully")
 	return nil
 }
