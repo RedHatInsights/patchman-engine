@@ -203,9 +203,9 @@ func reposHandler(c *gin.Context) {
     "pages": 1,
     "latest_repo_change": "2222-04-16 20:07:55.214266+00",
     "repository_list": {
-        "repo1": [],
+        "repo1": [{"updated_package_names": ["kernel", "firefox"]}],
         "repo2": [],
-        "repo3": [{"updated_package_names": ["kernel", "firefox"]}]
+        "repo3": []
     }}`
 	c.Data(http.StatusOK, gin.MIMEJSON, []byte(data))
 }

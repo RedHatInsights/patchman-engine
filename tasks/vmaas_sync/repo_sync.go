@@ -9,15 +9,9 @@ import (
 
 func syncRepos(syncStart time.Time) error {
 	// mark non-thirdparty repos known to vmaas
-	thirdParty := false
-	repoPackages, repoNoPackages, _, err := getUpdatedRepos(syncStart, nil, &thirdParty)
+	redhatRepos, err := getUpdatedRepos(syncStart)
 	if err != nil {
 		return err
-	}
-
-	redhatRepos := repoNoPackages
-	for _, repoPkg := range repoPackages {
-		redhatRepos = append(redhatRepos, repoPkg[0])
 	}
 
 	if len(redhatRepos) == 0 {

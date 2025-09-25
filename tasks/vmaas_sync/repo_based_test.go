@@ -72,50 +72,33 @@ func TestGetRepoOnlyBasedInventoryIDs(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	repos := []string{"repo1", "repo2"}
-	inventoryAIDs, err := getRepoBasedInventoryIDs(nil, repos)
+	// some systems have repo, some have package
+	// but none have both
+	repos := []string{"repo3"}
+	packages := []string{"curl", "bash"}
+	inventoryAIDs, err := getRepoBasedInventoryIDs(repos, packages)
 	assert.Nil(t, err)
-	assert.Equal(t, []mqueue.EvalData{
-		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID1},
-		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1, OrgID: &orgID1},
-		{InventoryID: "00000000-0000-0000-0000-000000000017", RhAccountID: 1, OrgID: &orgID1}},
-		inventoryAIDs)
+	assert.Empty(t, inventoryAIDs)
 }
 
 func TestGetRepoPackageBasedInventoryIDs(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	repos := [][]string{{"repo1", "not_installed_pkg"}, {"repo2", "not_installed_pkg"}, {"repo2", "kernel"}}
-	inventoryAIDs, err := getRepoBasedInventoryIDs(repos, nil)
+	// systems have both repo and package
+	repos := []string{"not_exists_repo", "repo2"}
+	packages := []string{"not_installed_pkg", "kernel"}
+	inventoryAIDs, err := getRepoBasedInventoryIDs(repos, packages)
 	assert.Nil(t, err)
 	assert.Equal(t, []mqueue.EvalData{
 		// "kernel" in "repo2"
 		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID1}},
-		// 00000000-0000-0000-0000-000000000017 does not have "not_installed_pkg" in "repo1"
 		inventoryAIDs)
 
-	repos = [][]string{{"repo1", "not_installed_pkg"}, {"repo2", "not_installed_pkg"}}
+	repos = []string{"not_installed_pkg"}
 	inventoryAIDs, err = getRepoBasedInventoryIDs(repos, nil)
 	assert.Nil(t, err)
 	assert.Len(t, inventoryAIDs, 0)
-}
-
-func TestGetRepoBasedInventoryIDs(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	repos := []string{"repo1"}
-	repoPackages := [][]string{{"repo1", "not_installed_pkg"}, {"repo2", "not_installed_pkg"}, {"repo2", "kernel"}}
-	inventoryAIDs, err := getRepoBasedInventoryIDs(repoPackages, repos)
-	assert.Nil(t, err)
-	assert.Equal(t, []mqueue.EvalData{
-		// from repoPackages
-		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID1},
-		// systems added from repos
-		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1, OrgID: &orgID1},
-		{InventoryID: "00000000-0000-0000-0000-000000000017", RhAccountID: 1, OrgID: &orgID1}},
-		inventoryAIDs)
 }
 
 func TestGetRepoBasedInventoryIDsEmpty(t *testing.T) {
@@ -123,8 +106,8 @@ func TestGetRepoBasedInventoryIDsEmpty(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	repos := []string{}
-	repoPackages := [][]string{}
-	inventoryIDs, err := getRepoBasedInventoryIDs(repoPackages, repos)
+	packages := []string{}
+	inventoryIDs, err := getRepoBasedInventoryIDs(repos, packages)
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(inventoryIDs))
 }
@@ -133,12 +116,20 @@ func TestGetUpdatedRepos(t *testing.T) {
 	core.SetupTestEnvironment()
 	Configure()
 
-	modifiedSince := time.Now().Format(types.Rfc3339NoTz)
-	thirdParty := true
-	repoPackages, repoNoPackages, _, err := getUpdatedRepos(time.Now(), &modifiedSince, &thirdParty)
+	repos, err := getUpdatedRepos(time.Now())
 	assert.Nil(t, err)
-	assert.Equal(t, 2, len(repoPackages[0]))
-	assert.Equal(t, 2, len(repoNoPackages))
+	assert.Equal(t, 3, len(repos))
+}
+
+func TestGetUpdatedReposWithPackages(t *testing.T) {
+	core.SetupTestEnvironment()
+	Configure()
+
+	modifiedSince := time.Now().Format(types.Rfc3339NoTz)
+	repos, packages, _, err := getUpdatedReposWithPackages(time.Now(), &modifiedSince)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(repos))
+	assert.Equal(t, 2, len(packages))
 }
 
 func resetLastEvalTimestamp(t *testing.T) {

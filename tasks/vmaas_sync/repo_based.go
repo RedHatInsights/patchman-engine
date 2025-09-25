@@ -7,7 +7,9 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"app/tasks"
+	"maps"
 	"net/http"
+	"slices"
 	"time"
 )
 
@@ -23,8 +25,7 @@ func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {
 	}
 
 	now := time.Now()
-	thirdParty := true
-	repoPackages, repoNoPackages, latestRepoChange, err := getUpdatedRepos(now, lastRepoBaseEval, &thirdParty)
+	repos, packages, latestRepoChange, err := getUpdatedReposWithPackages(now, lastRepoBaseEval)
 	if latestRepoChange == nil {
 		return nil, nil
 	}
@@ -32,7 +33,7 @@ func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {
 		return nil, err
 	}
 
-	inventoryAIDs, err := getRepoBasedInventoryIDs(repoPackages, repoNoPackages)
+	inventoryAIDs, err := getRepoBasedInventoryIDs(repos, packages)
 	if err != nil {
 		return nil, err
 	}
@@ -42,61 +43,65 @@ func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {
 	return inventoryAIDs, nil
 }
 
-func getRepoBasedInventoryIDs(repoPackages [][]string, repos []string) ([]mqueue.EvalData, error) {
+func getRepoBasedInventoryIDs(repos []string, packages []string) ([]mqueue.EvalData, error) {
 	var ids []mqueue.EvalData
-	if len(repoPackages) == 0 && len(repos) == 0 {
+	if len(repos) == 0 || len(packages) == 0 {
 		return ids, nil
 	}
 
-	// unique repo names from both repoPackages and repos
-	uniqRepos := make(map[string]bool)
-	for _, r := range repoPackages {
-		uniqRepos[r[0]] = true
-	}
-	for _, r := range repos {
-		uniqRepos[r] = true
-	}
-	uniqRepoList := make([]string, 0, len(uniqRepos))
-	for k := range uniqRepos {
-		uniqRepoList = append(uniqRepoList, k)
-	}
-
-	innerQuery := database.DB.Table("system_repo sr").
+	query := tasks.CancelableDB().Table("system_platform sp").
+		Joins("JOIN system_repo sr ON  sp.rh_account_id = sr.rh_account_id AND sp.id = sr.system_id").
 		Joins("JOIN repo ON repo.id = sr.repo_id").
-		Joins("JOIN system_platform sp ON  sp.rh_account_id = sr.rh_account_id AND sp.id = sr.system_id").
 		Joins("JOIN rh_account ra ON ra.id = sp.rh_account_id").
-		Select("distinct sp.id, sp.inventory_id, sp.rh_account_id, ra.org_id, repo.name").
-		Where("repo.name IN (?)", uniqRepoList)
-	query := tasks.CancelableDB().Table("(?) as rb", innerQuery).
-		Order("rb.rh_account_id").
-		Select("distinct rb.inventory_id, rb.rh_account_id, rb.org_id")
-	whereQ := database.DB
-
-	if len(repoPackages) > 0 && len(repoPackages) < tasks.MaxChangedPackages {
-		query = query.
-			Joins("JOIN system_package2 spkg ON spkg.rh_account_id = rb.rh_account_id AND spkg.system_id = rb.id").
-			Joins("JOIN package_name pn ON pn.id = spkg.name_id")
-		whereQ = whereQ.Where("(rb.name, pn.name) IN (?)", repoPackages)
-	} else {
-		whereQ = whereQ.Where("rb.name IN (?)", uniqRepoList)
-	}
-
-	if len(repos) > 0 {
-		whereQ = whereQ.Or("rb.name IN (?)", repos)
-	}
-
-	if err := query.Where(whereQ).Scan(&ids).Error; err != nil {
+		Joins("JOIN system_package2 spkg ON spkg.rh_account_id = sp.rh_account_id AND spkg.system_id = sp.id").
+		Joins("JOIN package_name pn ON pn.id = spkg.name_id").
+		Select("distinct sp.inventory_id, sp.rh_account_id, ra.org_id").
+		Where("repo.name IN (?)", repos).
+		Where("pn.name IN (?)", packages).
+		Order("sp.rh_account_id")
+	if err := query.Scan(&ids).Error; err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
+func getUpdatedRepos(syncStart time.Time) ([]string, error) {
+	repoMap, _, err := getVmaasRepos(syncStart, nil, false)
+	if err != nil {
+		return []string{}, err
+	}
+	return slices.Collect(maps.Keys(repoMap)), nil
+}
+
+func getUpdatedReposWithPackages(syncStart time.Time, modifiedSince *string) ([]string, []string, *time.Time, error) {
+	repoMap, lastChange, err := getVmaasRepos(syncStart, modifiedSince, true)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	var affectedRepos = make([]string, 0, len(repoMap))
+	var affectedPackages []string
+
+	included := make(map[string]bool) // remember packages already in list
+	for repoName, packageList := range repoMap {
+		if len(packageList) == 0 {
+			continue
+		}
+		affectedRepos = append(affectedRepos, repoName)
+		for _, packageName := range packageList {
+			if !included[packageName] {
+				included[packageName] = true
+				affectedPackages = append(affectedPackages, packageName)
+			}
+		}
+	}
+	return affectedRepos, affectedPackages, lastChange, nil
+}
+
 // nolint: funlen
-func getUpdatedRepos(syncStart time.Time, modifiedSince *string, thirdParty *bool,
-) ([][]string, []string, *time.Time, error) {
+func getVmaasRepos(syncStart time.Time, modifiedSince *string, thirdParty bool,
+) (map[string][]string, *time.Time, error) {
 	page := 1
-	var repoPackages [][]string
-	var repoNoPackages []string
+	var repoPackages = make(map[string][]string)
 	var latestRepoChange *time.Time
 	var nReposRedhat int
 	var nReposThirdParty int
@@ -106,7 +111,7 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string, thirdParty *boo
 			Page:           page,
 			RepositoryList: []string{".*"},
 			PageSize:       tasks.AdvisoryPageSize,
-			ThirdParty:     thirdParty,
+			ThirdParty:     &thirdParty,
 			ModifiedSince:  modifiedSince,
 			ShowPackages:   true,
 		}
@@ -119,7 +124,7 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string, thirdParty *boo
 
 		vmaasDataPtr, err := utils.HTTPCallRetry(vmaasCallFunc, tasks.VmaasCallExpRetry, tasks.VmaasCallMaxRetries)
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, nil, err
 		}
 		vmaasCallCnt.WithLabelValues("success").Inc()
 		repos := vmaasDataPtr.(*vmaas.ReposResponse)
@@ -148,15 +153,12 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string, thirdParty *boo
 
 		for k, contentSet := range repos.RepositoryList {
 			thirdParty := false
-			packages := make(map[string]bool)
+			repoPackages[k] = make([]string, 0)
 			for _, repo := range contentSet {
 				if repo["third_party"] == (interface{})(true) {
 					thirdParty = true
 				}
-				repoPackages = append(repoPackages, getRepoUpdatedPackages(k, repo, packages)...)
-			}
-			if len(packages) == 0 {
-				repoNoPackages = append(repoNoPackages, k)
+				repoPackages[k] = getRepoUpdatedPackages(repo)
 			}
 
 			if thirdParty {
@@ -173,17 +175,17 @@ func getUpdatedRepos(syncStart time.Time, modifiedSince *string, thirdParty *boo
 	}
 
 	utils.LogInfo("redhat", nReposRedhat, "thirdparty", nReposThirdParty, "Repos downloading complete")
-	return repoPackages, repoNoPackages, latestRepoChange, nil
+	return repoPackages, latestRepoChange, nil
 }
 
-func getRepoUpdatedPackages(contentSetName string, repo map[string]interface{}, packages map[string]bool) [][]string {
-	var repoPackages [][]string
+func getRepoUpdatedPackages(repo map[string]interface{}) []string {
+	var repoPackages []string
 	if value, ok := repo["updated_package_names"]; ok {
 		if updatedPkgs, ok := value.([]interface{}); ok {
+			repoPackages = make([]string, 0, len(updatedPkgs))
 			for _, p := range updatedPkgs {
-				if pkg, ok := p.(string); ok && !packages[pkg] {
-					packages[pkg] = true
-					repoPackages = append(repoPackages, []string{contentSetName, pkg})
+				if pkg, ok := p.(string); ok {
+					repoPackages = append(repoPackages, pkg)
 				}
 			}
 		}
