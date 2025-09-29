@@ -310,6 +310,8 @@ func flushEvalEvents() {
 		utils.LogWarn("err", err.Error(), WarnPayloadTracker)
 	}
 	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-sent-payload-tracker"))
+	utils.LogDebug("evaluator_messages", len(eBuffer.EvalBuffer),
+		"payload_tracker_messages", len(eBuffer.PtBuffer), "flushed buffers")
 	// empty buffer
 	eBuffer.EvalBuffer = eBuffer.EvalBuffer[:0]
 	eBuffer.PtBuffer = eBuffer.PtBuffer[:0]
@@ -376,6 +378,8 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 	templateID := hostTemplate(tx, accountID, host)
 	if templateID != nil {
 		colsToUpdate = append(colsToUpdate, "template_id")
+		utils.LogDebug("inventoryID", host.ID, "candlepin_env", host.SystemProfile.Rhsm.Environments,
+			"template", *templateID, "reporter", host.Reporter)
 	}
 
 	updatesReqJSONString := string(updatesReqJSON)
