@@ -52,5 +52,6 @@ func sendInventoryIDs(inventoryIDs mqueue.EvalDataSlice) {
 // Send given systems to re-evaluation.
 func RecalcSystems(inventoryAIDs []mqueue.EvalData) {
 	batch := inventoryIDsBatch{InventoryIDs: inventoryAIDs}
+	utils.LogDebug("systems", inventoryAIDs, "systems sent to recalc")
 	inventoryIDsChan <- batch
 }
