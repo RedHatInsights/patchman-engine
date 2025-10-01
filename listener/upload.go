@@ -760,10 +760,12 @@ func getYumUpdates(event HostEvent, client *api.Client) (*YumUpdates, error) {
 	}
 
 	if (parsed == vmaas.UpdatesV3Response{}) {
-		utils.LogWarn("yum_updates_s3url", yumUpdatesURL, "No yum updates on S3, getting legacy yum_updates field")
-		err := sonic.Unmarshal(yumUpdates, &parsed)
-		if err != nil {
-			return nil, errors.Wrap(err, "unable to unmarshall yum updates")
+		utils.LogDebug("yum_updates_s3url", yumUpdatesURL, "No yum updates on S3, getting legacy yum_updates field")
+		if len(yumUpdates) > 0 { // yumUpdates are not empty
+			err := sonic.Unmarshal(yumUpdates, &parsed)
+			if err != nil {
+				return nil, errors.Wrap(err, "unable to unmarshall yum updates")
+			}
 		}
 	}
 
