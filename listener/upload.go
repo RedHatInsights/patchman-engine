@@ -3,6 +3,7 @@ package listener
 import (
 	"app/base"
 	"app/base/api"
+	"app/base/candlepin"
 	"app/base/database"
 	"app/base/inventory"
 	"app/base/models"
@@ -50,6 +51,7 @@ const (
 	RepoPathPattern           = "(/content/.*)"
 	RepoBasearchPlaceholder   = "$basearch"
 	RepoReleaseverPlaceholder = "$releasever"
+	TemplateRepoPattern       = `^https://cert\.console.*/api/pulp-content/(cs-)?[[:xdigit:]]+/templates/`
 )
 
 var (
@@ -63,10 +65,12 @@ var (
 )
 
 var (
-	repoPathRegex = regexp.MustCompile(RepoPathPattern)
-	spacesRegex   = regexp.MustCompile(`^\s*$`)
-	httpClient    *api.Client
-	metricByErr   = map[error]string{
+	repoPathRegex    = regexp.MustCompile(RepoPathPattern)
+	spacesRegex      = regexp.MustCompile(`^\s*$`)
+	templateRepoPath = regexp.MustCompile(TemplateRepoPattern)
+	httpClient       *api.Client
+	candlepinClient  = candlepin.CreateCandlepinClient()
+	metricByErr      = map[error]string{
 		ErrNoPackages:        ReceivedWarnNoPackages,
 		ErrReporter:          ReceivedWarnExcludedReporter,
 		ErrHostType:          ReceivedWarnExcludedHostType,
@@ -328,11 +332,24 @@ func updateReporterCounter(reporter string) {
 
 func hostTemplate(tx *gorm.DB, accountID int, host *Host) *int64 {
 	var templateID *int64
-	var err error
-	if host.Reporter == rhsmReporter || host.Reporter == puptooReporter {
-		templateID, err = getTemplate(tx, accountID, host.SystemProfile.Rhsm.Environments)
+
+	if hasTemplateRepo(&host.SystemProfile) {
+		// check system's env in candlepin
+		resp, err := callCandlepinEnvironment(base.Context, host.SystemProfile.ConsumerID)
 		if err != nil {
 			utils.LogWarn("inventoryID", host.ID, "err", errors.Wrap(err, "Unable to assign templates"))
+		}
+
+		// get template from candlepin
+		if resp != nil {
+			envs := make([]string, len(resp.Environments))
+			for i, env := range resp.Environments {
+				envs[i] = env.ID
+			}
+			templateID, err = getTemplate(tx, accountID, envs)
+			if err != nil {
+				utils.LogWarn("inventoryID", host.ID, "err", errors.Wrap(err, "Unable to assign templates"))
+			}
 		}
 	}
 	return templateID
@@ -638,6 +655,16 @@ func getRepoPath(systemProfile *inventory.SystemProfile, repo *inventory.YumRepo
 		return repoPath, nil
 	}
 	return repoPath, nil
+}
+
+func hasTemplateRepo(systemProfile *inventory.SystemProfile) bool {
+	yumRepos := systemProfile.GetYumRepos()
+	for _, r := range yumRepos {
+		if r.Enabled && templateRepoPath.MatchString(r.BaseURL) {
+			return true
+		}
+	}
+	return false
 }
 
 func processRepos(systemProfile *inventory.SystemProfile) ([]string, []string) {
