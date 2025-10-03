@@ -21,6 +21,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var accountID = int(1)
+
 func assertInLogs(t *testing.T, msg string, logs ...log.Entry) {
 	nLogs := len(logs)
 	i := 0
@@ -50,6 +52,20 @@ func createTestInvHost(t *testing.T) *Host {
 		},
 	}
 	return &host
+}
+
+func createTestHostWithEnv(reporter, consumer, baseURL string) *Host {
+	return &Host{
+		ID:       id,
+		Reporter: reporter,
+		SystemProfile: inventory.SystemProfile{
+			ConsumerID: consumer,
+			YumRepos: &[]inventory.YumRepo{{
+				ID:      "base",
+				Enabled: true,
+				BaseURL: baseURL}},
+		},
+	}
 }
 
 func TestUpdateSystemPlatform(t *testing.T) {
@@ -435,17 +451,9 @@ func TestHostTemplateRhsmReporter(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
-	accountID := int(1)
-	host := &Host{
-		ID:       id,
-		Reporter: rhsmReporter,
-		SystemProfile: inventory.SystemProfile{
-			Rhsm: inventory.Rhsm{
-				Environments: []string{"99900000000000000000000000000001", "99900000000000000000000000000002"},
-			},
-		},
-	}
-
+	host := createTestHostWithEnv(rhsmReporter, "00000000-0000-0000-0000-000000000001",
+		"https://cert.console.example.com/api/pulp-content/abcdef/templates/"+
+			"12345678-90ab-cdef-1234-567890abcdef/content/dist/rhel9/$releasever/x86_64/baseos/os")
 	templateID := hostTemplate(database.DB, accountID, host)
 	assert.NotNil(t, templateID)
 	assert.Equal(t, int64(1), *templateID)
@@ -456,19 +464,33 @@ func TestHostTemplatePuptoo(t *testing.T) {
 	core.SetupTestEnvironment()
 	configure()
 
-	accountID := int(1)
-	host := &Host{
-		ID:       id,
-		Reporter: puptooReporter,
-		SystemProfile: inventory.SystemProfile{
-			ConsumerID: "00000000-0000-0000-0000-000000000002",
-			Rhsm: inventory.Rhsm{
-				Environments: []string{"99900000000000000000000000000002"},
-			},
-		},
-	}
-
+	host := createTestHostWithEnv(puptooReporter, "00000000-0000-0000-0000-000000000002",
+		"https://cert.console.example.com/api/pulp-content/abcdef/templates/"+
+			"12345678-90ab-cdef-1234-567890abcdef/content/dist/rhel9/$releasever/x86_64/baseos/os")
 	templateID := hostTemplate(database.DB, accountID, host)
 	assert.NotNil(t, templateID)
 	assert.Equal(t, int64(2), *templateID)
+}
+
+func TestNoHostTemplate(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	host := createTestHostWithEnv(puptooReporter, "00000000-0000-0000-0000-000000000002",
+		"https://cdn.example.com/content/dist/rhel9/$releasever/x86_64/baseos/os")
+	templateID := hostTemplate(database.DB, accountID, host)
+	assert.Nil(t, templateID)
+}
+
+func TestHostTemplateCandlepinFailure(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	host := createTestHostWithEnv(puptooReporter, "return_404",
+		"https://cert.console.example.com/api/pulp-content/abcdef/templates/"+
+			"12345678-90ab-cdef-1234-567890abcdef/content/dist/rhel9/$releasever/x86_64/baseos/os")
+	templateID := hostTemplate(database.DB, accountID, host)
+	assert.Nil(t, templateID)
 }
