@@ -4,6 +4,7 @@ import (
 	"app/base/core"
 	"app/base/database"
 	"app/base/utils"
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -47,4 +48,39 @@ func TestAssignTemplates(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCallCandlepinEnvironment(t *testing.T) {
+	ctx := context.Background()
+	result, err := callCandlepinEnvironment(ctx, "00000000-0000-0000-0000-000000000001")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Len(t, result.Environments, 1)
+	assert.Equal(t, "99900000000000000000000000000001", result.Environments[0].ID)
+}
+
+func TestCallCandlepinEnvironmentError(t *testing.T) {
+	ctx := context.Background()
+	result, err := callCandlepinEnvironment(ctx, "return_404")
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "candlepin /consumers call failed")
+	assert.Nil(t, result)
+}
+
+func TestCallCandlepinEnvNetworkError(t *testing.T) {
+	// Override the candlepin address to invalid URL
+	originalAddress := utils.CoreCfg.CandlepinAddress
+	utils.CoreCfg.CandlepinAddress = "http://invalid-host:12345"
+	defer func() {
+		utils.CoreCfg.CandlepinAddress = originalAddress
+	}()
+
+	ctx := context.Background()
+	result, err := callCandlepinEnvironment(ctx, "test-consumer")
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "candlepin error")
+	assert.Nil(t, result)
 }

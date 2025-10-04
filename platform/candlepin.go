@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"slices"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,6 +21,23 @@ func candlepinConsumersPutHandler(c *gin.Context) {
 		return
 	}
 	c.Data(http.StatusOK, gin.MIMEJSON, []byte{})
+}
+
+func candlepinConsumersGetHandler(c *gin.Context) {
+	consumer := c.Param("consumer")
+	utils.LogInfo("GET consumer", consumer, "body")
+	if consumer == "return_404" {
+		c.Data(http.StatusNotFound, gin.MIMEJSON, []byte{})
+		return
+	}
+	env := strings.ReplaceAll(consumer, "-", "")
+	env = strings.Replace(env, "000", "999", 1)
+	response := candlepin.ConsumersDetailResponse{
+		Environments: []candlepin.ConsumersEnvironment{
+			{ID: env},
+		},
+	}
+	c.JSON(http.StatusOK, response)
 }
 
 func candlepinConsumersEnvironmentsHandler(c *gin.Context) {
@@ -42,5 +60,6 @@ func candlepinConsumersEnvironmentsHandler(c *gin.Context) {
 
 func initCandlepin(app *gin.Engine) {
 	app.PUT("/candlepin/consumers/:consumer", candlepinConsumersPutHandler)
+	app.GET("/candlepin/consumers/:consumer", candlepinConsumersGetHandler)
 	app.PUT("/candlepin/owners/:owner/consumers/environments", candlepinConsumersEnvironmentsHandler)
 }
