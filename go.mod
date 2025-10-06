@@ -31,7 +31,7 @@ require (
 	github.com/zsais/go-gin-prometheus v0.1.0
 	go.uber.org/automaxprocs v1.6.0
 	go.uber.org/ratelimit v0.3.1
-	golang.org/x/exp v0.0.0-20250911091902-df9299821621
+	golang.org/x/exp v0.0.0-20251002181428-27f1f14c8bb9
 	golang.org/x/net v0.44.0
 	google.golang.org/grpc v1.75.1
 	gorm.io/driver/postgres v1.6.0
