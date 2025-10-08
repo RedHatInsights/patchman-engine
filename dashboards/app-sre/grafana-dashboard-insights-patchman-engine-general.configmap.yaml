@@ -29,7 +29,7 @@ data:
         "editable": true,
         "fiscalYearStartMonth": 0,
         "graphTooltip": 0,
-        "id": 1025983,
+        "id": 1203750,
         "links": [
 
         ],
@@ -6246,17 +6246,6 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"baseline_.*\"}) by (pod))",
-                        "format": "time_series",
-                        "interval": "",
-                        "intervalFactor": 1,
-                        "legendFormat": "baseline_sum",
-                        "refId": "E"
-                    },
-                    {
-                        "datasource": {
-                            "uid": "$datasource"
-                        },
                         "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_advisories_.*\"}) by (pod))",
                         "format": "time_series",
                         "interval": "",
@@ -6268,10 +6257,12 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_package_.*\"}) by (pod))",
+                        "editorMode": "code",
+                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_package2_.*\"}) by (pod))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "system_package_sum",
+                        "range": true,
                         "refId": "C"
                     },
                     {
@@ -7474,8 +7465,8 @@ data:
                 },
                 {
                     "current": {
-                        "text": "appsrep07ue1-prometheus",
-                        "value": "P7E8E1698DF0AC988"
+                        "text": "aws-resources-exporter-production",
+                        "value": "PCEFB875D6FD018FC"
                     },
                     "includeAll": false,
                     "label": "rds_datasource",
