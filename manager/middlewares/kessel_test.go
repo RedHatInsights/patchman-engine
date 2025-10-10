@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"app/base/utils"
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -15,6 +14,7 @@ import (
 	kesselv2 "github.com/project-kessel/kessel-sdk-go/kessel/inventory/v1beta2"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSetupClient(t *testing.T) {
@@ -78,19 +78,14 @@ func TestProcessWorkspaces(t *testing.T) {
 	}
 }
 
-func TestGetDefaultWorkspaceID(t *testing.T) {
-	workspaceID, err := getDefaultWorkspaceID(context.Background(), mockXRHID())
-	if assert.NoError(t, err) {
-		assert.NotEqual(t, "", workspaceID)
-	}
-}
+func TestBuildPermission(t *testing.T) {
+	c := &gin.Context{Request: &http.Request{Method: http.MethodGet}}
+	permission := buildPermission(c)
+	assert.Equal(t, "patch_system_view", permission)
 
-func TestUseCheckForUpdate(t *testing.T) {
-	client, conn := mockClient(t)
-	defer conn.Close()
-
-	err := useCheckForUpdate(&gin.Context{}, client, mockXRHID(), "patch_template_view")
-	assert.Nil(t, err)
+	c = &gin.Context{Request: &http.Request{Method: http.MethodPut}}
+	permission = buildPermission(c)
+	assert.Equal(t, "patch_system_edit", permission)
 }
 
 func TestUseStreamedListObjects(t *testing.T) {
@@ -98,11 +93,9 @@ func TestUseStreamedListObjects(t *testing.T) {
 	defer conn.Close()
 
 	c := &gin.Context{Request: &http.Request{Method: http.MethodGet}}
-	err := useStreamedListObjects(c, client, mockXRHID())
+	workspaces, err := useStreamedListObjects(c, client, mockXRHID(), "demo_permission")
 	if assert.NoError(t, err) {
-		inventoryGroups, found := c.Get(utils.KeyInventoryGroups)
-		assert.True(t, found)
-		assert.NotEqual(t, "", inventoryGroups)
+		assert.Equal(t, 1, len(workspaces))
 	}
 }
 
@@ -111,8 +104,11 @@ func TestHasPermissionKessel(t *testing.T) {
 	c.Request.Header.Set("x-rh-identity", "eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJjb3N0X21hbmFnZW1lbnQiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJhbnNpYmxlIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1ZX0sIm1pZ3JhdGlvbnMiOnsiaXNfZW50aXRsZWQiOnRydWV9fSwiaWRlbnRpdHkiOnsiaW50ZXJuYWwiOnsiYXV0aF90aW1lIjoyOTksImF1dGhfdHlwZSI6ImJhc2ljLWF1dGgiLCJvcmdfaWQiOiIxMTc4OTc3MiJ9LCJhY2NvdW50X251bWJlciI6IjYwODk3MTkiLCJ1c2VyIjp7ImZpcnN0X25hbWUiOiJJbnNpZ2h0cyIsImlzX2FjdGl2ZSI6dHJ1ZSwiaXNfaW50ZXJuYWwiOmZhbHNlLCJsYXN0X25hbWUiOiJRQSIsImxvY2FsZSI6ImVuX1VTIiwiaXNfb3JnX2FkbWluIjp0cnVlLCJ1c2VybmFtZSI6Imluc2lnaHRzLXFhIiwiZW1haWwiOiJqbmVlZGxlK3FhQHJlZGhhdC5jb20ifSwidHlwZSI6IlVzZXIifX0=") //nolint:lll
 
 	hasPermissionKessel(c)
-	_, exists := c.Get(utils.KeyInventoryGroups)
-	assert.True(t, exists)
+	inventoryGroups, found := c.Get(utils.KeyInventoryGroups)
+	require.True(t, found)
+	inventoryGroupMap, ok := (inventoryGroups).(map[string]string)
+	require.True(t, ok)
+	assert.Equal(t, `{"[{\"id\":\"inventory-group-1\"}]"}`, inventoryGroupMap[utils.KeyGrouped])
 }
 
 func mockXRHID() *identity.XRHID {
