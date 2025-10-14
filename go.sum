@@ -6,6 +6,8 @@ github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc
 github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6XgeJcm8brE=
 github.com/MichaelMraka/gorpm v0.0.0-20210923131407-e21b5950f175 h1:KkjlVN/HUw3OStvTnsAKt6bzLfWz/qDzfdNKRAo9Ef0=
 github.com/MichaelMraka/gorpm v0.0.0-20210923131407-e21b5950f175/go.mod h1:R3iHBCKh4OIuNrIzJl+81N08s7dD92MLffdRy+wbtnk=
+github.com/MichaelMraka/kafka-go v0.0.0-20251014134425-230b5408c208 h1:+BepVnwpCIO1xQFu5ZxRoPVwadiGaevazv5/RFMDlRw=
+github.com/MichaelMraka/kafka-go v0.0.0-20251014134425-230b5408c208/go.mod h1:Y1gn60kzLEEaW28YshXyk2+VCUKbJ3Qr6DrnT3i4+9E=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/aws/aws-sdk-go v1.49.13/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
