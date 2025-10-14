@@ -138,3 +138,4 @@ require (
 )
 
 replace github.com/ezamriy/gorpm v0.0.0-20160905202458-25f7273cbf51 => github.com/MichaelMraka/gorpm v0.0.0-20210923131407-e21b5950f175
+replace github.com/segmentio/kafka-go v0.4.49 => github.com/MichaelMraka/kafka-go v0.0.0-20251014134425-230b5408c208
