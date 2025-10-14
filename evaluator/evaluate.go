@@ -531,7 +531,9 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 	advisories SystemAdvisoryMap, installed, installable, applicable int) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("system-update"))
-	defer utils.ObserveSecondsSince(*system.LastUpload, uploadEvaluationDelay)
+	if system.LastUpload != nil {
+		defer utils.ObserveSecondsSince(*system.LastUpload, uploadEvaluationDelay)
+	}
 	if system.LastEvaluation != nil {
 		defer utils.ObserveHoursSince(*system.LastEvaluation, twoEvaluationsInterval)
 	}
@@ -584,7 +586,7 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 	err := tx.Model(system).Updates(data).Error
 
 	now := time.Now()
-	if system.LastUpload.Sub(now) > time.Hour {
+	if system.LastUpload != nil && system.LastUpload.Sub(now) > time.Hour {
 		// log long evaluating systems
 		utils.LogWarn("id", system.InventoryID, "lastUpload", *system.LastUpload, "now", now, "uploadEvaluationDelay")
 	}
