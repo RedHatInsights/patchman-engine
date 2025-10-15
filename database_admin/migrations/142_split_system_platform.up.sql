@@ -165,6 +165,309 @@ ADD CONSTRAINT system_inventory_id
     FOREIGN KEY (rh_account_id, system_id)
     REFERENCES system_inventory (rh_account_id, id);
 
+-- UPDATE FUNCTIONS
+CREATE OR REPLACE FUNCTION on_system_update()
+-- this trigger updates advisory_account_data when server changes its stale flag
+    RETURNS TRIGGER
+AS
+$system_update$
+DECLARE
+    was_counted  BOOLEAN;
+    should_count BOOLEAN;
+    change       INT;
+BEGIN
+    -- Ignore not yet evaluated systems
+    IF TG_OP != 'UPDATE' OR NOT EXISTS (
+        SELECT 1
+        FROM system_patch
+        WHERE system_id = NEW.id 
+          AND rh_account_id = NEW.rh_account_id
+          AND last_evaluation IS NOT NULL
+    ) THEN
+        RETURN NEW;
+    END IF;
+
+    was_counted := OLD.stale = FALSE;
+    should_count := NEW.stale = FALSE;
+
+    -- Determine what change we are performing
+    IF was_counted and NOT should_count THEN
+        change := -1;
+    ELSIF NOT was_counted AND should_count THEN
+        change := 1;
+    ELSE
+        -- No change
+        RETURN NEW;
+    END IF;
+
+    -- insert/update advisories linked to the server
+    INSERT
+      INTO advisory_account_data (advisory_id, rh_account_id, systems_installable, systems_applicable)
+    SELECT sa.advisory_id, NEW.rh_account_id,
+           case when sa.status_id = 0 then change else 0 end as systems_installable,
+           change as systems_applicable
+      FROM system_advisories sa
+     WHERE sa.system_id = NEW.id AND sa.rh_account_id = NEW.rh_account_id
+     ORDER BY sa.advisory_id
+        ON CONFLICT (advisory_id, rh_account_id) DO UPDATE
+           SET systems_installable = advisory_account_data.systems_installable + EXCLUDED.systems_installable,
+               systems_applicable = advisory_account_data.systems_applicable + EXCLUDED.systems_applicable;
+    RETURN NEW;
+END;
+$system_update$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION refresh_advisory_caches_multi(advisory_ids_in INTEGER[] DEFAULT NULL,
+                                                         rh_account_id_in INTEGER DEFAULT NULL)
+    RETURNS VOID AS
+$refresh_advisory$
+BEGIN
+    -- Lock rows
+    PERFORM aad.rh_account_id, aad.advisory_id
+    FROM advisory_account_data aad
+    WHERE (aad.advisory_id = ANY (advisory_ids_in) OR advisory_ids_in IS NULL)
+      AND (aad.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
+        FOR UPDATE OF aad;
+
+    WITH current_counts AS (
+        SELECT sa.advisory_id, sa.rh_account_id,
+               count(sa.*) filter (where sa.status_id = 0) as systems_installable,
+               count(sa.*) as systems_applicable
+          FROM system_advisories sa
+          JOIN system_inventory si
+            ON sa.rh_account_id = si.rh_account_id AND sa.system_id = si.id
+          JOIN system_patch sp
+            ON si.id = sp.system_id AND sp.rh_account_id = si.rh_account_id
+         WHERE sp.last_evaluation IS NOT NULL
+           AND si.stale = FALSE
+           AND (sa.advisory_id = ANY (advisory_ids_in) OR advisory_ids_in IS NULL)
+           AND (si.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
+         GROUP BY sa.advisory_id, sa.rh_account_id
+    ),
+        upserted AS (
+            INSERT INTO advisory_account_data (advisory_id, rh_account_id, systems_installable, systems_applicable)
+                 SELECT advisory_id, rh_account_id, systems_installable, systems_applicable
+                   FROM current_counts
+            ON CONFLICT (advisory_id, rh_account_id) DO UPDATE SET
+                     systems_installable = EXCLUDED.systems_installable,
+                     systems_applicable = EXCLUDED.systems_applicable
+         )
+    DELETE FROM advisory_account_data
+     WHERE (advisory_id, rh_account_id) NOT IN (SELECT advisory_id, rh_account_id FROM current_counts)
+       AND (advisory_id = ANY (advisory_ids_in) OR advisory_ids_in IS NULL)
+       AND (rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL);
+END;
+$refresh_advisory$ language plpgsql;
+
+CREATE OR REPLACE FUNCTION refresh_system_caches(system_id_in BIGINT DEFAULT NULL,
+                                                 rh_account_id_in INTEGER DEFAULT NULL)
+    RETURNS INTEGER AS
+$refresh_system$
+DECLARE
+    COUNT INTEGER;
+BEGIN
+    WITH system_advisories_count AS (
+        SELECT si.rh_account_id, si.id,
+               COUNT(advisory_id) FILTER (WHERE sa.status_id = 0) as installable_total,
+               COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 1 AND sa.status_id = 0) AS installable_enhancement,
+               COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 2 AND sa.status_id = 0) AS installable_bugfix,
+               COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 3 AND sa.status_id = 0) as installable_security,
+               COUNT(advisory_id) as applicable_total,
+               COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 1) AS applicable_enhancement,
+               COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 2) AS applicable_bugfix,
+               COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 3) as applicable_security
+          FROM system_inventory si  -- this table ensures even systems without any system_advisories are in results
+          LEFT JOIN system_advisories sa
+            ON si.rh_account_id = sa.rh_account_id AND si.id = sa.system_id
+          LEFT JOIN advisory_metadata am
+            ON sa.advisory_id = am.id
+         WHERE (si.id = system_id_in OR system_id_in IS NULL)
+           AND (si.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
+         GROUP BY si.rh_account_id, si.id
+         ORDER BY si.rh_account_id, si.id
+    )
+        UPDATE system_patch sp
+           SET installable_advisory_count_cache = sc.installable_total,
+               installable_advisory_enh_count_cache = sc.installable_enhancement,
+               installable_advisory_bug_count_cache = sc.installable_bugfix,
+               installable_advisory_sec_count_cache = sc.installable_security,
+               applicable_advisory_count_cache = sc.applicable_total,
+               applicable_advisory_enh_count_cache = sc.applicable_enhancement,
+               applicable_advisory_bug_count_cache = sc.applicable_bugfix,
+               applicable_advisory_sec_count_cache = sc.applicable_security
+          FROM system_advisories_count sc
+         WHERE sp.rh_account_id = sc.rh_account_id AND sp.system_id = sc.id
+           AND (sp.system_id = system_id_in OR system_id_in IS NULL)
+           AND (sp.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL);
+
+    GET DIAGNOSTICS COUNT = ROW_COUNT;
+    RETURN COUNT;
+END;
+$refresh_system$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION refresh_system_cached_counts(inventory_id_in varchar)
+    RETURNS void AS
+$refresh_system_cached_counts$
+DECLARE
+    system_id int;
+BEGIN
+
+    SELECT id FROM system_inventory WHERE inventory_id = inventory_id_in INTO system_id;
+
+    PERFORM refresh_system_caches(system_id, NULL);
+END;
+$refresh_system_cached_counts$
+    LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION delete_system(inventory_id_in uuid)
+    RETURNS TABLE
+            (
+                deleted_inventory_id uuid
+            )
+AS
+$delete_system$
+DECLARE
+    v_system_id  INT;
+    v_account_id INT;
+BEGIN
+    -- opt out to refresh cache and then delete
+    SELECT id, rh_account_id
+    FROM system_inventory
+    WHERE inventory_id = inventory_id_in
+    LIMIT 1
+        FOR UPDATE OF system_inventory
+    INTO v_system_id, v_account_id;
+
+    IF v_system_id IS NULL OR v_account_id IS NULL THEN
+        RAISE NOTICE 'Not found';
+        RETURN;
+    END IF;
+
+    UPDATE system_inventory
+    SET stale = true
+    WHERE rh_account_id = v_account_id
+      AND id = v_system_id;
+
+    DELETE
+    FROM system_advisories
+    WHERE rh_account_id = v_account_id
+      AND system_id = v_system_id;
+
+    DELETE
+    FROM system_repo
+    WHERE rh_account_id = v_account_id
+      AND system_id = v_system_id;
+
+    DELETE
+    FROM system_package2
+    WHERE rh_account_id = v_account_id
+      AND system_id = v_system_id;
+
+    DELETE
+    FROM system_patch
+    WHERE rh_account_id = v_account_id
+      AND system_id = v_system_id;
+
+    RETURN QUERY DELETE FROM system_inventory
+        WHERE rh_account_id = v_account_id AND
+              id = v_system_id
+        RETURNING inventory_id;
+END;
+$delete_system$ LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION delete_systems(inventory_ids UUID[])
+    RETURNS INTEGER
+AS
+$$
+DECLARE
+    tmp_cnt INTEGER;
+BEGIN
+
+    WITH systems as (
+        SELECT rh_account_id, id
+        FROM system_inventory
+        WHERE inventory_id = ANY (inventory_ids)
+        ORDER BY rh_account_id, id FOR UPDATE OF system_inventory),
+         marked as (
+             UPDATE system_inventory sp
+                 SET stale = true
+                 WHERE (rh_account_id, id) in (select rh_account_id, id from systems)
+         ),
+         advisories as (
+             DELETE
+                 FROM system_advisories
+                     WHERE (rh_account_id, system_id) in (select rh_account_id, id from systems)
+         ),
+         repos as (
+             DELETE
+                 FROM system_repo
+                     WHERE (rh_account_id, system_id) in (select rh_account_id, id from systems)
+         ),
+         packages2 as (
+             DELETE
+                 FROM system_package2
+                     WHERE (rh_account_id, system_id) in (select rh_account_id, id from systems)
+         ),
+         patch_systems as (
+             DELETE
+                 FROM system_patch
+                     WHERE (rh_account_id, system_id) in (select rh_account_id, id from systems)
+         ),
+         deleted as (
+             DELETE
+                 FROM system_inventory
+                     WHERE (rh_account_id, id) in (select rh_account_id, id from systems)
+                     RETURNING id
+         )
+    SELECT count(*)
+    FROM deleted
+    INTO tmp_cnt;
+
+    RETURN tmp_cnt;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION delete_culled_systems(delete_limit INTEGER)
+    RETURNS INTEGER
+AS
+$fun$
+DECLARE
+    ids UUID[];
+BEGIN
+    ids := ARRAY(
+            SELECT inventory_id
+            FROM system_inventory
+            WHERE culled_timestamp < now()
+            ORDER BY id
+            LIMIT delete_limit
+        );
+    return delete_systems(ids);
+END;
+$fun$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION mark_stale_systems(mark_limit integer)
+    RETURNS INTEGER
+AS
+$fun$
+DECLARE
+    marked integer;
+BEGIN
+    WITH ids AS (
+        SELECT rh_account_id, id, stale_warning_timestamp < now() as expired
+        FROM system_inventory
+        WHERE stale != (stale_warning_timestamp < now())
+        ORDER BY rh_account_id, id FOR UPDATE OF system_inventory
+        LIMIT mark_limit
+    )
+    UPDATE system_inventory si
+    SET stale = ids.expired
+    FROM ids
+    WHERE si.rh_account_id = ids.rh_account_id
+      AND si.id = ids.id;
+    GET DIAGNOSTICS marked = ROW_COUNT;
+    RETURN marked;
+END;
+$fun$ LANGUAGE plpgsql;
+
 
 
 -- system_patch
