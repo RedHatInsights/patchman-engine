@@ -55,6 +55,104 @@ GRANT SELECT, USAGE ON SEQUENCE system_inventory_id_seq TO evaluator;
 GRANT SELECT, USAGE ON SEQUENCE system_inventory_id_seq TO listener;
 GRANT SELECT, USAGE ON SEQUENCE system_inventory_id_seq TO vmaas_sync;
 
+-- LOAD DATA
+INSERT INTO system_inventory (
+    id,
+    inventory_id,
+    rh_account_id,
+    vmaas_json,
+    json_checksum,
+    last_updated,
+    unchanged_since,
+    last_upload,
+    stale,
+    display_name,
+    reporter_id,
+    yum_updates,
+    yum_checksum,
+    satellite_managed,
+    built_pkgcache,
+    arch,
+    bootc,
+    tags,
+    created,
+    stale_timestamp,
+    stale_warning_timestamp,
+    culled_timestamp
+  )
+  SELECT
+    id,
+    inventory_id,
+    rh_account_id,
+    vmaas_json,
+    json_checksum,
+    last_updated,
+    unchanged_since,
+    last_upload,
+    stale,
+    display_name,
+    reporter_id,
+    yum_updates,
+    yum_checksum,
+    satellite_managed,
+    built_pkgcache,
+    arch,
+    bootc,
+    '[]',
+    CURRENT_TIMESTAMP,
+    stale_timestamp,
+    stale_warning_timestamp,
+    culled_timestamp
+FROM system_platform sp
+WHERE sp.stale = false;
+
+SELECT setval('system_inventory_id_seq', (SELECT MAX(id) FROM system_inventory));
+
+CREATE OR REPLACE FUNCTION safe_to_int(input_text TEXT)
+RETURNS SMALLINT AS $$
+BEGIN
+  RETURN input_text::SMALLINT;
+EXCEPTION WHEN OTHERS THEN
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION safe_to_uuid(input_text TEXT)
+RETURNS UUID AS $$
+BEGIN
+  RETURN input_text::UUID;
+EXCEPTION WHEN OTHERS THEN
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DO $$ 
+BEGIN 
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'inventory' AND tablename = 'hosts') THEN
+        UPDATE system_inventory si
+        SET
+          tags = ih.tags,
+          created = ih.created,
+          workspaces = ARRAY(SELECT jsonb_array_elements(ih.groups)->>'id'),
+          os_name = ih.system_profile->'operating_system'->>'name',
+          os_major = safe_to_int(ih.system_profile->'operating_system'->>'major'),
+          os_minor = safe_to_int(ih.system_profile->'operating_system'->>'minor'),
+          rhsm_version = ih.system_profile->'rhsm'->>'version',
+          subscription_manager_id = safe_to_uuid(ih.system_profile->>'owner_id'),
+          sap_workload = COALESCE((ih.system_profile->'workloads'->'sap'->>'sap_system')::BOOLEAN, false),
+          sap_workload_sids = ARRAY(SELECT jsonb_array_elements_text(ih.system_profile->'workloads'->'sap'->'sids')),
+          ansible_workload = COALESCE(LENGTH(ih.system_profile->'workloads'->>'ansible') > 2, false),
+          ansible_workload_controller_version = ih.system_profile->'workloads'->'ansible'->>'controller_version',
+          mssql_workload = COALESCE(LENGTH(ih.system_profile->'workloads'->>'mssql') > 2, false),
+          mssql_workload_version = ih.system_profile->'workloads'->'mssql'->>'version'
+        FROM inventory.hosts ih
+        WHERE ih.id = si.inventory_id;
+    END IF;
+END $$;
+
+DROP FUNCTION safe_to_int;
+DROP FUNCTION safe_to_uuid;
+
 -- TRIGGERS
 SELECT create_table_partition_triggers('system_inventory_set_last_updated',
                                        $$BEFORE INSERT OR UPDATE$$,
@@ -128,6 +226,26 @@ SELECT grant_table_partitions('SELECT', 'system_patch', 'evaluator');
 SELECT grant_table_partitions('SELECT', 'system_patch', 'listener');
 SELECT grant_table_partitions('SELECT', 'system_patch', 'manager');
 SELECT grant_table_partitions('SELECT', 'system_patch', 'vmaas_sync');
+
+INSERT INTO system_patch SELECT
+    id,
+    rh_account_id,
+    last_evaluation,
+    installable_advisory_count_cache,
+    installable_advisory_enh_count_cache,
+    installable_advisory_bug_count_cache,
+    installable_advisory_sec_count_cache,
+    packages_installed,
+    packages_installable,
+    packages_applicable,
+    third_party,
+    applicable_advisory_count_cache,
+    applicable_advisory_enh_count_cache,
+    applicable_advisory_bug_count_cache,
+    applicable_advisory_sec_count_cache,
+    template_id
+FROM system_platform sp
+WHERE sp.stale = false;
 
 -- CONSTRAINTS
 ALTER TABLE IF EXISTS system_patch 
