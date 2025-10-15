@@ -9,3 +9,6 @@ TEST_DIRS=${1:-./...}
 # Run go test and colorize output (PASS - green, FAIL - red).
 # Set "-p 1" to run test sequentially to avoid parallel changes in testing database.
 gotestsum --format=standard-verbose -- -v -p 1 -coverprofile=coverage.txt -covermode=atomic $TEST_DIRS
+
+# To run one test uncomment and modify last string and comment the one above:
+# go test -count=1 -v ./tasks/vmaas_sync -run TestTableSizes

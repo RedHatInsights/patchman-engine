@@ -58,7 +58,13 @@ We cover a large part of the application functionality with tests; this requires
 podman-compose -f docker-compose.test.yml up --build --abort-on-container-exit
 ~~~
 
-### Run single test
+### Run single test or set of tests in containers
+- Open `./scripts/go_test.sh` file
+- Comment line that runs all tests
+- Uncomment and modify the last line to run one or a set of tests
+- Run the same command as for running all tests (from above)
+
+### Run single test locally
 After running all test suit, testing platform components are still running (kafka, platform, db). This is especially useful when fixing some test or adding a new one. You need to have golang installed.
 ~~~bash
 podman-compose -f docker-compose.test.yml up --build --no-start # build images
