@@ -83,3 +83,53 @@ CREATE INDEX IF NOT EXISTS system_inventory_inventory_id_idx ON system_inventory
 CREATE INDEX IF NOT EXISTS system_inventory_tags_index ON system_inventory USING GIN (tags JSONB_PATH_OPS);
 CREATE INDEX IF NOT EXISTS system_inventory_stale_timestamp_index ON system_inventory (stale_timestamp);
 CREATE INDEX IF NOT EXISTS system_inventory_workspaces_index ON system_inventory USING GIN (workspaces);
+
+
+
+-- system_patch
+CREATE TABLE IF NOT EXISTS system_patch
+(
+    system_id                            BIGINT      NOT NULL,
+    rh_account_id                        INT         NOT NULL,
+    last_evaluation                      TIMESTAMPTZ,
+    installable_advisory_count_cache     INT         NOT NULL DEFAULT 0,
+    installable_advisory_enh_count_cache INT         NOT NULL DEFAULT 0,
+    installable_advisory_bug_count_cache INT         NOT NULL DEFAULT 0,
+    installable_advisory_sec_count_cache INT         NOT NULL DEFAULT 0,
+    packages_installed                   INT         NOT NULL DEFAULT 0,
+    packages_installable                 INT         NOT NULL DEFAULT 0,
+    packages_applicable                  INT         NOT NULL DEFAULT 0,
+    third_party                          BOOLEAN     NOT NULL DEFAULT false,
+    applicable_advisory_count_cache      INT         NOT NULL DEFAULT 0,
+    applicable_advisory_enh_count_cache  INT         NOT NULL DEFAULT 0,
+    applicable_advisory_bug_count_cache  INT         NOT NULL DEFAULT 0,
+    applicable_advisory_sec_count_cache  INT         NOT NULL DEFAULT 0,
+    template_id                          BIGINT
+) PARTITION BY HASH (rh_account_id);
+
+-- PARTITIONING
+SELECT create_table_partitions('system_patch', 16,
+                               $$WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
+                                 TABLESPACE pg_default$$);
+
+-- PRIVILEGES (evaluator has write access)
+GRANT SELECT, UPDATE ON system_patch TO evaluator;
+GRANT SELECT, UPDATE (installable_advisory_count_cache,
+              installable_advisory_enh_count_cache,
+              installable_advisory_bug_count_cache,
+              installable_advisory_sec_count_cache,
+              applicable_advisory_count_cache,
+              applicable_advisory_enh_count_cache,
+              applicable_advisory_bug_count_cache,
+              applicable_advisory_sec_count_cache) ON system_patch TO manager;
+GRANT SELECT, UPDATE, DELETE ON system_patch to vmaas_sync; -- vmaas_sync performs system culling
+SELECT grant_table_partitions('SELECT', 'system_patch', 'evaluator');
+SELECT grant_table_partitions('SELECT', 'system_patch', 'listener');
+SELECT grant_table_partitions('SELECT', 'system_patch', 'manager');
+SELECT grant_table_partitions('SELECT', 'system_patch', 'vmaas_sync');
+
+-- CONSTRAINTS
+ALTER TABLE IF EXISTS system_patch 
+ADD PRIMARY KEY (rh_account_id, system_id),
+ADD FOREIGN KEY (rh_account_id, template_id) REFERENCES template (rh_account_id, id),
+ADD FOREIGN KEY (system_id, rh_account_id) REFERENCES system_inventory (id, rh_account_id);
