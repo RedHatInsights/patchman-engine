@@ -457,3 +457,101 @@ SELECT create_table_partition_triggers('system_patch_on_update',
 ALTER TABLE IF EXISTS system_patch 
 ADD PRIMARY KEY (rh_account_id, system_id),
 ADD FOREIGN KEY (system_id, rh_account_id) REFERENCES system_inventory (id, rh_account_id);
+
+
+
+-- system_platform
+DROP TABLE IF EXISTS system_platform;
+CREATE OR REPLACE VIEW system_platform AS SELECT
+    si.id,
+    si.inventory_id,
+    si.rh_account_id,
+    si.vmaas_json,
+    si.json_checksum,
+    si.last_updated,
+    si.unchanged_since,
+    sp.last_evaluation,
+    sp.installable_advisory_count_cache,
+    sp.installable_advisory_enh_count_cache,
+    sp.installable_advisory_bug_count_cache,
+    sp.installable_advisory_sec_count_cache,
+    si.last_upload,
+    si.stale_timestamp,
+    si.stale_warning_timestamp,
+    si.culled_timestamp,
+    si.stale,
+    si.display_name,
+    sp.packages_installed,
+    sp.packages_installable,
+    si.reporter_id,
+    sp.third_party,
+    si.yum_updates,
+    sp.applicable_advisory_count_cache,
+    sp.applicable_advisory_enh_count_cache,
+    sp.applicable_advisory_bug_count_cache,
+    sp.applicable_advisory_sec_count_cache,
+    si.satellite_managed,
+    si.built_pkgcache,
+    sp.packages_applicable,
+    si.template_id,
+    si.yum_checksum,
+    si.arch,
+    si.bootc
+FROM system_inventory si JOIN system_patch sp
+    ON si.id = sp.system_id AND si.rh_account_id = sp.rh_account_id;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON system_platform TO listener;
+-- evaluator needs to update last_evaluation
+GRANT UPDATE ON system_platform TO evaluator;
+-- manager needs to update cache and delete systems
+GRANT SELECT, UPDATE, DELETE ON system_platform TO manager;
+-- VMaaS sync needs to be able to perform system culling tasks
+GRANT SELECT, UPDATE, DELETE ON system_platform to vmaas_sync;
+
+
+
+-- inventory.hosts
+CREATE OR REPLACE VIEW inventory.hosts AS SELECT
+    si.inventory_id AS id,
+    ''::VARCHAR(10) AS account,
+    si.display_name::varchar(200),
+    si.created,
+    '-infinity'::TIMESTAMPTZ AS updated,
+    si.stale_timestamp,
+    si.stale_warning_timestamp,
+    si.culled_timestamp,
+    si.tags,
+    jsonb_build_object(
+        'operating_system', jsonb_build_object(
+            'name', si.os_name,
+            'major', si.os_major,
+            'minor', si.os_minor
+        ),
+        'rhsm', jsonb_build_object(
+            'version', si.rhsm_version
+        ),
+        'owner_id', si.owner_id,
+        'workloads', jsonb_build_object(
+            'sap', jsonb_build_object(
+                'sap_system', si.sap_workload,
+                'sids', si.sap_workload_sids
+            ),
+            'ansible', jsonb_build_object(
+                'controller_version', si.ansible_workload_controller_version
+            ),
+            'mssql', jsonb_build_object(
+                'version', si.mssql_workload_version
+            )
+        )
+    ) AS system_profile,
+    si.insights_id,
+    ''::VARCHAR(255) AS reporter,
+    '{}'::JSONB AS per_reporter_staleness,
+    ac.org_id::VARCHAR(36),
+    (
+        SELECT jsonb_agg(
+            jsonb_build_object('id', elem, 'name', '')
+        )
+        FROM unnest(si.workspaces) AS elem
+    ) AS groups
+FROM system_inventory si JOIN rh_account ac ON si.rh_account_id = ac.id;
