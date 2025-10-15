@@ -51,8 +51,9 @@ func updateMetricsWithState(items []keyValue, metrics *prometheus.GaugeVec) {
 
 func getTableSizes() []keyValue {
 	var tableSizes []keyValue
-	err := tasks.CancelableDB().Raw(`select tablename as key, pg_total_relation_size(quote_ident(tablename)) as value
-        from (select * from pg_catalog.pg_tables where schemaname = 'public') t;`).
+	err := tasks.CancelableDB().Raw(`select concat(schemaname, '.', tablename) as key, 
+	    pg_total_relation_size(schemaname || '.' || tablename) as value
+        from (select * from pg_catalog.pg_tables where schemaname in ('public', 'inventory', 'repack')) t;`).
 		Find(&tableSizes).Error
 	if err != nil {
 		utils.LogError("err", err.Error(), "unable to get database table sizes")
