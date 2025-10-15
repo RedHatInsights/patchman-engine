@@ -751,7 +751,7 @@ parameters:
 - {name: MEM_LIMIT_FLOORIST, value: 4Gi}
 
 # Kessel
-- {name: KESSEL_ENABLED, value: 'false'}
+- {name: KESSEL_ENABLED, value: 'true'}
 - name: KESSEL_URL
 - name: KESSEL_AUTH_ENABLED
 - name: KESSEL_AUTH_OIDC_ISSUER
