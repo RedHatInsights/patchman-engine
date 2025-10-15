@@ -55,6 +55,68 @@ GRANT SELECT, USAGE ON SEQUENCE system_inventory_id_seq TO evaluator;
 GRANT SELECT, USAGE ON SEQUENCE system_inventory_id_seq TO listener;
 GRANT SELECT, USAGE ON SEQUENCE system_inventory_id_seq TO vmaas_sync;
 
+-- LOAD DATA
+CREATE OR REPLACE FUNCTION safe_to_int(input_text TEXT)
+RETURNS SMALLINT AS $$
+BEGIN
+  RETURN input_text::SMALLINT;
+EXCEPTION WHEN OTHERS THEN
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION safe_to_uuid(input_text TEXT)
+RETURNS UUID AS $$
+BEGIN
+  RETURN input_text::UUID;
+EXCEPTION WHEN OTHERS THEN
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+INSERT INTO system_inventory SELECT
+    sp.id,
+    sp.inventory_id,
+    sp.rh_account_id,
+    sp.vmaas_json,
+    sp.json_checksum,
+    sp.last_updated,
+    sp.unchanged_since,
+    sp.last_upload,
+    sp.stale,
+    COALESCE(sp.display_name, ih.display_name),
+    sp.reporter_id,
+    sp.yum_updates,
+    sp.yum_checksum,
+    sp.satellite_managed,
+    sp.built_pkgcache,
+    sp.arch,
+    sp.bootc,
+    ih.tags,
+    ih.created,
+    ARRAY(SELECT jsonb_array_elements(ih.groups)->>'id') AS workspaces,
+    COALESCE(ih.stale_timestamp, sp.stale_timestamp),
+    COALESCE(ih.stale_warning_timestamp, sp.stale_warning_timestamp),
+    COALESCE(ih.culled_timestamp, sp.culled_timestamp),
+    ih.system_profile->'operating_system'->>'name' AS os_name,
+    safe_to_int(ih.system_profile->'operating_system'->>'major') AS os_major,
+    safe_to_int(ih.system_profile->'operating_system'->>'minor') AS os_minor,
+    ih.system_profile->'rhsm'->>'version' AS rhsm_version,
+    safe_to_uuid(ih.system_profile->>'owner_id') AS subscription_manager_id,
+    COALESCE((ih.system_profile->'workloads'->'sap'->>'sap_system')::BOOLEAN, false) AS sap_workload,
+    ARRAY(SELECT jsonb_array_elements_text(ih.system_profile->'workloads'->'sap'->'sids')) AS sap_workload_sids,
+    COALESCE(LENGTH(ih.system_profile->'workloads'->>'ansible') > 2, false) AS ansible_workload,
+    ih.system_profile->'workloads'->'ansible'->>'controller_version' AS ansible_workload_controller_version,
+    COALESCE(LENGTH(ih.system_profile->'workloads'->>'mssql') > 2, false) AS mssql_workload,
+    ih.system_profile->'workloads'->'mssql'->>'version' AS mssql_workload_version
+FROM inventory.hosts ih JOIN system_platform sp ON ih.id = sp.inventory_id
+WHERE sp.stale = false;
+
+SELECT setval('system_inventory_id_seq', (SELECT MAX(id) FROM system_inventory));
+
+DROP FUNCTION safe_to_int;
+DROP FUNCTION safe_to_uuid;
+
 -- TRIGGERS
 SELECT create_table_partition_triggers('system_inventory_set_last_updated',
                                        $$BEFORE INSERT OR UPDATE$$,
@@ -127,6 +189,26 @@ SELECT grant_table_partitions('SELECT', 'system_patch', 'evaluator');
 SELECT grant_table_partitions('SELECT', 'system_patch', 'listener');
 SELECT grant_table_partitions('SELECT', 'system_patch', 'manager');
 SELECT grant_table_partitions('SELECT', 'system_patch', 'vmaas_sync');
+
+INSERT INTO system_patch SELECT
+    id,
+    rh_account_id,
+    last_evaluation,
+    installable_advisory_count_cache,
+    installable_advisory_enh_count_cache,
+    installable_advisory_bug_count_cache,
+    installable_advisory_sec_count_cache,
+    packages_installed,
+    packages_installable,
+    packages_applicable,
+    third_party,
+    applicable_advisory_count_cache,
+    applicable_advisory_enh_count_cache,
+    applicable_advisory_bug_count_cache,
+    applicable_advisory_sec_count_cache,
+    template_id
+FROM system_platform sp
+WHERE sp.stale = false;
 
 -- CONSTRAINTS
 ALTER TABLE IF EXISTS system_patch 
