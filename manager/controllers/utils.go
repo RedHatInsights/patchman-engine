@@ -434,25 +434,22 @@ func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
 	}
 
 	var cmp string
-	val := values[0]
+	val := []any{}
 
 	switch {
-	case val == "not_nil":
+	case values[0] == "not_nil":
 		cmp = " is not null"
 	case strings.Contains(key, "[sap_sids"):
 		cmp = "::jsonb @> ?::jsonb"
 		bval, _ := sonic.Marshal(values)
-		val = string(bval)
+		val = []any{string(bval)}
 	default:
 		cmp = " = ?"
+		val = []any{values[0]}
 	}
 
 	subq := fmt.Sprintf("%s%s", nestedFilters[key], cmp)
-	if val == "not_nil" {
-		return tx.Where(subq)
-	}
-
-	return tx.Where(subq, val)
+	return tx.Where(subq, val...)
 }
 
 func Csv(ctx *gin.Context, code int, res interface{}) {
