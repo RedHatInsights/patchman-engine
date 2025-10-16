@@ -22,8 +22,8 @@ const (
 	OpNeq     = "neq"
 	OpGt      = "gt"
 	OpLt      = "lt"
-	OpGeq     = "geq"
-	OpLeq     = "leq"
+	OpGte     = "gte"
+	OpLte     = "lte"
 	OpBetween = "between"
 	OpIn      = "in"
 	OpNotIn   = "notin"
@@ -106,9 +106,9 @@ func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (str
 		return fmt.Sprintf("%s > ? ", attributes[fieldName].DataQuery), values, nil
 	case OpLt:
 		return fmt.Sprintf("%s < ? ", attributes[fieldName].DataQuery), values, nil
-	case OpGeq:
+	case OpGte:
 		return fmt.Sprintf("%s >= ? ", attributes[fieldName].DataQuery), values, nil
-	case OpLeq:
+	case OpLte:
 		return fmt.Sprintf("%s <= ? ", attributes[fieldName].DataQuery), values, nil
 	case OpBetween:
 		return fmt.Sprintf("%s BETWEEN ? AND ? ", attributes[fieldName].DataQuery), values, nil
