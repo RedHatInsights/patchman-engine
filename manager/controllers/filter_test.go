@@ -12,8 +12,12 @@ var testFilters = []string{
 	"eq:abc",
 	"in:a,b,c",
 	"gt:13",
+	"gte:13",
 	"lt:12",
+	"lte:12",
 	"between:12,13",
+	"null:",
+	"notnull:",
 }
 
 func dummyParser(v string) (interface{}, error) {
@@ -22,15 +26,19 @@ func dummyParser(v string) (interface{}, error) {
 
 func TestFilterParse(t *testing.T) {
 	operators := []string{
-		"eq", "in", "gt", "lt", "between",
+		"eq", "in", "gt", "gte", "lt", "lte", "between", "null", "notnull",
 	}
 
 	values := [][]string{
 		{"abc"},
 		{"a", "b", "c"},
 		{"13"},
+		{"13"},
+		{"12"},
 		{"12"},
 		{"12", "13"},
+		{""},
+		{""},
 	}
 
 	for i, f := range testFilters {
@@ -45,8 +53,12 @@ func TestFilterToSql(t *testing.T) {
 		"test = ? ",
 		"test IN (?) ",
 		"test > ? ",
+		"test >= ? ",
 		"test < ? ",
+		"test <= ? ",
 		"test BETWEEN ? AND ? ",
+		"test IS NULL ",
+		"test IS NOT NULL ",
 	}
 
 	for i, f := range testFilters {
@@ -64,8 +76,12 @@ func TestFilterToSqlAdvanced(t *testing.T) {
 		"(NOT test) = ? ",
 		"(NOT test) IN (?) ",
 		"(NOT test) > ? ",
+		"(NOT test) >= ? ",
 		"(NOT test) < ? ",
+		"(NOT test) <= ? ",
 		"(NOT test) BETWEEN ? AND ? ",
+		"(NOT test) IS NULL ",
+		"(NOT test) IS NOT NULL ",
 	}
 
 	for i, f := range testFilters {
