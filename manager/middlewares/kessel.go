@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -58,7 +59,7 @@ func processWorkspaces(workspaces []*kesselv2.StreamedListObjectsResponse) (map[
 	}
 
 	if len(groups) == 0 {
-		return nil, errors.New("no workspaces were found")
+		return nil, errors.New("no workspaces found")
 	}
 	return map[string]string{utils.KeyGrouped: fmt.Sprintf("{%s}", strings.Join(groups, ","))}, nil
 }
@@ -83,7 +84,7 @@ func buildPermission(c *gin.Context) string {
 
 func useStreamedListObjects(
 	c *gin.Context, client kesselv2.KesselInventoryServiceClient, xrhid *identity.XRHID, permission string,
-) ([]*kesselv2.StreamedListObjectsResponse, error) {
+) ([]*kesselv2.StreamedListObjectsResponse, time.Duration, error) {
 	sloReqContext, sloContextCancel := context.WithCancel(c)
 	defer sloContextCancel()
 
@@ -97,18 +98,19 @@ func useStreamedListObjects(
 		Subject:  buildSubject(xrhid),
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to establish a gRPC stream with Kessel")
+		return nil, 0, errors.Wrap(err, "failed to establish a gRPC stream with Kessel")
 	}
 
 	workspaces := make([]*kesselv2.StreamedListObjectsResponse, 0)
+	start := time.Now()
 	for res, err := stream.Recv(); err != io.EOF; res, err = stream.Recv() {
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to receive all from Kessel")
+			return nil, time.Since(start), errors.Wrap(err, "failed to receive all from Kessel")
 		}
 		workspaces = append(workspaces, res)
 	}
 
-	return workspaces, nil
+	return workspaces, time.Since(start), nil
 }
 
 func hasPermissionKessel(c *gin.Context) {
@@ -124,25 +126,33 @@ func hasPermissionKessel(c *gin.Context) {
 
 	xrhid, err := utils.ParseXRHID(c.GetHeader("x-rh-identity"))
 	if err != nil {
+		utils.LogError("err", err.Error(), "failed to ParseXRHID")
 		c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Invalid x-rh-identity header"})
 		return
 	}
 
 	permission := buildPermission(c)
-	workspaces, err := useStreamedListObjects(c, client, xrhid, permission)
+	workspaces, receivingDuration, err := useStreamedListObjects(c, client, xrhid, permission)
 	if err != nil {
-		utils.LogError("err", err.Error(), "useStreamedListObjects failed")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		utils.LogError(
+			"err", err.Error(), "receivingDuration", receivingDuration, "permission", permission,
+			"failed to useStreamedListObjects",
+		)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{
+			Error: "Communication with RBAC failed",
+		})
 		return
 	}
+	utils.LogDebug("workspaces", workspaces, "receivingDuration", receivingDuration, "retrieved workspaces")
 
 	inventoryGroups, err := processWorkspaces(workspaces)
 	if err != nil {
-		utils.LogError("err", err.Error(), "processWorkspaces")
+		utils.LogWarn(err.Error())
 		c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Missing permission"})
 		return
 	}
 	c.Set(utils.KeyInventoryGroups, inventoryGroups)
+	utils.LogDebug("Kessel check OK")
 }
 
 func Kessel() gin.HandlerFunc {
