@@ -27,6 +27,8 @@ const (
 	OpBetween = "between"
 	OpIn      = "in"
 	OpNotIn   = "notin"
+	OpNull    = "null"
+	OpNotNull = "notnull"
 )
 
 type FilterData struct {
@@ -75,7 +77,7 @@ func checkValueCount(operator string, nValues int) bool {
 }
 
 // Convert a single filter to where clauses
-func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (string, []interface{}, error) {
+func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (string, []any, error) {
 	var err error
 	transformedValues, transformedOperator := transformFilterParams(fieldName, t.Values, t.Operator)
 	var values = make([]interface{}, len(transformedValues))
@@ -113,9 +115,13 @@ func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (str
 	case OpBetween:
 		return fmt.Sprintf("%s BETWEEN ? AND ? ", attributes[fieldName].DataQuery), values, nil
 	case OpIn:
-		return fmt.Sprintf("%s IN (?) ", attributes[fieldName].DataQuery), []interface{}{values}, nil
+		return fmt.Sprintf("%s IN (?) ", attributes[fieldName].DataQuery), []any{values}, nil
 	case OpNotIn:
-		return fmt.Sprintf("%s NOT IN (?) ", attributes[fieldName].DataQuery), []interface{}{values}, nil
+		return fmt.Sprintf("%s NOT IN (?) ", attributes[fieldName].DataQuery), []any{values}, nil
+	case OpNull:
+		return fmt.Sprintf("%s IS NULL ", attributes[fieldName].DataQuery), []any{}, nil
+	case OpNotNull:
+		return fmt.Sprintf("%s IS NOT NULL ", attributes[fieldName].DataQuery), []any{}, nil
 	default:
 		return "", []interface{}{}, errors.Errorf("Unknown filter : %s", t.Operator)
 	}
