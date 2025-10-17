@@ -24,6 +24,10 @@ var credentials = auth.NewOAuth2ClientCredentials(
 )
 
 func setupClient() (kesselv2.KesselInventoryServiceClient, *grpc.ClientConn, error) {
+	utils.LogDebug(
+		"KESSEL_URL", utils.CoreCfg.KesselURL, "KESSEL_AUTH_ENABLED", utils.CoreCfg.KesselAuthEnabled,
+		"KESSEL_INSECURE", utils.CoreCfg.KesselInsecure, "Kessel service client config",
+	)
 	clientBuilder := kesselv2.NewClientBuilder(utils.CoreCfg.KesselURL)
 	if utils.CoreCfg.KesselAuthEnabled {
 		clientBuilder = clientBuilder.OAuth2ClientAuthenticated(&credentials, nil)
@@ -78,6 +82,7 @@ func buildPermission(c *gin.Context) string {
 		permission += "edit"
 	}
 
+	utils.LogDebug("permission", permission, "buildPermission")
 	return permission
 }
 
@@ -120,12 +125,14 @@ func hasPermissionKessel(c *gin.Context) {
 		})
 		return
 	}
+	utils.LogDebug("Kessel client set up successfully")
 	defer conn.Close()
 
 	xrhid, err := utils.ParseXRHID(c.GetHeader("x-rh-identity"))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Invalid x-rh-identity header"})
 	}
+	utils.LogDebug("Kessel x-rh-identity header parsed successfully")
 
 	permission := buildPermission(c)
 	workspaces, err := useStreamedListObjects(c, client, xrhid, permission)
@@ -133,15 +140,18 @@ func hasPermissionKessel(c *gin.Context) {
 		utils.LogError("err", err.Error(), "useStreamedListObjects failed")
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}
+	utils.LogDebug("workspaces", workspaces, "retrieved workspaces")
 
 	inventoryGroups, err := processWorkspaces(workspaces)
 	if err != nil {
 		utils.LogError("err", err.Error(), "processWorkspaces")
 		c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Missing permission"})
 	}
+	utils.LogDebug("inventoryGroups", inventoryGroups, "setting inventory groups")
 	c.Set(utils.KeyInventoryGroups, inventoryGroups)
 }
 
 func Kessel() gin.HandlerFunc {
+	utils.LogDebug("performing Kessel auth check")
 	return hasPermissionKessel
 }
