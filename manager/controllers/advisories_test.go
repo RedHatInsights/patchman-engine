@@ -210,6 +210,25 @@ func TestAdvisoriesFilterTypeID7(t *testing.T) {
 	}
 }
 
+func TestAdvisoriesFilterSeverityEq(t *testing.T) {
+	output := testAdvisories(t, "/?sort=id&filter[severity]=2")
+	assert.Equal(t, 1, len(output.Data))
+	assert.Equal(t, "RH-3", output.Data[0].ID)
+}
+
+func TestAdvisoriesFilterSeverityNotNull(t *testing.T) {
+	output := testAdvisories(t, "/?sort=id&filter[severity]=notnull")
+	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, "RH-3", output.Data[0].ID)
+	assert.Equal(t, "RH-6", output.Data[1].ID)
+}
+
+func TestAdvisoriesFilterSeverityNull(t *testing.T) {
+	output := testAdvisories(t, "/?sort=id&filter[severity]=null")
+	assert.Equal(t, 10, len(output.Data))
+	assert.Equal(t, "CUSTOM-12", output.Data[0].ID)
+}
+
 func TestAdvisoriesFilterApplicableSystems(t *testing.T) {
 	output := testAdvisories(t, "/?filter[applicable_systems]=gt:1")
 	assert.Equal(t, 1, len(output.Data))
