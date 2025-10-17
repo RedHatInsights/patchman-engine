@@ -22,11 +22,13 @@ const (
 	OpNeq     = "neq"
 	OpGt      = "gt"
 	OpLt      = "lt"
-	OpGeq     = "geq"
-	OpLeq     = "leq"
+	OpGte     = "gte"
+	OpLte     = "lte"
 	OpBetween = "between"
 	OpIn      = "in"
 	OpNotIn   = "notin"
+	OpNull    = "null"
+	OpNotNull = "notnull"
 )
 
 type FilterData struct {
@@ -75,9 +77,9 @@ func checkValueCount(operator string, nValues int) bool {
 }
 
 // Convert a single filter to where clauses
-func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (string, []interface{}, error) {
+func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (string, []any, error) {
 	var err error
-	transformedValues, transformedOperator := transformFilterParams(fieldName, t.Values, t.Operator)
+	transformedOperator, transformedValues := t.transformParams(fieldName)
 	var values = make([]interface{}, len(transformedValues))
 	for i, v := range transformedValues {
 		fieldInfo, found := attributes[fieldName]
@@ -106,30 +108,39 @@ func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (str
 		return fmt.Sprintf("%s > ? ", attributes[fieldName].DataQuery), values, nil
 	case OpLt:
 		return fmt.Sprintf("%s < ? ", attributes[fieldName].DataQuery), values, nil
-	case OpGeq:
+	case OpGte:
 		return fmt.Sprintf("%s >= ? ", attributes[fieldName].DataQuery), values, nil
-	case OpLeq:
+	case OpLte:
 		return fmt.Sprintf("%s <= ? ", attributes[fieldName].DataQuery), values, nil
 	case OpBetween:
 		return fmt.Sprintf("%s BETWEEN ? AND ? ", attributes[fieldName].DataQuery), values, nil
 	case OpIn:
-		return fmt.Sprintf("%s IN (?) ", attributes[fieldName].DataQuery), []interface{}{values}, nil
+		return fmt.Sprintf("%s IN (?) ", attributes[fieldName].DataQuery), []any{values}, nil
 	case OpNotIn:
-		return fmt.Sprintf("%s NOT IN (?) ", attributes[fieldName].DataQuery), []interface{}{values}, nil
+		return fmt.Sprintf("%s NOT IN (?) ", attributes[fieldName].DataQuery), []any{values}, nil
+	case OpNull:
+		return fmt.Sprintf("%s IS NULL ", attributes[fieldName].DataQuery), []any{}, nil
+	case OpNotNull:
+		return fmt.Sprintf("%s IS NOT NULL ", attributes[fieldName].DataQuery), []any{}, nil
 	default:
 		return "", []interface{}{}, errors.Errorf("Unknown filter : %s", t.Operator)
 	}
 }
 
-// transformFilterParams Allow exceptions in ToWhere values usage (e.g. "other").
-func transformFilterParams(fieldName string, originalValues []string, originalOperator string) (
-	transformedValues []string, transformedOperator string) {
+func (t *FilterData) transformParams(fieldName string) (
+	transformedOperator string, transformedValues []string) {
+	if len(t.Values) == 1 && (t.Values[0] == "null" || t.Values[0] == "notnull") {
+		// handle special cases filter=null and filter=notnull
+		return t.Values[0], []string{"0"}
+	}
 	if fieldName != "advisory_type_name" {
-		return originalValues, originalOperator
+		// no change
+		return t.Operator, t.Values
 	}
 
-	transformedValues = make([]string, 0, len(originalValues))
-	for _, originalValue := range originalValues {
+	// special case, in advisory_type_name filter expand "other" into list of what we mean by other
+	transformedValues = make([]string, 0, len(t.Values))
+	for _, originalValue := range t.Values {
 		if originalValue == "other" {
 			transformedValues = append(transformedValues, database.OtherAdvisoryTypes...)
 		} else {
@@ -137,19 +148,19 @@ func transformFilterParams(fieldName string, originalValues []string, originalOp
 		}
 	}
 
-	if len(transformedValues) == len(originalValues) {
-		return originalValues, originalOperator
+	if len(transformedValues) == len(t.Values) {
+		return t.Operator, t.Values
 	}
 
-	switch originalOperator {
+	switch t.Operator {
 	case OpEq:
 		transformedOperator = OpIn
 	case OpNeq:
 		transformedOperator = OpNotIn
 	default:
-		transformedOperator = originalOperator
+		transformedOperator = t.Operator
 	}
-	return transformedValues, transformedOperator
+	return transformedOperator, transformedValues
 }
 
 func (t Filters) ToQueryParams() string {
