@@ -32,7 +32,7 @@ require (
 	go.uber.org/automaxprocs v1.6.0
 	go.uber.org/ratelimit v0.3.1
 	golang.org/x/exp v0.0.0-20251002181428-27f1f14c8bb9
-	golang.org/x/net v0.44.0
+	golang.org/x/net v0.46.0
 	google.golang.org/grpc v1.75.1
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.0
@@ -51,7 +51,7 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.10 // indirect
-	github.com/gin-contrib/gzip v1.2.3 // indirect
+	github.com/gin-contrib/gzip v1.2.4 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -123,14 +123,14 @@ require (
 	go.uber.org/mock v0.6.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/arch v0.21.0 // indirect
-	golang.org/x/crypto v0.42.0 // indirect
-	golang.org/x/mod v0.28.0 // indirect
+	golang.org/x/arch v0.22.0 // indirect
+	golang.org/x/crypto v0.43.0 // indirect
+	golang.org/x/mod v0.29.0 // indirect
 	golang.org/x/oauth2 v0.31.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/sys v0.36.0 // indirect
-	golang.org/x/text v0.29.0 // indirect
-	golang.org/x/tools v0.37.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/text v0.30.0 // indirect
+	golang.org/x/tools v0.38.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251014184007-4626949a642f // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251007200510-49b9836ed3ff // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
