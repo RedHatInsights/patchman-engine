@@ -125,6 +125,7 @@ func hasPermissionKessel(c *gin.Context) {
 	xrhid, err := utils.ParseXRHID(c.GetHeader("x-rh-identity"))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Invalid x-rh-identity header"})
+		return
 	}
 
 	permission := buildPermission(c)
@@ -132,12 +133,14 @@ func hasPermissionKessel(c *gin.Context) {
 	if err != nil {
 		utils.LogError("err", err.Error(), "useStreamedListObjects failed")
 		c.AbortWithStatus(http.StatusInternalServerError)
+		return
 	}
 
 	inventoryGroups, err := processWorkspaces(workspaces)
 	if err != nil {
 		utils.LogError("err", err.Error(), "processWorkspaces")
 		c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Missing permission"})
+		return
 	}
 	c.Set(utils.KeyInventoryGroups, inventoryGroups)
 }
