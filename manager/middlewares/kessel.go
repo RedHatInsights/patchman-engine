@@ -72,7 +72,7 @@ func buildPermission(c *gin.Context) string {
 
 func useStreamedListObjects(
 	c *gin.Context, client kesselv2.KesselInventoryServiceClient, xrhid *identity.XRHID, permission string,
-) ([]*kesselv2.StreamedListObjectsResponse, time.Duration, error) {
+) ([]*kesselv2.StreamedListObjectsResponse, error) {
 	sloReqContext, sloContextCancel := context.WithCancel(c)
 	defer sloContextCancel()
 
@@ -82,12 +82,20 @@ func useStreamedListObjects(
 		sloReqContext, client, kesselRbacV2.PrincipalSubject(xrhid.Identity.User.UserID, "redhat"), permission, "",
 	) {
 		if err != nil {
-			return nil, time.Since(start), errors.Wrap(err, "failed to receive all from Kessel")
+			utils.LogError(
+				"err", err.Error(), "receivingDuration", time.Since(start), "permission", permission, "received_count",
+				len(workspaces), "failed to useStreamedListObjects",
+			)
+			return nil, err
 		}
 		workspaces = append(workspaces, res)
 	}
 
-	return workspaces, time.Since(start), nil
+	utils.LogDebug(
+		"workspaces", workspaces, "receivingDuration", time.Since(start), "permission", permission, "received_count",
+		len(workspaces), "retrieved workspaces",
+	)
+	return workspaces, nil
 }
 
 func hasPermissionKessel(c *gin.Context) {
@@ -99,7 +107,11 @@ func hasPermissionKessel(c *gin.Context) {
 		})
 		return
 	}
-	defer conn.Close()
+	defer func() {
+		if closeErr := conn.Close(); closeErr != nil {
+			utils.LogError("err", closeErr.Error(), "failed to close gRPC client")
+		}
+	}()
 
 	xrhid, err := utils.ParseXRHID(c.GetHeader("x-rh-identity"))
 	if err != nil {
@@ -108,19 +120,14 @@ func hasPermissionKessel(c *gin.Context) {
 		return
 	}
 
-	permission := buildPermission(c)
-	workspaces, receivingDuration, err := useStreamedListObjects(c, client, xrhid, permission)
+	workspaces, err := useStreamedListObjects(c, client, xrhid, buildPermission(c))
 	if err != nil {
-		utils.LogError(
-			"err", err.Error(), "receivingDuration", receivingDuration, "permission", permission,
-			"failed to useStreamedListObjects",
-		)
+		// already logged in useStreamedListObjects
 		c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{
 			Error: "Communication with RBAC failed",
 		})
 		return
 	}
-	utils.LogDebug("workspaces", workspaces, "receivingDuration", receivingDuration, "retrieved workspaces")
 
 	inventoryGroups, err := processWorkspaces(workspaces)
 	if err != nil {

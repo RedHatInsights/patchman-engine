@@ -93,7 +93,7 @@ func TestUseStreamedListObjects(t *testing.T) {
 	defer conn.Close()
 
 	c := &gin.Context{Request: &http.Request{Method: http.MethodGet}}
-	workspaces, _, err := useStreamedListObjects(c, client, mockXRHID(), "demo_permission")
+	workspaces, err := useStreamedListObjects(c, client, mockXRHID(), "demo_permission")
 	if assert.NoError(t, err) {
 		assert.Equal(t, 1, len(workspaces))
 	}
