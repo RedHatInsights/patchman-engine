@@ -4,7 +4,6 @@ import (
 	"app/base/utils"
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/project-kessel/kessel-sdk-go/kessel/auth"
 	kesselv2 "github.com/project-kessel/kessel-sdk-go/kessel/inventory/v1beta2"
+	kesselRbacV2 "github.com/project-kessel/kessel-sdk-go/kessel/rbac/v2"
 )
 
 var credentials = auth.NewOAuth2ClientCredentials(
@@ -33,18 +33,6 @@ func setupClient() (kesselv2.KesselInventoryServiceClient, *grpc.ClientConn, err
 		clientBuilder = clientBuilder.Insecure()
 	}
 	return clientBuilder.Build()
-}
-
-func buildSubject(xrhid *identity.XRHID) *kesselv2.SubjectReference {
-	return &kesselv2.SubjectReference{
-		Resource: &kesselv2.ResourceReference{
-			ResourceType: "principal",
-			ResourceId:   fmt.Sprintf("redhat/%s", xrhid.Identity.User.UserID),
-			Reporter: &kesselv2.ReporterReference{
-				Type: "rbac",
-			},
-		},
-	}
 }
 
 func processWorkspaces(workspaces []*kesselv2.StreamedListObjectsResponse) (map[string]string, error) {
@@ -88,22 +76,11 @@ func useStreamedListObjects(
 	sloReqContext, sloContextCancel := context.WithCancel(c)
 	defer sloContextCancel()
 
-	resourceType := "rbac"
-	stream, err := client.StreamedListObjects(sloReqContext, &kesselv2.StreamedListObjectsRequest{
-		ObjectType: &kesselv2.RepresentationType{
-			ResourceType: "workspace",
-			ReporterType: &resourceType,
-		},
-		Relation: permission,
-		Subject:  buildSubject(xrhid),
-	})
-	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to establish a gRPC stream with Kessel")
-	}
-
 	workspaces := make([]*kesselv2.StreamedListObjectsResponse, 0)
 	start := time.Now()
-	for res, err := stream.Recv(); err != io.EOF; res, err = stream.Recv() {
+	for res, err := range kesselRbacV2.ListWorkspaces(
+		sloReqContext, client, kesselRbacV2.PrincipalSubject(xrhid.Identity.User.UserID, "redhat"), permission, "",
+	) {
 		if err != nil {
 			return nil, time.Since(start), errors.Wrap(err, "failed to receive all from Kessel")
 		}
