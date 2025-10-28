@@ -476,6 +476,7 @@ objects:
     - {replicas: 3, partitions: 10, topicName: platform.remediation-updates.patch}
     - {replicas: 3, partitions: 10, topicName: platform.notifications.ingress}
     - {replicas: 3, partitions: 10, topicName: platform.content-sources.template}
+    - {replicas: 3, partitions: 4, topicName: patchman.evaluator.user-evaluation}
 
     dependencies:
     - host-inventory
@@ -618,7 +619,7 @@ parameters:
 - {name: REPLICAS_MANAGER, value: '1'}
 - {name: LOG_LEVEL_MANAGER, value: debug}
 - {name: DB_DEBUG_MANAGER, value: 'false'} # Log database queries if enabled
-- {name: EVAL_TOPIC_MANAGER, value: patchman.evaluator.upload}
+- {name: EVAL_TOPIC_MANAGER, value: patchman.evaluator.user-evaluation}
 - {name: CPU_LIMIT_MANAGER, value: 1000m}
 - {name: MEM_LIMIT_MANAGER, value: 2Gi}
 - {name: CPU_REQUEST_MANAGER, value: 500m}
