@@ -7,7 +7,8 @@ sleep 5
 for topic in "platform.inventory.events" "patchman.evaluator.upload" \
              "patchman.evaluator.recalc" "platform.remediation-updates.patch" "platform.notifications.ingress" \
              "platform.payload-status" "test" \
-             "platform.content-sources.template"
+             "platform.content-sources.template" \
+             "patchman.evaluator.user-evaluation"
 do
     until /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic $topic \
         --partitions 1 --bootstrap-server kafka:9092 --replication-factor 1; do
