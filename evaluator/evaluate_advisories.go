@@ -6,6 +6,8 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"cmp"
+	"fmt"
+	"regexp"
 	"slices"
 	"time"
 
@@ -27,6 +29,8 @@ type extendedAdvisory struct {
 }
 
 type extendedAdvisoryMap map[string]extendedAdvisory
+
+var rhelRegexp = regexp.MustCompile("^RH.A-")
 
 // LazySaveAndLoadAdvisories lazy saves missing advisories from reported, loads stored ones from DB,
 // and evaluates changes between the two.
@@ -156,11 +160,15 @@ func storeMissingAdvisories(missingNames []string) error {
 	toStore := make(models.AdvisoryMetadataSlice, 0, len(missingNames))
 	for _, name := range missingNames {
 		if len(name) > 0 && len(name) < 100 {
+			text := "Not Available for 3rd party systems"
+			if rhelRegexp.MatchString(name) {
+				text = fmt.Sprintf("https://access.redhat.com/errata/%s", name)
+			}
 			toStore = append(toStore, models.AdvisoryMetadata{
 				Name:           name,
-				Description:    "Not Available",
-				Synopsis:       "Not Available",
-				Summary:        "Not Available",
+				Description:    text,
+				Synopsis:       text,
+				Summary:        text,
 				AdvisoryTypeID: 0,
 				RebootRequired: false,
 				Synced:         false,
