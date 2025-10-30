@@ -1,4 +1,4 @@
-version: '3.4'
+version: "3.4"
 
 services:
   db:
@@ -162,6 +162,26 @@ services:
     ports:
       - 8084:8080
       - 9004:9000 # private port - pprof
+    depends_on:
+      - db
+      - platform
+    volumes:
+      - ./:/go/src/app
+    security_opt:
+      - label=disable
+
+  evaluator_user_evaluation:
+    container_name: evaluator_user_evaluation
+    image: patchman-engine-app
+    env_file:
+      - ./conf/common.env
+      - ./conf/evaluator_common.env
+      - ./conf/evaluator_user_evaluation.env
+      - ./conf/gorun.env
+    command: ./dev/scripts/docker-compose-entrypoint.sh evaluator
+    ports:
+      - 8086:8080
+      - 9006:9000 # private port - pprof
     depends_on:
       - db
       - platform
