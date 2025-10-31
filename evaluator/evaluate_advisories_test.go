@@ -7,6 +7,7 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -305,6 +306,33 @@ func TestCalcAdvisoryChanges(t *testing.T) {
 		advisoryID := change.AdvisoryID
 		assert.Equal(t, change.SystemsApplicable, expected[advisoryID].SystemsApplicable)
 		assert.Equal(t, change.SystemsInstallable, expected[advisoryID].SystemsInstallable)
+	}
+}
+
+func TestStoreMissingAdvisories(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	otherAdvisories := []string{"ER5", "ER6", "ER7", "ER8"}
+	err := storeMissingAdvisories(otherAdvisories)
+	assert.NoError(t, err)
+	advisories := database.GetAdvisoriesByName(t, otherAdvisories)
+	expectedText := "Not Available for 3rd party systems"
+	for _, advisory := range advisories {
+		assert.Equal(t, expectedText, advisory.Description)
+		assert.Equal(t, expectedText, advisory.Synopsis)
+		assert.Equal(t, expectedText, advisory.Summary)
+	}
+
+	rhelAdvisories := []string{"RHSA-2025:1234", "RHSA-2025:5678"}
+	err = storeMissingAdvisories(rhelAdvisories)
+	assert.NoError(t, err)
+	advisories = database.GetAdvisoriesByName(t, rhelAdvisories)
+	for _, advisory := range advisories {
+		expectedText = fmt.Sprintf("https://access.redhat.com/errata/%s", advisory.Name)
+		assert.Equal(t, expectedText, advisory.Description)
+		assert.Equal(t, expectedText, advisory.Synopsis)
+		assert.Equal(t, expectedText, advisory.Summary)
 	}
 }
 
