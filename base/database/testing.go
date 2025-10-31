@@ -110,6 +110,21 @@ func CheckAdvisoriesInDB(t *testing.T, advisories []string) []int64 {
 	return advisoryIDs
 }
 
+func GetAdvisoriesByName(t *testing.T, advisories []string) []models.AdvisoryMetadata {
+	var advisoryMetadata []models.AdvisoryMetadata
+	err := DB.Model(models.AdvisoryMetadata{}).Where("name IN (?)", advisories).
+		Find(&advisoryMetadata).Error
+	assert.Nil(t, err)
+	assert.Equal(t, len(advisories), len(advisoryMetadata))
+	return advisoryMetadata
+}
+
+func DeleteAdvisoriesByName(t *testing.T, advisories []string) {
+	err := DB.Model(models.AdvisoryMetadata{}).Where("name IN ?", advisories).
+		Delete(&models.AdvisoryMetadata{}).Error
+	assert.Nil(t, err)
+}
+
 func CheckThirdPartyRepos(t *testing.T, repoNames []string, thirdParty bool) {
 	var reposObjs []models.Repo
 	assert.Nil(t, DB.Where("name IN (?)", repoNames).Find(&reposObjs).Error)
