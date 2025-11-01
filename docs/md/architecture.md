@@ -35,6 +35,11 @@ See [component environment variables](../../conf/evaluator_upload.env)
 table). After this event all registered systems have to be re-evaluated because the input data for the system evaluation
 has changed. See [component environment variables](../../conf/evaluator_recalc.env)
 
+- **evaluator-user-evaluation** - same as the `-upload` instance, but listens for re-evaluation requests from the `manager` 
+component when user adds system to the template (`patchman.evaluator.user-evaluation` topic). The requests are separated 
+as when there is a heavy load from inventory at the time it may take very long for systems to be recalculated/updated.
+See [component environment variables](../../conf/evaluator_user_evaluation.env)
+
 - **vmaas-sync** - connects to [VMaaS](https://github.com/RedHatInsights/vmaas), and upon receiving notification about
 updated data, syncs new advisories into the database, and requests re-evaluation for systems which could be affected by
 new advisories. It's done via messaging to the `patchman.evaluator.recalc` Kafka topic and receiving by the
