@@ -8,6 +8,8 @@ objects:
   kind: ClowdApp
   metadata:
     name: patchman
+    annotations:
+      ignore-check.kube-linter.io/minimum-three-replicas: minimum three replicas not required
   spec:
     envName: ${ENV_NAME}
     deployments:
