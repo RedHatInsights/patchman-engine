@@ -291,7 +291,7 @@ objects:
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
-        - {name: EVAL_TOPIC, value: patchman.evaluator.user-evaluation}
+        - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: NOTIFICATIONS_TOPIC, value: 'platform.notifications.ingress'}
