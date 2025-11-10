@@ -476,6 +476,7 @@ objects:
     - {replicas: 3, partitions: 10, topicName: platform.remediation-updates.patch}
     - {replicas: 3, partitions: 10, topicName: platform.notifications.ingress}
     - {replicas: 3, partitions: 10, topicName: platform.content-sources.template}
+    - {replicas: 3, partitions: 4, topicName: patchman.evaluator.user-evaluation}
 
     dependencies:
     - host-inventory
