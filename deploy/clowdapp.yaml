@@ -259,6 +259,52 @@ objects:
           limits: {cpu: '${CPU_LIMIT_EVALUATOR_RECALC}', memory: '${MEM_LIMIT_EVALUATOR_RECALC}'}
           requests: {cpu: '${CPU_REQUEST_EVALUATOR_RECALC}', memory: '${MEM_REQUEST_EVALUATOR_RECALC}'}
 
+    - name: evaluator-user-evaluation
+      replicas: ${{REPLICAS_EVALUATOR_USER_EVALUATION}}
+      webServices:
+        public:
+          enabled: true
+        private:
+          enabled: true
+        metrics:
+          enabled: true
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
+        command:
+          - ./scripts/entrypoint.sh
+          - evaluator
+        env:
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_EVALUATOR_USER_EVALUATION}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SHOW_CLOWDER_VARS, value: ''}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_EVALUATOR_USER_EVALUATION}'}
+        - {name: DB_USER, value: evaluator}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                       key: evaluator-database-password}}}
+        - {name: KAFKA_GROUP, value: patchman}
+        - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
+        - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
+        - {name: EVAL_TOPIC, value: patchman.evaluator.user-evaluation}
+        - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
+        - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
+        - {name: NOTIFICATIONS_TOPIC, value: 'platform.notifications.ingress'}
+        - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
+        - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
+        - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_USER_EVALUATION}'}
+        - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
+        - {name: POD_CONFIG, value: 'label=user-evaluation;payload_tracker=false;${EVALUATOR_USER_EVALUATION_CONFIG}'}
+        - {name: CONSOLEDOT_HOSTNAME, value: '${CONSOLEDOT_HOSTNAME}'}
+        resources:
+          limits: {cpu: '${CPU_LIMIT_EVALUATOR_USER_EVALUATION}', memory: '${MEM_LIMIT_EVALUATOR_USER_EVALUATION}'}
+          requests: {cpu: '${CPU_REQUEST_EVALUATOR_USER_EVALUATION}', memory: '${MEM_REQUEST_EVALUATOR_USER_EVALUATION}'}
+
     jobs:
     - name: vmaas-sync
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -674,6 +720,17 @@ parameters:
 - {name: MEM_REQUEST_EVALUATOR_RECALC, value: 1500Mi}
 - {name: ENABLE_PROFILER_EVALUATOR_RECALC, value: 'false'}
 - {name: EVALUATOR_RECALC_CONFIG, value: ''}
+
+# Evaluator - user evaluation
+- {name: REPLICAS_EVALUATOR_USER_EVALUATION, value: '1'}
+- {name: LOG_LEVEL_EVALUATOR_USER_EVALUATION, value: debug}
+- {name: DB_DEBUG_EVALUATOR_USER_EVALUATION, value: 'false'}
+- {name: CPU_LIMIT_EVALUATOR_USER_EVALUATION, value: '2'}
+- {name: MEM_LIMIT_EVALUATOR_USER_EVALUATION, value: 3000Mi}
+- {name: CPU_REQUEST_EVALUATOR_USER_EVALUATION, value: '1'}
+- {name: MEM_REQUEST_EVALUATOR_USER_EVALUATION, value: 1500Mi}
+- {name: ENABLE_PROFILER_EVALUATOR_USER_EVALUATION, value: 'false'}
+- {name: EVALUATOR_USER_EVALUATION_CONFIG, value: ''}
 
 # JOBS
 - {name: LOG_LEVEL_JOBS, value: debug}
