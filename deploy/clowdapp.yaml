@@ -573,15 +573,17 @@ objects:
         chunksize: ${{FLOORIST_CHUNKSIZE}}
         query: >-
           SELECT ra.name AS rh_account_id, am.name AS advisory_name, at.name AS advisory_type,
-          count(sp.inventory_id) as applicable_systems
-          FROM system_advisories sa
-          JOIN system_platform sp ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id
-          JOIN inventory.hosts ih ON sp.inventory_id = ih.id
-          JOIN advisory_metadata am ON sa.advisory_id = am.id
-          JOIN rh_account ra ON ra.id = sa.rh_account_id
-          JOIN advisory_type at ON am.advisory_type_id = at.id
-          GROUP BY ra.name, am.name, at.name
-          ORDER BY ra.name ASC, applicable_systems DESC;
+                 adv.applicable_systems AS applicable_systems
+            FROM (SELECT sa.rh_account_id, sa.advisory_id, COUNT(*) as applicable_systems
+                    FROM system_advisories sa
+                    JOIN system_platform sp ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id
+                    JOIN inventory.hosts ih ON sp.inventory_id = ih.id
+                    GROUP BY sa.rh_account_id, sa.advisory_id
+                 ) as adv
+            JOIN rh_account ra ON ra.id = adv.rh_account_id
+            JOIN advisory_metadata am ON adv.advisory_id = am.id
+            JOIN advisory_type at ON am.advisory_type_id = at.id
+           ORDER BY ra.name ASC, adv.applicable_systems DESC;
 
 - apiVersion: metrics.console.redhat.com/v1alpha1
   kind: FloorPlan
