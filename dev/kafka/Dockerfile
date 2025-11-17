@@ -1,4 +1,4 @@
-FROM docker.io/apache/kafka:4.1.0
+FROM docker.io/apache/kafka:4.1.1
 
 ADD /dev/kafka/entrypoint.sh /app/entrypoint.sh
 ADD /dev/kafka/setup.sh      /app/setup.sh
