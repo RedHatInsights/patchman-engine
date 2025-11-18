@@ -301,7 +301,7 @@ objects:
         - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_USER_EVALUATION}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
-        - {name: POD_CONFIG, value: 'label=user-evaluation;${EVALUATOR_USER_EVALUATION_CONFIG}'}
+        - {name: POD_CONFIG, value: 'label=user-evaluation;payload_tracker=false;${EVALUATOR_USER_EVALUATION_CONFIG}'}
         - {name: CONSOLEDOT_HOSTNAME, value: '${CONSOLEDOT_HOSTNAME}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_EVALUATOR_USER_EVALUATION}', memory: '${MEM_LIMIT_EVALUATOR_USER_EVALUATION}'}
