@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (138, false);
+VALUES (139, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -1044,6 +1044,13 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO vmaas_sync;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO vmaas_sync;
 GRANT SELECT, UPDATE ON repo TO vmaas_sync;
 GRANT SELECT, INSERT, UPDATE, DELETE ON deleted_system TO vmaas_sync;
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'repack') THEN
+        GRANT USAGE ON SCHEMA repack TO vmaas_sync;
+    END IF;
+END
+$$;
 
 
 CREATE SCHEMA IF NOT EXISTS inventory;
