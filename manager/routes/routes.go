@@ -39,7 +39,6 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	systems.GET("/:inventory_id/packages", controllers.SystemPackagesHandler)
 	systems.GET("/:inventory_id/vmaas_json", controllers.SystemVmaasJSONHandler)
 	systems.GET("/:inventory_id/yum_updates", controllers.SystemYumUpdatesHandler)
-	systems.DELETE("/:inventory_id", controllers.SystemDeleteHandler)
 
 	userAuth.GET("/tags", controllers.SystemTagListHandler)
 
@@ -105,6 +104,7 @@ func InitAdmin(app *gin.Engine, enableTurnpikeAuth bool) {
 	api.PUT("/refresh-packages", admin.RefreshPackagesHandler)
 	api.PUT("/refresh-packages/:account", admin.RefreshPackagesAccountHandler)
 	api.GET("/repack/:table_name", admin.RepackHandler)
+	api.DELETE("/system/:inventory_id", admin.SystemDeleteHandler)
 
 	pprof := api.Group("/pprof")
 	pprof.GET("/evaluator_upload/:param", admin.GetEvaluatorUploadPprof)

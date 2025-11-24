@@ -3,10 +3,12 @@ package controllers
 import (
 	"app/base/database"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"app/tasks/caches"
 	"app/tasks/cleaning"
 	"app/tasks/repack"
 	sync "app/tasks/vmaas_sync"
+	"errors"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -195,4 +197,68 @@ func CleanAADHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, "cleaning advisory account data")
+}
+
+// @Summary Delete system by inventory id
+// @Description Delete system by inventory id
+// @ID deletesystem
+// @Security RhIdentity
+// @Accept   json
+// @Produce  json
+// @Param    inventory_id    path    string   true "Inventory ID"
+// @Success 200
+// @Failure 400 {object}	string
+// @Failure 404 {object}	string
+// @Failure 500 {object}	string
+// @Router /systems/{inventory_id} [delete]
+func SystemDeleteHandler(c *gin.Context) {
+	inventoryID := c.Param("inventory_id")
+	if inventoryID == "" {
+		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
+		return
+	}
+
+	if !utils.IsValidUUID(inventoryID) {
+		utils.LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+		return
+	}
+
+	var systemInventoryID []string
+	db := middlewares.DBFromContext(c)
+	tx := db.Begin()
+
+	defer tx.Rollback()
+
+	err := tx.Set("gorm:query_option", "FOR UPDATE OF system_platform").
+		Table("system_platform").
+		Where("inventory_id = ?::uuid", inventoryID).
+		Pluck("inventory_id", &systemInventoryID).Error
+
+	if err != nil {
+		utils.LogAndRespError(c, err, "could not query database for system")
+		return
+	}
+
+	if len(systemInventoryID) == 0 {
+		utils.LogAndRespNotFound(c, errors.New("no rows returned"), "system not found")
+		return
+	}
+
+	query := tx.Exec("select deleted_inventory_id from delete_system(?::uuid)", systemInventoryID[0])
+	if err := query.Error; err != nil {
+		utils.LogAndRespError(c, err, "Could not delete system")
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		utils.LogAndRespError(c, err, "Could not delete system")
+		return
+	}
+
+	if query.RowsAffected > 0 {
+		c.Status(http.StatusOK)
+	} else {
+		utils.LogAndRespNotFound(c, errors.New("no rows returned"), "system not found")
+		return
+	}
 }
