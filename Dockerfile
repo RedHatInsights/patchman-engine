@@ -26,7 +26,7 @@ RUN go mod download
 
 RUN if [ "$INSTALL_TOOLS" == "yes" ] ; then \
         go install github.com/swaggo/swag/cmd/swag@v1.16.4 && \
-        go install gotest.tools/gotestsum@v1.12.0 && \
+        go install gotest.tools/gotestsum@v1.13.0 && \
         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
         | sh -s -- -b $(go env GOPATH)/bin v2.2.2 ; \
     fi
