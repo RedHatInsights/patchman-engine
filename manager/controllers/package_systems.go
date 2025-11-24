@@ -78,12 +78,12 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 
 	var packageIDs []int
 	if err := database.PackageByName(db, packageName).Pluck("p.id", &packageIDs).Error; err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return nil, nil, nil, err
 	}
 
 	if len(packageIDs) == 0 {
-		LogAndRespNotFound(c, errors.New("not found"), "package not found")
+		utils.LogAndRespNotFound(c, errors.New("not found"), "package not found")
 		return nil, nil, nil, errors.New("package not found")
 	}
 
@@ -133,7 +133,7 @@ func PackageSystemsListHandler(c *gin.Context) {
 	var systems []PackageSystemDBLookup
 	err = query.Find(&systems).Error
 	if err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return
 	}
 
@@ -185,7 +185,7 @@ func PackageSystemsListIDsHandler(c *gin.Context) {
 	var sids []SystemsStatusID
 	err = query.Find(&sids).Error
 	if err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return
 	}
 

@@ -78,7 +78,7 @@ func SystemTagListHandler(c *gin.Context) {
 
 	tx, meta, params, err := ListCommon(query, c, nil, SystemTagsOpts)
 	if !checkSortMeta(meta.Sort) {
-		LogAndRespBadRequest(c, errors.New("invalid sort field(s)"), "invalid sort")
+		utils.LogAndRespBadRequest(c, errors.New("invalid sort field(s)"), "invalid sort")
 		return
 	}
 	if err != nil {
@@ -89,7 +89,7 @@ func SystemTagListHandler(c *gin.Context) {
 	var tagsWithCount []SystemTagDBLookup
 	tx = tx.Scan(&tagsWithCount)
 	if tx.Error != nil {
-		LogAndRespError(c, tx.Error, "unable to get tags")
+		utils.LogAndRespError(c, tx.Error, "unable to get tags")
 		return
 	}
 	var total int

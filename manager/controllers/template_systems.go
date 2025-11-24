@@ -57,19 +57,19 @@ func getTemplate(c *gin.Context, tx *gorm.DB, account int, uuid string) (*models
 	var template models.Template
 	if !utils.IsValidUUID(uuid) {
 		err := errors.Errorf("Invalid template uuid: %s", uuid)
-		LogAndRespNotFound(c, err, err.Error())
+		utils.LogAndRespNotFound(c, err, err.Error())
 		return &template, err
 	}
 	err := tx.Where("rh_account_id = ? AND uuid = ?::uuid ", account, uuid).
 		// use Find() not First() otherwise it returns error "no rows found" if uuid is not present
 		Find(&template).Error
 	if err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return &template, err
 	}
 	if template.ID == 0 {
 		err := errors.New("Template not found")
-		LogAndRespNotFound(c, err, err.Error())
+		utils.LogAndRespNotFound(c, err, err.Error())
 		return &template, err
 	}
 	return &template, nil
@@ -169,7 +169,7 @@ func TemplateSystemsListHandler(c *gin.Context) {
 	var templateSystems []TemplateSystemsDBLookup
 	err = query.Find(&templateSystems).Error
 	if err != nil {
-		LogAndRespError(c, err, err.Error())
+		utils.LogAndRespError(c, err, err.Error())
 		return
 	}
 
@@ -218,7 +218,7 @@ func TemplateSystemsListIDsHandler(c *gin.Context) {
 	var sids []SystemsID
 
 	if err = query.Scan(&sids).Error; err != nil {
-		LogAndRespError(c, err, "db error")
+		utils.LogAndRespError(c, err, "db error")
 		return
 	}
 

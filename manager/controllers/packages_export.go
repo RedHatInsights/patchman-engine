@@ -50,7 +50,7 @@ func PackagesExportHandler(c *gin.Context) {
 	err = query.Find(&data).Error
 	items, _ := PackageDBLookup2Item(data)
 	if err != nil {
-		LogAndRespError(c, err, "db error")
+		utils.LogAndRespError(c, err, "db error")
 		return
 	}
 

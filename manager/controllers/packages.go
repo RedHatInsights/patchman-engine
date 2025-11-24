@@ -135,7 +135,7 @@ func PackagesListHandler(c *gin.Context) {
 	var packages []PackageDBLookup
 	err = query.Scan(&packages).Error
 	if err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return
 	}
 

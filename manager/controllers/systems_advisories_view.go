@@ -171,7 +171,7 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListM
 	var meta *ListMeta
 	var links *Links
 	if err := c.ShouldBindJSON(&req); err != nil {
-		LogAndRespBadRequest(c, err, fmt.Sprintf("Invalid request body: %s", err.Error()))
+		utils.LogAndRespBadRequest(c, err, fmt.Sprintf("Invalid request body: %s", err.Error()))
 		return nil, nil, nil, err
 	}
 	acc := c.GetInt(utils.KeyAccount)
@@ -198,7 +198,7 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListM
 
 	var data []systemsAdvisoriesDBLoad
 	if err := q.Find(&data).Error; err != nil {
-		LogAndRespError(c, err, "Database error")
+		utils.LogAndRespError(c, err, "Database error")
 		return nil, nil, nil, err
 	}
 	return data, meta, links, nil

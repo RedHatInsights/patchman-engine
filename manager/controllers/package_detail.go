@@ -50,7 +50,7 @@ func packageLatestHandler(c *gin.Context, packageName string) {
 	err := query.Select(PackageSelect).
 		Order("(sum.value IS NOT NULL) DESC NULLS LAST, am.public_date DESC").Limit(1).Find(&pkg).Error
 	if err != nil {
-		LogAndRespNotFound(c, err, "package not found")
+		utils.LogAndRespNotFound(c, err, "package not found")
 		return
 	}
 
@@ -76,7 +76,7 @@ func packageEvraHandler(c *gin.Context, nevra *utils.Nevra) {
 	var pkg PackageDetailAttributes
 	err := query.Select(PackageSelect).Where("p.evra = ?", nevra.EVRAString()).Take(&pkg).Error
 	if err != nil {
-		LogAndRespNotFound(c, err, "package not found")
+		utils.LogAndRespNotFound(c, err, "package not found")
 		return
 	}
 
@@ -120,7 +120,7 @@ func PackageDetailHandler(c *gin.Context) {
 
 	nevra, err := utils.ParseNevra(parameter)
 	if err != nil {
-		LogAndRespBadRequest(c, err, "invalid package name")
+		utils.LogAndRespBadRequest(c, err, "invalid package name")
 		return
 	}
 	packageEvraHandler(c, nevra)

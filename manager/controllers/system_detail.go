@@ -53,7 +53,7 @@ func SystemDetailHandler(c *gin.Context) {
 	}
 
 	if !utils.IsValidUUID(inventoryID) {
-		LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+		utils.LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
 		return
 	}
 
@@ -69,12 +69,12 @@ func SystemDetailHandler(c *gin.Context) {
 
 	err := query.Take(&systemDetail).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		LogAndRespNotFound(c, err, "inventory not found")
+		utils.LogAndRespNotFound(c, err, "inventory not found")
 		return
 	}
 
 	if err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return
 	}
 
@@ -106,7 +106,7 @@ func SystemVmaasJSONHandler(c *gin.Context) {
 	}
 	data, err := utils.ParseVmaasJSON(system)
 	if err != nil {
-		LogAndRespError(c, err, "couldn't parse vmaas json")
+		utils.LogAndRespError(c, err, "couldn't parse vmaas json")
 		return
 	}
 
@@ -140,7 +140,7 @@ func SystemYumUpdatesHandler(c *gin.Context) {
 
 	err := sonic.Unmarshal(system.YumUpdates, &resp.Data)
 	if err != nil {
-		LogAndRespError(c, err, "unable to unmarshall yum updates")
+		utils.LogAndRespError(c, err, "unable to unmarshall yum updates")
 		return
 	}
 
@@ -158,7 +158,7 @@ func systemJSONsCommon(c *gin.Context, column string) *models.SystemPlatform {
 	}
 
 	if !utils.IsValidUUID(inventoryID) {
-		LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+		utils.LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
 		return nil
 	}
 
@@ -174,12 +174,12 @@ func systemJSONsCommon(c *gin.Context, column string) *models.SystemPlatform {
 
 	err := query.Take(&system).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		LogAndRespNotFound(c, err, "inventory not found")
+		utils.LogAndRespNotFound(c, err, "inventory not found")
 		return nil
 	}
 
 	if err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return nil
 	}
 	return &system

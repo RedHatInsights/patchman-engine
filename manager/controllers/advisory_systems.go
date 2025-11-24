@@ -83,12 +83,12 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error
 	err := db.Model(&models.AdvisoryMetadata{}).
 		Where("name = ? ", advisoryName).Count(&exists).Error
 	if err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return nil, nil, nil, err
 	}
 	if exists == 0 {
 		err = errors.New("advisory not found")
-		LogAndRespNotFound(c, err, "Advisory not found")
+		utils.LogAndRespNotFound(c, err, "Advisory not found")
 		return nil, nil, nil, err
 	}
 
@@ -146,7 +146,7 @@ func AdvisorySystemsListHandler(c *gin.Context) {
 	var dbItems []AdvisorySystemDBLookup
 
 	if err = query.Scan(&dbItems).Error; err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return
 	}
 
@@ -188,7 +188,7 @@ func systemsIDsStatus(c *gin.Context, systems []SystemsStatusID, meta *ListMeta)
 	}
 	if meta.Offset > total {
 		err := errors.New("Offset")
-		LogAndRespBadRequest(c, err, InvalidOffsetMsg)
+		utils.LogAndRespBadRequest(c, err, InvalidOffsetMsg)
 		return resp, err
 	}
 	if systems == nil {
@@ -259,7 +259,7 @@ func AdvisorySystemsListIDsHandler(c *gin.Context) {
 	var sids []SystemsStatusID
 
 	if err = query.Scan(&sids).Error; err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return
 	}
 

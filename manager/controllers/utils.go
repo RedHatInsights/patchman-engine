@@ -31,31 +31,6 @@ const FilterNotSupportedMsg = "filtering not supported on this endpoint"
 
 var tagRegex = regexp.MustCompile(`([^/=]+)/([^/=]+)(=([^/=]+))?`)
 
-func LogAndRespError(c *gin.Context, err error, respMsg string) {
-	utils.LogError("err", err.Error(), respMsg)
-	c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{Error: respMsg})
-}
-
-func LogWarnAndResp(c *gin.Context, code int, respMsg string) {
-	utils.LogWarn(respMsg)
-	c.AbortWithStatusJSON(code, utils.ErrorResponse{Error: respMsg})
-}
-
-func LogAndRespStatusError(c *gin.Context, code int, err error, msg string) {
-	utils.LogError("err", err.Error(), msg)
-	c.AbortWithStatusJSON(code, utils.ErrorResponse{Error: msg})
-}
-
-func LogAndRespBadRequest(c *gin.Context, err error, respMsg string) {
-	utils.LogWarn("err", err.Error(), respMsg)
-	c.AbortWithStatusJSON(http.StatusBadRequest, utils.ErrorResponse{Error: respMsg})
-}
-
-func LogAndRespNotFound(c *gin.Context, err error, respMsg string) {
-	utils.LogWarn("err", err.Error(), respMsg)
-	c.AbortWithStatusJSON(http.StatusNotFound, utils.ErrorResponse{Error: respMsg})
-}
-
 func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 	defaultSort, stableSort string) (*gorm.DB, []string, error) {
 	query := c.DefaultQuery("sort", defaultSort)
@@ -147,14 +122,14 @@ func ExportListCommon(tx *gorm.DB, c *gin.Context, opts ListOpts) (*gorm.DB, err
 	filters := Filters{}
 	err := ParseFilters(c, filters, opts.Fields, opts.DefaultFilters)
 	if err != nil {
-		LogAndRespBadRequest(c, err, err.Error())
+		utils.LogAndRespBadRequest(c, err, err.Error())
 		return nil, errors.Wrap(err, "filters parsing failed")
 	}
 	tx, _ = ApplySearch(c, tx, opts.SearchFields...)
 
 	tx, err = filters.Apply(tx, opts.Fields)
 	if err != nil {
-		LogAndRespBadRequest(c, err, "Failed to apply filters")
+		utils.LogAndRespBadRequest(c, err, "Failed to apply filters")
 		return nil, errors.Wrap(err, "filters applying failed")
 	}
 	return tx, nil
@@ -165,20 +140,20 @@ func ListCommonNoLimitOffset(tx *gorm.DB, c *gin.Context, filters Filters, opts 
 	hasSystems := true
 	limit, offset, err := utils.LoadLimitOffset(c, core.DefaultLimit)
 	if err != nil {
-		LogAndRespBadRequest(c, err, err.Error())
+		utils.LogAndRespBadRequest(c, err, err.Error())
 		return nil, nil, nil, errors.Wrap(err, "unable to parse limit, offset params")
 	}
 	tx, searchQ := ApplySearch(c, tx, opts.SearchFields...)
 
 	tx, err = filters.Apply(tx, opts.Fields)
 	if err != nil {
-		LogAndRespBadRequest(c, err, err.Error())
+		utils.LogAndRespBadRequest(c, err, err.Error())
 		return nil, nil, nil, errors.Wrap(err, "filters applying failed")
 	}
 
 	tx, sortFields, err := ApplySort(c, tx, opts.Fields, opts.DefaultSort, opts.StableSort)
 	if err != nil {
-		LogAndRespBadRequest(c, err, err.Error())
+		utils.LogAndRespBadRequest(c, err, err.Error())
 		return nil, nil, nil, errors.Wrap(err, "invalid sort")
 	}
 	var sortQ string
@@ -224,7 +199,7 @@ func UpdateMetaLinks(c *gin.Context, meta *ListMeta, total int, subTotals map[st
 	*ListMeta, *Links, error) {
 	if meta.Offset > total {
 		err := errors.New("Offset")
-		LogAndRespBadRequest(c, err, InvalidOffsetMsg)
+		utils.LogAndRespBadRequest(c, err, InvalidOffsetMsg)
 		return nil, nil, err
 	}
 	path := c.Request.URL.Path
@@ -333,7 +308,7 @@ func ParseAllFilters(c *gin.Context, opts ListOpts) (Filters, error) {
 	err = ParseFilters(c, filters, opts.Fields, opts.DefaultFilters)
 	if err != nil {
 		err = errors.Wrap(err, "cannot parse inventory filters")
-		LogAndRespBadRequest(c, err, err.Error())
+		utils.LogAndRespBadRequest(c, err, err.Error())
 		return nil, err
 	}
 
@@ -345,7 +320,7 @@ func parseTags(c *gin.Context, filters Filters) error {
 	for _, t := range tags {
 		tag, err := ParseTag(t)
 		if err != nil {
-			LogAndRespBadRequest(c, err, err.Error())
+			utils.LogAndRespBadRequest(c, err, err.Error())
 			return err
 		}
 
@@ -474,7 +449,7 @@ func OutputExportData(c *gin.Context, data interface{}) {
 	case strings.Contains(accept, "text/csv"):
 		Csv(c, http.StatusOK, data)
 	default:
-		LogWarnAndResp(c, http.StatusUnsupportedMediaType,
+		utils.LogWarnAndResp(c, http.StatusUnsupportedMediaType,
 			fmt.Sprintf("Invalid content type '%s', use 'application/json' or 'text/csv'", accept))
 	}
 }
@@ -542,7 +517,7 @@ func systemsIDs(c *gin.Context, systems []SystemsID, meta *ListMeta) (IDsPlainRe
 	}
 	if meta.Offset > total {
 		err := errors.New("Offset")
-		LogAndRespBadRequest(c, err, InvalidOffsetMsg)
+		utils.LogAndRespBadRequest(c, err, InvalidOffsetMsg)
 		return resp, err
 	}
 	if systems == nil {
@@ -566,7 +541,7 @@ func systemsSatelliteIDs(c *gin.Context, systems []SystemsSatelliteManagedID, me
 	}
 	if meta.Offset > total {
 		err := errors.New("Offset")
-		LogAndRespBadRequest(c, err, InvalidOffsetMsg)
+		utils.LogAndRespBadRequest(c, err, InvalidOffsetMsg)
 		return resp, err
 	}
 	if systems == nil {
@@ -608,7 +583,7 @@ func parseJSONList(jsonb []byte) ([]string, error) {
 
 func isFilterInURLValid(c *gin.Context) bool {
 	if strings.Contains(c.Request.URL.String(), "filter") {
-		LogAndRespBadRequest(c, errors.New(FilterNotSupportedMsg), FilterNotSupportedMsg)
+		utils.LogAndRespBadRequest(c, errors.New(FilterNotSupportedMsg), FilterNotSupportedMsg)
 		return false
 	}
 	return true

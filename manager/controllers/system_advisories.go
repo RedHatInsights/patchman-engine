@@ -71,7 +71,7 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 	}
 
 	if !utils.IsValidUUID(inventoryID) {
-		LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+		utils.LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
 		return nil, nil, nil, errors.New("incorrect inventory_id format")
 	}
 
@@ -86,12 +86,12 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 		Count(&exists).Error
 
 	if err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return nil, nil, nil, err
 	}
 	if exists == 0 {
 		err = errors.New("system not found")
-		LogAndRespNotFound(c, err, "Systems not found")
+		utils.LogAndRespNotFound(c, err, "Systems not found")
 		return nil, nil, nil, err
 	}
 
@@ -133,7 +133,7 @@ func SystemAdvisoriesHandler(c *gin.Context) {
 	var dbItems []SystemAdvisoriesDBLookup
 
 	if err = query.Find(&dbItems).Error; err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return
 	}
 
@@ -182,7 +182,7 @@ func SystemAdvisoriesIDsHandler(c *gin.Context) {
 	var aids []AdvisoryStatusID
 	err = query.Find(&aids).Error
 	if err != nil {
-		LogAndRespError(c, err, "db error")
+		utils.LogAndRespError(c, err, "db error")
 	}
 
 	resp := advisoriesStatusIDs(aids)
