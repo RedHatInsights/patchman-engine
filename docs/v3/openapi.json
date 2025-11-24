@@ -4699,63 +4699,6 @@
                         "RhIdentity": []
                     }
                 ]
-            },
-            "delete": {
-                "summary": "Delete system by inventory id",
-                "description": "Delete system by inventory id",
-                "operationId": "deletesystem",
-                "parameters": [
-                    {
-                        "name": "inventory_id",
-                        "in": "path",
-                        "description": "Inventory ID",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {}
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/utils.ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/utils.ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/utils.ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "RhIdentity": []
-                    }
-                ]
             }
         },
         "/systems/{inventory_id}/advisories": {
