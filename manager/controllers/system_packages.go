@@ -98,7 +98,7 @@ func SystemPackagesHandler(c *gin.Context) {
 	}
 
 	if !utils.IsValidUUID(inventoryID) {
-		LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+		utils.LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
 		return
 	}
 	filters, err := ParseAllFilters(c, SystemPackagesOpts)
@@ -116,12 +116,12 @@ func SystemPackagesHandler(c *gin.Context) {
 
 	err = q.Find(&loaded).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		LogAndRespNotFound(c, err, "inventory_id not found")
+		utils.LogAndRespNotFound(c, err, "inventory_id not found")
 		return
 	}
 
 	if err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return
 	}
 

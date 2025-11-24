@@ -95,7 +95,7 @@ func TemplatesListHandler(c *gin.Context) {
 	var templates []TemplatesDBLookup
 	err = query.Find(&templates).Error
 	if err != nil {
-		LogAndRespError(c, err, err.Error())
+		utils.LogAndRespError(c, err, err.Error())
 		return
 	}
 
@@ -107,7 +107,7 @@ func TemplatesListHandler(c *gin.Context) {
 
 	creators, err := templatesCreators(db, account)
 	if err != nil {
-		LogAndRespError(c, err, err.Error())
+		utils.LogAndRespError(c, err, err.Error())
 		return
 	}
 

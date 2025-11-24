@@ -55,7 +55,7 @@ func AdvisoriesExportHandler(c *gin.Context) {
 
 	err = query.Find(&advisories).Error
 	if err != nil {
-		LogAndRespError(c, err, "db error")
+		utils.LogAndRespError(c, err, "db error")
 		return
 	}
 

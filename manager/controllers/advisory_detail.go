@@ -77,9 +77,9 @@ func AdvisoryDetailHandler(c *gin.Context) {
 	resp, err = getAdvisory(db, advisoryName, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			LogAndRespNotFound(c, err, "advisory not found")
+			utils.LogAndRespNotFound(c, err, "advisory not found")
 		} else {
-			LogAndRespError(c, err, "advisory detail error")
+			utils.LogAndRespError(c, err, "advisory detail error")
 		}
 		return
 	}

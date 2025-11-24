@@ -264,7 +264,7 @@ func SystemsListHandler(c *gin.Context) {
 	var systems []SystemDBLookup
 	err = query.Find(&systems).Error
 	if err != nil {
-		LogAndRespError(c, err, "db error")
+		utils.LogAndRespError(c, err, "db error")
 		return
 	}
 
@@ -347,7 +347,7 @@ func SystemsListIDsHandler(c *gin.Context) {
 	var sids []SystemsSatelliteManagedID
 
 	if err = query.Scan(&sids).Error; err != nil {
-		LogAndRespError(c, err, "db error")
+		utils.LogAndRespError(c, err, "db error")
 		return
 	}
 

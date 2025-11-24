@@ -80,12 +80,12 @@ func PackageVersionsListHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
 	var packageNameIDs []int
 	if err := packagesNameID(db, packageName).Pluck("pn.id", &packageNameIDs).Error; err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return
 	}
 
 	if len(packageNameIDs) == 0 {
-		LogAndRespNotFound(c, errors.New("not found"), "package not found")
+		utils.LogAndRespNotFound(c, errors.New("not found"), "package not found")
 		return
 	}
 
@@ -99,7 +99,7 @@ func PackageVersionsListHandler(c *gin.Context) {
 	var versions []PackageVersionDBLookup
 	err = query.Find(&versions).Error
 	if err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return
 	}
 

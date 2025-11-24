@@ -48,7 +48,7 @@ func TemplateSystemsExportHandler(c *gin.Context) {
 	var templateSystems []TemplateSystemsDBLookup
 	err = query.Find(&templateSystems).Error
 	if err != nil {
-		LogAndRespError(c, err, err.Error())
+		utils.LogAndRespError(c, err, err.Error())
 		return
 	}
 

@@ -66,10 +66,10 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 	err := db.Model(&models.AdvisoryMetadata{}).
 		Where("name = ? ", advisoryName).Count(&exists).Error
 	if err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 	}
 	if exists == 0 {
-		LogAndRespNotFound(c, errors.New("advisory not found"), "Advisory not found")
+		utils.LogAndRespNotFound(c, errors.New("advisory not found"), "Advisory not found")
 		return
 	}
 
@@ -93,7 +93,7 @@ func outputExportData(c *gin.Context, query *gorm.DB) {
 	var systems []AdvisorySystemDBLookup
 	err := query.Find(&systems).Error
 	if err != nil {
-		LogAndRespError(c, err, "db error")
+		utils.LogAndRespError(c, err, "db error")
 		return
 	}
 

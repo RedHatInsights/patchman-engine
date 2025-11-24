@@ -44,12 +44,12 @@ func PackageSystemsExportHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
 	var packageIDs []int
 	if err := database.PackageByName(db, packageName).Pluck("p.id", &packageIDs).Error; err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return
 	}
 
 	if len(packageIDs) == 0 {
-		LogAndRespNotFound(c, errors.New("not found"), "package not found")
+		utils.LogAndRespNotFound(c, errors.New("not found"), "package not found")
 		return
 	}
 
@@ -67,7 +67,7 @@ func PackageSystemsExportHandler(c *gin.Context) {
 	var systems []PackageSystemDBLookup
 	err = query.Find(&systems).Error
 	if err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return
 	}
 

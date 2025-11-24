@@ -57,7 +57,7 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 
 	var req TemplateSystemsUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		LogAndRespBadRequest(c, err, "Invalid template update request "+err.Error())
+		utils.LogAndRespBadRequest(c, err, "Invalid template update request "+err.Error())
 		return
 	}
 
@@ -95,7 +95,7 @@ func checkTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template *
 	inventoryIDs []string, groups map[string]string) error {
 	if len(inventoryIDs) == 0 {
 		err := errors.New(InvalidInventoryIDsErr)
-		LogAndRespBadRequest(c, err, InvalidInventoryIDsErr)
+		utils.LogAndRespBadRequest(c, err, InvalidInventoryIDsErr)
 		return err
 	}
 
@@ -103,20 +103,20 @@ func checkTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template *
 	if err != nil {
 		switch {
 		case errors.Is(err, base.ErrBadRequest):
-			LogAndRespBadRequest(c, err, err.Error())
+			utils.LogAndRespBadRequest(c, err, err.Error())
 			return err
 		case errors.Is(err, base.ErrNotFound):
-			LogAndRespNotFound(c, err, err.Error())
+			utils.LogAndRespNotFound(c, err, err.Error())
 			return err
 		default:
-			LogAndRespError(c, err, "Database error")
+			utils.LogAndRespError(c, err, "Database error")
 			return err
 		}
 	}
 
 	if err := templateArchVersionMatch(db, inventoryIDs, template, accountID, groups); err != nil {
 		msg := fmt.Sprintf("Incompatible template and system version or architecture: %s", err.Error())
-		LogAndRespBadRequest(c, err, msg)
+		utils.LogAndRespBadRequest(c, err, msg)
 		return err
 	}
 
@@ -139,18 +139,18 @@ func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template 
 			accountID, inventoryIDs).
 		Update("template_id", templateID)
 	if err := tx.Error; err != nil {
-		LogAndRespError(c, err, "Database error")
+		utils.LogAndRespError(c, err, "Database error")
 		return err
 	}
 	if int(tx.RowsAffected) != len(inventoryIDs) {
 		err := errors.New(InvalidInventoryIDsErr)
-		LogAndRespBadRequest(c, err, InvalidInventoryIDsErr)
+		utils.LogAndRespBadRequest(c, err, InvalidInventoryIDsErr)
 		return err
 	}
 
 	err := tx.Commit().Error
 	if err != nil {
-		LogAndRespError(c, err, "Database error")
+		utils.LogAndRespError(c, err, "Database error")
 		return err
 	}
 	return nil
@@ -223,7 +223,7 @@ func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env 
 		Select("ih.id as inventory_id, ih.system_profile->>'owner_id' as consumer").
 		Where("ih.id in (?)", inventoryIDs).Find(&hosts).Error
 	if err != nil {
-		LogAndRespError(c, err, "Database error")
+		utils.LogAndRespError(c, err, "Database error")
 		return err
 	}
 
@@ -238,7 +238,7 @@ func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env 
 	}
 	if err != nil {
 		err = errors2.Join(errors.New("missing owner_id for systems"), err)
-		LogAndRespBadRequest(c, err, err.Error())
+		utils.LogAndRespBadRequest(c, err, err.Error())
 		return err
 	}
 
@@ -256,7 +256,7 @@ func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env 
 		if resp == nil {
 			resp = &candlepin.ConsumersUpdateResponse{Message: "call to candlepin failed"}
 		}
-		LogAndRespBadRequest(c, err, resp.Message)
+		utils.LogAndRespBadRequest(c, err, resp.Message)
 		return err
 	}
 

@@ -28,7 +28,7 @@ func TemplateSystemsDeleteHandler(c *gin.Context) {
 
 	var req TemplateSystemsUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		LogAndRespBadRequest(c, err, "Invalid template delete request "+err.Error())
+		utils.LogAndRespBadRequest(c, err, "Invalid template delete request "+err.Error())
 		return
 	}
 

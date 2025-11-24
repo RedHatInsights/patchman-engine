@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"app/base/database"
+	"app/base/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,7 +14,7 @@ import (
 func Status(c *gin.Context) {
 	sqlDB, _ := database.DB.DB()
 	if err := sqlDB.Ping(); err != nil {
-		LogAndRespStatusError(c, http.StatusServiceUnavailable, err, "Database not connected")
+		utils.LogAndRespStatusError(c, http.StatusServiceUnavailable, err, "Database not connected")
 	} else {
 		c.Status(http.StatusOK)
 	}

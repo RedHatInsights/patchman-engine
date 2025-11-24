@@ -75,7 +75,7 @@ func SystemsExportHandler(c *gin.Context) {
 
 	err = query.Find(&systems).Error
 	if err != nil {
-		LogAndRespError(c, err, "db error")
+		utils.LogAndRespError(c, err, "db error")
 		return
 	}
 

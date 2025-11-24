@@ -76,12 +76,12 @@ func getSubscribedSystem(c *gin.Context, tx *gorm.DB) (int, string, error) {
 		// use Find() not First() otherwise it returns error "no rows found" if uuid is not present
 		Find(&inventoryID).Error
 	if err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 		return 0, "", err
 	}
 	if inventoryID == "" {
 		err := errors.Errorf("System %s not found", systemCn)
-		LogAndRespNotFound(c, err, err.Error())
+		utils.LogAndRespNotFound(c, err, err.Error())
 		return 0, "", err
 	}
 	return account, inventoryID, err

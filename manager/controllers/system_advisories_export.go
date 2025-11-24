@@ -42,7 +42,7 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 	}
 
 	if !utils.IsValidUUID(inventoryID) {
-		LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+		utils.LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
 		return
 	}
 
@@ -52,10 +52,10 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 		Count(&exists).Error
 
 	if err != nil {
-		LogAndRespError(c, err, "database error")
+		utils.LogAndRespError(c, err, "database error")
 	}
 	if exists == 0 {
-		LogAndRespNotFound(c, errors.New("System not found"), "System not found")
+		utils.LogAndRespNotFound(c, errors.New("System not found"), "System not found")
 		return
 	}
 
@@ -74,7 +74,7 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 			fillAdvisoryItemAttributeReleaseVersion(advisories[i].AdvisoryItemAttributesCommon)
 	}
 	if err != nil {
-		LogAndRespError(c, err, "db error")
+		utils.LogAndRespError(c, err, "db error")
 		return
 	}
 
