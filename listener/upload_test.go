@@ -418,7 +418,7 @@ func TestGetRepoPath(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Empty(t, repoPath)
 
-	repo = inventory.YumRepo{Mirrorlist: "https://rhui.redhat.com["}
+	repo = inventory.YumRepo{Mirrorlist: "https://rhui.redhat.com/"}
 	repoPath, err = getRepoPath(&sp, &repo)
 	assert.Nil(t, err)
 	assert.Empty(t, repoPath)
