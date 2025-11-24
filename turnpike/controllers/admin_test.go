@@ -5,6 +5,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	managerTestUtils "app/manager/controllers"
 	"net/http"
 	"testing"
 
@@ -27,28 +28,36 @@ func TestInitDelete(t *testing.T) {
 
 func TestSystemDelete(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("DELETE", "/:inventory_id", del, "", nil, "", SystemDeleteHandler, 1)
+	w := managerTestUtils.CreateRequestRouterWithParams(
+		"DELETE", "/systems/:inventory_id", del, "", nil, "", SystemDeleteHandler, 1,
+	)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestSystemDeleteWrongAccount(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("DELETE", "/:inventory_id", del, "", nil, "", SystemDeleteHandler, 2)
+	w := managerTestUtils.CreateRequestRouterWithParams(
+		"DELETE", "/systems/:inventory_id", del, "", nil, "", SystemDeleteHandler, 2,
+	)
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestSystemDeleteNotFound(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("DELETE", "/:inventory_id", del, "", nil, "", SystemDeleteHandler, 1)
+	w := managerTestUtils.CreateRequestRouterWithParams(
+		"DELETE", "/systems/:inventory_id", del, "", nil, "", SystemDeleteHandler, 1,
+	)
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestSystemDeleteUnknown(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithParams("DELETE", "/:inventory_id", "unknownsystem", "", nil, "", SystemDeleteHandler, 1)
+	w := managerTestUtils.CreateRequestRouterWithParams(
+		"DELETE", "/systems/:inventory_id", "unknownsystem", "", nil, "", SystemDeleteHandler, 1,
+	)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
