@@ -12,33 +12,41 @@ import (
 )
 
 var (
-	DB                 *gorm.DB
-	DBReadReplica      *gorm.DB
-	OtherAdvisoryTypes []string
-	AdvisoryTypes      map[int]string
-	globalPgConfig     *PostgreSQLConfig
+	DB                        *gorm.DB
+	DBReadReplica             *gorm.DB
+	OtherAdvisoryTypes        []string
+	AdvisoryTypes             map[int]string
+	globalPgConfig            *PostgreSQLConfig
+	globalPgReadReplicaConfig *PostgreSQLConfig
 )
 
-func InitDB() {
-	pgConfig := loadEnvPostgreSQLConfig(false)
-	if DB != nil && pgConfig == globalPgConfig {
-		// reuse connection
-		check(DB)
-		return
+func initDB(db *gorm.DB, pgConfig *PostgreSQLConfig, globalPgConfig *PostgreSQLConfig) *gorm.DB {
+	if db == nil || pgConfig != globalPgConfig {
+		// create new connection if not already exists
+		globalPgConfig = pgConfig
+		db = openPostgreSQL(pgConfig)
 	}
-	globalPgConfig = pgConfig
-	DB = openPostgreSQL(pgConfig)
-	check(DB)
-	if utils.CoreCfg.DBReadReplicaEnabled {
-		pgConfig := loadEnvPostgreSQLConfig(ReadReplicaConfigured())
-		DBReadReplica = openPostgreSQL(pgConfig)
-		check(DBReadReplica)
+	check(db)
+	return db
+}
+
+func InitAdminDB() {
+	pgConfig := createPostgreSQLPrimaryAdminConfig()
+	DB = initDB(DB, pgConfig, globalPgConfig)
+}
+
+func InitUserDB() {
+	pgConfig := createPostgreSQLPrimaryUserConfig()
+	DB = initDB(DB, pgConfig, globalPgConfig)
+	if utils.CoreCfg.DBReadReplicaEnabled && ReadReplicaConfigured() {
+		pgConfig := createPostgreSQLReplicaConfig()
+		DBReadReplica = initDB(DBReadReplica, pgConfig, globalPgReadReplicaConfig)
 	}
 }
 
 // Configure Configure database, PostgreSQL or SQLite connection
 func Configure() {
-	InitDB()
+	InitUserDB()
 	loadAdditionalParamsFromDB()
 }
 
@@ -104,19 +112,11 @@ func check(db *gorm.DB) {
 }
 
 // load database config from environment vars using inserted prefix
-func loadEnvPostgreSQLConfig(useReadReplica bool) *PostgreSQLConfig {
-	host := utils.CoreCfg.DBHost
-	port := utils.CoreCfg.DBPort
-	if useReadReplica {
-		host = utils.CoreCfg.DBReadReplicaHost
-		port = utils.CoreCfg.DBReadReplicaPort
-	}
+func createPostgreSQLPrimaryConfig() *PostgreSQLConfig {
 	config := PostgreSQLConfig{
-		User:                   utils.CoreCfg.DBUser,
-		Host:                   host,
-		Port:                   port,
+		Host:                   utils.CoreCfg.DBHost,
+		Port:                   utils.CoreCfg.DBPort,
 		Database:               utils.CoreCfg.DBName,
-		Passwd:                 utils.CoreCfg.DBPassword,
 		SSLMode:                utils.CoreCfg.DBSslMode,
 		SSLRootCert:            utils.CoreCfg.DBSslRootCert,
 		Debug:                  utils.CoreCfg.DBDebug,
@@ -126,6 +126,29 @@ func loadEnvPostgreSQLConfig(useReadReplica bool) *PostgreSQLConfig {
 		MaxConnectionLifetimeS: utils.CoreCfg.DBMaxConnectionLifetimeS,
 	}
 	return &config
+}
+
+func createPostgreSQLReplicaConfig() *PostgreSQLConfig {
+	config := createPostgreSQLPrimaryConfig()
+	config.User = utils.CoreCfg.DBUser
+	config.Passwd = utils.CoreCfg.DBPassword
+	config.Host = utils.CoreCfg.DBReadReplicaHost
+	config.Port = utils.CoreCfg.DBReadReplicaPort
+	return config
+}
+
+func createPostgreSQLPrimaryUserConfig() *PostgreSQLConfig {
+	config := createPostgreSQLPrimaryConfig()
+	config.User = utils.CoreCfg.DBUser
+	config.Passwd = utils.CoreCfg.DBPassword
+	return config
+}
+
+func createPostgreSQLPrimaryAdminConfig() *PostgreSQLConfig {
+	config := createPostgreSQLPrimaryConfig()
+	config.User = utils.CoreCfg.DBAdminUser
+	config.Passwd = utils.CoreCfg.DBAdminPassword
+	return config
 }
 
 // create "data source" config string needed for database connection opening
