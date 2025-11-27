@@ -24,7 +24,7 @@ import (
 
 // @BasePath /api/patch/admin
 func RunAdminAPI() {
-	core.ConfigureApp()
+	core.ConfigureAdminApp()
 
 	// Toggle Turnpike authentication for internal API (manual sync, re-calc)
 	enableTurnpikeAuth := utils.PodConfig.GetBool("turnpike_auth", true)
