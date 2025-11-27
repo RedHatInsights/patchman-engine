@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	database.InitDB()
+	database.InitDB(database.Admin)
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "inventory_hosts":
