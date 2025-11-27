@@ -14,11 +14,20 @@ var (
 	dbWait        = utils.PodConfig.GetString("wait_for_db", "empty")
 )
 
-func ConfigureApp() {
+func configureBaseApp() {
 	utils.ConfigureLogging()
-	database.Configure()
 	metrics.Configure()
 	database.DBWait(dbWait)
+}
+
+func ConfigureApp() {
+	database.Configure()
+	configureBaseApp()
+}
+
+func ConfigureAdminApp() {
+	database.ConfigureAdmin()
+	configureBaseApp()
 }
 
 func SetupTestEnvironment() {

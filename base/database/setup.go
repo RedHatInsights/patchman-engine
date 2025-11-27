@@ -56,6 +56,11 @@ func Configure() {
 	loadAdditionalParamsFromDB()
 }
 
+func ConfigureAdmin() {
+	InitDB(Admin)
+	loadAdditionalParamsFromDB()
+}
+
 // PostgreSQLConfig PostgreSQL database config
 type PostgreSQLConfig struct {
 	Host        string
