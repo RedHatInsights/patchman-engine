@@ -3,9 +3,9 @@ module app
 go 1.24.4
 
 require (
+	github.com/MichaelMraka/gorpm v0.0.0-20251128174203-65cf25f01bac
 	github.com/aws/aws-sdk-go v1.55.7
 	github.com/bytedance/sonic v1.14.2
-	github.com/ezamriy/gorpm v0.0.0-20160905202458-25f7273cbf51
 	github.com/getkin/kin-openapi v0.133.0
 	github.com/gin-contrib/timeout v1.0.2
 	github.com/gin-gonic/gin v1.11.0
@@ -136,7 +136,5 @@ require (
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/ezamriy/gorpm v0.0.0-20160905202458-25f7273cbf51 => github.com/MichaelMraka/gorpm v0.0.0-20210923131407-e21b5950f175
 
 replace github.com/segmentio/kafka-go v0.4.49 => github.com/MichaelMraka/kafka-go v0.0.0-20251014134425-230b5408c208
