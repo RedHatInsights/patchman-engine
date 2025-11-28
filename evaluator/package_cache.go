@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	rpm "github.com/ezamriy/gorpm"
+	rpm "github.com/MichaelMraka/gorpm"
 	lru "github.com/hashicorp/golang-lru/v2"
 	"gorm.io/gorm"
 )
