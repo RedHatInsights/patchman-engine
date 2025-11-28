@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	rpm "github.com/ezamriy/gorpm"
+	rpm "github.com/MichaelMraka/gorpm"
 	"github.com/pkg/errors"
 )
 

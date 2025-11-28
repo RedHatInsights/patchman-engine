@@ -4,8 +4,8 @@ github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 h1:L/gRVlceqvL25
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc=
 github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6XgeJcm8brE=
-github.com/MichaelMraka/gorpm v0.0.0-20210923131407-e21b5950f175 h1:KkjlVN/HUw3OStvTnsAKt6bzLfWz/qDzfdNKRAo9Ef0=
-github.com/MichaelMraka/gorpm v0.0.0-20210923131407-e21b5950f175/go.mod h1:R3iHBCKh4OIuNrIzJl+81N08s7dD92MLffdRy+wbtnk=
+github.com/MichaelMraka/gorpm v0.0.0-20251128174203-65cf25f01bac h1:qxH8XNTYCJvelLn1tm6iwPI2WIOzUu9x4Wzdui5+pUI=
+github.com/MichaelMraka/gorpm v0.0.0-20251128174203-65cf25f01bac/go.mod h1:R3iHBCKh4OIuNrIzJl+81N08s7dD92MLffdRy+wbtnk=
 github.com/MichaelMraka/kafka-go v0.0.0-20251014134425-230b5408c208 h1:+BepVnwpCIO1xQFu5ZxRoPVwadiGaevazv5/RFMDlRw=
 github.com/MichaelMraka/kafka-go v0.0.0-20251014134425-230b5408c208/go.mod h1:Y1gn60kzLEEaW28YshXyk2+VCUKbJ3Qr6DrnT3i4+9E=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
@@ -253,8 +253,6 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/prashantv/gostub v1.1.0 h1:BTyx3RfQjRHnUWaGF9oQos79AlQ5k8WNktv7VGvVH4g=
 github.com/prashantv/gostub v1.1.0/go.mod h1:A5zLQHz7ieHGG7is6LLXLz7I8+3LZzsrV0P1IAHhP5U=
-github.com/project-kessel/kessel-sdk-go v1.3.0 h1:9pN66fPL6glNMHMqMmbp44h6hAFKSG6je/8xuowGAVk=
-github.com/project-kessel/kessel-sdk-go v1.3.0/go.mod h1:wPQReT5OgUvuipd7ZKSdwwpmFHVSlDiA+ueeueK6R38=
 github.com/project-kessel/kessel-sdk-go v1.4.0 h1:k4V/a6G4Es8j//OG1iAd0NF3xZ8o8QymtVlhCSKI4x4=
 github.com/project-kessel/kessel-sdk-go v1.4.0/go.mod h1:66IfMGKX5odNiyRa+XxwPdCEoW4wFp5+h23NKN12LLI=
 github.com/prometheus/client_golang v1.23.0 h1:ust4zpdl9r4trLY/gSjlm07PuiBq2ynaXXlptpfy8Uc=
