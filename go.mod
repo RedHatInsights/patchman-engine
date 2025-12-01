@@ -110,7 +110,7 @@ require (
 	github.com/ugorji/go/codec v1.3.1 // indirect
 	github.com/woodsbury/decimal128 v1.4.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
-	github.com/xdg-go/scram v1.1.2 // indirect
+	github.com/xdg-go/scram v1.2.0 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/zitadel/logging v0.6.2 // indirect
 	github.com/zitadel/oidc/v3 v3.45.0 // indirect
