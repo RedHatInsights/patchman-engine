@@ -158,7 +158,9 @@ func advisoriesSystemsQuery(c *gin.Context, db *gorm.DB, acc int, groups map[str
 	} else {
 		query = query.Joins(spJoin)
 	}
-	query = query.Order("am.name, sp.inventory_id")
+	query = query.
+		Where("sp.stale = false").
+		Order("am.name, sp.inventory_id")
 
 	meta, links, err := UpdateMetaLinks(c, meta, total, nil, params...)
 	return query, meta, links, err
