@@ -229,6 +229,23 @@ func TestAdvisoriesFilterSeverityNull(t *testing.T) {
 	assert.Equal(t, "CUSTOM-12", output.Data[0].ID)
 }
 
+func TestAdvisoriesFilterSeverityInWithNull(t *testing.T) {
+	output := testAdvisories(t, "/?sort=id&filter[severity]=in:2,null")
+	assert.Equal(t, 11, len(output.Data))
+	foundSeverity2 := false
+	foundNull := false
+	for _, adv := range output.Data {
+		if adv.ID == "RH-3" {
+			foundSeverity2 = true
+		}
+		if adv.ID == "CUSTOM-12" {
+			foundNull = true
+		}
+	}
+	assert.True(t, foundSeverity2)
+	assert.True(t, foundNull)
+}
+
 func TestAdvisoriesFilterApplicableSystems(t *testing.T) {
 	output := testAdvisories(t, "/?filter[applicable_systems]=gt:1")
 	assert.Equal(t, 1, len(output.Data))

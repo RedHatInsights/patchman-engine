@@ -108,3 +108,32 @@ func TestFilterOtherAdvisoryTypes(t *testing.T) {
 	// Check the list is loaded from database correctly
 	assert.Equal(t, []string{"unknown", "unspecified"}, database.OtherAdvisoryTypes)
 }
+
+func TestFilterSeverityInWithNull(t *testing.T) {
+	filter := ParseFilterValue(ColumnFilter, "in:2,null")
+	attrMap := database.AttrMap{"severity": {DataQuery: "severity", OrderQuery: "severity", Parser: dummyParser}}
+	query, args, err := filter.ToWhere("severity", attrMap)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "(severity IN ? OR severity IS NULL) ", query)
+	assert.Equal(t, 1, len(args))
+	assert.IsType(t, []any{}, args[0])
+	severityValues := args[0].([]any)
+	assert.Equal(t, 1, len(severityValues))
+	assert.Equal(t, "2", severityValues[0])
+}
+
+func TestFilterSeverityNotInWithNull(t *testing.T) {
+	filter := ParseFilterValue(ColumnFilter, "notin:2,3,null")
+	attrMap := database.AttrMap{"severity": {DataQuery: "severity", OrderQuery: "severity", Parser: dummyParser}}
+	query, args, err := filter.ToWhere("severity", attrMap)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "(severity NOT IN ? AND severity IS NOT NULL) ", query)
+	assert.Equal(t, 1, len(args))
+	assert.IsType(t, []any{}, args[0])
+	severityValues := args[0].([]any)
+	assert.Equal(t, 2, len(severityValues))
+	assert.Equal(t, "2", severityValues[0])
+	assert.Equal(t, "3", severityValues[1])
+}

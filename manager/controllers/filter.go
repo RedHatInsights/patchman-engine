@@ -77,9 +77,10 @@ func checkValueCount(operator string, nValues int) bool {
 }
 
 // Convert a single filter to where clauses
+// nolint funlen
 func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (string, []any, error) {
 	var err error
-	transformedOperator, transformedValues := t.transformParams(fieldName)
+	transformedOperator, transformedValues, hasNull := t.transformParams(fieldName)
 	var values = make([]any, len(transformedValues))
 	for i, v := range transformedValues {
 		fieldInfo, found := attributes[fieldName]
@@ -115,8 +116,16 @@ func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (str
 	case OpBetween:
 		return fmt.Sprintf("%s BETWEEN ? AND ? ", attributes[fieldName].DataQuery), values, nil
 	case OpIn:
+		if hasNull {
+			return fmt.Sprintf("(%s IN ? OR %s IS NULL) ",
+				attributes[fieldName].DataQuery, attributes[fieldName].DataQuery), []any{values}, nil
+		}
 		return fmt.Sprintf("%s IN (?) ", attributes[fieldName].DataQuery), []any{values}, nil
 	case OpNotIn:
+		if hasNull {
+			return fmt.Sprintf("(%s NOT IN ? AND %s IS NOT NULL) ",
+				attributes[fieldName].DataQuery, attributes[fieldName].DataQuery), []any{values}, nil
+		}
 		return fmt.Sprintf("%s NOT IN (?) ", attributes[fieldName].DataQuery), []any{values}, nil
 	case OpNull:
 		return fmt.Sprintf("%s IS NULL ", attributes[fieldName].DataQuery), []any{}, nil
@@ -127,39 +136,65 @@ func (t *FilterData) ToWhere(fieldName string, attributes database.AttrMap) (str
 	}
 }
 
-func (t *FilterData) transformParams(fieldName string) (transformedOperator string, transformedValues []string) {
-	if len(t.Values) == 1 && (t.Values[0] == "null" || t.Values[0] == "notnull") {
+func (t *FilterData) transformParams(fieldName string) (
+	transformedOperator string, transformedValues []string, hasNull bool) {
+	if len(t.Values) == 1 && (t.Values[0] == OpNull || t.Values[0] == OpNotNull) {
 		// handle special cases filter=null and filter=notnull
-		return t.Values[0], []string{"0"}
+		return t.Values[0], []string{"0"}, false
 	}
-	if fieldName != "advisory_type_name" {
-		// no change
-		return t.Operator, t.Values
-	}
-
 	// special case, in advisory_type_name filter expand "other" into list of what we mean by other
-	transformedValues = make([]string, 0, len(t.Values))
-	for _, originalValue := range t.Values {
-		if originalValue == "other" {
-			transformedValues = append(transformedValues, database.OtherAdvisoryTypes...)
-		} else {
-			transformedValues = append(transformedValues, originalValue)
+	valuesToProcess := t.Values
+	operatorToUse := t.Operator
+	if fieldName == "advisory_type_name" {
+		transformedValues = make([]string, 0, len(t.Values))
+		for _, originalValue := range t.Values {
+			if originalValue == "other" {
+				transformedValues = append(transformedValues, database.OtherAdvisoryTypes...)
+			} else {
+				transformedValues = append(transformedValues, originalValue)
+			}
+		}
+		// If "other" was expanded, use the expanded list for further processing
+		if len(transformedValues) != len(t.Values) {
+			valuesToProcess = transformedValues
+			// Convert operator if needed
+			switch t.Operator {
+			case OpEq:
+				operatorToUse = OpIn
+			case OpNeq:
+				operatorToUse = OpNotIn
+			default:
+				operatorToUse = t.Operator
+			}
 		}
 	}
 
-	if len(transformedValues) == len(t.Values) {
-		return t.Operator, t.Values
+	if fieldName == "severity" && (t.Operator == OpIn || t.Operator == OpNotIn) {
+		valuesToProcess, hasNull = separateNullFromValues(valuesToProcess)
+	}
+	return operatorToUse, valuesToProcess, hasNull
+}
+
+func separateNullFromValues(values []string) (regularValues []string, hasNull bool) {
+	hasNullValue := false
+
+	for _, v := range values {
+		if v == "null" {
+			hasNullValue = true
+		} else {
+			regularValues = append(regularValues, v)
+		}
 	}
 
-	switch t.Operator {
-	case OpEq:
-		transformedOperator = OpIn
-	case OpNeq:
-		transformedOperator = OpNotIn
-	default:
-		transformedOperator = t.Operator
+	if hasNullValue && len(regularValues) == 0 {
+		return []string{"0"}, false
 	}
-	return transformedOperator, transformedValues
+
+	// null mixed with values e.g. in:2,null
+	if hasNullValue && len(regularValues) > 0 {
+		return regularValues, true
+	}
+	return regularValues, false
 }
 
 func (t Filters) ToQueryParams() string {
