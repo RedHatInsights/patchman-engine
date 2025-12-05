@@ -43,10 +43,24 @@ var AdvisoryDetailGauge = prometheus.NewGauge(prometheus.GaugeOpts{
 	Name:      "advisory_detail_cache_size",
 })
 
+var AdvisoryAccountDataCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Help:      "How many requests hit/miss advisory_account_data",
+	Namespace: "patchman_engine",
+	Subsystem: "manager",
+	Name:      "advisory_account_data_cache",
+}, []string{"type"})
+
+var PackageAccountDataCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Help:      "How many requests hit/miss package_account_data",
+	Namespace: "patchman_engine",
+	Subsystem: "manager",
+	Name:      "package_account_data_cache",
+}, []string{"type"})
+
 // Create and configure Prometheus middleware to expose metrics
 func Prometheus() *ginprometheus.Prometheus {
 	prometheus.MustRegister(serviceErrorCnt, requestDurations, callerSourceCnt,
-		AdvisoryDetailCnt, AdvisoryDetailGauge)
+		AdvisoryDetailCnt, AdvisoryDetailGauge, AdvisoryAccountDataCnt, PackageAccountDataCnt)
 
 	p := ginprometheus.NewPrometheus("patchman_engine")
 	p.MetricsPath = utils.CoreCfg.MetricsPath

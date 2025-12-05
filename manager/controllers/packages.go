@@ -57,12 +57,14 @@ var queryItemSelect = database.MustGetSelect(&queryItem{})
 func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, groups map[string]string,
 	useCache bool) *gorm.DB {
 	if useCache {
+		middlewares.PackageAccountDataCnt.WithLabelValues("hit").Inc()
 		q := db.Table("package_account_data res").
 			Select(PackagesSelect).
 			Joins("JOIN package_name pn ON res.package_name_id = pn.id").
 			Where("rh_account_id = ?", acc)
 		return q
 	}
+	middlewares.PackageAccountDataCnt.WithLabelValues("miss").Inc()
 	systemsWithPkgsInstalledQ := database.Systems(db, acc, groups).
 		Select("sp.id").
 		Where("sp.stale = false AND sp.packages_installed > 0")
