@@ -92,8 +92,10 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	}
 
 	if config.DisableCachedCounts || HasInventoryFilter(filters) || len(groups) != 0 {
+		middlewares.AdvisoryAccountDataCnt.WithLabelValues("miss").Inc()
 		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
 	} else {
+		middlewares.AdvisoryAccountDataCnt.WithLabelValues("hit").Inc()
 		query = buildQueryAdvisories(db, account)
 	}
 
