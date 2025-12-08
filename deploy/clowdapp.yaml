@@ -695,12 +695,12 @@ parameters:
 - {name: CPU_REQUEST_LISTENER, value: 250m}
 - {name: MEM_REQUEST_LISTENER, value: 256Mi}
 - {name: ENABLE_PROFILER_LISTENER, value: 'false'}
-- {name: GOMEMLIMIT_LISTENER, value: '172MiB'} # set to 90% of the default memory limit 192Mi (don't forget `B`)
+- {name: GOMEMLIMIT_LISTENER, value: '691MiB'} # set to 90% of the default memory limit (don't forget `B`)
 - {name: LISTENER_CONFIG, value: ''}
 
 # Evaluator
 - {name: GOGC, value: '100'}
-- {name: GOMEMLIMIT_EVALUATOR, value: '922MiB'} # set to 90% of the default memory limit 1024Mi (don't forget `B`)
+- {name: GOMEMLIMIT_EVALUATOR, value: '2700MiB'} # set to 90% of the default memory limit (don't forget `B`)
 - {name: CONSOLEDOT_HOSTNAME, value: localhost}
 
 # Evaluator - upload
