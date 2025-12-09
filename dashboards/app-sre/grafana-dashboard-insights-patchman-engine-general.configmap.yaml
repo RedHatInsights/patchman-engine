@@ -4328,7 +4328,7 @@ data:
                             "uid": "$datasource"
                         },
                         "exemplar": true,
-                        "expr": "sum(rate(patchman_engine_evaluator_two_evaluations_interval_hours_sum{job=~\"patchman.*-evaluator-$evaluator\"}[$interval]))",
+                        "expr": "avg(rate(patchman_engine_evaluator_two_evaluations_interval_hours_sum{job=~\"patchman.*-evaluator-$evaluator\"}[$interval]))",
                         "format": "time_series",
                         "groupBy": [
                             {
