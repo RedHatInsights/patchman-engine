@@ -278,6 +278,9 @@ func tryGetYumUpdates(system *models.SystemPlatform) (*vmaas.UpdatesV3Response, 
 
 func evaluateWithVmaas(updatesData *vmaas.UpdatesV3Response,
 	system *models.SystemPlatform, event *mqueue.PlatformEvent) (*vmaas.UpdatesV3Response, error) {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("evaluate-with-vmaas-full"))
+
 	err := evaluateAndStore(system, updatesData, event)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to evaluate and store results")
@@ -286,6 +289,9 @@ func evaluateWithVmaas(updatesData *vmaas.UpdatesV3Response,
 }
 
 func getUpdatesData(ctx context.Context, system *models.SystemPlatform) (*vmaas.UpdatesV3Response, error) {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("get-updates-data"))
+
 	var yumUpdates *vmaas.UpdatesV3Response
 	var yumErr error
 	if enableYumUpdatesEval {
@@ -325,6 +331,9 @@ func getUpdatesData(ctx context.Context, system *models.SystemPlatform) (*vmaas.
 }
 
 func getVmaasUpdates(ctx context.Context, system *models.SystemPlatform) (*vmaas.UpdatesV3Response, error) {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("vmaas-updates-prepare"))
+
 	var vmaasDataCopy vmaas.UpdatesV3Response
 	// first check if we have data in cache
 	vmaasData, ok := memoryVmaasCache.Get(system.JSONChecksum)
@@ -496,6 +505,9 @@ func analyzeRepos(system *models.SystemPlatform) (thirdParty bool, err error) {
 		utils.LogInfo("repo analysis disabled, skipping")
 		return false, nil
 	}
+
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("repo-analysis"))
 
 	// if system has associated at least one third party repo
 	// it's marked as third party system
