@@ -296,6 +296,11 @@ func TestFixEpelRepos(t *testing.T) {
 	var sys = inventory.SystemProfile{}
 	repos = fixEpelRepos(&sys, repos)
 	assert.Equal(t, "epel", repos[0])
+
+	reposContent := []string{"EPEL_9_Everything_x86_64"}
+	var sysContent = inventory.SystemProfile{OperatingSystem: inventory.OperatingSystem{Major: 9}}
+	reposContent = fixEpelRepos(&sysContent, reposContent)
+	assert.Equal(t, "epel-9", reposContent[0])
 }
 
 func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
