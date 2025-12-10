@@ -512,6 +512,8 @@ func fixEpelRepos(sys *inventory.SystemProfile, repos []string) []string {
 	for i, r := range repos {
 		if r == "epel" {
 			repos[i] = fmt.Sprintf("%s-%d", r, sys.OperatingSystem.Major)
+		} else if strings.HasPrefix(r, fmt.Sprintf("EPEL_%d", sys.OperatingSystem.Major)) {
+			repos[i] = fmt.Sprintf("epel-%d", sys.OperatingSystem.Major)
 		}
 	}
 	return repos
