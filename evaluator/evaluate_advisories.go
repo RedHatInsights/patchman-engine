@@ -41,6 +41,9 @@ func lazySaveAndLoadAdvisories(system *models.SystemPlatform, vmaasData *vmaas.U
 		return nil, nil
 	}
 
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("advisories-lazy-save-and-load"))
+
 	err := lazySaveAdvisories(vmaasData, system.InventoryID)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to store unknown advisories in DB")

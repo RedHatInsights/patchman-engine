@@ -8,6 +8,7 @@ import (
 	"app/base/vmaas"
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -70,6 +71,9 @@ func getReportedPackageUpdates(vmaasData *vmaas.UpdatesV3Response) map[string]bo
 }
 
 func publishRemediationsState(system *models.SystemPlatform, response *vmaas.UpdatesV3Response) error {
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("remediations-publish"))
+
 	if remediationsPublisher == nil {
 		return nil
 	}
