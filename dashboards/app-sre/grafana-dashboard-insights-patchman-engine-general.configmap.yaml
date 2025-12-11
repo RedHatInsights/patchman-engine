@@ -6227,7 +6227,7 @@ data:
                     "tooltip": {
                         "hideZeros": false,
                         "mode": "multi",
-                        "sort": "none"
+                        "sort": "desc"
                     }
                 },
                 "pluginVersion": "11.6.3",
@@ -6246,7 +6246,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_advisories_.*\"}) by (pod))",
+                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"public.system_advisories_.*\"}) by (pod))",
                         "format": "time_series",
                         "interval": "",
                         "intervalFactor": 1,
@@ -6258,7 +6258,7 @@ data:
                             "uid": "$datasource"
                         },
                         "editorMode": "code",
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_package2_.*\"}) by (pod))",
+                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"public.system_package2_.*\"}) by (pod))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "system_package_sum",
@@ -6269,12 +6269,24 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"system_platform_.*\"}) by (pod))",
+                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"public.system_platform_.*\"}) by (pod))",
                         "format": "time_series",
                         "interval": "",
                         "intervalFactor": 1,
                         "legendFormat": "system_platform_sum",
                         "refId": "D"
+                    },
+                    {
+                        "datasource": {
+                            "uid": "$datasource"
+                        },
+                        "expr": "avg(sum(patchman_engine_vmaas_sync_database_size_bytes{table=~\"public.template_.*\"}) by (pod))",
+                        "format": "time_series",
+                        "hide": false,
+                        "interval": "",
+                        "intervalFactor": 1,
+                        "legendFormat": "template_sum",
+                        "refId": "E"
                     }
                 ],
                 "title": "Database size",
