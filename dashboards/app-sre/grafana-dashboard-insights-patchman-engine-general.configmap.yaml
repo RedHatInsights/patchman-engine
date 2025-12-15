@@ -2708,6 +2708,145 @@ data:
                 "type": "timeseries"
             },
             {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "$datasource"
+                },
+                "description": "",
+                "fieldConfig": {
+                    "defaults": {
+                        "color": {
+                            "mode": "palette-classic"
+                        },
+                        "custom": {
+                            "axisBorderShow": false,
+                            "axisCenteredZero": false,
+                            "axisColorMode": "text",
+                            "axisLabel": "Items",
+                            "axisPlacement": "auto",
+                            "barAlignment": 0,
+                            "barWidthFactor": 0.6,
+                            "drawStyle": "line",
+                            "fillOpacity": 0,
+                            "gradientMode": "none",
+                            "hideFrom": {
+                                "legend": false,
+                                "tooltip": false,
+                                "viz": false
+                            },
+                            "insertNulls": false,
+                            "lineInterpolation": "linear",
+                            "lineWidth": 1,
+                            "pointSize": 5,
+                            "scaleDistribution": {
+                                "type": "linear"
+                            },
+                            "showPoints": "never",
+                            "spanNulls": false,
+                            "stacking": {
+                                "group": "A",
+                                "mode": "none"
+                            },
+                            "thresholdsStyle": {
+                                "mode": "off"
+                            }
+                        },
+                        "links": [
+
+                        ],
+                        "mappings": [
+
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green"
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 80
+                                }
+                            ]
+                        },
+                        "unit": "none"
+                    },
+                    "overrides": [
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "hit ratio"
+                            },
+                            "properties": [
+                                {
+                                    "id": "custom.axisLabel",
+                                    "value": "Hit ratio"
+                                },
+                                {
+                                    "id": "unit",
+                                    "value": "percentunit"
+                                },
+                                {
+                                    "id": "custom.axisPlacement",
+                                    "value": "right"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "gridPos": {
+                    "h": 6,
+                    "w": 12,
+                    "x": 12,
+                    "y": 34
+                },
+                "id": 96,
+                "options": {
+                    "legend": {
+                        "calcs": [
+
+                        ],
+                        "displayMode": "list",
+                        "placement": "bottom",
+                        "showLegend": true
+                    },
+                    "tooltip": {
+                        "hideZeros": false,
+                        "mode": "multi",
+                        "sort": "none"
+                    }
+                },
+                "pluginVersion": "11.6.3",
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "editorMode": "code",
+                        "expr": "sum(patchman_engine_manager_package_account_data_cache)",
+                        "hide": false,
+                        "legendFormat": "items",
+                        "range": true,
+                        "refId": "A"
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "editorMode": "code",
+                        "expr": "sum(patchman_engine_manager_package_account_data_cache{type=\"hit\"})/sum(patchman_engine_manager_package_account_data_cache)",
+                        "hide": false,
+                        "legendFormat": "hit ratio",
+                        "range": true,
+                        "refId": "B"
+                    }
+                ],
+                "title": "Package account data usage",
+                "type": "timeseries"
+            },
+            {
                 "collapsed": false,
                 "gridPos": {
                     "h": 1,
