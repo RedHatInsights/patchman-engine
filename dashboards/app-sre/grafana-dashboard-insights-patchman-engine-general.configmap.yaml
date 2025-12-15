@@ -2583,7 +2583,7 @@ data:
                             "axisBorderShow": false,
                             "axisCenteredZero": false,
                             "axisColorMode": "text",
-                            "axisLabel": "items",
+                            "axisLabel": "Items",
                             "axisPlacement": "auto",
                             "barAlignment": 0,
                             "barWidthFactor": 0.6,
@@ -2618,7 +2618,6 @@ data:
                         "mappings": [
 
                         ],
-                        "noValue": "0%",
                         "thresholds": {
                             "mode": "absolute",
                             "steps": [
@@ -2634,7 +2633,26 @@ data:
                         "unit": "none"
                     },
                     "overrides": [
-
+                        {
+                            "matcher": {
+                                "id": "byName",
+                                "options": "hit ratio"
+                            },
+                            "properties": [
+                                {
+                                    "id": "custom.axisLabel",
+                                    "value": "Hit ratio"
+                                },
+                                {
+                                    "id": "unit",
+                                    "value": "percentunit"
+                                },
+                                {
+                                    "id": "custom.axisPlacement",
+                                    "value": "right"
+                                }
+                            ]
+                        }
                     ]
                 },
                 "gridPos": {
@@ -2651,7 +2669,7 @@ data:
                         ],
                         "displayMode": "list",
                         "placement": "bottom",
-                        "showLegend": false
+                        "showLegend": true
                     },
                     "tooltip": {
                         "hideZeros": false,
@@ -2667,14 +2685,26 @@ data:
                             "uid": "$datasource"
                         },
                         "editorMode": "code",
-                        "expr": "sum(patchman_engine_manager_advisory_detail_cache_size)",
+                        "expr": "sum(patchman_engine_manager_advisory_account_data_cache)",
                         "hide": false,
-                        "legendFormat": "__auto",
+                        "legendFormat": "items",
                         "range": true,
                         "refId": "A"
+                    },
+                    {
+                        "datasource": {
+                            "type": "prometheus",
+                            "uid": "$datasource"
+                        },
+                        "editorMode": "code",
+                        "expr": "sum(patchman_engine_manager_advisory_account_data_cache{type=\"hit\"})/sum(patchman_engine_manager_advisory_account_data_cache)",
+                        "hide": false,
+                        "legendFormat": "hit ratio",
+                        "range": true,
+                        "refId": "B"
                     }
                 ],
-                "title": "Advisory detail cache size",
+                "title": "Advisory account data usage",
                 "type": "timeseries"
             },
             {
