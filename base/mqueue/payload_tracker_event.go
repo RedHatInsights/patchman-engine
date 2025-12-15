@@ -3,11 +3,11 @@ package mqueue
 import (
 	"app/base/types"
 	"app/base/utils"
+	"context"
 	"time"
 
 	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
 )
 
 type PayloadTrackerEvent struct {

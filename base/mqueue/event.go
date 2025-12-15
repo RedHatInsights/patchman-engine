@@ -2,11 +2,11 @@ package mqueue
 
 import (
 	"app/base/utils"
+	"context"
 	"time"
 
 	"github.com/bytedance/sonic"
 	"github.com/lestrrat-go/backoff/v2"
-	"golang.org/x/net/context"
 )
 
 var BatchSize = utils.PodConfig.GetInt("msg_batch_size", 4000)
