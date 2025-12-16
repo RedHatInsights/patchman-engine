@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (139, false);
+VALUES (140, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -416,15 +416,14 @@ DECLARE
     marked integer;
 BEGIN
     WITH ids AS (
-        SELECT rh_account_id, id
+        SELECT rh_account_id, id, stale_warning_timestamp < now() as expired
         FROM system_platform
-        WHERE stale_warning_timestamp < now()
-          AND stale = false
+        WHERE stale != (stale_warning_timestamp < now())
         ORDER BY rh_account_id, id FOR UPDATE OF system_platform
         LIMIT mark_limit
     )
     UPDATE system_platform sp
-    SET stale = true
+    SET stale = ids.expired
     FROM ids
     WHERE sp.rh_account_id = ids.rh_account_id
       AND sp.id = ids.id;
