@@ -182,6 +182,25 @@ CREATE INDEX IF NOT EXISTS system_inventory_tags_index ON system_inventory USING
 CREATE INDEX IF NOT EXISTS system_inventory_stale_timestamp_index ON system_inventory (stale_timestamp);
 CREATE INDEX IF NOT EXISTS system_inventory_workspaces_index ON system_inventory USING GIN (workspaces);
 
+-- UPDATE FKEYS
+ALTER TABLE IF EXISTS system_repo
+DROP CONSTRAINT system_platform_id,
+ADD CONSTRAINT system_inventory_id
+    FOREIGN KEY (rh_account_id, system_id)
+    REFERENCES system_inventory (rh_account_id, id);
+
+ALTER TABLE IF EXISTS system_advisories
+DROP CONSTRAINT system_platform_id,
+ADD CONSTRAINT system_inventory_id
+    FOREIGN KEY (rh_account_id, system_id)
+    REFERENCES system_inventory (rh_account_id, id);
+
+ALTER TABLE IF EXISTS system_package2
+DROP CONSTRAINT system_package2_rh_account_id_system_id_fkey,
+ADD CONSTRAINT system_inventory_id
+    FOREIGN KEY (rh_account_id, system_id)
+    REFERENCES system_inventory (rh_account_id, id);
+
 
 
 -- system_patch
