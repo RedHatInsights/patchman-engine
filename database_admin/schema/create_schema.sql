@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (141, false);
+VALUES (142, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -127,12 +127,12 @@ BEGIN
                count(sa.*) filter (where sa.status_id = 0) as systems_installable,
                count(sa.*) as systems_applicable
           FROM system_advisories sa
-          JOIN system_platform sp
-            ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id
-         WHERE sp.last_evaluation IS NOT NULL
-           AND sp.stale = FALSE
+          JOIN system_inventory si
+            ON sa.rh_account_id = si.rh_account_id AND sa.system_id = si.id
+         WHERE si.last_evaluation IS NOT NULL
+           AND si.stale = FALSE
            AND (sa.advisory_id = ANY (advisory_ids_in) OR advisory_ids_in IS NULL)
-           AND (sp.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
+           AND (si.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
          GROUP BY sa.advisory_id, sa.rh_account_id
     ),
         upserted AS (
@@ -171,7 +171,7 @@ DECLARE
     COUNT INTEGER;
 BEGIN
     WITH system_advisories_count AS (
-        SELECT asp.rh_account_id, asp.id,
+        SELECT si.rh_account_id, si.id,
                COUNT(advisory_id) FILTER (WHERE sa.status_id = 0) as installable_total,
                COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 1 AND sa.status_id = 0) AS installable_enhancement,
                COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 2 AND sa.status_id = 0) AS installable_bugfix,
@@ -180,17 +180,17 @@ BEGIN
                COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 1) AS applicable_enhancement,
                COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 2) AS applicable_bugfix,
                COUNT(advisory_id) FILTER (WHERE am.advisory_type_id = 3) as applicable_security
-          FROM system_platform asp  -- this table ensures even systems without any system_advisories are in results
+          FROM system_inventory si  -- this table ensures even systems without any system_advisories are in results
           LEFT JOIN system_advisories sa
-            ON asp.rh_account_id = sa.rh_account_id AND asp.id = sa.system_id
+            ON si.rh_account_id = sa.rh_account_id AND si.id = sa.system_id
           LEFT JOIN advisory_metadata am
             ON sa.advisory_id = am.id
-         WHERE (asp.id = system_id_in OR system_id_in IS NULL)
-           AND (asp.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
-         GROUP BY asp.rh_account_id, asp.id
-         ORDER BY asp.rh_account_id, asp.id
+         WHERE (si.id = system_id_in OR system_id_in IS NULL)
+           AND (si.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
+         GROUP BY si.rh_account_id, si.id
+         ORDER BY si.rh_account_id, si.id
     )
-        UPDATE system_platform sp
+        UPDATE system_patch sp
            SET installable_advisory_count_cache = sc.installable_total,
                installable_advisory_enh_count_cache = sc.installable_enhancement,
                installable_advisory_bug_count_cache = sc.installable_bugfix,
@@ -200,8 +200,8 @@ BEGIN
                applicable_advisory_bug_count_cache = sc.applicable_bugfix,
                applicable_advisory_sec_count_cache = sc.applicable_security
           FROM system_advisories_count sc
-         WHERE sp.rh_account_id = sc.rh_account_id AND sp.id = sc.id
-           AND (sp.id = system_id_in OR system_id_in IS NULL)
+         WHERE sp.rh_account_id = sc.rh_account_id AND sp.system_id = sc.id
+           AND (sp.system_id = system_id_in OR system_id_in IS NULL)
            AND (sp.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL);
 
     GET DIAGNOSTICS COUNT = ROW_COUNT;
@@ -284,7 +284,7 @@ DECLARE
     system_id int;
 BEGIN
 
-    SELECT id FROM system_platform WHERE inventory_id = inventory_id_in INTO system_id;
+    SELECT id FROM system_inventory WHERE inventory_id = inventory_id_in INTO system_id;
 
     PERFORM refresh_system_caches(system_id, NULL);
 END;
@@ -305,10 +305,10 @@ DECLARE
 BEGIN
     -- opt out to refresh cache and then delete
     SELECT id, rh_account_id
-    FROM system_platform
+    FROM system_inventory
     WHERE inventory_id = inventory_id_in
     LIMIT 1
-        FOR UPDATE OF system_platform
+        FOR UPDATE OF system_inventory
     INTO v_system_id, v_account_id;
 
     IF v_system_id IS NULL OR v_account_id IS NULL THEN
@@ -316,7 +316,7 @@ BEGIN
         RETURN;
     END IF;
 
-    UPDATE system_platform
+    UPDATE system_inventory
     SET stale = true
     WHERE rh_account_id = v_account_id
       AND id = v_system_id;
@@ -336,7 +336,12 @@ BEGIN
     WHERE rh_account_id = v_account_id
       AND system_id = v_system_id;
 
-    RETURN QUERY DELETE FROM system_platform
+    DELETE
+    FROM system_patch
+    WHERE rh_account_id = v_account_id
+      AND system_id = v_system_id;
+
+    RETURN QUERY DELETE FROM system_inventory
         WHERE rh_account_id = v_account_id AND
               id = v_system_id
         RETURNING inventory_id;
@@ -353,11 +358,11 @@ BEGIN
 
     WITH systems as (
         SELECT rh_account_id, id
-        FROM system_platform
+        FROM system_inventory
         WHERE inventory_id = ANY (inventory_ids)
-        ORDER BY rh_account_id, id FOR UPDATE OF system_platform),
+        ORDER BY rh_account_id, id FOR UPDATE OF system_inventory),
          marked as (
-             UPDATE system_platform sp
+             UPDATE system_inventory sp
                  SET stale = true
                  WHERE (rh_account_id, id) in (select rh_account_id, id from systems)
          ),
@@ -376,9 +381,14 @@ BEGIN
                  FROM system_package2
                      WHERE (rh_account_id, system_id) in (select rh_account_id, id from systems)
          ),
+         patch_systems as (
+             DELETE
+                 FROM system_patch
+                     WHERE (rh_account_id, system_id) in (select rh_account_id, id from systems)
+         ),
          deleted as (
              DELETE
-                 FROM system_platform
+                 FROM system_inventory
                      WHERE (rh_account_id, id) in (select rh_account_id, id from systems)
                      RETURNING id
          )
@@ -399,7 +409,7 @@ DECLARE
 BEGIN
     ids := ARRAY(
             SELECT inventory_id
-            FROM system_platform
+            FROM system_inventory
             WHERE culled_timestamp < now()
             ORDER BY id
             LIMIT delete_limit
@@ -417,16 +427,16 @@ DECLARE
 BEGIN
     WITH ids AS (
         SELECT rh_account_id, id, stale_warning_timestamp < now() as expired
-        FROM system_platform
+        FROM system_inventory
         WHERE stale != (stale_warning_timestamp < now())
-        ORDER BY rh_account_id, id FOR UPDATE OF system_platform
+        ORDER BY rh_account_id, id FOR UPDATE OF system_inventory
         LIMIT mark_limit
     )
-    UPDATE system_platform sp
+    UPDATE system_inventory si
     SET stale = ids.expired
     FROM ids
-    WHERE sp.rh_account_id = ids.rh_account_id
-      AND sp.id = ids.id;
+    WHERE si.rh_account_id = ids.rh_account_id
+      AND si.id = ids.id;
     GET DIAGNOSTICS marked = ROW_COUNT;
     RETURN marked;
 END;
@@ -632,89 +642,6 @@ SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'template', 'lis
 SELECT grant_table_partitions('SELECT', 'template', 'evaluator');
 SELECT grant_table_partitions('SELECT', 'template', 'vmaas_sync');
 
--- system_platform
-CREATE TABLE IF NOT EXISTS system_platform
-(
-    id                                   BIGINT GENERATED BY DEFAULT AS IDENTITY,
-    inventory_id                         UUID                     NOT NULL,
-    rh_account_id                        INT                      NOT NULL,
-    vmaas_json                           TEXT                     CHECK (NOT empty(vmaas_json)),
-    json_checksum                        TEXT                     CHECK (NOT empty(json_checksum)),
-    last_updated                         TIMESTAMP WITH TIME ZONE NOT NULL,
-    unchanged_since                      TIMESTAMP WITH TIME ZONE NOT NULL,
-    last_evaluation                      TIMESTAMP WITH TIME ZONE,
-    installable_advisory_count_cache     INT                      NOT NULL DEFAULT 0,
-    installable_advisory_enh_count_cache INT                      NOT NULL DEFAULT 0,
-    installable_advisory_bug_count_cache INT                      NOT NULL DEFAULT 0,
-    installable_advisory_sec_count_cache INT                      NOT NULL DEFAULT 0,
-    last_upload              TIMESTAMP WITH TIME ZONE,
-    stale_timestamp          TIMESTAMP WITH TIME ZONE,
-    stale_warning_timestamp  TIMESTAMP WITH TIME ZONE,
-    culled_timestamp         TIMESTAMP WITH TIME ZONE,
-    stale                    BOOLEAN                  NOT NULL DEFAULT false,
-    display_name             TEXT                     NOT NULL CHECK (NOT empty(display_name)),
-    packages_installed       INT                      NOT NULL DEFAULT 0,
-    packages_installable     INT                      NOT NULL DEFAULT 0,
-    reporter_id              INT,
-    third_party              BOOLEAN                  NOT NULL DEFAULT false,
-    yum_updates              JSONB,
-    applicable_advisory_count_cache      INT                      NOT NULL DEFAULT 0,
-    applicable_advisory_enh_count_cache  INT                      NOT NULL DEFAULT 0,
-    applicable_advisory_bug_count_cache  INT                      NOT NULL DEFAULT 0,
-    applicable_advisory_sec_count_cache  INT                      NOT NULL DEFAULT 0,
-    satellite_managed                    BOOLEAN                  NOT NULL DEFAULT FALSE,
-    built_pkgcache                       BOOLEAN                  NOT NULL DEFAULT FALSE,
-    packages_applicable      INT                      NOT NULL DEFAULT 0,
-    template_id              BIGINT,
-    yum_checksum             TEXT                     CHECK (NOT empty(yum_checksum)),
-    arch                     TEXT                     CHECK (NOT empty(arch)),
-    bootc                    BOOLEAN                  NOT NULL DEFAULT false,
-    PRIMARY KEY (rh_account_id, id),
-    UNIQUE (rh_account_id, inventory_id),
-    CONSTRAINT reporter_id FOREIGN KEY (reporter_id) REFERENCES reporter (id),
-    CONSTRAINT template_id FOREIGN KEY (rh_account_id, template_id) REFERENCES template (rh_account_id, id)
-) PARTITION BY HASH (rh_account_id);
-
-SELECT create_table_partitions('system_platform', 16,
-                               $$WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
-                                 TABLESPACE pg_default$$);
-
-SELECT create_table_partition_triggers('system_platform_set_last_updated',
-                                       $$BEFORE INSERT OR UPDATE$$,
-                                       'system_platform',
-                                       $$FOR EACH ROW EXECUTE PROCEDURE set_last_updated()$$);
-
-SELECT create_table_partition_triggers('system_platform_check_unchanged',
-                                       $$BEFORE INSERT OR UPDATE$$,
-                                       'system_platform',
-                                       $$FOR EACH ROW EXECUTE PROCEDURE check_unchanged()$$);
-
-SELECT create_table_partition_triggers('system_platform_on_update',
-                                       $$AFTER UPDATE$$,
-                                       'system_platform',
-                                       $$FOR EACH ROW EXECUTE PROCEDURE on_system_update()$$);
-
-CREATE INDEX IF NOT EXISTS system_platform_inventory_id_idx
-    ON system_platform (inventory_id);
-
-GRANT SELECT, INSERT, UPDATE, DELETE ON system_platform TO listener;
--- evaluator needs to update last_evaluation
-GRANT UPDATE ON system_platform TO evaluator;
--- manager needs to update cache and delete systems
-GRANT UPDATE (installable_advisory_count_cache,
-              installable_advisory_enh_count_cache,
-              installable_advisory_bug_count_cache,
-              installable_advisory_sec_count_cache), DELETE ON system_platform TO manager;
-GRANT UPDATE (applicable_advisory_count_cache,
-              applicable_advisory_enh_count_cache,
-              applicable_advisory_bug_count_cache,
-              applicable_advisory_sec_count_cache), DELETE ON system_platform TO manager;
-              
-GRANT SELECT, UPDATE, DELETE ON system_platform TO manager;
-
--- VMaaS sync needs to be able to perform system culling tasks
-GRANT SELECT, UPDATE, DELETE ON system_platform to vmaas_sync;
-
 CREATE TABLE IF NOT EXISTS deleted_system
 (
     inventory_id TEXT                     NOT NULL,
@@ -824,7 +751,9 @@ CREATE TABLE IF NOT EXISTS system_advisories
     PRIMARY KEY (rh_account_id, system_id, advisory_id),
     CONSTRAINT advisory_metadata_id
         FOREIGN KEY (advisory_id)
-            REFERENCES advisory_metadata (id)
+            REFERENCES advisory_metadata (id),
+    FOREIGN KEY (rh_account_id, system_id)
+        REFERENCES system_inventory (rh_account_id, id)
 ) PARTITION BY HASH (rh_account_id);
 
 SELECT create_table_partitions('system_advisories', 32,
@@ -833,8 +762,6 @@ SELECT create_table_partitions('system_advisories', 32,
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO evaluator;
 -- manager needs to be able to update things like 'status' on a sysid/advisory combination, also needs to delete
 GRANT UPDATE, DELETE ON system_advisories TO manager;
--- manager needs to be able to update opt_out column
-GRANT UPDATE (stale) ON system_platform TO manager;
 -- listener deletes systems, TODO: temporary added evaluator permissions to listener
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO listener;
 -- vmaas_sync needs to delete culled systems, which cascades to system_advisories
@@ -893,9 +820,8 @@ CREATE TABLE IF NOT EXISTS system_repo
     repo_id       BIGINT NOT NULL,
     rh_account_id INT NOT NULL,
     UNIQUE (rh_account_id, system_id, repo_id),
-    CONSTRAINT system_platform_id
-        FOREIGN KEY (rh_account_id, system_id)
-            REFERENCES system_platform (rh_account_id, id),
+    FOREIGN KEY (rh_account_id, system_id)
+        REFERENCES system_inventory (rh_account_id, id),
     CONSTRAINT repo_id
         FOREIGN KEY (repo_id)
             REFERENCES repo (id)
@@ -911,16 +837,9 @@ GRANT SELECT, DELETE on system_repo to vmaas_sync;
 -- the following constraints are enabled here not directly in the table definitions
 -- to make new schema equal to the migrated schema
 ALTER TABLE system_advisories
-    ADD CONSTRAINT system_platform_id
-        FOREIGN KEY (rh_account_id, system_id)
-            REFERENCES system_platform (rh_account_id, id),
     ADD CONSTRAINT status_id
         FOREIGN KEY (status_id)
             REFERENCES status (id);
-ALTER TABLE system_platform
-    ADD CONSTRAINT rh_account_id
-        FOREIGN KEY (rh_account_id)
-            REFERENCES rh_account (id);
 
 CREATE TABLE IF NOT EXISTS package_name
 (
@@ -971,7 +890,7 @@ CREATE TABLE IF NOT EXISTS system_package2
     applicable_id  BIGINT REFERENCES package (id),
 
     PRIMARY KEY (rh_account_id, system_id, package_id),
-    FOREIGN KEY (rh_account_id, system_id) REFERENCES system_platform (rh_account_id, id)
+    FOREIGN KEY (rh_account_id, system_id) REFERENCES system_inventory (rh_account_id, id)
 ) PARTITION BY HASH (rh_account_id);
 
 CREATE INDEX IF NOT EXISTS system_package2_account_pkg_name_idx
@@ -1022,6 +941,211 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON timestamp_kv TO vmaas_sync;
 -- vmaas_sync needs to delete from this tables to sync CVEs correctly
 GRANT DELETE ON system_advisories TO vmaas_sync;
 GRANT DELETE ON advisory_account_data TO vmaas_sync;
+
+-- system_inventory
+CREATE TABLE IF NOT EXISTS system_inventory
+(
+    id                                  BIGINT GENERATED BY DEFAULT AS IDENTITY,
+    inventory_id                        UUID        NOT NULL,
+    rh_account_id                       INT         NOT NULL REFERENCES rh_account (id),
+    vmaas_json                          TEXT        CHECK (NOT empty(vmaas_json)),
+    json_checksum                       TEXT        CHECK (NOT empty(json_checksum)),
+    last_updated                        TIMESTAMPTZ NOT NULL,
+    unchanged_since                     TIMESTAMPTZ NOT NULL,
+    last_upload                         TIMESTAMPTZ,
+    stale                               BOOLEAN     NOT NULL DEFAULT false,
+    display_name                        TEXT        NOT NULL CHECK (NOT empty(display_name)),
+    reporter_id                         INT         REFERENCES reporter (id),
+    yum_updates                         JSONB,
+    yum_checksum                        TEXT        CHECK (NOT empty(yum_checksum)),
+    satellite_managed                   BOOLEAN     NOT NULL DEFAULT false,
+    built_pkgcache                      BOOLEAN     NOT NULL DEFAULT false,
+    template_id                         BIGINT,
+    arch                                TEXT        CHECK (NOT empty(arch)),
+    bootc                               BOOLEAN     NOT NULL DEFAULT false,
+    tags                                JSONB       NOT NULL,
+    created                             TIMESTAMPTZ NOT NULL,
+    insights_id                         UUID,
+    workspaces                          TEXT ARRAY, -- group IDs from system_platform.groups
+    stale_timestamp                     TIMESTAMPTZ NOT NULL,
+    stale_warning_timestamp             TIMESTAMPTZ NOT NULL,
+    culled_timestamp                    TIMESTAMPTZ NOT NULL,
+    os_name                             TEXT,
+    os_major                            SMALLINT,
+    os_minor                            SMALLINT,
+    rhsm_version                        TEXT,
+    owner_id                            UUID,
+    sap_workload                        BOOLEAN     NOT NULL DEFAULT false,
+    sap_workload_sids                   TEXT ARRAY,
+    ansible_workload                    BOOLEAN     NOT NULL DEFAULT false,
+    ansible_workload_controller_version TEXT,
+    mssql_workload                      BOOLEAN     NOT NULL DEFAULT false,
+    mssql_workload_version              TEXT,
+    PRIMARY KEY (rh_account_id, id),
+    FOREIGN KEY (rh_account_id, template_id) REFERENCES template (rh_account_id, id),
+    UNIQUE (rh_account_id, inventory_id)
+) PARTITION BY HASH (rh_account_id);
+
+SELECT create_table_partitions('system_inventory', 16,
+                               $$WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
+                                 TABLESPACE pg_default$$);
+
+GRANT SELECT, INSERT, UPDATE ON system_inventory TO listener;
+GRANT SELECT, UPDATE, DELETE ON system_inventory TO vmaas_sync; -- vmaas_sync performs system culling
+GRANT SELECT, UPDATE (stale) ON system_inventory TO manager; -- manager needs to be able to update opt_out column
+GRANT SELECT ON system_inventory TO evaluator;
+
+SELECT create_table_partition_triggers('system_inventory_set_last_updated',
+                                       $$BEFORE INSERT OR UPDATE$$,
+                                       'system_inventory',
+                                       $$FOR EACH ROW EXECUTE PROCEDURE set_last_updated()$$);
+
+SELECT create_table_partition_triggers('system_inventory_check_unchanged',
+                                       $$BEFORE INSERT OR UPDATE$$,
+                                       'system_inventory',
+                                       $$FOR EACH ROW EXECUTE PROCEDURE check_unchanged()$$);
+
+-- INDEXES
+CREATE INDEX IF NOT EXISTS system_inventory_inventory_id_idx ON system_inventory (inventory_id);
+CREATE INDEX IF NOT EXISTS system_inventory_tags_index ON system_inventory USING GIN (tags JSONB_PATH_OPS);
+CREATE INDEX IF NOT EXISTS system_inventory_stale_timestamp_index ON system_inventory (stale_timestamp);
+CREATE INDEX IF NOT EXISTS system_inventory_workspaces_index ON system_inventory USING GIN (workspaces);
+
+-- system_patch
+CREATE TABLE IF NOT EXISTS system_patch
+(
+    system_id                            BIGINT      NOT NULL,
+    rh_account_id                        INT         NOT NULL,
+    last_evaluation                      TIMESTAMPTZ,
+    installable_advisory_count_cache     INT         NOT NULL DEFAULT 0,
+    installable_advisory_enh_count_cache INT         NOT NULL DEFAULT 0,
+    installable_advisory_bug_count_cache INT         NOT NULL DEFAULT 0,
+    installable_advisory_sec_count_cache INT         NOT NULL DEFAULT 0,
+    packages_installed                   INT         NOT NULL DEFAULT 0,
+    packages_installable                 INT         NOT NULL DEFAULT 0,
+    packages_applicable                  INT         NOT NULL DEFAULT 0,
+    third_party                          BOOLEAN     NOT NULL DEFAULT false,
+    applicable_advisory_count_cache      INT         NOT NULL DEFAULT 0,
+    applicable_advisory_enh_count_cache  INT         NOT NULL DEFAULT 0,
+    applicable_advisory_bug_count_cache  INT         NOT NULL DEFAULT 0,
+    applicable_advisory_sec_count_cache  INT         NOT NULL DEFAULT 0,
+    PRIMARY KEY (rh_account_id, system_id),
+    FOREIGN KEY (system_id, rh_account_id) REFERENCES system_inventory (id, rh_account_id)
+) PARTITION BY HASH (rh_account_id);
+
+SELECT create_table_partitions('system_patch', 16,
+                               $$WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
+                                 TABLESPACE pg_default$$);
+
+GRANT SELECT, UPDATE ON system_patch TO evaluator;
+GRANT SELECT, UPDATE (installable_advisory_count_cache,
+              installable_advisory_enh_count_cache,
+              installable_advisory_bug_count_cache,
+              installable_advisory_sec_count_cache,
+              applicable_advisory_count_cache,
+              applicable_advisory_enh_count_cache,
+              applicable_advisory_bug_count_cache,
+              applicable_advisory_sec_count_cache) ON system_patch TO manager;
+GRANT SELECT, UPDATE, DELETE ON system_patch to vmaas_sync; -- vmaas_sync performs system culling
+
+SELECT create_table_partition_triggers('system_patch_on_update',
+                                       $$AFTER UPDATE$$,
+                                       'system_patch',
+                                       $$FOR EACH ROW EXECUTE PROCEDURE on_system_update()$$);
+
+-- system_platform
+DROP TABLE IF EXISTS system_platform;
+CREATE OR REPLACE VIEW system_platform AS SELECT
+    si.id,
+    si.inventory_id,
+    si.rh_account_id,
+    si.vmaas_json,
+    si.json_checksum,
+    si.last_updated,
+    si.unchanged_since,
+    sp.last_evaluation,
+    sp.installable_advisory_count_cache,
+    sp.installable_advisory_enh_count_cache,
+    sp.installable_advisory_bug_count_cache,
+    sp.installable_advisory_sec_count_cache,
+    si.last_upload,
+    si.stale_timestamp,
+    si.stale_warning_timestamp,
+    si.culled_timestamp,
+    si.stale,
+    si.display_name,
+    sp.packages_installed,
+    sp.packages_installable,
+    si.reporter_id,
+    sp.third_party,
+    si.yum_updates,
+    sp.applicable_advisory_count_cache,
+    sp.applicable_advisory_enh_count_cache,
+    sp.applicable_advisory_bug_count_cache,
+    sp.applicable_advisory_sec_count_cache,
+    si.satellite_managed,
+    si.built_pkgcache,
+    sp.packages_applicable,
+    si.template_id,
+    si.yum_checksum,
+    si.arch,
+    si.bootc
+FROM system_inventory si JOIN system_patch sp
+    ON si.id = sp.system_id AND si.rh_account_id = sp.rh_account_id;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON system_platform TO listener;
+-- evaluator needs to update last_evaluation
+GRANT UPDATE ON system_platform TO evaluator;
+-- manager needs to update cache and delete systems
+GRANT SELECT, UPDATE, DELETE ON system_platform TO manager;
+-- VMaaS sync needs to be able to perform system culling tasks
+GRANT SELECT, UPDATE, DELETE ON system_platform to vmaas_sync;
+
+-- inventory.hosts
+CREATE OR REPLACE VIEW inventory.hosts AS SELECT
+    si.inventory_id AS id,
+    ''::VARCHAR(10) AS account,
+    si.display_name::varchar(200),
+    si.created,
+    '-infinity'::TIMESTAMPTZ AS updated,
+    si.stale_timestamp,
+    si.stale_warning_timestamp,
+    si.culled_timestamp,
+    si.tags,
+    jsonb_build_object(
+        'operating_system', jsonb_build_object(
+            'name', si.os_name,
+            'major', si.os_major,
+            'minor', si.os_minor
+        ),
+        'rhsm', jsonb_build_object(
+            'version', si.rhsm_version
+        ),
+        'owner_id', si.owner_id,
+        'workloads', jsonb_build_object(
+            'sap', jsonb_build_object(
+                'sap_system', si.sap_workload,
+                'sids', si.sap_workload_sids
+            ),
+            'ansible', jsonb_build_object(
+                'controller_version', si.ansible_workload_controller_version
+            ),
+            'mssql', jsonb_build_object(
+                'version', si.mssql_workload_version
+            )
+        )
+    ) AS system_profile,
+    si.insights_id,
+    ''::VARCHAR(255) AS reporter,
+    '{}'::JSONB AS per_reporter_staleness,
+    ac.org_id::VARCHAR(36),
+    (
+        SELECT jsonb_agg(
+            jsonb_build_object('id', elem, 'name', '')
+        )
+        FROM unnest(si.workspaces) AS elem
+    ) AS groups
+FROM system_inventory si JOIN rh_account ac ON si.rh_account_id = ac.id;
 
 -- ----------------------------------------------------------------------------
 -- Read access for all users

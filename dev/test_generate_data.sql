@@ -6,19 +6,19 @@ create table if not exists _const (
     val int
 );
 
-truncate table _const ;
-insert into _const values           -- counts in prod 2022/02
-    ('accounts',   50),             --  50k     -- number of rh_accounts
-    ('systems',    7500),           -- 750k     -- number of systems(_platform)
-    ('advisories', 320),            --  50k     -- number of advisory_metadata
-    ('repos',      350),            --  55k     -- number of repos
-    ('package_names', 300),         --  58k     -- number of package_name
-    ('packages', 4500),             -- 1650k    -- number of package
-    ('adv_per_system', 10),         -- 100      (71M system_advisories)
-    ('repo_per_system', 10),        --   8      (6.1M system_repo)
-    ('packages_per_system', 1000),  -- 780      (580M system_packages)
-    ('progress_pct', 10)   -- print progress message on every X% reached
-    on conflict do nothing;
+truncate table _const;
+-- insert into _const values           -- counts in prod 2022/02
+--     ('accounts',   50),             --  50k     -- number of rh_accounts
+--     ('systems',    7500),           -- 750k     -- number of systems(_platform)
+--     ('advisories', 320),            --  50k     -- number of advisory_metadata
+--     ('repos',      350),            --  55k     -- number of repos
+--     ('package_names', 300),         --  58k     -- number of package_name
+--     ('packages', 4500),             -- 1650k    -- number of package
+--     ('adv_per_system', 10),         -- 100      (71M system_advisories)
+--     ('repo_per_system', 10),        --   8      (6.1M system_repo)
+--     ('packages_per_system', 4),  -- 780      (580M system_packages)
+--     ('progress_pct', 10)   -- print progress message on every X% reached
+--     on conflict do nothing;
 /*
 insert into _const values           -- counts in prod 2022/08
     ('accounts',           68000),
@@ -33,6 +33,30 @@ insert into _const values           -- counts in prod 2022/08
     ('progress_pct',          10)   -- print progress message on every X% reached
     on conflict do nothing;
 */
+-- insert into _const values              -- counts in prod 2025/12
+--     ('accounts',          530000),     -- 530k     -- number of rh_accounts
+--     ('systems',          2500000),     -- 2.5M     -- number of systems(_platform)
+--     ('advisories',        120000),     -- 120k     -- number of advisory_metadata
+--     ('repos',             185000),     -- 185k     -- number of repos
+--     ('package_names',     807000),     -- 807k     -- number of package_name
+--     ('packages',        10000000),     -- 10M      -- number of package
+--     ('adv_per_system',        90),     -- ??       (?M system_advisories)
+--     ('repo_per_system',        5),     -- 5        (12.5M system_repo)
+--     ('packages_per_system', 1000),     -- ????     (???M system_package2)
+--     ('progress_pct',           2)      -- print progress message on every X% reached
+--     on conflict do nothing;
+insert into _const values              -- counts in prod 2025/12
+    ('accounts',            5300),     -- 530k     -- number of rh_accounts
+    ('systems',            25000),     -- 2.5M     -- number of systems(_platform)
+    ('advisories',          1200),     -- 120k     -- number of advisory_metadata
+    ('repos',               1850),     -- 185k     -- number of repos
+    ('package_names',       8070),     -- 807k     -- number of package_name
+    ('packages',          100000),     -- 10M      -- number of package
+    ('adv_per_system',        90),     -- ??       (?M system_advisories)
+    ('repo_per_system',        5),     -- 5        (12.5M system_repo)
+    ('packages_per_system',   10),     -- ????     (???M system_package2)
+    ('progress_pct',           2)      -- print progress message on every X% reached
+    on conflict do nothing;
 
 -- prepare some pseudorandom vmaas jsons
 create table if not exists _json (
@@ -55,6 +79,7 @@ truncate table advisory_metadata cascade;
 
 -- generate rh_accounts
 -- duration: 250ms / 5000 accounts (on RDS)
+-- Time: 16935.288 ms (00:16.935) for 530k rh_account
 alter sequence rh_account_id_seq restart with 1;
 do $$
   declare
@@ -78,6 +103,7 @@ $$
 
 -- generate systems
 -- duration: 55s / 1M systems (on RDS)
+-- Time: 276121.018 ms (04:36.121) for 2.5M system_platform
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 alter sequence system_platform_id_seq restart with 1;
 do $$
@@ -125,8 +151,9 @@ $$
 ;
 
 -- fill inventory.hosts from system platform
-truncate table inventory.hosts;
-insert into inventory.hosts (id, account, display_name, tags, updated, created, stale_timestamp,
+truncate table inventory.hosts_v1_0;
+-- Time: 26260.011 ms (00:26.260)
+insert into inventory.hosts_v1_0 (id, account, display_name, tags, updated, created, stale_timestamp,
                              system_profile, reporter, per_reporter_staleness, org_id, groups )
   select sp.inventory_id, substr(ac.name, 0, 10), sp.display_name, '{}', sp.last_updated, sp.last_updated, coalesce(sp.stale_timestamp, now()),
          '{}', 'puptoo', '{}', ac.org_id, '[]'
@@ -136,6 +163,7 @@ insert into inventory.hosts (id, account, display_name, tags, updated, created, 
 
 -- generate advisory_metadata
 -- duration: 3s / 60k advisories (on RDS)
+-- Time: 9099.758 ms (00:09.100) for 120k advisory_metadata
 alter sequence advisory_metadata_id_seq restart with 1;
 do $$
   declare
@@ -247,6 +275,7 @@ $$
 
 -- generate system_repo
 -- Time: 706303.429 ms (11:46.303)  8.3M system_repo (RDS)
+-- Time: roughly 20 min for 12.5M system_repo 
 do $$
   declare
     cnt int := 0;
@@ -289,6 +318,7 @@ $$
 ;
 
 -- generate package_name
+-- Time: roughly 30s for 807k package_name
 alter sequence package_name_id_seq restart with 1;
 do $$
   declare
@@ -317,6 +347,7 @@ insert into strings(id, value) values ('0', 'testing string value')
 on conflict do nothing;
 
 -- generate package
+-- Time: upper bound 16 min for 10M package
 alter sequence package_id_seq restart with 1;
 do $$
   declare
