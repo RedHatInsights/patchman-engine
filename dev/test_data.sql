@@ -199,7 +199,7 @@ INSERT INTO inventory.hosts_v1_0 (id, insights_id, account, display_name, tags, 
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"workloads": {"sap": {"sap_system": true}, "mssql": { "version": "15.3.0"}}, "operating_system": {"name": "RHEL", "major": 7, "minor": 3}, "rhsm": {"version": "7.3"}}',
  'puptoo', '{}', 'org_1', '[{"id": "inventory-group-1", "name": "group1"}]'),
 ('00000000000000000000000000000007', '00000000-0000-0000-0007-000000000001', '1', '00000000-0000-0000-0000-000000000007','[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"workloads": {"sap": {"sap_system": true}, "ansible": {"controller_version": "1.0"}}, "operating_system": {"name": "RHEL", "major": 8, "minor": "x"}, "rhsm": {"version": "8.x"}, "owner_id": "cccccccc-0000-0000-0001-000000000007"}',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"workloads": {"sap": {"sap_system": true}, "ansible": {"controller_version": "1.0"}}, "operating_system": {"name": "RHEL", "major": 8, "minor": "0"}, "rhsm": {"version": "8.x"}, "owner_id": "cccccccc-0000-0000-0001-000000000007"}',
  'puptoo', '{}', 'org_1', '[{"id": "inventory-group-2", "name": "group2"}]'),
 ('00000000000000000000000000000008', '00000000-0000-0000-0008-000000000001', '1', '00000000-0000-0000-0000-000000000008', '[{"key": "k1", "value": "val1", "namespace": "ns1"}]',
  '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"workloads": {"sap": {"sap_system": true}}, "operating_system": {"name": "RHEL", "major": 8, "minor": 3}, "rhsm": {"version": "8.3"}, "owner_id": "cccccccc-0000-0000-0001-000000000008"}',
@@ -233,7 +233,7 @@ INSERT INTO inventory.hosts_v1_0 (id, insights_id, account, display_name, tags, 
  '{"rhsm": {"version": "8.1"}, "operating_system": {"name": "RHEL", "major": 8, "minor": 1}, "workloads": {"ansible": {"controller_version": "1.0", "hub_version": "3.4.1", "catalog_worker_version": "100.387.9846.12", "sso_version": "1.28.3.52641.10000513168495123"}, "mssql": { "version": "15.3.0"}}}',
  'puptoo', '{}', 'org_3', '[]'),
  ('00000000000000000000000000000018', '00000000-0000-0000-0018-000000000001', '1', '00000000-0000-0000-0000-000000000018', '[{"key": "k3", "value": "val4", "namespace": "ns1"}]',
- '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"workloads": {"sap": {"sap_system": true}}, "operating_system": {"name": "RHEL", "major": 8, "minor": 2}, "rhsm": {"version": "8.3"}, "owner_id": "return_404"}',
+ '2018-09-22 12:00:00-04', '2018-08-26 12:00:00-04', '2018-08-26 12:00:00-04', '{"workloads": {"sap": {"sap_system": true}}, "operating_system": {"name": "RHEL", "major": 8, "minor": 2}, "rhsm": {"version": "8.3"}, "owner_id": "00000000-0000-0000-0000-000000000118"}',
  'puptoo', '{}', 'org_1', '[{"id": "inventory-group-1", "name": "group1"}]');
 
 SELECT refresh_all_cached_counts();
