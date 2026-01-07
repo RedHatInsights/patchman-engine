@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type RhAccount struct {
@@ -94,6 +96,73 @@ func (s *SystemPlatform) GetInventoryID() string {
 		return ""
 	}
 	return s.InventoryID
+}
+
+type SystemInventory struct {
+	ID                               int64  `gorm:"primaryKey"`
+	InventoryID                      string `gorm:"unique"`
+	RhAccountID                      int    `gorm:"primaryKey"`
+	VmaasJSON                        *string
+	JSONChecksum                     *string
+	LastUpdated                      *time.Time `gorm:"default:null"`
+	UnchangedSince                   *time.Time `gorm:"default:null"`
+	LastUpload                       *time.Time `gorm:"default:null"`
+	Stale                            bool
+	DisplayName                      string
+	ReporterID                       *int
+	YumUpdates                       []byte  `gorm:"column:yum_updates"`
+	YumChecksum                      *string `gorm:"column:yum_checksum"`
+	SatelliteManaged                 bool    `gorm:"column:satellite_managed"`
+	BuiltPkgcache                    bool    `gorm:"column:built_pkgcache"`
+	Arch                             *string
+	Bootc                            bool
+	Tags                             []byte `gorm:"column:tags"`
+	Created                          time.Time
+	Workspaces                       pq.StringArray `gorm:"type:text[]"`
+	StaleTimestamp                   time.Time
+	StaleWarningTimestamp            time.Time
+	CulledTimestamp                  time.Time
+	OSName                           *string
+	OSMajor                          *int16
+	OSMinor                          *int16
+	RhsmVersion                      *string
+	SubscriptionManagerID            *string
+	SapWorkload                      bool
+	SapWorkloadSIDs                  pq.StringArray `gorm:"type:text[];column:sap_workload_sids"`
+	AnsibleWorkload                  bool
+	AnsibleWorkloadControllerVersion *string
+	MssqlWorkload                    bool
+	MssqlWorkloadVersion             *string
+}
+
+func (SystemInventory) TableName() string {
+	return "system_inventory"
+}
+
+func (s *SystemInventory) GetInventoryID() string {
+	if s == nil {
+		return ""
+	}
+	return s.InventoryID
+}
+
+type SystemPatch struct {
+	SystemID                         int64      `gorm:"primaryKey"`
+	RhAccountID                      int        `gorm:"primaryKey"`
+	LastEvaluation                   *time.Time `gorm:"default:null"` // TODO: trigger sets it to current time?
+	InstallableAdvisoryCountCache    int
+	InstallableAdvisoryEnhCountCache int
+	InstallableAdvisoryBugCountCache int
+	InstallableAdvisorySecCountCache int
+	PackagesInstalled                int
+	PackagesInstallable              int
+	PackagesApplicable               int
+	ThirdParty                       bool
+	ApplicableAdvisoryCountCache     int
+	ApplicableAdvisoryEnhCountCache  int
+	ApplicableAdvisoryBugCountCache  int
+	ApplicableAdvisorySecCountCache  int
+	TemplateID                       *int64 `gorm:"column:template_id"`
 }
 
 type String struct {
