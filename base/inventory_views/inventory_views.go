@@ -36,7 +36,7 @@ type InventoryViewsEvent struct {
 }
 
 func MakeInventoryViewsHosts(systems []models.SystemPlatform,
-	templates map[int64]models.Template) []InventoryViewsHost {
+	templates map[int64]models.TemplateBase) []InventoryViewsHost {
 	hosts := make([]InventoryViewsHost, len(systems))
 	for i, system := range systems {
 		hosts[i] = InventoryViewsHost{
@@ -70,7 +70,7 @@ func MakeInventoryViewsHosts(systems []models.SystemPlatform,
 	return hosts
 }
 
-func FindSystemsTemplates(tx *gorm.DB, systems []models.SystemPlatform) (map[int64]models.Template, error) {
+func FindSystemsTemplates(tx *gorm.DB, systems []models.SystemPlatform) (map[int64]models.TemplateBase, error) {
 	templateIDs := make([]int64, 0, len(systems))
 	if len(systems) == 0 {
 		return nil, nil
@@ -85,15 +85,15 @@ func FindSystemsTemplates(tx *gorm.DB, systems []models.SystemPlatform) (map[int
 	if len(templateIDs) == 0 {
 		return nil, nil
 	}
-	templates := make([]models.Template, 0, len(templateIDs))
-	q := tx.Model(&models.Template{}).
+	templates := make([]models.TemplateBase, 0, len(templateIDs))
+	q := tx.Model(&models.TemplateBase{}).
 		Where("rh_account_id = ? AND id IN (?)", systems[0].RhAccountID, templateIDs)
 	err := q.Find(&templates).Error
 	if err != nil {
 		return nil, err
 	}
 
-	templatesMap := make(map[int64]models.Template, len(templates))
+	templatesMap := make(map[int64]models.TemplateBase, len(templates))
 	for _, t := range templates {
 		templatesMap[t.ID] = t
 	}

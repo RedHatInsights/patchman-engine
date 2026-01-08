@@ -25,12 +25,16 @@ func (Reporter) TableName() string {
 	return "reporter"
 }
 
+type TemplateBase struct {
+	ID          int64 `gorm:"primaryKey"`
+	RhAccountID int   `gorm:"primaryKey"`
+	UUID        string
+	Name        string
+}
+
 type Template struct {
-	ID            int64 `gorm:"primaryKey"`
-	RhAccountID   int   `gorm:"primaryKey"`
-	UUID          string
+	TemplateBase
 	EnvironmentID string
-	Name          string
 	Arch          string
 	Version       string
 	// Config      pgtype.JSONB // currently unused
@@ -40,7 +44,7 @@ type Template struct {
 	LastEdited  *time.Time
 }
 
-func (Template) TableName() string {
+func (TemplateBase) TableName() string {
 	return "template"
 }
 
