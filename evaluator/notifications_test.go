@@ -114,7 +114,7 @@ func TestAdvisoriesNotificationMessage(t *testing.T) {
 	assert.Equal(t, displayName, notification.Context.DisplayName)
 	assert.Equal(t, tags, notification.Context.Tags)
 
-	msg, err := mqueue.MessageFromJSON(inventoryID, notification)
+	msg, err := mqueue.MessageFromJSON(inventoryID, notification, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, inventoryID, string(msg.Key))
 

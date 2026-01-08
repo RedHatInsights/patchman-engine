@@ -87,7 +87,7 @@ func publishRemediationsState(system *models.SystemPlatform, response *vmaas.Upd
 	}
 
 	state := createRemediationsStateMsg(system.InventoryID, response)
-	msg, err := mqueue.MessageFromJSON(system.InventoryID, state)
+	msg, err := mqueue.MessageFromJSON(system.InventoryID, state, nil)
 	if err != nil {
 		return errors.Wrap(err, "formatting message")
 	}
