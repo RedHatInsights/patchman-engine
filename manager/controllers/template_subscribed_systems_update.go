@@ -73,9 +73,8 @@ func getSubscribedSystem(c *gin.Context, tx *gorm.DB) (int, string, error) {
 		Table("inventory.hosts ih").
 		Joins("JOIN rh_account acc on ih.org_id = acc.org_id").
 		Where("ih.system_profile->>'owner_id' = ? AND acc.id = ?", systemCn, account).
-		// use Find() not First() otherwise it returns error "no rows found" if uuid is not present
-		Find(&inventoryID).Error
-	if err != nil {
+		Limit(1).Find(&inventoryID).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		utils.LogAndRespError(c, err, "database error")
 		return 0, "", err
 	}
