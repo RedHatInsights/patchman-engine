@@ -205,6 +205,7 @@ objects:
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: NOTIFICATIONS_TOPIC, value: 'platform.notifications.ingress'}
+        - {name: INVENTORY_VIEWS_TOPIC, value: '${INVENTORY_VIEWS_TOPIC}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_UPLOAD}'}
@@ -251,6 +252,7 @@ objects:
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: NOTIFICATIONS_TOPIC, value: 'platform.notifications.ingress'}
+        - {name: INVENTORY_VIEWS_TOPIC, value: '${INVENTORY_VIEWS_TOPIC}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_RECALC}'}
@@ -297,6 +299,7 @@ objects:
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: REMEDIATIONS_UPDATE_TOPIC, value: 'platform.remediation-updates.patch'}
         - {name: NOTIFICATIONS_TOPIC, value: 'platform.notifications.ingress'}
+        - {name: INVENTORY_VIEWS_TOPIC, value: '${INVENTORY_VIEWS_TOPIC}'}
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: GOGC, value: '${GOGC}'}  # set garbage collection limit for go 1.18
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_EVALUATOR_USER_EVALUATION}'}
@@ -518,6 +521,7 @@ objects:
 
     kafkaTopics:
     - {replicas: 3, partitions: 10, topicName: platform.inventory.events}
+    - {replicas: 3, partitions: 10, topicName: platform.inventory.host-apps}
     - {replicas: 3, partitions: 10, topicName: patchman.evaluator.upload}
     - {replicas: 3, partitions: 10, topicName: patchman.evaluator.recalc}
     - {replicas: 3, partitions: 8, topicName: platform.payload-status}
@@ -702,6 +706,7 @@ parameters:
 - {name: GOGC, value: '100'}
 - {name: GOMEMLIMIT_EVALUATOR, value: '2700MiB'} # set to 90% of the default memory limit (don't forget `B`)
 - {name: CONSOLEDOT_HOSTNAME, value: localhost}
+- {name: INVENTORY_VIEWS_TOPIC, value: 'platform.inventory.host-apps'}
 
 # Evaluator - upload
 - {name: REPLICAS_EVALUATOR_UPLOAD, value: '1'}
