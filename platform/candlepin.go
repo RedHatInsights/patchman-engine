@@ -16,7 +16,7 @@ func candlepinConsumersPutHandler(c *gin.Context) {
 	consumer := c.Param("consumer")
 	jsonData, _ := io.ReadAll(c.Request.Body)
 	utils.LogInfo("PUT consumer", consumer, "body", string(jsonData))
-	if consumer == "return_404" {
+	if consumer == "return_404" || consumer == "99999999-9999-9999-9999-999999999404" {
 		c.Data(http.StatusNotFound, gin.MIMEJSON, []byte{})
 		return
 	}
@@ -26,7 +26,7 @@ func candlepinConsumersPutHandler(c *gin.Context) {
 func candlepinConsumersGetHandler(c *gin.Context) {
 	consumer := c.Param("consumer")
 	utils.LogInfo("GET consumer", consumer, "body")
-	if consumer == "return_404" {
+	if consumer == "return_404" || consumer == "99999999-9999-9999-9999-999999999404" {
 		c.Data(http.StatusNotFound, gin.MIMEJSON, []byte{})
 		return
 	}
@@ -51,7 +51,8 @@ func candlepinConsumersEnvironmentsHandler(c *gin.Context) {
 		return
 	}
 	utils.LogInfo("ConsumerUuids", req.ConsumerUuids)
-	if slices.Contains(req.ConsumerUuids, "return_404") {
+	if slices.Contains(req.ConsumerUuids, "return_404") ||
+		slices.Contains(req.ConsumerUuids, "99999999-9999-9999-9999-999999999404") {
 		c.Data(http.StatusNotFound, gin.MIMEJSON, []byte{})
 		return
 	}
