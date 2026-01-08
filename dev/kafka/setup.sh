@@ -4,11 +4,17 @@
 sleep 5
 
 # create topics with multiple partitions for scaling
-for topic in "platform.inventory.events" "patchman.evaluator.upload" \
-             "patchman.evaluator.recalc" "platform.remediation-updates.patch" "platform.notifications.ingress" \
-             "platform.payload-status" "test" \
-             "platform.content-sources.template" \
-             "patchman.evaluator.user-evaluation"
+for topic in \
+            "patchman.evaluator.recalc" \
+            "patchman.evaluator.upload" \
+            "patchman.evaluator.user-evaluation" \
+            "platform.content-sources.template" \
+            "platform.inventory.events" \
+            "platform.inventory.host-apps" \
+            "platform.notifications.ingress" \
+            "platform.payload-status" \
+            "platform.remediation-updates.patch" \
+            "test"
 do
     until /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic $topic \
         --partitions 1 --bootstrap-server kafka:9092 --replication-factor 1; do
