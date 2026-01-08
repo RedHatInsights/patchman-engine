@@ -3,6 +3,7 @@ package inventory_views
 import (
 	"app/base/models"
 	"app/base/utils"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -33,6 +34,16 @@ type InventoryViewsEvent struct {
 	OrgID     string               `json:"org_id"`
 	Timestamp string               `json:"timestamp"`
 	Hosts     []InventoryViewsHost `json:"hosts"`
+}
+
+func MakeInventoryViewsEvent(tx *gorm.DB, orgID string, systems []models.SystemPlatform) (
+	InventoryViewsEvent, error) {
+	templates, err := FindSystemsTemplates(tx, systems)
+	if err != nil {
+		return InventoryViewsEvent{}, err
+	}
+	hosts := MakeInventoryViewsHosts(systems, templates)
+	return InventoryViewsEvent{OrgID: orgID, Timestamp: time.Now().Format(time.RFC3339), Hosts: hosts}, nil
 }
 
 func MakeInventoryViewsHosts(systems []models.SystemPlatform,
