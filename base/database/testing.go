@@ -400,8 +400,12 @@ func DeleteSystem(t *testing.T, inventoryID string) {
 
 func CreateTemplate(t *testing.T, account int, uuid string, inventoryIDs []string) {
 	template := &models.Template{
-		RhAccountID: account, UUID: uuid, Name: uuid, EnvironmentID: strings.ReplaceAll(uuid, "-", ""),
-		Arch: "x86_64", Version: "8",
+		TemplateBase: models.TemplateBase{
+			RhAccountID: account, UUID: uuid, Name: uuid,
+		},
+		EnvironmentID: strings.ReplaceAll(uuid, "-", ""),
+		Arch:          "x86_64",
+		Version:       "8",
 	}
 
 	tx := DB.Begin()
