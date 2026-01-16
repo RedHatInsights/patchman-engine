@@ -39,7 +39,7 @@ func (t *kafkaGoReaderImpl) HandleMessages(handler MessageHandler) {
 			}
 		}
 		// At this level, all errors are fatal
-		kafkaMessage := KafkaMessage{Key: m.Key, Value: m.Value}
+		kafkaMessage := KafkaMessage{Key: m.Key, Value: m.Value, Headers: m.Headers}
 		if err = handler(kafkaMessage); err != nil {
 			utils.LogPanic("err", err.Error(), "Handler failed")
 		}
@@ -61,7 +61,7 @@ type kafkaGoWriterImpl struct {
 func (t *kafkaGoWriterImpl) WriteMessages(ctx context.Context, msgs ...KafkaMessage) error {
 	kafkaGoMessages := make([]kafka.Message, len(msgs))
 	for i, m := range msgs {
-		kafkaGoMessages[i] = kafka.Message{Key: m.Key, Value: m.Value}
+		kafkaGoMessages[i] = kafka.Message{Key: m.Key, Value: m.Value, Headers: m.Headers}
 	}
 	err := t.Writer.WriteMessages(ctx, kafkaGoMessages...)
 	return err

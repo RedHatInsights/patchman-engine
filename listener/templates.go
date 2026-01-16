@@ -118,10 +118,12 @@ func TemplateUpdate(template mqueue.TemplateResponse) error {
 	}
 
 	row := models.Template{
-		RhAccountID:   accountID,
-		UUID:          template.UUID,
+		TemplateBase: models.TemplateBase{
+			RhAccountID: accountID,
+			UUID:        template.UUID,
+			Name:        template.Name,
+		},
 		EnvironmentID: template.EnvironmentID,
-		Name:          template.Name,
 		Arch:          template.Arch,
 		Version:       template.Version,
 		//Config:      nil,

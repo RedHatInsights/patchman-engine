@@ -59,6 +59,7 @@ var (
 	enableYumUpdatesEval          bool
 	nEvalGoroutines               int
 	enableInstantNotifications    bool
+	enableInventoryViews          bool
 	enableSatelliteFunctionality  bool
 	errVmaasBadRequest            = errors.New("vmaas bad request")
 )
@@ -79,6 +80,7 @@ func configure() {
 	vmaasUpdatesURL = utils.FailIfEmpty(utils.CoreCfg.VmaasAddress, "VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/updates"
 	configureRemediations()
 	configureNotifications()
+	configureInventoryViews()
 	configureStatus()
 }
 
@@ -126,6 +128,8 @@ func confugureEvaluator() {
 	nEvalGoroutines = utils.PodConfig.GetInt("max_goroutines", 1)
 	// Send advisory notification immediately
 	enableInstantNotifications = utils.PodConfig.GetBool("instant_notifications", true)
+	// Send inventory views events
+	enableInventoryViews = utils.PodConfig.GetBool("inventory_views", false)
 	// Ignore templates for satellite managed systems
 	enableSatelliteFunctionality = utils.PodConfig.GetBool("satellite_functionality", true)
 }
@@ -479,6 +483,15 @@ func evaluateAndStore(system *models.SystemPlatform,
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-update-system").Inc()
 		return errors.Wrap(err, "Unable to update system")
+	}
+
+	if enableInventoryViews {
+		err = publishInventoryViewsEvent(tx, []models.SystemPlatform{*system}, event)
+		if err != nil {
+			evaluationCnt.WithLabelValues("error-inventory-views-publish").Inc()
+			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err.Error(),
+				"publishing inventory views event failed")
+		}
 	}
 
 	// Send instant notification with new advisories

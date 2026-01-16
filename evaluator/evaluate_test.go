@@ -18,6 +18,7 @@ import (
 
 var systemID = int64(12)
 var rhAccountID = 3
+var orgID = "org_3"
 
 func TestInit(_ *testing.T) {
 	utils.TestLoadEnv("conf/evaluator_common.env", "conf/evaluator_upload.env")
@@ -61,6 +62,7 @@ func TestEvaluate(t *testing.T) {
 	err := evaluateHandler(mqueue.PlatformEvent{
 		SystemIDs:  []string{"00000000-0000-0000-0000-000000000012", "00000000-0000-0000-0000-000000000011"},
 		RequestIDs: []string{"request-1", "request-2"},
+		OrgID:      &orgID,
 		AccountID:  rhAccountID})
 	assert.NoError(t, err)
 
@@ -78,6 +80,7 @@ func TestEvaluate(t *testing.T) {
 	err = evaluateHandler(mqueue.PlatformEvent{
 		SystemIDs:  []string{"00000000-0000-0000-0000-000000000012"},
 		RequestIDs: []string{"request-1"},
+		OrgID:      &orgID,
 		AccountID:  rhAccountID})
 	assert.NoError(t, err)
 	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 3, 1, 1, 0,
@@ -122,6 +125,7 @@ func TestEvaluateYum(t *testing.T) {
 
 	err := evaluateHandler(mqueue.PlatformEvent{
 		SystemIDs: []string{ID},
+		OrgID:     &orgID,
 		AccountID: rhAccountID})
 	assert.NoError(t, err)
 

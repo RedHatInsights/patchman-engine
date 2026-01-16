@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/lestrrat-go/backoff/v2"
+	"github.com/segmentio/kafka-go"
 )
 
 const errContextCanceled = "context canceled"
@@ -42,8 +43,9 @@ func createLoggerFunc(counter Counter) func(fmt string, args ...interface{}) {
 }
 
 type KafkaMessage struct {
-	Key   []byte
-	Value []byte
+	Key     []byte
+	Value   []byte
+	Headers []kafka.Header
 }
 
 type MessageHandler func(message KafkaMessage) error

@@ -66,6 +66,7 @@ type coreConfig struct {
 	RemediationUpdateTopic string
 	NotificationsTopic     string
 	TemplateTopic          string
+	InventoryViewsTopic    string
 
 	// services
 	VmaasAddress                  string
@@ -149,6 +150,11 @@ func initDBFromEnv() {
 }
 
 func initKafkaFromEnv() {
+	overrideKafkaAddress := Getenv("KAFKA_ADDRESS", "")
+	if overrideKafkaAddress != "" {
+		CoreCfg.KafkaAddress = overrideKafkaAddress
+		CoreCfg.KafkaServers = []string{overrideKafkaAddress}
+	}
 	CoreCfg.KafkaSslCert = Getenv("KAFKA_SSL_CERT", CoreCfg.KafkaSslCert)
 	CoreCfg.KafkaSslSkipVerify = GetBoolEnvOrDefault("KAFKA_SSL_SKIP_VERIFY", false)
 	CoreCfg.KafkaUsername = Getenv("KAFKA_USERNAME", CoreCfg.KafkaUsername)
@@ -167,6 +173,7 @@ func initTopicsFromEnv() {
 	CoreCfg.RemediationUpdateTopic = Getenv("REMEDIATIONS_UPDATE_TOPIC", "")
 	CoreCfg.NotificationsTopic = Getenv("NOTIFICATIONS_TOPIC", "")
 	CoreCfg.TemplateTopic = Getenv("TEMPLATE_TOPIC", "")
+	CoreCfg.InventoryViewsTopic = Getenv("INVENTORY_VIEWS_TOPIC", "")
 }
 
 func initServicesFromEnv() {
@@ -248,6 +255,7 @@ func initKafkaFromClowder() {
 		translateTopic(&CoreCfg.RemediationUpdateTopic)
 		translateTopic(&CoreCfg.NotificationsTopic)
 		translateTopic(&CoreCfg.TemplateTopic)
+		translateTopic(&CoreCfg.InventoryViewsTopic)
 	}
 }
 
@@ -399,6 +407,7 @@ func printKafkaParams() {
 	fmt.Printf("REMEDIATIONS_UPDATE_TOPIC=%s\n", CoreCfg.RemediationUpdateTopic)
 	fmt.Printf("NOTIFICATIONS_TOPIC=%s\n", CoreCfg.NotificationsTopic)
 	fmt.Printf("TEMPLATE_TOPIC=%s\n", CoreCfg.TemplateTopic)
+	fmt.Printf("INVENTORY_VIEWS_TOPIC=%s\n", CoreCfg.InventoryViewsTopic)
 }
 
 func printServicesParams() {
