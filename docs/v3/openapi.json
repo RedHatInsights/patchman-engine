@@ -2447,14 +2447,6 @@
                         }
                     },
                     {
-                        "name": "filter[insights_id]",
-                        "in": "query",
-                        "description": "Filter",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "filter[display_name]",
                         "in": "query",
                         "description": "Filter",
@@ -7181,9 +7173,6 @@
                         "items": {
                             "$ref": "#/components/schemas/controllers.SystemGroup"
                         }
-                    },
-                    "insights_id": {
-                        "type": "string"
                     },
                     "installable_other_count": {
                         "type": "integer"
