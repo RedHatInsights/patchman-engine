@@ -229,8 +229,8 @@ func SystemDeleteHandler(c *gin.Context) {
 
 	defer tx.Rollback()
 
-	err := tx.Set("gorm:query_option", "FOR UPDATE OF system_platform").
-		Table("system_platform").
+	err := tx.Set("gorm:query_option", "FOR UPDATE OF system_inventory").
+		Table("system_inventory").
 		Where("inventory_id = ?::uuid", inventoryID).
 		Pluck("inventory_id", &systemInventoryID).Error
 
