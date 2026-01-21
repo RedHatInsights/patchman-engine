@@ -1246,6 +1246,21 @@ END;
 $system_platform_update$
     LANGUAGE 'plpgsql';
 
+CREATE OR REPLACE FUNCTION system_platform_delete()
+    RETURNS TRIGGER AS
+$system_platform_delete$
+BEGIN
+    DELETE FROM system_patch
+     WHERE system_id = OLD.id AND rh_account_id = OLD.rh_account_id;
+
+    DELETE FROM system_inventory
+     WHERE id = OLD.id AND rh_account_id = OLD.rh_account_id;
+
+    RETURN OLD;
+END;
+$system_platform_delete$
+    LANGUAGE 'plpgsql';
+
 CREATE TRIGGER system_platform_insert_trigger
     INSTEAD OF INSERT ON system_platform
     FOR EACH ROW
@@ -1255,6 +1270,11 @@ CREATE TRIGGER system_platform_update_trigger
     INSTEAD OF UPDATE ON system_platform
     FOR EACH ROW
     EXECUTE FUNCTION system_platform_update();
+
+CREATE TRIGGER system_platform_delete_trigger
+    INSTEAD OF DELETE ON system_platform
+    FOR EACH ROW
+    EXECUTE FUNCTION system_platform_delete();
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_platform TO listener;
 -- evaluator needs to update last_evaluation
