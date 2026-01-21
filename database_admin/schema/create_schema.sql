@@ -1045,7 +1045,7 @@ CREATE TABLE IF NOT EXISTS system_patch
     template_id                          BIGINT,
     PRIMARY KEY (rh_account_id, system_id),
     FOREIGN KEY (rh_account_id, template_id) REFERENCES template (rh_account_id, id),
-    FOREIGN KEY (system_id, rh_account_id) REFERENCES system_inventory (id, rh_account_id)
+    FOREIGN KEY (rh_account_id, system_id) REFERENCES system_inventory (rh_account_id, id)
 ) PARTITION BY HASH (rh_account_id);
 
 SELECT create_table_partitions('system_patch', 16,
