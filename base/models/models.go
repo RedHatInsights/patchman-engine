@@ -119,9 +119,9 @@ type SystemInventory struct {
 	Tags                             []byte `gorm:"column:tags"`
 	Created                          time.Time
 	Workspaces                       pq.StringArray `gorm:"type:text[]"`
-	StaleTimestamp                   time.Time
-	StaleWarningTimestamp            time.Time
-	CulledTimestamp                  time.Time
+	StaleTimestamp                   *time.Time
+	StaleWarningTimestamp            *time.Time
+	CulledTimestamp                  *time.Time
 	OSName                           *string
 	OSMajor                          *int16
 	OSMinor                          *int16
