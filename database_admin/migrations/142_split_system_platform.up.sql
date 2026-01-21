@@ -536,7 +536,7 @@ WHERE sp.stale = false;
 ALTER TABLE IF EXISTS system_patch 
 ADD PRIMARY KEY (rh_account_id, system_id),
 ADD FOREIGN KEY (rh_account_id, template_id) REFERENCES template (rh_account_id, id),
-ADD FOREIGN KEY (system_id, rh_account_id) REFERENCES system_inventory (id, rh_account_id);
+ADD FOREIGN KEY (rh_account_id, system_id) REFERENCES system_inventory (rh_account_id, id);
 
 
 
