@@ -673,9 +673,9 @@ CREATE TABLE IF NOT EXISTS system_inventory
     tags                                JSONB       NOT NULL,
     created                             TIMESTAMPTZ NOT NULL,
     workspaces                          TEXT ARRAY  CHECK (array_length(workspaces,1) > 0 or workspaces is null), -- group IDs from system_platform.groups
-    stale_timestamp                     TIMESTAMPTZ NOT NULL,
-    stale_warning_timestamp             TIMESTAMPTZ NOT NULL,
-    culled_timestamp                    TIMESTAMPTZ NOT NULL,
+    stale_timestamp                     TIMESTAMPTZ,
+    stale_warning_timestamp             TIMESTAMPTZ,
+    culled_timestamp                    TIMESTAMPTZ,
     os_name                             TEXT        CHECK (NOT empty(os_name)),
     os_major                            SMALLINT,
     os_minor                            SMALLINT,
