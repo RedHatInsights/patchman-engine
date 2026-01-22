@@ -165,6 +165,10 @@ type SystemPatch struct {
 	TemplateID                       *int64 `gorm:"column:template_id"`
 }
 
+func (SystemPatch) TableName() string {
+	return "system_patch"
+}
+
 type String struct {
 	ID    []byte `gorm:"primaryKey"`
 	Value string
