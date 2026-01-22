@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -469,6 +470,7 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 	return &systemPlatform, nil
 }
 
+// nolint: funlen
 func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsToUpdate []string) error {
 	if err := tx.Where("rh_account_id = ? AND inventory_id = ?", system.RhAccountID, system.InventoryID).
 		Select("id").Find(system).Error; err != nil {
@@ -479,7 +481,7 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 	tx = tx.Clauses(clause.Returning{
 		Columns: []clause.Column{
 			{Name: "id"}, {Name: "inventory_id"}, {Name: "rh_account_id"},
-			{Name: "unchanged_since"}, {Name: "last_evaluation"},
+			{Name: "unchanged_since"},
 		},
 	})
 
@@ -488,9 +490,54 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 		err := tx.Select(colsToUpdate).Updates(system).Error
 		return base.WrapFatalDBError(err, "unable to update system_platform")
 	}
-	// insert system
-	err := database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
-		Save(system).Error
+	inventoryRecord := models.SystemInventory{
+		ID:                    system.ID,
+		InventoryID:           system.InventoryID,
+		RhAccountID:           system.RhAccountID,
+		DisplayName:           system.DisplayName,
+		LastUpload:            system.LastUpload,
+		SatelliteManaged:      system.SatelliteManaged,
+		BuiltPkgcache:         system.BuiltPkgcache,
+		Arch:                  system.Arch,
+		Bootc:                 system.Bootc,
+		VmaasJSON:             system.VmaasJSON,
+		JSONChecksum:          system.JSONChecksum,
+		ReporterID:            system.ReporterID,
+		YumUpdates:            system.YumUpdates,
+		YumChecksum:           system.YumChecksum,
+		StaleTimestamp:        system.StaleTimestamp,
+		StaleWarningTimestamp: system.StaleWarningTimestamp,
+		CulledTimestamp:       system.CulledTimestamp,
+		Tags:                  []byte("[]"),
+	}
+	inventoryColsToUpdate := slices.DeleteFunc(colsToUpdate, func(col string) bool {
+		return col == "template_id"
+	})
+	err := database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "inventory_id"}, inventoryColsToUpdate...).
+		Save(&inventoryRecord).Error
+	if err != nil {
+		return base.WrapFatalDBError(err, "unable to insert to system_inventory")
+	}
+
+	system.ID = inventoryRecord.ID
+	system.InventoryID = inventoryRecord.InventoryID
+	system.RhAccountID = inventoryRecord.RhAccountID
+	system.UnchangedSince = inventoryRecord.UnchangedSince
+
+	var patchColsToUpdate []string
+	if slices.Contains(colsToUpdate, "template_id") {
+		patchColsToUpdate = []string{"template_id"}
+	}
+	patchRecord := models.SystemPatch{
+		SystemID:       inventoryRecord.ID,
+		RhAccountID:    system.RhAccountID,
+		LastEvaluation: system.LastEvaluation,
+		TemplateID:     system.TemplateID,
+	}
+	tx = tx.Clauses(clause.Returning{Columns: []clause.Column{{Name: "last_evaluation"}}})
+	err = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "system_id"}, patchColsToUpdate...).
+		Save(patchRecord).Error
+	system.LastEvaluation = patchRecord.LastEvaluation
 	return base.WrapFatalDBError(err, "unable to insert to system_platform")
 }
 
