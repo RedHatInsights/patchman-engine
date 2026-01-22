@@ -478,7 +478,7 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 	}
 
 	// return system_platform record after update
-	tx = tx.Clauses(clause.Returning{
+	txi := tx.Clauses(clause.Returning{
 		Columns: []clause.Column{
 			{Name: "id"}, {Name: "inventory_id"}, {Name: "rh_account_id"},
 			{Name: "unchanged_since"},
@@ -487,7 +487,7 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 
 	if system.ID != 0 {
 		// update system
-		err := tx.Select(colsToUpdate).Updates(system).Error
+		err := txi.Select(colsToUpdate).Updates(system).Error
 		return base.WrapFatalDBError(err, "unable to update system_platform")
 	}
 	inventoryRecord := models.SystemInventory{
@@ -513,7 +513,7 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 	inventoryColsToUpdate := slices.DeleteFunc(colsToUpdate, func(col string) bool {
 		return col == "template_id"
 	})
-	err := database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "inventory_id"}, inventoryColsToUpdate...).
+	err := database.OnConflictUpdateMulti(txi, []string{"rh_account_id", "inventory_id"}, inventoryColsToUpdate...).
 		Save(&inventoryRecord).Error
 	if err != nil {
 		return base.WrapFatalDBError(err, "unable to insert to system_inventory")
@@ -534,9 +534,9 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 		LastEvaluation: system.LastEvaluation,
 		TemplateID:     system.TemplateID,
 	}
-	tx = tx.Clauses(clause.Returning{Columns: []clause.Column{{Name: "last_evaluation"}}})
-	err = database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "system_id"}, patchColsToUpdate...).
-		Save(patchRecord).Error
+	txp := tx.Clauses(clause.Returning{Columns: []clause.Column{{Name: "last_evaluation"}}})
+	err = database.OnConflictUpdateMulti(txp, []string{"rh_account_id", "system_id"}, patchColsToUpdate...).
+		Create(&patchRecord).Error
 	system.LastEvaluation = patchRecord.LastEvaluation
 	return base.WrapFatalDBError(err, "unable to insert to system_platform")
 }
