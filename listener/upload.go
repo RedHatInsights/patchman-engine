@@ -335,13 +335,6 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 
 	isBootc := len(host.SystemProfile.BootcStatus.Booted.Image) > 0
 
-	templateID := hostTemplate(tx, accountID, host)
-	if templateID != nil {
-		colsToUpdate = append(colsToUpdate, "template_id")
-		utils.LogDebug("inventoryID", host.ID, "candlepin_env", host.SystemProfile.Rhsm.Environments,
-			"template", *templateID, "reporter", host.Reporter)
-	}
-
 	updatesReqJSONString := string(updatesReqJSON)
 	systemPlatform := models.SystemPlatform{
 		InventoryID:           inventoryID,
@@ -360,7 +353,7 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 		BuiltPkgcache:         yumUpdates.GetBuiltPkgcache(),
 		Arch:                  host.SystemProfile.Arch,
 		Bootc:                 isBootc,
-		TemplateID:            templateID,
+		TemplateID:            hostTemplate(tx, accountID, host),
 	}
 
 	type OldChecksums struct {
@@ -419,22 +412,83 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 	}
 
 	// return system_platform record after update
-	tx = tx.Clauses(clause.Returning{
+	txi := tx.Clauses(clause.Returning{
 		Columns: []clause.Column{
 			{Name: "id"}, {Name: "inventory_id"}, {Name: "rh_account_id"},
-			{Name: "unchanged_since"}, {Name: "last_evaluation"},
+			{Name: "unchanged_since"},
 		},
 	})
 
-	if system.ID != 0 {
-		// update system
-		err := tx.Select(colsToUpdate).Updates(system).Error
-		return base.WrapFatalDBError(err, "unable to update system_platform")
+	inventoryRecord := models.SystemInventory{
+		ID:                    system.ID,
+		InventoryID:           system.InventoryID,
+		RhAccountID:           system.RhAccountID,
+		DisplayName:           system.DisplayName,
+		LastUpload:            system.LastUpload,
+		SatelliteManaged:      system.SatelliteManaged,
+		BuiltPkgcache:         system.BuiltPkgcache,
+		Arch:                  system.Arch,
+		Bootc:                 system.Bootc,
+		VmaasJSON:             system.VmaasJSON,
+		JSONChecksum:          system.JSONChecksum,
+		ReporterID:            system.ReporterID,
+		YumUpdates:            system.YumUpdates,
+		YumChecksum:           system.YumChecksum,
+		StaleTimestamp:        system.StaleTimestamp,
+		StaleWarningTimestamp: system.StaleWarningTimestamp,
+		CulledTimestamp:       system.CulledTimestamp,
+		Tags:                  []byte("[]"),
 	}
-	// insert system
-	err := database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
-		Save(system).Error
-	return base.WrapFatalDBError(err, "unable to insert to system_platform")
+
+	err := database.OnConflictUpdateMulti(txi, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
+		Create(&inventoryRecord).Error
+	if err != nil {
+		return base.WrapFatalDBError(err, "unable to insert to system_inventory")
+	}
+
+	system.ID = inventoryRecord.ID
+	system.InventoryID = inventoryRecord.InventoryID
+	system.RhAccountID = inventoryRecord.RhAccountID
+	system.UnchangedSince = inventoryRecord.UnchangedSince
+
+	return upsertSystemPatch(tx, system)
+}
+
+func upsertSystemPatch(tx *gorm.DB, system *models.SystemPlatform) error {
+	tx = tx.Clauses(clause.Returning{Columns: []clause.Column{{Name: "last_evaluation"}}})
+
+	patchRecord := models.SystemPatch{
+		SystemID:    system.ID,
+		RhAccountID: system.RhAccountID,
+		TemplateID:  system.TemplateID,
+	}
+
+	var patchColsToUpdate = []string{}
+	if system.TemplateID != nil {
+		patchColsToUpdate = append(patchColsToUpdate, "template_id")
+	}
+
+	// !existuje, *           => create
+	//  existuje, templateID  => update templateID
+	//  existuje, !templateID => nothing, we need to load last_evaluation
+
+	patchResult := database.OnConflictUpdateMulti(tx, []string{"rh_account_id", "system_id"}, patchColsToUpdate...).
+		Create(&patchRecord)
+	if patchResult.Error != nil {
+		return base.WrapFatalDBError(patchResult.Error, "unable to insert to system_patch")
+	}
+	if patchResult.RowsAffected == 0 {
+		err := tx.Model(&models.SystemPatch{}).
+			Select("last_evaluation").
+			Where("system_id = ? AND rh_account_id = ?", patchRecord.SystemID, patchRecord.RhAccountID).
+			First(&patchRecord).Error
+		if err != nil {
+			return base.WrapFatalDBError(err, "unable to load system_patch last_evaluation")
+		}
+	}
+
+	system.LastEvaluation = patchRecord.LastEvaluation
+	return nil
 }
 
 func getReporterID(reporter string) *int {
