@@ -129,7 +129,7 @@ func confugureEvaluator() {
 	// Send advisory notification immediately
 	enableInstantNotifications = utils.PodConfig.GetBool("instant_notifications", true)
 	// Send inventory views events
-	enableInventoryViews = utils.PodConfig.GetBool("inventory_views", false)
+	enableInventoryViews = utils.PodConfig.GetBool("inventory_views", true)
 	// Ignore templates for satellite managed systems
 	enableSatelliteFunctionality = utils.PodConfig.GetBool("satellite_functionality", true)
 }
