@@ -485,11 +485,13 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 		},
 	})
 
-	if system.ID != 0 {
-		// update system
-		err := txi.Select(colsToUpdate).Updates(system).Error
-		return base.WrapFatalDBError(err, "unable to update system_platform")
-	}
+	/*
+		if system.ID != 0 {
+			// update system
+			err := txi.Select(colsToUpdate).Updates(system).Error
+			return base.WrapFatalDBError(err, "unable to update system_platform")
+		}
+	*/
 	inventoryRecord := models.SystemInventory{
 		ID:                    system.ID,
 		InventoryID:           system.InventoryID,
@@ -514,7 +516,7 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 		return col == "template_id"
 	})
 	err := database.OnConflictUpdateMulti(txi, []string{"rh_account_id", "inventory_id"}, inventoryColsToUpdate...).
-		Save(&inventoryRecord).Error
+		Create(&inventoryRecord).Error
 	if err != nil {
 		return base.WrapFatalDBError(err, "unable to insert to system_inventory")
 	}
@@ -524,15 +526,16 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 	system.RhAccountID = inventoryRecord.RhAccountID
 	system.UnchangedSince = inventoryRecord.UnchangedSince
 
-	var patchColsToUpdate []string
+	// var patchColsToUpdate = []string{"last_evaluation"}
+	var patchColsToUpdate = []string{}
 	if slices.Contains(colsToUpdate, "template_id") {
-		patchColsToUpdate = []string{"template_id"}
+		patchColsToUpdate = append(patchColsToUpdate, "template_id")
 	}
 	patchRecord := models.SystemPatch{
-		SystemID:       inventoryRecord.ID,
-		RhAccountID:    system.RhAccountID,
-		LastEvaluation: system.LastEvaluation,
-		TemplateID:     system.TemplateID,
+		SystemID:    inventoryRecord.ID,
+		RhAccountID: system.RhAccountID,
+		// LastEvaluation: system.LastEvaluation,
+		TemplateID: system.TemplateID,
 	}
 	txp := tx.Clauses(clause.Returning{Columns: []clause.Column{{Name: "last_evaluation"}}})
 	err = database.OnConflictUpdateMulti(txp, []string{"rh_account_id", "system_id"}, patchColsToUpdate...).
