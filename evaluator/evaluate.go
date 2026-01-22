@@ -608,7 +608,33 @@ func updateSystemPlatform(tx *gorm.DB, system *models.SystemPlatform,
 		data["third_party"] = system.ThirdParty
 	}
 
-	err := tx.Model(system).Updates(data).Error
+	systemPatch := models.SystemPatch{
+		SystemID:    system.ID,
+		RhAccountID: system.RhAccountID,
+	}
+	// err := tx.Model(system).Updates(data).Error
+	err := tx.Model(&systemPatch).Updates(data).Error
+	if enableAdvisoryAnalysis {
+		system.InstallableAdvisoryCountCache = systemPatch.InstallableAdvisoryCountCache
+		system.InstallableAdvisoryEnhCountCache = systemPatch.InstallableAdvisoryEnhCountCache
+		system.InstallableAdvisoryBugCountCache = systemPatch.InstallableAdvisoryBugCountCache
+		system.InstallableAdvisorySecCountCache = systemPatch.InstallableAdvisorySecCountCache
+
+		system.ApplicableAdvisoryCountCache = systemPatch.ApplicableAdvisoryCountCache
+		system.ApplicableAdvisoryEnhCountCache = systemPatch.ApplicableAdvisoryEnhCountCache
+		system.ApplicableAdvisoryBugCountCache = systemPatch.ApplicableAdvisoryBugCountCache
+		system.ApplicableAdvisorySecCountCache = systemPatch.ApplicableAdvisorySecCountCache
+	}
+
+	if enablePackageAnalysis {
+		system.PackagesInstalled = systemPatch.PackagesInstalled
+		system.PackagesInstallable = systemPatch.PackagesInstallable
+		system.PackagesApplicable = systemPatch.PackagesApplicable
+	}
+
+	if enableRepoAnalysis {
+		system.ThirdParty = systemPatch.ThirdParty
+	}
 
 	now := time.Now()
 	if system.LastUpload != nil && system.LastUpload.Sub(now) > time.Hour {

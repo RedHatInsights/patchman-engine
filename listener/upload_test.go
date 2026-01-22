@@ -400,7 +400,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 
 	// make sure we are not creating gaps in id sequences
 	database.DB.Model(&models.SystemPlatform{}).Select("count(*)").Find(&newCount)
-	database.DB.Raw("select currval('system_platform_id_seq')").Find(&currval)
+	database.DB.Raw("select currval('system_inventory_id_seq')").Find(&currval)
 	countInc := newCount - oldCount
 	maxInc := currval - nextval
 	assert.Equal(t, countInc, maxInc)
