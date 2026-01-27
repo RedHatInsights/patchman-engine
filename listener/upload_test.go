@@ -113,39 +113,44 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	deleteData(t)
 }
 
-func TestUploadHandler(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	utils.SkipWithoutPlatform(t)
-	core.SetupTestEnvironment()
-	configure()
-	deleteData(t)
+func TestUploadHandlerCreatedSystem(t *testing.T) {
+	eventTypes := []string{"created", "updated"}
+	for _, eventType := range eventTypes {
+		t.Run(eventType, func(t *testing.T) {
+			utils.SkipWithoutDB(t)
+			utils.SkipWithoutPlatform(t)
+			core.SetupTestEnvironment()
+			configure()
+			deleteData(t)
 
-	_ = getOrCreateTestAccount(t)
-	event := createTestUploadEvent(id, id, "puptoo", true, false)
+			_ = getOrCreateTestAccount(t)
+			event := createTestUploadEvent(id, id, "puptoo", true, false, eventType)
 
-	event.Host.SystemProfile.OperatingSystem = inventory.OperatingSystem{Major: 8}
-	repos := append(event.Host.SystemProfile.GetYumRepos(), inventory.YumRepo{ID: "epel", Enabled: true})
-	event.Host.SystemProfile.YumRepos = &repos
+			event.Host.SystemProfile.OperatingSystem = inventory.OperatingSystem{Major: 8}
+			repos := append(event.Host.SystemProfile.GetYumRepos(), inventory.YumRepo{ID: "epel", Enabled: true})
+			event.Host.SystemProfile.YumRepos = &repos
 
-	err := HandleUpload(event)
-	assert.NoError(t, err)
+			err := HandleUpload(event)
+			assert.NoError(t, err)
 
-	reporterID := 1
-	assertSystemInDB(t, id, nil, &reporterID)
+			reporterID := 1
+			assertSystemInDB(t, id, nil, &reporterID)
 
-	var sys models.SystemPlatform
-	assert.NoError(t, database.DB.Where("inventory_id = ?::uuid", id).Find(&sys).Error)
-	after := time.Now().Add(time.Hour)
-	sys.LastEvaluation = &after
-	assert.NoError(t, database.DB.Save(&sys).Error)
-	// Test that second upload did not cause re-evaluation
-	logHook := utils.NewTestLogHook()
-	log.AddHook(logHook)
-	err = HandleUpload(event)
-	assert.NoError(t, err)
-	assertInLogs(t, UploadSuccessNoEval, logHook.LogEntries...)
-	assertSystemReposInDB(t, sys.ID, []string{"epel-8"})
-	deleteData(t)
+			var sys models.SystemPlatform
+			assert.NoError(t, database.DB.Where("inventory_id = ?::uuid", id).Find(&sys).Error)
+			after := time.Now().Add(time.Hour)
+			sys.LastEvaluation = &after
+			assert.NoError(t, database.DB.Save(&sys).Error)
+			// Test that second upload did not cause re-evaluation
+			logHook := utils.NewTestLogHook()
+			log.AddHook(logHook)
+			err = HandleUpload(event)
+			assert.NoError(t, err)
+			assertInLogs(t, UploadSuccessNoEval, logHook.LogEntries...)
+			assertSystemReposInDB(t, sys.ID, []string{"epel-8"})
+			deleteData(t)
+		})
+	}
 }
 
 func TestUploadHandlerWarn(t *testing.T) {
@@ -153,7 +158,7 @@ func TestUploadHandlerWarn(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	noPkgsEvent := createTestUploadEvent("1", id, "puptoo", false, false)
+	noPkgsEvent := createTestUploadEvent("1", id, "puptoo", false, false, "created")
 	err := HandleUpload(noPkgsEvent)
 	if assert.Error(t, err) {
 		assert.ErrorIs(t, err, ErrNoPackages)
@@ -166,7 +171,7 @@ func TestUploadHandlerWarnSkipReporter(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	noPkgsEvent := createTestUploadEvent("1", id, "yupana", false, false)
+	noPkgsEvent := createTestUploadEvent("1", id, "yupana", false, false, "created")
 	err := HandleUpload(noPkgsEvent)
 	if assert.Error(t, err) {
 		assert.ErrorIs(t, err, ErrReporter)
@@ -179,7 +184,7 @@ func TestUploadHandlerWarnSkipHostType(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	event := createTestUploadEvent("1", id, "puptoo", true, false)
+	event := createTestUploadEvent("1", id, "puptoo", true, false, "created")
 	event.Host.SystemProfile.HostType = "edge"
 	err := HandleUpload(event)
 	if assert.Error(t, err) {
@@ -194,7 +199,7 @@ func TestUploadHandlerError1(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	event := createTestUploadEvent("1", id, "puptoo", true, false)
+	event := createTestUploadEvent("1", id, "puptoo", true, false, "created")
 	*event.Host.OrgID = ""
 	err := HandleUpload(event)
 	if assert.Error(t, err) {
@@ -216,10 +221,11 @@ func TestUploadHandlerError2(t *testing.T) {
 	configure()
 	deleteData(t)
 	evalWriter = &erroringWriter{}
+	createdSystemsWriter = &erroringWriter{}
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
 	_ = getOrCreateTestAccount(t)
-	event := createTestUploadEvent("1", id, "puptoo", true, false)
+	event := createTestUploadEvent("1", id, "puptoo", true, false, "created")
 	err := HandleUpload(event)
 	assert.Nil(t, err)
 	time.Sleep(2 * uploadEvalTimeout)
@@ -316,7 +322,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 		HTTPClient: &http.Client{},
 		Debug:      true,
 	}
-	hostEvent := createTestUploadEvent("1", id, "puptoo", false, true)
+	hostEvent := createTestUploadEvent("1", id, "puptoo", false, true, "created")
 	yumUpdates, err := getYumUpdates(hostEvent, httpClient)
 	assert.Nil(t, err)
 
