@@ -108,6 +108,7 @@ func RunServer(ctx context.Context, handler http.Handler, port int) error {
 	srv := http.Server{Addr: addr, Handler: handler, ReadHeaderTimeout: ReadHeaderTimeout, MaxHeaderBytes: 65535}
 	go func() {
 		<-ctx.Done()
+		LogDebug("gracefully shutting down server...")
 		err := srv.Shutdown(context.Background())
 		if err != nil {
 			LogError("err", err.Error(), "server shutting down failed")
