@@ -40,11 +40,11 @@ func configure() {
 	core.ConfigureApp()
 	eventsTopic = utils.FailIfEmpty(utils.CoreCfg.EventsTopic, "EVENTS_TOPIC")
 	evalTopic := utils.FailIfEmpty(utils.CoreCfg.EvalTopic, "EVAL_TOPIC")
-	// createdTopic := utils.FailIfEmpty(utils.CoreCfg.CreatedSystemsTopic, "CREATED_SYSTEMS_TOPIC")
+	createdTopic := utils.FailIfEmpty(utils.CoreCfg.CreatedSystemsTopic, "CREATED_SYSTEMS_TOPIC")
 	ptTopic := utils.FailIfEmpty(utils.CoreCfg.PayloadTrackerTopic, "PAYLOAD_TRACKER_TOPIC")
 	evalWriter = mqueue.NewKafkaWriterFromEnv(evalTopic)
 	ptWriter = mqueue.NewKafkaWriterFromEnv(ptTopic)
-	// createdSystemsWriter = mqueue.NewKafkaWriterFromEnv(createdTopic)
+	createdSystemsWriter = mqueue.NewKafkaWriterFromEnv(createdTopic)
 
 	configureListener()
 }
@@ -76,7 +76,7 @@ func configureListener() {
 	validReporters = loadValidReporters()
 
 	updatedEventsBuffer.initFlushTimer(&evalWriter)
-	// createdEventsBuffer.initFlushTimer(createdSystemsWriter)
+	createdEventsBuffer.initFlushTimer(&createdSystemsWriter)
 }
 
 func loadValidReporters() map[string]int {

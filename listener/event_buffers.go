@@ -30,11 +30,6 @@ var createdEventsBuffer = eventBuffer{
 	Lock:       sync.Mutex{},
 }
 
-// var flushTimer = time.AfterFunc(87600*time.Hour, func() {
-// 	utils.LogInfo(FlushedTimeoutBuffer)
-// 	updatedEventsBuffer.flushEvalEvents()
-// })
-
 func (b *eventBuffer) initFlushTimer(w *mqueue.Writer) {
 	b.flushTimer = time.AfterFunc(87600*time.Hour, func() {
 		utils.LogInfo(FlushedTimeoutBuffer)

@@ -27,7 +27,7 @@ func TestUpdateSystem(t *testing.T) {
 		DisplayName: id,
 	}).Error)
 
-	ev := createTestUploadEvent("1", id, "puptoo", false, false)
+	ev := createTestUploadEvent("1", id, "puptoo", false, false, "created")
 	name := "TEST_NAME"
 	ev.Host.DisplayName = &name
 	ev.Host.SystemProfile.InstalledPackages = &[]string{"kernel-0:4.18.0-193.1.2.el8_2.x86_64"}
@@ -112,7 +112,7 @@ func TestUploadAfterDelete(t *testing.T) {
 	assert.NoError(t, err)
 
 	// upload will be skipped and system won't be created
-	uploadEvent := createTestUploadEvent("1", id, "puptoo", true, false)
+	uploadEvent := createTestUploadEvent("1", id, "puptoo", true, false, "created")
 	err = HandleUpload(uploadEvent)
 	assert.NoError(t, err)
 	assertSystemNotInDB(t)
@@ -126,7 +126,7 @@ func TestCreateDeleteUpload(t *testing.T) {
 	configure()
 	deleteData(t)
 
-	uploadEvent := createTestUploadEvent("1", id, "puptoo", true, false)
+	uploadEvent := createTestUploadEvent("1", id, "puptoo", true, false, "created")
 	originalName := "UPLOADED"
 	uploadEvent.Host.DisplayName = &originalName
 	err := HandleUpload(uploadEvent)

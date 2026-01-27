@@ -89,10 +89,10 @@ func getOrCreateTestAccount(t *testing.T) int {
 }
 
 // nolint: unparam
-func createTestUploadEvent(orgID, inventoryID, reporter string, packages, yum bool) HostEvent {
+func createTestUploadEvent(orgID, inventoryID, reporter string, packages, yum bool, eventType string) HostEvent {
 	now := time.Now()
 	ev := HostEvent{
-		Type: "created",
+		Type: eventType,
 		Host: Host{
 			ID:       inventoryID,
 			OrgID:    &orgID,
