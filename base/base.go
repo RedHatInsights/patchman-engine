@@ -7,12 +7,14 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 const VMaaSAPIPrefix = "/api/v3"
 const RBACApiPrefix = "/api/rbac/v1"
+const defaultK8sGracePeriod = 30 * time.Second
 
 var Context context.Context
 var CancelContext context.CancelFunc
@@ -25,8 +27,9 @@ func HandleSignals() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		<-c
-		utils.LogInfo("SIGTERM/SIGINT received")
+		sig := <-c
+		utils.LogInfo("starting grace period for " + sig.String())
+		time.Sleep(defaultK8sGracePeriod / 4)
 		CancelContext()
 		utils.LogInfo("SIGTERM/SIGINT handled")
 	}()
