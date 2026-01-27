@@ -26,6 +26,7 @@ func HandleSignals() {
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-c
+		utils.LogInfo("SIGTERM/SIGINT received")
 		CancelContext()
 		utils.LogInfo("SIGTERM/SIGINT handled")
 	}()
