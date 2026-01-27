@@ -588,3 +588,13 @@ func isFilterInURLValid(c *gin.Context) bool {
 	}
 	return true
 }
+
+func checkTemplateSystemsLimit(numSystems int, c *gin.Context) error {
+	if numSystems > TemplateSystemsUpdateLimit {
+		msg := fmt.Sprintf("Cannot process more than %d systems at once", TemplateSystemsUpdateLimit)
+		err := errors.New(msg)
+		utils.LogAndRespBadRequest(c, err, msg)
+		return err
+	}
+	return nil
+}

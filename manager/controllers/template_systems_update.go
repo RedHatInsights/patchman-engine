@@ -25,6 +25,7 @@ import (
 var candlepinClient = candlepin.CreateCandlepinClient()
 
 const InvalidInventoryIDsErr = "invalid list of inventory IDs"
+const TemplateSystemsUpdateLimit = 1000
 
 type TemplateSystemsUpdateRequest struct {
 	// List of inventory IDs to have templates removed
@@ -58,6 +59,10 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 	var req TemplateSystemsUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.LogAndRespBadRequest(c, err, "Invalid template update request "+err.Error())
+		return
+	}
+
+	if err := checkTemplateSystemsLimit(len(req.Systems), c); err != nil {
 		return
 	}
 
