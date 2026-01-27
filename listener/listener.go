@@ -29,6 +29,11 @@ var (
 	uploadEvalTimeout    time.Duration
 	deletionThreshold    time.Duration
 	useTraceLevel        bool
+
+	// Event buffers
+	eventBufferSize     = 5 * mqueue.BatchSize
+	updatedEventsBuffer eventBuffer
+	createdEventsBuffer eventBuffer
 )
 
 const (
@@ -45,6 +50,9 @@ func configure() {
 	evalWriter = mqueue.NewKafkaWriterFromEnv(evalTopic)
 	ptWriter = mqueue.NewKafkaWriterFromEnv(ptTopic)
 	createdSystemsWriter = mqueue.NewKafkaWriterFromEnv(createdTopic)
+
+	updatedEventsBuffer.initEventBuffer(&evalWriter, &ptWriter)
+	createdEventsBuffer.initEventBuffer(&createdSystemsWriter, &ptWriter)
 
 	configureListener()
 }
@@ -74,9 +82,6 @@ func configureListener() {
 	useTraceLevel = log.IsLevelEnabled(log.TraceLevel)
 
 	validReporters = loadValidReporters()
-
-	updatedEventsBuffer.initFlushTimer(&evalWriter)
-	createdEventsBuffer.initFlushTimer(&createdSystemsWriter)
 }
 
 func loadValidReporters() map[string]int {

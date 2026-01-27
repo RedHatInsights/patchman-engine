@@ -179,9 +179,9 @@ func HandleUpload(event HostEvent) error {
 
 	ptEvent.StatusMsg = ProcessingStatus
 	if event.Type == "created" {
-		createdEventsBuffer.bufferEvalEvents(sys.InventoryID, sys.RhAccountID, &ptEvent, &createdSystemsWriter)
+		createdEventsBuffer.bufferEvalEvents(sys.InventoryID, sys.RhAccountID, &ptEvent)
 	} else {
-		updatedEventsBuffer.bufferEvalEvents(sys.InventoryID, sys.RhAccountID, &ptEvent, &evalWriter)
+		updatedEventsBuffer.bufferEvalEvents(sys.InventoryID, sys.RhAccountID, &ptEvent)
 	}
 	logAndObserve(UploadSuccess, ReceivedSuccess, &event, &ptEvent, tStart, SuccessStatus, false)
 	return nil
