@@ -14,20 +14,21 @@ import (
 )
 
 var (
-	eventsTopic        string
-	eventsConsumers    int
-	enableTemplates    bool
-	templatesTopic     string
-	templatesConsumers int
-	evalWriter         mqueue.Writer
-	ptWriter           mqueue.Writer
-	validReporters     map[string]int
-	allowedReporters   map[string]bool
-	excludedHostTypes  map[string]bool
-	enableBypass       bool
-	uploadEvalTimeout  time.Duration
-	deletionThreshold  time.Duration
-	useTraceLevel      bool
+	eventsTopic          string
+	eventsConsumers      int
+	enableTemplates      bool
+	templatesTopic       string
+	templatesConsumers   int
+	evalWriter           mqueue.Writer
+	createdSystemsWriter mqueue.Writer
+	ptWriter             mqueue.Writer
+	validReporters       map[string]int
+	allowedReporters     map[string]bool
+	excludedHostTypes    map[string]bool
+	enableBypass         bool
+	uploadEvalTimeout    time.Duration
+	deletionThreshold    time.Duration
+	useTraceLevel        bool
 )
 
 const (
@@ -39,9 +40,11 @@ func configure() {
 	core.ConfigureApp()
 	eventsTopic = utils.FailIfEmpty(utils.CoreCfg.EventsTopic, "EVENTS_TOPIC")
 	evalTopic := utils.FailIfEmpty(utils.CoreCfg.EvalTopic, "EVAL_TOPIC")
+	// createdTopic := utils.FailIfEmpty(utils.CoreCfg.CreatedSystemsTopic, "CREATED_SYSTEMS_TOPIC")
 	ptTopic := utils.FailIfEmpty(utils.CoreCfg.PayloadTrackerTopic, "PAYLOAD_TRACKER_TOPIC")
 	evalWriter = mqueue.NewKafkaWriterFromEnv(evalTopic)
 	ptWriter = mqueue.NewKafkaWriterFromEnv(ptTopic)
+	// createdSystemsWriter = mqueue.NewKafkaWriterFromEnv(createdTopic)
 
 	configureListener()
 }
@@ -71,6 +74,9 @@ func configureListener() {
 	useTraceLevel = log.IsLevelEnabled(log.TraceLevel)
 
 	validReporters = loadValidReporters()
+
+	updatedEventsBuffer.initFlushTimer(&evalWriter)
+	// createdEventsBuffer.initFlushTimer(createdSystemsWriter)
 }
 
 func loadValidReporters() map[string]int {

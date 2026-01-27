@@ -62,6 +62,7 @@ type coreConfig struct {
 	KafkaWriterMaxAttempts int
 	EventsTopic            string
 	EvalTopic              string
+	CreatedSystemsTopic    string
 	PayloadTrackerTopic    string
 	RemediationUpdateTopic string
 	NotificationsTopic     string
@@ -169,6 +170,7 @@ func initKafkaFromEnv() {
 func initTopicsFromEnv() {
 	CoreCfg.EventsTopic = Getenv("EVENTS_TOPIC", "")
 	CoreCfg.EvalTopic = Getenv("EVAL_TOPIC", "")
+	CoreCfg.CreatedSystemsTopic = Getenv("CREATED_SYSTEMS_TOPIC", "")
 	CoreCfg.PayloadTrackerTopic = Getenv("PAYLOAD_TRACKER_TOPIC", "")
 	CoreCfg.RemediationUpdateTopic = Getenv("REMEDIATIONS_UPDATE_TOPIC", "")
 	CoreCfg.NotificationsTopic = Getenv("NOTIFICATIONS_TOPIC", "")
