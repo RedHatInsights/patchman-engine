@@ -32,6 +32,10 @@ func TemplateSystemsDeleteHandler(c *gin.Context) {
 		return
 	}
 
+	if err := checkTemplateSystemsLimit(len(req.Systems), c); err != nil {
+		return
+	}
+
 	db := middlewares.DBFromContext(c)
 
 	err := checkTemplateSystems(c, db, account, nil, req.Systems, groups)

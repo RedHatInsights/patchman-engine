@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -244,4 +246,31 @@ func TestUpdateTemplateSystemsCandlepin404(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	database.CheckTemplateSystems(t, templateAccount, templateUUID,
 		[]string{"00000000-0000-0000-0000-000000000007"})
+}
+
+func TestUpdateTemplateTooManySystems(t *testing.T) {
+	core.SetupTest(t)
+
+	database.CreateTemplate(t, templateAccount, templateUUID, templateSystems)
+	defer database.DeleteTemplate(t, templateAccount, templateUUID)
+
+	systems := make([]string, 0, TemplateSystemsUpdateLimit+1)
+	for i := 0; i < TemplateSystemsUpdateLimit+1; i++ {
+		systems = append(systems, uuid.NewString())
+	}
+	body := map[string][]string{
+		"systems": systems,
+	}
+
+	bodyJSON, err := sonic.Marshal(body)
+	if err != nil {
+		panic(err)
+	}
+
+	w := CreateRequestRouterWithParams("PUT", templatePath, templateUUID, "", bytes.NewBuffer(bodyJSON), "",
+		TemplateSystemsUpdateHandler, templateAccount)
+
+	var errResp utils.ErrorResponse
+	CheckResponse(t, w, http.StatusBadRequest, &errResp)
+	assert.Equal(t, fmt.Sprintf("Cannot process more than %d systems at once", TemplateSystemsUpdateLimit), errResp.Error)
 }
