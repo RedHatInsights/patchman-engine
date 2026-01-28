@@ -101,9 +101,8 @@ type SystemItemAttributes struct {
 // nolint: lll
 type SystemItemAttributesExtended struct {
 	SystemItemAttributes
-	ThirdParty        bool   `json:"third_party" csv:"third_party" query:"sp.third_party" gorm:"column:third_party"`
-	InsightsID        string `json:"insights_id" csv:"insights_id" query:"ih.insights_id" gorm:"column:insights_id"`
-	PackagesUpdatable int    `json:"packages_updatable" csv:"packages_updatable" query:"sp.packages_installable" gorm:"column:packages_updatable"`
+	ThirdParty        bool `json:"third_party" csv:"third_party" query:"sp.third_party" gorm:"column:third_party"`
+	PackagesUpdatable int  `json:"packages_updatable" csv:"packages_updatable" query:"sp.packages_installable" gorm:"column:packages_updatable"`
 
 	OSName  string `json:"os_name" csv:"os_name" query:"ih.system_profile->'operating_system'->>'name'" gorm:"column:osname"`
 	OSMajor string `json:"os_major" csv:"os_major" query:"ih.system_profile->'operating_system'->>'major'" gorm:"column:osmajor"`
