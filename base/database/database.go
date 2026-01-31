@@ -16,10 +16,13 @@ func OnConflictUpdateMulti(db *gorm.DB, keys []string, updateCols ...string) *go
 	for _, key := range keys {
 		confilctColumns = append(confilctColumns, clause.Column{Name: key})
 	}
-	return db.Clauses(clause.OnConflict{
-		Columns:   confilctColumns,
-		DoUpdates: clause.AssignmentColumns(updateCols),
-	})
+	onConflict := clause.OnConflict{Columns: confilctColumns}
+	if len(updateCols) > 0 {
+		onConflict.DoUpdates = clause.AssignmentColumns(updateCols)
+	} else {
+		onConflict.DoNothing = true
+	}
+	return db.Clauses(onConflict)
 }
 
 type UpExpr struct {
