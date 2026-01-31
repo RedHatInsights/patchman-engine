@@ -2,11 +2,12 @@ package utils
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestRunServer(t *testing.T) {
@@ -24,7 +25,8 @@ func TestRunServer(t *testing.T) {
 	err := RunServer(ctx, gin.Default(), 8888)
 	assert.Nil(t, err)
 	AssertEqualWait(t, 1, func() (exp, act interface{}) {
-		return 1, len(hook.LogEntries)
+		return 2, len(hook.LogEntries)
 	})
-	assert.Equal(t, "server closed successfully", hook.LogEntries[0].Message)
+	assert.Equal(t, "gracefully shutting down server...", hook.LogEntries[0].Message)
+	assert.Equal(t, "server closed successfully", hook.LogEntries[1].Message)
 }
