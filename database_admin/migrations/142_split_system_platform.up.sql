@@ -139,14 +139,14 @@ BEGIN
           os_name = ih.system_profile->'operating_system'->>'name',
           os_major = safe_to_int(ih.system_profile->'operating_system'->>'major'),
           os_minor = safe_to_int(ih.system_profile->'operating_system'->>'minor'),
-          rhsm_version = ih.system_profile->'rhsm'->>'version',
+          rhsm_version = NULLIF(ih.system_profile->'rhsm'->>'version', ''),
           subscription_manager_id = safe_to_uuid(ih.system_profile->>'owner_id'),
           sap_workload = COALESCE((ih.system_profile->'workloads'->'sap'->>'sap_system')::BOOLEAN, false),
           sap_workload_sids = ARRAY(SELECT jsonb_array_elements_text(ih.system_profile->'workloads'->'sap'->'sids')),
           ansible_workload = COALESCE(LENGTH(ih.system_profile->'workloads'->>'ansible') > 2, false),
-          ansible_workload_controller_version = ih.system_profile->'workloads'->'ansible'->>'controller_version',
+          ansible_workload_controller_version = NULLIF(ih.system_profile->'workloads'->'ansible'->>'controller_version', ''),
           mssql_workload = COALESCE(LENGTH(ih.system_profile->'workloads'->>'mssql') > 2, false),
-          mssql_workload_version = ih.system_profile->'workloads'->'mssql'->>'version'
+          mssql_workload_version = NULLIF(ih.system_profile->'workloads'->'mssql'->>'version', '')
         FROM inventory.hosts ih
         WHERE ih.id = si.inventory_id;
     END IF;
