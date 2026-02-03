@@ -4,6 +4,7 @@ import (
 	"app/base/utils"
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -30,7 +31,7 @@ func NewConn(databaseURL string) (database.Driver, *sql.DB, error) {
 	}
 
 	loggingConn := pq.ConnectorWithNoticeHandler(baseConn, func(e *pq.Error) {
-		fmt.Printf("Notice: %v\n", e)
+		utils.LogInfo("Notice: " + e.Error())
 	})
 
 	db := sql.OpenDB(loggingConn)
@@ -61,12 +62,12 @@ func MigrateUp(conn database.Driver, sourceURL string) {
 	}
 
 	if err != nil && err.Error() == "no change" {
-		fmt.Println("no change")
+		utils.LogInfo("no change")
 		return
 	}
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error upgrading the database: %v", err.Error())
+		utils.LogError("err", err.Error(), "error upgrading the database")
 		panic(err)
 	}
 }
@@ -109,44 +110,44 @@ func dbSchemaVersion(conn database.Driver, sourceURL string) (int, error) {
 
 func migrateAction(conn database.Driver, sourceURL string) int {
 	expectedSchema := schemaMigration
-	fmt.Printf("DB migration in progress, waiting for schema=%d\n", expectedSchema)
+	utils.LogInfo("schema", expectedSchema, "DB migration in progress, waiting for schema")
 	dbSchema, err := dbSchemaVersion(conn, sourceURL)
 	if err != nil {
 		if errors.As(err, &migrate.ErrDirty{}) && forceMigrationVersion > 0 {
 			return MIGRATE
 		}
-		fmt.Fprintf(os.Stderr, "Error getting current DB version: %v\n", err.Error())
+		utils.LogError("err", err.Error(), "error getting current DB version")
 		return BLOCK
 	}
 	migrationSchema, err := latestSchemaMigrationFileVersion(sourceURL)
 	if err != nil {
-		fmt.Fprint(os.Stderr, err.Error())
+		utils.LogError("err", err.Error(), "failed to load latestSchemaMigrationFileVersion")
 		return BLOCK
 	}
 
 	if migrationSchema < expectedSchema || migrationSchema < dbSchema {
 		// some migration files are missing
-		fmt.Fprintf(os.Stderr, "Missing migration files for schema %d and newer\n", migrationSchema)
+		utils.LogError("schema", migrationSchema, "missing migration files for schema")
 		return BLOCK
 	}
 	if dbSchema == expectedSchema && migrationSchema > dbSchema {
 		// schema can be upgraded but is intentionaly blocked by SCHEMA_MIGRATION
-		fmt.Println("Deployment blocked, enable migrations to proceed")
+		utils.LogWarn("deployment blocked, enable migrations to proceed")
 		return BLOCK
 	}
 	if dbSchema == migrationSchema &&
 		(dbSchema == expectedSchema || expectedSchema == -1) {
-		fmt.Println("DB is upgraded")
+		utils.LogInfo("DB is upgraded")
 		return CONTINUE
 	}
-	fmt.Printf("current version: %d, expected: %d\n", dbSchema, expectedSchema)
+	utils.LogInfo("current version:", dbSchema, "expected: ", expectedSchema, "migrateAction")
 	return MIGRATE
 }
 
 type logger struct{}
 
 func (t logger) Printf(format string, v ...interface{}) {
-	fmt.Printf(format, v...)
+	log.Printf(format, v...)
 }
 
 func (t logger) Verbose() bool {
