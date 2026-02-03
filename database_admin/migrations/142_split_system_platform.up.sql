@@ -55,6 +55,8 @@ GRANT SELECT, USAGE ON SEQUENCE system_inventory_id_seq TO evaluator;
 GRANT SELECT, USAGE ON SEQUENCE system_inventory_id_seq TO listener;
 GRANT SELECT, USAGE ON SEQUENCE system_inventory_id_seq TO vmaas_sync;
 
+do $$ begin RAISE NOTICE 'Created system_inventory'; end $$;
+
 -- LOAD DATA
 INSERT INTO system_inventory (
     id,
@@ -153,6 +155,8 @@ END $$;
 DROP FUNCTION safe_to_int;
 DROP FUNCTION safe_to_uuid;
 
+do $$ begin RAISE NOTICE 'Data loaded into system_inventory'; end $$;
+
 -- TRIGGERS
 SELECT create_table_partition_triggers('system_inventory_set_last_updated',
                                        $$BEFORE INSERT OR UPDATE$$,
@@ -182,6 +186,8 @@ CREATE INDEX IF NOT EXISTS system_inventory_tags_index ON system_inventory USING
 CREATE INDEX IF NOT EXISTS system_inventory_stale_timestamp_index ON system_inventory (stale_timestamp);
 CREATE INDEX IF NOT EXISTS system_inventory_workspaces_index ON system_inventory USING GIN (workspaces);
 
+do $$ begin RAISE NOTICE 'Added triggers, constraints, and indexes to system_inventory'; end $$;
+
 -- UPDATE FKEYS
 ALTER TABLE IF EXISTS system_repo
 DROP CONSTRAINT system_platform_id,
@@ -200,6 +206,8 @@ DROP CONSTRAINT system_package2_rh_account_id_system_id_fkey,
 ADD CONSTRAINT system_inventory_id
     FOREIGN KEY (rh_account_id, system_id)
     REFERENCES system_inventory (rh_account_id, id);
+
+do $$ begin RAISE NOTICE 'Updated fkey references from system_platform to system_inventory'; end $$;
 
 -- UPDATE FUNCTIONS
 CREATE OR REPLACE FUNCTION on_system_update()
@@ -504,6 +512,8 @@ BEGIN
 END;
 $fun$ LANGUAGE plpgsql;
 
+do $$ begin RAISE NOTICE 'Updated functions to use system_inventory'; end $$;
+
 
 
 -- system_patch
@@ -549,6 +559,8 @@ SELECT grant_table_partitions('SELECT', 'system_patch', 'listener');
 SELECT grant_table_partitions('SELECT', 'system_patch', 'manager');
 SELECT grant_table_partitions('SELECT', 'system_patch', 'vmaas_sync');
 
+do $$ begin RAISE NOTICE 'Created system_patch'; end $$;
+
 INSERT INTO system_patch SELECT
     id,
     rh_account_id,
@@ -568,6 +580,8 @@ INSERT INTO system_patch SELECT
     template_id
 FROM system_platform sp
 WHERE sp.stale = false;
+
+do $$ begin RAISE NOTICE 'Data loaded into system_patch'; end $$;
 
 -- CONSTRAINTS
 ALTER TABLE IF EXISTS system_patch 
@@ -624,3 +638,5 @@ GRANT SELECT, UPDATE ON system_platform TO evaluator;
 GRANT SELECT, UPDATE, DELETE ON system_platform TO manager;
 -- VMaaS sync needs to be able to perform system culling tasks
 GRANT SELECT, UPDATE, DELETE ON system_platform to vmaas_sync;
+
+do $$ begin RAISE NOTICE 'Migration 142 end'; end $$;
