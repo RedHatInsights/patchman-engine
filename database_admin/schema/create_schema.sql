@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (143, false);
+VALUES (144, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -1061,7 +1061,8 @@ GRANT SELECT, UPDATE (installable_advisory_count_cache,
               applicable_advisory_count_cache,
               applicable_advisory_enh_count_cache,
               applicable_advisory_bug_count_cache,
-              applicable_advisory_sec_count_cache) ON system_patch TO manager;
+              applicable_advisory_sec_count_cache,
+              template_id) ON system_patch TO manager;
 GRANT SELECT, UPDATE, DELETE ON system_patch to vmaas_sync; -- vmaas_sync performs system culling
 
 -- system_platform
