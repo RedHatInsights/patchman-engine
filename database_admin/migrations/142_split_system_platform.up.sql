@@ -105,8 +105,7 @@ INSERT INTO system_inventory (
     stale_timestamp,
     stale_warning_timestamp,
     culled_timestamp
-FROM system_platform sp
-WHERE sp.stale = false;
+FROM system_platform sp;
 
 SELECT setval('system_inventory_id_seq', (SELECT MAX(id) FROM system_inventory));
 
@@ -578,8 +577,7 @@ INSERT INTO system_patch SELECT
     applicable_advisory_bug_count_cache,
     applicable_advisory_sec_count_cache,
     template_id
-FROM system_platform sp
-WHERE sp.stale = false;
+FROM system_platform sp;
 
 do $$ begin RAISE NOTICE 'Data loaded into system_patch'; end $$;
 
