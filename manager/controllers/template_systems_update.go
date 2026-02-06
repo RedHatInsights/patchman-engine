@@ -139,6 +139,9 @@ func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template 
 		templateID = &template.ID
 	}
 
+	// TODO: once SystemPlatform model is removed, revoke unnecessary manager privileges to system_inventory and
+	// system_patch tables. They were granted in migration 145 as a temporary fix to solve system_platform view instead
+	// of update trigger issues. Hint: have a look at 145_update_manager_privileges.down.sql
 	tx = tx.Model(models.SystemPlatform{}).
 		Where("rh_account_id = ? AND inventory_id IN (?::uuid)",
 			accountID, inventoryIDs).
