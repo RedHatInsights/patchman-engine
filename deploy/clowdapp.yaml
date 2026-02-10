@@ -692,7 +692,7 @@ parameters:
 - {name: MAX_REQUEST_BODY_SIZE, value: '1048576'} # limit request body size, in bytes (default 1MB)
 - {name: MAX_HEADER_COUNT, value: '50'} # limit number of request headers
 - {name: MAX_GIN_CONNECTIONS, value: '50'}
-- {name: RATELIMIT, value: '100'} # requests per second for leaky bucket rate limiter
+- {name: RATELIMIT, value: '1000'} # requests per second for leaky bucket rate limiter
 - {name: LIMIT_PAGE_SIZE, value: 'true'}  # page size is limited to 100 items per page, set to `false` to use any limit
 - {name: MANAGER_CONFIG, value: ''}
 
