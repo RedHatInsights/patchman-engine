@@ -18,9 +18,10 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	api.Use(middlewares.DatabaseWithContext())
 
 	userAuth := api.Group("/")
-	userAuth.Use(middlewares.RBAC())
 	if utils.CoreCfg.KesselEnabled {
 		userAuth.Use(middlewares.Kessel())
+	} else {
+		userAuth.Use(middlewares.RBAC())
 	}
 	userAuth.Use(middlewares.PublicAuthenticator())
 
