@@ -104,8 +104,8 @@ type SystemInventory struct {
 	RhAccountID                      int    `gorm:"primaryKey"`
 	VmaasJSON                        *string
 	JSONChecksum                     *string
-	LastUpdated                      *time.Time `gorm:"default:null"`
-	UnchangedSince                   *time.Time `gorm:"default:null"`
+	LastUpdated                      *time.Time `gorm:"default:null"` // set by trigger system_inventory_set_last_updated
+	UnchangedSince                   *time.Time `gorm:"default:null"` // set by trigger system_inventory_check_unchanged
 	LastUpload                       *time.Time `gorm:"default:null"`
 	Stale                            bool
 	DisplayName                      string
@@ -116,8 +116,8 @@ type SystemInventory struct {
 	BuiltPkgcache                    bool    `gorm:"column:built_pkgcache"`
 	Arch                             *string
 	Bootc                            bool
-	Tags                             []byte `gorm:"column:tags"`
-	Created                          time.Time
+	Tags                             []byte         `gorm:"column:tags"`
+	Created                          time.Time      // set by trigger system_platform_insert_trigger
 	Workspaces                       pq.StringArray `gorm:"type:text[]"`
 	StaleTimestamp                   *time.Time
 	StaleWarningTimestamp            *time.Time
