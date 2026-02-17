@@ -14,9 +14,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"testing"
 	"time"
 
+	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -357,16 +359,17 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	database.DB.Raw("select nextval('system_inventory_id_seq')").Find(&nextval)
 
 	colsToUpdate := []string{"vmaas_json", "json_checksum", "reporter_id", "satellite_managed"}
-	json := "this_is_json"
+	vmaasJSON := "this_is_json"
 	inStore := models.SystemPlatform{
 		InventoryID:      "99990000-0000-0000-0000-000000000001",
 		RhAccountID:      1,
-		VmaasJSON:        &json,
+		VmaasJSON:        &vmaasJSON,
 		DisplayName:      "display_name",
 		SatelliteManaged: false,
 	}
 	// insert new row
-	err := storeOrUpdateSysPlatform(database.DB, &inStore, colsToUpdate)
+	hostEvent := createTestUploadEvent("1", id, "puptoo", false, true, "created")
+	err := storeOrUpdateSysPlatform(database.DB, &inStore, &hostEvent.Host, colsToUpdate)
 	assert.Nil(t, err)
 
 	var outStore models.SystemPlatform
@@ -378,6 +381,41 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	assert.Equal(t, *inStore.VmaasJSON, *outStore.VmaasJSON)
 	assert.Equal(t, inStore.SatelliteManaged, outStore.SatelliteManaged)
 
+	// verify SystemInventory was created from Host fields
+	var inventoryAfterInsert models.SystemInventory
+	err = database.DB.Where("id = ?", inStore.ID).First(&inventoryAfterInsert).Error
+	assert.Nil(t, err)
+
+	assert.Contains(t, string(inventoryAfterInsert.Tags), `"namespace": "insights-client"`)
+	assert.Contains(t, string(inventoryAfterInsert.Tags), `"key": "env"`)
+	assert.Contains(t, string(inventoryAfterInsert.Tags), `"value": "prod"`)
+
+	expectedWorkspaces := make([]string, len(hostEvent.Host.Groups))
+	for i, g := range hostEvent.Host.Groups {
+		expectedWorkspaces[i] = g.ID
+	}
+	slices.Sort(expectedWorkspaces)
+	assert.Equal(t, pq.StringArray(expectedWorkspaces), inventoryAfterInsert.Workspaces)
+
+	assert.Equal(t, hostEvent.Host.SystemProfile.OperatingSystem.Name, *inventoryAfterInsert.OSName)
+	assert.Equal(t, hostEvent.Host.SystemProfile.OperatingSystem.Major, *inventoryAfterInsert.OSMajor)
+	assert.Equal(t, hostEvent.Host.SystemProfile.OperatingSystem.Minor, *inventoryAfterInsert.OSMinor)
+
+	assert.Equal(t, hostEvent.Host.SystemProfile.Rhsm.Version, *inventoryAfterInsert.RhsmVersion)
+
+	assert.Equal(t, hostEvent.Host.SystemProfile.Workloads.Sap.SapSystem, inventoryAfterInsert.SapWorkload)
+	assert.ElementsMatch(t,
+		pq.StringArray(hostEvent.Host.SystemProfile.Workloads.Sap.Sids),
+		inventoryAfterInsert.SapWorkloadSIDs)
+
+	assert.Equal(t, true, inventoryAfterInsert.AnsibleWorkload)
+	assert.Equal(t,
+		hostEvent.Host.SystemProfile.Workloads.Ansible.ControllerVersion,
+		*inventoryAfterInsert.AnsibleWorkloadControllerVersion)
+
+	assert.Equal(t, true, inventoryAfterInsert.MssqlWorkload)
+	assert.Equal(t, hostEvent.Host.SystemProfile.Workloads.Mssql.Version, *inventoryAfterInsert.MssqlWorkloadVersion)
+
 	updateJSON := "updated_json"
 	reporter := 2
 	inUpdate := outStore
@@ -388,7 +426,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	inUpdate.SatelliteManaged = true
 
 	// update row
-	err = storeOrUpdateSysPlatform(database.DB, &inUpdate, colsToUpdate)
+	err = storeOrUpdateSysPlatform(database.DB, &inUpdate, &hostEvent.Host, colsToUpdate)
 	assert.Nil(t, err)
 
 	var outUpdate models.SystemPlatform
