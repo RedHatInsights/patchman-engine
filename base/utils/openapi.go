@@ -33,3 +33,11 @@ func EmptyToNil(s *string) *string {
 	}
 	return s
 }
+
+// MarshalNilToJSONB returns JSON bytes suitable for a NOT NULL JSONB column.
+func MarshalNilToJSONB(data []byte) []byte {
+	if len(data) == 0 {
+		return []byte("[]")
+	}
+	return data
+}
