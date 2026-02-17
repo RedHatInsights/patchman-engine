@@ -19,8 +19,11 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
+
+	"github.com/lib/pq"
 
 	stdErrors "errors"
 
@@ -89,6 +92,8 @@ type Host struct {
 	Reporter              string                                 `json:"reporter,omitempty"`
 	SystemProfile         inventory.SystemProfile                `json:"system_profile,omitempty"`
 	PerReporterStaleness  map[string]inventory.ReporterStaleness `json:"per_reporter_staleness,omitempty"`
+	Groups                []inventory.Group                      `json:"groups,omitempty"`
+	Tags                  json.RawMessage                        `json:"tags,omitempty"`
 	ParsedYumUpdates      *YumUpdates                            `json:"-"`
 }
 
@@ -383,7 +388,7 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 		colsToUpdate = append(colsToUpdate, "yum_updates", "yum_checksum")
 	}
 
-	if err := storeOrUpdateSysPlatform(tx, &systemPlatform, colsToUpdate); err != nil {
+	if err := storeOrUpdateSysPlatform(tx, &systemPlatform, host, colsToUpdate); err != nil {
 		return nil, errors.Wrap(err, "Unable to save or update system in database")
 	}
 
@@ -405,7 +410,13 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 	return &systemPlatform, nil
 }
 
-func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsToUpdate []string) error {
+// nolint: funlen
+func storeOrUpdateSysPlatform(
+	tx *gorm.DB,
+	system *models.SystemPlatform,
+	host *Host,
+	colsToUpdate []string,
+) error {
 	if err := tx.Where("rh_account_id = ? AND inventory_id = ?", system.RhAccountID, system.InventoryID).
 		Select("id").Find(system).Error; err != nil {
 		utils.LogWarn("err", err, "couldn't find system for update")
@@ -419,25 +430,43 @@ func storeOrUpdateSysPlatform(tx *gorm.DB, system *models.SystemPlatform, colsTo
 		},
 	})
 
+	workspaces := make([]string, len(host.Groups))
+	for i, group := range host.Groups {
+		workspaces[i] = group.ID
+	}
+	slices.Sort(workspaces)
+
 	inventoryRecord := models.SystemInventory{
-		ID:                    system.ID,
-		InventoryID:           system.InventoryID,
-		RhAccountID:           system.RhAccountID,
-		DisplayName:           system.DisplayName,
-		LastUpload:            system.LastUpload,
-		SatelliteManaged:      system.SatelliteManaged,
-		BuiltPkgcache:         system.BuiltPkgcache,
-		Arch:                  system.Arch,
-		Bootc:                 system.Bootc,
-		VmaasJSON:             system.VmaasJSON,
-		JSONChecksum:          system.JSONChecksum,
-		ReporterID:            system.ReporterID,
-		YumUpdates:            system.YumUpdates,
-		YumChecksum:           system.YumChecksum,
-		StaleTimestamp:        system.StaleTimestamp,
-		StaleWarningTimestamp: system.StaleWarningTimestamp,
-		CulledTimestamp:       system.CulledTimestamp,
-		Tags:                  []byte("[]"),
+		ID:                               system.ID,
+		InventoryID:                      system.InventoryID,
+		RhAccountID:                      system.RhAccountID,
+		VmaasJSON:                        system.VmaasJSON,
+		JSONChecksum:                     system.JSONChecksum,
+		LastUpload:                       system.LastUpload,
+		DisplayName:                      system.DisplayName,
+		ReporterID:                       system.ReporterID,
+		YumUpdates:                       system.YumUpdates,
+		YumChecksum:                      system.YumChecksum,
+		SatelliteManaged:                 system.SatelliteManaged,
+		BuiltPkgcache:                    system.BuiltPkgcache,
+		Arch:                             system.Arch,
+		Bootc:                            system.Bootc,
+		Tags:                             utils.MarshalNilToJSONB(host.Tags),
+		Workspaces:                       pq.StringArray(workspaces),
+		StaleTimestamp:                   system.StaleTimestamp,
+		StaleWarningTimestamp:            system.StaleWarningTimestamp,
+		CulledTimestamp:                  system.CulledTimestamp,
+		OSName:                           utils.EmptyToNil(&host.SystemProfile.OperatingSystem.Name),
+		OSMajor:                          &host.SystemProfile.OperatingSystem.Major,
+		OSMinor:                          &host.SystemProfile.OperatingSystem.Minor,
+		RhsmVersion:                      utils.EmptyToNil(&host.SystemProfile.Rhsm.Version),
+		SubscriptionManagerID:            utils.EmptyToNil(&host.SystemProfile.ConsumerID),
+		SapWorkload:                      host.SystemProfile.Workloads.Sap.SapSystem,
+		SapWorkloadSIDs:                  pq.StringArray(host.SystemProfile.Workloads.Sap.Sids),
+		AnsibleWorkload:                  host.SystemProfile.Workloads.Ansible.ControllerVersion != "",
+		AnsibleWorkloadControllerVersion: utils.EmptyToNil(&host.SystemProfile.Workloads.Ansible.ControllerVersion),
+		MssqlWorkload:                    host.SystemProfile.Workloads.Mssql.Version != "",
+		MssqlWorkloadVersion:             utils.EmptyToNil(&host.SystemProfile.Workloads.Mssql.Version),
 	}
 
 	err := database.OnConflictUpdateMulti(txi, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
