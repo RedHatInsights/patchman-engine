@@ -68,7 +68,6 @@ var (
 
 var (
 	repoPathRegex    = regexp.MustCompile(RepoPathPattern)
-	spacesRegex      = regexp.MustCompile(`^\s*$`)
 	templateRepoPath = regexp.MustCompile(TemplateRepoPattern)
 	httpClient       *api.Client
 	candlepinClient  = candlepin.CreateCandlepinClient()
@@ -334,7 +333,7 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 	}
 
 	displayName := inventoryID
-	if host.DisplayName != nil && len(*host.DisplayName) > 0 && !spacesRegex.MatchString(*host.DisplayName) {
+	if host.DisplayName != nil && strings.TrimSpace(*host.DisplayName) != "" {
 		displayName = *host.DisplayName
 	}
 
