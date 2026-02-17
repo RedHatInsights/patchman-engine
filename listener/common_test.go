@@ -94,11 +94,36 @@ func createTestUploadEvent(orgID, inventoryID, reporter string, packages, yum bo
 	ev := HostEvent{
 		Type: eventType,
 		Host: Host{
-			ID:       inventoryID,
-			OrgID:    &orgID,
-			Reporter: reporter,
+			ID:          inventoryID,
+			DisplayName: utils.PtrString("Test Host"),
+			OrgID:       &orgID,
+			Reporter:    reporter,
 			PerReporterStaleness: map[string]inventory.ReporterStaleness{
 				reporter: {LastCheckIn: types.Rfc3339TimestampWithZ(now)},
+			},
+			Tags:   []byte(`{"namespace": "insights-client","key": "env","value": "prod"}`),
+			Groups: []inventory.Group{{ID: "group1"}},
+			SystemProfile: inventory.SystemProfile{
+				OperatingSystem: inventory.OperatingSystem{
+					Name:  "RHEL",
+					Major: 8,
+					Minor: 4,
+				},
+				Rhsm: inventory.Rhsm{
+					Version: "8.4",
+				},
+				Workloads: inventory.Workloads{
+					Sap: inventory.SapWorkload{
+						SapSystem: true,
+						Sids:      []string{"sid1", "sid2"},
+					},
+					Ansible: inventory.AnsibleWorkload{
+						ControllerVersion: "2.12.0",
+					},
+					Mssql: inventory.MssqlWorkload{
+						Version: "15.0",
+					},
+				},
 			},
 		},
 	}
