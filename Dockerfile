@@ -6,8 +6,8 @@ ARG INSTALL_TOOLS=no
 
 # install build, development and test environment
 RUN (dnf module enable -y postgresql:16 || curl -o /etc/yum.repos.d/postgresql.repo \
-        https://copr.fedorainfracloud.org/coprs/g/insights/postgresql-16/repo/epel-9/group_insights-postgresql-16-epel-9.repo) && \
-     dnf install -y go-toolset postgresql diffutils rpm-devel pg_repack
+    https://copr.fedorainfracloud.org/coprs/g/insights/postgresql-16/repo/epel-9/group_insights-postgresql-16-epel-9.repo) && \
+    dnf install -y go-toolset postgresql diffutils rpm-devel pg_repack
 
 ENV GOPATH=/go \
     GO111MODULE=on \
@@ -28,7 +28,7 @@ RUN if [ "$INSTALL_TOOLS" == "yes" ] ; then \
         go install github.com/swaggo/swag/cmd/swag@v1.16.4 && \
         go install gotest.tools/gotestsum@v1.13.0 && \
         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
-        | sh -s -- -b $(go env GOPATH)/bin v2.2.2 ; \
+        | sh -s -- -b $(go env GOPATH)/bin v2.10.1 ; \
     fi
 
 ADD --chown=insights:insights dev/kafka/secrets/ca.crt /opt/kafka/
