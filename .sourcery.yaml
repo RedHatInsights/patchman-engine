@@ -1,3 +1,2 @@
 # Disable diagram features
-diagrams:
-  mermaid: false
+diagrams: false
