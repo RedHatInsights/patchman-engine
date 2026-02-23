@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
@@ -126,7 +127,7 @@ type SystemInventory struct {
 	OSMajor                          *int16
 	OSMinor                          *int16
 	RhsmVersion                      *string
-	SubscriptionManagerID            *string
+	SubscriptionManagerID            *uuid.UUID
 	SapWorkload                      bool
 	SapWorkloadSIDs                  pq.StringArray `gorm:"type:text[];column:sap_workload_sids"`
 	AnsibleWorkload                  bool
