@@ -71,11 +71,10 @@ func getSystemTags(tx *gorm.DB, system *models.SystemPlatform) ([]ntf.SystemTag,
 
 	var tags []ntf.SystemTag
 	var tagsJSON string
-	err := tx.Table("system_platform sp").
-		Select("ih.tags").
-		Joins("JOIN inventory.hosts ih ON sp.inventory_id = ih.id").
-		Where("sp.rh_account_id = ?", system.RhAccountID).
-		Where("sp.id = ?", system.ID).
+	err := tx.Table("system_inventory").
+		Select("tags").
+		Where("rh_account_id = ?", system.RhAccountID).
+		Where("id = ?", system.ID).
 		Scan(&tagsJSON).Error
 	if err != nil {
 		return nil, errors.Wrap(err, "system tags query failed")
