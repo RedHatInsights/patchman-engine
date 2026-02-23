@@ -18,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -57,11 +58,15 @@ func createTestInvHost(t *testing.T) *Host {
 }
 
 func createTestHostWithEnv(reporter, consumer, baseURL string) *Host {
+	consumerUUID, err := uuid.Parse(consumer)
+	if err != nil {
+		consumerUUID = uuid.Nil
+	}
 	return &Host{
 		ID:       id,
 		Reporter: reporter,
 		SystemProfile: inventory.SystemProfile{
-			ConsumerID: consumer,
+			OwnerID: consumerUUID,
 			YumRepos: &[]inventory.YumRepo{{
 				ID:      "base",
 				Enabled: true,

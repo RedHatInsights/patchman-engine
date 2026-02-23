@@ -2,6 +2,8 @@ package inventory
 
 import (
 	"app/base/types"
+
+	"github.com/google/uuid"
 )
 
 type SystemProfile struct {
@@ -15,7 +17,7 @@ type SystemProfile struct {
 	Releasever        *string         `json:"releasever,omitempty"`
 	SatelliteManaged  bool            `json:"satellite_managed,omitempty"`
 	BootcStatus       Bootc           `json:"bootc_status,omitempty"`
-	ConsumerID        string          `json:"owner_id,omitempty"`
+	OwnerID           uuid.UUID       `json:"owner_id,omitempty"`
 	Workloads         Workloads       `json:"workloads,omitempty"`
 }
 

@@ -282,7 +282,7 @@ func hostTemplate(tx *gorm.DB, accountID int, host *Host) *int64 {
 
 	if hasTemplateRepo(&host.SystemProfile) {
 		// check system's env in candlepin
-		resp, err := callCandlepinEnvironment(base.Context, host.SystemProfile.ConsumerID)
+		resp, err := callCandlepinEnvironment(base.Context, host.SystemProfile.OwnerID.String())
 		if err != nil {
 			utils.LogWarn("inventoryID", host.ID, "err", errors.Wrap(err, "Unable to assign templates"))
 		}
@@ -459,7 +459,7 @@ func storeOrUpdateSysPlatform(
 		OSMajor:                          &host.SystemProfile.OperatingSystem.Major,
 		OSMinor:                          &host.SystemProfile.OperatingSystem.Minor,
 		RhsmVersion:                      utils.EmptyToNil(&host.SystemProfile.Rhsm.Version),
-		SubscriptionManagerID:            utils.EmptyToNil(&host.SystemProfile.ConsumerID),
+		SubscriptionManagerID:            &host.SystemProfile.OwnerID,
 		SapWorkload:                      host.SystemProfile.Workloads.Sap.SapSystem,
 		SapWorkloadSIDs:                  pq.StringArray(host.SystemProfile.Workloads.Sap.Sids),
 		AnsibleWorkload:                  host.SystemProfile.Workloads.Ansible.ControllerVersion != "",
