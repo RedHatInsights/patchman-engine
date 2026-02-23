@@ -87,7 +87,7 @@ func getCounts(pkgSysCounts *[]models.PackageAccountData, accID *int) error {
 			`).
 			Joins("JOIN system_package2 spkg ON sp.id = spkg.system_id AND sp.rh_account_id = spkg.rh_account_id").
 			Joins("JOIN rh_account acc ON sp.rh_account_id = acc.id").
-			Joins("JOIN inventory.hosts ih ON sp.inventory_id = ih.id").
+			Joins("JOIN system_inventory si ON sp.inventory_id = si.inventory_id").
 			Where("sp.packages_installed > 0 AND sp.stale = FALSE").
 			Group("sp.rh_account_id, spkg.name_id").
 			Order("sp.rh_account_id, spkg.name_id")
