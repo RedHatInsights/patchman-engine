@@ -19,7 +19,6 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"slices"
 	"strings"
 	"time"
 
@@ -429,11 +428,10 @@ func storeOrUpdateSysPlatform(
 		},
 	})
 
-	workspaces := make([]string, len(host.Groups))
-	for i, group := range host.Groups {
-		workspaces[i] = group.ID
+	workspaces, err := json.Marshal(host.Groups)
+	if err != nil {
+		return errors.Wrap(err, "marshalling groups")
 	}
-	slices.Sort(workspaces)
 
 	inventoryRecord := models.SystemInventory{
 		ID:                               system.ID,
@@ -451,7 +449,7 @@ func storeOrUpdateSysPlatform(
 		Arch:                             system.Arch,
 		Bootc:                            system.Bootc,
 		Tags:                             utils.MarshalNilToJSONB(host.Tags),
-		Workspaces:                       pq.StringArray(workspaces),
+		Workspaces:                       utils.MarshalNilToJSONB(workspaces),
 		StaleTimestamp:                   system.StaleTimestamp,
 		StaleWarningTimestamp:            system.StaleWarningTimestamp,
 		CulledTimestamp:                  system.CulledTimestamp,
@@ -468,7 +466,7 @@ func storeOrUpdateSysPlatform(
 		MssqlWorkloadVersion:             utils.EmptyToNil(&host.SystemProfile.Workloads.Mssql.Version),
 	}
 
-	err := database.OnConflictUpdateMulti(txi, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
+	err = database.OnConflictUpdateMulti(txi, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
 		Create(&inventoryRecord).Error
 	if err != nil {
 		return base.WrapFatalDBError(err, "unable to insert to system_inventory")

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (145, false);
+VALUES (146, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -672,7 +672,6 @@ CREATE TABLE IF NOT EXISTS system_inventory
     bootc                               BOOLEAN     NOT NULL DEFAULT false,
     tags                                JSONB       NOT NULL,
     created                             TIMESTAMPTZ NOT NULL,
-    workspaces                          TEXT ARRAY  CHECK (array_length(workspaces,1) > 0 or workspaces is null), -- group IDs from system_platform.groups
     stale_timestamp                     TIMESTAMPTZ,
     stale_warning_timestamp             TIMESTAMPTZ,
     culled_timestamp                    TIMESTAMPTZ,
@@ -687,6 +686,7 @@ CREATE TABLE IF NOT EXISTS system_inventory
     ansible_workload_controller_version TEXT        CHECK (NOT empty(ansible_workload_controller_version)),
     mssql_workload                      BOOLEAN     NOT NULL DEFAULT false,
     mssql_workload_version              TEXT        CHECK (NOT empty(mssql_workload_version)),
+    workspaces                          JSONB,
     PRIMARY KEY (rh_account_id, id),
     UNIQUE (rh_account_id, inventory_id)
 ) PARTITION BY HASH (rh_account_id);

@@ -11,10 +11,10 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-	"slices"
 	"testing"
 	"time"
 
@@ -395,12 +395,10 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	assert.Contains(t, string(inventoryAfterInsert.Tags), `"key": "env"`)
 	assert.Contains(t, string(inventoryAfterInsert.Tags), `"value": "prod"`)
 
-	expectedWorkspaces := make([]string, len(hostEvent.Host.Groups))
-	for i, g := range hostEvent.Host.Groups {
-		expectedWorkspaces[i] = g.ID
-	}
-	slices.Sort(expectedWorkspaces)
-	assert.Equal(t, pq.StringArray(expectedWorkspaces), inventoryAfterInsert.Workspaces)
+	var expectedWorkspaces []inventory.Group
+	err = json.Unmarshal(inventoryAfterInsert.Workspaces, &expectedWorkspaces)
+	assert.Nil(t, err)
+	assert.Equal(t, hostEvent.Host.Groups, expectedWorkspaces)
 
 	assert.Equal(t, hostEvent.Host.SystemProfile.OperatingSystem.Name, *inventoryAfterInsert.OSName)
 	assert.Equal(t, hostEvent.Host.SystemProfile.OperatingSystem.Major, *inventoryAfterInsert.OSMajor)
