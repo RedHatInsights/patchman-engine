@@ -87,7 +87,7 @@ func TestSchemaCompatiblity(t *testing.T) {
 		writeTemp("/tmp", "schema-1-migrated.*.dump", migrated)
 		writeTemp("/tmp", "schema-2-fromscratch.*.dump", fromScratch)
 	}
-	assert.Equal(t, len(diff), 0)
+	assert.Equal(t, 0, len(diff))
 }
 
 func TestSchemaEmptyText(t *testing.T) {
