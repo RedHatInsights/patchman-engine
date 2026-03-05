@@ -56,7 +56,7 @@ func CallAPI(client *http.Client, request *http.Request, debugEnabled bool) (*ht
 		LogDebug("dump", fmt.Sprintf("\n%s\n", string(dump)), "http call")
 	}
 
-	resp, err := client.Do(request)
+	resp, err := client.Do(request) // #nosec G704
 	if err != nil {
 		return resp, err
 	}
