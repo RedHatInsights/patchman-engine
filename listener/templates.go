@@ -148,7 +148,7 @@ func processTemplateEvent(value json.RawMessage) (eType string, event mqueue.Tem
 	}
 
 	for i, d := range event.Data {
-		if d.Description != nil && (len(*d.Description) == 0 || spacesRegex.MatchString(*d.Description)) {
+		if d.Description != nil && strings.TrimSpace(*d.Description) == "" {
 			d.Description = nil
 			event.Data[i] = d
 		}

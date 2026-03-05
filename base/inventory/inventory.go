@@ -1,6 +1,8 @@
 package inventory
 
-import "app/base/types"
+import (
+	"app/base/types"
+)
 
 type SystemProfile struct {
 	Arch              *string         `json:"arch,omitempty"`
@@ -14,6 +16,7 @@ type SystemProfile struct {
 	SatelliteManaged  bool            `json:"satellite_managed,omitempty"`
 	BootcStatus       Bootc           `json:"bootc_status,omitempty"`
 	ConsumerID        string          `json:"owner_id,omitempty"`
+	Workloads         Workloads       `json:"workloads,omitempty"`
 }
 
 func (t *SystemProfile) GetInstalledPackages() []string {
@@ -38,8 +41,8 @@ func (t *SystemProfile) GetYumRepos() []YumRepo {
 }
 
 type OperatingSystem struct {
-	Major int    `json:"major,omitempty"`
-	Minor int    `json:"minor,omitempty"`
+	Major int16  `json:"major,omitempty"`
+	Minor int16  `json:"minor,omitempty"`
 	Name  string `json:"name,omitempty"`
 }
 
@@ -71,4 +74,28 @@ type BootcBooted struct {
 
 type ReporterStaleness struct {
 	LastCheckIn types.Rfc3339TimestampWithZ `json:"last_check_in"`
+}
+
+type Group struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type Workloads struct {
+	Sap     SapWorkload     `json:"sap,omitempty"`
+	Ansible AnsibleWorkload `json:"ansible,omitempty"`
+	Mssql   MssqlWorkload   `json:"mssql,omitempty"`
+}
+
+type SapWorkload struct {
+	SapSystem bool     `json:"sap_system,omitempty"`
+	Sids      []string `json:"sids,omitempty"`
+}
+
+type AnsibleWorkload struct {
+	ControllerVersion string `json:"controller_version,omitempty"`
+}
+
+type MssqlWorkload struct {
+	Version string `json:"version,omitempty"`
 }

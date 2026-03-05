@@ -1,6 +1,6 @@
 ARG BUILDIMG=registry.access.redhat.com/ubi9
 ARG RUNIMG=registry.access.redhat.com/ubi9-micro
-FROM ${BUILDIMG} as buildimg
+FROM ${BUILDIMG} AS buildimg
 
 ARG INSTALL_TOOLS=no
 
@@ -62,7 +62,7 @@ EXPOSE 8080
 
 # ---------------------------------------
 # runtime image with only necessary stuff
-FROM ${RUNIMG} as runtimeimg
+FROM ${RUNIMG} AS runtimeimg
 
 # create insights user
 RUN echo "insights:x:1000:1000::/go:/bin/bash" >>/etc/passwd && \
