@@ -12,11 +12,11 @@ func OnConflictUpdate(db *gorm.DB, key string, updateCols ...string) *gorm.DB {
 
 // Appends `ON CONFLICT (key...) DO UPDATE SET (fields) to following insert query with multiple key fields
 func OnConflictUpdateMulti(db *gorm.DB, keys []string, updateCols ...string) *gorm.DB {
-	confilctColumns := []clause.Column{}
-	for _, key := range keys {
-		confilctColumns = append(confilctColumns, clause.Column{Name: key})
+	conflictColumns := make([]clause.Column, len(keys))
+	for i, key := range keys {
+		conflictColumns[i] = clause.Column{Name: key}
 	}
-	onConflict := clause.OnConflict{Columns: confilctColumns}
+	onConflict := clause.OnConflict{Columns: conflictColumns}
 	if len(updateCols) > 0 {
 		onConflict.DoUpdates = clause.AssignmentColumns(updateCols)
 	} else {
@@ -31,17 +31,17 @@ type UpExpr struct {
 }
 
 func OnConflictDoUpdateExpr(db *gorm.DB, keys []string, updateExprs ...UpExpr) *gorm.DB {
-	updateColsValues := make(map[string]interface{})
+	updateColsValues := make(map[string]interface{}, len(updateExprs))
 	for _, v := range updateExprs {
 		updateColsValues[v.Name] = v.Expr
 	}
-	confilctColumns := []clause.Column{}
-	for _, key := range keys {
-		confilctColumns = append(confilctColumns, clause.Column{Name: key})
+	conflictColumns := make([]clause.Column, len(keys))
+	for i, key := range keys {
+		conflictColumns[i] = clause.Column{Name: key}
 	}
 	if len(updateColsValues) > 0 {
 		return db.Clauses(clause.OnConflict{
-			Columns:   confilctColumns,
+			Columns:   conflictColumns,
 			DoUpdates: clause.Assignments(updateColsValues),
 		})
 	}

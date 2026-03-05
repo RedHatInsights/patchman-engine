@@ -15,7 +15,9 @@ func RequestResponseLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tStart := time.Now()
 		c.Next()
-		var fields []interface{}
+		// 17 is the number of fields that are always logged
+		// 2 is the number of fields for each parameter
+		var fields = make([]any, 0, 17+2*len(c.Params))
 
 		duration := time.Since(tStart).Nanoseconds() / 1e6
 		fields = append(fields, "durationMs", duration,

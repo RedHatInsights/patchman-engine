@@ -67,7 +67,7 @@ type PostgreSQLConfig struct {
 	Port        int
 	User        string
 	Database    string
-	Passwd      string
+	Passwd      string // #nosec G117
 	SSLMode     string
 	SSLRootCert string
 	Debug       bool

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"regexp"
+	"slices"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +21,7 @@ import (
 // @Failure 500 {object} map[string]interface{}
 // @Router /pprof/evaluator_upload/{param} [get]
 func GetEvaluatorUploadPprof(c *gin.Context) {
-	pprofHandler(c, utils.CoreCfg.EvaluatorUploadPrivateAddress)
+	pprofHandler(c, "evaluator-upload")
 }
 
 // @Summary Get profile info
@@ -34,7 +34,7 @@ func GetEvaluatorUploadPprof(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{}
 // @Router /pprof/evaluator_recalc/{param} [get]
 func GetEvaluatorRecalcPprof(c *gin.Context) {
-	pprofHandler(c, utils.CoreCfg.EvaluatorRecalcPrivateAddress)
+	pprofHandler(c, "evaluator-recalc")
 }
 
 // @Summary Get profile info
@@ -47,7 +47,7 @@ func GetEvaluatorRecalcPprof(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{}
 // @Router /pprof/listener/{param} [get]
 func GetListenerPprof(c *gin.Context) {
-	pprofHandler(c, utils.CoreCfg.ListenerPrivateAddress)
+	pprofHandler(c, "listener")
 }
 
 // @Summary Get profile info
@@ -60,20 +60,19 @@ func GetListenerPprof(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{}
 // @Router /pprof/manager/{param} [get]
 func GetManagerPprof(c *gin.Context) {
-	pprofHandler(c, utils.CoreCfg.ManagerPrivateAddress)
+	pprofHandler(c, "manager")
 }
 
-var paramRegexp = regexp.MustCompile("^(heap|profile|block|mutex|trace)$")
+var allowedParams = []string{"heap", "profile", "block", "mutex", "trace"}
 
-func pprofHandler(c *gin.Context, address string) {
+func pprofHandler(c *gin.Context, serviceName string) {
 	query := c.Request.URL.RawQuery
 	param := c.Param("param")
-	match := paramRegexp.FindStringSubmatch(param)
-	if len(match) < 1 {
+	if !slices.Contains(allowedParams, param) {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	data, err := getPprof(address, match[0], query)
+	data, err := getPprof(serviceName, param, query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
@@ -82,19 +81,32 @@ func pprofHandler(c *gin.Context, address string) {
 	c.Data(http.StatusOK, "application/octet-stream", data)
 }
 
-func getPprof(address, param, query string) ([]byte, error) {
+func getPprof(serviceName, param, query string) ([]byte, error) {
 	client := &http.Client{
 		Timeout: time.Second * 60,
 	}
 	if len(query) > 0 {
 		param = param + "?" + query
 	}
+	var address string
+	switch serviceName {
+	case "manager":
+		address = utils.CoreCfg.ManagerPrivateAddress
+	case "listener":
+		address = utils.CoreCfg.ListenerPrivateAddress
+	case "evaluator-upload":
+		address = utils.CoreCfg.EvaluatorUploadPrivateAddress
+	case "evaluator-recalc":
+		address = utils.CoreCfg.EvaluatorRecalcPrivateAddress
+	default:
+		return nil, fmt.Errorf("invalid service name: %s", serviceName)
+	}
 	urlPath := fmt.Sprintf("%s/debug/pprof/%s", address, param)
-	req, err := http.NewRequest(http.MethodGet, urlPath, nil)
+	req, err := http.NewRequest(http.MethodGet, urlPath, nil) // #nosec G704
 	if err != nil {
 		return nil, err
 	}
-	res, err := client.Do(req)
+	res, err := client.Do(req) // #nosec G704
 	if err != nil {
 		return nil, err
 	}
