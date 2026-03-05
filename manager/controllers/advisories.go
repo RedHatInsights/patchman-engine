@@ -54,6 +54,7 @@ type AdvisoryItemAttributesCommon struct {
 	Synopsis         string     `json:"synopsis" csv:"synopsis" query:"am.synopsis" gorm:"column:synopsis"`
 	AdvisoryTypeName string     `json:"advisory_type_name" csv:"advisory_type_name" query:"at.name" order_query:"at.preference" gorm:"column:advisory_type_name"` // Advisory type name, proper ordering ensured (unknown, unspecified, other, enhancement, bugfix, security)
 	Severity         *int       `json:"severity,omitempty" csv:"severity" query:"am.severity_id" gorm:"column:severity"`
+	SeverityName     *string    `json:"severity_name,omitempty" csv:"severity_name" query:"sev.name" gorm:"column:severity_name"`
 	CveCount         int        `json:"cve_count" csv:"cve_count" query:"CASE WHEN jsonb_typeof(am.cve_list) = 'array' THEN jsonb_array_length(am.cve_list) ELSE 0 END" gorm:"column:cve_count"`
 	RebootRequired   bool       `json:"reboot_required" csv:"reboot_required" query:"am.reboot_required" gorm:"column:reboot_required"`
 	ReleaseVersions  RelList    `json:"release_versions" csv:"release_versions" query:"null" gorm:"-"`
@@ -121,6 +122,7 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 // @Param    filter[synopsis]            query   string  false "Filter"
 // @Param    filter[advisory_type_name]  query   string  false "Filter" Enums(unknown,unspecified,other,enhancement,bugfix,security)
 // @Param    filter[severity]            query   int     false "Filter" minimum(1) maximum(4)
+// @Param    filter[severity_name]       query   string  false "Filter" Enums(Low,Medium,High,Critical)
 // @Param    filter[installable_systems] query   int     false "Filter"
 // @Param    filter[applicable_systems]  query   int     false "Filter"
 // @Param    tags                        query   []string  false "Tag filter"
@@ -211,6 +213,7 @@ func buildQueryAdvisories(db *gorm.DB, account int) *gorm.DB {
 	query := database.AdvisoryMetadata(db).
 		Select(AdvisoriesSelect).
 		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id").
+		Joins("LEFT JOIN advisory_severity sev ON am.severity_id = sev.id").
 		Where("aad.rh_account_id = ?", account).
 		Where("aad.systems_applicable > 0")
 	return query
@@ -234,7 +237,8 @@ func buildQueryAdvisoriesTagged(db *gorm.DB, filters map[string]FilterData, acco
 
 	query := database.AdvisoryMetadata(db).
 		Select(AdvisoriesSelect).
-		Joins("JOIN (?) aad ON am.id = aad.advisory_id", subq)
+		Joins("JOIN (?) aad ON am.id = aad.advisory_id", subq).
+		Joins("LEFT JOIN advisory_severity sev ON am.severity_id = sev.id")
 
 	return query
 }
