@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/lib/pq"
+	"gorm.io/datatypes"
 )
 
 type RhAccount struct {
@@ -261,10 +262,10 @@ type AdvisoryMetadata struct {
 	ModifiedDate    *time.Time
 	URL             *string
 	SeverityID      *int
-	PackageData     []byte
-	CveList         []byte
+	PackageData     datatypes.JSONSlice[string] `gorm:"type:jsonb"`
+	CveList         datatypes.JSONSlice[string] `gorm:"type:jsonb"`
 	RebootRequired  bool
-	ReleaseVersions []byte
+	ReleaseVersions datatypes.JSONSlice[string] `gorm:"type:jsonb"`
 	Synced          bool
 }
 

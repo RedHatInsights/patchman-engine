@@ -57,10 +57,7 @@ type AdvisoryItemAttributesCommon struct {
 	SeverityName     *string    `json:"severity_name,omitempty" csv:"severity_name" query:"sev.name" gorm:"column:severity_name"`
 	CveCount         int        `json:"cve_count" csv:"cve_count" query:"CASE WHEN jsonb_typeof(am.cve_list) = 'array' THEN jsonb_array_length(am.cve_list) ELSE 0 END" gorm:"column:cve_count"`
 	RebootRequired   bool       `json:"reboot_required" csv:"reboot_required" query:"am.reboot_required" gorm:"column:reboot_required"`
-	ReleaseVersions  RelList    `json:"release_versions" csv:"release_versions" query:"null" gorm:"-"`
-
-	// helper field to get release_version json from db and parse it to ReleaseVersions field
-	ReleaseVersionsJSONB []byte `json:"-" csv:"-" query:"am.release_versions" gorm:"column:release_versions_json"`
+	ReleaseVersions  RelList    `json:"release_versions" csv:"release_versions" query:"am.release_versions" gorm:"column:release_versions" swaggertype:"array,string"`
 }
 
 // nolint: lll
@@ -261,7 +258,6 @@ func buildAdvisoriesData(advisories []AdvisoriesDBLookup) ([]AdvisoryItem, int, 
 	data := make([]AdvisoryItem, len(advisories))
 	for i := 0; i < len(advisories); i++ {
 		advisory := (advisories)[i]
-		advisory.AdvisoryItemAttributesCommon = fillAdvisoryItemAttributeReleaseVersion(advisory.AdvisoryItemAttributesCommon)
 		data[i] = AdvisoryItem{
 			Attributes: AdvisoryItemAttributes{
 				AdvisoryItemAttributesCommon: advisory.AdvisoryItemAttributesCommon,

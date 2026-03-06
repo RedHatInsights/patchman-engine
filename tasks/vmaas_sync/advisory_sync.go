@@ -14,6 +14,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
+	"gorm.io/datatypes"
 )
 
 const SyncBatchSize = 1000 // Should be < 5000
@@ -110,11 +111,6 @@ func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataRespons
 		return nil, nil
 	}
 
-	packageData, cvesData, releaseVersionsData, err := getJSONFields(&vmaasData)
-	if err != nil {
-		return nil, errors.Wrap(err, "Unable to get JSON fields data")
-	}
-
 	advisory := models.AdvisoryMetadata{
 		Name:            errataName,
 		AdvisoryTypeID:  advisoryTypes[strings.ToLower(vmaasData.Type)],
@@ -123,13 +119,13 @@ func vmaasData2AdvisoryMetadata(errataName string, vmaasData vmaas.ErrataRespons
 		Summary:         vmaasData.Summary,
 		Solution:        utils.EmptyToNil(vmaasData.Solution),
 		SeverityID:      getSeverityID(&vmaasData, severities),
-		CveList:         cvesData,
+		CveList:         datatypes.JSONSlice[string](vmaasData.CveList),
 		PublicDate:      &issued,
 		ModifiedDate:    &modified,
 		URL:             utils.EmptyToNil(vmaasData.URL),
-		PackageData:     packageData,
+		PackageData:     datatypes.JSONSlice[string](vmaasData.PackageList),
 		RebootRequired:  vmaasData.RequiresReboot,
-		ReleaseVersions: releaseVersionsData,
+		ReleaseVersions: datatypes.JSONSlice[string](vmaasData.ReleaseVersions),
 		Synced:          true,
 	}
 	return &advisory, nil

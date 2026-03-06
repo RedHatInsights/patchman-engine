@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/pkg/errors"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -30,23 +31,21 @@ type AdvisoryDetailItem struct {
 }
 
 type AdvisoryDetailAttributes struct {
-	Description      string     `json:"description"`
-	ModifiedDate     *time.Time `json:"modified_date"`
-	PublicDate       *time.Time `json:"public_date"`
-	Topic            string     `json:"topic"`
-	Synopsis         string     `json:"synopsis"`
-	Solution         *string    `json:"solution"`
-	AdvisoryTypeName string     `json:"advisory_type_name"`
-	Severity         *int       `json:"severity"`
-	Fixes            *string    `json:"fixes"`
-	Cves             []string   `json:"cves"`
-	References       []string   `json:"references"`
-	RebootRequired   bool       `json:"reboot_required"`
-	ReleaseVersions  []string   `json:"release_versions"`
-	Packages         packages   `json:"packages"`
+	Description      string                      `json:"description"`
+	ModifiedDate     *time.Time                  `json:"modified_date"`
+	PublicDate       *time.Time                  `json:"public_date"`
+	Topic            string                      `json:"topic"`
+	Synopsis         string                      `json:"synopsis"`
+	Solution         *string                     `json:"solution"`
+	AdvisoryTypeName string                      `json:"advisory_type_name"`
+	Severity         *int                        `json:"severity"`
+	Fixes            *string                     `json:"fixes"`
+	Cves             datatypes.JSONSlice[string] `json:"cves" swaggertype:"array,string"`
+	References       []string                    `json:"references"`
+	RebootRequired   bool                        `json:"reboot_required"`
+	ReleaseVersions  datatypes.JSONSlice[string] `json:"release_versions" swaggertype:"array,string"`
+	Packages         datatypes.JSONSlice[string] `json:"packages" swaggertype:"array,string"`
 }
-
-type packages []string
 
 // @Summary Show me details an advisory by given advisory name
 // @Description Show me details an advisory by given advisory name
@@ -95,16 +94,6 @@ func getAdvisoryFromDB(db *gorm.DB, advisoryName string) (*AdvisoryDetailRespons
 		return nil, err
 	}
 
-	cves, err := parseJSONList(advisory.CveList)
-	if err != nil {
-		return nil, errors.Wrap(err, "CVEs parsing error")
-	}
-
-	releaseVersions, err := parseJSONList(advisory.ReleaseVersions)
-	if err != nil {
-		return nil, errors.Wrap(err, "release_versions parsing error")
-	}
-
 	ada := AdvisoryDetailAttributes{
 		Description:      advisory.Description,
 		ModifiedDate:     advisory.ModifiedDate,
@@ -115,15 +104,11 @@ func getAdvisoryFromDB(db *gorm.DB, advisoryName string) (*AdvisoryDetailRespons
 		Severity:         advisory.SeverityID,
 		AdvisoryTypeName: database.AdvisoryTypes[advisory.AdvisoryTypeID],
 		Fixes:            nil,
-		Cves:             cves,
+		Cves:             advisory.CveList,
+		Packages:         advisory.PackageData,
 		References:       []string{},
 		RebootRequired:   advisory.RebootRequired,
-		ReleaseVersions:  releaseVersions,
-	}
-
-	pkgs, err := parsePackages(advisory.PackageData)
-	if err != nil {
-		return nil, errors.Wrap(err, "packages parsing error")
+		ReleaseVersions:  advisory.ReleaseVersions,
 	}
 
 	var resp = AdvisoryDetailResponse{Data: AdvisoryDetailItem{
@@ -131,22 +116,8 @@ func getAdvisoryFromDB(db *gorm.DB, advisoryName string) (*AdvisoryDetailRespons
 		Type:       "advisory",
 		Attributes: ada,
 	}}
-	resp.Data.Attributes.Packages = pkgs
 
 	return &resp, nil
-}
-
-func parsePackages(jsonb []byte) (packages, error) {
-	if jsonb == nil {
-		return packages{}, nil
-	}
-
-	var err error
-	pkgs, err := parseJSONList(jsonb)
-	if err != nil {
-		return nil, err
-	}
-	return pkgs, nil
 }
 
 func InitAdvisoryDetailCache() {
