@@ -6220,6 +6220,9 @@
                     "severity": {
                         "type": "integer"
                     },
+                    "severity_name": {
+                        "type": "string"
+                    },
                     "solution": {
                         "type": "string"
                     },
