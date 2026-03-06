@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"app/base/database"
-	"app/base/models"
 	"app/base/utils"
 	"app/manager/config"
 	"app/manager/middlewares"
@@ -34,17 +33,22 @@ type AdvisoryDetailAttributes struct {
 	Description      string                      `json:"description"`
 	ModifiedDate     *time.Time                  `json:"modified_date"`
 	PublicDate       *time.Time                  `json:"public_date"`
-	Topic            string                      `json:"topic"`
+	Topic            string                      `json:"topic" gorm:"column:summary"`
 	Synopsis         string                      `json:"synopsis"`
 	Solution         *string                     `json:"solution"`
 	AdvisoryTypeName string                      `json:"advisory_type_name"`
-	Severity         *int                        `json:"severity"`
+	Severity         *int                        `json:"severity" gorm:"column:severity_id"`
+	SeverityName     *string                     `json:"severity_name,omitempty"`
 	Fixes            *string                     `json:"fixes"`
-	Cves             datatypes.JSONSlice[string] `json:"cves" swaggertype:"array,string"`
-	References       []string                    `json:"references"`
+	Cves             datatypes.JSONSlice[string] `json:"cves" gorm:"column:cve_list" swaggertype:"array,string"`
+	References       []string                    `json:"references" query:"null" gorm:"-"`
 	RebootRequired   bool                        `json:"reboot_required"`
 	ReleaseVersions  datatypes.JSONSlice[string] `json:"release_versions" swaggertype:"array,string"`
-	Packages         datatypes.JSONSlice[string] `json:"packages" swaggertype:"array,string"`
+	Packages         datatypes.JSONSlice[string] `json:"packages" gorm:"column:package_data" swaggertype:"array,string"`
+}
+
+func (AdvisoryDetailAttributes) TableName() string {
+	return "advisory_metadata AS am"
 }
 
 // @Summary Show me details an advisory by given advisory name
@@ -87,34 +91,20 @@ func AdvisoryDetailHandler(c *gin.Context) {
 }
 
 func getAdvisoryFromDB(db *gorm.DB, advisoryName string) (*AdvisoryDetailResponse, error) {
-	var advisory models.AdvisoryMetadata
+	var advisory AdvisoryDetailAttributes
 	err := db.Table(advisory.TableName()).
-		Take(&advisory, "name = ?", advisoryName).Error
+		Select("am.*", "sev.name as severity_name", "at.name as advisory_type_name").
+		Joins("LEFT JOIN advisory_severity sev ON am.severity_id = sev.id").
+		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
+		Take(&advisory, "am.name = ?", advisoryName).Error
 	if err != nil {
 		return nil, err
 	}
 
-	ada := AdvisoryDetailAttributes{
-		Description:      advisory.Description,
-		ModifiedDate:     advisory.ModifiedDate,
-		PublicDate:       advisory.PublicDate,
-		Topic:            advisory.Summary,
-		Synopsis:         advisory.Synopsis,
-		Solution:         advisory.Solution,
-		Severity:         advisory.SeverityID,
-		AdvisoryTypeName: database.AdvisoryTypes[advisory.AdvisoryTypeID],
-		Fixes:            nil,
-		Cves:             advisory.CveList,
-		Packages:         advisory.PackageData,
-		References:       []string{},
-		RebootRequired:   advisory.RebootRequired,
-		ReleaseVersions:  advisory.ReleaseVersions,
-	}
-
 	var resp = AdvisoryDetailResponse{Data: AdvisoryDetailItem{
-		ID:         advisory.Name,
+		ID:         advisoryName,
 		Type:       "advisory",
-		Attributes: ada,
+		Attributes: advisory,
 	}}
 
 	return &resp, nil
