@@ -5,9 +5,11 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"database/sql/driver"
 	"net/http"
 	"strings"
 
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +26,7 @@ var SystemAdvisoriesOpts = ListOpts{
 	SearchFields:   []string{"am.name", "am.synopsis"},
 }
 
-type RelList []string
+type RelList datatypes.JSONSlice[string]
 
 type SystemAdvisoriesDBLookup struct {
 	ID string `json:"id" csv:"id" query:"am.name" gorm:"column:id"`
@@ -58,6 +60,14 @@ type AdvisoryStatusID struct {
 
 func (v RelList) String() string {
 	return strings.Join(v, ",")
+}
+
+func (v RelList) Value() (driver.Value, error) {
+	return (datatypes.JSONSlice[string])(v).Value()
+}
+
+func (v *RelList) Scan(value interface{}) error {
+	return (*datatypes.JSONSlice[string])(v).Scan(value)
 }
 
 func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
@@ -206,7 +216,6 @@ func buildSystemAdvisoriesData(models []SystemAdvisoriesDBLookup) ([]SystemAdvis
 	}
 	data := make([]SystemAdvisoryItem, len(models))
 	for i, advisory := range models {
-		advisory.AdvisoryItemAttributesCommon = fillAdvisoryItemAttributeReleaseVersion(advisory.AdvisoryItemAttributesCommon)
 		item := SystemAdvisoryItem{
 			ID:         advisory.ID,
 			Type:       "advisory",

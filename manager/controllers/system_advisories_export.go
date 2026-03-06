@@ -70,10 +70,6 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 
 	var advisories []SystemAdvisoriesDBLookup
 	err = query.Find(&advisories).Error
-	for i := 0; i < len(advisories); i++ {
-		advisories[i].AdvisoryItemAttributesCommon =
-			fillAdvisoryItemAttributeReleaseVersion(advisories[i].AdvisoryItemAttributesCommon)
-	}
 	if err != nil {
 		utils.LogAndRespError(c, err, "db error")
 		return

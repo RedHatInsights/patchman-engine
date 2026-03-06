@@ -60,11 +60,5 @@ func AdvisoriesExportHandler(c *gin.Context) {
 		return
 	}
 
-	// update release_version field
-	for i := range advisories {
-		advisories[i].AdvisoryItemAttributesCommon =
-			fillAdvisoryItemAttributeReleaseVersion(advisories[i].AdvisoryItemAttributesCommon)
-	}
-
 	OutputExportData(c, advisories)
 }
