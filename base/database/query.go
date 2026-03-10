@@ -124,6 +124,10 @@ func getQueryFromTags(v reflect.Type) (AttrMap, []AttrName, error) {
 				info.OrderQuery = info.DataQuery
 			}
 			res[columnName] = info
+			// Allow sort/filter by API name "id" when column is "inventory_id"
+			if columnName == "inventory_id" {
+				res["id"] = info
+			}
 
 			// Result HAS to contain all columns, because gorm loads by index, not by name
 			resNames = append(resNames, columnName)

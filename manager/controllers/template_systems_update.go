@@ -177,8 +177,8 @@ func templateArchVersionMatch(
 	}{}
 	var err error
 	err = database.Systems(db, acc, groups).
-		Select("ih.id as inventory_id, ih.system_profile->'operating_system'->>'major' as version, sp.arch as arch").
-		Where("ih.id in (?)", inventoryIDs).Find(&sysArchVersions).Error
+		Select("si.inventory_id as inventory_id, si.os_major as version, sp.arch as arch").
+		Where("si.inventory_id in (?)", inventoryIDs).Find(&sysArchVersions).Error
 	if err != nil {
 		return err
 	}
@@ -228,8 +228,8 @@ func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env 
 	}{}
 
 	err := database.Systems(db, accountID, groups).
-		Select("ih.id as inventory_id, ih.system_profile->>'owner_id' as consumer").
-		Where("ih.id in (?)", inventoryIDs).Find(&hosts).Error
+		Select("si.inventory_id as inventory_id, si.subscription_manager_id as consumer").
+		Where("si.inventory_id in (?)", inventoryIDs).Find(&hosts).Error
 	if err != nil {
 		utils.LogAndRespError(c, err, "Database error")
 		return err
@@ -277,7 +277,7 @@ func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string, groups
 	var satelliteIDs []string
 	var bootcIDs []string
 	err = database.Systems(db, accountID, groups).
-		Where("inventory_id IN (?::uuid)", inventoryIDs).
+		Where("sp.inventory_id IN (?::uuid)", inventoryIDs).
 		Scan(&containingSystems).Error
 	if err != nil {
 		return errors2.Join(base.ErrDatabase, err)

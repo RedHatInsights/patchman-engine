@@ -70,7 +70,7 @@ func SystemTagListHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
 	// https://stackoverflow.com/questions/33474778/how-to-group-result-by-array-column-in-postgres
 	sq := database.Systems(db, account, groups).
-		Select("jsonb_array_elements(ih.tags) AS tag")
+		Select("jsonb_array_elements(si.tags) AS tag")
 
 	query := db.Table("(?) AS sq", sq).
 		Select(SystemTagSelect).

@@ -11,4 +11,4 @@ TEST_DIRS=${1:-./...}
 gotestsum --format=standard-verbose -- -v -p 1 -coverprofile=coverage.txt -covermode=atomic $TEST_DIRS
 
 # To run one test uncomment and modify last string and comment the one above:
-# go test -count=1 -v ./tasks/vmaas_sync -run TestTableSizes
+# go test -count=1 -v ./tasks/system_culling -run "TestCullSystems"

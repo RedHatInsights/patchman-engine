@@ -17,8 +17,8 @@ var PackageSystemsOpts = ListOpts{
 	Fields: PackageSystemFields,
 	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
 	DefaultFilters: map[string]FilterData{},
-	DefaultSort:    "id",
-	StableSort:     "id",
+	DefaultSort:    "inventory_id",
+	StableSort:     "sp.id",
 	SearchFields:   []string{"sp.display_name"},
 }
 

@@ -53,11 +53,11 @@ func updatesHandler(c *gin.Context) {
                     {
                         "basearch": "i686",
                         "erratum": "RH-100",
-                        "package": "kernel-0:5.10.13-200.fc31.x86_64",
+                        "package": "kernel-0:5.6.13-201.fc31.x86_64",
                         "releasever": "ser1",
                         "repository": "repo1",
                         "package_name": "kernel",
-                        "evra": "0:5.10.13-200.fc31.x86_64"
+                        "evra": "0:5.6.13-201.fc31.x86_64"
                     }
                 ]
             }
@@ -105,7 +105,7 @@ func erratasHandler(c *gin.Context) {
             "description": "adv-100-des",
             "issued": "2020-01-02T15:04:05+07:00",
             "package_list": [
-                "kernel-5.10.13-200.fc31.x86_64"
+                "kernel-5.6.13-201.fc31.x86_64"
             ],
             "reference_list": [],
             "requires_reboot": true,

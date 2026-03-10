@@ -9,23 +9,23 @@ type MetaTotalHelper struct {
 }
 
 type OSAttributes struct {
-	OS   string `json:"os" csv:"os" query:"ih.system_profile->'operating_system'->>'name' || ' ' || coalesce(ih.system_profile->'operating_system'->>'major' || '.' || (ih.system_profile->'operating_system'->>'minor'), '')" order_query:"ih.system_profile->'operating_system'->>'name' || ' ' || coalesce(ih.system_profile->'operating_system'->>'major' || '.' || (ih.system_profile->'operating_system'->>'minor'), '') collate numeric" gorm:"column:os"`
-	Rhsm string `json:"rhsm" csv:"rhsm" query:"ih.system_profile->'rhsm'->>'version'" gorm:"column:rhsm"`
+	OS   string `json:"os" csv:"os" query:"si.os_name || ' ' || coalesce(si.os_major::text || '.' || coalesce(si.os_minor::text, 'x'), '')" order_query:"si.os_name || ' ' || coalesce(si.os_major::text || '.' || coalesce(si.os_minor::text, 'x'), '') collate numeric" gorm:"column:os"`
+	Rhsm string `json:"rhsm" csv:"rhsm" query:"si.rhsm_version" gorm:"column:rhsm"`
 }
 
 type SystemTimestamps struct {
-	StaleTimestamp        *time.Time `json:"stale_timestamp" csv:"stale_timestamp" query:"ih.stale_timestamp" gorm:"column:stale_timestamp"`
-	StaleWarningTimestamp *time.Time `json:"stale_warning_timestamp" csv:"stale_warning_timestamp" query:"ih.stale_warning_timestamp" gorm:"column:stale_warning_timestamp"`
-	CulledTimestamp       *time.Time `json:"culled_timestamp" csv:"culled_timestamp" query:"ih.culled_timestamp" gorm:"column:culled_timestamp"`
-	Created               *time.Time `json:"created" csv:"created" query:"ih.created" gorm:"column:created"`
+	StaleTimestamp        *time.Time `json:"stale_timestamp" csv:"stale_timestamp" query:"si.stale_timestamp" gorm:"column:stale_timestamp"`
+	StaleWarningTimestamp *time.Time `json:"stale_warning_timestamp" csv:"stale_warning_timestamp" query:"si.stale_warning_timestamp" gorm:"column:stale_warning_timestamp"`
+	CulledTimestamp       *time.Time `json:"culled_timestamp" csv:"culled_timestamp" query:"si.culled_timestamp" gorm:"column:culled_timestamp"`
+	Created               *time.Time `json:"created" csv:"created" query:"si.created" gorm:"column:created"`
 }
 
 type SystemTags struct {
-	Tags SystemTagsList `json:"tags" csv:"tags" query:"ih.tags" gorm:"column:tags"`
+	Tags SystemTagsList `json:"tags" csv:"tags" query:"si.tags" gorm:"column:tags"`
 }
 
 type SystemGroups struct {
-	Groups SystemGroupsList `json:"groups" csv:"groups" query:"ih.groups" gorm:"column:groups" order_query:"ih.groups->0->>'name'"`
+	Groups SystemGroupsList `json:"groups" csv:"groups" query:"si.workspaces" gorm:"column:groups" order_query:"si.workspaces->0->>'name'"`
 }
 
 // baseline attributes are obsoleted and we keep them only for backward API compatibility
@@ -65,7 +65,7 @@ type SystemStale struct {
 }
 
 type SystemIDAttribute struct {
-	ID string `json:"id" csv:"id" query:"sp.inventory_id" gorm:"column:id"`
+	ID string `json:"id" csv:"id" query:"sp.inventory_id" gorm:"column:inventory_id"`
 }
 
 type SystemAdvisoryStatus struct {

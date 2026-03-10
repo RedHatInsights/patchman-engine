@@ -239,19 +239,19 @@ func ReadReplicaConfigured() bool {
 }
 
 func InventoryHostsJoin(tx *gorm.DB, groups map[string]string) *gorm.DB {
-	tx = tx.Joins("JOIN inventory.hosts ih ON ih.id = sp.inventory_id")
+	tx = tx.Joins("JOIN system_inventory si ON si.inventory_id = sp.inventory_id")
 	if _, ok := groups[utils.KeyGrouped]; !ok {
 		if _, ok := groups[utils.KeyUngrouped]; ok {
 			// show only systems with '[]' group
-			return tx.Where("ih.groups = '[]'")
+			return tx.Where("si.workspaces = '[]'")
 		}
 		// return query without WHERE if there are no groups
 		return tx
 	}
 
-	db := DB.Where("ih.groups @> ANY (?::jsonb[])", groups[utils.KeyGrouped])
+	db := DB.Where("si.workspaces @> ANY (?::jsonb[])", groups[utils.KeyGrouped])
 	if _, ok := groups[utils.KeyUngrouped]; ok {
-		db = db.Or("ih.groups = '[]'")
+		db = db.Or("si.workspaces = '[]'")
 	}
 	return tx.Where(db)
 }
