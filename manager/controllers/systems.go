@@ -27,17 +27,17 @@ var SystemOpts = ListOpts{
 		},
 	},
 	DefaultSort:  "-last_upload",
-	StableSort:   "id",
+	StableSort:   "sp.id",
 	SearchFields: []string{"sp.display_name"},
 }
 
 type SystemsID struct {
-	ID string `query:"sp.inventory_id" gorm:"column:id"`
+	ID string `query:"sp.inventory_id" gorm:"column:inventory_id"`
 	MetaTotalHelper
 }
 
 type SystemsSatelliteManagedID struct {
-	ID string `query:"sp.inventory_id" gorm:"column:id"`
+	ID string `query:"sp.inventory_id" gorm:"column:inventory_id"`
 	SystemSatelliteManaged
 	MetaTotalHelper
 }
@@ -104,9 +104,9 @@ type SystemItemAttributesExtended struct {
 	ThirdParty        bool `json:"third_party" csv:"third_party" query:"sp.third_party" gorm:"column:third_party"`
 	PackagesUpdatable int  `json:"packages_updatable" csv:"packages_updatable" query:"sp.packages_installable" gorm:"column:packages_updatable"`
 
-	OSName  string `json:"os_name" csv:"os_name" query:"ih.system_profile->'operating_system'->>'name'" gorm:"column:osname"`
-	OSMajor string `json:"os_major" csv:"os_major" query:"ih.system_profile->'operating_system'->>'major'" gorm:"column:osmajor"`
-	OSMinor string `json:"os_minor" csv:"os_minor" query:"ih.system_profile->'operating_system'->>'minor'" gorm:"column:osminor"`
+	OSName  string `json:"os_name" csv:"os_name" query:"si.os_name" gorm:"column:osname"`
+	OSMajor string `json:"os_major" csv:"os_major" query:"si.os_major" gorm:"column:osmajor"`
+	OSMinor string `json:"os_minor" csv:"os_minor" query:"si.os_minor" gorm:"column:osminor"`
 	BaselineUpToDateAttr
 }
 

@@ -18,6 +18,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/gocarina/gocsv"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -71,13 +72,13 @@ type NestedFilterMap map[string]string
 
 var nestedFilters = NestedFilterMap{
 	"group_name":                                  "group_name",
-	"system_profile][sap_system":                  "(ih.system_profile->'workloads'->'sap'->>'sap_system')",
-	"system_profile][sap_sids":                    "(ih.system_profile->'workloads'->'sap'->>'sids')",
-	"system_profile][sap_sids][in]":               "(ih.system_profile->'workloads'->'sap'->>'sids')",
-	"system_profile][ansible":                     "(ih.system_profile->'workloads'->>'ansible')",
-	"system_profile][ansible][controller_version": "(ih.system_profile->'workloads'->'ansible'->>'controller_version')",
-	"system_profile][mssql":                       "(ih.system_profile->'workloads'->>'mssql')",
-	"system_profile][mssql][version":              "(ih.system_profile->'workloads'->'mssql'->>'version')",
+	"system_profile][sap_system":                  "(si.sap_workload)",
+	"system_profile][sap_sids":                    "(si.sap_workload_sids)",
+	"system_profile][sap_sids][in]":               "(si.sap_workload_sids)",
+	"system_profile][ansible":                     "(si.ansible_workload)",
+	"system_profile][ansible][controller_version": "(si.ansible_workload_controller_version)",
+	"system_profile][mssql":                       "(si.mssql_workload)",
+	"system_profile][mssql][version":              "(si.mssql_workload_version)",
 }
 
 func ParseFilters(c *gin.Context, filters Filters, allowedFields database.AttrMap,
@@ -294,7 +295,7 @@ func (t *Tag) ApplyTag(tx *gorm.DB) *gorm.DB {
 	}
 
 	tagStr, _ := sonic.Marshal([]Tag{*t})
-	return tx.Where("ih.tags @> ?::jsonb", tagStr)
+	return tx.Where("si.tags @> ?::jsonb", tagStr)
 }
 
 func ParseAllFilters(c *gin.Context, opts ListOpts) (Filters, error) {
@@ -355,8 +356,8 @@ func ApplyInventoryFilter(filters map[string]FilterData, tx *gorm.DB, systemIDEx
 	}
 
 	subq := database.DB.
-		Table("inventory.hosts ih").
-		Select("ih.id")
+		Table("system_inventory si").
+		Select("si.inventory_id")
 
 	subq, applied := ApplyInventoryWhere(filters, subq)
 
@@ -391,7 +392,7 @@ func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, 
 // Builds inventory sub query
 // Example:
 // buildSystemProfileQuery("system_profile][mssql][version", "1.0")
-// returns "(ih.system_profile->'workloads'->'mssql'->>'version') = 1.0"
+// returns "(si.mssql_workload_version) = 1.0"
 func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
 	if strings.Contains(key, "group_name") {
 		groups := []string{}
@@ -405,7 +406,7 @@ func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
 			groups = append(groups, group)
 		}
 		jsonq := fmt.Sprintf("{%s}", strings.Join(groups, ","))
-		return tx.Where("ih.groups @> ANY (?::jsonb[])", jsonq)
+		return tx.Where("si.workspaces @> ANY (?::jsonb[])", jsonq)
 	}
 
 	var cmp string
@@ -415,9 +416,8 @@ func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
 	case values[0] == "not_nil":
 		cmp = " is not null"
 	case strings.Contains(key, "[sap_sids"):
-		cmp = "::jsonb @> ?::jsonb"
-		bval, _ := sonic.Marshal(values)
-		val = []any{string(bval)}
+		cmp = " && ?::text[]"
+		val = []any{pq.Array(values)}
 	default:
 		cmp = " = ?"
 		val = []any{values[0]}

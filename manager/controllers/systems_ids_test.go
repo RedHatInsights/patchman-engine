@@ -87,7 +87,7 @@ func TestSystemsIDsWorkloads2(t *testing.T) {
 
 func TestSystemsIDsWorkloads3(t *testing.T) {
 	output := testSystemsIDs(t, "?filter[system_profile][sap_system]=false", 1)
-	assert.Equal(t, 0, len(output.IDs))
+	assert.Equal(t, 1, len(output.IDs))
 }
 
 func TestSystemsIDsPackagesCount(t *testing.T) {

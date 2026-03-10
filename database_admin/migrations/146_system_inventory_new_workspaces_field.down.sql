@@ -8,7 +8,7 @@ ALTER TABLE system_inventory DROP COLUMN workspaces;
 ALTER TABLE system_inventory ADD COLUMN workspaces TEXT ARRAY CHECK (array_length(workspaces,1) > 0 or workspaces is null);
 
 UPDATE system_inventory si
-SET workspaces = ARRAY(SELECT jsonb_array_elements(ih.groups)->>'id'),
+SET workspaces = ARRAY(SELECT jsonb_array_elements(ih.groups)->>'id')
 FROM inventory.hosts ih
 WHERE ih.id = si.inventory_id;
 
