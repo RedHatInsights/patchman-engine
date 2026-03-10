@@ -5,9 +5,11 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"database/sql/driver"
 	"net/http"
 	"strings"
 
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +26,7 @@ var SystemAdvisoriesOpts = ListOpts{
 	SearchFields:   []string{"am.name", "am.synopsis"},
 }
 
-type RelList []string
+type RelList datatypes.JSONSlice[string]
 
 type SystemAdvisoriesDBLookup struct {
 	ID string `json:"id" csv:"id" query:"am.name" gorm:"column:id"`
@@ -58,6 +60,14 @@ type AdvisoryStatusID struct {
 
 func (v RelList) String() string {
 	return strings.Join(v, ",")
+}
+
+func (v RelList) Value() (driver.Value, error) {
+	return (datatypes.JSONSlice[string])(v).Value()
+}
+
+func (v *RelList) Scan(value interface{}) error {
+	return (*datatypes.JSONSlice[string])(v).Scan(value)
 }
 
 func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
@@ -119,6 +129,7 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 // @Param    filter[synopsis]            query   string  false "Filter"
 // @Param    filter[advisory_type_name]  query   string  false "Filter" Enums(unknown,unspecified,other,enhancement,bugfix,security)
 // @Param    filter[severity]            query   int  	 false "Filter" minimum(1) maximum(4)
+// @Param    filter[severity_name]       query   string  false "Filter" Enums(Low,Medium,High,Critical)
 // @Success 200 {object} SystemAdvisoriesResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
@@ -193,6 +204,7 @@ func buildSystemAdvisoriesQuery(db *gorm.DB, account int, groups map[string]stri
 	query := database.SystemAdvisoriesByInventoryID(db, account, groups, inventoryID,
 		database.JoinAdvisoryMetadata, database.JoinAdvisoryType).
 		Joins("JOIN status ON sa.status_id = status.id").
+		Joins("LEFT JOIN advisory_severity sev ON am.severity_id = sev.id").
 		Select(SystemAdvisoriesSelect)
 	return query
 }
@@ -204,7 +216,6 @@ func buildSystemAdvisoriesData(models []SystemAdvisoriesDBLookup) ([]SystemAdvis
 	}
 	data := make([]SystemAdvisoryItem, len(models))
 	for i, advisory := range models {
-		advisory.AdvisoryItemAttributesCommon = fillAdvisoryItemAttributeReleaseVersion(advisory.AdvisoryItemAttributesCommon)
 		item := SystemAdvisoryItem{
 			ID:         advisory.ID,
 			Type:       "advisory",

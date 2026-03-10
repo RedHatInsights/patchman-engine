@@ -12,6 +12,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/datatypes"
 )
 
 func TestInit(_ *testing.T) {
@@ -97,21 +98,21 @@ func TestParseAdvisories(t *testing.T) {
 		"ER1": {
 			Updated:           "2004-09-02T00:00:00+00:00",
 			Severity:          "",
-			ReferenceList:     &[]string{},
+			ReferenceList:     []string{},
 			Issued:            "2004-09-02T00:00:00+00:00",
 			Description:       "DESC",
 			Solution:          utils.PtrString("SOL"),
 			Summary:           "SUM",
 			URL:               utils.PtrString("URL"),
 			Synopsis:          "SYN",
-			CveList:           utils.PtrSliceString([]string{"CVE-1", "CVE-2", "CVE-3"}),
-			BugzillaList:      &[]string{},
+			CveList:           []string{"CVE-1", "CVE-2", "CVE-3"},
+			BugzillaList:      []string{},
 			PackageList:       []string{},
-			SourcePackageList: &[]string{},
+			SourcePackageList: []string{},
 			Type:              "bugfix",
 			ThirdParty:        new(bool),
 			RequiresReboot:    true,
-			ReleaseVersions:   utils.PtrSliceString([]string{"8.0", "8.1"}),
+			ReleaseVersions:   []string{"8.0", "8.1"},
 		},
 	}
 
@@ -132,8 +133,8 @@ func TestParseAdvisories(t *testing.T) {
 	assert.Equal(t, 2, adv.AdvisoryTypeID)
 	assert.Equal(t, 2, adv.AdvisoryTypeID)
 	assert.Equal(t, true, adv.RebootRequired)
-	assert.Equal(t, `["CVE-1","CVE-2","CVE-3"]`, string(adv.CveList))
-	assert.Equal(t, `["8.0","8.1"]`, string(adv.ReleaseVersions))
+	assert.Equal(t, datatypes.JSONSlice[string]{"CVE-1", "CVE-2", "CVE-3"}, adv.CveList)
+	assert.Equal(t, datatypes.JSONSlice[string]{"8.0", "8.1"}, adv.ReleaseVersions)
 }
 
 func TestSaveAdvisories(t *testing.T) {

@@ -23,6 +23,7 @@ import (
 // @Param    filter[synopsis]           query   string  false "Filter"
 // @Param    filter[advisory_type_name] query   string  false "Filter" Enums(unknown,unspecified,other,enhancement,bugfix,security)
 // @Param    filter[severity]           query   int     false "Filter" minimum(1) maximum(4)
+// @Param    filter[severity_name]      query   string  false "Filter" Enums(Low,Medium,High,Critical)
 // @Param    filter[applicable_systems] query   int     false "Filter"
 // @Success 200 {array} AdvisoriesDBLookup
 // @Failure 415 {object} utils.ErrorResponse
@@ -57,12 +58,6 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	if err != nil {
 		utils.LogAndRespError(c, err, "db error")
 		return
-	}
-
-	// update release_version field
-	for i := range advisories {
-		advisories[i].AdvisoryItemAttributesCommon =
-			fillAdvisoryItemAttributeReleaseVersion(advisories[i].AdvisoryItemAttributesCommon)
 	}
 
 	OutputExportData(c, advisories)

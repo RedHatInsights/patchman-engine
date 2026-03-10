@@ -25,6 +25,7 @@ import (
 // @Param    filter[synopsis]            query   string  false "Filter"
 // @Param    filter[advisory_type_name]  query   string  false "Filter" Enums(unknown,unspecified,other,enhancement,bugfix,security)
 // @Param    filter[severity]            query   int  	 false "Filter" minimum(1) maximum(4)
+// @Param    filter[severity_name]       query   string  false "Filter" Enums(Low,Medium,High,Critical)
 // @Success 200 {array} SystemAdvisoriesDBLookup
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
@@ -69,10 +70,6 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 
 	var advisories []SystemAdvisoriesDBLookup
 	err = query.Find(&advisories).Error
-	for i := 0; i < len(advisories); i++ {
-		advisories[i].AdvisoryItemAttributesCommon =
-			fillAdvisoryItemAttributeReleaseVersion(advisories[i].AdvisoryItemAttributesCommon)
-	}
 	if err != nil {
 		utils.LogAndRespError(c, err, "db error")
 		return

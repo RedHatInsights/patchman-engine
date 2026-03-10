@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"app/base/database"
-	"app/base/models"
 	"app/base/utils"
 	"app/manager/config"
 	"app/manager/middlewares"
@@ -12,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/pkg/errors"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -30,23 +30,26 @@ type AdvisoryDetailItem struct {
 }
 
 type AdvisoryDetailAttributes struct {
-	Description      string     `json:"description"`
-	ModifiedDate     *time.Time `json:"modified_date"`
-	PublicDate       *time.Time `json:"public_date"`
-	Topic            string     `json:"topic"`
-	Synopsis         string     `json:"synopsis"`
-	Solution         *string    `json:"solution"`
-	AdvisoryTypeName string     `json:"advisory_type_name"`
-	Severity         *int       `json:"severity"`
-	Fixes            *string    `json:"fixes"`
-	Cves             []string   `json:"cves"`
-	References       []string   `json:"references"`
-	RebootRequired   bool       `json:"reboot_required"`
-	ReleaseVersions  []string   `json:"release_versions"`
-	Packages         packages   `json:"packages"`
+	Description      string                      `json:"description"`
+	ModifiedDate     *time.Time                  `json:"modified_date"`
+	PublicDate       *time.Time                  `json:"public_date"`
+	Topic            string                      `json:"topic" gorm:"column:summary"`
+	Synopsis         string                      `json:"synopsis"`
+	Solution         *string                     `json:"solution"`
+	AdvisoryTypeName string                      `json:"advisory_type_name"`
+	Severity         *int                        `json:"severity" gorm:"column:severity_id"`
+	SeverityName     *string                     `json:"severity_name,omitempty"`
+	Fixes            *string                     `json:"fixes"`
+	Cves             datatypes.JSONSlice[string] `json:"cves" gorm:"column:cve_list" swaggertype:"array,string"`
+	References       []string                    `json:"references" query:"null" gorm:"-"`
+	RebootRequired   bool                        `json:"reboot_required"`
+	ReleaseVersions  datatypes.JSONSlice[string] `json:"release_versions" swaggertype:"array,string"`
+	Packages         datatypes.JSONSlice[string] `json:"packages" gorm:"column:package_data" swaggertype:"array,string"`
 }
 
-type packages []string
+func (AdvisoryDetailAttributes) TableName() string {
+	return "advisory_metadata AS am"
+}
 
 // @Summary Show me details an advisory by given advisory name
 // @Description Show me details an advisory by given advisory name
@@ -88,65 +91,23 @@ func AdvisoryDetailHandler(c *gin.Context) {
 }
 
 func getAdvisoryFromDB(db *gorm.DB, advisoryName string) (*AdvisoryDetailResponse, error) {
-	var advisory models.AdvisoryMetadata
+	var advisory AdvisoryDetailAttributes
 	err := db.Table(advisory.TableName()).
-		Take(&advisory, "name = ?", advisoryName).Error
+		Select("am.*", "sev.name as severity_name", "at.name as advisory_type_name").
+		Joins("LEFT JOIN advisory_severity sev ON am.severity_id = sev.id").
+		Joins("JOIN advisory_type at ON am.advisory_type_id = at.id").
+		Take(&advisory, "am.name = ?", advisoryName).Error
 	if err != nil {
 		return nil, err
-	}
-
-	cves, err := parseJSONList(advisory.CveList)
-	if err != nil {
-		return nil, errors.Wrap(err, "CVEs parsing error")
-	}
-
-	releaseVersions, err := parseJSONList(advisory.ReleaseVersions)
-	if err != nil {
-		return nil, errors.Wrap(err, "release_versions parsing error")
-	}
-
-	ada := AdvisoryDetailAttributes{
-		Description:      advisory.Description,
-		ModifiedDate:     advisory.ModifiedDate,
-		PublicDate:       advisory.PublicDate,
-		Topic:            advisory.Summary,
-		Synopsis:         advisory.Synopsis,
-		Solution:         advisory.Solution,
-		Severity:         advisory.SeverityID,
-		AdvisoryTypeName: database.AdvisoryTypes[advisory.AdvisoryTypeID],
-		Fixes:            nil,
-		Cves:             cves,
-		References:       []string{},
-		RebootRequired:   advisory.RebootRequired,
-		ReleaseVersions:  releaseVersions,
-	}
-
-	pkgs, err := parsePackages(advisory.PackageData)
-	if err != nil {
-		return nil, errors.Wrap(err, "packages parsing error")
 	}
 
 	var resp = AdvisoryDetailResponse{Data: AdvisoryDetailItem{
-		ID:         advisory.Name,
+		ID:         advisoryName,
 		Type:       "advisory",
-		Attributes: ada,
+		Attributes: advisory,
 	}}
-	resp.Data.Attributes.Packages = pkgs
 
 	return &resp, nil
-}
-
-func parsePackages(jsonb []byte) (packages, error) {
-	if jsonb == nil {
-		return packages{}, nil
-	}
-
-	var err error
-	pkgs, err := parseJSONList(jsonb)
-	if err != nil {
-		return nil, err
-	}
-	return pkgs, nil
 }
 
 func InitAdvisoryDetailCache() {

@@ -2,7 +2,6 @@ package evaluator
 
 import (
 	"app/base"
-	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
 	ntf "app/base/notification"
@@ -32,33 +31,16 @@ func getUnnotifiedAdvisories(tx *gorm.DB, accountID int, newAdvs SystemAdvisoryM
 		advIDs = append(advIDs, a.AdvisoryID)
 	}
 
-	var advNames []string
 	err := tx.Table("advisory_account_data as acd").
-		Select("am.name").
+		Select("am.id as advisory_id, am.name as advisory_name, at.name as advisory_type, am.synopsis").
 		Joins("inner join advisory_metadata am on am.id = acd.advisory_id").
+		Joins("inner join advisory_type at on at.id = am.advisory_type_id").
 		Where("acd.rh_account_id = ? AND acd.advisory_id IN (?)"+
 			"AND acd.notified IS NULL AND acd.systems_installable > 0", accountID, advIDs).
 		Order("am.name ASC").
-		Scan(&advNames).Error
+		Scan(&unAdvs).Error
 	if err != nil {
 		return nil, errors.Wrap(err, "querying unnotified advisories from DB failed")
-	}
-
-	if len(advNames) == 0 {
-		return nil, nil
-	}
-
-	for _, n := range advNames {
-		if a, ok := newAdvs[n]; ok {
-			unAdvs = append(
-				unAdvs,
-				ntf.Advisory{
-					AdvisoryID:   a.AdvisoryID,
-					AdvisoryName: a.Advisory.Name,
-					AdvisoryType: database.AdvisoryTypes[a.Advisory.AdvisoryTypeID],
-					Synopsis:     a.Advisory.Synopsis,
-				})
-		}
 	}
 
 	return unAdvs, nil

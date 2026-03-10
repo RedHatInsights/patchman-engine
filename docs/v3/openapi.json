@@ -124,6 +124,20 @@
                         }
                     },
                     {
+                        "name": "filter[severity_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Low",
+                                "Medium",
+                                "High",
+                                "Critical"
+                            ]
+                        }
+                    },
+                    {
                         "name": "filter[installable_systems]",
                         "in": "query",
                         "description": "Filter",
@@ -657,6 +671,20 @@
                             "maximum": 4,
                             "minimum": 1,
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "filter[severity_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Low",
+                                "Medium",
+                                "High",
+                                "Critical"
+                            ]
                         }
                     },
                     {
@@ -1697,6 +1725,20 @@
                             "maximum": 4,
                             "minimum": 1,
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "filter[severity_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Low",
+                                "Medium",
+                                "High",
+                                "Critical"
+                            ]
                         }
                     }
                 ],
@@ -4806,6 +4848,20 @@
                             "minimum": 1,
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "filter[severity_name]",
+                        "in": "query",
+                        "description": "Filter",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Low",
+                                "Medium",
+                                "High",
+                                "Critical"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
@@ -6071,6 +6127,9 @@
                     "severity": {
                         "type": "integer"
                     },
+                    "severity_name": {
+                        "type": "string"
+                    },
                     "synopsis": {
                         "type": "string"
                     }
@@ -6161,6 +6220,9 @@
                     "severity": {
                         "type": "integer"
                     },
+                    "severity_name": {
+                        "type": "string"
+                    },
                     "solution": {
                         "type": "string"
                     },
@@ -6241,6 +6303,9 @@
                     },
                     "severity": {
                         "type": "integer"
+                    },
+                    "severity_name": {
+                        "type": "string"
                     },
                     "synopsis": {
                         "type": "string"
@@ -6791,6 +6856,9 @@
                     "severity": {
                         "type": "integer"
                     },
+                    "severity_name": {
+                        "type": "string"
+                    },
                     "status": {
                         "type": "string"
                     },
@@ -6858,6 +6926,9 @@
                     },
                     "severity": {
                         "type": "integer"
+                    },
+                    "severity_name": {
+                        "type": "string"
                     },
                     "status": {
                         "type": "string"

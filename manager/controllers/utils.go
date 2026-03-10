@@ -558,29 +558,6 @@ func systemsSatelliteIDs(c *gin.Context, systems []SystemsSatelliteManagedID, me
 	return resp, nil
 }
 
-func fillAdvisoryItemAttributeReleaseVersion(advisory AdvisoryItemAttributesCommon) AdvisoryItemAttributesCommon {
-	// parse release version from json to []strings
-	var err error
-	advisory.ReleaseVersions, err = parseJSONList(advisory.ReleaseVersionsJSONB)
-	if err != nil {
-		utils.LogWarn("err", err.Error(), "json", advisory.ReleaseVersionsJSONB, "Unable to parse json list")
-	}
-	return advisory
-}
-
-func parseJSONList(jsonb []byte) ([]string, error) {
-	if jsonb == nil {
-		return []string{}, nil
-	}
-
-	var items []string
-	err := sonic.Unmarshal(jsonb, &items)
-	if err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 func isFilterInURLValid(c *gin.Context) bool {
 	if strings.Contains(c.Request.URL.String(), "filter") {
 		utils.LogAndRespBadRequest(c, errors.New(FilterNotSupportedMsg), FilterNotSupportedMsg)

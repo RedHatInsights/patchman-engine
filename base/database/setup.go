@@ -1,7 +1,6 @@
 package database
 
 import (
-	"app/base/models"
 	"app/base/utils"
 	"fmt"
 	"time"
@@ -23,7 +22,6 @@ var (
 	DB                 *gorm.DB
 	DBReadReplica      *gorm.DB
 	OtherAdvisoryTypes []string
-	AdvisoryTypes      map[int]string
 	globalPgConfig     map[DBMode]PostgreSQLConfig = make(map[DBMode]PostgreSQLConfig)
 )
 
@@ -171,21 +169,5 @@ func loadAdditionalParamsFromDB() {
 	utils.LogDebug("other_advisory_types", OtherAdvisoryTypes, "Other advisory types loaded from DB")
 	if err != nil {
 		panic(err)
-	}
-
-	// Load AdvisoryTypes
-	var types []models.AdvisoryType
-
-	err = DB.Table("advisory_type").
-		Select("id, name").
-		Scan(&types).Error
-	utils.LogDebug("advisory_types", types, "Advisory types loaded from DB")
-	if err != nil {
-		panic(err)
-	}
-
-	AdvisoryTypes = make(map[int]string)
-	for _, at := range types {
-		AdvisoryTypes[at.ID] = at.Name
 	}
 }

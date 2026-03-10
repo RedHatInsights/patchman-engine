@@ -9,6 +9,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/datatypes"
 )
 
 func TestAdvisoryDetailDefault(t *testing.T) {
@@ -32,11 +33,11 @@ func (r *AdvisoryDetailResponse) checkRH9Fields(t *testing.T) {
 	assert.Equal(t, "2018-09-22 20:00:00 +0000 UTC", r.Data.Attributes.ModifiedDate.String())
 	assert.Equal(t, 2, len(r.Data.Attributes.Packages))
 	assert.Equal(
-		t, packages{"firefox-77.0.1-1.fc31.x86_64", "firefox-77.0.1-1.fc31.s390"},
+		t, datatypes.JSONSlice[string]{"firefox-77.0.1-1.fc31.x86_64", "firefox-77.0.1-1.fc31.s390"},
 		r.Data.Attributes.Packages,
 	)
 	assert.Equal(t, false, r.Data.Attributes.RebootRequired)
-	assert.Equal(t, []string{"8.2", "8.4"}, r.Data.Attributes.ReleaseVersions)
+	assert.Equal(t, datatypes.JSONSlice[string]{"8.2", "8.4"}, r.Data.Attributes.ReleaseVersions)
 	assert.Nil(t, r.Data.Attributes.Severity)
 }
 
