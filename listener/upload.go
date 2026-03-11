@@ -19,7 +19,6 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"slices"
 	"strings"
 	"time"
 
@@ -282,7 +281,7 @@ func hostTemplate(tx *gorm.DB, accountID int, host *Host) *int64 {
 
 	if hasTemplateRepo(&host.SystemProfile) {
 		// check system's env in candlepin
-		resp, err := callCandlepinEnvironment(base.Context, host.SystemProfile.ConsumerID)
+		resp, err := callCandlepinEnvironment(base.Context, host.SystemProfile.OwnerID.String())
 		if err != nil {
 			utils.LogWarn("inventoryID", host.ID, "err", errors.Wrap(err, "Unable to assign templates"))
 		}
@@ -429,12 +428,7 @@ func storeOrUpdateSysPlatform(
 		},
 	})
 
-	workspaces := make([]string, len(host.Groups))
-	for i, group := range host.Groups {
-		workspaces[i] = group.ID
-	}
-	slices.Sort(workspaces)
-
+	hostWorkspaces := inventory.Groups(host.Groups)
 	inventoryRecord := models.SystemInventory{
 		ID:                               system.ID,
 		InventoryID:                      system.InventoryID,
@@ -451,7 +445,7 @@ func storeOrUpdateSysPlatform(
 		Arch:                             system.Arch,
 		Bootc:                            system.Bootc,
 		Tags:                             utils.MarshalNilToJSONB(host.Tags),
-		Workspaces:                       pq.StringArray(workspaces),
+		Workspaces:                       &hostWorkspaces,
 		StaleTimestamp:                   system.StaleTimestamp,
 		StaleWarningTimestamp:            system.StaleWarningTimestamp,
 		CulledTimestamp:                  system.CulledTimestamp,
@@ -459,7 +453,7 @@ func storeOrUpdateSysPlatform(
 		OSMajor:                          &host.SystemProfile.OperatingSystem.Major,
 		OSMinor:                          &host.SystemProfile.OperatingSystem.Minor,
 		RhsmVersion:                      utils.EmptyToNil(&host.SystemProfile.Rhsm.Version),
-		SubscriptionManagerID:            utils.EmptyToNil(&host.SystemProfile.ConsumerID),
+		SubscriptionManagerID:            &host.SystemProfile.OwnerID,
 		SapWorkload:                      host.SystemProfile.Workloads.Sap.SapSystem,
 		SapWorkloadSIDs:                  pq.StringArray(host.SystemProfile.Workloads.Sap.Sids),
 		AnsibleWorkload:                  host.SystemProfile.Workloads.Ansible.ControllerVersion != "",

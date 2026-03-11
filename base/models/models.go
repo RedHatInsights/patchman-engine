@@ -1,8 +1,10 @@
 package models
 
 import (
+	"app/base/inventory"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
@@ -116,9 +118,9 @@ type SystemInventory struct {
 	BuiltPkgcache                    bool    `gorm:"column:built_pkgcache"`
 	Arch                             *string
 	Bootc                            bool
-	Tags                             []byte         `gorm:"column:tags"`
-	Created                          time.Time      // set by trigger system_platform_insert_trigger
-	Workspaces                       pq.StringArray `gorm:"type:text[]"`
+	Tags                             []byte            `gorm:"column:tags"`
+	Created                          time.Time         // set by trigger system_platform_insert_trigger
+	Workspaces                       *inventory.Groups `gorm:"column:workspaces"`
 	StaleTimestamp                   *time.Time
 	StaleWarningTimestamp            *time.Time
 	CulledTimestamp                  *time.Time
@@ -126,7 +128,7 @@ type SystemInventory struct {
 	OSMajor                          *int16
 	OSMinor                          *int16
 	RhsmVersion                      *string
-	SubscriptionManagerID            *string
+	SubscriptionManagerID            *uuid.UUID
 	SapWorkload                      bool
 	SapWorkloadSIDs                  pq.StringArray `gorm:"type:text[];column:sap_workload_sids"`
 	AnsibleWorkload                  bool

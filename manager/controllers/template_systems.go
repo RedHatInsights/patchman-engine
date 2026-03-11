@@ -18,7 +18,7 @@ var TemplateSystemOpts = ListOpts{
 	Fields:         templateSystemFields,
 	DefaultFilters: map[string]FilterData{},
 	DefaultSort:    "-display_name",
-	StableSort:     "id",
+	StableSort:     "sp.id",
 	SearchFields:   []string{"sp.display_name"},
 }
 

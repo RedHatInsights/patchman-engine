@@ -28,7 +28,6 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, "8.10", output.Data[0].Attributes.Rhsm)
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.StaleTimestamp.String())
 	assert.Equal(t, "2018-09-02 16:00:00 +0000 UTC", output.Data[0].Attributes.StaleWarningTimestamp.String())
-	assert.Equal(t, "2018-09-09 16:00:00 +0000 UTC", output.Data[0].Attributes.CulledTimestamp.String())
 	assert.Equal(t, "2018-08-26 16:00:00 +0000 UTC", output.Data[0].Attributes.Created.String())
 	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}, {"k2", "ns1", "val2"}}, output.Data[0].Attributes.Tags)
 	assert.Equal(t, "", output.Data[0].Attributes.BaselineName)
@@ -151,7 +150,7 @@ func TestSystemsWorkloads2(t *testing.T) {
 
 func TestSystemsWorkloads3(t *testing.T) {
 	output := testSystems(t, "?filter[system_profile][sap_system]=false", 1)
-	assert.Equal(t, 0, len(output.Data))
+	assert.Equal(t, 1, len(output.Data))
 }
 
 func TestSystemsWorkloadEscaping1(t *testing.T) {

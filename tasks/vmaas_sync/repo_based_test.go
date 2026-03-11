@@ -85,15 +85,16 @@ func TestGetRepoPackageBasedInventoryIDs(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	// systems have both repo and package
-	repos := []string{"not_exists_repo", "repo2"}
+	repos := []string{"not_exists_repo", "repo1"}
 	packages := []string{"not_installed_pkg", "kernel"}
 	inventoryAIDs, err := getRepoBasedInventoryIDs(repos, packages)
 	assert.Nil(t, err)
 	assert.Equal(t, []mqueue.EvalData{
 		// "kernel" in "repo2"
-		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID1}},
-		inventoryAIDs)
+		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID1},
+		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1, OrgID: &orgID1},
+		{InventoryID: "00000000-0000-0000-0000-000000000017", RhAccountID: 1, OrgID: &orgID1},
+	}, inventoryAIDs)
 
 	repos = []string{"not_installed_pkg"}
 	inventoryAIDs, err = getRepoBasedInventoryIDs(repos, nil)

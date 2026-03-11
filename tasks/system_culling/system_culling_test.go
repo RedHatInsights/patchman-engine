@@ -158,6 +158,7 @@ func TestCullSystems(t *testing.T) {
 	var cntAfter int64
 	database.DebugWithCachesCheck("delete-culled", func() {
 		assert.NoError(t, database.DB.Model(&models.SystemPlatform{}).Count(&cnt).Error)
+		fmt.Println("cnt", cnt)
 		// first batch
 		nDeleted, err := deleteCulledSystems(database.DB, 3)
 		assert.Nil(t, err)
@@ -169,6 +170,9 @@ func TestCullSystems(t *testing.T) {
 		assert.Equal(t, 1, nDeleted)
 
 		assert.NoError(t, database.DB.Model(&models.SystemPlatform{}).Count(&cntAfter).Error)
+		fmt.Println("cnt", cnt)
+		fmt.Println("nToDelete", nToDelete)
+		fmt.Println("cntAfter", cntAfter)
 		assert.Equal(t, cnt-int64(nToDelete), cntAfter)
 	})
 }

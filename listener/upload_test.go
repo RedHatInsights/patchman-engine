@@ -14,13 +14,14 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"slices"
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var accountID = int(1)
@@ -57,11 +58,15 @@ func createTestInvHost(t *testing.T) *Host {
 }
 
 func createTestHostWithEnv(reporter, consumer, baseURL string) *Host {
+	consumerUUID, err := uuid.Parse(consumer)
+	if err != nil {
+		consumerUUID = uuid.Nil
+	}
 	return &Host{
 		ID:       id,
 		Reporter: reporter,
 		SystemProfile: inventory.SystemProfile{
-			ConsumerID: consumer,
+			OwnerID: consumerUUID,
 			YumRepos: &[]inventory.YumRepo{{
 				ID:      "base",
 				Enabled: true,
@@ -390,12 +395,8 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	assert.Contains(t, string(inventoryAfterInsert.Tags), `"key": "env"`)
 	assert.Contains(t, string(inventoryAfterInsert.Tags), `"value": "prod"`)
 
-	expectedWorkspaces := make([]string, len(hostEvent.Host.Groups))
-	for i, g := range hostEvent.Host.Groups {
-		expectedWorkspaces[i] = g.ID
-	}
-	slices.Sort(expectedWorkspaces)
-	assert.Equal(t, pq.StringArray(expectedWorkspaces), inventoryAfterInsert.Workspaces)
+	require.NotNil(t, inventoryAfterInsert.Workspaces)
+	assert.Equal(t, hostEvent.Host.Groups, []inventory.Group(*inventoryAfterInsert.Workspaces))
 
 	assert.Equal(t, hostEvent.Host.SystemProfile.OperatingSystem.Name, *inventoryAfterInsert.OSName)
 	assert.Equal(t, hostEvent.Host.SystemProfile.OperatingSystem.Major, *inventoryAfterInsert.OSMajor)
