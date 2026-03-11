@@ -11,7 +11,6 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -22,6 +21,7 @@ import (
 	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var accountID = int(1)
@@ -395,10 +395,8 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	assert.Contains(t, string(inventoryAfterInsert.Tags), `"key": "env"`)
 	assert.Contains(t, string(inventoryAfterInsert.Tags), `"value": "prod"`)
 
-	var expectedWorkspaces []inventory.Group
-	err = json.Unmarshal(inventoryAfterInsert.Workspaces, &expectedWorkspaces)
-	assert.Nil(t, err)
-	assert.Equal(t, hostEvent.Host.Groups, expectedWorkspaces)
+	require.NotNil(t, inventoryAfterInsert.Workspaces)
+	assert.Equal(t, hostEvent.Host.Groups, []inventory.Group(*inventoryAfterInsert.Workspaces))
 
 	assert.Equal(t, hostEvent.Host.SystemProfile.OperatingSystem.Name, *inventoryAfterInsert.OSName)
 	assert.Equal(t, hostEvent.Host.SystemProfile.OperatingSystem.Major, *inventoryAfterInsert.OSMajor)
