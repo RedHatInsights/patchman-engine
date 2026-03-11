@@ -1,6 +1,7 @@
 package models
 
 import (
+	"app/base/inventory"
 	"time"
 
 	"github.com/google/uuid"
@@ -117,9 +118,9 @@ type SystemInventory struct {
 	BuiltPkgcache                    bool    `gorm:"column:built_pkgcache"`
 	Arch                             *string
 	Bootc                            bool
-	Tags                             []byte    `gorm:"column:tags"`
-	Created                          time.Time // set by trigger system_platform_insert_trigger
-	Workspaces                       []byte    `gorm:"column:workspaces"`
+	Tags                             []byte            `gorm:"column:tags"`
+	Created                          time.Time         // set by trigger system_platform_insert_trigger
+	Workspaces                       *inventory.Groups `gorm:"column:workspaces"`
 	StaleTimestamp                   *time.Time
 	StaleWarningTimestamp            *time.Time
 	CulledTimestamp                  *time.Time

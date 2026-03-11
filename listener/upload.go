@@ -428,11 +428,7 @@ func storeOrUpdateSysPlatform(
 		},
 	})
 
-	workspaces, err := json.Marshal(host.Groups)
-	if err != nil {
-		return errors.Wrap(err, "marshalling groups")
-	}
-
+	hostWorkspaces := inventory.Groups(host.Groups)
 	inventoryRecord := models.SystemInventory{
 		ID:                               system.ID,
 		InventoryID:                      system.InventoryID,
@@ -449,7 +445,7 @@ func storeOrUpdateSysPlatform(
 		Arch:                             system.Arch,
 		Bootc:                            system.Bootc,
 		Tags:                             utils.MarshalNilToJSONB(host.Tags),
-		Workspaces:                       utils.MarshalNilToJSONB(workspaces),
+		Workspaces:                       &hostWorkspaces,
 		StaleTimestamp:                   system.StaleTimestamp,
 		StaleWarningTimestamp:            system.StaleWarningTimestamp,
 		CulledTimestamp:                  system.CulledTimestamp,
@@ -466,7 +462,7 @@ func storeOrUpdateSysPlatform(
 		MssqlWorkloadVersion:             utils.EmptyToNil(&host.SystemProfile.Workloads.Mssql.Version),
 	}
 
-	err = database.OnConflictUpdateMulti(txi, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
+	err := database.OnConflictUpdateMulti(txi, []string{"rh_account_id", "inventory_id"}, colsToUpdate...).
 		Create(&inventoryRecord).Error
 	if err != nil {
 		return base.WrapFatalDBError(err, "unable to insert to system_inventory")
