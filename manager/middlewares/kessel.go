@@ -83,8 +83,8 @@ func useStreamedListObjects(
 	) {
 		if err != nil {
 			utils.LogError(
-				"err", err.Error(), "receivingDuration", time.Since(start), "permission", permission, "received_count",
-				len(workspaces), "failed to useStreamedListObjects",
+				"err", err.Error(), "durationMs", time.Since(start).Milliseconds(), "permission", permission,
+				"received_count", len(workspaces), "failed to useStreamedListObjects",
 			)
 			return nil, err
 		}
@@ -92,8 +92,8 @@ func useStreamedListObjects(
 	}
 
 	utils.LogDebug(
-		"workspaces", workspaces, "receivingDuration", time.Since(start), "permission", permission, "received_count",
-		len(workspaces), "retrieved workspaces",
+		"durationMs", time.Since(start).Milliseconds(), "permission", permission, "received_count", len(workspaces),
+		"retrieved workspaces",
 	)
 	return workspaces, nil
 }
@@ -136,7 +136,6 @@ func hasPermissionKessel(c *gin.Context) {
 		return
 	}
 	c.Set(utils.KeyInventoryGroups, inventoryGroups)
-	utils.LogDebug("Kessel check OK")
 }
 
 func Kessel() gin.HandlerFunc {
