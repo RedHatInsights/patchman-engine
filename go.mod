@@ -33,6 +33,7 @@ require (
 	go.uber.org/ratelimit v0.3.1
 	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90
 	google.golang.org/grpc v1.79.2
+	gorm.io/datatypes v1.2.7
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.1
 	modernc.org/strutil v1.2.1
@@ -40,7 +41,7 @@ require (
 
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260209202127-80ab13bee0bf.1 // indirect
-	filippo.io/edwards25519 v1.1.0 // indirect
+	filippo.io/edwards25519 v1.1.1 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -136,7 +137,6 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260311181403-84a4fc48630c // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/datatypes v1.2.7 // indirect
 	gorm.io/driver/mysql v1.5.6 // indirect
 )
 
