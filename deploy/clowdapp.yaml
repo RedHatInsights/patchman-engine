@@ -72,8 +72,6 @@ objects:
                                                                     key: evaluator-database-password}}}
             - {name: VMAAS_SYNC_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                                     key: vmaas-sync-database-password}}}
-            - {name: CYNDI_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                                key: cyndi-database-password}}}
             - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
         command:
           - ./scripts/entrypoint.sh
@@ -539,24 +537,6 @@ objects:
     - puptoo
     optionalDependencies:
     - content-sources-backend
-    cyndi:
-      enabled: true
-      appName: patch
-      insightsOnly: false
-      additionalFilters:
-        - name: "insightsOnly"
-          type: "com.redhat.insights.kafka.connect.transforms.Filter"
-          if: "record.headers().lastWithName('insights_id').value() && record.headers().lastWithName('insights_id').value() != '00000000-0000-0000-0000-000000000000'"
-          where: "h.insights_id != '00000000-0000-0000-0000-000000000000'::uuid"
-        - name: "nonCentOS"
-          type: "com.redhat.insights.kafka.connect.transforms.Filter"
-          if: "!record.headers().lastWithName('os_name').value().match(/centos/i)"
-          join: "LEFT JOIN hbi.system_profiles_static sps ON sps.org_id = h.org_id AND sps.host_id = h.id"
-          where: "COALESCE(sps.operating_system->>'name', '') NOT ILIKE '%centos%'"
-        - name: "excludedReporters"
-          type: "com.redhat.insights.kafka.connect.transforms.Filter"
-          if: "!record.headers().lastWithName('reporter').value().match(/^(yupana|satellite|discovery|rhsm-conduit)$/i)"
-          where: "h.reporter NOT IN ('yupana', 'satellite', 'discovery', 'rhsm-conduit')"
     testing:
       iqePlugin: patchman
 
@@ -587,7 +567,6 @@ objects:
             FROM (SELECT sa.rh_account_id, sa.advisory_id, COUNT(*) as applicable_systems
                     FROM system_advisories sa
                     JOIN system_platform sp ON sa.rh_account_id = sp.rh_account_id AND sa.system_id = sp.id
-                    JOIN inventory.hosts ih ON sp.inventory_id = ih.id
                     GROUP BY sa.rh_account_id, sa.advisory_id
                  ) as adv
             JOIN rh_account ra ON ra.id = adv.rh_account_id
@@ -618,11 +597,10 @@ objects:
         chunksize: ${{FLOORIST_HMS_CHUNKSIZE}}
         query: >-
           SELECT a.org_id,
-                 count(ih.id),
+                 count(sp.inventory_id),
                  t.uuid::text as template_uuid, t.environment_id, t.name as template_name,
                  CURRENT_DATE as collected_at 
             FROM system_platform sp
-            JOIN inventory.hosts ih ON sp.inventory_id = ih.id
             JOIN rh_account a ON a.id = sp.rh_account_id
             LEFT JOIN template t on t.id = sp.template_id
             where sp.last_upload >= date_trunc('month', CURRENT_DATE)
@@ -641,7 +619,6 @@ objects:
     listener-database-password: bGlzdGVuZXI= # listener
     evaluator-database-password: ZXZhbHVhdG9y # evaluator
     vmaas-sync-database-password: dm1hYXMtc3luYw== # vmaas-sync
-    cyndi-database-password: Y3luZGk= # cyndi
 
 - apiVersion: v1
   data:
