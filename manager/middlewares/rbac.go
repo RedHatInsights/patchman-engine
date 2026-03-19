@@ -182,6 +182,7 @@ func findInventoryGroups(access *rbac.AccessPagination) (map[string]string, erro
 	if len(groups) > 0 {
 		res[utils.KeyGrouped] = fmt.Sprintf("{%s}", strings.Join(groups, ","))
 	}
+	utils.LogDebug("group_count", len(groups), "processed groups")
 	return res, nil
 }
 
