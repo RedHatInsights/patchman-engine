@@ -17,7 +17,7 @@ func main() {
 			return
 		}
 	}
-	// create inventory.hosts and feed db
+	// create inventory.hosts (for migration to pass on new envs) and feed db
 	createInventoryHosts()
 	feed()
 }
