@@ -134,9 +134,6 @@ func UpdateDB(migrationFilesURL string) {
 		execOrPanic(db, "ALTER USER evaluator WITH PASSWORD '"+utils.GetenvOrFail("EVALUATOR_PASSWORD")+"'")
 		execOrPanic(db, "ALTER USER manager WITH PASSWORD '"+utils.GetenvOrFail("MANAGER_PASSWORD")+"'")
 		execOrPanic(db, "ALTER USER vmaas_sync WITH PASSWORD '"+utils.GetenvOrFail("VMAAS_SYNC_PASSWORD")+"'")
-		if updateCyndiPasswd {
-			execOrPanic(db, "ALTER USER cyndi WITH PASSWORD '"+utils.GetenvOrFail("CYNDI_PASSWORD")+"'")
-		}
 	}
 
 	if updateDBConfig {
