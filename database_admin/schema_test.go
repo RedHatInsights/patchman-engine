@@ -53,6 +53,10 @@ func TestSchemaCompatiblity(t *testing.T) {
 	err := database.ExecFile("./schema/clear_db.sql")
 	assert.NoError(t, err)
 
+	// create inventory.hosts for migration purposes
+	err = database.ExecFile("../dev/create_inventory_hosts.sql")
+	assert.NoError(t, err)
+
 	sqlDB, _ := database.DB.DB()
 	driver, err := postgres.WithInstance(sqlDB, &cfg)
 	assert.NoError(t, err)
