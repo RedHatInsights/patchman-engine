@@ -123,7 +123,7 @@ func advisoriesSystemsQuery(c *gin.Context, db *gorm.DB, acc int, groups map[str
 	req SystemsAdvisoriesRequest) (*gorm.DB, *ListMeta, *Links, error) {
 	systems := req.Systems
 	advisories := req.Advisories
-	// get all advisories for all systems in the account (with inventory.hosts join)
+	// get all advisories for all systems in the account
 	advq := database.SystemAdvisories(db, acc, groups, database.JoinAdvisoryMetadata).
 		Distinct("am.id, am.name")
 		// we need to join system_advisories to make `limit` work properly

@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	// counts of systems from system_platform JOIN inventory.hosts
+	// counts of systems from system_platform
 	nGroup1    int64 = 7
 	nGroup2    int64 = 2
 	nUngrouped int64 = 7
