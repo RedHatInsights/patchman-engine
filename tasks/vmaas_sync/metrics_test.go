@@ -37,6 +37,27 @@ func TestSystemsCounts(t *testing.T) {
 	assert.Nil(t, shiftSystemsLastUpload(-timeshift))
 }
 
+func TestGetSystemInventoryData(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	tagStats, systemStats, err := getSystemInventoryData()
+	assert.Nil(t, err)
+	assert.NotNil(t, tagStats)
+	assert.NotNil(t, systemStats)
+
+	// Tag stats: all systems, SAP systems, systems with tags (from test data: 18 total, 15 SAP, 16 with tags)
+	assert.Equal(t, int64(18), tagStats[allSystemCount])
+	assert.Equal(t, int64(15), tagStats[systemsSapSystemCount])
+	assert.Equal(t, int64(16), tagStats[systemsWithTagsCount])
+
+	// System stats: updated in last 1D/7D/30D and total
+	assert.GreaterOrEqual(t, systemStats[lastUploadLast1D], int64(0))
+	assert.GreaterOrEqual(t, systemStats[lastUploadLast7D], int64(0))
+	assert.GreaterOrEqual(t, systemStats[lastUploadLast30D], int64(0))
+	assert.Equal(t, int64(18), systemStats[lastUploadAll])
+}
+
 func TestAdvisoryCounts(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()

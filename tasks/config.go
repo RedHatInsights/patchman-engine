@@ -14,9 +14,7 @@ var (
 	DeleteUnusedDataLimit = utils.PodConfig.GetInt("delete_unused_data_limit", 1000)
 	// Remove only LIMIT systems in a run, useful to avoid complete wipe in case of error
 	DeleteCulledSystemsLimit = utils.PodConfig.GetInt("delete_culled_systems_limit", 1000)
-	// Toggle cyndi metrics reporting
-	EnableCyndiMetrics = utils.PodConfig.GetBool("enable_cyndi_metrics", true)
-	UseTraceLevel      = log.IsLevelEnabled(log.TraceLevel)
+	UseTraceLevel            = log.IsLevelEnabled(log.TraceLevel)
 	// Toggle system reevaluation base on changed repos
 	EnabledRepoBasedReeval = utils.PodConfig.GetBool("repo_based_re_evaluation", true)
 	// Send recalc messages for systems with modified repos
