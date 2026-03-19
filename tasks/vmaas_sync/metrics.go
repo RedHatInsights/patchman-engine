@@ -103,7 +103,7 @@ func Metrics() *push.Pusher {
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(vmaasCallCnt, storeAdvisoriesCnt, storePackagesCnt,
 		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration, packageCnt, packageNameCnt,
-		databaseSizeBytesGaugeVec, databaseProcessesGaugeVec, cyndiSystemsCnt, cyndiTagsCnt,
+		databaseSizeBytesGaugeVec, databaseProcessesGaugeVec, systemsCntByType, tagsCntByType,
 		advisoriesCountMismatch)
 
 	// update advanced metrics
@@ -118,10 +118,7 @@ func update() {
 	updatePackageMetrics()
 	updateSystemAdvisoriesStats()
 	updateDBMetrics()
-
-	if tasks.EnableCyndiMetrics {
-		updateCyndiData()
-	}
+	updateSystemInventoryData()
 }
 
 func updateSystemMetrics() {

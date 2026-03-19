@@ -5694,7 +5694,7 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_systems{last_upload=~\"last.*|all\"}) by (last_upload, pod)) by (last_upload) - avg(sum(label_replace(patchman_engine_vmaas_sync_cyndi_systems{type=~\"last.*|all\"}, \"last_upload\", \"$1\", \"type\", \"(.*)\")) by (last_upload, pod)) by (last_upload)",
+                        "expr": "avg(sum(patchman_engine_vmaas_sync_systems{last_upload=~\"last.*|all\"}) by (last_upload, pod)) by (last_upload) - avg(sum(label_replace(patchman_engine_vmaas_sync_systems_count_by_type{type=~\"last.*|all\"}, \"last_upload\", \"$1\", \"type\", \"(.*)\")) by (last_upload, pod)) by (last_upload)",
                         "format": "time_series",
                         "hide": false,
                         "intervalFactor": 1,
@@ -6064,14 +6064,14 @@ data:
                         "datasource": {
                             "uid": "$datasource"
                         },
-                        "expr": "avg(sum(patchman_engine_vmaas_sync_cyndi_tags_count) by (type, pod)) by (type)",
+                        "expr": "avg(sum(patchman_engine_vmaas_sync_tags_count_by_type) by (type, pod)) by (type)",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "{{type}}",
                         "refId": "A"
                     }
                 ],
-                "title": "Database items - Cyndi data",
+                "title": "Database items - System inventory data",
                 "type": "timeseries"
             },
             {
