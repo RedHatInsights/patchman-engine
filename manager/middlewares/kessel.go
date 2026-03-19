@@ -36,6 +36,10 @@ func setupClient() (kesselv2.KesselInventoryServiceClient, *grpc.ClientConn, err
 }
 
 func processWorkspaces(workspaces []*kesselv2.StreamedListObjectsResponse) (map[string]string, error) {
+	defer func(start time.Time) {
+		utils.LogDebug("durationMs", time.Since(start).Milliseconds(), "processed workspaces")
+	}(time.Now())
+
 	groups := make([]string, 0, len(workspaces))
 	for _, workspace := range workspaces {
 		group, err := utils.ParseInventoryGroup(&workspace.Object.ResourceId, nil)
