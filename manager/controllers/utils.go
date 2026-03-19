@@ -5,7 +5,6 @@ import (
 	"app/base/core"
 	"app/base/database"
 	"app/base/utils"
-	"app/manager/config"
 	"app/manager/middlewares"
 	"encoding/csv"
 	"fmt"
@@ -240,9 +239,6 @@ type Tag struct {
 }
 
 func HasInventoryFilter(filters Filters) bool {
-	if !config.EnableCyndiTags {
-		return false
-	}
 	for _, data := range filters {
 		switch data.Type {
 		case InventoryFilter:
@@ -351,10 +347,6 @@ func parseTags(c *gin.Context, filters Filters) error {
 
 // Filter systems by tags with subquery
 func ApplyInventoryFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
-	if !config.EnableCyndiTags {
-		return tx, false
-	}
-
 	subq := database.DB.
 		Table("system_inventory si").
 		Select("si.inventory_id")

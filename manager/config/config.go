@@ -14,8 +14,6 @@ var (
 	// Use in-memory package cache
 	EnabledPackageCache = utils.PodConfig.GetBool("package_cache", true)
 
-	// Allow filtering by cyndi tags
-	EnableCyndiTags = utils.PodConfig.GetBool("cyndi_tags", true)
 	// Use precomputed system counts for advisories
 	DisableCachedCounts = !utils.PodConfig.GetBool("cache_counts", true)
 	// Satellite systems can't be assigned to baselines/templates
