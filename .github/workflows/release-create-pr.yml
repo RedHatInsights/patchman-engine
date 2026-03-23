@@ -1,0 +1,42 @@
+name: Create release PR
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Increment version
+        id: version
+        run: |
+          DOC_FILE="docs/v3/openapi.json docs/admin/openapi.json"
+          CLOWDER_FILE=deploy/clowdapp.yaml
+          VERSION=$(cat VERSION)
+          [ "$(git log -1 --pretty=%B)" == "$VERSION" ] && exit 0
+          RELEASE_TYPE=$(git log -1 | tail -n1) # Check release type (/major, /minor, /patch (default))
+          VERSION_NEXT=$(./scripts/increment_version.sh $VERSION $RELEASE_TYPE)
+          sed -i 's|\("version": "\)[^"]*\("\)$|'"\1$VERSION_NEXT\2|;" $DOC_FILE
+          echo $VERSION_NEXT > VERSION
+          echo "VERSION_NEXT=$VERSION_NEXT" >> $GITHUB_OUTPUT
+
+      - name: Create PR for new release
+        uses: peter-evans/create-pull-request@v8
+        if: steps.version.outputs.VERSION_NEXT != ''
+        with:
+          base: master
+          branch: update-semantic-release-${{ steps.version.outputs.VERSION_NEXT }}
+          commit-message: "Update semantic release to ${{ steps.version.outputs.VERSION_NEXT }}"
+          title: "Update semantic release to ${{ steps.version.outputs.VERSION_NEXT }}"
+          token: ${{ secrets.VMAAS_BOT_TOKEN }}
+          body: |
+            New semantic release version **${{ steps.version.outputs.VERSION_NEXT }}** is available.
