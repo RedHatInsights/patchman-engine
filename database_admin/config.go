@@ -13,6 +13,8 @@ var (
 	resetSchema = utils.PodConfig.GetBool("reset_schema", false)
 	// Create users and update their password
 	updateUsers = utils.PodConfig.GetBool("update_users", false)
+	// Unlock users
+	unlockUsers = utils.PodConfig.GetBool("unlock_users", false)
 	// rerun config.sql
 	updateDBConfig = utils.PodConfig.GetBool("update_db_config", false)
 )

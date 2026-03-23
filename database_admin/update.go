@@ -65,19 +65,27 @@ func setPgEnv() {
 	os.Setenv("PGSSLROOTCERT", utils.CoreCfg.DBSslRootCert)
 }
 
-func startMigration(conn database.Driver, db *sql.DB, migrationFilesURL string) {
-	log.Info("Blocking writing users during the migration")
+func blockUsers(db *sql.DB) {
 	execOrPanic(db, "ALTER USER listener NOLOGIN")
 	execOrPanic(db, "ALTER USER evaluator NOLOGIN")
 	execOrPanic(db, "ALTER USER vmaas_sync NOLOGIN")
+}
+
+func unblockUsers(db *sql.DB) {
+	execOrPanic(db, "ALTER USER listener LOGIN")
+	execOrPanic(db, "ALTER USER evaluator LOGIN")
+	execOrPanic(db, "ALTER USER vmaas_sync LOGIN")
+}
+
+func startMigration(conn database.Driver, db *sql.DB, migrationFilesURL string) {
+	log.Info("Blocking writing users during the migration")
+	blockUsers(db)
 	waitForSessionClosed(db)
 
 	MigrateUp(conn, migrationFilesURL)
 
 	log.Info("Reverting components privileges")
-	execOrPanic(db, "ALTER USER listener LOGIN")
-	execOrPanic(db, "ALTER USER evaluator LOGIN")
-	execOrPanic(db, "ALTER USER vmaas_sync LOGIN")
+	unblockUsers(db)
 }
 
 func dbConn() (database.Driver, *sql.DB) {
@@ -112,6 +120,11 @@ func UpdateDB(migrationFilesURL string) {
 	if updateUsers {
 		log.Info("Creating application components users")
 		execFromFile(db, "./database_admin/schema/create_users.sql")
+	}
+
+	if unlockUsers {
+		log.Info("Unlocking application components users")
+		unblockUsers(db)
 	}
 
 	switch action := migrateAction(conn, migrationFilesURL); action {
