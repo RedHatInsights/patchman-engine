@@ -138,6 +138,7 @@ func findInventoryGroups(access *rbac.AccessPagination) (map[string]string, erro
 	res := make(map[string]string)
 
 	if len(access.Data) == 0 {
+		utils.LogDebug("rbac zero access data")
 		return res, nil
 	}
 	inventoryHostsReadPerms := expandedPermission(inventoryHostsReadPerm)
@@ -150,6 +151,7 @@ func findInventoryGroups(access *rbac.AccessPagination) (map[string]string, erro
 
 		if len(a.ResourceDefinitions) == 0 {
 			// access to all groups
+			utils.LogDebug("rbac access to all groups")
 			return nil, nil
 		}
 		for _, rd := range a.ResourceDefinitions {
