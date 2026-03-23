@@ -32,7 +32,7 @@ require (
 	go.uber.org/automaxprocs v1.6.0
 	go.uber.org/ratelimit v0.3.1
 	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90
-	google.golang.org/grpc v1.79.2
+	google.golang.org/grpc v1.79.3
 	gorm.io/datatypes v1.2.7
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.1
