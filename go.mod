@@ -6,7 +6,7 @@ require (
 	github.com/MichaelMraka/gorpm v0.0.0-20251128174203-65cf25f01bac
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/bytedance/sonic v1.15.0
-	github.com/getkin/kin-openapi v0.133.0
+	github.com/getkin/kin-openapi v0.134.0
 	github.com/gin-contrib/timeout v1.1.0
 	github.com/gin-gonic/gin v1.12.0
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
