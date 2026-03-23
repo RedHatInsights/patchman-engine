@@ -9,9 +9,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    - name: Generate token
+      id: app-token
+      uses: actions/create-github-app-token@v1
+      with:
+        app-id: ${{ secrets.SEMANTIC_RELEASE_APP_ID }}
+        private-key: ${{ secrets.SEMANTIC_RELEASE_PK }}
     - uses: actions/checkout@v4
       with:
-        token: ${{ secrets.VMAAS_BOT_TOKEN }}
+        token: "${{ steps.app-token.outputs.token }}"
     - name: increment version, commit, push
       run: |
         DOC_FILE="docs/v3/openapi.json docs/admin/openapi.json"
