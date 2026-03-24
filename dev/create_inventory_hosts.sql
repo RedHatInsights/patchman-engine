@@ -36,3 +36,5 @@ CREATE OR REPLACE VIEW inventory.hosts AS SELECT
 	org_id,
 	groups
 FROM inventory.hosts_v1_0;
+
+CREATE USER cyndi;
