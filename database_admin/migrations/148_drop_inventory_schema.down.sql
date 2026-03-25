@@ -1,5 +1,7 @@
 CREATE SCHEMA IF NOT EXISTS inventory;
 
+CREATE USER cyndi;
+
 -- The admin ROLE that allows the inventory schema to be managed
 DO $$
 BEGIN
