@@ -453,7 +453,7 @@ func storeOrUpdateSysPlatform(
 		OSMajor:                          &host.SystemProfile.OperatingSystem.Major,
 		OSMinor:                          &host.SystemProfile.OperatingSystem.Minor,
 		RhsmVersion:                      utils.EmptyToNil(&host.SystemProfile.Rhsm.Version),
-		SubscriptionManagerID:            &host.SystemProfile.OwnerID,
+		SubscriptionManagerID:            host.SystemProfile.OwnerID,
 		SapWorkload:                      host.SystemProfile.Workloads.Sap.SapSystem,
 		SapWorkloadSIDs:                  pq.StringArray(host.SystemProfile.Workloads.Sap.Sids),
 		AnsibleWorkload:                  host.SystemProfile.Workloads.Ansible.ControllerVersion != "",

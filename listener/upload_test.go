@@ -66,7 +66,7 @@ func createTestHostWithEnv(reporter, consumer, baseURL string) *Host {
 		ID:       id,
 		Reporter: reporter,
 		SystemProfile: inventory.SystemProfile{
-			OwnerID: consumerUUID,
+			OwnerID: &consumerUUID,
 			YumRepos: &[]inventory.YumRepo{{
 				ID:      "base",
 				Enabled: true,
