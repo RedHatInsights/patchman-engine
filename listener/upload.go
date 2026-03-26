@@ -93,6 +93,7 @@ type Host struct {
 	Groups                []inventory.Group                      `json:"groups,omitempty"`
 	Tags                  json.RawMessage                        `json:"tags,omitempty"`
 	ParsedYumUpdates      *YumUpdates                            `json:"-"`
+	Created               time.Time                              `json:"created"`
 }
 
 type HostMetadata struct {
@@ -436,6 +437,7 @@ func storeOrUpdateSysPlatform(
 		VmaasJSON:                        system.VmaasJSON,
 		JSONChecksum:                     system.JSONChecksum,
 		LastUpload:                       system.LastUpload,
+		Created:                          host.Created,
 		DisplayName:                      system.DisplayName,
 		ReporterID:                       system.ReporterID,
 		YumUpdates:                       system.YumUpdates,
