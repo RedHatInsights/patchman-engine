@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/bytedance/sonic v1.15.0
 	github.com/getkin/kin-openapi v0.134.0
-	github.com/gin-contrib/timeout v1.1.0
+	github.com/gin-contrib/timeout v1.2.1
 	github.com/gin-gonic/gin v1.12.0
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
 	github.com/golang-migrate/migrate/v4 v4.19.1
