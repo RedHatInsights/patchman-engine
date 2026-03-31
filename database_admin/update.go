@@ -94,6 +94,7 @@ func dbConn() (database.Driver, *sql.DB) {
 		sslModeCert += "&sslrootcert=" + utils.CoreCfg.DBSslRootCert
 	}
 	databaseURL := fmt.Sprintf("postgres://%s/%s?sslmode=%s", utils.CoreCfg.DBHost, utils.CoreCfg.DBName, sslModeCert)
+	databaseURL += "&tcp_keepalives_idle=60&tcp_keepalives_interval=30&tcp_keepalives_count=5"
 	setPgEnv()
 
 	conn, db, err := NewConn(databaseURL)
