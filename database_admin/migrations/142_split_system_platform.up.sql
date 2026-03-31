@@ -1,3 +1,10 @@
+BEGIN; -- Start transaction
+
+-- lock tables to prevent deadlocks
+LOCK TABLE system_repo IN EXCLUSIVE MODE;
+LOCK TABLE system_advisories IN EXCLUSIVE MODE;
+LOCK TABLE system_package2 IN EXCLUSIVE MODE;
+
 -- system_inventory
 CREATE TABLE IF NOT EXISTS system_inventory
 (
@@ -638,3 +645,5 @@ GRANT SELECT, UPDATE, DELETE ON system_platform TO manager;
 GRANT SELECT, UPDATE, DELETE ON system_platform to vmaas_sync;
 
 do $$ begin RAISE NOTICE 'Migration 142 end'; end $$;
+
+COMMIT; -- End transaction
