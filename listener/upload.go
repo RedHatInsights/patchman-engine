@@ -281,6 +281,11 @@ func hostTemplate(tx *gorm.DB, accountID int, host *Host) *int64 {
 	var templateID *int64
 
 	if hasTemplateRepo(&host.SystemProfile) {
+		if host.SystemProfile.OwnerID == nil {
+			utils.LogWarn("inventoryID", host.ID, "Unable to assign templates: missing owner_id")
+			return templateID
+		}
+
 		// check system's env in candlepin
 		resp, err := callCandlepinEnvironment(base.Context, host.SystemProfile.OwnerID.String())
 		if err != nil {
