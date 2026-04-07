@@ -41,13 +41,13 @@ func waitForSessionClosed(db *sql.DB) {
 		session := ""
 		err := db.QueryRow(
 			"SELECT usename || ' ' || substring(query for 50) FROM pg_stat_activity WHERE " +
-				"usename IN ('evaluator', 'listener', 'vmaas_sync') LIMIT 30;",
+				"usename IN ('manager', 'evaluator', 'listener', 'vmaas_sync') LIMIT 30;",
 		).Scan(&session)
 		if err != nil {
 			log.Info(err)
 		}
 		if session == "" {
-			log.Info("No 'listener', 'evaluator', 'vmaas_sync' sessions found")
+			log.Info("No 'manager', 'listener', 'evaluator', 'vmaas_sync' sessions found")
 			return
 		}
 		utils.LogInfo("session:", session, "Session found")
@@ -67,12 +67,14 @@ func setPgEnv() {
 
 func blockUsers(db *sql.DB) {
 	execOrPanic(db, "ALTER USER listener NOLOGIN")
+	execOrPanic(db, "ALTER USER manager NOLOGIN")
 	execOrPanic(db, "ALTER USER evaluator NOLOGIN")
 	execOrPanic(db, "ALTER USER vmaas_sync NOLOGIN")
 }
 
 func unblockUsers(db *sql.DB) {
 	execOrPanic(db, "ALTER USER listener LOGIN")
+	execOrPanic(db, "ALTER USER manager LOGIN")
 	execOrPanic(db, "ALTER USER evaluator LOGIN")
 	execOrPanic(db, "ALTER USER vmaas_sync LOGIN")
 }
