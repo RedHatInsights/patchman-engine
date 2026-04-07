@@ -5,11 +5,14 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4/database"
 	log "github.com/sirupsen/logrus"
 )
+
+var lockUsers = []string{"listener", "evaluator", "manager", "vmaas_sync"}
 
 func execOrPanic(db *sql.DB, query string, args ...interface{}) {
 	if _, err := db.Exec(query, args...); err != nil {
@@ -35,19 +38,19 @@ func releaseAdvisoryLock(db *sql.DB) {
 	execOrPanic(db, "SELECT pg_advisory_unlock(123)")
 }
 
-// Wait for closing of all "listener", "evaluator" and "vmaas_sync" database sessions.
+// Wait for closing of all lockUsers database sessions.
 func waitForSessionClosed(db *sql.DB) {
 	for {
 		session := ""
 		err := db.QueryRow(
-			"SELECT usename || ' ' || substring(query for 50) FROM pg_stat_activity WHERE " +
-				"usename IN ('evaluator', 'listener', 'vmaas_sync') LIMIT 30;",
+			"SELECT usename || ' ' || substring(query for 50) FROM pg_stat_activity WHERE "+
+				"usename IN (?) LIMIT 30;", lockUsers,
 		).Scan(&session)
 		if err != nil {
 			log.Info(err)
 		}
 		if session == "" {
-			log.Info("No 'listener', 'evaluator', 'vmaas_sync' sessions found")
+			log.Info("No ", strings.Join(lockUsers, ", "), " sessions found")
 			return
 		}
 		utils.LogInfo("session:", session, "Session found")
@@ -66,15 +69,15 @@ func setPgEnv() {
 }
 
 func blockUsers(db *sql.DB) {
-	execOrPanic(db, "ALTER USER listener NOLOGIN")
-	execOrPanic(db, "ALTER USER evaluator NOLOGIN")
-	execOrPanic(db, "ALTER USER vmaas_sync NOLOGIN")
+	for _, user := range lockUsers {
+		execOrPanic(db, "ALTER USER "+user+" NOLOGIN")
+	}
 }
 
 func unblockUsers(db *sql.DB) {
-	execOrPanic(db, "ALTER USER listener LOGIN")
-	execOrPanic(db, "ALTER USER evaluator LOGIN")
-	execOrPanic(db, "ALTER USER vmaas_sync LOGIN")
+	for _, user := range lockUsers {
+		execOrPanic(db, "ALTER USER "+user+" LOGIN")
+	}
 }
 
 func startMigration(conn database.Driver, db *sql.DB, migrationFilesURL string) {
