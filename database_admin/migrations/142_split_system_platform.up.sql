@@ -1,9 +1,9 @@
 BEGIN; -- Start transaction
 
 -- lock tables to prevent deadlocks
-LOCK TABLE system_repo IN EXCLUSIVE MODE;
-LOCK TABLE system_advisories IN EXCLUSIVE MODE;
-LOCK TABLE system_package2 IN EXCLUSIVE MODE;
+LOCK TABLE system_repo IN ACCESS EXCLUSIVE MODE;
+LOCK TABLE system_advisories IN ACCESS EXCLUSIVE MODE;
+LOCK TABLE system_package2 IN ACCESS EXCLUSIVE MODE;
 
 -- system_inventory
 CREATE TABLE IF NOT EXISTS system_inventory
