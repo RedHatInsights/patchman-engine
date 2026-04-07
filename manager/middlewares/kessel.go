@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 	"google.golang.org/grpc"
 
 	"github.com/project-kessel/kessel-sdk-go/kessel/auth"
@@ -82,8 +82,17 @@ func useStreamedListObjects(
 
 	workspaces := make([]*kesselv2.StreamedListObjectsResponse, 0)
 	start := time.Now()
+	var userID string
+	switch {
+	case xrhid.Identity.User != nil && xrhid.Identity.User.UserID != "":
+		userID = xrhid.Identity.User.UserID
+	case xrhid.Identity.ServiceAccount != nil && xrhid.Identity.ServiceAccount.UserId != "":
+		userID = xrhid.Identity.ServiceAccount.UserId
+	default:
+		return nil, errors.New("user_id not found in identity")
+	}
 	for res, err := range kesselRbacV2.ListWorkspaces(
-		sloReqContext, client, kesselRbacV2.PrincipalSubject(xrhid.Identity.User.UserID, "redhat"), permission, "",
+		sloReqContext, client, kesselRbacV2.PrincipalSubject(userID, "redhat"), permission, "",
 	) {
 		if err != nil {
 			utils.LogError(
