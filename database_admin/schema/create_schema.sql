@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (152, false);
+VALUES (153, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -593,6 +593,8 @@ CREATE TABLE IF NOT EXISTS system_inventory
     mssql_workload                      BOOLEAN     NOT NULL DEFAULT false,
     mssql_workload_version              TEXT        CHECK (NOT empty(mssql_workload_version)),
     workspaces                          JSONB,
+    workspace_id                        UUID,
+    workspace_name                      TEXT        CHECK (NOT empty(workspace_name)),
     PRIMARY KEY (rh_account_id, id),
     UNIQUE (rh_account_id, inventory_id)
 ) PARTITION BY HASH (rh_account_id);
@@ -625,6 +627,8 @@ CREATE INDEX IF NOT EXISTS system_inventory_inventory_id_idx ON system_inventory
 CREATE INDEX IF NOT EXISTS system_inventory_tags_index ON system_inventory USING GIN (tags JSONB_PATH_OPS);
 CREATE INDEX IF NOT EXISTS system_inventory_stale_timestamp_index ON system_inventory (stale_timestamp);
 CREATE INDEX IF NOT EXISTS system_inventory_workspaces_index ON system_inventory USING GIN (workspaces);
+CREATE INDEX IF NOT EXISTS system_inventory_workspace_id_index ON system_inventory (workspace_id);
+CREATE INDEX IF NOT EXISTS system_inventory_workspace_name_index ON system_inventory (workspace_name);
 
 CREATE TABLE IF NOT EXISTS deleted_system
 (
