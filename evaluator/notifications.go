@@ -81,7 +81,7 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 	if err != nil {
 		return errors.Wrap(err, "getting unnotified advisories failed")
 	}
-	if advisories == nil {
+	if len(advisories) == 0 {
 		return nil
 	}
 
