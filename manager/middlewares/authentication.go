@@ -86,7 +86,11 @@ func PublicAuthenticator() gin.HandlerFunc {
 			return
 		}
 		if findAccount(c, xrhid.Identity.OrgID) {
-			c.Set(utils.KeyUser, fmt.Sprintf("%s %s", xrhid.Identity.User.FirstName, xrhid.Identity.User.LastName))
+			if xrhid.Identity.User != nil {
+				c.Set(utils.KeyUser, fmt.Sprintf("%s %s", xrhid.Identity.User.FirstName, xrhid.Identity.User.LastName))
+			} else if xrhid.Identity.ServiceAccount != nil {
+				c.Set(utils.KeyUser, xrhid.Identity.ServiceAccount.Username)
+			}
 			c.Next()
 		}
 	}
