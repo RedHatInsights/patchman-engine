@@ -108,6 +108,32 @@ var (
         }
     }
 }`)
+	identityHeaderTmplServiceAccount, _ = template.New("x-rh-identity").Parse(`{
+    "identity": {
+        "org_id": "{{.OrgID}}",
+        "auth_type": "{{.AuthType}}",
+        "type": "{{.Type}}",
+		"service_account": {
+            "client_id": "{{.ClientID}}",
+			"username": "{{.Username}}",
+		    "user_id": "{{.UserID}}"
+        },
+        "system": {
+            "cert_type": "{{.CertType}}",
+            "cn": "{{.SystemCN}}"
+        },
+        "internal": {
+            "org_id": "{{.OrgID}}",
+            "auth_type": "{{.AuthType}}",
+            "auth_time": 6300
+        }
+    },
+    "entitlements": {
+        "insights": {
+            "is_entitled": true
+        }
+    }
+}`)
 	systemCN = "cccccccc-0000-0000-0001-000000000004"
 )
 
@@ -122,6 +148,26 @@ func TestPublicAuthenticator(t *testing.T) {
 	PublicAuthenticator()(c)
 	assert.Equal(t, 1, c.GetInt(utils.KeyAccount))
 	assert.Equal(t, "john doe", c.GetString(utils.KeyUser))
+}
+
+func TestPublicAuthenticatorServiceAccount(t *testing.T) {
+	c := testSetup(t)
+	var identityHeader bytes.Buffer
+	err := identityHeaderTmplServiceAccount.Execute(&identityHeader,
+		map[string]string{
+			"OrgID":    "org_1",
+			"Type":     "ServiceAccount",
+			"AuthType": "basic-auth",
+			"ClientID": "test-client-id",
+			"Username": "test-username",
+			"UserID":   "12345",
+		})
+	assert.Nil(t, err)
+	c.Request = &http.Request{Header: http.Header{}}
+	c.Request.Header.Add("x-rh-identity", base64.StdEncoding.EncodeToString(identityHeader.Bytes()))
+	PublicAuthenticator()(c)
+	assert.Equal(t, 1, c.GetInt(utils.KeyAccount))
+	assert.Equal(t, "test-username", c.GetString(utils.KeyUser))
 }
 
 func TestPublicAuthenticatorMissingHeader(t *testing.T) {
