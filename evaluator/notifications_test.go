@@ -9,6 +9,7 @@ import (
 	"app/base/utils"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/assert"
@@ -142,4 +143,106 @@ func TestGetSystemTags(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.Equal(t, expected, tags)
 	}
+}
+
+// TestAdvisoriesNotificationAlreadyNotified verifies that no Kafka message is sent when all
+// advisories on the system have already been notified (notified IS NOT NULL). This is the
+// exact scenario that caused the blank-email production bug introduced in RHINENG-21786.
+func TestAdvisoriesNotificationAlreadyNotified(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	mockWriter := mqueue.MockKafkaWriter{}
+	notificationsPublisher = &mockWriter
+
+	advisoryIDs := []int64{1, 2}
+	database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
+
+	now := time.Now()
+	for _, id := range advisoryIDs {
+		err := database.DB.Create(&models.AdvisoryAccountData{
+			AdvisoryID:         id,
+			RhAccountID:        rhAccountID,
+			SystemsInstallable: 1,
+			SystemsApplicable:  1,
+			Notified:           &now,
+		}).Error
+		assert.NoError(t, err)
+	}
+	defer database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
+
+	system := &models.SystemPlatform{
+		ID:          systemID,
+		RhAccountID: rhAccountID,
+		InventoryID: inventoryID,
+		DisplayName: "test-display-name",
+	}
+	newAdvs := SystemAdvisoryMap{
+		"RH-1": {AdvisoryID: 1},
+		"RH-2": {AdvisoryID: 2},
+	}
+
+	err := publishNewAdvisoriesNotification(database.DB, system, orgID, newAdvs)
+	assert.NoError(t, err)
+	assert.Empty(t, mockWriter.Messages, "no notification should be sent when all advisories are already notified")
+}
+
+// TestAdvisoriesNotificationEmptyAdvisoryMap verifies that no Kafka message is sent when
+// publishNewAdvisoriesNotification is called with an empty SystemAdvisoryMap (no advisories
+// on the system at all).
+func TestAdvisoriesNotificationEmptyAdvisoryMap(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	mockWriter := mqueue.MockKafkaWriter{}
+	notificationsPublisher = &mockWriter
+
+	system := &models.SystemPlatform{
+		ID:          systemID,
+		RhAccountID: rhAccountID,
+		InventoryID: inventoryID,
+		DisplayName: "test-display-name",
+	}
+
+	// An empty map means there is nothing to query — no messages should be produced regardless.
+	publishNewAdvisoriesNotification(database.DB, system, orgID, SystemAdvisoryMap{}) //nolint:errcheck
+	assert.Empty(t, mockWriter.Messages, "no notification should be sent when the advisory map is empty")
+}
+
+// TestGetUnnotifiedAdvisoriesReturnsEmpty documents the return-type contract of
+// getUnnotifiedAdvisories: when all candidate advisories are already notified the function
+// must return a non-nil empty slice (not nil). This prevents a future nil-vs-empty regression
+// from silently bypassing the len == 0 guard in publishNewAdvisoriesNotification.
+func TestGetUnnotifiedAdvisoriesReturnsEmpty(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	advisoryIDs := []int64{1, 2}
+	database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
+
+	now := time.Now()
+	for _, id := range advisoryIDs {
+		err := database.DB.Create(&models.AdvisoryAccountData{
+			AdvisoryID:         id,
+			RhAccountID:        rhAccountID,
+			SystemsInstallable: 1,
+			SystemsApplicable:  1,
+			Notified:           &now,
+		}).Error
+		assert.NoError(t, err)
+	}
+	defer database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
+
+	newAdvs := SystemAdvisoryMap{
+		"RH-1": {AdvisoryID: 1},
+		"RH-2": {AdvisoryID: 2},
+	}
+
+	result, err := getUnnotifiedAdvisories(database.DB, rhAccountID, newAdvs)
+	assert.NoError(t, err)
+	assert.NotNil(t, result, "result must be a non-nil slice so callers can use len() safely")
+	assert.Empty(t, result, "no advisories should be returned when all are already notified")
 }
