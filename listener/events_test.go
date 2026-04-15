@@ -50,7 +50,7 @@ func TestDeleteSystem(t *testing.T) {
 	deleteEvent := createTestDeleteEvent(id)
 	err := HandleDelete(deleteEvent)
 	assert.NoError(t, err)
-	assertSystemStaleAndCulled(t)
+	assertSystemCulled(t)
 	deleteData(t)
 }
 
@@ -136,7 +136,7 @@ func TestCreateDeleteUpload(t *testing.T) {
 	deleteEvent := createTestDeleteEvent(id)
 	err = HandleDelete(deleteEvent)
 	assert.NoError(t, err)
-	assertSystemStaleAndCulled(t)
+	assertSystemCulled(t)
 
 	// second upload of now deleted system should not change anything
 	changedName := "UPDATED"

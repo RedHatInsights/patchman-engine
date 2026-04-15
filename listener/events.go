@@ -81,8 +81,6 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 	// mark system as stale and let system_culling job remove it later
 	query := database.DB.Model(&models.SystemInventory{}).Where("inventory_id = ?::uuid", event.ID).
 		Updates(map[string]interface{}{
-			"stale":            true,
-			"stale_timestamp":  gorm.Expr("NOW()"),
 			"culled_timestamp": gorm.Expr("NOW()"),
 		})
 	err = query.Error

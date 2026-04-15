@@ -72,11 +72,11 @@ func assertSystemNotInDB(t *testing.T) {
 	assert.Equal(t, 0, int(systemCount))
 }
 
-func assertSystemStaleAndCulled(t *testing.T) {
+func assertSystemCulled(t *testing.T) {
 	var systemCount int64
 	now := time.Now()
 	assert.Nil(t, database.DB.Model(models.SystemPlatform{}).
-		Where("stale = true AND stale_timestamp < ? AND culled_timestamp < ?", now, now).
+		Where("culled_timestamp < ?", now).
 		Where("inventory_id = ?::uuid", id).Count(&systemCount).Error)
 
 	assert.Equal(t, 1, int(systemCount))
