@@ -244,7 +244,7 @@ func SystemDeleteHandler(c *gin.Context) {
 		return
 	}
 
-	query := tx.Exec("select deleted_inventory_id from delete_system(?::uuid)", systemInventoryID[0])
+	query := tx.Exec("select delete_system(?::uuid)", systemInventoryID[0])
 	if err := query.Error; err != nil {
 		utils.LogAndRespError(c, err, "Could not delete system")
 		return

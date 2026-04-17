@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (149, false);
+VALUES (150, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -301,15 +301,13 @@ $refresh_system_cached_counts$
 
 
 CREATE OR REPLACE FUNCTION delete_system(inventory_id_in uuid)
-    RETURNS TABLE
-            (
-                deleted_inventory_id uuid
-            )
+    RETURNS uuid
 AS
 $delete_system$
 DECLARE
     v_system_id  INT;
     v_account_id INT;
+    v_inventory_id uuid;
 BEGIN
     -- opt out to refresh cache and then delete
     SELECT id, rh_account_id
@@ -321,7 +319,7 @@ BEGIN
 
     IF v_system_id IS NULL OR v_account_id IS NULL THEN
         RAISE NOTICE 'Not found';
-        RETURN;
+        RETURN NULL;
     END IF;
 
     UPDATE system_inventory
@@ -349,10 +347,12 @@ BEGIN
     WHERE rh_account_id = v_account_id
       AND system_id = v_system_id;
 
-    RETURN QUERY DELETE FROM system_inventory
+    DELETE FROM system_inventory
         WHERE rh_account_id = v_account_id AND
               id = v_system_id
-        RETURNING inventory_id;
+        RETURNING inventory_id INTO v_inventory_id;
+
+    RETURN v_inventory_id;
 END;
 $delete_system$ LANGUAGE 'plpgsql';
 
