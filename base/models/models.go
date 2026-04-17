@@ -129,8 +129,8 @@ func (SystemPatch) TableName() string {
 // and do not pass it to gorm.DB.Model as a single-table model—load it with explicit
 // SQL or Table/Joins on system_inventory and system_patch.
 type SystemPlatformV2 struct {
-	Inventory SystemInventory
-	Patch     SystemPatch
+	Inventory SystemInventory `gorm:"embedded"`
+	Patch     SystemPatch     `gorm:"embedded"`
 }
 
 func (v *SystemPlatformV2) GetInventoryID() string {

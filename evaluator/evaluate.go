@@ -680,11 +680,14 @@ func loadSystemData(accountID int, inventoryID string) (*models.SystemPlatformV2
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, evaluationPartDuration.WithLabelValues("data-loading"))
 
-	v2, err := loadSystemPlatformV2(database.DB, accountID, inventoryID)
-	if err != nil {
-		return nil, err
-	}
-	return v2, nil
+	var system models.SystemPlatformV2
+	err := database.DB.Table("system_inventory si").
+		Select("si.*, sp.*").
+		Joins("JOIN system_patch sp ON sp.system_id = si.id AND sp.rh_account_id = si.rh_account_id").
+		Where("si.rh_account_id = ?", accountID).
+		Where("si.inventory_id = ?::uuid", inventoryID).
+		Find(&system).Error
+	return &system, err
 }
 
 func validSystem(accountID int, systemID int64) bool {
