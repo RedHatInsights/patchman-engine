@@ -68,11 +68,11 @@ func TestSingleSystemStale(t *testing.T) {
 
 		nMarked, err := markSystemsStale(database.DB, 0)
 		assert.Nil(t, err)
-		assert.Equal(t, 0, nMarked)
+		assert.Equal(t, int64(0), nMarked)
 
 		nMarked, err = markSystemsStale(database.DB, 1)
 		assert.Nil(t, err)
-		assert.Equal(t, 1, nMarked)
+		assert.Equal(t, int64(1), nMarked)
 
 		oldAffected = accountData[0].SystemsInstallable
 		assert.NoError(t, database.DB.Find(&accountData, "rh_account_id = ? AND advisory_id = ?",
@@ -113,7 +113,7 @@ func TestMarkSystemsStale(t *testing.T) {
 	}
 	nMarked, err := markSystemsStale(database.DB, 500)
 	assert.Nil(t, err)
-	assert.Equal(t, 18, nMarked)
+	assert.Equal(t, int64(18), nMarked)
 
 	inventories = loadAllSystemInventories(t, database.DB)
 	for i := range inventories {
@@ -147,7 +147,7 @@ func TestMarkSystemsNotStale(t *testing.T) {
 	}
 	nMarked, err := markSystemsStale(database.DB, 500)
 	assert.NoError(t, err)
-	assert.Equal(t, 18, nMarked)
+	assert.Equal(t, int64(18), nMarked)
 
 	inventories = loadAllSystemInventories(t, database.DB)
 	for i := range inventories {
@@ -192,12 +192,12 @@ func TestCullSystems(t *testing.T) {
 		// first batch
 		nDeleted, err := deleteCulledSystems(database.DB, 3)
 		assert.Nil(t, err)
-		assert.Equal(t, 3, nDeleted)
+		assert.Equal(t, int64(3), nDeleted)
 
 		// second batch
 		nDeleted, err = deleteCulledSystems(database.DB, 3)
 		assert.Nil(t, err)
-		assert.Equal(t, 1, nDeleted)
+		assert.Equal(t, int64(1), nDeleted)
 
 		assert.NoError(t, database.DB.Model(&models.SystemInventory{}).Count(&cntAfter).Error)
 		assert.Equal(t, cnt-int64(nToDelete), cntAfter)
