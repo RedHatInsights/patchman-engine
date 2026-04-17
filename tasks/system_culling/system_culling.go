@@ -46,16 +46,36 @@ func runSystemCulling() {
 	}
 }
 
-// https://github.com/go-gorm/gorm/issues/3722
-func deleteCulledSystems(tx *gorm.DB, limitDeleted int) (nDeleted int, err error) {
-	var nDeletedArr []int
-	err = tx.Raw("select delete_culled_systems(?)", limitDeleted).
-		Find(&nDeletedArr).Error
-	if len(nDeletedArr) > 0 {
-		nDeleted = nDeletedArr[0]
+// systems are deleted in independent transactions to avoid locking multiple rows for long time
+func deleteCulledSystems(tx *gorm.DB, limitDeleted int) (nDeleted int64, err error) {
+	var inventoryIDs []string
+	err = tx.Model(&models.SystemInventory{}).
+		Where("culled_timestamp < ?", time.Now()).
+		Order("id").
+		Limit(limitDeleted).
+		Pluck("inventory_id", &inventoryIDs).Error
+	if err != nil {
+		return 0, err
 	}
 
-	return nDeleted, err
+	for _, id := range inventoryIDs {
+		var rowsAffected int64
+		delErr := tasks.CancelableDB().Transaction(func(tx2 *gorm.DB) error {
+			res := tx2.Exec("select delete_system(?::uuid)", id)
+			if res.Error != nil {
+				return res.Error
+			}
+			rowsAffected = res.RowsAffected
+			return nil
+		})
+		if delErr != nil {
+			utils.LogWarn("inventoryID", id, "err", delErr.Error(), "Delete culled system")
+			continue
+		}
+		nDeleted += rowsAffected
+	}
+
+	return nDeleted, nil
 }
 
 func markSystemsStale(tx *gorm.DB, markedLimit int) (nMarked int, err error) {
