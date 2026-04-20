@@ -1,4 +1,4 @@
-FROM grafana/grafana:12.4.2
+FROM grafana/grafana:12.4.3
 
 USER root
 RUN apk add --no-cache python3 py3-yaml
