@@ -24,12 +24,16 @@ type Session struct {
 // @Failure 500 {object} map[string]interface{}
 // @Router /database/pg_repack/recreate [put]
 func RepackRecreateHandler(c *gin.Context) {
-	if err := database.DB.Exec("DROP EXTENSION IF EXISTS pg_repack CASCADE").Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
-		return
+	runSequence := []string{
+		"DROP EXTENSION IF EXISTS pg_repack CASCADE",
+		"CREATE EXTENSION pg_repack",
+		"GRANT USAGE ON SCHEMA repack TO vmaas_sync",
 	}
-	if err := database.DB.Exec("CREATE EXTENSION pg_repack").Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+	for _, query := range runSequence {
+		if err := database.DB.Exec(query).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+			return
+		}
 	}
 	c.JSON(http.StatusOK, "pg_repack extension re-created")
 }
