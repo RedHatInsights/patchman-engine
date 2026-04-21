@@ -6377,6 +6377,12 @@
                     },
                     "template_uuid": {
                         "type": "string"
+                    },
+                    "workspace_id": {
+                        "type": "string"
+                    },
+                    "workspace_name": {
+                        "type": "string"
                     }
                 }
             },
@@ -6455,6 +6461,12 @@
                         "type": "string"
                     },
                     "template_uuid": {
+                        "type": "string"
+                    },
+                    "workspace_id": {
+                        "type": "string"
+                    },
+                    "workspace_name": {
                         "type": "string"
                     }
                 }
@@ -6763,6 +6775,12 @@
                     },
                     "update_status": {
                         "type": "string"
+                    },
+                    "workspace_id": {
+                        "type": "string"
+                    },
+                    "workspace_name": {
+                        "type": "string"
                     }
                 }
             },
@@ -7051,6 +7069,12 @@
                     },
                     "template_uuid": {
                         "type": "string"
+                    },
+                    "workspace_id": {
+                        "type": "string"
+                    },
+                    "workspace_name": {
+                        "type": "string"
                     }
                 }
             },
@@ -7197,6 +7221,12 @@
                     },
                     "template_uuid": {
                         "type": "string"
+                    },
+                    "workspace_id": {
+                        "type": "string"
+                    },
+                    "workspace_name": {
+                        "type": "string"
                     }
                 }
             },
@@ -7328,6 +7358,12 @@
                     },
                     "third_party": {
                         "type": "boolean"
+                    },
+                    "workspace_id": {
+                        "type": "string"
+                    },
+                    "workspace_name": {
+                        "type": "string"
                     }
                 }
             },
@@ -7633,6 +7669,12 @@
                         "items": {
                             "$ref": "#/components/schemas/controllers.SystemTag"
                         }
+                    },
+                    "workspace_id": {
+                        "type": "string"
+                    },
+                    "workspace_name": {
+                        "type": "string"
                     }
                 }
             },
@@ -7705,6 +7747,12 @@
                         "items": {
                             "$ref": "#/components/schemas/controllers.SystemTag"
                         }
+                    },
+                    "workspace_id": {
+                        "type": "string"
+                    },
+                    "workspace_name": {
+                        "type": "string"
                     }
                 }
             },
