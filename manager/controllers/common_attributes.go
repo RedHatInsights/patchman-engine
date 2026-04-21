@@ -1,7 +1,11 @@
 // nolint:lll
 package controllers
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type MetaTotalHelper struct {
 	// a helper to get total number of systems
@@ -26,6 +30,11 @@ type SystemTags struct {
 
 type SystemGroups struct {
 	Groups SystemGroupsList `json:"groups" csv:"groups" query:"si.workspaces" gorm:"column:groups" order_query:"si.workspaces->0->>'name'"`
+}
+
+type SystemWorkspace struct {
+	WorkspaceID   *uuid.UUID `json:"workspace_id" csv:"workspace_id" query:"si.workspace_id" gorm:"column:workspace_id"`
+	WorkspaceName *string    `json:"workspace_name" csv:"workspace_name" query:"si.workspace_name" gorm:"column:workspace_name"`
 }
 
 // baseline attributes are obsoleted and we keep them only for backward API compatibility

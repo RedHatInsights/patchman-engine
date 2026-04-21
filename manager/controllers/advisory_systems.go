@@ -41,6 +41,7 @@ type AdvisorySystemItemAttributes struct {
 	SystemTimestamps
 	SystemTags
 	SystemGroups
+	SystemWorkspace
 	BaselineIDAttr
 	BaselineNameAttr
 	TemplateAttibutes

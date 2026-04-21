@@ -36,6 +36,7 @@ type TemplateSystemAttributes struct {
 	ApplicableAdvisories
 	SystemTags
 	SystemGroups
+	SystemWorkspace
 	SystemLastUpload
 }
 

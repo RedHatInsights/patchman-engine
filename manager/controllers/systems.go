@@ -96,6 +96,7 @@ type SystemItemAttributes struct {
 	BaselineIDAttr
 	TemplateAttibutes
 	SystemGroups
+	SystemWorkspace
 	SystemArch
 }
 
