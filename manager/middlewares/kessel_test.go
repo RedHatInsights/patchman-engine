@@ -114,6 +114,13 @@ func TestHasPermissionKessel(t *testing.T) {
 	inventoryGroupMap, ok := (inventoryGroups).(map[string]string)
 	require.True(t, ok)
 	assert.Equal(t, `{"[{\"id\":\"inventory-group-1\"}]"}`, inventoryGroupMap[utils.KeyGrouped])
+
+	workspaces, found := c.Get(utils.KeyInventoryWorkspaces)
+	require.True(t, found)
+	workspaceIDs, ok := (workspaces).([]string)
+	require.True(t, ok)
+	require.Greater(t, len(workspaceIDs), 0)
+	assert.Equal(t, "inventory-group-1", workspaceIDs[0])
 }
 
 func mockXRHID(userType string) *identity.XRHID {

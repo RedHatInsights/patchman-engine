@@ -142,6 +142,18 @@ func hasPermissionKessel(c *gin.Context) {
 		return
 	}
 
+	workspaceIDs := make([]string, 0, len(workspaces))
+	for _, workspace := range workspaces {
+		workspaceIDs = append(workspaceIDs, workspace.Object.ResourceId)
+	}
+
+	if len(workspaceIDs) == 0 {
+		utils.LogWarn(errors.New("no workspaces found"))
+		c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Missing permission"})
+		return
+	}
+	c.Set(utils.KeyInventoryWorkspaces, workspaceIDs)
+
 	inventoryGroups, err := processWorkspaces(workspaces)
 	if err != nil {
 		utils.LogWarn(err.Error())
