@@ -40,6 +40,7 @@ type PackageSystemItem struct {
 	OSAttributes
 	UpdateStatus string `json:"update_status" csv:"update_status" query:"CASE WHEN spkg.installable_id is not null THEN 'Installable' WHEN spkg.applicable_id is not null THEN 'Applicable' ELSE 'None' END" gorm:"column:update_status"`
 	SystemGroups
+	SystemWorkspace
 }
 
 type PackageSystemDBLookup struct {
