@@ -26,6 +26,7 @@ import (
 // @Router /templates/{template_id}/subscribed-systems [PATCH]
 func TemplateSubscribedSystemsUpdateHandler(c *gin.Context) {
 	templateUUID := c.Param("template_id")
+	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 
 	db := middlewares.DBFromContext(c)
 
@@ -41,12 +42,12 @@ func TemplateSubscribedSystemsUpdateHandler(c *gin.Context) {
 	}
 
 	systemList := []string{systemUUID}
-	err = checkTemplateSystems(c, db, account, template, systemList, nil)
+	err = checkTemplateSystems(c, db, account, template, systemList, workspaceIDs)
 	if err != nil {
 		return
 	}
 
-	err = assignCandlepinEnvironment(c, db, account, &template.EnvironmentID, systemList, nil)
+	err = assignCandlepinEnvironment(c, db, account, &template.EnvironmentID, systemList, workspaceIDs)
 	if err != nil {
 		return
 	}

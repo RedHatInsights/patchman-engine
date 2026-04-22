@@ -54,7 +54,7 @@ type SystemTemplateDBLookup struct {
 func TemplateSystemsUpdateHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
 	templateUUID := c.Param("template_id")
-	groups := c.GetStringMapString(utils.KeyInventoryGroups)
+	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 
 	var req TemplateSystemsUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -73,12 +73,12 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	err = checkTemplateSystems(c, db, account, template, req.Systems, groups)
+	err = checkTemplateSystems(c, db, account, template, req.Systems, workspaceIDs)
 	if err != nil {
 		return
 	}
 
-	err = assignCandlepinEnvironment(c, db, account, &template.EnvironmentID, req.Systems, groups)
+	err = assignCandlepinEnvironment(c, db, account, &template.EnvironmentID, req.Systems, workspaceIDs)
 	if err != nil {
 		return
 	}
@@ -97,14 +97,14 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 }
 
 func checkTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template *models.Template,
-	inventoryIDs []string, groups map[string]string) error {
+	inventoryIDs []string, workspaceIDs []string) error {
 	if len(inventoryIDs) == 0 {
 		err := errors.New(InvalidInventoryIDsErr)
 		utils.LogAndRespBadRequest(c, err, InvalidInventoryIDsErr)
 		return err
 	}
 
-	err := checkInventoryIDs(db, accountID, inventoryIDs, groups)
+	err := checkInventoryIDs(db, accountID, inventoryIDs, workspaceIDs)
 	if err != nil {
 		switch {
 		case errors.Is(err, base.ErrBadRequest):
@@ -119,7 +119,7 @@ func checkTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template *
 		}
 	}
 
-	if err := templateArchVersionMatch(db, inventoryIDs, template, accountID, groups); err != nil {
+	if err := templateArchVersionMatch(db, inventoryIDs, template, accountID, workspaceIDs); err != nil {
 		msg := fmt.Sprintf("Incompatible template and system version or architecture: %s", err.Error())
 		utils.LogAndRespBadRequest(c, err, msg)
 		return err
@@ -164,7 +164,7 @@ func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template 
 }
 
 func templateArchVersionMatch(
-	db *gorm.DB, inventoryIDs []string, template *models.Template, acc int, groups map[string]string,
+	db *gorm.DB, inventoryIDs []string, template *models.Template, acc int, workspaceIDs []string,
 ) error {
 	if template == nil {
 		return nil
@@ -175,7 +175,7 @@ func templateArchVersionMatch(
 		Version     string
 	}{}
 	var err error
-	err = database.Systems(db, acc, groups).
+	err = database.Systems(db, acc, workspaceIDs).
 		Select("si.inventory_id as inventory_id, si.os_major as version, si.arch as arch").
 		Where("si.inventory_id in (?)", inventoryIDs).Find(&sysArchVersions).Error
 	if err != nil {
@@ -220,13 +220,13 @@ func callCandlepin(ctx context.Context, owner string, request *candlepin.Consume
 }
 
 func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env *string, inventoryIDs []string,
-	groups map[string]string) error {
+	workspaceIDs []string) error {
 	var hosts = []struct {
 		InventoryID string
 		Consumer    *string
 	}{}
 
-	err := database.Systems(db, accountID, groups).
+	err := database.Systems(db, accountID, workspaceIDs).
 		Select("si.inventory_id as inventory_id, si.subscription_manager_id as consumer").
 		Where("si.inventory_id in (?)", inventoryIDs).Find(&hosts).Error
 	if err != nil {
@@ -270,12 +270,12 @@ func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env 
 	return nil
 }
 
-func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string, groups map[string]string) (err error) {
+func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string, workspaceIDs []string) (err error) {
 	var containingSystems []SystemTemplateDBLookup
 	var missingIDs []string
 	var satelliteIDs []string
 	var bootcIDs []string
-	err = database.Systems(db, accountID, groups).
+	err = database.Systems(db, accountID, workspaceIDs).
 		Select("si.inventory_id, si.satellite_managed, si.bootc").
 		Where("si.inventory_id IN (?::uuid)", inventoryIDs).
 		Scan(&containingSystems).Error

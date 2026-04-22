@@ -71,7 +71,7 @@ var AdvisorySystemOpts = ListOpts{
 
 func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(utils.KeyAccount)
-	groups := c.GetStringMapString(utils.KeyInventoryGroups)
+	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 
 	advisoryName := c.Param("advisory_id")
 	if advisoryName == "" {
@@ -93,7 +93,7 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error
 		return nil, nil, nil, err
 	}
 
-	query := buildAdvisorySystemsQuery(db, account, groups, advisoryName)
+	query := buildAdvisorySystemsQuery(db, account, workspaceIDs, advisoryName)
 	opts := AdvisorySystemOpts
 	filters, err := ParseAllFilters(c, opts)
 	if err != nil {
@@ -270,9 +270,9 @@ func AdvisorySystemsListIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildAdvisorySystemsQuery(db *gorm.DB, account int, groups map[string]string, advisoryName string) *gorm.DB {
+func buildAdvisorySystemsQuery(db *gorm.DB, account int, workspaceIDs []string, advisoryName string) *gorm.DB {
 	selectQuery := AdvisorySystemsSelect
-	query := database.SystemAdvisories(db, account, groups, database.JoinTemplates, database.JoinAdvisoryMetadata).
+	query := database.SystemAdvisories(db, account, workspaceIDs, database.JoinTemplates, database.JoinAdvisoryMetadata).
 		Select(selectQuery).
 		Joins("LEFT JOIN status st ON sa.status_id = st.id").
 		Where("am.name = ?", advisoryName).
