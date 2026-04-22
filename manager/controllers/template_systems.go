@@ -76,7 +76,7 @@ func getTemplate(c *gin.Context, tx *gorm.DB, account int, uuid string) (*models
 	return &template, nil
 }
 
-func templateSystemsQuery(c *gin.Context, account int, groups map[string]string) (*gorm.DB, Filters, error) {
+func templateSystemsQuery(c *gin.Context, account int, workspaceIDs []string) (*gorm.DB, Filters, error) {
 	templateUUID := c.Param("template_id")
 	db := middlewares.DBFromContext(c)
 
@@ -86,7 +86,7 @@ func templateSystemsQuery(c *gin.Context, account int, groups map[string]string)
 		return nil, nil, err
 	}
 
-	query := database.Systems(db, account, groups).
+	query := database.Systems(db, account, workspaceIDs).
 		Where("spatch.template_id = ?", template.ID).
 		Select(templateSystemSelect)
 
@@ -98,9 +98,9 @@ func templateSystemsQuery(c *gin.Context, account int, groups map[string]string)
 	return query, filters, nil
 }
 
-func templateSystemsCommon(c *gin.Context, account int, groups map[string]string,
+func templateSystemsCommon(c *gin.Context, account int, workspaceIDs []string,
 ) (*gorm.DB, *ListMeta, []string, error) {
-	query, filters, err := templateSystemsQuery(c, account, groups)
+	query, filters, err := templateSystemsQuery(c, account, workspaceIDs)
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled in method itself
@@ -160,9 +160,9 @@ func templateSystemData(templateSystems []TemplateSystemsDBLookup) ([]TemplateSy
 // @Router /templates/{template_id}/systems [get]
 func TemplateSystemsListHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	groups := c.GetStringMapString(utils.KeyInventoryGroups)
+	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 
-	query, meta, params, err := templateSystemsCommon(c, account, groups)
+	query, meta, params, err := templateSystemsCommon(c, account, workspaceIDs)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -209,9 +209,9 @@ func TemplateSystemsListHandler(c *gin.Context) {
 // @Router /ids/templates/{template_id}/systems [get]
 func TemplateSystemsListIDsHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	groups := c.GetStringMapString(utils.KeyInventoryGroups)
+	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 
-	query, meta, _, err := templateSystemsCommon(c, account, groups)
+	query, meta, _, err := templateSystemsCommon(c, account, workspaceIDs)
 	if err != nil {
 		return
 	} // Error handled in method itself

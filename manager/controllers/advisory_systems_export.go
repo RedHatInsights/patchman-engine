@@ -53,7 +53,7 @@ var AdvisorySystemExportOpts = ListOpts{
 // @Router /export/advisories/{advisory_id}/systems [get]
 func AdvisorySystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	groups := c.GetStringMapString(utils.KeyInventoryGroups)
+	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 
 	advisoryName := c.Param("advisory_id")
 	if advisoryName == "" {
@@ -73,7 +73,7 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	query := buildAdvisorySystemsQuery(db, account, groups, advisoryName)
+	query := buildAdvisorySystemsQuery(db, account, workspaceIDs, advisoryName)
 	filters, err := ParseAllFilters(c, AdvisorySystemExportOpts)
 	if err != nil {
 		return

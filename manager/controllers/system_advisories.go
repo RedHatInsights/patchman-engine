@@ -72,7 +72,7 @@ func (v *RelList) Scan(value interface{}) error {
 
 func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(utils.KeyAccount)
-	groups := c.GetStringMapString(utils.KeyInventoryGroups)
+	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {
@@ -105,7 +105,7 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 		return nil, nil, nil, err
 	}
 
-	query := buildSystemAdvisoriesQuery(db, account, groups, inventoryID)
+	query := buildSystemAdvisoriesQuery(db, account, workspaceIDs, inventoryID)
 	query, meta, params, err := ListCommon(query, c, filters, SystemAdvisoriesOpts)
 	// Error handling and setting of result code & content is done in ListCommon
 	return query, meta, params, err
@@ -200,8 +200,8 @@ func SystemAdvisoriesIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildSystemAdvisoriesQuery(db *gorm.DB, account int, groups map[string]string, inventoryID string) *gorm.DB {
-	query := database.SystemAdvisoriesByInventoryID(db, account, groups, inventoryID,
+func buildSystemAdvisoriesQuery(db *gorm.DB, account int, workspaceIDs []string, inventoryID string) *gorm.DB {
+	query := database.SystemAdvisoriesByInventoryID(db, account, workspaceIDs, inventoryID,
 		database.JoinAdvisoryMetadata, database.JoinAdvisoryType).
 		Joins("JOIN status ON sa.status_id = status.id").
 		Joins("LEFT JOIN advisory_severity sev ON am.severity_id = sev.id").

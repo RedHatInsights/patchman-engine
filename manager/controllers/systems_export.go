@@ -56,9 +56,9 @@ import (
 // @Router /export/systems [get]
 func SystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	groups := c.GetStringMapString(utils.KeyInventoryGroups)
+	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 	db := middlewares.DBFromContext(c)
-	query := querySystems(db, account, groups)
+	query := querySystems(db, account, workspaceIDs)
 	filters, err := ParseAllFilters(c, SystemOpts)
 	if err != nil {
 		return

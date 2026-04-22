@@ -33,9 +33,9 @@ import (
 // @Router /export/templates/{template_id}/systems [get]
 func TemplateSystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	groups := c.GetStringMapString(utils.KeyInventoryGroups)
+	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 
-	query, _, err := templateSystemsQuery(c, account, groups)
+	query, _, err := templateSystemsQuery(c, account, workspaceIDs)
 	if err != nil {
 		return
 	} // Error handled in method itself

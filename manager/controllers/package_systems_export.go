@@ -33,7 +33,7 @@ import (
 // @Router /export/packages/{package_name}/systems [get]
 func PackageSystemsExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	groups := c.GetStringMapString(utils.KeyInventoryGroups)
+	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 
 	packageName := c.Param("package_name")
 	if packageName == "" {
@@ -53,7 +53,7 @@ func PackageSystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	query := packageSystemsQuery(db, account, groups, packageName, packageIDs)
+	query := packageSystemsQuery(db, account, workspaceIDs, packageName, packageIDs)
 	filters, err := ParseAllFilters(c, PackageSystemsOpts)
 	if err != nil {
 		return

@@ -45,8 +45,8 @@ func packagesNameID(db *gorm.DB, pkgName string) *gorm.DB {
 		Where("pn.name = ?", pkgName)
 }
 
-func packageVersionsQuery(db *gorm.DB, acc int, groups map[string]string, packageNameIDs []int) *gorm.DB {
-	query := database.SystemPackages(db, acc, groups).
+func packageVersionsQuery(db *gorm.DB, acc int, workspaceIDs []string, packageNameIDs []int) *gorm.DB {
+	query := database.SystemPackages(db, acc, workspaceIDs).
 		Distinct(PackageVersionSelect).
 		Where("si.stale = false").
 		Where("spkg.name_id in (?)", packageNameIDs)
@@ -69,7 +69,7 @@ func packageVersionsQuery(db *gorm.DB, acc int, groups map[string]string, packag
 // @Router /packages/{package_name}/versions [get]
 func PackageVersionsListHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	groups := c.GetStringMapString(utils.KeyInventoryGroups)
+	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 
 	packageName := c.Param("package_name")
 	if packageName == "" {
@@ -89,7 +89,7 @@ func PackageVersionsListHandler(c *gin.Context) {
 		return
 	}
 
-	query := packageVersionsQuery(db, account, groups, packageNameIDs)
+	query := packageVersionsQuery(db, account, workspaceIDs, packageNameIDs)
 	// we don't support tags and filters for this endpoint
 	query, meta, params, err := ListCommon(query, c, nil, PackageVersionsOpts)
 	if err != nil {
