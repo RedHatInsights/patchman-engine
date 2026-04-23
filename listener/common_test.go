@@ -86,7 +86,7 @@ func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int, report
 
 // assertSystemInventoryProfileMatchesHost checks host-derived system_inventory columns written by
 // storeOrUpdateSysPlatform (must stay in sync on ON CONFLICT DO UPDATE, not only on first insert).
-// nolint: unparam
+// nolint: unparam,funlen
 func assertSystemInventoryProfileMatchesHost(t *testing.T, inventoryID string, host *Host) {
 	t.Helper()
 	var inv models.SystemInventory
@@ -94,8 +94,18 @@ func assertSystemInventoryProfileMatchesHost(t *testing.T, inventoryID string, h
 
 	assert.JSONEq(t, string(utils.MarshalNilToJSONB(host.Tags)), string(inv.Tags))
 
-	require.NotNil(t, inv.Workspaces)
-	assert.Equal(t, host.Groups, []inventory.Group(*inv.Workspaces))
+	if hostWorkspaceID := host.Groups[0].ID; hostWorkspaceID != "" {
+		require.NotNil(t, inv.WorkspaceID)
+		assert.Equal(t, hostWorkspaceID, inv.WorkspaceID.String())
+	} else {
+		require.Nil(t, inv.WorkspaceID)
+	}
+	if hostWorkspaceName := host.Groups[0].Name; hostWorkspaceName != "" {
+		require.NotNil(t, inv.WorkspaceName)
+		assert.Equal(t, hostWorkspaceName, *inv.WorkspaceName)
+	} else {
+		require.Nil(t, inv.WorkspaceName)
+	}
 
 	if host.SystemProfile.OperatingSystem.Name != "" {
 		require.NotNil(t, inv.OSName)
@@ -184,7 +194,7 @@ func createTestUploadEvent(orgID, inventoryID, reporter string, packages, yum bo
 				reporter: {LastCheckIn: types.Rfc3339TimestampWithZ(now)},
 			},
 			Tags:   []byte(`{"namespace": "insights-client","key": "env","value": "prod"}`),
-			Groups: []inventory.Group{{ID: "group1"}},
+			Groups: []inventory.Group{{ID: "00000000-0000-0000-0000-000000000003", Name: "group3"}},
 			SystemProfile: inventory.SystemProfile{
 				OperatingSystem: inventory.OperatingSystem{
 					Name:  "RHEL",
