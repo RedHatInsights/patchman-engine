@@ -2,9 +2,6 @@ package inventory
 
 import (
 	"app/base/types"
-	"database/sql/driver"
-	"encoding/json"
-	"errors"
 
 	"github.com/google/uuid"
 )
@@ -84,35 +81,6 @@ type ReporterStaleness struct {
 type Group struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
-}
-
-// Groups is a slice of Group that implements driver.Valuer and sql.Scanner
-// for storing/loading as JSONB in the database (e.g. system_inventory.workspaces).
-type Groups []Group
-
-// Value implements driver.Valuer for GORM: marshal to JSON for DB write.
-func (g *Groups) Value() (driver.Value, error) {
-	if g == nil {
-		return nil, nil
-	}
-	return json.Marshal(g)
-}
-
-// Scan implements sql.Scanner for GORM: unmarshal from JSON on DB read.
-func (g *Groups) Scan(value interface{}) error {
-	if value == nil {
-		*g = nil
-		return nil
-	}
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.New("inventory.Groups: type assertion to []byte failed")
-	}
-	if len(b) == 0 {
-		*g = nil
-		return nil
-	}
-	return json.Unmarshal(b, g)
 }
 
 type Workloads struct {
