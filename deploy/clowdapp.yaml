@@ -566,7 +566,6 @@ objects:
                  adv.applicable_systems AS applicable_systems
             FROM (SELECT sa.rh_account_id, sa.advisory_id, COUNT(*) as applicable_systems
                     FROM system_advisories sa
-                    JOIN system_inventory si ON sa.rh_account_id = si.rh_account_id AND sa.system_id = si.id
                     GROUP BY sa.rh_account_id, sa.advisory_id
                  ) as adv
             JOIN rh_account ra ON ra.id = adv.rh_account_id
