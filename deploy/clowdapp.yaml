@@ -595,16 +595,17 @@ objects:
       - prefix: hms_analytics/content-sources/system-template-grouped
         chunksize: ${{FLOORIST_HMS_CHUNKSIZE}}
         query: >-
-          SELECT a.org_id,
-                 count(si.inventory_id),
+          SELECT a.org_id, tc.systems_count,
                  t.uuid::text as template_uuid, t.environment_id, t.name as template_name,
                  CURRENT_DATE as collected_at 
-            FROM system_inventory si
-            JOIN system_patch spatch ON spatch.system_id = si.id AND spatch.rh_account_id = si.rh_account_id
-            JOIN rh_account a ON a.id = si.rh_account_id
-            LEFT JOIN template t ON t.id = spatch.template_id AND t.rh_account_id = spatch.rh_account_id
-            WHERE si.last_upload >= date_trunc('month', CURRENT_DATE)
-            group by a.org_id, template_uuid, t.environment_id, template_name
+            FROM (SELECT spatch.rh_account_id, spatch.template_id, count(*) as systems_count
+                    FROM system_patch spatch
+                    JOIN system_inventory si ON spatch.system_id = si.id AND spatch.rh_account_id = si.rh_account_id
+                    WHERE si.last_upload >= date_trunc('month', CURRENT_DATE)
+                    group by spatch.rh_account_id, spatch.template_id
+                 ) as tc
+            JOIN rh_account a ON a.id = tc.rh_account_id
+            LEFT JOIN template t ON t.id = tc.template_id AND t.rh_account_id = tc.rh_account_id
             ORDER BY a.org_id;
 
 
