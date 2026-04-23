@@ -392,18 +392,7 @@ func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, 
 // returns "(si.mssql_workload_version) = 1.0"
 func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
 	if strings.Contains(key, "group_name") {
-		groups := []string{}
-		for _, v := range values {
-			name := v
-			group, err := utils.ParseInventoryGroup(nil, &name)
-			if err != nil {
-				// couldn't marshal inventory group to json
-				continue
-			}
-			groups = append(groups, group)
-		}
-		jsonq := fmt.Sprintf("{%s}", strings.Join(groups, ","))
-		return tx.Where("si.workspaces @> ANY (?::jsonb[])", jsonq)
+		return tx.Where("si.workspace_name IN (?)", values)
 	}
 
 	var cmp string
