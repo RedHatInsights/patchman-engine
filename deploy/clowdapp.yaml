@@ -343,6 +343,8 @@ objects:
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_VMAAS_SYNC}'}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
+        - {name: CANDLEPIN_CERT, valueFrom: {secretKeyRef: {name: candlepin, key: cert}}}
+        - {name: CANDLEPIN_KEY, valueFrom: {secretKeyRef: {name: candlepin, key: key}}}
         resources:
           limits: {cpu: '${CPU_LIMIT_VMAAS_SYNC}', memory: '${MEM_LIMIT_VMAAS_SYNC}'}
           requests: {cpu: '${CPU_REQUEST_VMAAS_SYNC}', memory: '${MEM_REQUEST_VMAAS_SYNC}'}

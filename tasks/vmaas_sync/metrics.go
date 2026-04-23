@@ -2,6 +2,7 @@ package vmaas_sync
 
 import (
 	"app/base/database"
+	"app/base/metrics"
 	"app/base/models"
 	"app/base/utils"
 	"app/tasks"
@@ -104,7 +105,7 @@ func Metrics() *push.Pusher {
 	registry.MustRegister(vmaasCallCnt, storeAdvisoriesCnt, storePackagesCnt,
 		systemsCnt, advisoriesCnt, systemAdvisoriesStats, syncDuration, messageSendDuration, packageCnt, packageNameCnt,
 		databaseSizeBytesGaugeVec, databaseProcessesGaugeVec, systemsCntByType, tagsCntByType,
-		advisoriesCountMismatch)
+		advisoriesCountMismatch, metrics.CertificateExpiryDays)
 
 	// update advanced metrics
 	update()
@@ -119,6 +120,7 @@ func update() {
 	updateSystemAdvisoriesStats()
 	updateDBMetrics()
 	updateSystemInventoryData()
+	metrics.UpdateCandlepinCertificateExpiry()
 }
 
 func updateSystemMetrics() {
