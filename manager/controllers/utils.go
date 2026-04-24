@@ -223,18 +223,15 @@ func UpdateMetaLinks(c *gin.Context, meta *ListMeta, total int, subTotals map[st
 
 func ApplySearch(c *gin.Context, tx *gorm.DB, searchColumns ...string) (*gorm.DB, string) {
 	search := base.RemoveInvalidChars(c.Query("search"))
-	if search == "" {
+	if search == "" || len(searchColumns) == 0 {
 		return tx, ""
 	}
 
-	if len(searchColumns) == 0 {
-		return tx, ""
+	or := database.DB
+	for _, column := range searchColumns {
+		or = or.Or(column+"::text ILIKE ?", "%"+search+"%")
 	}
-
-	searchExtended := "%" + search + "%"
-	concatValue := strings.Join(searchColumns, ",' ',")
-	txWithSearch := tx.Where("LOWER(CONCAT("+concatValue+")) LIKE LOWER(?)", searchExtended)
-	return txWithSearch, fmt.Sprintf("search=%s", search)
+	return tx.Where(or), fmt.Sprintf("search=%s", search)
 }
 
 type Tag struct {
