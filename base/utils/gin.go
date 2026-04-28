@@ -18,9 +18,6 @@ const (
 	KeyOrgID               = "org_id"
 	KeyUser                = "user"
 	KeySystem              = "system_cn"
-	KeyInventoryGroups     = "inventoryGroups"
-	KeyGrouped             = "grouped"
-	KeyUngrouped           = "ungrouped"
 	KeyInventoryWorkspaces = "workspaceIDs"
 	// ReadHeaderTimeout same as nginx default
 	ReadHeaderTimeout = 60 * time.Second
