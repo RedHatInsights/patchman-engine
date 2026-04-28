@@ -8,3 +8,6 @@ UPDATE system_inventory
 
 CREATE INDEX IF NOT EXISTS system_inventory_workspace_id_index ON system_inventory (workspace_id);
 CREATE INDEX IF NOT EXISTS system_inventory_workspace_name_index ON system_inventory (workspace_name);
+
+ALTER TABLE system_inventory
+    DROP COLUMN workspaces;
