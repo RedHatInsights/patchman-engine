@@ -3,7 +3,6 @@ package middlewares
 import (
 	"app/base/utils"
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -33,27 +32,6 @@ func setupClient() (kesselv2.KesselInventoryServiceClient, *grpc.ClientConn, err
 		clientBuilder = clientBuilder.Insecure()
 	}
 	return clientBuilder.Build()
-}
-
-func processWorkspaces(workspaces []*kesselv2.StreamedListObjectsResponse) (map[string]string, error) {
-	defer func(start time.Time) {
-		utils.LogDebug("durationMs", time.Since(start).Milliseconds(), "processed workspaces")
-	}(time.Now())
-
-	groups := make([]string, 0, len(workspaces))
-	for _, workspace := range workspaces {
-		group, err := utils.ParseInventoryGroup(&workspace.Object.ResourceId, nil)
-		if err != nil {
-			// couldn't marshal inventory group to json
-			continue
-		}
-		groups = append(groups, group)
-	}
-
-	if len(groups) == 0 {
-		return nil, errors.New("no workspaces found")
-	}
-	return map[string]string{utils.KeyGrouped: fmt.Sprintf("{%s}", strings.Join(groups, ","))}, nil
 }
 
 func buildPermission(c *gin.Context) string {
@@ -153,14 +131,6 @@ func hasPermissionKessel(c *gin.Context) {
 		return
 	}
 	c.Set(utils.KeyInventoryWorkspaces, workspaceIDs)
-
-	inventoryGroups, err := processWorkspaces(workspaces)
-	if err != nil {
-		utils.LogWarn(err.Error())
-		c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Missing permission"})
-		return
-	}
-	c.Set(utils.KeyInventoryGroups, inventoryGroups)
 }
 
 func Kessel() gin.HandlerFunc {

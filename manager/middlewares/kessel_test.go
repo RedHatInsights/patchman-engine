@@ -2,9 +2,7 @@ package middlewares
 
 import (
 	"app/base/utils"
-	"fmt"
 	"net/http"
-	"strconv"
 	"testing"
 
 	"google.golang.org/grpc"
@@ -66,18 +64,6 @@ func TestSetupClient(t *testing.T) {
 	utils.CoreCfg.KesselAuthClientSecret = originalKesselAuthClientSecret
 }
 
-func TestProcessWorkspaces(t *testing.T) {
-	expected := fmt.Sprintf("{%s,%s}", strconv.Quote(`[{"id":"test-1"}]`), strconv.Quote(`[{"id":"test-2"}]`))
-	workspaces := []*kesselv2.StreamedListObjectsResponse{
-		{Object: &kesselv2.ResourceReference{ResourceId: "test-1"}},
-		{Object: &kesselv2.ResourceReference{ResourceId: "test-2"}},
-	}
-	processed, err := processWorkspaces(workspaces)
-	if assert.NoError(t, err) {
-		assert.Equal(t, expected, processed[utils.KeyGrouped])
-	}
-}
-
 func TestBuildPermission(t *testing.T) {
 	c := &gin.Context{Request: &http.Request{Method: http.MethodGet}}
 	permission := buildPermission(c)
@@ -109,12 +95,6 @@ func TestHasPermissionKessel(t *testing.T) {
 	c.Request.Header.Set("x-rh-identity", "ewogICAgImVudGl0bGVtZW50cyI6IHsKICAgICAgICAiaW5zaWdodHMiOiB7CiAgICAgICAgICAgICJpc19lbnRpdGxlZCI6IHRydWUKICAgICAgICB9LAogICAgICAgICJjb3N0X21hbmFnZW1lbnQiOiB7CiAgICAgICAgICAgICJpc19lbnRpdGxlZCI6IHRydWUKICAgICAgICB9LAogICAgICAgICJhbnNpYmxlIjogewogICAgICAgICAgICAiaXNfZW50aXRsZWQiOiB0cnVlCiAgICAgICAgfSwKICAgICAgICAib3BlbnNoaWZ0IjogewogICAgICAgICAgICAiaXNfZW50aXRsZWQiOiB0cnVlCiAgICAgICAgfSwKICAgICAgICAic21hcnRfbWFuYWdlbWVudCI6IHsKICAgICAgICAgICAgImlzX2VudGl0bGVkIjogdHJ1ZQogICAgICAgIH0sCiAgICAgICAgIm1pZ3JhdGlvbnMiOiB7CiAgICAgICAgICAgICJpc19lbnRpdGxlZCI6IHRydWUKICAgICAgICB9CiAgICB9LAogICAgImlkZW50aXR5IjogewogICAgICAgICJpbnRlcm5hbCI6IHsKICAgICAgICAgICAgImF1dGhfdGltZSI6IDI5OSwKICAgICAgICAgICAgImF1dGhfdHlwZSI6ICJiYXNpYy1hdXRoIiwKICAgICAgICAgICAgIm9yZ19pZCI6ICIxMTc4OTc3MiIKICAgICAgICB9LAogICAgICAgICJhY2NvdW50X251bWJlciI6ICI2MDg5NzE5IiwKICAgICAgICAidXNlciI6IHsKICAgICAgICAgICAgImZpcnN0X25hbWUiOiAiSW5zaWdodHMiLAogICAgICAgICAgICAiaXNfYWN0aXZlIjogdHJ1ZSwKICAgICAgICAgICAgImlzX2ludGVybmFsIjogZmFsc2UsCiAgICAgICAgICAgICJsYXN0X25hbWUiOiAiUUEiLAogICAgICAgICAgICAibG9jYWxlIjogImVuX1VTIiwKICAgICAgICAgICAgImlzX29yZ19hZG1pbiI6IHRydWUsCiAgICAgICAgICAgICJ1c2VybmFtZSI6ICJpbnNpZ2h0cy1xYSIsCiAgICAgICAgICAgICJlbWFpbCI6ICJqbmVlZGxlK3FhQHJlZGhhdC5jb20iLAogICAgICAgICAgICAidXNlcl9pZCI6ICI2MDg5NzE5IgogICAgICAgIH0sCiAgICAgICAgInR5cGUiOiAiVXNlciIKICAgIH0KfQ==") //nolint:lll
 
 	hasPermissionKessel(c)
-	inventoryGroups, found := c.Get(utils.KeyInventoryGroups)
-	require.True(t, found)
-	inventoryGroupMap, ok := (inventoryGroups).(map[string]string)
-	require.True(t, ok)
-	assert.Equal(t, `{"[{\"id\":\"inventory-group-1\"}]"}`, inventoryGroupMap[utils.KeyGrouped])
-
 	workspaces, found := c.Get(utils.KeyInventoryWorkspaces)
 	require.True(t, found)
 	workspaceIDs, ok := (workspaces).([]string)

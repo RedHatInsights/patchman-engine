@@ -16,6 +16,12 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+const (
+	KeyInventoryGroups = "inventoryGroups"
+	KeyGrouped         = "grouped"
+	KeyUngrouped       = "ungrouped"
+)
+
 var (
 	rbacURL    = ""
 	httpClient = &http.Client{}
@@ -129,7 +135,7 @@ func isAccessGranted(c *gin.Context) bool {
 			utils.LogError("err", err.Error(), "RBAC")
 			granted = false
 		}
-		c.Set(utils.KeyInventoryGroups, groups)
+		c.Set(KeyInventoryGroups, groups)
 	}
 	return granted
 }
@@ -168,7 +174,7 @@ func findInventoryGroups(access *rbac.AccessPagination) (map[string]string, erro
 			}
 			for _, v := range rd.AttributeFilter.Value {
 				if v == nil {
-					res[utils.KeyUngrouped] = "[]"
+					res[KeyUngrouped] = "[]"
 					continue
 				}
 				group, err := utils.ParseInventoryGroup(v, nil)
@@ -182,7 +188,7 @@ func findInventoryGroups(access *rbac.AccessPagination) (map[string]string, erro
 	}
 
 	if len(groups) > 0 {
-		res[utils.KeyGrouped] = fmt.Sprintf("{%s}", strings.Join(groups, ","))
+		res[KeyGrouped] = fmt.Sprintf("{%s}", strings.Join(groups, ","))
 	}
 	utils.LogDebug("group_count", len(groups), "processed groups")
 	return res, nil
