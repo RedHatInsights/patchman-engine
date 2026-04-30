@@ -94,6 +94,32 @@ func TestSchemaCompatiblity(t *testing.T) {
 	assert.Equal(t, 0, len(diff))
 }
 
+// checks that all migrations succeed without creating cyndi user or inventory.hosts table
+func TestMigrationsWithoutCyndi(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	cfg := postgres.Config{
+		DatabaseName:    "patchman",
+		SchemaName:      "public",
+		MigrationsTable: "schema_migrations",
+	}
+	database.Configure()
+
+	err := database.ExecFile("./schema/clear_db.sql")
+	assert.NoError(t, err)
+
+	sqlDB, err := database.DB.DB()
+	assert.NoError(t, err)
+	driver, err := postgres.WithInstance(sqlDB, &cfg)
+	assert.NoError(t, err)
+
+	m, err := migrate.NewWithDatabaseInstance("file://migrations",
+		utils.FailIfEmpty(utils.CoreCfg.DBName, "DB_NAME"), driver)
+	assert.NoError(t, err)
+
+	err = m.Up()
+	assert.NoError(t, err)
+}
+
 func TestSchemaEmptyText(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	database.Configure()

@@ -7,11 +7,17 @@ ALTER TABLE system_inventory DROP COLUMN workspaces;
 -- add the new workspaces field
 ALTER TABLE system_inventory ADD COLUMN workspaces JSONB;
 
--- copy the data from old inventory_hosts.groups to new workspaces field
-UPDATE system_inventory si
-SET workspaces = ih.groups
-FROM inventory.hosts ih
-WHERE ih.id = si.inventory_id;
+-- copy the data from old inventory_hosts.groups (if it exists) to new workspaces field
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'inventory' AND table_name = 'hosts') THEN
+        UPDATE system_inventory si
+        SET workspaces = ih.groups
+        FROM inventory.hosts ih
+        WHERE ih.id = si.inventory_id;
+    END IF;
+END
+$$;
 
 -- create index on new workspaces field
 CREATE INDEX IF NOT EXISTS system_inventory_workspaces_index ON system_inventory USING GIN (workspaces);
