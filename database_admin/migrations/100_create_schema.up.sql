@@ -1088,4 +1088,12 @@ GRANT cyndi_reader to evaluator;
 GRANT cyndi_reader to manager;
 GRANT cyndi_reader TO vmaas_sync;
 
-GRANT cyndi_admin to cyndi;
+
+-- Grant cyndi the cyndi_admin role if cyndi exists
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = 'cyndi') THEN
+        GRANT cyndi_admin to cyndi;
+    END IF;
+END
+$$;
