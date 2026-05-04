@@ -3,10 +3,12 @@ package controllers
 import (
 	"app/base/core"
 	"app/base/utils"
+	"bytes"
 	"fmt"
 	"net/http"
 	"testing"
 
+	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -262,6 +264,74 @@ func testSystems(t *testing.T, queryString string, account int) SystemsResponse 
 	var output SystemsResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	return output
+}
+
+func testSystemsPost(t *testing.T, body SystemsListPostRequest, queryString string, account int) SystemsResponse {
+	core.SetupTest(t)
+	bodyJSON, err := sonic.Marshal(&body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := CreateRequestRouterWithParams("POST", "/", "", queryString, bytes.NewBuffer(bodyJSON), "", SystemsListPostHandler,
+		account)
+
+	var output SystemsResponse
+	CheckResponse(t, w, http.StatusOK, &output)
+	return output
+}
+
+func TestSystemsPostByIDs(t *testing.T) {
+	out := testSystemsPost(t, SystemsListPostRequest{
+		IDs: []string{
+			"00000000-0000-0000-0000-000000000001",
+			"00000000-0000-0000-0000-000000000002",
+		},
+	}, "", 1)
+	assert.Equal(t, 2, len(out.Data))
+	ids := map[string]struct{}{out.Data[0].ID: {}, out.Data[1].ID: {}}
+	_, ok1 := ids["00000000-0000-0000-0000-000000000001"]
+	_, ok2 := ids["00000000-0000-0000-0000-000000000002"]
+	assert.True(t, ok1 && ok2)
+	assert.Equal(t, 2, out.Meta.TotalItems)
+	assert.Equal(t, "system", out.Data[0].Type)
+}
+
+func TestSystemsPostEmptyIDs(t *testing.T) {
+	out := testSystemsPost(t, SystemsListPostRequest{IDs: []string{}}, "", 1)
+	assert.Equal(t, 10, len(out.Data))
+	assert.Equal(t, 10, out.Meta.TotalItems)
+}
+
+func TestSystemsPostWithQueryLimit(t *testing.T) {
+	out := testSystemsPost(t, SystemsListPostRequest{
+		IDs: []string{
+			"00000000-0000-0000-0000-000000000001",
+			"00000000-0000-0000-0000-000000000002",
+			"00000000-0000-0000-0000-000000000003",
+		},
+	}, "?limit=2&offset=0", 1)
+	assert.Equal(t, 2, len(out.Data))
+	assert.Equal(t, 3, out.Meta.TotalItems)
+}
+
+func testSystemsPostError(t *testing.T, body SystemsListPostRequest) (int, utils.ErrorResponse) {
+	core.SetupTest(t)
+	bodyJSON, err := sonic.Marshal(&body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := CreateRequestRouterWithParams("POST", "/", "", "", bytes.NewBuffer(bodyJSON), "", SystemsListPostHandler, 1)
+	var errResp utils.ErrorResponse
+	ParseResponseBody(t, w.Body.Bytes(), &errResp)
+	return w.Code, errResp
+}
+
+func TestSystemsPostInvalidUUID(t *testing.T) {
+	code, errResp := testSystemsPostError(t, SystemsListPostRequest{
+		IDs: []string{"not-a-uuid", "00000000-0000-0000-0000-000000000001"},
+	})
+	assert.Equal(t, http.StatusBadRequest, code)
+	assert.Contains(t, errResp.Error, "UUID")
 }
 
 func testSystemsError(t *testing.T, queryString string) (int, utils.ErrorResponse) {
