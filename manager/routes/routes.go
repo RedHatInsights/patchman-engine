@@ -35,6 +35,7 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 
 	systems := userAuth.Group("/systems")
 	systems.GET("", controllers.SystemsListHandler)
+	systems.POST("", controllers.SystemsListPostHandler)
 	systems.GET("/:inventory_id", controllers.SystemDetailHandler)
 	systems.GET("/:inventory_id/advisories", controllers.SystemAdvisoriesHandler)
 	systems.GET("/:inventory_id/packages", controllers.SystemPackagesHandler)

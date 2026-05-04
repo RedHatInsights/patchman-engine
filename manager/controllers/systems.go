@@ -5,6 +5,7 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"database/sql/driver"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -181,8 +182,21 @@ type SystemsResponse struct {
 	Meta  ListMeta     `json:"meta"`
 }
 
-func systemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
-	var err error
+// SystemsListPostRequest body for POST /systems (inventory UUIDs).
+type SystemsListPostRequest struct {
+	IDs []string `json:"ids"`
+}
+
+func validateSystemsListIDs(ids []string) error {
+	for _, id := range ids {
+		if !utils.IsValidUUID(id) {
+			return fmt.Errorf("'%s' is not a valid UUID", id)
+		}
+	}
+	return nil
+}
+
+func systemsCommon(c *gin.Context, ids []string) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(utils.KeyAccount)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
@@ -191,10 +205,38 @@ func systemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled method itself
+	if len(ids) > 0 {
+		filters["id"] = FilterData{
+			Type:     ColumnFilter,
+			Operator: OpIn,
+			Values:   ids,
+		}
+	}
 	query, _ = ApplyInventoryFilter(filters, query, "si.inventory_id")
 	query, meta, params, err := ListCommon(query, c, filters, SystemOpts)
 	// Error handled method itself
 	return query, meta, params, err
+}
+
+func systemsListResponse(c *gin.Context, query *gorm.DB, meta *ListMeta, params []string) {
+	var systems []SystemDBLookup
+	err := query.Find(&systems).Error
+	if err != nil {
+		utils.LogAndRespError(c, err, "db error")
+		return
+	}
+
+	data, total, subtotals := systemDBLookups2SystemItems(systems)
+	meta, links, err := UpdateMetaLinks(c, meta, total, subtotals, params...)
+	if err != nil {
+		return // Error handled in method itself
+	}
+	resp := SystemsResponse{
+		Data:  data,
+		Links: *links,
+		Meta:  *meta,
+	}
+	c.JSON(http.StatusOK, &resp)
 }
 
 // nolint: lll
@@ -255,29 +297,88 @@ func systemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /systems [get]
 func SystemsListHandler(c *gin.Context) {
-	query, meta, params, err := systemsCommon(c)
+	query, meta, params, err := systemsCommon(c, nil)
 	if err != nil {
 		return
 	} // Error handled in method itself
 
-	var systems []SystemDBLookup
-	err = query.Find(&systems).Error
-	if err != nil {
-		utils.LogAndRespError(c, err, "db error")
+	systemsListResponse(c, query, meta, params)
+}
+
+// nolint: lll
+// @Summary List systems by inventory IDs
+// @Description Same response as GET /systems, restricted to the given inventory IDs. Use query parameters for paging, sort, search, and filters.
+// @ID listSystemsPost
+// @Security RhIdentity
+// @Accept   json
+// @Produce  json
+// @Param    body       body    SystemsListPostRequest true "Inventory IDs"
+// @Param    limit      query   int     false   "Limit for paging" minimum(1) maximum(100)
+// @Param    offset     query   int     false   "Offset for paging"
+// @Param    sort       query   string  false   "Sort field" Enums(id,display_name,last_upload,rhsa_count,rhba_count,rhea_count,other_count,stale,packages_installed,baseline_name,groups,satellite_managed,built_pkgcache)
+// @Param    search     query   string  false   "Find matching text"
+// @Param    filter[display_name]           query   string  false   "Filter"
+// @Param    filter[last_evaluation]        query   string  false   "Filter"
+// @Param    filter[last_upload]            query   string  false   "Filter"
+// @Param    filter[rhsa_count]             query   int    false   "Filter"
+// @Param    filter[rhba_count]             query   int    false   "Filter"
+// @Param    filter[rhea_count]             query   int    false   "Filter"
+// @Param    filter[other_count]            query   int    false   "Filter"
+// @Param    filter[installable_rhsa_count] query   int    false   "Filter"
+// @Param    filter[installable_rhba_count] query   int    false   "Filter"
+// @Param    filter[installable_rhea_count] query   int    false   "Filter"
+// @Param    filter[installable_other_count] query  int    false   "Filter"
+// @Param    filter[applicable_rhsa_count]  query   int    false   "Filter"
+// @Param    filter[applicable_rhba_count]  query   int    false   "Filter"
+// @Param    filter[applicable_rhea_count]  query   int    false   "Filter"
+// @Param    filter[applicable_other_count] query   int    false   "Filter"
+// @Param    filter[stale]                  query   bool   false   "Filter"
+// @Param    filter[packages_installed]     query   int    false   "Filter"
+// @Param    filter[packages_installable]   query   int    false   "Filter"
+// @Param    filter[packages_applicable]    query   int    false   "Filter"
+// @Param    filter[stale_timestamp]        query   string  false   "Filter"
+// @Param    filter[stale_warning_timestamp] query  string  false   "Filter"
+// @Param    filter[culled_timestamp]       query   string  false   "Filter"
+// @Param    filter[created]                query   string  false   "Filter"
+// @Param    filter[baseline_name]          query   string  false   "Filter"
+// @Param    filter[template_name]          query   string  false   "Filter"
+// @Param    filter[template_uuid]          query   string  false   "Filter"
+// @Param    filter[satellite_managed] 		query   bool    false   "Filter"
+// @Param    filter[built_pkgcache]         query   bool    false   "Filter"
+// @Param    filter[arch]                   query   string  false   "Filter"
+// @Param    filter[os]                     query   string  false   "Filter OS version"
+// @Param    filter[osname]                 query   string  false   "Filter OS name"
+// @Param    filter[osmajor]                query   string  false   "Filter OS major version"
+// @Param    filter[osminor]                query   string  false   "Filter OS minor version"
+// @Param    tags                           query   []string false  "Tag filter"
+// @Param    filter[group_name] 									query   []string false "Filter systems by inventory groups"
+// @Param    filter[system_profile][sap_system]                     query   bool  false   "Filter only SAP systems"
+// @Param    filter[system_profile][sap_sids]	                    query   []string false  "Filter systems by their SAP SIDs"
+// @Param    filter[system_profile][ansible]                        query   string  false   "Filter systems by ansible"
+// @Param    filter[system_profile][ansible][controller_version]    query   string  false   "Filter systems by ansible version"
+// @Param    filter[system_profile][mssql]                          query   string  false   "Filter systems by mssql version"
+// @Param    filter[system_profile][mssql][version]                 query   string  false   "Filter systems by mssql version"
+// @Success 200 {object} SystemsResponse
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /systems [post]
+func SystemsListPostHandler(c *gin.Context) {
+	var req SystemsListPostRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.LogAndRespBadRequest(c, err, fmt.Sprintf("Invalid request body: %s", err.Error()))
+		return
+	}
+	if err := validateSystemsListIDs(req.IDs); err != nil {
+		utils.LogAndRespBadRequest(c, err, err.Error())
 		return
 	}
 
-	data, total, subtotals := systemDBLookups2SystemItems(systems)
-	meta, links, err := UpdateMetaLinks(c, meta, total, subtotals, params...)
+	query, meta, params, err := systemsCommon(c, req.IDs)
 	if err != nil {
-		return // Error handled in method itself
-	}
-	resp := SystemsResponse{
-		Data:  data,
-		Links: *links,
-		Meta:  *meta,
-	}
-	c.JSON(http.StatusOK, &resp)
+		return
+	} // Error handled in method itself
+
+	systemsListResponse(c, query, meta, params)
 }
 
 // nolint: lll
@@ -338,7 +439,7 @@ func SystemsListHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/systems [get]
 func SystemsListIDsHandler(c *gin.Context) {
-	query, meta, _, err := systemsCommon(c)
+	query, meta, _, err := systemsCommon(c, nil)
 	if err != nil {
 		return
 	} // Error handled in method itself
