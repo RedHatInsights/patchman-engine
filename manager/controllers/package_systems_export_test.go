@@ -41,12 +41,14 @@ func TestPackageSystemsExportHandlerCSV(t *testing.T) {
 		"update_status,groups,workspace_id,workspace_name", lines[0])
 	assert.Equal(t, "00000000-0000-0000-0000-000000000012,00000000-0000-0000-0000-000000000012,"+
 		"5.6.13-200.fc31.x86_64,5.6.13-201.fc31.x86_64,true,"+
-		"\"[{'key':'k1','namespace':'ns1','value':'val1'}]\",,,,,false,0,RHEL 8.1,8.1,Installable,[],"+
+		"\"[{'key':'k1','namespace':'ns1','value':'val1'}]\",,,,,false,0,RHEL 8.1,8.1,Installable,"+
+		"\"[{'id':'00000000-0000-0000-0000-999999999999','name':'root-ws'}]\","+
 		"00000000-0000-0000-0000-999999999999,root-ws",
 		lines[1])
 	assert.Equal(t, "00000000-0000-0000-0000-000000000013,00000000-0000-0000-0000-000000000013,"+
 		"5.6.13-200.fc31.x86_64,,false,\"[{'key':'k1','namespace':'ns1','value':'val1'}]\",,,,,"+
-		"false,0,RHEL 8.2,8.2,None,[],00000000-0000-0000-0000-999999999999,root-ws", lines[2])
+		"false,0,RHEL 8.2,8.2,None,\"[{'id':'00000000-0000-0000-0000-999999999999','name':'root-ws'}]\","+
+		"00000000-0000-0000-0000-999999999999,root-ws", lines[2])
 }
 
 func TestPackageSystemsExportInvalidName(t *testing.T) {
