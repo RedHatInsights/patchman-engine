@@ -7,6 +7,7 @@ Main database tables description:
 - **advisory_metadata** - stores info about advisories (`description`, `summary`, `solution` etc.). It's synced and stored on trigger by `vmaas_sync` component. It allows to display detail information about the advisory.
 - **system_advisories** - stores info about advisories evaluated for particular systems (system - advisory M-N mapping table). `system_id` references **system_inventory.id**. Contains info when system advisory was firstly reported and patched (if so). Records are created and updated by `evaluator` component. It allows to display list of advisories related to a system.
 - **advisory_account_data** - stores info about all advisories detected within at least one system that belongs to a given account. So it provides overall statistics about system advisories displayed by the application.
+- **account_advisory** - workspace-scoped version of `advisory_account_data`. Stores per-advisory aggregate counts (`systems_applicable`, `systems_installable`) and notification state for each workspace within an account. Keyed by `(rh_account_id, workspace_id, advisory_id)`, partitioned by `rh_account_id` (32 partitions).
 - **package_name** - names of the packages installed on systems
 - **package** - list of all packages versions, precisely all EVRAs (epoch-version-release-arch)
 - **system_package2** - list of packages installed on a system
