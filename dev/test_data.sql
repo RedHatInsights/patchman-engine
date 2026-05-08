@@ -7,6 +7,7 @@ DELETE FROM deleted_system;
 DELETE FROM repo;
 DELETE FROM timestamp_kv;
 DELETE FROM advisory_account_data;
+DELETE FROM account_advisory;
 DELETE FROM package_account_data;
 DELETE FROM package;
 DELETE FROM package_name;
