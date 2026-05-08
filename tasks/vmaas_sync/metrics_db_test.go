@@ -17,12 +17,13 @@ func TestTableSizes(t *testing.T) {
 	for _, item := range tableSizes {
 		uniqueTables[item.Key] = true
 	}
-	assert.Equal(t, 230, len(tableSizes))
-	assert.Equal(t, 230, len(uniqueTables))
+	assert.Equal(t, 263, len(tableSizes))
+	assert.Equal(t, 263, len(uniqueTables))
 	assert.True(t, uniqueTables["public.system_inventory"]) // check whether table names were loaded
 	assert.True(t, uniqueTables["public.system_patch"])     // check whether table names were loaded
 	assert.True(t, uniqueTables["public.package"])
 	assert.True(t, uniqueTables["public.repo"])
+	assert.True(t, uniqueTables["public.account_advisory"])
 }
 
 func TestDatabaseSize(t *testing.T) {
