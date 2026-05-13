@@ -8,6 +8,7 @@ for topic in \
             "patchman.evaluator.recalc" \
             "patchman.evaluator.upload" \
             "patchman.evaluator.user-evaluation" \
+            "patchman.advisory.update" \
             "platform.content-sources.template" \
             "platform.inventory.events" \
             "platform.inventory.host-apps" \
