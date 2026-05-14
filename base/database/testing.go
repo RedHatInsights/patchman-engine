@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -295,6 +296,48 @@ func DeleteSystemAdvisories(t *testing.T, systemID int64, advisoryIDs []int64) {
 	assert.Nil(t, query.Count(&cnt).Error)
 	assert.Equal(t, int64(0), cnt)
 	assert.Nil(t, DB.Exec("SELECT * FROM update_system_caches(?)", systemID).Error)
+}
+
+func CreateAccountAdvisory(t *testing.T, rhAccountID int, workspaceID string, advisoryIDs []int64,
+	systemsInstallable int) {
+	wsID := uuid.MustParse(workspaceID)
+	for _, advisoryID := range advisoryIDs {
+		err := DB.Create(&models.AccountAdvisory{
+			AdvisoryID: advisoryID, RhAccountID: rhAccountID, WorkspaceID: wsID,
+			SystemsInstallable: systemsInstallable, SystemsApplicable: systemsInstallable}).Error
+		assert.Nil(t, err)
+	}
+	CheckAccountAdvisory(t, rhAccountID, workspaceID, advisoryIDs, systemsInstallable)
+}
+
+func CheckAccountAdvisory(t *testing.T, rhAccountID int, workspaceID string, advisoryIDs []int64,
+	systemsInstallable int) {
+	var accountAdvisory []models.AccountAdvisory
+	err := DB.Where("rh_account_id = ? AND workspace_id = ? AND advisory_id IN (?)",
+		rhAccountID, workspaceID, advisoryIDs).
+		Find(&accountAdvisory).Error
+	assert.Nil(t, err)
+
+	sum := 0
+	for _, item := range accountAdvisory {
+		sum += item.SystemsInstallable
+	}
+	assert.Equal(t, systemsInstallable*len(advisoryIDs), sum, "sum of systems_installable does not match")
+}
+
+func DeleteAccountAdvisory(t *testing.T, rhAccountID int, workspaceID string, advisoryIDs []int64) {
+	query := DB.Model(&models.AccountAdvisory{}).Where("rh_account_id = ? AND workspace_id = ? AND advisory_id IN (?)",
+		rhAccountID, workspaceID, advisoryIDs)
+	assert.Nil(t, query.Delete(&models.AccountAdvisory{}).Error)
+
+	var cnt int64
+	assert.Nil(t, query.Count(&cnt).Error)
+	assert.Equal(t, int64(0), cnt)
+}
+
+func DeleteAccountAdvisoryByAccount(t *testing.T, rhAccountID int) {
+	assert.Nil(t, DB.Where("rh_account_id = ?", rhAccountID).
+		Delete(&models.AccountAdvisory{}).Error)
 }
 
 func DeleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int64) {
