@@ -161,6 +161,3 @@ available ports:
 - set `ENABLE_PROFILE_{container_name}=true` in the ClowdApp
 - download the profile file using internal api `/api/patch/admin/pprof/{manager|listener|evaluator_upload|evaluator_recalc}/{heap|profile|block|mutex|trace}`
 - `go tool pprof <saved.file>`
-
-## Deps backup
-[patchman-engine-deps](https://github.com/RedHatInsights/patchman-engine-deps)
