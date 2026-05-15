@@ -281,6 +281,22 @@ func (AdvisoryAccountData) TableName() string {
 }
 
 type AdvisoryAccountDataSlice []AdvisoryAccountData
+
+type AccountAdvisory struct {
+	AdvisoryID         int64     `gorm:"primaryKey"`
+	RhAccountID        int       `gorm:"primaryKey"`
+	WorkspaceID        uuid.UUID `gorm:"primaryKey"`
+	SystemsApplicable  int
+	SystemsInstallable int
+	Notified           *time.Time
+}
+
+func (AccountAdvisory) TableName() string {
+	return "account_advisory"
+}
+
+type AccountAdvisorySlice []AccountAdvisory
+
 type Repo struct {
 	ID         int64 `gorm:"primaryKey"`
 	Name       string
