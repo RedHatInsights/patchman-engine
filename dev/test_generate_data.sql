@@ -9,7 +9,7 @@ create table if not exists _const (
 truncate table _const ;
 insert into _const values           -- counts in prod 2022/02
     ('accounts',   50),             --  50k     -- number of rh_accounts
-    ('systems',    10),           -- 750k     -- number of system_inventory rows (each with system_patch)
+    ('systems',    7500),           -- 750k     -- number of system_inventory rows (each with system_patch)
     ('advisories', 320),            --  50k     -- number of advisory_metadata
     ('repos',      350),            --  55k     -- number of repos
     ('package_names', 300),         --  58k     -- number of package_name
@@ -95,12 +95,14 @@ do $$
     acc_id int;
     new_id bigint;
     ji int;
+    workspace_ids uuid[];
   begin
     select val into wanted from _const where key = 'systems';
     select val into progress from _const where key = 'progress_pct';
     select count(*) into rh_accounts from rh_account;
     json_data := array(select data from _json order by id);
     json_hash := array(select hash from _json order by id);
+    workspace_ids := array(select uuid_generate_v4() from generate_series(1, 3));
     while cnt < wanted loop
         gen_uuid := uuid_generate_v4();
         rnd := random();
@@ -110,10 +112,12 @@ do $$
         ji := trunc(rnd*3)+1;
         insert into system_inventory
             (inventory_id, display_name, rh_account_id, vmaas_json, json_checksum,
-             last_upload, arch, tags, created, os_name, os_major, rhsm_version)
+             last_upload, arch, tags, created, os_name, os_major, rhsm_version,
+             workspace_id, workspace_name)
         values
             (gen_uuid, gen_uuid::text, acc_id, json_data[ji], json_hash[ji],
-             rnd_date2, 'x86_64', '[]'::jsonb, rnd_date1, 'RHEL', 8, '8.0')
+             rnd_date2, 'x86_64', '[]'::jsonb, rnd_date1, 'RHEL', 8, '8.0',
+             workspace_ids[cnt%3+1], workspace_ids[cnt%3+1]::text)
         returning id into new_id;
         insert into system_patch
             (rh_account_id, system_id, last_evaluation,
