@@ -27,19 +27,19 @@ import (
 // @Router /export/packages [get]
 func PackagesExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	filters, err := ParseAllFilters(c, PackagesOpts)
 	if err != nil {
 		return
 	}
 
 	db := middlewares.DBFromContext(c)
-	useCache := shouldUseCache(db, account, filters, workspaceIDs)
+	useCache := shouldUseCache(db, account, filters, groups)
 	if !useCache {
 		db.Exec("SET work_mem TO '?'", utils.CoreCfg.DBWorkMem)
 		defer db.Exec("RESET work_mem")
 	}
-	query := packagesQuery(db, filters, account, workspaceIDs, useCache)
+	query := packagesQuery(db, filters, account, groups, useCache)
 	query, err = ExportListCommon(query, c, PackagesOpts)
 	var data []PackageDBLookup
 

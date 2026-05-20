@@ -77,14 +77,14 @@ type TemplatesResponse struct {
 // @Router /templates [get]
 func TemplatesListHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	filters, err := ParseAllFilters(c, TemplateOpts)
 	if err != nil {
 		return
 	}
 
 	db := middlewares.DBFromContext(c)
-	query := templatesQuery(db, filters, account, workspaceIDs)
+	query := templatesQuery(db, filters, account, groups)
 
 	query, meta, params, err := ListCommon(query, c, filters, TemplateOpts)
 	if err != nil {
@@ -123,8 +123,8 @@ func TemplatesListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func templatesQuery(db *gorm.DB, filters map[string]FilterData, account int, workspaceIDs []string) *gorm.DB {
-	subq := database.Systems(db, account, workspaceIDs).
+func templatesQuery(db *gorm.DB, filters map[string]FilterData, account int, groups map[string]string) *gorm.DB {
+	subq := database.Systems(db, account, groups).
 		Select("spatch.template_id, count(*) as systems").
 		Group("spatch.template_id")
 

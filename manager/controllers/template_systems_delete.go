@@ -24,7 +24,7 @@ import (
 // @Router /templates/systems [DELETE]
 func TemplateSystemsDeleteHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	var req TemplateSystemsUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -38,12 +38,12 @@ func TemplateSystemsDeleteHandler(c *gin.Context) {
 
 	db := middlewares.DBFromContext(c)
 
-	err := checkTemplateSystems(c, db, account, nil, req.Systems, workspaceIDs)
+	err := checkTemplateSystems(c, db, account, nil, req.Systems, groups)
 	if err != nil {
 		return
 	}
 
-	err = assignCandlepinEnvironment(c, db, account, nil, req.Systems, workspaceIDs)
+	err = assignCandlepinEnvironment(c, db, account, nil, req.Systems, groups)
 	if err != nil {
 		return
 	}

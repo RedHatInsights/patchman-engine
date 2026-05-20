@@ -40,7 +40,6 @@ type PackageSystemItem struct {
 	OSAttributes
 	UpdateStatus string `json:"update_status" csv:"update_status" query:"CASE WHEN spkg.installable_id is not null THEN 'Installable' WHEN spkg.applicable_id is not null THEN 'Applicable' ELSE 'None' END" gorm:"column:update_status"`
 	SystemGroups
-	SystemWorkspace
 }
 
 type PackageSystemDBLookup struct {
@@ -55,9 +54,9 @@ type PackageSystemsResponse struct {
 	Meta  ListMeta            `json:"meta"`
 }
 
-func packageSystemsQuery(db *gorm.DB, acc int, workspaceIDs []string, packageName string, packageIDs []int,
+func packageSystemsQuery(db *gorm.DB, acc int, groups map[string]string, packageName string, packageIDs []int,
 ) *gorm.DB {
-	query := database.SystemPackages(db, acc, workspaceIDs,
+	query := database.SystemPackages(db, acc, groups,
 		database.JoinTemplates, database.JoinInstallableApplicablePackages).
 		Select(PackageSystemsSelect).
 		Where("si.stale = false").
@@ -68,7 +67,7 @@ func packageSystemsQuery(db *gorm.DB, acc int, workspaceIDs []string, packageNam
 
 func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(utils.KeyAccount)
-	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	var filters map[string]FilterData
 
 	packageName := c.Param("package_name")
@@ -88,7 +87,7 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 		return nil, nil, nil, errors.New("package not found")
 	}
 
-	query := packageSystemsQuery(db, account, workspaceIDs, packageName, packageIDs)
+	query := packageSystemsQuery(db, account, groups, packageName, packageIDs)
 	filters, err := ParseAllFilters(c, PackageSystemsOpts)
 	if err != nil {
 		return nil, nil, nil, err

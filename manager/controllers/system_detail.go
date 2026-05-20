@@ -44,7 +44,7 @@ type SystemYumUpdatesResponse struct {
 // @Router /systems/{inventory_id} [get]
 func SystemDetailHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {
@@ -63,7 +63,7 @@ func SystemDetailHandler(c *gin.Context) {
 
 	var systemDetail SystemDetailLookup
 	db := middlewares.DBFromContext(c)
-	query := database.Systems(db, account, workspaceIDs, database.JoinTemplates).
+	query := database.Systems(db, account, groups, database.JoinTemplates).
 		Select(database.MustGetSelect(&systemDetail)).
 		Where("si.inventory_id = ?::uuid", inventoryID)
 
@@ -154,7 +154,7 @@ func SystemYumUpdatesHandler(c *gin.Context) {
 
 func systemJSONsCommon(c *gin.Context, column string) *models.SystemInventory {
 	account := c.GetInt(utils.KeyAccount)
-	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	inventoryID := c.Param("inventory_id")
 	if inventoryID == "" {
@@ -173,7 +173,7 @@ func systemJSONsCommon(c *gin.Context, column string) *models.SystemInventory {
 
 	var system models.SystemInventory
 	db := middlewares.DBFromContext(c)
-	query := database.Systems(db, account, workspaceIDs).
+	query := database.Systems(db, account, groups).
 		Select(column).
 		Where("si.inventory_id = ?::uuid", inventoryID)
 

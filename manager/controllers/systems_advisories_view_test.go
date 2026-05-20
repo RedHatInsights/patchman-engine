@@ -13,8 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func doTestView(t *testing.T, handler gin.HandlerFunc, q string, limit, offset *int,
-) *httptest.ResponseRecorder {
+func doTestView(t *testing.T, handler gin.HandlerFunc, q string, limit, offset *int) *httptest.ResponseRecorder {
 	core.SetupTest(t)
 	body := SystemsAdvisoriesRequest{
 		Systems:    []SystemID{"00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002"},

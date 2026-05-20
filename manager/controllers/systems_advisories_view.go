@@ -72,14 +72,14 @@ func totalItems(tx *gorm.DB, cols string) (int, error) {
 	return int(count), err
 }
 
-func systemsAdvisoriesQuery(c *gin.Context, db *gorm.DB, acc int, workspaceIDs []string,
+func systemsAdvisoriesQuery(c *gin.Context, db *gorm.DB, acc int, groups map[string]string,
 	req SystemsAdvisoriesRequest) (*gorm.DB, *ListMeta, *Links, error) {
 	systems := req.Systems
 	advisories := req.Advisories
 	sysq := database.ApplyInventoryWorkspaceFilter(
 		db.Table("system_inventory si").
 			Where("si.rh_account_id = ?", acc),
-		workspaceIDs).
+		groups).
 		Distinct("si.rh_account_id, si.id, si.inventory_id").
 		// we need to join system_advisories to make `limit` work properly
 		// without this join it can happen that we display less items on some pages
@@ -122,12 +122,12 @@ func systemsAdvisoriesQuery(c *gin.Context, db *gorm.DB, acc int, workspaceIDs [
 	return query, meta, links, err
 }
 
-func advisoriesSystemsQuery(c *gin.Context, db *gorm.DB, acc int, workspaceIDs []string,
+func advisoriesSystemsQuery(c *gin.Context, db *gorm.DB, acc int, groups map[string]string,
 	req SystemsAdvisoriesRequest) (*gorm.DB, *ListMeta, *Links, error) {
 	systems := req.Systems
 	advisories := req.Advisories
 	// get all advisories for all systems in the account
-	advq := database.SystemAdvisories(db, acc, workspaceIDs, database.JoinAdvisoryMetadata).
+	advq := database.SystemAdvisories(db, acc, groups, database.JoinAdvisoryMetadata).
 		Distinct("am.id, am.name")
 		// we need to join system_advisories to make `limit` work properly
 		// without this join it can happen that we display less items on some pages
@@ -180,7 +180,7 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListM
 		return nil, nil, nil, err
 	}
 	acc := c.GetInt(utils.KeyAccount)
-	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 	db := middlewares.DBFromContext(c)
 	// backward compatibility, put limit/offset from json into querystring
 	if req.Limit != nil {
@@ -191,9 +191,9 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListM
 	}
 	switch endpoint {
 	case "SystemsAdvisories":
-		q, meta, links, err = systemsAdvisoriesQuery(c, db, acc, workspaceIDs, req)
+		q, meta, links, err = systemsAdvisoriesQuery(c, db, acc, groups, req)
 	case "AdvisoriesSystems":
-		q, meta, links, err = advisoriesSystemsQuery(c, db, acc, workspaceIDs, req)
+		q, meta, links, err = advisoriesSystemsQuery(c, db, acc, groups, req)
 	default:
 		return nil, nil, nil, fmt.Errorf("unknown endpoint '%s'", endpoint)
 	}

@@ -54,7 +54,7 @@ type queryItem struct {
 
 var queryItemSelect = database.MustGetSelect(&queryItem{})
 
-func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, workspaceIDs []string,
+func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, groups map[string]string,
 	useCache bool) *gorm.DB {
 	if useCache {
 		middlewares.PackageAccountDataCnt.WithLabelValues("hit").Inc()
@@ -65,7 +65,7 @@ func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, workspac
 		return q
 	}
 	middlewares.PackageAccountDataCnt.WithLabelValues("miss").Inc()
-	systemsWithPkgsInstalledQ := database.Systems(db, acc, workspaceIDs).
+	systemsWithPkgsInstalledQ := database.Systems(db, acc, groups).
 		Select("si.id").
 		Where("si.stale = false AND spatch.packages_installed > 0")
 
@@ -114,7 +114,7 @@ func packagesQuery(db *gorm.DB, filters map[string]FilterData, acc int, workspac
 func PackagesListHandler(c *gin.Context) {
 	var filters map[string]FilterData
 	account := c.GetInt(utils.KeyAccount)
-	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	filters, err := ParseAllFilters(c, PackagesOpts)
 	if err != nil {
@@ -122,13 +122,13 @@ func PackagesListHandler(c *gin.Context) {
 	}
 
 	db := middlewares.DBFromContext(c)
-	useCache := shouldUseCache(db, account, filters, workspaceIDs)
+	useCache := shouldUseCache(db, account, filters, groups)
 	if !useCache {
 		db.Exec("SET work_mem TO '?'", utils.CoreCfg.DBWorkMem)
 		defer db.Exec("RESET work_mem")
 	}
 
-	query := packagesQuery(db, filters, account, workspaceIDs, useCache)
+	query := packagesQuery(db, filters, account, groups, useCache)
 	query, meta, params, err := ListCommon(query, c, filters, PackagesOpts)
 	if err != nil {
 		return
@@ -167,14 +167,11 @@ func PackageDBLookup2Item(packages []PackageDBLookup) ([]PackageItem, int) {
 }
 
 // use cache only when tag filter is not used, there are no inventory groups and cache is valid
-func shouldUseCache(db *gorm.DB, acc int, filters map[string]FilterData, workspaceIDs []string) bool {
-	// TODO: remove this function, it does not make sense since replacing groups with workspaces,
-	// because there is always at least the root workspace
-
+func shouldUseCache(db *gorm.DB, acc int, filters map[string]FilterData, groups map[string]string) bool {
 	if !config.EnabledPackageCache {
 		return false
 	}
-	if HasInventoryFilter(filters) || len(workspaceIDs) != 0 {
+	if HasInventoryFilter(filters) || len(groups) != 0 {
 		return false
 	}
 
