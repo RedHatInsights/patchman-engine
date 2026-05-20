@@ -1,11 +1,7 @@
 // nolint:lll
 package controllers
 
-import (
-	"time"
-
-	"github.com/google/uuid"
-)
+import "time"
 
 type MetaTotalHelper struct {
 	// a helper to get total number of systems
@@ -29,12 +25,7 @@ type SystemTags struct {
 }
 
 type SystemGroups struct {
-	Groups SystemGroupsList `json:"groups" csv:"groups" query:"CASE WHEN si.workspace_id IS NOT NULL THEN jsonb_build_array(jsonb_build_object('id', si.workspace_id, 'name', si.workspace_name)) ELSE '[]'::jsonb END" order_query:"si.workspace_name"`
-}
-
-type SystemWorkspace struct {
-	WorkspaceID   *uuid.UUID `json:"workspace_id" csv:"workspace_id" query:"si.workspace_id" gorm:"column:workspace_id"`
-	WorkspaceName *string    `json:"workspace_name" csv:"workspace_name" query:"si.workspace_name" gorm:"column:workspace_name"`
+	Groups SystemGroupsList `json:"groups" csv:"groups" query:"si.workspaces" gorm:"column:groups" order_query:"si.workspaces->0->>'name'"`
 }
 
 // baseline attributes are obsoleted and we keep them only for backward API compatibility

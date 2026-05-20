@@ -13,12 +13,14 @@ import (
 )
 
 const (
-	KeyApiver              = "apiver"
-	KeyAccount             = "account"
-	KeyOrgID               = "org_id"
-	KeyUser                = "user"
-	KeySystem              = "system_cn"
-	KeyInventoryWorkspaces = "workspaceIDs"
+	KeyApiver          = "apiver"
+	KeyAccount         = "account"
+	KeyOrgID           = "org_id"
+	KeyUser            = "user"
+	KeySystem          = "system_cn"
+	KeyInventoryGroups = "inventoryGroups"
+	KeyGrouped         = "grouped"
+	KeyUngrouped       = "ungrouped"
 	// ReadHeaderTimeout same as nginx default
 	ReadHeaderTimeout = 60 * time.Second
 )

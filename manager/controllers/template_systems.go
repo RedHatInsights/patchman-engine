@@ -36,7 +36,6 @@ type TemplateSystemAttributes struct {
 	ApplicableAdvisories
 	SystemTags
 	SystemGroups
-	SystemWorkspace
 	SystemLastUpload
 }
 
@@ -76,7 +75,7 @@ func getTemplate(c *gin.Context, tx *gorm.DB, account int, uuid string) (*models
 	return &template, nil
 }
 
-func templateSystemsQuery(c *gin.Context, account int, workspaceIDs []string) (*gorm.DB, Filters, error) {
+func templateSystemsQuery(c *gin.Context, account int, groups map[string]string) (*gorm.DB, Filters, error) {
 	templateUUID := c.Param("template_id")
 	db := middlewares.DBFromContext(c)
 
@@ -86,7 +85,7 @@ func templateSystemsQuery(c *gin.Context, account int, workspaceIDs []string) (*
 		return nil, nil, err
 	}
 
-	query := database.Systems(db, account, workspaceIDs).
+	query := database.Systems(db, account, groups).
 		Where("spatch.template_id = ?", template.ID).
 		Select(templateSystemSelect)
 
@@ -98,9 +97,9 @@ func templateSystemsQuery(c *gin.Context, account int, workspaceIDs []string) (*
 	return query, filters, nil
 }
 
-func templateSystemsCommon(c *gin.Context, account int, workspaceIDs []string,
+func templateSystemsCommon(c *gin.Context, account int, groups map[string]string,
 ) (*gorm.DB, *ListMeta, []string, error) {
-	query, filters, err := templateSystemsQuery(c, account, workspaceIDs)
+	query, filters, err := templateSystemsQuery(c, account, groups)
 	if err != nil {
 		return nil, nil, nil, err
 	} // Error handled in method itself
@@ -160,9 +159,9 @@ func templateSystemData(templateSystems []TemplateSystemsDBLookup) ([]TemplateSy
 // @Router /templates/{template_id}/systems [get]
 func TemplateSystemsListHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
-	query, meta, params, err := templateSystemsCommon(c, account, workspaceIDs)
+	query, meta, params, err := templateSystemsCommon(c, account, groups)
 	if err != nil {
 		return
 	} // Error handled in method itself
@@ -209,9 +208,9 @@ func TemplateSystemsListHandler(c *gin.Context) {
 // @Router /ids/templates/{template_id}/systems [get]
 func TemplateSystemsListIDsHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
+	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
-	query, meta, _, err := templateSystemsCommon(c, account, workspaceIDs)
+	query, meta, _, err := templateSystemsCommon(c, account, groups)
 	if err != nil {
 		return
 	} // Error handled in method itself

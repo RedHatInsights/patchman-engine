@@ -477,8 +477,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	vmaasJSON := "this_is_json"
 	// insert new row
 	hostEvent := createTestUploadEvent("1", id, "puptoo", false, true, "created")
-	workspaceID := uuid.MustParse(hostEvent.Host.Groups[0].ID)
-	workspaceName := &hostEvent.Host.Groups[0].Name
+	hostWorkspaces := inventory.Groups(hostEvent.Host.Groups)
 	inStore := &models.SystemPlatformV2{
 		Inventory: models.SystemInventory{
 			InventoryID:                      "99990000-0000-0000-0000-000000000001",
@@ -488,8 +487,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 			SatelliteManaged:                 false,
 			Created:                          hostEvent.Host.Created,
 			Tags:                             utils.MarshalNilToJSONB(hostEvent.Host.Tags),
-			WorkspaceID:                      &workspaceID,
-			WorkspaceName:                    workspaceName,
+			Workspaces:                       &hostWorkspaces,
 			OSName:                           utils.EmptyToNil(&hostEvent.Host.SystemProfile.OperatingSystem.Name),
 			OSMajor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Major,
 			OSMinor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Minor,
@@ -506,7 +504,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	}
 
 	err := storeOrUpdateSysPlatform(database.DB, inStore, colsToUpdate)
-	require.Nil(t, err)
+	assert.Nil(t, err)
 
 	var outStore models.SystemInventory
 	assert.NoError(t, database.DB.Where("id = ? AND rh_account_id = ?", inStore.Inventory.ID, inStore.Inventory.RhAccountID). // nolint:lll
@@ -532,10 +530,8 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	assert.Contains(t, string(inventoryAfterInsert.Tags), `"key": "env"`)
 	assert.Contains(t, string(inventoryAfterInsert.Tags), `"value": "prod"`)
 
-	require.NotNil(t, inventoryAfterInsert.WorkspaceID)
-	assert.Equal(t, hostEvent.Host.Groups[0].ID, inventoryAfterInsert.WorkspaceID.String())
-	require.NotNil(t, inventoryAfterInsert.WorkspaceName)
-	assert.Equal(t, hostEvent.Host.Groups[0].Name, *inventoryAfterInsert.WorkspaceName)
+	require.NotNil(t, inventoryAfterInsert.Workspaces)
+	assert.Equal(t, hostEvent.Host.Groups, []inventory.Group(*inventoryAfterInsert.Workspaces))
 
 	assert.Equal(t, hostEvent.Host.SystemProfile.OperatingSystem.Name, *inventoryAfterInsert.OSName)
 	assert.Equal(t, hostEvent.Host.SystemProfile.OperatingSystem.Major, *inventoryAfterInsert.OSMajor)
@@ -573,8 +569,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 			SatelliteManaged:                 true,
 			Created:                          hostEvent.Host.Created,
 			Tags:                             utils.MarshalNilToJSONB(hostEvent.Host.Tags),
-			WorkspaceID:                      &workspaceID,
-			WorkspaceName:                    workspaceName,
+			Workspaces:                       &hostWorkspaces,
 			OSName:                           utils.EmptyToNil(&hostEvent.Host.SystemProfile.OperatingSystem.Name),
 			OSMajor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Major,
 			OSMinor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Minor,
