@@ -1,9 +1,10 @@
 package controllers
 
 import (
-	"app/base/core"
 	"net/http"
 	"testing"
+
+	"app/base/core"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -75,4 +76,39 @@ func TestSystemTagsListBadRequestOnIdtSort(t *testing.T) {
 
 	w := CreateRequestRouterWithAccount("GET", "/", "", "?sort=id", nil, "", SystemTagListHandler, 1)
 	assert.Equal(t, 400, w.Code)
+}
+
+func TestSystemTagsListSearch(t *testing.T) {
+	core.SetupTest(t)
+
+	w := CreateRequestRouterWithAccount("GET", "/", "", "?search=k3", nil, "", SystemTagListHandler, 1)
+
+	var output SystemTagsResponse
+	CheckResponse(t, w, http.StatusOK, &output)
+
+	assert.Equal(t, 2, len(output.Data))
+	assert.Equal(t, 2, output.Meta.TotalItems)
+	assert.Equal(t, "k3", output.Meta.Search)
+
+	assert.Equal(t, 1, output.Data[0].Count)
+	assert.Equal(t, "k3", output.Data[0].Tag.Key)
+	assert.Equal(t, "ns1", output.Data[0].Tag.Namespace)
+	assert.Equal(t, "val3", output.Data[0].Tag.Value)
+
+	assert.Equal(t, 3, output.Data[1].Count)
+	assert.Equal(t, "k3", output.Data[1].Tag.Key)
+	assert.Equal(t, "ns1", output.Data[1].Tag.Namespace)
+	assert.Equal(t, "val4", output.Data[1].Tag.Value)
+}
+
+func TestSystemTagsListSearchUnknown(t *testing.T) {
+	core.SetupTest(t)
+
+	w := CreateRequestRouterWithAccount("GET", "/", "", "?search=unknown", nil, "", SystemTagListHandler, 1)
+
+	var output SystemTagsResponse
+	CheckResponse(t, w, http.StatusOK, &output)
+
+	assert.Equal(t, 0, len(output.Data))
+	assert.Equal(t, "unknown", output.Meta.Search)
 }
