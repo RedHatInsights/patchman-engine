@@ -5657,6 +5657,14 @@
                         }
                     },
                     {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Find matching text",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "offset",
                         "in": "query",
                         "description": "Offset for paging",

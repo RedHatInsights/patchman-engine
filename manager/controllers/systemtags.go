@@ -1,10 +1,11 @@
 package controllers
 
 import (
-	"app/base/database"
-	"app/base/utils"
 	"errors"
 	"net/http"
+
+	"app/base/database"
+	"app/base/utils"
 
 	"app/manager/middlewares"
 
@@ -48,6 +49,11 @@ var SystemTagsOpts = ListOpts{
 	},
 	StableSort:  "tag",
 	DefaultSort: "tag",
+	SearchFields: []string{
+		"sq.tag->>'namespace'",
+		"sq.tag->>'key'",
+		"sq.tag->>'value'",
+	},
 }
 
 // @Summary Show me systems tags applicable to this application
@@ -55,9 +61,10 @@ var SystemTagsOpts = ListOpts{
 // @ID listSystemTags
 // @Security RhIdentity
 // @Produce  json
-// @Param	sort	query	string	false	"Sort field" Enums(tag, count)
-// @Param	limit	query	int		fals	"Limit for paging"
-// @Param 	offset	query	int		false	"Offset for paging"
+// @Param sort   query string false "Sort field" Enums(tag, count)
+// @Param limit  query int    false "Limit for paging"
+// @Param search query string false "Find matching text"
+// @Param offset query int    false "Offset for paging"
 // @Success 200 {object} SystemTagsResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 500 {object} utils.ErrorResponse
