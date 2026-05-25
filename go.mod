@@ -6,7 +6,7 @@ require (
 	github.com/MichaelMraka/gorpm v0.0.0-20251128174203-65cf25f01bac
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/bytedance/sonic v1.15.1
-	github.com/getkin/kin-openapi v0.138.0
+	github.com/getkin/kin-openapi v0.139.0
 	github.com/gin-contrib/timeout v1.2.1
 	github.com/gin-gonic/gin v1.12.0
 	github.com/gocarina/gocsv v0.0.0-20260523204920-c264028e67ea
@@ -97,8 +97,8 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/muhlemmer/gu v0.3.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/oasdiff/yaml v0.0.9 // indirect
-	github.com/oasdiff/yaml3 v0.0.12 // indirect
+	github.com/oasdiff/yaml v0.1.0 // indirect
+	github.com/oasdiff/yaml3 v0.0.13 // indirect
 	github.com/onsi/gomega v1.39.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
