@@ -31,6 +31,8 @@ spec:
     value: Dockerfile
   - name: path-context
     value: .
+  - name: skip-sast-coverity-check
+    value: "false"
   pipelineRef:
     name: docker-build-oci-ta
   taskRunTemplate:
