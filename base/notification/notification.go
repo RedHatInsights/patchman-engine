@@ -15,6 +15,10 @@ const (
 	Application = "patch"
 )
 
+// TODO: Remove Context after migrating to the new aggregator component
+// Advisories apply to multiple systems, so for aggregated notifications, system-specific context is unnecessary
+// See: https://redhat.atlassian.net/browse/RHINENG-26543
+
 type Context struct {
 	InventoryID string      `json:"inventory_id"`
 	DisplayName string      `json:"display_name"`

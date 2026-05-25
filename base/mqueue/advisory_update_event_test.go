@@ -20,7 +20,6 @@ func TestAdvisoryUpdateEventMarshal(t *testing.T) {
 	event := AdvisoryUpdateEvent{
 		RhAccountID: 1,
 		WorkspaceID: testWorkspaceID,
-		InventoryID: uuid.New(),
 		AdvisoryIDs: []int64{101, 202, 303},
 		ProducedAt:  testNow,
 	}
@@ -33,7 +32,6 @@ func TestAdvisoryUpdateEventMarshal(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, event.RhAccountID, parsed.RhAccountID)
 	assert.Equal(t, event.WorkspaceID, parsed.WorkspaceID)
-	assert.Equal(t, event.InventoryID, parsed.InventoryID)
 	assert.Equal(t, event.AdvisoryIDs, parsed.AdvisoryIDs)
 	assert.NotNil(t, parsed.ProducedAt)
 }
@@ -45,14 +43,12 @@ func TestAdvisoryUpdateEventsWriteEvents(t *testing.T) {
 		{
 			RhAccountID: 1,
 			WorkspaceID: testWorkspaceID,
-			InventoryID: uuid.New(),
 			AdvisoryIDs: []int64{100, 200},
 			ProducedAt:  testNow,
 		},
 		{
 			RhAccountID: 2,
 			WorkspaceID: testWorkspaceID,
-			InventoryID: uuid.New(),
 			AdvisoryIDs: []int64{300},
 			ProducedAt:  testNow,
 		},
@@ -69,7 +65,6 @@ func TestAdvisoryUpdateEventsWriteEvents(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, events[0].RhAccountID, firstEvent.RhAccountID)
 	assert.Equal(t, events[0].WorkspaceID, firstEvent.WorkspaceID)
-	assert.Equal(t, events[0].InventoryID, firstEvent.InventoryID)
 	assert.Equal(t, events[0].AdvisoryIDs, firstEvent.AdvisoryIDs)
 	assert.NotNil(t, firstEvent.ProducedAt)
 
@@ -78,7 +73,6 @@ func TestAdvisoryUpdateEventsWriteEvents(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, events[1].RhAccountID, secondEvent.RhAccountID)
 	assert.Equal(t, events[1].WorkspaceID, secondEvent.WorkspaceID)
-	assert.Equal(t, events[1].InventoryID, secondEvent.InventoryID)
 	assert.Equal(t, events[1].AdvisoryIDs, secondEvent.AdvisoryIDs)
 	assert.NotNil(t, secondEvent.ProducedAt)
 }
