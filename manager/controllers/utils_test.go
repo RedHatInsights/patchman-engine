@@ -57,6 +57,50 @@ func TestGroupNameFilter2(t *testing.T) {
 	assert.Equal(t, 9, len(systems)) // 2 systems with `group2`, 6 with `group1` in test_data
 }
 
+func TestGroupIDFilter(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	database.Configure()
+
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request, _ = http.NewRequest("GET", "/?filter[group_id]=inventory-group-2", nil)
+
+	filters, err := ParseAllFilters(c, ListOpts{})
+	assert.Nil(t, err)
+
+	var systems []SystemsID
+	groups := map[string]string{
+		utils.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]","[{\"id\":\"inventory-group-2\"}]"}`,
+	}
+	tx := database.Systems(database.DB, 1, groups)
+	tx, _ = ApplyInventoryFilter(filters, tx, "si.inventory_id")
+	tx.Scan(&systems)
+
+	assert.Equal(t, 2, len(systems))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000007", systems[0].ID)
+	assert.Equal(t, "00000000-0000-0000-0000-000000000008", systems[1].ID)
+}
+
+func TestGroupIDFilterMultiple(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	database.Configure()
+
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request, _ = http.NewRequest("GET", "/?filter[group_id]=inventory-group-2,inventory-group-1", nil)
+
+	filters, err := ParseAllFilters(c, ListOpts{})
+	assert.Nil(t, err)
+
+	var systems []SystemsID
+	groups := map[string]string{
+		utils.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]","[{\"id\":\"inventory-group-2\"}]"}`,
+	}
+	tx := database.Systems(database.DB, 1, groups)
+	tx, _ = ApplyInventoryFilter(filters, tx, "si.inventory_id")
+	tx.Scan(&systems)
+
+	assert.Equal(t, 9, len(systems))
+}
+
 func TestApplySearchEmpty(t *testing.T) {
 	var baseTx gorm.DB
 

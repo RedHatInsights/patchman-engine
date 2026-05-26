@@ -3284,6 +3284,19 @@
                         }
                     },
                     {
+                        "name": "filter[group_id]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -4578,6 +4591,19 @@
                         }
                     },
                     {
+                        "name": "filter[group_id]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
                         "name": "filter[system_profile][sap_system]",
                         "in": "query",
                         "description": "Filter only SAP systems",
@@ -5002,6 +5028,19 @@
                     },
                     {
                         "name": "filter[group_name]",
+                        "in": "query",
+                        "description": "Filter systems by inventory groups",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "filter[group_id]",
                         "in": "query",
                         "description": "Filter systems by inventory groups",
                         "style": "form",

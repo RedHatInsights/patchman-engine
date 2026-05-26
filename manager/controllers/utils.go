@@ -71,6 +71,7 @@ type NestedFilterMap map[string]string
 
 var nestedFilters = NestedFilterMap{
 	"group_name":                                  "group_name",
+	"group_id":                                    "group_id",
 	"system_profile][sap_system":                  "(si.sap_workload)",
 	"system_profile][sap_sids":                    "(si.sap_workload_sids)",
 	"system_profile][sap_sids][in]":               "(si.sap_workload_sids)",
@@ -388,11 +389,18 @@ func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, 
 // buildSystemProfileQuery("system_profile][mssql][version", "1.0")
 // returns "(si.mssql_workload_version) = 1.0"
 func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
-	if strings.Contains(key, "group_name") {
+	if strings.Contains(key, "group_name") || strings.Contains(key, "group_id") {
 		groups := []string{}
 		for _, v := range values {
-			name := v
-			group, err := utils.ParseInventoryGroup(nil, &name)
+			var group string
+			var err error
+			if strings.Contains(key, "group_id") {
+				id := v
+				group, err = utils.ParseInventoryGroup(&id, nil)
+			} else {
+				name := v
+				group, err = utils.ParseInventoryGroup(nil, &name)
+			}
 			if err != nil {
 				// couldn't marshal inventory group to json
 				continue
