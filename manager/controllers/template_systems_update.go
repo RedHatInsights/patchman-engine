@@ -53,6 +53,7 @@ type SystemTemplateDBLookup struct {
 // @Router /templates/{template_id}/systems [PATCH]
 func TemplateSystemsUpdateHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
+	orgID := c.GetString(utils.KeyOrgID)
 	templateUUID := c.Param("template_id")
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
@@ -90,7 +91,7 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 
 	// re-evaluate systems added/removed from templates
 	if config.EnableTemplateChangeEval {
-		inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, req.Systems)
+		inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, orgID, req.Systems)
 		kafka.RecalcSystems(inventoryAIDs)
 	}
 	c.Status(http.StatusOK)

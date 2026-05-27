@@ -23,10 +23,12 @@ func TestSubscribedSystemID(t *testing.T) {
 	c, _ := gin.CreateTestContext(httptest.NewRecorder())
 	c.Set(utils.KeyAccount, templateAccount)
 	c.Set(utils.KeySystem, subscriptionUUID)
-	account, systemID, err := getSubscribedSystem(c, database.DB)
+	c.Set(utils.KeyOrgID, orgID)
+	account, org, systemID, err := getSubscribedSystem(c, database.DB)
 
 	assert.Nil(t, err)
 	assert.Equal(t, templateAccount, account)
+	assert.Equal(t, orgID, org)
 	assert.Equal(t, templateSystemUUID, systemID)
 }
 
@@ -35,11 +37,13 @@ func TestUnknownSubscribedSystemID(t *testing.T) {
 
 	c, _ := gin.CreateTestContext(httptest.NewRecorder())
 	c.Set(utils.KeyAccount, templateAccount)
+	c.Set(utils.KeyOrgID, orgID)
 	c.Set(utils.KeySystem, "cccccccc-0000-0000-0001-000000000001")
-	account, systemID, err := getSubscribedSystem(c, database.DB)
+	account, org, systemID, err := getSubscribedSystem(c, database.DB)
 
 	assert.EqualError(t, err, "System cccccccc-0000-0000-0001-000000000001 not found")
 	assert.Equal(t, 0, account)
+	assert.Equal(t, "", org)
 	assert.Equal(t, "", systemID)
 }
 
