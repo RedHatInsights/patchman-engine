@@ -29,7 +29,7 @@ func TemplateSubscribedSystemsUpdateHandler(c *gin.Context) {
 
 	db := middlewares.DBFromContext(c)
 
-	account, systemUUID, err := getSubscribedSystem(c, db)
+	account, orgID, systemUUID, err := getSubscribedSystem(c, db)
 	if err != nil {
 		// respose set in getTemplateID()
 		return
@@ -58,14 +58,15 @@ func TemplateSubscribedSystemsUpdateHandler(c *gin.Context) {
 
 	// re-evaluate systems added/removed from templates
 	if config.EnableTemplateChangeEval {
-		inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, systemList)
+		inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, orgID, systemList)
 		kafka.RecalcSystems(inventoryAIDs)
 	}
 	c.Status(http.StatusOK)
 }
 
-func getSubscribedSystem(c *gin.Context, tx *gorm.DB) (int, string, error) {
+func getSubscribedSystem(c *gin.Context, tx *gorm.DB) (int, string, string, error) {
 	account := c.GetInt(utils.KeyAccount)
+	orgID := c.GetString(utils.KeyOrgID)
 	systemCn := c.GetString(utils.KeySystem)
 
 	var inventoryID string
@@ -75,12 +76,12 @@ func getSubscribedSystem(c *gin.Context, tx *gorm.DB) (int, string, error) {
 		Limit(1).Find(&inventoryID).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		utils.LogAndRespError(c, err, "database error")
-		return 0, "", err
+		return 0, "", "", err
 	}
 	if inventoryID == "" {
 		err := errors.Errorf("System %s not found", systemCn)
 		utils.LogAndRespNotFound(c, err, err.Error())
-		return 0, "", err
+		return 0, "", "", err
 	}
-	return account, inventoryID, err
+	return account, orgID, inventoryID, err
 }
