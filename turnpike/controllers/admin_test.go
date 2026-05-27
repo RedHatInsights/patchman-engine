@@ -23,6 +23,7 @@ func TestInitDelete(t *testing.T) {
 		RhAccountID: 1,
 		DisplayName: del,
 		Tags:        []byte("[]"),
+		Workspaces:  database.TestWorkspacesGroup1(),
 	}
 	assert.NoError(t, database.DB.Create(&inv).Error)
 	assert.NoError(t, database.DB.Create(&models.SystemPatch{

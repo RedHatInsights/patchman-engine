@@ -16,11 +16,11 @@ var (
 )
 
 var testCases = []map[int64]map[string]string{
-	{nGroup1: {utils.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]"}`}},
-	{nGroup2: {utils.KeyGrouped: `{"[{\"id\":\"inventory-group-2\"}]"}`}},
-	{nGroup1 + nGroup2: {utils.KeyGrouped: `{"[{\"id\":\"inventory-group-1\"}]","[{\"id\":\"inventory-group-2\"}]"}`}},
+	{nGroup1: {utils.KeyGrouped: `{"[{\"id\":\"aaaaaaaa-0000-0000-0000-000000000001\"}]"}`}},
+	{nGroup2: {utils.KeyGrouped: `{"[{\"id\":\"aaaaaaaa-0000-0000-0000-000000000002\"}]"}`}},
+	{nGroup1 + nGroup2: {utils.KeyGrouped: `{"[{\"id\":\"aaaaaaaa-0000-0000-0000-000000000001\"}]","[{\"id\":\"aaaaaaaa-0000-0000-0000-000000000002\"}]"}`}}, //nolint:lll
 	{nGroup1 + nUngrouped: {
-		utils.KeyGrouped:   `{"[{\"id\":\"inventory-group-1\"}]"}`,
+		utils.KeyGrouped:   `{"[{\"id\":\"aaaaaaaa-0000-0000-0000-000000000001\"}]"}`,
 		utils.KeyUngrouped: "[]",
 	}},
 	{nUngrouped: {

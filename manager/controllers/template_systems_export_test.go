@@ -68,12 +68,12 @@ func TestTemplateSystemsExportCSV(t *testing.T) {
 	assert.Equal(t, "00000000-0000-0000-0000-000000000002,00000000-0000-0000-0000-000000000002,RHEL 8.1,"+
 		"8.1,0,0,0,0,0,0,1,0,\"[{'key':'k1','namespace':'ns1','value':'val1'},"+
 		"{'key':'k2','namespace':'ns1','value':'val2'},{'key':'k3','namespace':'ns1','value':'val3'}]\","+
-		"\"[{'id':'inventory-group-1','name':'group1'}]\",2018-09-22T16:00:00Z",
+		"\"[{'id':'aaaaaaaa-0000-0000-0000-000000000001','name':'group1'}]\",2018-09-22T16:00:00Z",
 		lines[1])
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,RHEL 8.10,"+
 		"8.10,2,2,1,0,2,3,3,0,\"[{'key':'k1','namespace':'ns1','value':'val1'},"+
 		"{'key':'k2','namespace':'ns1','value':'val2'}]\","+
-		"\"[{'id':'inventory-group-1','name':'group1'}]\",2020-09-22T16:00:00Z",
+		"\"[{'id':'aaaaaaaa-0000-0000-0000-000000000001','name':'group1'}]\",2020-09-22T16:00:00Z",
 		lines[2])
 }
 

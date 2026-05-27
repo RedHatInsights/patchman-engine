@@ -52,6 +52,7 @@ func createTestSystemInDB(t *testing.T, inventoryID string, rhAccountID int, dis
 		RhAccountID: rhAccountID,
 		DisplayName: displayName,
 		Tags:        []byte("[]"),
+		Workspaces:  database.TestWorkspacesGroup1(),
 	}
 	assert.NoError(t, database.DB.Create(&inv).Error)
 	assert.NoError(t, database.DB.Create(&models.SystemPatch{
@@ -184,7 +185,7 @@ func createTestUploadEvent(orgID, inventoryID, reporter string, packages, yum bo
 				reporter: {LastCheckIn: types.Rfc3339TimestampWithZ(now)},
 			},
 			Tags:   []byte(`{"namespace": "insights-client","key": "env","value": "prod"}`),
-			Groups: []inventory.Group{{ID: "group1"}},
+			Groups: []inventory.Group{{ID: database.TestWorkspace1ID, Name: "group1"}},
 			SystemProfile: inventory.SystemProfile{
 				OperatingSystem: inventory.OperatingSystem{
 					Name:  "RHEL",
