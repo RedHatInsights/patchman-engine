@@ -18,8 +18,8 @@ func testRecalcSystems(t *testing.T, accountID int, orgID string, inventoryIDs [
 
 	writerMock := mqueue.MockKafkaWriter{}
 	TryStartEvalQueue(mqueue.MockCreateKafkaWriter(&writerMock))
-	inventoryAIDs := InventoryIDs2InventoryAIDs(accountID, orgID, inventoryIDs)
-	RecalcSystems(inventoryAIDs)
+	evaldataList := InventoryIDs2EvalData(accountID, orgID, inventoryIDs)
+	RecalcSystems(evaldataList)
 	utils.AssertEqualWait(t, 1, func() (exp, act interface{}) {
 		return 1, len(writerMock.Messages)
 	})

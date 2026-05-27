@@ -29,12 +29,12 @@ func runRecalcLoop() {
 	}
 }
 
-func InventoryIDs2InventoryAIDs(accountID int, orgID string, inventoryIDs []string) []mqueue.EvalData {
-	inventoryAIDs := make([]mqueue.EvalData, 0, len(inventoryIDs))
+func InventoryIDs2EvalData(accountID int, orgID string, inventoryIDs []string) []mqueue.EvalData {
+	evalDataList := make([]mqueue.EvalData, 0, len(inventoryIDs))
 	for _, v := range inventoryIDs {
-		inventoryAIDs = append(inventoryAIDs, mqueue.EvalData{InventoryID: v, RhAccountID: accountID, OrgID: &orgID})
+		evalDataList = append(evalDataList, mqueue.EvalData{InventoryID: v, RhAccountID: accountID, OrgID: &orgID})
 	}
-	return inventoryAIDs
+	return evalDataList
 }
 
 func sendInventoryIDs(inventoryIDs mqueue.EvalDataSlice) {
