@@ -24,6 +24,7 @@ import (
 // @Router /templates/systems [DELETE]
 func TemplateSystemsDeleteHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
+	orgID := c.GetString(utils.KeyOrgID)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
 	var req TemplateSystemsUpdateRequest
@@ -56,7 +57,7 @@ func TemplateSystemsDeleteHandler(c *gin.Context) {
 
 	// re-evaluate systems removed from templates
 	if config.EnableTemplateChangeEval {
-		inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, req.Systems)
+		inventoryAIDs := kafka.InventoryIDs2InventoryAIDs(account, orgID, req.Systems)
 		kafka.RecalcSystems(inventoryAIDs)
 	}
 	c.Status(http.StatusOK)

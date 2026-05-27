@@ -11,14 +11,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testRecalcSystems(t *testing.T, accountID int, inventoryIDs []string) mqueue.PlatformEvent {
+func testRecalcSystems(t *testing.T, accountID int, orgID string, inventoryIDs []string) mqueue.PlatformEvent {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	config.EnableTemplateChangeEval = true
 
 	writerMock := mqueue.MockKafkaWriter{}
 	TryStartEvalQueue(mqueue.MockCreateKafkaWriter(&writerMock))
-	inventoryAIDs := InventoryIDs2InventoryAIDs(accountID, inventoryIDs)
+	inventoryAIDs := InventoryIDs2InventoryAIDs(accountID, orgID, inventoryIDs)
 	RecalcSystems(inventoryAIDs)
 	utils.AssertEqualWait(t, 1, func() (exp, act interface{}) {
 		return 1, len(writerMock.Messages)
