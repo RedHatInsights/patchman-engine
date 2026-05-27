@@ -50,6 +50,7 @@ func createTestInvHost(t *testing.T) *Host {
 		ID:             id,
 		StaleTimestamp: &correctTime,
 		Reporter:       "puptoo",
+		Groups:         []inventory.Group{{ID: database.TestWorkspace1ID, Name: "group1"}},
 		PerReporterStaleness: map[string]inventory.ReporterStaleness{
 			"puptoo": {LastCheckIn: types.Rfc3339TimestampWithZ(now)},
 		},
@@ -65,6 +66,7 @@ func createTestHostWithEnv(reporter, consumer, baseURL string) *Host {
 	return &Host{
 		ID:       id,
 		Reporter: reporter,
+		Groups:   []inventory.Group{{ID: database.TestWorkspace1ID, Name: "group1"}},
 		SystemProfile: inventory.SystemProfile{
 			OwnerID: &consumerUUID,
 			YumRepos: &[]inventory.YumRepo{{

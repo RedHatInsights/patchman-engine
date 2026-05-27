@@ -2,6 +2,7 @@ package database
 
 import (
 	"app/base"
+	"app/base/inventory"
 	"app/base/models"
 	"app/base/utils"
 	"fmt"
@@ -12,6 +13,17 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
+
+const (
+	TestWorkspace1ID     = "aaaaaaaa-0000-0000-0000-000000000001"
+	TestWorkspace2ID     = "aaaaaaaa-0000-0000-0000-000000000002"
+	TestWorkspaceOtherID = "bbbbbbbb-0000-0000-0000-000000000003"
+)
+
+func TestWorkspacesGroup1() *inventory.Groups {
+	g := inventory.Groups{{ID: TestWorkspace1ID, Name: "group1"}}
+	return &g
+}
 
 func DebugWithCachesCheck(part string, fun func()) {
 	fun()

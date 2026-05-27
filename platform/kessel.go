@@ -32,7 +32,7 @@ func (server MockKesselServer) StreamedListObjects(_ *kesselv2.StreamedListObjec
 	return streamingServer.Send(&kesselv2.StreamedListObjectsResponse{
 		Object: &kesselv2.ResourceReference{
 			ResourceType: "workspace",
-			ResourceId:   "inventory-group-1",
+			ResourceId:   "aaaaaaaa-0000-0000-0000-000000000001",
 			// Reporter: &kesselv2.ReporterReference{
 			// 	Type:       "rbac",
 			// 	InstanceId: new(string),

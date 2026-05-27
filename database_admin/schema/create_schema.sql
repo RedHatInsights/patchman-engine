@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (155, false);
+VALUES (156, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -65,6 +65,25 @@ END;
 $check_unchanged$
     LANGUAGE 'plpgsql';
 
+CREATE OR REPLACE FUNCTION sync_system_inventory_workspace()
+    RETURNS TRIGGER AS
+$$
+BEGIN
+    IF NEW.workspaces IS NOT NULL
+        AND jsonb_typeof(NEW.workspaces) = 'array'
+        AND jsonb_array_length(NEW.workspaces) > 0
+    THEN
+        NEW.workspace_id := (NEW.workspaces->0->>'id')::UUID;
+        NEW.workspace_name := NEW.workspaces->0->>'name';
+        IF NEW.workspace_name IS NULL OR empty(NEW.workspace_name) THEN
+            RAISE EXCEPTION 'workspace_name must not be empty';
+        END IF;
+    ELSIF TG_OP = 'INSERT' THEN
+        RAISE EXCEPTION 'workspaces required';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION on_system_update()
 -- this trigger updates advisory_account_data when server changes its stale flag
@@ -593,6 +612,8 @@ CREATE TABLE IF NOT EXISTS system_inventory
     mssql_workload                      BOOLEAN     NOT NULL DEFAULT false,
     mssql_workload_version              TEXT        CHECK (NOT empty(mssql_workload_version)),
     workspaces                          JSONB,
+    workspace_id                        UUID,
+    workspace_name                      TEXT        CHECK (NOT empty(workspace_name)),
     PRIMARY KEY (rh_account_id, id),
     UNIQUE (rh_account_id, inventory_id)
 ) PARTITION BY HASH (rh_account_id);
@@ -620,6 +641,11 @@ SELECT create_table_partition_triggers('system_inventory_on_update',
                                        $$AFTER UPDATE$$,
                                        'system_inventory',
                                        $$FOR EACH ROW EXECUTE PROCEDURE on_system_update()$$);
+
+SELECT create_table_partition_triggers('system_inventory_sync_workspace',
+                                       $$BEFORE INSERT OR UPDATE OF workspaces$$,
+                                       'system_inventory',
+                                       $$FOR EACH ROW EXECUTE PROCEDURE sync_system_inventory_workspace()$$);
 
 CREATE INDEX IF NOT EXISTS system_inventory_inventory_id_idx ON system_inventory (inventory_id);
 CREATE INDEX IF NOT EXISTS system_inventory_tags_index ON system_inventory USING GIN (tags JSONB_PATH_OPS);

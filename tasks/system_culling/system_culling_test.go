@@ -176,6 +176,7 @@ func TestCullSystems(t *testing.T) {
 			RhAccountID:     1,
 			DisplayName:     invID,
 			Tags:            []byte("[]"),
+			Workspaces:      database.TestWorkspacesGroup1(),
 			CulledTimestamp: &staleDate,
 		}
 		assert.NoError(t, database.DB.Create(&inv).Error)
