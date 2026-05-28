@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +28,7 @@ func TestTemplateSystemsExportJSON(t *testing.T) {
 	assert.Equal(t, 2, len(output))
 
 	// Export uses the same default sort as the list API (-display_name), so UUID ...002 sorts before ...001.
-	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000002"), output[0].ID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output[0].DisplayName)
 	assert.Equal(t, "RHEL 8.1", output[0].OS)
 	assert.Equal(t, "8.1", output[0].Rhsm)
@@ -39,7 +40,7 @@ func TestTemplateSystemsExportJSON(t *testing.T) {
 	assert.Equal(t, 0, output[0].ApplicableRhbaCount)
 	assert.Equal(t, 1, output[0].ApplicableRheaCount)
 	assert.Equal(t, 0, output[0].ApplicableOtherCount)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[1].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output[1].ID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[1].DisplayName)
 	assert.Equal(t, "RHEL 8.10", output[1].OS)
 	assert.Equal(t, "8.10", output[1].Rhsm)
@@ -109,7 +110,7 @@ func TestExportTemplateSystemsTags(t *testing.T) {
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	assert.Equal(t, 2, len(output))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000002"), output[0].ID)
 }
 
 func TestExportTemplateSystemsTagsInvalid(t *testing.T) {
@@ -132,5 +133,5 @@ func TestTemplateSystemsExportWorkloads(t *testing.T) {
 	CheckResponse(t, w, http.StatusOK, &output)
 
 	assert.Equal(t, 2, len(output))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000002"), output[0].ID)
 }

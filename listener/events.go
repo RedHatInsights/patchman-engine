@@ -64,6 +64,7 @@ func EventsMessageHandler(m mqueue.KafkaMessage) error {
 
 func HandleDelete(event mqueue.PlatformEvent) error {
 	defer utils.ObserveSecondsSince(time.Now(), messageHandlingDuration.WithLabelValues(EventDelete))
+
 	// TODO: Do we need locking here ?
 	err := database.OnConflictUpdate(database.DB, "inventory_id", "when_deleted").
 		Create(models.DeletedSystem{
@@ -78,7 +79,7 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 	}
 
 	// mark system as stale and let system_culling job remove it later
-	query := database.DB.Model(&models.SystemInventory{}).Where("inventory_id = ?::uuid", event.ID).
+	query := database.DB.Model(&models.SystemInventory{}).Where("inventory_id = ?", event.ID).
 		Updates(map[string]interface{}{
 			"culled_timestamp": gorm.Expr("NOW()"),
 		})

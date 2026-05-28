@@ -10,6 +10,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -22,11 +23,11 @@ func configureRemediations() {
 }
 
 type RemediationsState struct {
-	HostID string   `json:"host_id"`
-	Issues []string `json:"issues"`
+	HostID uuid.UUID `json:"host_id"`
+	Issues []string  `json:"issues"`
 }
 
-func createRemediationsStateMsg(id string, response *vmaas.UpdatesV3Response) *RemediationsState {
+func createRemediationsStateMsg(id uuid.UUID, response *vmaas.UpdatesV3Response) *RemediationsState {
 	advisories := getReportedAdvisories(response)
 	packages := getReportedPackageUpdates(response)
 	var state RemediationsState
@@ -86,7 +87,7 @@ func publishRemediationsState(system *models.SystemPlatformV2, response *vmaas.U
 	}
 
 	state := createRemediationsStateMsg(system.GetInventoryID(), response)
-	msg, err := mqueue.MessageFromJSON(system.GetInventoryID(), state, nil)
+	msg, err := mqueue.MessageFromJSON(system.GetInventoryID().String(), state, nil)
 	if err != nil {
 		return errors.Wrap(err, "formatting message")
 	}

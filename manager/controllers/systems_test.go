@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +20,7 @@ func TestSystemsDefault(t *testing.T) {
 
 	// data
 	assert.Equal(t, 10, len(output.Data))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "2020-09-22 16:00:00 +0000 UTC", output.Data[0].Attributes.LastUpload.String())
 	assert.Equal(t, 1, output.Data[0].Attributes.RheaCount)
@@ -84,7 +85,7 @@ func TestSystemsWrongSort(t *testing.T) {
 func TestSystemsSearch(t *testing.T) {
 	output := testSystems(t, "?search=001", 1)
 	assert.Equal(t, 3, len(output.Data))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].Attributes.DisplayName)
 }
@@ -92,13 +93,13 @@ func TestSystemsSearch(t *testing.T) {
 func TestSystemsTags(t *testing.T) {
 	output := testSystems(t, "?tags=ns1/k2=val2", 1)
 	assert.Equal(t, 2, len(output.Data))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output.Data[0].ID)
 }
 
 func TestSystemsTagsMultiple(t *testing.T) {
 	output := testSystems(t, "?tags=ns1/k3=val4&tags=ns1/k1=val1", 1)
 	assert.Equal(t, 1, len(output.Data))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000003"), output.Data[0].ID)
 }
 
 func TestSystemsTagsUnknown(t *testing.T) {
@@ -109,7 +110,7 @@ func TestSystemsTagsUnknown(t *testing.T) {
 func TestSystemsTagsNoVal(t *testing.T) {
 	output := testSystems(t, "?tags=ns1/k3=val4&tags=ns1/k1", 1)
 	assert.Equal(t, 1, len(output.Data))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000003"), output.Data[0].ID)
 }
 
 func TestSystemsTagsInvalid(t *testing.T) {
@@ -141,13 +142,13 @@ func TestSystemsTagsEscaping4(t *testing.T) {
 func TestSystemsWorkloads1(t *testing.T) {
 	output := testSystems(t, "?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC", 1)
 	assert.Equal(t, 2, len(output.Data))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output.Data[0].ID)
 }
 
 func TestSystemsWorkloads2(t *testing.T) {
 	output := testSystems(t, sapABCFilter, 1)
 	assert.Equal(t, 2, len(output.Data))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output.Data[0].ID)
 }
 
 func TestSystemsWorkloads3(t *testing.T) {
@@ -167,7 +168,7 @@ func TestSystemsWorkloadEscaping2(t *testing.T) {
 func TestSystemsPackagesCount(t *testing.T) {
 	output := testSystems(t, "?sort=-packages_installed,id", 3)
 	assert.Equal(t, 5, len(output.Data))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000015", output.Data[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000015"), output.Data[0].ID)
 	assert.Equal(t, "system", output.Data[0].Type)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000015", output.Data[0].Attributes.DisplayName)
 	assert.Equal(t, 3, output.Data[0].Attributes.PackagesInstalled)
@@ -288,7 +289,7 @@ func TestSystemsPostByIDs(t *testing.T) {
 		},
 	}, "", 1)
 	assert.Equal(t, 2, len(out.Data))
-	ids := map[string]struct{}{out.Data[0].ID: {}, out.Data[1].ID: {}}
+	ids := map[string]struct{}{out.Data[0].ID.String(): {}, out.Data[1].ID.String(): {}}
 	_, ok1 := ids["00000000-0000-0000-0000-000000000001"]
 	_, ok2 := ids["00000000-0000-0000-0000-000000000002"]
 	assert.True(t, ok1 && ok2)
@@ -415,13 +416,9 @@ func TestAAPSystemMeta2(t *testing.T) {
 }
 
 func TestAAPSystemMeta3(t *testing.T) {
-	const (
-		ID         = "00000000-0000-0000-0000-000000000007"
-		totalItems = 2
-	)
 	output := testSystems(t, `?filter[system_profile][ansible][controller_version]=1.0`, 1)
-	assert.Equal(t, ID, output.Data[0].ID)
-	assert.Equal(t, totalItems, output.Meta.TotalItems)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000007"), output.Data[0].ID)
+	assert.Equal(t, 2, output.Meta.TotalItems)
 }
 
 func TestMSSQLSystemMeta(t *testing.T) {
@@ -443,11 +440,7 @@ func TestMSSQLSystemMeta2(t *testing.T) {
 }
 
 func TestMSSQLSystemMeta3(t *testing.T) {
-	const (
-		ID         = "00000000-0000-0000-0000-000000000006"
-		totalItems = 2
-	)
 	output := testSystems(t, `?filter[system_profile][mssql][version]=15.3.0`, 1)
-	assert.Equal(t, ID, output.Data[0].ID)
-	assert.Equal(t, totalItems, output.Meta.TotalItems)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000006"), output.Data[0].ID)
+	assert.Equal(t, 2, output.Meta.TotalItems)
 }

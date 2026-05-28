@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,9 +26,9 @@ func TestTemplateSystemsDefault(t *testing.T) {
 
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, "template_system", output.Data[0].Type)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.Data[0].InventoryID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000002"), output.Data[0].InventoryID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000002", output.Data[0].Attributes.DisplayName)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[1].InventoryID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output.Data[1].InventoryID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[1].Attributes.DisplayName)
 
 	// links
@@ -89,7 +90,7 @@ func TestTemplatesFilterDisplayName(t *testing.T) {
 	output := testTemplateSystems(t, "99900000-0000-0000-0000-000000000001",
 		"?filter[display_name]=00000000-0000-0000-0000-000000000001")
 	assert.Equal(t, 1, len(output.Data))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].InventoryID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output.Data[0].InventoryID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].Attributes.DisplayName)
 }
 
@@ -111,7 +112,7 @@ func TestTemplateSystemsSearch(t *testing.T) {
 		"?search=00000000-0000-0000-0000-000000000001")
 	assert.Equal(t, 1, len(output.Data))
 	assert.Equal(t, "template_system", output.Data[0].Type)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].InventoryID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output.Data[0].InventoryID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data[0].Attributes.DisplayName)
 
 	// links

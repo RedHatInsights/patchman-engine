@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -134,7 +135,7 @@ func confugureEvaluator() {
 	enableSatelliteFunctionality = utils.PodConfig.GetBool("satellite_functionality", true)
 }
 
-func Evaluate(ctx context.Context, event *mqueue.PlatformEvent, inventoryID, evaluationType string) error {
+func Evaluate(ctx context.Context, event *mqueue.PlatformEvent, inventoryID uuid.UUID, evaluationType string) error {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationDuration.WithLabelValues(evaluationType))
 
 	utils.LogInfo("inventoryID", inventoryID, "Evaluating system")
@@ -170,7 +171,7 @@ func Evaluate(ctx context.Context, event *mqueue.PlatformEvent, inventoryID, eva
 func runEvaluate(
 	ctx context.Context,
 	event mqueue.PlatformEvent, // makes a copy to avoid races
-	inventoryID string, // coming from loop
+	inventoryID uuid.UUID, // coming from loop
 	evaluationType string,
 	ptEventIn mqueue.PayloadTrackerEvent,
 	wg *sync.WaitGroup,
@@ -202,7 +203,7 @@ func runEvaluate(
 	return ptEventOut, err
 }
 
-func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, inventoryID string) (
+func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, inventoryID uuid.UUID) (
 	*models.SystemPlatformV2, *vmaas.UpdatesV3Response, error) {
 	system, err := tryGetSystem(event.AccountID, inventoryID, event.Timestamp)
 	if err != nil {
@@ -380,7 +381,7 @@ func getVmaasUpdates(ctx context.Context, system *models.SystemPlatformV2) (*vma
 func tryGetVmaasRequest(system *models.SystemPlatformV2) (*vmaas.UpdatesV3Request, error) {
 	if system == nil || system.Inventory.VmaasJSON == nil {
 		evaluationCnt.WithLabelValues("error-parse-vmaas-json").Inc()
-		invID := ""
+		invID := uuid.Nil
 		if system != nil {
 			invID = system.GetInventoryID()
 		}
@@ -415,7 +416,7 @@ func tryGetVmaasRequest(system *models.SystemPlatformV2) (*vmaas.UpdatesV3Reques
 	return &updatesReq, nil
 }
 
-func tryGetSystem(accountID int, inventoryID string,
+func tryGetSystem(accountID int, inventoryID uuid.UUID,
 	requested *types.Rfc3339Timestamp) (*models.SystemPlatformV2, error) {
 	system, err := loadSystemData(accountID, inventoryID)
 	if err != nil {
@@ -668,7 +669,7 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 	return vmaasDataPtr.(*vmaas.UpdatesV3Response), nil
 }
 
-func loadSystemData(accountID int, inventoryID string) (*models.SystemPlatformV2, error) {
+func loadSystemData(accountID int, inventoryID uuid.UUID) (*models.SystemPlatformV2, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("data-loading"))
 
 	var system models.SystemPlatformV2
@@ -676,7 +677,7 @@ func loadSystemData(accountID int, inventoryID string) (*models.SystemPlatformV2
 		Select("si.*, sp.*").
 		Joins("JOIN system_patch sp ON sp.system_id = si.id AND sp.rh_account_id = si.rh_account_id").
 		Where("si.rh_account_id = ?", accountID).
-		Where("si.inventory_id = ?::uuid", inventoryID).
+		Where("si.inventory_id = ?", inventoryID).
 		Find(&system).Error
 	return &system, err
 }

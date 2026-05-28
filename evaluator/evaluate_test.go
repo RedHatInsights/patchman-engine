@@ -13,12 +13,15 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
-var systemID = int64(12)
 var rhAccountID = 3
 var orgID = "org_3"
+var testDBID = int64(12)
+var testInventoryID = uuid.MustParse("00000000-0000-0000-0000-000000000012")
+var testInventoryID2 = uuid.MustParse("00000000-0000-0000-0000-000000000011")
 
 func TestInit(_ *testing.T) {
 	utils.TestLoadEnv("conf/evaluator_common.env", "conf/evaluator_upload.env")
@@ -47,49 +50,49 @@ func TestEvaluate(t *testing.T) {
 	expectedPackageIDs := []int64{1, 2}
 	systemRepoIDs := []int64{1, 2}
 
-	database.DeleteSystemAdvisories(t, systemID, expectedAdvisoryIDs)
-	database.DeleteSystemAdvisories(t, systemID, patchingSystemAdvisoryIDs)
+	database.DeleteSystemAdvisories(t, testDBID, expectedAdvisoryIDs)
+	database.DeleteSystemAdvisories(t, testDBID, patchingSystemAdvisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, patchingSystemAdvisoryIDs)
-	database.DeleteSystemPackages(t, rhAccountID, systemID, expectedPackageIDs...)
-	database.DeleteSystemRepos(t, rhAccountID, systemID, systemRepoIDs)
-	database.CreateSystemAdvisories(t, rhAccountID, systemID, oldSystemAdvisoryIDs)
+	database.DeleteSystemPackages(t, rhAccountID, testDBID, expectedPackageIDs...)
+	database.DeleteSystemRepos(t, rhAccountID, testDBID, systemRepoIDs)
+	database.CreateSystemAdvisories(t, rhAccountID, testDBID, oldSystemAdvisoryIDs)
 	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
-	database.CreateSystemRepos(t, rhAccountID, systemID, systemRepoIDs)
+	database.CreateSystemRepos(t, rhAccountID, testDBID, systemRepoIDs)
 	database.CheckCachesValid(t)
 
 	// do evaluate the system
 	err := evaluateHandler(mqueue.PlatformEvent{
-		SystemIDs:  []string{"00000000-0000-0000-0000-000000000012", "00000000-0000-0000-0000-000000000011"},
+		SystemIDs:  []uuid.UUID{testInventoryID, testInventoryID2},
 		RequestIDs: []string{"request-1", "request-2"},
 		OrgID:      &orgID,
 		AccountID:  rhAccountID})
 	assert.NoError(t, err)
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
-	database.CheckSystemAdvisories(t, systemID, advisoryIDs)
-	database.CheckSystemPackages(t, rhAccountID, systemID, len(expectedPackageIDs), expectedPackageIDs...)
-	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 3, 1, 1, 0,
+	database.CheckSystemAdvisories(t, testDBID, advisoryIDs)
+	database.CheckSystemPackages(t, rhAccountID, testDBID, len(expectedPackageIDs), expectedPackageIDs...)
+	database.CheckSystemJustEvaluated(t, testInventoryID, 3, 1, 1, 0,
 		3, 1, 1, 0, 2, 2, 2, false)
 	database.CheckCachesValid(t)
 
 	// test evaluation with third party repos
 	thirdPartySystemRepoIDs := []int64{1, 2, 4}
-	database.DeleteSystemRepos(t, rhAccountID, systemID, systemRepoIDs)
-	database.CreateSystemRepos(t, rhAccountID, systemID, thirdPartySystemRepoIDs)
+	database.DeleteSystemRepos(t, rhAccountID, testDBID, systemRepoIDs)
+	database.CreateSystemRepos(t, rhAccountID, testDBID, thirdPartySystemRepoIDs)
 	err = evaluateHandler(mqueue.PlatformEvent{
-		SystemIDs:  []string{"00000000-0000-0000-0000-000000000012"},
+		SystemIDs:  []uuid.UUID{testInventoryID},
 		RequestIDs: []string{"request-1"},
 		OrgID:      &orgID,
 		AccountID:  rhAccountID})
 	assert.NoError(t, err)
-	database.CheckSystemJustEvaluated(t, "00000000-0000-0000-0000-000000000012", 3, 1, 1, 0,
+	database.CheckSystemJustEvaluated(t, testInventoryID, 3, 1, 1, 0,
 		3, 1, 1, 0, 2, 2, 2, true)
 
-	database.DeleteSystemAdvisories(t, systemID, advisoryIDs)
+	database.DeleteSystemAdvisories(t, testDBID, advisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs)
-	database.DeleteSystemRepos(t, rhAccountID, systemID, thirdPartySystemRepoIDs)
+	database.DeleteSystemRepos(t, rhAccountID, testDBID, thirdPartySystemRepoIDs)
 
 	assert.Equal(t, 2, len(mockWriter.Messages))
 }
@@ -101,10 +104,8 @@ func TestEvaluateYum(t *testing.T) {
 	configure()
 	loadCache()
 
-	const (
-		ID    = "00000000-0000-0000-0000-000000000015"
-		sysID = 15
-	)
+	testDBID := int64(15)
+	testInventoryID := uuid.MustParse("00000000-0000-0000-0000-000000000015")
 
 	mockWriter := mqueue.MockKafkaWriter{}
 	remediationsPublisher = &mockWriter
@@ -117,25 +118,25 @@ func TestEvaluateYum(t *testing.T) {
 		"kernel-5.6.13-200.fc31.x86_64", "firefox-76.0.1-1.fc31.x86_64", "suricata-6.0.3-2.fc35.i686",
 	}
 
-	database.DeleteSystemAdvisories(t, sysID, expectedAdvisoryIDs)
+	database.DeleteSystemAdvisories(t, testDBID, expectedAdvisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
-	database.CreateSystemAdvisories(t, rhAccountID, sysID, oldSystemAdvisoryIDs)
+	database.CreateSystemAdvisories(t, rhAccountID, testDBID, oldSystemAdvisoryIDs)
 	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
 	database.CheckCachesValid(t)
 
 	err := evaluateHandler(mqueue.PlatformEvent{
-		SystemIDs: []string{ID},
+		SystemIDs: []uuid.UUID{testInventoryID},
 		OrgID:     &orgID,
 		AccountID: rhAccountID})
 	assert.NoError(t, err)
 
 	expectedPackageIDs := database.GetPackageIDs(expectedPackages...)
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
-	database.CheckSystemPackages(t, rhAccountID, sysID, len(expectedPackages), expectedPackageIDs...)
-	database.CheckSystemJustEvaluated(t, ID, 4, 1, 1, 1, 4, 1, 1, 1, 3, 3, 3, false)
+	database.CheckSystemPackages(t, rhAccountID, testDBID, len(expectedPackages), expectedPackageIDs...)
+	database.CheckSystemJustEvaluated(t, testInventoryID, 4, 1, 1, 1, 4, 1, 1, 1, 3, 3, 3, false)
 
-	database.DeleteSystemPackages(t, rhAccountID, sysID, expectedPackageIDs...)
-	database.DeleteSystemAdvisories(t, sysID, advisoryIDs)
+	database.DeleteSystemPackages(t, rhAccountID, testDBID, expectedPackageIDs...)
+	database.DeleteSystemAdvisories(t, testDBID, advisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs)
 
@@ -318,7 +319,7 @@ func TestSatelliteSystemAdvisories(t *testing.T) {
 
 	system := &models.SystemPlatformV2{
 		Inventory: models.SystemInventory{
-			InventoryID:      "99999999-0000-0000-0000-000000000015",
+			InventoryID:      uuid.MustParse("99999999-0000-0000-0000-000000000015"),
 			JSONChecksum:     &vmaasJSONChecksum,
 			VmaasJSON:        &vmaasJSON,
 			YumUpdates:       yumUpdatesRaw,

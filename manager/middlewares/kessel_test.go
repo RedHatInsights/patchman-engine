@@ -67,10 +67,14 @@ func TestSetupClient(t *testing.T) {
 }
 
 func TestProcessWorkspaces(t *testing.T) {
-	expected := fmt.Sprintf("{%s,%s}", strconv.Quote(`[{"id":"test-1"}]`), strconv.Quote(`[{"id":"test-2"}]`))
+	id1 := "aaaaaaaa-0000-0000-0000-000000000001"
+	id2 := "bbbbbbbb-0000-0000-0000-000000000002"
+	expected := fmt.Sprintf("{%s,%s}",
+		strconv.Quote(fmt.Sprintf(`[{"id":"%s"}]`, id1)),
+		strconv.Quote(fmt.Sprintf(`[{"id":"%s"}]`, id2)))
 	workspaces := []*kesselv2.StreamedListObjectsResponse{
-		{Object: &kesselv2.ResourceReference{ResourceId: "test-1"}},
-		{Object: &kesselv2.ResourceReference{ResourceId: "test-2"}},
+		{Object: &kesselv2.ResourceReference{ResourceId: id1}},
+		{Object: &kesselv2.ResourceReference{ResourceId: id2}},
 	}
 	processed, err := processWorkspaces(workspaces)
 	if assert.NoError(t, err) {

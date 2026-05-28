@@ -47,7 +47,7 @@ func createTestInvHost(t *testing.T) *Host {
 
 	now := time.Now()
 	host := Host{
-		ID:             id,
+		ID:             testInventoryID,
 		StaleTimestamp: &correctTime,
 		Reporter:       "puptoo",
 		Groups:         []inventory.Group{{ID: database.TestWorkspace1ID, Name: "group1"}},
@@ -64,7 +64,7 @@ func createTestHostWithEnv(reporter, consumer, baseURL string) *Host {
 		consumerUUID = uuid.Nil
 	}
 	return &Host{
-		ID:       id,
+		ID:       testInventoryID,
 		Reporter: reporter,
 		Groups:   []inventory.Group{{ID: database.TestWorkspace1ID, Name: "group1"}},
 		SystemProfile: inventory.SystemProfile{
@@ -99,7 +99,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	assert.Nil(t, err)
 
 	reporterID1 := 1
-	assertSystemInDB(t, id, &accountID1, &reporterID1)
+	assertSystemInDB(t, testInventoryID, &accountID1, &reporterID1)
 	assertReposInDB(t, req.RepositoryList)
 
 	host2 := createTestInvHost(t)
@@ -109,7 +109,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	assert.Nil(t, err)
 
 	reporterID2 := 3
-	assertSystemInDB(t, id, &accountID2, &reporterID2)
+	assertSystemInDB(t, testInventoryID, &accountID2, &reporterID2)
 
 	assert.Equal(t, sys1.Inventory.ID, sys2.Inventory.ID)
 	assert.Equal(t, sys1.Inventory.InventoryID, sys2.Inventory.InventoryID)
@@ -142,26 +142,26 @@ func TestUpdateSystemPlatformUpdatesSubscriptionManagerIDWhenOwnerIDChanges(t *t
 		Basearch:       utils.PtrString("x86_64"),
 	}
 
-	ev := createTestUploadEvent(id, id, "puptoo", true, false, "created")
+	ev := createTestUploadEvent(testOrgID, testInventoryID, "puptoo", true, false, "created")
 	ev.Host.StaleTimestamp = &correctTime
 	ownerID1 := uuid.MustParse("11111111-1111-1111-1111-111111111111")
 	ev.Host.SystemProfile.OwnerID = &ownerID1
 
 	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile)
 	require.NoError(t, err)
-	assertSystemInventoryProfileMatchesHost(t, id, &ev.Host)
+	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
 	ownerID2 := uuid.MustParse("22222222-2222-2222-2222-222222222222")
 	ev.Host.SystemProfile.OwnerID = &ownerID2
 
 	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile)
 	require.NoError(t, err)
-	assertSystemInventoryProfileMatchesHost(t, id, &ev.Host)
+	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
 	ev.Host.SystemProfile.OwnerID = nil
 	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile)
 	require.NoError(t, err)
-	assertSystemInventoryProfileMatchesHost(t, id, &ev.Host)
+	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
 	deleteData(t)
 }
@@ -184,11 +184,11 @@ func TestUpdateSystemPlatformRefreshesInventoryProfileOnConflict(t *testing.T) {
 		Releasever:     utils.PtrString("7Server"),
 		Basearch:       utils.PtrString("x86_64"),
 	}
-	ev := createTestUploadEvent(id, id, "puptoo", true, false, "created")
+	ev := createTestUploadEvent(testOrgID, testInventoryID, "puptoo", true, false, "created")
 	ev.Host.StaleTimestamp = &correctTime
 	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile)
 	require.NoError(t, err)
-	assertSystemInventoryProfileMatchesHost(t, id, &ev.Host)
+	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
 	ev.Host.Tags = []byte(`{"namespace": "insights-client","key": "env","value": "staging"}`)
 	ev.Host.SystemProfile.OperatingSystem.Minor = 5
@@ -199,7 +199,7 @@ func TestUpdateSystemPlatformRefreshesInventoryProfileOnConflict(t *testing.T) {
 
 	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile)
 	require.NoError(t, err)
-	assertSystemInventoryProfileMatchesHost(t, id, &ev.Host)
+	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
 	deleteData(t)
 }
@@ -215,7 +215,7 @@ func TestUploadHandlerCreatedSystem(t *testing.T) {
 			deleteData(t)
 
 			_ = getOrCreateTestAccount(t)
-			event := createTestUploadEvent(id, id, "puptoo", true, false, eventType)
+			event := createTestUploadEvent(testOrgID, testInventoryID, "puptoo", true, false, eventType)
 
 			event.Host.SystemProfile.OperatingSystem = inventory.OperatingSystem{Major: 8}
 			repos := append(event.Host.SystemProfile.GetYumRepos(), inventory.YumRepo{ID: "epel", Enabled: true})
@@ -225,10 +225,10 @@ func TestUploadHandlerCreatedSystem(t *testing.T) {
 			assert.NoError(t, err)
 
 			reporterID := 1
-			assertSystemInDB(t, id, nil, &reporterID)
+			assertSystemInDB(t, testInventoryID, nil, &reporterID)
 
 			var inv models.SystemInventory
-			assert.NoError(t, database.DB.Where("inventory_id = ?::uuid", id).First(&inv).Error)
+			assert.NoError(t, database.DB.Where("inventory_id = ?", testInventoryID).First(&inv).Error)
 			var patch models.SystemPatch
 			assert.NoError(t, database.DB.Where("rh_account_id = ? AND system_id = ?", inv.RhAccountID, inv.ID).
 				First(&patch).Error)
@@ -252,7 +252,7 @@ func TestUploadHandlerWarn(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	noPkgsEvent := createTestUploadEvent("1", id, "puptoo", false, false, "created")
+	noPkgsEvent := createTestUploadEvent("1", testInventoryID, "puptoo", false, false, "created")
 	err := HandleUpload(noPkgsEvent)
 	if assert.Error(t, err) {
 		assert.ErrorIs(t, err, ErrNoPackages)
@@ -265,7 +265,7 @@ func TestUploadHandlerWarnSkipReporter(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	noPkgsEvent := createTestUploadEvent("1", id, "yupana", false, false, "created")
+	noPkgsEvent := createTestUploadEvent("1", testInventoryID, "yupana", false, false, "created")
 	err := HandleUpload(noPkgsEvent)
 	if assert.Error(t, err) {
 		assert.ErrorIs(t, err, ErrReporter)
@@ -278,7 +278,7 @@ func TestUploadHandlerWarnSkipHostType(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	event := createTestUploadEvent("1", id, "puptoo", true, false, "created")
+	event := createTestUploadEvent("1", testInventoryID, "puptoo", true, false, "created")
 	event.Host.SystemProfile.HostType = "edge"
 	err := HandleUpload(event)
 	if assert.Error(t, err) {
@@ -293,7 +293,7 @@ func TestUploadHandlerError1(t *testing.T) {
 	configure()
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	event := createTestUploadEvent("1", id, "puptoo", true, false, "created")
+	event := createTestUploadEvent("1", testInventoryID, "puptoo", true, false, "created")
 	*event.Host.OrgID = ""
 	err := HandleUpload(event)
 	if assert.Error(t, err) {
@@ -319,7 +319,7 @@ func TestUploadHandlerError2(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
 	_ = getOrCreateTestAccount(t)
-	event := createTestUploadEvent("1", id, "puptoo", true, false, "created")
+	event := createTestUploadEvent("1", testInventoryID, "puptoo", true, false, "created")
 	err := HandleUpload(event)
 	assert.Nil(t, err)
 	time.Sleep(2 * uploadEvalTimeout)
@@ -417,7 +417,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 		HTTPClient: &http.Client{},
 		Debug:      true,
 	}
-	hostEvent := createTestUploadEvent("1", id, "puptoo", false, true, "created")
+	hostEvent := createTestUploadEvent("1", testInventoryID, "puptoo", false, true, "created")
 	yumUpdates, err := getYumUpdates(hostEvent, httpClient)
 	assert.Nil(t, err)
 
@@ -427,17 +427,17 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 	assert.Nil(t, err)
 
 	reporterID1 := 1
-	assertSystemInDB(t, id, &accountID1, &reporterID1)
+	assertSystemInDB(t, testInventoryID, &accountID1, &reporterID1)
 	assertReposInDB(t, req.RepositoryList)
-	assertYumUpdatesInDB(t, id, yumUpdates)
-	assertSystemInventoryProfileMatchesHost(t, id, &hostEvent.Host)
+	assertYumUpdatesInDB(t, testInventoryID, yumUpdates)
+	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &hostEvent.Host)
 
 	// check that yumUpdates has been updated (keep the same Host so profile columns are not wiped)
 	yumUpdates.RawParsed = []byte("{}")
 	_, err = updateSystemPlatform(database.DB, accountID1, &hostEvent.Host, yumUpdates, &req)
 	assert.Nil(t, err)
-	assertYumUpdatesInDB(t, id, yumUpdates)
-	assertSystemInventoryProfileMatchesHost(t, id, &hostEvent.Host)
+	assertYumUpdatesInDB(t, testInventoryID, yumUpdates)
+	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &hostEvent.Host)
 
 	hostEvent.Host.Tags = []byte(`{"namespace": "insights-client","key": "env","value": "staging"}`)
 	hostEvent.Host.SystemProfile.OperatingSystem.Minor = 6
@@ -447,8 +447,8 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 	hostEvent.Host.SystemProfile.Workloads.Mssql.Version = "17.0"
 	_, err = updateSystemPlatform(database.DB, accountID1, &hostEvent.Host, yumUpdates, &req)
 	assert.Nil(t, err)
-	assertYumUpdatesInDB(t, id, yumUpdates)
-	assertSystemInventoryProfileMatchesHost(t, id, &hostEvent.Host)
+	assertYumUpdatesInDB(t, testInventoryID, yumUpdates)
+	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &hostEvent.Host)
 
 	// Clear workload-related profile fields and verify ON CONFLICT updates clear them in DB.
 	hostEvent.Host.SystemProfile.Rhsm.Version = ""
@@ -458,8 +458,8 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 	hostEvent.Host.SystemProfile.Workloads.Mssql.Version = ""
 	_, err = updateSystemPlatform(database.DB, accountID1, &hostEvent.Host, yumUpdates, &req)
 	assert.Nil(t, err)
-	assertYumUpdatesInDB(t, id, yumUpdates)
-	assertSystemInventoryProfileMatchesHost(t, id, &hostEvent.Host)
+	assertYumUpdatesInDB(t, testInventoryID, yumUpdates)
+	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &hostEvent.Host)
 
 	deleteData(t)
 }
@@ -478,11 +478,11 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	colsToUpdate := []string{"vmaas_json", "json_checksum", "reporter_id", "satellite_managed"}
 	vmaasJSON := "this_is_json"
 	// insert new row
-	hostEvent := createTestUploadEvent("1", id, "puptoo", false, true, "created")
+	hostEvent := createTestUploadEvent("1", testInventoryID, "puptoo", false, true, "created")
 	hostWorkspaces := inventory.Groups(hostEvent.Host.Groups)
 	inStore := &models.SystemPlatformV2{
 		Inventory: models.SystemInventory{
-			InventoryID:                      "99990000-0000-0000-0000-000000000001",
+			InventoryID:                      uuid.MustParse("99990000-0000-0000-0000-000000000001"),
 			RhAccountID:                      1,
 			VmaasJSON:                        &vmaasJSON,
 			DisplayName:                      "display_name",

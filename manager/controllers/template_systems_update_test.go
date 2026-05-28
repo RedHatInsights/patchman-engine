@@ -18,10 +18,10 @@ import (
 var templateUUID = "11111111-2222-3333-4444-555555555555"
 var templatePath = "/:template_id/systems"
 var templateAccount = 1
-var templateSystems = []string{
-	"00000000-0000-0000-0000-000000000004",
-	"00000000-0000-0000-0000-000000000007",
-	"00000000-0000-0000-0000-000000000008",
+var templateSystems = []uuid.UUID{
+	uuid.MustParse("00000000-0000-0000-0000-000000000004"),
+	uuid.MustParse("00000000-0000-0000-0000-000000000007"),
+	uuid.MustParse("00000000-0000-0000-0000-000000000008"),
 }
 
 func TestUpdateTemplateSystems(t *testing.T) {
@@ -33,8 +33,8 @@ func TestUpdateTemplateSystems(t *testing.T) {
 		]
 	}`
 
-	database.CreateTemplate(t, templateAccount, templateUUID, []string{
-		"00000000-0000-0000-0000-000000000007",
+	database.CreateTemplate(t, templateAccount, templateUUID, []uuid.UUID{
+		uuid.MustParse("00000000-0000-0000-0000-000000000007"),
 	})
 	w := CreateRequestRouterWithParams("PUT", templatePath, templateUUID, "", bytes.NewBufferString(data), "",
 		TemplateSystemsUpdateHandler, templateAccount)
@@ -52,8 +52,8 @@ func TestUpdateTemplateInvalidVersion(t *testing.T) {
 		]
 	}`
 
-	database.CreateTemplate(t, templateAccount, templateUUID, []string{
-		"00000000-0000-0000-0000-000000000007",
+	database.CreateTemplate(t, templateAccount, templateUUID, []uuid.UUID{
+		uuid.MustParse("00000000-0000-0000-0000-000000000007"),
 	})
 	w := CreateRequestRouterWithParams("PUT", templatePath, templateUUID, "", bytes.NewBufferString(data), "",
 		TemplateSystemsUpdateHandler, templateAccount)
@@ -77,7 +77,7 @@ func TestUpdateTemplateInvalidSystem(t *testing.T) {
 			"00000000-0000-0000-0000-000000000009"
 		]
 	}`
-	database.CreateTemplate(t, templateAccount, templateUUID, []string{})
+	database.CreateTemplate(t, templateAccount, templateUUID, []uuid.UUID{})
 	w := CreateRequestRouterWithParams("PUT", templatePath, templateUUID, "", bytes.NewBufferString(data), "",
 		TemplateSystemsUpdateHandler, templateAccount)
 
@@ -100,7 +100,7 @@ func TestUpdateTemplateSystemNotInCandlepin(t *testing.T) {
 			"00000000-0000-0000-0000-000000000003"
 		]
 	}`
-	database.CreateTemplate(t, templateAccount, templateUUID, []string{})
+	database.CreateTemplate(t, templateAccount, templateUUID, []uuid.UUID{})
 	w := CreateRequestRouterWithParams("PUT", templatePath, templateUUID, "", bytes.NewBufferString(data), "",
 		TemplateSystemsUpdateHandler, templateAccount)
 
@@ -142,7 +142,7 @@ func TestReassignTemplateSystems2(t *testing.T) {
 
 	template2 := "99999999-9999-8888-8888-888888888888"
 	database.CreateTemplate(t, templateAccount, templateUUID, templateSystems)
-	database.CreateTemplate(t, templateAccount, template2, []string{})
+	database.CreateTemplate(t, templateAccount, template2, []uuid.UUID{})
 
 	// Reassigning inventory IDs of another templates is allowed
 	data := `{
@@ -156,13 +156,13 @@ func TestReassignTemplateSystems2(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	database.CheckTemplateSystems(t, templateAccount, template2, []string{
-		"00000000-0000-0000-0000-000000000004",
-		"00000000-0000-0000-0000-000000000005",
+	database.CheckTemplateSystems(t, templateAccount, template2, []uuid.UUID{
+		uuid.MustParse("00000000-0000-0000-0000-000000000004"),
+		uuid.MustParse("00000000-0000-0000-0000-000000000005"),
 	})
-	database.CheckTemplateSystems(t, templateAccount, templateUUID, []string{
-		"00000000-0000-0000-0000-000000000007",
-		"00000000-0000-0000-0000-000000000008",
+	database.CheckTemplateSystems(t, templateAccount, templateUUID, []uuid.UUID{
+		uuid.MustParse("00000000-0000-0000-0000-000000000007"),
+		uuid.MustParse("00000000-0000-0000-0000-000000000008"),
 	})
 	database.DeleteTemplate(t, templateAccount, templateUUID)
 	database.DeleteTemplate(t, templateAccount, template2)
@@ -175,7 +175,7 @@ func testUpdateTemplateBadRequest(t *testing.T, satelliteManaged, bootc bool) {
 	defer database.DeleteTemplate(t, templateAccount, templateUUID)
 
 	inv := models.SystemInventory{
-		InventoryID:      "99999999-0000-0000-0000-000000000015",
+		InventoryID:      uuid.MustParse("99999999-0000-0000-0000-000000000015"),
 		RhAccountID:      templateAccount,
 		DisplayName:      "template_bad_request_test",
 		Tags:             []byte("[]"),
@@ -234,15 +234,16 @@ func TestUpdateTemplateSystemsCandlepin404(t *testing.T) {
 		]
 	}`
 
-	database.CreateTemplate(t, templateAccount, templateUUID, []string{
-		"00000000-0000-0000-0000-000000000007",
+	database.CreateTemplate(t, templateAccount, templateUUID, []uuid.UUID{
+		uuid.MustParse("00000000-0000-0000-0000-000000000007"),
 	})
 	defer database.DeleteTemplate(t, templateAccount, templateUUID)
 	w := CreateRequestRouterWithParams("PUT", templatePath, templateUUID, "", bytes.NewBufferString(data), "",
 		TemplateSystemsUpdateHandler, templateAccount, core.ContextKV{Key: utils.KeyOrgID, Value: orgID})
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	database.CheckTemplateSystems(t, templateAccount, templateUUID, []string{"00000000-0000-0000-0000-000000000007"})
+	database.CheckTemplateSystems(t, templateAccount, templateUUID,
+		[]uuid.UUID{uuid.MustParse("00000000-0000-0000-0000-000000000007")})
 
 	// Expect HTTP 400 status code even when only 1 system causes candlepin call error
 	data = `{
@@ -256,7 +257,7 @@ func TestUpdateTemplateSystemsCandlepin404(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	database.CheckTemplateSystems(t, templateAccount, templateUUID,
-		[]string{"00000000-0000-0000-0000-000000000007"})
+		[]uuid.UUID{uuid.MustParse("00000000-0000-0000-0000-000000000007")})
 }
 
 func TestUpdateTemplateTooManySystems(t *testing.T) {

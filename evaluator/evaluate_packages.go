@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -139,7 +140,7 @@ func loadPackages(system *models.SystemPlatformV2, vmaasData *vmaas.UpdatesV3Res
 	return packages, installed, installable, applicable, nil
 }
 
-func packagesFromUpdateList(inventoryID string, vmaasData *vmaas.UpdatesV3Response) (
+func packagesFromUpdateList(inventoryID uuid.UUID, vmaasData *vmaas.UpdatesV3Response) (
 	map[string]namedPackage, int, int, int) {
 	installed := 0
 	installable := 0

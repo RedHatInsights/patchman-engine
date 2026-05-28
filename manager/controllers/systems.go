@@ -12,6 +12,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -33,12 +34,12 @@ var SystemOpts = ListOpts{
 }
 
 type SystemsID struct {
-	ID string `query:"si.inventory_id" gorm:"column:inventory_id"`
+	ID uuid.UUID `query:"si.inventory_id" gorm:"column:inventory_id"`
 	MetaTotalHelper
 }
 
 type SystemsSatelliteManagedID struct {
-	ID string `query:"si.inventory_id" gorm:"column:inventory_id"`
+	ID uuid.UUID `query:"si.inventory_id" gorm:"column:inventory_id"`
 	SystemSatelliteManaged
 	MetaTotalHelper
 }
@@ -166,13 +167,13 @@ func SystemJSONBItemScan[T SystemJSONBItemType](v *T, value interface{}) error {
 
 type SystemItemExtended struct {
 	Attributes SystemItemAttributesExtended `json:"attributes"`
-	ID         string                       `json:"id"`
+	ID         uuid.UUID                    `json:"id"`
 	Type       string                       `json:"type"`
 }
 
 type SystemItem struct {
 	Attributes SystemItemAttributes `json:"attributes"`
-	ID         string               `json:"id"`
+	ID         uuid.UUID            `json:"id"`
 	Type       string               `json:"type"`
 }
 
@@ -189,7 +190,7 @@ type SystemsListPostRequest struct {
 
 func validateSystemsListIDs(ids []string) error {
 	for _, id := range ids {
-		if !utils.IsValidUUID(id) {
+		if _, err := uuid.Parse(id); err != nil {
 			return fmt.Errorf("'%s' is not a valid UUID", id)
 		}
 	}

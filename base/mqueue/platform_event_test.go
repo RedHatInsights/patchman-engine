@@ -5,14 +5,15 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWriteEventsOfInventoryAccounts(t *testing.T) {
-	const (
+	var (
 		acc  = 1
-		inv2 = "00000000-0000-0000-0000-000000000002"
-		inv3 = "00000000-0000-0000-0000-000000000003"
+		inv2 = uuid.MustParse("00000000-0000-0000-0000-000000000002")
+		inv3 = uuid.MustParse("00000000-0000-0000-0000-000000000003")
 	)
 
 	var writer Writer = &MockKafkaWriter{}

@@ -33,22 +33,25 @@ func TestTemplateSystemsDeleteDefault(t *testing.T) {
 
 	database.CreateTemplate(t, templateAccount, templateUUID, templateSystems)
 	template2 := "99999999-9999-8888-8888-888888888888"
-	templateSystems2 := []string{
-		"00000000-0000-0000-0000-000000000005",
+	templateSystems2 := []uuid.UUID{
+		uuid.MustParse("00000000-0000-0000-0000-000000000005"),
 	}
 	database.CreateTemplate(t, templateAccount, template2, templateSystems2)
 
 	database.CheckTemplateSystems(t, templateAccount, templateUUID, templateSystems)
 	database.CheckTemplateSystems(t, templateAccount, template2, templateSystems2)
 
+	allSystems := make([]uuid.UUID, 0, len(templateSystems)+len(templateSystems2))
+	allSystems = append(allSystems, templateSystems...)
+	allSystems = append(allSystems, templateSystems2...)
 	req := TemplateSystemsUpdateRequest{
-		Systems: append(templateSystems, templateSystems2...),
+		Systems: allSystems,
 	}
 
 	testTemplateSystemsDelete(t, req, http.StatusOK)
 
-	database.CheckTemplateSystems(t, templateAccount, templateUUID, []string{})
-	database.CheckTemplateSystems(t, templateAccount, template2, []string{})
+	database.CheckTemplateSystems(t, templateAccount, templateUUID, []uuid.UUID{})
+	database.CheckTemplateSystems(t, templateAccount, template2, []uuid.UUID{})
 	database.DeleteTemplate(t, templateAccount, templateUUID)
 	database.DeleteTemplate(t, templateAccount, template2)
 }
@@ -58,29 +61,29 @@ func TestTemplateSystemsDeleteInvalid(t *testing.T) {
 
 	for _, req := range []TemplateSystemsUpdateRequest{
 		{},
-		{Systems: []string{}}} {
+		{Systems: []uuid.UUID{}}} {
 		testTemplateSystemsDelete(t, req, http.StatusBadRequest)
 	}
 
 	testTemplateSystemsDelete(t, TemplateSystemsUpdateRequest{
-		Systems: []string{"c0ffeec0-ffee-c0ff-eec0-ffeec0ffee00"}}, http.StatusNotFound)
+		Systems: []uuid.UUID{uuid.MustParse("c0ffeec0-ffee-c0ff-eec0-ffeec0ffee00")}}, http.StatusNotFound)
 }
 
 func TestTemplateSystemsDeleteTooManySystems(t *testing.T) {
 	core.SetupTest(t)
 
-	systems := make([]string, 0, TemplateSystemsUpdateLimit+1)
+	systems := make([]uuid.UUID, 0, TemplateSystemsUpdateLimit+1)
 	for i := 0; i < TemplateSystemsUpdateLimit; i++ {
-		systems = append(systems, uuid.NewString())
+		systems = append(systems, uuid.New())
 	}
 
 	database.CreateTemplate(t, templateAccount, templateUUID, systems)
 	defer database.DeleteTemplate(t, templateAccount, templateUUID)
 
 	// Add one more system to the template so we can try to delete more than the limit
-	additionalSystem := "00000000-0000-0000-0000-000000000004"
+	additionalSystem := uuid.MustParse("00000000-0000-0000-0000-000000000004")
 	putBody := TemplateSystemsUpdateRequest{
-		Systems: []string{additionalSystem},
+		Systems: []uuid.UUID{additionalSystem},
 	}
 
 	putBodyJSON, err := sonic.Marshal(&putBody)

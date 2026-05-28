@@ -159,11 +159,11 @@ func CheckPackagesNamesInDB(t *testing.T, filter string, packageNames ...string)
 	assert.Equal(t, int64(len(packageNames)), count)
 }
 
-func CheckSystemJustEvaluated(t *testing.T, inventoryID string, nIAll, nIEnh, nIBug, nISec,
+func CheckSystemJustEvaluated(t *testing.T, inventoryID uuid.UUID, nIAll, nIEnh, nIBug, nISec,
 	nAAll, nAEnh, nABug, nASec, nInstall, nInstallable, nApplicable int,
 	thirdParty bool) {
 	var inv models.SystemInventory
-	assert.Nil(t, DB.Where("inventory_id = ?::uuid", inventoryID).First(&inv).Error)
+	assert.Nil(t, DB.Where("inventory_id = ?", inventoryID).First(&inv).Error)
 	var patch models.SystemPatch
 	assert.Nil(t, DB.Where("rh_account_id = ? AND system_id = ?", inv.RhAccountID, inv.ID).First(&patch).Error)
 	assert.NotNil(t, patch.LastEvaluation)
@@ -427,7 +427,7 @@ func GetPackageIDs(nevras ...string) []int64 {
 	return ids
 }
 
-func CreateTemplate(t *testing.T, account int, uuid string, inventoryIDs []string) {
+func CreateTemplate(t *testing.T, account int, uuid string, inventoryIDs []uuid.UUID) {
 	template := &models.Template{
 		TemplateBase: models.TemplateBase{
 			RhAccountID: account, UUID: uuid, Name: uuid,
@@ -451,7 +451,7 @@ func CreateTemplate(t *testing.T, account int, uuid string, inventoryIDs []strin
 			SELECT id 
 			FROM system_inventory 
 			WHERE rh_account_id = ? 
-			AND inventory_id = ?::uuid
+			AND inventory_id = ?
 		)`,
 			template.ID, account, account, invID).Error
 		assert.Nil(t, err)
@@ -477,21 +477,21 @@ func DeleteTemplate(t *testing.T, account int, templateUUID string) {
 	assert.Nil(t, err)
 }
 
-func CheckTemplateSystems(t *testing.T, account int, templateUUID string, inventoryIDs []string) {
-	var dbInventoryIDs []string
+func CheckTemplateSystems(t *testing.T, account int, templateUUID string, inventoryIDs []uuid.UUID) {
+	var foundInventoryIDs []uuid.UUID
 	err := DB.Table("system_inventory si").Select("si.inventory_id as id").
 		Joins("JOIN system_patch spatch ON si.id = spatch.system_id AND si.rh_account_id = spatch.rh_account_id").
 		Joins("JOIN template tp ON tp.id = spatch.template_id AND tp.rh_account_id = spatch.rh_account_id").
 		Where("si.rh_account_id = ? AND tp.uuid = ?::uuid", account, templateUUID).
 		Order("id").
-		Find(&dbInventoryIDs).Error
+		Find(&foundInventoryIDs).Error
 
 	assert.Nil(t, err)
 
-	assert.Equal(t, len(inventoryIDs), len(dbInventoryIDs))
-	if len(inventoryIDs) == len(dbInventoryIDs) {
+	assert.Equal(t, len(inventoryIDs), len(foundInventoryIDs))
+	if len(inventoryIDs) == len(foundInventoryIDs) {
 		for index, inventoryID := range inventoryIDs {
-			assert.Equal(t, inventoryID, dbInventoryIDs[index])
+			assert.Equal(t, inventoryID, foundInventoryIDs[index])
 		}
 	}
 }

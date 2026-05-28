@@ -11,6 +11,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -46,14 +47,9 @@ func SystemDetailHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
-	inventoryID := c.Param("inventory_id")
-	if inventoryID == "" {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
-		return
-	}
-
-	if !utils.IsValidUUID(inventoryID) {
-		utils.LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+	inventoryID, err := uuid.Parse(c.Param("inventory_id"))
+	if err != nil {
+		utils.LogAndRespBadRequest(c, err, "incorrect inventory_id format")
 		return
 	}
 
@@ -65,9 +61,9 @@ func SystemDetailHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
 	query := database.Systems(db, account, groups, database.JoinTemplates).
 		Select(database.MustGetSelect(&systemDetail)).
-		Where("si.inventory_id = ?::uuid", inventoryID)
+		Where("si.inventory_id = ?", inventoryID)
 
-	err := query.Take(&systemDetail).Error
+	err = query.Take(&systemDetail).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		utils.LogAndRespNotFound(c, err, "inventory not found")
 		return
@@ -156,14 +152,9 @@ func systemJSONsCommon(c *gin.Context, column string) *models.SystemInventory {
 	account := c.GetInt(utils.KeyAccount)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
-	inventoryID := c.Param("inventory_id")
-	if inventoryID == "" {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
-		return nil
-	}
-
-	if !utils.IsValidUUID(inventoryID) {
-		utils.LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+	inventoryID, err := uuid.Parse(c.Param("inventory_id"))
+	if err != nil {
+		utils.LogAndRespBadRequest(c, err, "incorrect inventory_id format")
 		return nil
 	}
 
@@ -175,9 +166,9 @@ func systemJSONsCommon(c *gin.Context, column string) *models.SystemInventory {
 	db := middlewares.DBFromContext(c)
 	query := database.Systems(db, account, groups).
 		Select(column).
-		Where("si.inventory_id = ?::uuid", inventoryID)
+		Where("si.inventory_id = ?", inventoryID)
 
-	err := query.Take(&system).Error
+	err = query.Take(&system).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		utils.LogAndRespNotFound(c, err, "inventory not found")
 		return nil

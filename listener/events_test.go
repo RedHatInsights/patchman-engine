@@ -9,11 +9,12 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
-const notexistid = "99c0ffee-0000-0000-0000-999999999999"
+var notexistid = uuid.MustParse("99c0ffee-0000-0000-0000-999999999999")
 
 func TestUpdateSystem(t *testing.T) {
 	utils.SkipWithoutDB(t)
@@ -21,25 +22,25 @@ func TestUpdateSystem(t *testing.T) {
 	configure()
 
 	deleteData(t)
-	createTestSystemInDB(t, id, 1, id)
+	createTestSystemInDB(t, testInventoryID, 1, testInventoryID.String())
 
-	ev := createTestUploadEvent("1", id, "puptoo", false, false, "created")
+	ev := createTestUploadEvent("1", testInventoryID, "puptoo", false, false, "created")
 	name := "TEST_NAME"
 	ev.Host.DisplayName = &name
 	ev.Host.SystemProfile.InstalledPackages = &[]string{"kernel-0:4.18.0-193.1.2.el8_2.x86_64"}
 	assert.NoError(t, HandleUpload(ev))
 
 	var system models.SystemInventory
-	assert.NoError(t, database.DB.Order("ID DESC").Find(&system, "inventory_id = ?::uuid", id).Error)
+	assert.NoError(t, database.DB.Order("ID DESC").Find(&system, "inventory_id = ?", testInventoryID).Error)
 
 	assert.Equal(t, name, system.DisplayName)
 }
 
 func TestDeleteSystem(t *testing.T) {
 	deleteData(t)
-	createTestSystemInDB(t, id, 1, id)
+	createTestSystemInDB(t, testInventoryID, 1, testInventoryID.String())
 
-	deleteEvent := createTestDeleteEvent(id)
+	deleteEvent := createTestDeleteEvent(testInventoryID)
 	err := HandleDelete(deleteEvent)
 	assert.NoError(t, err)
 	assertSystemCulled(t)
@@ -49,7 +50,7 @@ func TestDeleteSystem(t *testing.T) {
 func TestDeleteSystemWarn1(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	deleteEvent := createTestDeleteEvent(id)
+	deleteEvent := createTestDeleteEvent(testInventoryID)
 	deleteEvent.Type = nil
 
 	data, err := sonic.Marshal(deleteEvent)
@@ -64,7 +65,7 @@ func TestDeleteSystemWarn1(t *testing.T) {
 func TestDeleteSystemWarn2(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
-	deleteEvent := createTestDeleteEvent(id)
+	deleteEvent := createTestDeleteEvent(testInventoryID)
 	nonDeleteType := "no-delete"
 	deleteEvent.Type = &nonDeleteType
 
@@ -99,12 +100,12 @@ func TestUploadAfterDelete(t *testing.T) {
 	deleteData(t)
 
 	// system is not in database and the first event is delete
-	deleteEvent := createTestDeleteEvent(id)
+	deleteEvent := createTestDeleteEvent(testInventoryID)
 	err := HandleDelete(deleteEvent)
 	assert.NoError(t, err)
 
 	// upload will be skipped and system won't be created
-	uploadEvent := createTestUploadEvent("1", id, "puptoo", true, false, "created")
+	uploadEvent := createTestUploadEvent("1", testInventoryID, "puptoo", true, false, "created")
 	err = HandleUpload(uploadEvent)
 	assert.NoError(t, err)
 	assertSystemNotInDB(t)
@@ -118,14 +119,14 @@ func TestCreateDeleteUpload(t *testing.T) {
 	configure()
 	deleteData(t)
 
-	uploadEvent := createTestUploadEvent("1", id, "puptoo", true, false, "created")
+	uploadEvent := createTestUploadEvent("1", testInventoryID, "puptoo", true, false, "created")
 	originalName := "UPLOADED"
 	uploadEvent.Host.DisplayName = &originalName
 	err := HandleUpload(uploadEvent)
 	assert.NoError(t, err)
 
 	// delete marks the system but not physically delete it
-	deleteEvent := createTestDeleteEvent(id)
+	deleteEvent := createTestDeleteEvent(testInventoryID)
 	err = HandleDelete(deleteEvent)
 	assert.NoError(t, err)
 	assertSystemCulled(t)
@@ -137,7 +138,7 @@ func TestCreateDeleteUpload(t *testing.T) {
 	assert.NoError(t, err)
 
 	var system models.SystemInventory
-	assert.NoError(t, database.DB.Order("ID DESC").Find(&system, "inventory_id = ?::uuid", id).Error)
+	assert.NoError(t, database.DB.Order("ID DESC").Find(&system, "inventory_id = ?", testInventoryID).Error)
 	assert.Equal(t, originalName, system.DisplayName)
 
 	deleteData(t)

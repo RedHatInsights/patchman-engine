@@ -6,6 +6,7 @@ import (
 	"app/tasks"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -48,7 +49,7 @@ func runSystemCulling() {
 
 // systems are deleted in independent transactions to avoid locking multiple rows for long time
 func deleteCulledSystems(tx *gorm.DB, limitDeleted int) (nDeleted int64, err error) {
-	var inventoryIDs []string
+	var inventoryIDs []uuid.UUID
 	err = tx.Model(&models.SystemInventory{}).
 		Where("culled_timestamp < ?", time.Now()).
 		Order("id").
@@ -61,7 +62,7 @@ func deleteCulledSystems(tx *gorm.DB, limitDeleted int) (nDeleted int64, err err
 	for _, id := range inventoryIDs {
 		var rowsAffected int64
 		delErr := tasks.CancelableDB().Transaction(func(tx2 *gorm.DB) error {
-			res := tx2.Exec("select delete_system(?::uuid)", id)
+			res := tx2.Exec("select delete_system(?)", id)
 			if res.Error != nil {
 				return res.Error
 			}

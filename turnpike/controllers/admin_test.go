@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +20,7 @@ func TestInitDelete(t *testing.T) {
 	core.SetupTest(t)
 
 	inv := models.SystemInventory{
-		InventoryID: del,
+		InventoryID: uuid.MustParse(del),
 		RhAccountID: 1,
 		DisplayName: del,
 		Tags:        []byte("[]"),

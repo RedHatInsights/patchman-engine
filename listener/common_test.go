@@ -14,12 +14,15 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-const id = "99c0ffee-0000-0000-0000-0000c0ffee99"
+var testInventoryID = uuid.MustParse("99c0ffee-0000-0000-0000-0000c0ffee99")
+var testOrgID = "12345678"
+var testWorkspaceID = "00000000-0000-0000-0000-000000000003"
 
 var s3URL = "http://platform:9001/yum_updates"
 
@@ -30,7 +33,7 @@ func TestInit(_ *testing.T) {
 func deleteData(t *testing.T) {
 	// Delete test data from previous run
 	assert.Nil(t, database.DB.Unscoped().Exec("DELETE FROM advisory_account_data aad "+
-		"USING rh_account ra WHERE ra.id = aad.rh_account_id AND ra.name = ?", id).Error)
+		"USING rh_account ra WHERE ra.id = aad.rh_account_id AND ra.name = ?", testOrgID).Error)
 	assert.Nil(t, database.DB.Unscoped().Where("first_reported > timestamp '2020-01-01'").
 		Delete(&models.SystemAdvisories{}).Error)
 	assert.Nil(t, database.DB.Unscoped().Where("repo_id NOT IN (1, 2) OR system_id NOT IN (2, 3, 17)").
@@ -39,13 +42,14 @@ func deleteData(t *testing.T) {
 		Delete(&models.Repo{}).Error)
 	assert.Nil(t, database.DB.Unscoped().Exec(
 		"DELETE FROM system_patch WHERE (rh_account_id, system_id) IN "+
-			"(SELECT rh_account_id, id FROM system_inventory WHERE inventory_id = ?::uuid)", id).Error)
-	assert.Nil(t, database.DB.Unscoped().Where("inventory_id = ?::uuid", id).Delete(&models.SystemInventory{}).Error)
-	assert.Nil(t, database.DB.Unscoped().Where("name = ?", id).Delete(&models.RhAccount{}).Error)
-	assert.Nil(t, database.DB.Unscoped().Where("inventory_id = ?", id).Delete(&models.DeletedSystem{}).Error)
+			"(SELECT rh_account_id, id FROM system_inventory WHERE inventory_id = ?)", testInventoryID).Error)
+	assert.Nil(t, database.DB.Unscoped().
+		Where("inventory_id = ?", testInventoryID).Delete(&models.SystemInventory{}).Error)
+	assert.Nil(t, database.DB.Unscoped().Where("name = ?", testOrgID).Delete(&models.RhAccount{}).Error)
+	assert.Nil(t, database.DB.Unscoped().Where("inventory_id = ?", testInventoryID).Delete(&models.DeletedSystem{}).Error)
 }
 
-func createTestSystemInDB(t *testing.T, inventoryID string, rhAccountID int, displayName string) {
+func createTestSystemInDB(t *testing.T, inventoryID uuid.UUID, rhAccountID int, displayName string) {
 	t.Helper()
 	inv := models.SystemInventory{
 		InventoryID: inventoryID,
@@ -62,17 +66,17 @@ func createTestSystemInDB(t *testing.T, inventoryID string, rhAccountID int, dis
 }
 
 // nolint: unparam
-func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int, reporterID *int) {
+func assertSystemInDB(t *testing.T, inventoryID uuid.UUID, rhAccountID *int, reporterID *int) {
 	var system models.SystemInventory
-	assert.NoError(t, database.DB.Where("inventory_id = ?::uuid", inventoryID).Find(&system).Error)
+	assert.NoError(t, database.DB.Where("inventory_id = ?", inventoryID).Find(&system).Error)
 	assert.Equal(t, system.InventoryID, inventoryID)
 
 	var account models.RhAccount
 	assert.NoError(t, database.DB.Where("id = ?", system.RhAccountID).Find(&account).Error)
 	if account.Name == nil || *account.Name == "" {
-		assert.Equal(t, inventoryID, *account.OrgID)
+		assert.Equal(t, testOrgID, *account.OrgID)
 	} else {
-		assert.Equal(t, inventoryID, *account.Name)
+		assert.Equal(t, testOrgID, *account.Name)
 	}
 	if rhAccountID != nil {
 		assert.Equal(t, system.RhAccountID, *rhAccountID)
@@ -87,11 +91,11 @@ func assertSystemInDB(t *testing.T, inventoryID string, rhAccountID *int, report
 
 // assertSystemInventoryProfileMatchesHost checks host-derived system_inventory columns written by
 // storeOrUpdateSysPlatform (must stay in sync on ON CONFLICT DO UPDATE, not only on first insert).
-// nolint: unparam
-func assertSystemInventoryProfileMatchesHost(t *testing.T, inventoryID string, host *Host) {
+// nolint: unparam, funlen
+func assertSystemInventoryProfileMatchesHost(t *testing.T, inventoryID uuid.UUID, host *Host) {
 	t.Helper()
 	var inv models.SystemInventory
-	require.NoError(t, database.DB.Where("inventory_id = ?::uuid", inventoryID).First(&inv).Error)
+	require.NoError(t, database.DB.Where("inventory_id = ?", inventoryID).First(&inv).Error)
 
 	assert.JSONEq(t, string(utils.MarshalNilToJSONB(host.Tags)), string(inv.Tags))
 
@@ -150,7 +154,7 @@ func assertSystemInventoryProfileMatchesHost(t *testing.T, inventoryID string, h
 func assertSystemNotInDB(t *testing.T) {
 	var systemCount int64
 	assert.Nil(t, database.DB.Model(models.SystemInventory{}).
-		Where("inventory_id = ?::uuid", id).Count(&systemCount).Error)
+		Where("inventory_id = ?", testInventoryID).Count(&systemCount).Error)
 
 	assert.Equal(t, 0, int(systemCount))
 }
@@ -160,19 +164,20 @@ func assertSystemCulled(t *testing.T) {
 	now := time.Now()
 	assert.Nil(t, database.DB.Model(models.SystemInventory{}).
 		Where("culled_timestamp < ?", now).
-		Where("inventory_id = ?::uuid", id).Count(&systemCount).Error)
+		Where("inventory_id = ?", testInventoryID).Count(&systemCount).Error)
 
 	assert.Equal(t, 1, int(systemCount))
 }
 
 func getOrCreateTestAccount(t *testing.T) int {
-	accountID, err := middlewares.GetOrCreateAccount(id)
+	accountID, err := middlewares.GetOrCreateAccount(testOrgID)
 	assert.Nil(t, err)
 	return accountID
 }
 
 // nolint: unparam
-func createTestUploadEvent(orgID, inventoryID, reporter string, packages, yum bool, eventType string) HostEvent {
+func createTestUploadEvent(orgID string, inventoryID uuid.UUID, reporter string,
+	packages, yum bool, eventType string) HostEvent {
 	now := time.Now()
 	ev := HostEvent{
 		Type: eventType,
@@ -228,7 +233,7 @@ func createTestUploadEvent(orgID, inventoryID, reporter string, packages, yum bo
 	return ev
 }
 
-func createTestDeleteEvent(inventoryID string) mqueue.PlatformEvent {
+func createTestDeleteEvent(inventoryID uuid.UUID) mqueue.PlatformEvent {
 	typ := "delete"
 	return mqueue.PlatformEvent{
 		ID:   inventoryID,
@@ -256,9 +261,9 @@ func assertSystemReposInDB(t *testing.T, systemID int64, repos []string) {
 }
 
 // nolint: unparam
-func assertYumUpdatesInDB(t *testing.T, inventoryID string, yumUpdates *YumUpdates) {
+func assertYumUpdatesInDB(t *testing.T, inventoryID uuid.UUID, yumUpdates *YumUpdates) {
 	var system models.SystemInventory
-	assert.NoError(t, database.DB.Where("inventory_id = ?::uuid", inventoryID).Find(&system).Error)
+	assert.NoError(t, database.DB.Where("inventory_id = ?", inventoryID).Find(&system).Error)
 	assert.Equal(t, system.InventoryID, inventoryID)
 	var systemYumUpdatesParsed vmaas.UpdatesV3Response
 	var yumUpdatesParsed vmaas.UpdatesV3Response

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/exp/slices"
 )
@@ -134,6 +135,7 @@ func isAccessGranted(c *gin.Context) bool {
 	return granted
 }
 
+// nolint: gocognit
 func findInventoryGroups(access *rbac.AccessPagination) (map[string]string, error) {
 	res := make(map[string]string)
 
@@ -171,9 +173,12 @@ func findInventoryGroups(access *rbac.AccessPagination) (map[string]string, erro
 					res[utils.KeyUngrouped] = "[]"
 					continue
 				}
-				group, err := utils.ParseInventoryGroup(v, nil)
+				id, err := uuid.Parse(*v)
 				if err != nil {
-					// couldn't marshal inventory group to json
+					continue
+				}
+				group, err := utils.ParseInventoryGroup(&id, nil)
+				if err != nil {
 					continue
 				}
 				groups = append(groups, group)

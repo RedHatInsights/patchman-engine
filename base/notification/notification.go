@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -20,7 +21,7 @@ const (
 // See: https://redhat.atlassian.net/browse/RHINENG-26543
 
 type Context struct {
-	InventoryID string      `json:"inventory_id"`
+	InventoryID uuid.UUID   `json:"inventory_id"`
 	DisplayName string      `json:"display_name"`
 	HostURL     string      `json:"host_url"`
 	Tags        []SystemTag `json:"tags"`

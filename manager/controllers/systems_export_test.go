@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,7 +32,7 @@ func TestSystemsExportJSON(t *testing.T) {
 	var output []SystemDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 10, len(output))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output[0].ID)
 	assert.Equal(t, 2, output[0].SystemItemAttributes.RhsaCount)
 	assert.Equal(t, 2, output[0].SystemItemAttributes.RhbaCount)
 	assert.Equal(t, 1, output[0].SystemItemAttributes.RheaCount)
@@ -90,7 +91,7 @@ func TestExportSystemsTags(t *testing.T) {
 	var output []SystemDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, len(output))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output[0].ID)
 }
 
 func TestExportSystemsTagsInvalid(t *testing.T) {
@@ -111,7 +112,7 @@ func TestSystemsExportWorkloads(t *testing.T) {
 	var output []SystemDBLookup
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 2, len(output))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output[0].ID)
 }
 
 func TestSystemsExportFilterPartialOS(t *testing.T) {

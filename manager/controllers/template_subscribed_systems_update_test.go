@@ -9,11 +9,11 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
 var subscriptionUUID = "cccccccc-0000-0000-0001-000000000004"
-var templateSystemUUID = "00000000-0000-0000-0000-000000000004"
 var subscriptionInvalidUUID = "99999999-9999-8888-8888-888888888888"
 var orgID = "org_1"
 
@@ -29,7 +29,7 @@ func TestSubscribedSystemID(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, templateAccount, account)
 	assert.Equal(t, orgID, org)
-	assert.Equal(t, templateSystemUUID, systemID)
+	assert.Equal(t, testInventoryID4, systemID)
 }
 
 func TestUnknownSubscribedSystemID(t *testing.T) {
@@ -44,7 +44,7 @@ func TestUnknownSubscribedSystemID(t *testing.T) {
 	assert.EqualError(t, err, "System cccccccc-0000-0000-0001-000000000001 not found")
 	assert.Equal(t, 0, account)
 	assert.Equal(t, "", org)
-	assert.Equal(t, "", systemID)
+	assert.Equal(t, uuid.Nil, systemID)
 }
 
 func TestUpdateTemplateSubscribedSystems(t *testing.T) {
@@ -58,7 +58,7 @@ func TestUpdateTemplateSubscribedSystems(t *testing.T) {
 		core.ContextKV{Key: utils.KeyOrgID, Value: orgID})
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	database.CheckTemplateSystems(t, templateAccount, templateUUID, []string{templateSystemUUID})
+	database.CheckTemplateSystems(t, templateAccount, templateUUID, []uuid.UUID{testInventoryID4})
 	database.DeleteTemplate(t, templateAccount, templateUUID)
 }
 
@@ -72,6 +72,6 @@ func TestUpdateTemplateSubscribedSystemsInvalid(t *testing.T) {
 		core.ContextKV{Key: utils.KeySystem, Value: subscriptionInvalidUUID})
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
-	database.CheckTemplateSystems(t, templateAccount, templateUUID, []string{})
+	database.CheckTemplateSystems(t, templateAccount, templateUUID, []uuid.UUID{})
 	database.DeleteTemplate(t, templateAccount, templateUUID)
 }

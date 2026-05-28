@@ -100,28 +100,28 @@ func TestSystemsIDsFilterAdvCount1(t *testing.T) {
 	outputIDs := testSystemsIDs(t, "?filter[rhba_count]=2", 1)
 	output := testSystems(t, "?filter[rhba_count]=2", 1)
 	assert.Equal(t, 1, len(outputIDs.IDs))
-	assert.Equal(t, output.Data[0].ID, outputIDs.IDs[0])
+	assert.Equal(t, output.Data[0].ID.String(), outputIDs.IDs[0])
 }
 
 func TestSystemsIDsFilterAdvCount2(t *testing.T) {
 	outputIDs := testSystemsIDs(t, "?filter[rhea_count]=1", 1)
 	output := testSystems(t, "?filter[rhea_count]=1", 1)
 	assert.Equal(t, 4, len(outputIDs.IDs))
-	assert.Equal(t, output.Data[0].ID, outputIDs.IDs[0])
+	assert.Equal(t, output.Data[0].ID.String(), outputIDs.IDs[0])
 }
 
 func TestSystemsIDsFilterAdvCount3(t *testing.T) {
 	outputIDs := testSystemsIDs(t, "?filter[rhsa_count]=2", 1)
 	output := testSystems(t, "?filter[rhsa_count]=2", 1)
 	assert.Equal(t, 1, len(outputIDs.IDs))
-	assert.Equal(t, output.Data[0].ID, outputIDs.IDs[0])
+	assert.Equal(t, output.Data[0].ID.String(), outputIDs.IDs[0])
 }
 
 func TestSystemsIDsFilterAdvCount4(t *testing.T) {
 	outputIDs := testSystemsIDs(t, "?filter[other_count]=4", 1)
 	output := testSystems(t, "?filter[other_count]=4", 1)
 	assert.Equal(t, 1, len(outputIDs.IDs))
-	assert.Equal(t, output.Data[0].ID, outputIDs.IDs[0])
+	assert.Equal(t, output.Data[0].ID.String(), outputIDs.IDs[0])
 }
 
 func TestSystemsIDsFilterNotExisting(t *testing.T) {
@@ -134,30 +134,30 @@ func TestSystemsIDsFilterPartialOS(t *testing.T) {
 	outputIDs := testSystemsIDs(t, "?filter[osname]=RHEL&filter[osmajor]=8&filter[osminor]=1", 1)
 	output := testSystems(t, "?filter[osname]=RHEL&filter[osmajor]=8&filter[osminor]=1", 1)
 	assert.Equal(t, 3, len(outputIDs.IDs))
-	assert.Equal(t, output.Data[0].ID, outputIDs.IDs[0])
-	assert.Equal(t, output.Data[1].ID, outputIDs.IDs[1])
+	assert.Equal(t, output.Data[0].ID.String(), outputIDs.IDs[0])
+	assert.Equal(t, output.Data[1].ID.String(), outputIDs.IDs[1])
 }
 
 func TestSystemsIDsFilterOS(t *testing.T) {
 	outputIDs := testSystemsIDs(t, `?filter[os]=in:RHEL 8.1,RHEL 7.3&sort=os`, 1)
 	output := testSystems(t, `?filter[os]=in:RHEL 8.1,RHEL 7.3&sort=os`, 1)
 	assert.Equal(t, 4, len(outputIDs.IDs))
-	assert.Equal(t, output.Data[0].ID, outputIDs.IDs[0])
-	assert.Equal(t, output.Data[1].ID, outputIDs.IDs[1])
-	assert.Equal(t, output.Data[2].ID, outputIDs.IDs[2])
+	assert.Equal(t, output.Data[0].ID.String(), outputIDs.IDs[0])
+	assert.Equal(t, output.Data[1].ID.String(), outputIDs.IDs[1])
+	assert.Equal(t, output.Data[2].ID.String(), outputIDs.IDs[2])
 }
 
 func TestSystemsIDsOrderOS(t *testing.T) {
 	output := testSystems(t, `?sort=os`, 1)
 	outputIDs := testSystemsIDs(t, `?sort=os`, 1)
-	assert.Equal(t, output.Data[0].ID, outputIDs.IDs[0])
-	assert.Equal(t, output.Data[1].ID, outputIDs.IDs[1])
-	assert.Equal(t, output.Data[2].ID, outputIDs.IDs[2])
-	assert.Equal(t, output.Data[3].ID, outputIDs.IDs[3])
-	assert.Equal(t, output.Data[4].ID, outputIDs.IDs[4])
-	assert.Equal(t, output.Data[5].ID, outputIDs.IDs[5])
-	assert.Equal(t, output.Data[6].ID, outputIDs.IDs[6])
-	assert.Equal(t, output.Data[7].ID, outputIDs.IDs[7])
+	assert.Equal(t, output.Data[0].ID.String(), outputIDs.IDs[0])
+	assert.Equal(t, output.Data[1].ID.String(), outputIDs.IDs[1])
+	assert.Equal(t, output.Data[2].ID.String(), outputIDs.IDs[2])
+	assert.Equal(t, output.Data[3].ID.String(), outputIDs.IDs[3])
+	assert.Equal(t, output.Data[4].ID.String(), outputIDs.IDs[4])
+	assert.Equal(t, output.Data[5].ID.String(), outputIDs.IDs[5])
+	assert.Equal(t, output.Data[6].ID.String(), outputIDs.IDs[6])
+	assert.Equal(t, output.Data[7].ID.String(), outputIDs.IDs[7])
 }
 
 func TestSystemsIDsFilterArch(t *testing.T) {
@@ -166,7 +166,7 @@ func TestSystemsIDsFilterArch(t *testing.T) {
 	assert.Equal(t, 9, len(outputIDs.Data))
 	assert.Equal(t, 9, len(output.Data))
 	for i, d := range outputIDs.Data {
-		assert.Equal(t, output.Data[i].ID, d.ID)
+		assert.Equal(t, output.Data[i].ID.String(), d.ID)
 	}
 }
 
@@ -176,7 +176,7 @@ func TestSystemsIDsFilterTemplateName(t *testing.T) {
 	assert.Equal(t, 2, len(outputIDs.Data))
 	assert.Equal(t, 2, len(output.Data))
 	for i, d := range outputIDs.Data {
-		assert.Equal(t, output.Data[i].ID, d.ID)
+		assert.Equal(t, output.Data[i].ID.String(), d.ID)
 	}
 }
 
@@ -186,7 +186,7 @@ func TestSystemsIDsFilterTemplateUUID(t *testing.T) {
 	assert.Equal(t, 2, len(outputIDs.Data))
 	assert.Equal(t, 2, len(output.Data))
 	for i, d := range outputIDs.Data {
-		assert.Equal(t, output.Data[i].ID, d.ID)
+		assert.Equal(t, output.Data[i].ID.String(), d.ID)
 	}
 }
 

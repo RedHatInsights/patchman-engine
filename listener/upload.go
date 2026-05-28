@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 
 	stdErrors "errors"
@@ -81,7 +82,7 @@ var (
 )
 
 type Host struct {
-	ID                    string                                 `json:"id,omitempty"`
+	ID                    uuid.UUID                              `json:"id,omitempty"`
 	DisplayName           *string                                `json:"display_name,omitempty"`
 	OrgID                 *string                                `json:"org_id,omitempty"`
 	StaleTimestamp        *types.Rfc3339Timestamp                `json:"stale_timestamp,omitempty"`
@@ -348,7 +349,7 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 		"mssql_workload_version",
 	}
 
-	displayName := inventoryID
+	displayName := inventoryID.String()
 	if host.DisplayName != nil && strings.TrimSpace(*host.DisplayName) != "" {
 		displayName = *host.DisplayName
 	}
@@ -404,7 +405,7 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 	// Lock the system_inventory row and read prior json_checksum / yum_checksum for incremental updates.
 	tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 		Model(&models.SystemInventory{}).
-		Where("rh_account_id = ? AND inventory_id = ?::uuid", accountID, inventoryID).
+		Where("rh_account_id = ? AND inventory_id = ?", accountID, inventoryID).
 		Select("json_checksum, yum_checksum").
 		First(&oldChecksums)
 
@@ -453,7 +454,7 @@ func storeOrUpdateSysPlatform(
 	// Resolve system_inventory.id by account + inventory UUID
 	var existingID int64
 	if err := tx.Model(&models.SystemInventory{}).
-		Where("rh_account_id = ? AND inventory_id = ?::uuid", system.Inventory.RhAccountID, system.Inventory.InventoryID).
+		Where("rh_account_id = ? AND inventory_id = ?", system.Inventory.RhAccountID, system.Inventory.InventoryID).
 		Select("id").
 		Scan(&existingID).Error; err != nil {
 		utils.LogWarn("err", err, "couldn't find system for update")
@@ -779,7 +780,7 @@ func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatformV2
 	}
 
 	// If the system was deleted in last hour, don't register this upload
-	if deleted.InventoryID != "" && deleted.WhenDeleted.After(time.Now().Add(-deletionThreshold)) {
+	if deleted.InventoryID != uuid.Nil && deleted.WhenDeleted.After(time.Now().Add(-deletionThreshold)) {
 		utils.LogInfo("inventoryID", host.ID, "Received recently deleted system")
 		return nil, nil
 	}

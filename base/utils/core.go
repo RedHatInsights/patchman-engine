@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
 
@@ -184,7 +185,7 @@ func GetGorutineID() uint64 {
 	return n
 }
 
-func ParseInventoryGroup(id *string, name *string) (string, error) {
+func ParseInventoryGroup(id *uuid.UUID, name *string) (string, error) {
 	group := rbac.InventoryGroup{{ID: id, Name: name}}
 	groupJSON, err := sonic.Marshal(&group)
 	if err != nil {

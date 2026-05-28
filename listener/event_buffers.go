@@ -6,6 +6,8 @@ import (
 	"app/base/utils"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type eventBuffer struct {
@@ -31,7 +33,7 @@ func (b *eventBuffer) initEventBuffer(evalWriter, ptWriter *mqueue.Writer) {
 
 // send events after full buffer or timeout
 func (b *eventBuffer) bufferEvalEvents(
-	inventoryID string,
+	inventoryID uuid.UUID,
 	rhAccountID int,
 	ptEvent *mqueue.PayloadTrackerEvent,
 ) {
