@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
@@ -51,13 +52,13 @@ func TestMakeInventoryViewsEvent(t *testing.T) {
 	assert.Equal(t, 2, len(event.Hosts))
 
 	assert.Equal(t, InventoryViewsHost{
-		ID: "00000000-0000-0000-0000-000000000001",
+		ID: uuid.MustParse("00000000-0000-0000-0000-000000000001"),
 		Data: InventoryViewsHostData{2, 3, 3, 0, 2, 2, 1, 0, 0, 0, 0,
 			utils.PtrString("temp1-1"), utils.PtrString("99900000-0000-0000-0000-000000000001")},
 	}, event.Hosts[0])
 
 	assert.Equal(t, InventoryViewsHost{
-		ID: "00000000-0000-0000-0000-000000000003",
+		ID: uuid.MustParse("00000000-0000-0000-0000-000000000003"),
 		Data: InventoryViewsHostData{0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0,
 			utils.PtrString("temp2-1"), utils.PtrString("99900000-0000-0000-0000-000000000002")},
 	}, event.Hosts[1])
@@ -98,7 +99,7 @@ func TestMakeInventoryViewsEventNoTemplate(t *testing.T) {
 	assert.Equal(t, 1, len(event.Hosts))
 
 	host := event.Hosts[0]
-	assert.Equal(t, "00000000-0000-0000-0000-000000000004", host.ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000004"), host.ID)
 	// Template fields should be nil when template is not found
 	assert.Nil(t, host.Data.TemplateName)
 	assert.Nil(t, host.Data.TemplateUUID)

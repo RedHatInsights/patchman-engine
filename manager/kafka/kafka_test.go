@@ -8,10 +8,11 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
-func testRecalcSystems(t *testing.T, accountID int, orgID string, inventoryIDs []string) mqueue.PlatformEvent {
+func testRecalcSystems(t *testing.T, accountID int, orgID string, inventoryIDs []uuid.UUID) mqueue.PlatformEvent {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	config.EnableTemplateChangeEval = true
@@ -30,10 +31,13 @@ func testRecalcSystems(t *testing.T, accountID int, orgID string, inventoryIDs [
 
 // Evaluate updated systems
 func TestRecalcUpdatedSystems(t *testing.T) {
-	inventoryIDs := []string{"00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000004"}
+	inventoryIDs := []uuid.UUID{
+		uuid.MustParse("00000000-0000-0000-0000-000000000001"),
+		uuid.MustParse("00000000-0000-0000-0000-000000000004"),
+	}
 	event := testRecalcSystems(t, 1, "org_1", inventoryIDs)
 	assert.Equal(t, 2, len(event.SystemIDs))
 	assert.Equal(t, 1, event.AccountID)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", event.SystemIDs[0])
-	assert.Equal(t, "00000000-0000-0000-0000-000000000004", event.SystemIDs[1])
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), event.SystemIDs[0])
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000004"), event.SystemIDs[1])
 }

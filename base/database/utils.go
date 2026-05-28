@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -65,9 +66,9 @@ func PackageByName(tx *gorm.DB, pkgName string, joins ...join) *gorm.DB {
 	return (joinsT)(joins).apply(tx)
 }
 
-func SystemAdvisoriesByInventoryID(tx *gorm.DB, accountID int, groups map[string]string, inventoryID string,
+func SystemAdvisoriesByInventoryID(tx *gorm.DB, accountID int, groups map[string]string, inventoryID uuid.UUID,
 	joins ...join) *gorm.DB {
-	tx = SystemAdvisories(tx, accountID, groups).Where("si.inventory_id = ?::uuid", inventoryID)
+	tx = SystemAdvisories(tx, accountID, groups).Where("si.inventory_id = ?", inventoryID)
 	return (joinsT)(joins).apply(tx)
 }
 

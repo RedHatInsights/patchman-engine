@@ -13,6 +13,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -74,15 +75,10 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 	account := c.GetInt(utils.KeyAccount)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
-	inventoryID := c.Param("inventory_id")
-	if inventoryID == "" {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
-		return nil, nil, nil, errors.New("inventory_id param not found")
-	}
-
-	if !utils.IsValidUUID(inventoryID) {
-		utils.LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
-		return nil, nil, nil, errors.New("incorrect inventory_id format")
+	inventoryID, err := uuid.Parse(c.Param("inventory_id"))
+	if err != nil {
+		utils.LogAndRespBadRequest(c, err, "incorrect inventory_id format")
+		return nil, nil, nil, err
 	}
 
 	filters, err := ParseAllFilters(c, SystemAdvisoriesOpts)
@@ -92,7 +88,7 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 
 	db := middlewares.DBFromContext(c)
 	var exists int64
-	err = db.Model(&models.SystemInventory{}).Where("inventory_id = ?::uuid ", inventoryID).
+	err = db.Model(&models.SystemInventory{}).Where("inventory_id = ?", inventoryID).
 		Count(&exists).Error
 
 	if err != nil {
@@ -200,7 +196,7 @@ func SystemAdvisoriesIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildSystemAdvisoriesQuery(db *gorm.DB, account int, groups map[string]string, inventoryID string) *gorm.DB {
+func buildSystemAdvisoriesQuery(db *gorm.DB, account int, groups map[string]string, inventoryID uuid.UUID) *gorm.DB {
 	query := database.SystemAdvisoriesByInventoryID(db, account, groups, inventoryID,
 		database.JoinAdvisoryMetadata, database.JoinAdvisoryType).
 		Joins("JOIN status ON sa.status_id = status.id").

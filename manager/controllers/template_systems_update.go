@@ -9,6 +9,7 @@ import (
 	"app/manager/config"
 	"app/manager/kafka"
 	"app/manager/middlewares"
+	"bytes"
 	"context"
 	"fmt"
 	"net/http"
@@ -16,10 +17,10 @@ import (
 
 	errors2 "errors"
 
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-
-	"github.com/gin-gonic/gin"
 )
 
 var candlepinClient = candlepin.CreateCandlepinClient()
@@ -29,13 +30,13 @@ const TemplateSystemsUpdateLimit = 1000
 
 type TemplateSystemsUpdateRequest struct {
 	// List of inventory IDs to have templates removed
-	Systems []string `json:"systems" example:"system1-uuid, system2-uuid, ..."`
+	Systems []uuid.UUID `json:"systems" example:"system1-uuid, system2-uuid, ..."`
 }
 
 type SystemTemplateDBLookup struct {
-	InventoryID      string `query:"si.inventory_id"`
-	SatelliteManaged bool   `query:"si.satellite_managed"`
-	Bootc            bool   `query:"si.bootc"`
+	InventoryID      uuid.UUID `query:"si.inventory_id"`
+	SatelliteManaged bool      `query:"si.satellite_managed"`
+	Bootc            bool      `query:"si.bootc"`
 }
 
 // @Summary Add systems to a template
@@ -98,7 +99,7 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 }
 
 func checkTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template *models.Template,
-	inventoryIDs []string, groups map[string]string) error {
+	inventoryIDs []uuid.UUID, groups map[string]string) error {
 	if len(inventoryIDs) == 0 {
 		err := errors.New(InvalidInventoryIDsErr)
 		utils.LogAndRespBadRequest(c, err, InvalidInventoryIDsErr)
@@ -130,7 +131,7 @@ func checkTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template *
 }
 
 func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template *models.Template,
-	inventoryIDs []string) error {
+	inventoryIDs []uuid.UUID) error {
 	tx := db.Begin()
 	defer tx.Rollback()
 
@@ -142,7 +143,7 @@ func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template 
 
 	siSub := tx.Model(&models.SystemInventory{}).
 		Select("id").
-		Where("rh_account_id = ? AND inventory_id IN (?::uuid)", accountID, inventoryIDs)
+		Where("rh_account_id = ? AND inventory_id IN (?)", accountID, inventoryIDs)
 	tx = tx.Model(&models.SystemPatch{}).
 		Where("rh_account_id = ? AND system_id IN (?)", accountID, siSub).
 		Update("template_id", templateID)
@@ -165,16 +166,16 @@ func assignTemplateSystems(c *gin.Context, db *gorm.DB, accountID int, template 
 }
 
 func templateArchVersionMatch(
-	db *gorm.DB, inventoryIDs []string, template *models.Template, acc int, groups map[string]string,
+	db *gorm.DB, inventoryIDs []uuid.UUID, template *models.Template, acc int, groups map[string]string,
 ) error {
 	if template == nil {
 		return nil
 	}
-	var sysArchVersions = []struct {
-		InventoryID string
+	var sysArchVersions []struct {
+		InventoryID uuid.UUID
 		Arch        string
 		Version     string
-	}{}
+	}
 	var err error
 	err = database.Systems(db, acc, groups).
 		Select("si.inventory_id as inventory_id, si.os_major as version, si.arch as arch").
@@ -220,12 +221,12 @@ func callCandlepin(ctx context.Context, owner string, request *candlepin.Consume
 	return candlepinRespPtr.(*candlepin.ConsumersUpdateResponse), nil
 }
 
-func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env *string, inventoryIDs []string,
+func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env *string, inventoryIDs []uuid.UUID,
 	groups map[string]string) error {
-	var hosts = []struct {
-		InventoryID string
+	var hosts []struct {
+		InventoryID uuid.UUID
 		Consumer    *string
-	}{}
+	}
 
 	err := database.Systems(db, accountID, groups).
 		Select("si.inventory_id as inventory_id, si.subscription_manager_id as consumer").
@@ -271,20 +272,20 @@ func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env 
 	return nil
 }
 
-func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string, groups map[string]string) (err error) {
+func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []uuid.UUID, groups map[string]string) (err error) {
 	var containingSystems []SystemTemplateDBLookup
-	var missingIDs []string
-	var satelliteIDs []string
-	var bootcIDs []string
+	var missingIDs []uuid.UUID
+	var satelliteIDs []uuid.UUID
+	var bootcIDs []uuid.UUID
 	err = database.Systems(db, accountID, groups).
 		Select("si.inventory_id, si.satellite_managed, si.bootc").
-		Where("si.inventory_id IN (?::uuid)", inventoryIDs).
+		Where("si.inventory_id IN (?)", inventoryIDs).
 		Scan(&containingSystems).Error
 	if err != nil {
 		return errors2.Join(base.ErrDatabase, err)
 	}
 
-	containingIDsMap := make(map[string]bool, len(containingSystems))
+	containingIDsMap := make(map[uuid.UUID]bool, len(containingSystems))
 	for _, containingSystem := range containingSystems {
 		containingIDsMap[containingSystem.InventoryID] = true
 
@@ -302,9 +303,9 @@ func checkInventoryIDs(db *gorm.DB, accountID int, inventoryIDs []string, groups
 		}
 	}
 
-	sort.Strings(missingIDs)
-	sort.Strings(satelliteIDs)
-	sort.Strings(bootcIDs)
+	sort.Slice(missingIDs, func(i, j int) bool { return bytes.Compare(missingIDs[i][:], missingIDs[j][:]) < 0 })
+	sort.Slice(satelliteIDs, func(i, j int) bool { return bytes.Compare(satelliteIDs[i][:], satelliteIDs[j][:]) < 0 })
+	sort.Slice(bootcIDs, func(i, j int) bool { return bytes.Compare(bootcIDs[i][:], bootcIDs[j][:]) < 0 })
 
 	switch {
 	case config.EnableSatelliteFunctionality && len(satelliteIDs) > 0:

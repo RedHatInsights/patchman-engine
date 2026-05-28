@@ -2,6 +2,7 @@ package rbac
 
 import (
 	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 )
 
 type AccessPagination struct {
@@ -26,8 +27,8 @@ type AttributeFilter struct {
 }
 
 type inventoryGroup struct {
-	ID   *string `json:"id,omitempty"`
-	Name *string `json:"name,omitempty"`
+	ID   *uuid.UUID `json:"id,omitempty"`
+	Name *string    `json:"name,omitempty"`
 }
 
 type InventoryGroup []inventoryGroup

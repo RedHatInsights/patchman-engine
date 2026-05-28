@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -56,12 +57,12 @@ type SystemPackageDBLoad struct {
 	MetaTotalHelper
 }
 
-func systemPackageQuery(db *gorm.DB, account int, groups map[string]string, inventoryID string) *gorm.DB {
+func systemPackageQuery(db *gorm.DB, account int, groups map[string]string, inventoryID uuid.UUID) *gorm.DB {
 	query := database.SystemPackages(db, account, groups, database.JoinInstallableApplicablePackages).
 		Joins("LEFT JOIN strings AS descr ON p.description_hash = descr.id").
 		Joins("LEFT JOIN strings AS sum ON p.summary_hash = sum.id").
 		Select(SystemPackagesSelect).
-		Where("si.inventory_id = ?::uuid", inventoryID)
+		Where("si.inventory_id = ?", inventoryID)
 
 	return query
 }
@@ -91,14 +92,9 @@ func SystemPackagesHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
-	inventoryID := c.Param("inventory_id")
-	if inventoryID == "" {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
-		return
-	}
-
-	if !utils.IsValidUUID(inventoryID) {
-		utils.LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+	inventoryID, err := uuid.Parse(c.Param("inventory_id"))
+	if err != nil {
+		utils.LogAndRespBadRequest(c, err, "incorrect inventory_id format")
 		return
 	}
 	filters, err := ParseAllFilters(c, SystemPackagesOpts)

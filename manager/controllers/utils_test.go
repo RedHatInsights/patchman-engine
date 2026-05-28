@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
@@ -32,8 +33,8 @@ func TestGroupNameFilter(t *testing.T) {
 	tx.Scan(&systems)
 
 	assert.Equal(t, 2, len(systems)) // 2 systems with `group2` in test_data
-	assert.Equal(t, "00000000-0000-0000-0000-000000000007", systems[0].ID)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000008", systems[1].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000007"), systems[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000008"), systems[1].ID)
 }
 
 func TestGroupNameFilter2(t *testing.T) {

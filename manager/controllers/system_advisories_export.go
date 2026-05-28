@@ -4,9 +4,9 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/manager/middlewares"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -36,20 +36,15 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
-	inventoryID := c.Param("inventory_id")
-	if inventoryID == "" {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
-		return
-	}
-
-	if !utils.IsValidUUID(inventoryID) {
-		utils.LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+	inventoryID, err := uuid.Parse(c.Param("inventory_id"))
+	if err != nil {
+		utils.LogAndRespBadRequest(c, err, "incorrect inventory_id format")
 		return
 	}
 
 	db := middlewares.DBFromContext(c)
 	var exists int64
-	err := db.Model(&models.SystemInventory{}).Where("inventory_id = ?::uuid ", inventoryID).
+	err = db.Model(&models.SystemInventory{}).Where("inventory_id = ?", inventoryID).
 		Count(&exists).Error
 
 	if err != nil {

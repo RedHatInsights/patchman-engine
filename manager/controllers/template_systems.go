@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -42,7 +43,7 @@ type TemplateSystemAttributes struct {
 type TemplateSystemItem struct {
 	Attributes TemplateSystemAttributes `json:"attributes"`
 	// Template system inventory ID (uuid format)
-	InventoryID string `json:"inventory_id"`
+	InventoryID uuid.UUID `json:"inventory_id"`
 	// Document type name
 	Type string `json:"type"`
 }

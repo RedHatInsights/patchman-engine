@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
@@ -172,7 +173,7 @@ func TestCullSystems(t *testing.T) {
 	for i := 0; i < nToDelete; i++ {
 		invID := fmt.Sprintf("00000000-0000-0000-0000-000000000de%d", i+1)
 		inv := models.SystemInventory{
-			InventoryID:     invID,
+			InventoryID:     uuid.MustParse(invID),
 			RhAccountID:     1,
 			DisplayName:     invID,
 			Tags:            []byte("[]"),
@@ -213,12 +214,12 @@ func TestPruneDeletedSystems(t *testing.T) {
 	for i := 0; i < nToDelete; i++ {
 		invID := fmt.Sprintf("00000000-0000-0000-0000-000000000de%d", i+1)
 		assert.NoError(t, database.DB.Create(&models.DeletedSystem{
-			InventoryID: invID,
+			InventoryID: uuid.MustParse(invID),
 			WhenDeleted: staleDate,
 		}).Error)
 	}
 	assert.NoError(t, database.DB.Create(&models.DeletedSystem{
-		InventoryID: "00000000-0000-0000-0000-000000000deff",
+		InventoryID: uuid.MustParse("00000000-0000-0000-0000-0000000000de"),
 		WhenDeleted: time.Now(),
 	}).Error)
 

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 	"google.golang.org/grpc"
@@ -42,9 +43,12 @@ func processWorkspaces(workspaces []*kesselv2.StreamedListObjectsResponse) (map[
 
 	groups := make([]string, 0, len(workspaces))
 	for _, workspace := range workspaces {
-		group, err := utils.ParseInventoryGroup(&workspace.Object.ResourceId, nil)
+		id, err := uuid.Parse(workspace.Object.ResourceId)
 		if err != nil {
-			// couldn't marshal inventory group to json
+			continue
+		}
+		group, err := utils.ParseInventoryGroup(&id, nil)
+		if err != nil {
 			continue
 		}
 		groups = append(groups, group)

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +19,7 @@ func TestPackageSystemsExportHandlerJSON(t *testing.T) {
 	var output []PackageSystemItem
 	CheckResponse(t, w, http.StatusOK, &output)
 	assert.Equal(t, 3, len(output))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000012", output[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000012"), output[0].ID)
 	assert.Equal(t, "5.6.13-200.fc31.x86_64", output[0].InstalledEVRA)
 	assert.Equal(t, "5.6.13-201.fc31.x86_64", output[0].AvailableEVRA)
 	assert.Equal(t, SystemTagsList{{"k1", "ns1", "val1"}}, output[0].Tags)

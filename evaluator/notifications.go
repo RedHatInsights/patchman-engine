@@ -100,7 +100,7 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 		return errors.Wrap(err, "creating notification failed")
 	}
 
-	msg, err := mqueue.MessageFromJSON(system.GetInventoryID(), notif, nil)
+	msg, err := mqueue.MessageFromJSON(system.GetInventoryID().String(), notif, nil)
 	if err != nil {
 		return errors.Wrap(err, "creating message from notification failed")
 	}

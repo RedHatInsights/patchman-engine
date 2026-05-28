@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,7 +17,7 @@ func TestSystemDetailDefault1(t *testing.T) {
 
 	var output SystemDetailResponse
 	CheckResponse(t, w, http.StatusOK, &output)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data.ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output.Data.ID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.Data.Attributes.DisplayName)
 	assert.Equal(t, "system", output.Data.Type)
 	assert.Equal(t, "2018-09-22 16:00:00 +0000 UTC", output.Data.Attributes.LastEvaluation.String())
@@ -54,7 +55,7 @@ func TestSystemDetailNoIdProvided(t *testing.T) {
 
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
-	assert.Equal(t, "inventory_id param not found", errResp.Error)
+	assert.Equal(t, "incorrect inventory_id format", errResp.Error)
 }
 
 func TestSystemDetailNotFound(t *testing.T) {
@@ -74,7 +75,7 @@ func TestSystemsNoRHSM(t *testing.T) {
 
 	var output SystemDetailResponse
 	CheckResponse(t, w, http.StatusOK, &output)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000014", output.Data.ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000014"), output.Data.ID)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000014", output.Data.Attributes.DisplayName)
 	assert.Equal(t, "", output.Data.Attributes.Rhsm)
 }
@@ -86,7 +87,7 @@ func TestRHSMLessThanOS(t *testing.T) {
 
 	var output SystemDetailResponse
 	CheckResponse(t, w, http.StatusOK, &output)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000003", output.Data.ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000003"), output.Data.ID)
 	assert.Equal(t, "8.0", output.Data.Attributes.Rhsm)
 	assert.Equal(t, "8", output.Data.Attributes.OSMajor)
 	assert.Equal(t, "1", output.Data.Attributes.OSMinor)
@@ -99,7 +100,7 @@ func TestRHSMGreaterThanOS(t *testing.T) {
 
 	var output SystemDetailResponse
 	CheckResponse(t, w, http.StatusOK, &output)
-	assert.Equal(t, "00000000-0000-0000-0000-000000000004", output.Data.ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000004"), output.Data.ID)
 	assert.Equal(t, "8.3", output.Data.Attributes.Rhsm)
 	assert.Equal(t, "8", output.Data.Attributes.OSMajor)
 	assert.Equal(t, "2", output.Data.Attributes.OSMinor)

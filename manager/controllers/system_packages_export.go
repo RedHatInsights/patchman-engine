@@ -4,9 +4,9 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"errors"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -39,21 +39,16 @@ func SystemPackagesExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
 	groups := c.GetStringMapString(utils.KeyInventoryGroups)
 
-	inventoryID := c.Param("inventory_id")
-	if inventoryID == "" {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
-		return
-	}
-
-	if !utils.IsValidUUID(inventoryID) {
-		utils.LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
+	inventoryID, err := uuid.Parse(c.Param("inventory_id"))
+	if err != nil {
+		utils.LogAndRespBadRequest(c, err, "incorrect inventory_id format")
 		return
 	}
 
 	var loaded []SystemPackageDBLoad
 	db := middlewares.DBFromContext(c)
 	q := systemPackageQuery(db, account, groups, inventoryID)
-	q, err := ExportListCommon(q, c, SystemPackagesOpts)
+	q, err = ExportListCommon(q, c, SystemPackagesOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon
 		return

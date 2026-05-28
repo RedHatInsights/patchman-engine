@@ -520,8 +520,8 @@ func systemsIDs(c *gin.Context, systems []SystemsID, meta *ListMeta) (IDsPlainRe
 	resp.IDs = make([]string, 0, len(systems))
 	resp.Data = make([]IDPlain, 0, len(systems))
 	for _, x := range systems {
-		resp.IDs = append(resp.IDs, x.ID)
-		resp.Data = append(resp.Data, IDPlain{ID: x.ID})
+		resp.IDs = append(resp.IDs, x.ID.String())
+		resp.Data = append(resp.Data, IDPlain{ID: x.ID.String()})
 	}
 	return resp, nil
 }
@@ -544,8 +544,8 @@ func systemsSatelliteIDs(c *gin.Context, systems []SystemsSatelliteManagedID, me
 	ids := make([]string, len(systems))
 	data := make([]IDSatelliteManaged, len(systems))
 	for i, x := range systems {
-		ids[i] = x.ID
-		data[i] = IDSatelliteManaged{x.ID, x.SatelliteManaged}
+		ids[i] = x.ID.String()
+		data[i] = IDSatelliteManaged{x.ID.String(), x.SatelliteManaged}
 	}
 	resp.IDs = ids
 	resp.Data = data

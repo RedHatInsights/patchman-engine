@@ -6,23 +6,26 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
+// PlatformEvent ID is typed as uuid.UUID to match the inventory service contract:
+// https://github.com/RedHatInsights/insights-host-inventory/blob/master/swagger/host_events.spec.yaml
 type PlatformEvent struct {
-	ID          string                  `json:"id"`
+	ID          uuid.UUID               `json:"id"`
 	Type        *string                 `json:"type"`
 	Timestamp   *types.Rfc3339Timestamp `json:"timestamp"`
 	AccountID   int                     `json:"account_id"`
 	OrgID       *string                 `json:"org_id,omitempty"`
 	B64Identity *string                 `json:"b64_identity"`
 	URL         *string                 `json:"url"`
-	SystemIDs   []string                `json:"system_ids,omitempty"`
+	SystemIDs   []uuid.UUID             `json:"system_ids,omitempty"`
 	RequestIDs  []string                `json:"request_ids,omitempty"`
 }
 
 type EvalData struct {
-	InventoryID string
+	InventoryID uuid.UUID
 	RhAccountID int
 	RequestID   string
 	OrgID       *string
@@ -31,7 +34,7 @@ type EvalData struct {
 type PlatformEvents []PlatformEvent
 type EvalDataSlice []EvalData
 
-type accountInventories map[int][]string
+type accountInventories map[int][]uuid.UUID
 type accountRequests map[int][]string
 type orgIDs map[int]*string
 
@@ -69,7 +72,7 @@ func writePlatformEvents(ctx context.Context, w Writer, events ...PlatformEvent)
 	return w.WriteMessages(ctx, msgs...)
 }
 
-func batchSize(grouped map[int][]string) int {
+func batchSize(grouped map[int][]uuid.UUID) int {
 	// compute how many batches we will create
 	var batches = 0
 	for _, ev := range grouped {

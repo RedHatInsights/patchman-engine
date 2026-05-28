@@ -4,6 +4,8 @@ import (
 	"app/base"
 	"app/base/mqueue"
 	"app/base/utils"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -29,7 +31,7 @@ func runRecalcLoop() {
 	}
 }
 
-func InventoryIDs2EvalData(accountID int, orgID string, inventoryIDs []string) []mqueue.EvalData {
+func InventoryIDs2EvalData(accountID int, orgID string, inventoryIDs []uuid.UUID) []mqueue.EvalData {
 	evalDataList := make([]mqueue.EvalData, 0, len(inventoryIDs))
 	for _, v := range inventoryIDs {
 		evalDataList = append(evalDataList, mqueue.EvalData{InventoryID: v, RhAccountID: accountID, OrgID: &orgID})

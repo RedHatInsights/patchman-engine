@@ -11,6 +11,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -131,7 +132,7 @@ func evaluateChanges(vmaasData *vmaas.UpdatesV3Response, stored SystemAdvisoryMa
 }
 
 // LazySaveAdvisories finds advisories reported by VMaaS and missing in the DB and lazy saves them.
-func lazySaveAdvisories(vmaasData *vmaas.UpdatesV3Response, inventoryID string) error {
+func lazySaveAdvisories(vmaasData *vmaas.UpdatesV3Response, inventoryID uuid.UUID) error {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("advisories-lazy-save"))
 	reportedNames := getReportedAdvisories(vmaasData)
 	if len(reportedNames) < 1 {

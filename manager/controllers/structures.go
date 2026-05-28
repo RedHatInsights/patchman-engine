@@ -33,6 +33,10 @@ type ListMeta struct {
 	HasSystems *bool `json:"has_systems,omitempty"`
 }
 
+// IDPlain, IDStatus, and IDSatelliteManaged use string IDs because they serve both
+// system endpoints (uuid.UUID) and advisory endpoints (names like "RHSA-2024-1234")
+// System callers must convert uuid.UUID to string via .String()
+
 type IDPlain struct {
 	ID string `json:"id"`
 }

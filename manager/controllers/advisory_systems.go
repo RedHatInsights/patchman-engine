@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -23,7 +24,7 @@ type AdvisorySystemsResponse struct {
 
 type AdvisorySystemItem struct {
 	Attributes AdvisorySystemItemAttributes `json:"attributes"`
-	ID         string                       `json:"id"`
+	ID         uuid.UUID                    `json:"id"`
 	Type       string                       `json:"type"`
 }
 
@@ -197,8 +198,8 @@ func systemsIDsStatus(c *gin.Context, systems []SystemsStatusID, meta *ListMeta)
 	ids := make([]string, len(systems))
 	data := make([]IDStatus, len(systems))
 	for i, x := range systems {
-		ids[i] = x.ID
-		data[i] = IDStatus{x.ID, x.Status}
+		ids[i] = x.ID.String()
+		data[i] = IDStatus{x.ID.String(), x.Status}
 	}
 	resp.IDs = ids
 	resp.Data = data

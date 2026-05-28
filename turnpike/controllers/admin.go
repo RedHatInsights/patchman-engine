@@ -14,6 +14,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // @Summary Sync data from VMaaS
@@ -212,26 +213,22 @@ func CleanAADHandler(c *gin.Context) {
 // @Failure 500 {object}	string
 // @Router /systems/{inventory_id} [delete]
 func SystemDeleteHandler(c *gin.Context) {
-	inventoryID := c.Param("inventory_id")
-	if inventoryID == "" {
-		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "inventory_id param not found"})
+	inventoryID, err := uuid.Parse(c.Param("inventory_id"))
+	if err != nil {
+		// catches both empty and malformed inventory_id errors
+		utils.LogAndRespBadRequest(c, err, "incorrect inventory_id format")
 		return
 	}
 
-	if !utils.IsValidUUID(inventoryID) {
-		utils.LogAndRespBadRequest(c, errors.New("bad request"), "incorrect inventory_id format")
-		return
-	}
-
-	var systemInventoryID []string
+	var systemInventoryID []uuid.UUID
 	db := middlewares.DBFromContext(c)
 	tx := db.Begin()
 
 	defer tx.Rollback()
 
-	err := tx.Set("gorm:query_option", "FOR UPDATE OF system_inventory").
+	err = tx.Set("gorm:query_option", "FOR UPDATE OF system_inventory").
 		Table("system_inventory").
-		Where("inventory_id = ?::uuid", inventoryID).
+		Where("inventory_id = ?", inventoryID).
 		Pluck("inventory_id", &systemInventoryID).Error
 
 	if err != nil {
@@ -244,7 +241,7 @@ func SystemDeleteHandler(c *gin.Context) {
 		return
 	}
 
-	query := tx.Exec("select delete_system(?::uuid)", systemInventoryID[0])
+	query := tx.Exec("select delete_system(?)", systemInventoryID[0])
 	if err := query.Error; err != nil {
 		utils.LogAndRespError(c, err, "Could not delete system")
 		return

@@ -10,10 +10,17 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
 const InvalidContentTypeErr = `{"error":"Invalid content type 'test-format', use 'application/json' or 'text/csv'"}`
+
+var (
+	testInventoryID1 = uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	testInventoryID2 = uuid.MustParse("00000000-0000-0000-0000-000000000002")
+	testInventoryID4 = uuid.MustParse("00000000-0000-0000-0000-000000000004")
+)
 
 func ParseResponseBody(t *testing.T, bytes []byte, out interface{}) {
 	// don't use sonic.Unmarshal as some tests receive empty output

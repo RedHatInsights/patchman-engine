@@ -7,13 +7,14 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
-const id = "99c0ffee-0000-0000-0000-0000c0ffee99"
-const someid = "99c0ffee-0000-0000-0000-0000000050de"
+var id = uuid.MustParse("99c0ffee-0000-0000-0000-0000c0ffee99")
+var someid = uuid.MustParse("99c0ffee-0000-0000-0000-0000000050de")
 
-var msg = KafkaMessage{Value: []byte(`{"id": "` + id + `", "type": "delete"}`)}
+var msg = KafkaMessage{Value: []byte(`{"id": "` + id.String() + `", "type": "delete"}`)}
 
 func TestParseEvents(t *testing.T) {
 	reached := false

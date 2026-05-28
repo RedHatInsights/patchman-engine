@@ -12,11 +12,8 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-)
-
-const (
-	inventoryID = "00000000-0000-0000-0000-000000000012"
 )
 
 func checkNotificationPayload(t *testing.T, notification ntf.Notification, name, advType, synopsis string) {
@@ -52,9 +49,9 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 	expectedAdvisoryIDs := []int64{1, 2}     // advisories expected to be paired to the system after evaluation
 	oldSystemAdvisoryIDs := []int64{1, 3, 4} // old advisories paired with the system
 
-	database.DeleteSystemAdvisories(t, systemID, expectedAdvisoryIDs)
+	database.DeleteSystemAdvisories(t, testDBID, expectedAdvisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
-	database.CreateSystemAdvisories(t, rhAccountID, systemID, oldSystemAdvisoryIDs)
+	database.CreateSystemAdvisories(t, rhAccountID, testDBID, oldSystemAdvisoryIDs)
 	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
 	database.CheckCachesValid(t)
 	database.CheckAdvisoriesAccountDataNotified(t, rhAccountID, oldSystemAdvisoryIDs, false)
@@ -62,7 +59,7 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 	orgID := "1234567"
 	// do evaluate the system
 	err := evaluateHandler(mqueue.PlatformEvent{
-		SystemIDs:  []string{"00000000-0000-0000-0000-000000000012"},
+		SystemIDs:  []uuid.UUID{testInventoryID},
 		RequestIDs: []string{"request-2"},
 		AccountID:  rhAccountID,
 		OrgID:      &orgID})
@@ -82,7 +79,7 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 	assert.True(t, events[0].Payload.(map[string]interface{})["advisory_name"].(string) <
 		events[1].Payload.(map[string]interface{})["advisory_name"].(string))
 
-	database.DeleteSystemAdvisories(t, systemID, advisoryIDs)
+	database.DeleteSystemAdvisories(t, testDBID, advisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
 	database.DeleteAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs)
 }
@@ -99,25 +96,25 @@ func TestAdvisoriesNotificationMessage(t *testing.T) {
 
 	displayName := "display-name"
 	inv := &models.SystemInventory{
-		InventoryID: inventoryID,
+		InventoryID: testInventoryID,
 		DisplayName: displayName,
 	}
 	tags := []ntf.SystemTag{{Key: "key", Namespace: "namespace", Value: "value"}}
 
 	orgID := "1234567"
-	url := fmt.Sprintf("https://localhost/insights/inventory/%s", inventoryID)
+	url := fmt.Sprintf("https://localhost/insights/inventory/%s", testInventoryID.String())
 
 	notification, err := ntf.MakeNotification(inv, tags, orgID, NewAdvisoryEvent, events)
 	assert.Nil(t, err)
 	assert.Equal(t, orgID, notification.OrgID)
 	assert.Equal(t, url, notification.Context.HostURL)
-	assert.Equal(t, inventoryID, notification.Context.InventoryID)
+	assert.Equal(t, testInventoryID, notification.Context.InventoryID)
 	assert.Equal(t, displayName, notification.Context.DisplayName)
 	assert.Equal(t, tags, notification.Context.Tags)
 
-	msg, err := mqueue.MessageFromJSON(inventoryID, notification, nil)
+	msg, err := mqueue.MessageFromJSON(testInventoryID.String(), notification, nil)
 	assert.Nil(t, err)
-	assert.Equal(t, inventoryID, string(msg.Key))
+	assert.Equal(t, testInventoryID.String(), string(msg.Key))
 
 	notificationJSON, err := sonic.Marshal(notification)
 	assert.Nil(t, err)
@@ -133,7 +130,7 @@ func TestGetSystemTags(t *testing.T) {
 		Inventory: models.SystemInventory{
 			ID:          1,
 			RhAccountID: 1,
-			InventoryID: "00000000-0000-0000-0000-000000000001",
+			InventoryID: uuid.MustParse("00000000-0000-0000-0000-000000000001"),
 			DisplayName: "display name",
 		},
 		Patch: models.SystemPatch{},
@@ -179,7 +176,7 @@ func TestAdvisoriesNotificationAlreadyNotified(t *testing.T) {
 		Inventory: models.SystemInventory{
 			ID:          1,
 			RhAccountID: rhAccountID,
-			InventoryID: "00000000-0000-0000-0000-000000000001",
+			InventoryID: uuid.MustParse("00000000-0000-0000-0000-000000000001"),
 			DisplayName: "display name",
 		},
 		Patch: models.SystemPatch{},
@@ -209,7 +206,7 @@ func TestAdvisoriesNotificationEmptyAdvisoryMap(t *testing.T) {
 		Inventory: models.SystemInventory{
 			ID:          1,
 			RhAccountID: rhAccountID,
-			InventoryID: "00000000-0000-0000-0000-000000000001",
+			InventoryID: uuid.MustParse("00000000-0000-0000-0000-000000000001"),
 			DisplayName: "display name",
 		},
 		Patch: models.SystemPatch{},

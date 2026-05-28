@@ -90,7 +90,7 @@ func TestEvaluateChanges(t *testing.T) {
 	vmaasData := vmaas.UpdatesV3Response{UpdateList: &updateList}
 
 	// advisories must be lazy saved before evaluating changes
-	err := lazySaveAdvisories(&vmaasData, inventoryID)
+	err := lazySaveAdvisories(&vmaasData, testInventoryID)
 	defer database.DeleteNewlyAddedAdvisories(t)
 	assert.Nil(t, err)
 
@@ -117,7 +117,7 @@ func TestLoadMissingNamesIDs(t *testing.T) {
 	assert.Error(t, err)
 
 	// test OK if lazy saved
-	err = lazySaveAdvisories(&vmaasData, inventoryID)
+	err = lazySaveAdvisories(&vmaasData, testInventoryID)
 	defer database.DeleteNewlyAddedAdvisories(t)
 	assert.NoError(t, err)
 	err = loadMissingNamesIDs(missingNames, extendedAdvisories)
@@ -225,9 +225,9 @@ func TestProcessAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemID := int64(2)
+	dbID := int64(2)
 	system := &models.SystemPlatformV2{
-		Inventory: models.SystemInventory{RhAccountID: 1, ID: systemID},
+		Inventory: models.SystemInventory{RhAccountID: 1, ID: dbID},
 		Patch:     models.SystemPatch{},
 	}
 	extendedAdvisories := extendedAdvisoryMap{
@@ -252,17 +252,17 @@ func TestUpsertSystemAdvisories(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	// ensure consistent environment
-	database.DeleteSystemAdvisories(t, systemID, []int64{3, 4})
-	database.CreateSystemAdvisories(t, rhAccountID, systemID, []int64{3})
+	database.DeleteSystemAdvisories(t, testDBID, []int64{3, 4})
+	database.CreateSystemAdvisories(t, rhAccountID, testDBID, []int64{3})
 
 	// mock data: the system advisory with ID=3 exists and will be updated,
 	// the system advisory with ID=4 will be created
 	advisoryObjs := models.SystemAdvisoriesSlice{
-		models.SystemAdvisories{SystemID: systemID, RhAccountID: rhAccountID,
+		models.SystemAdvisories{SystemID: testDBID, RhAccountID: rhAccountID,
 			AdvisoryID: int64(3),
 			StatusID:   APPLICABLE,
 		},
-		models.SystemAdvisories{SystemID: systemID, RhAccountID: rhAccountID,
+		models.SystemAdvisories{SystemID: testDBID, RhAccountID: rhAccountID,
 			AdvisoryID: int64(4),
 		},
 	}
@@ -270,7 +270,7 @@ func TestUpsertSystemAdvisories(t *testing.T) {
 	// check insert
 	err := upsertSystemAdvisories(database.DB, advisoryObjs)
 	assert.Nil(t, err)
-	database.CheckSystemAdvisories(t, systemID, []int64{3, 4})
+	database.CheckSystemAdvisories(t, testDBID, []int64{3, 4})
 
 	// check update
 	var updatedAdvisory models.SystemAdvisories
@@ -279,12 +279,12 @@ func TestUpsertSystemAdvisories(t *testing.T) {
 	assert.Equal(t, APPLICABLE, updatedAdvisory.StatusID)
 
 	// cleanup
-	database.DeleteSystemAdvisories(t, systemID, []int64{3, 4})
+	database.DeleteSystemAdvisories(t, testDBID, []int64{3, 4})
 }
 
 func TestCalcAdvisoryChanges(t *testing.T) {
 	system := &models.SystemPlatformV2{
-		Inventory: models.SystemInventory{ID: systemID, RhAccountID: rhAccountID},
+		Inventory: models.SystemInventory{ID: testDBID, RhAccountID: rhAccountID},
 		Patch:     models.SystemPatch{},
 	}
 	advisoriesByName := extendedAdvisoryMap{

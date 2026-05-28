@@ -8,11 +8,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type AdvisoryName string
-type SystemID string
+type SystemID = uuid.UUID
 
 type SystemsAdvisoriesRequest struct {
 	Systems    []SystemID     `json:"systems"`
@@ -157,7 +158,7 @@ func advisoriesSystemsQuery(c *gin.Context, db *gorm.DB, acc int, groups map[str
 		Distinct(systemsAdvisoriesSelect).
 		Joins("LEFT JOIN system_advisories sa ON am.id = sa.advisory_id AND sa.rh_account_id = ? AND sa.status_id = 0", acc)
 	if len(systems) > 0 {
-		query = query.Joins(fmt.Sprintf("%s AND si.inventory_id in (?::uuid)", siJoin), systems)
+		query = query.Joins(fmt.Sprintf("%s AND si.inventory_id in (?)", siJoin), systems)
 	} else {
 		query = query.Joins(siJoin)
 	}
@@ -290,11 +291,11 @@ func PostAdvisoriesSystems(c *gin.Context) {
 	}
 
 	for _, i := range data {
-		if _, has := response.Data[i.AdvisoryID]; has && i.SystemID == "" {
+		if _, has := response.Data[i.AdvisoryID]; has && i.SystemID == uuid.Nil {
 			// don't append empty values to slices with len > 1
 			continue
 		}
-		if _, has := response.Data[i.AdvisoryID]; !has && i.SystemID == "" {
+		if _, has := response.Data[i.AdvisoryID]; !has && i.SystemID == uuid.Nil {
 			response.Data[i.AdvisoryID] = []SystemID{}
 			continue
 		}

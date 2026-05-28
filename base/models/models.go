@@ -54,9 +54,9 @@ func (TemplateBase) TableName() string {
 }
 
 type SystemInventory struct {
-	ID                               int64  `gorm:"primaryKey"`
-	InventoryID                      string `gorm:"unique"`
-	RhAccountID                      int    `gorm:"primaryKey"`
+	ID                               int64     `gorm:"primaryKey"`
+	InventoryID                      uuid.UUID `gorm:"unique"`
+	RhAccountID                      int       `gorm:"primaryKey"`
 	VmaasJSON                        *string
 	JSONChecksum                     *string
 	LastUpdated                      *time.Time `gorm:"default:null"` // set by trigger system_inventory_set_last_updated
@@ -94,9 +94,9 @@ func (SystemInventory) TableName() string {
 	return "system_inventory"
 }
 
-func (s *SystemInventory) GetInventoryID() string {
+func (s *SystemInventory) GetInventoryID() uuid.UUID {
 	if s == nil {
-		return ""
+		return uuid.Nil
 	}
 	return s.InventoryID
 }
@@ -133,9 +133,9 @@ type SystemPlatformV2 struct {
 	Patch     SystemPatch     `gorm:"embedded"`
 }
 
-func (v *SystemPlatformV2) GetInventoryID() string {
+func (v *SystemPlatformV2) GetInventoryID() uuid.UUID {
 	if v == nil {
-		return ""
+		return uuid.Nil
 	}
 	return v.Inventory.GetInventoryID()
 }
@@ -200,7 +200,7 @@ type PackageUpdate struct {
 }
 
 type DeletedSystem struct {
-	InventoryID string
+	InventoryID uuid.UUID
 	WhenDeleted time.Time
 }
 

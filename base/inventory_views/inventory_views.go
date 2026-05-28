@@ -5,12 +5,13 @@ import (
 	"app/base/utils"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type InventoryViewsHost struct {
 	// Inventory ID (UUID) of the host
-	ID   string                 `json:"id"`
+	ID   uuid.UUID              `json:"id"`
 	Data InventoryViewsHostData `json:"data"`
 }
 

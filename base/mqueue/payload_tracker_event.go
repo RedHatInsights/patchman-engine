@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -14,7 +15,7 @@ type PayloadTrackerEvent struct {
 	Service     string                       `json:"service"`
 	OrgID       *string                      `json:"org_id,omitempty"`
 	RequestID   *string                      `json:"request_id"`
-	InventoryID string                       `json:"inventory_id"`
+	InventoryID uuid.UUID                    `json:"inventory_id"`
 	Status      string                       `json:"status"`
 	StatusMsg   string                       `json:"status_msg,omitempty"`
 	Date        *types.Rfc3339TimestampWithZ `json:"date"`

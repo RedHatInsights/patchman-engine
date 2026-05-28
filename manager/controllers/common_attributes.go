@@ -1,7 +1,11 @@
 // nolint:lll
 package controllers
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type MetaTotalHelper struct {
 	// a helper to get total number of systems
@@ -65,7 +69,7 @@ type SystemStale struct {
 }
 
 type SystemIDAttribute struct {
-	ID string `json:"id" csv:"id" query:"si.inventory_id" gorm:"column:inventory_id"`
+	ID uuid.UUID `json:"id" csv:"id" query:"si.inventory_id" gorm:"column:inventory_id"`
 }
 
 type SystemAdvisoryStatus struct {

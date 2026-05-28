@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -60,6 +61,13 @@ func parserForType(v reflect.Type) (AttrParser, error) {
 		}, nil
 	case reflect.Ptr:
 		return parserForType(v.Elem())
+	case reflect.Array:
+		if v == reflect.TypeOf(uuid.UUID{}) {
+			return func(s string) (i interface{}, err error) {
+				return uuid.Parse(s)
+			}, nil
+		}
+		fallthrough
 	case reflect.Struct:
 		if reflect.TypeOf(time.Time{}).AssignableTo(v) {
 			return func(s string) (i interface{}, err error) {

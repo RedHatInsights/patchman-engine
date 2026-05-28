@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,9 +25,9 @@ func TestGetCurrentRepoBasedInventoryIDs(t *testing.T) {
 	inventoryAIDs, err := getCurrentRepoBasedInventoryIDs()
 	assert.Nil(t, err)
 	assert.Equal(t, []mqueue.EvalData{
-		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID1},
-		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1, OrgID: &orgID1},
-		{InventoryID: "00000000-0000-0000-0000-000000000017", RhAccountID: 1, OrgID: &orgID1}},
+		{InventoryID: uuid.MustParse("00000000-0000-0000-0000-000000000002"), RhAccountID: 1, OrgID: &orgID1},
+		{InventoryID: uuid.MustParse("00000000-0000-0000-0000-000000000003"), RhAccountID: 1, OrgID: &orgID1},
+		{InventoryID: uuid.MustParse("00000000-0000-0000-0000-000000000017"), RhAccountID: 1, OrgID: &orgID1}},
 		inventoryAIDs)
 	resetLastEvalTimestamp(t)
 }
@@ -51,13 +52,13 @@ func TestGetAllInventoryIDs(t *testing.T) {
 		if inventoryAIDs[i].RhAccountID != inventoryAIDs[j].RhAccountID {
 			return inventoryAIDs[i].RhAccountID < inventoryAIDs[j].RhAccountID
 		}
-		return inventoryAIDs[i].InventoryID < inventoryAIDs[j].InventoryID
+		return inventoryAIDs[i].InventoryID.String() < inventoryAIDs[j].InventoryID.String()
 	})
 	sort.Slice(systems, func(i, j int) bool {
 		if systems[i].RhAccountID != systems[j].RhAccountID {
 			return systems[i].RhAccountID < systems[j].RhAccountID
 		}
-		return systems[i].InventoryID < systems[j].InventoryID
+		return systems[i].InventoryID.String() < systems[j].InventoryID.String()
 	})
 
 	for i, inv := range inventoryAIDs {
@@ -113,9 +114,9 @@ func TestGetRepoPackageBasedInventoryIDs(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, []mqueue.EvalData{
 		// "kernel" in "repo2"
-		{InventoryID: "00000000-0000-0000-0000-000000000002", RhAccountID: 1, OrgID: &orgID1},
-		{InventoryID: "00000000-0000-0000-0000-000000000003", RhAccountID: 1, OrgID: &orgID1},
-		{InventoryID: "00000000-0000-0000-0000-000000000017", RhAccountID: 1, OrgID: &orgID1},
+		{InventoryID: uuid.MustParse("00000000-0000-0000-0000-000000000002"), RhAccountID: 1, OrgID: &orgID1},
+		{InventoryID: uuid.MustParse("00000000-0000-0000-0000-000000000003"), RhAccountID: 1, OrgID: &orgID1},
+		{InventoryID: uuid.MustParse("00000000-0000-0000-0000-000000000017"), RhAccountID: 1, OrgID: &orgID1},
 	}, inventoryAIDs)
 
 	repos = []string{"not_installed_pkg"}

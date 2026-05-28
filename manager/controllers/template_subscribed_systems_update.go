@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -40,7 +41,7 @@ func TemplateSubscribedSystemsUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	systemList := []string{systemUUID}
+	systemList := []uuid.UUID{systemUUID}
 	err = checkTemplateSystems(c, db, account, template, systemList, nil)
 	if err != nil {
 		return
@@ -64,24 +65,25 @@ func TemplateSubscribedSystemsUpdateHandler(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func getSubscribedSystem(c *gin.Context, tx *gorm.DB) (int, string, string, error) {
+func getSubscribedSystem(c *gin.Context, tx *gorm.DB) (int, string, uuid.UUID, error) {
 	account := c.GetInt(utils.KeyAccount)
 	orgID := c.GetString(utils.KeyOrgID)
 	systemCn := c.GetString(utils.KeySystem)
 
-	var inventoryID string
+	var inventoryIDStr string
 	err := tx.Select("inventory_id").
 		Table("system_inventory").
 		Where("subscription_manager_id = ? AND rh_account_id = ?", systemCn, account).
-		Limit(1).Find(&inventoryID).Error
+		Limit(1).Find(&inventoryIDStr).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		utils.LogAndRespError(c, err, "database error")
-		return 0, "", "", err
+		return 0, "", uuid.Nil, err
 	}
-	if inventoryID == "" {
+	inventoryID, _ := uuid.Parse(inventoryIDStr)
+	if inventoryID == uuid.Nil {
 		err := errors.Errorf("System %s not found", systemCn)
 		utils.LogAndRespNotFound(c, err, err.Error())
-		return 0, "", "", err
+		return 0, "", uuid.Nil, err
 	}
 	return account, orgID, inventoryID, err
 }
