@@ -516,6 +516,34 @@ objects:
                                                       key: vmaas-sync-database-password}}}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
 
+    - name: workspace-backfill
+      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
+      schedule: ${WORKSPACE_BACKFILL_SCHEDULE}
+      suspend: ${{WORKSPACE_BACKFILL_SUSPEND}}
+      concurrencyPolicy: Forbid
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
+        command:
+          - ./scripts/entrypoint.sh
+          - job
+          - workspace_backfill
+        env:
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
+        - {name: DB_USER, value: vmaas_sync}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                      key: vmaas-sync-database-password}}}
+        - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
+        - {name: POD_CONFIG, value: '${WORKSPACE_BACKFILL_CONFIG}'}
+
     database:
       name: patchman
       version: 16
@@ -762,6 +790,10 @@ parameters:
 # Clean advisory_account_data
 - {name: CLEAN_AAD_SCHEDULE, value: '0 12 * * *'} # Cronjob schedule definition
 - {name: CLEAN_AAD_SUSPEND, value: 'false'} # Disable cronjob execution
+# Workspace backfill (one-time data migration; keep suspended until ready to run)
+- {name: WORKSPACE_BACKFILL_SCHEDULE, value: '*/10 * * * *'} # Cronjob schedule definition
+- {name: WORKSPACE_BACKFILL_SUSPEND, value: 'true'} # Disable cronjob execution
+- {name: WORKSPACE_BACKFILL_CONFIG, value: 'workspace_backfill_batch_size=1000;workspace_backfill_max_rows_per_run=50000;workspace_backfill_batch_sleep_ms=0'}
 
 # Database admin
 - {name: LOG_LEVEL_DATABASE_ADMIN, value: debug}
