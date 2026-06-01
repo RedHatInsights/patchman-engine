@@ -42,4 +42,10 @@ var (
 	MaxChangedPackages = utils.PodConfig.GetInt("max_changed_packages", 30000)
 	// prune deleted_system table records older than threshold
 	DeletedSystemsThreshold = time.Hour * time.Duration(utils.PodConfig.GetInt("system_delete_hrs", 4))
+	// Max system_inventory rows updated per workspace backfill job run
+	WorkspaceBackfillMaxRowsPerRun = utils.PodConfig.GetInt("workspace_backfill_max_rows_per_run", 50000)
+	// Batch size per account in workspace backfill job
+	WorkspaceBackfillBatchSize = utils.PodConfig.GetInt("workspace_backfill_batch_size", 1000)
+	// Sleep between workspace backfill batches in milliseconds
+	WorkspaceBackfillBatchSleepMs = utils.PodConfig.GetInt("workspace_backfill_batch_sleep_ms", 0)
 )
