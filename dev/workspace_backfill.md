@@ -118,6 +118,10 @@ docker compose -f docker-compose.workspace-backfill.yml run --rm \
   workspace-backfill ./scripts/workspace_backfill_e2e.sh
 ```
 
+## Database user
+
+The job connects as the **admin** user (`core.ConfigureAdminApp()`), same credentials as migrations (`database.adminUsername` / `adminPassword` from Clowder). That is required for `SET LOCAL session_replication_role = replica` and matches local testing via `cdappconfig.json`.
+
 ## Production
 
-CronJob `workspace-backfill` in [`deploy/clowdapp.yaml`](../deploy/clowdapp.yaml) uses `WORKSPACE_BACKFILL_CONFIG` with `workspace_backfill_max_rows_per_run=50000` (suspended by default). Run on a schedule until pending rows are gone.
+CronJob `workspace-backfill` in [`deploy/clowdapp.yaml`](../deploy/clowdapp.yaml) uses `WORKSPACE_BACKFILL_CONFIG` with `workspace_backfill_max_rows_per_run=50000` (suspended by default). Run on a schedule until pending rows are gone. Admin DB credentials are provided by the platform (Clowder), not component secrets.
