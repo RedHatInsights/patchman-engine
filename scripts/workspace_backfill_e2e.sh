@@ -28,16 +28,16 @@ export WAIT_FOR_FULL_DB=1
 unset WAIT_FOR_FULL_DB
 
 echo "==> Loading system_inventory test data"
-psql_admin -f dev/test_generate_system_inventory.sql
+psql_admin -f dev/workspace_backfill/test_generate_system_inventory.sql
 
 echo "==> Clearing workspace_id / workspace_name (triggers disabled per transaction)"
-psql_admin -f dev/prepare_workspace_backfill_test.sql
+psql_admin -f dev/workspace_backfill/prepare_workspace_backfill_test.sql
 
 echo "==> Running workspace_backfill job"
 ./scripts/entrypoint.sh job workspace_backfill
 
 echo "==> Verifying backfill"
-mapfile -t _wb_counts < <(psql_admin -t -A -f dev/verify_workspace_backfill.sql)
+mapfile -t _wb_counts < <(psql_admin -t -A -f dev/workspace_backfill/verify_workspace_backfill.sql)
 pending="${_wb_counts[0]}"
 mismatched="${_wb_counts[1]}"
 
