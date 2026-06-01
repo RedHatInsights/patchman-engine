@@ -57,7 +57,8 @@ workspace_id IS NULL
   AND NOT (` + validWorkspacesJSONPredicate + `)`
 
 func configure() {
-	core.ConfigureApp()
+	// Admin DB user (same as migrations): UPDATE on partitions and session_replication_role = replica.
+	core.ConfigureAdminApp()
 }
 
 // RunWorkspaceBackfill runs the batched workspace_id / workspace_name backfill job.
