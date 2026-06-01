@@ -8,19 +8,19 @@ Backfill copies `workspaces` JSON into `workspace_id` and `workspace_name` on `s
 
 | File | Purpose |
 |------|---------|
-| [`docker-compose.workspace-backfill.yml`](../docker-compose.workspace-backfill.yml) | `db` + optional one-shot e2e runner |
-| [`conf/workspace_backfill.env`](../conf/workspace_backfill.env) | Local Docker `POD_CONFIG` (**1000** rows per job run) |
-| [`dev/test_generate_system_inventory.sql`](test_generate_system_inventory.sql) | Fast load: accounts + inventory + patch only |
-| [`dev/prepare_workspace_backfill_test.sql`](prepare_workspace_backfill_test.sql) | Clear `workspace_id` / `workspace_name` without triggers |
-| [`dev/verify_workspace_backfill.sql`](verify_workspace_backfill.sql) | Check pending / mismatched rows |
-| [`scripts/workspace_backfill_e2e.sh`](../scripts/workspace_backfill_e2e.sh) | Automated pipeline: setup + **one** job run + verify |
+| [`docker-compose.workspace-backfill.yml`](../../docker-compose.workspace-backfill.yml) | `db` + optional one-shot e2e runner |
+| [`conf/workspace_backfill.env`](../../conf/workspace_backfill.env) | Local Docker `POD_CONFIG` (**1000** rows per job run) |
+| [`test_generate_system_inventory.sql`](test_generate_system_inventory.sql) | Fast load: accounts + inventory + patch only |
+| [`prepare_workspace_backfill_test.sql`](prepare_workspace_backfill_test.sql) | Clear `workspace_id` / `workspace_name` without triggers |
+| [`verify_workspace_backfill.sql`](verify_workspace_backfill.sql) | Check pending / mismatched rows |
+| [`scripts/workspace_backfill_e2e.sh`](../../scripts/workspace_backfill_e2e.sh) | Automated pipeline: setup + **one** job run + verify |
 
 ## Configuration (`POD_CONFIG`)
 
-| Key | Local Docker ([`conf/workspace_backfill.env`](../conf/workspace_backfill.env)) | Code / production default |
+| Key | Local Docker ([`conf/workspace_backfill.env`](../../conf/workspace_backfill.env)) | Code / production default |
 |-----|----------------------------------------------------------------------------------|---------------------------|
 | `workspace_backfill_batch_size` | `1000` | `1000` |
-| `workspace_backfill_max_rows_per_run` | **`1000`** | **`50000`** ([`tasks/config.go`](../tasks/config.go), [`deploy/clowdapp.yaml`](../deploy/clowdapp.yaml)) |
+| `workspace_backfill_max_rows_per_run` | **`1000`** | **`50000`** ([`tasks/config.go`](../../tasks/config.go), [`deploy/clowdapp.yaml`](../../deploy/clowdapp.yaml)) |
 | `workspace_backfill_batch_sleep_ms` | `0` | `0` |
 
 Local compose loads `workspace_backfill.env` so each job invocation updates at most **1000** rows. Re-run the job manually until logs say `Workspace backfill complete`.
@@ -56,8 +56,8 @@ unset WAIT_FOR_EMPTY_DB
 export WAIT_FOR_FULL_DB=1
 ./dev/scripts/wait-for-services.sh true
 unset WAIT_FOR_FULL_DB
-PGPASSWORD=passwd psql -h db -p 5432 -U admin -d patchman -f dev/test_generate_system_inventory.sql
-PGPASSWORD=passwd psql -h db -p 5432 -U admin -d patchman -f dev/prepare_workspace_backfill_test.sql
+PGPASSWORD=passwd psql -h db -p 5432 -U admin -d patchman -f dev/workspace_backfill/test_generate_system_inventory.sql
+PGPASSWORD=passwd psql -h db -p 5432 -U admin -d patchman -f dev/workspace_backfill/prepare_workspace_backfill_test.sql
 '
 ```
 
@@ -87,7 +87,7 @@ PGPASSWORD=passwd psql -h localhost -p 5433 -U admin -d patchman -c \
 Verify when `pending` is 0:
 
 ```bash
-PGPASSWORD=passwd psql -h localhost -p 5433 -U admin -d patchman -f dev/verify_workspace_backfill.sql
+PGPASSWORD=passwd psql -h localhost -p 5433 -U admin -d patchman -f dev/workspace_backfill/verify_workspace_backfill.sql
 ```
 
 Expect `pending = 0` and `mismatched = 0`.
@@ -124,4 +124,4 @@ The job connects as the **admin** user (`core.ConfigureAdminApp()`), same creden
 
 ## Production
 
-CronJob `workspace-backfill` in [`deploy/clowdapp.yaml`](../deploy/clowdapp.yaml) uses `WORKSPACE_BACKFILL_CONFIG` with `workspace_backfill_max_rows_per_run=50000` (suspended by default). Run on a schedule until pending rows are gone. Admin DB credentials are provided by the platform (Clowder), not component secrets.
+CronJob `workspace-backfill` in [`deploy/clowdapp.yaml`](../../deploy/clowdapp.yaml) uses `WORKSPACE_BACKFILL_CONFIG` with `workspace_backfill_max_rows_per_run=50000` (suspended by default). Run on a schedule until pending rows are gone. Admin DB credentials are provided by the platform (Clowder), not component secrets.
