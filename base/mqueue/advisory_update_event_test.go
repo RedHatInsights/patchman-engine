@@ -7,21 +7,20 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
 var (
-	testWorkspaceID = uuid.New()
-	testNow         = types.Rfc3339Timestamp(time.Now())
+	testWorkspaceIDs = []string{"00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002"}
+	testNow          = types.Rfc3339Timestamp(time.Now())
 )
 
 func TestAdvisoryUpdateEventMarshal(t *testing.T) {
 	event := AdvisoryUpdateEvent{
-		RhAccountID: 1,
-		WorkspaceID: testWorkspaceID,
-		AdvisoryIDs: []int64{101, 202, 303},
-		ProducedAt:  testNow,
+		RhAccountID:  1,
+		WorkspaceIDs: testWorkspaceIDs,
+		AdvisoryIDs:  []int64{101, 202, 303},
+		ProducedAt:   testNow,
 	}
 
 	data, err := sonic.Marshal(&event)
@@ -31,7 +30,7 @@ func TestAdvisoryUpdateEventMarshal(t *testing.T) {
 	err = sonic.Unmarshal(data, &parsed)
 	assert.NoError(t, err)
 	assert.Equal(t, event.RhAccountID, parsed.RhAccountID)
-	assert.Equal(t, event.WorkspaceID, parsed.WorkspaceID)
+	assert.Equal(t, event.WorkspaceIDs, parsed.WorkspaceIDs)
 	assert.Equal(t, event.AdvisoryIDs, parsed.AdvisoryIDs)
 	assert.NotNil(t, parsed.ProducedAt)
 }
@@ -41,16 +40,16 @@ func TestAdvisoryUpdateEventsWriteEvents(t *testing.T) {
 
 	events := AdvisoryUpdateEvents{
 		{
-			RhAccountID: 1,
-			WorkspaceID: testWorkspaceID,
-			AdvisoryIDs: []int64{100, 200},
-			ProducedAt:  testNow,
+			RhAccountID:  1,
+			WorkspaceIDs: testWorkspaceIDs,
+			AdvisoryIDs:  []int64{100, 200},
+			ProducedAt:   testNow,
 		},
 		{
-			RhAccountID: 2,
-			WorkspaceID: testWorkspaceID,
-			AdvisoryIDs: []int64{300},
-			ProducedAt:  testNow,
+			RhAccountID:  2,
+			WorkspaceIDs: testWorkspaceIDs,
+			AdvisoryIDs:  []int64{300},
+			ProducedAt:   testNow,
 		},
 	}
 
@@ -64,7 +63,7 @@ func TestAdvisoryUpdateEventsWriteEvents(t *testing.T) {
 	err = sonic.Unmarshal(mockWriter.Messages[0].Value, &firstEvent)
 	assert.NoError(t, err)
 	assert.Equal(t, events[0].RhAccountID, firstEvent.RhAccountID)
-	assert.Equal(t, events[0].WorkspaceID, firstEvent.WorkspaceID)
+	assert.Equal(t, events[0].WorkspaceIDs, firstEvent.WorkspaceIDs)
 	assert.Equal(t, events[0].AdvisoryIDs, firstEvent.AdvisoryIDs)
 	assert.NotNil(t, firstEvent.ProducedAt)
 
@@ -72,7 +71,7 @@ func TestAdvisoryUpdateEventsWriteEvents(t *testing.T) {
 	err = sonic.Unmarshal(mockWriter.Messages[1].Value, &secondEvent)
 	assert.NoError(t, err)
 	assert.Equal(t, events[1].RhAccountID, secondEvent.RhAccountID)
-	assert.Equal(t, events[1].WorkspaceID, secondEvent.WorkspaceID)
+	assert.Equal(t, events[1].WorkspaceIDs, secondEvent.WorkspaceIDs)
 	assert.Equal(t, events[1].AdvisoryIDs, secondEvent.AdvisoryIDs)
 	assert.NotNil(t, secondEvent.ProducedAt)
 }
