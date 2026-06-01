@@ -1,0 +1,41 @@
+# E2E workspace backfill: DB + one-shot runner (no Kafka/platform).
+#
+#   docker compose -f docker-compose.workspace-backfill.yml up --build --abort-on-container-exit
+#
+# Uses host port 5433 (same as docker-compose.test.yml). Do not run both stacks at once.
+
+services:
+  db:
+    container_name: patchman-wb-db
+    build:
+      context: .
+      dockerfile: dev/database/Dockerfile
+    image: patchman-engine-db
+    ports:
+      - 5433:5432
+    env_file:
+      - ./conf/database.env
+
+  workspace-backfill:
+    container_name: patchman-wb-runner
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - INSTALL_TOOLS=yes
+      target: buildimg
+    image: patchman-engine-app
+    env_file:
+      - ./conf/common.env
+      - ./conf/database.env
+      - ./conf/database_admin.env
+      - ./conf/gorun.env
+      - ./conf/workspace_backfill.env
+    depends_on:
+      - db
+    user: root
+    command: ./scripts/workspace_backfill_e2e.sh
+    volumes:
+      - ./:/go/src/app/
+    security_opt:
+      - label=disable
