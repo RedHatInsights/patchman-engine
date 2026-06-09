@@ -61,6 +61,7 @@ var (
 	nEvalGoroutines               int
 	enableInstantNotifications    bool
 	enableInventoryViews          bool
+	enableAdvisoryUpdates         bool
 	enableSatelliteFunctionality  bool
 	errVmaasBadRequest            = errors.New("vmaas bad request")
 )
@@ -69,7 +70,7 @@ const WarnPayloadTracker = "unable to send message to payload tracker"
 
 func configure() {
 	core.ConfigureApp()
-	confugureEvaluator()
+	configureEvaluator()
 	evalTopic = utils.FailIfEmpty(utils.CoreCfg.EvalTopic, "EVAL_TOPIC")
 	ptTopic = utils.FailIfEmpty(utils.CoreCfg.PayloadTrackerTopic, "PAYLOAD_TRACKER_TOPIC")
 	ptWriter = mqueue.NewKafkaWriterFromEnv(ptTopic)
@@ -82,10 +83,11 @@ func configure() {
 	configureRemediations()
 	configureNotifications()
 	configureInventoryViews()
+	configureAdvisoryUpdates()
 	configureStatus()
 }
 
-func confugureEvaluator() {
+func configureEvaluator() {
 	evalLabel = utils.FailIfEmpty(utils.PodConfig.GetString("label", ""), "label")
 	// Number of kafka readers for upload topic
 	consumerCount = utils.PodConfig.GetInt("consumer_count", 1)
@@ -131,6 +133,8 @@ func confugureEvaluator() {
 	enableInstantNotifications = utils.PodConfig.GetBool("instant_notifications", true)
 	// Send inventory views events
 	enableInventoryViews = utils.PodConfig.GetBool("inventory_views", true)
+	// Send advisory update events
+	enableAdvisoryUpdates = utils.PodConfig.GetBool("advisory_updates", false)
 	// Ignore templates for satellite managed systems
 	enableSatelliteFunctionality = utils.PodConfig.GetBool("satellite_functionality", true)
 }
@@ -456,6 +460,8 @@ func commitWithObserve(tx *gorm.DB) error {
 
 // EvaluateAndStore first loads advisories and packages (including change evaluation)
 // and then executes all deletions, updates, and insertions in a single transaction.
+
+//nolint:funlen
 func evaluateAndStore(system *models.SystemPlatformV2,
 	vmaasData *vmaas.UpdatesV3Response, event *mqueue.PlatformEvent) error {
 	advisoriesByName, err := lazySaveAndLoadAdvisories(system, vmaasData)
@@ -506,6 +512,15 @@ func evaluateAndStore(system *models.SystemPlatformV2,
 			evaluationCnt.WithLabelValues("error-advisory-notification").Inc()
 			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err.Error(),
 				"publishing new advisories notification failed")
+		}
+	}
+
+	if enableAdvisoryUpdates {
+		err = publishAdvisoryUpdates(system, advisoriesByName)
+		if err != nil {
+			evaluationCnt.WithLabelValues("error-advisory-update-publish").Inc()
+			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err.Error(),
+				"publishing advisory update event failed")
 		}
 	}
 
