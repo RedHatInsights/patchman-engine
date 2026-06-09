@@ -260,6 +260,7 @@ func initKafkaFromClowder() {
 		translateTopic(&CoreCfg.NotificationsTopic)
 		translateTopic(&CoreCfg.TemplateTopic)
 		translateTopic(&CoreCfg.InventoryViewsTopic)
+		translateTopic(&CoreCfg.AdvisoryUpdateTopic)
 	}
 }
 
@@ -412,6 +413,7 @@ func printKafkaParams() {
 	fmt.Printf("NOTIFICATIONS_TOPIC=%s\n", CoreCfg.NotificationsTopic)
 	fmt.Printf("TEMPLATE_TOPIC=%s\n", CoreCfg.TemplateTopic)
 	fmt.Printf("INVENTORY_VIEWS_TOPIC=%s\n", CoreCfg.InventoryViewsTopic)
+	fmt.Printf("ADVISORY_UPDATE_TOPIC=%s\n", CoreCfg.AdvisoryUpdateTopic)
 }
 
 func printServicesParams() {
