@@ -15,7 +15,7 @@ import (
 var TemplateCsvHeader = "id,display_name,os,rhsm," +
 	"installable_rhsa_count,installable_rhba_count,installable_rhea_count,installable_other_count," +
 	"applicable_rhsa_count,applicable_rhba_count,applicable_rhea_count,applicable_other_count," +
-	"tags,groups,last_upload"
+	"tags,groups,workspace_id,workspace_name,last_upload"
 
 // nolint: dupl
 func TestTemplateSystemsExportJSON(t *testing.T) {
@@ -69,13 +69,13 @@ func TestTemplateSystemsExportCSV(t *testing.T) {
 	assert.Equal(t, "00000000-0000-0000-0000-000000000002,00000000-0000-0000-0000-000000000002,RHEL 8.1,"+
 		"8.1,0,0,0,0,0,0,1,0,\"[{'key':'k1','namespace':'ns1','value':'val1'},"+
 		"{'key':'k2','namespace':'ns1','value':'val2'},{'key':'k3','namespace':'ns1','value':'val3'}]\","+
-		"\"[{'id':'aaaaaaaa-0000-0000-0000-000000000001','name':'group1'}]\",2018-09-22T16:00:00Z",
-		lines[1])
+		"\"[{'id':'00000000-0000-0000-0000-000000000001','name':'group1'}]\","+
+		"00000000-0000-0000-0000-000000000001,group1,2018-09-22T16:00:00Z", lines[1])
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001,00000000-0000-0000-0000-000000000001,RHEL 8.10,"+
 		"8.10,2,2,1,0,2,3,3,0,\"[{'key':'k1','namespace':'ns1','value':'val1'},"+
 		"{'key':'k2','namespace':'ns1','value':'val2'}]\","+
-		"\"[{'id':'aaaaaaaa-0000-0000-0000-000000000001','name':'group1'}]\",2020-09-22T16:00:00Z",
-		lines[2])
+		"\"[{'id':'00000000-0000-0000-0000-000000000001','name':'group1'}]\","+
+		"00000000-0000-0000-0000-000000000001,group1,2020-09-22T16:00:00Z", lines[2])
 }
 
 func TestTemplateSystemsExportWrongFormat(t *testing.T) {

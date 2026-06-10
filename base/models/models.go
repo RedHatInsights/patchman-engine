@@ -74,6 +74,8 @@ type SystemInventory struct {
 	Tags                             []byte            `gorm:"column:tags"`
 	Created                          time.Time         // set by trigger system_platform_insert_trigger
 	Workspaces                       *inventory.Groups `gorm:"column:workspaces"`
+	WorkspaceID                      *uuid.UUID        `gorm:"column:workspace_id"`
+	WorkspaceName                    *string           `gorm:"column:workspace_name"`
 	StaleTimestamp                   *time.Time
 	StaleWarningTimestamp            *time.Time
 	CulledTimestamp                  *time.Time

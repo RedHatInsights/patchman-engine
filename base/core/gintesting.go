@@ -17,6 +17,15 @@ type ContextKV struct {
 
 var V3APICtx = ContextKV{Key: utils.KeyApiver, Value: 3}
 
+var WorkspacesTestCtx = ContextKV{
+	Key: utils.KeyInventoryWorkspaces,
+	Value: []string{
+		"00000000-0000-0000-0000-000000000001",
+		"00000000-0000-0000-0000-000000000002",
+		"00000000-0000-0000-0000-999999999999",
+	},
+}
+
 func InitRouter(handler gin.HandlerFunc, contextKVs ...ContextKV) *gin.Engine {
 	return InitRouterWithPath(handler, "/", contextKVs...)
 }
@@ -32,6 +41,7 @@ func InitRouterWithParams(handler gin.HandlerFunc, account int, method, path str
 	router.Use(func(c *gin.Context) {
 		// set default api version for tests to latest
 		c.Set(utils.KeyApiver, LatestAPIVersion)
+		c.Set(utils.KeyInventoryWorkspaces, WorkspacesTestCtx.Value)
 		for _, kv := range contextKVs {
 			c.Set(kv.Key, kv.Value)
 		}

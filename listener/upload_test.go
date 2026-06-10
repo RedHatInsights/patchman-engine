@@ -479,7 +479,8 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	vmaasJSON := "this_is_json"
 	// insert new row
 	hostEvent := createTestUploadEvent("1", testInventoryID, "puptoo", false, true, "created")
-	hostWorkspaces := inventory.Groups(hostEvent.Host.Groups)
+	workspaceID := uuid.MustParse(hostEvent.Host.Groups[0].ID)
+	workspaceName := &hostEvent.Host.Groups[0].Name
 	inStore := &models.SystemPlatformV2{
 		Inventory: models.SystemInventory{
 			InventoryID:                      uuid.MustParse("99990000-0000-0000-0000-000000000001"),
@@ -489,7 +490,8 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 			SatelliteManaged:                 false,
 			Created:                          hostEvent.Host.Created,
 			Tags:                             utils.MarshalNilToJSONB(hostEvent.Host.Tags),
-			Workspaces:                       &hostWorkspaces,
+			WorkspaceID:                      &workspaceID,
+			WorkspaceName:                    workspaceName,
 			OSName:                           utils.EmptyToNil(&hostEvent.Host.SystemProfile.OperatingSystem.Name),
 			OSMajor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Major,
 			OSMinor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Minor,
@@ -532,8 +534,10 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	assert.Contains(t, string(inventoryAfterInsert.Tags), `"key": "env"`)
 	assert.Contains(t, string(inventoryAfterInsert.Tags), `"value": "prod"`)
 
-	require.NotNil(t, inventoryAfterInsert.Workspaces)
-	assert.Equal(t, hostEvent.Host.Groups, []inventory.Group(*inventoryAfterInsert.Workspaces))
+	require.NotNil(t, inventoryAfterInsert.WorkspaceID)
+	assert.Equal(t, hostEvent.Host.Groups[0].ID, inventoryAfterInsert.WorkspaceID.String())
+	require.NotNil(t, inventoryAfterInsert.WorkspaceName)
+	assert.Equal(t, hostEvent.Host.Groups[0].Name, *inventoryAfterInsert.WorkspaceName)
 
 	assert.Equal(t, hostEvent.Host.SystemProfile.OperatingSystem.Name, *inventoryAfterInsert.OSName)
 	assert.Equal(t, hostEvent.Host.SystemProfile.OperatingSystem.Major, *inventoryAfterInsert.OSMajor)
@@ -571,7 +575,8 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 			SatelliteManaged:                 true,
 			Created:                          hostEvent.Host.Created,
 			Tags:                             utils.MarshalNilToJSONB(hostEvent.Host.Tags),
-			Workspaces:                       &hostWorkspaces,
+			WorkspaceID:                      &workspaceID,
+			WorkspaceName:                    workspaceName,
 			OSName:                           utils.EmptyToNil(&hostEvent.Host.SystemProfile.OperatingSystem.Name),
 			OSMajor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Major,
 			OSMinor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Minor,

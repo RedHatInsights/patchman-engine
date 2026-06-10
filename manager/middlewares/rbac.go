@@ -17,6 +17,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+const rootWorkspaceID = "00000000-0000-0000-0000-999999999999"
+
 var (
 	rbacURL    = ""
 	httpClient = &http.Client{}
@@ -124,36 +126,30 @@ func isAccessGranted(c *gin.Context) bool {
 
 	granted := checkPermissions(&access, handlerName, c.Request.Method)
 	if granted {
-		// collect inventory groups
-		groups, err := findInventoryGroups(&access)
+		workspaces, err := findInventoryWorkspaces(&access)
 		if err != nil {
 			utils.LogError("err", err.Error(), "RBAC")
 			granted = false
 		}
-		c.Set(utils.KeyInventoryGroups, groups)
+		c.Set(utils.KeyInventoryWorkspaces, workspaces)
 	}
 	return granted
 }
 
-// nolint: gocognit
-func findInventoryGroups(access *rbac.AccessPagination) (map[string]string, error) {
-	res := make(map[string]string)
-
+func findInventoryWorkspaces(access *rbac.AccessPagination) ([]string, error) {
 	if len(access.Data) == 0 {
 		utils.LogDebug("rbac zero access data")
-		return res, nil
+		return nil, nil
 	}
 	inventoryHostsReadPerms := expandedPermission(inventoryHostsReadPerm)
-	groups := []string{}
+	workspaceIDs := make([]string, 0)
 	for _, a := range access.Data {
-		// look for groups only on inventory:hosts:read permissions
 		if !slices.Contains(inventoryHostsReadPerms, a.Permission) {
 			continue
 		}
 
 		if len(a.ResourceDefinitions) == 0 {
-			// access to all groups
-			utils.LogDebug("rbac access to all groups")
+			utils.LogDebug("rbac access to all workspaces")
 			return nil, nil
 		}
 		for _, rd := range a.ResourceDefinitions {
@@ -170,27 +166,20 @@ func findInventoryGroups(access *rbac.AccessPagination) (map[string]string, erro
 			}
 			for _, v := range rd.AttributeFilter.Value {
 				if v == nil {
-					res[utils.KeyUngrouped] = "[]"
+					workspaceIDs = append(workspaceIDs, rootWorkspaceID)
 					continue
 				}
 				id, err := uuid.Parse(*v)
 				if err != nil {
 					continue
 				}
-				group, err := utils.ParseInventoryGroup(&id, nil)
-				if err != nil {
-					continue
-				}
-				groups = append(groups, group)
+				workspaceIDs = append(workspaceIDs, id.String())
 			}
 		}
 	}
 
-	if len(groups) > 0 {
-		res[utils.KeyGrouped] = fmt.Sprintf("{%s}", strings.Join(groups, ","))
-	}
-	utils.LogDebug("group_count", len(groups), "processed groups")
-	return res, nil
+	utils.LogDebug("workspace_count", len(workspaceIDs), "processed workspaces")
+	return workspaceIDs, nil
 }
 
 func RBAC() gin.HandlerFunc {

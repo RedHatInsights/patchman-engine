@@ -34,7 +34,7 @@ import (
 // @Router /export/systems/{inventory_id}/advisories [get]
 func SystemAdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	groups := c.GetStringMapString(utils.KeyInventoryGroups)
+	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 
 	inventoryID, err := uuid.Parse(c.Param("inventory_id"))
 	if err != nil {
@@ -55,7 +55,7 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 		return
 	}
 
-	query := buildSystemAdvisoriesQuery(db, account, groups, inventoryID)
+	query := buildSystemAdvisoriesQuery(db, account, workspaceIDs, inventoryID)
 	query = query.Order("id")
 	query, err = ExportListCommon(query, c, SystemAdvisoriesOpts)
 	if err != nil {

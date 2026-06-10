@@ -3,7 +3,6 @@ package evaluator
 import (
 	"app/base/core"
 	"app/base/database"
-	"app/base/inventory"
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
@@ -28,14 +27,15 @@ func TestGetChangedAdvisoryIDs(t *testing.T) {
 }
 
 func TestCreateAdvisoryUpdateEvent(t *testing.T) {
-	wsID := "d964b282-17f6-47ab-b596-a4a34d711f04"
-	workspaces := inventory.Groups{{ID: wsID, Name: "test-workspace"}}
+	wsID := uuid.MustParse("d964b282-17f6-47ab-b596-a4a34d711f04")
+	wsName := "test-workspace"
 	system := &models.SystemPlatformV2{
 		Inventory: models.SystemInventory{
-			ID:          1,
-			RhAccountID: rhAccountID,
-			InventoryID: uuid.MustParse("00000000-0000-0000-0000-000000000001"),
-			Workspaces:  &workspaces,
+			ID:            1,
+			RhAccountID:   rhAccountID,
+			InventoryID:   uuid.MustParse("00000000-0000-0000-0000-000000000001"),
+			WorkspaceID:   &wsID,
+			WorkspaceName: &wsName,
 		},
 		Patch: models.SystemPatch{},
 	}
@@ -44,7 +44,7 @@ func TestCreateAdvisoryUpdateEvent(t *testing.T) {
 
 	event := createAdvisoryUpdateEvent(system, changedAdvisoryIDs)
 	assert.Equal(t, rhAccountID, event.RhAccountID)
-	assert.Equal(t, uuid.MustParse(wsID), event.WorkspaceID)
+	assert.Equal(t, wsID, event.WorkspaceID)
 	assert.ElementsMatch(t, changedAdvisoryIDs, event.AdvisoryIDs)
 	assert.False(t, event.ProducedAt.Time().IsZero())
 }

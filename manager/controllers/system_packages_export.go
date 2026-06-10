@@ -37,7 +37,7 @@ type SystemPackageInline struct {
 // @Router /export/systems/{inventory_id}/packages [get]
 func SystemPackagesExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	groups := c.GetStringMapString(utils.KeyInventoryGroups)
+	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 
 	inventoryID, err := uuid.Parse(c.Param("inventory_id"))
 	if err != nil {
@@ -47,7 +47,7 @@ func SystemPackagesExportHandler(c *gin.Context) {
 
 	var loaded []SystemPackageDBLoad
 	db := middlewares.DBFromContext(c)
-	q := systemPackageQuery(db, account, groups, inventoryID)
+	q := systemPackageQuery(db, account, workspaceIDs, inventoryID)
 	q, err = ExportListCommon(q, c, SystemPackagesOpts)
 	if err != nil {
 		// Error handling and setting of result code & content is done in ListCommon

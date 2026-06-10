@@ -32,15 +32,10 @@ func getChangedAdvisoryIDs(advisoriesByName extendedAdvisoryMap) []int64 {
 
 func createAdvisoryUpdateEvent(system *models.SystemPlatformV2, advisoryIDs []int64) mqueue.AdvisoryUpdateEvent {
 	var workspaceID uuid.UUID
-	if system.Inventory.Workspaces != nil && len(*system.Inventory.Workspaces) > 0 {
-		parsed, err := uuid.Parse((*system.Inventory.Workspaces)[0].ID)
-		if err != nil {
-			utils.LogWarn("inventoryID", system.GetInventoryID(), "err", err.Error(), "unable to parse workspace ID")
-		} else {
-			workspaceID = parsed
-		}
+	if system.Inventory.WorkspaceID != nil {
+		workspaceID = *system.Inventory.WorkspaceID
 	} else {
-		utils.LogWarn("inventoryID", system.GetInventoryID(), "no workspaces for system")
+		utils.LogWarn("inventoryID", system.GetInventoryID(), "no workspace for system")
 	}
 
 	return mqueue.AdvisoryUpdateEvent{

@@ -335,7 +335,8 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 		"arch",
 		"bootc",
 		"tags",
-		"workspaces",
+		"workspace_id",
+		"workspace_name",
 		"os_name",
 		"os_major",
 		"os_minor",
@@ -357,7 +358,26 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 	isBootc := len(host.SystemProfile.BootcStatus.Booted.Image) > 0
 
 	updatesReqJSONString := string(updatesReqJSON)
-	hostWorkspaces := inventory.Groups(host.Groups)
+	var workspaceID *uuid.UUID
+	var workspaceName *string
+	if l := len(host.Groups); l > 0 {
+		workspace := host.Groups[0]
+		uuid, err := uuid.Parse(workspace.ID)
+		if err != nil {
+			utils.LogError("workspaceID", workspace.ID, "invalid workspace UUID")
+			return nil, errors.New("received invalid workspace UUID")
+		}
+		workspaceID = &uuid
+		if workspace.Name != "" {
+			workspaceName = &workspace.Name
+		}
+		if l != 1 {
+			utils.LogWarn(
+				"host_id", host.ID, "org_id", host.OrgID, "workspaces", host.Groups,
+				"received a host with multiple workspaces",
+			)
+		}
+	}
 	systemPlatform := &models.SystemPlatformV2{
 		Inventory: models.SystemInventory{
 			InventoryID:                      inventoryID,
@@ -365,7 +385,8 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 			DisplayName:                      displayName,
 			Created:                          host.Created,
 			Tags:                             utils.MarshalNilToJSONB(host.Tags),
-			Workspaces:                       &hostWorkspaces,
+			WorkspaceID:                      workspaceID,
+			WorkspaceName:                    workspaceName,
 			VmaasJSON:                        utils.EmptyToNil(&updatesReqJSONString),
 			JSONChecksum:                     utils.EmptyToNil(&jsonChecksum),
 			LastUpload:                       host.GetLastUpload(),
@@ -546,7 +567,8 @@ func fixEpelRepos(sys *inventory.SystemProfile, repos []string) []string {
 
 func updateRepos(tx *gorm.DB, profile inventory.SystemProfile, rhAccountID int,
 	systemID int64, repos []string) (addedRepos int64, addedSysRepos int64, deletedSysRepos int64, err error) {
-	defer utils.ObserveSecondsSince(time.Now(), messagePartDuration.WithLabelValues("update-repos"))
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("update-repos"))
 	repos = fixEpelRepos(&profile, repos)
 	repoIDs, addedRepos, err := ensureReposInDB(tx, repos)
 	if err != nil {
@@ -741,7 +763,8 @@ func processModules(systemProfile *inventory.SystemProfile) *[]vmaas.UpdatesV3Re
 
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
 func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatformV2, error) {
-	defer utils.ObserveSecondsSince(time.Now(), messagePartDuration.WithLabelValues("upload-processing"))
+	tStart := time.Now()
+	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("upload-processing"))
 	// Ensure we have account stored
 	accountID, err := middlewares.GetOrCreateAccount(host.GetOrgID())
 	if err != nil {

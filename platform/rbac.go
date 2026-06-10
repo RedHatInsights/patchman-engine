@@ -10,7 +10,7 @@ import (
 
 var rbacPermissions = utils.PodConfig.GetString("rbac_permissions", "patch:*:read")
 
-var inventoryGroup = "inventory-group-1"
+var inventoryGroup = "00000000-0000-0000-0000-000000000001"
 
 func rbacHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, rbac.AccessPagination{
