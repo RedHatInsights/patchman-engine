@@ -18,6 +18,19 @@ jobs:
     - uses: actions/checkout@v6
       with:
         token: "${{ steps.app-token.outputs.token }}"
+    - name: Configure SSH commit signing
+      env:
+        SIGNING_KEY: ${{ secrets.SEMANTIC_RELEASE_SIGNING_KEY }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SIGNING_KEY" > ~/.ssh/signing_key
+        chmod 600 ~/.ssh/signing_key
+        git config --global gpg.format ssh
+        git config --global user.signingkey ~/.ssh/signing_key
+        git config --global commit.gpgSign true
+        git config --global tag.gpgSign true
+        git config --global user.name 'vmaas-bot'
+        git config --global user.email '40663028+vmaas-bot@users.noreply.github.com'
     - name: increment version, commit, push
       run: |
         DOC_FILE="docs/v3/openapi.json docs/admin/openapi.json"
@@ -28,8 +41,6 @@ jobs:
         VERSION_NEXT=$(./scripts/increment_version.sh $VERSION $RELEASE_TYPE)
         sed -i 's|\("version": "\)[^"]*\("\)$|'"\1$VERSION_NEXT\2|;" $DOC_FILE
         echo $VERSION_NEXT >VERSION
-        git config --global user.name 'semantic-release'
-        git config --global user.email ''
         git commit -am "${VERSION_NEXT}"
         git push
         git tag ${VERSION_NEXT}
