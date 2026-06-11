@@ -2,9 +2,9 @@ package middlewares
 
 import (
 	"app/base/utils"
-	"fmt"
+	"net"
 	"net/http"
-	"strconv"
+	"net/http/httptest"
 	"testing"
 
 	"google.golang.org/grpc"
@@ -16,6 +16,62 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+const testXRHIdentity = "ewogICAgImVudGl0bGVtZW50cyI6IHsKICAgICAgICAiaW5zaWdodHMiOiB7CiAgICAgICAgICAgICJpc19lbnRpdGxlZCI6IHRydWUKICAgICAgICB9LAogICAgICAgICJjb3N0X21hbmFnZW1lbnQiOiB7CiAgICAgICAgICAgICJpc19lbnRpdGxlZCI6IHRydWUKICAgICAgICB9LAogICAgICAgICJhbnNpYmxlIjogewogICAgICAgICAgICAiaXNfZW50aXRsZWQiOiB0cnVlCiAgICAgICAgfSwKICAgICAgICAib3BlbnNoaWZ0IjogewogICAgICAgICAgICAiaXNfZW50aXRsZWQiOiB0cnVlCiAgICAgICAgfSwKICAgICAgICAic21hcnRfbWFuYWdlbWVudCI6IHsKICAgICAgICAgICAgImlzX2VudGl0bGVkIjogdHJ1ZQogICAgICAgIH0sCiAgICAgICAgIm1pZ3JhdGlvbnMiOiB7CiAgICAgICAgICAgICJpc19lbnRpdGxlZCI6IHRydWUKICAgICAgICB9CiAgICB9LAogICAgImlkZW50aXR5IjogewogICAgICAgICJpbnRlcm5hbCI6IHsKICAgICAgICAgICAgImF1dGhfdGltZSI6IDI5OSwKICAgICAgICAgICAgImF1dGhfdHlwZSI6ICJiYXNpYy1hdXRoIiwKICAgICAgICAgICAgIm9yZ19pZCI6ICIxMTc4OTc3MiIKICAgICAgICB9LAogICAgICAgICJhY2NvdW50X251bWJlciI6ICI2MDg5NzE5IiwKICAgICAgICAidXNlciI6IHsKICAgICAgICAgICAgImZpcnN0X25hbWUiOiAiSW5zaWdodHMiLAogICAgICAgICAgICAiaXNfYWN0aXZlIjogdHJ1ZSwKICAgICAgICAgICAgImlzX2ludGVybmFsIjogZmFsc2UsCiAgICAgICAgICAgICJsYXN0X25hbWUiOiAiUUEiLAogICAgICAgICAgICAibG9jYWxlIjogImVuX1VTIiwKICAgICAgICAgICAgImlzX29yZ19hZG1pbiI6IHRydWUsCiAgICAgICAgICAgICJ1c2VybmFtZSI6ICJpbnNpZ2h0cy1xYSIsCiAgICAgICAgICAgICJlbWFpbCI6ICJqbmVlZGxlK3FhQHJlZGhhdC5jb20iLAogICAgICAgICAgICAidXNlcl9pZCI6ICI2MDg5NzE5IgogICAgICAgIH0sCiAgICAgICAgInR5cGUiOiAiVXNlciIKICAgIH0KfQ==" //nolint:lll
+
+type testKesselServer struct {
+	kesselv2.UnimplementedKesselInventoryServiceServer
+	workspaceIDs []string
+}
+
+func (s *testKesselServer) StreamedListObjects(_ *kesselv2.StreamedListObjectsRequest,
+	stream kesselv2.KesselInventoryService_StreamedListObjectsServer,
+) error {
+	for _, id := range s.workspaceIDs {
+		if err := stream.Send(&kesselv2.StreamedListObjectsResponse{
+			Object: &kesselv2.ResourceReference{
+				ResourceType: "workspace",
+				ResourceId:   id,
+			},
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func withTestKesselServer(t *testing.T, workspaceIDs []string) func() {
+	t.Helper()
+
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+
+	grpcServer := grpc.NewServer()
+	kesselv2.RegisterKesselInventoryServiceServer(grpcServer, &testKesselServer{workspaceIDs: workspaceIDs})
+	go func() {
+		_ = grpcServer.Serve(listener)
+	}()
+
+	originalURL := utils.CoreCfg.KesselURL
+	originalInsecure := utils.CoreCfg.KesselInsecure
+	utils.CoreCfg.KesselURL = listener.Addr().String()
+	utils.CoreCfg.KesselInsecure = true
+
+	return func() {
+		grpcServer.Stop()
+		_ = listener.Close()
+		utils.CoreCfg.KesselURL = originalURL
+		utils.CoreCfg.KesselInsecure = originalInsecure
+	}
+}
+
+func newKesselTestContext() (*gin.Context, *httptest.ResponseRecorder) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+	c.Request.Header.Set("x-rh-identity", testXRHIdentity)
+	return c, w
+}
 
 func TestSetupClient(t *testing.T) {
 	originalKesselInsecure := utils.CoreCfg.KesselInsecure
@@ -66,22 +122,6 @@ func TestSetupClient(t *testing.T) {
 	utils.CoreCfg.KesselAuthClientSecret = originalKesselAuthClientSecret
 }
 
-func TestProcessWorkspaces(t *testing.T) {
-	id1 := "aaaaaaaa-0000-0000-0000-000000000001"
-	id2 := "bbbbbbbb-0000-0000-0000-000000000002"
-	expected := fmt.Sprintf("{%s,%s}",
-		strconv.Quote(fmt.Sprintf(`[{"id":"%s"}]`, id1)),
-		strconv.Quote(fmt.Sprintf(`[{"id":"%s"}]`, id2)))
-	workspaces := []*kesselv2.StreamedListObjectsResponse{
-		{Object: &kesselv2.ResourceReference{ResourceId: id1}},
-		{Object: &kesselv2.ResourceReference{ResourceId: id2}},
-	}
-	processed, err := processWorkspaces(workspaces)
-	if assert.NoError(t, err) {
-		assert.Equal(t, expected, processed[utils.KeyGrouped])
-	}
-}
-
 func TestBuildPermission(t *testing.T) {
 	c := &gin.Context{Request: &http.Request{Method: http.MethodGet}}
 	permission := buildPermission(c)
@@ -109,15 +149,48 @@ func TestUseStreamedListObjects(t *testing.T) {
 }
 
 func TestHasPermissionKessel(t *testing.T) {
-	c := &gin.Context{Request: &http.Request{Header: map[string][]string{}, Method: http.MethodGet}}
-	c.Request.Header.Set("x-rh-identity", "ewogICAgImVudGl0bGVtZW50cyI6IHsKICAgICAgICAiaW5zaWdodHMiOiB7CiAgICAgICAgICAgICJpc19lbnRpdGxlZCI6IHRydWUKICAgICAgICB9LAogICAgICAgICJjb3N0X21hbmFnZW1lbnQiOiB7CiAgICAgICAgICAgICJpc19lbnRpdGxlZCI6IHRydWUKICAgICAgICB9LAogICAgICAgICJhbnNpYmxlIjogewogICAgICAgICAgICAiaXNfZW50aXRsZWQiOiB0cnVlCiAgICAgICAgfSwKICAgICAgICAib3BlbnNoaWZ0IjogewogICAgICAgICAgICAiaXNfZW50aXRsZWQiOiB0cnVlCiAgICAgICAgfSwKICAgICAgICAic21hcnRfbWFuYWdlbWVudCI6IHsKICAgICAgICAgICAgImlzX2VudGl0bGVkIjogdHJ1ZQogICAgICAgIH0sCiAgICAgICAgIm1pZ3JhdGlvbnMiOiB7CiAgICAgICAgICAgICJpc19lbnRpdGxlZCI6IHRydWUKICAgICAgICB9CiAgICB9LAogICAgImlkZW50aXR5IjogewogICAgICAgICJpbnRlcm5hbCI6IHsKICAgICAgICAgICAgImF1dGhfdGltZSI6IDI5OSwKICAgICAgICAgICAgImF1dGhfdHlwZSI6ICJiYXNpYy1hdXRoIiwKICAgICAgICAgICAgIm9yZ19pZCI6ICIxMTc4OTc3MiIKICAgICAgICB9LAogICAgICAgICJhY2NvdW50X251bWJlciI6ICI2MDg5NzE5IiwKICAgICAgICAidXNlciI6IHsKICAgICAgICAgICAgImZpcnN0X25hbWUiOiAiSW5zaWdodHMiLAogICAgICAgICAgICAiaXNfYWN0aXZlIjogdHJ1ZSwKICAgICAgICAgICAgImlzX2ludGVybmFsIjogZmFsc2UsCiAgICAgICAgICAgICJsYXN0X25hbWUiOiAiUUEiLAogICAgICAgICAgICAibG9jYWxlIjogImVuX1VTIiwKICAgICAgICAgICAgImlzX29yZ19hZG1pbiI6IHRydWUsCiAgICAgICAgICAgICJ1c2VybmFtZSI6ICJpbnNpZ2h0cy1xYSIsCiAgICAgICAgICAgICJlbWFpbCI6ICJqbmVlZGxlK3FhQHJlZGhhdC5jb20iLAogICAgICAgICAgICAidXNlcl9pZCI6ICI2MDg5NzE5IgogICAgICAgIH0sCiAgICAgICAgInR5cGUiOiAiVXNlciIKICAgIH0KfQ==") //nolint:lll
-
+	c, _ := newKesselTestContext()
 	hasPermissionKessel(c)
-	inventoryGroups, found := c.Get(utils.KeyInventoryGroups)
+	workspaces, found := c.Get(utils.KeyInventoryWorkspaces)
 	require.True(t, found)
-	inventoryGroupMap, ok := (inventoryGroups).(map[string]string)
+	workspaceIDs, ok := (workspaces).([]string)
 	require.True(t, ok)
-	assert.Equal(t, `{"[{\"id\":\"aaaaaaaa-0000-0000-0000-000000000001\"}]"}`, inventoryGroupMap[utils.KeyGrouped])
+	require.Greater(t, len(workspaceIDs), 0)
+	assert.Equal(t, "aaaaaaaa-0000-0000-0000-000000000001", workspaceIDs[0])
+}
+
+func TestHasPermissionKesselMultipleWorkspacesSetsContext(t *testing.T) {
+	defer withTestKesselServer(t, []string{
+		"aaaaaaaa-0000-0000-0000-000000000001",
+		"bbbbbbbb-0000-0000-0000-000000000002",
+	})()
+
+	c, w := newKesselTestContext()
+	hasPermissionKessel(c)
+
+	assert.False(t, c.IsAborted())
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	workspaces, found := c.Get(utils.KeyInventoryWorkspaces)
+	require.True(t, found)
+	workspaceIDs, ok := workspaces.([]string)
+	require.True(t, ok)
+	assert.Equal(t, []string{
+		"aaaaaaaa-0000-0000-0000-000000000001",
+		"bbbbbbbb-0000-0000-0000-000000000002",
+	}, workspaceIDs)
+}
+
+func TestHasPermissionKesselNoWorkspacesReturnsUnauthorized(t *testing.T) {
+	defer withTestKesselServer(t, nil)()
+
+	c, w := newKesselTestContext()
+	hasPermissionKessel(c)
+
+	assert.True(t, c.IsAborted())
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	_, found := c.Get(utils.KeyInventoryWorkspaces)
+	assert.False(t, found)
 }
 
 func mockXRHID(userType string) *identity.XRHID {

@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"app/base/rbac"
-	"app/base/utils"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -242,7 +241,7 @@ func TestPermissionsRead(t *testing.T) {
 	assert.False(t, checkPermissions(&access, handler, "GET"))
 }
 
-func TestFindInventoryGroupsGrouped(t *testing.T) {
+func TestFindInventoryWorkspacesGrouped(t *testing.T) {
 	access := &rbac.AccessPagination{
 		Data: []rbac.Access{{
 			Permission: "inventory:hosts:read",
@@ -255,19 +254,13 @@ func TestFindInventoryGroupsGrouped(t *testing.T) {
 			}},
 		}},
 	}
-	groups, err := findInventoryGroups(access)
+	workspaces, err := findInventoryWorkspaces(access)
 	if assert.NoError(t, err) {
-		assert.Equal(t,
-			`{"[{\"id\":\"df57820e-965c-49a6-b0bc-797b7dd60581\"}]"}`,
-			groups[utils.KeyGrouped],
-		)
-		val, ok := groups[utils.KeyUngrouped]
-		assert.Equal(t, "", val)
-		assert.Equal(t, false, ok)
+		assert.Equal(t, []string{group1}, workspaces)
 	}
 }
 
-func TestFindInventoryGroupsUnrouped(t *testing.T) {
+func TestFindInventoryWorkspacesUngrouped(t *testing.T) {
 	access := &rbac.AccessPagination{
 		Data: []rbac.Access{{
 			Permission: "inventory:hosts:read",
@@ -280,16 +273,13 @@ func TestFindInventoryGroupsUnrouped(t *testing.T) {
 			}},
 		}},
 	}
-	groups, err := findInventoryGroups(access)
+	workspaces, err := findInventoryWorkspaces(access)
 	if assert.NoError(t, err) {
-		val, ok := groups[utils.KeyGrouped]
-		assert.Equal(t, "", val)
-		assert.Equal(t, false, ok)
-		assert.Equal(t, "[]", groups[utils.KeyUngrouped])
+		assert.Equal(t, []string{rootWorkspaceID}, workspaces)
 	}
 }
 
-func TestFindInventoryGroups(t *testing.T) {
+func TestFindInventoryWorkspaces(t *testing.T) {
 	access := &rbac.AccessPagination{
 		Data: []rbac.Access{{
 			Permission: "inventory:hosts:read",
@@ -302,17 +292,13 @@ func TestFindInventoryGroups(t *testing.T) {
 			}},
 		}},
 	}
-	groups, err := findInventoryGroups(access)
+	workspaces, err := findInventoryWorkspaces(access)
 	if assert.NoError(t, err) {
-		assert.Equal(t,
-			`{"[{\"id\":\"df57820e-965c-49a6-b0bc-797b7dd60581\"}]","[{\"id\":\"df3f0efd-c853-41b5-80a1-86881d5343d1\"}]"}`,
-			groups[utils.KeyGrouped],
-		)
-		assert.Equal(t, "[]", groups[utils.KeyUngrouped])
+		assert.Equal(t, []string{group1, group2, rootWorkspaceID}, workspaces)
 	}
 }
 
-func TestFindInventoryGroupsOverwrite(t *testing.T) {
+func TestFindInventoryWorkspacesAllAccess(t *testing.T) {
 	access := &rbac.AccessPagination{
 		Data: []rbac.Access{
 			{
@@ -331,14 +317,13 @@ func TestFindInventoryGroupsOverwrite(t *testing.T) {
 			},
 		},
 	}
-	groups, err := findInventoryGroups(access)
+	workspaces, err := findInventoryWorkspaces(access)
 	if assert.NoError(t, err) {
-		// we expect access to all groups (empty map)
-		assert.Equal(t, 0, len(groups))
+		assert.Nil(t, workspaces)
 	}
 }
 
-func TestFindInventoryGroupsOverwrite2(t *testing.T) {
+func TestFindInventoryWorkspacesAllAccessFirst(t *testing.T) {
 	access := &rbac.AccessPagination{
 		Data: []rbac.Access{
 			{
@@ -357,14 +342,13 @@ func TestFindInventoryGroupsOverwrite2(t *testing.T) {
 			},
 		},
 	}
-	groups, err := findInventoryGroups(access)
+	workspaces, err := findInventoryWorkspaces(access)
 	if assert.NoError(t, err) {
-		// we expect access to all groups (empty map)
-		assert.Equal(t, 0, len(groups))
+		assert.Nil(t, workspaces)
 	}
 }
 
-func TestFindInventoryGroupsInvalidOp(t *testing.T) {
+func TestFindInventoryWorkspacesInvalidOp(t *testing.T) {
 	access := &rbac.AccessPagination{
 		Data: []rbac.Access{
 			{
@@ -379,9 +363,29 @@ func TestFindInventoryGroupsInvalidOp(t *testing.T) {
 			},
 		},
 	}
-	groups, err := findInventoryGroups(access)
+	workspaces, err := findInventoryWorkspaces(access)
 	assert.Error(t, err)
-	assert.Nil(t, groups)
+	assert.Nil(t, workspaces)
+}
+
+func TestFindInventoryWorkspacesSkipsInvalidUUID(t *testing.T) {
+	invalid := "not-a-uuid"
+	access := &rbac.AccessPagination{
+		Data: []rbac.Access{{
+			Permission: "inventory:hosts:read",
+			ResourceDefinitions: []rbac.ResourceDefinition{{
+				AttributeFilter: rbac.AttributeFilter{
+					Key:       "group.id",
+					Value:     []*string{&invalid, &group1},
+					Operation: "in",
+				},
+			}},
+		}},
+	}
+	workspaces, err := findInventoryWorkspaces(access)
+	if assert.NoError(t, err) {
+		assert.Equal(t, []string{group1}, workspaces)
+	}
 }
 
 func TestMultiplePermissions(t *testing.T) {
@@ -477,11 +481,13 @@ func TestPermissionsAllowedOperations(t *testing.T) {
 	err := json.Unmarshal([]byte(allowedOperations), &access)
 	assert.NoError(t, err)
 	assert.True(t, checkPermissions(&access, handler, "GET"))
-	groups, err := findInventoryGroups(&access)
+	workspaces, err := findInventoryWorkspaces(&access)
 	assert.NoError(t, err)
-	assert.Equal(t, "[]", groups["ungrouped"])
-	assert.Equal(t, `{"[{\"id\":\"00000000-f688-49d4-a8e2-87394f1ac1b1\"}]",`+
-		`"[{\"id\":\"00000000-f7a6-45a1-b5a8-410f20052fb1\"}]",`+
-		`"[{\"id\":\"00000000-78e0-4cad-bf01-63cf1e4b1dca\"}]",`+
-		`"[{\"id\":\"00000000-f688-49d4-a8e2-ee394f1ac1b1\"}]"}`, groups["grouped"])
+	assert.Equal(t, []string{
+		"00000000-f688-49d4-a8e2-87394f1ac1b1",
+		"00000000-f7a6-45a1-b5a8-410f20052fb1",
+		"00000000-78e0-4cad-bf01-63cf1e4b1dca",
+		"00000000-f688-49d4-a8e2-ee394f1ac1b1",
+		rootWorkspaceID,
+	}, workspaces)
 }

@@ -26,6 +26,16 @@ func TestWorkspacesGroup1() *inventory.Groups {
 	return &g
 }
 
+func TestWorkspace1IDPtr() *uuid.UUID {
+	id := uuid.MustParse(TestWorkspace1ID)
+	return &id
+}
+
+func TestWorkspace1NamePtr() *string {
+	name := "group1"
+	return &name
+}
+
 func DebugWithCachesCheck(part string, fun func()) {
 	fun()
 	validAfter, err := CheckCachesValidRet()

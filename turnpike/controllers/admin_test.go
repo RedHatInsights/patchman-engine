@@ -20,11 +20,12 @@ func TestInitDelete(t *testing.T) {
 	core.SetupTest(t)
 
 	inv := models.SystemInventory{
-		InventoryID: uuid.MustParse(del),
-		RhAccountID: 1,
-		DisplayName: del,
-		Tags:        []byte("[]"),
-		Workspaces:  database.TestWorkspacesGroup1(),
+		InventoryID:   uuid.MustParse(del),
+		RhAccountID:   1,
+		DisplayName:   del,
+		Tags:          []byte("[]"),
+		WorkspaceID:   database.TestWorkspace1IDPtr(),
+		WorkspaceName: database.TestWorkspace1NamePtr(),
 	}
 	assert.NoError(t, database.DB.Create(&inv).Error)
 	assert.NoError(t, database.DB.Create(&models.SystemPatch{

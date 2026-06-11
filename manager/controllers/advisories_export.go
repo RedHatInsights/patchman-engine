@@ -31,7 +31,7 @@ import (
 // @Router /export/advisories [get]
 func AdvisoriesExportHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
-	groups := c.GetStringMapString(utils.KeyInventoryGroups)
+	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 	filters, err := ParseAllFilters(c, AdvisoriesOpts)
 	if err != nil {
 		return
@@ -39,8 +39,10 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	db := middlewares.DBFromContext(c)
 	var query *gorm.DB
 
-	if config.DisableCachedCounts || HasInventoryFilter(filters) || len(groups) != 0 {
-		query = buildQueryAdvisoriesTagged(db, filters, account, groups)
+	// TODO: fix below; the condition is always true since moving from groups to workspaces,
+	// there will always be at least root workspace
+	if config.DisableCachedCounts || HasInventoryFilter(filters) || len(workspaceIDs) != 0 {
+		query = buildQueryAdvisoriesTagged(db, filters, account, workspaceIDs)
 	} else {
 		query = buildQueryAdvisories(db, account)
 	}

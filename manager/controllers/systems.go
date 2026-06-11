@@ -97,6 +97,7 @@ type SystemItemAttributes struct {
 	BaselineIDAttr
 	TemplateAttibutes
 	SystemGroups
+	SystemWorkspace
 	SystemArch
 }
 
@@ -199,9 +200,9 @@ func validateSystemsListIDs(ids []string) error {
 
 func systemsCommon(c *gin.Context, ids []string) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(utils.KeyAccount)
-	groups := c.GetStringMapString(utils.KeyInventoryGroups)
+	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 	db := middlewares.DBFromContext(c)
-	query := querySystems(db, account, groups)
+	query := querySystems(db, account, workspaceIDs)
 	filters, err := ParseAllFilters(c, SystemOpts)
 	if err != nil {
 		return nil, nil, nil, err
@@ -459,6 +460,6 @@ func SystemsListIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func querySystems(db *gorm.DB, account int, groups map[string]string) *gorm.DB {
-	return database.Systems(db, account, groups, database.JoinTemplates).Select(SystemsSelect)
+func querySystems(db *gorm.DB, account int, workspaceIDs []string) *gorm.DB {
+	return database.Systems(db, account, workspaceIDs, database.JoinTemplates).Select(SystemsSelect)
 }

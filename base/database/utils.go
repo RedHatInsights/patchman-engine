@@ -27,16 +27,16 @@ func (j joinsT) apply(tx *gorm.DB) *gorm.DB {
 	return tx
 }
 
-func Systems(tx *gorm.DB, accountID int, groups map[string]string, joins ...join) *gorm.DB {
+func Systems(tx *gorm.DB, accountID int, workspaceIDs []string, joins ...join) *gorm.DB {
 	tx = tx.Table("system_inventory si").
 		Joins("JOIN system_patch spatch ON si.id = spatch.system_id AND si.rh_account_id = spatch.rh_account_id").
 		Where("si.rh_account_id = ?", accountID)
 	tx = (joinsT)(joins).apply(tx)
-	return ApplyInventoryWorkspaceFilter(tx, groups)
+	return ApplyInventoryWorkspaceFilter(tx, workspaceIDs)
 }
 
-func SystemAdvisories(tx *gorm.DB, accountID int, groups map[string]string, joins ...join) *gorm.DB {
-	tx = Systems(tx, accountID, groups).
+func SystemAdvisories(tx *gorm.DB, accountID int, workspaceIDs []string, joins ...join) *gorm.DB {
+	tx = Systems(tx, accountID, workspaceIDs).
 		Joins("JOIN system_advisories sa on sa.system_id = si.id AND sa.rh_account_id = ?", accountID)
 	return (joinsT)(joins).apply(tx)
 }
@@ -47,8 +47,8 @@ func SystemPackagesShort(tx *gorm.DB, accountID int, joins ...join) *gorm.DB {
 	return (joinsT)(joins).apply(tx)
 }
 
-func SystemPackages(tx *gorm.DB, accountID int, groups map[string]string, joins ...join) *gorm.DB {
-	tx = Systems(tx, accountID, groups).
+func SystemPackages(tx *gorm.DB, accountID int, workspaceIDs []string, joins ...join) *gorm.DB {
+	tx = Systems(tx, accountID, workspaceIDs).
 		Joins("JOIN system_package2 spkg on spkg.system_id = si.id AND spkg.rh_account_id = ?", accountID).
 		Joins("JOIN package p on p.id = spkg.package_id").
 		Joins("JOIN package_name pn on pn.id = spkg.name_id")
@@ -66,9 +66,9 @@ func PackageByName(tx *gorm.DB, pkgName string, joins ...join) *gorm.DB {
 	return (joinsT)(joins).apply(tx)
 }
 
-func SystemAdvisoriesByInventoryID(tx *gorm.DB, accountID int, groups map[string]string, inventoryID uuid.UUID,
+func SystemAdvisoriesByInventoryID(tx *gorm.DB, accountID int, workspaceIDs []string, inventoryID uuid.UUID,
 	joins ...join) *gorm.DB {
-	tx = SystemAdvisories(tx, accountID, groups).Where("si.inventory_id = ?", inventoryID)
+	tx = SystemAdvisories(tx, accountID, workspaceIDs).Where("si.inventory_id = ?", inventoryID)
 	return (joinsT)(joins).apply(tx)
 }
 
@@ -241,21 +241,12 @@ func ReadReplicaConfigured() bool {
 	return len(utils.CoreCfg.DBReadReplicaHost) > 0 && utils.CoreCfg.DBReadReplicaPort != 0
 }
 
-func ApplyInventoryWorkspaceFilter(tx *gorm.DB, groups map[string]string) *gorm.DB {
-	if _, ok := groups[utils.KeyGrouped]; !ok {
-		if _, ok := groups[utils.KeyUngrouped]; ok {
-			// show only systems with '[]' group
-			return tx.Where("si.workspaces = '[]'")
-		}
-		// return query without WHERE if there are no groups
+func ApplyInventoryWorkspaceFilter(tx *gorm.DB, workspaceIDs []string) *gorm.DB {
+	if len(workspaceIDs) == 0 {
+		utils.LogWarn("there should always be some workspaces, at least root workspace")
 		return tx
 	}
-
-	db := DB.Where("si.workspaces @> ANY (?::jsonb[])", groups[utils.KeyGrouped])
-	if _, ok := groups[utils.KeyUngrouped]; ok {
-		db = db.Or("si.workspaces = '[]'")
-	}
-	return tx.Where(db)
+	return tx.Where("si.workspace_id IN (?)", workspaceIDs)
 }
 
 // LEFT JOIN templates to spatch (system_patch)

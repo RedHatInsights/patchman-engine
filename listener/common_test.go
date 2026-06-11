@@ -56,7 +56,6 @@ func createTestSystemInDB(t *testing.T, inventoryID uuid.UUID, rhAccountID int, 
 		RhAccountID: rhAccountID,
 		DisplayName: displayName,
 		Tags:        []byte("[]"),
-		Workspaces:  database.TestWorkspacesGroup1(),
 	}
 	assert.NoError(t, database.DB.Create(&inv).Error)
 	assert.NoError(t, database.DB.Create(&models.SystemPatch{
@@ -91,7 +90,7 @@ func assertSystemInDB(t *testing.T, inventoryID uuid.UUID, rhAccountID *int, rep
 
 // assertSystemInventoryProfileMatchesHost checks host-derived system_inventory columns written by
 // storeOrUpdateSysPlatform (must stay in sync on ON CONFLICT DO UPDATE, not only on first insert).
-// nolint: unparam, funlen
+// nolint: unparam,funlen
 func assertSystemInventoryProfileMatchesHost(t *testing.T, inventoryID uuid.UUID, host *Host) {
 	t.Helper()
 	var inv models.SystemInventory
@@ -99,8 +98,23 @@ func assertSystemInventoryProfileMatchesHost(t *testing.T, inventoryID uuid.UUID
 
 	assert.JSONEq(t, string(utils.MarshalNilToJSONB(host.Tags)), string(inv.Tags))
 
-	require.NotNil(t, inv.Workspaces)
-	assert.Equal(t, host.Groups, []inventory.Group(*inv.Workspaces))
+	if len(host.Groups) == 0 {
+		assert.Nil(t, inv.WorkspaceID)
+		assert.Nil(t, inv.WorkspaceName)
+	} else {
+		if hostWorkspaceID := host.Groups[0].ID; hostWorkspaceID != "" {
+			require.NotNil(t, inv.WorkspaceID)
+			assert.Equal(t, hostWorkspaceID, inv.WorkspaceID.String())
+		} else {
+			require.Nil(t, inv.WorkspaceID)
+		}
+		if hostWorkspaceName := host.Groups[0].Name; hostWorkspaceName != "" {
+			require.NotNil(t, inv.WorkspaceName)
+			assert.Equal(t, hostWorkspaceName, *inv.WorkspaceName)
+		} else {
+			require.Nil(t, inv.WorkspaceName)
+		}
+	}
 
 	if host.SystemProfile.OperatingSystem.Name != "" {
 		require.NotNil(t, inv.OSName)
