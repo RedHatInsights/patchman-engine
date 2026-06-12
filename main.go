@@ -13,7 +13,6 @@ import (
 	"app/tasks/repack"
 	"app/tasks/system_culling"
 	"app/tasks/vmaas_sync"
-	"app/tasks/workspace_backfill"
 	"app/turnpike"
 	"log"
 	"os"
@@ -75,7 +74,5 @@ func runJob(name string) {
 		repack.RunRepack()
 	case "clean_advisory_account_data":
 		cleaning.RunCleanAdvisoryAccountData()
-	case "workspace_backfill":
-		workspace_backfill.RunWorkspaceBackfill()
 	}
 }
