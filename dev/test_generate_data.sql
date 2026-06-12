@@ -114,13 +114,10 @@ do $$
         insert into system_inventory
             (inventory_id, display_name, rh_account_id, vmaas_json, json_checksum,
              last_updated, last_upload, arch, tags, created, os_name, os_major, rhsm_version,
-             workspaces, workspace_id, workspace_name)
+             workspace_id, workspace_name)
         values
             (gen_uuid, gen_uuid::text, acc_id, json_data[ji], json_hash[ji],
              rnd_date2, rnd_date2, 'x86_64', '[]'::jsonb, rnd_date1, 'RHEL', 8, '8.0',
-             jsonb_build_array(jsonb_build_object(
-                 'id', workspace_ids[cnt % 3 + 1]::text,
-                 'name', workspace_ids[cnt % 3 + 1]::text)),
              workspace_ids[cnt % 3 + 1], workspace_ids[cnt % 3 + 1]::text)
         returning id into new_id;
         insert into system_patch

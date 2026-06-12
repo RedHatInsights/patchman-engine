@@ -2,7 +2,6 @@ package database
 
 import (
 	"app/base"
-	"app/base/inventory"
 	"app/base/models"
 	"app/base/utils"
 	"fmt"
@@ -16,15 +15,8 @@ import (
 )
 
 const (
-	TestWorkspace1ID     = "aaaaaaaa-0000-0000-0000-000000000001"
-	TestWorkspace2ID     = "aaaaaaaa-0000-0000-0000-000000000002"
-	TestWorkspaceOtherID = "bbbbbbbb-0000-0000-0000-000000000003"
+	TestWorkspace1ID = "aaaaaaaa-0000-0000-0000-000000000001"
 )
-
-func TestWorkspacesGroup1() *inventory.Groups {
-	g := inventory.Groups{{ID: TestWorkspace1ID, Name: "group1"}}
-	return &g
-}
 
 func TestWorkspace1IDPtr() *uuid.UUID {
 	id := uuid.MustParse(TestWorkspace1ID)
