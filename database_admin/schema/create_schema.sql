@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (159, false);
+VALUES (160, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -182,7 +182,7 @@ BEGIN
         FOR UPDATE OF aa;
 
     WITH current_counts AS (
-        SELECT sa.advisory_id, sa.rh_account_id, (ws->>'id')::UUID AS workspace_id,
+        SELECT sa.advisory_id, sa.rh_account_id, si.workspace_id,
                count(sa.*) FILTER (WHERE sa.status_id = 0) AS systems_installable,
                count(sa.*) AS systems_applicable
           FROM system_advisories sa
@@ -190,13 +190,12 @@ BEGIN
             ON sa.rh_account_id = si.rh_account_id AND sa.system_id = si.id
           JOIN system_patch sp
             ON si.id = sp.system_id AND sp.rh_account_id = si.rh_account_id
-         CROSS JOIN LATERAL jsonb_array_elements(si.workspaces) AS ws
          WHERE sp.last_evaluation IS NOT NULL
            AND si.stale = FALSE
-           AND si.workspaces IS NOT NULL
+           AND si.workspace_id IS NOT NULL
            AND (sa.advisory_id = ANY (advisory_ids_in) OR advisory_ids_in IS NULL)
            AND (si.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
-         GROUP BY sa.advisory_id, sa.rh_account_id, (ws->>'id')::UUID
+         GROUP BY sa.advisory_id, sa.rh_account_id, si.workspace_id
     ),
         upserted AS (
             INSERT INTO account_advisory (advisory_id, rh_account_id, workspace_id, systems_installable, systems_applicable)
@@ -655,7 +654,6 @@ CREATE TABLE IF NOT EXISTS system_inventory
     ansible_workload_controller_version TEXT        CHECK (NOT empty(ansible_workload_controller_version)),
     mssql_workload                      BOOLEAN     NOT NULL DEFAULT false,
     mssql_workload_version              TEXT        CHECK (NOT empty(mssql_workload_version)),
-    workspaces                          JSONB,
     workspace_id                        UUID,
     workspace_name                      TEXT        CHECK (NOT empty(workspace_name)),
     PRIMARY KEY (rh_account_id, id),
@@ -689,7 +687,6 @@ SELECT create_table_partition_triggers('system_inventory_on_update',
 CREATE INDEX IF NOT EXISTS system_inventory_inventory_id_idx ON system_inventory (inventory_id);
 CREATE INDEX IF NOT EXISTS system_inventory_tags_index ON system_inventory USING GIN (tags JSONB_PATH_OPS);
 CREATE INDEX IF NOT EXISTS system_inventory_stale_timestamp_index ON system_inventory (stale_timestamp);
-CREATE INDEX IF NOT EXISTS system_inventory_workspaces_index ON system_inventory USING GIN (workspaces);
 CREATE INDEX IF NOT EXISTS system_inventory_workspace_id_index ON system_inventory (workspace_id);
 
 CREATE TABLE IF NOT EXISTS deleted_system
