@@ -48,6 +48,7 @@ func deleteUnusedAdvisories() {
 	subq := tx.Select("id").Table("advisory_metadata am").
 		Where("am.synced = ?", false).
 		Where("NOT EXISTS (SELECT 1 FROM system_advisories sa WHERE am.id = sa.advisory_id)").
+		Where("NOT EXISTS (SELECT 1 FROM template_advisory ta WHERE am.id = ta.advisory_id)").
 		Where("NOT EXISTS (SELECT 1 FROM package p WHERE am.id = p.advisory_id)").
 		Where("NOT EXISTS (SELECT 1 FROM advisory_account_data aad WHERE am.id = aad.advisory_id)").
 		Limit(tasks.DeleteUnusedDataLimit)
