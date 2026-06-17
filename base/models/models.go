@@ -52,6 +52,19 @@ func (TemplateBase) TableName() string {
 	return "template"
 }
 
+type TemplateAdvisory struct {
+	RhAccountID int   `gorm:"primaryKey"`
+	TemplateID  int64 `gorm:"primaryKey"`
+	AdvisoryID  int64 `gorm:"primaryKey"`
+	Advisory    AdvisoryMetadata
+}
+
+func (TemplateAdvisory) TableName() string {
+	return "template_advisory"
+}
+
+type TemplateAdvisorySlice []TemplateAdvisory
+
 type SystemInventory struct {
 	ID                               int64     `gorm:"primaryKey"`
 	InventoryID                      uuid.UUID `gorm:"unique"`
