@@ -59,6 +59,49 @@ func findActiveAppSession(db *sql.DB) (session string, found bool, err error) {
 	return session, true, nil
 }
 
+type appSession struct {
+	pid     int
+	usename string
+	query   string
+}
+
+const activeAppSessionPIDsQuery = `SELECT pid, usename, coalesce(substring(query for 50), '')
+FROM pg_stat_activity
+WHERE usename = ANY($1)
+  AND pid <> pg_backend_pid()`
+
+func listActiveAppSessions(db *sql.DB) ([]appSession, error) {
+	rows, err := db.Query(activeAppSessionPIDsQuery, pq.Array(lockUsers))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sessions []appSession
+	for rows.Next() {
+		var session appSession
+		if err := rows.Scan(&session.pid, &session.usename, &session.query); err != nil {
+			return nil, err
+		}
+		sessions = append(sessions, session)
+	}
+	return sessions, rows.Err()
+}
+
+func terminateAppSessions(db *sql.DB) {
+	sessions, err := listActiveAppSessions(db)
+	if err != nil {
+		panic(err)
+	}
+	for _, session := range sessions {
+		if _, err := db.Exec("SELECT pg_terminate_backend($1)", session.pid); err != nil {
+			panic(err)
+		}
+		utils.LogInfo("pid", session.pid, "user", session.usename, "query", session.query,
+			"terminated app database session")
+	}
+}
+
 // Wait for closing of all lockUsers database sessions.
 func waitForSessionClosed(db *sql.DB) {
 	errRetries := 0
@@ -106,10 +149,18 @@ func unblockUsers(db *sql.DB) {
 	}
 }
 
-func startMigration(conn database.Driver, db *sql.DB, migrationFilesURL string) {
+func prepareForMigration(db *sql.DB) {
 	log.Info("Blocking writing users during the migration")
 	blockUsers(db)
+	if terminateDBSessions {
+		log.Info("Terminating active app database sessions")
+		terminateAppSessions(db)
+	}
 	waitForSessionClosed(db)
+}
+
+func startMigration(conn database.Driver, db *sql.DB, migrationFilesURL string) {
+	prepareForMigration(db)
 
 	MigrateUp(conn, migrationFilesURL)
 

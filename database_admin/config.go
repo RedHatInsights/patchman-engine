@@ -17,4 +17,6 @@ var (
 	unlockUsers = utils.PodConfig.GetBool("unlock_users", false)
 	// rerun config.sql
 	updateDBConfig = utils.PodConfig.GetBool("update_db_config", false)
+	// Terminate lockUsers sessions after NOLOGIN (for major DDL migrations)
+	terminateDBSessions = utils.PodConfig.GetBool("terminate_db_sessions", false)
 )

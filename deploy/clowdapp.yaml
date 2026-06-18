@@ -812,6 +812,7 @@ parameters:
 - {name: MEM_REQUEST_DATABASE_ADMIN, value: 128Mi}
 - {name: GOMEMLIMIT_DATABASE_ADMIN, value: '115MiB'} # set to 90% of the default memory limit 128Mi (don't forget `B`)
 - {name: DATABASE_ADMIN_CONFIG, value: ''} # Set 'schema_version=XXX' if need specific database schema
+                                           # 'terminate_db_sessions=true' to kill app DB sessions before DDL
                                            # 'force_schema_version=XXX' to reset the dirty flag to false and force the specific version, it will follow up with the schema upgrade defined by schema_version
 
 # Common parameters
