@@ -3,16 +3,25 @@ package database_admin
 import (
 	"app/base/utils"
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4/database"
+	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 )
 
 var lockUsers = []string{"listener", "evaluator", "manager", "vmaas_sync"}
+
+const activeAppSessionsQuery = `SELECT usename || ' ' || substring(query for 50)
+FROM pg_stat_activity
+WHERE usename = ANY($1)
+LIMIT 1`
+
+const sessionCheckMaxRetries = 5
 
 func execOrPanic(db *sql.DB, query string, args ...interface{}) {
 	if _, err := db.Exec(query, args...); err != nil {
@@ -38,18 +47,35 @@ func releaseAdvisoryLock(db *sql.DB) {
 	execOrPanic(db, "SELECT pg_advisory_unlock(123)")
 }
 
+// findActiveAppSession returns the first open session for lockUsers, if any.
+func findActiveAppSession(db *sql.DB) (session string, found bool, err error) {
+	err = db.QueryRow(activeAppSessionsQuery, pq.Array(lockUsers)).Scan(&session)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, err
+	}
+	return session, true, nil
+}
+
 // Wait for closing of all lockUsers database sessions.
 func waitForSessionClosed(db *sql.DB) {
+	errRetries := 0
 	for {
-		session := ""
-		err := db.QueryRow(
-			"SELECT usename || ' ' || substring(query for 50) FROM pg_stat_activity WHERE "+
-				"usename IN (?) LIMIT 30;", lockUsers,
-		).Scan(&session)
+		session, found, err := findActiveAppSession(db)
 		if err != nil {
-			log.Info(err)
+			errRetries++
+			utils.LogError("err", err.Error(), "attempt", errRetries, "failed to check app database sessions")
+			if errRetries >= sessionCheckMaxRetries {
+				panic(fmt.Errorf("failed to check app database sessions after %d attempts: %w",
+					sessionCheckMaxRetries, err))
+			}
+			time.Sleep(time.Second)
+			continue
 		}
-		if session == "" {
+		errRetries = 0
+		if !found {
 			log.Info("No ", strings.Join(lockUsers, ", "), " sessions found")
 			return
 		}
