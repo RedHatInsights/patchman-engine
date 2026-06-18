@@ -55,23 +55,11 @@ objects:
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
-          - name: db-migration
+          - name: check-for-db
             image: ${IMAGE}:${IMAGE_TAG}
             command:
-              - ./database_admin/entrypoint.sh
+              - ./database_admin/check-upgraded.sh
             env:
-            - {name: LOG_LEVEL, value: '${LOG_LEVEL_DATABASE_ADMIN}'}
-            - {name: DB_DEBUG, value: '${DB_DEBUG_DATABASE_ADMIN}'}
-            - {name: GIN_MODE, value: '${GIN_MODE}'}
-            - {name: SHOW_CLOWDER_VARS, value: ''}
-            - {name: MANAGER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                                  key: manager-database-password}}}
-            - {name: LISTENER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                                  key: listener-database-password}}}
-            - {name: EVALUATOR_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                                    key: evaluator-database-password}}}
-            - {name: VMAAS_SYNC_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                                    key: vmaas-sync-database-password}}}
             - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
         command:
           - ./scripts/entrypoint.sh
@@ -313,6 +301,33 @@ objects:
           requests: {cpu: '${CPU_REQUEST_EVALUATOR_USER_EVALUATION}', memory: '${MEM_REQUEST_EVALUATOR_USER_EVALUATION}'}
 
     jobs:
+    - name: db-migration
+      completions: 1
+      parallelism: 1
+      activeDeadlineSeconds: ${{MIGRATION_TIMEOUT}}
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        command:
+          - ./database_admin/entrypoint.sh
+        env:
+        - {name: MIGRATION_MAX_RETRIES, value: '3'}
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_DATABASE_ADMIN}'}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_DATABASE_ADMIN}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SHOW_CLOWDER_VARS, value: ''}
+        - {name: MANAGER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                                  key: manager-database-password}}}
+        - {name: LISTENER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                                  key: listener-database-password}}}
+        - {name: EVALUATOR_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                                    key: evaluator-database-password}}}
+        - {name: VMAAS_SYNC_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                                    key: vmaas-sync-database-password}}}
+        - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
+        resources:
+          limits: {cpu: '${CPU_LIMIT_DATABASE_ADMIN}', memory: '${MEM_LIMIT_DATABASE_ADMIN}'}
+          requests: {cpu: '${CPU_REQUEST_DATABASE_ADMIN}', memory: '${MEM_REQUEST_DATABASE_ADMIN}'}
+
     - name: vmaas-sync
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
       schedule: ${VMAAS_SYNC_SCHEDULE}
@@ -767,6 +782,7 @@ parameters:
 - {name: CLEAN_AAD_SUSPEND, value: 'false'} # Disable cronjob execution
 
 # Database admin
+- {name: MIGRATION_TIMEOUT, value: '7200'}  # 2h timeout for db-migration job
 - {name: LOG_LEVEL_DATABASE_ADMIN, value: debug}
 - {name: DB_DEBUG_DATABASE_ADMIN, value: 'false'}
 - {name: CPU_LIMIT_DATABASE_ADMIN, value: 100m}
