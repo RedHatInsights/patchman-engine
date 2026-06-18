@@ -108,6 +108,17 @@ func dbSchemaVersion(conn database.Driver, sourceURL string) (int, error) {
 	return int(curVersion), nil //nolint:gosec
 }
 
+func migrationTargetVersion(sourceURL string) int {
+	if schemaMigration >= 0 {
+		return schemaMigration
+	}
+	latest, err := latestSchemaMigrationFileVersion(sourceURL)
+	if err != nil {
+		panic(err)
+	}
+	return latest
+}
+
 func migrateAction(conn database.Driver, sourceURL string) int {
 	expectedSchema := schemaMigration
 	utils.LogInfo("schema", expectedSchema, "DB migration in progress, waiting for schema")

@@ -16,9 +16,11 @@ import (
 
 var lockUsers = []string{"listener", "evaluator", "manager", "vmaas_sync"}
 
+const activeAppSessionsWhere = `usename = ANY($1) AND pid <> pg_backend_pid()`
+
 const activeAppSessionsQuery = `SELECT usename || ' ' || substring(query for 50)
 FROM pg_stat_activity
-WHERE usename = ANY($1)
+WHERE ` + activeAppSessionsWhere + `
 LIMIT 1`
 
 const sessionCheckMaxRetries = 5
@@ -40,6 +42,7 @@ func execFromFile(db *sql.DB, filepath string) {
 func getAdvisoryLock(db *sql.DB) {
 	log.Info("Getting advisory lock")
 	execOrPanic(db, "SELECT pg_advisory_lock(123)")
+	log.Info("Advisory lock acquired")
 }
 
 func releaseAdvisoryLock(db *sql.DB) {
@@ -67,8 +70,7 @@ type appSession struct {
 
 const activeAppSessionPIDsQuery = `SELECT pid, usename, coalesce(substring(query for 50), '')
 FROM pg_stat_activity
-WHERE usename = ANY($1)
-  AND pid <> pg_backend_pid()`
+WHERE ` + activeAppSessionsWhere
 
 func listActiveAppSessions(db *sql.DB) ([]appSession, error) {
 	rows, err := db.Query(activeAppSessionPIDsQuery, pq.Array(lockUsers))
@@ -88,6 +90,14 @@ func listActiveAppSessions(db *sql.DB) ([]appSession, error) {
 	return sessions, rows.Err()
 }
 
+func formatAppSessions(sessions []appSession) string {
+	details := make([]string, len(sessions))
+	for i, session := range sessions {
+		details[i] = fmt.Sprintf("pid=%d user=%s query=%q", session.pid, session.usename, session.query)
+	}
+	return strings.Join(details, "; ")
+}
+
 func terminateAppSessions(db *sql.DB) {
 	sessions, err := listActiveAppSessions(db)
 	if err != nil {
@@ -97,8 +107,7 @@ func terminateAppSessions(db *sql.DB) {
 		if _, err := db.Exec("SELECT pg_terminate_backend($1)", session.pid); err != nil {
 			panic(err)
 		}
-		utils.LogInfo("pid", session.pid, "user", session.usename, "query", session.query,
-			"terminated app database session")
+		log.Infof("Terminated session pid=%d user=%s query=%q", session.pid, session.usename, session.query)
 	}
 }
 
@@ -106,7 +115,7 @@ func terminateAppSessions(db *sql.DB) {
 func waitForSessionClosed(db *sql.DB) {
 	errRetries := 0
 	for {
-		session, found, err := findActiveAppSession(db)
+		sessions, err := listActiveAppSessions(db)
 		if err != nil {
 			errRetries++
 			utils.LogError("err", err.Error(), "attempt", errRetries, "failed to check app database sessions")
@@ -118,11 +127,11 @@ func waitForSessionClosed(db *sql.DB) {
 			continue
 		}
 		errRetries = 0
-		if !found {
-			log.Info("No ", strings.Join(lockUsers, ", "), " sessions found")
+		if len(sessions) == 0 {
+			log.Info("App database sessions cleared")
 			return
 		}
-		utils.LogInfo("session:", session, "Session found")
+		log.Infof("Waiting for %d sessions: %s", len(sessions), formatAppSessions(sessions))
 		time.Sleep(time.Second)
 	}
 }
@@ -161,6 +170,13 @@ func prepareForMigration(db *sql.DB) {
 
 func startMigration(conn database.Driver, db *sql.DB, migrationFilesURL string) {
 	prepareForMigration(db)
+
+	targetVersion := migrationTargetVersion(migrationFilesURL)
+	if currentVersion, err := dbSchemaVersion(conn, migrationFilesURL); err != nil {
+		log.Infof("Starting schema migration to version %d", targetVersion)
+	} else {
+		log.Infof("Starting schema migration to version %d (current version %d)", targetVersion, currentVersion)
+	}
 
 	MigrateUp(conn, migrationFilesURL)
 
