@@ -9,7 +9,7 @@ require (
 	github.com/getkin/kin-openapi v0.139.0
 	github.com/gin-contrib/timeout v1.2.1
 	github.com/gin-gonic/gin v1.12.0
-	github.com/gocarina/gocsv v0.0.0-20260523204920-c264028e67ea
+	github.com/gocarina/gocsv v0.0.0-20260607070740-0735908c6461
 	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
