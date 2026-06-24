@@ -562,6 +562,21 @@ objects:
     testing:
       iqePlugin: patchman
 
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdJobInvocation
+  metadata:
+    annotations:
+      clowder.redhat.com/expected-image-tag: ${IMAGE_TAG}
+    labels:
+      app: patchman
+    generateName: db-migration-
+  spec:
+    appName: patchman
+    runOnNotReady: true
+    disabled: ${{DB_MIGRATION_DISABLED}}
+    jobs:
+      - db-migration
+
 - apiVersion: metrics.console.redhat.com/v1alpha1
   kind: FloorPlan
   metadata:
@@ -755,6 +770,8 @@ parameters:
 - {name: DB_READ_REPLICA_ENABLED_JOBS, value: 'TRUE'}
 - {name: JOBS_CONFIG, value: ''}
 
+# DB migration
+- {name: DB_MIGRATION_DISABLED, value: 'false'} # Disable db-migration job execution
 # VMaaS sync
 - {name: VMAAS_SYNC_SCHEDULE, value: '*/5 * * * *'} # Cronjob schedule definition
 - {name: VMAAS_SYNC_SUSPEND, value: 'false'} # Disable cronjob execution
