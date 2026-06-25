@@ -81,6 +81,7 @@ type coreConfig struct {
 	ListenerPrivateAddress        string
 	EvaluatorUploadPrivateAddress string
 	EvaluatorRecalcPrivateAddress string
+	ContentSourcesAddress         string
 
 	// cloudwatch
 	CloudWatchAccessKeyID     string
@@ -187,6 +188,7 @@ func initServicesFromEnv() {
 	CoreCfg.CandlepinCert = Getenv("CANDLEPIN_CERT", CoreCfg.CandlepinCert)
 	CoreCfg.CandlepinKey = Getenv("CANDLEPIN_KEY", CoreCfg.CandlepinKey)
 	CoreCfg.CandlepinCA = Getenv("CANDLEPIN_CA", CoreCfg.CandlepinCA)
+	CoreCfg.ContentSourcesAddress = Getenv("CONTENT_SOURCES_ADDRESS", CoreCfg.ContentSourcesAddress)
 }
 
 func initDBFromClowder() {
@@ -282,6 +284,8 @@ func initServicesFromClowder() {
 			CoreCfg.RbacAddress = (*Endpoint)(&endpoint).buildURL()
 		case "rbac-service":
 			CoreCfg.RbacURL = (*Endpoint)(&endpoint).buildURL()
+		case "content-sources-backend":
+			CoreCfg.ContentSourcesAddress = (*Endpoint)(&endpoint).buildURL()
 		}
 	}
 
@@ -419,6 +423,7 @@ func printKafkaParams() {
 func printServicesParams() {
 	fmt.Printf("VMAAS_ADDRESS=http://%s\n", CoreCfg.VmaasAddress)
 	fmt.Printf("RBAC_ADDRESS=http://%s\n", CoreCfg.RbacAddress)
+	fmt.Printf("CONTENT_SOURCES_ADDRESS=http://%s\n", CoreCfg.ContentSourcesAddress)
 }
 
 func printCloudwatchParams() {

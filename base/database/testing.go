@@ -497,3 +497,30 @@ func CheckTemplateSystems(t *testing.T, account int, templateUUID string, invent
 		}
 	}
 }
+
+func CreateTemplateAdvisories(t *testing.T, rhAccountID int, templateID int64, advisoryIDs []int64) {
+	for _, advisoryID := range advisoryIDs {
+		err := DB.Create(&models.TemplateAdvisory{
+			RhAccountID: rhAccountID, TemplateID: templateID, AdvisoryID: advisoryID}).Error
+		assert.Nil(t, err)
+	}
+	CheckTemplateAdvisories(t, templateID, advisoryIDs)
+}
+
+func CheckTemplateAdvisories(t *testing.T, templateID int64, advisoryIDs []int64) {
+	var templateAdvisories []models.TemplateAdvisory
+	err := DB.Where("template_id = ? AND advisory_id IN (?)", templateID, advisoryIDs).
+		Find(&templateAdvisories).Error
+	assert.Nil(t, err)
+	assert.Equal(t, len(advisoryIDs), len(templateAdvisories))
+}
+
+func DeleteTemplateAdvisories(t *testing.T, templateID int64, advisoryIDs []int64) {
+	query := DB.Model(&models.TemplateAdvisory{}).Where("template_id = ? AND advisory_id IN (?)",
+		templateID, advisoryIDs)
+	assert.Nil(t, query.Delete(&models.TemplateAdvisory{}).Error)
+
+	var count int64
+	assert.Nil(t, query.Count(&count).Error)
+	assert.Equal(t, int64(0), count)
+}

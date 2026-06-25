@@ -3,6 +3,7 @@ package utils
 import (
 	"testing"
 
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,4 +22,26 @@ func TestParseIdentity(t *testing.T) {
 	assert.Equal(t, nil, err)
 	assert.Equal(t, "6089719", xrhid.Identity.AccountNumber)
 	assert.Equal(t, "6089719", xrhid.Identity.ServiceAccount.UserId)
+}
+
+func TestEncodeXRHID(t *testing.T) {
+	testIdentityString := "eyJpZGVudGl0eSI6eyJvcmdfaWQiOiJvcmdfMSIsImludGVybmFsIjp7Im9yZ19pZCI6Im9yZ18xIn0sInR5cGUiOiJVc2VyIn0sImVudGl0bGVtZW50cyI6bnVsbH0=" //nolint:lll
+	orgID := "org_1"
+	var xrhid identity.Identity
+	xrhid.OrgID = orgID
+	xrhid.Internal.OrgID = orgID
+	xrhid.Type = "User"
+	identityString, err := EncodeXRHID(xrhid)
+
+	assert.Equal(t, nil, err)
+	assert.Equal(t, testIdentityString, identityString)
+}
+
+func TestXRHIDForOrg(t *testing.T) {
+	orgID := "1234"
+	xrhid := XRHIDForOrg(orgID)
+
+	assert.Equal(t, orgID, xrhid.Identity.OrgID)
+	assert.Equal(t, orgID, xrhid.Identity.Internal.OrgID)
+	assert.Equal(t, "User", xrhid.Identity.Type)
 }

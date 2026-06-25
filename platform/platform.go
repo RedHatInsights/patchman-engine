@@ -185,6 +185,7 @@ func platformMock() {
 	initVMaaS(app)
 	initRbac(app)
 	initCandlepin(app)
+	initContentSources(app)
 
 	// Control endpoint handler
 	app.POST("/control/upload", mockUploadHandler)
