@@ -22,7 +22,7 @@ System Patch Manager is one of the applications for [console.redhat.com](https:/
 Ensure that you have Go and Podman installed.
 
 ### Running locally
-Use `podman-compose` to deploy the individual project components and supporting containers that simulate the CMSfR platform and database:
+Use `podman-compose` (or `docker compose`) to deploy the individual project components and supporting containers that simulate the CMSfR platform and database:
 ~~~bash
 podman-compose up --build # Build images if needed and start containers
 podman-compose down       # Stop and remove containers
