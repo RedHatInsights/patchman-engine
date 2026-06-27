@@ -52,10 +52,11 @@ description of the component and data layout are in [separate page](database.md)
 
 - **database-admin** - Executes database initialization and migrations. It needs all rights for the database. It also
 creates database users for all components and updates passwords for them, so it reads passwords for admin and all
-components from environment variables. Before DDL it sets app users (`listener`, `evaluator`, `manager`, `vmaas_sync`)
-to `NOLOGIN`, optionally terminates lingering sessions when `terminate_db_sessions=true`, waits until no app sessions
-remain, runs migrations, then restores `LOGIN`. See [Database migrations](database.md#migrations) for when to enable
-session termination. Using container CLI it's possible to manually manage database
+components from environment variables. In production a **db-migration** Job runs migrations once per deploy; other pods
+wait in **check-for-db** init until the schema is current. Before DDL it sets app users (`listener`, `evaluator`,
+`manager`, `vmaas_sync`) to `NOLOGIN`, optionally terminates lingering sessions when `terminate_db_sessions=true`,
+waits until no app sessions remain, runs migrations, then restores `LOGIN`. See [Database migrations](database.md#migrations)
+and the [major migration runbook](major-migration-runbook.md). Using container CLI it's possible to manually manage database
 (`./scripts/psql.sh`). See [component environment variables](../../conf/database_admin.env)
 
 ### Components cooperation schema

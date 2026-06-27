@@ -10,6 +10,7 @@
 |--------|----------|
 | Architecture and components | [docs/md/architecture.md](docs/md/architecture.md) |
 | Database layout and migrations | [docs/md/database.md](docs/md/database.md) |
+| Major migration operations runbook | [docs/md/major-migration-runbook.md](docs/md/major-migration-runbook.md) |
 | Local dev, tests, OpenAPI | [README.md](README.md) |
 | Commits, PRs, contribution style | [CONTRIBUTING.md](CONTRIBUTING.md) |
 
@@ -30,7 +31,7 @@ Prefer these sources over guessing when behavior or schema matters.
 | Evaluation | `evaluator/`, topic names in code and `conf/` |
 | Advisory sync | `tasks/vmaas_sync/` |
 | Migrations | `database_admin/migrations/` (verify naming against existing migrations) |
-| Migration flow and session flags | `database_admin/update.go`, [docs/md/database.md#migrations](docs/md/database.md#migrations) |
+| Migration flow, session flags, ops runbook | `database_admin/update.go`, [docs/md/database.md#migrations](docs/md/database.md#migrations), [docs/md/major-migration-runbook.md](docs/md/major-migration-runbook.md) |
 | Database schema and SQL | `database_admin/schema/` |
 | Containers and local orchestration | `docker-compose.yml`, `docker-compose.test.yml`, `Dockerfile*` |
 | Scheduled jobs | `tasks/` |
@@ -89,13 +90,15 @@ Response to User
 
 ---
 
-## Database migrations: `terminate_db_sessions`
+## Database migrations (major DDL)
 
-When advising on migrations or deploy config, use [docs/md/database.md#migrations](docs/md/database.md#migrations). Summary for agents:
+When advising on migrations or deploy config, use [docs/md/database.md#migrations](docs/md/database.md#migrations) for overview and [docs/md/major-migration-runbook.md](docs/md/major-migration-runbook.md) for ops procedure, troubleshooting, and flag reference.
 
-**Default:** do **not** set `terminate_db_sessions`. It defaults to `false`; normal deploys must stay unchanged.
+**Deploy model:** One **db-migration** Job per deploy runs migrations; app pods only **check-for-db** init (poll schema). Failed migration → new pods fail init, old pods keep serving.
 
-**What it does:** After `NOLOGIN` on app DB users, database-admin optionally runs `pg_terminate_backend` on open `listener` / `evaluator` / `manager` / `vmaas_sync` sessions, then waits until `pg_stat_activity` shows none, then runs DDL. Code: `prepareForMigration()` in `database_admin/update.go`.
+**Session handling:** Before DDL, database-admin sets app users (`listener`, `evaluator`, `manager`, `vmaas_sync`) to `NOLOGIN`, optionally terminates lingering backends (`terminate_db_sessions`), polls `pg_stat_activity` until clear (`waitForSessionClosed` in `database_admin/update.go`; fails after 5 consecutive query errors — does not proceed silently), then runs DDL and restores `LOGIN`. `NOLOGIN` stops new connections but does not close existing ones.
+
+**`terminate_db_sessions`:** Default **off** (`false`); normal deploys must stay unchanged. When enabled on the **db-migration Job only** via `DATABASE_ADMIN_CONFIG=terminate_db_sessions=true`, runs `pg_terminate_backend` on open app-user sessions, then waits again until `pg_stat_activity` is clear. Remove after deploy. Do not enable on manager/listener/evaluator pods. Other flags (`schema_migration`, `force_migration_version`, etc.) are documented in the runbook.
 
 **Recommend `terminate_db_sessions=true` only when:**
 
@@ -109,6 +112,6 @@ When advising on migrations or deploy config, use [docs/md/database.md#migration
 - The user is working locally or in CI
 - There is no session-lock symptom — it forcibly drops client connections and is not a safe default
 
-**How to set (production):** `DATABASE_ADMIN_CONFIG=terminate_db_sessions=true` on the db-migration Job for that deploy only; remove afterward. Do not enable on manager/listener/evaluator pods.
+**Logging:** Key lines — `Advisory lock acquired`, `Waiting for N sessions`, `App database sessions cleared`, `Starting schema migration to version X`. Stuck at only `Getting advisory lock` → advisory lock 123 held elsewhere. Use `message:` filters in Kibana, not `kubernetes.container_name`. Full log sequence in the runbook.
 
-**Related:** Session wait logic and `pg_stat_activity` queries are in `database_admin/update.go`. Deploy layout (single migration Job, `check-for-db` init) is in `deploy/clowdapp.yaml`. Expected migration log sequence (advisory lock → sessions cleared → DDL start) is in [docs/md/database.md#migration-log-sequence](docs/md/database.md#migration-log-sequence).
+**When advising users:** Point to the runbook for before/during/after steps, Kibana queries, and Postgres diagnostics. Deploy layout (single migration Job, `check-for-db` init) is in `deploy/clowdapp.yaml`.
