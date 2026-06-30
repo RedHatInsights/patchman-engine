@@ -108,6 +108,9 @@ type coreConfig struct {
 	LogLevel string
 	LogStyle string
 
+	// glitchtip logging
+	SentryDSN string
+
 	ConsoledotHostname string
 }
 
@@ -350,6 +353,7 @@ func initConsoledotFromEnv() {
 func initLoggerFromEnv() {
 	CoreCfg.LogLevel = Getenv("LOG_LEVEL", "INFO")
 	CoreCfg.LogStyle = Getenv("LOG_STYLE", "plain")
+	CoreCfg.SentryDSN = Getenv("SENTRY_DSN", "")
 }
 
 func initKesselFromEnv() {

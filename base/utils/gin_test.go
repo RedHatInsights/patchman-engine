@@ -11,6 +11,10 @@ import (
 )
 
 func TestRunServer(t *testing.T) {
+	prev := CoreCfg.LogLevel
+	CoreCfg.LogLevel = "debug"
+	defer func() { CoreCfg.LogLevel = prev }()
+
 	ConfigureLogging()
 
 	var hook = NewTestLogHook()
