@@ -89,14 +89,9 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 		return nil, nil, nil, err
 	}
 
-	// TODO: fix below; the condition is always true since moving from groups to workspaces,
-	// there will always be at least root workspace
-	if config.DisableCachedCounts || HasInventoryFilter(filters) || len(workspaceIDs) != 0 {
-		middlewares.AdvisoryAccountDataCnt.WithLabelValues("miss").Inc()
-		query = buildQueryAdvisoriesTagged(db, filters, account, workspaceIDs)
-	} else {
-		middlewares.AdvisoryAccountDataCnt.WithLabelValues("hit").Inc()
-		query = buildQueryAdvisories(db, account)
+	query, err = resolveAdvisoriesQuery(db, account, workspaceIDs, filters)
+	if err != nil {
+		return nil, nil, nil, err
 	}
 
 	query, meta, params, err := ListCommon(query, c, filters, AdvisoriesOpts)
@@ -218,6 +213,36 @@ func buildQueryAdvisories(db *gorm.DB, account int) *gorm.DB {
 	return query
 }
 
+func resolveAdvisoriesQuery(db *gorm.DB, account int, workspaceIDs []string, filters Filters) (*gorm.DB, error) {
+	if config.EnableAccountAdvisoryReadPath && !hasNonGroupInventoryFilter(filters) {
+		effectiveWorkspaceIDs := workspaceIDs
+		if groupNames := getGroupNameFilterValues(filters); len(groupNames) > 0 {
+			var err error
+			effectiveWorkspaceIDs, err = resolveWorkspaceNameToIDs(db, account, groupNames, workspaceIDs)
+			if err != nil {
+				return nil, err
+			}
+		}
+		middlewares.AdvisoryAccountDataCnt.WithLabelValues("hit").Inc()
+		if len(effectiveWorkspaceIDs) == 0 {
+			query := buildQueryAdvisoriesFromAccountAdvisory(db, account, effectiveWorkspaceIDs)
+			return query.Where("FALSE"), nil
+		}
+		return buildQueryAdvisoriesFromAccountAdvisory(db, account, effectiveWorkspaceIDs), nil
+	}
+	// TODO: fix below;
+	// the condition is always true since moving from groups to workspaces,
+	// there will always be at least root workspace
+	// leaving until RBAC cannot be re-enabled
+	if !config.EnableAccountAdvisoryReadPath && !config.DisableCachedCounts &&
+		!HasInventoryFilter(filters) && len(workspaceIDs) == 0 {
+		middlewares.AdvisoryAccountDataCnt.WithLabelValues("hit").Inc()
+		return buildQueryAdvisories(db, account), nil
+	}
+	middlewares.AdvisoryAccountDataCnt.WithLabelValues("miss").Inc()
+	return buildQueryAdvisoriesTagged(db, filters, account, workspaceIDs), nil
+}
+
 func buildAdvisoryAccountDataQuery(db *gorm.DB, account int, workspaceIDs []string) *gorm.DB {
 	query := database.SystemAdvisories(db, account, workspaceIDs).
 		Select(`sa.advisory_id, si.rh_account_id as rh_account_id,
@@ -240,6 +265,63 @@ func buildQueryAdvisoriesTagged(db *gorm.DB, filters map[string]FilterData, acco
 		Joins("LEFT JOIN advisory_severity sev ON am.severity_id = sev.id")
 
 	return query
+}
+
+func hasNonGroupInventoryFilter(filters Filters) bool {
+	for key, data := range filters {
+		if data.Type == TagFilter {
+			return true
+		}
+		if data.Type == InventoryFilter && key != "group_name" {
+			return true
+		}
+	}
+	return false
+}
+
+func getGroupNameFilterValues(filters Filters) []string {
+	if data, ok := filters["group_name"]; ok && data.Type == InventoryFilter {
+		return data.Values
+	}
+	return nil
+}
+
+func resolveWorkspaceNameToIDs(db *gorm.DB,
+	accountID int,
+	names []string,
+	allowedWorkspaceIDs []string) ([]string, error) {
+	var ids []string
+	query := db.Table("system_inventory si").
+		Distinct().
+		Where("si.rh_account_id = ?", accountID).
+		Where("si.workspace_name IN (?)", names)
+	if len(allowedWorkspaceIDs) > 0 {
+		query = query.Where("si.workspace_id IN (?)", allowedWorkspaceIDs)
+	}
+	err := query.Pluck("workspace_id", &ids).Error
+	return ids, err
+}
+
+func buildAccountAdvisorySubquery(db *gorm.DB, account int, workspaceIDs []string) *gorm.DB {
+	query := db.Table("account_advisory aa_inner").
+		Select(`aa_inner.advisory_id,
+			aa_inner.rh_account_id,
+			SUM(aa_inner.systems_installable) as systems_installable,
+			SUM(aa_inner.systems_applicable) as systems_applicable`).
+		Where("aa_inner.rh_account_id = ?", account)
+	if len(workspaceIDs) > 0 {
+		query = query.Where("aa_inner.workspace_id IN (?)", workspaceIDs)
+	}
+	return query.Group("aa_inner.advisory_id, aa_inner.rh_account_id").
+		Having("SUM(aa_inner.systems_applicable) > 0")
+}
+
+func buildQueryAdvisoriesFromAccountAdvisory(db *gorm.DB, account int, workspaceIDs []string) *gorm.DB {
+	subq := buildAccountAdvisorySubquery(db, account, workspaceIDs)
+	return database.AdvisoryMetadata(db).
+		Select(AdvisoriesSelect).
+		Joins("JOIN (?) aad ON am.id = aad.advisory_id", subq).
+		Joins("LEFT JOIN advisory_severity sev ON am.severity_id = sev.id")
 }
 
 func buildAdvisoriesData(advisories []AdvisoriesDBLookup) ([]AdvisoryItem, int, map[string]int) {

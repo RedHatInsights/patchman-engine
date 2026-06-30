@@ -2,11 +2,9 @@ package controllers
 
 import (
 	"app/base/utils"
-	"app/manager/config"
 	"app/manager/middlewares"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 // nolint:lll
@@ -37,14 +35,11 @@ func AdvisoriesExportHandler(c *gin.Context) {
 		return
 	}
 	db := middlewares.DBFromContext(c)
-	var query *gorm.DB
 
-	// TODO: fix below; the condition is always true since moving from groups to workspaces,
-	// there will always be at least root workspace
-	if config.DisableCachedCounts || HasInventoryFilter(filters) || len(workspaceIDs) != 0 {
-		query = buildQueryAdvisoriesTagged(db, filters, account, workspaceIDs)
-	} else {
-		query = buildQueryAdvisories(db, account)
+	query, err := resolveAdvisoriesQuery(db, account, workspaceIDs, filters)
+	if err != nil {
+		utils.LogAndRespError(c, err, "db error")
+		return
 	}
 
 	var advisories []AdvisoriesDBLookup
