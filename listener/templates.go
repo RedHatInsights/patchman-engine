@@ -6,6 +6,7 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"app/manager/middlewares"
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 const (
@@ -42,7 +44,7 @@ func TemplatesMessageHandler(m mqueue.KafkaMessage) error {
 		case TemplateEventUpdate:
 			fallthrough
 		case TemplateEventCreate:
-			err = TemplateUpdate(template)
+			err = TemplateUpdate(template, eType)
 		default:
 			utils.LogWarn("msg", fmt.Sprintf("%v", template), WarnUnknownType)
 			err = nil
@@ -86,6 +88,12 @@ func TemplateDelete(template mqueue.TemplateResponse) error {
 	}
 
 	err = database.DB.
+		Delete(&models.TemplateAdvisory{}, "template_id = ? AND rh_account_id = ?", templateID, accountID).Error
+	if err != nil {
+		return errors.Wrap(err, "deleting template advisory relationships")
+	}
+
+	err = database.DB.
 		Delete(&models.Template{}, "id = ? AND rh_account_id = ?", templateID, accountID).Error
 	if err != nil {
 		return errors.Wrap(err, "deleting template")
@@ -94,13 +102,13 @@ func TemplateDelete(template mqueue.TemplateResponse) error {
 	return nil
 }
 
-func TemplateUpdate(template mqueue.TemplateResponse) error {
+func TemplateUpdate(template mqueue.TemplateResponse, eventType string) error {
 	tStart := time.Now()
-	defer utils.ObserveSecondsSince(tStart, templateMsgHandlingDuration.WithLabelValues(TemplateEventCreate))
+	defer utils.ObserveSecondsSince(tStart, templateMsgHandlingDuration.WithLabelValues(eventType))
 
 	if template.OrgID == "" {
 		utils.LogError("template", template.UUID, ErrorNoAccountProvided)
-		eventMsgsReceivedCnt.WithLabelValues(TemplateEventCreate, ReceivedErrorIdentity).Inc()
+		eventMsgsReceivedCnt.WithLabelValues(eventType, ReceivedErrorIdentity).Inc()
 		utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("template-skip"))
 		return nil
 	}
@@ -134,7 +142,15 @@ func TemplateUpdate(template mqueue.TemplateResponse) error {
 	err = database.OnConflictUpdateMulti(database.DB, []string{"rh_account_id", "uuid"},
 		"name", "environment_id", "description", "creator", "published").Save(&row).Error
 	if err != nil {
-		return errors.Wrap(err, "creating template from message")
+		return errors.Wrap(err, "creating/updating template from message")
+	}
+
+	if contentSourcesBaseURL != "" && eventType == TemplateEventUpdate {
+		ctx := identity.WithIdentity(context.Background(), utils.XRHIDForOrg(template.OrgID))
+		err = syncTemplateAdvisories(ctx, accountID, row.ID, template.UUID)
+		if err != nil {
+			return errors.Wrap(err, "syncing template advisories")
+		}
 	}
 	return nil
 }
