@@ -53,12 +53,12 @@ func runSync() {
 		err := SyncData(lastModified, vmaasExportedTS)
 		if err != nil {
 			// This probably means programming error, better to exit with nonzero error code, so the error is noticed
-			utils.LogFatal("err", err.Error(), "vmaas data sync failed")
+			utils.LogFatal("err", err, "vmaas data sync failed")
 		}
 
 		err = SendReevaluationMessages()
 		if err != nil {
-			utils.LogError("err", err.Error(), "re-evaluation sending routine failed")
+			utils.LogError("err", err, "re-evaluation sending routine failed")
 		}
 	}
 }

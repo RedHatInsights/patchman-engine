@@ -41,7 +41,7 @@ func runSystemCulling() {
 	})
 
 	if err != nil {
-		utils.LogError("err", err.Error(), "System culling")
+		utils.LogError("err", err, "System culling")
 	} else {
 		utils.LogInfo("System culling tasks performed successfully")
 	}
@@ -70,7 +70,7 @@ func deleteCulledSystems(tx *gorm.DB, limitDeleted int) (nDeleted int64, err err
 			return nil
 		})
 		if delErr != nil {
-			utils.LogWarn("inventoryID", id, "err", delErr.Error(), "Delete culled system")
+			utils.LogWarn("inventoryID", id, "err", delErr, "Delete culled system")
 			continue
 		}
 		nDeleted += rowsAffected
@@ -110,7 +110,7 @@ func markSystemsStale(tx *gorm.DB, markedLimit int) (nMarked int64, err error) {
 			return nil
 		})
 		if markErr != nil {
-			utils.LogWarn("rhAccountID", c.RhAccountID, "systemID", c.ID, "err", markErr.Error(), "Mark stale system")
+			utils.LogWarn("rhAccountID", c.RhAccountID, "systemID", c.ID, "err", markErr, "Mark stale system")
 			continue
 		}
 		nMarked += rowsAffected

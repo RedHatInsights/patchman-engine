@@ -137,7 +137,7 @@ func checkUpdatedSummaryDescription(errataName string, vmaasData vmaas.ErrataRes
 	if err != nil {
 		modified, err = time.Parse(time.RFC3339, vmaasData.Updated)
 		if err != nil {
-			utils.LogError("err", err.Error(), "erratum", errataName, "Invalid errata modified date")
+			utils.LogError("err", err, "erratum", errataName, "Invalid errata modified date")
 			return time.Time{}, false
 		}
 	}

@@ -197,10 +197,10 @@ func handleListenerErrors(err error, event *HostEvent, ptEvent *mqueue.PayloadTr
 	if err != nil {
 		if errors.Is(err, base.ErrFatal) {
 			// fatal error which should restart the pod
-			utils.LogError("inventoryID", event.Host.ID, "err", err.Error())
+			utils.LogError("inventoryID", event.Host.ID, "err", err)
 		} else {
 			utils.LogWarn("inventoryID", event.Host.ID, "reporter", event.Host.Reporter,
-				"hostType", event.Host.SystemProfile.HostType, "err", err.Error())
+				"hostType", event.Host.SystemProfile.HostType, "err", err)
 		}
 	}
 	metric, ok := metricByErr[err]
@@ -264,7 +264,7 @@ func sendPayloadStatus(w mqueue.Writer, event mqueue.PayloadTrackerEvent, status
 		event.StatusMsg = statusMsg
 	}
 	if err := mqueue.SendMessages(base.Context, w, &event); err != nil {
-		utils.LogWarn("err", err.Error(), WarnPayloadTracker)
+		utils.LogWarn("err", err, WarnPayloadTracker)
 	}
 }
 

@@ -73,7 +73,7 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 		}).Error
 
 	if err != nil {
-		utils.LogError("inventoryID", event.ID, "err", err.Error(), "Could not delete system")
+		utils.LogError("inventoryID", event.ID, "err", err, "Could not delete system")
 		eventMsgsReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorProcessing).Inc()
 		return errors.Wrap(err, "Could not delete system")
 	}
@@ -86,7 +86,7 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 	err = query.Error
 	if err != nil {
 		wrappedErr := errors.Wrap(err, "Could not mark system as deleted")
-		utils.LogError("inventoryID", event.ID, "err", wrappedErr.Error())
+		utils.LogError("inventoryID", event.ID, "err", wrappedErr)
 		eventMsgsReceivedCnt.WithLabelValues(EventDelete, ReceivedErrorProcessing).Inc()
 		return wrappedErr
 	}

@@ -14,7 +14,7 @@ func RunCleanAdvisoryAccountData() {
 	utils.LogInfo("Deleting advisory rows with 0 applicable systems from advisory_account_data")
 
 	if err := CleanAdvisoryAccountData(); err != nil {
-		utils.LogError("err", err.Error(), "Cleaning advisory account data")
+		utils.LogError("err", err, "Cleaning advisory account data")
 		return
 	}
 	utils.LogInfo("CleanAdvisoryAccountData task performed successfully")

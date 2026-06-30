@@ -141,7 +141,7 @@ func PreloadAdvisoryCacheItems() {
 	for _, advisoryName := range advisoryNames {
 		_, err = getAdvisory(database.DB, advisoryName, true)
 		if err != nil {
-			utils.LogError("advisoryName", advisoryName, "err", err.Error(), "can not re-load item to cache")
+			utils.LogError("advisoryName", advisoryName, "err", err, "can not re-load item to cache")
 		}
 		*count++
 	}

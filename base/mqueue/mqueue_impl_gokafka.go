@@ -29,7 +29,7 @@ func (t *kafkaGoReaderImpl) HandleMessages(handler MessageHandler) {
 			if err.Error() == errContextCanceled {
 				break
 			}
-			utils.LogError("err", err.Error(), "unable to read message from Kafka reader")
+			utils.LogError("err", err, "unable to read message from Kafka reader")
 			panic(err)
 		}
 		if log.IsLevelEnabled(log.TraceLevel) {
@@ -41,14 +41,14 @@ func (t *kafkaGoReaderImpl) HandleMessages(handler MessageHandler) {
 		// At this level, all errors are fatal
 		kafkaMessage := KafkaMessage{Key: m.Key, Value: m.Value, Headers: m.Headers}
 		if err = handler(kafkaMessage); err != nil {
-			utils.LogPanic("err", err.Error(), "Handler failed")
+			utils.LogPanic("err", err, "Handler failed")
 		}
 		err = t.CommitMessages(base.Context, m)
 		if err != nil {
 			if err.Error() == errContextCanceled {
 				break
 			}
-			utils.LogError("err", err.Error(), "unable to commit kafka message")
+			utils.LogError("err", err, "unable to commit kafka message")
 			panic(err)
 		}
 	}

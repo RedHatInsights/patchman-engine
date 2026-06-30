@@ -189,7 +189,7 @@ func ParseInventoryGroup(id *uuid.UUID, name *string) (string, error) {
 	group := rbac.InventoryGroup{{ID: id, Name: name}}
 	groupJSON, err := sonic.Marshal(&group)
 	if err != nil {
-		LogError("group", group, "err", err.Error(), "Cannot Marshal Inventory group")
+		LogError("group", group, "err", err, "Cannot Marshal Inventory group")
 		return "", err
 	}
 	return strconv.Quote(string(groupJSON)), nil

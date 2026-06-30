@@ -126,7 +126,7 @@ func update() {
 func updateSystemMetrics() {
 	counts, err := getSystemCounts()
 	if err != nil {
-		utils.LogError("err", err.Error(), "unable to update system metrics")
+		utils.LogError("err", err, "unable to update system metrics")
 		return
 	}
 
@@ -180,7 +180,7 @@ func getSystemCounts() (map[systemsCntLabels]int, error) {
 func updateAdvisoryMetrics() {
 	other, enh, bug, sec, err := getAdvisoryCounts()
 	if err != nil {
-		utils.LogError("err", err.Error(), "unable to update advisory metrics")
+		utils.LogError("err", err, "unable to update advisory metrics")
 	}
 	advisoriesCnt.WithLabelValues("other").Set(float64(other))
 	advisoriesCnt.WithLabelValues("enhancement").Set(float64(enh))
@@ -191,13 +191,13 @@ func updateAdvisoryMetrics() {
 func updatePackageMetrics() {
 	nPackages, err := getPackageCounts()
 	if err != nil {
-		utils.LogError("err", err.Error(), "unable to update package metrics")
+		utils.LogError("err", err, "unable to update package metrics")
 	}
 	packageCnt.Set(float64(nPackages))
 
 	nPackageNames, err := getPackageNameCounts()
 	if err != nil {
-		utils.LogError("err", err.Error(), "unable to update package_name metrics")
+		utils.LogError("err", err, "unable to update package_name metrics")
 	}
 	packageNameCnt.Set(float64(nPackageNames))
 }

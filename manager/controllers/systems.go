@@ -147,7 +147,7 @@ func (v *SystemGroupsList) Scan(value interface{}) error {
 func SystemJSONBItemString[T SystemJSONBItemType](v T) string {
 	b, err := sonic.Marshal(v)
 	if err != nil {
-		utils.LogError("err", err.Error(), "Unable to convert tags struct to json")
+		utils.LogError("err", err, "Unable to convert tags struct to json")
 	}
 	replacedQuotes := strings.ReplaceAll(string(b), `"`, `'`) // use the same way as "vulnerability app"
 	return replacedQuotes

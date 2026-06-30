@@ -32,7 +32,7 @@ func trySetupCloudWatchLogging() {
 
 	hostname, err := os.Hostname()
 	if err != nil {
-		LogError("err", err.Error(), "unable to get hostname to set CloudWatch log_stream")
+		LogError("err", err, "unable to get hostname to set CloudWatch log_stream")
 		return
 	}
 
@@ -49,7 +49,7 @@ func trySetupCloudWatchLogging() {
 	awsconf := aws.NewConfig().WithRegion(region).WithCredentials(cred)
 	cloudwatchHook, err = lc.NewBatchingHook(group, hostname, awsconf, 10*time.Second)
 	if err != nil {
-		LogError("err", err.Error(), "unable to setup CloudWatch logging")
+		LogError("err", err, "unable to setup CloudWatch logging")
 		return
 	}
 	log.AddHook(cloudwatchHook)

@@ -34,7 +34,7 @@ func HTTPCallRetry(httpCallFun func() (outputDataPtr interface{}, resp *http.Res
 		}
 
 		if len(codesToRetry) == 0 { // no "retry" codes specified, continue always
-			LogWarn("attempt", attempt, "err", callErr.Error(), "HTTP call failed, trying again")
+			LogWarn("attempt", attempt, "err", callErr, "HTTP call failed, trying again")
 			continue
 		}
 
@@ -123,7 +123,7 @@ func RunProfiler() {
 			server := &http.Server{Addr: fmt.Sprintf(":%d", CoreCfg.PrivatePort), ReadHeaderTimeout: 120 * time.Second}
 			err := server.ListenAndServe()
 			if err != nil {
-				LogWarn("err", err.Error(), "couldn't start profiler")
+				LogWarn("err", err, "couldn't start profiler")
 			}
 		}()
 	}

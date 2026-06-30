@@ -65,12 +65,12 @@ func (b *eventBuffer) flushEvalEvents() {
 	defer b.lock.Unlock()
 	err := mqueue.SendMessages(base.Context, *b.evalWriter, b.evalBuffer)
 	if err != nil {
-		utils.LogError("err", err.Error(), ErrorKafkaSend)
+		utils.LogError("err", err, ErrorKafkaSend)
 	}
 	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-sent-evaluator"))
 	err = mqueue.SendMessages(base.Context, *b.ptWriter, b.ptBuffer)
 	if err != nil {
-		utils.LogWarn("err", err.Error(), WarnPayloadTracker)
+		utils.LogWarn("err", err, WarnPayloadTracker)
 	}
 	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-sent-payload-tracker"))
 	utils.LogDebug("evaluator_messages", len(b.evalBuffer),

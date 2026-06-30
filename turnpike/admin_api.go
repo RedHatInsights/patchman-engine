@@ -39,7 +39,7 @@ func RunAdminAPI() {
 
 	err := utils.RunServer(base.Context, app, utils.CoreCfg.PublicPort)
 	if err != nil {
-		utils.LogError("err", err.Error())
+		utils.LogError("err", err)
 		panic(err)
 	}
 }

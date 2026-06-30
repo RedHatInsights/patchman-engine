@@ -72,7 +72,7 @@ func RunManager() {
 
 	err := utils.RunServer(base.Context, app, port)
 	if err != nil {
-		utils.LogFatal("err", err.Error(), "server listening failed")
+		utils.LogFatal("err", err, "server listening failed")
 		panic(err)
 	}
 	utils.LogInfo("manager completed")

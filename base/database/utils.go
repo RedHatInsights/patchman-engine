@@ -125,7 +125,7 @@ func UpdateTimestampKVValue(key string, value time.Time) {
 	ts := value.Format(time.RFC3339Nano)
 	err := UpdateTimestampKVValueStr(key, ts)
 	if err != nil {
-		utils.LogError("err", err.Error(), "key", key, "Unable to updated timestamp KV value")
+		utils.LogError("err", err, "key", key, "Unable to updated timestamp KV value")
 	}
 }
 

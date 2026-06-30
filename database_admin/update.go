@@ -118,7 +118,7 @@ func waitForSessionClosed(db *sql.DB) {
 		sessions, err := listActiveAppSessions(db)
 		if err != nil {
 			errRetries++
-			utils.LogError("err", err.Error(), "attempt", errRetries, "failed to check app database sessions")
+			utils.LogError("err", err, "attempt", errRetries, "failed to check app database sessions")
 			if errRetries >= sessionCheckMaxRetries {
 				panic(fmt.Errorf("failed to check app database sessions after %d attempts: %w",
 					sessionCheckMaxRetries, err))

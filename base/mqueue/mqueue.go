@@ -62,7 +62,7 @@ func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 			if err = handler(message); err == nil || !errors.Is(err, base.ErrFatal) {
 				return nil
 			}
-			utils.LogError("err", err.Error(), "attempt", attempt, "Try failed")
+			utils.LogError("err", err, "attempt", attempt, "Try failed")
 			attempt++
 		}
 		if err != nil && errors.Is(err, base.ErrFatal) {

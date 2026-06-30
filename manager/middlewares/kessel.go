@@ -74,7 +74,7 @@ func useStreamedListObjects(
 	) {
 		if err != nil {
 			utils.LogError(
-				"err", err.Error(), "durationMs", time.Since(start).Milliseconds(), "permission", permission,
+				"err", err, "durationMs", time.Since(start).Milliseconds(), "permission", permission,
 				"received_count", len(workspaces), "failed to useStreamedListObjects",
 			)
 			return nil, err
@@ -92,7 +92,7 @@ func useStreamedListObjects(
 func hasPermissionKessel(c *gin.Context) {
 	client, conn, err := setupClient()
 	if err != nil {
-		utils.LogError("err", err.Error(), "failed to setup Kessel service client")
+		utils.LogError("err", err, "failed to setup Kessel service client")
 		c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{
 			Error: "Unexpected server error", // missing cert or failed to make a new gRPC client
 		})
@@ -100,13 +100,13 @@ func hasPermissionKessel(c *gin.Context) {
 	}
 	defer func() {
 		if closeErr := conn.Close(); closeErr != nil {
-			utils.LogError("err", closeErr.Error(), "failed to close gRPC client")
+			utils.LogError("err", closeErr, "failed to close gRPC client")
 		}
 	}()
 
 	xrhid, err := utils.ParseXRHID(c.GetHeader("x-rh-identity"))
 	if err != nil {
-		utils.LogError("err", err.Error(), "failed to ParseXRHID")
+		utils.LogError("err", err, "failed to ParseXRHID")
 		c.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse{Error: "Invalid x-rh-identity header"})
 		return
 	}

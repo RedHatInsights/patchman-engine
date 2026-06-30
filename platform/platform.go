@@ -282,7 +282,7 @@ func mockUploadManyHandler(c *gin.Context) {
 	countParam := c.Param("count")
 	count, err := strconv.Atoi(countParam)
 	if err != nil {
-		utils.LogError("err", err.Error())
+		utils.LogError("err", err)
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}

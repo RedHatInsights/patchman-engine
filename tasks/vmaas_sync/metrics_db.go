@@ -56,7 +56,7 @@ func getTableSizes() []keyValue {
         from (select * from pg_catalog.pg_tables where schemaname in ('public', 'inventory', 'repack')) t;`).
 		Find(&tableSizes).Error
 	if err != nil {
-		utils.LogError("err", err.Error(), "unable to get database table sizes")
+		utils.LogError("err", err, "unable to get database table sizes")
 	}
 	return tableSizes
 }
@@ -68,7 +68,7 @@ func getDatabaseSize() []keyValue {
 		fmt.Sprintf(`SELECT 'database' as key, pg_database_size('%s') as value;`, dbName)).
 		Find(&dbSize).Error
 	if err != nil {
-		utils.LogError("err", err.Error(), "unable to get database total size")
+		utils.LogError("err", err, "unable to get database total size")
 	}
 
 	return dbSize
@@ -80,7 +80,7 @@ func getDatabaseProcesses() []keyValue {
 		Select("COALESCE(usename, '-') as key, COUNT(*) as value, COALESCE(state, '-') state").
 		Group("key, state").Find(&usenameCounts).Error
 	if err != nil {
-		utils.LogError("err", err.Error(), "unable to get processes counts")
+		utils.LogError("err", err, "unable to get processes counts")
 	}
 
 	return usenameCounts
