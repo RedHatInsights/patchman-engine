@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
@@ -107,6 +108,16 @@ func TestPublishAdvisoryUpdatesNoDelta(t *testing.T) {
 	assert.Empty(t, mockWriter.Messages)
 }
 
+func waitForConsumerGroup(t *testing.T, writer mqueue.Writer, received *mqueue.KafkaMessage) {
+	t.Helper()
+	err := writer.WriteMessages(base.Context, mqueue.KafkaMessage{Value: []byte("probe")})
+	assert.NoError(t, err, "failed to send probe message")
+	utils.AssertEqualWait(t, 10, func() (exp, act interface{}) {
+		return true, len(received.Value) > 0
+	})
+	*received = mqueue.KafkaMessage{}
+}
+
 func TestAdvisoryUpdateKafkaRoundTrip(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	utils.SkipWithoutPlatform(t)
@@ -136,6 +147,8 @@ func TestAdvisoryUpdateKafkaRoundTrip(t *testing.T) {
 			return nil
 		})
 	}()
+
+	waitForConsumerGroup(t, advisoryUpdatePublisher, &received)
 
 	// Remove stale rows from previous test runs
 	database.DeleteSystemAdvisories(t, testDBID, []int64{1, 2})
