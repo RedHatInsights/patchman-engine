@@ -49,6 +49,7 @@ func deleteData(t *testing.T) {
 	assert.Nil(t, database.DB.Unscoped().Where("inventory_id = ?", testInventoryID).Delete(&models.DeletedSystem{}).Error)
 }
 
+// nolint: unparam
 func createTestSystemInDB(t *testing.T, inventoryID uuid.UUID, rhAccountID int, displayName string) {
 	t.Helper()
 	inv := models.SystemInventory{
@@ -62,6 +63,26 @@ func createTestSystemInDB(t *testing.T, inventoryID uuid.UUID, rhAccountID int, 
 		SystemID:    inv.ID,
 		RhAccountID: rhAccountID,
 	}).Error)
+}
+
+func deleteTestSystemInDB(t *testing.T, inventoryID uuid.UUID) {
+	t.Helper()
+	var inv models.SystemInventory
+	err := database.DB.Where("inventory_id = ?", inventoryID).First(&inv).Error
+	if err != nil {
+		return
+	}
+	assert.NoError(t, database.DB.Unscoped().
+		Where("rh_account_id = ? AND system_id = ?", inv.RhAccountID, inv.ID).
+		Delete(&models.SystemAdvisories{}).Error)
+	assert.NoError(t, database.DB.Unscoped().
+		Where("rh_account_id = ? AND system_id = ?", inv.RhAccountID, inv.ID).
+		Delete(&models.SystemPackage{}).Error)
+	assert.NoError(t, database.DB.Unscoped().Exec(
+		"DELETE FROM system_patch WHERE rh_account_id = ? AND system_id = ?",
+		inv.RhAccountID, inv.ID).Error)
+	assert.NoError(t, database.DB.Unscoped().Where("inventory_id = ?", inventoryID).
+		Delete(&models.SystemInventory{}).Error)
 }
 
 // nolint: unparam

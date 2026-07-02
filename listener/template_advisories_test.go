@@ -128,7 +128,7 @@ func TestSyncTemplateAdvisories(t *testing.T) {
 
 	// content sources mock returns RH-1 and RH-3 so we need to add RH-3, remove RH-2
 	ctx := identity.WithIdentity(context.Background(), utils.XRHIDForOrg(orgID))
-	err := syncTemplateAdvisories(ctx, accountID, templateID, templateUUID)
+	err := syncTemplateAdvisories(ctx, accountID, templateID, templateUUID, orgID)
 	assert.Nil(t, err)
 
 	// RH-3 and RH-1 now linked to the template

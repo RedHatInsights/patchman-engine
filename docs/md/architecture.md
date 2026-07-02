@@ -19,6 +19,10 @@ on [this service](https://github.com/RedHatInsights/insights-rbac), however it c
 archive is uploaded, it upserts **`system_inventory`** (including `vmaas_json` with installed packages, repos, and modules) and the matching **`system_patch`** row. Upload locks and checksum logic apply to **`system_inventory`**. It registers repositories for the system by pairing `repo` with the internal system id (**`system_inventory.id`**) through **`system_repo`**. After that it sends a
 Kafka message (`patchman.evaluator.upload` topic) to evaluate the system with the `evaluator-upload` component. This
 component also handles system deleting events (`platform.inventory.events` Kafka topic).
+It consumes template events from Content Sources (`platform.content-sources.template`), upserts **`template`** metadata,
+and on `template-updated` syncs **`template_advisory`** rows from the Content Sources API. When template advisories
+change and `template_advisory_eval` is enabled, it sends a bulk re-evaluation message to
+`patchman.evaluator.user-evaluation`.
 See [component environment variables](../../conf/listener.env)
 
 - **evaluator-upload** - connects to the Kafka service (`patchman.evaluator.upload` topic) and listens for evaluation
@@ -32,8 +36,10 @@ See [component environment variables](../../conf/evaluator_upload.env)
 table). After this event all registered systems have to be re-evaluated because the input data for the system evaluation
 has changed. See [component environment variables](../../conf/evaluator_recalc.env)
 
-- **evaluator-user-evaluation** - same as the `-upload` instance, but listens for re-evaluation requests from the `manager` 
-component when user adds system to the template (`patchman.evaluator.user-evaluation` topic). The requests are separated 
+- **evaluator-user-evaluation** - same as the `-upload` instance, but listens for re-evaluation requests from the `manager`
+component when user adds or removes systems from a template, and from the `listener` when template advisory content
+changes (`patchman.evaluator.user-evaluation` topic). Recalc messages carry explicit `system_ids`; the listener
+resolves template-assigned systems before sending. The requests are separated
 as when there is a heavy load from inventory at the time it may take very long for systems to be recalculated/updated.
 See [component environment variables](../../conf/evaluator_user_evaluation.env)
 
@@ -61,3 +67,29 @@ and the [major migration runbook](major-migration-runbook.md). Using container C
 
 ### Components cooperation schema
 ![](graphics/schema.png)
+
+### Template content update flow
+
+When Content Sources publishes a `template-updated` event:
+
+1. **listener** upserts **`template`** metadata and calls Content Sources `GET /templates/{uuid}/advisories/ids`.
+2. **listener** diffs the response against **`template_advisory`** and inserts or deletes rows.
+3. If advisories changed and `template_advisory_eval=true`, **listener** looks up systems assigned to the
+   template and sends `PlatformEvent{system_ids}` to `patchman.evaluator.user-evaluation`.
+4. **evaluator-user-evaluation** re-evaluates each system in the message.
+5. For template-assigned systems, **evaluator** skips yum updates, calls VMaaS, and marks advisories in
+   **`template_advisory`** as installable; other applicable advisories remain applicable.
+
+### `template_advisory_eval` rollout
+
+One flag controls the full template-advisory feature. Set `template_advisory_eval=true` in `POD_CONFIG` on:
+
+- **listener** — triggers re-evaluation when template advisory content changes or a template is deleted
+- **evaluator-upload**, **evaluator-user-evaluation**, and **evaluator-recalc** — applies installability from
+  **`template_advisory`** for template-assigned systems
+
+Default is `false` everywhere. Enable listener and evaluator pods together; listener-only leaves advisories synced but
+installability unchanged, evaluator-only leaves content changes without automatic recalc.
+
+This is separate from **manager** `template_change_eval`, which still controls recalc when users assign or remove systems
+via the REST API.
