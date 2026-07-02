@@ -26,7 +26,7 @@ func getTemplateAdvisoryUpdatesData(ctx context.Context, system *models.SystemPl
 			utils.LogWarn("Vmaas response error - bad request, skipping system", vmaasErr.Error())
 			return nil, nil
 		}
-		return nil, errors.Wrap(vmaasErr, vmaasErr.Error())
+		return nil, errors.Wrap(vmaasErr, "getting vmaas updates for template-advisory evaluation")
 	}
 	if vmaasData == nil {
 		return nil, nil
