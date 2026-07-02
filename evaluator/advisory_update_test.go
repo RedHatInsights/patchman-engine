@@ -1,7 +1,6 @@
 package evaluator
 
 import (
-	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
@@ -110,7 +109,7 @@ func TestPublishAdvisoryUpdatesNoDelta(t *testing.T) {
 
 func waitForConsumerGroup(t *testing.T, writer mqueue.Writer, received *mqueue.KafkaMessage) {
 	t.Helper()
-	err := writer.WriteMessages(base.Context, mqueue.KafkaMessage{Value: []byte("probe")})
+	err := writer.WriteMessages(t.Context(), mqueue.KafkaMessage{Value: []byte("probe")})
 	assert.NoError(t, err, "failed to send probe message")
 	utils.AssertEqualWait(t, 10, func() (exp, act interface{}) {
 		return true, len(received.Value) > 0
@@ -137,16 +136,11 @@ func TestAdvisoryUpdateKafkaRoundTrip(t *testing.T) {
 		assert.NoError(t, reader.Close(), "failed to close Kafka reader")
 	}()
 
-	// recover() absorbs the EOF panic from HandleMessages after reader.Close()
-	// We can't use t.Context() because HandleMessages hardcodes base.Context internally
 	var received mqueue.KafkaMessage
-	go func() {
-		defer func() { _ = recover() }()
-		reader.HandleMessages(func(m mqueue.KafkaMessage) error {
-			received = m
-			return nil
-		})
-	}()
+	go reader.HandleMessages(t.Context(), func(m mqueue.KafkaMessage) error {
+		received = m
+		return nil
+	})
 
 	waitForConsumerGroup(t, advisoryUpdatePublisher, &received)
 

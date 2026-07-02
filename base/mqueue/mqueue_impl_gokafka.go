@@ -1,7 +1,6 @@
 package mqueue
 
 import (
-	"app/base"
 	"app/base/utils"
 	"context"
 	"crypto/tls"
@@ -22,9 +21,9 @@ type kafkaGoReaderImpl struct {
 	kafka.Reader
 }
 
-func (t *kafkaGoReaderImpl) HandleMessages(handler MessageHandler) {
+func (t *kafkaGoReaderImpl) HandleMessages(ctx context.Context, handler MessageHandler) {
 	for {
-		m, err := t.FetchMessage(base.Context)
+		m, err := t.FetchMessage(ctx)
 		if err != nil {
 			if err.Error() == errContextCanceled {
 				break
@@ -43,7 +42,7 @@ func (t *kafkaGoReaderImpl) HandleMessages(handler MessageHandler) {
 		if err = handler(kafkaMessage); err != nil {
 			utils.LogPanic("err", err.Error(), "Handler failed")
 		}
-		err = t.CommitMessages(base.Context, m)
+		err = t.CommitMessages(ctx, m)
 		if err != nil {
 			if err.Error() == errContextCanceled {
 				break

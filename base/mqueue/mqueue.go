@@ -19,7 +19,7 @@ const errContextCanceled = "context canceled"
 
 // By wrapping raw value we can add new methods & ensure methods of wrapped type are callable
 type Reader interface {
-	HandleMessages(handler MessageHandler)
+	HandleMessages(ctx context.Context, handler MessageHandler)
 	io.Closer
 }
 
@@ -75,15 +75,17 @@ func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 type CreateReader func(topic string) Reader
 type CreateWriter func(topic string) Writer
 
-func runReader(wg *sync.WaitGroup, topic string, createReader CreateReader, msgHandler MessageHandler) {
+func runReader(ctx context.Context, wg *sync.WaitGroup, topic string, createReader CreateReader,
+	msgHandler MessageHandler) {
 	defer wg.Done()
 	defer utils.LogPanics(true)
 	reader := createReader(topic)
 	defer reader.Close()
-	reader.HandleMessages(msgHandler)
+	reader.HandleMessages(ctx, msgHandler)
 }
 
-func SpawnReader(wg *sync.WaitGroup, topic string, createReader CreateReader, msgHandler MessageHandler) {
+func SpawnReader(ctx context.Context, wg *sync.WaitGroup, topic string, createReader CreateReader,
+	msgHandler MessageHandler) {
 	wg.Add(1)
-	go runReader(wg, topic, createReader, msgHandler)
+	go runReader(ctx, wg, topic, createReader, msgHandler)
 }
