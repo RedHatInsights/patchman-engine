@@ -79,6 +79,11 @@ func TemplateDelete(template mqueue.TemplateResponse) error {
 		return nil
 	}
 
+	err = SendTemplateRecalc(accountID, template.OrgID, templateID)
+	if err != nil {
+		return errors.Wrap(err, "sending template recalc")
+	}
+
 	// unassign systems from the template (template_id lives on system_patch)
 	err = database.DB.Model(&models.SystemPatch{}).
 		Where("rh_account_id = ? AND template_id = ?", accountID, templateID).
@@ -147,7 +152,7 @@ func TemplateUpdate(template mqueue.TemplateResponse, eventType string) error {
 
 	if contentSourcesBaseURL != "" && eventType == TemplateEventUpdate {
 		ctx := identity.WithIdentity(context.Background(), utils.XRHIDForOrg(template.OrgID))
-		err = syncTemplateAdvisories(ctx, accountID, row.ID, template.UUID)
+		err = syncTemplateAdvisories(ctx, accountID, row.ID, template.UUID, template.OrgID)
 		if err != nil {
 			return errors.Wrap(err, "syncing template advisories")
 		}

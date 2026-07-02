@@ -63,6 +63,7 @@ var (
 	enableInventoryViews          bool
 	enableAdvisoryUpdates         bool
 	enableSatelliteFunctionality  bool
+	enableTemplateAdvisoryEval    bool
 	errVmaasBadRequest            = errors.New("vmaas bad request")
 )
 
@@ -137,6 +138,8 @@ func configureEvaluator() {
 	enableAdvisoryUpdates = utils.PodConfig.GetBool("advisory_updates", false)
 	// Ignore templates for satellite managed systems
 	enableSatelliteFunctionality = utils.PodConfig.GetBool("satellite_functionality", true)
+	// template_advisory_eval — template installability from template_advisory
+	enableTemplateAdvisoryEval = utils.PodConfig.GetBool("template_advisory_eval", false)
 }
 
 func Evaluate(ctx context.Context, event *mqueue.PlatformEvent, inventoryID uuid.UUID, evaluationType string) error {
@@ -298,9 +301,13 @@ func evaluateWithVmaas(updatesData *vmaas.UpdatesV3Response,
 func getUpdatesData(ctx context.Context, system *models.SystemPlatformV2) (*vmaas.UpdatesV3Response, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("get-updates-data"))
 
+	if useTemplateAdvisoryEval(system) {
+		return getTemplateAdvisoryUpdatesData(ctx, system)
+	}
+
 	var yumUpdates *vmaas.UpdatesV3Response
-	var yumErr error
 	if enableYumUpdatesEval {
+		var yumErr error
 		yumUpdates, yumErr = tryGetYumUpdates(system)
 		if yumErr != nil {
 			// ignore broken yum updates
@@ -325,7 +332,8 @@ func getUpdatesData(ctx context.Context, system *models.SystemPlatformV2) (*vmaa
 	}
 
 	if system.Inventory.SatelliteManaged || system.Patch.TemplateID != nil {
-		// satellite managed systems and systems using template has vmaas updates APPLICABLE instead of INSTALLABLE
+		// satellite managed systems and template-assigned systems (when template_advisory_eval is off)
+		// have vmaas updates APPLICABLE instead of INSTALLABLE; yum updates may still be INSTALLABLE
 		mergedUpdateList := vmaasData.GetUpdateList()
 		for nevra := range mergedUpdateList {
 			(*mergedUpdateList[nevra]).SetUpdatesInstallability(APPLICABLE)
