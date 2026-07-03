@@ -33,9 +33,10 @@ func TestParseEvents(t *testing.T) {
 func TestRoundTripKafkaGo(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 	reader := NewKafkaReaderFromEnv("test")
+	defer reader.Close()
 
 	var eventOut PlatformEvent
-	go reader.HandleMessages(context.Background(), MakeMessageHandler(func(event PlatformEvent) error {
+	go reader.HandleMessages(t.Context(), MakeMessageHandler(func(event PlatformEvent) error {
 		eventOut = event
 		return nil
 	}))

@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -25,7 +26,8 @@ func (t *kafkaGoReaderImpl) HandleMessages(ctx context.Context, handler MessageH
 	for {
 		m, err := t.FetchMessage(ctx)
 		if err != nil {
-			if err.Error() == errContextCanceled {
+			// Both context cancellation or reader.Close() racing are expected during shutdown
+			if err.Error() == errContextCanceled || err == io.EOF {
 				break
 			}
 			utils.LogError("err", err.Error(), "unable to read message from Kafka reader")
