@@ -33,9 +33,10 @@ func TestParseEvents(t *testing.T) {
 func TestRoundTripKafkaGo(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 	reader := NewKafkaReaderFromEnv("test")
+	defer reader.Close()
 
 	var eventOut PlatformEvent
-	go reader.HandleMessages(MakeMessageHandler(func(event PlatformEvent) error {
+	go reader.HandleMessages(t.Context(), MakeMessageHandler(func(event PlatformEvent) error {
 		eventOut = event
 		return nil
 	}))
@@ -51,7 +52,7 @@ func TestRoundTripKafkaGo(t *testing.T) {
 func TestSpawnReader(t *testing.T) {
 	var nReaders int32
 	wg := sync.WaitGroup{}
-	SpawnReader(&wg, "", CreateCountedMockReader(&nReaders),
+	SpawnReader(context.Background(), &wg, "", CreateCountedMockReader(&nReaders),
 		MakeMessageHandler(func(_ PlatformEvent) error { return nil }))
 	wg.Wait()
 	assert.Equal(t, 1, int(nReaders))

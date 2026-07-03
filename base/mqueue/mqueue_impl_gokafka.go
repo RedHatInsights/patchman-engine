@@ -1,12 +1,12 @@
 package mqueue
 
 import (
-	"app/base"
 	"app/base/utils"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -22,11 +22,12 @@ type kafkaGoReaderImpl struct {
 	kafka.Reader
 }
 
-func (t *kafkaGoReaderImpl) HandleMessages(handler MessageHandler) {
+func (t *kafkaGoReaderImpl) HandleMessages(ctx context.Context, handler MessageHandler) {
 	for {
-		m, err := t.FetchMessage(base.Context)
+		m, err := t.FetchMessage(ctx)
 		if err != nil {
-			if err.Error() == errContextCanceled {
+			// Both context cancellation or reader.Close() racing are expected during shutdown
+			if err.Error() == errContextCanceled || err == io.EOF {
 				break
 			}
 			utils.LogError("err", err.Error(), "unable to read message from Kafka reader")
@@ -43,7 +44,7 @@ func (t *kafkaGoReaderImpl) HandleMessages(handler MessageHandler) {
 		if err = handler(kafkaMessage); err != nil {
 			utils.LogPanic("err", err.Error(), "Handler failed")
 		}
-		err = t.CommitMessages(base.Context, m)
+		err = t.CommitMessages(ctx, m)
 		if err != nil {
 			if err.Error() == errContextCanceled {
 				break
