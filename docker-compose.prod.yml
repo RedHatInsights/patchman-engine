@@ -194,6 +194,27 @@ services:
     security_opt:
       - label=disable
 
+  aggregator:
+    container_name: aggregator
+    image: patchman-engine-app
+    env_file:
+      - ./conf/common.env
+      - ./conf/aggregator_common.env
+      - ./conf/aggregator.env
+    command: ./dev/scripts/docker-compose-entrypoint.sh aggregator
+    ports:
+      - 8087:8080
+      - 9007:9000 # private port - pprof
+    depends_on:
+      - db
+      - platform
+    volumes:
+      - ./dev:/go/src/app/dev
+      - ./dev/database/secrets:/opt/postgresql
+      - ./dev/kafka/secrets:/opt/kafka
+    security_opt:
+      - label=disable
+
   vmaas_sync:
     container_name: vmaas_sync
     image: patchman-engine-app

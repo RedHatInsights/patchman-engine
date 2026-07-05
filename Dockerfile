@@ -41,6 +41,7 @@ ADD --chown=insights:insights scripts                  /go/src/app/scripts
 ADD --chown=insights:insights database_admin           /go/src/app/database_admin
 ADD --chown=insights:insights docs                     /go/src/app/docs
 ADD --chown=insights:insights evaluator                /go/src/app/evaluator
+ADD --chown=insights:insights aggregator               /go/src/app/aggregator
 ADD --chown=insights:insights listener                 /go/src/app/listener
 ADD --chown=insights:insights tasks                    /go/src/app/tasks
 ADD --chown=insights:insights base                     /go/src/app/base
