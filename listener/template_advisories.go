@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func syncTemplateAdvisories(ctx context.Context, accountID int, templateID int64, templateUUID string) error {
+func syncTemplateAdvisories(ctx context.Context, accountID int, templateID int64, templateUUID, orgID string) error {
 	current, err := callCSTemplateAdvisories(ctx, templateUUID)
 	if err != nil {
 		return errors.Wrap(err, "fetching current template advisories from content-sources")
@@ -59,7 +59,16 @@ func syncTemplateAdvisories(ctx context.Context, accountID int, templateID int64
 		"template advisories synced",
 	)
 
-	return tx.Commit().Error
+	err = tx.Commit().Error
+	if err != nil {
+		return err
+	}
+
+	if err := SendTemplateRecalc(accountID, orgID, templateID); err != nil {
+		utils.LogError("err", err.Error(), "template_id", templateID, "account_id", accountID,
+			"Template recalc lookup failed")
+	}
+	return nil
 }
 
 // Returns advisories currently stored for the template

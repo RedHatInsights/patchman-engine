@@ -17,21 +17,22 @@ import (
 )
 
 var (
-	eventsTopic          string
-	eventsConsumers      int
-	enableTemplates      bool
-	templatesTopic       string
-	templatesConsumers   int
-	evalWriter           mqueue.Writer
-	createdSystemsWriter mqueue.Writer
-	ptWriter             mqueue.Writer
-	validReporters       map[string]int
-	allowedReporters     map[string]bool
-	excludedHostTypes    map[string]bool
-	enableBypass         bool
-	uploadEvalTimeout    time.Duration
-	deletionThreshold    time.Duration
-	useTraceLevel        bool
+	eventsTopic                string
+	eventsConsumers            int
+	enableTemplates            bool
+	templatesTopic             string
+	templatesConsumers         int
+	evalWriter                 mqueue.Writer
+	createdSystemsWriter       mqueue.Writer
+	ptWriter                   mqueue.Writer
+	validReporters             map[string]int
+	allowedReporters           map[string]bool
+	excludedHostTypes          map[string]bool
+	enableBypass               bool
+	enableTemplateAdvisoryEval bool
+	uploadEvalTimeout          time.Duration
+	deletionThreshold          time.Duration
+	useTraceLevel              bool
 
 	// Event buffers
 	eventBufferSize     = 5 * mqueue.BatchSize
@@ -86,6 +87,8 @@ func configureListener() {
 	excludedHostTypes = utils.PodConfig.GetStringSet("excluded_host_types", "edge")
 	// Toggle bypass (fake) messages processing
 	enableBypass = utils.PodConfig.GetBool("bypass", false)
+	// Template advisory evaluation: recalc on advisory content change and template delete
+	enableTemplateAdvisoryEval = utils.PodConfig.GetBool("template_advisory_eval", false)
 	// How long to collect upload messages before grouping them and sending to evaluator
 	uploadEvalTimeout = time.Duration(utils.PodConfig.GetInt("upload_eval_timeout_ms", 500)) * time.Millisecond
 	// Ignore a system if there was a delete message in the last X hours

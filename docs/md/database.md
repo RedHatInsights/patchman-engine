@@ -11,6 +11,12 @@ Main database tables description:
 - **package_name** - names of the packages installed on systems
 - **package** - list of all packages versions, precisely all EVRAs (epoch-version-release-arch)
 - **system_package2** - list of packages installed on a system
+- **template** - Content Sources template metadata per account (`rh_account_id`, `id`, `uuid`, `name`, `environment_id`,
+  `arch`, `version`, etc.). Upserted by **listener** from `platform.content-sources.template` events.
+- **template_advisory** - junction table linking a **template** to **advisory_metadata** rows
+  (`rh_account_id`, `template_id`, `advisory_id`). Populated by **listener** on `template-updated` from Content Sources.
+  Read by **evaluator** (when `template_advisory_eval=true`) to determine which advisories are installable for systems
+  assigned via **`system_patch.template_id`**. The same flag on **listener** triggers re-evaluation when rows change.
 
 ## Schema
 The ERD image below may lag `database_admin/schema/create_schema.sql`; for systems it may not reflect the split between **system_inventory** (host profile / upload payload) and **system_patch** (evaluation caches and aggregates).
