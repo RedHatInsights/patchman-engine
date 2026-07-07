@@ -45,7 +45,7 @@ var querySystemInventoryMetricColumns = database.MustGetSelect(&systemInventoryM
 func updateSystemInventoryData() {
 	tagStats, systemStats, err := getSystemInventoryData()
 	if err != nil {
-		utils.LogError("err", err.Error(), "unable to update system inventory metrics")
+		utils.LogError("err", err, "unable to update system inventory metrics")
 	}
 
 	for label, count := range tagStats {

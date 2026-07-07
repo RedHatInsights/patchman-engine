@@ -30,7 +30,7 @@ func RunPackageRefresh() {
 		utils.LogInfo("err", err, "Could not push to pushgateway")
 	}
 	if errRefresh != nil {
-		utils.LogError("err", errRefresh.Error(), "Refresh account packages caches")
+		utils.LogError("err", errRefresh, "Refresh account packages caches")
 		return
 	}
 	utils.LogInfo("Refreshed account packages caches")

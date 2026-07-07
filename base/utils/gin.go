@@ -109,7 +109,7 @@ func RunServer(ctx context.Context, handler http.Handler, port int) error {
 		LogDebug("gracefully shutting down server...")
 		err := srv.Shutdown(context.Background())
 		if err != nil {
-			LogError("err", err.Error(), "server shutting down failed")
+			LogError("err", err, "server shutting down failed")
 			return
 		}
 		LogInfo("server closed successfully")

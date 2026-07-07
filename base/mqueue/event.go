@@ -29,7 +29,7 @@ func MakeMessageHandler(eventHandler EventHandler) MessageHandler {
 		err := sonic.Unmarshal(m.Value, &event)
 		// Not a fatal error, invalid data format, log and skip
 		if err != nil {
-			utils.LogError("err", err.Error(), "Could not deserialize platform event")
+			utils.LogError("err", err, "Could not deserialize platform event")
 			return nil
 		}
 		return eventHandler(event)

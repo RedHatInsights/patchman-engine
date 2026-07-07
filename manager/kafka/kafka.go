@@ -46,7 +46,7 @@ func sendInventoryIDs(inventoryIDs mqueue.EvalDataSlice) {
 
 	err := mqueue.SendMessages(base.Context, evalWriter, &inventoryIDs)
 	if err != nil {
-		utils.LogError("nInventoryIDs", len(inventoryIDs), "err", err.Error(),
+		utils.LogError("nInventoryIDs", len(inventoryIDs), "err", err,
 			"Inventory IDs sending failed")
 	}
 }

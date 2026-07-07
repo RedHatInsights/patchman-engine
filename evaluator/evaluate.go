@@ -197,7 +197,7 @@ func runEvaluate(
 			event := <-ptEventC
 			event.Status = "error"
 			ptEventC <- event
-			utils.LogError("err", err.Error(), "inventoryID", inventoryID, "evalLabel", evalLabel,
+			utils.LogError("err", err, "inventoryID", inventoryID, "evalLabel", evalLabel,
 				"Eval message handling")
 		}
 		errc <- err
@@ -311,7 +311,7 @@ func getUpdatesData(ctx context.Context, system *models.SystemPlatformV2) (*vmaa
 		yumUpdates, yumErr = tryGetYumUpdates(system)
 		if yumErr != nil {
 			// ignore broken yum updates
-			utils.LogWarn("Can't parse yum_updates", yumErr.Error())
+			utils.LogWarn("err", yumErr, "Can't parse yum_updates")
 		}
 	}
 
@@ -321,14 +321,14 @@ func getUpdatesData(ctx context.Context, system *models.SystemPlatformV2) (*vmaa
 			// vmaas bad request means we either created wrong vmaas request
 			// or more likely we received package_list without epochs
 			// either way, we should skip this system and not fail hard which will cause pod to restart
-			utils.LogWarn("Vmaas response error - bad request, skipping system", vmaasErr.Error())
+			utils.LogWarn("err", vmaasErr, "Vmaas response error - bad request, skipping system")
 			return nil, nil
 		}
 		// if there's no yum update fail hard otherwise only log warning and use yum data
 		if yumUpdates == nil {
 			return nil, errors.Wrap(vmaasErr, vmaasErr.Error())
 		}
-		utils.LogWarn("Vmaas response error, continuing with yum updates only", vmaasErr.Error())
+		utils.LogWarn("err", vmaasErr, "Vmaas response error, continuing with yum updates only")
 	}
 
 	if system.Inventory.SatelliteManaged || system.Patch.TemplateID != nil {
@@ -508,7 +508,7 @@ func evaluateAndStore(system *models.SystemPlatformV2,
 		err = publishInventoryViewsEvent(tx, []models.SystemPlatformV2{*system}, event)
 		if err != nil {
 			evaluationCnt.WithLabelValues("error-inventory-views-publish").Inc()
-			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err.Error(),
+			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err,
 				"publishing inventory views event failed")
 		}
 	}
@@ -518,7 +518,7 @@ func evaluateAndStore(system *models.SystemPlatformV2,
 		err = publishNewAdvisoriesNotification(tx, system, event.GetOrgID(), systemAdvisoriesNew)
 		if err != nil {
 			evaluationCnt.WithLabelValues("error-advisory-notification").Inc()
-			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err.Error(),
+			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err,
 				"publishing new advisories notification failed")
 		}
 	}
@@ -527,7 +527,7 @@ func evaluateAndStore(system *models.SystemPlatformV2,
 		err = publishAdvisoryUpdates(system, advisoriesByName)
 		if err != nil {
 			evaluationCnt.WithLabelValues("error-advisory-update-publish").Inc()
-			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err.Error(),
+			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err,
 				"publishing advisory update event failed")
 		}
 	}
@@ -559,7 +559,7 @@ func analyzeRepos(system *models.SystemPlatformV2) (thirdParty bool, err error) 
 		Where("r.third_party = true").
 		Count(&thirdPartyCount).Error
 	if err != nil {
-		utils.LogWarn("err", err.Error(), "accountID", system.Inventory.RhAccountID, "systemID", system.Inventory.ID,
+		utils.LogWarn("err", err, "accountID", system.Inventory.RhAccountID, "systemID", system.Inventory.ID,
 			"counting third party repos")
 		return false, err
 	}
@@ -767,7 +767,7 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 	wg.Wait()
 
 	if cacheErr := invalidateCaches(event.GetOrgID()); cacheErr != nil {
-		utils.LogError("err", err.Error(), "org_id", event.GetOrgID(), "Couldn't invalidate caches")
+		utils.LogError("err", cacheErr, "org_id", event.GetOrgID(), "Couldn't invalidate caches")
 	}
 
 	// send kafka message to payload tracker
@@ -775,7 +775,7 @@ func evaluateHandler(event mqueue.PlatformEvent) error {
 		ptErr := mqueue.SendMessages(base.Context, ptWriter, &ptEvents)
 		if ptErr != nil {
 			// don't fail with err, just log that we couldn't send msg to payload tracker
-			utils.LogWarn("err", ptErr.Error(), WarnPayloadTracker)
+			utils.LogWarn("err", ptErr, WarnPayloadTracker)
 		}
 	}
 	return err

@@ -67,7 +67,7 @@ func MigrateUp(conn database.Driver, sourceURL string) {
 	}
 
 	if err != nil {
-		utils.LogError("err", err.Error(), "error upgrading the database")
+		utils.LogError("err", err, "error upgrading the database")
 		panic(err)
 	}
 }
@@ -127,12 +127,12 @@ func migrateAction(conn database.Driver, sourceURL string) int {
 		if errors.As(err, &migrate.ErrDirty{}) && forceMigrationVersion > 0 {
 			return MIGRATE
 		}
-		utils.LogError("err", err.Error(), "error getting current DB version")
+		utils.LogError("err", err, "error getting current DB version")
 		return BLOCK
 	}
 	migrationSchema, err := latestSchemaMigrationFileVersion(sourceURL)
 	if err != nil {
-		utils.LogError("err", err.Error(), "failed to load latestSchemaMigrationFileVersion")
+		utils.LogError("err", err, "failed to load latestSchemaMigrationFileVersion")
 		return BLOCK
 	}
 

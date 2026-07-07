@@ -93,7 +93,7 @@ func RemoveNonLatestPackages(updates *vmaas.UpdatesV3Response) {
 	for k := range updateList {
 		nevra, err := ParseNevra(k)
 		if err != nil {
-			LogWarn("err", err.Error(), "Removing package because nevra is malformed")
+			LogWarn("err", err, "Removing package because nevra is malformed")
 			toDel = append(toDel, k)
 			continue
 		}
@@ -130,7 +130,7 @@ func ParseVmaasJSON(inv *models.SystemInventory) (vmaas.UpdatesV3Request, error)
 	}
 	err := sonic.Unmarshal([]byte(*inv.VmaasJSON), &updatesReq)
 	if err != nil {
-		LogWarn("inventoryID", inv.GetInventoryID(), "err", err.Error(), "failed to parse vmaas json")
+		LogWarn("inventoryID", inv.GetInventoryID(), "err", err, "failed to parse vmaas json")
 	}
 	return updatesReq, err
 }

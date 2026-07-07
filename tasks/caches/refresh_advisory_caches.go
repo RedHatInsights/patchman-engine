@@ -29,7 +29,7 @@ func refreshAdvisoryCachesPerAccounts(wg *sync.WaitGroup) {
 	}
 	utils.LogInfo("accounts", len(rhAccountIDs), "Starting advisory cache refresh for accounts")
 	if err != nil {
-		utils.LogError("err", err.Error(), "Unable to load rh_account table ids to refresh caches")
+		utils.LogError("err", err, "Unable to load rh_account table ids to refresh caches")
 		return
 	}
 
@@ -50,12 +50,12 @@ func refreshAdvisoryCachesPerAccounts(wg *sync.WaitGroup) {
 				return tx.Exec("select refresh_advisory_caches(NULL, ?)", rhAccountID).Error
 			})
 			if err != nil {
-				utils.LogError("err", err.Error(), "rh_account_id", rhAccountID,
+				utils.LogError("err", err, "rh_account_id", rhAccountID,
 					"Refreshed account advisory caches")
 				return
 			}
 			if err := updateAdvisoryCacheValidity(rhAccountID); err != nil {
-				utils.LogError("err", err.Error(), "rh_account_id", rhAccountID, "Refresh failed")
+				utils.LogError("err", err, "rh_account_id", rhAccountID, "Refresh failed")
 				return
 			}
 			utils.LogInfo("i", i, "rh_account_id", rhAccountID, "Refreshed account advisory cache")

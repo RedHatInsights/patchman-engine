@@ -75,7 +75,7 @@ func RunRepack() {
 	for table, columns := range TABLES {
 		err := Repack(table, columns)
 		if err != nil {
-			utils.LogError("err", err.Error(), fmt.Sprintf("Failed to repack table %s", table))
+			utils.LogError("err", err, fmt.Sprintf("Failed to repack table %s", table))
 			continue
 		}
 		utils.LogInfo(fmt.Sprintf("Successfully repacked table %s", table))

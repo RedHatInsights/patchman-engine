@@ -56,7 +56,7 @@ func TryExposeOnMetricsPort(app *gin.Engine) {
 	}
 	err := utils.RunServer(Context, app, metricsPort)
 	if err != nil {
-		utils.LogError("err", err.Error())
+		utils.LogError("err", err)
 		panic(err)
 	}
 }

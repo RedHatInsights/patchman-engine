@@ -34,6 +34,7 @@ objects:
           - admin
         env:
         - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
@@ -67,6 +68,7 @@ objects:
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_MANAGER}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_MANAGER}'}
         - {name: DB_USER, value: manager}
@@ -131,6 +133,7 @@ objects:
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_LISTENER}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_LISTENER}'}
         - {name: DB_USER, value: listener}
@@ -180,6 +183,7 @@ objects:
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_EVALUATOR_UPLOAD}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_EVALUATOR_UPLOAD}'}
         - {name: DB_USER, value: evaluator}
@@ -228,6 +232,7 @@ objects:
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_EVALUATOR_RECALC}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_EVALUATOR_RECALC}'}
         - {name: DB_USER, value: evaluator}
@@ -276,6 +281,7 @@ objects:
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_EVALUATOR_USER_EVALUATION}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_EVALUATOR_USER_EVALUATION}'}
         - {name: DB_USER, value: evaluator}
@@ -314,6 +320,7 @@ objects:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_DATABASE_ADMIN}'}
         - {name: DB_DEBUG, value: '${DB_DEBUG_DATABASE_ADMIN}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: MANAGER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                                   key: manager-database-password}}}
@@ -349,6 +356,7 @@ objects:
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
@@ -388,6 +396,7 @@ objects:
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
@@ -416,6 +425,7 @@ objects:
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
@@ -450,6 +460,7 @@ objects:
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
@@ -477,6 +488,7 @@ objects:
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
@@ -504,6 +516,7 @@ objects:
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
 
@@ -528,6 +541,7 @@ objects:
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
@@ -686,6 +700,15 @@ objects:
   kind: Secret
   metadata:
     name: kessel-service-client
+    namespace: test  # namespace is overwritten by bonfire
+  type: Opaque
+
+- apiVersion: v1
+  data:
+    sentry-dsn: ""
+  kind: Secret
+  metadata:
+    name: patchman-sentry
     namespace: test  # namespace is overwritten by bonfire
   type: Opaque
 

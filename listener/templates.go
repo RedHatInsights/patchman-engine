@@ -26,7 +26,7 @@ const (
 func TemplatesMessageHandler(m mqueue.KafkaMessage) error {
 	eType, event, err := processTemplateEvent(m.Value)
 	if err != nil {
-		utils.LogError("msg", err.Error(), "skipping template event")
+		utils.LogError("err", err, "skipping template event")
 		// Skip invalid messages
 		return nil
 	}

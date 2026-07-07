@@ -30,7 +30,7 @@ func deleteUnusedPackages() {
 	err := tx.Delete(&models.Package{}, "id IN (?)", subq).Error
 
 	if err != nil {
-		utils.LogError("err", err.Error(), "DeleteUnusedPackages")
+		utils.LogError("err", err, "DeleteUnusedPackages")
 		return
 	}
 
@@ -56,7 +56,7 @@ func deleteUnusedAdvisories() {
 	err := tx.Delete(&models.AdvisoryMetadata{}, "id IN (?)", subq).Error
 
 	if err != nil {
-		utils.LogError("err", err.Error(), "DeleteUnusedAdvisories")
+		utils.LogError("err", err, "DeleteUnusedAdvisories")
 		return
 	}
 

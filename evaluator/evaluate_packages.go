@@ -69,7 +69,7 @@ func getMissingPackage(nevra string, parsed *utils.Nevra) *models.Package {
 		pkgName := models.PackageName{Name: parsed.Name}
 		err := updatePackageNameDB(&pkgName)
 		if err != nil {
-			utils.LogError("err", err.Error(), "nevra", nevra, "unknown package name insert failed")
+			utils.LogError("err", err, "nevra", nevra, "unknown package name insert failed")
 		}
 		pkg.NameID = pkgName.ID
 		if pkg.NameID == 0 {

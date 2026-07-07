@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	sentry "github.com/getsentry/sentry-go"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -17,6 +18,8 @@ func ConfigureLogging() {
 		initJSONLogStyle()
 	}
 	trySetupCloudWatchLogging()
+	trySetupSentryLogging()
+	log.RegisterExitHandler(FlushLogs)
 }
 
 func processArgs(args []interface{}) (log.Fields, interface{}) {
@@ -41,6 +44,8 @@ func logLevel(level log.Level, args ...interface{}) {
 		return
 	}
 	fields, msg := processArgs(args)
+
+	tryCaptureSentryException(level, fields, msg)
 
 	// using standard Log at Fatal or Panic level will not properly exit or panic
 	entry := log.WithFields(fields)
@@ -122,4 +127,13 @@ func LogProgress(msg string, duration time.Duration, total int64) (*time.Ticker,
 		}
 	}()
 	return timer, &count
+}
+
+func FlushLogs() {
+	if cloudwatchHook != nil {
+		cloudwatchHook.Flush()
+	}
+	if sentryEnabled {
+		sentry.Flush(5 * time.Second)
+	}
 }

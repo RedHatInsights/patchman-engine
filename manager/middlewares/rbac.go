@@ -113,7 +113,7 @@ func isAccessGranted(c *gin.Context) bool {
 	}
 
 	if err != nil {
-		utils.LogError("err", err.Error(), "Call to RBAC svc failed")
+		utils.LogError("err", err, "Call to RBAC svc failed")
 		status := http.StatusInternalServerError
 		if res != nil {
 			status = res.StatusCode
@@ -128,7 +128,7 @@ func isAccessGranted(c *gin.Context) bool {
 	if granted {
 		workspaces, err := findInventoryWorkspaces(&access)
 		if err != nil {
-			utils.LogError("err", err.Error(), "RBAC")
+			utils.LogError("err", err, "RBAC")
 			granted = false
 		}
 		c.Set(utils.KeyInventoryWorkspaces, workspaces)

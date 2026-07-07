@@ -32,7 +32,7 @@ func Syncapi(c *gin.Context) {
 	vmaasExportedTS := sync.VmaasDBExported()
 	err := sync.SyncData(nil, vmaasExportedTS)
 	if err != nil {
-		utils.LogError("err", err.Error(), "manual called syncing failed")
+		utils.LogError("err", err, "manual called syncing failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
 	}
@@ -53,7 +53,7 @@ func Recalc(c *gin.Context) {
 	utils.LogInfo("manual re-calc messages sending called...")
 	err := sync.SendReevaluationMessages()
 	if err != nil {
-		utils.LogError("err", err.Error(), "manual re-calc msgs sending failed")
+		utils.LogError("err", err, "manual re-calc msgs sending failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
 	}
@@ -133,7 +133,7 @@ func RefreshPackagesAccountHandler(c *gin.Context) {
 	}
 	err = caches.RefreshPackagesCaches(&accID)
 	if err != nil {
-		utils.LogError("error", err.Error(), "Could not refresh package caches")
+		utils.LogError("error", err, "Could not refresh package caches")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
 	}
@@ -170,7 +170,7 @@ func RepackHandler(c *gin.Context) {
 
 	err := repack.Repack(tableName, columns)
 	if err != nil {
-		utils.LogError("err", err.Error(), "manual repack call failed")
+		utils.LogError("err", err, "manual repack call failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 		return
 	}
