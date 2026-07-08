@@ -306,6 +306,51 @@ objects:
           limits: {cpu: '${CPU_LIMIT_EVALUATOR_USER_EVALUATION}', memory: '${MEM_LIMIT_EVALUATOR_USER_EVALUATION}'}
           requests: {cpu: '${CPU_REQUEST_EVALUATOR_USER_EVALUATION}', memory: '${MEM_REQUEST_EVALUATOR_USER_EVALUATION}'}
 
+    - name: aggregator
+      replicas: ${{REPLICAS_AGGREGATOR}}
+      webServices:
+        public:
+          enabled: true
+        private:
+          enabled: true
+        metrics:
+          enabled: true
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
+        command:
+          - ./scripts/entrypoint.sh
+          - aggregator
+        env:
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_AGGREGATOR}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
+        - {name: SHOW_CLOWDER_VARS, value: ''}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_AGGREGATOR}'}
+        - {name: DB_USER, value: evaluator}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                       key: evaluator-database-password}}}
+        - {name: KAFKA_GROUP, value: patchman}
+        - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
+        - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
+        - {name: NOTIFICATIONS_TOPIC, value: 'platform.notifications.ingress'}
+        - {name: ADVISORY_UPDATE_TOPIC, value: 'patchman.advisory.update'}
+        - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
+        - {name: GOGC, value: '${GOGC}'}
+        - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_AGGREGATOR}'}
+        - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_AGGREGATOR}'}
+        - {name: POD_CONFIG, value: 'label=aggregator;${AGGREGATOR_CONFIG}'}
+        - {name: CONSOLEDOT_HOSTNAME, value: '${CONSOLEDOT_HOSTNAME}'}
+        resources:
+          limits: {cpu: '${CPU_LIMIT_AGGREGATOR}', memory: '${MEM_LIMIT_AGGREGATOR}'}
+          requests: {cpu: '${CPU_REQUEST_AGGREGATOR}', memory: '${MEM_REQUEST_AGGREGATOR}'}
+
     jobs:
     - name: db-migration
       completions: 1
@@ -784,6 +829,18 @@ parameters:
 - {name: MEM_REQUEST_EVALUATOR_USER_EVALUATION, value: 1500Mi}
 - {name: ENABLE_PROFILER_EVALUATOR_USER_EVALUATION, value: 'false'}
 - {name: EVALUATOR_USER_EVALUATION_CONFIG, value: ''}
+
+# Aggregator
+- {name: REPLICAS_AGGREGATOR, value: '0'}
+- {name: LOG_LEVEL_AGGREGATOR, value: debug}
+- {name: DB_DEBUG_AGGREGATOR, value: 'false'}
+- {name: CPU_LIMIT_AGGREGATOR, value: 500m}
+- {name: MEM_LIMIT_AGGREGATOR, value: 512Mi}
+- {name: CPU_REQUEST_AGGREGATOR, value: 250m}
+- {name: MEM_REQUEST_AGGREGATOR, value: 256Mi}
+- {name: ENABLE_PROFILER_AGGREGATOR, value: 'false'}
+- {name: GOMEMLIMIT_AGGREGATOR, value: '460MiB'}
+- {name: AGGREGATOR_CONFIG, value: ''}
 
 # JOBS
 - {name: LOG_LEVEL_JOBS, value: debug}

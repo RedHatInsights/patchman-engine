@@ -1,6 +1,7 @@
 package main
 
 import (
+	"app/aggregator"
 	"app/base"
 	"app/base/utils"
 	"app/database_admin"
@@ -37,6 +38,9 @@ func main() {
 			return
 		case "evaluator":
 			evaluator.RunEvaluator()
+			return
+		case "aggregator":
+			aggregator.RunAggregator()
 			return
 		case "migrate":
 			database_admin.UpdateDB(os.Args[2])

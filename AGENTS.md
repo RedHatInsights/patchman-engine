@@ -29,6 +29,7 @@ Prefer these sources over guessing when behavior or schema matters.
 | HTTP REST API | `manager/` |
 | External messages | `listener/`, topic names in code and `conf/` |
 | Evaluation | `evaluator/`, topic names in code and `conf/` |
+| Advisory aggregation | `aggregator/` |
 | Advisory sync | `tasks/vmaas_sync/` |
 | Migrations | `database_admin/migrations/` (verify naming against existing migrations) |
 | Migration flow, session flags, ops runbook | `database_admin/update.go`, [docs/md/database.md#migrations](docs/md/database.md#migrations), [docs/md/major-migration-runbook.md](docs/md/major-migration-runbook.md) |
@@ -55,11 +56,17 @@ Listener Component
     ↓
 Evaluator-Upload Component
     ↓ (calls VMaaS /updates)
-    ↓ (updates system_advisories, advisory_account_data)
+    ↓ (updates system_advisories)
+    ↓ (updates advisory_account_data — legacy table, to be removed)
     ↓
-[platform.notifications.ingress] (optional)
 [platform.remediation-updates.patch] (optional)
 [platform.inventory.host-apps] (optional)
+[patchman.advisory.update] Kafka Topic (changed advisory IDs)
+    ↓
+Aggregator Component
+    ↓ (recounts from system_advisories, writes aggregates to account_advisory — new workspace-scoped table)
+    ↓
+[platform.notifications.ingress] (optional)
 ```
 
 ### Advisory Sync Flow
