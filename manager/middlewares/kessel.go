@@ -4,6 +4,7 @@ import (
 	"app/base/utils"
 	"context"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -96,6 +97,7 @@ func hasPermissionKessel(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{
 			Error: "Unexpected server error", // missing cert or failed to make a new gRPC client
 		})
+		serviceErrorCnt.WithLabelValues("kessel", strconv.Itoa(http.StatusInternalServerError)).Inc()
 		return
 	}
 	defer func() {
@@ -117,6 +119,7 @@ func hasPermissionKessel(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{
 			Error: "Communication with RBAC failed",
 		})
+		serviceErrorCnt.WithLabelValues("kessel", strconv.Itoa(http.StatusInternalServerError)).Inc()
 		return
 	}
 
