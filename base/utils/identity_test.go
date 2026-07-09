@@ -37,11 +37,13 @@ func TestEncodeXRHID(t *testing.T) {
 	assert.Equal(t, testIdentityString, identityString)
 }
 
-func TestXRHIDForOrg(t *testing.T) {
+func TestContentSourcesXRHIDForOrg(t *testing.T) {
+	const testUser = "test-user"
 	orgID := "1234"
-	xrhid := XRHIDForOrg(orgID)
+	xrhid := XRHIDForOrg(orgID, testUser)
 
 	assert.Equal(t, orgID, xrhid.Identity.OrgID)
 	assert.Equal(t, orgID, xrhid.Identity.Internal.OrgID)
 	assert.Equal(t, "User", xrhid.Identity.Type)
+	assert.Equal(t, testUser, xrhid.Identity.User.Username)
 }

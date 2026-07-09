@@ -82,6 +82,7 @@ type coreConfig struct {
 	EvaluatorUploadPrivateAddress string
 	EvaluatorRecalcPrivateAddress string
 	ContentSourcesAddress         string
+	ContentSourcesUser            string
 
 	// cloudwatch
 	CloudWatchAccessKeyID     string
@@ -192,6 +193,7 @@ func initServicesFromEnv() {
 	CoreCfg.CandlepinKey = Getenv("CANDLEPIN_KEY", CoreCfg.CandlepinKey)
 	CoreCfg.CandlepinCA = Getenv("CANDLEPIN_CA", CoreCfg.CandlepinCA)
 	CoreCfg.ContentSourcesAddress = Getenv("CONTENT_SOURCES_ADDRESS", CoreCfg.ContentSourcesAddress)
+	CoreCfg.ContentSourcesUser = Getenv("CONTENT_SOURCES_USER", CoreCfg.ContentSourcesUser)
 }
 
 func initDBFromClowder() {
