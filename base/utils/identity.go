@@ -32,10 +32,13 @@ func EncodeXRHID(id identity.Identity) (string, error) {
 	return base64.StdEncoding.EncodeToString(js), nil
 }
 
-func XRHIDForOrg(orgID string) identity.XRHID {
+func XRHIDForOrg(orgID string, username string) identity.XRHID {
 	return identity.XRHID{
 		Identity: identity.Identity{
-			Type:  "User",
+			Type: "User",
+			User: &identity.User{
+				Username: username,
+			},
 			OrgID: orgID,
 			Internal: identity.Internal{
 				OrgID: orgID,

@@ -150,8 +150,9 @@ func TemplateUpdate(template mqueue.TemplateResponse, eventType string) error {
 		return errors.Wrap(err, "creating/updating template from message")
 	}
 
-	if contentSourcesBaseURL != "" && eventType == TemplateEventUpdate {
-		ctx := identity.WithIdentity(context.Background(), utils.XRHIDForOrg(template.OrgID))
+	if contentSourcesBaseURL != "" && utils.CoreCfg.ContentSourcesUser != "" && eventType == TemplateEventUpdate {
+		ctx := identity.WithIdentity(context.Background(),
+			utils.XRHIDForOrg(template.OrgID, utils.CoreCfg.ContentSourcesUser))
 		err = syncTemplateAdvisories(ctx, accountID, row.ID, template.UUID, template.OrgID)
 		if err != nil {
 			return errors.Wrap(err, "syncing template advisories")

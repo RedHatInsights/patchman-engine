@@ -17,12 +17,16 @@ func setupContentSourcesClient(t *testing.T) {
 	originalAddress := utils.CoreCfg.ContentSourcesAddress
 	address := utils.Getenv("CONTENT_SOURCES_ADDRESS", "http://platform:9001")
 	utils.CoreCfg.ContentSourcesAddress = address
+	originalUser := utils.CoreCfg.ContentSourcesUser
+	user := utils.Getenv("CONTENT_SOURCES_USER", "test-user")
+	utils.CoreCfg.ContentSourcesUser = user
 	contentSourcesClient = content_sources.CreateContentSourcesClient()
 	contentSourcesBaseURL = address + "/api/content-sources/v1"
 	t.Cleanup(func() {
 		utils.CoreCfg.ContentSourcesAddress = originalAddress
 		contentSourcesClient = nil
 		contentSourcesBaseURL = ""
+		utils.CoreCfg.ContentSourcesUser = originalUser
 	})
 }
 
@@ -31,7 +35,7 @@ func TestCallCSTemplateAdvisories(t *testing.T) {
 
 	templateUUID := "99900000-0000-0000-0000-000000000001"
 	orgID := "org_1"
-	ctx := identity.WithIdentity(context.Background(), utils.XRHIDForOrg(orgID))
+	ctx := identity.WithIdentity(context.Background(), utils.XRHIDForOrg(orgID, utils.CoreCfg.ContentSourcesUser))
 	result, err := callCSTemplateAdvisories(ctx, templateUUID)
 
 	assert.NoError(t, err)
@@ -127,7 +131,7 @@ func TestSyncTemplateAdvisories(t *testing.T) {
 	defer database.DeleteTemplateAdvisories(t, templateID, []int64{1, 2, 3})
 
 	// content sources mock returns RH-1 and RH-3 so we need to add RH-3, remove RH-2
-	ctx := identity.WithIdentity(context.Background(), utils.XRHIDForOrg(orgID))
+	ctx := identity.WithIdentity(context.Background(), utils.XRHIDForOrg(orgID, utils.CoreCfg.ContentSourcesUser))
 	err := syncTemplateAdvisories(ctx, accountID, templateID, templateUUID, orgID)
 	assert.Nil(t, err)
 
