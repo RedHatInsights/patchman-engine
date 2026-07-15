@@ -9,7 +9,11 @@ ALTER TABLE system_advisories ALTER COLUMN status_id DROP DEFAULT,
 
 ALTER TABLE advisory_account_data DROP CONSTRAINT status_id;
 ALTER TABLE advisory_account_data RENAME COLUMN status_id TO systems_applicable;
+ALTER TABLE advisory_account_data RENAME CONSTRAINT advisory_account_data_status_id_not_null
+                                                 TO advisory_account_data_systems_applicable_not_null;
 ALTER TABLE advisory_account_data RENAME COLUMN systems_affected TO systems_installable;
+ALTER TABLE advisory_account_data RENAME CONSTRAINT advisory_account_data_systems_affected_not_null
+                                                 TO advisory_account_data_systems_installable_not_null;
 
 CREATE OR REPLACE FUNCTION on_system_update()
     RETURNS TRIGGER

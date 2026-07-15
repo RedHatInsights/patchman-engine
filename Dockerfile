@@ -5,8 +5,8 @@ FROM ${BUILDIMG} AS buildimg
 ARG INSTALL_TOOLS=no
 
 # install build, development and test environment
-RUN (dnf module enable -y postgresql:16 || curl -o /etc/yum.repos.d/postgresql.repo \
-    https://copr.fedorainfracloud.org/coprs/g/insights/postgresql-16/repo/epel-9/group_insights-postgresql-16-epel-9.repo) && \
+RUN (dnf module enable -y postgresql:18 || curl -o /etc/yum.repos.d/postgresql.repo \
+    https://copr.fedorainfracloud.org/coprs/g/insights/postgresql-18/repo/rhel-9/group_insights-postgresql-18-rhel-9.repo) && \
     dnf install -y go-toolset postgresql diffutils rpm-devel pg_repack
 
 ENV GOPATH=/go \
