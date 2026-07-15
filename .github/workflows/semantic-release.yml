@@ -13,7 +13,7 @@ jobs:
       id: app-token
       uses: actions/create-github-app-token@v3
       with:
-        app-id: ${{ secrets.SEMANTIC_RELEASE_APP_ID }}
+        client-id: ${{ secrets.SEMANTIC_RELEASE_APP_ID }}
         private-key: ${{ secrets.SEMANTIC_RELEASE_PK }}
     - uses: actions/checkout@v7
       with:
@@ -43,5 +43,5 @@ jobs:
         echo $VERSION_NEXT >VERSION
         git commit -am "${VERSION_NEXT}"
         git push
-        git tag ${VERSION_NEXT}
-        git push origin ${VERSION_NEXT}
+        git tag "${VERSION_NEXT}" -m "${VERSION_NEXT}"
+        git push origin "${VERSION_NEXT}"
