@@ -26,4 +26,6 @@ var (
 
 	// Expose templates API (feature flag)
 	EnableTemplates = utils.PodConfig.GetBool("templates_api", true)
+	// Use precomputed per-workspace advisory counts from account_advisory table
+	EnableAccountAdvisoryReadPath = utils.PodConfig.GetBool("account_advisory", true)
 )

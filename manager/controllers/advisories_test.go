@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"app/base/core"
+	"app/base/database"
 	"app/base/utils"
+	"app/manager/config"
 	"fmt"
 	"net/http"
 	"testing"
@@ -36,6 +38,15 @@ func testAdvisoriesIDs(t *testing.T, url string) IDsPlainResponse {
 	var output IDsPlainResponse
 	CheckResponse(t, w, http.StatusOK, &output)
 	return output
+}
+
+func TestAdvisoriesLegacyPath(t *testing.T) {
+	core.SetupTest(t)
+	config.EnableAccountAdvisoryReadPath = false
+	defer func() { config.EnableAccountAdvisoryReadPath = true }()
+
+	output := testAdvisories(t, "/")
+	assert.Equal(t, 12, len(output.Data))
 }
 
 func TestAdvisoriesDefault(t *testing.T) {
@@ -385,4 +396,162 @@ func TestAdvisoryMetadataSums(t *testing.T) {
 	assert.Equal(t, enhancement, st["enhancement"])
 	assert.Equal(t, bugfix, st["bugfix"])
 	assert.Equal(t, security, st["security"])
+}
+
+func TestAdvisoriesGroupNameSingle(t *testing.T) {
+	output := testAdvisories(t, "/?sort=id&filter[group_name]=group1")
+	// group1 = workspace 00000000-0000-0000-0000-000000000001
+	// Systems 1-6 in group1, advisories 1-8 from system 1, advisory 1 from systems 2-6
+	assert.Equal(t, 8, len(output.Data))
+	assert.Equal(t, "RH-1", output.Data[0].ID)
+	assert.Equal(t, 4, output.Data[0].Attributes.InstallableSystems)
+	assert.Equal(t, 6, output.Data[0].Attributes.ApplicableSystems)
+}
+
+func TestAdvisoriesGroupNameGroup2(t *testing.T) {
+	output := testAdvisories(t, "/?sort=id&filter[group_name]=group2")
+	// group2 = workspace 00000000-0000-0000-0000-000000000002
+	// System 8 in group2 (system 7 has no last_evaluation), advisories 10-13
+	assert.Equal(t, 4, len(output.Data))
+	assert.Equal(t, "CUSTOM-12", output.Data[0].ID)
+	assert.Equal(t, "CUSTOM-13", output.Data[1].ID)
+	assert.Equal(t, "UNSPEC-10", output.Data[2].ID)
+	assert.Equal(t, "UNSPEC-11", output.Data[3].ID)
+}
+
+func TestAdvisoriesGroupNameMultiple(t *testing.T) {
+	output := testAdvisories(t, "/?filter[group_name]=group1,group2")
+	// group1 + group2 = all advisories for account 1
+	assert.Equal(t, 12, len(output.Data))
+}
+
+func TestAdvisoriesGroupNameNoMatch(t *testing.T) {
+	output := testAdvisories(t, "/?filter[group_name]=nonexistent")
+	assert.Equal(t, 0, len(output.Data))
+	assert.Equal(t, 0, output.Meta.TotalItems)
+}
+
+func TestAdvisoriesIDsGroupName(t *testing.T) {
+	output := testAdvisoriesIDs(t, "/?sort=id&filter[group_name]=group2")
+	assert.Equal(t, 4, len(output.IDs))
+}
+
+func TestAdvisoriesExportGroupName(t *testing.T) {
+	core.SetupTest(t)
+	w := CreateRequest("GET", "/?filter[group_name]=group2", nil, "application/json", AdvisoriesExportHandler)
+
+	var output []AdvisoriesDBLookup
+	CheckResponse(t, w, http.StatusOK, &output)
+	assert.Equal(t, 4, len(output))
+}
+
+func TestHasNonGroupInventoryFilter(t *testing.T) {
+	tests := []struct {
+		name     string
+		filters  Filters
+		expected bool
+	}{
+		{
+			name:     "empty filters",
+			filters:  Filters{},
+			expected: false,
+		},
+		{
+			name: "only group_name",
+			filters: Filters{
+				"group_name": {Type: InventoryFilter, Operator: "eq", Values: []string{"group1"}},
+			},
+			expected: false,
+		},
+		{
+			name: "group_name and column filter",
+			filters: Filters{
+				"group_name":         {Type: InventoryFilter, Operator: "eq", Values: []string{"group1"}},
+				"applicable_systems": {Type: ColumnFilter, Operator: "gt", Values: []string{"0"}},
+			},
+			expected: false,
+		},
+		{
+			name: "tag filter",
+			filters: Filters{
+				"ns1/k1": {Type: TagFilter, Operator: "eq", Values: []string{"val1"}},
+			},
+			expected: true,
+		},
+		{
+			name: "sap_system filter",
+			filters: Filters{
+				"system_profile][sap_system": {Type: InventoryFilter, Operator: "eq", Values: []string{"true"}},
+			},
+			expected: true,
+		},
+		{
+			name: "group_name and tag",
+			filters: Filters{
+				"group_name": {Type: InventoryFilter, Operator: "eq", Values: []string{"group1"}},
+				"ns1/k1":     {Type: TagFilter, Operator: "eq", Values: []string{"val1"}},
+			},
+			expected: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, hasNonGroupInventoryFilter(tc.filters))
+		})
+	}
+}
+
+func TestGetGroupNameFilterValues(t *testing.T) {
+	filters := Filters{
+		"group_name": {Type: InventoryFilter, Operator: "eq", Values: []string{"group1", "group2"}},
+	}
+	assert.Equal(t, []string{"group1", "group2"}, getGroupNameFilterValues(filters))
+
+	assert.Nil(t, getGroupNameFilterValues(Filters{}))
+
+	filtersColumnOnly := Filters{
+		"group_name": {Type: ColumnFilter, Operator: "eq", Values: []string{"group1"}},
+	}
+	assert.Nil(t, getGroupNameFilterValues(filtersColumnOnly))
+}
+
+func TestAdvisoriesTagsFallbackWithAccountAdvisory(t *testing.T) {
+	output := testAdvisories(t, "/?sort=id&tags=ns1/k2=val2")
+	assert.Equal(t, 8, len(output.Data))
+	assert.Equal(t, 1, output.Data[0].Attributes.InstallableSystems)
+	assert.Equal(t, 2, output.Data[0].Attributes.ApplicableSystems)
+}
+
+func TestResolveWorkspaceNameToIDs(t *testing.T) {
+	core.SetupTest(t)
+
+	allowedWorkspaces := []string{
+		"00000000-0000-0000-0000-000000000001",
+		"00000000-0000-0000-0000-000000000002",
+		"00000000-0000-0000-0000-999999999999",
+	}
+
+	ids, err := resolveWorkspaceNameToIDs(database.DB, 1, []string{"group1"}, allowedWorkspaces)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(ids))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000001", ids[0])
+
+	ids, err = resolveWorkspaceNameToIDs(database.DB, 1, []string{"group2"}, allowedWorkspaces)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(ids))
+	assert.Equal(t, "00000000-0000-0000-0000-000000000002", ids[0])
+
+	ids, err = resolveWorkspaceNameToIDs(database.DB, 1, []string{"group1", "group2"}, allowedWorkspaces)
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(ids))
+
+	ids, err = resolveWorkspaceNameToIDs(database.DB, 1, []string{"nonexistent"}, allowedWorkspaces)
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(ids))
+
+	ids, err = resolveWorkspaceNameToIDs(database.DB,
+		1, []string{"group1"}, []string{"00000000-0000-0000-0000-000000000002"})
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(ids))
 }
