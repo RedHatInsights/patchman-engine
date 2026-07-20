@@ -6,7 +6,7 @@ require (
 	github.com/MichaelMraka/gorpm v0.0.0-20251128174203-65cf25f01bac
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/bytedance/sonic v1.15.2
-	github.com/getkin/kin-openapi v0.140.0
+	github.com/getkin/kin-openapi v0.142.0
 	github.com/getsentry/sentry-go v0.47.0
 	github.com/gin-contrib/timeout v1.2.1
 	github.com/gin-gonic/gin v1.12.0
@@ -95,8 +95,8 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/muhlemmer/gu v0.3.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/oasdiff/yaml v0.1.0 // indirect
-	github.com/oasdiff/yaml3 v0.0.13 // indirect
+	github.com/oasdiff/yaml v0.1.1 // indirect
+	github.com/oasdiff/yaml3 v0.0.14 // indirect
 	github.com/onsi/gomega v1.39.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pierrec/lz4/v4 v4.1.26 // indirect
