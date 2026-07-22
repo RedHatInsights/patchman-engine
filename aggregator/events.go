@@ -5,6 +5,6 @@ import (
 )
 
 // TODO: stub - will process advisory update events in batches and update account_advisory table
-func advisoryUpdateHandler(m mqueue.KafkaMessage) error {
+func advisoryUpdateHandler(event mqueue.AdvisoryUpdateEvent) error {
 	return nil
 }
