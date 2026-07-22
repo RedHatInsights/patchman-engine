@@ -101,6 +101,11 @@ type SystemInventory struct {
 	AnsibleWorkloadControllerVersion *string
 	MssqlWorkload                    bool
 	MssqlWorkloadVersion             *string
+	CrowdstrikeWorkload              bool `gorm:"column:crowdstrike_workload"`
+	IbmDb2Workload                   bool `gorm:"column:ibm_db2_workload"`
+	IntersystemsWorkload             bool `gorm:"column:intersystems_workload"`
+	OracleDbWorkload                 bool `gorm:"column:oracle_db_workload"`
+	RhelAiWorkload                   bool `gorm:"column:rhel_ai_workload"`
 }
 
 func (SystemInventory) TableName() string {

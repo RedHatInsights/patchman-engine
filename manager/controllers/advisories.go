@@ -127,6 +127,11 @@ func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
+// @Param    filter[system_profile][crowdstrike]						query string 	false "Filter systems by crowdstrike"
+// @Param    filter[system_profile][ibm_db2]						query string 	false "Filter systems by ibm_db2"
+// @Param    filter[system_profile][intersystems]					query string 	false "Filter systems by intersystems"
+// @Param    filter[system_profile][oracle_db]						query string 	false "Filter systems by oracle_db"
+// @Param    filter[system_profile][rhel_ai]						query string 	false "Filter systems by rhel_ai"
 // @Success 200 {object} AdvisoriesResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse
@@ -183,6 +188,11 @@ func AdvisoriesListHandler(c *gin.Context) {
 // @Param    filter[system_profile][ansible][controller_version]	query string 	false "Filter systems by ansible version"
 // @Param    filter[system_profile][mssql]							query string 	false "Filter systems by mssql version"
 // @Param    filter[system_profile][mssql][version]					query string 	false "Filter systems by mssql version"
+// @Param    filter[system_profile][crowdstrike]						query string 	false "Filter systems by crowdstrike"
+// @Param    filter[system_profile][ibm_db2]						query string 	false "Filter systems by ibm_db2"
+// @Param    filter[system_profile][intersystems]					query string 	false "Filter systems by intersystems"
+// @Param    filter[system_profile][oracle_db]						query string 	false "Filter systems by oracle_db"
+// @Param    filter[system_profile][rhel_ai]						query string 	false "Filter systems by rhel_ai"
 // @Success 200 {object} IDsPlainResponse
 // @Failure 400 {object} utils.ErrorResponse
 // @Failure 404 {object} utils.ErrorResponse

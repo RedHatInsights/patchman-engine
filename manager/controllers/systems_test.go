@@ -444,3 +444,55 @@ func TestMSSQLSystemMeta3(t *testing.T) {
 	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000006"), output.Data[0].ID)
 	assert.Equal(t, 2, output.Meta.TotalItems)
 }
+
+func TestCrowdstrikeFilter(t *testing.T) {
+	output := testSystems(t, `?filter[system_profile][crowdstrike]=not_nil`, 1)
+	testMap := map[string]FilterData{
+		"system_profile][crowdstrike": {Operator: "eq", Values: []string{"not_nil"}},
+		"stale":                       {Operator: "eq", Values: []string{"false"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
+func TestIbmDb2Filter(t *testing.T) {
+	output := testSystems(t, `?filter[system_profile][ibm_db2]=not_nil`, 3)
+	testMap := map[string]FilterData{
+		"system_profile][ibm_db2": {Operator: "eq", Values: []string{"not_nil"}},
+		"stale":                   {Operator: "eq", Values: []string{"false"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
+func TestIntersystemsFilter(t *testing.T) {
+	output := testSystems(t, `?filter[system_profile][intersystems]=not_nil`, 3)
+	testMap := map[string]FilterData{
+		"system_profile][intersystems": {Operator: "eq", Values: []string{"not_nil"}},
+		"stale":                        {Operator: "eq", Values: []string{"false"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
+func TestOracleDbFilter(t *testing.T) {
+	output := testSystems(t, `?filter[system_profile][oracle_db]=not_nil`, 3)
+	testMap := map[string]FilterData{
+		"system_profile][oracle_db": {Operator: "eq", Values: []string{"not_nil"}},
+		"stale":                     {Operator: "eq", Values: []string{"false"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
+func TestRhelAiFilter(t *testing.T) {
+	output := testSystems(t, `?filter[system_profile][rhel_ai]=not_nil`, 1)
+	testMap := map[string]FilterData{
+		"system_profile][rhel_ai": {Operator: "eq", Values: []string{"not_nil"}},
+		"stale":                   {Operator: "eq", Values: []string{"false"}},
+	}
+	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
+func TestWorkloadOrLogic(t *testing.T) {
+	// System 7 has ansible=true, system 17 has crowdstrike=true (both account 1)
+	// OR logic should return both, AND would return 0
+	output := testSystems(t, `?filter[system_profile][ansible]=not_nil&filter[system_profile][crowdstrike]=not_nil`, 1)
+	assert.Equal(t, 2, output.Meta.TotalItems, "OR logic should return systems matching either workload")
+}

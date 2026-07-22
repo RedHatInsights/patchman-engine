@@ -348,6 +348,11 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 		"ansible_workload_controller_version",
 		"mssql_workload",
 		"mssql_workload_version",
+		"crowdstrike_workload",
+		"ibm_db2_workload",
+		"intersystems_workload",
+		"oracle_db_workload",
+		"rhel_ai_workload",
 	}
 
 	displayName := inventoryID.String()
@@ -411,6 +416,11 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 			AnsibleWorkloadControllerVersion: utils.EmptyToNil(&host.SystemProfile.Workloads.Ansible.ControllerVersion), // nolint:lll
 			MssqlWorkload:                    host.SystemProfile.Workloads.Mssql.Version != "",
 			MssqlWorkloadVersion:             utils.EmptyToNil(&host.SystemProfile.Workloads.Mssql.Version),
+			CrowdstrikeWorkload:              host.SystemProfile.Workloads.Crowdstrike.FalconAID != "",
+			IbmDb2Workload:                   host.SystemProfile.Workloads.IbmDb2.IsRunning,
+			IntersystemsWorkload:             host.SystemProfile.Workloads.Intersystems.IsIntersystems,
+			OracleDbWorkload:                 host.SystemProfile.Workloads.OracleDb.IsRunning,
+			RhelAiWorkload:                   host.SystemProfile.Workloads.RhelAi.Variant != "",
 		},
 		Patch: models.SystemPatch{
 			RhAccountID: accountID,

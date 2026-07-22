@@ -656,6 +656,11 @@ CREATE TABLE IF NOT EXISTS system_inventory
     mssql_workload_version              TEXT        CHECK (NOT empty(mssql_workload_version)),
     workspace_id                        UUID,
     workspace_name                      TEXT        CHECK (NOT empty(workspace_name)),
+    crowdstrike_workload                BOOLEAN     NOT NULL DEFAULT false,
+    ibm_db2_workload                    BOOLEAN     NOT NULL DEFAULT false,
+    intersystems_workload               BOOLEAN     NOT NULL DEFAULT false,
+    oracle_db_workload                  BOOLEAN     NOT NULL DEFAULT false,
+    rhel_ai_workload                    BOOLEAN     NOT NULL DEFAULT false,
     PRIMARY KEY (rh_account_id, id),
     UNIQUE (rh_account_id, inventory_id)
 ) PARTITION BY HASH (rh_account_id);

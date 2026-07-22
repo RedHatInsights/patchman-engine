@@ -78,6 +78,26 @@ var nestedFilters = NestedFilterMap{
 	"system_profile][ansible][controller_version": "(si.ansible_workload_controller_version)",
 	"system_profile][mssql":                       "(si.mssql_workload)",
 	"system_profile][mssql][version":              "(si.mssql_workload_version)",
+	"system_profile][crowdstrike":                 "(si.crowdstrike_workload)",
+	"system_profile][ibm_db2":                     "(si.ibm_db2_workload)",
+	"system_profile][intersystems":                "(si.intersystems_workload)",
+	"system_profile][oracle_db":                   "(si.oracle_db_workload)",
+	"system_profile][rhel_ai":                     "(si.rhel_ai_workload)",
+}
+
+var workloadFilterKeys = map[string]bool{
+	"system_profile][sap_system":                  true,
+	"system_profile][sap_sids":                    true,
+	"system_profile][sap_sids][in]":               true,
+	"system_profile][ansible":                     true,
+	"system_profile][ansible][controller_version": true,
+	"system_profile][mssql":                       true,
+	"system_profile][mssql][version":              true,
+	"system_profile][crowdstrike":                 true,
+	"system_profile][ibm_db2":                     true,
+	"system_profile][intersystems":                true,
+	"system_profile][oracle_db":                   true,
+	"system_profile][rhel_ai":                     true,
 }
 
 func ParseFilters(c *gin.Context, filters Filters, allowedFields database.AttrMap,
@@ -365,9 +385,13 @@ func ApplyInventoryFilter(filters map[string]FilterData, tx *gorm.DB, systemIDEx
 	return tx.Where(fmt.Sprintf("%s::uuid in (?)", systemIDExpr), subq), true
 }
 
-// Apply Where clause with tags filter
+// Apply Where clause with tags filter.
+// Workload filters use OR logic (matching any workload), other filters use AND.
 func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, bool) {
 	applied := false
+	var workloadClauses []string
+	var workloadArgs []any
+
 	for key, val := range filters {
 		if val.Type == TagFilter {
 			tagString := key + "=" + strings.Join(val.Values, ",")
@@ -378,23 +402,28 @@ func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, 
 		}
 
 		if val.Type == InventoryFilter {
-			tx = buildInventoryQuery(tx, key, val.Values)
+			if workloadFilterKeys[key] {
+				clause, args := buildInventoryClause(key, val.Values)
+				workloadClauses = append(workloadClauses, clause)
+				workloadArgs = append(workloadArgs, args...)
+			} else {
+				tx = buildInventoryQuery(tx, key, val.Values)
+			}
 			applied = true
 			continue
 		}
 	}
+
+	if len(workloadClauses) > 0 {
+		tx = tx.Where("("+strings.Join(workloadClauses, " OR ")+")", workloadArgs...)
+	}
+
 	return tx, applied
 }
 
-// Builds inventory sub query
-// Example:
-// buildSystemProfileQuery("system_profile][mssql][version", "1.0")
-// returns "(si.mssql_workload_version) = 1.0"
-func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
-	if strings.Contains(key, "group_name") {
-		return tx.Where("si.workspace_name IN (?)", values)
-	}
-
+// buildInventoryClause returns a SQL clause and args for a single inventory filter
+// without applying it to a query. Used for workload filters that need OR grouping.
+func buildInventoryClause(key string, values []string) (string, []any) {
 	var cmp string
 	val := []any{}
 
@@ -409,8 +438,18 @@ func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
 		val = []any{values[0]}
 	}
 
-	subq := fmt.Sprintf("%s%s", nestedFilters[key], cmp)
-	return tx.Where(subq, val...)
+	clause := fmt.Sprintf("%s%s", nestedFilters[key], cmp)
+	return clause, val
+}
+
+// Builds inventory sub query for non-workload filters (e.g. group_name).
+func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
+	if strings.Contains(key, "group_name") {
+		return tx.Where("si.workspace_name IN (?)", values)
+	}
+
+	clause, val := buildInventoryClause(key, values)
+	return tx.Where(clause, val...)
 }
 
 func Csv(ctx *gin.Context, code int, res interface{}) {

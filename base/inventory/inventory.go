@@ -84,9 +84,14 @@ type Group struct {
 }
 
 type Workloads struct {
-	Sap     SapWorkload     `json:"sap,omitempty"`
-	Ansible AnsibleWorkload `json:"ansible,omitempty"`
-	Mssql   MssqlWorkload   `json:"mssql,omitempty"`
+	Sap          SapWorkload          `json:"sap,omitempty"`
+	Ansible      AnsibleWorkload      `json:"ansible,omitempty"`
+	Mssql        MssqlWorkload        `json:"mssql,omitempty"`
+	Crowdstrike  CrowdstrikeWorkload  `json:"crowdstrike,omitempty"`
+	IbmDb2       IbmDb2Workload       `json:"ibm_db2,omitempty"`
+	Intersystems IntersystemsWorkload `json:"intersystems,omitempty"`
+	OracleDb     OracleDbWorkload     `json:"oracle_db,omitempty"`
+	RhelAi       RhelAiWorkload       `json:"rhel_ai,omitempty"`
 }
 
 type SapWorkload struct {
@@ -100,4 +105,24 @@ type AnsibleWorkload struct {
 
 type MssqlWorkload struct {
 	Version string `json:"version,omitempty"`
+}
+
+type CrowdstrikeWorkload struct {
+	FalconAID string `json:"falcon_aid,omitempty"`
+}
+
+type IbmDb2Workload struct {
+	IsRunning bool `json:"is_running,omitempty"`
+}
+
+type IntersystemsWorkload struct {
+	IsIntersystems bool `json:"is_intersystems,omitempty"`
+}
+
+type OracleDbWorkload struct {
+	IsRunning bool `json:"is_running,omitempty"`
+}
+
+type RhelAiWorkload struct {
+	Variant string `json:"variant,omitempty"`
 }
