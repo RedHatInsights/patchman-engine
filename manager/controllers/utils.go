@@ -385,12 +385,16 @@ func ApplyInventoryFilter(filters map[string]FilterData, tx *gorm.DB, systemIDEx
 	return tx.Where(fmt.Sprintf("%s::uuid in (?)", systemIDExpr), subq), true
 }
 
+type inventoryClause struct {
+	query string
+	args  []any
+}
+
 // Apply Where clause with tags filter.
-// Workload filters use OR logic (matching any workload), other filters use AND.
+// Workload existence checks (not_nil/nil) use OR logic, all other filters use AND.
 func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, bool) {
 	applied := false
-	var workloadClauses []string
-	var workloadArgs []any
+	var workloadClauses []inventoryClause
 
 	for key, val := range filters {
 		if val.Type == TagFilter {
@@ -402,10 +406,9 @@ func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, 
 		}
 
 		if val.Type == InventoryFilter {
-			if workloadFilterKeys[key] {
-				clause, args := buildInventoryClause(key, val.Values)
-				workloadClauses = append(workloadClauses, clause)
-				workloadArgs = append(workloadArgs, args...)
+			if workloadFilterKeys[key] && isExistenceCheck(val.Values) {
+				query, args := buildInventoryClause(key, val.Values)
+				workloadClauses = append(workloadClauses, inventoryClause{query, args})
 			} else {
 				tx = buildInventoryQuery(tx, key, val.Values)
 			}
@@ -415,10 +418,19 @@ func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, 
 	}
 
 	if len(workloadClauses) > 0 {
-		tx = tx.Where("("+strings.Join(workloadClauses, " OR ")+")", workloadArgs...)
+		orQuery := tx.Session(&gorm.Session{NewDB: true}).Where(workloadClauses[0].query, workloadClauses[0].args...)
+		for _, c := range workloadClauses[1:] {
+			orQuery = orQuery.Or(c.query, c.args...)
+		}
+		tx = tx.Where(orQuery)
 	}
 
 	return tx, applied
+}
+
+// isExistenceCheck returns true if the filter value is a nil/not_nil check.
+func isExistenceCheck(values []string) bool {
+	return len(values) > 0 && (values[0] == "not_nil" || values[0] == "nil")
 }
 
 // buildInventoryClause returns a SQL clause and args for a single inventory filter

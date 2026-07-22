@@ -491,8 +491,11 @@ func TestRhelAiFilter(t *testing.T) {
 }
 
 func TestWorkloadOrLogic(t *testing.T) {
-	// System 7 has ansible=true, system 17 has crowdstrike=true (both account 1)
-	// OR logic should return both, AND would return 0
-	output := testSystems(t, `?filter[system_profile][ansible]=not_nil&filter[system_profile][crowdstrike]=not_nil`, 1)
-	assert.Equal(t, 2, output.Meta.TotalItems, "OR logic should return systems matching either workload")
+	// Use nullable text columns where not_nil actually filters:
+	// System 6 has mssql_version='15.3.0', system 7 has ansible_controller_version='1.0',
+	// system 17 has both. All in account 1.
+	// OR returns 3 (any system with either); AND would return 1 (only system 17 has both).
+	output := testSystems(t,
+		`?filter[system_profile][ansible][controller_version]=not_nil&filter[system_profile][mssql][version]=not_nil`, 1)
+	assert.Equal(t, 3, output.Meta.TotalItems, "OR logic should return systems matching either workload")
 }
