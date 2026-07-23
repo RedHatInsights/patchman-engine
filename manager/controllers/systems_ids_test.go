@@ -74,13 +74,7 @@ func TestSystemsIDsTagsInvalid(t *testing.T) {
 }
 
 func TestSystemsIDsWorkloads1(t *testing.T) {
-	output := testSystemsIDs(t, "?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC", 1)
-	assert.Equal(t, 2, len(output.IDs))
-	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.IDs[0])
-}
-
-func TestSystemsIDsWorkloads2(t *testing.T) {
-	output := testSystemsIDs(t, sapABCFilter, 1)
+	output := testSystemsIDs(t, "?filter[system_profile][sap_sids]=ABC", 1)
 	assert.Equal(t, 2, len(output.IDs))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", output.IDs[0])
 }

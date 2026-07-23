@@ -140,13 +140,7 @@ func TestSystemsTagsEscaping4(t *testing.T) {
 }
 
 func TestSystemsWorkloads1(t *testing.T) {
-	output := testSystems(t, "?filter[system_profile][sap_system]=true&filter[system_profile][sap_sids]=ABC", 1)
-	assert.Equal(t, 2, len(output.Data))
-	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output.Data[0].ID)
-}
-
-func TestSystemsWorkloads2(t *testing.T) {
-	output := testSystems(t, sapABCFilter, 1)
+	output := testSystems(t, "?filter[system_profile][sap_sids]=ABC", 1)
 	assert.Equal(t, 2, len(output.Data))
 	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output.Data[0].ID)
 }
