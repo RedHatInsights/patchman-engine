@@ -14,6 +14,7 @@ type FilterType int8
 const (
 	ColumnFilter FilterType = iota
 	InventoryFilter
+	WorkloadFilter
 	TagFilter
 )
 

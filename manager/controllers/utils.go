@@ -69,8 +69,7 @@ func ApplySort(c *gin.Context, tx *gorm.DB, fieldExprs database.AttrMap,
 
 type NestedFilterMap map[string]string
 
-var nestedFilters = NestedFilterMap{
-	"group_name":                                  "group_name",
+var workloadFilters = NestedFilterMap{
 	"system_profile][sap_system":                  "(si.sap_workload)",
 	"system_profile][sap_sids":                    "(si.sap_workload_sids)",
 	"system_profile][sap_sids][in]":               "(si.sap_workload_sids)",
@@ -85,19 +84,8 @@ var nestedFilters = NestedFilterMap{
 	"system_profile][rhel_ai":                     "(si.rhel_ai_workload)",
 }
 
-var workloadFilterKeys = map[string]bool{
-	"system_profile][sap_system":                  true,
-	"system_profile][sap_sids":                    true,
-	"system_profile][sap_sids][in]":               true,
-	"system_profile][ansible":                     true,
-	"system_profile][ansible][controller_version": true,
-	"system_profile][mssql":                       true,
-	"system_profile][mssql][version":              true,
-	"system_profile][crowdstrike":                 true,
-	"system_profile][ibm_db2":                     true,
-	"system_profile][intersystems":                true,
-	"system_profile][oracle_db":                   true,
-	"system_profile][rhel_ai":                     true,
+var inventoryFilters = NestedFilterMap{
+	"group_name": "si.workspace_name",
 }
 
 func ParseFilters(c *gin.Context, filters Filters, allowedFields database.AttrMap,
@@ -107,7 +95,11 @@ func ParseFilters(c *gin.Context, filters Filters, allowedFields database.AttrMa
 		if strings.HasPrefix(name, "filter[") {
 			subject := name[7 : len(name)-1] // strip key from "filter[...]"
 			for _, v := range values {
-				if _, ok := nestedFilters[subject]; ok {
+				if _, ok := workloadFilters[subject]; ok {
+					filters.Update(WorkloadFilter, subject, v)
+					continue
+				}
+				if _, ok := inventoryFilters[subject]; ok {
 					filters.Update(InventoryFilter, subject, v)
 					continue
 				}
@@ -268,6 +260,8 @@ func HasInventoryFilter(filters Filters) bool {
 		switch data.Type {
 		case InventoryFilter:
 			return true
+		case WorkloadFilter:
+			return true
 		case TagFilter:
 			return true
 		}
@@ -394,7 +388,7 @@ type inventoryClause struct {
 // Workload existence checks (not_nil/nil) use OR logic, all other filters use AND.
 func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, bool) {
 	applied := false
-	var workloadClauses []inventoryClause
+	workloadExpr := []clause.Expression{}
 
 	for key, val := range filters {
 		if val.Type == TagFilter {
@@ -406,36 +400,27 @@ func ApplyInventoryWhere(filters map[string]FilterData, tx *gorm.DB) (*gorm.DB, 
 		}
 
 		if val.Type == InventoryFilter {
-			if workloadFilterKeys[key] && isExistenceCheck(val.Values) {
-				query, args := buildInventoryClause(key, val.Values)
-				workloadClauses = append(workloadClauses, inventoryClause{query, args})
-			} else {
-				tx = buildInventoryQuery(tx, key, val.Values)
-			}
+			query, args := buildInventoryClause(key, val.Values, inventoryFilters)
+			tx = tx.Where(query, args...)
 			applied = true
+			continue
+		}
+		if val.Type == WorkloadFilter {
+			query, args := buildInventoryClause(key, val.Values, workloadFilters)
+			workloadExpr = append(workloadExpr, clause.Expr{SQL: query, Vars: args})
 			continue
 		}
 	}
 
-	if len(workloadClauses) > 0 {
-		orQuery := tx.Session(&gorm.Session{NewDB: true}).Where(workloadClauses[0].query, workloadClauses[0].args...)
-		for _, c := range workloadClauses[1:] {
-			orQuery = orQuery.Or(c.query, c.args...)
-		}
-		tx = tx.Where(orQuery)
+	if len(workloadExpr) > 0 {
+		tx = tx.Where(clause.Or(workloadExpr...))
+		applied = true
 	}
-
 	return tx, applied
 }
 
-// isExistenceCheck returns true if the filter value is a nil/not_nil check.
-func isExistenceCheck(values []string) bool {
-	return len(values) > 0 && (values[0] == "not_nil" || values[0] == "nil")
-}
-
-// buildInventoryClause returns a SQL clause and args for a single inventory filter
-// without applying it to a query. Used for workload filters that need OR grouping.
-func buildInventoryClause(key string, values []string) (string, []any) {
+// buildInventoryClause returns a SQL clause and args for an inventory filter
+func buildInventoryClause(key string, values []string, keyMap NestedFilterMap) (string, []any) {
 	var cmp string
 	val := []any{}
 
@@ -446,22 +431,17 @@ func buildInventoryClause(key string, values []string) (string, []any) {
 		cmp = " && ?::text[]"
 		val = []any{pq.Array(values)}
 	default:
-		cmp = " = ?"
-		val = []any{values[0]}
+		if len(values) > 1 {
+			cmp = " in (?)"
+			val = []any{values}
+		} else {
+			cmp = " = ?"
+			val = []any{values[0]}
+		}
 	}
 
-	clause := fmt.Sprintf("%s%s", nestedFilters[key], cmp)
+	clause := fmt.Sprintf("%s%s", keyMap[key], cmp)
 	return clause, val
-}
-
-// Builds inventory sub query for non-workload filters (e.g. group_name).
-func buildInventoryQuery(tx *gorm.DB, key string, values []string) *gorm.DB {
-	if strings.Contains(key, "group_name") {
-		return tx.Where("si.workspace_name IN (?)", values)
-	}
-
-	clause, val := buildInventoryClause(key, values)
-	return tx.Where(clause, val...)
 }
 
 func Csv(ctx *gin.Context, code int, res interface{}) {
