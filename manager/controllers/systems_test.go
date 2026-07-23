@@ -440,56 +440,65 @@ func TestMSSQLSystemMeta3(t *testing.T) {
 }
 
 func TestCrowdstrikeFilter(t *testing.T) {
-	output := testSystems(t, `?filter[system_profile][crowdstrike]=not_nil`, 1)
+	output := testSystems(t, `?filter[system_profile][crowdstrike]=true`, 1)
 	testMap := map[string]FilterData{
-		"system_profile][crowdstrike": {Operator: "eq", Values: []string{"not_nil"}},
+		"system_profile][crowdstrike": {Operator: "eq", Values: []string{"true"}},
 		"stale":                       {Operator: "eq", Values: []string{"false"}},
 	}
+	assert.Equal(t, 1, output.Meta.TotalItems)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000017"), output.Data[0].ID)
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
 
 func TestIbmDb2Filter(t *testing.T) {
-	output := testSystems(t, `?filter[system_profile][ibm_db2]=not_nil`, 3)
+	output := testSystems(t, `?filter[system_profile][ibm_db2]=true`, 3)
 	testMap := map[string]FilterData{
-		"system_profile][ibm_db2": {Operator: "eq", Values: []string{"not_nil"}},
+		"system_profile][ibm_db2": {Operator: "eq", Values: []string{"true"}},
 		"stale":                   {Operator: "eq", Values: []string{"false"}},
 	}
+	assert.Equal(t, 1, output.Meta.TotalItems)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000016"), output.Data[0].ID)
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
 
 func TestIntersystemsFilter(t *testing.T) {
-	output := testSystems(t, `?filter[system_profile][intersystems]=not_nil`, 3)
+	output := testSystems(t, `?filter[system_profile][intersystems]=true`, 3)
 	testMap := map[string]FilterData{
-		"system_profile][intersystems": {Operator: "eq", Values: []string{"not_nil"}},
+		"system_profile][intersystems": {Operator: "eq", Values: []string{"true"}},
 		"stale":                        {Operator: "eq", Values: []string{"false"}},
 	}
+	assert.Equal(t, 1, output.Meta.TotalItems)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000016"), output.Data[0].ID)
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
 
 func TestOracleDbFilter(t *testing.T) {
-	output := testSystems(t, `?filter[system_profile][oracle_db]=not_nil`, 3)
+	output := testSystems(t, `?filter[system_profile][oracle_db]=true`, 3)
 	testMap := map[string]FilterData{
-		"system_profile][oracle_db": {Operator: "eq", Values: []string{"not_nil"}},
+		"system_profile][oracle_db": {Operator: "eq", Values: []string{"true"}},
 		"stale":                     {Operator: "eq", Values: []string{"false"}},
 	}
+	assert.Equal(t, 1, output.Meta.TotalItems)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000016"), output.Data[0].ID)
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
 
 func TestRhelAiFilter(t *testing.T) {
-	output := testSystems(t, `?filter[system_profile][rhel_ai]=not_nil`, 1)
+	output := testSystems(t, `?filter[system_profile][rhel_ai]=true`, 1)
 	testMap := map[string]FilterData{
-		"system_profile][rhel_ai": {Operator: "eq", Values: []string{"not_nil"}},
+		"system_profile][rhel_ai": {Operator: "eq", Values: []string{"true"}},
 		"stale":                   {Operator: "eq", Values: []string{"false"}},
 	}
+	assert.Equal(t, 1, output.Meta.TotalItems)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000017"), output.Data[0].ID)
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
 
 func TestWorkloadOrLogic(t *testing.T) {
-	// Use nullable text columns where not_nil actually filters:
-	// System 6 has mssql_version='15.3.0', system 7 has ansible_controller_version='1.0',
-	// system 17 has both. All in account 1.
-	// OR returns 3 (any system with either); AND would return 1 (only system 17 has both).
 	output := testSystems(t,
-		`?filter[system_profile][ansible][controller_version]=not_nil&filter[system_profile][mssql][version]=not_nil`, 1)
-	assert.Equal(t, 3, output.Meta.TotalItems, "OR logic should return systems matching either workload")
+		`?filter[system_profile][rhel_ai]=true&filter[system_profile][sap_sids]=ABC`, 1)
+	assert.Equal(t, 3, output.Meta.TotalItems)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000001"), output.Data[0].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000002"), output.Data[1].ID)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000017"), output.Data[2].ID)
 }
