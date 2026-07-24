@@ -341,6 +341,13 @@ func getUpdatesData(ctx context.Context, system *models.SystemPlatformV2) (*vmaa
 	}
 
 	merged := utils.MergeVMaaSResponses(yumUpdates, vmaasData)
+	if system.Inventory.Bootc && merged != nil {
+		// image-mode systems are not patchable via Insights; force all updates applicable
+		mergedUpdateList := merged.GetUpdateList()
+		for nevra := range mergedUpdateList {
+			(*mergedUpdateList[nevra]).SetUpdatesInstallability(APPLICABLE)
+		}
+	}
 	return merged, nil
 }
 
