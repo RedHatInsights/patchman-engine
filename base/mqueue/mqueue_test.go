@@ -7,6 +7,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,30 +17,15 @@ var someid = uuid.MustParse("99c0ffee-0000-0000-0000-0000000050de")
 
 var msg = KafkaMessage{Value: []byte(`{"id": "` + id.String() + `", "type": "delete"}`)}
 
-func TestParseEvents(t *testing.T) {
-	reached := false
-
-	err := MakeMessageHandler(func(event PlatformEvent) error {
-		assert.Equal(t, event.ID, id)
-		assert.Equal(t, *event.Type, "delete")
-		reached = true
-		return nil
-	})(msg)
-
-	assert.True(t, reached, "Event handler should have been called")
-	assert.NoError(t, err)
-}
-
 func TestRoundTripKafkaGo(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 	reader := NewKafkaReaderFromEnv("test")
 	defer reader.Close()
 
 	var eventOut PlatformEvent
-	go reader.HandleMessages(t.Context(), MakeMessageHandler(func(event PlatformEvent) error {
-		eventOut = event
-		return nil
-	}))
+	go reader.HandleMessages(t.Context(), func(m KafkaMessage) error {
+		return sonic.Unmarshal(m.Value, &eventOut)
+	})
 
 	writer := NewKafkaWriterFromEnv("test")
 	eventIn := PlatformEvent{ID: someid}
@@ -53,14 +39,14 @@ func TestSpawnReader(t *testing.T) {
 	var nReaders int32
 	wg := sync.WaitGroup{}
 	SpawnReader(context.Background(), &wg, "", CreateCountedMockReader(&nReaders),
-		MakeMessageHandler(func(_ PlatformEvent) error { return nil }))
+		func(_ KafkaMessage) error { return nil })
 	wg.Wait()
 	assert.Equal(t, 1, int(nReaders))
 }
 
 func TestRetry(t *testing.T) {
 	i := 0
-	handler := func(_ PlatformEvent) error {
+	handler := func(_ KafkaMessage) error {
 		i++
 		if i < 2 {
 			return errors.New("Failed")
@@ -69,8 +55,8 @@ func TestRetry(t *testing.T) {
 	}
 
 	// Without retry handler should fail
-	assert.Error(t, MakeMessageHandler(handler)(msg))
+	assert.Error(t, handler(msg))
 
 	// With retry we handler should eventually succeed
-	assert.NoError(t, MakeRetryingHandler(MakeMessageHandler(handler))(msg))
+	assert.NoError(t, MakeRetryingHandler(handler)(msg))
 }
