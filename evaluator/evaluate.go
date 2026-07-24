@@ -733,7 +733,13 @@ func invalidateCaches(orgID string) error {
 	return err
 }
 
-func evaluateHandler(event mqueue.PlatformEvent) error {
+func evaluateHandler(m mqueue.KafkaMessage) error {
+	var event mqueue.PlatformEvent
+	if err := sonic.Unmarshal(m.Value, &event); err != nil {
+		utils.LogError("err", err, "Could not deserialize platform event")
+		return nil
+	}
+
 	var err error
 	var wg sync.WaitGroup
 	guard := make(chan struct{}, nEvalGoroutines)
@@ -800,7 +806,7 @@ func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 
 	loadCache()
 
-	var handler = mqueue.MakeRetryingHandler(mqueue.MakeMessageHandler(evaluateHandler))
+	var handler = mqueue.MakeRetryingHandler(evaluateHandler)
 	// We create multiple consumers, and hope that the partition rebalancing
 	// algorithm assigns each consumer a single partition
 	for i := 0; i < consumerCount; i++ {

@@ -155,11 +155,13 @@ func TestAdvisoryUpdateKafkaRoundTrip(t *testing.T) {
 	database.CheckCachesValid(t)
 
 	// Run evaluation
-	err := evaluateHandler(mqueue.PlatformEvent{
+	data, err := sonic.Marshal(mqueue.PlatformEvent{
 		SystemIDs:  []uuid.UUID{testInventoryID},
 		RequestIDs: []string{"request-1"},
 		OrgID:      &orgID,
 		AccountID:  rhAccountID})
+	assert.NoError(t, err)
+	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 
 	utils.AssertEqualWait(t, 10, func() (exp, act interface{}) {

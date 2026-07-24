@@ -2,27 +2,12 @@ package mqueue
 
 import (
 	"app/base/types"
-	"app/base/utils"
 	"context"
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
-
-type AdvisoryUpdateEventHandler func(event AdvisoryUpdateEvent) error
-
-func MakeAdvisoryUpdateHandler(handler AdvisoryUpdateEventHandler) MessageHandler {
-	return func(m KafkaMessage) error {
-		var event AdvisoryUpdateEvent
-		err := sonic.Unmarshal(m.Value, &event)
-		if err != nil {
-			utils.LogError("err", err, "Could not deserialize advisory update event")
-			return nil
-		}
-		return handler(event)
-	}
-}
 
 type AdvisoryUpdateEvent struct {
 	RhAccountID int                    `json:"rh_account_id"`

@@ -58,11 +58,13 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 
 	orgID := "1234567"
 	// do evaluate the system
-	err := evaluateHandler(mqueue.PlatformEvent{
+	data, err := sonic.Marshal(mqueue.PlatformEvent{
 		SystemIDs:  []uuid.UUID{testInventoryID},
 		RequestIDs: []string{"request-2"},
 		AccountID:  rhAccountID,
 		OrgID:      &orgID})
+	assert.NoError(t, err)
+	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
 	database.CheckAdvisoriesAccountDataNotified(t, rhAccountID, expectedAdvisoryIDs, true)

@@ -62,11 +62,13 @@ func TestEvaluate(t *testing.T) {
 	database.CheckCachesValid(t)
 
 	// do evaluate the system
-	err := evaluateHandler(mqueue.PlatformEvent{
+	data, err := sonic.Marshal(mqueue.PlatformEvent{
 		SystemIDs:  []uuid.UUID{testInventoryID, testInventoryID2},
 		RequestIDs: []string{"request-1", "request-2"},
 		OrgID:      &orgID,
 		AccountID:  rhAccountID})
+	assert.NoError(t, err)
+	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
@@ -80,11 +82,13 @@ func TestEvaluate(t *testing.T) {
 	thirdPartySystemRepoIDs := []int64{1, 2, 4}
 	database.DeleteSystemRepos(t, rhAccountID, testDBID, systemRepoIDs)
 	database.CreateSystemRepos(t, rhAccountID, testDBID, thirdPartySystemRepoIDs)
-	err = evaluateHandler(mqueue.PlatformEvent{
+	data, err = sonic.Marshal(mqueue.PlatformEvent{
 		SystemIDs:  []uuid.UUID{testInventoryID},
 		RequestIDs: []string{"request-1"},
 		OrgID:      &orgID,
 		AccountID:  rhAccountID})
+	assert.NoError(t, err)
+	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 	database.CheckSystemJustEvaluated(t, testInventoryID, 3, 1, 1, 0,
 		3, 1, 1, 0, 2, 2, 2, true)
@@ -124,10 +128,12 @@ func TestEvaluateYum(t *testing.T) {
 	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
 	database.CheckCachesValid(t)
 
-	err := evaluateHandler(mqueue.PlatformEvent{
+	data, err := sonic.Marshal(mqueue.PlatformEvent{
 		SystemIDs: []uuid.UUID{testInventoryID},
 		OrgID:     &orgID,
 		AccountID: rhAccountID})
+	assert.NoError(t, err)
+	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 
 	expectedPackageIDs := database.GetPackageIDs(expectedPackages...)
