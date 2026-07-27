@@ -106,7 +106,7 @@ func TestAdvisoriesNotificationMessage(t *testing.T) {
 	orgID := "1234567"
 	url := fmt.Sprintf("https://localhost/insights/inventory/%s", testInventoryID.String())
 
-	notification, err := ntf.MakeNotification(inv, tags, orgID, NewAdvisoryEvent, events)
+	notification, err := ntf.MakeNotification(inv, tags, orgID, ntf.NewAdvisoryEvent, events)
 	assert.Nil(t, err)
 	assert.Equal(t, orgID, notification.OrgID)
 	assert.Equal(t, url, notification.Context.HostURL)

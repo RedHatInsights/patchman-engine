@@ -13,8 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const NewAdvisoryEvent = "new-advisory"
-
 var notificationsPublisher mqueue.Writer
 
 func configureNotifications() {
@@ -95,7 +93,7 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 		return errors.Wrap(err, "getting system tags failed")
 	}
 
-	notif, err := ntf.MakeNotification(&system.Inventory, tags, orgID, NewAdvisoryEvent, events)
+	notif, err := ntf.MakeNotification(&system.Inventory, tags, orgID, ntf.NewAdvisoryEvent, events)
 	if err != nil {
 		return errors.Wrap(err, "creating notification failed")
 	}

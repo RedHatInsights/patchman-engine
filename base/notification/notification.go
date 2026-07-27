@@ -11,13 +11,13 @@ import (
 )
 
 const (
-	Version     = "v1.1.0"
-	Bundle      = "rhel"
-	Application = "patch"
+	Version          = "v1.1.0"
+	Bundle           = "rhel"
+	Application      = "patch"
+	NewAdvisoryEvent = "new-advisory"
 )
 
-// TODO: Remove Context after migrating to the new aggregator component
-// Advisories apply to multiple systems, so for aggregated notifications, system-specific context is unnecessary
+// TODO: Remove Context, MakeNotification and *Context field on Notification after fully migrating to the aggregator
 // See: https://redhat.atlassian.net/browse/RHINENG-26543
 
 type Context struct {
@@ -64,8 +64,8 @@ type Notification struct {
 	// ISO-8601 formatted date (per platform convention when the message was sent).
 	Timestamp string `json:"timestamp"`
 	// Extra information that are common to all the events that are sent in this message.
-	Context Context `json:"context,omitempty"`
-	Events  []Event `json:"events"`
+	Context *Context `json:"context,omitempty"`
+	Events  []Event  `json:"events"`
 	// Recipients settings - Applications can add extra email recipients by adding entries to this array.
 	// This setting extends whatever the Administrators configured in their Notifications settings (since v1.1.0).
 	Recipients []Recipient `json:"recipients,omitempty"`
@@ -101,7 +101,7 @@ func MakeNotification(inv *models.SystemInventory, systemTags []SystemTag, orgID
 		EventType:   eventType,
 		// ISO-8601 formatted time
 		Timestamp: time.Now().Format(time.RFC3339),
-		Context: Context{
+		Context: &Context{
 			InventoryID: inv.InventoryID,
 			DisplayName: inv.DisplayName,
 			HostURL:     hostURL,
@@ -109,5 +109,21 @@ func MakeNotification(inv *models.SystemInventory, systemTags []SystemTag, orgID
 		},
 		Events: events,
 		OrgID:  orgID,
+	}, nil
+}
+
+func MakeAccountNotification(orgID string, eventType string, events []Event) (*Notification, error) {
+	if orgID == "" || orgID == "null" {
+		return nil, errors.New("invalid orgID")
+	}
+
+	return &Notification{
+		Version:     Version,
+		Bundle:      Bundle,
+		Application: Application,
+		EventType:   eventType,
+		Timestamp:   time.Now().Format(time.RFC3339),
+		Events:      events,
+		OrgID:       orgID,
 	}, nil
 }
