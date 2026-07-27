@@ -18,11 +18,13 @@ var (
 
 func readPodConfig() {
 	consumerCount = utils.PodConfig.GetInt("consumer_count", 1)
-	enableNotifications = utils.PodConfig.GetBool("instant_notifications", false)
+	enableNotifications = utils.PodConfig.GetBool("enable_notifications", false)
+	batchSize = utils.PodConfig.GetInt("advisory_batch_size", 4000)
 }
 
 func configure() {
 	advisoryUpdateTopic = utils.FailIfEmpty(utils.CoreCfg.AdvisoryUpdateTopic, "ADVISORY_UPDATE_TOPIC")
+	initBuffer()
 	configureNotifications()
 }
 

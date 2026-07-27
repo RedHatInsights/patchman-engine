@@ -1,20 +1,78 @@
 package aggregator
 
 import (
+	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
+	"sync"
 
-	"github.com/bytedance/sonic"
+	"github.com/lib/pq"
 )
 
-// TODO: stub - will process advisory update events in batches and update account_advisory table
-func advisoryUpdateHandler(m mqueue.KafkaMessage) error {
-	var event mqueue.AdvisoryUpdateEvent
-	if err := sonic.Unmarshal(m.Value, &event); err != nil {
-		utils.LogError("err", err, "Could not deserialize advisory update event")
-		return nil
+var (
+	batchSize      int
+	advisoryBuffer []mqueue.AdvisoryUpdateEvent
+	bufferLock     sync.Mutex
+)
+
+func initBuffer() {
+	advisoryBuffer = make([]mqueue.AdvisoryUpdateEvent, 0, batchSize+1)
+}
+
+func advisoryUpdateHandler(event mqueue.AdvisoryUpdateEvent) error {
+	bufferLock.Lock()
+	advisoryBuffer = append(advisoryBuffer, event)
+	shouldFlush := len(advisoryBuffer) >= batchSize
+	var batch []mqueue.AdvisoryUpdateEvent
+	if shouldFlush {
+		batch = make([]mqueue.AdvisoryUpdateEvent, len(advisoryBuffer))
+		copy(batch, advisoryBuffer)
+		advisoryBuffer = advisoryBuffer[:0]
 	}
-	// TODO: advisory update code goes here
-	_ = event
+	bufferLock.Unlock()
+
+	if shouldFlush {
+		grouped := groupAdvisoryUpdates(batch)
+		processAdvisoryBatch(grouped)
+	}
 	return nil
+}
+
+func groupAdvisoryUpdates(events []mqueue.AdvisoryUpdateEvent) map[int][]int64 {
+	sets := make(map[int]map[int64]struct{})
+	for _, e := range events {
+		if _, ok := sets[e.RhAccountID]; !ok {
+			sets[e.RhAccountID] = make(map[int64]struct{})
+		}
+		for _, id := range e.AdvisoryIDs {
+			sets[e.RhAccountID][id] = struct{}{}
+		}
+	}
+
+	grouped := make(map[int][]int64, len(sets))
+	for accID, idSet := range sets {
+		ids := make([]int64, 0, len(idSet))
+		for id := range idSet {
+			ids = append(ids, id)
+		}
+		grouped[accID] = ids
+	}
+	return grouped
+}
+
+func processAdvisoryBatch(grouped map[int][]int64) {
+	for rhAccountID, advisoryIDs := range grouped {
+		utils.LogInfo("rh_account_id", rhAccountID, "advisory_count", len(advisoryIDs), "refreshing account advisory caches")
+		err := database.DB.Exec("SELECT refresh_account_advisory_caches_multi(?, ?)", pq.Array(advisoryIDs), rhAccountID).Error //nolint:lll
+		if err != nil {
+			utils.LogError("err", err, "rh_account_id", rhAccountID, "failed to refresh account advisory caches")
+			continue
+		}
+
+		checkAdvisoryDrift(rhAccountID, advisoryIDs)
+
+		if err := publishNewAdvisoryNotification(rhAccountID, advisoryIDs); err != nil {
+			utils.LogError("err", err, "rh_account_id", rhAccountID, "failed to publish new advisory notification")
+		}
+	}
 }
