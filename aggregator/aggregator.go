@@ -39,7 +39,7 @@ func runServer() {
 }
 
 func subscribeToAdvisoryUpdates(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
-	handler := mqueue.MakeRetryingHandler(mqueue.MakeAdvisoryUpdateHandler(advisoryUpdateHandler))
+	handler := mqueue.MakeRetryingHandler(advisoryUpdateHandler)
 	for i := 0; i < consumerCount; i++ {
 		mqueue.SpawnReader(base.Context, wg, advisoryUpdateTopic, readerBuilder, handler)
 		utils.LogDebug("spawned advisory update reader", i)

@@ -26,7 +26,11 @@ func prepareTemplateAdvisoryIntegrationTest() {
 }
 
 func evaluateHandlerForTest(event mqueue.PlatformEvent) error {
-	return evaluateHandler(event)
+	data, err := sonic.Marshal(event)
+	if err != nil {
+		return err
+	}
+	return evaluateHandler(mqueue.KafkaMessage{Value: data})
 }
 
 // nolint: funlen

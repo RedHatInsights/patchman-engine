@@ -62,11 +62,13 @@ func TestEvaluate(t *testing.T) {
 	database.CheckCachesValid(t)
 
 	// do evaluate the system
-	err := evaluateHandler(mqueue.PlatformEvent{
+	data, err := sonic.Marshal(mqueue.PlatformEvent{
 		SystemIDs:  []uuid.UUID{testInventoryID, testInventoryID2},
 		RequestIDs: []string{"request-1", "request-2"},
 		OrgID:      &orgID,
 		AccountID:  rhAccountID})
+	assert.NoError(t, err)
+	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
@@ -80,11 +82,13 @@ func TestEvaluate(t *testing.T) {
 	thirdPartySystemRepoIDs := []int64{1, 2, 4}
 	database.DeleteSystemRepos(t, rhAccountID, testDBID, systemRepoIDs)
 	database.CreateSystemRepos(t, rhAccountID, testDBID, thirdPartySystemRepoIDs)
-	err = evaluateHandler(mqueue.PlatformEvent{
+	data, err = sonic.Marshal(mqueue.PlatformEvent{
 		SystemIDs:  []uuid.UUID{testInventoryID},
 		RequestIDs: []string{"request-1"},
 		OrgID:      &orgID,
 		AccountID:  rhAccountID})
+	assert.NoError(t, err)
+	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 	database.CheckSystemJustEvaluated(t, testInventoryID, 3, 1, 1, 0,
 		3, 1, 1, 0, 2, 2, 2, true)
@@ -124,10 +128,12 @@ func TestEvaluateYum(t *testing.T) {
 	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
 	database.CheckCachesValid(t)
 
-	err := evaluateHandler(mqueue.PlatformEvent{
+	data, err := sonic.Marshal(mqueue.PlatformEvent{
 		SystemIDs: []uuid.UUID{testInventoryID},
 		OrgID:     &orgID,
 		AccountID: rhAccountID})
+	assert.NoError(t, err)
+	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 
 	expectedPackageIDs := database.GetPackageIDs(expectedPackages...)
@@ -351,6 +357,147 @@ func TestSatelliteSystemAdvisories(t *testing.T) {
 	}
 	assert.Equal(t, 2, installableCnt)
 	assert.Equal(t, 2, applicableCnt)
+}
+
+// nolint:funlen
+func TestBootcSystemAdvisories(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	utils.SkipWithoutPlatform(t)
+	core.SetupTestEnvironment()
+
+	ogYumUpdatesEval := enableYumUpdatesEval
+	enableYumUpdatesEval = true
+	defer func() { enableYumUpdatesEval = ogYumUpdatesEval }()
+
+	configure()
+	loadCache()
+	mockWriter := mqueue.MockKafkaWriter{}
+	remediationsPublisher = &mockWriter
+
+	vmaasJSON := `
+	{
+		"package_list": [
+			"git-2.30.1-1.el8_8.x86_64",
+			"sqlite-3.21.0-1.el8_6.x86_64"
+		],
+		"repository_list": [
+			"rhel-8-for-x86_64-appstream-rpms"
+		],
+		"releasever": "8",
+		"basearch": "x86_64",
+		"latest_only": true
+	}
+	`
+	vmaasDataResp := `
+	{
+		"update_list": {
+			"git-2.30.1-1.el8_8.x86_64": {
+				"available_updates": [
+					{
+						"erratum": "RHSA-2023:3246",
+						"basearch": "x86_64",
+						"releasever": "8",
+						"repository": "rhel-8-for-x86_64-appstream-rpms",
+						"package": "git-2.39.3-1.el8_8.x86_64",
+						"package_name": "git",
+						"evra": "0:2.39.3-1.el8_8.x86_64"
+					},
+					{
+						"erratum": "RHSA-2023:3240",
+						"basearch": "x86_64",
+						"releasever": "8",
+						"repository": "rhel-8-for-x86_64-appstream-rpms",
+						"package": "git-2.39.4-1.el8_8.x86_64",
+						"package_name": "git",
+						"evra": "0:2.39.4-1.el8_8.x86_64"
+					}
+				]
+			},
+			"sqlite-3.21.0-1.el8_6.x86_64": {
+				"available_updates": [
+					{
+						"erratum": "RHSA-2022:7100",
+						"basearch": "x86_64",
+						"releasever": "8",
+						"repository": "rhel-8-for-x86_64-appstream-rpms",
+						"package": "sqlite-3.26.0-16.el8_6.x86_64",
+						"package_name": "sqlite",
+						"evra": "0:3.26.0-16.el8_6.x86_64"
+					}
+				]
+			}
+		}
+	}
+	`
+
+	var vmaasData vmaas.UpdatesV3Response
+	err := sonic.Unmarshal([]byte(vmaasDataResp), &vmaasData)
+	assert.Nil(t, err)
+
+	vmaasJSONChecksum := "bootc-1337"
+	memoryVmaasCache.Add(&vmaasJSONChecksum, &vmaasData)
+
+	yumUpdatesRaw := []byte(`
+		{
+			"update_list": {
+				"git-2.30.1-1.el8_8.x86_64": {
+					"available_updates": [
+						{
+							"erratum": "RHSA-2023:3246",
+							"basearch": "x86_64",
+							"releasever": "8",
+							"repository": "rhel-8-for-x86_64-appstream-rpms",
+							"package": "git-0:2.39.3-1.el8_8.x86_64"
+						}
+					]
+				},
+				"sqlite-3.21.0-1.el8_6.x86_64": {
+					"available_updates": [
+						{
+							"erratum": "RHSA-2022:7108",
+							"basearch": "x86_64",
+							"releasever": "8",
+							"repository": "rhel-8-for-x86_64-appstream-rpms",
+							"package": "sqlite-3.26.0-16.el8_6.x86_64"
+						}
+					]
+				}
+			}
+		}
+		`)
+
+	system := &models.SystemPlatformV2{
+		Inventory: models.SystemInventory{
+			InventoryID:   uuid.MustParse("99999999-0000-0000-0000-000000000016"),
+			JSONChecksum:  &vmaasJSONChecksum,
+			VmaasJSON:     &vmaasJSON,
+			YumUpdates:    yumUpdatesRaw,
+			DisplayName:   "bootc_system_test1",
+			RhAccountID:   1,
+			BuiltPkgcache: true,
+			Bootc:         true,
+		},
+		Patch: models.SystemPatch{},
+	}
+
+	result, err := getUpdatesData(context.Background(), system)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	// bootc systems cannot be patched via Insights: every update must be applicable
+	var installableCnt, applicableCnt int
+	for _, updates := range result.GetUpdateList() {
+		for _, update := range updates.GetAvailableUpdates() {
+			switch update.StatusID {
+			case INSTALLABLE:
+				installableCnt++
+			case APPLICABLE:
+				applicableCnt++
+			}
+		}
+	}
+	assert.Equal(t, 0, installableCnt)
+	assert.Equal(t, 4, applicableCnt)
 }
 
 func TestCallVmaas400(t *testing.T) {
