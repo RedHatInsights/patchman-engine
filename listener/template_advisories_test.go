@@ -13,6 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const orgID = "org_1"
+
 func setupContentSourcesClient(t *testing.T) {
 	originalAddress := utils.CoreCfg.ContentSourcesAddress
 	address := utils.Getenv("CONTENT_SOURCES_ADDRESS", "http://platform:9001")
@@ -34,7 +36,6 @@ func TestCallCSTemplateAdvisories(t *testing.T) {
 	setupContentSourcesClient(t)
 
 	templateUUID := "99900000-0000-0000-0000-000000000001"
-	orgID := "org_1"
 	ctx := identity.WithIdentity(context.Background(), utils.XRHIDForOrg(orgID, utils.CoreCfg.ContentSourcesUser))
 	result, err := callCSTemplateAdvisories(ctx, templateUUID)
 
@@ -124,7 +125,6 @@ func TestSyncTemplateAdvisories(t *testing.T) {
 
 	templateID := int64(1)
 	templateUUID := "99900000-0000-0000-0000-000000000001"
-	orgID := "org_1"
 
 	// DB has RH-1 and RH-2 linked to the template
 	database.CreateTemplateAdvisories(t, accountID, templateID, []int64{1, 2})
@@ -145,4 +145,25 @@ func TestSyncTemplateAdvisories(t *testing.T) {
 		Count(&count).Error
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), count)
+}
+
+func TestSyncTemplateAdvisories_TemplateNotFound(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	setupContentSourcesClient(t)
+
+	templateID := int64(1)
+	templateUUID := "40499999-9999-9999-9999-999999999404"
+
+	// DB has RH-1 and RH-2 linked to the template
+	database.CreateTemplateAdvisories(t, accountID, templateID, []int64{1, 2})
+	defer database.DeleteTemplateAdvisories(t, templateID, []int64{1, 2})
+
+	// content sources mock returns 404 for this template UUID
+	ctx := identity.WithIdentity(context.Background(), utils.XRHIDForOrg(orgID, utils.CoreCfg.ContentSourcesUser))
+	err := syncTemplateAdvisories(ctx, accountID, templateID, templateUUID, orgID)
+	assert.Nil(t, err)
+
+	// sync was skipped and no advisories were changed
+	database.CheckTemplateAdvisories(t, templateID, []int64{1, 2})
 }

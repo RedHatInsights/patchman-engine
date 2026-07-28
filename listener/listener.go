@@ -9,6 +9,7 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+	"github.com/pkg/errors"
 	"strings"
 	"sync"
 	"time"
@@ -40,8 +41,9 @@ var (
 	createdEventsBuffer eventBuffer
 
 	// Content sources client
-	contentSourcesClient  *api.Client
-	contentSourcesBaseURL string
+	contentSourcesClient              *api.Client
+	contentSourcesBaseURL             string
+	errContentSourcesTemplateNotFound = errors.New("content sources template not found")
 )
 
 const (
