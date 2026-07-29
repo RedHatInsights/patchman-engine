@@ -5,35 +5,53 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"sync"
+	"time"
 
 	"github.com/lib/pq"
 )
 
 var (
 	batchSize      int
+	flushTimeout   time.Duration
 	advisoryBuffer []mqueue.AdvisoryUpdateEvent
 	bufferLock     sync.Mutex
+	flushTimer     *time.Timer
 )
 
 func initBuffer() {
 	advisoryBuffer = make([]mqueue.AdvisoryUpdateEvent, 0, batchSize+1)
+	flushTimer = time.AfterFunc(87600*time.Hour, func() {
+		utils.LogInfo("flushing advisory buffer after timeout")
+		flushAdvisoryBuffer()
+	})
+}
+
+func flushAdvisoryBuffer() {
+	bufferLock.Lock()
+	if len(advisoryBuffer) == 0 {
+		bufferLock.Unlock()
+		return
+	}
+	// Copy and unlock before processing so new events can accumulate while DB work runs
+	batch := make([]mqueue.AdvisoryUpdateEvent, len(advisoryBuffer))
+	copy(batch, advisoryBuffer)
+	advisoryBuffer = advisoryBuffer[:0]
+	bufferLock.Unlock()
+
+	grouped := groupAdvisoryUpdates(batch)
+	processAdvisoryBatch(grouped)
 }
 
 func advisoryUpdateHandler(event mqueue.AdvisoryUpdateEvent) error {
 	bufferLock.Lock()
 	advisoryBuffer = append(advisoryBuffer, event)
+	flushTimer.Reset(flushTimeout)
 	shouldFlush := len(advisoryBuffer) >= batchSize
-	var batch []mqueue.AdvisoryUpdateEvent
-	if shouldFlush {
-		batch = make([]mqueue.AdvisoryUpdateEvent, len(advisoryBuffer))
-		copy(batch, advisoryBuffer)
-		advisoryBuffer = advisoryBuffer[:0]
-	}
 	bufferLock.Unlock()
 
 	if shouldFlush {
-		grouped := groupAdvisoryUpdates(batch)
-		processAdvisoryBatch(grouped)
+		utils.LogInfo("flushing full advisory buffer")
+		flushAdvisoryBuffer()
 	}
 	return nil
 }

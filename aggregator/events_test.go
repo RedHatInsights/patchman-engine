@@ -7,6 +7,7 @@ import (
 	"app/base/utils"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -60,6 +61,7 @@ func TestBufferedEventsProcessedOnBatchThreshold(t *testing.T) {
 	defer database.DeleteAccountAdvisoryByAccount(t, 1)
 
 	batchSize = 3
+	flushTimeout = time.Hour
 	initBuffer()
 
 	event := mqueue.AdvisoryUpdateEvent{RhAccountID: 1, AdvisoryIDs: []int64{1, 2}}
