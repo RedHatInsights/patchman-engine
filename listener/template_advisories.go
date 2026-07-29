@@ -6,16 +6,21 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"context"
-	"net/http"
-
 	"github.com/pkg/errors"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+	"net/http"
 )
 
+// nolint: funlen
 func syncTemplateAdvisories(ctx context.Context, accountID int, templateID int64, templateUUID, orgID string) error {
 	current, err := callCSTemplateAdvisories(ctx, templateUUID)
 	if err != nil {
+		if errors.Is(err, errContentSourcesTemplateNotFound) {
+			utils.LogWarn("template_uuid", templateUUID, "template not found in content sources, skipping", err.Error())
+			return nil
+		}
 		return errors.Wrap(err, "fetching current template advisories from content-sources")
 	}
 
@@ -46,7 +51,10 @@ func syncTemplateAdvisories(ctx context.Context, accountID int, templateID int64
 	}
 
 	if len(toInsert) > 0 {
-		err = database.BulkInsert(tx, toInsert)
+		txOnConflict := tx.Clauses(clause.OnConflict{
+			DoNothing: true,
+		})
+		err = database.BulkInsert(txOnConflict, toInsert)
 		if err != nil {
 			return errors.Wrap(err, "bulk inserting added template advisories")
 		}
@@ -186,6 +194,9 @@ func httpCallCSTemplateAdvisories(ctx context.Context, templateUUID string) (
 	url := contentSourcesBaseURL + "/templates/" + templateUUID + "/advisories/ids"
 	var resp content_sources.TemplateAdvisoryIDsResponse
 	httpResp, err := client.Request(&ctx, http.MethodGet, url, nil, &resp)
+	if err != nil && httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
+		return &resp, httpResp, errors.Wrap(errContentSourcesTemplateNotFound, err.Error())
+	}
 
 	return &resp, httpResp, err
 }
