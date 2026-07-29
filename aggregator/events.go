@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/lib/pq"
 )
 
@@ -42,7 +43,13 @@ func flushAdvisoryBuffer() {
 	processAdvisoryBatch(grouped)
 }
 
-func advisoryUpdateHandler(event mqueue.AdvisoryUpdateEvent) error {
+func advisoryUpdateHandler(m mqueue.KafkaMessage) error {
+	var event mqueue.AdvisoryUpdateEvent
+	if err := sonic.Unmarshal(m.Value, &event); err != nil {
+		utils.LogError("err", err, "could not deserialize advisory update event")
+		return nil
+	}
+
 	bufferLock.Lock()
 	advisoryBuffer = append(advisoryBuffer, event)
 	flushTimer.Reset(flushTimeout)

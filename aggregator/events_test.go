@@ -9,8 +9,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/assert"
 )
+
+func toKafkaMessage(t *testing.T, event mqueue.AdvisoryUpdateEvent) mqueue.KafkaMessage {
+	t.Helper()
+	data, err := sonic.Marshal(event)
+	assert.Nil(t, err)
+	return mqueue.KafkaMessage{Value: data}
+}
 
 func TestGroupAdvisoryUpdatesSingleAccount(t *testing.T) {
 	events := []mqueue.AdvisoryUpdateEvent{
@@ -64,16 +72,16 @@ func TestBufferedEventsProcessedOnBatchThreshold(t *testing.T) {
 	flushTimeout = time.Hour
 	initBuffer()
 
-	event := mqueue.AdvisoryUpdateEvent{RhAccountID: 1, AdvisoryIDs: []int64{1, 2}}
+	msg := toKafkaMessage(t, mqueue.AdvisoryUpdateEvent{RhAccountID: 1, AdvisoryIDs: []int64{1, 2}})
 
 	// First two events accumulate in the buffer
-	assert.Nil(t, advisoryUpdateHandler(event))
+	assert.Nil(t, advisoryUpdateHandler(msg))
 	assert.Equal(t, 1, len(advisoryBuffer))
-	assert.Nil(t, advisoryUpdateHandler(event))
+	assert.Nil(t, advisoryUpdateHandler(msg))
 	assert.Equal(t, 2, len(advisoryBuffer))
 
 	// Third event triggers flush and processAdvisoryBatch runs
-	assert.Nil(t, advisoryUpdateHandler(event))
+	assert.Nil(t, advisoryUpdateHandler(msg))
 	assert.Equal(t, 0, len(advisoryBuffer))
 
 	// Verify account_advisory was populated
