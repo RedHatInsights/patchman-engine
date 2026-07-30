@@ -76,16 +76,18 @@ func writePlatformEvents(ctx context.Context, w Writer, events ...PlatformEvent)
 	return w.WriteMessages(ctx, msgs...)
 }
 
-func batchSize(grouped map[int][]uuid.UUID) int {
-	// compute how many batches we will create
+func batchCount(grouped map[int][]uuid.UUID, size int) int {
+	if size <= 0 {
+		size = BatchSize
+	}
 	var batches = 0
 	for _, ev := range grouped {
-		batches += len(ev)/BatchSize + 1
+		batches += (len(ev) + size - 1) / size
 	}
 	return batches
 }
 
-func (evals EvalDataSlice) getAccountEvalData() (int, accountInventories, accountRequests, orgIDs) {
+func (evals EvalDataSlice) getAccountEvalData(size int) (int, accountInventories, accountRequests, orgIDs) {
 	// group systems by account
 	invs := accountInventories{}
 	reqs := accountRequests{}
@@ -97,30 +99,41 @@ func (evals EvalDataSlice) getAccountEvalData() (int, accountInventories, accoun
 			orgs[e.RhAccountID] = e.OrgID
 		}
 	}
-	return batchSize(invs), invs, reqs, orgs
+	return batchCount(invs, size), invs, reqs, orgs
 }
 
 func (evals EvalDataSlice) WriteEvents(ctx context.Context, w Writer) error {
-	batches, accInvs, reqs, orgs := evals.getAccountEvalData()
-	// create events, per BatchSize of systems from one account
+	return evals.writeEvents(ctx, w, BatchSize, false)
+}
+
+// WriteEventsSkipNotifications publishes recalc events in batches of batchSize systems
+// per account with SkipNotifications set. Used by one-off recovery jobs.
+func (evals EvalDataSlice) WriteEventsSkipNotifications(ctx context.Context, w Writer, batchSize int) error {
+	return evals.writeEvents(ctx, w, batchSize, true)
+}
+
+func (evals EvalDataSlice) writeEvents(ctx context.Context, w Writer, size int, skipNotifications bool) error {
+	if size <= 0 {
+		size = BatchSize
+	}
+	batches, accInvs, reqs, orgs := evals.getAccountEvalData(size)
 	now := types.Rfc3339Timestamp(time.Now())
 	events := make(PlatformEvents, 0, batches)
 	for acc, invs := range accInvs {
-		for start := 0; start < len(invs); start += BatchSize {
-			end := start + BatchSize
+		for start := 0; start < len(invs); start += size {
+			end := start + size
 			if end > len(invs) {
 				end = len(invs)
 			}
 			events = append(events, PlatformEvent{
-				Timestamp:  &now,
-				AccountID:  acc,
-				SystemIDs:  invs[start:end],
-				RequestIDs: reqs[acc][start:end],
-				OrgID:      orgs[acc],
+				Timestamp:         &now,
+				AccountID:         acc,
+				SystemIDs:         invs[start:end],
+				RequestIDs:        reqs[acc][start:end],
+				OrgID:             orgs[acc],
+				SkipNotifications: skipNotifications,
 			})
 		}
 	}
-	// write events to queue
-	err := writePlatformEvents(ctx, w, events...)
-	return err
+	return writePlatformEvents(ctx, w, events...)
 }

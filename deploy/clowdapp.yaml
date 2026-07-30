@@ -594,6 +594,39 @@ objects:
                                                       key: vmaas-sync-database-password}}}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
 
+    - name: system-advisories-0-recovery
+      # One-shot Job (no schedule): runs on deploy / CJI like db-migration.
+      # No-op unless JOBS_CONFIG includes system_advisories_0_recovery=true.
+      completions: 1
+      parallelism: 1
+      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
+        command:
+          - ./scripts/entrypoint.sh
+          - job
+          - system_advisories_0_recovery
+        env:
+        - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
+        - {name: GIN_MODE, value: '${GIN_MODE}'}
+        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
+        - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
+        - {name: DB_USER, value: vmaas_sync}
+        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                      key: vmaas-sync-database-password}}}
+        - {name: KAFKA_GROUP, value: patchman}
+        - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
+        - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
+        - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
+        - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}  # set system_advisories_0_recovery=true for cutover
+
     database:
       name: patchman
       version: 16
@@ -636,6 +669,22 @@ objects:
     disabled: ${{DB_MIGRATION_DISABLED}}
     jobs:
       - db-migration
+
+# One-off system_advisories_0 recovery recalc. Keep disabled; enable for cutover deploy with
+# JOBS_CONFIG=system_advisories_0_recovery=true, then disable again.
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdJobInvocation
+  metadata:
+    annotations:
+      clowder.redhat.com/expected-image-tag: ${IMAGE_TAG}
+    labels:
+      app: patchman
+    name: system-advisories-0-recovery-${IMAGE_TAG}-${CJI_UID}
+  spec:
+    appName: patchman
+    disabled: ${{SA0_RECOVERY_DISABLED}}
+    jobs:
+      - system-advisories-0-recovery
 
 - apiVersion: metrics.console.redhat.com/v1alpha1
   kind: FloorPlan
@@ -850,7 +899,7 @@ parameters:
 - {name: JOBS_TIMEOUT, value: '1800'}  # 30 min timeout for jobs
 - {name: PROMETHEUS_PUSHGATEWAY, required: true, value: "pushgateway"}
 - {name: DB_READ_REPLICA_ENABLED_JOBS, value: 'TRUE'}
-- {name: JOBS_CONFIG, value: ''}
+- {name: JOBS_CONFIG, value: ''} # e.g. system_advisories_0_recovery=true for SA0 recovery job cutover
 
 # DB migration
 - {name: DB_MIGRATION_DISABLED, value: 'false'} # Disable db-migration job execution
@@ -858,6 +907,8 @@ parameters:
   description: Unique db-migration CJI name suffix
   generate: expression
   from: '[a-z0-9]{6}'
+# system_advisories_0 recovery recalc CJI (one-off; keep disabled unless cutover)
+- {name: SA0_RECOVERY_DISABLED, value: 'true'} # set false + JOBS_CONFIG=system_advisories_0_recovery=true for cutover
 # VMaaS sync
 - {name: VMAAS_SYNC_SCHEDULE, value: '*/5 * * * *'} # Cronjob schedule definition
 - {name: VMAAS_SYNC_SUSPEND, value: 'false'} # Disable cronjob execution
