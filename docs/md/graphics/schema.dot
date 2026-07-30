@@ -1,5 +1,6 @@
 // dot schema.dot -Tpng -o schema.png -Gdpi=100
 digraph G {
+  rankdir="LR"
   node[shape="Mrecord"
        style="filled"]
 
@@ -19,6 +20,12 @@ digraph G {
     vmaas -> evaluator_recalc [label="http:8080", style="dashed"]
     evaluator_recalc -> db [label="psql:5432", dir="both"]
     evaluator_recalc -> remediations [label="kafka:9092", style="dotted,bold"]
+
+    evaluator_upload -> aggregator [label="kafka:9092", style="dotted,bold"]
+    aggregator -> db [label="psql:5432", dir="both"]
+    aggregator -> notifications [label="kafka:9092", style="dotted,bold"]
+
+    {rank=same; evaluator_upload; aggregator}
 
     vmaas -> vmaas_sync [label="http:8080", style="dashed"]
     vmaas -> vmaas_sync [label="ws:8082", style="dashed"]
@@ -70,6 +77,13 @@ digraph G {
            </table>>
            fillcolor="lightblue"]
 
+     aggregator [label=<
+           <table border="0">
+            <tr><td><img src="icon_gopher.png"/></td></tr>
+            <tr><td>aggregator</td></tr>
+           </table>>
+           fillcolor="lightblue"]
+
      db_admin [label=<
            <table border="0">
             <tr><td><img src="icon_gopher.png"/></td></tr>
@@ -114,5 +128,11 @@ digraph G {
            </table>>
           fillcolor="gray92"]
     
+    notifications [label=<
+           <table border="0">
+            <tr><td>Notifications</td></tr>
+           </table>>
+          fillcolor="gray92"]
+
     client [label="HTTP Client", fillcolor="gray92"]
 }
