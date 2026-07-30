@@ -6,6 +6,7 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,11 +19,14 @@ var (
 
 func readPodConfig() {
 	consumerCount = utils.PodConfig.GetInt("consumer_count", 1)
-	enableNotifications = utils.PodConfig.GetBool("instant_notifications", false)
+	enableNotifications = utils.PodConfig.GetBool("enable_notifications", false)
+	batchSize = utils.PodConfig.GetInt("advisory_batch_size", 4000)
+	flushTimeout = time.Duration(utils.PodConfig.GetInt("advisory_flush_timeout_ms", 500)) * time.Millisecond
 }
 
 func configure() {
 	advisoryUpdateTopic = utils.FailIfEmpty(utils.CoreCfg.AdvisoryUpdateTopic, "ADVISORY_UPDATE_TOPIC")
+	initBuffer()
 	configureNotifications()
 }
 

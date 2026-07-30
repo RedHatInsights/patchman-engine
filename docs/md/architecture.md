@@ -2,7 +2,7 @@
 The project is written as a set of communicating containers. It allows to scale different parts of the application
 according to needs. It also increases application robustness, because even if one component have some issues (errors, down times), the others are not impacted with that work.
 
-The components are `manager`, `listener`, `evaluator-{upload,recalc}`, `vmaas_sync`, `database` and
+The components are `manager`, `listener`, `evaluator-{upload,recalc}`, `aggregator`, `vmaas_sync`, `database` and
 `database_admin`.
 
 ### Components
@@ -42,6 +42,15 @@ changes (`patchman.evaluator.user-evaluation` topic). Recalc messages carry expl
 resolves template-assigned systems before sending. The requests are separated
 as when there is a heavy load from inventory at the time it may take very long for systems to be recalculated/updated.
 See [component environment variables](../../conf/evaluator_user_evaluation.env)
+
+- **aggregator** - maintains per-account, per-workspace advisory counts. When the evaluator processes a system upload or
+recalculation and updates **`system_advisories`**, it publishes an `AdvisoryUpdateEvent` to the `patchman.advisory.update`
+Kafka topic listing which advisory IDs changed for a given account. The aggregator consumes these events and recounts
+how many systems have each advisory applicable or installable, writing the results to **`account_advisory`**. This is the
+workspace-aware replacement for **`advisory_account_data`** (previously maintained by the evaluator). Incoming events are
+batched before processing. When `enable_notifications` is set in `POD_CONFIG`, the aggregator also publishes
+new installable advisories to `platform.notifications.ingress` and marks them as notified in **`account_advisory`**.
+See [component environment variables](../../conf/aggregator.env)
 
 - **vmaas-sync** - connects to [VMaaS](https://github.com/RedHatInsights/vmaas), and upon receiving notification about
 updated data, syncs new advisories into the database, and requests re-evaluation for systems which could be affected by
