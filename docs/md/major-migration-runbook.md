@@ -147,6 +147,18 @@ Config keys are defined in `database_admin/config.go`. ClowdApp comments in `dep
 
 `NOLOGIN` alone does not close existing connections — that is why this flag exists.
 
+### `repair_system_advisories_0`
+
+| | |
+|---|---|
+| **Config key** | `repair_system_advisories_0` (boolean, default `false`) |
+| **Where** | `DATABASE_ADMIN_CONFIG` on the **db-migration Job** only |
+| **Effect** | After migrate CONTINUE/MIGRATE, runs `prepareForMigration`, then `database_admin/schema/repair_system_advisories_0.sql`: `TRUNCATE system_advisories_0`, clear bucket-0 `advisory_account_data` and `account_advisory`. **Destructive** for hash remainder 0. |
+
+**Enable when:** one-off recovery from corrupt/unreadable `system_advisories_0`. Combine with `terminate_db_sessions=true` if truncate is blocked by app sessions.
+
+**Leave off for all normal deploys.** Remove after the cutover succeeds. Do not enable on manager/listener/evaluator pods.
+
 ---
 
 ## During deploy
