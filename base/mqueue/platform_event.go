@@ -22,6 +22,10 @@ type PlatformEvent struct {
 	URL         *string                 `json:"url"`
 	SystemIDs   []uuid.UUID             `json:"system_ids,omitempty"`
 	RequestIDs  []string                `json:"request_ids,omitempty"`
+	// SkipNotifications suppresses instant advisory notification publish for this event.
+	// Evaluator still marks matching advisory_account_data.notified so later evals do not flood.
+	// Used by recovery recalc; omit/false for normal upload/recalc traffic.
+	SkipNotifications bool `json:"skip_notifications,omitempty"`
 }
 
 type EvalData struct {
