@@ -8137,6 +8137,9 @@
                     "id": {
                         "type": "string"
                     },
+                    "image_based": {
+                        "type": "boolean"
+                    },
                     "installable_other_count": {
                         "type": "integer"
                     },
@@ -8289,6 +8292,9 @@
                             "$ref": "#/components/schemas/controllers.SystemGroup"
                         }
                     },
+                    "image_based": {
+                        "type": "boolean"
+                    },
                     "installable_other_count": {
                         "type": "integer"
                     },
@@ -8410,6 +8416,9 @@
                         "items": {
                             "$ref": "#/components/schemas/controllers.SystemGroup"
                         }
+                    },
+                    "image_based": {
+                        "type": "boolean"
                     },
                     "installable_other_count": {
                         "type": "integer"

@@ -85,6 +85,10 @@ type SystemSatelliteManaged struct {
 	SatelliteManaged bool `json:"satellite_managed" csv:"satellite_managed" query:"si.satellite_managed" gorm:"column:satellite_managed"`
 }
 
+type SystemBootc struct {
+	Bootc bool `json:"image_based" csv:"image_based" query:"si.bootc" gorm:"column:bootc"`
+}
+
 type SystemBuiltPkgcache struct {
 	BuiltPkgcache bool `json:"built_pkgcache" csv:"built_pkgcache" query:"si.built_pkgcache" gorm:"column:built_pkgcache"`
 }
