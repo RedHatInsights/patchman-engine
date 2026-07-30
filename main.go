@@ -77,6 +77,8 @@ func runJob(name string) {
 		caches.RunPackageRefresh()
 	case "repack":
 		repack.RunRepack()
+	case "account_advisory_backfill":
+		caches.RunAccountAdvisoryBackfill()
 	case "clean_advisory_account_data":
 		cleaning.RunCleanAdvisoryAccountData()
 	case "system_advisories_0_recovery":

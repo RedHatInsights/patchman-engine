@@ -26,7 +26,7 @@ func TestCheckAdvisoryDriftCountMismatch(t *testing.T) {
 	hook := utils.NewTestLogHook(log.WarnLevel)
 	log.AddHook(hook)
 
-	checkAdvisoryDrift(1, []int64{1})
+	CheckAdvisoryDrift(1, []int64{1})
 
 	found := false
 	for _, entry := range hook.LogEntries {
@@ -48,7 +48,7 @@ func TestCheckAdvisoryDriftMissingFromNew(t *testing.T) {
 	hook := utils.NewTestLogHook(log.WarnLevel)
 	log.AddHook(hook)
 
-	checkAdvisoryDrift(1, []int64{1, 2})
+	CheckAdvisoryDrift(1, []int64{1, 2})
 
 	found := false
 	for _, entry := range hook.LogEntries {

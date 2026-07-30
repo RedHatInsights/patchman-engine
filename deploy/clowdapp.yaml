@@ -594,6 +594,34 @@ objects:
                                                       key: vmaas-sync-database-password}}}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
 
+    - name: account-advisory-backfill
+      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
+      schedule: ${ACCOUNT_ADVISORY_BACKFILL_SCHEDULE}
+      suspend: ${{ACCOUNT_ADVISORY_BACKFILL_SUSPEND}}
+      concurrencyPolicy: Forbid
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+              - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
+        command:
+          - ./scripts/entrypoint.sh
+          - job
+          - account_advisory_backfill
+        env:
+          - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
+          - {name: GIN_MODE, value: '${GIN_MODE}'}
+          - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
+          - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
+          - {name: DB_USER, value: vmaas_sync}
+          - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                         key: vmaas-sync-database-password}}}
+          - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
+
     - name: system-advisories-0-recovery
       # One-shot Job (no schedule): runs on deploy / CJI like db-migration.
       # No-op unless JOBS_CONFIG includes system_advisories_0_recovery=true.
@@ -934,6 +962,9 @@ parameters:
 # Clean advisory_account_data
 - {name: CLEAN_AAD_SCHEDULE, value: '0 12 * * *'} # Cronjob schedule definition
 - {name: CLEAN_AAD_SUSPEND, value: 'false'} # Disable cronjob execution
+# Backfill account_advisory
+- {name: ACCOUNT_ADVISORY_BACKFILL_SCHEDULE, value: '0 3 * * *'} # Cronjob schedule definition
+- {name: ACCOUNT_ADVISORY_BACKFILL_SUSPEND, value: 'true'} # Suspended until ready to run
 
 # Database admin
 - {name: MIGRATION_TIMEOUT, value: '7200'}  # 2h timeout for db-migration job
