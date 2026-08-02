@@ -566,10 +566,10 @@ objects:
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
 
-    - name: clean-advisory-account-data
+    - name: clean-account-advisory
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
-      schedule: ${CLEAN_AAD_SCHEDULE}
-      suspend: ${{CLEAN_AAD_SUSPEND}}
+      schedule: ${CLEAN_AA_SCHEDULE}
+      suspend: ${{CLEAN_AA_SUSPEND}}
       concurrencyPolicy: Forbid
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
@@ -583,7 +583,7 @@ objects:
         command:
           - ./scripts/entrypoint.sh
           - job
-          - clean_advisory_account_data
+          - clean_account_advisory
         env:
         - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
         - {name: GIN_MODE, value: '${GIN_MODE}'}
@@ -931,9 +931,9 @@ parameters:
 # Repack
 - {name: REPACK_SCHEDULE, value: '0 11 * * 5'} # Cronjob schedule definition
 - {name: REPACK_SUSPEND, value: 'false'} # Disable cronjob execution
-# Clean advisory_account_data
-- {name: CLEAN_AAD_SCHEDULE, value: '0 12 * * *'} # Cronjob schedule definition
-- {name: CLEAN_AAD_SUSPEND, value: 'false'} # Disable cronjob execution
+# Clean account_advisory
+- {name: CLEAN_AA_SCHEDULE, value: '0 12 * * *'} # Cronjob schedule definition
+- {name: CLEAN_AA_SUSPEND, value: 'false'} # Disable cronjob execution
 
 # Database admin
 - {name: MIGRATION_TIMEOUT, value: '7200'}  # 2h timeout for db-migration job
