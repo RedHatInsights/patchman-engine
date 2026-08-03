@@ -9,6 +9,31 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestPlatformEventSkipNotificationsJSON(t *testing.T) {
+	orgID := "org_1"
+	event := PlatformEvent{
+		AccountID:         1,
+		OrgID:             &orgID,
+		SkipNotifications: true,
+	}
+	data, err := sonic.Marshal(event)
+	assert.NoError(t, err)
+
+	var parsed PlatformEvent
+	assert.NoError(t, sonic.Unmarshal(data, &parsed))
+	assert.True(t, parsed.SkipNotifications)
+
+	// omitempty: false must not appear in JSON; fresh unmarshal defaults to false
+	event.SkipNotifications = false
+	data, err = sonic.Marshal(event)
+	assert.NoError(t, err)
+	assert.NotContains(t, string(data), "skip_notifications")
+
+	var parsedFalse PlatformEvent
+	assert.NoError(t, sonic.Unmarshal(data, &parsedFalse))
+	assert.False(t, parsedFalse.SkipNotifications)
+}
+
 func TestWriteEventsOfInventoryAccounts(t *testing.T) {
 	var (
 		acc  = 1

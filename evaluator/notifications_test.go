@@ -86,6 +86,50 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 	database.DeleteAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs)
 }
 
+// TestAdvisoriesNotificationSkipPublishViaEvaluate runs a full evaluateHandler path with
+// skip_notifications set: advisories are stored and marked notified, but no Kafka notify is sent.
+func TestAdvisoriesNotificationSkipPublishViaEvaluate(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	utils.SkipWithoutPlatform(t)
+	core.SetupTestEnvironment()
+
+	configure()
+	loadCache()
+	mockWriter := mqueue.MockKafkaWriter{}
+	notificationsPublisher = &mockWriter
+
+	expectedAddedAdvisories := []string{"RH-1", "RH-2", "RH-100"}
+	expectedAdvisoryIDs := []int64{1, 2}
+	oldSystemAdvisoryIDs := []int64{1, 3, 4}
+
+	database.DeleteSystemAdvisories(t, testDBID, expectedAdvisoryIDs)
+	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
+	database.CreateSystemAdvisories(t, rhAccountID, testDBID, oldSystemAdvisoryIDs)
+	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
+	database.CheckCachesValid(t)
+	database.CheckAdvisoriesAccountDataNotified(t, rhAccountID, oldSystemAdvisoryIDs, false)
+
+	orgID := "1234567"
+	data, err := sonic.Marshal(mqueue.PlatformEvent{
+		SystemIDs:         []uuid.UUID{testInventoryID},
+		RequestIDs:        []string{"request-skip-notif"},
+		AccountID:         rhAccountID,
+		OrgID:             &orgID,
+		SkipNotifications: true,
+	})
+	assert.NoError(t, err)
+	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
+	assert.NoError(t, err)
+
+	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
+	database.CheckAdvisoriesAccountDataNotified(t, rhAccountID, expectedAdvisoryIDs, true)
+	assert.Empty(t, mockWriter.Messages, "no notification should be sent when skip_notifications is set")
+
+	database.DeleteSystemAdvisories(t, testDBID, advisoryIDs)
+	database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
+	database.DeleteAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs)
+}
+
 func TestAdvisoriesNotificationMessage(t *testing.T) {
 	events := make([]ntf.Event, 1)
 	events[0] = ntf.Event{
@@ -188,7 +232,7 @@ func TestAdvisoriesNotificationAlreadyNotified(t *testing.T) {
 		"RH-2": {AdvisoryID: 2},
 	}
 
-	err := publishNewAdvisoriesNotification(database.DB, system, orgID, newAdvs)
+	err := publishNewAdvisoriesNotification(database.DB, system, orgID, newAdvs, false)
 	assert.NoError(t, err)
 	assert.Empty(t, mockWriter.Messages, "no notification should be sent when all advisories are already notified")
 }
@@ -215,8 +259,44 @@ func TestAdvisoriesNotificationEmptyAdvisoryMap(t *testing.T) {
 	}
 
 	// An empty map means there is nothing to query — no messages should be produced regardless.
-	publishNewAdvisoriesNotification(database.DB, system, orgID, SystemAdvisoryMap{}) //nolint:errcheck
+	publishNewAdvisoriesNotification(database.DB, system, orgID, SystemAdvisoryMap{}, false) //nolint:errcheck
 	assert.Empty(t, mockWriter.Messages, "no notification should be sent when the advisory map is empty")
+}
+
+// TestAdvisoriesNotificationSkipPublish verifies recovery-style skip_notifications: no Kafka
+// message is sent, but advisory_account_data.notified is still set.
+func TestAdvisoriesNotificationSkipPublish(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	configure()
+
+	mockWriter := mqueue.MockKafkaWriter{}
+	notificationsPublisher = &mockWriter
+
+	advisoryIDs := []int64{1, 2}
+	database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
+	database.CreateAdvisoryAccountData(t, rhAccountID, advisoryIDs, 1)
+	database.CheckAdvisoriesAccountDataNotified(t, rhAccountID, advisoryIDs, false)
+	defer database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
+
+	system := &models.SystemPlatformV2{
+		Inventory: models.SystemInventory{
+			ID:          1,
+			RhAccountID: rhAccountID,
+			InventoryID: uuid.MustParse("00000000-0000-0000-0000-000000000001"),
+			DisplayName: "display name",
+		},
+		Patch: models.SystemPatch{},
+	}
+	newAdvs := SystemAdvisoryMap{
+		"RH-1": {AdvisoryID: 1},
+		"RH-2": {AdvisoryID: 2},
+	}
+
+	err := publishNewAdvisoriesNotification(database.DB, system, orgID, newAdvs, true)
+	assert.NoError(t, err)
+	assert.Empty(t, mockWriter.Messages, "no notification should be sent when skipPublish is true")
+	database.CheckAdvisoriesAccountDataNotified(t, rhAccountID, advisoryIDs, true)
 }
 
 // TestGetUnnotifiedAdvisoriesReturnsEmpty documents the return-type contract of

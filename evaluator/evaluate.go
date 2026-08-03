@@ -520,9 +520,11 @@ func evaluateAndStore(system *models.SystemPlatformV2,
 		}
 	}
 
-	// Send instant notification with new advisories
-	if enableInstantNotifications {
-		err = publishNewAdvisoriesNotification(tx, system, event.GetOrgID(), systemAdvisoriesNew)
+	// Instant notifications, or mark-notified only when the event opts out of publishing
+	// (e.g. recovery recalc with skip_notifications).
+	if event.SkipNotifications || enableInstantNotifications {
+		err = publishNewAdvisoriesNotification(tx, system, event.GetOrgID(), systemAdvisoriesNew,
+			event.SkipNotifications)
 		if err != nil {
 			evaluationCnt.WithLabelValues("error-advisory-notification").Inc()
 			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err,
