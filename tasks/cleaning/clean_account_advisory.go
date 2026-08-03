@@ -14,26 +14,33 @@ func RunCleanAccountAdvisory() {
 	defer utils.LogPanics(true)
 
 	var wg sync.WaitGroup
+	var aadErr, aaErr error
 	wg.Add(2)
 
 	go func() {
 		defer wg.Done()
 		utils.LogInfo("Deleting advisory rows with 0 applicable/installable systems from advisory_account_data")
-		if err := CleanAdvisoryAccountData(); err != nil {
-			utils.LogError("err", err, "Cleaning advisory_account_data")
+		aadErr = CleanAdvisoryAccountData()
+		if aadErr != nil {
+			utils.LogError("err", aadErr, "Cleaning advisory_account_data")
 		}
 	}()
 
 	go func() {
 		defer wg.Done()
 		utils.LogInfo("Deleting advisory rows with 0 applicable/installable systems from account_advisory")
-		if err := CleanAccountAdvisory(); err != nil {
-			utils.LogError("err", err, "Cleaning account_advisory")
+		aaErr = CleanAccountAdvisory()
+		if aaErr != nil {
+			utils.LogError("err", aaErr, "Cleaning account_advisory")
 		}
 	}()
 
 	wg.Wait()
-	utils.LogInfo("RunCleanAccountAdvisory task performed successfully")
+	if aadErr != nil || aaErr != nil {
+		utils.LogWarn("RunCleanAccountAdvisory task completed with errors")
+	} else {
+		utils.LogInfo("RunCleanAccountAdvisory task performed successfully")
+	}
 }
 
 func CleanAdvisoryAccountData() error {

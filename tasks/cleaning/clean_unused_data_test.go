@@ -7,6 +7,7 @@ import (
 	"app/base/utils"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -94,4 +95,44 @@ func TestCleanUnusedAdvisories(t *testing.T) {
 	err = database.DB.Model(models.AdvisoryMetadata{}).Count(&afterAdvCount).Error
 	assert.Nil(t, err)
 	assert.Equal(t, beforeAdvCount-rh100count, afterAdvCount)
+}
+
+func TestDeleteUnusedAdvisoriesKeptByAccountAdvisory(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	advisory := "CUSTOM-5678"
+	customAdv := models.AdvisoryMetadata{
+		Name:           advisory,
+		Description:    "Custom desc",
+		Synopsis:       "Custom syn",
+		Summary:        "Custom sum",
+		Solution:       utils.PtrString("Custom sol"),
+		AdvisoryTypeID: 1,
+		RebootRequired: false,
+		Synced:         false,
+	}
+	err := database.DB.Create(&customAdv).Error
+	assert.Nil(t, err)
+
+	aa := models.AccountAdvisory{
+		AdvisoryID:         customAdv.ID,
+		RhAccountID:        1,
+		WorkspaceID:        uuid.MustParse("00000000-0000-0000-0000-000000000001"),
+		SystemsApplicable:  1,
+		SystemsInstallable: 0,
+	}
+	err = database.DB.Create(&aa).Error
+	assert.Nil(t, err)
+
+	deleteUnusedAdvisories()
+
+	var count int64
+	err = database.DB.Model(models.AdvisoryMetadata{}).Where("name = ?", advisory).Count(&count).Error
+	assert.Nil(t, err)
+	assert.Equal(t, int64(1), count, "advisory with account_advisory row should not be deleted")
+
+	// cleanup
+	database.DB.Delete(&aa)
+	database.DB.Delete(&customAdv)
 }
