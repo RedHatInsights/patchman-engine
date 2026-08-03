@@ -42,4 +42,6 @@ var (
 	MaxChangedPackages = utils.PodConfig.GetInt("max_changed_packages", 30000)
 	// prune deleted_system table records older than threshold
 	DeletedSystemsThreshold = time.Hour * time.Duration(utils.PodConfig.GetInt("system_delete_hrs", 4))
+	// One-off: publish recalc for non-stale system_advisories hash remainder 0 (default off)
+	EnableSystemAdvisories0Recovery = utils.PodConfig.GetBool("system_advisories_0_recovery", false)
 )

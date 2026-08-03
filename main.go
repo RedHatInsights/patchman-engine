@@ -12,6 +12,7 @@ import (
 	"app/tasks/caches"
 	"app/tasks/cleaning"
 	"app/tasks/repack"
+	"app/tasks/system_advisories_0_recovery"
 	"app/tasks/system_culling"
 	"app/tasks/vmaas_sync"
 	"app/turnpike"
@@ -78,5 +79,7 @@ func runJob(name string) {
 		repack.RunRepack()
 	case "clean_advisory_account_data":
 		cleaning.RunCleanAdvisoryAccountData()
+	case "system_advisories_0_recovery":
+		system_advisories_0_recovery.Run()
 	}
 }
