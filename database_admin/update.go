@@ -184,6 +184,15 @@ func startMigration(conn database.Driver, db *sql.DB, migrationFilesURL string) 
 	unblockUsers(db)
 }
 
+func repairSystemAdvisories0Partition(db *sql.DB) {
+	log.Info("Repairing system_advisories_0 (truncate + clear bucket-0 caches)")
+	prepareForMigration(db)
+	execFromFile(db, "./database_admin/schema/repair_system_advisories_0.sql")
+	log.Info("system_advisories_0 repair finished")
+	log.Info("Reverting components privileges after system_advisories_0 repair")
+	unblockUsers(db)
+}
+
 func dbConn() (database.Driver, *sql.DB) {
 	sslModeCert := utils.CoreCfg.DBSslMode
 	if utils.CoreCfg.DBSslRootCert != "" {
@@ -234,6 +243,10 @@ func UpdateDB(migrationFilesURL string) {
 	case MIGRATE:
 		log.Info("Migrating the database")
 		startMigration(conn, db, migrationFilesURL)
+	}
+
+	if repairSystemAdvisories0 {
+		repairSystemAdvisories0Partition(db)
 	}
 
 	if updateUsers {

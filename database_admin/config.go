@@ -19,4 +19,6 @@ var (
 	updateDBConfig = utils.PodConfig.GetBool("update_db_config", false)
 	// Terminate lockUsers sessions after NOLOGIN (for major DDL migrations)
 	terminateDBSessions = utils.PodConfig.GetBool("terminate_db_sessions", false)
+	// One-off: truncate corrupt system_advisories_0 and clear bucket-0 advisory caches
+	repairSystemAdvisories0 = utils.PodConfig.GetBool("repair_system_advisories_0", false)
 )
