@@ -11,7 +11,7 @@ type advisoryCounts struct {
 	SystemsInstallable int
 }
 
-func checkAdvisoryDrift(rhAccountID int, advisoryIDs []int64) {
+func CheckAdvisoryDrift(rhAccountID int, advisoryIDs []int64) {
 	if len(advisoryIDs) == 0 {
 		return
 	}
