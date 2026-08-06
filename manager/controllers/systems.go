@@ -83,6 +83,7 @@ type SystemItemAttributes struct {
 	SystemTimestamps
 	SystemStale
 	SystemSatelliteManaged
+	SystemBootc
 	SystemBuiltPkgcache
 	PackagesInstallable   int `json:"packages_installable" csv:"packages_installable" query:"spatch.packages_installable" gorm:"column:packages_installable"`
 	PackagesApplicable    int `json:"packages_applicable" csv:"packages_applicable" query:"spatch.packages_applicable" gorm:"column:packages_applicable"`

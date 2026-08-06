@@ -40,6 +40,7 @@ func TestSystemsDefault(t *testing.T) {
 	assert.Equal(t, "x86_64", output.Data[0].Attributes.Arch)
 	assert.Equal(t, "temp1-1", output.Data[0].Attributes.TemplateName)
 	assert.Equal(t, "99900000-0000-0000-0000-000000000001", output.Data[0].Attributes.TemplateUUID)
+	assert.True(t, output.Data[0].Attributes.Bootc)
 
 	// links
 	assert.Equal(t, "/?offset=0&limit=20&filter[stale]=eq:false&sort=-last_upload", output.Links.First)
