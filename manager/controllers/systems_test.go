@@ -43,8 +43,8 @@ func TestSystemsDefault(t *testing.T) {
 	assert.True(t, output.Data[0].Attributes.Bootc)
 
 	// links
-	assert.Equal(t, "/?offset=0&limit=20&filter[stale]=eq:false&sort=-last_upload", output.Links.First)
-	assert.Equal(t, "/?offset=0&limit=20&filter[stale]=eq:false&sort=-last_upload", output.Links.Last)
+	assert.Equal(t, "/?offset=0&limit=20&sort=-last_upload", output.Links.First)
+	assert.Equal(t, "/?offset=0&limit=20&sort=-last_upload", output.Links.Last)
 	assert.Nil(t, output.Links.Next)
 	assert.Nil(t, output.Links.Previous)
 
@@ -350,7 +350,6 @@ func TestSystemsTagsInMetadata(t *testing.T) {
 	testMap := map[string]FilterData{
 		"ns1/k1": {Operator: "eq", Values: []string{"val1"}},
 		"ns1/k3": {Operator: "eq", Values: []string{"val4"}},
-		"stale":  {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -359,7 +358,6 @@ func TestSAPSystemMeta1(t *testing.T) {
 	output := testSystems(t, "?filter[system_profile][sap_sids]=ABC", 1)
 	testMap := map[string]FilterData{
 		"system_profile][sap_sids": {Operator: "eq", Values: []string{"ABC"}},
-		"stale":                    {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -368,7 +366,6 @@ func TestSAPSystemMeta2(t *testing.T) {
 	output := testSystems(t, "?filter[system_profile][sap_sids]=ABC", 1)
 	testMap := map[string]FilterData{
 		"system_profile][sap_sids": {Operator: "eq", Values: []string{"ABC"}},
-		"stale":                    {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -378,7 +375,6 @@ func TestSAPSystemMeta3(t *testing.T) {
 	testMap := map[string]FilterData{
 		"system_profile][sap_system": {Operator: "eq", Values: []string{"true"}},
 		"system_profile][sap_sids":   {Operator: "eq", Values: []string{"ABC"}},
-		"stale":                      {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -387,7 +383,6 @@ func TestSAPSystemMeta4(t *testing.T) {
 	output := testSystems(t, "?filter[system_profile][sap_sids]=ABC&filter[system_profile][sap_sids]=GHI", 1)
 	testMap := map[string]FilterData{
 		"system_profile][sap_sids": {Operator: "eq", Values: []string{"GHI", "ABC"}},
-		"stale":                    {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -396,7 +391,6 @@ func TestAAPSystemMeta(t *testing.T) {
 	output := testSystems(t, `?filter[system_profile][ansible][controller_version]=1.0`, 1)
 	testMap := map[string]FilterData{
 		"system_profile][ansible][controller_version": {Operator: "eq", Values: []string{"1.0"}},
-		"stale": {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -405,7 +399,6 @@ func TestAAPSystemMeta2(t *testing.T) {
 	output := testSystems(t, `?filter[system_profile][ansible]=not_nil`, 1)
 	testMap := map[string]FilterData{
 		"system_profile][ansible": {Operator: "eq", Values: []string{"not_nil"}},
-		"stale":                   {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -420,7 +413,6 @@ func TestMSSQLSystemMeta(t *testing.T) {
 	output := testSystems(t, `?filter[system_profile][mssql][version]=15.3.0`, 1)
 	testMap := map[string]FilterData{
 		"system_profile][mssql][version": {Operator: "eq", Values: []string{"15.3.0"}},
-		"stale":                          {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -429,7 +421,6 @@ func TestMSSQLSystemMeta2(t *testing.T) {
 	output := testSystems(t, `?filter[system_profile][mssql]=not_nil`, 1)
 	testMap := map[string]FilterData{
 		"system_profile][mssql": {Operator: "eq", Values: []string{"not_nil"}},
-		"stale":                 {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
@@ -444,7 +435,6 @@ func TestCrowdstrikeFilter(t *testing.T) {
 	output := testSystems(t, `?filter[system_profile][crowdstrike]=true`, 1)
 	testMap := map[string]FilterData{
 		"system_profile][crowdstrike": {Operator: "eq", Values: []string{"true"}},
-		"stale":                       {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, 1, output.Meta.TotalItems)
 	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000017"), output.Data[0].ID)
@@ -455,7 +445,6 @@ func TestIbmDb2Filter(t *testing.T) {
 	output := testSystems(t, `?filter[system_profile][ibm_db2]=true`, 3)
 	testMap := map[string]FilterData{
 		"system_profile][ibm_db2": {Operator: "eq", Values: []string{"true"}},
-		"stale":                   {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, 1, output.Meta.TotalItems)
 	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000016"), output.Data[0].ID)
@@ -466,7 +455,6 @@ func TestIntersystemsFilter(t *testing.T) {
 	output := testSystems(t, `?filter[system_profile][intersystems]=true`, 3)
 	testMap := map[string]FilterData{
 		"system_profile][intersystems": {Operator: "eq", Values: []string{"true"}},
-		"stale":                        {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, 1, output.Meta.TotalItems)
 	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000016"), output.Data[0].ID)
@@ -477,7 +465,6 @@ func TestOracleDbFilter(t *testing.T) {
 	output := testSystems(t, `?filter[system_profile][oracle_db]=true`, 3)
 	testMap := map[string]FilterData{
 		"system_profile][oracle_db": {Operator: "eq", Values: []string{"true"}},
-		"stale":                     {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, 1, output.Meta.TotalItems)
 	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000016"), output.Data[0].ID)
@@ -488,7 +475,6 @@ func TestRhelAiFilter(t *testing.T) {
 	output := testSystems(t, `?filter[system_profile][rhel_ai]=true`, 1)
 	testMap := map[string]FilterData{
 		"system_profile][rhel_ai": {Operator: "eq", Values: []string{"true"}},
-		"stale":                   {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, 1, output.Meta.TotalItems)
 	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000017"), output.Data[0].ID)
@@ -499,7 +485,6 @@ func TestSatelliteFilter(t *testing.T) {
 	output := testSystems(t, `?filter[system_profile][satellite]=true`, 3)
 	testMap := map[string]FilterData{
 		"system_profile][satellite": {Operator: "eq", Values: []string{"true"}},
-		"stale":                     {Operator: "eq", Values: []string{"false"}},
 	}
 	assert.Equal(t, 1, output.Meta.TotalItems)
 	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000016"), output.Data[0].ID)

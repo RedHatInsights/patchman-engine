@@ -20,14 +20,7 @@ import (
 var SystemsFields = database.MustGetQueryAttrs(&SystemDBLookupExtended{})
 var SystemsSelect = database.MustGetSelect(&SystemDBLookup{})
 var SystemOpts = ListOpts{
-	Fields: SystemsFields,
-	// By default, we show only fresh systems. If all systems are required, you must pass in:true,false filter into the api
-	DefaultFilters: map[string]FilterData{
-		"stale": {
-			Operator: "eq",
-			Values:   []string{"false"},
-		},
-	},
+	Fields:       SystemsFields,
 	DefaultSort:  "-last_upload",
 	StableSort:   "si.id",
 	SearchFields: []string{"si.display_name"},
