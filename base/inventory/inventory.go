@@ -92,6 +92,7 @@ type Workloads struct {
 	Intersystems IntersystemsWorkload `json:"intersystems,omitempty"`
 	OracleDb     OracleDbWorkload     `json:"oracle_db,omitempty"`
 	RhelAi       RhelAiWorkload       `json:"rhel_ai,omitempty"`
+	Satellite    SatelliteWorkload    `json:"satellite,omitempty"`
 }
 
 type SapWorkload struct {
@@ -125,4 +126,9 @@ type OracleDbWorkload struct {
 
 type RhelAiWorkload struct {
 	Variant string `json:"variant,omitempty"`
+}
+
+type SatelliteWorkload struct {
+	Type    string `json:"type,omitempty"`
+	Version string `json:"version,omitempty"`
 }

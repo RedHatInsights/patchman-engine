@@ -106,6 +106,7 @@ type SystemInventory struct {
 	IntersystemsWorkload             bool `gorm:"column:intersystems_workload"`
 	OracleDbWorkload                 bool `gorm:"column:oracle_db_workload"`
 	RhelAiWorkload                   bool `gorm:"column:rhel_ai_workload"`
+	SatelliteWorkload                bool `gorm:"column:satellite_workload"`
 }
 
 func (SystemInventory) TableName() string {

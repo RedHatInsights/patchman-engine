@@ -503,6 +503,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 			AnsibleWorkloadControllerVersion: utils.EmptyToNil(&hostEvent.Host.SystemProfile.Workloads.Ansible.ControllerVersion), // nolint:lll
 			MssqlWorkload:                    hostEvent.Host.SystemProfile.Workloads.Mssql.Version != "",
 			MssqlWorkloadVersion:             utils.EmptyToNil(&hostEvent.Host.SystemProfile.Workloads.Mssql.Version),
+			SatelliteWorkload:                hostEvent.Host.SystemProfile.Workloads.Satellite.Type != "",
 		},
 		Patch: models.SystemPatch{RhAccountID: 1},
 	}
@@ -558,6 +559,8 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	assert.Equal(t, true, inventoryAfterInsert.MssqlWorkload)
 	assert.Equal(t, hostEvent.Host.SystemProfile.Workloads.Mssql.Version, *inventoryAfterInsert.MssqlWorkloadVersion)
 
+	assert.Equal(t, true, inventoryAfterInsert.SatelliteWorkload)
+
 	updateJSON := "updated_json"
 	reporter := 2
 	var patchAfterInsert models.SystemPatch
@@ -588,6 +591,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 			AnsibleWorkloadControllerVersion: utils.EmptyToNil(&hostEvent.Host.SystemProfile.Workloads.Ansible.ControllerVersion), // nolint:lll
 			MssqlWorkload:                    hostEvent.Host.SystemProfile.Workloads.Mssql.Version != "",
 			MssqlWorkloadVersion:             utils.EmptyToNil(&hostEvent.Host.SystemProfile.Workloads.Mssql.Version),
+			SatelliteWorkload:                hostEvent.Host.SystemProfile.Workloads.Satellite.Type != "",
 		},
 		Patch: models.SystemPatch{
 			RhAccountID: outStore.RhAccountID,
