@@ -82,6 +82,7 @@ var workloadFilters = NestedFilterMap{
 	"system_profile][intersystems":                "(si.intersystems_workload)",
 	"system_profile][oracle_db":                   "(si.oracle_db_workload)",
 	"system_profile][rhel_ai":                     "(si.rhel_ai_workload)",
+	"system_profile][satellite":                   "(si.satellite_workload)",
 }
 
 var inventoryFilters = NestedFilterMap{

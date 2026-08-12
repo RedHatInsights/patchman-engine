@@ -495,6 +495,17 @@ func TestRhelAiFilter(t *testing.T) {
 	assert.Equal(t, testMap, output.Meta.Filter)
 }
 
+func TestSatelliteFilter(t *testing.T) {
+	output := testSystems(t, `?filter[system_profile][satellite]=true`, 3)
+	testMap := map[string]FilterData{
+		"system_profile][satellite": {Operator: "eq", Values: []string{"true"}},
+		"stale":                     {Operator: "eq", Values: []string{"false"}},
+	}
+	assert.Equal(t, 1, output.Meta.TotalItems)
+	assert.Equal(t, uuid.MustParse("00000000-0000-0000-0000-000000000016"), output.Data[0].ID)
+	assert.Equal(t, testMap, output.Meta.Filter)
+}
+
 func TestWorkloadOrLogic(t *testing.T) {
 	output := testSystems(t,
 		`?filter[system_profile][rhel_ai]=true&filter[system_profile][sap_sids]=ABC`, 1)

@@ -178,6 +178,9 @@ func assertSystemInventoryProfileMatchesHost(t *testing.T, inventoryID uuid.UUID
 		assert.Nil(t, inv.MssqlWorkloadVersion)
 	}
 
+	expSatellite := host.SystemProfile.Workloads.Satellite.Type != ""
+	assert.Equal(t, expSatellite, inv.SatelliteWorkload)
+
 	if host.SystemProfile.OwnerID != nil {
 		require.NotNil(t, inv.SubscriptionManagerID)
 		assert.Equal(t, *host.SystemProfile.OwnerID, *inv.SubscriptionManagerID)
@@ -245,6 +248,10 @@ func createTestUploadEvent(orgID string, inventoryID uuid.UUID, reporter string,
 					},
 					Mssql: inventory.MssqlWorkload{
 						Version: "15.0",
+					},
+					Satellite: inventory.SatelliteWorkload{
+						Type:    "server",
+						Version: "6.17.6.1",
 					},
 				},
 			},

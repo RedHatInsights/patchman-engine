@@ -353,6 +353,7 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 		"intersystems_workload",
 		"oracle_db_workload",
 		"rhel_ai_workload",
+		"satellite_workload",
 	}
 
 	displayName := inventoryID.String()
@@ -421,6 +422,7 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 			IntersystemsWorkload:             host.SystemProfile.Workloads.Intersystems.IsIntersystems,
 			OracleDbWorkload:                 host.SystemProfile.Workloads.OracleDb.IsRunning,
 			RhelAiWorkload:                   host.SystemProfile.Workloads.RhelAi.Variant != "",
+			SatelliteWorkload:                host.SystemProfile.Workloads.Satellite.Type != "",
 		},
 		Patch: models.SystemPatch{
 			RhAccountID: accountID,
