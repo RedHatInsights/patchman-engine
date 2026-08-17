@@ -1,4 +1,4 @@
-FROM docker.io/library/postgres:18.4
+FROM docker.io/library/postgres:18.6
 
 ADD /dev/database/init.sh /docker-entrypoint-initdb.d/
 RUN mv /var/lib/postgresql /var/lib/pgsql
