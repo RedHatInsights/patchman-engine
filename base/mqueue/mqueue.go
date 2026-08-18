@@ -34,8 +34,13 @@ func createLoggerFunc(counter Counter) func(fmt string, args ...interface{}) {
 
 	fn := func(fmt string, args ...interface{}) {
 		counter.Inc()
-		utils.LogError("type", "kafka", format.Sprintf(fmt, args...))
-		if strings.Contains(fmt, "Group Load In Progress") {
+		msg := format.Sprintf(fmt, args...)
+		if strings.Contains(msg, "failed to dial") {
+			utils.LogWarn("type", "kafka", msg)
+		} else {
+			utils.LogError("type", "kafka", msg)
+		}
+		if strings.Contains(msg, "Group Load In Progress") {
 			utils.LogPanic("Kafka client stuck detected!!!")
 		}
 	}
