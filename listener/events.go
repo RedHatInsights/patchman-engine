@@ -5,6 +5,7 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+	"context"
 	"time"
 
 	"github.com/bytedance/sonic"
@@ -18,7 +19,7 @@ const (
 	WarnNoRowsModified = "no rows modified on delete event"
 )
 
-func EventsMessageHandler(m mqueue.KafkaMessage) error {
+func EventsMessageHandler(ctx context.Context, m mqueue.KafkaMessage) error {
 	var msgData map[string]interface{}
 	utils.LogTrace("kafka message data", string(m.Value))
 	if err := sonic.Unmarshal(m.Value, &msgData); err != nil {
