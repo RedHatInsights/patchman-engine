@@ -4,12 +4,14 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
+	"app/base/telemetry"
 	"app/base/utils"
 	"context"
 	"time"
 
 	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
 
@@ -46,7 +48,8 @@ func EventsMessageHandler(ctx context.Context, m mqueue.KafkaMessage) error {
 			utils.LogError("inventoryID", msgData["id"], "msg", string(m.Value),
 				"Invalid 'delete' message format")
 		}
-		return HandleDelete(event)
+		telemetry.SetRHAttributes(trace.SpanFromContext(ctx), event.GetOrgID(), "")
+		return HandleDelete(ctx, event)
 	case "updated":
 		fallthrough
 	case "created":
@@ -56,18 +59,19 @@ func EventsMessageHandler(ctx context.Context, m mqueue.KafkaMessage) error {
 				"Invalid 'updated' message format")
 			return nil
 		}
-		return HandleUpload(event)
+		telemetry.SetRHAttributes(trace.SpanFromContext(ctx), event.Host.GetOrgID(), event.Metadata.RequestID)
+		return HandleUpload(ctx, event)
 	default:
 		utils.LogWarn("msg", string(m.Value), WarnUnknownType)
 		return nil
 	}
 }
 
-func HandleDelete(event mqueue.PlatformEvent) error {
+func HandleDelete(ctx context.Context, event mqueue.PlatformEvent) error {
 	defer utils.ObserveSecondsSince(time.Now(), messageHandlingDuration.WithLabelValues(EventDelete))
 
 	// TODO: Do we need locking here ?
-	err := database.OnConflictUpdate(database.DB, "inventory_id", "when_deleted").
+	err := database.OnConflictUpdate(database.DB.WithContext(ctx), "inventory_id", "when_deleted").
 		Create(models.DeletedSystem{
 			InventoryID: event.ID,
 			WhenDeleted: time.Now(),
@@ -80,7 +84,7 @@ func HandleDelete(event mqueue.PlatformEvent) error {
 	}
 
 	// mark system as stale and let system_culling job remove it later
-	query := database.DB.Model(&models.SystemInventory{}).Where("inventory_id = ?", event.ID).
+	query := database.DB.WithContext(ctx).Model(&models.SystemInventory{}).Where("inventory_id = ?", event.ID).
 		Updates(map[string]interface{}{
 			"culled_timestamp": gorm.Expr("NOW()"),
 		})
