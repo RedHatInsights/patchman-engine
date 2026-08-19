@@ -11,6 +11,16 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+func TestSQLEnabledAfterInit(t *testing.T) {
+	t.Setenv("OTEL_ENABLED", "true")
+
+	exp := tracetest.NewInMemoryExporter()
+	require.NoError(t, initWithExporter(exp))
+	defer Shutdown(context.Background())
+
+	assert.True(t, SQLEnabled())
+}
+
 func TestInitDisabledByDefault(t *testing.T) {
 	t.Setenv("OTEL_ENABLED", "")
 	require.NoError(t, Init())
