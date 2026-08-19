@@ -6,6 +6,7 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+	"context"
 	"testing"
 
 	"github.com/bytedance/sonic"
@@ -56,7 +57,7 @@ func TestDeleteSystemWarn1(t *testing.T) {
 	data, err := sonic.Marshal(deleteEvent)
 	assert.NoError(t, err)
 
-	err = EventsMessageHandler(mqueue.KafkaMessage{Value: data})
+	err = EventsMessageHandler(context.Background(), mqueue.KafkaMessage{Value: data})
 	assert.Equal(t, WarnEmptyEventType, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
 
 	assert.NoError(t, err)
@@ -72,7 +73,7 @@ func TestDeleteSystemWarn2(t *testing.T) {
 	data, err := sonic.Marshal(deleteEvent)
 	assert.NoError(t, err)
 
-	err = EventsMessageHandler(mqueue.KafkaMessage{Value: data})
+	err = EventsMessageHandler(context.Background(), mqueue.KafkaMessage{Value: data})
 	assert.Equal(t, WarnUnknownType, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
 
 	assert.NoError(t, err)

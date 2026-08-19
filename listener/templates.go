@@ -23,7 +23,7 @@ const (
 	TemplateEventCreate = "template-created"
 )
 
-func TemplatesMessageHandler(m mqueue.KafkaMessage) error {
+func TemplatesMessageHandler(ctx context.Context, m mqueue.KafkaMessage) error {
 	eType, event, err := processTemplateEvent(m.Value)
 	if err != nil {
 		utils.LogError("err", err, "skipping template event")

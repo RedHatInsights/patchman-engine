@@ -6,6 +6,7 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -80,7 +81,7 @@ func TestCreateTemplate(t *testing.T) {
 	assert.Equal(t, 0, len(noTemplates))
 
 	// process message
-	err = TemplatesMessageHandler(mqueue.KafkaMessage{Value: msg})
+	err = TemplatesMessageHandler(context.Background(), mqueue.KafkaMessage{Value: msg})
 	assert.Nil(t, err)
 
 	// assert templates exist and have correct data
@@ -99,7 +100,7 @@ func TestCreateTemplate(t *testing.T) {
 	assert.Nil(t, err)
 
 	// process update
-	err = TemplatesMessageHandler(mqueue.KafkaMessage{Value: msg})
+	err = TemplatesMessageHandler(context.Background(), mqueue.KafkaMessage{Value: msg})
 	assert.Nil(t, err)
 
 	// assert templates exist and have correct data
@@ -113,7 +114,7 @@ func TestCreateTemplate(t *testing.T) {
 	assert.Nil(t, err)
 
 	// process update
-	err = TemplatesMessageHandler(mqueue.KafkaMessage{Value: msg})
+	err = TemplatesMessageHandler(context.Background(), mqueue.KafkaMessage{Value: msg})
 	assert.Nil(t, err)
 
 	// assert templates exist and have correct data
@@ -138,7 +139,7 @@ func TestTemplateErrors(t *testing.T) {
 	assert.Nil(t, err)
 
 	// process message
-	err = TemplatesMessageHandler(mqueue.KafkaMessage{Value: msg})
+	err = TemplatesMessageHandler(context.Background(), mqueue.KafkaMessage{Value: msg})
 	expectedErr := errors.New(`creating template from message: ` +
 		`ERROR: invalid input syntax for type uuid: "not-an-uuid" (SQLSTATE 22P02)\n` +
 		`creating template from message: ` +
@@ -166,7 +167,7 @@ func TestTemplateEmptyDescription(t *testing.T) {
 	assert.Nil(t, err)
 
 	// process message
-	err = TemplatesMessageHandler(mqueue.KafkaMessage{Value: msg})
+	err = TemplatesMessageHandler(context.Background(), mqueue.KafkaMessage{Value: msg})
 	assert.Nil(t, err)
 
 	after := testTemplatesInDB(t)
