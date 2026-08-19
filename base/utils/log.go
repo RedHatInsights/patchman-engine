@@ -1,12 +1,14 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
 
 	sentry "github.com/getsentry/sentry-go"
 	log "github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // configure logging using env variables
@@ -39,11 +41,23 @@ func processArgs(args []interface{}) (log.Fields, interface{}) {
 
 // implement LogXXXX functions to enable additional log fields
 // usage: utils.LogInfo("my_field_1", 1, "my_field_2", 4.3, "Testing logging")
+// Optional leading context.Context adds trace_id / span_id when the span is valid.
 func logLevel(level log.Level, args ...interface{}) {
 	if !log.IsLevelEnabled(level) {
 		return
 	}
+	var spanCtx trace.SpanContext
+	if len(args) > 0 {
+		if ctx, ok := args[0].(context.Context); ok {
+			spanCtx = trace.SpanFromContext(ctx).SpanContext()
+			args = args[1:]
+		}
+	}
 	fields, msg := processArgs(args)
+	if spanCtx.IsValid() {
+		fields["trace_id"] = spanCtx.TraceID().String()
+		fields["span_id"] = spanCtx.SpanID().String()
+	}
 
 	tryCaptureSentryException(level, fields, msg)
 
