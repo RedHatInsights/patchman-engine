@@ -61,6 +61,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_ADMIN}', memory: '${MEM_LIMIT_ADMIN}'}
           requests: {cpu: '${CPU_REQUEST_ADMIN}', memory: '${MEM_REQUEST_ADMIN}'}
@@ -146,6 +147,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_MANAGER}', memory: '${MEM_LIMIT_MANAGER}'}
           requests: {cpu: '${CPU_REQUEST_MANAGER}', memory: '${MEM_REQUEST_MANAGER}'}
@@ -218,6 +220,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_LISTENER}', memory: '${MEM_LIMIT_LISTENER}'}
           requests: {cpu: '${CPU_REQUEST_LISTENER}', memory: '${MEM_REQUEST_LISTENER}'}
@@ -287,6 +290,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_EVALUATOR_UPLOAD}', memory: '${MEM_LIMIT_EVALUATOR_UPLOAD}'}
           requests: {cpu: '${CPU_REQUEST_EVALUATOR_UPLOAD}', memory: '${MEM_REQUEST_EVALUATOR_UPLOAD}'}
@@ -356,6 +360,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_EVALUATOR_RECALC}', memory: '${MEM_LIMIT_EVALUATOR_RECALC}'}
           requests: {cpu: '${CPU_REQUEST_EVALUATOR_RECALC}', memory: '${MEM_REQUEST_EVALUATOR_RECALC}'}
@@ -425,6 +430,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_EVALUATOR_USER_EVALUATION}', memory: '${MEM_LIMIT_EVALUATOR_USER_EVALUATION}'}
           requests: {cpu: '${CPU_REQUEST_EVALUATOR_USER_EVALUATION}', memory: '${MEM_REQUEST_EVALUATOR_USER_EVALUATION}'}
@@ -490,6 +496,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_AGGREGATOR}', memory: '${MEM_LIMIT_AGGREGATOR}'}
           requests: {cpu: '${CPU_REQUEST_AGGREGATOR}', memory: '${MEM_REQUEST_AGGREGATOR}'}
@@ -539,6 +546,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_DATABASE_ADMIN}', memory: '${MEM_LIMIT_DATABASE_ADMIN}'}
           requests: {cpu: '${CPU_REQUEST_DATABASE_ADMIN}', memory: '${MEM_REQUEST_DATABASE_ADMIN}'}
@@ -599,6 +607,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_VMAAS_SYNC}', memory: '${MEM_LIMIT_VMAAS_SYNC}'}
           requests: {cpu: '${CPU_REQUEST_VMAAS_SYNC}', memory: '${MEM_REQUEST_VMAAS_SYNC}'}
@@ -651,6 +660,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
 
     - name: package-refresh
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -706,6 +716,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
 
     - name: advisory-refresh
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -754,6 +765,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
 
     - name: delete-unused
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -802,6 +814,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
 
     - name: repack
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -847,6 +860,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
 
     - name: clean-advisory-account-data
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -895,6 +909,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
 
     - name: account-advisory-backfill
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -943,6 +958,7 @@ objects:
           - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
           - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
           - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+          - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
 
     - name: sql
       # Runs on each deploy; no-op unless SQL_JOB_FILE selects a bundled script.
@@ -1026,6 +1042,7 @@ objects:
         - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
+        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
     database:
       name: patchman
       version: 16
@@ -1390,6 +1407,7 @@ parameters:
 - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '10000'}
 - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '64'}
 - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '1024'}
+- {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '16384'}
 - {name: ENV_NAME, required: false}
 - {name: GIN_MODE, value: 'release'} # Gin webframework running mode
 - {name: KAFKA_READER_MAX_ATTEMPTS, value: '3'} # Limit of how many attempts will be made before kafka read error.

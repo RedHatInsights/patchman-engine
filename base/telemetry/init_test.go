@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,7 +17,9 @@ func TestSQLEnabledAfterInit(t *testing.T) {
 
 	exp := tracetest.NewInMemoryExporter()
 	require.NoError(t, initWithExporter(exp))
-	defer Shutdown(context.Background())
+	defer func() {
+		_ = Shutdown(context.Background())
+	}()
 
 	assert.True(t, SQLEnabled())
 }
@@ -32,6 +35,26 @@ func TestInitDisabledByDefault(t *testing.T) {
 	_, span := Tracer().Start(context.Background(), "noop")
 	assert.False(t, span.SpanContext().IsValid() && span.IsRecording())
 	span.End()
+}
+
+func TestInitPreservesSpanEventLimits(t *testing.T) {
+	t.Setenv("OTEL_ENABLED", "true")
+
+	exp := tracetest.NewInMemoryExporter()
+	require.NoError(t, initWithExporter(exp))
+	defer func() {
+		_ = Shutdown(context.Background())
+	}()
+
+	_, span := Tracer().Start(context.Background(), "event-limit-test")
+	span.RecordError(errors.New("test error"))
+	span.End()
+	require.NoError(t, tracerProvider.ForceFlush(context.Background()))
+
+	spans := exp.GetSpans()
+	require.Len(t, spans, 1)
+	assert.Greater(t, len(spans[0].Events), 0)
+	assert.Equal(t, 0, spans[0].DroppedEvents)
 }
 
 func TestInitSetsResourceAndSampler(t *testing.T) {

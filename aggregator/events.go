@@ -44,7 +44,7 @@ func flushAdvisoryBuffer() {
 	processAdvisoryBatch(grouped)
 }
 
-func advisoryUpdateHandler(ctx context.Context, m mqueue.KafkaMessage) error {
+func advisoryUpdateHandler(_ context.Context, m mqueue.KafkaMessage) error {
 	var event mqueue.AdvisoryUpdateEvent
 	if err := sonic.Unmarshal(m.Value, &event); err != nil {
 		utils.LogError("err", err, "could not deserialize advisory update event")
