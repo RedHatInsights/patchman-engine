@@ -41,6 +41,26 @@ objects:
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_DATABASE_ADMIN}'}
         - {name: POD_CONFIG, value: '${ADMIN_CONFIG}'}
 
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-admin'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_ADMIN}', memory: '${MEM_LIMIT_ADMIN}'}
           requests: {cpu: '${CPU_REQUEST_ADMIN}', memory: '${MEM_REQUEST_ADMIN}'}
@@ -105,6 +125,26 @@ objects:
         - {name: KESSEL_AUTH_CLIENT_ID, valueFrom: {secretKeyRef: {name: kessel-service-client, key: id}}}
         - {name: KESSEL_AUTH_CLIENT_SECRET, valueFrom: {secretKeyRef: {name: kessel-service-client, key: secret}}}
 
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-manager'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_MANAGER}', memory: '${MEM_LIMIT_MANAGER}'}
           requests: {cpu: '${CPU_REQUEST_MANAGER}', memory: '${MEM_REQUEST_MANAGER}'}
@@ -156,6 +196,26 @@ objects:
         - {name: POD_CONFIG, value: '${LISTENER_CONFIG}'}
         - {name: CONTENT_SOURCES_USER, value: '${CONTENT_SOURCES_USER}'}
 
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-listener'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_LISTENER}', memory: '${MEM_LIMIT_LISTENER}'}
           requests: {cpu: '${CPU_REQUEST_LISTENER}', memory: '${MEM_REQUEST_LISTENER}'}
@@ -205,6 +265,26 @@ objects:
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
         - {name: POD_CONFIG, value: 'label=upload;${EVALUATOR_UPLOAD_CONFIG}'}
         - {name: CONSOLEDOT_HOSTNAME, value: '${CONSOLEDOT_HOSTNAME}'}
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-evaluator-upload'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_EVALUATOR_UPLOAD}', memory: '${MEM_LIMIT_EVALUATOR_UPLOAD}'}
           requests: {cpu: '${CPU_REQUEST_EVALUATOR_UPLOAD}', memory: '${MEM_REQUEST_EVALUATOR_UPLOAD}'}
@@ -254,6 +334,26 @@ objects:
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
         - {name: POD_CONFIG, value: 'label=recalc;payload_tracker=false;${EVALUATOR_RECALC_CONFIG}'}
         - {name: CONSOLEDOT_HOSTNAME, value: '${CONSOLEDOT_HOSTNAME}'}
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-evaluator-recalc'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_EVALUATOR_RECALC}', memory: '${MEM_LIMIT_EVALUATOR_RECALC}'}
           requests: {cpu: '${CPU_REQUEST_EVALUATOR_RECALC}', memory: '${MEM_REQUEST_EVALUATOR_RECALC}'}
@@ -303,6 +403,26 @@ objects:
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_EVALUATOR}'}
         - {name: POD_CONFIG, value: 'label=user-evaluation;payload_tracker=false;${EVALUATOR_USER_EVALUATION_CONFIG}'}
         - {name: CONSOLEDOT_HOSTNAME, value: '${CONSOLEDOT_HOSTNAME}'}
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-evaluator-user-evaluation'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_EVALUATOR_USER_EVALUATION}', memory: '${MEM_LIMIT_EVALUATOR_USER_EVALUATION}'}
           requests: {cpu: '${CPU_REQUEST_EVALUATOR_USER_EVALUATION}', memory: '${MEM_REQUEST_EVALUATOR_USER_EVALUATION}'}
@@ -348,6 +468,26 @@ objects:
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_AGGREGATOR}'}
         - {name: POD_CONFIG, value: 'label=aggregator;${AGGREGATOR_CONFIG}'}
         - {name: CONSOLEDOT_HOSTNAME, value: '${CONSOLEDOT_HOSTNAME}'}
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-aggregator'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_AGGREGATOR}', memory: '${MEM_LIMIT_AGGREGATOR}'}
           requests: {cpu: '${CPU_REQUEST_AGGREGATOR}', memory: '${MEM_REQUEST_AGGREGATOR}'}
@@ -377,6 +517,26 @@ objects:
         - {name: VMAAS_SYNC_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                                     key: vmaas-sync-database-password}}}
         - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-db-migration'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_DATABASE_ADMIN}', memory: '${MEM_LIMIT_DATABASE_ADMIN}'}
           requests: {cpu: '${CPU_REQUEST_DATABASE_ADMIN}', memory: '${MEM_REQUEST_DATABASE_ADMIN}'}
@@ -417,6 +577,26 @@ objects:
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
         - {name: CANDLEPIN_CERT, valueFrom: {secretKeyRef: {name: candlepin, key: cert}}}
         - {name: CANDLEPIN_KEY, valueFrom: {secretKeyRef: {name: candlepin, key: key}}}
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-vmaas-sync'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_VMAAS_SYNC}', memory: '${MEM_LIMIT_VMAAS_SYNC}'}
           requests: {cpu: '${CPU_REQUEST_VMAAS_SYNC}', memory: '${MEM_REQUEST_VMAAS_SYNC}'}
@@ -449,6 +629,26 @@ objects:
                                                       key: vmaas-sync-database-password}}}
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-system-culling'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
 
     - name: package-refresh
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -484,6 +684,26 @@ objects:
         - {name: DB_WORK_MEM, value: '${DB_WORK_MEM}'}
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-package-refresh'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
 
     - name: advisory-refresh
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -512,6 +732,26 @@ objects:
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                       key: vmaas-sync-database-password}}}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-advisory-refresh'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
 
     - name: delete-unused
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -540,6 +780,26 @@ objects:
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                       key: vmaas-sync-database-password}}}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-delete-unused'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
 
     - name: repack
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -565,6 +825,26 @@ objects:
         - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-repack'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
 
     - name: clean-advisory-account-data
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -593,6 +873,26 @@ objects:
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                       key: vmaas-sync-database-password}}}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-clean-advisory-account-data'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
 
     - name: account-advisory-backfill
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
@@ -621,6 +921,26 @@ objects:
           - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                          key: vmaas-sync-database-password}}}
           - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
+          - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+          - {name: OTEL_SERVICE_NAME, value: 'patchman-account-advisory-backfill'}
+          - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+          - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+          - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+          - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+          - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+          - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+          - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+          - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+          - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+          - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+          - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+          - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+          - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+          - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+          - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+          - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+          - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+          - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
 
     - name: system-advisories-0-recovery
       # One-shot Job (no schedule): runs on deploy / CJI like db-migration.
@@ -655,6 +975,26 @@ objects:
         - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}  # set system_advisories_0_recovery=true for cutover
 
+        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
+        - {name: OTEL_SERVICE_NAME, value: 'patchman-system-advisories-0-recovery'}
+        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
+        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
+        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
+        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
+        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
+        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
+        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
+        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
+        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
+        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
+        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
+        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
+        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
+        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
+        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
+        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
+        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
     database:
       name: patchman
       version: 16
@@ -983,6 +1323,24 @@ parameters:
 # Common parameters
 - {name: IMAGE, value: quay.io/redhat-services-prod/insights-management-tenant/insights-patch/patchman-engine}
 - {name: IMAGE_TAG, required: true}
+- {name: OTEL_ENABLED, value: 'false'}
+- {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: ''}
+- {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: 'http/protobuf'}
+- {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: 'gzip'}
+- {name: OTEL_TRACES_EXPORTER, value: 'otlp'}
+- {name: OTEL_METRICS_EXPORTER, value: 'none'}
+- {name: OTEL_LOGS_EXPORTER, value: 'none'}
+- {name: OTEL_SAMPLING_RATE, value: '1.0'}
+- {name: OTEL_SQL_ENABLED, value: 'true'}
+- {name: OTEL_HTTP_INBOUND_ENABLED, value: 'true'}
+- {name: OTEL_HTTP_OUTBOUND_ENABLED, value: 'true'}
+- {name: OTEL_MQ_ENABLED, value: 'true'}
+- {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '8192'}
+- {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '256'}
+- {name: OTEL_BSP_SCHEDULE_DELAY, value: '2000'}
+- {name: OTEL_BSP_EXPORT_TIMEOUT, value: '10000'}
+- {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '64'}
+- {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '1024'}
 - {name: ENV_NAME, required: false}
 - {name: GIN_MODE, value: 'release'} # Gin webframework running mode
 - {name: KAFKA_READER_MAX_ATTEMPTS, value: '3'} # Limit of how many attempts will be made before kafka read error.
