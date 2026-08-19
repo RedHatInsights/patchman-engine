@@ -7,6 +7,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
+	"app/base/telemetry"
 	"app/base/types"
 	"app/base/utils"
 	"app/base/vmaas"
@@ -19,6 +20,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -236,7 +238,7 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 		return nil, nil, nil
 	}
 
-	vmaasData, err := evaluateWithVmaas(updatesData, system, event)
+	vmaasData, err := evaluateWithVmaas(ctx, updatesData, system, event)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluation with vmaas failed")
 	}
@@ -287,11 +289,11 @@ func tryGetYumUpdates(system *models.SystemPlatformV2) (*vmaas.UpdatesV3Response
 	return &resp, nil
 }
 
-func evaluateWithVmaas(updatesData *vmaas.UpdatesV3Response,
+func evaluateWithVmaas(ctx context.Context, updatesData *vmaas.UpdatesV3Response,
 	system *models.SystemPlatformV2, event *mqueue.PlatformEvent) (*vmaas.UpdatesV3Response, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("evaluate-with-vmaas-full"))
 
-	err := evaluateAndStore(system, updatesData, event)
+	err := evaluateAndStore(ctx, system, updatesData, event)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to evaluate and store results")
 	}
@@ -477,7 +479,7 @@ func commitWithObserve(tx *gorm.DB) error {
 // and then executes all deletions, updates, and insertions in a single transaction.
 
 //nolint:funlen
-func evaluateAndStore(system *models.SystemPlatformV2,
+func evaluateAndStore(ctx context.Context, system *models.SystemPlatformV2,
 	vmaasData *vmaas.UpdatesV3Response, event *mqueue.PlatformEvent) error {
 	advisoriesByName, err := lazySaveAndLoadAdvisories(system, vmaasData)
 	if err != nil {
@@ -489,7 +491,7 @@ func evaluateAndStore(system *models.SystemPlatformV2,
 		return errors.Wrap(err, "Package loading failed")
 	}
 
-	tx := database.DB.WithContext(base.Context).Begin()
+	tx := database.DB.WithContext(ctx).Begin()
 	// Don't allow requested TX to hang around locking the rows
 	defer tx.Rollback()
 
@@ -742,6 +744,20 @@ func invalidateCaches(orgID string) error {
 	return err
 }
 
+func systemIDsAndTraceparents(event mqueue.PlatformEvent) ([]uuid.UUID, []string) {
+	if event.SystemIDs != nil {
+		return event.SystemIDs, event.Traceparents
+	}
+	return []uuid.UUID{event.ID}, event.Traceparents
+}
+
+func firstRequestID(event mqueue.PlatformEvent) string {
+	if len(event.RequestIDs) > 0 {
+		return event.RequestIDs[0]
+	}
+	return ""
+}
+
 func evaluateHandler(ctx context.Context, m mqueue.KafkaMessage) error {
 	var event mqueue.PlatformEvent
 	if err := sonic.Unmarshal(m.Value, &event); err != nil {
@@ -749,34 +765,37 @@ func evaluateHandler(ctx context.Context, m mqueue.KafkaMessage) error {
 		return nil
 	}
 
+	span := trace.SpanFromContext(ctx)
+	telemetry.SetRHAttributes(span, event.GetOrgID(), firstRequestID(event))
+
 	var err error
 	var wg sync.WaitGroup
 	guard := make(chan struct{}, nEvalGoroutines)
 
-	nSystems := 1
-	if event.SystemIDs != nil {
-		nSystems = len(event.SystemIDs)
-	}
-	ptEvents := make(mqueue.PayloadTrackerEvents, 0, nSystems)
+	ids, tps := systemIDsAndTraceparents(event)
+	ptEvents := make(mqueue.PayloadTrackerEvents, 0, len(ids))
 	ptEvent := mqueue.PayloadTrackerEvent{
 		OrgID:     event.OrgID,
 		Status:    "success",
 		StatusMsg: "advisories evaluation",
 	}
 
-	if event.SystemIDs != nil {
-		// Evaluate in bulk
-		nRequestIDs := len(event.RequestIDs)
-		for i, id := range event.SystemIDs {
-			ptEvent.InventoryID = id
-			if nRequestIDs > i {
-				ptEvent.RequestID = &event.RequestIDs[i]
-			}
-			ptEvent, err = runEvaluate(base.Context, event, id, evalLabel, ptEvent, &wg, guard)
-			ptEvents = append(ptEvents, ptEvent)
+	nRequestIDs := len(event.RequestIDs)
+	for i, id := range ids {
+		ptEvent.InventoryID = id
+		if nRequestIDs > i {
+			ptEvent.RequestID = &event.RequestIDs[i]
 		}
-	} else {
-		ptEvent, err = runEvaluate(base.Context, event, event.ID, evalLabel, ptEvent, &wg, guard)
+		tp := ""
+		if i < len(tps) {
+			tp = tps[i]
+		}
+		itemCtx, itemSpan := telemetry.ItemContext(ctx, "evaluate "+evalLabel, tp)
+		if i < len(event.RequestIDs) {
+			telemetry.SetRHAttributes(itemSpan, event.GetOrgID(), event.RequestIDs[i])
+		}
+		ptEvent, err = runEvaluate(itemCtx, event, id, evalLabel, ptEvent, &wg, guard)
+		telemetry.End(itemSpan, err)
 		ptEvents = append(ptEvents, ptEvent)
 	}
 	wg.Wait()
@@ -787,7 +806,7 @@ func evaluateHandler(ctx context.Context, m mqueue.KafkaMessage) error {
 
 	// send kafka message to payload tracker
 	if evalLabel == uploadLabel {
-		ptErr := mqueue.SendMessages(base.Context, ptWriter, &ptEvents)
+		ptErr := mqueue.SendMessages(ctx, ptWriter, &ptEvents)
 		if ptErr != nil {
 			// don't fail with err, just log that we couldn't send msg to payload tracker
 			utils.LogWarn("err", ptErr, WarnPayloadTracker)
