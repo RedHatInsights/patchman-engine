@@ -62,6 +62,7 @@ func initTracerProvider(exp sdktrace.SpanExporter, useBatch bool) error {
 		sdktrace.WithRawSpanLimits(sdktrace.SpanLimits{
 			AttributeCountLimit:       utils.GetIntEnvOrDefault("OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT", 64),
 			AttributeValueLengthLimit: utils.GetIntEnvOrDefault("OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT", 1024),
+			LinkCountLimit:            utils.GetIntEnvOrDefault("OTEL_SPAN_LINK_COUNT_LIMIT", 128),
 		}),
 	}
 
