@@ -4,6 +4,7 @@ import (
 	"app/base"
 	"app/base/core"
 	"app/base/mqueue"
+	"app/base/telemetry"
 	"app/base/utils"
 	"app/docs"
 	"app/manager/config"
@@ -43,6 +44,7 @@ func RunManager() {
 
 	// middlewares
 	app.Use(gin.Recovery())
+	app.Use(telemetry.RHHTTPAttributes())
 	middlewares.Prometheus().Use(app)
 	app.Use(middlewares.MaxConnections(utils.CoreCfg.MaxGinConnections))
 	app.Use(middlewares.Ratelimit(utils.CoreCfg.Ratelimit))
