@@ -3,6 +3,7 @@ package core
 import (
 	"app/base/database"
 	"app/base/metrics"
+	"app/base/telemetry"
 	"app/base/utils"
 	"testing"
 )
@@ -16,6 +17,9 @@ var (
 
 func configureBaseApp() {
 	utils.ConfigureLogging()
+	if err := telemetry.Init(); err != nil {
+		panic(err)
+	}
 	metrics.Configure()
 	database.DBWait(dbWait)
 }
