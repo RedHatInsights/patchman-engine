@@ -742,7 +742,7 @@ func invalidateCaches(orgID string) error {
 	return err
 }
 
-func evaluateHandler(m mqueue.KafkaMessage) error {
+func evaluateHandler(ctx context.Context, m mqueue.KafkaMessage) error {
 	var event mqueue.PlatformEvent
 	if err := sonic.Unmarshal(m.Value, &event); err != nil {
 		utils.LogError("err", err, "Could not deserialize platform event")

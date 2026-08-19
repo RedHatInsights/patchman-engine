@@ -68,7 +68,7 @@ func TestEvaluate(t *testing.T) {
 		OrgID:      &orgID,
 		AccountID:  rhAccountID})
 	assert.NoError(t, err)
-	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
+	err = evaluateHandler(context.Background(), mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
@@ -88,7 +88,7 @@ func TestEvaluate(t *testing.T) {
 		OrgID:      &orgID,
 		AccountID:  rhAccountID})
 	assert.NoError(t, err)
-	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
+	err = evaluateHandler(context.Background(), mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 	database.CheckSystemJustEvaluated(t, testInventoryID, 3, 1, 1, 0,
 		3, 1, 1, 0, 2, 2, 2, true)
@@ -133,7 +133,7 @@ func TestEvaluateYum(t *testing.T) {
 		OrgID:     &orgID,
 		AccountID: rhAccountID})
 	assert.NoError(t, err)
-	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
+	err = evaluateHandler(context.Background(), mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 
 	expectedPackageIDs := database.GetPackageIDs(expectedPackages...)
