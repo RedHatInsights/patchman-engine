@@ -35,7 +35,8 @@ func createLoggerFunc(counter Counter) func(fmt string, args ...interface{}) {
 	fn := func(fmt string, args ...interface{}) {
 		counter.Inc()
 		msg := format.Sprintf(fmt, args...)
-		if strings.Contains(msg, "failed to dial") {
+		if strings.Contains(msg, "failed to dial") ||
+			strings.Contains(msg, "unknown error reading partition") {
 			utils.LogWarn("type", "kafka", msg)
 		} else {
 			utils.LogError("type", "kafka", msg)
