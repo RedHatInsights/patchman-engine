@@ -45,12 +45,14 @@ func deleteUnusedAdvisories() {
 	// remove unused advisories not synced from vmaas
 	// before changing the query below test its performance on big data otherwise it can lock database
 	// Time: 18988.223 ms (00:18.988) for 50k advisories, 75M system_advisories, 1.6M package and 50k rh_account
+	// both advisory_account_data and account_advisory are checked temporarily until the legacy table is dropped
 	subq := tx.Select("id").Table("advisory_metadata am").
 		Where("am.synced = ?", false).
 		Where("NOT EXISTS (SELECT 1 FROM system_advisories sa WHERE am.id = sa.advisory_id)").
 		Where("NOT EXISTS (SELECT 1 FROM template_advisory ta WHERE am.id = ta.advisory_id)").
 		Where("NOT EXISTS (SELECT 1 FROM package p WHERE am.id = p.advisory_id)").
 		Where("NOT EXISTS (SELECT 1 FROM advisory_account_data aad WHERE am.id = aad.advisory_id)").
+		Where("NOT EXISTS (SELECT 1 FROM account_advisory aa WHERE am.id = aa.advisory_id)").
 		Limit(tasks.DeleteUnusedDataLimit)
 
 	err := tx.Delete(&models.AdvisoryMetadata{}, "id IN (?)", subq).Error
