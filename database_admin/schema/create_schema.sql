@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (165, false);
+VALUES (166, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -904,6 +904,7 @@ SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'account_advisor
 
 CREATE INDEX ON account_advisory (systems_applicable);
 CREATE INDEX ON account_advisory (systems_installable);
+CREATE INDEX ON account_advisory (advisory_id);
 
 -- repo
 CREATE TABLE IF NOT EXISTS repo
