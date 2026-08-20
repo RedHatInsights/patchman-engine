@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (164, false);
+VALUES (165, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -700,7 +700,7 @@ CREATE TABLE IF NOT EXISTS deleted_system
     inventory_id TEXT                     NOT NULL,
     CHECK (NOT empty(inventory_id)),
     when_deleted TIMESTAMP WITH TIME ZONE NOT NULL,
-    UNIQUE (inventory_id)
+    PRIMARY KEY (inventory_id)
 ) TABLESPACE pg_default;
 
 CREATE INDEX ON deleted_system (when_deleted);
@@ -925,7 +925,7 @@ CREATE TABLE IF NOT EXISTS system_repo
     system_id     BIGINT NOT NULL,
     repo_id       BIGINT NOT NULL,
     rh_account_id INT NOT NULL,
-    UNIQUE (rh_account_id, system_id, repo_id),
+    PRIMARY KEY (rh_account_id, system_id, repo_id),
     CONSTRAINT system_inventory_id
         FOREIGN KEY (rh_account_id, system_id)
             REFERENCES system_inventory (rh_account_id, id),
@@ -1043,7 +1043,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON package_account_data TO vmaas_sync;
 -- timestamp_kv
 CREATE TABLE IF NOT EXISTS timestamp_kv
 (
-    name  TEXT                     NOT NULL UNIQUE,
+    name  TEXT                     NOT NULL PRIMARY KEY,
     CHECK (NOT empty(name)),
     value TIMESTAMP WITH TIME ZONE NOT NULL
 ) TABLESPACE pg_default;
