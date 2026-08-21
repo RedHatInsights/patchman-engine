@@ -838,11 +838,15 @@ func getYumUpdates(event HostEvent, client *api.Client) (*YumUpdates, error) {
 
 	if yumUpdatesURL != nil && *yumUpdatesURL != "" {
 		resp, err := client.Request(&base.Context, http.MethodGet, *yumUpdatesURL, nil, &parsed)
+		if resp != nil && resp.Body != nil {
+			defer func() {
+				if closeErr := resp.Body.Close(); closeErr != nil {
+					utils.LogWarn("err", closeErr, "closing yum updates response body")
+				}
+			}()
+		}
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to get yum updates from S3")
-		}
-		if err := resp.Body.Close(); err != nil {
-			return nil, errors.Wrap(err, "response error for yum updates from S3")
 		}
 	}
 

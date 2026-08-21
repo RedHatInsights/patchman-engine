@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	"time"
@@ -24,27 +25,42 @@ func HTTPCallRetry(httpCallFun func() (outputDataPtr interface{}, resp *http.Res
 		attempt++
 		outDataPtr, resp, callErr := httpCallFun()
 		if statusCodeFound(resp, codesToRetry) {
+			closeHTTPResponse(resp)
 			LogWarn("attempt", attempt, "status_code", TryGetStatusCode(resp),
 				"HTTP call ended with wrong status code")
 			continue
 		}
 
 		if callErr == nil {
+			closeHTTPResponse(resp)
 			return outDataPtr, nil
 		}
 
 		if len(codesToRetry) == 0 { // no "retry" codes specified, continue always
+			closeHTTPResponse(resp)
 			LogWarn("attempt", attempt, "err", callErr, "HTTP call failed, trying again")
 			continue
 		}
 
 		responseDetails := tryGetResponseDetails(resp)
-		if resp != nil {
-			resp.Body.Close()
-		}
+		closeHTTPResponse(resp)
 		return nil, errors.Wrap(callErr, "HTTP call failed"+responseDetails)
 	}
 	return nil, errors.Errorf("HTTP retry call failed, attempts: %d", attempt)
+}
+
+// maxHTTPResponseDrain matches net/http maxPostHandlerReadBytes: enough leftover
+// body to allow connection reuse without reading arbitrarily large payloads.
+const maxHTTPResponseDrain = 256 << 10
+
+// closeHTTPResponse drains up to maxHTTPResponseDrain and closes the body so the
+// Transport can release the TCP connection.
+func closeHTTPResponse(resp *http.Response) {
+	if resp == nil || resp.Body == nil {
+		return
+	}
+	_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, maxHTTPResponseDrain))
+	_ = resp.Body.Close()
 }
 
 func CallAPI(client *http.Client, request *http.Request, debugEnabled bool) (*http.Response, error) {
