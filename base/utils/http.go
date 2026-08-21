@@ -49,12 +49,17 @@ func HTTPCallRetry(httpCallFun func() (outputDataPtr interface{}, resp *http.Res
 	return nil, errors.Errorf("HTTP retry call failed, attempts: %d", attempt)
 }
 
-// closeHTTPResponse drains and closes the body so the Transport can release the TCP connection.
+// maxHTTPResponseDrain matches net/http maxPostHandlerReadBytes: enough leftover
+// body to allow connection reuse without reading arbitrarily large payloads.
+const maxHTTPResponseDrain = 256 << 10
+
+// closeHTTPResponse drains up to maxHTTPResponseDrain and closes the body so the
+// Transport can release the TCP connection.
 func closeHTTPResponse(resp *http.Response) {
 	if resp == nil || resp.Body == nil {
 		return
 	}
-	_, _ = io.Copy(io.Discard, resp.Body)
+	_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, maxHTTPResponseDrain))
 	_ = resp.Body.Close()
 }
 
