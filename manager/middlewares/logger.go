@@ -35,9 +35,9 @@ func RequestResponseLogger() gin.HandlerFunc {
 		fields = append(fields, "request")
 
 		if c.Writer.Status() < http.StatusInternalServerError {
-			utils.LogInfo(fields...)
+			utils.LogInfo(append([]any{c.Request.Context()}, fields...)...)
 		} else {
-			utils.LogError(fields...)
+			utils.LogError(append([]any{c.Request.Context()}, fields...)...)
 		}
 
 		utils.ObserveSecondsSince(tStart, requestDurations.
