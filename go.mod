@@ -1,6 +1,6 @@
 module app
 
-go 1.25.7
+go 1.26.0
 
 require (
 	github.com/MichaelMraka/gorpm v0.0.0-20251128174203-65cf25f01bac
@@ -33,7 +33,7 @@ require (
 	github.com/zsais/go-gin-prometheus v1.0.3
 	go.uber.org/automaxprocs v1.6.0
 	go.uber.org/ratelimit v0.3.1
-	golang.org/x/exp v0.0.0-20260813180055-c1d0aacb2297
+	golang.org/x/exp v0.0.0-20260820142414-ca536658362e
 	google.golang.org/grpc v1.83.0
 	gorm.io/datatypes v1.2.7
 	gorm.io/driver/postgres v1.6.2
