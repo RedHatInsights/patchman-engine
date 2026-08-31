@@ -26,7 +26,7 @@ require (
 	github.com/redhatinsights/platform-go-middlewares v1.0.0
 	github.com/redhatinsights/platform-go-middlewares/v2 v2.1.0
 	github.com/segmentio/kafka-go v0.4.51
-	github.com/sirupsen/logrus v1.10.1
+	github.com/sirupsen/logrus v1.10.2
 	github.com/stretchr/testify v1.12.1
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.1
