@@ -1,16 +1,18 @@
 package listener
 
 import (
+	"app/base/api"
 	"app/base/content_sources"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"context"
+	"net/http"
+
 	"github.com/pkg/errors"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"net/http"
 )
 
 // nolint: funlen
@@ -188,8 +190,11 @@ func httpCallCSTemplateAdvisories(ctx context.Context, templateUUID string) (
 	if contentSourcesClient == nil {
 		return nil, nil, errors.New("content sources client is nil")
 	}
-	client := *contentSourcesClient
-	client.DefaultHeaders = map[string]string{"x-rh-identity": header}
+	client := &api.Client{
+		HTTPClient:     contentSourcesClient.HTTPClient,
+		Debug:          contentSourcesClient.Debug,
+		DefaultHeaders: map[string]string{"x-rh-identity": header},
+	}
 
 	url := contentSourcesBaseURL + "/templates/" + templateUUID + "/advisories/ids"
 	var resp content_sources.TemplateAdvisoryIDsResponse

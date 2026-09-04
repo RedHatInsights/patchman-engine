@@ -6,6 +6,7 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+	"context"
 	"testing"
 
 	"github.com/bytedance/sonic"
@@ -28,7 +29,7 @@ func TestUpdateSystem(t *testing.T) {
 	name := "TEST_NAME"
 	ev.Host.DisplayName = &name
 	ev.Host.SystemProfile.InstalledPackages = &[]string{"kernel-0:4.18.0-193.1.2.el8_2.x86_64"}
-	assert.NoError(t, HandleUpload(ev))
+	assert.NoError(t, HandleUpload(context.Background(), ev))
 
 	var system models.SystemInventory
 	assert.NoError(t, database.DB.Order("ID DESC").Find(&system, "inventory_id = ?", testInventoryID).Error)
@@ -41,7 +42,7 @@ func TestDeleteSystem(t *testing.T) {
 	createTestSystemInDB(t, testInventoryID, 1, testInventoryID.String())
 
 	deleteEvent := createTestDeleteEvent(testInventoryID)
-	err := HandleDelete(deleteEvent)
+	err := HandleDelete(context.Background(), deleteEvent)
 	assert.NoError(t, err)
 	assertSystemCulled(t)
 	deleteData(t)
@@ -56,7 +57,7 @@ func TestDeleteSystemWarn1(t *testing.T) {
 	data, err := sonic.Marshal(deleteEvent)
 	assert.NoError(t, err)
 
-	err = EventsMessageHandler(mqueue.KafkaMessage{Value: data})
+	err = EventsMessageHandler(context.Background(), mqueue.KafkaMessage{Value: data})
 	assert.Equal(t, WarnEmptyEventType, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
 
 	assert.NoError(t, err)
@@ -72,7 +73,7 @@ func TestDeleteSystemWarn2(t *testing.T) {
 	data, err := sonic.Marshal(deleteEvent)
 	assert.NoError(t, err)
 
-	err = EventsMessageHandler(mqueue.KafkaMessage{Value: data})
+	err = EventsMessageHandler(context.Background(), mqueue.KafkaMessage{Value: data})
 	assert.Equal(t, WarnUnknownType, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
 
 	assert.NoError(t, err)
@@ -87,7 +88,7 @@ func TestDeleteSystemWarn3(t *testing.T) {
 	log.AddHook(logHook)
 
 	deleteEvent := createTestDeleteEvent(notexistid)
-	err := HandleDelete(deleteEvent)
+	err := HandleDelete(context.Background(), deleteEvent)
 	assert.NoError(t, err)
 
 	assert.Equal(t, WarnNoRowsModified, logHook.LogEntries[len(logHook.LogEntries)-1].Message)
@@ -101,12 +102,12 @@ func TestUploadAfterDelete(t *testing.T) {
 
 	// system is not in database and the first event is delete
 	deleteEvent := createTestDeleteEvent(testInventoryID)
-	err := HandleDelete(deleteEvent)
+	err := HandleDelete(context.Background(), deleteEvent)
 	assert.NoError(t, err)
 
 	// upload will be skipped and system won't be created
 	uploadEvent := createTestUploadEvent("1", testInventoryID, "puptoo", true, false, "created")
-	err = HandleUpload(uploadEvent)
+	err = HandleUpload(context.Background(), uploadEvent)
 	assert.NoError(t, err)
 	assertSystemNotInDB(t)
 
@@ -122,19 +123,19 @@ func TestCreateDeleteUpload(t *testing.T) {
 	uploadEvent := createTestUploadEvent("1", testInventoryID, "puptoo", true, false, "created")
 	originalName := "UPLOADED"
 	uploadEvent.Host.DisplayName = &originalName
-	err := HandleUpload(uploadEvent)
+	err := HandleUpload(context.Background(), uploadEvent)
 	assert.NoError(t, err)
 
 	// delete marks the system but not physically delete it
 	deleteEvent := createTestDeleteEvent(testInventoryID)
-	err = HandleDelete(deleteEvent)
+	err = HandleDelete(context.Background(), deleteEvent)
 	assert.NoError(t, err)
 	assertSystemCulled(t)
 
 	// second upload of now deleted system should not change anything
 	changedName := "UPDATED"
 	uploadEvent.Host.DisplayName = &changedName
-	err = HandleUpload(uploadEvent)
+	err = HandleUpload(context.Background(), uploadEvent)
 	assert.NoError(t, err)
 
 	var system models.SystemInventory

@@ -54,18 +54,18 @@ type KafkaMessage struct {
 	Headers []kafka.Header
 }
 
-type MessageHandler func(message KafkaMessage) error
+type MessageHandler func(ctx context.Context, message KafkaMessage) error
 
 func MakeRetryingHandler(handler MessageHandler) MessageHandler {
-	return func(message KafkaMessage) error {
+	return func(ctx context.Context, message KafkaMessage) error {
 		var err error
 		var attempt int
 
-		ctx, cancel := context.WithCancel(context.Background())
-		backoffState := policy.Start(ctx)
+		backoffCtx, cancel := context.WithCancel(context.Background())
+		backoffState := policy.Start(backoffCtx)
 		defer cancel()
 		for backoff.Continue(backoffState) {
-			if err = handler(message); err == nil || !errors.Is(err, base.ErrFatal) {
+			if err = handler(ctx, message); err == nil || !errors.Is(err, base.ErrFatal) {
 				return nil
 			}
 			utils.LogError("err", err, "attempt", attempt, "Try failed")
