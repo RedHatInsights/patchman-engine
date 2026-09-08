@@ -100,14 +100,14 @@ func TestProducerContextLinksOriginalsAndInjectsOwnTraceparent(t *testing.T) {
 	assert.Equal(t, producerStub.SpanContext.TraceID(), childStub.SpanContext.TraceID())
 }
 
-func TestItemContextLinksOriginalAndParentsBulk(t *testing.T) {
+func TestItemContextParentsOriginalTrace(t *testing.T) {
 	exp := setupKafkaTest(t)
 
 	origCtx, orig := Tracer().Start(context.Background(), "original-item")
 	originalTraceparent := EncodeTraceparent(origCtx)
 	orig.End()
 
-	producerCtx, producer := ProducerContext(context.Background(), "patchman.evaluator.upload", nil)
+	producerCtx, producer := ProducerContext(ContextFromTraceparent(originalTraceparent), "patchman.evaluator.upload", nil)
 	producerHeaders := Inject(producerCtx, nil)
 	producer.End()
 
@@ -117,23 +117,50 @@ func TestItemContextLinksOriginalAndParentsBulk(t *testing.T) {
 	bulk.End()
 
 	spans := flushSpans(t, exp)
-	var bulkStub, itemStub tracetest.SpanStub
+	var bulkStub, itemStub, producerStub tracetest.SpanStub
 	for _, s := range spans {
 		switch s.Name {
 		case "process patchman.evaluator.upload":
 			bulkStub = s
 		case "evaluate upload":
 			itemStub = s
+		case "send patchman.evaluator.upload":
+			producerStub = s
 		}
 	}
 	require.NotEmpty(t, bulkStub.Name)
 	require.NotEmpty(t, itemStub.Name)
-	assert.Equal(t, bulkStub.SpanContext.SpanID(), itemStub.Parent.SpanID())
+	require.NotEmpty(t, producerStub.Name)
 
 	origSC := trace.SpanContextFromContext(ContextFromTraceparent(originalTraceparent))
-	require.Len(t, itemStub.Links, 1)
-	assert.Equal(t, origSC.TraceID(), itemStub.Links[0].SpanContext.TraceID())
-	assert.Equal(t, origSC.SpanID(), itemStub.Links[0].SpanContext.SpanID())
+	assert.Equal(t, origSC.TraceID(), itemStub.SpanContext.TraceID())
+	assert.Equal(t, origSC.SpanID(), itemStub.Parent.SpanID())
+	assert.Empty(t, itemStub.Links)
+
+	assert.Equal(t, origSC.TraceID(), producerStub.SpanContext.TraceID())
+	assert.Equal(t, origSC.SpanID(), producerStub.Parent.SpanID())
+	assert.Equal(t, producerStub.SpanContext.SpanID(), bulkStub.Parent.SpanID())
+}
+
+func TestParentContextFromTraceparents(t *testing.T) {
+	setupKafkaTest(t)
+
+	ctx0, span0 := Tracer().Start(context.Background(), "item-0")
+	tp0 := EncodeTraceparent(ctx0)
+	span0.End()
+
+	ctx1, span1 := Tracer().Start(context.Background(), "item-1")
+	tp1 := EncodeTraceparent(ctx1)
+	span1.End()
+
+	got := ParentContextFromTraceparents([]string{"", tp0, tp1})
+	sc := trace.SpanContextFromContext(got)
+	origSC := trace.SpanContextFromContext(ContextFromTraceparent(tp0))
+	assert.Equal(t, origSC.TraceID(), sc.TraceID())
+	assert.Equal(t, origSC.SpanID(), sc.SpanID())
+
+	assert.Equal(t, context.Background(), ParentContextFromTraceparents(nil))
+	assert.Equal(t, context.Background(), ParentContextFromTraceparents([]string{"", ""}))
 }
 
 func TestEncodeRoundTrip(t *testing.T) {

@@ -72,8 +72,11 @@ func (b *eventBuffer) flushEvalEvents() {
 	for _, e := range b.evalBuffer {
 		tps = append(tps, e.Traceparent)
 	}
-	links := telemetry.LinksFromTraceparents(tps)
-	pctx, span := telemetry.ProducerContext(context.Background(), utils.CoreCfg.EvalTopic, links)
+	pctx, span := telemetry.ProducerContext(
+		telemetry.ParentContextFromTraceparents(tps),
+		utils.CoreCfg.EvalTopic,
+		nil,
+	)
 	var err error
 	defer func() { telemetry.End(span, err) }()
 	err = mqueue.SendMessages(pctx, *b.evalWriter, b.evalBuffer)

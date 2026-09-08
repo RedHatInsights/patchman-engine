@@ -88,6 +88,21 @@ func LinksFromTraceparents(tps []string) []trace.Link {
 	return links
 }
 
+// ParentContextFromTraceparents returns a context whose remote parent is the
+// first valid traceparent in tps, or context.Background() when none are valid.
+func ParentContextFromTraceparents(tps []string) context.Context {
+	for _, tp := range tps {
+		if tp == "" {
+			continue
+		}
+		orig := ContextFromTraceparent(tp)
+		if trace.SpanContextFromContext(orig).IsValid() {
+			return orig
+		}
+	}
+	return context.Background()
+}
+
 func ConsumerContext(ctx context.Context, topic string, headers []kafka.Header) (context.Context, trace.Span) {
 	if !Enabled() || !MQEnabled() {
 		return ctx, trace.SpanFromContext(ctx)
@@ -125,11 +140,14 @@ func ItemContext(parent context.Context, name, traceparent string) (context.Cont
 	if !Enabled() {
 		return parent, trace.SpanFromContext(parent)
 	}
-	opts := []trace.SpanStartOption{trace.WithSpanKind(trace.SpanKindInternal)}
-	if orig := ContextFromTraceparent(traceparent); trace.SpanContextFromContext(orig).IsValid() {
-		opts = append(opts, trace.WithLinks(trace.LinkFromContext(orig)))
+	startCtx := parent
+	if traceparent != "" {
+		orig := ContextFromTraceparent(traceparent)
+		if trace.SpanContextFromContext(orig).IsValid() {
+			startCtx = orig
+		}
 	}
-	return Tracer().Start(parent, name, opts...)
+	return Tracer().Start(startCtx, name, trace.WithSpanKind(trace.SpanKindInternal))
 }
 
 func SetRHAttributes(span trace.Span, orgID, requestID string) {
