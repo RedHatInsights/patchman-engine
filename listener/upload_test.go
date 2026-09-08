@@ -418,7 +418,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 		Debug:      true,
 	}
 	hostEvent := createTestUploadEvent("1", testInventoryID, "puptoo", false, true, "created")
-	yumUpdates, err := getYumUpdates(hostEvent, httpClient)
+	yumUpdates, err := getYumUpdates(context.Background(), hostEvent, httpClient)
 	assert.Nil(t, err)
 
 	req := vmaas.UpdatesV3Request{}

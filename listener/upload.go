@@ -160,7 +160,7 @@ func HandleUpload(ctx context.Context, event HostEvent) error {
 	}
 
 	sendPayloadStatus(ptWriter, ptEvent, "", "Received by listener")
-	yumUpdates, err := getYumUpdates(event, httpClient)
+	yumUpdates, err := getYumUpdates(ctx, event, httpClient)
 	if err != nil {
 		// don't fail, use vmaas evaluation
 		utils.LogError("err", err, "Could not get yum updates")
@@ -862,14 +862,14 @@ func skipRecentlyDeleted(tx *gorm.DB, inventoryID uuid.UUID) (bool, error) {
 	return false, nil
 }
 
-func getYumUpdates(event HostEvent, client *api.Client) (*YumUpdates, error) {
+func getYumUpdates(ctx context.Context, event HostEvent, client *api.Client) (*YumUpdates, error) {
 	var parsed vmaas.UpdatesV3Response
 	res := &YumUpdates{}
 	yumUpdates := event.PlatformMetadata.CustomMetadata.YumUpdates
 	yumUpdatesURL := event.PlatformMetadata.CustomMetadata.YumUpdatesS3URL
 
 	if yumUpdatesURL != nil && *yumUpdatesURL != "" {
-		resp, err := client.Request(&base.Context, http.MethodGet, *yumUpdatesURL, nil, &parsed)
+		resp, err := client.Request(&ctx, http.MethodGet, *yumUpdatesURL, nil, &parsed)
 		if resp != nil && resp.Body != nil {
 			defer func() {
 				if closeErr := resp.Body.Close(); closeErr != nil {
