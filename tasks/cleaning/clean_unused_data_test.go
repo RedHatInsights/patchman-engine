@@ -17,7 +17,7 @@ func TestCleanUnusedPackages(t *testing.T) {
 
 	// package count before test
 	var beforePkgCount int64
-	err := database.DB.Model(models.Package{}).Count(&beforePkgCount).Error
+	err := database.TestDB().Model(models.Package{}).Count(&beforePkgCount).Error
 	assert.Nil(t, err)
 
 	// create unused package
@@ -27,7 +27,7 @@ func TestCleanUnusedPackages(t *testing.T) {
 		EVRA:   evra,
 		Synced: false,
 	}
-	err = database.DB.Create(&customPkg).Error
+	err = database.TestDB().Create(&customPkg).Error
 	assert.Nil(t, err)
 
 	// package is there
@@ -43,7 +43,7 @@ func TestCleanUnusedPackages(t *testing.T) {
 	// it is affected by test order
 	// there are multiple packages with synced=false
 	var afterPkgCount int64
-	err = database.DB.Model(models.Package{}).Count(&afterPkgCount).Error
+	err = database.TestDB().Model(models.Package{}).Count(&afterPkgCount).Error
 	assert.Nil(t, err)
 	assert.Equal(t, beforePkgCount, afterPkgCount+2)
 }
@@ -55,7 +55,7 @@ func TestCleanUnusedAdvisories(t *testing.T) {
 
 	// advisory count before test
 	var beforeAdvCount int64
-	err := database.DB.Model(models.AdvisoryMetadata{}).Count(&beforeAdvCount).Error
+	err := database.TestDB().Model(models.AdvisoryMetadata{}).Count(&beforeAdvCount).Error
 	assert.Nil(t, err)
 
 	// create unused advisory
@@ -70,7 +70,7 @@ func TestCleanUnusedAdvisories(t *testing.T) {
 		RebootRequired: false,
 		Synced:         false,
 	}
-	err = database.DB.Create(&customAdv).Error
+	err = database.TestDB().Create(&customAdv).Error
 	assert.Nil(t, err)
 
 	// advisory is there
@@ -78,21 +78,21 @@ func TestCleanUnusedAdvisories(t *testing.T) {
 
 	// lazy saved RH-100 remains in AdvisoryMetadata after evaluator tests
 	var rh100count int64
-	database.DB.Model(models.AdvisoryMetadata{}).Where("name = ?", "RH-100").Count(&rh100count)
+	database.TestDB().Model(models.AdvisoryMetadata{}).Where("name = ?", "RH-100").Count(&rh100count)
 
 	// delete unused
 	deleteUnusedAdvisories()
 
 	// is custom advisory deleted?
 	var count int64
-	err = database.DB.Model(models.AdvisoryMetadata{}).Where("name = ?", advisory).
+	err = database.TestDB().Model(models.AdvisoryMetadata{}).Where("name = ?", advisory).
 		Count(&count).Error
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), count)
 
 	// anything else deleted by mistake?
 	var afterAdvCount int64
-	err = database.DB.Model(models.AdvisoryMetadata{}).Count(&afterAdvCount).Error
+	err = database.TestDB().Model(models.AdvisoryMetadata{}).Count(&afterAdvCount).Error
 	assert.Nil(t, err)
 	assert.Equal(t, beforeAdvCount-rh100count, afterAdvCount)
 }
@@ -112,7 +112,7 @@ func TestDeleteUnusedAdvisoriesKeptByAccountAdvisory(t *testing.T) {
 		RebootRequired: false,
 		Synced:         false,
 	}
-	err := database.DB.Create(&customAdv).Error
+	err := database.TestDB().Create(&customAdv).Error
 	assert.Nil(t, err)
 
 	aa := models.AccountAdvisory{
@@ -122,17 +122,17 @@ func TestDeleteUnusedAdvisoriesKeptByAccountAdvisory(t *testing.T) {
 		SystemsApplicable:  1,
 		SystemsInstallable: 0,
 	}
-	err = database.DB.Create(&aa).Error
+	err = database.TestDB().Create(&aa).Error
 	assert.Nil(t, err)
 
 	deleteUnusedAdvisories()
 
 	var count int64
-	err = database.DB.Model(models.AdvisoryMetadata{}).Where("name = ?", advisory).Count(&count).Error
+	err = database.TestDB().Model(models.AdvisoryMetadata{}).Where("name = ?", advisory).Count(&count).Error
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), count, "advisory with account_advisory row should not be deleted")
 
 	// cleanup
-	database.DB.Delete(&aa)
-	database.DB.Delete(&customAdv)
+	database.TestDB().Delete(&aa)
+	database.TestDB().Delete(&customAdv)
 }

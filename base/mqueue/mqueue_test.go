@@ -1,6 +1,7 @@
 package mqueue
 
 import (
+	"app/base"
 	"app/base/utils"
 	"context"
 	"errors"
@@ -29,7 +30,7 @@ func TestRoundTripKafkaGo(t *testing.T) {
 
 	writer := NewKafkaWriterFromEnv("test")
 	eventIn := PlatformEvent{ID: someid}
-	assert.NoError(t, writePlatformEvents(context.Background(), writer, eventIn))
+	assert.NoError(t, writePlatformEvents(base.Context, writer, eventIn))
 	utils.AssertEqualWait(t, 10, func() (exp, act interface{}) {
 		return eventIn.ID, eventOut.ID
 	})
@@ -38,7 +39,7 @@ func TestRoundTripKafkaGo(t *testing.T) {
 func TestSpawnReader(t *testing.T) {
 	var nReaders int32
 	wg := sync.WaitGroup{}
-	SpawnReader(context.Background(), &wg, "", CreateCountedMockReader(&nReaders),
+	SpawnReader(base.Context, &wg, "", CreateCountedMockReader(&nReaders),
 		func(_ context.Context, _ KafkaMessage) error { return nil })
 	wg.Wait()
 	assert.Equal(t, 1, int(nReaders))
@@ -55,10 +56,10 @@ func TestRetry(t *testing.T) {
 	}
 
 	// Without retry handler should fail
-	assert.Error(t, handler(context.Background(), msg))
+	assert.Error(t, handler(base.Context, msg))
 
 	// With retry we handler should eventually succeed
-	assert.NoError(t, MakeRetryingHandler(handler)(context.Background(), msg))
+	assert.NoError(t, MakeRetryingHandler(handler)(base.Context, msg))
 }
 
 func TestWriteMessagesInjectsTraceparent(t *testing.T) {

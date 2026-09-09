@@ -32,7 +32,7 @@ func HandleSignals() {
 		utils.LogInfo("starting grace period for " + sig.String())
 		time.Sleep(defaultK8sGracePeriod / 4)
 		CancelContext()
-		_ = telemetry.Shutdown(context.Background())
+		_ = telemetry.Shutdown(Context)
 		utils.LogInfo("SIGTERM/SIGINT handled")
 	}()
 }

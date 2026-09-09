@@ -55,7 +55,7 @@ func CheckCachesValidRet() (bool, error) {
 	valid := true
 	var aad []models.AdvisoryAccountData
 
-	tx := DB.WithContext(base.Context).Begin()
+	tx := DB(base.Context).Begin()
 	defer tx.Rollback()
 	err := tx.Set("gorm:query_option", "FOR SHARE OF advisory_account_data").
 		Order("rh_account_id, advisory_id").Find(&aad).Error
@@ -118,7 +118,7 @@ func CheckCachesValid(t *testing.T) {
 
 func CheckAdvisoriesInDB(t *testing.T, advisories []string) []int64 {
 	var advisoryIDs []int64
-	err := DB.Model(models.AdvisoryMetadata{}).Where("name IN (?)", advisories).
+	err := TestDB().Model(models.AdvisoryMetadata{}).Where("name IN (?)", advisories).
 		Pluck("id", &advisoryIDs).Error
 	assert.Nil(t, err)
 	assert.Equal(t, len(advisories), len(advisoryIDs))
@@ -127,7 +127,7 @@ func CheckAdvisoriesInDB(t *testing.T, advisories []string) []int64 {
 
 func GetAdvisoriesByName(t *testing.T, advisories []string) []models.AdvisoryMetadata {
 	var advisoryMetadata []models.AdvisoryMetadata
-	err := DB.Model(models.AdvisoryMetadata{}).Where("name IN (?)", advisories).
+	err := TestDB().Model(models.AdvisoryMetadata{}).Where("name IN (?)", advisories).
 		Find(&advisoryMetadata).Error
 	assert.Nil(t, err)
 	assert.Equal(t, len(advisories), len(advisoryMetadata))
@@ -135,14 +135,14 @@ func GetAdvisoriesByName(t *testing.T, advisories []string) []models.AdvisoryMet
 }
 
 func DeleteAdvisoriesByName(t *testing.T, advisories []string) {
-	err := DB.Model(models.AdvisoryMetadata{}).Where("name IN ?", advisories).
+	err := TestDB().Model(models.AdvisoryMetadata{}).Where("name IN ?", advisories).
 		Delete(&models.AdvisoryMetadata{}).Error
 	assert.Nil(t, err)
 }
 
 func CheckThirdPartyRepos(t *testing.T, repoNames []string, thirdParty bool) {
 	var reposObjs []models.Repo
-	assert.Nil(t, DB.Where("name IN (?)", repoNames).Find(&reposObjs).Error)
+	assert.Nil(t, TestDB().Where("name IN (?)", repoNames).Find(&reposObjs).Error)
 	assert.Equal(t, len(reposObjs), len(repoNames), "loaded repos count match")
 	for _, reposObj := range reposObjs {
 		assert.Equal(t, thirdParty, reposObj.ThirdParty,
@@ -152,7 +152,7 @@ func CheckThirdPartyRepos(t *testing.T, repoNames []string, thirdParty bool) {
 
 func CheckPackagesNamesInDB(t *testing.T, filter string, packageNames ...string) {
 	var count int64
-	query := DB.Model(&models.PackageName{}).Where("name in (?)", packageNames)
+	query := TestDB().Model(&models.PackageName{}).Where("name in (?)", packageNames)
 	if filter != "" {
 		query = query.Where(filter)
 	}
@@ -164,9 +164,9 @@ func CheckSystemJustEvaluated(t *testing.T, inventoryID uuid.UUID, nIAll, nIEnh,
 	nAAll, nAEnh, nABug, nASec, nInstall, nInstallable, nApplicable int,
 	thirdParty bool) {
 	var inv models.SystemInventory
-	assert.Nil(t, DB.Where("inventory_id = ?", inventoryID).First(&inv).Error)
+	assert.Nil(t, TestDB().Where("inventory_id = ?", inventoryID).First(&inv).Error)
 	var patch models.SystemPatch
-	assert.Nil(t, DB.Where("rh_account_id = ? AND system_id = ?", inv.RhAccountID, inv.ID).First(&patch).Error)
+	assert.Nil(t, TestDB().Where("rh_account_id = ? AND system_id = ?", inv.RhAccountID, inv.ID).First(&patch).Error)
 	assert.NotNil(t, patch.LastEvaluation)
 	assert.True(t, patch.LastEvaluation.After(time.Now().Add(-time.Second)))
 	assert.Equal(t, nIAll, patch.InstallableAdvisoryCountCache)
@@ -185,7 +185,7 @@ func CheckSystemJustEvaluated(t *testing.T, inventoryID uuid.UUID, nIAll, nIEnh,
 
 func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int64, systemsInstallable int) {
 	var advisoryAccountData []models.AdvisoryAccountData
-	err := DB.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
+	err := TestDB().Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
 		Find(&advisoryAccountData).Error
 	assert.Nil(t, err)
 
@@ -199,7 +199,7 @@ func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int
 
 func CheckAdvisoriesAccountDataNotified(t *testing.T, rhAccountID int, advisoryIDs []int64, notified bool) {
 	var advisoryAccountData []models.AdvisoryAccountData
-	err := DB.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
+	err := TestDB().Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
 		Find(&advisoryAccountData).Error
 	assert.Nil(t, err)
 
@@ -231,7 +231,7 @@ func CreateStoredAdvisories(advisoryPatched []int64) map[string]models.SystemAdv
 
 func CreateSystemAdvisories(t *testing.T, rhAccountID int, systemID int64, advisoryIDs []int64) {
 	for _, advisoryID := range advisoryIDs {
-		err := DB.Create(&models.SystemAdvisories{
+		err := TestDB().Create(&models.SystemAdvisories{
 			RhAccountID: rhAccountID, SystemID: systemID, AdvisoryID: advisoryID, StatusID: 0}).Error
 		assert.Nil(t, err)
 	}
@@ -241,7 +241,7 @@ func CreateSystemAdvisories(t *testing.T, rhAccountID int, systemID int64, advis
 func CreateAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int64,
 	systemsInstallable int) {
 	for _, advisoryID := range advisoryIDs {
-		err := DB.Create(&models.AdvisoryAccountData{
+		err := TestDB().Create(&models.AdvisoryAccountData{
 			AdvisoryID: advisoryID, RhAccountID: rhAccountID, SystemsInstallable: systemsInstallable,
 			// create same number of applicable and installable systems because installable is subset of applicable
 			SystemsApplicable: systemsInstallable}).Error
@@ -252,7 +252,7 @@ func CreateAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int6
 
 func CreateSystemRepos(t *testing.T, rhAccountID int, systemID int64, repoIDs []int64) {
 	for _, repoID := range repoIDs {
-		assert.Nil(t, DB.Create(&models.SystemRepo{RhAccountID: int64(rhAccountID),
+		assert.Nil(t, TestDB().Create(&models.SystemRepo{RhAccountID: int64(rhAccountID),
 			SystemID: systemID, RepoID: repoID}).Error)
 	}
 	CheckSystemRepos(t, rhAccountID, systemID, repoIDs)
@@ -260,7 +260,7 @@ func CreateSystemRepos(t *testing.T, rhAccountID int, systemID int64, repoIDs []
 
 func CheckSystemAdvisories(t *testing.T, systemID int64, advisoryIDs []int64) {
 	var systemAdvisories []models.SystemAdvisories
-	err := DB.Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
+	err := TestDB().Where("system_id = ? AND advisory_id IN (?)", systemID, advisoryIDs).
 		Find(&systemAdvisories).Error
 	assert.Nil(t, err)
 	assert.Equal(t, len(advisoryIDs), len(systemAdvisories))
@@ -268,13 +268,13 @@ func CheckSystemAdvisories(t *testing.T, systemID int64, advisoryIDs []int64) {
 
 func CheckEVRAsInDB(t *testing.T, nExpected int, evras ...string) {
 	var packages []models.Package
-	assert.Nil(t, DB.Where("evra IN (?)", evras).Find(&packages).Error)
+	assert.Nil(t, TestDB().Where("evra IN (?)", evras).Find(&packages).Error)
 	assert.Equal(t, nExpected, len(packages))
 }
 
 func CheckEVRAsInDBSynced(t *testing.T, nExpected int, synced bool, evras ...string) {
 	var packages []models.Package
-	assert.Nil(t, DB.Where("evra IN (?)", evras).Find(&packages).Error)
+	assert.Nil(t, TestDB().Where("evra IN (?)", evras).Find(&packages).Error)
 	assert.Equal(t, nExpected, len(packages))
 	for _, pkg := range packages {
 		assert.Equal(t, synced, pkg.Synced)
@@ -283,7 +283,7 @@ func CheckEVRAsInDBSynced(t *testing.T, nExpected int, synced bool, evras ...str
 
 func CheckSystemPackages(t *testing.T, accountID int, systemID int64, nExpected int, packageIDs ...int64) {
 	var systemPackages []models.SystemPackage
-	query := DB.Where("rh_account_id = ? AND system_id = ?", accountID, systemID)
+	query := TestDB().Where("rh_account_id = ? AND system_id = ?", accountID, systemID)
 	if len(packageIDs) > 0 {
 		query = query.Where("package_id IN (?)", packageIDs)
 	}
@@ -293,7 +293,7 @@ func CheckSystemPackages(t *testing.T, accountID int, systemID int64, nExpected 
 
 func CheckSystemRepos(t *testing.T, rhAccountID int, systemID int64, repoIDs []int64) {
 	var systemRepos []models.SystemRepo
-	err := DB.Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)",
+	err := TestDB().Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)",
 		rhAccountID, systemID, repoIDs).
 		Find(&systemRepos).Error
 	assert.Nil(t, err)
@@ -301,21 +301,21 @@ func CheckSystemRepos(t *testing.T, rhAccountID int, systemID int64, repoIDs []i
 }
 
 func DeleteSystemAdvisories(t *testing.T, systemID int64, advisoryIDs []int64) {
-	query := DB.Model(&models.SystemAdvisories{}).Where("system_id = ? AND advisory_id IN (?)",
+	query := TestDB().Model(&models.SystemAdvisories{}).Where("system_id = ? AND advisory_id IN (?)",
 		systemID, advisoryIDs)
 	assert.Nil(t, query.Delete(&models.SystemAdvisories{}).Error)
 
 	var cnt int64
 	assert.Nil(t, query.Count(&cnt).Error)
 	assert.Equal(t, int64(0), cnt)
-	assert.Nil(t, DB.Exec("SELECT * FROM update_system_caches(?)", systemID).Error)
+	assert.Nil(t, TestDB().Exec("SELECT * FROM update_system_caches(?)", systemID).Error)
 }
 
 func CreateAccountAdvisory(t *testing.T, rhAccountID int, workspaceID string, advisoryIDs []int64,
 	systemsInstallable int) {
 	wsID := uuid.MustParse(workspaceID)
 	for _, advisoryID := range advisoryIDs {
-		err := DB.Create(&models.AccountAdvisory{
+		err := TestDB().Create(&models.AccountAdvisory{
 			AdvisoryID: advisoryID, RhAccountID: rhAccountID, WorkspaceID: wsID,
 			SystemsInstallable: systemsInstallable, SystemsApplicable: systemsInstallable}).Error
 		assert.Nil(t, err)
@@ -326,7 +326,7 @@ func CreateAccountAdvisory(t *testing.T, rhAccountID int, workspaceID string, ad
 func CheckAccountAdvisory(t *testing.T, rhAccountID int, workspaceID string, advisoryIDs []int64,
 	systemsInstallable int) {
 	var accountAdvisory []models.AccountAdvisory
-	err := DB.Where("rh_account_id = ? AND workspace_id = ? AND advisory_id IN (?)",
+	err := TestDB().Where("rh_account_id = ? AND workspace_id = ? AND advisory_id IN (?)",
 		rhAccountID, workspaceID, advisoryIDs).
 		Find(&accountAdvisory).Error
 	assert.Nil(t, err)
@@ -339,8 +339,8 @@ func CheckAccountAdvisory(t *testing.T, rhAccountID int, workspaceID string, adv
 }
 
 func DeleteAccountAdvisory(t *testing.T, rhAccountID int, workspaceID string, advisoryIDs []int64) {
-	query := DB.Model(&models.AccountAdvisory{}).Where("rh_account_id = ? AND workspace_id = ? AND advisory_id IN (?)",
-		rhAccountID, workspaceID, advisoryIDs)
+	query := TestDB().Model(&models.AccountAdvisory{}).
+		Where("rh_account_id = ? AND workspace_id = ? AND advisory_id IN (?)", rhAccountID, workspaceID, advisoryIDs)
 	assert.Nil(t, query.Delete(&models.AccountAdvisory{}).Error)
 
 	var cnt int64
@@ -349,12 +349,12 @@ func DeleteAccountAdvisory(t *testing.T, rhAccountID int, workspaceID string, ad
 }
 
 func DeleteAccountAdvisoryByAccount(t *testing.T, rhAccountID int) {
-	assert.Nil(t, DB.Where("rh_account_id = ?", rhAccountID).
+	assert.Nil(t, TestDB().Where("rh_account_id = ?", rhAccountID).
 		Delete(&models.AccountAdvisory{}).Error)
 }
 
 func DeleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int64) {
-	query := DB.Model(&models.AdvisoryAccountData{}).Where("rh_account_id = ? AND advisory_id IN (?)",
+	query := TestDB().Model(&models.AdvisoryAccountData{}).Where("rh_account_id = ? AND advisory_id IN (?)",
 		rhAccountID, advisoryIDs)
 	assert.Nil(t, query.Delete(&models.AdvisoryAccountData{}).Error)
 
@@ -364,7 +364,7 @@ func DeleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int6
 }
 
 func DeleteSystemPackages(t *testing.T, accountID int, systemID int64, pkgIDs ...int64) {
-	query := DB.Model(&models.SystemPackage{}).Where("rh_account_id = ? AND system_id = ?", accountID, systemID)
+	query := TestDB().Model(&models.SystemPackage{}).Where("rh_account_id = ? AND system_id = ?", accountID, systemID)
 	if len(pkgIDs) > 0 {
 		query = query.Where("package_id in (?)", pkgIDs)
 	}
@@ -376,13 +376,13 @@ func DeleteSystemPackages(t *testing.T, accountID int, systemID int64, pkgIDs ..
 }
 
 func DeleteSystemRepos(t *testing.T, rhAccountID int, systemID int64, repoIDs []int64) {
-	err := DB.Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)", rhAccountID, systemID, repoIDs).
+	err := TestDB().Where("rh_account_id = ? AND system_id = ? AND repo_id IN (?)", rhAccountID, systemID, repoIDs).
 		Delete(&models.SystemRepo{}).Error
 	assert.Nil(t, err)
 }
 
 func DeleteNewlyAddedPackages(t *testing.T) {
-	query := DB.Table("package p").
+	query := TestDB().Table("package p").
 		Where("id >= 100").
 		Where("NOT EXISTS (SELECT 1 FROM system_package2 sp WHERE" +
 			" p.id = sp.package_id OR p.id = sp.installable_id OR p.id = sp.applicable_id)")
@@ -393,9 +393,9 @@ func DeleteNewlyAddedPackages(t *testing.T) {
 }
 
 func DeleteNewlyAddedAdvisories(t *testing.T) {
-	query := DB.Model(models.AdvisoryMetadata{}).Where("id >= 100")
-	querySa := DB.Model(models.SystemAdvisories{}).Where("advisory_id >= 100")
-	queryAad := DB.Model(models.AdvisoryAccountData{}).Where("advisory_id >= 100")
+	query := TestDB().Model(models.AdvisoryMetadata{}).Where("id >= 100")
+	querySa := TestDB().Model(models.SystemAdvisories{}).Where("advisory_id >= 100")
+	queryAad := TestDB().Model(models.AdvisoryAccountData{}).Where("advisory_id >= 100")
 	assert.Nil(t, querySa.Delete(models.SystemAdvisories{}).Error)
 	assert.Nil(t, queryAad.Delete(models.AdvisoryAccountData{}).Error)
 	assert.Nil(t, query.Delete(models.AdvisoryMetadata{}).Error)
@@ -405,7 +405,7 @@ func DeleteNewlyAddedAdvisories(t *testing.T) {
 }
 
 func GetAllSystems(t *testing.T) (systems []*models.SystemInventory) {
-	assert.Nil(t, DB.Model(&models.SystemInventory{}).Order("rh_account_id").Scan(&systems).Error)
+	assert.Nil(t, TestDB().Model(&models.SystemInventory{}).Order("rh_account_id").Scan(&systems).Error)
 	return systems
 }
 
@@ -417,7 +417,7 @@ func GetPackageIDs(nevras ...string) []int64 {
 		if err != nil {
 			continue
 		}
-		DB.Model(models.Package{}).
+		TestDB().Model(models.Package{}).
 			Joins("JOIN package_name pn ON package.name_id = pn.id").
 			Where("name = ? and evra = ?", nevra.Name, nevra.EVRAString()).
 			Pluck("package.id", &packageID)
@@ -438,7 +438,7 @@ func CreateTemplate(t *testing.T, account int, uuid string, inventoryIDs []uuid.
 		Version:       "8",
 	}
 
-	tx := DB.Begin()
+	tx := TestDB().Begin()
 	defer tx.Rollback()
 
 	err := tx.Create(template).Error
@@ -462,7 +462,7 @@ func CreateTemplate(t *testing.T, account int, uuid string, inventoryIDs []uuid.
 }
 
 func DeleteTemplate(t *testing.T, account int, templateUUID string) {
-	tx := DB.Begin()
+	tx := TestDB().Begin()
 	defer tx.Rollback()
 
 	err := tx.Model(&models.SystemPatch{}).
@@ -480,7 +480,7 @@ func DeleteTemplate(t *testing.T, account int, templateUUID string) {
 
 func CheckTemplateSystems(t *testing.T, account int, templateUUID string, inventoryIDs []uuid.UUID) {
 	var foundInventoryIDs []uuid.UUID
-	err := DB.Table("system_inventory si").Select("si.inventory_id as id").
+	err := TestDB().Table("system_inventory si").Select("si.inventory_id as id").
 		Joins("JOIN system_patch spatch ON si.id = spatch.system_id AND si.rh_account_id = spatch.rh_account_id").
 		Joins("JOIN template tp ON tp.id = spatch.template_id AND tp.rh_account_id = spatch.rh_account_id").
 		Where("si.rh_account_id = ? AND tp.uuid = ?::uuid", account, templateUUID).
@@ -499,7 +499,7 @@ func CheckTemplateSystems(t *testing.T, account int, templateUUID string, invent
 
 func CreateTemplateAdvisories(t *testing.T, rhAccountID int, templateID int64, advisoryIDs []int64) {
 	for _, advisoryID := range advisoryIDs {
-		err := DB.Create(&models.TemplateAdvisory{
+		err := TestDB().Create(&models.TemplateAdvisory{
 			RhAccountID: rhAccountID, TemplateID: templateID, AdvisoryID: advisoryID}).Error
 		assert.Nil(t, err)
 	}
@@ -508,14 +508,14 @@ func CreateTemplateAdvisories(t *testing.T, rhAccountID int, templateID int64, a
 
 func CheckTemplateAdvisories(t *testing.T, templateID int64, advisoryIDs []int64) {
 	var templateAdvisories []models.TemplateAdvisory
-	err := DB.Where("template_id = ? AND advisory_id IN (?)", templateID, advisoryIDs).
+	err := TestDB().Where("template_id = ? AND advisory_id IN (?)", templateID, advisoryIDs).
 		Find(&templateAdvisories).Error
 	assert.Nil(t, err)
 	assert.Equal(t, len(advisoryIDs), len(templateAdvisories))
 }
 
 func DeleteTemplateAdvisories(t *testing.T, templateID int64, advisoryIDs []int64) {
-	query := DB.Model(&models.TemplateAdvisory{}).Where("template_id = ? AND advisory_id IN (?)",
+	query := TestDB().Model(&models.TemplateAdvisory{}).Where("template_id = ? AND advisory_id IN (?)",
 		templateID, advisoryIDs)
 	assert.Nil(t, query.Delete(&models.TemplateAdvisory{}).Error)
 

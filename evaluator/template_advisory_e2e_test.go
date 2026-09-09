@@ -1,13 +1,13 @@
 package evaluator
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
 	"app/listener"
-	"context"
 	"strings"
 	"testing"
 	"time"
@@ -31,7 +31,7 @@ func evaluateHandlerForTest(event mqueue.PlatformEvent) error {
 	if err != nil {
 		return err
 	}
-	return evaluateHandler(context.Background(), mqueue.KafkaMessage{Value: data})
+	return evaluateHandler(base.Context, mqueue.KafkaMessage{Value: data})
 }
 
 // nolint: funlen
@@ -60,7 +60,7 @@ func TestTemplateAdvisoryEvalE2E(t *testing.T) {
 	database.CreateTemplate(t, accountID, templateUUID, []uuid.UUID{inventoryID})
 
 	var template models.Template
-	err := database.DB.Where("rh_account_id = ? AND uuid = ?::uuid", accountID, templateUUID).First(&template).Error
+	err := database.TestDB().Where("rh_account_id = ? AND uuid = ?::uuid", accountID, templateUUID).First(&template).Error
 	require.NoError(t, err)
 
 	database.CreateTemplateAdvisories(t, accountID, template.ID, []int64{1, 2})
@@ -87,7 +87,7 @@ func TestTemplateAdvisoryEvalE2E(t *testing.T) {
 	msg, err := sonic.Marshal(updateEvent)
 	require.NoError(t, err)
 
-	err = listener.TemplatesMessageHandler(context.Background(), mqueue.KafkaMessage{Value: msg})
+	err = listener.TemplatesMessageHandler(base.Context, mqueue.KafkaMessage{Value: msg})
 	require.NoError(t, err)
 
 	database.CheckTemplateAdvisories(t, template.ID, []int64{1, 3})
@@ -118,8 +118,8 @@ func createE2ETestSystem(t *testing.T, inventoryID uuid.UUID, accountID int, vma
 		VmaasJSON:    &vmaasJSON,
 		JSONChecksum: strPtr("e2e-template-advisory"),
 	}
-	require.NoError(t, database.DB.Create(&inv).Error)
-	require.NoError(t, database.DB.Create(&models.SystemPatch{
+	require.NoError(t, database.TestDB().Create(&inv).Error)
+	require.NoError(t, database.TestDB().Create(&models.SystemPatch{
 		SystemID:    inv.ID,
 		RhAccountID: accountID,
 	}).Error)
@@ -129,30 +129,30 @@ func createE2ETestSystem(t *testing.T, inventoryID uuid.UUID, accountID int, vma
 func deleteE2ETestSystem(t *testing.T, inventoryID uuid.UUID) {
 	t.Helper()
 	var inv models.SystemInventory
-	err := database.DB.Where("inventory_id = ?", inventoryID).First(&inv).Error
+	err := database.TestDB().Where("inventory_id = ?", inventoryID).First(&inv).Error
 	if err != nil {
 		return
 	}
-	require.NoError(t, database.DB.Unscoped().
+	require.NoError(t, database.TestDB().Unscoped().
 		Where("rh_account_id = ? AND system_id = ?", inv.RhAccountID, inv.ID).
 		Delete(&models.SystemAdvisories{}).Error)
-	require.NoError(t, database.DB.Unscoped().
+	require.NoError(t, database.TestDB().Unscoped().
 		Where("rh_account_id = ? AND system_id = ?", inv.RhAccountID, inv.ID).
 		Delete(&models.SystemPackage{}).Error)
-	require.NoError(t, database.DB.Unscoped().
+	require.NoError(t, database.TestDB().Unscoped().
 		Where("rh_account_id = ? AND system_id = ?", inv.RhAccountID, inv.ID).
 		Delete(&models.SystemRepo{}).Error)
-	require.NoError(t, database.DB.Unscoped().Exec(
+	require.NoError(t, database.TestDB().Unscoped().Exec(
 		"DELETE FROM system_patch WHERE rh_account_id = ? AND system_id = ?",
 		inv.RhAccountID, inv.ID).Error)
-	require.NoError(t, database.DB.Unscoped().Where("inventory_id = ?", inventoryID).
+	require.NoError(t, database.TestDB().Unscoped().Where("inventory_id = ?", inventoryID).
 		Delete(&models.SystemInventory{}).Error)
 }
 
 func assertSystemAdvisoryStatus(t *testing.T, systemID int64, advisoryName string, expectedStatus int) {
 	t.Helper()
 	var systemAdvisory models.SystemAdvisories
-	err := database.DB.Table("system_advisories sa").
+	err := database.TestDB().Table("system_advisories sa").
 		Select("sa.*").
 		Joins("JOIN advisory_metadata am ON am.id = sa.advisory_id").
 		Where("sa.system_id = ? AND am.name = ?", systemID, advisoryName).

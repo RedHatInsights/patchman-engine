@@ -185,15 +185,15 @@ func testUpdateTemplateBadRequest(t *testing.T, satelliteManaged, bootc bool) {
 		SatelliteManaged: satelliteManaged,
 		Bootc:            bootc,
 	}
-	assert.Nil(t, database.DB.Create(&inv).Error)
-	assert.Nil(t, database.DB.Create(&models.SystemPatch{
+	assert.Nil(t, database.TestDB().Create(&inv).Error)
+	assert.Nil(t, database.TestDB().Create(&models.SystemPatch{
 		SystemID:    inv.ID,
 		RhAccountID: templateAccount,
 	}).Error)
 	defer func() {
-		assert.Nil(t, database.DB.Where("system_id = ? AND rh_account_id = ?", inv.ID, templateAccount).
+		assert.Nil(t, database.TestDB().Where("system_id = ? AND rh_account_id = ?", inv.ID, templateAccount).
 			Delete(&models.SystemPatch{}).Error)
-		assert.Nil(t, database.DB.Delete(&inv).Error)
+		assert.Nil(t, database.TestDB().Delete(&inv).Error)
 	}()
 
 	data := `{

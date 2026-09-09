@@ -1,13 +1,13 @@
 package evaluator
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
 	"app/base/vmaas"
-	"context"
 	"net/http"
 	"sync"
 	"testing"
@@ -91,7 +91,7 @@ func TestEvaluate(t *testing.T) {
 		OrgID:      &orgID,
 		AccountID:  rhAccountID})
 	assert.NoError(t, err)
-	err = evaluateHandler(context.Background(), mqueue.KafkaMessage{Value: data})
+	err = evaluateHandler(base.Context, mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
@@ -111,7 +111,7 @@ func TestEvaluate(t *testing.T) {
 		OrgID:      &orgID,
 		AccountID:  rhAccountID})
 	assert.NoError(t, err)
-	err = evaluateHandler(context.Background(), mqueue.KafkaMessage{Value: data})
+	err = evaluateHandler(base.Context, mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 	database.CheckSystemJustEvaluated(t, testInventoryID, 3, 1, 1, 0,
 		3, 1, 1, 0, 2, 2, 2, true)
@@ -156,7 +156,7 @@ func TestEvaluateYum(t *testing.T) {
 		OrgID:     &orgID,
 		AccountID: rhAccountID})
 	assert.NoError(t, err)
-	err = evaluateHandler(context.Background(), mqueue.KafkaMessage{Value: data})
+	err = evaluateHandler(base.Context, mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 
 	expectedPackageIDs := database.GetPackageIDs(expectedPackages...)
@@ -192,7 +192,7 @@ func TestVMaaSUpdatesCall(t *testing.T) {
 	}
 
 	resp := vmaas.UpdatesV3Response{}
-	ctx := context.Background()
+	ctx := base.Context
 	httpResp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasUpdatesURL, &req, &resp) // nolint: bodyclose
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
@@ -360,7 +360,7 @@ func TestSatelliteSystemAdvisories(t *testing.T) {
 		Patch: models.SystemPatch{},
 	}
 
-	result, err := getUpdatesData(context.Background(), system)
+	result, err := getUpdatesData(base.Context, system)
 	assert.Nil(t, err)
 
 	// result should have 2 git advisories,    1 is installable (taken from yum updates and vmaas, merged)
@@ -503,7 +503,7 @@ func TestBootcSystemAdvisories(t *testing.T) {
 		Patch: models.SystemPatch{},
 	}
 
-	result, err := getUpdatesData(context.Background(), system)
+	result, err := getUpdatesData(base.Context, system)
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 
@@ -528,7 +528,7 @@ func TestCallVmaas400(t *testing.T) {
 	utils.SkipWithoutPlatform(t)
 	configure()
 	req := vmaas.UpdatesV3Request{TestReturnStatus: 400}
-	_, err := callVMaas(context.Background(), &req)
+	_, err := callVMaas(base.Context, &req)
 	assert.ErrorIs(t, err, errVmaasBadRequest)
 }
 
@@ -543,7 +543,7 @@ func TestGetUpdatesDataVmaas400(t *testing.T) {
 	reqJSON, _ := sonic.Marshal(req)
 	reqString := string(reqJSON)
 	sp := &models.SystemPlatformV2{Inventory: models.SystemInventory{VmaasJSON: &reqString}}
-	res, err := getUpdatesData(context.Background(), sp)
+	res, err := getUpdatesData(base.Context, sp)
 	// response and error should be nil, system is skipped due to VMaaS 400
 	assert.Nil(t, err)
 	assert.Nil(t, res)
@@ -563,7 +563,7 @@ func TestGetVmaasDataCached(t *testing.T) {
 	sp := &models.SystemPlatformV2{Inventory: models.SystemInventory{VmaasJSON: &reqString, JSONChecksum: &chsum}}
 
 	var assertInstallable = func() (*vmaas.UpdatesV3Response, []vmaas.UpdatesV3ResponseAvailableUpdates) {
-		vmaasData, _ := getVmaasUpdates(context.Background(), sp)
+		vmaasData, _ := getVmaasUpdates(base.Context, sp)
 		updates := (*vmaasData.UpdateList)["firefox-0:76.0.1-1.fc31.x86_64"].GetAvailableUpdates()
 		assert.Equal(t, INSTALLABLE, updates[0].StatusID)
 		return vmaasData, updates

@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
@@ -23,7 +24,7 @@ const (
 	TemplateEventCreate = "template-created"
 )
 
-func TemplatesMessageHandler(_ context.Context, m mqueue.KafkaMessage) error {
+func TemplatesMessageHandler(ctx context.Context, m mqueue.KafkaMessage) error {
 	eType, event, err := processTemplateEvent(m.Value)
 	if err != nil {
 		utils.LogError("err", err, "skipping template event")
@@ -40,11 +41,11 @@ func TemplatesMessageHandler(_ context.Context, m mqueue.KafkaMessage) error {
 
 		switch eType {
 		case TemplateEventDelete:
-			err = TemplateDelete(template)
+			err = TemplateDelete(ctx, template)
 		case TemplateEventUpdate:
 			fallthrough
 		case TemplateEventCreate:
-			err = TemplateUpdate(template, eType)
+			err = TemplateUpdate(ctx, template, eType)
 		default:
 			utils.LogWarn("msg", fmt.Sprintf("%v", template), WarnUnknownType)
 			err = nil
@@ -56,17 +57,17 @@ func TemplatesMessageHandler(_ context.Context, m mqueue.KafkaMessage) error {
 	return nil
 }
 
-func TemplateDelete(template mqueue.TemplateResponse) error {
+func TemplateDelete(ctx context.Context, template mqueue.TemplateResponse) error {
 	defer utils.ObserveSecondsSince(time.Now(), templateMsgHandlingDuration.WithLabelValues(TemplateEventDelete))
 
 	// check account
-	accountID, err := middlewares.GetOrCreateAccount(template.OrgID)
+	accountID, err := middlewares.GetOrCreateAccount(ctx, template.OrgID)
 	if err != nil {
 		return errors.Wrap(err, "when getting account")
 	}
 
 	var templateID int64
-	err = database.DB.Model(&models.Template{}).
+	err = database.DB(ctx).Model(&models.Template{}).
 		Select("id").
 		Where("rh_account_id = ? AND uuid = ?::uuid ", accountID, template.UUID).
 		// use Find() not First() otherwise it returns error "no rows found" if uuid is not present
@@ -79,26 +80,26 @@ func TemplateDelete(template mqueue.TemplateResponse) error {
 		return nil
 	}
 
-	err = SendTemplateRecalc(accountID, template.OrgID, templateID)
+	err = SendTemplateRecalc(ctx, accountID, template.OrgID, templateID)
 	if err != nil {
 		return errors.Wrap(err, "sending template recalc")
 	}
 
 	// unassign systems from the template (template_id lives on system_patch)
-	err = database.DB.Model(&models.SystemPatch{}).
+	err = database.DB(ctx).Model(&models.SystemPatch{}).
 		Where("rh_account_id = ? AND template_id = ?", accountID, templateID).
 		Update("template_id", nil).Error
 	if err != nil {
 		return errors.Wrap(err, "removing systems from template")
 	}
 
-	err = database.DB.
+	err = database.DB(ctx).
 		Delete(&models.TemplateAdvisory{}, "template_id = ? AND rh_account_id = ?", templateID, accountID).Error
 	if err != nil {
 		return errors.Wrap(err, "deleting template advisory relationships")
 	}
 
-	err = database.DB.
+	err = database.DB(ctx).
 		Delete(&models.Template{}, "id = ? AND rh_account_id = ?", templateID, accountID).Error
 	if err != nil {
 		return errors.Wrap(err, "deleting template")
@@ -107,7 +108,7 @@ func TemplateDelete(template mqueue.TemplateResponse) error {
 	return nil
 }
 
-func TemplateUpdate(template mqueue.TemplateResponse, eventType string) error {
+func TemplateUpdate(ctx context.Context, template mqueue.TemplateResponse, eventType string) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, templateMsgHandlingDuration.WithLabelValues(eventType))
 
@@ -119,7 +120,7 @@ func TemplateUpdate(template mqueue.TemplateResponse, eventType string) error {
 	}
 
 	// Ensure we have account stored
-	accountID, err := middlewares.GetOrCreateAccount(template.OrgID)
+	accountID, err := middlewares.GetOrCreateAccount(ctx, template.OrgID)
 	if err != nil {
 		return errors.Wrap(err, "saving account into the database")
 	}
@@ -144,14 +145,14 @@ func TemplateUpdate(template mqueue.TemplateResponse, eventType string) error {
 		Published:   &template.Date,
 	}
 
-	err = database.OnConflictUpdateMulti(database.DB, []string{"rh_account_id", "uuid"},
+	err = database.OnConflictUpdateMulti(database.DB(ctx), []string{"rh_account_id", "uuid"},
 		"name", "environment_id", "description", "creator", "published").Save(&row).Error
 	if err != nil {
 		return errors.Wrap(err, "creating/updating template from message")
 	}
 
 	if contentSourcesBaseURL != "" && utils.CoreCfg.ContentSourcesUser != "" && eventType == TemplateEventUpdate {
-		ctx := identity.WithIdentity(context.Background(),
+		ctx := identity.WithIdentity(base.Context,
 			utils.XRHIDForOrg(template.OrgID, utils.CoreCfg.ContentSourcesUser))
 		err = syncTemplateAdvisories(ctx, accountID, row.ID, template.UUID, template.OrgID)
 		if err != nil {

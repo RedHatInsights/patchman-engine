@@ -30,7 +30,7 @@ func RepackRecreateHandler(c *gin.Context) {
 		"GRANT USAGE ON SCHEMA repack TO vmaas_sync",
 	}
 	for _, query := range runSequence {
-		if err := database.DB.Exec(query).Error; err != nil {
+		if err := database.DB(c.Request.Context()).Exec(query).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
 			return
 		}
@@ -52,7 +52,7 @@ func RepackRecreateHandler(c *gin.Context) {
 func GetActiveSessionsHandler(c *gin.Context) {
 	param := c.Param("search")
 	data := make([]Session, 0)
-	q := database.DB.Table("pg_stat_activity").Select("pid, query")
+	q := database.DB(c.Request.Context()).Table("pg_stat_activity").Select("pid, query")
 	if param != "" {
 		q.Where("query like ?", fmt.Sprint("%", param, "%"))
 	}
@@ -83,7 +83,7 @@ func TerminateSessionHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "pid param not found"})
 		return
 	}
-	err := database.DB.Exec("select pg_terminate_backend(?)", param).Error
+	err := database.DB(c.Request.Context()).Exec("select pg_terminate_backend(?)", param).Error
 	if err != nil {
 		utils.LogError("error", err, "DB query failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})

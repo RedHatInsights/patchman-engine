@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"app/base"
 	"app/base/api"
 	"app/base/core"
 	"app/base/database"
@@ -95,7 +96,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 		Basearch:       utils.PtrString("x86_64"),
 	}
 
-	sys1, err := updateSystemPlatform(database.DB, accountID1, createTestInvHost(t), nil, &req, nil)
+	sys1, err := updateSystemPlatform(database.TestDB(), accountID1, createTestInvHost(t), nil, &req, nil)
 	assert.Nil(t, err)
 
 	reporterID1 := 1
@@ -105,7 +106,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	host2 := createTestInvHost(t)
 	host2.Reporter = "yupana"
 	req.PackageList = []string{"package0", "package1"}
-	sys2, err := updateSystemPlatform(database.DB, accountID2, host2, nil, &req, nil)
+	sys2, err := updateSystemPlatform(database.TestDB(), accountID2, host2, nil, &req, nil)
 	assert.Nil(t, err)
 
 	reporterID2 := 3
@@ -147,19 +148,19 @@ func TestUpdateSystemPlatformDualWritesOwnerID(t *testing.T) {
 	ownerID1 := uuid.MustParse("11111111-1111-1111-1111-111111111111")
 	ev.Host.SystemProfile.OwnerID = &ownerID1
 
-	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile, nil)
+	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
 	ownerID2 := uuid.MustParse("22222222-2222-2222-2222-222222222222")
 	ev.Host.SystemProfile.OwnerID = &ownerID2
 
-	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile, nil)
+	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
 	ev.Host.SystemProfile.OwnerID = nil
-	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile, nil)
+	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
@@ -186,7 +187,7 @@ func TestUpdateSystemPlatformRefreshesInventoryProfileOnConflict(t *testing.T) {
 	}
 	ev := createTestUploadEvent(testOrgID, testInventoryID, "puptoo", true, false, "created")
 	ev.Host.StaleTimestamp = &correctTime
-	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile, nil)
+	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
@@ -197,7 +198,7 @@ func TestUpdateSystemPlatformRefreshesInventoryProfileOnConflict(t *testing.T) {
 	ev.Host.SystemProfile.Workloads.Ansible.ControllerVersion = "2.13.0"
 	ev.Host.SystemProfile.Workloads.Mssql.Version = "16.0"
 
-	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile, nil)
+	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
@@ -221,24 +222,24 @@ func TestUploadHandlerCreatedSystem(t *testing.T) {
 			repos := append(event.Host.SystemProfile.GetYumRepos(), inventory.YumRepo{ID: "epel", Enabled: true})
 			event.Host.SystemProfile.YumRepos = &repos
 
-			err := HandleUpload(context.Background(), event)
+			err := HandleUpload(base.Context, event)
 			assert.NoError(t, err)
 
 			reporterID := 1
 			assertSystemInDB(t, testInventoryID, nil, &reporterID)
 
 			var inv models.SystemInventory
-			assert.NoError(t, database.DB.Where("inventory_id = ?", testInventoryID).First(&inv).Error)
+			assert.NoError(t, database.TestDB().Where("inventory_id = ?", testInventoryID).First(&inv).Error)
 			var patch models.SystemPatch
-			assert.NoError(t, database.DB.Where("rh_account_id = ? AND system_id = ?", inv.RhAccountID, inv.ID).
+			assert.NoError(t, database.TestDB().Where("rh_account_id = ? AND system_id = ?", inv.RhAccountID, inv.ID).
 				First(&patch).Error)
 			after := time.Now().Add(time.Hour)
 			patch.LastEvaluation = &after
-			assert.NoError(t, database.DB.Save(&patch).Error)
+			assert.NoError(t, database.TestDB().Save(&patch).Error)
 			// Test that second upload did not cause re-evaluation
 			logHook := utils.NewTestLogHook()
 			log.AddHook(logHook)
-			err = HandleUpload(context.Background(), event)
+			err = HandleUpload(base.Context, event)
 			assert.NoError(t, err)
 			assertInLogs(t, UploadSuccessNoEval, logHook.LogEntries...)
 			assertSystemReposInDB(t, inv.ID, []string{"epel-8"})
@@ -253,7 +254,7 @@ func TestUploadHandlerWarn(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
 	noPkgsEvent := createTestUploadEvent("1", testInventoryID, "puptoo", false, false, "created")
-	err := HandleUpload(context.Background(), noPkgsEvent)
+	err := HandleUpload(base.Context, noPkgsEvent)
 	if assert.Error(t, err) {
 		assert.ErrorIs(t, err, ErrNoPackages)
 	}
@@ -266,7 +267,7 @@ func TestUploadHandlerWarnSkipReporter(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
 	noPkgsEvent := createTestUploadEvent("1", testInventoryID, "yupana", false, false, "created")
-	err := HandleUpload(context.Background(), noPkgsEvent)
+	err := HandleUpload(base.Context, noPkgsEvent)
 	if assert.Error(t, err) {
 		assert.ErrorIs(t, err, ErrReporter)
 	}
@@ -280,7 +281,7 @@ func TestUploadHandlerWarnSkipHostType(t *testing.T) {
 	log.AddHook(logHook)
 	event := createTestUploadEvent("1", testInventoryID, "puptoo", true, false, "created")
 	event.Host.SystemProfile.HostType = "edge"
-	err := HandleUpload(context.Background(), event)
+	err := HandleUpload(base.Context, event)
 	if assert.Error(t, err) {
 		assert.ErrorIs(t, err, ErrHostType)
 	}
@@ -295,7 +296,7 @@ func TestUploadHandlerError1(t *testing.T) {
 	log.AddHook(logHook)
 	event := createTestUploadEvent("1", testInventoryID, "puptoo", true, false, "created")
 	*event.Host.OrgID = ""
-	err := HandleUpload(context.Background(), event)
+	err := HandleUpload(base.Context, event)
 	if assert.Error(t, err) {
 		assert.ErrorIs(t, err, ErrNoAccountProvided)
 	}
@@ -320,7 +321,7 @@ func TestUploadHandlerError2(t *testing.T) {
 	log.AddHook(logHook)
 	_ = getOrCreateTestAccount(t)
 	event := createTestUploadEvent("1", testInventoryID, "puptoo", true, false, "created")
-	err := HandleUpload(context.Background(), event)
+	err := HandleUpload(base.Context, event)
 	assert.Nil(t, err)
 	time.Sleep(2 * uploadEvalTimeout)
 	assertInLogs(t, ErrorKafkaSend, logHook.LogEntries...)
@@ -332,7 +333,7 @@ func TestEnsureReposInDB(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	repos := []string{"repo1", "repo10", "repo20"}
-	repoIDs, nAdded, err := ensureReposInDB(database.DB, repos)
+	repoIDs, nAdded, err := ensureReposInDB(database.TestDB(), repos)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(2), nAdded)
 	assert.Equal(t, 3, len(repoIDs))
@@ -345,7 +346,7 @@ func TestEnsureReposEmpty(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	var repos []string
-	repoIDs, nAdded, err := ensureReposInDB(database.DB, repos)
+	repoIDs, nAdded, err := ensureReposInDB(database.TestDB(), repos)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), nAdded)
 	assert.Equal(t, 0, len(repoIDs))
@@ -358,16 +359,16 @@ func TestUpdateSystemRepos1(t *testing.T) {
 
 	systemID := int64(5)
 	rhAccountID := 1
-	database.DB.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 1})
-	database.DB.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 2})
+	database.TestDB().Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 1})
+	database.TestDB().Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 2})
 
 	repos := []string{"repo1", "repo10", "repo20"}
-	repoIDs, nReposAdded, err := ensureReposInDB(database.DB, repos)
+	repoIDs, nReposAdded, err := ensureReposInDB(database.TestDB(), repos)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(repoIDs))
 	assert.Equal(t, int64(2), nReposAdded)
 
-	nAdded, nDeleted, err := updateSystemRepos(database.DB, rhAccountID, systemID, repoIDs)
+	nAdded, nDeleted, err := updateSystemRepos(database.TestDB(), rhAccountID, systemID, repoIDs)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(2), nAdded)
 	assert.Equal(t, int64(1), nDeleted)
@@ -381,10 +382,10 @@ func TestUpdateSystemRepos2(t *testing.T) {
 
 	systemID := int64(5)
 	rhAccountID := 1
-	database.DB.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 1})
-	database.DB.Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 2})
+	database.TestDB().Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 1})
+	database.TestDB().Create(models.SystemRepo{RhAccountID: int64(rhAccountID), SystemID: systemID, RepoID: 2})
 
-	nAdded, nDeleted, err := updateSystemRepos(database.DB, rhAccountID, systemID, []int64{})
+	nAdded, nDeleted, err := updateSystemRepos(database.TestDB(), rhAccountID, systemID, []int64{})
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), nAdded)
 	assert.Equal(t, int64(2), nDeleted)
@@ -418,12 +419,12 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 		Debug:      true,
 	}
 	hostEvent := createTestUploadEvent("1", testInventoryID, "puptoo", false, true, "created")
-	yumUpdates, err := getYumUpdates(context.Background(), hostEvent, httpClient)
+	yumUpdates, err := getYumUpdates(base.Context, hostEvent, httpClient)
 	assert.Nil(t, err)
 
 	req := vmaas.UpdatesV3Request{}
 
-	_, err = updateSystemPlatform(database.DB, accountID1, &hostEvent.Host, yumUpdates, &req, nil)
+	_, err = updateSystemPlatform(database.TestDB(), accountID1, &hostEvent.Host, yumUpdates, &req, nil)
 	assert.Nil(t, err)
 
 	reporterID1 := 1
@@ -434,7 +435,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 
 	// check that yumUpdates has been updated (keep the same Host so profile columns are not wiped)
 	yumUpdates.RawParsed = []byte("{}")
-	_, err = updateSystemPlatform(database.DB, accountID1, &hostEvent.Host, yumUpdates, &req, nil)
+	_, err = updateSystemPlatform(database.TestDB(), accountID1, &hostEvent.Host, yumUpdates, &req, nil)
 	assert.Nil(t, err)
 	assertYumUpdatesInDB(t, testInventoryID, yumUpdates)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &hostEvent.Host)
@@ -445,7 +446,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 	hostEvent.Host.SystemProfile.Workloads.Sap.Sids = []string{"sid-yum-test"}
 	hostEvent.Host.SystemProfile.Workloads.Ansible.ControllerVersion = "2.14.0"
 	hostEvent.Host.SystemProfile.Workloads.Mssql.Version = "17.0"
-	_, err = updateSystemPlatform(database.DB, accountID1, &hostEvent.Host, yumUpdates, &req, nil)
+	_, err = updateSystemPlatform(database.TestDB(), accountID1, &hostEvent.Host, yumUpdates, &req, nil)
 	assert.Nil(t, err)
 	assertYumUpdatesInDB(t, testInventoryID, yumUpdates)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &hostEvent.Host)
@@ -456,7 +457,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 	hostEvent.Host.SystemProfile.Workloads.Sap.Sids = nil
 	hostEvent.Host.SystemProfile.Workloads.Ansible.ControllerVersion = ""
 	hostEvent.Host.SystemProfile.Workloads.Mssql.Version = ""
-	_, err = updateSystemPlatform(database.DB, accountID1, &hostEvent.Host, yumUpdates, &req, nil)
+	_, err = updateSystemPlatform(database.TestDB(), accountID1, &hostEvent.Host, yumUpdates, &req, nil)
 	assert.Nil(t, err)
 	assertYumUpdatesInDB(t, testInventoryID, yumUpdates)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &hostEvent.Host)
@@ -472,8 +473,8 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 
 	var oldCount, newCount int
 	var nextval, currval int
-	database.DB.Model(&models.SystemInventory{}).Select("count(*)").Find(&oldCount)
-	database.DB.Raw("select nextval('system_inventory_id_seq')").Find(&nextval)
+	database.TestDB().Model(&models.SystemInventory{}).Select("count(*)").Find(&oldCount)
+	database.TestDB().Raw("select nextval('system_inventory_id_seq')").Find(&nextval)
 
 	colsToUpdate := []string{"vmaas_json", "json_checksum", "reporter_id", "satellite_managed"}
 	vmaasJSON := "this_is_json"
@@ -509,16 +510,16 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 		Patch: models.SystemPatch{RhAccountID: 1},
 	}
 
-	err := storeOrUpdateSysPlatform(database.DB, inStore, colsToUpdate)
+	err := storeOrUpdateSysPlatform(database.TestDB(), inStore, colsToUpdate)
 	assert.Nil(t, err)
 
 	var outStore models.SystemInventory
-	assert.NoError(t, database.DB.Where("id = ? AND rh_account_id = ?", inStore.Inventory.ID, inStore.Inventory.RhAccountID). // nolint:lll
+	assert.NoError(t, database.TestDB().Where("id = ? AND rh_account_id = ?", inStore.Inventory.ID, inStore.Inventory.RhAccountID). // nolint:lll
 																	First(&outStore).Error)
 	defer func() {
-		database.DB.Unscoped().Where("rh_account_id = ? AND system_id = ?", outStore.RhAccountID, outStore.ID).
+		database.TestDB().Unscoped().Where("rh_account_id = ? AND system_id = ?", outStore.RhAccountID, outStore.ID).
 			Delete(&models.SystemPatch{})
-		database.DB.Unscoped().Where("id = ? AND rh_account_id = ?", outStore.ID, outStore.RhAccountID).
+		database.TestDB().Unscoped().Where("id = ? AND rh_account_id = ?", outStore.ID, outStore.RhAccountID).
 			Delete(&models.SystemInventory{})
 	}()
 
@@ -529,7 +530,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 
 	// verify SystemInventory was created from Host fields
 	var inventoryAfterInsert models.SystemInventory
-	err = database.DB.Where("id = ?", inStore.Inventory.ID).First(&inventoryAfterInsert).Error
+	err = database.TestDB().Where("id = ?", inStore.Inventory.ID).First(&inventoryAfterInsert).Error
 	assert.Nil(t, err)
 
 	assert.Contains(t, string(inventoryAfterInsert.Tags), `"namespace": "insights-client"`)
@@ -564,7 +565,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	updateJSON := "updated_json"
 	reporter := 2
 	var patchAfterInsert models.SystemPatch
-	assert.NoError(t, database.DB.Where("rh_account_id = ? AND system_id = ?", outStore.RhAccountID, outStore.ID).
+	assert.NoError(t, database.TestDB().Where("rh_account_id = ? AND system_id = ?", outStore.RhAccountID, outStore.ID).
 		First(&patchAfterInsert).Error)
 	inUpdate := &models.SystemPlatformV2{
 		Inventory: models.SystemInventory{
@@ -601,12 +602,13 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	}
 
 	// update row
-	err = storeOrUpdateSysPlatform(database.DB, inUpdate, colsToUpdate)
+	err = storeOrUpdateSysPlatform(database.TestDB(), inUpdate, colsToUpdate)
 	require.NoError(t, err)
 
 	var outUpdate models.SystemInventory
-	assert.NoError(t, database.DB.Where("id = ? AND rh_account_id = ?", inUpdate.Inventory.ID, inUpdate.Inventory.RhAccountID). // nolint:lll
-																	First(&outUpdate).Error)
+	assert.NoError(t, database.TestDB().
+		Where("id = ? AND rh_account_id = ?", inUpdate.Inventory.ID, inUpdate.Inventory.RhAccountID).
+		First(&outUpdate).Error)
 	assert.Equal(t, inUpdate.Inventory.InventoryID, outUpdate.InventoryID)
 	assert.Equal(t, inUpdate.Inventory.RhAccountID, outUpdate.RhAccountID)
 	require.NotNil(t, outUpdate.VmaasJSON)
@@ -622,8 +624,8 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	assert.Equal(t, outStore.DisplayName, outUpdate.DisplayName)
 
 	// make sure we are not creating gaps in id sequences
-	database.DB.Model(&models.SystemInventory{}).Select("count(*)").Find(&newCount)
-	database.DB.Raw("select currval('system_inventory_id_seq')").Find(&currval)
+	database.TestDB().Model(&models.SystemInventory{}).Select("count(*)").Find(&newCount)
+	database.TestDB().Raw("select currval('system_inventory_id_seq')").Find(&currval)
 	countInc := newCount - oldCount
 	maxInc := currval - nextval
 	assert.Equal(t, countInc, maxInc)
@@ -682,7 +684,7 @@ func TestHostTemplateRhsmReporter(t *testing.T) {
 	host := createTestHostWithEnv(rhsmReporter, "00000000-0000-0000-0000-000000000001",
 		"https://cert.console.example.com/api/pulp-content/abcdef/templates/"+
 			"12345678-90ab-cdef-1234-567890abcdef/content/dist/rhel9/$releasever/x86_64/baseos/os")
-	templateID := hostTemplate(database.DB, accountID, host)
+	templateID := hostTemplate(database.TestDB(), accountID, host)
 	assert.NotNil(t, templateID)
 	assert.Equal(t, int64(1), *templateID)
 }
@@ -695,7 +697,7 @@ func TestHostTemplatePuptoo(t *testing.T) {
 	host := createTestHostWithEnv(puptooReporter, "00000000-0000-0000-0000-000000000002",
 		"https://cert.console.example.com/api/pulp-content/abcdef/templates/"+
 			"12345678-90ab-cdef-1234-567890abcdef/content/dist/rhel9/$releasever/x86_64/baseos/os")
-	templateID := hostTemplate(database.DB, accountID, host)
+	templateID := hostTemplate(database.TestDB(), accountID, host)
 	assert.NotNil(t, templateID)
 	assert.Equal(t, int64(2), *templateID)
 }
@@ -707,7 +709,7 @@ func TestNoHostTemplate(t *testing.T) {
 
 	host := createTestHostWithEnv(puptooReporter, "00000000-0000-0000-0000-000000000002",
 		"https://cdn.example.com/content/dist/rhel9/$releasever/x86_64/baseos/os")
-	templateID := hostTemplate(database.DB, accountID, host)
+	templateID := hostTemplate(database.TestDB(), accountID, host)
 	assert.Nil(t, templateID)
 }
 
@@ -719,6 +721,6 @@ func TestHostTemplateCandlepinFailure(t *testing.T) {
 	host := createTestHostWithEnv(puptooReporter, "return_404",
 		"https://cert.console.example.com/api/pulp-content/abcdef/templates/"+
 			"12345678-90ab-cdef-1234-567890abcdef/content/dist/rhel9/$releasever/x86_64/baseos/os")
-	templateID := hostTemplate(database.DB, accountID, host)
+	templateID := hostTemplate(database.TestDB(), accountID, host)
 	assert.Nil(t, templateID)
 }

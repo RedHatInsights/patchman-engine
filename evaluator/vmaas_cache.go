@@ -8,6 +8,7 @@ import (
 	"time"
 
 	lru "github.com/hashicorp/golang-lru/v2"
+	"gorm.io/gorm"
 )
 
 var memoryVmaasCache *VmaasCache
@@ -21,13 +22,13 @@ type VmaasCache struct {
 	data          *lru.TwoQueueCache[string, *vmaas.UpdatesV3Response]
 }
 
-func NewVmaasPackageCache(enabled bool, size int, checkDuration time.Duration) *VmaasCache {
+func NewVmaasPackageCache(tx *gorm.DB, enabled bool, size int, checkDuration time.Duration) *VmaasCache {
 	c := new(VmaasCache)
 
 	c.enabled = enabled
 	c.size = size
 	c.currentSize = 0
-	c.validity = vmaas_sync.GetLastSync(vmaas_sync.VmaasExported)
+	c.validity = vmaas_sync.GetLastSync(tx, vmaas_sync.VmaasExported)
 	c.checkDuration = checkDuration
 	vmaasCacheGauge.Set(0)
 
@@ -73,9 +74,9 @@ func (c *VmaasCache) Reset(ts *types.Rfc3339TimestampWithZ) {
 	}
 }
 
-func (c *VmaasCache) CheckValidity() {
+func (c *VmaasCache) CheckValidity(tx *gorm.DB) {
 	for range time.Tick(c.checkDuration) {
-		lastModifiedTS := vmaas_sync.GetLastSync(vmaas_sync.VmaasExported)
+		lastModifiedTS := vmaas_sync.GetLastSync(tx, vmaas_sync.VmaasExported)
 		if lastModifiedTS == nil || c.validity == nil || c.validity.Time().Before(*lastModifiedTS.Time()) {
 			c.Reset(lastModifiedTS)
 		}

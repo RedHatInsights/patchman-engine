@@ -766,7 +766,7 @@ func processUpload(ctx context.Context, host *Host, yumUpdates *YumUpdates) (*mo
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("upload-processing"))
 	// Ensure we have account stored
-	accountID, err := middlewares.GetOrCreateAccount(host.GetOrgID())
+	accountID, err := middlewares.GetOrCreateAccount(ctx, host.GetOrgID())
 	if err != nil {
 		return nil, errors.Wrap(err, "saving account into the database")
 	}
@@ -793,7 +793,7 @@ func processUpload(ctx context.Context, host *Host, yumUpdates *YumUpdates) (*mo
 		updatesReq.SetReleasever(releasever)
 	}
 
-	tx := database.DB.WithContext(ctx).Begin()
+	tx := database.DB(ctx).Begin()
 	defer tx.Rollback()
 
 	// Skip Candlepin for recently deleted systems; re-check after the HTTP

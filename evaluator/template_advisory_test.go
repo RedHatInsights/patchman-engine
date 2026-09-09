@@ -1,12 +1,12 @@
 package evaluator
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"app/base/vmaas"
-	"context"
 	"testing"
 
 	"github.com/bytedance/sonic"
@@ -59,7 +59,7 @@ func TestLoadTemplateAdvisoryErrata(t *testing.T) {
 	database.CreateTemplateAdvisories(t, 1, templateID, []int64{1, 2})
 	defer database.DeleteTemplateAdvisories(t, templateID, []int64{1, 2})
 
-	errata, err := loadTemplateAdvisoryErrata(database.DB, 1, templateID)
+	errata, err := loadTemplateAdvisoryErrata(database.TestDB(), 1, templateID)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(errata))
 	_, ok := errata["RH-1"]
@@ -147,7 +147,7 @@ func TestGetUpdatesDataTemplateAdvisoryEval(t *testing.T) {
 	database.CreateTemplateAdvisories(t, 1, templateID, []int64{1})
 	defer database.DeleteTemplateAdvisories(t, templateID, []int64{1})
 
-	result, err := getUpdatesData(context.Background(), system)
+	result, err := getUpdatesData(base.Context, system)
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 

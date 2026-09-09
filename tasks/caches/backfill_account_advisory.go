@@ -2,6 +2,7 @@ package caches
 
 import (
 	"app/aggregator"
+	"app/base"
 	"app/base/database"
 	"app/base/utils"
 	"app/tasks"
@@ -52,7 +53,7 @@ func backfillAccountAdvisoryPerAccounts(wg *sync.WaitGroup) {
 			utils.LogInfo("i", i, "rh_account_id", rhAccountID, "backfilled account_advisory")
 
 			var advisoryIDs []int64
-			if err := database.DB.Table("account_advisory").
+			if err := database.DB(base.Context).Table("account_advisory").
 				Where("rh_account_id = ?", rhAccountID).
 				Distinct("advisory_id").
 				Pluck("advisory_id", &advisoryIDs).Error; err != nil {

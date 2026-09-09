@@ -2,6 +2,7 @@ package database
 
 // This file was adapted from https://github.com/bombsimon/gorm-bulk
 import (
+	"app/base"
 	"fmt"
 	"reflect"
 	"sort"
@@ -244,7 +245,7 @@ func objectToMap(schema *schema.Schema, object interface{}) (map[string]interfac
 	}
 
 	if now.IsZero() {
-		now = DB.NowFunc()
+		now = DB(base.Context).NowFunc()
 	}
 
 	for _, field := range schema.Fields {

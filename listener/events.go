@@ -71,7 +71,7 @@ func HandleDelete(ctx context.Context, event mqueue.PlatformEvent) error {
 	defer utils.ObserveSecondsSince(time.Now(), messageHandlingDuration.WithLabelValues(EventDelete))
 
 	// TODO: Do we need locking here ?
-	err := database.OnConflictUpdate(database.DB.WithContext(ctx), "inventory_id", "when_deleted").
+	err := database.OnConflictUpdate(database.DB(ctx), "inventory_id", "when_deleted").
 		Create(models.DeletedSystem{
 			InventoryID: event.ID,
 			WhenDeleted: time.Now(),
@@ -84,7 +84,7 @@ func HandleDelete(ctx context.Context, event mqueue.PlatformEvent) error {
 	}
 
 	// mark system as stale and let system_culling job remove it later
-	query := database.DB.WithContext(ctx).Model(&models.SystemInventory{}).Where("inventory_id = ?", event.ID).
+	query := database.DB(ctx).Model(&models.SystemInventory{}).Where("inventory_id = ?", event.ID).
 		Updates(map[string]interface{}{
 			"culled_timestamp": gorm.Expr("NOW()"),
 		})

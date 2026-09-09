@@ -9,10 +9,11 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
-	"github.com/pkg/errors"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/pkg/errors"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -102,7 +103,7 @@ func configureListener() {
 
 func loadValidReporters() map[string]int {
 	var reporters []models.Reporter
-	database.DB.Find(&reporters)
+	database.DB(base.Context).Find(&reporters)
 	reportersMap := make(map[string]int, len(reporters))
 	for _, reporter := range reporters {
 		reportersMap[reporter.Name] = reporter.ID

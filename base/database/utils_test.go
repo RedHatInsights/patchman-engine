@@ -37,7 +37,7 @@ func TestApplyInventoryWorkspaceFilter(t *testing.T) {
 	for _, tc := range testCases {
 		for expectedCount, workspaceIDs := range tc {
 			var count int64
-			ApplyInventoryWorkspaceFilter(DB.Table("system_inventory si").
+			ApplyInventoryWorkspaceFilter(TestDB().Table("system_inventory si").
 				Joins("JOIN system_patch spatch ON si.id = spatch.system_id AND si.rh_account_id = spatch.rh_account_id"),
 				workspaceIDs).Count(&count)
 			assert.Equal(t, expectedCount, count)

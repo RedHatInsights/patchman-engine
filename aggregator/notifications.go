@@ -37,7 +37,7 @@ func publishNewAdvisoryNotification(rhAccountID int, advisoryIDs []int64) error 
 		return nil
 	}
 
-	tx := database.DB.WithContext(base.Context).Begin()
+	tx := database.DB(base.Context).Begin()
 	defer tx.Rollback() //nolint:errcheck
 
 	advisories, err := getUnnotifiedAdvisories(tx, rhAccountID, advisoryIDs)

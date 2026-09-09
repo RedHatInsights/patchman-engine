@@ -1,8 +1,10 @@
 package database
 
 import (
+	"app/base"
 	"app/base/telemetry"
 	"app/base/utils"
+	"context"
 	"fmt"
 	"time"
 
@@ -22,8 +24,8 @@ const (
 )
 
 var (
-	DB                 *gorm.DB
-	DBReadReplica      *gorm.DB
+	baseDB             *gorm.DB
+	baseDBReadReplica  *gorm.DB
 	OtherAdvisoryTypes []string
 	globalPgConfig     map[DBMode]PostgreSQLConfig = make(map[DBMode]PostgreSQLConfig)
 )
@@ -41,13 +43,13 @@ func InitDB(mode DBMode) {
 	if mode == Replica {
 		if utils.CoreCfg.DBReadReplicaEnabled && ReadReplicaConfigured() {
 			pgConfig := createPostgreSQLConfig(mode)
-			DBReadReplica = initDB(mode, DBReadReplica, pgConfig)
+			baseDBReadReplica = initDB(mode, baseDBReadReplica, pgConfig)
 		}
 		return
 	}
 
 	pgConfig := createPostgreSQLConfig(mode)
-	DB = initDB(mode, DB, pgConfig)
+	baseDB = initDB(mode, baseDB, pgConfig)
 }
 
 // Configure Configure database, PostgreSQL or SQLite connection
@@ -179,7 +181,7 @@ func dataSourceName(dbConfig *PostgreSQLConfig) string {
 
 func loadAdditionalParamsFromDB() {
 	// Load OtherAdvisoryTypes list
-	err := DB.Table("advisory_type").
+	err := DB(base.Context).Table("advisory_type").
 		Where("name NOT IN ('enhancement', 'bugfix', 'security')").
 		Order("name").
 		Pluck("name", &OtherAdvisoryTypes).Error
@@ -187,4 +189,22 @@ func loadAdditionalParamsFromDB() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func DB(ctx context.Context) *gorm.DB {
+	if baseDB == nil || ctx == nil {
+		return baseDB
+	}
+	return baseDB.WithContext(ctx)
+}
+
+func DBReadReplica(ctx context.Context) *gorm.DB {
+	if baseDBReadReplica == nil || ctx == nil {
+		return baseDBReadReplica
+	}
+	return baseDBReadReplica.WithContext(ctx)
+}
+
+func TestDB() *gorm.DB {
+	return DB(base.Context)
 }

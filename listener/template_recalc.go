@@ -5,6 +5,7 @@ import (
 	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
+	"context"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -38,7 +39,7 @@ func inventoryIDsToEvalData(accountID int, orgID string, inventoryIDs []uuid.UUI
 
 // SendTemplateRecalc looks up systems assigned to the template and requests their re-evaluation.
 // Call before unassigning systems from a deleted template so inventory IDs are still known.
-func SendTemplateRecalc(accountID int, orgID string, templateID int64) error {
+func SendTemplateRecalc(ctx context.Context, accountID int, orgID string, templateID int64) error {
 	if !enableTemplateAdvisoryEval {
 		return nil
 	}
@@ -46,7 +47,7 @@ func SendTemplateRecalc(accountID int, orgID string, templateID int64) error {
 		utils.LogWarn("template_id", templateID, "account_id", accountID, "skipping template recalc: missing org_id")
 		return nil
 	}
-	inventoryIDs, err := lookupTemplateSystemInventoryIDs(database.DB, accountID, templateID)
+	inventoryIDs, err := lookupTemplateSystemInventoryIDs(database.DB(ctx), accountID, templateID)
 	if err != nil {
 		return err
 	}

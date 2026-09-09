@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
@@ -167,7 +168,7 @@ func TestAdvisoryUpdateKafkaRoundTrip(t *testing.T) {
 		OrgID:      &orgID,
 		AccountID:  rhAccountID})
 	assert.NoError(t, err)
-	err = evaluateHandler(context.Background(), mqueue.KafkaMessage{Value: data})
+	err = evaluateHandler(base.Context, mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 
 	utils.AssertEqualWait(t, 10, func() (exp, act interface{}) {

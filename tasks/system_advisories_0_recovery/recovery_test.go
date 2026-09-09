@@ -22,7 +22,7 @@ func TestGetNonStaleBucket0InventoryIDs(t *testing.T) {
 	require.NoError(t, err)
 
 	var expected int64
-	err = database.DB.Raw(`
+	err = database.TestDB().Raw(`
 		SELECT count(*)
 		  FROM system_inventory si
 		 WHERE si.stale = false
@@ -33,7 +33,7 @@ func TestGetNonStaleBucket0InventoryIDs(t *testing.T) {
 
 	for _, row := range ids {
 		var inBucket bool
-		err = database.DB.Raw(
+		err = database.TestDB().Raw(
 			`SELECT satisfies_hash_partition('system_advisories'::regclass, ?, ?, ?)`,
 			systemAdvisoriesPartitions, systemAdvisoriesRemainder, row.RhAccountID,
 		).Scan(&inBucket).Error

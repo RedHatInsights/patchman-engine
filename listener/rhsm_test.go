@@ -1,10 +1,10 @@
 package listener
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/utils"
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -38,7 +38,7 @@ func TestAssignTemplates(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			templateID, err := getTemplate(database.DB, 1, test.environments)
+			templateID, err := getTemplate(database.TestDB(), 1, test.environments)
 			isErrReturned := err != nil
 			assert.Equal(t, test.res.isErr, isErrReturned)
 			if test.res.templateID == nil {
@@ -51,7 +51,7 @@ func TestAssignTemplates(t *testing.T) {
 }
 
 func TestCallCandlepinEnvironment(t *testing.T) {
-	ctx := context.Background()
+	ctx := base.Context
 	result, err := callCandlepinEnvironment(ctx, "00000000-0000-0000-0000-000000000001")
 
 	assert.NoError(t, err)
@@ -61,7 +61,7 @@ func TestCallCandlepinEnvironment(t *testing.T) {
 }
 
 func TestCallCandlepinEnvironmentError(t *testing.T) {
-	ctx := context.Background()
+	ctx := base.Context
 	result, err := callCandlepinEnvironment(ctx, "return_404")
 
 	assert.Error(t, err)
@@ -77,7 +77,7 @@ func TestCallCandlepinEnvNetworkError(t *testing.T) {
 		utils.CoreCfg.CandlepinAddress = originalAddress
 	}()
 
-	ctx := context.Background()
+	ctx := base.Context
 	result, err := callCandlepinEnvironment(ctx, "test-consumer")
 
 	assert.Error(t, err)

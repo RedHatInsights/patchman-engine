@@ -15,11 +15,11 @@ func TestCheckAdvisoryDriftCountMismatch(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	assert.Nil(t, database.DB.Exec("SELECT refresh_advisory_caches(NULL, 1)").Error)
-	assert.Nil(t, database.DB.Exec("SELECT backfill_account_advisory(1)").Error)
+	assert.Nil(t, database.TestDB().Exec("SELECT refresh_advisory_caches(NULL, 1)").Error)
+	assert.Nil(t, database.TestDB().Exec("SELECT backfill_account_advisory(1)").Error)
 	defer database.DeleteAccountAdvisoryByAccount(t, 1)
 
-	assert.Nil(t, database.DB.Model(&models.AccountAdvisory{}).
+	assert.Nil(t, database.TestDB().Model(&models.AccountAdvisory{}).
 		Where("advisory_id = 1 AND rh_account_id = 1").
 		Update("systems_installable", 999).Error)
 
@@ -42,7 +42,7 @@ func TestCheckAdvisoryDriftMissingFromNew(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	assert.Nil(t, database.DB.Exec("SELECT refresh_advisory_caches(NULL, 1)").Error)
+	assert.Nil(t, database.TestDB().Exec("SELECT refresh_advisory_caches(NULL, 1)").Error)
 	defer database.DeleteAccountAdvisoryByAccount(t, 1)
 
 	hook := utils.NewTestLogHook(log.WarnLevel)

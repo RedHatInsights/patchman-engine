@@ -26,7 +26,7 @@ func syncTemplateAdvisories(ctx context.Context, accountID int, templateID int64
 		return errors.Wrap(err, "fetching current template advisories from content-sources")
 	}
 
-	stored, err := lookUpTemplateAdvisories(database.DB, accountID, templateID)
+	stored, err := lookUpTemplateAdvisories(database.DB(ctx), accountID, templateID)
 	if err != nil {
 		return errors.Wrap(err, "looking up stored template advisories")
 	}
@@ -37,14 +37,14 @@ func syncTemplateAdvisories(ctx context.Context, accountID int, templateID int64
 		return nil
 	}
 
-	nameToID, err := lookUpAdvisoryMetadataIDs(toAdd)
+	nameToID, err := lookUpAdvisoryMetadataIDs(ctx, toAdd)
 	if err != nil {
 		return errors.Wrap(err, "looking up advisory metadata IDs")
 	}
 
 	toInsert := buildTemplateAdvisoryRows(accountID, templateID, toAdd, nameToID)
 
-	tx := database.DB.Begin()
+	tx := database.DB(ctx).Begin()
 	defer tx.Rollback()
 
 	err = deleteOldTemplateAdvisories(tx, accountID, templateID, toRemove)
@@ -74,7 +74,7 @@ func syncTemplateAdvisories(ctx context.Context, accountID int, templateID int64
 		return err
 	}
 
-	if err := SendTemplateRecalc(accountID, orgID, templateID); err != nil {
+	if err := SendTemplateRecalc(ctx, accountID, orgID, templateID); err != nil {
 		utils.LogError("err", err.Error(), "template_id", templateID, "account_id", accountID,
 			"Template recalc lookup failed")
 	}
@@ -126,10 +126,10 @@ func diffTemplateAdvisories(current []string, stored map[string]models.TemplateA
 }
 
 // Returns the advisory IDs from advisory_metadata that map to the given advisory names
-func lookUpAdvisoryMetadataIDs(names []string) (map[string]int64, error) {
+func lookUpAdvisoryMetadataIDs(ctx context.Context, names []string) (map[string]int64, error) {
 	metadata := make(models.AdvisoryMetadataSlice, 0, len(names))
 
-	err := database.DB.Model(&models.AdvisoryMetadata{}).
+	err := database.DB(ctx).Model(&models.AdvisoryMetadata{}).
 		Where("name IN (?)", names).
 		Select("id, name").
 		Scan(&metadata).Error

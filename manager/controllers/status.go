@@ -12,7 +12,7 @@ import (
 // @Success 200 {int}		http.StatusOK
 // @Failure 503 {object} 	utils.ErrorResponse
 func Status(c *gin.Context) {
-	sqlDB, _ := database.DB.DB()
+	sqlDB, _ := database.DB(c.Request.Context()).DB()
 	if err := sqlDB.Ping(); err != nil {
 		utils.LogAndRespStatusError(c, http.StatusServiceUnavailable, err, "Database not connected")
 	} else {

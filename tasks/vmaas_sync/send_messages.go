@@ -1,14 +1,17 @@
 package vmaas_sync
 
 import (
-	"app/base"
+	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
 	"app/tasks"
+	"context"
 	"time"
+
+	"gorm.io/gorm"
 )
 
-func SendReevaluationMessages() error {
+func SendReevaluationMessages(ctx context.Context) error {
 	if !tasks.EnableRecalcMessagesSend {
 		utils.LogInfo("Recalc messages sending disabled, skipping...")
 		return nil
@@ -16,18 +19,18 @@ func SendReevaluationMessages() error {
 
 	var inventoryAIDs mqueue.EvalDataSlice
 	var err error
-
+	tx := database.DB(ctx)
 	if tasks.EnabledRepoBasedReeval {
-		inventoryAIDs, err = getCurrentRepoBasedInventoryIDs()
+		inventoryAIDs, err = getCurrentRepoBasedInventoryIDs(tx)
 	} else {
-		inventoryAIDs, err = getAllInventoryIDs()
+		inventoryAIDs, err = getAllInventoryIDs(tx)
 	}
 	if err != nil {
 		return err
 	}
 
 	defer utils.ObserveSecondsSince(time.Now(), messageSendDuration)
-	err = mqueue.SendMessages(base.Context, evalWriter, &inventoryAIDs)
+	err = mqueue.SendMessages(ctx, evalWriter, &inventoryAIDs)
 	if err != nil {
 		utils.LogError("err", err, "sending to re-evaluate failed")
 	}
@@ -35,9 +38,9 @@ func SendReevaluationMessages() error {
 	return nil
 }
 
-func getAllInventoryIDs() ([]mqueue.EvalData, error) {
+func getAllInventoryIDs(tx *gorm.DB) ([]mqueue.EvalData, error) {
 	var inventoryAIDs []mqueue.EvalData
-	err := tasks.CancelableDB().Table("system_inventory si").
+	err := tx.Table("system_inventory si").
 		Select("si.inventory_id, si.rh_account_id, ra.org_id").
 		Joins("JOIN rh_account ra on ra.id = si.rh_account_id").
 		Order("ra.id").
