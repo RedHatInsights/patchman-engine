@@ -106,7 +106,7 @@ func InitAdmin(app *gin.Engine, enableTurnpikeAuth bool) {
 	api.PUT("/refresh-packages", admin.RefreshPackagesHandler)
 	api.PUT("/refresh-packages/:account", admin.RefreshPackagesAccountHandler)
 	api.GET("/repack/:table_name", admin.RepackHandler)
-	api.DELETE("/system/:inventory_id", admin.SystemDeleteHandler)
+	api.DELETE("/systems/:inventory_id", admin.SystemDeleteHandler)
 
 	pprof := api.Group("/pprof")
 	pprof.GET("/evaluator_upload/:param", admin.GetEvaluatorUploadPprof)
