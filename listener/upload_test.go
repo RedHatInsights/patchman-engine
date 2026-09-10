@@ -221,7 +221,7 @@ func TestUploadHandlerCreatedSystem(t *testing.T) {
 			repos := append(event.Host.SystemProfile.GetYumRepos(), inventory.YumRepo{ID: "epel", Enabled: true})
 			event.Host.SystemProfile.YumRepos = &repos
 
-			err := HandleUpload(event)
+			err := HandleUpload(context.Background(), event)
 			assert.NoError(t, err)
 
 			reporterID := 1
@@ -238,7 +238,7 @@ func TestUploadHandlerCreatedSystem(t *testing.T) {
 			// Test that second upload did not cause re-evaluation
 			logHook := utils.NewTestLogHook()
 			log.AddHook(logHook)
-			err = HandleUpload(event)
+			err = HandleUpload(context.Background(), event)
 			assert.NoError(t, err)
 			assertInLogs(t, UploadSuccessNoEval, logHook.LogEntries...)
 			assertSystemReposInDB(t, inv.ID, []string{"epel-8"})
@@ -253,7 +253,7 @@ func TestUploadHandlerWarn(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
 	noPkgsEvent := createTestUploadEvent("1", testInventoryID, "puptoo", false, false, "created")
-	err := HandleUpload(noPkgsEvent)
+	err := HandleUpload(context.Background(), noPkgsEvent)
 	if assert.Error(t, err) {
 		assert.ErrorIs(t, err, ErrNoPackages)
 	}
@@ -266,7 +266,7 @@ func TestUploadHandlerWarnSkipReporter(t *testing.T) {
 	logHook := utils.NewTestLogHook()
 	log.AddHook(logHook)
 	noPkgsEvent := createTestUploadEvent("1", testInventoryID, "yupana", false, false, "created")
-	err := HandleUpload(noPkgsEvent)
+	err := HandleUpload(context.Background(), noPkgsEvent)
 	if assert.Error(t, err) {
 		assert.ErrorIs(t, err, ErrReporter)
 	}
@@ -280,7 +280,7 @@ func TestUploadHandlerWarnSkipHostType(t *testing.T) {
 	log.AddHook(logHook)
 	event := createTestUploadEvent("1", testInventoryID, "puptoo", true, false, "created")
 	event.Host.SystemProfile.HostType = "edge"
-	err := HandleUpload(event)
+	err := HandleUpload(context.Background(), event)
 	if assert.Error(t, err) {
 		assert.ErrorIs(t, err, ErrHostType)
 	}
@@ -295,7 +295,7 @@ func TestUploadHandlerError1(t *testing.T) {
 	log.AddHook(logHook)
 	event := createTestUploadEvent("1", testInventoryID, "puptoo", true, false, "created")
 	*event.Host.OrgID = ""
-	err := HandleUpload(event)
+	err := HandleUpload(context.Background(), event)
 	if assert.Error(t, err) {
 		assert.ErrorIs(t, err, ErrNoAccountProvided)
 	}
@@ -320,7 +320,7 @@ func TestUploadHandlerError2(t *testing.T) {
 	log.AddHook(logHook)
 	_ = getOrCreateTestAccount(t)
 	event := createTestUploadEvent("1", testInventoryID, "puptoo", true, false, "created")
-	err := HandleUpload(event)
+	err := HandleUpload(context.Background(), event)
 	assert.Nil(t, err)
 	time.Sleep(2 * uploadEvalTimeout)
 	assertInLogs(t, ErrorKafkaSend, logHook.LogEntries...)

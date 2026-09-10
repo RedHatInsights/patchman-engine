@@ -5,6 +5,7 @@ import (
 	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
+	"context"
 	"sort"
 	"testing"
 	"time"
@@ -75,13 +76,13 @@ func TestBufferedEventsProcessedOnBatchThreshold(t *testing.T) {
 	msg := toKafkaMessage(t, mqueue.AdvisoryUpdateEvent{RhAccountID: 1, AdvisoryIDs: []int64{1, 2}})
 
 	// First two events accumulate in the buffer
-	assert.Nil(t, advisoryUpdateHandler(msg))
+	assert.Nil(t, advisoryUpdateHandler(context.Background(), msg))
 	assert.Equal(t, 1, len(advisoryBuffer))
-	assert.Nil(t, advisoryUpdateHandler(msg))
+	assert.Nil(t, advisoryUpdateHandler(context.Background(), msg))
 	assert.Equal(t, 2, len(advisoryBuffer))
 
 	// Third event triggers flush and processAdvisoryBatch runs
-	assert.Nil(t, advisoryUpdateHandler(msg))
+	assert.Nil(t, advisoryUpdateHandler(context.Background(), msg))
 	assert.Equal(t, 0, len(advisoryBuffer))
 
 	// Verify account_advisory was populated

@@ -7,6 +7,7 @@ import (
 	"app/base/mqueue"
 	ntf "app/base/notification"
 	"app/base/utils"
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -64,7 +65,7 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 		AccountID:  rhAccountID,
 		OrgID:      &orgID})
 	assert.NoError(t, err)
-	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
+	err = evaluateHandler(context.Background(), mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
 	database.CheckAdvisoriesAccountDataNotified(t, rhAccountID, expectedAdvisoryIDs, true)
@@ -118,7 +119,7 @@ func TestAdvisoriesNotificationSkipPublishViaEvaluate(t *testing.T) {
 		SkipNotifications: true,
 	})
 	assert.NoError(t, err)
-	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
+	err = evaluateHandler(context.Background(), mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)

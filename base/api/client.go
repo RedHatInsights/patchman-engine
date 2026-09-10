@@ -1,11 +1,13 @@
 package api
 
 import (
+	"app/base/telemetry"
 	"app/base/utils"
 	"bytes"
 	"context"
 	"io"
 	"net/http"
+	"sync"
 
 	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
@@ -15,10 +17,15 @@ type Client struct {
 	HTTPClient     *http.Client
 	Debug          bool
 	DefaultHeaders map[string]string
+	otelOnce       sync.Once
 }
 
 func (o *Client) Request(ctx *context.Context, method, url string,
 	requestPtr interface{}, responseOutPtr interface{}) (*http.Response, error) {
+	o.otelOnce.Do(func() {
+		o.HTTPClient = telemetry.InstrumentHTTPClient(o.HTTPClient)
+	})
+
 	body := &bytes.Buffer{}
 	if requestPtr != nil {
 		err := sonic.ConfigDefault.NewEncoder(body).Encode(requestPtr)

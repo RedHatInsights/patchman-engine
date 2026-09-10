@@ -12,6 +12,7 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"app/manager/middlewares"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -137,7 +138,7 @@ func (y *YumUpdates) GetBuiltPkgcache() bool {
 	return y.BuiltPkgcache
 }
 
-func HandleUpload(event HostEvent) error {
+func HandleUpload(ctx context.Context, event HostEvent) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventUpload))
 
@@ -165,7 +166,7 @@ func HandleUpload(event HostEvent) error {
 		utils.LogError("err", err, "Could not get yum updates")
 	}
 
-	sys, err := processUpload(&event.Host, yumUpdates)
+	sys, err := processUpload(ctx, &event.Host, yumUpdates)
 	if err != nil {
 		return handleListenerErrors(stdErrors.Join(ErrProcessUpload, err), &event, &ptEvent, tStart, ErrorStatus)
 	}
@@ -184,9 +185,9 @@ func HandleUpload(event HostEvent) error {
 
 	ptEvent.StatusMsg = ProcessingStatus
 	if event.Type == "created" {
-		createdEventsBuffer.bufferEvalEvents(sys.GetInventoryID(), sys.Inventory.RhAccountID, &ptEvent)
+		createdEventsBuffer.bufferEvalEvents(sys.GetInventoryID(), sys.Inventory.RhAccountID, &ptEvent, ctx)
 	} else {
-		updatedEventsBuffer.bufferEvalEvents(sys.GetInventoryID(), sys.Inventory.RhAccountID, &ptEvent)
+		updatedEventsBuffer.bufferEvalEvents(sys.GetInventoryID(), sys.Inventory.RhAccountID, &ptEvent, ctx)
 	}
 	logAndObserve(UploadSuccess, ReceivedSuccess, &event, &ptEvent, tStart, SuccessStatus, false)
 	return nil
@@ -774,7 +775,7 @@ func processModules(systemProfile *inventory.SystemProfile) *[]vmaas.UpdatesV3Re
 }
 
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
-func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatformV2, error) {
+func processUpload(ctx context.Context, host *Host, yumUpdates *YumUpdates) (*models.SystemPlatformV2, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("upload-processing"))
 	// Ensure we have account stored
@@ -805,7 +806,7 @@ func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatformV2
 		updatesReq.SetReleasever(releasever)
 	}
 
-	tx := database.DB.WithContext(base.Context).Begin()
+	tx := database.DB.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
 	var deleted models.DeletedSystem
