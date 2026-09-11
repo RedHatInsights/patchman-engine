@@ -5,8 +5,10 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
+	"app/base/types"
 	"app/base/utils"
 	"testing"
+	"time"
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
@@ -34,15 +36,19 @@ func TestCreateAdvisoryUpdateEvent(t *testing.T) {
 			ID:            1,
 			RhAccountID:   rhAccountID,
 			InventoryID:   uuid.MustParse("00000000-0000-0000-0000-000000000001"),
-			WorkspaceID:   &wsID,
+			WorkspaceID:   wsID,
 			WorkspaceName: &wsName,
 		},
 		Patch: models.SystemPatch{},
 	}
 
 	changedAdvisoryIDs := []int64{1, 2}
-
-	event := createAdvisoryUpdateEvent(system, changedAdvisoryIDs)
+	event := mqueue.AdvisoryUpdateEvent{
+		RhAccountID: system.Inventory.RhAccountID,
+		WorkspaceID: system.Inventory.WorkspaceID,
+		AdvisoryIDs: changedAdvisoryIDs,
+		ProducedAt:  types.Rfc3339Timestamp(time.Now()),
+	}
 	assert.Equal(t, rhAccountID, event.RhAccountID)
 	assert.Equal(t, wsID, event.WorkspaceID)
 	assert.ElementsMatch(t, changedAdvisoryIDs, event.AdvisoryIDs)
@@ -60,7 +66,7 @@ func TestPublishAdvisoryUpdates(t *testing.T) {
 			ID:            1,
 			RhAccountID:   rhAccountID,
 			InventoryID:   uuid.MustParse("00000000-0000-0000-0000-000000000001"),
-			WorkspaceID:   &wsID,
+			WorkspaceID:   wsID,
 			WorkspaceName: &wsName,
 		},
 		Patch: models.SystemPatch{},
