@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (166, false);
+VALUES (167, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -192,7 +192,6 @@ BEGIN
             ON si.id = sp.system_id AND sp.rh_account_id = si.rh_account_id
          WHERE sp.last_evaluation IS NOT NULL
            AND si.stale = FALSE
-           AND si.workspace_id IS NOT NULL
            AND (sa.advisory_id = ANY (advisory_ids_in) OR advisory_ids_in IS NULL)
            AND (si.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
          GROUP BY sa.advisory_id, sa.rh_account_id, si.workspace_id
@@ -654,7 +653,7 @@ CREATE TABLE IF NOT EXISTS system_inventory
     ansible_workload_controller_version TEXT        CHECK (NOT empty(ansible_workload_controller_version)),
     mssql_workload                      BOOLEAN     NOT NULL DEFAULT false,
     mssql_workload_version              TEXT        CHECK (NOT empty(mssql_workload_version)),
-    workspace_id                        UUID,
+    workspace_id                        UUID        NOT NULL,
     workspace_name                      TEXT        CHECK (NOT empty(workspace_name)),
     crowdstrike_workload                BOOLEAN     NOT NULL DEFAULT false,
     ibm_db2_workload                    BOOLEAN     NOT NULL DEFAULT false,
