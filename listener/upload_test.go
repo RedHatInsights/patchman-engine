@@ -490,7 +490,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 			SatelliteManaged:                 false,
 			Created:                          hostEvent.Host.Created,
 			Tags:                             utils.MarshalNilToJSONB(hostEvent.Host.Tags),
-			WorkspaceID:                      &workspaceID,
+			WorkspaceID:                      workspaceID,
 			WorkspaceName:                    workspaceName,
 			OSName:                           utils.EmptyToNil(&hostEvent.Host.SystemProfile.OperatingSystem.Name),
 			OSMajor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Major,
@@ -535,7 +535,6 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 	assert.Contains(t, string(inventoryAfterInsert.Tags), `"key": "env"`)
 	assert.Contains(t, string(inventoryAfterInsert.Tags), `"value": "prod"`)
 
-	require.NotNil(t, inventoryAfterInsert.WorkspaceID)
 	assert.Equal(t, hostEvent.Host.Groups[0].ID, inventoryAfterInsert.WorkspaceID.String())
 	require.NotNil(t, inventoryAfterInsert.WorkspaceName)
 	assert.Equal(t, hostEvent.Host.Groups[0].Name, *inventoryAfterInsert.WorkspaceName)
@@ -578,7 +577,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 			SatelliteManaged:                 true,
 			Created:                          hostEvent.Host.Created,
 			Tags:                             utils.MarshalNilToJSONB(hostEvent.Host.Tags),
-			WorkspaceID:                      &workspaceID,
+			WorkspaceID:                      workspaceID,
 			WorkspaceName:                    workspaceName,
 			OSName:                           utils.EmptyToNil(&hostEvent.Host.SystemProfile.OperatingSystem.Name),
 			OSMajor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Major,

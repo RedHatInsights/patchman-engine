@@ -18,9 +18,8 @@ const (
 	TestWorkspace1ID = "aaaaaaaa-0000-0000-0000-000000000001"
 )
 
-func TestWorkspace1IDPtr() *uuid.UUID {
-	id := uuid.MustParse(TestWorkspace1ID)
-	return &id
+func TestWorkspace1UUID() uuid.UUID {
+	return uuid.MustParse(TestWorkspace1ID)
 }
 
 func TestWorkspace1NamePtr() *string {
