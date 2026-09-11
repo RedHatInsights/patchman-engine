@@ -30,6 +30,10 @@ spec:
     value: .
   - name: skip-sast-coverity-check
     value: "true"
+  - name: hermetic
+    value: "true"
+  - name: prefetch-input
+    value: '[{"type": "gomod", "path": "."}]'
   pipelineRef:
     name: docker-build-oci-ta
   taskRunTemplate:
