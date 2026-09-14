@@ -4,9 +4,7 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"errors"
-	"fmt"
 	"runtime"
-	"strings"
 	"time"
 
 	rpm "github.com/MichaelMraka/gorpm"
@@ -360,40 +358,21 @@ func (c *PackageCache) ReadByNevra(nevraString string) *PackageCacheMetadata {
 
 // return slice of packages found in DB and map of packages missing in DB
 func (c *PackageCache) ReadByNevras(nevraStrings []string) ([]PackageCacheMetadata, map[string]utils.Nevra) {
-	parsed := make(map[string]utils.Nevra, len(nevraStrings))
-	invalid := make(map[string]bool)
 	missing := make(map[string]utils.Nevra, len(nevraStrings))
+	res := make([]PackageCacheMetadata, 0, len(nevraStrings))
 	for _, nevraString := range nevraStrings {
 		nevra, err := utils.ParseNevra(nevraString)
 		if err != nil {
 			utils.LogWarn("nevra", nevraString, "PackageCache.ReadByNevra: cannot parse evra")
-			invalid[nevraString] = true
 			continue
 		}
-		parsed[nevraString] = *nevra
-	}
-	nevras := make([][]interface{}, 0, len(parsed))
-	for _, n := range parsed {
-		nevras = append(nevras, []interface{}{n.Name, n.EVRAString()})
-	}
-	utils.LogTrace("nevras", nevras, "PackageCache.ReadByNevra")
-	res := readPackagesFromDB("(pn.name,p.evra) IN ?", "", nevras)
-
-	resNevras := make(map[string]bool)
-	for _, pkg := range res {
-		// nevra always with epoch
-		evra := pkg.Evra
-		if !strings.Contains(evra, ":") {
-			evra = "0:" + evra
+		utils.LogTrace("nevra", nevraString, "parsed", nevraString, "PackageCache.ReadByNevras")
+		pkg := readPackageFromDB("pn.name = ? and p.evra = ?", "", nevra.Name, nevra.EVRAString())
+		if pkg == nil {
+			missing[nevraString] = *nevra
+			continue
 		}
-		nevra := fmt.Sprintf("%s-%s", pkg.Name, evra)
-		resNevras[nevra] = true
-	}
-
-	for nevra, pkg := range parsed {
-		if !invalid[nevra] && !resNevras[nevra] {
-			missing[nevra] = pkg
-		}
+		res = append(res, *pkg)
 	}
 
 	return res, missing
