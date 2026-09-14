@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/MichaelMraka/gorpm v0.0.0-20251128174203-65cf25f01bac
 	github.com/aws/aws-sdk-go v1.55.8
-	github.com/bytedance/sonic v1.15.3
+	github.com/bytedance/sonic v1.15.4
 	github.com/getkin/kin-openapi v0.149.0
 	github.com/getsentry/sentry-go v0.49.0
 	github.com/gin-contrib/timeout v1.2.1
