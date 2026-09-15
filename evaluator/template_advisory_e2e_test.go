@@ -7,6 +7,7 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"app/listener"
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -30,7 +31,7 @@ func evaluateHandlerForTest(event mqueue.PlatformEvent) error {
 	if err != nil {
 		return err
 	}
-	return evaluateHandler(mqueue.KafkaMessage{Value: data})
+	return evaluateHandler(context.Background(), mqueue.KafkaMessage{Value: data})
 }
 
 // nolint: funlen
@@ -86,7 +87,7 @@ func TestTemplateAdvisoryEvalE2E(t *testing.T) {
 	msg, err := sonic.Marshal(updateEvent)
 	require.NoError(t, err)
 
-	err = listener.TemplatesMessageHandler(mqueue.KafkaMessage{Value: msg})
+	err = listener.TemplatesMessageHandler(context.Background(), mqueue.KafkaMessage{Value: msg})
 	require.NoError(t, err)
 
 	database.CheckTemplateAdvisories(t, template.ID, []int64{1, 3})

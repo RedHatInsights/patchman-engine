@@ -1,10 +1,13 @@
 package database
 
 import (
+	"app/base/telemetry"
 	"app/base/utils"
 	"fmt"
 	"time"
 
+	"github.com/XSAM/otelsql"
+	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -88,7 +91,21 @@ func createGormConfig(debug bool) *gorm.Config {
 // open database connection
 func openPostgreSQL(dbConfig *PostgreSQLConfig) *gorm.DB {
 	connectString := dataSourceName(dbConfig)
-	db, err := gorm.Open(postgres.Open(connectString), createGormConfig(dbConfig.Debug))
+	cfg := createGormConfig(dbConfig.Debug)
+
+	var db *gorm.DB
+	var err error
+	if telemetry.SQLEnabled() {
+		// gorm.io/driver/postgres uses jackc/pgx/v5/stdlib (driver name "pgx")
+		sqlDB, openErr := otelsql.Open("pgx", connectString,
+			otelsql.WithAttributes(semconv.DBSystemPostgreSQL))
+		if openErr != nil {
+			panic(openErr)
+		}
+		db, err = gorm.Open(postgres.New(postgres.Config{Conn: sqlDB}), cfg)
+	} else {
+		db, err = gorm.Open(postgres.Open(connectString), cfg)
+	}
 	if err != nil {
 		panic(err)
 	}

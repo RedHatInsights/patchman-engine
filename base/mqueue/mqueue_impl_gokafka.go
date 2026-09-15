@@ -1,6 +1,7 @@
 package mqueue
 
 import (
+	"app/base/telemetry"
 	"app/base/utils"
 	"context"
 	"crypto/tls"
@@ -41,7 +42,10 @@ func (t *kafkaGoReaderImpl) HandleMessages(ctx context.Context, handler MessageH
 		}
 		// At this level, all errors are fatal
 		kafkaMessage := KafkaMessage{Key: m.Key, Value: m.Value, Headers: m.Headers}
-		if err = handler(kafkaMessage); err != nil {
+		msgCtx, span := telemetry.ConsumerContext(ctx, t.Config().Topic, m.Headers)
+		err = handler(msgCtx, kafkaMessage)
+		telemetry.End(span, err)
+		if err != nil {
 			utils.LogPanic("err", err, "Handler failed")
 		}
 		err = t.CommitMessages(ctx, m)
@@ -62,7 +66,8 @@ type kafkaGoWriterImpl struct {
 func (t *kafkaGoWriterImpl) WriteMessages(ctx context.Context, msgs ...KafkaMessage) error {
 	kafkaGoMessages := make([]kafka.Message, len(msgs))
 	for i, m := range msgs {
-		kafkaGoMessages[i] = kafka.Message{Key: m.Key, Value: m.Value, Headers: m.Headers}
+		headers := telemetry.Inject(ctx, m.Headers)
+		kafkaGoMessages[i] = kafka.Message{Key: m.Key, Value: m.Value, Headers: headers}
 	}
 	err := t.Writer.WriteMessages(ctx, kafkaGoMessages...)
 	return err

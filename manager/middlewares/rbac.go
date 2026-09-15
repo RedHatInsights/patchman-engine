@@ -4,12 +4,14 @@ import (
 	"app/base"
 	"app/base/api"
 	"app/base/rbac"
+	"app/base/telemetry"
 	"app/base/utils"
 	"app/manager/config"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -22,6 +24,7 @@ const rootWorkspaceID = "00000000-0000-0000-0000-999999999999"
 var (
 	rbacURL    = ""
 	httpClient = &http.Client{}
+	httpOnce   sync.Once
 )
 
 const xRHIdentity = "x-rh-identity"
@@ -39,6 +42,9 @@ var granularPerms = map[string]string{
 
 // Make RBAC client on demand, with specified identity
 func makeClient(identity string) *api.Client {
+	httpOnce.Do(func() {
+		httpClient = telemetry.InstrumentHTTPClient(httpClient)
+	})
 	debugRequest := log.IsLevelEnabled(log.TraceLevel)
 
 	client := api.Client{

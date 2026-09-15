@@ -7,6 +7,7 @@ import (
 	"app/base/mqueue"
 	"app/base/types"
 	"app/base/utils"
+	"context"
 	"testing"
 	"time"
 
@@ -143,7 +144,7 @@ func TestAdvisoryUpdateKafkaRoundTrip(t *testing.T) {
 	}()
 
 	var received mqueue.KafkaMessage
-	go reader.HandleMessages(t.Context(), func(m mqueue.KafkaMessage) error {
+	go reader.HandleMessages(t.Context(), func(_ context.Context, m mqueue.KafkaMessage) error {
 		received = m
 		return nil
 	})
@@ -167,7 +168,7 @@ func TestAdvisoryUpdateKafkaRoundTrip(t *testing.T) {
 		OrgID:      &orgID,
 		AccountID:  rhAccountID})
 	assert.NoError(t, err)
-	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
+	err = evaluateHandler(context.Background(), mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 
 	utils.AssertEqualWait(t, 10, func() (exp, act interface{}) {

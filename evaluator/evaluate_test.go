@@ -27,6 +27,29 @@ func TestInit(_ *testing.T) {
 	utils.TestLoadEnv("conf/evaluator_common.env", "conf/evaluator_upload.env")
 }
 
+func TestSystemIDsAndTraceparents(t *testing.T) {
+	id1 := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	id2 := uuid.MustParse("00000000-0000-0000-0000-000000000002")
+	single := uuid.MustParse("00000000-0000-0000-0000-000000000099")
+
+	ids, tps := systemIDsAndTraceparents(mqueue.PlatformEvent{
+		SystemIDs:    []uuid.UUID{id1, id2},
+		Traceparents: []string{"tp1", "tp2"},
+	})
+	assert.Equal(t, []uuid.UUID{id1, id2}, ids)
+	assert.Equal(t, []string{"tp1", "tp2"}, tps)
+
+	ids, tps = systemIDsAndTraceparents(mqueue.PlatformEvent{
+		ID:           single,
+		Traceparents: []string{"tp-single"},
+	})
+	assert.Equal(t, []uuid.UUID{single}, ids)
+	assert.Equal(t, []string{"tp-single"}, tps)
+
+	assert.Equal(t, "r1", firstRequestID(mqueue.PlatformEvent{RequestIDs: []string{"r1", "r2"}}))
+	assert.Equal(t, "", firstRequestID(mqueue.PlatformEvent{}))
+}
+
 // nolint: funlen
 func TestEvaluate(t *testing.T) {
 	utils.SkipWithoutDB(t)
@@ -68,7 +91,7 @@ func TestEvaluate(t *testing.T) {
 		OrgID:      &orgID,
 		AccountID:  rhAccountID})
 	assert.NoError(t, err)
-	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
+	err = evaluateHandler(context.Background(), mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
@@ -88,7 +111,7 @@ func TestEvaluate(t *testing.T) {
 		OrgID:      &orgID,
 		AccountID:  rhAccountID})
 	assert.NoError(t, err)
-	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
+	err = evaluateHandler(context.Background(), mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 	database.CheckSystemJustEvaluated(t, testInventoryID, 3, 1, 1, 0,
 		3, 1, 1, 0, 2, 2, 2, true)
@@ -133,7 +156,7 @@ func TestEvaluateYum(t *testing.T) {
 		OrgID:     &orgID,
 		AccountID: rhAccountID})
 	assert.NoError(t, err)
-	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
+	err = evaluateHandler(context.Background(), mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 
 	expectedPackageIDs := database.GetPackageIDs(expectedPackages...)

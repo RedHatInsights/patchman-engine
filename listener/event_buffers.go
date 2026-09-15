@@ -3,7 +3,9 @@ package listener
 import (
 	"app/base"
 	"app/base/mqueue"
+	"app/base/telemetry"
 	"app/base/utils"
+	"context"
 	"sync"
 	"time"
 
@@ -36,6 +38,7 @@ func (b *eventBuffer) bufferEvalEvents(
 	inventoryID uuid.UUID,
 	rhAccountID int,
 	ptEvent *mqueue.PayloadTrackerEvent,
+	ctx context.Context,
 ) {
 	defer utils.ObserveSecondsSince(time.Now(), messagePartDuration.WithLabelValues("buffer-eval-events"))
 
@@ -45,6 +48,7 @@ func (b *eventBuffer) bufferEvalEvents(
 		RhAccountID: rhAccountID,
 		OrgID:       ptEvent.OrgID,
 		RequestID:   *ptEvent.RequestID,
+		Traceparent: telemetry.EncodeTraceparent(ctx),
 	}
 	b.evalBuffer = append(b.evalBuffer, evalData)
 	b.ptBuffer = append(b.ptBuffer, *ptEvent)
@@ -63,14 +67,22 @@ func (b *eventBuffer) flushEvalEvents() {
 	tStart := time.Now()
 	b.lock.Lock()
 	defer b.lock.Unlock()
-	err := mqueue.SendMessages(base.Context, *b.evalWriter, b.evalBuffer)
+
+	tps := make([]string, 0, len(b.evalBuffer))
+	for _, e := range b.evalBuffer {
+		tps = append(tps, e.Traceparent)
+	}
+	links := telemetry.LinksFromTraceparents(tps)
+	pctx, span := telemetry.ProducerContext(context.Background(), utils.CoreCfg.EvalTopic, links)
+	var err error
+	defer func() { telemetry.End(span, err) }()
+	err = mqueue.SendMessages(pctx, *b.evalWriter, b.evalBuffer)
 	if err != nil {
 		utils.LogError("err", err, ErrorKafkaSend)
 	}
 	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-sent-evaluator"))
-	err = mqueue.SendMessages(base.Context, *b.ptWriter, b.ptBuffer)
-	if err != nil {
-		utils.LogWarn("err", err, WarnPayloadTracker)
+	if ptErr := mqueue.SendMessages(base.Context, *b.ptWriter, b.ptBuffer); ptErr != nil {
+		utils.LogWarn("err", ptErr, WarnPayloadTracker)
 	}
 	utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("buffer-sent-payload-tracker"))
 	utils.LogDebug("evaluator_messages", len(b.evalBuffer),
