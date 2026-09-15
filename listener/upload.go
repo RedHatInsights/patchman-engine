@@ -364,25 +364,26 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 	isBootc := len(host.SystemProfile.BootcStatus.Booted.Image) > 0
 
 	updatesReqJSONString := string(updatesReqJSON)
-	var workspaceID *uuid.UUID
 	var workspaceName *string
-	if l := len(host.Groups); l > 0 {
-		workspace := host.Groups[0]
-		uuid, err := uuid.Parse(workspace.ID)
-		if err != nil {
-			utils.LogError("workspaceID", workspace.ID, "invalid workspace UUID")
-			return nil, errors.New("received invalid workspace UUID")
-		}
-		workspaceID = &uuid
-		if workspace.Name != "" {
-			workspaceName = &workspace.Name
-		}
-		if l != 1 {
-			utils.LogWarn(
-				"host_id", host.ID, "org_id", host.OrgID, "workspaces", host.Groups,
-				"received a host with multiple workspaces",
-			)
-		}
+	l := len(host.Groups)
+	if l == 0 {
+		utils.LogError("inventoryID", inventoryID, "workspace UUID missing for system")
+		return nil, errors.New("workspace UUID missing for system")
+	}
+	workspace := host.Groups[0]
+	workspaceID, err := uuid.Parse(workspace.ID)
+	if err != nil {
+		utils.LogError("workspaceID", workspace.ID, "invalid workspace UUID")
+		return nil, errors.New("received invalid workspace UUID")
+	}
+	if workspace.Name != "" {
+		workspaceName = &workspace.Name
+	}
+	if l != 1 {
+		utils.LogWarn(
+			"host_id", host.ID, "org_id", host.OrgID, "workspaces", host.Groups,
+			"received a host with multiple workspaces",
+		)
 	}
 	systemPlatform := &models.SystemPlatformV2{
 		Inventory: models.SystemInventory{

@@ -179,7 +179,7 @@ func testUpdateTemplateBadRequest(t *testing.T, satelliteManaged, bootc bool) {
 		RhAccountID:      templateAccount,
 		DisplayName:      "template_bad_request_test",
 		Tags:             []byte("[]"),
-		WorkspaceID:      database.TestWorkspace1IDPtr(),
+		WorkspaceID:      database.TestWorkspace1UUID(),
 		WorkspaceName:    database.TestWorkspace1NamePtr(),
 		BuiltPkgcache:    true,
 		SatelliteManaged: satelliteManaged,

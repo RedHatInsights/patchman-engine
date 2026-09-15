@@ -24,7 +24,7 @@ func TestInitDelete(t *testing.T) {
 		RhAccountID:   1,
 		DisplayName:   del,
 		Tags:          []byte("[]"),
-		WorkspaceID:   database.TestWorkspace1IDPtr(),
+		WorkspaceID:   database.TestWorkspace1UUID(),
 		WorkspaceName: database.TestWorkspace1NamePtr(),
 	}
 	assert.NoError(t, database.DB.Create(&inv).Error)

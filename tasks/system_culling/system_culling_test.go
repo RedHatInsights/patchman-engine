@@ -177,7 +177,7 @@ func TestCullSystems(t *testing.T) {
 			RhAccountID:     1,
 			DisplayName:     invID,
 			Tags:            []byte("[]"),
-			WorkspaceID:     database.TestWorkspace1IDPtr(),
+			WorkspaceID:     database.TestWorkspace1UUID(),
 			WorkspaceName:   database.TestWorkspace1NamePtr(),
 			CulledTimestamp: &staleDate,
 		}
