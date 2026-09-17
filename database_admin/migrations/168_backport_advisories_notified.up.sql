@@ -14,3 +14,24 @@ BEGIN
         AND aad.notified IS NOT NULL;
 END;
 $backfill$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION sync_account_advisory_notified_on_insert()
+    RETURNS TRIGGER AS
+$sync_notified_insert$
+BEGIN
+    IF NEW.notified IS NULL THEN
+        SELECT notified INTO NEW.notified
+        FROM account_advisory
+        WHERE rh_account_id = NEW.rh_account_id
+          AND advisory_id = NEW.advisory_id
+          AND notified IS NOT NULL
+        LIMIT 1;
+    END IF;
+    RETURN NEW;
+END;
+$sync_notified_insert$ LANGUAGE plpgsql;
+
+SELECT create_table_partition_triggers('account_advisory_sync_notified_insert',
+                                       $$BEFORE INSERT$$,
+                                       'account_advisory',
+                                       $$FOR EACH ROW EXECUTE PROCEDURE sync_account_advisory_notified_on_insert()$$);

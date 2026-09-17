@@ -241,6 +241,23 @@ BEGIN
 END;
 $backfill$ LANGUAGE plpgsql;
 
+-- handle a new workspace with already notified advisory
+CREATE OR REPLACE FUNCTION sync_account_advisory_notified_on_insert()
+    RETURNS TRIGGER AS
+$sync_notified_insert$
+BEGIN
+    IF NEW.notified IS NULL THEN
+        SELECT notified INTO NEW.notified
+        FROM account_advisory
+        WHERE rh_account_id = NEW.rh_account_id
+          AND advisory_id = NEW.advisory_id
+          AND notified IS NOT NULL
+        LIMIT 1;
+    END IF;
+    RETURN NEW;
+END;
+$sync_notified_insert$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION refresh_system_caches(system_id_in BIGINT DEFAULT NULL,
                                                  rh_account_id_in INTEGER DEFAULT NULL)
     RETURNS INTEGER AS
@@ -909,6 +926,11 @@ SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'account_advisor
 SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'account_advisory', 'evaluator');
 SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'account_advisory', 'listener');
 SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'account_advisory', 'vmaas_sync');
+
+SELECT create_table_partition_triggers('account_advisory_sync_notified_insert',
+                                       $$BEFORE INSERT$$,
+                                       'account_advisory',
+                                       $$FOR EACH ROW EXECUTE PROCEDURE sync_account_advisory_notified_on_insert()$$);
 
 CREATE INDEX ON account_advisory (systems_applicable);
 CREATE INDEX ON account_advisory (systems_installable);
