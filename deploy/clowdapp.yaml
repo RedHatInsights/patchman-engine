@@ -485,34 +485,6 @@ objects:
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
 
-    - name: advisory-refresh
-      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
-      schedule: ${ADVISORY_REFRESH_SCHEDULE}
-      suspend: ${{ADVISORY_REFRESH_SUSPEND}}
-      concurrencyPolicy: Forbid
-      podSpec:
-        image: ${IMAGE}:${IMAGE_TAG}
-        initContainers:
-          - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG}
-            command:
-              - ./database_admin/check-upgraded.sh
-            env:
-            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
-        command:
-          - ./scripts/entrypoint.sh
-          - job
-          - advisory_cache_refresh
-        env:
-        - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GIN_MODE, value: '${GIN_MODE}'}
-        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
-        - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
-        - {name: DB_USER, value: vmaas_sync}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                      key: vmaas-sync-database-password}}}
-        - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
-
     - name: delete-unused
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
       schedule: ${DELETE_UNUSED_SCHEDULE}
@@ -847,8 +819,6 @@ parameters:
 # Cache refresh
 - {name: PKG_REFRESH_SCHEDULE, value: '5 11-20/2 * * *'} # Cronjob schedule definition
 - {name: PKG_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
-- {name: ADVISORY_REFRESH_SCHEDULE, value: '*/15 * * * *'} # Cronjob schedule definition
-- {name: ADVISORY_REFRESH_SUSPEND, value: 'true'} # Disable cronjob execution
 # Repack
 - {name: REPACK_SCHEDULE, value: '0 11 * * 5'} # Cronjob schedule definition
 - {name: REPACK_SUSPEND, value: 'false'} # Disable cronjob execution

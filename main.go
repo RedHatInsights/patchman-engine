@@ -68,8 +68,6 @@ func runJob(name string) {
 		vmaas_sync.RunVmaasSync()
 	case "system_culling":
 		system_culling.RunSystemCulling()
-	case "advisory_cache_refresh":
-		caches.RunAdvisoryRefresh()
 	case "delete_unused":
 		cleaning.RunDeleteUnusedData()
 	case "packages_cache_refresh":

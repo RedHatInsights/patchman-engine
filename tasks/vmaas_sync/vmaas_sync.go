@@ -9,7 +9,6 @@ import (
 	"app/base/types"
 	"app/base/utils"
 	"app/tasks"
-	"app/tasks/caches"
 	"net/http"
 
 	"time"
@@ -110,13 +109,6 @@ func SyncData(lastModifiedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *type
 	}
 	if vmaasExportedTS != nil {
 		database.UpdateTimestampKVValue(VmaasExported, *vmaasExportedTS.Time())
-	}
-
-	// refresh caches
-	if tasks.EnableAdvisoryCacheRefresh {
-		caches.RefreshAdvisoryCaches()
-	} else {
-		utils.LogInfo("Advisory cache refresh is disabled")
 	}
 
 	utils.LogInfo("Data sync finished successfully")

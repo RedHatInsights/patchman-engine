@@ -719,12 +719,12 @@ func parseVmaasJSON(inv *models.SystemInventory) (vmaas.UpdatesV3Request, error)
 	return utils.ParseVmaasJSON(inv)
 }
 
-func invalidateCaches(orgID string) error {
+func invalidatePackageCache(orgID string) error {
 	err := database.DB.Model(models.RhAccount{}).
 		Where("org_id = ?", orgID).
-		Where("valid_package_cache = true OR valid_advisory_cache = true").
+		Where("valid_package_cache = true").
 		// use map because struct updates only non-zero values and we need to update it to `false`
-		Updates(map[string]interface{}{"valid_package_cache": false, "valid_advisory_cache": false}).
+		Updates(map[string]interface{}{"valid_package_cache": false}).
 		Error
 	return err
 }
@@ -768,7 +768,7 @@ func evaluateHandler(m mqueue.KafkaMessage) error {
 	}
 	wg.Wait()
 
-	if cacheErr := invalidateCaches(event.GetOrgID()); cacheErr != nil {
+	if cacheErr := invalidatePackageCache(event.GetOrgID()); cacheErr != nil {
 		utils.LogError("err", cacheErr, "org_id", event.GetOrgID(), "Couldn't invalidate caches")
 	}
 

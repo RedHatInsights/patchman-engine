@@ -24,20 +24,6 @@ func loadAllSystemInventories(t *testing.T, db *gorm.DB) []models.SystemInventor
 	return rows
 }
 
-func loadFirstInstallableNonStaleInventory(t *testing.T, db *gorm.DB, rhAccountID int) models.SystemInventory {
-	t.Helper()
-	var inv models.SystemInventory
-	err := db.Table("system_inventory AS si").
-		Select("si.*").
-		Joins("JOIN system_patch sp ON sp.system_id = si.id AND sp.rh_account_id = si.rh_account_id").
-		Where("si.rh_account_id = ? AND si.stale = ? AND sp.installable_advisory_count_cache > ?",
-			rhAccountID, false, 0).
-		Order("si.id").
-		First(&inv).Error
-	assert.NoError(t, err)
-	return inv
-}
-
 func updateInventoryStaleFields(t *testing.T, db *gorm.DB, inv *models.SystemInventory,
 	staleTS, staleWarnTS *time.Time, stale bool,
 ) {
@@ -55,87 +41,68 @@ func TestSingleSystemStale(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	var oldAffected int
 	var inv models.SystemInventory
-	var accountData []models.AdvisoryAccountData
-
 	assert.NotNil(t, staleDate)
-	assert.NoError(t, database.DB.Find(&accountData, "systems_installable > 1 ").
-		Order("systems_installable DESC").Error)
-	inv = loadFirstInstallableNonStaleInventory(t, database.DB, accountData[0].RhAccountID)
+	assert.NoError(t, database.DB.Where("stale = ?", false).Order("rh_account_id, id").First(&inv).Error)
 
-	updateInventoryStaleFields(t, database.DB, &inv, &staleDate, &staleDate, inv.Stale)
+	updateInventoryStaleFields(t, database.DB, &inv, &staleDate, &staleDate, false)
 
 	nMarked, err := markSystemsStale(database.DB, 0)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, int64(0), nMarked)
 
 	nMarked, err = markSystemsStale(database.DB, 1)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, int64(1), nMarked)
 
-	oldAffected = accountData[0].SystemsInstallable
-	assert.NoError(t, database.DB.Find(&accountData, "rh_account_id = ? AND advisory_id = ?",
-		accountData[0].RhAccountID, accountData[0].AdvisoryID).Error)
+	var updated models.SystemInventory
+	assert.NoError(t, database.DB.First(&updated, "rh_account_id = ? AND id = ?", inv.RhAccountID, inv.ID).Error)
+	assert.True(t, updated.Stale, "System should be marked stale")
 
-	assert.Equal(t, oldAffected-1, accountData[0].SystemsInstallable,
-		"Systems affected should be decremented by one")
+	futureDate := time.Now().Add(24 * time.Hour)
+	updateInventoryStaleFields(t, database.DB, &inv, &futureDate, &futureDate, true)
 
+	nMarked, err = markSystemsStale(database.DB, 1)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), nMarked)
+
+	assert.NoError(t, database.DB.First(&updated, "rh_account_id = ? AND id = ?", inv.RhAccountID, inv.ID).Error)
+	assert.False(t, updated.Stale, "System should be marked not stale")
+
+	// Cleanup fixture state
 	updateInventoryStaleFields(t, database.DB, &inv, nil, nil, false)
-	assert.NoError(t, database.DB.Find(&accountData, "rh_account_id = ? AND advisory_id = ?",
-		accountData[0].RhAccountID, accountData[0].AdvisoryID).Error)
-
-	assert.Equal(t, oldAffected, accountData[0].SystemsInstallable,
-		"Systems affected should be changed to match value at the start of the test case")
 }
 
-// Test for making sure system culling works
 func TestMarkSystemsStale(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	inventories := loadAllSystemInventories(t, database.DB)
-	var accountData []models.AdvisoryAccountData
 	assert.NotNil(t, staleDate)
-	assert.NoError(t, database.DB.Find(&accountData).Error)
+	inventories := loadAllSystemInventories(t, database.DB)
 	for i := range inventories {
 		assert.NotEqual(t, 0, inventories[i].ID)
-		assert.Equal(t, false, inventories[i].Stale, "No systems should be stale")
-		updateInventoryStaleFields(t, database.DB, &inventories[i], &staleDate, &staleDate, inventories[i].Stale)
+		assert.False(t, inventories[i].Stale, "No systems should start stale")
+		updateInventoryStaleFields(t, database.DB, &inventories[i], &staleDate, &staleDate, false)
 	}
 
-	assert.True(t, len(accountData) > 0, "We should have some systems affected by advisories")
-	for _, a := range accountData {
-		assert.True(t, a.SystemsInstallable+a.SystemsApplicable > 0, "We should have some systems affected")
-	}
 	nMarked, err := markSystemsStale(database.DB, 500)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, int64(18), nMarked)
 
 	inventories = loadAllSystemInventories(t, database.DB)
 	for i := range inventories {
-		assert.Equal(t, true, inventories[i].Stale, "All systems should be stale")
+		assert.True(t, inventories[i].Stale, "All systems should be marked stale")
+		// Clean up fixture
 		updateInventoryStaleFields(t, database.DB, &inventories[i], nil, nil, false)
 	}
-
-	assert.NoError(t, database.DB.Find(&accountData).Error)
-	assert.True(t, len(accountData) > 0, "advisory_account_data should still exist after unstale")
-	sumAffected := 0
-	for _, a := range accountData {
-		sumAffected += a.SystemsInstallable + a.SystemsApplicable
-	}
-	assert.True(t, sumAffected > 0,
-		"after clearing stale, caches should show systems again (installable+applicable > 0)", sumAffected)
 }
 
 func TestMarkSystemsNotStale(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	// This test runs before TestMarkSystemsStale by name order; the DB fixture is not stale.
-	// Match TestMarkSystemsStale setup so every host is stale, then verify clearing stale restores counts.
-	var accountData []models.AdvisoryAccountData
 	assert.NotNil(t, staleDate)
+	futureDate := time.Now().Add(24 * time.Hour)
 
 	inventories := loadAllSystemInventories(t, database.DB)
 	for i := range inventories {
@@ -148,14 +115,17 @@ func TestMarkSystemsNotStale(t *testing.T) {
 
 	inventories = loadAllSystemInventories(t, database.DB)
 	for i := range inventories {
-		assert.True(t, inventories[i].Stale, "all systems should be stale after markSystemsStale")
-		updateInventoryStaleFields(t, database.DB, &inventories[i], nil, nil, false)
+		assert.True(t, inventories[i].Stale, "all systems should be stale before un-staling")
+		updateInventoryStaleFields(t, database.DB, &inventories[i], &futureDate, &futureDate, true)
 	}
 
-	assert.NoError(t, database.DB.Find(&accountData).Error)
-	assert.True(t, len(accountData) > 0, "We should have some systems affected by advisories")
-	for _, a := range accountData {
-		assert.True(t, a.SystemsInstallable+a.SystemsApplicable > 0, "We should have some systems affected")
+	nMarked, err = markSystemsStale(database.DB, 500)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(18), nMarked)
+
+	inventories = loadAllSystemInventories(t, database.DB)
+	for i := range inventories {
+		assert.False(t, inventories[i].Stale, "all systems should be marked not stale")
 	}
 }
 
