@@ -287,20 +287,6 @@ func (SystemAdvisories) TableName() string {
 
 type SystemAdvisoriesSlice []SystemAdvisories
 
-type AdvisoryAccountData struct {
-	AdvisoryID         int64 `gorm:"primaryKey"`
-	RhAccountID        int   `gorm:"primaryKey"`
-	SystemsApplicable  int
-	SystemsInstallable int
-	Notified           *time.Time
-}
-
-func (AdvisoryAccountData) TableName() string {
-	return "advisory_account_data"
-}
-
-type AdvisoryAccountDataSlice []AdvisoryAccountData
-
 type AccountAdvisory struct {
 	AdvisoryID         int64     `gorm:"primaryKey"`
 	RhAccountID        int       `gorm:"primaryKey"`
