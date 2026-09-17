@@ -80,7 +80,5 @@ func runJob(name string) {
 		caches.RunPackageRefresh()
 	case "repack":
 		repack.RunRepack()
-	case "clean_advisory_account_data":
-		cleaning.RunCleanAdvisoryAccountData()
 	}
 }
