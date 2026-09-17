@@ -69,12 +69,9 @@ func TestEvaluate(t *testing.T) {
 
 	database.DeleteSystemAdvisories(t, testDBID, expectedAdvisoryIDs)
 	database.DeleteSystemAdvisories(t, testDBID, patchingSystemAdvisoryIDs)
-	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
-	database.DeleteAdvisoryAccountData(t, rhAccountID, patchingSystemAdvisoryIDs)
 	database.DeleteSystemPackages(t, rhAccountID, testDBID, expectedPackageIDs...)
 	database.DeleteSystemRepos(t, rhAccountID, testDBID, systemRepoIDs)
 	database.CreateSystemAdvisories(t, rhAccountID, testDBID, oldSystemAdvisoryIDs)
-	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
 	database.CreateSystemRepos(t, rhAccountID, testDBID, systemRepoIDs)
 
 	// do evaluate the system
@@ -109,8 +106,6 @@ func TestEvaluate(t *testing.T) {
 		3, 1, 1, 0, 2, 2, 2, true)
 
 	database.DeleteSystemAdvisories(t, testDBID, advisoryIDs)
-	database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
-	database.DeleteAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs)
 	database.DeleteSystemRepos(t, rhAccountID, testDBID, thirdPartySystemRepoIDs)
 
 	assert.Equal(t, 2, len(mockWriter.Messages))
@@ -138,9 +133,7 @@ func TestEvaluateYum(t *testing.T) {
 	}
 
 	database.DeleteSystemAdvisories(t, testDBID, expectedAdvisoryIDs)
-	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
 	database.CreateSystemAdvisories(t, rhAccountID, testDBID, oldSystemAdvisoryIDs)
-	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
 
 	data, err := sonic.Marshal(mqueue.PlatformEvent{
 		SystemIDs: []uuid.UUID{testInventoryID},
@@ -157,8 +150,6 @@ func TestEvaluateYum(t *testing.T) {
 
 	database.DeleteSystemPackages(t, rhAccountID, testDBID, expectedPackageIDs...)
 	database.DeleteSystemAdvisories(t, testDBID, advisoryIDs)
-	database.DeleteAdvisoryAccountData(t, rhAccountID, advisoryIDs)
-	database.DeleteAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs)
 
 	assert.Equal(t, 1, len(mockWriter.Messages))
 }
