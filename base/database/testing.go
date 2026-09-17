@@ -27,18 +27,6 @@ func TestWorkspace1NamePtr() *string {
 	return &name
 }
 
-func DebugWithCachesCheck(part string, fun func()) {
-	fun()
-	validAfter, err := CheckCachesValidRet()
-	if err != nil {
-		utils.LogPanic("error", err, "Could not check validity of caches")
-	}
-
-	if !validAfter {
-		utils.LogPanic("part", part, "Cache mismatch created")
-	}
-}
-
 type key struct {
 	AccountID  int
 	AdvisoryID int64
@@ -108,12 +96,6 @@ func CheckCachesValidRet() (bool, error) {
 
 	tx.Commit()
 	return valid, nil
-}
-
-func CheckCachesValid(t *testing.T) {
-	valid, err := CheckCachesValidRet()
-	assert.Nil(t, err)
-	assert.True(t, valid)
 }
 
 func CheckAdvisoriesInDB(t *testing.T, advisories []string) []int64 {
