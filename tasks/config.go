@@ -25,8 +25,6 @@ var (
 	EnablePackagesSync = utils.PodConfig.GetBool("packages_sync", true)
 	// Toggle repo sync in vmaas_sync
 	EnableReposSync = utils.PodConfig.GetBool("repos_sync", true)
-	// Toggle advisory cache refresh in vmaas_sync
-	EnableAdvisoryCacheRefresh = utils.PodConfig.GetBool("advisory_cache_refresh", true)
 	// Sync data in vnass_sync based on timestamp
 	EnableModifiedSinceSync = utils.PodConfig.GetBool("modified_since_sync", true)
 	// Page size for /errata vmass API call
