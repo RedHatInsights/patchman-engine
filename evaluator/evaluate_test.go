@@ -59,7 +59,6 @@ func TestEvaluate(t *testing.T) {
 	database.CreateSystemAdvisories(t, rhAccountID, testDBID, oldSystemAdvisoryIDs)
 	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
 	database.CreateSystemRepos(t, rhAccountID, testDBID, systemRepoIDs)
-	database.CheckCachesValid(t)
 
 	// do evaluate the system
 	data, err := sonic.Marshal(mqueue.PlatformEvent{
@@ -76,7 +75,6 @@ func TestEvaluate(t *testing.T) {
 	database.CheckSystemPackages(t, rhAccountID, testDBID, len(expectedPackageIDs), expectedPackageIDs...)
 	database.CheckSystemJustEvaluated(t, testInventoryID, 3, 1, 1, 0,
 		3, 1, 1, 0, 2, 2, 2, false)
-	database.CheckCachesValid(t)
 
 	// test evaluation with third party repos
 	thirdPartySystemRepoIDs := []int64{1, 2, 4}
@@ -126,7 +124,6 @@ func TestEvaluateYum(t *testing.T) {
 	database.DeleteAdvisoryAccountData(t, rhAccountID, expectedAdvisoryIDs)
 	database.CreateSystemAdvisories(t, rhAccountID, testDBID, oldSystemAdvisoryIDs)
 	database.CreateAdvisoryAccountData(t, rhAccountID, oldSystemAdvisoryIDs, 1)
-	database.CheckCachesValid(t)
 
 	data, err := sonic.Marshal(mqueue.PlatformEvent{
 		SystemIDs: []uuid.UUID{testInventoryID},

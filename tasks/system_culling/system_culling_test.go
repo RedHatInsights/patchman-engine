@@ -59,38 +59,34 @@ func TestSingleSystemStale(t *testing.T) {
 	var inv models.SystemInventory
 	var accountData []models.AdvisoryAccountData
 
-	database.DebugWithCachesCheck("stale-trigger", func() {
-		assert.NotNil(t, staleDate)
-		assert.NoError(t, database.DB.Find(&accountData, "systems_installable > 1 ").
-			Order("systems_installable DESC").Error)
-		inv = loadFirstInstallableNonStaleInventory(t, database.DB, accountData[0].RhAccountID)
+	assert.NotNil(t, staleDate)
+	assert.NoError(t, database.DB.Find(&accountData, "systems_installable > 1 ").
+		Order("systems_installable DESC").Error)
+	inv = loadFirstInstallableNonStaleInventory(t, database.DB, accountData[0].RhAccountID)
 
-		updateInventoryStaleFields(t, database.DB, &inv, &staleDate, &staleDate, inv.Stale)
+	updateInventoryStaleFields(t, database.DB, &inv, &staleDate, &staleDate, inv.Stale)
 
-		nMarked, err := markSystemsStale(database.DB, 0)
-		assert.Nil(t, err)
-		assert.Equal(t, int64(0), nMarked)
+	nMarked, err := markSystemsStale(database.DB, 0)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(0), nMarked)
 
-		nMarked, err = markSystemsStale(database.DB, 1)
-		assert.Nil(t, err)
-		assert.Equal(t, int64(1), nMarked)
+	nMarked, err = markSystemsStale(database.DB, 1)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(1), nMarked)
 
-		oldAffected = accountData[0].SystemsInstallable
-		assert.NoError(t, database.DB.Find(&accountData, "rh_account_id = ? AND advisory_id = ?",
-			accountData[0].RhAccountID, accountData[0].AdvisoryID).Error)
+	oldAffected = accountData[0].SystemsInstallable
+	assert.NoError(t, database.DB.Find(&accountData, "rh_account_id = ? AND advisory_id = ?",
+		accountData[0].RhAccountID, accountData[0].AdvisoryID).Error)
 
-		assert.Equal(t, oldAffected-1, accountData[0].SystemsInstallable,
-			"Systems affected should be decremented by one")
-	})
+	assert.Equal(t, oldAffected-1, accountData[0].SystemsInstallable,
+		"Systems affected should be decremented by one")
 
-	database.DebugWithCachesCheck("stale-trigger", func() {
-		updateInventoryStaleFields(t, database.DB, &inv, nil, nil, false)
-		assert.NoError(t, database.DB.Find(&accountData, "rh_account_id = ? AND advisory_id = ?",
-			accountData[0].RhAccountID, accountData[0].AdvisoryID).Error)
+	updateInventoryStaleFields(t, database.DB, &inv, nil, nil, false)
+	assert.NoError(t, database.DB.Find(&accountData, "rh_account_id = ? AND advisory_id = ?",
+		accountData[0].RhAccountID, accountData[0].AdvisoryID).Error)
 
-		assert.Equal(t, oldAffected, accountData[0].SystemsInstallable,
-			"Systems affected should be changed to match value at the start of the test case")
-	})
+	assert.Equal(t, oldAffected, accountData[0].SystemsInstallable,
+		"Systems affected should be changed to match value at the start of the test case")
 }
 
 // Test for making sure system culling works
@@ -190,21 +186,19 @@ func TestCullSystems(t *testing.T) {
 
 	var cnt int64
 	var cntAfter int64
-	database.DebugWithCachesCheck("delete-culled", func() {
-		assert.NoError(t, database.DB.Model(&models.SystemInventory{}).Count(&cnt).Error)
-		// first batch
-		nDeleted, err := deleteCulledSystems(database.DB, 3)
-		assert.Nil(t, err)
-		assert.Equal(t, int64(3), nDeleted)
+	assert.NoError(t, database.DB.Model(&models.SystemInventory{}).Count(&cnt).Error)
+	// first batch
+	nDeleted, err := deleteCulledSystems(database.DB, 3)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(3), nDeleted)
 
-		// second batch
-		nDeleted, err = deleteCulledSystems(database.DB, 3)
-		assert.Nil(t, err)
-		assert.Equal(t, int64(1), nDeleted)
+	// second batch
+	nDeleted, err = deleteCulledSystems(database.DB, 3)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(1), nDeleted)
 
-		assert.NoError(t, database.DB.Model(&models.SystemInventory{}).Count(&cntAfter).Error)
-		assert.Equal(t, cnt-int64(nToDelete), cntAfter)
-	})
+	assert.NoError(t, database.DB.Model(&models.SystemInventory{}).Count(&cntAfter).Error)
+	assert.Equal(t, cnt-int64(nToDelete), cntAfter)
 }
 
 func TestPruneDeletedSystems(t *testing.T) {

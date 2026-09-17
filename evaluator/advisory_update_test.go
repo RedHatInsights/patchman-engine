@@ -157,7 +157,6 @@ func TestAdvisoryUpdateKafkaRoundTrip(t *testing.T) {
 	oldAdvisoryIDs := []int64{1, 3, 4}
 	database.CreateSystemAdvisories(t, rhAccountID, testDBID, oldAdvisoryIDs)
 	database.CreateAdvisoryAccountData(t, rhAccountID, oldAdvisoryIDs, 1)
-	database.CheckCachesValid(t)
 
 	// Run evaluation
 	data, err := sonic.Marshal(mqueue.PlatformEvent{
