@@ -4,7 +4,6 @@ import (
 	"app/base/utils"
 	"app/manager/middlewares"
 	"app/tasks/caches"
-	"app/tasks/cleaning"
 	"app/tasks/repack"
 	sync "app/tasks/vmaas_sync"
 	"errors"
@@ -149,27 +148,6 @@ func RepackHandler(c *gin.Context) {
 
 	utils.LogInfo("manual repack finished successfully")
 	c.JSON(http.StatusOK, "OK")
-}
-
-// @Summary Clean advisory_account_data
-// @Description Delete rows with no installable and applicable systems
-// @ID cleanAdvisoryAccountData
-// @Security RhIdentity
-// @Accept   json
-// @Produce  json
-// @Success 200 {object} string
-// @Failure 409 {object} string
-// @Failure 500 {object} map[string]interface{}
-// @Router /clean-advisory-account-data [put]
-func CleanAADHandler(c *gin.Context) {
-	err := cleaning.CleanAdvisoryAccountData()
-	if err != nil {
-		utils.LogError("error", err, "Could not clean advisory account data")
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, "cleaning advisory account data")
 }
 
 // @Summary Delete system by inventory id
