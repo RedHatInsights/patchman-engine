@@ -1,7 +1,6 @@
 package caches
 
 import (
-	"app/aggregator"
 	"app/base/database"
 	"app/base/utils"
 	"app/tasks"
@@ -59,7 +58,6 @@ func backfillAccountAdvisoryPerAccounts(wg *sync.WaitGroup) {
 				utils.LogError("err", err, "rh_account_id", rhAccountID, "failed to load advisory IDs for drift check")
 				return
 			}
-			aggregator.CheckAdvisoryDrift(rhAccountID, advisoryIDs)
 		}(i, rhAccountID)
 	}
 }
