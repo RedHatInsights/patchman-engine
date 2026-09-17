@@ -76,6 +76,13 @@ func markAdvisoriesNotified(tx *gorm.DB, accountID int, advisoryIDs []int64) err
 	if err != nil {
 		return errors.Wrap(err, "updating notified column failed")
 	}
+	// Ensure notifications are in sync between aad and aa, while we transition
+	err = tx.Table("account_advisory").
+		Where("rh_account_id = ? AND advisory_id IN (?)", accountID, advisoryIDs).
+		Update("notified", time.Now()).Error
+	if err != nil {
+		return errors.Wrap(err, "updating notified column in account_advisory failed")
+	}
 	return nil
 }
 
