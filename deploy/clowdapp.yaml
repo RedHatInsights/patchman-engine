@@ -718,55 +718,6 @@ objects:
         - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
         - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
 
-    - name: advisory-refresh
-      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
-      schedule: ${ADVISORY_REFRESH_SCHEDULE}
-      suspend: ${{ADVISORY_REFRESH_SUSPEND}}
-      concurrencyPolicy: Forbid
-      podSpec:
-        image: ${IMAGE}:${IMAGE_TAG}
-        initContainers:
-          - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG}
-            command:
-              - ./database_admin/check-upgraded.sh
-            env:
-            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
-        command:
-          - ./scripts/entrypoint.sh
-          - job
-          - advisory_cache_refresh
-        env:
-        - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GIN_MODE, value: '${GIN_MODE}'}
-        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
-        - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
-        - {name: DB_USER, value: vmaas_sync}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                      key: vmaas-sync-database-password}}}
-        - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
-        - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
-        - {name: OTEL_SERVICE_NAME, value: 'patchman-advisory-refresh'}
-        - {name: OTEL_ENABLED, value: '${OTEL_ENABLED}'}
-        - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: '${OTEL_EXPORTER_OTLP_ENDPOINT}'}
-        - {name: OTEL_EXPORTER_OTLP_PROTOCOL, value: '${OTEL_EXPORTER_OTLP_PROTOCOL}'}
-        - {name: OTEL_EXPORTER_OTLP_COMPRESSION, value: '${OTEL_EXPORTER_OTLP_COMPRESSION}'}
-        - {name: OTEL_TRACES_EXPORTER, value: '${OTEL_TRACES_EXPORTER}'}
-        - {name: OTEL_METRICS_EXPORTER, value: '${OTEL_METRICS_EXPORTER}'}
-        - {name: OTEL_LOGS_EXPORTER, value: '${OTEL_LOGS_EXPORTER}'}
-        - {name: OTEL_SAMPLING_RATE, value: '${OTEL_SAMPLING_RATE}'}
-        - {name: OTEL_SQL_ENABLED, value: '${OTEL_SQL_ENABLED}'}
-        - {name: OTEL_HTTP_INBOUND_ENABLED, value: '${OTEL_HTTP_INBOUND_ENABLED}'}
-        - {name: OTEL_HTTP_OUTBOUND_ENABLED, value: '${OTEL_HTTP_OUTBOUND_ENABLED}'}
-        - {name: OTEL_MQ_ENABLED, value: '${OTEL_MQ_ENABLED}'}
-        - {name: OTEL_BSP_MAX_QUEUE_SIZE, value: '${OTEL_BSP_MAX_QUEUE_SIZE}'}
-        - {name: OTEL_BSP_MAX_EXPORT_BATCH_SIZE, value: '${OTEL_BSP_MAX_EXPORT_BATCH_SIZE}'}
-        - {name: OTEL_BSP_SCHEDULE_DELAY, value: '${OTEL_BSP_SCHEDULE_DELAY}'}
-        - {name: OTEL_BSP_EXPORT_TIMEOUT, value: '${OTEL_BSP_EXPORT_TIMEOUT}'}
-        - {name: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}'}
-        - {name: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, value: '${OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT}'}
-        - {name: OTEL_SPAN_LINK_COUNT_LIMIT, value: '${OTEL_SPAN_LINK_COUNT_LIMIT}'}
-
     - name: delete-unused
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
       schedule: ${DELETE_UNUSED_SCHEDULE}
@@ -1190,8 +1141,6 @@ parameters:
 # Cache refresh
 - {name: PKG_REFRESH_SCHEDULE, value: '5 11-20/2 * * *'} # Cronjob schedule definition
 - {name: PKG_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
-- {name: ADVISORY_REFRESH_SCHEDULE, value: '*/15 * * * *'} # Cronjob schedule definition
-- {name: ADVISORY_REFRESH_SUSPEND, value: 'true'} # Disable cronjob execution
 # Repack
 - {name: REPACK_SCHEDULE, value: '0 11 * * 5'} # Cronjob schedule definition
 - {name: REPACK_SUSPEND, value: 'false'} # Disable cronjob execution

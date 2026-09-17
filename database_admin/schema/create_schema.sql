@@ -115,61 +115,6 @@ BEGIN
 END;
 $system_update$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION refresh_advisory_caches_multi(advisory_ids_in INTEGER[] DEFAULT NULL,
-                                                         rh_account_id_in INTEGER DEFAULT NULL)
-    RETURNS VOID AS
-$refresh_advisory$
-BEGIN
-    -- Lock rows
-    PERFORM aad.rh_account_id, aad.advisory_id
-    FROM advisory_account_data aad
-    WHERE (aad.advisory_id = ANY (advisory_ids_in) OR advisory_ids_in IS NULL)
-      AND (aad.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
-        FOR UPDATE OF aad;
-
-    WITH current_counts AS (
-        SELECT sa.advisory_id, sa.rh_account_id,
-               count(sa.*) filter (where sa.status_id = 0) as systems_installable,
-               count(sa.*) as systems_applicable
-          FROM system_advisories sa
-          JOIN system_inventory si
-            ON sa.rh_account_id = si.rh_account_id AND sa.system_id = si.id
-          JOIN system_patch sp
-            ON si.id = sp.system_id AND sp.rh_account_id = si.rh_account_id
-         WHERE sp.last_evaluation IS NOT NULL
-           AND si.stale = FALSE
-           AND (sa.advisory_id = ANY (advisory_ids_in) OR advisory_ids_in IS NULL)
-           AND (si.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
-         GROUP BY sa.advisory_id, sa.rh_account_id
-    ),
-        upserted AS (
-            INSERT INTO advisory_account_data (advisory_id, rh_account_id, systems_installable, systems_applicable)
-                 SELECT advisory_id, rh_account_id, systems_installable, systems_applicable
-                   FROM current_counts
-            ON CONFLICT (advisory_id, rh_account_id) DO UPDATE SET
-                     systems_installable = EXCLUDED.systems_installable,
-                     systems_applicable = EXCLUDED.systems_applicable
-         )
-    DELETE FROM advisory_account_data
-     WHERE (advisory_id, rh_account_id) NOT IN (SELECT advisory_id, rh_account_id FROM current_counts)
-       AND (advisory_id = ANY (advisory_ids_in) OR advisory_ids_in IS NULL)
-       AND (rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL);
-END;
-$refresh_advisory$ language plpgsql;
-
-CREATE OR REPLACE FUNCTION refresh_advisory_caches(advisory_id_in INTEGER DEFAULT NULL,
-                                                   rh_account_id_in INTEGER DEFAULT NULL)
-    RETURNS VOID AS
-$refresh_advisory$
-BEGIN
-    IF advisory_id_in IS NOT NULL THEN
-        PERFORM refresh_advisory_caches_multi(ARRAY [advisory_id_in], rh_account_id_in);
-    ELSE
-        PERFORM refresh_advisory_caches_multi(NULL, rh_account_id_in);
-    END IF;
-END;
-$refresh_advisory$ language plpgsql;
-
 CREATE OR REPLACE FUNCTION refresh_account_advisory_caches_multi(advisory_ids_in INTEGER[] DEFAULT NULL,
                                                                   rh_account_id_in INTEGER DEFAULT NULL)
     RETURNS VOID AS
@@ -295,64 +240,6 @@ BEGIN
     PERFORM refresh_system_caches(system_id_in, NULL);
 END;
 $update_system_caches$
-    LANGUAGE 'plpgsql';
-
--- refresh_all_cached_counts
--- WARNING: executing this procedure takes long time,
---          use only when necessary, e.g. during upgrade to populate initial caches
-CREATE OR REPLACE FUNCTION refresh_all_cached_counts()
-    RETURNS void AS
-$refresh_all_cached_counts$
-BEGIN
-    PERFORM refresh_system_caches(NULL, NULL);
-    PERFORM refresh_advisory_caches(NULL, NULL);
-END;
-$refresh_all_cached_counts$
-    LANGUAGE 'plpgsql';
-
-CREATE OR REPLACE FUNCTION refresh_account_cached_counts(rh_account_in varchar)
-    RETURNS void AS
-$refresh_account_cached_counts$
-DECLARE
-    rh_account_id_in INT;
-BEGIN
-    -- update advisory count for ordered systems
-    SELECT id FROM rh_account WHERE name = rh_account_in INTO rh_account_id_in;
-
-    PERFORM refresh_system_caches(NULL, rh_account_id_in);
-    PERFORM refresh_advisory_caches(NULL, rh_account_id_in);
-END;
-$refresh_account_cached_counts$
-    LANGUAGE 'plpgsql';
-
-CREATE OR REPLACE FUNCTION refresh_advisory_cached_counts(advisory_name varchar)
-    RETURNS void AS
-$refresh_advisory_cached_counts$
-DECLARE
-    advisory_id_id BIGINT;
-BEGIN
-    -- update system count for advisory
-    SELECT id FROM advisory_metadata WHERE name = advisory_name INTO advisory_id_id;
-
-    PERFORM refresh_advisory_caches(advisory_id_id, NULL);
-END;
-$refresh_advisory_cached_counts$
-    LANGUAGE 'plpgsql';
-
-CREATE OR REPLACE FUNCTION refresh_advisory_account_cached_counts(advisory_name varchar, rh_account_name varchar)
-    RETURNS void AS
-$refresh_advisory_account_cached_counts$
-DECLARE
-    advisory_md_id   BIGINT;
-    rh_account_id_in INT;
-BEGIN
-    -- update system count for ordered advisories
-    SELECT id FROM advisory_metadata WHERE name = advisory_name INTO advisory_md_id;
-    SELECT id FROM rh_account WHERE name = rh_account_name INTO rh_account_id_in;
-
-    PERFORM refresh_advisory_caches(advisory_md_id, rh_account_id_in);
-END;
-$refresh_advisory_account_cached_counts$
     LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION refresh_system_cached_counts(inventory_id_in varchar)
@@ -573,7 +460,6 @@ CREATE TABLE IF NOT EXISTS rh_account
     name                    TEXT UNIQUE CHECK (NOT empty(name)),
     org_id                  TEXT UNIQUE CHECK (NOT empty(org_id)),
     valid_package_cache     BOOLEAN NOT NULL DEFAULT FALSE,
-    valid_advisory_cache    BOOLEAN NOT NULL DEFAULT FALSE,
     CHECK (name IS NOT NULL OR org_id IS NOT NULL),
     PRIMARY KEY (id)
 ) TABLESPACE pg_default;

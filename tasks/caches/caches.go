@@ -14,13 +14,6 @@ func configure() {
 	core.ConfigureApp()
 }
 
-func RunAdvisoryRefresh() {
-	tasks.HandleContextCancel(tasks.WaitAndExit)
-	configure()
-	utils.LogInfo("Refreshing advisory cache")
-	RefreshAdvisoryCaches()
-}
-
 func RunPackageRefresh() {
 	tasks.HandleContextCancel(tasks.WaitAndExit)
 	configure()

@@ -9,7 +9,6 @@ import (
 	"app/base/types"
 	"app/base/utils"
 	"app/tasks"
-	"app/tasks/caches"
 	"net/http"
 
 	"time"
@@ -112,13 +111,6 @@ func SyncData(tx *gorm.DB, lastModifiedTS *types.Rfc3339TimestampWithZ, vmaasExp
 	}
 	if vmaasExportedTS != nil {
 		database.UpdateTimestampKVValue(tx, VmaasExported, *vmaasExportedTS.Time())
-	}
-
-	// refresh caches
-	if tasks.EnableAdvisoryCacheRefresh {
-		caches.RefreshAdvisoryCaches()
-	} else {
-		utils.LogInfo("Advisory cache refresh is disabled")
 	}
 
 	utils.LogInfo("Data sync finished successfully")
