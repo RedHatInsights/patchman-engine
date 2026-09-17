@@ -105,20 +105,6 @@ func CheckSystemJustEvaluated(t *testing.T, inventoryID uuid.UUID, nIAll, nIEnh,
 	assert.Equal(t, thirdParty, patch.ThirdParty)
 }
 
-func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int64, systemsInstallable int) {
-	var advisoryAccountData []models.AdvisoryAccountData
-	err := DB.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
-		Find(&advisoryAccountData).Error
-	assert.Nil(t, err)
-
-	sum := 0
-	for _, item := range advisoryAccountData {
-		sum += item.SystemsInstallable
-	}
-	// covers both cases, when we have advisory_account_data stored with 0 systems_installable, and when we delete it
-	assert.Equal(t, systemsInstallable*len(advisoryIDs), sum, "sum of systems_installable does not match")
-}
-
 func CreateStoredAdvisories(advisoryPatched []int64) map[string]models.SystemAdvisories {
 	systemAdvisoriesMap := make(map[string]models.SystemAdvisories, len(advisoryPatched))
 	for _, advisoryID := range advisoryPatched {
@@ -135,18 +121,6 @@ func CreateSystemAdvisories(t *testing.T, rhAccountID int, systemID int64, advis
 		assert.Nil(t, err)
 	}
 	CheckSystemAdvisories(t, systemID, advisoryIDs)
-}
-
-func CreateAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int64,
-	systemsInstallable int) {
-	for _, advisoryID := range advisoryIDs {
-		err := DB.Create(&models.AdvisoryAccountData{
-			AdvisoryID: advisoryID, RhAccountID: rhAccountID, SystemsInstallable: systemsInstallable,
-			// create same number of applicable and installable systems because installable is subset of applicable
-			SystemsApplicable: systemsInstallable}).Error
-		assert.Nil(t, err)
-	}
-	CheckAdvisoriesAccountData(t, rhAccountID, advisoryIDs, systemsInstallable)
 }
 
 func CreateSystemRepos(t *testing.T, rhAccountID int, systemID int64, repoIDs []int64) {
@@ -252,16 +226,6 @@ func DeleteAccountAdvisoryByAccount(t *testing.T, rhAccountID int) {
 		Delete(&models.AccountAdvisory{}).Error)
 }
 
-func DeleteAdvisoryAccountData(t *testing.T, rhAccountID int, advisoryIDs []int64) {
-	query := DB.Model(&models.AdvisoryAccountData{}).Where("rh_account_id = ? AND advisory_id IN (?)",
-		rhAccountID, advisoryIDs)
-	assert.Nil(t, query.Delete(&models.AdvisoryAccountData{}).Error)
-
-	var cnt int64
-	assert.Nil(t, query.Count(&cnt).Error)
-	assert.Equal(t, int64(0), cnt)
-}
-
 func DeleteSystemPackages(t *testing.T, accountID int, systemID int64, pkgIDs ...int64) {
 	query := DB.Model(&models.SystemPackage{}).Where("rh_account_id = ? AND system_id = ?", accountID, systemID)
 	if len(pkgIDs) > 0 {
@@ -294,9 +258,7 @@ func DeleteNewlyAddedPackages(t *testing.T) {
 func DeleteNewlyAddedAdvisories(t *testing.T) {
 	query := DB.Model(models.AdvisoryMetadata{}).Where("id >= 100")
 	querySa := DB.Model(models.SystemAdvisories{}).Where("advisory_id >= 100")
-	queryAad := DB.Model(models.AdvisoryAccountData{}).Where("advisory_id >= 100")
 	assert.Nil(t, querySa.Delete(models.SystemAdvisories{}).Error)
-	assert.Nil(t, queryAad.Delete(models.AdvisoryAccountData{}).Error)
 	assert.Nil(t, query.Delete(models.AdvisoryMetadata{}).Error)
 	var cnt int64
 	assert.Nil(t, query.Count(&cnt).Error)
