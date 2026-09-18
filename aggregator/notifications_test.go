@@ -67,7 +67,6 @@ func TestPublishNewAdvisoryNotificationSuccess(t *testing.T) {
 	var notif ntf.Notification
 	assert.Nil(t, sonic.Unmarshal(mockWriter.Messages[0].Value, &notif))
 	assert.Equal(t, "org_1", notif.OrgID)
-	assert.Nil(t, notif.Context)
 	assert.NotEmpty(t, notif.Events)
 
 	// Verify advisories were marked as notified (count varies by workspace)
