@@ -1,7 +1,6 @@
 package database
 
 import (
-	"app/base"
 	"app/base/models"
 	"app/base/utils"
 	"fmt"
@@ -37,65 +36,6 @@ type advisoryCount struct {
 	AdvisoryID         int64
 	SystemsInstallable int
 	SystemsApplicable  int
-}
-
-func CheckCachesValidRet() (bool, error) {
-	valid := true
-	var aad []models.AdvisoryAccountData
-
-	tx := DB.WithContext(base.Context).Begin()
-	defer tx.Rollback()
-	err := tx.Set("gorm:query_option", "FOR SHARE OF advisory_account_data").
-		Order("rh_account_id, advisory_id").Find(&aad).Error
-	if err != nil {
-		return false, err
-	}
-	var counts []advisoryCount
-
-	err = tx.Select("si.rh_account_id, sa.advisory_id," +
-		"count(*) filter (where sa.status_id = 0) as systems_installable," +
-		"count(*) as systems_applicable").
-		Table("system_advisories sa").
-		Joins("JOIN system_inventory si ON sa.rh_account_id = si.rh_account_id AND sa.system_id = si.id").
-		Joins("JOIN system_patch spatch ON si.id = spatch.system_id AND si.rh_account_id = spatch.rh_account_id").
-		Where("si.stale = false AND spatch.last_evaluation IS NOT NULL").
-		Order("si.rh_account_id, sa.advisory_id").
-		Group("si.rh_account_id, sa.advisory_id").
-		Find(&counts).Error
-	if err != nil {
-		return false, err
-	}
-
-	cached := make(map[key][]int, len(aad))
-	calculated := make(map[key][]int, len(counts))
-
-	for _, val := range aad {
-		cached[key{val.RhAccountID, val.AdvisoryID}] = []int{val.SystemsInstallable, val.SystemsApplicable}
-	}
-	for _, val := range counts {
-		calculated[key{val.RhAccountID, val.AdvisoryID}] = []int{val.SystemsInstallable, val.SystemsApplicable}
-	}
-
-	crossCheckCache := func(a, b map[key][]int) {
-		for key, aCounts := range a {
-			bCounts := b[key]
-			if len(bCounts) == 0 {
-				bCounts = []int{0, 0}
-			}
-			for i, msg := range []string{"installable", "applicable"} {
-				if aCounts[i] != bCounts[i] {
-					utils.LogError("advisory_id", key.AdvisoryID, "account_id", key.AccountID,
-						"cached", aCounts[i], "calculated", bCounts[i], fmt.Sprintf("Cached %s counts mismatch", msg))
-					valid = false
-				}
-			}
-		}
-	}
-	crossCheckCache(cached, calculated)
-	crossCheckCache(calculated, cached)
-
-	tx.Commit()
-	return valid, nil
 }
 
 func CheckAdvisoriesInDB(t *testing.T, advisories []string) []int64 {
