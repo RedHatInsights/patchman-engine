@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"app/base/database"
 	"app/base/utils"
 	"app/manager/middlewares"
 	"app/tasks/caches"
@@ -59,33 +58,6 @@ func Recalc(c *gin.Context) {
 	}
 	utils.LogInfo("manual re-calc messages sent successfully")
 	c.JSON(http.StatusOK, "OK")
-}
-
-// @Summary Check cached counts
-// @Description Check cached counts
-// @ID checkCaches
-// @Security RhIdentity
-// @Accept   json
-// @Produce  json
-// @Success 200 {object} string
-// @Failure 409 {object} string
-// @Failure 500 {object} map[string]interface{}
-// @Router /check-caches [get]
-func CheckCaches(c *gin.Context) {
-	valid, err := database.CheckCachesValidRet()
-	if err != nil {
-		utils.LogError("error", err, "Could not check validity of caches")
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
-		return
-	}
-
-	if !valid {
-		utils.LogError("Cache mismatch found")
-		c.JSON(http.StatusConflict, "conflict")
-		return
-	}
-
-	c.JSON(http.StatusOK, "caches counts OK")
 }
 
 // @Summary Refresh package caches
