@@ -197,29 +197,6 @@ func CheckAdvisoriesAccountData(t *testing.T, rhAccountID int, advisoryIDs []int
 	assert.Equal(t, systemsInstallable*len(advisoryIDs), sum, "sum of systems_installable does not match")
 }
 
-func CheckAdvisoriesAccountDataNotified(t *testing.T, rhAccountID int, advisoryIDs []int64, notified bool) {
-	var advisoryAccountData []models.AdvisoryAccountData
-	err := DB.Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
-		Find(&advisoryAccountData).Error
-	assert.Nil(t, err)
-
-	for _, item := range advisoryAccountData {
-		if notified {
-			assert.NotNil(t, item.Notified)
-		} else {
-			assert.Nil(t, item.Notified)
-		}
-	}
-}
-
-func CreateReportedAdvisories(reportedAdvisories []string, status []int) map[string]int {
-	reportedAdvisoriesMap := make(map[string]int, len(reportedAdvisories))
-	for i, adv := range reportedAdvisories {
-		reportedAdvisoriesMap[adv] = status[i]
-	}
-	return reportedAdvisoriesMap
-}
-
 func CreateStoredAdvisories(advisoryPatched []int64) map[string]models.SystemAdvisories {
 	systemAdvisoriesMap := make(map[string]models.SystemAdvisories, len(advisoryPatched))
 	for _, advisoryID := range advisoryPatched {
