@@ -51,8 +51,8 @@ func TestPublishNewAdvisoryNotificationSuccess(t *testing.T) {
 		notificationsPublisher = nil
 	}()
 
-	// Backfill to populate account_advisory from system_advisories
-	assert.Nil(t, database.DB.Exec("SELECT backfill_account_advisory(1)").Error)
+	// populate account_advisory from system_advisories
+	assert.Nil(t, database.DB.Exec("SELECT refresh_account_advisory_caches_multi(NULL, 1)").Error)
 	defer database.DeleteAccountAdvisoryByAccount(t, 1)
 
 	// Advisory IDs 1-8 exist for rh_account_id=1 in test data
