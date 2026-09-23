@@ -233,7 +233,6 @@ func resolveAdvisoriesQuery(db *gorm.DB, account int, workspaceIDs []string, fil
 				return nil, err
 			}
 		}
-		middlewares.AdvisoryAccountDataCnt.WithLabelValues("hit").Inc()
 		if len(effectiveWorkspaceIDs) == 0 {
 			query := buildQueryAdvisoriesFromAccountAdvisory(db, account, effectiveWorkspaceIDs)
 			return query.Where("FALSE"), nil
@@ -246,10 +245,8 @@ func resolveAdvisoriesQuery(db *gorm.DB, account int, workspaceIDs []string, fil
 	// leaving until RBAC cannot be re-enabled
 	if !config.EnableAccountAdvisoryReadPath && !config.DisableCachedCounts &&
 		!HasInventoryFilter(filters) && len(workspaceIDs) == 0 {
-		middlewares.AdvisoryAccountDataCnt.WithLabelValues("hit").Inc()
 		return buildQueryAdvisories(db, account), nil
 	}
-	middlewares.AdvisoryAccountDataCnt.WithLabelValues("miss").Inc()
 	return buildQueryAdvisoriesTagged(db, filters, account, workspaceIDs), nil
 }
 
