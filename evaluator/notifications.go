@@ -90,7 +90,11 @@ func markAdvisoriesNotified(tx *gorm.DB, accountID int, advisoryIDs []int64) err
 // skipPublish is true. In both cases, matching advisory_account_data rows are marked notified
 // when there is something to notify about (so skipPublish still prevents later flood).
 func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatformV2, orgID string,
-	newAdvisories SystemAdvisoryMap, skipPublish bool) error {
+	newAdvisories SystemAdvisoryMap) error {
+	if notificationsPublisher == nil {
+		return nil
+	}
+
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("advisory-notification-publish"))
 
 	advisories, err := getUnnotifiedAdvisories(tx, system.Inventory.RhAccountID, newAdvisories)
@@ -98,21 +102,6 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 		return errors.Wrap(err, "getting unnotified advisories failed")
 	}
 	if len(advisories) == 0 {
-		return nil
-	}
-
-	advisoryIDs := make([]int64, 0, len(advisories))
-	for _, a := range advisories {
-		advisoryIDs = append(advisoryIDs, a.AdvisoryID)
-	}
-
-	if skipPublish {
-		utils.LogInfo("inventoryID", system.GetInventoryID(), "advisoryIDs", advisoryIDs, "orgID", orgID,
-			"skipping advisory notification publish")
-		return markAdvisoriesNotified(tx, system.Inventory.RhAccountID, advisoryIDs)
-	}
-
-	if notificationsPublisher == nil {
 		return nil
 	}
 
@@ -142,8 +131,20 @@ func publishNewAdvisoriesNotification(tx *gorm.DB, system *models.SystemPlatform
 		return errors.Wrap(err, "writing message to notifications publisher failed")
 	}
 
+	advisoryIDs := make([]int64, 0, len(advisories))
+	for _, a := range advisories {
+		advisoryIDs = append(advisoryIDs, a.AdvisoryID)
+	}
+
 	utils.LogInfo("inventoryID", system.GetInventoryID(), "advisoryIDs", advisoryIDs, "orgID", orgID,
 		"notification sent successfully")
 
-	return markAdvisoriesNotified(tx, system.Inventory.RhAccountID, advisoryIDs)
+	err = tx.Table("advisory_account_data").
+		Where("rh_account_id = ? AND advisory_id IN (?)", system.Inventory.RhAccountID, advisoryIDs).
+		Update("notified", time.Now()).Error
+	if err != nil {
+		return errors.Wrap(err, "updating notified column failed")
+	}
+
+	return nil
 }
