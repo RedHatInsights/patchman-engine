@@ -64,6 +64,7 @@ var (
 	enableAdvisoryUpdates         bool
 	enableSatelliteFunctionality  bool
 	enableTemplateAdvisoryEval    bool
+	enableAdvisoryAccountData     bool
 	errVmaasBadRequest            = errors.New("vmaas bad request")
 )
 
@@ -96,6 +97,8 @@ func configureEvaluator() {
 	disableCompression = !utils.PodConfig.GetBool("vmaas_call_compression", true)
 	// Evaluate advisories
 	enableAdvisoryAnalysis = utils.PodConfig.GetBool("advisory_analysis", true)
+	// Update legacy advisory_account_data counts during evaluation
+	enableAdvisoryAccountData = utils.PodConfig.GetBool("advisory_account_data", true)
 	// evaluate packages
 	enablePackageAnalysis = utils.PodConfig.GetBool("package_analysis", true)
 	// Look for third party repos

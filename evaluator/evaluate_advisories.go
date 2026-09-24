@@ -417,6 +417,11 @@ func updateAdvisoryAccountData(
 	system *models.SystemPlatformV2,
 	advisoriesByName extendedAdvisoryMap,
 ) error {
+	if !enableAdvisoryAccountData {
+		utils.LogInfo("inventoryID", system.GetInventoryID(), "advisory_account_data updates disabled, skipping")
+		return nil
+	}
+
 	changes := calcAdvisoryChanges(system, advisoriesByName)
 
 	if len(changes) == 0 {
