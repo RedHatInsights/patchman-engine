@@ -6,7 +6,6 @@ DELETE FROM system_inventory;
 DELETE FROM deleted_system;
 DELETE FROM repo;
 DELETE FROM timestamp_kv;
-DELETE FROM advisory_account_data;
 DELETE FROM account_advisory;
 DELETE FROM package_account_data;
 DELETE FROM package;
@@ -203,7 +202,7 @@ INSERT INTO system_package2 (rh_account_id, system_id, name_id, package_id, inst
 INSERT INTO timestamp_kv (name, value) VALUES
 ('last_eval_repo_based', '2018-04-05T01:23:45+02:00');
 
-SELECT refresh_all_cached_counts();
+SELECT refresh_system_caches(NULL, NULL);
 SELECT refresh_account_advisory_caches_multi(NULL, NULL);
 
 ALTER TABLE advisory_metadata ALTER COLUMN id RESTART WITH 100;

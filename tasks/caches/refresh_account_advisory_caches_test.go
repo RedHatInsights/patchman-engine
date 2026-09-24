@@ -19,8 +19,8 @@ func TestRefreshAccountAdvisoryCaches(t *testing.T) {
 
 	workspace := testWorkspace
 
-	// populate account_advisory using backfill
-	assert.Nil(t, database.DB.Exec("SELECT backfill_account_advisory(1)").Error)
+	// populate account_advisory
+	assert.Nil(t, database.DB.Exec("SELECT refresh_account_advisory_caches_multi(NULL, 1)").Error)
 
 	// capture correct counts before corrupting
 	countAdv1 := database.PluckInt(database.DB.Table("account_advisory").
@@ -58,7 +58,7 @@ func TestRefreshAccountAdvisoryCachesRemovesOrphanedRows(t *testing.T) {
 	configure()
 
 	workspace := testWorkspace
-	assert.Nil(t, database.DB.Exec("SELECT backfill_account_advisory(1)").Error)
+	assert.Nil(t, database.DB.Exec("SELECT refresh_account_advisory_caches_multi(NULL, 1)").Error)
 
 	// mark all systems in this workspace as stale
 	assert.Nil(t, database.DB.Exec(

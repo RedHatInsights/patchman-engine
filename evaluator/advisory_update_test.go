@@ -151,13 +151,10 @@ func TestAdvisoryUpdateKafkaRoundTrip(t *testing.T) {
 
 	// Remove stale rows from previous test runs
 	database.DeleteSystemAdvisories(t, testDBID, []int64{1, 2})
-	database.DeleteAdvisoryAccountData(t, rhAccountID, []int64{1, 2})
 
 	// Pair system with advisories before evaluation
 	oldAdvisoryIDs := []int64{1, 3, 4}
 	database.CreateSystemAdvisories(t, rhAccountID, testDBID, oldAdvisoryIDs)
-	database.CreateAdvisoryAccountData(t, rhAccountID, oldAdvisoryIDs, 1)
-	database.CheckCachesValid(t)
 
 	// Run evaluation
 	data, err := sonic.Marshal(mqueue.PlatformEvent{
@@ -183,6 +180,4 @@ func TestAdvisoryUpdateKafkaRoundTrip(t *testing.T) {
 	evaluatedAdvisoryNames := []string{"RH-1", "RH-2", "RH-100"}
 	evaluatedAdvisoryIDs := database.CheckAdvisoriesInDB(t, evaluatedAdvisoryNames)
 	database.DeleteSystemAdvisories(t, testDBID, evaluatedAdvisoryIDs)
-	database.DeleteAdvisoryAccountData(t, rhAccountID, evaluatedAdvisoryIDs)
-	database.DeleteAdvisoryAccountData(t, rhAccountID, oldAdvisoryIDs)
 }

@@ -213,16 +213,6 @@ func AdvisoriesListIDsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, &resp)
 }
 
-func buildQueryAdvisories(db *gorm.DB, account int) *gorm.DB {
-	query := database.AdvisoryMetadata(db).
-		Select(AdvisoriesSelect).
-		Joins("JOIN advisory_account_data aad ON am.id = aad.advisory_id").
-		Joins("LEFT JOIN advisory_severity sev ON am.severity_id = sev.id").
-		Where("aad.rh_account_id = ?", account).
-		Where("aad.systems_applicable > 0")
-	return query
-}
-
 func resolveAdvisoriesQuery(db *gorm.DB, account int, workspaceIDs []string, filters Filters) (*gorm.DB, error) {
 	if config.EnableAccountAdvisoryReadPath && !hasNonGroupInventoryFilter(filters) {
 		effectiveWorkspaceIDs := workspaceIDs
@@ -233,23 +223,12 @@ func resolveAdvisoriesQuery(db *gorm.DB, account int, workspaceIDs []string, fil
 				return nil, err
 			}
 		}
-		middlewares.AdvisoryAccountDataCnt.WithLabelValues("hit").Inc()
 		if len(effectiveWorkspaceIDs) == 0 {
 			query := buildQueryAdvisoriesFromAccountAdvisory(db, account, effectiveWorkspaceIDs)
 			return query.Where("FALSE"), nil
 		}
 		return buildQueryAdvisoriesFromAccountAdvisory(db, account, effectiveWorkspaceIDs), nil
 	}
-	// TODO: fix below;
-	// the condition is always true since moving from groups to workspaces,
-	// there will always be at least root workspace
-	// leaving until RBAC cannot be re-enabled
-	if !config.EnableAccountAdvisoryReadPath && !config.DisableCachedCounts &&
-		!HasInventoryFilter(filters) && len(workspaceIDs) == 0 {
-		middlewares.AdvisoryAccountDataCnt.WithLabelValues("hit").Inc()
-		return buildQueryAdvisories(db, account), nil
-	}
-	middlewares.AdvisoryAccountDataCnt.WithLabelValues("miss").Inc()
 	return buildQueryAdvisoriesTagged(db, filters, account, workspaceIDs), nil
 }
 
