@@ -39,7 +39,6 @@ func TestCreateAdvisoryUpdateEvent(t *testing.T) {
 			WorkspaceID:   wsID,
 			WorkspaceName: &wsName,
 		},
-		Patch: models.SystemPatch{},
 	}
 
 	changedAdvisoryIDs := []int64{1, 2}

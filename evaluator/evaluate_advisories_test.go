@@ -196,6 +196,45 @@ func TestUpdateAdvisoryAccountData(t *testing.T) {
 	database.DeleteAdvisoryAccountData(t, system.Inventory.RhAccountID, advisoryIDs)
 }
 
+func TestUpdateAdvisoryAccountDataDisabled(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	prev := enableAdvisoryAccountData
+	enableAdvisoryAccountData = false
+	defer func() { enableAdvisoryAccountData = prev }()
+
+	system := &models.SystemPlatformV2{
+		Inventory: models.SystemInventory{ID: 12, RhAccountID: 3},
+		Patch:     models.SystemPatch{},
+	}
+	advisoryIDs := []int64{2, 3, 4}
+	database.CreateAdvisoryAccountData(t, system.Inventory.RhAccountID, advisoryIDs, 1)
+	defer database.DeleteAdvisoryAccountData(t, system.Inventory.RhAccountID, advisoryIDs)
+
+	advisoriesByName := extendedAdvisoryMap{
+		"ER-2": {
+			change: Remove,
+			SystemAdvisories: models.SystemAdvisories{
+				AdvisoryID: 2, SystemID: system.InternalSystemID(), RhAccountID: system.Inventory.RhAccountID},
+		},
+		"ER-3": {
+			change: Remove,
+			SystemAdvisories: models.SystemAdvisories{
+				AdvisoryID: 3, SystemID: system.InternalSystemID(), RhAccountID: system.Inventory.RhAccountID},
+		},
+		"ER-4": {
+			change: Remove,
+			SystemAdvisories: models.SystemAdvisories{
+				AdvisoryID: 4, SystemID: system.InternalSystemID(), RhAccountID: system.Inventory.RhAccountID},
+		},
+	}
+
+	err := updateAdvisoryAccountData(database.DB, system, advisoriesByName)
+	assert.NoError(t, err)
+	database.CheckAdvisoriesAccountData(t, system.Inventory.RhAccountID, advisoryIDs, 1)
+}
+
 func TestGetMissingAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
