@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (169, false);
+VALUES (170, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -398,6 +398,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION revoke_table_partitions(perms text, tbl regclass, grantie text)
+    RETURNS VOID AS
+$$
+DECLARE
+    r record;
+BEGIN
+    FOR r IN SELECT child.relname
+               FROM pg_inherits
+               JOIN pg_class parent
+                 ON pg_inherits.inhparent = parent.oid
+               JOIN pg_class child
+                 ON pg_inherits.inhrelid   = child.oid
+              WHERE parent.relname = text(tbl)
+    LOOP
+        EXECUTE 'REVOKE ' || perms || ' ON TABLE ' || r.relname || ' FROM ' || grantie;
+    END LOOP;
+    EXECUTE 'REVOKE ' || perms || ' ON TABLE ' || text(tbl) || ' FROM ' || grantie;
+END;
+$$ LANGUAGE plpgsql;
+
 
 -- ---------------------------------------------------------------------------
 -- Tables
@@ -704,10 +724,11 @@ SELECT create_table_partitions('account_advisory', 32,
     $$WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
       TABLESPACE pg_default$$);
 
-SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'account_advisory', 'manager');
-SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'account_advisory', 'evaluator');
-SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'account_advisory', 'listener');
-SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'account_advisory', 'vmaas_sync');
+SELECT grant_table_partitions('SELECT', 'account_advisory', 'manager');
+SELECT grant_table_partitions('SELECT', 'account_advisory', 'evaluator');
+SELECT grant_table_partitions('SELECT', 'account_advisory', 'listener');
+SELECT grant_table_partitions('SELECT, DELETE', 'account_advisory', 'vmaas_sync');
+SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'account_advisory', 'aggregator');
 
 SELECT create_table_partition_triggers('account_advisory_sync_notified_insert',
                                        $$BEFORE INSERT$$,
@@ -934,3 +955,8 @@ BEGIN
     END IF;
 END
 $$;
+
+-- user for aggregator component
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO aggregator;
+GRANT EXECUTE ON FUNCTION refresh_account_advisory_caches_multi(INTEGER[], INTEGER) TO aggregator;
+GRANT EXECUTE ON FUNCTION refresh_account_advisory_caches(INTEGER, INTEGER) TO aggregator;

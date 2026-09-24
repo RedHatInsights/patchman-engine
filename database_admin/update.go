@@ -14,7 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var lockUsers = []string{"listener", "evaluator", "manager", "vmaas_sync"}
+var lockUsers = []string{"listener", "evaluator", "manager", "vmaas_sync", "aggregator"}
 
 const activeAppSessionsWhere = `usename = ANY($1) AND pid <> pg_backend_pid()`
 
@@ -257,6 +257,7 @@ func UpdateDB(migrationFilesURL string) {
 		execOrPanic(db, "ALTER USER evaluator WITH PASSWORD '"+utils.GetenvOrFail("EVALUATOR_PASSWORD")+"'")
 		execOrPanic(db, "ALTER USER manager WITH PASSWORD '"+utils.GetenvOrFail("MANAGER_PASSWORD")+"'")
 		execOrPanic(db, "ALTER USER vmaas_sync WITH PASSWORD '"+utils.GetenvOrFail("VMAAS_SYNC_PASSWORD")+"'")
+		execOrPanic(db, "ALTER USER aggregator WITH PASSWORD '"+utils.GetenvOrFail("AGGREGATOR_PASSWORD")+"'")
 	}
 
 	if updateDBConfig {

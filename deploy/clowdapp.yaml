@@ -334,9 +334,9 @@ objects:
         - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_AGGREGATOR}'}
-        - {name: DB_USER, value: evaluator}
+        - {name: DB_USER, value: aggregator}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                       key: evaluator-database-password}}}
+                                                       key: aggregator-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
@@ -376,6 +376,8 @@ objects:
                                                                     key: evaluator-database-password}}}
         - {name: VMAAS_SYNC_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                                     key: vmaas-sync-database-password}}}
+        - {name: AGGREGATOR_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                                    key: aggregator-database-password}}}
         - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_DATABASE_ADMIN}', memory: '${MEM_LIMIT_DATABASE_ADMIN}'}
