@@ -69,13 +69,11 @@ func TestInventoryViewsKeepsEachUploadsIdentity(t *testing.T) {
 	origin := mqueue.PlatformEvent{
 		OrgID: &orgID, SystemIDs: []uuid.UUID{id, id, uuid.New()},
 		RequestIDs: []string{"request-A", "request-B"}, Traceparents: []string{"trace-A", "trace-B"},
-		SkipNotifications: true,
 	}
 	for i, hostID := range origin.SystemIDs {
 		item := eventForSystem(origin, i, hostID)
 		assert.Equal(t, hostID, item.ID)
 		assert.Nil(t, item.SystemIDs)
-		assert.True(t, item.SkipNotifications)
 		if i == 2 {
 			assert.Empty(t, item.RequestIDs)
 			assert.Empty(t, item.Traceparents)
