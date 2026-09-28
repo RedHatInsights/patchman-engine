@@ -867,7 +867,7 @@ parameters:
 - {name: MEM_REQUEST_LISTENER, value: 256Mi}
 - {name: ENABLE_PROFILER_LISTENER, value: 'false'}
 - {name: GOMEMLIMIT_LISTENER, value: '691MiB'} # set to 90% of the default memory limit (don't forget `B`)
-- {name: LISTENER_CONFIG, value: ''}
+- {name: LISTENER_CONFIG, value: 'template_advisory_eval=true'}
 - {name: CONTENT_SOURCES_USER, value: ''}
 
 # Evaluator
@@ -885,7 +885,7 @@ parameters:
 - {name: CPU_REQUEST_EVALUATOR_UPLOAD, value: '1'}
 - {name: MEM_REQUEST_EVALUATOR_UPLOAD, value: 1500Mi}
 - {name: ENABLE_PROFILER_EVALUATOR_UPLOAD, value: 'false'}
-- {name: EVALUATOR_UPLOAD_CONFIG, value: ''}
+- {name: EVALUATOR_UPLOAD_CONFIG, value: 'template_advisory_eval=true'}
 
 # Evaluator - recalc
 - {name: REPLICAS_EVALUATOR_RECALC, value: '1'}
@@ -896,7 +896,7 @@ parameters:
 - {name: CPU_REQUEST_EVALUATOR_RECALC, value: '1'}
 - {name: MEM_REQUEST_EVALUATOR_RECALC, value: 1500Mi}
 - {name: ENABLE_PROFILER_EVALUATOR_RECALC, value: 'false'}
-- {name: EVALUATOR_RECALC_CONFIG, value: ''}
+- {name: EVALUATOR_RECALC_CONFIG, value: 'template_advisory_eval=true'}
 
 # Evaluator - user evaluation
 - {name: REPLICAS_EVALUATOR_USER_EVALUATION, value: '1'}
@@ -907,7 +907,7 @@ parameters:
 - {name: CPU_REQUEST_EVALUATOR_USER_EVALUATION, value: '1'}
 - {name: MEM_REQUEST_EVALUATOR_USER_EVALUATION, value: 1500Mi}
 - {name: ENABLE_PROFILER_EVALUATOR_USER_EVALUATION, value: 'false'}
-- {name: EVALUATOR_USER_EVALUATION_CONFIG, value: ''}
+- {name: EVALUATOR_USER_EVALUATION_CONFIG, value: 'template_advisory_eval=true'}
 
 # Aggregator
 - {name: REPLICAS_AGGREGATOR, value: '0'}
