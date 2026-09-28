@@ -67,8 +67,8 @@ github.com/gin-contrib/gzip v1.2.5 h1:fIZs0S+l17pIu1P5XRJOo/YNqfIuPCrZZ3TWB7pjck
 github.com/gin-contrib/gzip v1.2.5/go.mod h1:aomRgR7ftdZV3uWY0gW/m8rChfxau0n8YVvwlOHONzw=
 github.com/gin-contrib/sse v1.1.1 h1:uGYpNwTacv5R68bSGMapo62iLTRa9l5zxGCps4hK6ko=
 github.com/gin-contrib/sse v1.1.1/go.mod h1:QXzuVkA0YO7o/gun03UI1Q+FTI8ZV/n5t03kIQAI89s=
-github.com/gin-contrib/timeout v1.2.2 h1:aGBV1d5V//xoZlunAAwyQhZ5VXg6BZE3epZdSSSykXA=
-github.com/gin-contrib/timeout v1.2.2/go.mod h1:ug0OHKmhlukJGm2emdAScRg6XBnBrgpDzPbx08MtuRw=
+github.com/gin-contrib/timeout v1.2.3 h1:IMtA08qBADiehRfjBBr1qj9ieqB/FFSvztOvvItWBGQ=
+github.com/gin-contrib/timeout v1.2.3/go.mod h1:sAS/omn0H2dRsc37MQ/0KAPR8zpnN/L91Sf6/mnqXL8=
 github.com/gin-gonic/gin v1.12.0 h1:b3YAbrZtnf8N//yjKeU2+MQsh2mY5htkZidOM7O0wG8=
 github.com/gin-gonic/gin v1.12.0/go.mod h1:VxccKfsSllpKshkBWgVgRniFFAzFb9csfngsqANjnLc=
 github.com/go-chi/chi v4.1.2+incompatible h1:fGFk2Gmi/YKXk0OmGfBh0WgmN3XB8lVnEyNz34tQRec=
