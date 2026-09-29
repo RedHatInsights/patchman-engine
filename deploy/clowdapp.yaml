@@ -964,7 +964,7 @@ parameters:
 - {name: CLEAN_AAD_SUSPEND, value: 'false'} # Disable cronjob execution
 # Backfill account_advisory
 - {name: ACCOUNT_ADVISORY_BACKFILL_SCHEDULE, value: '0 3 * * *'} # Cronjob schedule definition
-- {name: ACCOUNT_ADVISORY_BACKFILL_SUSPEND, value: 'true'} # Suspended until ready to run
+- {name: ACCOUNT_ADVISORY_BACKFILL_SUSPEND, value: 'false'} # Suspended until ready to run
 
 # Database admin
 - {name: MIGRATION_TIMEOUT, value: '7200'}  # 2h timeout for db-migration job
