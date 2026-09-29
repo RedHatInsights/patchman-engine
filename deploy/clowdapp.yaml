@@ -334,9 +334,9 @@ objects:
         - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_AGGREGATOR}'}
-        - {name: DB_USER, value: evaluator}
+        - {name: DB_USER, value: aggregator}
         - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                       key: evaluator-database-password}}}
+                                                       key: aggregator-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
@@ -376,6 +376,8 @@ objects:
                                                                     key: evaluator-database-password}}}
         - {name: VMAAS_SYNC_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
                                                                     key: vmaas-sync-database-password}}}
+        - {name: AGGREGATOR_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                                    key: aggregator-database-password}}}
         - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
         resources:
           limits: {cpu: '${CPU_LIMIT_DATABASE_ADMIN}', memory: '${MEM_LIMIT_DATABASE_ADMIN}'}
@@ -485,34 +487,6 @@ objects:
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
 
-    - name: advisory-refresh
-      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
-      schedule: ${ADVISORY_REFRESH_SCHEDULE}
-      suspend: ${{ADVISORY_REFRESH_SUSPEND}}
-      concurrencyPolicy: Forbid
-      podSpec:
-        image: ${IMAGE}:${IMAGE_TAG}
-        initContainers:
-          - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG}
-            command:
-              - ./database_admin/check-upgraded.sh
-            env:
-            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
-        command:
-          - ./scripts/entrypoint.sh
-          - job
-          - advisory_cache_refresh
-        env:
-        - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GIN_MODE, value: '${GIN_MODE}'}
-        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
-        - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
-        - {name: DB_USER, value: vmaas_sync}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                      key: vmaas-sync-database-password}}}
-        - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
-
     - name: delete-unused
       activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
       schedule: ${DELETE_UNUSED_SCHEDULE}
@@ -566,95 +540,6 @@ objects:
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
 
-    - name: clean-advisory-account-data
-      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
-      schedule: ${CLEAN_AAD_SCHEDULE}
-      suspend: ${{CLEAN_AAD_SUSPEND}}
-      concurrencyPolicy: Forbid
-      podSpec:
-        image: ${IMAGE}:${IMAGE_TAG}
-        initContainers:
-          - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG}
-            command:
-              - ./database_admin/check-upgraded.sh
-            env:
-            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
-        command:
-          - ./scripts/entrypoint.sh
-          - job
-          - clean_advisory_account_data
-        env:
-        - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GIN_MODE, value: '${GIN_MODE}'}
-        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
-        - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
-        - {name: DB_USER, value: vmaas_sync}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                      key: vmaas-sync-database-password}}}
-        - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
-
-    - name: account-advisory-backfill
-      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
-      schedule: ${ACCOUNT_ADVISORY_BACKFILL_SCHEDULE}
-      suspend: ${{ACCOUNT_ADVISORY_BACKFILL_SUSPEND}}
-      concurrencyPolicy: Forbid
-      podSpec:
-        image: ${IMAGE}:${IMAGE_TAG}
-        initContainers:
-          - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG}
-            command:
-              - ./database_admin/check-upgraded.sh
-            env:
-              - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
-        command:
-          - ./scripts/entrypoint.sh
-          - job
-          - account_advisory_backfill
-        env:
-          - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-          - {name: GIN_MODE, value: '${GIN_MODE}'}
-          - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
-          - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
-          - {name: DB_USER, value: vmaas_sync}
-          - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                         key: vmaas-sync-database-password}}}
-          - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
-
-    - name: system-advisories-0-recovery
-      # One-shot Job (no schedule): runs on deploy / CJI like db-migration.
-      # No-op unless JOBS_CONFIG includes system_advisories_0_recovery=true.
-      completions: 1
-      parallelism: 1
-      activeDeadlineSeconds: ${{JOBS_TIMEOUT}}
-      podSpec:
-        image: ${IMAGE}:${IMAGE_TAG}
-        initContainers:
-          - name: check-for-db
-            image: ${IMAGE}:${IMAGE_TAG}
-            command:
-              - ./database_admin/check-upgraded.sh
-            env:
-            - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
-        command:
-          - ./scripts/entrypoint.sh
-          - job
-          - system_advisories_0_recovery
-        env:
-        - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
-        - {name: GIN_MODE, value: '${GIN_MODE}'}
-        - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
-        - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
-        - {name: DB_USER, value: vmaas_sync}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                      key: vmaas-sync-database-password}}}
-        - {name: KAFKA_GROUP, value: patchman}
-        - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
-        - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
-        - {name: SSL_CERT_DIR, value: '${SSL_CERT_DIR}'}
-        - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}  # set system_advisories_0_recovery=true for cutover
-
     database:
       name: patchman
       version: 16
@@ -697,22 +582,6 @@ objects:
     disabled: ${{DB_MIGRATION_DISABLED}}
     jobs:
       - db-migration
-
-# One-off system_advisories_0 recovery recalc. Keep disabled; enable for cutover deploy with
-# JOBS_CONFIG=system_advisories_0_recovery=true, then disable again.
-- apiVersion: cloud.redhat.com/v1alpha1
-  kind: ClowdJobInvocation
-  metadata:
-    annotations:
-      clowder.redhat.com/expected-image-tag: ${IMAGE_TAG}
-    labels:
-      app: patchman
-    name: system-advisories-0-recovery-${IMAGE_TAG}-${CJI_UID}
-  spec:
-    appName: patchman
-    disabled: ${{SA0_RECOVERY_DISABLED}}
-    jobs:
-      - system-advisories-0-recovery
 
 - apiVersion: metrics.console.redhat.com/v1alpha1
   kind: FloorPlan
@@ -927,7 +796,7 @@ parameters:
 - {name: JOBS_TIMEOUT, value: '1800'}  # 30 min timeout for jobs
 - {name: PROMETHEUS_PUSHGATEWAY, required: true, value: "pushgateway"}
 - {name: DB_READ_REPLICA_ENABLED_JOBS, value: 'TRUE'}
-- {name: JOBS_CONFIG, value: ''} # e.g. system_advisories_0_recovery=true for SA0 recovery job cutover
+- {name: JOBS_CONFIG, value: ''}
 
 # DB migration
 - {name: DB_MIGRATION_DISABLED, value: 'false'} # Disable db-migration job execution
@@ -935,8 +804,6 @@ parameters:
   description: Unique db-migration CJI name suffix
   generate: expression
   from: '[a-z0-9]{6}'
-# system_advisories_0 recovery recalc CJI (one-off; keep disabled unless cutover)
-- {name: SA0_RECOVERY_DISABLED, value: 'true'} # set false + JOBS_CONFIG=system_advisories_0_recovery=true for cutover
 # VMaaS sync
 - {name: VMAAS_SYNC_SCHEDULE, value: '*/5 * * * *'} # Cronjob schedule definition
 - {name: VMAAS_SYNC_SUSPEND, value: 'false'} # Disable cronjob execution
@@ -954,17 +821,9 @@ parameters:
 # Cache refresh
 - {name: PKG_REFRESH_SCHEDULE, value: '5 11-20/2 * * *'} # Cronjob schedule definition
 - {name: PKG_REFRESH_SUSPEND, value: 'false'} # Disable cronjob execution
-- {name: ADVISORY_REFRESH_SCHEDULE, value: '*/15 * * * *'} # Cronjob schedule definition
-- {name: ADVISORY_REFRESH_SUSPEND, value: 'true'} # Disable cronjob execution
 # Repack
 - {name: REPACK_SCHEDULE, value: '0 11 * * 5'} # Cronjob schedule definition
 - {name: REPACK_SUSPEND, value: 'false'} # Disable cronjob execution
-# Clean advisory_account_data
-- {name: CLEAN_AAD_SCHEDULE, value: '0 12 * * *'} # Cronjob schedule definition
-- {name: CLEAN_AAD_SUSPEND, value: 'false'} # Disable cronjob execution
-# Backfill account_advisory
-- {name: ACCOUNT_ADVISORY_BACKFILL_SCHEDULE, value: '0 3 * * *'} # Cronjob schedule definition
-- {name: ACCOUNT_ADVISORY_BACKFILL_SUSPEND, value: 'true'} # Suspended until ready to run
 
 # Database admin
 - {name: MIGRATION_TIMEOUT, value: '7200'}  # 2h timeout for db-migration job

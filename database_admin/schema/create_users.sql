@@ -5,7 +5,7 @@ $$
     BEGIN
         FOR usr IN
             SELECT name
-            FROM (VALUES ('evaluator'), ('listener'), ('manager'), ('vmaas_sync')) users (name)
+            FROM (VALUES ('evaluator'), ('listener'), ('manager'), ('vmaas_sync'), ('aggregator')) users (name)
             WHERE name NOT IN (SELECT rolname FROM pg_catalog.pg_roles)
             LOOP
                 execute 'CREATE USER ' || usr || ';';

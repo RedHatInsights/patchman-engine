@@ -94,8 +94,6 @@ func processAdvisoryBatch(grouped map[int][]int64) {
 			continue
 		}
 
-		CheckAdvisoryDrift(rhAccountID, advisoryIDs)
-
 		if err := publishNewAdvisoryNotification(rhAccountID, advisoryIDs); err != nil {
 			utils.LogError("err", err, "rh_account_id", rhAccountID, "failed to publish new advisory notification")
 		}

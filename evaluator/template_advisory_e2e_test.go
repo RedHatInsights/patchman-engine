@@ -66,7 +66,6 @@ func TestTemplateAdvisoryEvalE2E(t *testing.T) {
 	defer database.DeleteTemplateAdvisories(t, template.ID, []int64{1, 2, 3})
 
 	database.DeleteSystemAdvisories(t, systemInv.ID, []int64{1, 2, 3, 100})
-	database.DeleteAdvisoryAccountData(t, accountID, []int64{1, 2, 3, 100})
 
 	description := "e2e template"
 	updateEvent := mqueue.TemplateEvent{
