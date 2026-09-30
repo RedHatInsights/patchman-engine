@@ -76,8 +76,7 @@ func TestRbacAddressEnvOverride(t *testing.T) {
 	CoreCfg.RbacAddress = "https://rbac-service.svc:8443"
 
 	// Env var override takes precedence (initServicesFromEnv behavior)
-	os.Setenv("RBAC_ADDRESS", "http://localhost:8080")
-	defer os.Unsetenv("RBAC_ADDRESS")
+	t.Setenv("RBAC_ADDRESS", "http://localhost:8080")
 	initServicesFromEnv()
 	assert.Equal(t, "http://localhost:8080", CoreCfg.RbacAddress)
 }
@@ -89,7 +88,10 @@ func TestRbacAddressEnvPreservesV2WhenUnset(t *testing.T) {
 	// Simulate V2-resolved address
 	CoreCfg.RbacAddress = "https://rbac-service.svc:8443"
 
-	// No env override: Getenv returns current value as default
+	// No env override: Getenv returns current value as default.
+	// t.Setenv registers cleanup to restore original value after test;
+	// os.Unsetenv then clears it so LookupEnv returns ok=false.
+	t.Setenv("RBAC_ADDRESS", "")
 	os.Unsetenv("RBAC_ADDRESS")
 	initServicesFromEnv()
 	assert.Equal(t, "https://rbac-service.svc:8443", CoreCfg.RbacAddress)

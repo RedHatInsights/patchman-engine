@@ -284,11 +284,6 @@ func resolveRbacV2Address() string {
 }
 
 func initServicesFromClowder() {
-	// Try V2 dependency endpoint for RBAC (preferred over V1 flat list).
-	if addr := resolveRbacV2Address(); addr != "" {
-		CoreCfg.RbacAddress = addr
-	}
-
 	webappName := "webapp-service"
 	if PodConfig.GetBool("use_vmaas_go", true) {
 		webappName = "webapp-go"
@@ -300,8 +295,10 @@ func initServicesFromClowder() {
 				CoreCfg.VmaasAddress = (*Endpoint)(&endpoint).buildURL()
 			}
 		case "rbac":
-			// V1 fallback: set only if V2 did not resolve above.
-			if CoreCfg.RbacAddress == "" {
+			// Prefer V2 dependency endpoint; fall back to V1 flat list.
+			if addr := resolveRbacV2Address(); addr != "" {
+				CoreCfg.RbacAddress = addr
+			} else {
 				CoreCfg.RbacAddress = (*Endpoint)(&endpoint).buildURL()
 			}
 		case "rbac-service":
