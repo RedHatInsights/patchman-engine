@@ -277,7 +277,10 @@ func updateReporterCounter(reporter string) {
 	}
 }
 
-func hostTemplate(tx *gorm.DB, accountID int, host *Host) *int64 {
+// hostTemplate resolves template assignment from Candlepin + local template rows.
+// Call this before opening the upload DB transaction: Candlepin HTTP (with retries)
+// must not run while a transaction holds SELECT ... FOR UPDATE on system_inventory.
+func hostTemplate(db *gorm.DB, accountID int, host *Host) *int64 {
 	var templateID *int64
 
 	if hasTemplateRepo(&host.SystemProfile) {
@@ -298,7 +301,7 @@ func hostTemplate(tx *gorm.DB, accountID int, host *Host) *int64 {
 			for i, env := range resp.Environments {
 				envs[i] = env.ID
 			}
-			templateID, err = getTemplate(tx, accountID, envs)
+			templateID, err = getTemplate(db, accountID, envs)
 			if err != nil {
 				utils.LogWarn("inventoryID", host.ID, "err", errors.Wrap(err, "Unable to assign templates"))
 			}
@@ -309,8 +312,9 @@ func hostTemplate(tx *gorm.DB, accountID int, host *Host) *int64 {
 
 // nolint: funlen
 // Stores or updates base system profile, returning inventory + patch aggregate.
+// templateID must be resolved before the caller opens tx (see hostTemplate).
 func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
-	yumUpdates *YumUpdates, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatformV2, error) {
+	yumUpdates *YumUpdates, updatesReq *vmaas.UpdatesV3Request, templateID *int64) (*models.SystemPlatformV2, error) {
 	defer utils.ObserveSecondsSince(time.Now(), messagePartDuration.WithLabelValues("update-system-platform"))
 	// NOTE: if we add a map to vmaas.UpdatesV3Request in the future, we need to use
 	//  	 `encoder.Encode(updatesReq, encoder.SortMapKeys)` to compute the hash correctly
@@ -427,7 +431,7 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 		},
 		Patch: models.SystemPatch{
 			RhAccountID: accountID,
-			TemplateID:  hostTemplate(tx, accountID, host),
+			TemplateID:  templateID,
 		},
 	}
 
@@ -806,6 +810,11 @@ func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatformV2
 		updatesReq.SetReleasever(releasever)
 	}
 
+	// Resolve template via Candlepin before opening the DB transaction so HTTP
+	// retries do not hold SELECT ... FOR UPDATE on system_inventory or stall
+	// this Kafka consumer while a row lock is held.
+	templateID := hostTemplate(database.DB, accountID, host)
+
 	tx := database.DB.WithContext(base.Context).Begin()
 	defer tx.Rollback()
 
@@ -820,7 +829,7 @@ func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatformV2
 		utils.LogInfo("inventoryID", host.ID, "Received recently deleted system")
 		return nil, nil
 	}
-	sys, err := updateSystemPlatform(tx, accountID, host, yumUpdates, &updatesReq)
+	sys, err := updateSystemPlatform(tx, accountID, host, yumUpdates, &updatesReq, templateID)
 	if err != nil {
 		return nil, errors.Wrap(err, "saving system into the database")
 	}

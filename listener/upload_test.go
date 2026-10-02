@@ -95,7 +95,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 		Basearch:       utils.PtrString("x86_64"),
 	}
 
-	sys1, err := updateSystemPlatform(database.DB, accountID1, createTestInvHost(t), nil, &req)
+	sys1, err := updateSystemPlatform(database.DB, accountID1, createTestInvHost(t), nil, &req, nil)
 	assert.Nil(t, err)
 
 	reporterID1 := 1
@@ -105,7 +105,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	host2 := createTestInvHost(t)
 	host2.Reporter = "yupana"
 	req.PackageList = []string{"package0", "package1"}
-	sys2, err := updateSystemPlatform(database.DB, accountID2, host2, nil, &req)
+	sys2, err := updateSystemPlatform(database.DB, accountID2, host2, nil, &req, nil)
 	assert.Nil(t, err)
 
 	reporterID2 := 3
@@ -147,19 +147,19 @@ func TestUpdateSystemPlatformUpdatesSubscriptionManagerIDWhenOwnerIDChanges(t *t
 	ownerID1 := uuid.MustParse("11111111-1111-1111-1111-111111111111")
 	ev.Host.SystemProfile.OwnerID = &ownerID1
 
-	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile)
+	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
 	ownerID2 := uuid.MustParse("22222222-2222-2222-2222-222222222222")
 	ev.Host.SystemProfile.OwnerID = &ownerID2
 
-	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile)
+	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
 	ev.Host.SystemProfile.OwnerID = nil
-	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile)
+	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
@@ -186,7 +186,7 @@ func TestUpdateSystemPlatformRefreshesInventoryProfileOnConflict(t *testing.T) {
 	}
 	ev := createTestUploadEvent(testOrgID, testInventoryID, "puptoo", true, false, "created")
 	ev.Host.StaleTimestamp = &correctTime
-	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile)
+	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
@@ -197,7 +197,7 @@ func TestUpdateSystemPlatformRefreshesInventoryProfileOnConflict(t *testing.T) {
 	ev.Host.SystemProfile.Workloads.Ansible.ControllerVersion = "2.13.0"
 	ev.Host.SystemProfile.Workloads.Mssql.Version = "16.0"
 
-	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile)
+	_, err = updateSystemPlatform(database.DB, acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
@@ -423,7 +423,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 
 	req := vmaas.UpdatesV3Request{}
 
-	_, err = updateSystemPlatform(database.DB, accountID1, &hostEvent.Host, yumUpdates, &req)
+	_, err = updateSystemPlatform(database.DB, accountID1, &hostEvent.Host, yumUpdates, &req, nil)
 	assert.Nil(t, err)
 
 	reporterID1 := 1
@@ -434,7 +434,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 
 	// check that yumUpdates has been updated (keep the same Host so profile columns are not wiped)
 	yumUpdates.RawParsed = []byte("{}")
-	_, err = updateSystemPlatform(database.DB, accountID1, &hostEvent.Host, yumUpdates, &req)
+	_, err = updateSystemPlatform(database.DB, accountID1, &hostEvent.Host, yumUpdates, &req, nil)
 	assert.Nil(t, err)
 	assertYumUpdatesInDB(t, testInventoryID, yumUpdates)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &hostEvent.Host)
@@ -445,7 +445,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 	hostEvent.Host.SystemProfile.Workloads.Sap.Sids = []string{"sid-yum-test"}
 	hostEvent.Host.SystemProfile.Workloads.Ansible.ControllerVersion = "2.14.0"
 	hostEvent.Host.SystemProfile.Workloads.Mssql.Version = "17.0"
-	_, err = updateSystemPlatform(database.DB, accountID1, &hostEvent.Host, yumUpdates, &req)
+	_, err = updateSystemPlatform(database.DB, accountID1, &hostEvent.Host, yumUpdates, &req, nil)
 	assert.Nil(t, err)
 	assertYumUpdatesInDB(t, testInventoryID, yumUpdates)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &hostEvent.Host)
@@ -456,7 +456,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 	hostEvent.Host.SystemProfile.Workloads.Sap.Sids = nil
 	hostEvent.Host.SystemProfile.Workloads.Ansible.ControllerVersion = ""
 	hostEvent.Host.SystemProfile.Workloads.Mssql.Version = ""
-	_, err = updateSystemPlatform(database.DB, accountID1, &hostEvent.Host, yumUpdates, &req)
+	_, err = updateSystemPlatform(database.DB, accountID1, &hostEvent.Host, yumUpdates, &req, nil)
 	assert.Nil(t, err)
 	assertYumUpdatesInDB(t, testInventoryID, yumUpdates)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &hostEvent.Host)
