@@ -274,6 +274,15 @@ func initKafkaFromClowder() {
 type Endpoint clowder.DependencyEndpoint
 type PrivateEndpoint clowder.PrivateDependencyEndpoint
 
+// resolveRbacV2Address returns the RBAC address from V2 dependency endpoints,
+// or empty string if V2 is not available.
+func resolveRbacV2Address() string {
+	if endpoint, ok := clowder.GetV2DependencyEndpoint("rbac", "service"); ok && endpoint.Uri != "" {
+		return endpoint.Uri
+	}
+	return ""
+}
+
 func initServicesFromClowder() {
 	webappName := "webapp-service"
 	if PodConfig.GetBool("use_vmaas_go", true) {
@@ -286,7 +295,12 @@ func initServicesFromClowder() {
 				CoreCfg.VmaasAddress = (*Endpoint)(&endpoint).buildURL()
 			}
 		case "rbac":
-			CoreCfg.RbacAddress = (*Endpoint)(&endpoint).buildURL()
+			// Prefer V2 dependency endpoint; fall back to V1 flat list.
+			if addr := resolveRbacV2Address(); addr != "" {
+				CoreCfg.RbacAddress = addr
+			} else {
+				CoreCfg.RbacAddress = (*Endpoint)(&endpoint).buildURL()
+			}
 		case "rbac-service":
 			CoreCfg.RbacURL = (*Endpoint)(&endpoint).buildURL()
 		case "content-sources-backend":
