@@ -309,8 +309,9 @@ func hostTemplate(tx *gorm.DB, accountID int, host *Host) *int64 {
 
 // nolint: funlen
 // Stores or updates base system profile, returning inventory + patch aggregate.
+// templateID must be resolved before SELECT ... FOR UPDATE on system_inventory.
 func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
-	yumUpdates *YumUpdates, updatesReq *vmaas.UpdatesV3Request) (*models.SystemPlatformV2, error) {
+	yumUpdates *YumUpdates, updatesReq *vmaas.UpdatesV3Request, templateID *int64) (*models.SystemPlatformV2, error) {
 	defer utils.ObserveSecondsSince(time.Now(), messagePartDuration.WithLabelValues("update-system-platform"))
 	// NOTE: if we add a map to vmaas.UpdatesV3Request in the future, we need to use
 	//  	 `encoder.Encode(updatesReq, encoder.SortMapKeys)` to compute the hash correctly
@@ -427,7 +428,7 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 		},
 		Patch: models.SystemPatch{
 			RhAccountID: accountID,
-			TemplateID:  hostTemplate(tx, accountID, host),
+			TemplateID:  templateID,
 		},
 	}
 
@@ -809,18 +810,20 @@ func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatformV2
 	tx := database.DB.WithContext(base.Context).Begin()
 	defer tx.Rollback()
 
-	var deleted models.DeletedSystem
-	if err := tx.Find(&deleted, "inventory_id = ?", host.ID).Error; err != nil &&
-		!errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, base.WrapFatalDBError(err, "checking deleted systems")
+	// Skip Candlepin for recently deleted systems; re-check after the HTTP
+	// wait so a delete that lands during template resolution is still dropped.
+	if skip, err := skipRecentlyDeleted(tx, host.ID); err != nil || skip {
+		return nil, err
 	}
 
-	// If the system was deleted in last hour, don't register this upload
-	if deleted.InventoryID != uuid.Nil && deleted.WhenDeleted.After(time.Now().Add(-deletionThreshold)) {
-		utils.LogInfo("inventoryID", host.ID, "Received recently deleted system")
-		return nil, nil
+	// Resolve template via Candlepin before SELECT ... FOR UPDATE in
+	// updateSystemPlatform so HTTP retries do not hold a row lock.
+	templateID := hostTemplate(tx, accountID, host)
+
+	if skip, err := skipRecentlyDeleted(tx, host.ID); err != nil || skip {
+		return nil, err
 	}
-	sys, err := updateSystemPlatform(tx, accountID, host, yumUpdates, &updatesReq)
+	sys, err := updateSystemPlatform(tx, accountID, host, yumUpdates, &updatesReq, templateID)
 	if err != nil {
 		return nil, errors.Wrap(err, "saving system into the database")
 	}
@@ -829,6 +832,19 @@ func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatformV2
 		return nil, base.WrapFatalDBError(err, "committing changes")
 	}
 	return sys, nil
+}
+
+func skipRecentlyDeleted(tx *gorm.DB, inventoryID uuid.UUID) (bool, error) {
+	var deleted models.DeletedSystem
+	if err := tx.Find(&deleted, "inventory_id = ?", inventoryID).Error; err != nil &&
+		!errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, base.WrapFatalDBError(err, "checking deleted systems")
+	}
+	if deleted.InventoryID != uuid.Nil && deleted.WhenDeleted.After(time.Now().Add(-deletionThreshold)) {
+		utils.LogInfo("inventoryID", inventoryID, "Received recently deleted system")
+		return true, nil
+	}
+	return false, nil
 }
 
 func getYumUpdates(event HostEvent, client *api.Client) (*YumUpdates, error) {
