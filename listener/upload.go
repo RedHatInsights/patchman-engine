@@ -365,26 +365,9 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 	isBootc := len(host.SystemProfile.BootcStatus.Booted.Image) > 0
 
 	updatesReqJSONString := string(updatesReqJSON)
-	var workspaceName *string
-	l := len(host.Groups)
-	if l == 0 {
-		utils.LogError("inventoryID", inventoryID, "workspace UUID missing for system")
-		return nil, errors.New("workspace UUID missing for system")
-	}
-	workspace := host.Groups[0]
-	workspaceID, err := uuid.Parse(workspace.ID)
+	workspaceID, workspaceName, err := hostWorkspace(host)
 	if err != nil {
-		utils.LogError("workspaceID", workspace.ID, "invalid workspace UUID")
-		return nil, errors.New("received invalid workspace UUID")
-	}
-	if workspace.Name != "" {
-		workspaceName = &workspace.Name
-	}
-	if l != 1 {
-		utils.LogWarn(
-			"host_id", host.ID, "org_id", host.OrgID, "workspaces", host.Groups,
-			"received a host with multiple workspaces",
-		)
+		return nil, err
 	}
 	systemPlatform := &models.SystemPlatformV2{
 		Inventory: models.SystemInventory{
@@ -816,6 +799,10 @@ func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatformV2
 		return nil, err
 	}
 
+	if _, _, err := hostWorkspace(host); err != nil {
+		return nil, err
+	}
+
 	// Resolve template via Candlepin before SELECT ... FOR UPDATE in
 	// updateSystemPlatform so HTTP retries do not hold a row lock.
 	templateID := hostTemplate(tx, accountID, host)
@@ -832,6 +819,31 @@ func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatformV2
 		return nil, base.WrapFatalDBError(err, "committing changes")
 	}
 	return sys, nil
+}
+
+func hostWorkspace(host *Host) (uuid.UUID, *string, error) {
+	l := len(host.Groups)
+	if l == 0 {
+		utils.LogError("inventoryID", host.ID, "workspace UUID missing for system")
+		return uuid.Nil, nil, errors.New("workspace UUID missing for system")
+	}
+	workspace := host.Groups[0]
+	workspaceID, err := uuid.Parse(workspace.ID)
+	if err != nil {
+		utils.LogError("workspaceID", workspace.ID, "invalid workspace UUID")
+		return uuid.Nil, nil, errors.New("received invalid workspace UUID")
+	}
+	var workspaceName *string
+	if workspace.Name != "" {
+		workspaceName = &workspace.Name
+	}
+	if l != 1 {
+		utils.LogWarn(
+			"host_id", host.ID, "org_id", host.OrgID, "workspaces", host.Groups,
+			"received a host with multiple workspaces",
+		)
+	}
+	return workspaceID, workspaceName, nil
 }
 
 func skipRecentlyDeleted(tx *gorm.DB, inventoryID uuid.UUID) (bool, error) {
