@@ -622,6 +622,35 @@ objects:
                                                          key: vmaas-sync-database-password}}}
           - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
 
+    - name: sql
+      # Runs on each deploy; no-op unless SQL_JOB_FILE selects a bundled script.
+      completions: 1
+      parallelism: 1
+      activeDeadlineSeconds: ${{SQL_JOB_TIMEOUT}}
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        initContainers:
+          - name: check-for-db
+            image: ${IMAGE}:${IMAGE_TAG}
+            command:
+              - ./database_admin/check-upgraded.sh
+            env:
+              - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
+        command:
+          - ./scripts/entrypoint.sh
+          - job
+          - sql
+        env:
+          - {name: LOG_LEVEL, value: '${LOG_LEVEL_JOBS}'}
+          - {name: GIN_MODE, value: '${GIN_MODE}'}
+          - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
+          - {name: DB_DEBUG, value: 'false'}
+          - {name: DB_USER, value: vmaas_sync}
+          - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
+                                                         key: vmaas-sync-database-password}}}
+          - {name: SQL_JOB_FILE, value: '${SQL_JOB_FILE}'}
+          - {name: POD_CONFIG, value: '${SQL_JOB_CONFIG}'}
+
     - name: system-advisories-0-recovery
       # One-shot Job (no schedule): runs on deploy / CJI like db-migration.
       # No-op unless JOBS_CONFIG includes system_advisories_0_recovery=true.
@@ -697,6 +726,19 @@ objects:
     disabled: ${{DB_MIGRATION_DISABLED}}
     jobs:
       - db-migration
+
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdJobInvocation
+  metadata:
+    annotations:
+      clowder.redhat.com/expected-image-tag: ${IMAGE_TAG}
+    labels:
+      app: patchman
+    name: sql-${IMAGE_TAG}-${CJI_UID}
+  spec:
+    appName: patchman
+    jobs:
+      - sql
 
 # One-off system_advisories_0 recovery recalc. Keep disabled; enable for cutover deploy with
 # JOBS_CONFIG=system_advisories_0_recovery=true, then disable again.
@@ -928,6 +970,11 @@ parameters:
 - {name: PROMETHEUS_PUSHGATEWAY, required: true, value: "pushgateway"}
 - {name: DB_READ_REPLICA_ENABLED_JOBS, value: 'TRUE'}
 - {name: JOBS_CONFIG, value: ''} # e.g. system_advisories_0_recovery=true for SA0 recovery job cutover
+
+# SQL job runs on each deploy; leave the file empty unless SQL should execute.
+- {name: SQL_JOB_FILE, value: ''} # Filename under tasks/sql_job/sql in the image
+- {name: SQL_JOB_TIMEOUT, value: '1800'}
+- {name: SQL_JOB_CONFIG, value: 'sql_lock_timeout_seconds=30;sql_statement_timeout_seconds=1500'}
 
 # DB migration
 - {name: DB_MIGRATION_DISABLED, value: 'false'} # Disable db-migration job execution

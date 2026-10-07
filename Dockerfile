@@ -88,6 +88,7 @@ COPY --from=buildimg /go/lib64/* /lib64/
 
 ADD --chown=insights:insights go.sum                     /go/src/app/
 ADD --chown=insights:insights scripts                    /go/src/app/scripts
+ADD --chown=insights:insights tasks/sql_job/sql          /go/src/app/tasks/sql_job/sql
 ADD --chown=insights:insights database_admin/*.sh        /go/src/app/database_admin/
 ADD --chown=insights:insights database_admin/*.sql       /go/src/app/database_admin/
 ADD --chown=insights:insights database_admin/schema      /go/src/app/database_admin/schema
