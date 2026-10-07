@@ -122,7 +122,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	deleteData(t)
 }
 
-func TestUpdateSystemPlatformUpdatesSubscriptionManagerIDWhenOwnerIDChanges(t *testing.T) {
+func TestUpdateSystemPlatformDualWritesOwnerID(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	configure()
@@ -497,6 +497,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 			OSMinor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Minor,
 			RhsmVersion:                      utils.EmptyToNil(&hostEvent.Host.SystemProfile.Rhsm.Version),
 			SubscriptionManagerID:            hostEvent.Host.SystemProfile.OwnerID,
+			OwnerID:                          hostEvent.Host.SystemProfile.OwnerID,
 			SapWorkload:                      hostEvent.Host.SystemProfile.Workloads.Sap.SapSystem,
 			SapWorkloadSIDs:                  pq.StringArray(hostEvent.Host.SystemProfile.Workloads.Sap.Sids),
 			AnsibleWorkload:                  hostEvent.Host.SystemProfile.Workloads.Ansible.ControllerVersion != "",
@@ -584,6 +585,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 			OSMinor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Minor,
 			RhsmVersion:                      utils.EmptyToNil(&hostEvent.Host.SystemProfile.Rhsm.Version),
 			SubscriptionManagerID:            hostEvent.Host.SystemProfile.OwnerID,
+			OwnerID:                          hostEvent.Host.SystemProfile.OwnerID,
 			SapWorkload:                      hostEvent.Host.SystemProfile.Workloads.Sap.SapSystem,
 			SapWorkloadSIDs:                  pq.StringArray(hostEvent.Host.SystemProfile.Workloads.Sap.Sids),
 			AnsibleWorkload:                  hostEvent.Host.SystemProfile.Workloads.Ansible.ControllerVersion != "",
