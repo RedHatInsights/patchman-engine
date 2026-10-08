@@ -5,6 +5,11 @@ on:
     branches:
     - master
 
+# one job at a time, concurrent jobs will wait
+concurrency:
+  group: version-inc
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,6 +20,8 @@ jobs:
       with:
         client-id: ${{ secrets.SEMANTIC_RELEASE_APP_ID }}
         private-key: ${{ secrets.SEMANTIC_RELEASE_PK }}
+        permission-contents: write
+        permission-pull-requests: write
     - uses: actions/checkout@v7
       with:
         token: "${{ steps.app-token.outputs.token }}"
@@ -32,16 +39,40 @@ jobs:
         git config --global user.name 'vmaas-bot'
         git config --global user.email '40663028+vmaas-bot@users.noreply.github.com'
     - name: increment version, commit, push
+      env:
+        GH_TOKEN: ${{ steps.app-token.outputs.token }}
       run: |
-        DOC_FILE="docs/v3/openapi.json docs/admin/openapi.json"
-        CLOWDER_FILE=deploy/clowdapp.yaml
+        set -euo pipefail
+
+        # last commit is an automatic version update, tag and push it
+        if git log -1 --pretty=%B | grep -Fxq '[automatic version update]' ; then
+            version=$(cat VERSION)
+            if git ls-remote --exit-code origin --tags "${version}" >/dev/null 2>&1; then
+                echo "Tag ${version} already exists"
+                exit 0
+            fi
+            git tag "${version}" -m "${version}"
+            git push origin "refs/tags/${version}"
+            exit 0
+        fi
+
         VERSION=$(cat VERSION)
-        [ "$(git log -1 --pretty=%B)" == "$VERSION" ] && exit 0
+        [ "$(git log -1 --pretty=%B)" == "${VERSION}" ] && exit 0
         RELEASE_TYPE=$(git log -1 | tail -n1) # Check release type (/major, /minor, /patch (default))
-        VERSION_NEXT=$(./scripts/increment_version.sh $VERSION $RELEASE_TYPE)
-        sed -i 's|\("version": "\)[^"]*\("\)$|'"\1$VERSION_NEXT\2|;" $DOC_FILE
-        echo $VERSION_NEXT >VERSION
-        git commit -am "${VERSION_NEXT}"
-        git push
-        git tag "${VERSION_NEXT}" -m "${VERSION_NEXT}"
-        git push origin "${VERSION_NEXT}"
+        VERSION_NEXT=$(./scripts/increment_version.sh ${VERSION} ${RELEASE_TYPE})
+
+        BRANCH="version/${VERSION_NEXT}"
+        BODY=$(printf '%s\n\n%s\n' "${VERSION_NEXT}" "[automatic version update]")
+        git checkout -B "${BRANCH}"
+
+        DOC_FILE="docs/v3/openapi.json docs/admin/openapi.json"
+        sed -i 's|\("version": "\)[^"]*\("\)$|'"\1${VERSION_NEXT}\2|;" ${DOC_FILE}
+        echo "${VERSION_NEXT}" >VERSION
+        git commit -am "${BODY}"
+        if git push -u origin "HEAD:${BRANCH}" ; then
+          gh pr create --base master --head "${BRANCH}" --title "${VERSION_NEXT}" --body "${BODY}"
+          gh pr merge --auto --squash --delete-branch --subject "${VERSION_NEXT}" --body "${BODY}" "${BRANCH}"
+        else
+          echo "Failed to push branch ${BRANCH}"
+          exit 1
+        fi
