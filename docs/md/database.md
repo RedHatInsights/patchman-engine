@@ -25,6 +25,9 @@ The ERD image below may lag `database_admin/schema/create_schema.sql`; for syste
 
 ## Migrations
 
+Manual data updates can use the [SQL job runner](sql-jobs.md). They are separate
+from schema migrations and require explicit invocation and verification.
+
 Schema changes live in `database_admin/migrations/` and are applied by **database-admin** (`database_admin/update.go`).
 
 In production:

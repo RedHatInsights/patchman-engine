@@ -12,6 +12,7 @@ import (
 	"app/tasks/caches"
 	"app/tasks/cleaning"
 	"app/tasks/repack"
+	"app/tasks/sql_job"
 	"app/tasks/system_advisories_0_recovery"
 	"app/tasks/system_culling"
 	"app/tasks/vmaas_sync"
@@ -65,6 +66,8 @@ func main() {
 
 func runJob(name string) {
 	switch name {
+	case "sql":
+		sql_job.Run()
 	case "vmaas_sync":
 		vmaas_sync.RunVmaasSync()
 	case "system_culling":
