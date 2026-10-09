@@ -20,7 +20,7 @@ require (
 	github.com/lib/pq v1.12.3
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
-	github.com/project-kessel/kessel-sdk-go v1.11.1
+	github.com/project-kessel/kessel-sdk-go v1.13.0
 	github.com/prometheus/client_golang v1.24.1
 	github.com/redhatinsights/app-common-go v1.7.0
 	github.com/redhatinsights/platform-go-middlewares v1.0.0
