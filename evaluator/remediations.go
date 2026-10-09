@@ -12,13 +12,20 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/segmentio/kafka-go"
 )
+
+// Set a 24 MiB limit for uncompressed messages so kafka-go does not reject
+// messages over its 1 MiB default before GZIP can compress them. The broker has
+// a separate limit on compressed record batches. Confirm the limit for this
+// cluster before relying on larger messages passing.
+const remediationsBatchBytes = 24 * 1024 * 1024 // 24 MiB
 
 var remediationsPublisher mqueue.Writer
 
 func configureRemediations() {
 	if topic := utils.CoreCfg.RemediationUpdateTopic; topic != "" {
-		remediationsPublisher = mqueue.NewKafkaWriterFromEnv(topic)
+		remediationsPublisher = mqueue.NewGzipKafkaWriterFromEnv(topic, remediationsBatchBytes)
 	}
 }
 
@@ -92,5 +99,23 @@ func publishRemediationsState(system *models.SystemPlatformV2, response *vmaas.U
 		return errors.Wrap(err, "formatting message")
 	}
 	err = remediationsPublisher.WriteMessages(base.Context, msg)
+
+	if isRemediationsMessageTooLarge(err) {
+		utils.LogError("inventoryID", state.HostID, "issue_count", len(state.Issues),
+			"uncompressed_bytes", len(msg.Value), "err", err, "Remediations update skipped: message too large")
+		return nil
+	}
 	return base.WrapFatalKafkaError(err, "write message")
+}
+
+func isRemediationsMessageTooLarge(err error) bool {
+	// Broker errors are wrapped in WriteErrors, which errors.Is does not unwrap
+	var writeErrors kafka.WriteErrors
+	if errors.As(err, &writeErrors) {
+		if len(writeErrors) != 1 {
+			return false
+		}
+		err = writeErrors[0]
+	}
+	return errors.Is(err, kafka.MessageSizeTooLarge)
 }
