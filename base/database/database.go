@@ -24,26 +24,3 @@ func OnConflictUpdateMulti(db *gorm.DB, keys []string, updateCols ...string) *go
 	}
 	return db.Clauses(onConflict)
 }
-
-type UpExpr struct {
-	Name string
-	Expr string
-}
-
-func OnConflictDoUpdateExpr(db *gorm.DB, keys []string, updateExprs ...UpExpr) *gorm.DB {
-	updateColsValues := make(map[string]interface{}, len(updateExprs))
-	for _, v := range updateExprs {
-		updateColsValues[v.Name] = v.Expr
-	}
-	conflictColumns := make([]clause.Column, len(keys))
-	for i, key := range keys {
-		conflictColumns[i] = clause.Column{Name: key}
-	}
-	if len(updateColsValues) > 0 {
-		return db.Clauses(clause.OnConflict{
-			Columns:   conflictColumns,
-			DoUpdates: clause.Assignments(updateColsValues),
-		})
-	}
-	return db
-}

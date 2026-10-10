@@ -5,10 +5,8 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"app/base/vmaas"
-	"cmp"
 	"fmt"
 	"regexp"
-	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -254,75 +252,7 @@ func storeAdvisoryData(tx *gorm.DB, system *models.SystemPlatformV2, advisoriesB
 		return nil, err
 	}
 
-	err = updateAdvisoryAccountData(tx, system, advisoriesByName)
-	if err != nil {
-		return nil, errors.Wrap(err, "Unable to update advisory_account_data caches")
-	}
 	return systemAdvisoriesNew, nil
-}
-
-func calcAdvisoryChanges(system *models.SystemPlatformV2, //nolint: funlen
-	advisoriesByName extendedAdvisoryMap) []models.AdvisoryAccountData {
-	// If system is stale, we won't change any rows in advisory_account_data
-	if system.Inventory.Stale {
-		return []models.AdvisoryAccountData{}
-	}
-
-	aadMap := make(map[int64]models.AdvisoryAccountData, len(advisoriesByName))
-	for _, advisory := range advisoriesByName {
-		switch advisory.change {
-		case Remove:
-			aadMap[advisory.AdvisoryID] = models.AdvisoryAccountData{
-				AdvisoryID:         advisory.AdvisoryID,
-				RhAccountID:        system.Inventory.RhAccountID,
-				SystemsInstallable: -1,
-			}
-			if advisory.StatusID != APPLICABLE { // advisory is no longer applicable
-				aad := aadMap[advisory.AdvisoryID]
-				aad.SystemsApplicable = -1
-				aadMap[advisory.AdvisoryID] = aad
-			}
-		case Keep:
-			continue
-		case Add:
-			fallthrough
-		case Update:
-			if advisory.StatusID == INSTALLABLE {
-				aadMap[advisory.AdvisoryID] = models.AdvisoryAccountData{
-					AdvisoryID:         advisory.AdvisoryID,
-					RhAccountID:        system.Inventory.RhAccountID,
-					SystemsInstallable: 1,
-					// every installable advisory is also applicable advisory
-					SystemsApplicable: 1,
-				}
-			} else { // APPLICABLE
-				// add advisories which are only applicable and not installable to `aadMap`
-				if _, ok := aadMap[advisory.AdvisoryID]; !ok {
-					// FIXME: this check can be removed if advisories don't repeat.
-					// Is it possible that there would be 2 advisories with the same AdvisoryID \
-					// where one would be one INSTALLABLE and the other APPLICABLE?
-					aadMap[advisory.AdvisoryID] = models.AdvisoryAccountData{
-						AdvisoryID:        advisory.AdvisoryID,
-						RhAccountID:       system.Inventory.RhAccountID,
-						SystemsApplicable: 1,
-					}
-				}
-			}
-		}
-	}
-
-	// aadMap into aadSlice
-	aadSlice := make([]models.AdvisoryAccountData, 0, len(advisoriesByName))
-	for _, aad := range aadMap {
-		aadSlice = append(aadSlice, aad)
-	}
-	slices.SortStableFunc(aadSlice, func(x, y models.AdvisoryAccountData) int {
-		if n := cmp.Compare(x.RhAccountID, y.RhAccountID); n != 0 {
-			return n
-		}
-		return cmp.Compare(x.AdvisoryID, y.AdvisoryID)
-	})
-	return aadSlice
 }
 
 func deleteOldSystemAdvisories(tx *gorm.DB, accountID int, systemID int64, patched []int64) error {
@@ -410,29 +340,4 @@ func loadSystemAdvisories(tx *gorm.DB, accountID int, systemID int64) (SystemAdv
 		systemAdvisories[sa.Advisory.Name] = sa
 	}
 	return systemAdvisories, nil
-}
-
-func updateAdvisoryAccountData(
-	tx *gorm.DB,
-	system *models.SystemPlatformV2,
-	advisoriesByName extendedAdvisoryMap,
-) error {
-	if !enableAdvisoryAccountData {
-		utils.LogInfo("inventoryID", system.GetInventoryID(), "advisory_account_data updates disabled, skipping")
-		return nil
-	}
-
-	changes := calcAdvisoryChanges(system, advisoriesByName)
-
-	if len(changes) == 0 {
-		return nil
-	}
-
-	txOnConflict := database.OnConflictDoUpdateExpr(tx, []string{"rh_account_id", "advisory_id"},
-		database.UpExpr{Name: "systems_installable",
-			Expr: "advisory_account_data.systems_installable + excluded.systems_installable"},
-		database.UpExpr{Name: "systems_applicable",
-			Expr: "advisory_account_data.systems_applicable + excluded.systems_applicable"})
-
-	return database.BulkInsert(txOnConflict, changes)
 }
