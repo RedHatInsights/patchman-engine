@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (168, false);
+VALUES (169, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -687,6 +687,7 @@ CREATE TABLE IF NOT EXISTS system_inventory
     oracle_db_workload                  BOOLEAN     NOT NULL DEFAULT false,
     rhel_ai_workload                    BOOLEAN     NOT NULL DEFAULT false,
     satellite_workload                  BOOLEAN     NOT NULL DEFAULT false,
+    owner_id                            UUID,
     PRIMARY KEY (rh_account_id, id),
     UNIQUE (rh_account_id, inventory_id)
 ) PARTITION BY HASH (rh_account_id);

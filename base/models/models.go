@@ -95,6 +95,7 @@ type SystemInventory struct {
 	OSMinor                          *int16
 	RhsmVersion                      *string
 	SubscriptionManagerID            *uuid.UUID
+	OwnerID                          *uuid.UUID
 	SapWorkload                      bool
 	SapWorkloadSIDs                  pq.StringArray `gorm:"type:text[];column:sap_workload_sids"`
 	AnsibleWorkload                  bool
