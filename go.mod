@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/bytedance/sonic v1.15.4
 	github.com/getkin/kin-openapi v0.149.0
-	github.com/getsentry/sentry-go v0.49.0
+	github.com/getsentry/sentry-go v0.50.0
 	github.com/gin-contrib/timeout v1.2.3
 	github.com/gin-gonic/gin v1.12.0
 	github.com/gocarina/gocsv v0.0.0-20260926200228-b2c6eb8fefab
