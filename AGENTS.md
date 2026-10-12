@@ -57,14 +57,13 @@ Listener Component
 Evaluator-Upload Component
     ↓ (calls VMaaS /updates)
     ↓ (updates system_advisories)
-    ↓ (updates advisory_account_data — legacy table, to be removed)
     ↓
 [platform.remediation-updates.patch] (optional)
 [platform.inventory.host-apps] (optional)
 [patchman.advisory.update] Kafka Topic (changed advisory IDs)
     ↓
 Aggregator Component
-    ↓ (recounts from system_advisories, writes aggregates to account_advisory — new workspace-scoped table)
+    ↓ (recounts from system_advisories, writes aggregates to account_advisory — a workspace-scoped table)
     ↓
 [platform.notifications.ingress] (optional)
 ```

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (168, false);
+VALUES (170, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -65,111 +65,6 @@ END;
 $check_unchanged$
     LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION on_system_update()
--- this trigger updates advisory_account_data when server changes its stale flag
-    RETURNS TRIGGER
-AS
-$system_update$
-DECLARE
-    was_counted  BOOLEAN;
-    should_count BOOLEAN;
-    change       INT;
-BEGIN
-    -- Ignore not yet evaluated systems
-    IF TG_OP != 'UPDATE' OR NOT EXISTS (
-        SELECT 1
-        FROM system_patch
-        WHERE system_id = NEW.id 
-          AND rh_account_id = NEW.rh_account_id
-          AND last_evaluation IS NOT NULL
-    ) THEN
-        RETURN NEW;
-    END IF;
-
-    was_counted := OLD.stale = FALSE;
-    should_count := NEW.stale = FALSE;
-
-    -- Determine what change we are performing
-    IF was_counted and NOT should_count THEN
-        change := -1;
-    ELSIF NOT was_counted AND should_count THEN
-        change := 1;
-    ELSE
-        -- No change
-        RETURN NEW;
-    END IF;
-
-    -- insert/update advisories linked to the server
-    INSERT
-      INTO advisory_account_data (advisory_id, rh_account_id, systems_installable, systems_applicable)
-    SELECT sa.advisory_id, NEW.rh_account_id,
-           case when sa.status_id = 0 then change else 0 end as systems_installable,
-           change as systems_applicable
-      FROM system_advisories sa
-     WHERE sa.system_id = NEW.id AND sa.rh_account_id = NEW.rh_account_id
-     ORDER BY sa.advisory_id
-        ON CONFLICT (advisory_id, rh_account_id) DO UPDATE
-           SET systems_installable = advisory_account_data.systems_installable + EXCLUDED.systems_installable,
-               systems_applicable = advisory_account_data.systems_applicable + EXCLUDED.systems_applicable;
-    RETURN NEW;
-END;
-$system_update$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION refresh_advisory_caches_multi(advisory_ids_in INTEGER[] DEFAULT NULL,
-                                                         rh_account_id_in INTEGER DEFAULT NULL)
-    RETURNS VOID AS
-$refresh_advisory$
-BEGIN
-    -- Lock rows
-    PERFORM aad.rh_account_id, aad.advisory_id
-    FROM advisory_account_data aad
-    WHERE (aad.advisory_id = ANY (advisory_ids_in) OR advisory_ids_in IS NULL)
-      AND (aad.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
-        FOR UPDATE OF aad;
-
-    WITH current_counts AS (
-        SELECT sa.advisory_id, sa.rh_account_id,
-               count(sa.*) filter (where sa.status_id = 0) as systems_installable,
-               count(sa.*) as systems_applicable
-          FROM system_advisories sa
-          JOIN system_inventory si
-            ON sa.rh_account_id = si.rh_account_id AND sa.system_id = si.id
-          JOIN system_patch sp
-            ON si.id = sp.system_id AND sp.rh_account_id = si.rh_account_id
-         WHERE sp.last_evaluation IS NOT NULL
-           AND si.stale = FALSE
-           AND (sa.advisory_id = ANY (advisory_ids_in) OR advisory_ids_in IS NULL)
-           AND (si.rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL)
-         GROUP BY sa.advisory_id, sa.rh_account_id
-    ),
-        upserted AS (
-            INSERT INTO advisory_account_data (advisory_id, rh_account_id, systems_installable, systems_applicable)
-                 SELECT advisory_id, rh_account_id, systems_installable, systems_applicable
-                   FROM current_counts
-            ON CONFLICT (advisory_id, rh_account_id) DO UPDATE SET
-                     systems_installable = EXCLUDED.systems_installable,
-                     systems_applicable = EXCLUDED.systems_applicable
-         )
-    DELETE FROM advisory_account_data
-     WHERE (advisory_id, rh_account_id) NOT IN (SELECT advisory_id, rh_account_id FROM current_counts)
-       AND (advisory_id = ANY (advisory_ids_in) OR advisory_ids_in IS NULL)
-       AND (rh_account_id = rh_account_id_in OR rh_account_id_in IS NULL);
-END;
-$refresh_advisory$ language plpgsql;
-
-CREATE OR REPLACE FUNCTION refresh_advisory_caches(advisory_id_in INTEGER DEFAULT NULL,
-                                                   rh_account_id_in INTEGER DEFAULT NULL)
-    RETURNS VOID AS
-$refresh_advisory$
-BEGIN
-    IF advisory_id_in IS NOT NULL THEN
-        PERFORM refresh_advisory_caches_multi(ARRAY [advisory_id_in], rh_account_id_in);
-    ELSE
-        PERFORM refresh_advisory_caches_multi(NULL, rh_account_id_in);
-    END IF;
-END;
-$refresh_advisory$ language plpgsql;
-
 CREATE OR REPLACE FUNCTION refresh_account_advisory_caches_multi(advisory_ids_in INTEGER[] DEFAULT NULL,
                                                                   rh_account_id_in INTEGER DEFAULT NULL)
     RETURNS VOID AS
@@ -223,23 +118,6 @@ BEGIN
     END IF;
 END;
 $refresh_account_advisory$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION backfill_account_advisory(rh_account_id_in INTEGER)
-    RETURNS VOID AS
-$backfill$
-BEGIN
-    PERFORM refresh_account_advisory_caches_multi(NULL, rh_account_id_in);
-
-    -- copy `notified` for all `workspace_id`s per account
-    UPDATE account_advisory aa
-    SET notified = aad.notified
-        FROM advisory_account_data aad
-    WHERE aa.advisory_id = aad.advisory_id
-        AND aa.rh_account_id = aad.rh_account_id
-        AND aa.rh_account_id = rh_account_id_in
-        AND aad.notified IS NOT NULL;
-END;
-$backfill$ LANGUAGE plpgsql;
 
 -- handle a new workspace with already notified advisory
 CREATE OR REPLACE FUNCTION sync_account_advisory_notified_on_insert()
@@ -312,64 +190,6 @@ BEGIN
     PERFORM refresh_system_caches(system_id_in, NULL);
 END;
 $update_system_caches$
-    LANGUAGE 'plpgsql';
-
--- refresh_all_cached_counts
--- WARNING: executing this procedure takes long time,
---          use only when necessary, e.g. during upgrade to populate initial caches
-CREATE OR REPLACE FUNCTION refresh_all_cached_counts()
-    RETURNS void AS
-$refresh_all_cached_counts$
-BEGIN
-    PERFORM refresh_system_caches(NULL, NULL);
-    PERFORM refresh_advisory_caches(NULL, NULL);
-END;
-$refresh_all_cached_counts$
-    LANGUAGE 'plpgsql';
-
-CREATE OR REPLACE FUNCTION refresh_account_cached_counts(rh_account_in varchar)
-    RETURNS void AS
-$refresh_account_cached_counts$
-DECLARE
-    rh_account_id_in INT;
-BEGIN
-    -- update advisory count for ordered systems
-    SELECT id FROM rh_account WHERE name = rh_account_in INTO rh_account_id_in;
-
-    PERFORM refresh_system_caches(NULL, rh_account_id_in);
-    PERFORM refresh_advisory_caches(NULL, rh_account_id_in);
-END;
-$refresh_account_cached_counts$
-    LANGUAGE 'plpgsql';
-
-CREATE OR REPLACE FUNCTION refresh_advisory_cached_counts(advisory_name varchar)
-    RETURNS void AS
-$refresh_advisory_cached_counts$
-DECLARE
-    advisory_id_id BIGINT;
-BEGIN
-    -- update system count for advisory
-    SELECT id FROM advisory_metadata WHERE name = advisory_name INTO advisory_id_id;
-
-    PERFORM refresh_advisory_caches(advisory_id_id, NULL);
-END;
-$refresh_advisory_cached_counts$
-    LANGUAGE 'plpgsql';
-
-CREATE OR REPLACE FUNCTION refresh_advisory_account_cached_counts(advisory_name varchar, rh_account_name varchar)
-    RETURNS void AS
-$refresh_advisory_account_cached_counts$
-DECLARE
-    advisory_md_id   BIGINT;
-    rh_account_id_in INT;
-BEGIN
-    -- update system count for ordered advisories
-    SELECT id FROM advisory_metadata WHERE name = advisory_name INTO advisory_md_id;
-    SELECT id FROM rh_account WHERE name = rh_account_name INTO rh_account_id_in;
-
-    PERFORM refresh_advisory_caches(advisory_md_id, rh_account_id_in);
-END;
-$refresh_advisory_account_cached_counts$
     LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION refresh_system_cached_counts(inventory_id_in varchar)
@@ -578,6 +398,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION revoke_table_partitions(perms text, tbl regclass, grantie text)
+    RETURNS VOID AS
+$$
+DECLARE
+    r record;
+BEGIN
+    FOR r IN SELECT child.relname
+               FROM pg_inherits
+               JOIN pg_class parent
+                 ON pg_inherits.inhparent = parent.oid
+               JOIN pg_class child
+                 ON pg_inherits.inhrelid   = child.oid
+              WHERE parent.relname = text(tbl)
+    LOOP
+        EXECUTE 'REVOKE ' || perms || ' ON TABLE ' || r.relname || ' FROM ' || grantie;
+    END LOOP;
+    EXECUTE 'REVOKE ' || perms || ' ON TABLE ' || text(tbl) || ' FROM ' || grantie;
+END;
+$$ LANGUAGE plpgsql;
+
 
 -- ---------------------------------------------------------------------------
 -- Tables
@@ -590,7 +430,6 @@ CREATE TABLE IF NOT EXISTS rh_account
     name                    TEXT UNIQUE CHECK (NOT empty(name)),
     org_id                  TEXT UNIQUE CHECK (NOT empty(org_id)),
     valid_package_cache     BOOLEAN NOT NULL DEFAULT FALSE,
-    valid_advisory_cache    BOOLEAN NOT NULL DEFAULT FALSE,
     CHECK (name IS NOT NULL OR org_id IS NOT NULL),
     PRIMARY KEY (id)
 ) TABLESPACE pg_default;
@@ -709,11 +548,6 @@ SELECT create_table_partition_triggers('system_inventory_check_unchanged',
                                        $$BEFORE INSERT OR UPDATE$$,
                                        'system_inventory',
                                        $$FOR EACH ROW EXECUTE PROCEDURE check_unchanged()$$);
-
-SELECT create_table_partition_triggers('system_inventory_on_update',
-                                       $$AFTER UPDATE$$,
-                                       'system_inventory',
-                                       $$FOR EACH ROW EXECUTE PROCEDURE on_system_update()$$);
 
 CREATE INDEX IF NOT EXISTS system_inventory_inventory_id_idx ON system_inventory (inventory_id);
 CREATE INDEX IF NOT EXISTS system_inventory_tags_index ON system_inventory USING GIN (tags JSONB_PATH_OPS);
@@ -868,38 +702,6 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO listener;
 -- vmaas_sync needs to delete culled systems, which cascades to system_advisories
 GRANT SELECT, DELETE ON system_advisories TO vmaas_sync;
 
--- advisory_account_data
-CREATE TABLE IF NOT EXISTS advisory_account_data
-(
-    advisory_id              BIGINT NOT NULL,
-    rh_account_id            INT NOT NULL,
-    systems_applicable       INT NOT NULL DEFAULT 0,
-    systems_installable      INT NOT NULL DEFAULT 0,
-    notified                 TIMESTAMP WITH TIME ZONE NULL,
-    CONSTRAINT advisory_metadata_id
-        FOREIGN KEY (advisory_id)
-            REFERENCES advisory_metadata (id),
-    CONSTRAINT rh_account_id
-        FOREIGN KEY (rh_account_id)
-            REFERENCES rh_account (id),
-    UNIQUE (advisory_id, rh_account_id),
-    PRIMARY KEY (rh_account_id, advisory_id)
-) WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
-  TABLESPACE pg_default;
-
--- manager user needs to change this table for opt-out functionality
-GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO manager;
--- evaluator user needs to change this table
-GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO evaluator;
--- listner user needs to change this table when deleting system
-GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO listener;
--- vmaas_sync needs to update stale mark, which creates and deletes advisory_account_data
-GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_account_data TO vmaas_sync;
-
--- indexes for filtering systems_applicable, systems_installable
-CREATE INDEX ON advisory_account_data (systems_applicable);
-CREATE INDEX ON advisory_account_data (systems_installable);
-
 -- account_advisory
 CREATE TABLE IF NOT EXISTS account_advisory
 (
@@ -922,10 +724,11 @@ SELECT create_table_partitions('account_advisory', 32,
     $$WITH (fillfactor = '70', autovacuum_vacuum_scale_factor = '0.05')
       TABLESPACE pg_default$$);
 
-SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'account_advisory', 'manager');
-SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'account_advisory', 'evaluator');
-SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'account_advisory', 'listener');
-SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'account_advisory', 'vmaas_sync');
+SELECT grant_table_partitions('SELECT', 'account_advisory', 'manager');
+SELECT grant_table_partitions('SELECT', 'account_advisory', 'evaluator');
+SELECT grant_table_partitions('SELECT', 'account_advisory', 'listener');
+SELECT grant_table_partitions('SELECT, DELETE', 'account_advisory', 'vmaas_sync');
+SELECT grant_table_partitions('SELECT, INSERT, UPDATE, DELETE', 'account_advisory', 'aggregator');
 
 SELECT create_table_partition_triggers('account_advisory_sync_notified_insert',
                                        $$BEFORE INSERT$$,
@@ -1083,7 +886,6 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON timestamp_kv TO vmaas_sync;
 
 -- vmaas_sync needs to delete from this tables to sync CVEs correctly
 GRANT DELETE ON system_advisories TO vmaas_sync;
-GRANT DELETE ON advisory_account_data TO vmaas_sync;
 
 -- system_patch
 CREATE TABLE IF NOT EXISTS system_patch
@@ -1153,3 +955,8 @@ BEGIN
     END IF;
 END
 $$;
+
+-- user for aggregator component
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO aggregator;
+GRANT EXECUTE ON FUNCTION refresh_account_advisory_caches_multi(INTEGER[], INTEGER) TO aggregator;
+GRANT EXECUTE ON FUNCTION refresh_account_advisory_caches(INTEGER, INTEGER) TO aggregator;

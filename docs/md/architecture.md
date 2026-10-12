@@ -27,7 +27,9 @@ See [component environment variables](../../conf/listener.env)
 
 - **evaluator-upload** - connects to the Kafka service (`patchman.evaluator.upload` topic) and listens for evaluation
 requests from the `listener` component. For each received Kafka message it evaluates system with ID contained in the
-message. It loads each system by joining **`system_inventory`** and **`system_patch`**. As an evaluation result it updates **`system_advisories`** (referencing **`system_inventory.id`**), **`system_patch`** (evaluation caches, `last_evaluation`, and related fields), and **`advisory_account_data`**. Evaluation is scaled on two levels, firstly with multiple replicas (more pods) and secondary
+message. It loads each system by joining **`system_inventory`** and **`system_patch`**. As an evaluation result it updates
+**`system_advisories`** (referencing **`system_inventory.id`**), and **`system_patch`** (evaluation caches, `last_evaluation`,
+and related fields). Evaluation is scaled on two levels, firstly with multiple replicas (more pods) and secondary
 with multiple goroutines within single pod (set by `CONSUMER_COUNT` environment variable).
 See [component environment variables](../../conf/evaluator_upload.env)
 
@@ -46,9 +48,8 @@ See [component environment variables](../../conf/evaluator_user_evaluation.env)
 - **aggregator** - maintains per-account, per-workspace advisory counts. When the evaluator processes a system upload or
 recalculation and updates **`system_advisories`**, it publishes an `AdvisoryUpdateEvent` to the `patchman.advisory.update`
 Kafka topic listing which advisory IDs changed for a given account. The aggregator consumes these events and recounts
-how many systems have each advisory applicable or installable, writing the results to **`account_advisory`**. This is the
-workspace-aware replacement for **`advisory_account_data`** (previously maintained by the evaluator). Incoming events are
-batched before processing. When `enable_notifications` is set in `POD_CONFIG`, the aggregator also publishes
+how many systems have each advisory applicable or installable, writing the results to **`account_advisory`**. Incoming events
+are batched before processing. When `enable_notifications` is set in `POD_CONFIG`, the aggregator also publishes
 new installable advisories to `platform.notifications.ingress` and marks them as notified in **`account_advisory`**.
 See [component environment variables](../../conf/aggregator.env)
 

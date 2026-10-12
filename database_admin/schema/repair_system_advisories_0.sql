@@ -9,10 +9,6 @@ BEGIN;
 TRUNCATE TABLE system_advisories_0;
 
 -- Clear denormalized counts for accounts that hash into remainder 0 (do not read old _0).
-DELETE FROM advisory_account_data aad
- WHERE satisfies_hash_partition(
-         'system_advisories'::regclass, 32, 0, aad.rh_account_id);
-
 DELETE FROM account_advisory aa
  WHERE satisfies_hash_partition(
          'system_advisories'::regclass, 32, 0, aa.rh_account_id);

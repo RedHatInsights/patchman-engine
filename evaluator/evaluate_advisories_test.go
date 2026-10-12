@@ -148,93 +148,6 @@ func TestIncrementAdvisoryTypeCounts(t *testing.T) {
 	assert.Equal(t, 1, secCount)
 }
 
-func TestUpdateAdvisoryAccountData(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	system := &models.SystemPlatformV2{
-		Inventory: models.SystemInventory{ID: 12, RhAccountID: 3},
-		Patch:     models.SystemPatch{},
-	}
-	advisoryIDs := []int64{2, 3, 4}
-	database.CreateSystemAdvisories(t, system.Inventory.RhAccountID, system.InternalSystemID(), advisoryIDs)
-	database.CreateAdvisoryAccountData(t, system.Inventory.RhAccountID, advisoryIDs, 1)
-	advisoriesByName := extendedAdvisoryMap{
-		"ER-2": {
-			change: Remove,
-			SystemAdvisories: models.SystemAdvisories{
-				AdvisoryID: 2, SystemID: system.InternalSystemID(), RhAccountID: system.Inventory.RhAccountID},
-		},
-		"ER-3": {
-			change: Remove,
-			SystemAdvisories: models.SystemAdvisories{
-				AdvisoryID: 3, SystemID: system.InternalSystemID(), RhAccountID: system.Inventory.RhAccountID},
-		},
-		"ER-4": {
-			change: Remove,
-			SystemAdvisories: models.SystemAdvisories{
-				AdvisoryID: 4, SystemID: system.InternalSystemID(), RhAccountID: system.Inventory.RhAccountID},
-		},
-	}
-
-	// Update as if the advisories became patched
-	err := updateAdvisoryAccountData(database.DB, system, advisoriesByName)
-	assert.NoError(t, err)
-	database.CheckSystemAdvisories(t, system.InternalSystemID(), advisoryIDs)
-	database.CheckAdvisoriesAccountData(t, system.Inventory.RhAccountID, advisoryIDs, 0)
-
-	// Update as if the advisories became unpatched
-	for name, ea := range advisoriesByName {
-		ea.change = Add
-		advisoriesByName[name] = ea
-	}
-	err = updateAdvisoryAccountData(database.DB, system, advisoriesByName)
-	assert.NoError(t, err)
-	database.CheckAdvisoriesAccountData(t, system.Inventory.RhAccountID, advisoryIDs, 1)
-
-	database.DeleteSystemAdvisories(t, system.InternalSystemID(), advisoryIDs)
-	database.DeleteAdvisoryAccountData(t, system.Inventory.RhAccountID, advisoryIDs)
-}
-
-func TestUpdateAdvisoryAccountDataDisabled(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-
-	prev := enableAdvisoryAccountData
-	enableAdvisoryAccountData = false
-	defer func() { enableAdvisoryAccountData = prev }()
-
-	system := &models.SystemPlatformV2{
-		Inventory: models.SystemInventory{ID: 12, RhAccountID: 3},
-		Patch:     models.SystemPatch{},
-	}
-	advisoryIDs := []int64{2, 3, 4}
-	database.CreateAdvisoryAccountData(t, system.Inventory.RhAccountID, advisoryIDs, 1)
-	defer database.DeleteAdvisoryAccountData(t, system.Inventory.RhAccountID, advisoryIDs)
-
-	advisoriesByName := extendedAdvisoryMap{
-		"ER-2": {
-			change: Remove,
-			SystemAdvisories: models.SystemAdvisories{
-				AdvisoryID: 2, SystemID: system.InternalSystemID(), RhAccountID: system.Inventory.RhAccountID},
-		},
-		"ER-3": {
-			change: Remove,
-			SystemAdvisories: models.SystemAdvisories{
-				AdvisoryID: 3, SystemID: system.InternalSystemID(), RhAccountID: system.Inventory.RhAccountID},
-		},
-		"ER-4": {
-			change: Remove,
-			SystemAdvisories: models.SystemAdvisories{
-				AdvisoryID: 4, SystemID: system.InternalSystemID(), RhAccountID: system.Inventory.RhAccountID},
-		},
-	}
-
-	err := updateAdvisoryAccountData(database.DB, system, advisoriesByName)
-	assert.NoError(t, err)
-	database.CheckAdvisoriesAccountData(t, system.Inventory.RhAccountID, advisoryIDs, 1)
-}
-
 func TestGetMissingAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
@@ -319,45 +232,6 @@ func TestUpsertSystemAdvisories(t *testing.T) {
 
 	// cleanup
 	database.DeleteSystemAdvisories(t, testDBID, []int64{3, 4})
-}
-
-func TestCalcAdvisoryChanges(t *testing.T) {
-	system := &models.SystemPlatformV2{
-		Inventory: models.SystemInventory{ID: testDBID, RhAccountID: rhAccountID},
-		Patch:     models.SystemPatch{},
-	}
-	advisoriesByName := extendedAdvisoryMap{
-		"ER-102": {
-			change:           Update,
-			SystemAdvisories: models.SystemAdvisories{AdvisoryID: int64(102), StatusID: INSTALLABLE},
-		},
-		"ER-103": {
-			change:           Remove,
-			SystemAdvisories: models.SystemAdvisories{AdvisoryID: int64(103), StatusID: INSTALLABLE},
-		},
-		"ER-104": {
-			change:           Remove,
-			SystemAdvisories: models.SystemAdvisories{AdvisoryID: int64(104), StatusID: APPLICABLE},
-		},
-		"ER-105": {
-			change:           Add,
-			SystemAdvisories: models.SystemAdvisories{AdvisoryID: int64(105), StatusID: APPLICABLE},
-		},
-	}
-
-	changes := calcAdvisoryChanges(system, advisoriesByName)
-	expected := map[int64]models.AdvisoryAccountData{
-		102: {SystemsApplicable: 1, SystemsInstallable: 1},
-		103: {SystemsApplicable: -1, SystemsInstallable: -1},
-		104: {SystemsInstallable: -1},
-		105: {SystemsApplicable: 1},
-	}
-	assert.Equal(t, len(expected), len(changes))
-	for _, change := range changes {
-		advisoryID := change.AdvisoryID
-		assert.Equal(t, change.SystemsApplicable, expected[advisoryID].SystemsApplicable)
-		assert.Equal(t, change.SystemsInstallable, expected[advisoryID].SystemsInstallable)
-	}
 }
 
 func TestStoreMissingAdvisories(t *testing.T) {
