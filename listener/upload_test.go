@@ -18,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
@@ -60,16 +61,18 @@ func createTestInvHost(t *testing.T) *Host {
 }
 
 func createTestHostWithEnv(reporter, consumer, baseURL string) *Host {
+	ownerUUID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
 	consumerUUID, err := uuid.Parse(consumer)
 	if err != nil {
 		consumerUUID = uuid.Nil
 	}
 	return &Host{
-		ID:       testInventoryID,
-		Reporter: reporter,
-		Groups:   []inventory.Group{{ID: database.TestWorkspace1ID, Name: "group1"}},
+		SubscriptionManagerID: &consumerUUID,
+		ID:                    testInventoryID,
+		Reporter:              reporter,
+		Groups:                []inventory.Group{{ID: database.TestWorkspace1ID, Name: "group1"}},
 		SystemProfile: inventory.SystemProfile{
-			OwnerID: &consumerUUID,
+			OwnerID: &ownerUUID,
 			YumRepos: &[]inventory.YumRepo{{
 				ID:      "base",
 				Enabled: true,
@@ -123,7 +126,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	deleteData(t)
 }
 
-func TestUpdateSystemPlatformDualWritesOwnerID(t *testing.T) {
+func TestUpdateSystemPlatformIndependentIdentityIDs(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 	configure()
@@ -147,6 +150,7 @@ func TestUpdateSystemPlatformDualWritesOwnerID(t *testing.T) {
 	ev.Host.StaleTimestamp = &correctTime
 	ownerID1 := uuid.MustParse("11111111-1111-1111-1111-111111111111")
 	ev.Host.SystemProfile.OwnerID = &ownerID1
+	ev.Host.SubscriptionManagerID = &ownerID1
 
 	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
@@ -159,12 +163,43 @@ func TestUpdateSystemPlatformDualWritesOwnerID(t *testing.T) {
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
+	subscriptionManagerID := uuid.MustParse("33333333-3333-3333-3333-333333333333")
+	ev.Host.SubscriptionManagerID = &subscriptionManagerID
+	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
+	require.NoError(t, err)
+	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
+
 	ev.Host.SystemProfile.OwnerID = nil
 	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
+	ev.Host.SystemProfile.OwnerID = &ownerID2
+	ev.Host.SubscriptionManagerID = nil
+	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
+	require.NoError(t, err)
+	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
+
 	deleteData(t)
+}
+
+func TestHostEventSubscriptionManagerID(t *testing.T) {
+	id := uuid.MustParse("33333333-3333-3333-3333-333333333333")
+	for _, tc := range []struct {
+		name string
+		host string
+		want *uuid.UUID
+	}{
+		{"present", `{"subscription_manager_id":"33333333-3333-3333-3333-333333333333"}`, &id},
+		{"null", `{"subscription_manager_id":null}`, nil},
+		{"absent", `{"system_profile":{"owner_id":"11111111-1111-1111-1111-111111111111"}}`, nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var event HostEvent
+			require.NoError(t, sonic.Unmarshal([]byte(`{"host":`+tc.host+`}`), &event))
+			assert.Equal(t, tc.want, event.Host.SubscriptionManagerID)
+		})
+	}
 }
 
 func TestUpdateSystemPlatformRefreshesInventoryProfileOnConflict(t *testing.T) {
@@ -497,7 +532,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 			OSMajor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Major,
 			OSMinor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Minor,
 			RhsmVersion:                      utils.EmptyToNil(&hostEvent.Host.SystemProfile.Rhsm.Version),
-			SubscriptionManagerID:            hostEvent.Host.SystemProfile.OwnerID,
+			SubscriptionManagerID:            hostEvent.Host.SubscriptionManagerID,
 			OwnerID:                          hostEvent.Host.SystemProfile.OwnerID,
 			SapWorkload:                      hostEvent.Host.SystemProfile.Workloads.Sap.SapSystem,
 			SapWorkloadSIDs:                  pq.StringArray(hostEvent.Host.SystemProfile.Workloads.Sap.Sids),
@@ -585,7 +620,7 @@ func TestStoreOrUpdateSysPlatform(t *testing.T) {
 			OSMajor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Major,
 			OSMinor:                          &hostEvent.Host.SystemProfile.OperatingSystem.Minor,
 			RhsmVersion:                      utils.EmptyToNil(&hostEvent.Host.SystemProfile.Rhsm.Version),
-			SubscriptionManagerID:            hostEvent.Host.SystemProfile.OwnerID,
+			SubscriptionManagerID:            hostEvent.Host.SubscriptionManagerID,
 			OwnerID:                          hostEvent.Host.SystemProfile.OwnerID,
 			SapWorkload:                      hostEvent.Host.SystemProfile.Workloads.Sap.SapSystem,
 			SapWorkloadSIDs:                  pq.StringArray(hostEvent.Host.SystemProfile.Workloads.Sap.Sids),
@@ -687,6 +722,11 @@ func TestHostTemplateRhsmReporter(t *testing.T) {
 	templateID := hostTemplate(database.TestDB(), accountID, host)
 	assert.NotNil(t, templateID)
 	assert.Equal(t, int64(1), *templateID)
+	host.SystemProfile.OwnerID = nil
+	assert.Equal(t, templateID, hostTemplate(database.TestDB(), accountID, host))
+	host.SystemProfile.OwnerID = &testInventoryID
+	host.SubscriptionManagerID = nil
+	assert.Nil(t, hostTemplate(database.TestDB(), accountID, host))
 }
 
 func TestHostTemplatePuptoo(t *testing.T) {
