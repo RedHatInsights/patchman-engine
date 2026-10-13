@@ -14,8 +14,9 @@ import (
 )
 
 var subscriptionUUID = "cccccccc-0000-0000-0001-000000000004"
-var subscriptionInvalidUUID = "99999999-9999-8888-8888-888888888888"
 var orgID = "org_1"
+
+const hostSubscriptionManagerUUID = "dddddddd-0000-0000-0001-000000000004"
 
 func TestSubscribedSystemID(t *testing.T) {
 	core.SetupTest(t)
@@ -34,17 +35,28 @@ func TestSubscribedSystemID(t *testing.T) {
 
 func TestUnknownSubscribedSystemID(t *testing.T) {
 	core.SetupTest(t)
-
-	c, _ := gin.CreateTestContext(httptest.NewRecorder())
-	c.Set(utils.KeyAccount, templateAccount)
-	c.Set(utils.KeyOrgID, orgID)
-	c.Set(utils.KeySystem, "cccccccc-0000-0000-0001-000000000001")
-	account, org, systemID, err := getSubscribedSystem(c, database.DB)
-
-	assert.EqualError(t, err, "System cccccccc-0000-0000-0001-000000000001 not found")
-	assert.Equal(t, 0, account)
-	assert.Equal(t, "", org)
-	assert.Equal(t, uuid.Nil, systemID)
+	for _, tc := range []struct {
+		cn      string
+		account int
+	}{
+		{"cccccccc-0000-0000-0001-000000000001", templateAccount},
+		{hostSubscriptionManagerUUID, templateAccount},
+		{subscriptionUUID, templateAccount + 1},
+	} {
+		t.Run(tc.cn, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Set(utils.KeyAccount, tc.account)
+			c.Set(utils.KeyOrgID, orgID)
+			c.Set(utils.KeySystem, tc.cn)
+			account, org, systemID, err := getSubscribedSystem(c, database.DB)
+			assert.EqualError(t, err, "System "+tc.cn+" not found")
+			assert.Equal(t, 0, account)
+			assert.Equal(t, "", org)
+			assert.Equal(t, uuid.Nil, systemID)
+			assert.Equal(t, http.StatusNotFound, w.Code)
+		})
+	}
 }
 
 func TestUpdateTemplateSubscribedSystems(t *testing.T) {
@@ -69,7 +81,7 @@ func TestUpdateTemplateSubscribedSystemsInvalid(t *testing.T) {
 
 	w := CreateRequestRouterWithParams("PATCH", "/:template_id/subscribed-systems", templateUUID, "", nil, "",
 		TemplateSubscribedSystemsUpdateHandler, templateAccount,
-		core.ContextKV{Key: utils.KeySystem, Value: subscriptionInvalidUUID})
+		core.ContextKV{Key: utils.KeySystem, Value: hostSubscriptionManagerUUID})
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	database.CheckTemplateSystems(t, templateAccount, templateUUID, []uuid.UUID{})

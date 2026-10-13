@@ -74,7 +74,7 @@ func getSubscribedSystem(c *gin.Context, tx *gorm.DB) (int, string, uuid.UUID, e
 	var inventoryIDStr string
 	err := tx.Select("inventory_id").
 		Table("system_inventory").
-		Where("subscription_manager_id = ? AND rh_account_id = ?", systemCn, account).
+		Where("owner_id = ? AND rh_account_id = ?", systemCn, account).
 		Limit(1).Find(&inventoryIDStr).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		utils.LogAndRespError(c, err, "database error")

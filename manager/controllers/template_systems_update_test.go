@@ -1,23 +1,58 @@
 package controllers
 
 import (
+	"app/base/candlepin"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/bytedance/sonic"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var templateUUID = "11111111-2222-3333-4444-555555555555"
 var templatePath = "/:template_id/systems"
 var templateAccount = 1
+
+func TestCandlepinUsesSubscriptionManagerID(t *testing.T) {
+	core.SetupTest(t)
+	requests := make(chan candlepin.ConsumersEnvironmentsRequest, 1)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var request candlepin.ConsumersEnvironmentsRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		requests <- request
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer server.Close()
+	oldAddress := utils.CoreCfg.CandlepinAddress
+	utils.CoreCfg.CandlepinAddress = server.URL
+	defer func() { utils.CoreCfg.CandlepinAddress = oldAddress }()
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Set(utils.KeyOrgID, orgID)
+	require.NoError(t, assignCandlepinEnvironment(c, database.DB, templateAccount, nil,
+		[]uuid.UUID{testInventoryID4, uuid.MustParse("00000000-0000-0000-0000-000000000005")}, nil))
+	select {
+	case request := <-requests:
+		assert.ElementsMatch(t, []string{hostSubscriptionManagerUUID,
+			"cccccccc-0000-0000-0001-000000000005"}, request.ConsumerUuids)
+	default:
+		t.Fatal("Candlepin did not receive an assignment request")
+	}
+}
+
 var templateSystems = []uuid.UUID{
 	uuid.MustParse("00000000-0000-0000-0000-000000000004"),
 	uuid.MustParse("00000000-0000-0000-0000-000000000007"),
@@ -107,7 +142,7 @@ func TestUpdateTemplateSystemNotInCandlepin(t *testing.T) {
 	var errResp utils.ErrorResponse
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	// 00000000-0000-0000-0000-000000000003 is not in candlepin
-	assert.Equal(t, "missing owner_id for systems\n'00000000-0000-0000-0000-000000000003'",
+	assert.Equal(t, "missing subscription_manager_id for systems\n'00000000-0000-0000-0000-000000000003'",
 		errResp.Error)
 	database.DeleteTemplate(t, templateAccount, templateUUID)
 }
@@ -228,7 +263,7 @@ func TestUpdateTemplateBadRequest(t *testing.T) {
 func TestUpdateTemplateSystemsCandlepin404(t *testing.T) {
 	core.SetupTest(t)
 	// 00000000-0000-0000-0000-000000000018 will force candlepin mock to return 404
-	// because owner_id=return_404
+	// because subscription_manager_id=return_404
 	data := `{
 		"systems": [
 			"00000000-0000-0000-0000-000000000018"
