@@ -42,5 +42,5 @@ BEGIN
   CREATE USER cyndi;
   EXCEPTION WHEN DUPLICATE_OBJECT THEN
     RAISE NOTICE 'cyndi already exists';
-END
+END;
 $$;
