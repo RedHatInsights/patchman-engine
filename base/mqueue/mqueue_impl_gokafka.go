@@ -90,8 +90,17 @@ func NewKafkaReaderFromEnv(topic string) Reader {
 }
 
 func NewKafkaWriterFromEnv(topic string) Writer {
-	maxAttempts := utils.CoreCfg.KafkaWriterMaxAttempts
+	return &kafkaGoWriterImpl{newKafkaWriterFromEnv(topic)}
+}
 
+func NewGzipKafkaWriterFromEnv(topic string, batchBytes int64) Writer {
+	writer := newKafkaWriterFromEnv(topic)
+	writer.BatchBytes = batchBytes
+	writer.Compression = kafka.Gzip
+	return &kafkaGoWriterImpl{writer}
+}
+
+func newKafkaWriterFromEnv(topic string) *kafka.Writer {
 	config := kafka.WriterConfig{
 		Brokers: utils.CoreCfg.KafkaServers,
 		Topic:   topic,
@@ -102,7 +111,7 @@ func NewKafkaWriterFromEnv(topic string) Writer {
 		BatchTimeout: time.Nanosecond,
 		ErrorLogger:  kafka.LoggerFunc(createLoggerFunc(kafkaErrorWriteCnt)),
 		Dialer:       tryCreateSecuredDialerFromEnv(),
-		MaxAttempts:  maxAttempts,
+		MaxAttempts:  utils.CoreCfg.KafkaWriterMaxAttempts,
 		// Messages can contain different number of systems for evalution. Use LeasBytes balancer
 		// to balance partitions more equally. This way each partition should have _same_ number of systems
 		// for evaluation.
@@ -110,8 +119,7 @@ func NewKafkaWriterFromEnv(topic string) Writer {
 		// When using more producers, each producer have to create balanced messages.
 		Balancer: &kafka.LeastBytes{},
 	}
-	writer := &kafkaGoWriterImpl{kafka.NewWriter(config)}
-	return writer
+	return kafka.NewWriter(config)
 }
 
 // Init encrypting dialer if env var configured or return nil
