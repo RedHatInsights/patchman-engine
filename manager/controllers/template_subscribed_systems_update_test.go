@@ -11,12 +11,57 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var subscriptionUUID = "cccccccc-0000-0000-0001-000000000004"
 var orgID = "org_1"
 
 const hostSubscriptionManagerUUID = "dddddddd-0000-0000-0001-000000000004"
+
+func TestSubscribedSystemForwardedIdentity(t *testing.T) {
+	core.SetupTest(t)
+	tx := database.DB.Begin()
+	require.NoError(t, tx.Error)
+	defer tx.Rollback() //nolint:errcheck
+	otherID := uuid.MustParse("00000000-0000-0000-0000-000000000005")
+	otherSubscriptionID := "cccccccc-0000-0000-0001-000000000005"
+	require.NoError(t, tx.Exec("UPDATE system_inventory SET owner_id = ? WHERE inventory_id = ?",
+		subscriptionUUID, otherID).Error)
+	for _, tc := range []struct {
+		name, owner, forwarded string
+		account                int
+		want                   uuid.UUID
+	}{
+		{"first host", subscriptionUUID, hostSubscriptionManagerUUID, templateAccount, testInventoryID4},
+		{"second host", subscriptionUUID, otherSubscriptionID, templateAccount, otherID},
+		{"wrong owner", otherSubscriptionID, hostSubscriptionManagerUUID, templateAccount, uuid.Nil},
+		{"wrong host", subscriptionUUID, subscriptionUUID, templateAccount, uuid.Nil},
+		{"wrong account", subscriptionUUID, hostSubscriptionManagerUUID, templateAccount + 1, uuid.Nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c, _ := gin.CreateTestContext(httptest.NewRecorder())
+			c.Set(utils.KeyAccount, tc.account)
+			c.Set(utils.KeySystem, tc.owner)
+			c.Set(utils.KeySubscriptionManagerID, tc.forwarded)
+			_, _, id, err := getSubscribedSystem(c, tx)
+			if tc.want == uuid.Nil {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+			assert.Equal(t, tc.want, id)
+		})
+	}
+	require.NoError(t, tx.Exec("UPDATE system_inventory SET subscription_manager_id = NULL WHERE inventory_id = ?",
+		testInventoryID4).Error)
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Set(utils.KeyAccount, templateAccount)
+	c.Set(utils.KeySystem, subscriptionUUID)
+	c.Set(utils.KeySubscriptionManagerID, hostSubscriptionManagerUUID)
+	_, _, _, err := getSubscribedSystem(c, tx)
+	require.Error(t, err)
+}
 
 func TestSubscribedSystemID(t *testing.T) {
 	core.SetupTest(t)
