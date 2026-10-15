@@ -77,7 +77,7 @@ func AdvisoryDetailHandler(c *gin.Context) {
 
 	var err error
 	var resp *AdvisoryDetailResponse
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	resp, err = getAdvisory(db, advisoryName, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

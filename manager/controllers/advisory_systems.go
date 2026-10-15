@@ -80,7 +80,7 @@ func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error
 		return nil, nil, nil, errors.New("advisory_id param not found")
 	}
 
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	var exists int64
 	err := db.Model(&models.AdvisoryMetadata{}).
 		Where("name = ? ", advisoryName).Count(&exists).Error

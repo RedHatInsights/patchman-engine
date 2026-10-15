@@ -1,7 +1,7 @@
 package core
 
 import (
-	"app/base/database"
+	"app/manager/middlewares"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +12,7 @@ func Liveness(c *gin.Context) {
 }
 
 func Readiness(c *gin.Context) {
-	sqlDB, err := database.DB(c.Request.Context()).DB()
+	sqlDB, err := middlewares.DBWriter(c).DB()
 	if err != nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"err": err.Error()})
 		return

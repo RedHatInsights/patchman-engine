@@ -69,7 +69,7 @@ func TemplateSystemsUpdateHandler(c *gin.Context) {
 		return
 	}
 
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	template, err := getTemplate(c, db, account, templateUUID)
 	if err != nil {
 		// respose set in getTemplateID()

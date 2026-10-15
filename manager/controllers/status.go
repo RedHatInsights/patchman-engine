@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"app/base/database"
 	"app/base/utils"
+	"app/manager/middlewares"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +12,11 @@ import (
 // @Success 200 {int}		http.StatusOK
 // @Failure 503 {object} 	utils.ErrorResponse
 func Status(c *gin.Context) {
-	sqlDB, _ := database.DB(c.Request.Context()).DB()
+	sqlDB, err := middlewares.DBWriter(c).DB()
+	if err != nil {
+		utils.LogAndRespStatusError(c, http.StatusServiceUnavailable, err, "Database not connected")
+		return
+	}
 	if err := sqlDB.Ping(); err != nil {
 		utils.LogAndRespStatusError(c, http.StatusServiceUnavailable, err, "Database not connected")
 	} else {

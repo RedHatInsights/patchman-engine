@@ -129,7 +129,7 @@ func packageSystemsCommon(db *gorm.DB, c *gin.Context) (*gorm.DB, *ListMeta, []s
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /packages/{package_name}/systems [get]
 func PackageSystemsListHandler(c *gin.Context) {
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 
 	query, meta, params, err := packageSystemsCommon(db, c)
 	if err != nil {
@@ -187,7 +187,7 @@ func PackageSystemsListHandler(c *gin.Context) {
 // @Failure 500 {object} utils.ErrorResponse
 // @Router /ids/packages/{package_name}/systems [get]
 func PackageSystemsListIDsHandler(c *gin.Context) {
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	query, meta, _, err := packageSystemsCommon(db, c)
 	if err != nil {
 		return
