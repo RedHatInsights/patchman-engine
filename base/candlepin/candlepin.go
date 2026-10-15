@@ -74,12 +74,19 @@ func CreateCandlepinClient() api.Client {
 	}
 
 	debugRequest := log.IsLevelEnabled(log.TraceLevel)
+	var headers map[string]string
+	if value := utils.CoreCfg.CandlepinXRhOverrideExposed; value != "" {
+		headers = map[string]string{"x-rh-override-exposed": value}
+		// HTTP dumps include headers, so disable them to avoid logging the secret.
+		debugRequest = false
+	}
 
 	return api.Client{
 		HTTPClient: &http.Client{Transport: &http.Transport{
 			DisableCompression: !CandlepinCallCmp,
 			TLSClientConfig:    tlsConfig,
 		}},
-		Debug: debugRequest,
+		Debug:          debugRequest,
+		DefaultHeaders: headers,
 	}
 }

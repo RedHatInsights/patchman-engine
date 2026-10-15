@@ -9,6 +9,17 @@ import (
 
 const myTestEnv = "MY_TEST_CONFIG"
 
+func TestCandlepinOverrideConfig(t *testing.T) {
+	originalConfig := CoreCfg
+	t.Cleanup(func() { CoreCfg = originalConfig })
+
+	for _, value := range []string{"test-override-secret", ""} {
+		t.Setenv("CANDLEPIN_X_RH_OVERRIDE_EXPOSED", value)
+		initServicesFromEnv()
+		assert.Equal(t, value, CoreCfg.CandlepinXRhOverrideExposed)
+	}
+}
+
 func TestPodConfig(t *testing.T) {
 	os.Setenv(myTestEnv, "bool_val1=true;bool_val2=false;no_val;int_val=123;int64_val=17179869184;str_val=a b c")
 	pc := ReadPodConfig(myTestEnv)

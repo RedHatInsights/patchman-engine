@@ -81,7 +81,8 @@ objects:
         - {name: CANDLEPIN_ADDRESS, value: '${CANDLEPIN_ADDRESS}'}
         - {name: CANDLEPIN_CERT, valueFrom: {secretKeyRef: {name: candlepin, key: cert}}}
         - {name: CANDLEPIN_KEY, valueFrom: {secretKeyRef: {name: candlepin, key: key}}}
-        - {name: CANDLEPIN_CA, valueFrom: {secretKeyRef: {name: candlepin, key: ca}}}
+        - {name: CANDLEPIN_CA, valueFrom: {secretKeyRef: {name: candlepin, key: ca, optional: true}}}
+        - {name: CANDLEPIN_X_RH_OVERRIDE_EXPOSED, valueFrom: {secretKeyRef: {name: candlepin, key: x-rh-override-exposed, optional: true}}}
         - {name: DB_READ_REPLICA_ENABLED, value: '${DB_READ_REPLICA_ENABLED}'}
         - {name: DB_WORK_MEM, value: '${DB_WORK_MEM}'}
         - {name: KAFKA_GROUP, value: patchman}
@@ -142,7 +143,8 @@ objects:
         - {name: CANDLEPIN_ADDRESS, value: '${CANDLEPIN_ADDRESS}'}
         - {name: CANDLEPIN_CERT, valueFrom: {secretKeyRef: {name: candlepin, key: cert}}}
         - {name: CANDLEPIN_KEY, valueFrom: {secretKeyRef: {name: candlepin, key: key}}}
-        - {name: CANDLEPIN_CA, valueFrom: {secretKeyRef: {name: candlepin, key: ca}}}
+        - {name: CANDLEPIN_CA, valueFrom: {secretKeyRef: {name: candlepin, key: ca, optional: true}}}
+        - {name: CANDLEPIN_X_RH_OVERRIDE_EXPOSED, valueFrom: {secretKeyRef: {name: candlepin, key: x-rh-override-exposed, optional: true}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
