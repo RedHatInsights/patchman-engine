@@ -32,7 +32,6 @@ func RunAdminAPI() {
 	utils.LogInfo("port", utils.CoreCfg.PublicPort, "Manager-admin starting")
 	app := gin.New()
 	app.Use(middlewares.RequestResponseLogger())
-	app.Use(middlewares.DatabaseWithContext())
 	middlewares.SetAdminSwagger(app)
 
 	core.InitProbes(app)

@@ -80,7 +80,7 @@ type AdvisoriesResponse struct {
 }
 
 func advisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	account := c.GetInt(utils.KeyAccount)
 	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 	var query *gorm.DB

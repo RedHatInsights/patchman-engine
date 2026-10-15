@@ -34,7 +34,7 @@ func AdvisoriesExportHandler(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 
 	query, err := resolveAdvisoriesQuery(db, account, workspaceIDs, filters)
 	if err != nil {
