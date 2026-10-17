@@ -29,7 +29,7 @@ func TestPublishNewAdvisoryNotificationSkipsAlreadyNotified(t *testing.T) {
 
 	database.CreateAccountAdvisory(t, 1, testWorkspaceID, advisoryIDs, 1)
 	// Mark them as already notified
-	assert.Nil(t, database.DB.Table("account_advisory").
+	assert.Nil(t, database.TestDB().Table("account_advisory").
 		Where("rh_account_id = 1 AND advisory_id IN (?)", advisoryIDs).
 		Update("notified", "2026-01-01").Error)
 	defer database.DeleteAccountAdvisoryByAccount(t, 1)
@@ -52,7 +52,7 @@ func TestPublishNewAdvisoryNotificationSuccess(t *testing.T) {
 	}()
 
 	// Backfill to populate account_advisory from system_advisories
-	assert.Nil(t, database.DB.Exec("SELECT backfill_account_advisory(1)").Error)
+	assert.Nil(t, database.TestDB().Exec("SELECT backfill_account_advisory(1)").Error)
 	defer database.DeleteAccountAdvisoryByAccount(t, 1)
 
 	// Advisory IDs 1-8 exist for rh_account_id=1 in test data
@@ -72,7 +72,7 @@ func TestPublishNewAdvisoryNotificationSuccess(t *testing.T) {
 
 	// Verify advisories were marked as notified (count varies by workspace)
 	var count int64
-	assert.Nil(t, database.DB.Table("account_advisory").
+	assert.Nil(t, database.TestDB().Table("account_advisory").
 		Where("rh_account_id = 1 AND advisory_id IN (?) AND notified IS NOT NULL", advisoryIDs).
 		Count(&count).Error)
 	assert.True(t, count > 0)

@@ -16,7 +16,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func lazySaveAndLoadPackages(system *models.SystemPlatformV2, vmaasData *vmaas.UpdatesV3Response) (
+func lazySaveAndLoadPackages(tx *gorm.DB, system *models.SystemPlatformV2, vmaasData *vmaas.UpdatesV3Response) (
 	map[string]namedPackage, int, int, int, error) {
 	if !enablePackageAnalysis {
 		utils.LogInfo("package analysis disabled, skipping lazy saving and loading")
@@ -25,13 +25,13 @@ func lazySaveAndLoadPackages(system *models.SystemPlatformV2, vmaasData *vmaas.U
 
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-lazy-save-and-load"))
 
-	err := lazySavePackages(vmaasData)
+	err := lazySavePackages(tx, vmaasData)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-lazy-pkg-save").Inc()
 		return nil, 0, 0, 0, errors.Wrap(err, "lazy package save failed")
 	}
 
-	pkgByName, installed, installable, applicable, err := loadPackages(system, vmaasData)
+	pkgByName, installed, installable, applicable, err := loadPackages(tx, system, vmaasData)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-pkg-data").Inc()
 		return nil, 0, 0, 0, errors.Wrap(err, "Unable to load package data")
@@ -40,21 +40,21 @@ func lazySaveAndLoadPackages(system *models.SystemPlatformV2, vmaasData *vmaas.U
 }
 
 // LazySavePackages adds unknown EVRAs into the db if needed.
-func lazySavePackages(vmaasData *vmaas.UpdatesV3Response) error {
+func lazySavePackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV3Response) error {
 	if !enableLazyPackageSave {
 		return nil
 	}
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("lazy-package-save"))
 
-	missingPackages := getMissingPackages(vmaasData)
-	err := updatePackageDB(&missingPackages)
+	missingPackages := getMissingPackages(tx, vmaasData)
+	err := updatePackageDB(tx, &missingPackages)
 	if err != nil {
 		return errors.Wrap(err, "packages bulk insert failed")
 	}
 	return nil
 }
 
-func getMissingPackage(nevra string, parsed *utils.Nevra) *models.Package {
+func getMissingPackage(tx *gorm.DB, nevra string, parsed *utils.Nevra) *models.Package {
 	utils.LogTrace("missing nevra", nevra, "getMissingPackages")
 
 	latestName, found := memoryPackageCache.GetLatestByName(parsed.Name)
@@ -67,7 +67,7 @@ func getMissingPackage(nevra string, parsed *utils.Nevra) *models.Package {
 	} else {
 		// name is unknown, insert into package_name
 		pkgName := models.PackageName{Name: parsed.Name}
-		err := updatePackageNameDB(&pkgName)
+		err := updatePackageNameDB(tx, &pkgName)
 		if err != nil {
 			utils.LogError("err", err, "nevra", nevra, "unknown package name insert failed")
 		}
@@ -75,7 +75,7 @@ func getMissingPackage(nevra string, parsed *utils.Nevra) *models.Package {
 		if pkg.NameID == 0 {
 			// insert conflict, it did not return ID
 			// try to get ID from package_name table
-			database.DB.Where("name = ?", parsed.Name).First(&pkgName)
+			tx.Where("name = ?", parsed.Name).First(&pkgName)
 			pkg.NameID = pkgName.ID
 		}
 	}
@@ -83,7 +83,7 @@ func getMissingPackage(nevra string, parsed *utils.Nevra) *models.Package {
 }
 
 // GetMissingPackages gets packages with a known name but a version missing in db/cache.
-func getMissingPackages(vmaasData *vmaas.UpdatesV3Response) models.PackageSlice {
+func getMissingPackages(tx *gorm.DB, vmaasData *vmaas.UpdatesV3Response) models.PackageSlice {
 	updates := vmaasData.GetUpdateList()
 	packages := make(models.PackageSlice, 0, len(updates))
 	nevras := make([]string, 0, len(updates))
@@ -97,42 +97,42 @@ func getMissingPackages(vmaasData *vmaas.UpdatesV3Response) models.PackageSlice 
 	}
 	_, missingNevras, _ := memoryPackageCache.GetByNevras(nevras)
 	for nevra, parsed := range missingNevras {
-		if pkg := getMissingPackage(nevra, &parsed); pkg != nil {
+		if pkg := getMissingPackage(tx, nevra, &parsed); pkg != nil {
 			packages = append(packages, *pkg)
 		}
 	}
 	return packages
 }
 
-func updatePackageDB(missing *models.PackageSlice) error {
+func updatePackageDB(tx *gorm.DB, missing *models.PackageSlice) error {
 	// autonomous transaction needs to be committed even if evaluation fails
 	if len(*missing) > 0 {
-		tx := database.DB.Begin()
-		defer tx.Commit()
+		aTx := database.AutonomousTx(tx)
+		defer aTx.Commit()
 		// tx.Create() also updates packages with their IDs
-		return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(missing).Error
+		return aTx.Clauses(clause.OnConflict{DoNothing: true}).Create(missing).Error
 	}
 	return nil
 }
 
-func updatePackageNameDB(missing *models.PackageName) error {
+func updatePackageNameDB(tx *gorm.DB, missing *models.PackageName) error {
 	// autonomous transaction needs to be committed even if evaluation fails
 	if missing != nil {
-		tx := database.DB.Begin()
-		defer tx.Commit()
+		aTx := database.AutonomousTx(tx)
+		defer aTx.Commit()
 		// tx.Create() also updates packages with their IDs
-		return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(missing).Error
+		return aTx.Clauses(clause.OnConflict{DoNothing: true}).Create(missing).Error
 	}
 	return nil
 }
 
 // LoadPackages finds relevant package data based on vmaas results.
-func loadPackages(system *models.SystemPlatformV2, vmaasData *vmaas.UpdatesV3Response) (
+func loadPackages(tx *gorm.DB, system *models.SystemPlatformV2, vmaasData *vmaas.UpdatesV3Response) (
 	map[string]namedPackage, int, int, int, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("packages-load"))
 
 	packages, installed, installable, applicable := packagesFromUpdateList(system.GetInventoryID(), vmaasData)
-	err := loadSystemNEVRAsFromDB(system, packages)
+	err := loadSystemNEVRAsFromDB(tx, system, packages)
 	if err != nil {
 		return nil, 0, 0, 0, errors.Wrap(err, "loading packages")
 	}
@@ -179,8 +179,8 @@ func packagesFromUpdateList(inventoryID uuid.UUID, vmaasData *vmaas.UpdatesV3Res
 	return packages, installed, installable, applicable
 }
 
-func loadSystemNEVRAsFromDB(system *models.SystemPlatformV2, packages map[string]namedPackage) error {
-	rows, err := database.DB.Table("system_package2 sp2").
+func loadSystemNEVRAsFromDB(tx *gorm.DB, system *models.SystemPlatformV2, packages map[string]namedPackage) error {
+	rows, err := tx.Table("system_package2 sp2").
 		Select("sp2.name_id, sp2.package_id, sp2.installable_id, sp2.applicable_id").
 		Where("rh_account_id = ? AND system_id = ?", system.Inventory.RhAccountID, system.InternalSystemID()).
 		Rows()
@@ -191,7 +191,7 @@ func loadSystemNEVRAsFromDB(system *models.SystemPlatformV2, packages map[string
 	numStored := 0
 	defer rows.Close()
 	for rows.Next() {
-		err = database.DB.ScanRows(rows, &columns)
+		err = tx.ScanRows(rows, &columns)
 		if err != nil {
 			return err
 		}

@@ -532,25 +532,25 @@ func TestResolveWorkspaceNameToIDs(t *testing.T) {
 		"00000000-0000-0000-0000-999999999999",
 	}
 
-	ids, err := resolveWorkspaceNameToIDs(database.DB, 1, []string{"group1"}, allowedWorkspaces)
+	ids, err := resolveWorkspaceNameToIDs(database.TestDB(), 1, []string{"group1"}, allowedWorkspaces)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(ids))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000001", ids[0])
 
-	ids, err = resolveWorkspaceNameToIDs(database.DB, 1, []string{"group2"}, allowedWorkspaces)
+	ids, err = resolveWorkspaceNameToIDs(database.TestDB(), 1, []string{"group2"}, allowedWorkspaces)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(ids))
 	assert.Equal(t, "00000000-0000-0000-0000-000000000002", ids[0])
 
-	ids, err = resolveWorkspaceNameToIDs(database.DB, 1, []string{"group1", "group2"}, allowedWorkspaces)
+	ids, err = resolveWorkspaceNameToIDs(database.TestDB(), 1, []string{"group1", "group2"}, allowedWorkspaces)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(ids))
 
-	ids, err = resolveWorkspaceNameToIDs(database.DB, 1, []string{"nonexistent"}, allowedWorkspaces)
+	ids, err = resolveWorkspaceNameToIDs(database.TestDB(), 1, []string{"nonexistent"}, allowedWorkspaces)
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(ids))
 
-	ids, err = resolveWorkspaceNameToIDs(database.DB,
+	ids, err = resolveWorkspaceNameToIDs(database.TestDB(),
 		1, []string{"group1"}, []string{"00000000-0000-0000-0000-000000000002"})
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(ids))

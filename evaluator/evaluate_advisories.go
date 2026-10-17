@@ -35,7 +35,7 @@ var rhelRegexp = regexp.MustCompile("^RH.A-")
 
 // LazySaveAndLoadAdvisories lazy saves missing advisories from reported, loads stored ones from DB,
 // and evaluates changes between the two.
-func lazySaveAndLoadAdvisories(system *models.SystemPlatformV2, vmaasData *vmaas.UpdatesV3Response) (
+func lazySaveAndLoadAdvisories(tx *gorm.DB, system *models.SystemPlatformV2, vmaasData *vmaas.UpdatesV3Response) (
 	extendedAdvisoryMap, error) {
 	if !enableAdvisoryAnalysis {
 		utils.LogInfo("advisory analysis disabled, skipping lazy saving and loading")
@@ -44,17 +44,17 @@ func lazySaveAndLoadAdvisories(system *models.SystemPlatformV2, vmaasData *vmaas
 
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("advisories-lazy-save-and-load"))
 
-	err := lazySaveAdvisories(vmaasData, system.GetInventoryID())
+	err := lazySaveAdvisories(tx, vmaasData, system.GetInventoryID())
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to store unknown advisories in DB")
 	}
 
-	stored, err := loadSystemAdvisories(database.DB, system.Inventory.RhAccountID, system.InternalSystemID())
+	stored, err := loadSystemAdvisories(tx, system.Inventory.RhAccountID, system.InternalSystemID())
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to load system advisories")
 	}
 
-	merged, err := evaluateChanges(vmaasData, stored)
+	merged, err := evaluateChanges(tx, vmaasData, stored)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to evaluate advisory changes")
 	}
@@ -62,8 +62,8 @@ func lazySaveAndLoadAdvisories(system *models.SystemPlatformV2, vmaasData *vmaas
 	return merged, nil
 }
 
-func loadMissingNamesIDs(missingNames []string, extendedAdvisories extendedAdvisoryMap) error {
-	name2AdvisoryID, err := getAdvisoryMetadataIDs(missingNames)
+func loadMissingNamesIDs(tx *gorm.DB, missingNames []string, extendedAdvisories extendedAdvisoryMap) error {
+	name2AdvisoryID, err := getAdvisoryMetadataIDs(tx, missingNames)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func loadMissingNamesIDs(missingNames []string, extendedAdvisories extendedAdvis
 // EvaluateChanges evaluates all types of changes (Keep, Add, Update, Remove)
 // between the stored advisories from DB and the reported advisories from VMaaS,
 // and tracks them in extendedAdvisoryMap.
-func evaluateChanges(vmaasData *vmaas.UpdatesV3Response, stored SystemAdvisoryMap) (
+func evaluateChanges(tx *gorm.DB, vmaasData *vmaas.UpdatesV3Response, stored SystemAdvisoryMap) (
 	extendedAdvisoryMap, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("advisories-evaluate"))
 	reported := getReportedAdvisories(vmaasData)
@@ -114,7 +114,7 @@ func evaluateChanges(vmaasData *vmaas.UpdatesV3Response, stored SystemAdvisoryMa
 		}
 	}
 
-	err := loadMissingNamesIDs(missingNames, extendedAdvisories)
+	err := loadMissingNamesIDs(tx, missingNames, extendedAdvisories)
 	if err != nil {
 		return nil, err
 	}
@@ -132,14 +132,14 @@ func evaluateChanges(vmaasData *vmaas.UpdatesV3Response, stored SystemAdvisoryMa
 }
 
 // LazySaveAdvisories finds advisories reported by VMaaS and missing in the DB and lazy saves them.
-func lazySaveAdvisories(vmaasData *vmaas.UpdatesV3Response, inventoryID uuid.UUID) error {
+func lazySaveAdvisories(tx *gorm.DB, vmaasData *vmaas.UpdatesV3Response, inventoryID uuid.UUID) error {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("advisories-lazy-save"))
 	reportedNames := getReportedAdvisories(vmaasData)
 	if len(reportedNames) < 1 {
 		return nil
 	}
 
-	missingNames, err := getMissingAdvisories(reportedNames)
+	missingNames, err := getMissingAdvisories(tx, reportedNames)
 	if err != nil {
 		return errors.Wrap(err, "Unable to get missing system advisories")
 	}
@@ -151,7 +151,7 @@ func lazySaveAdvisories(vmaasData *vmaas.UpdatesV3Response, inventoryID uuid.UUI
 	utils.LogInfo("inventoryID", inventoryID, "unknown", nUnknown, "unknown advisories")
 	updatesCnt.WithLabelValues("unknown").Add(float64(nUnknown))
 
-	err = storeMissingAdvisories(missingNames)
+	err = storeMissingAdvisories(tx, missingNames)
 	if err != nil {
 		return errors.Wrap(err, "Failed to save missing advisory_metadata")
 	}
@@ -159,7 +159,7 @@ func lazySaveAdvisories(vmaasData *vmaas.UpdatesV3Response, inventoryID uuid.UUI
 	return nil
 }
 
-func storeMissingAdvisories(missingNames []string) error {
+func storeMissingAdvisories(tx *gorm.DB, missingNames []string) error {
 	toStore := make(models.AdvisoryMetadataSlice, 0, len(missingNames))
 	for _, name := range missingNames {
 		if len(name) > 0 && len(name) < 100 {
@@ -183,14 +183,14 @@ func storeMissingAdvisories(missingNames []string) error {
 		return nil
 	}
 
-	tx := database.DB.Begin()
-	defer tx.Commit()
-	return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&toStore).Error
+	aTx := database.AutonomousTx(tx)
+	defer aTx.Commit()
+	return aTx.Clauses(clause.OnConflict{DoNothing: true}).Create(&toStore).Error
 }
 
-func getAdvisoryMetadataIDs(names []string) (map[string]int64, error) {
+func getAdvisoryMetadataIDs(tx *gorm.DB, names []string) (map[string]int64, error) {
 	metadata := make(models.AdvisoryMetadataSlice, 0, len(names))
-	err := database.DB.Model(&models.AdvisoryMetadata{}).
+	err := tx.Model(&models.AdvisoryMetadata{}).
 		Where("name IN (?)", names).
 		Select("id, name").
 		Scan(&metadata).Error
@@ -206,7 +206,7 @@ func getAdvisoryMetadataIDs(names []string) (map[string]int64, error) {
 }
 
 // GetMissingAdvisories determines if advisories from DB are properly stored based on advisory metadata existence.
-func getMissingAdvisories(advisoriesMap map[string]int) ([]string, error) {
+func getMissingAdvisories(tx *gorm.DB, advisoriesMap map[string]int) ([]string, error) {
 	advisoryNames := make([]string, 0, len(advisoriesMap))
 	present := make(map[string]bool, len(advisoriesMap))
 	for name := range advisoriesMap {
@@ -216,7 +216,7 @@ func getMissingAdvisories(advisoriesMap map[string]int) ([]string, error) {
 		}
 	}
 
-	name2AdvisoryID, err := getAdvisoryMetadataIDs(advisoryNames)
+	name2AdvisoryID, err := getAdvisoryMetadataIDs(tx, advisoryNames)
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +389,7 @@ func updateSystemAdvisories(tx *gorm.DB, system *models.SystemPlatformV2,
 
 	// check wherther system has not been deleted in the meanwhile
 	// fixes 'insert or update on table "system_advisories_31" violates foreign key constraint "system_platform_id"'
-	if !validSystem(system.Inventory.RhAccountID, system.InternalSystemID()) {
+	if !validSystem(tx, system.Inventory.RhAccountID, system.InternalSystemID()) {
 		// system does not exist anymore, skip system_advisory insert
 		return nil
 	}

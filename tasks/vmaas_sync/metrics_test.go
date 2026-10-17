@@ -15,7 +15,7 @@ func refTime() time.Time {
 }
 
 func shiftSystemsLastUpload(timeshift time.Duration) error {
-	return database.DB.Exec("UPDATE system_inventory SET last_upload = last_upload + ?", timeshift).Error
+	return database.TestDB().Exec("UPDATE system_inventory SET last_upload = last_upload + ?", timeshift).Error
 }
 
 func TestSystemsCounts(t *testing.T) {

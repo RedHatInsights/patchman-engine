@@ -1,6 +1,7 @@
 package aggregator
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/utils"
 )
@@ -17,7 +18,7 @@ func CheckAdvisoryDrift(rhAccountID int, advisoryIDs []int64) {
 	}
 
 	var newCounts []advisoryCounts
-	err := database.DB.Table("account_advisory aa").
+	err := database.DB(base.Context).Table("account_advisory aa").
 		Select(`aa.advisory_id,
 			SUM(aa.systems_installable) as systems_installable,
 			SUM(aa.systems_applicable) as systems_applicable`).
@@ -35,7 +36,7 @@ func CheckAdvisoryDrift(rhAccountID int, advisoryIDs []int64) {
 	}
 
 	var legacyCounts []advisoryCounts
-	err = database.DB.Table("advisory_account_data").
+	err = database.DB(base.Context).Table("advisory_account_data").
 		Select("advisory_id, systems_applicable, systems_installable").
 		Where("rh_account_id = ? AND advisory_id IN (?)", rhAccountID, advisoryIDs).
 		Find(&legacyCounts).Error

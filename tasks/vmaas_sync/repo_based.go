@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"slices"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 const LastEvalRepoBased = "last_eval_repo_based"
@@ -18,8 +20,8 @@ const LastSync = "last_sync"
 const LastFullSync = "last_full_sync"
 const VmaasExported = "vmaas_exported"
 
-func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {
-	lastRepoBaseEval, err := database.GetTimestampKVValueStr(LastEvalRepoBased)
+func getCurrentRepoBasedInventoryIDs(tx *gorm.DB) ([]mqueue.EvalData, error) {
+	lastRepoBaseEval, err := database.GetTimestampKVValueStr(tx, LastEvalRepoBased)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +40,7 @@ func getCurrentRepoBasedInventoryIDs() ([]mqueue.EvalData, error) {
 		return nil, err
 	}
 
-	database.UpdateTimestampKVValue(LastEvalRepoBased, *latestRepoChange)
+	database.UpdateTimestampKVValue(tx, LastEvalRepoBased, *latestRepoChange)
 
 	return inventoryAIDs, nil
 }

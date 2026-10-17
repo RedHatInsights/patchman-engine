@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/utils"
 	"errors"
@@ -78,7 +79,7 @@ func (c *PackageCache) Load() {
 	}
 
 	utils.LogInfo("size", c.size, "PackageCache.Load")
-	tx := database.DB.Begin()
+	tx := database.DB(base.Context).Begin()
 	defer tx.Rollback()
 
 	// load N last recently added packages, i.e. newest
@@ -311,7 +312,7 @@ func buildPackagesQuery(tx *gorm.DB, where string, order string, args ...any) *g
 }
 
 func readPackageFromDB(where string, order string, args ...interface{}) *PackageCacheMetadata {
-	tx := database.DB.Begin()
+	tx := database.DB(base.Context).Begin()
 	defer tx.Rollback()
 
 	var pkg PackageCacheMetadata
@@ -327,7 +328,7 @@ func readPackageFromDB(where string, order string, args ...interface{}) *Package
 }
 
 func readPackagesFromDB(where string, order string, args ...any) []PackageCacheMetadata {
-	tx := database.DB.Begin()
+	tx := database.DB(base.Context).Begin()
 	defer tx.Rollback()
 
 	var pkgs []PackageCacheMetadata

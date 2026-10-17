@@ -23,6 +23,10 @@ const (
 	ReadHeaderTimeout = 60 * time.Second
 )
 
+// InstrumentHTTPHandler wraps the server handler (e.g. otelhttp). Default is identity;
+// telemetry.Init replaces this with telemetry.InstrumentHandler.
+var InstrumentHTTPHandler = func(h http.Handler) http.Handler { return h }
+
 func LoadParamInt(c *gin.Context, param string, defaultValue int, query bool) (int, error) {
 	var valueStr string
 	if query {
@@ -103,7 +107,12 @@ type ErrorResponse struct {
 
 func RunServer(ctx context.Context, handler http.Handler, port int) error {
 	addr := fmt.Sprintf(":%d", port)
-	srv := http.Server{Addr: addr, Handler: handler, ReadHeaderTimeout: ReadHeaderTimeout, MaxHeaderBytes: 65535}
+	srv := http.Server{
+		Addr:              addr,
+		Handler:           InstrumentHTTPHandler(handler),
+		ReadHeaderTimeout: ReadHeaderTimeout,
+		MaxHeaderBytes:    65535,
+	}
 	go func() {
 		<-ctx.Done()
 		LogDebug("gracefully shutting down server...")

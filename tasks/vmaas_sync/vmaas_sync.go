@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 var (
@@ -44,27 +45,28 @@ func Configure() {
 func runSync() {
 	utils.LogInfo("Starting vmaas-sync job")
 
+	tx := tasks.CancelableDB()
 	var lastModified *types.Rfc3339TimestampWithZ
 	if tasks.EnableModifiedSinceSync {
-		lastModified = GetLastSync(VmaasExported)
+		lastModified = GetLastSync(tx, VmaasExported)
 	}
 	vmaasExportedTS := VmaasDBExported()
 	if isSyncNeeded(lastModified, vmaasExportedTS) {
-		err := SyncData(lastModified, vmaasExportedTS)
+		err := SyncData(tx, lastModified, vmaasExportedTS)
 		if err != nil {
 			// This probably means programming error, better to exit with nonzero error code, so the error is noticed
 			utils.LogFatal("err", err, "vmaas data sync failed")
 		}
 
-		err = SendReevaluationMessages()
+		err = SendReevaluationMessages(base.Context)
 		if err != nil {
 			utils.LogError("err", err, "re-evaluation sending routine failed")
 		}
 	}
 }
 
-func GetLastSync(key string) *types.Rfc3339TimestampWithZ {
-	ts, err := database.GetTimestampKVValue(key)
+func GetLastSync(tx *gorm.DB, key string) *types.Rfc3339TimestampWithZ {
+	ts, err := database.GetTimestampKVValue(tx, key)
 	if err != nil {
 		utils.LogInfo("ts", ts, "key", key, "Unable to load last sync timestamp")
 		return nil
@@ -72,11 +74,11 @@ func GetLastSync(key string) *types.Rfc3339TimestampWithZ {
 	return ts
 }
 
-func SyncData(lastModifiedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *types.Rfc3339Timestamp) error {
+func SyncData(tx *gorm.DB, lastModifiedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *types.Rfc3339Timestamp) error {
 	utils.LogInfo("Data sync started")
 	syncStart := time.Now()
 	defer utils.ObserveSecondsSince(syncStart, syncDuration)
-	lastFullSyncTS := GetLastSync(LastFullSync)
+	lastFullSyncTS := GetLastSync(tx, LastFullSync)
 
 	lastModified := database.Timestamp2Str(lastModifiedTS)
 	if lastFullSyncTS != nil {
@@ -104,12 +106,12 @@ func SyncData(lastModifiedTS *types.Rfc3339TimestampWithZ, vmaasExportedTS *type
 		}
 	}
 
-	database.UpdateTimestampKVValue(LastSync, syncStart)
+	database.UpdateTimestampKVValue(tx, LastSync, syncStart)
 	if lastModified == nil {
-		database.UpdateTimestampKVValue(LastFullSync, syncStart)
+		database.UpdateTimestampKVValue(tx, LastFullSync, syncStart)
 	}
 	if vmaasExportedTS != nil {
-		database.UpdateTimestampKVValue(VmaasExported, *vmaasExportedTS.Time())
+		database.UpdateTimestampKVValue(tx, VmaasExported, *vmaasExportedTS.Time())
 	}
 
 	// refresh caches

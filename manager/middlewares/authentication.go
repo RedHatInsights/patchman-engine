@@ -5,6 +5,7 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"context"
 	"fmt"
 	"net/http"
 	"slices"
@@ -32,7 +33,7 @@ var AccountIDCache = struct {
 type ginContext gin.Context
 
 // Stores or updates the account data, returning the account id
-func GetOrCreateAccount(orgID string) (int, error) {
+func GetOrCreateAccount(ctx context.Context, orgID string) (int, error) {
 	rhAccount := models.RhAccount{
 		OrgID: &orgID,
 	}
@@ -42,7 +43,7 @@ func GetOrCreateAccount(orgID string) (int, error) {
 	}
 
 	// Find account by OrgID
-	err := database.DB.Where("org_id = ?", *rhAccount.OrgID).Find(&rhAccount).Error
+	err := database.DB(ctx).Where("org_id = ?", *rhAccount.OrgID).Find(&rhAccount).Error
 	if err != nil {
 		utils.LogWarn("err", err, "org_id", *rhAccount.OrgID, "Error in finding account")
 	}
@@ -51,7 +52,7 @@ func GetOrCreateAccount(orgID string) (int, error) {
 	}
 
 	// create new rhAccount with OrgID
-	err = database.OnConflictUpdate(database.DB, "org_id", "org_id").Select("org_id").Create(&rhAccount).Error
+	err = database.OnConflictUpdate(database.DB(ctx), "org_id", "org_id").Select("org_id").Create(&rhAccount).Error
 	if err != nil {
 		utils.LogWarn("err", err, "org_id", *rhAccount.OrgID, "Error creating account")
 		err = stdErrors.Join(base.ErrFatal, base.ErrDatabase, err)
@@ -67,7 +68,7 @@ func findAccount(c *gin.Context, orgID string) bool {
 		c.Set(utils.KeyAccount, id)
 	} else {
 		// create new account if it does not exist
-		accID, err := GetOrCreateAccount(orgID)
+		accID, err := GetOrCreateAccount(c.Request.Context(), orgID)
 		if err != nil {
 			return false
 		}

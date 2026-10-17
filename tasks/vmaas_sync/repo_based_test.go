@@ -22,7 +22,7 @@ func TestGetCurrentRepoBasedInventoryIDs(t *testing.T) {
 	core.SetupTestEnvironment()
 	Configure()
 
-	inventoryAIDs, err := getCurrentRepoBasedInventoryIDs()
+	inventoryAIDs, err := getCurrentRepoBasedInventoryIDs(database.TestDB())
 	assert.Nil(t, err)
 	assert.Equal(t, []mqueue.EvalData{
 		{InventoryID: uuid.MustParse("00000000-0000-0000-0000-000000000002"), RhAccountID: 1, OrgID: &orgID1},
@@ -37,12 +37,12 @@ func TestGetAllInventoryIDs(t *testing.T) {
 	core.SetupTestEnvironment()
 	Configure()
 
-	inventoryAIDs, err := getAllInventoryIDs()
+	inventoryAIDs, err := getAllInventoryIDs(database.TestDB())
 	assert.Nil(t, err)
 
 	// Mirror getAllInventoryIDs: all system_inventory rows.
 	var systems []*models.SystemInventory
-	assert.NoError(t, database.DB.Table("system_inventory AS si").
+	assert.NoError(t, database.TestDB().Table("system_inventory AS si").
 		Select("si.*").
 		Find(&systems).Error)
 	assert.Equal(t, len(inventoryAIDs), len(systems))
@@ -72,7 +72,7 @@ func TestGetLastRepobasedEvalTms(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	ts, err := database.GetTimestampKVValueStr(LastEvalRepoBased)
+	ts, err := database.GetTimestampKVValueStr(database.TestDB(), LastEvalRepoBased)
 	assert.Nil(t, err)
 	assert.Equal(t, "2018-04-04T23:23:45Z", *ts)
 }
@@ -82,9 +82,9 @@ func TestUpdateRepoBaseEvalTimestamp(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	now := "2021-04-01T23:23:45Z"
-	assert.Nil(t, database.UpdateTimestampKVValueStr(LastEvalRepoBased, now))
+	assert.Nil(t, database.UpdateTimestampKVValueStr(database.TestDB(), LastEvalRepoBased, now))
 
-	ts, err := database.GetTimestampKVValueStr(LastEvalRepoBased)
+	ts, err := database.GetTimestampKVValueStr(database.TestDB(), LastEvalRepoBased)
 	assert.Nil(t, err)
 	assert.Equal(t, now, *ts)
 
@@ -157,6 +157,6 @@ func TestGetUpdatedReposWithPackages(t *testing.T) {
 }
 
 func resetLastEvalTimestamp(t *testing.T) {
-	err := database.UpdateTimestampKVValueStr(LastEvalRepoBased, "2018-04-05T01:23:45+02:00")
+	err := database.UpdateTimestampKVValueStr(database.TestDB(), LastEvalRepoBased, "2018-04-05T01:23:45+02:00")
 	assert.Nil(t, err)
 }

@@ -1,9 +1,11 @@
 package aggregator
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/mqueue"
 	"app/base/utils"
+	"context"
 	"sync"
 	"time"
 
@@ -40,10 +42,10 @@ func flushAdvisoryBuffer() {
 	bufferLock.Unlock()
 
 	grouped := groupAdvisoryUpdates(batch)
-	processAdvisoryBatch(grouped)
+	processAdvisoryBatch(base.Context, grouped)
 }
 
-func advisoryUpdateHandler(m mqueue.KafkaMessage) error {
+func advisoryUpdateHandler(_ context.Context, m mqueue.KafkaMessage) error {
 	var event mqueue.AdvisoryUpdateEvent
 	if err := sonic.Unmarshal(m.Value, &event); err != nil {
 		utils.LogError("err", err, "could not deserialize advisory update event")
@@ -85,10 +87,10 @@ func groupAdvisoryUpdates(events []mqueue.AdvisoryUpdateEvent) map[int][]int64 {
 	return grouped
 }
 
-func processAdvisoryBatch(grouped map[int][]int64) {
+func processAdvisoryBatch(ctx context.Context, grouped map[int][]int64) {
 	for rhAccountID, advisoryIDs := range grouped {
 		utils.LogInfo("rh_account_id", rhAccountID, "advisory_count", len(advisoryIDs), "refreshing account advisory caches")
-		err := database.DB.Exec("SELECT refresh_account_advisory_caches_multi(?, ?)", pq.Array(advisoryIDs), rhAccountID).Error //nolint:lll
+		err := database.DB(ctx).Exec("SELECT refresh_account_advisory_caches_multi(?, ?)", pq.Array(advisoryIDs), rhAccountID).Error //nolint:lll
 		if err != nil {
 			utils.LogError("err", err, "rh_account_id", rhAccountID, "failed to refresh account advisory caches")
 			continue

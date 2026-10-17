@@ -1,10 +1,15 @@
 package database
 
 import (
+	"app/base"
+	"app/base/telemetry"
 	"app/base/utils"
+	"context"
 	"fmt"
 	"time"
 
+	"github.com/XSAM/otelsql"
+	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -19,8 +24,8 @@ const (
 )
 
 var (
-	DB                 *gorm.DB
-	DBReadReplica      *gorm.DB
+	baseDB             *gorm.DB
+	baseDBReadReplica  *gorm.DB
 	OtherAdvisoryTypes []string
 	globalPgConfig     map[DBMode]PostgreSQLConfig = make(map[DBMode]PostgreSQLConfig)
 )
@@ -38,13 +43,13 @@ func InitDB(mode DBMode) {
 	if mode == Replica {
 		if utils.CoreCfg.DBReadReplicaEnabled && ReadReplicaConfigured() {
 			pgConfig := createPostgreSQLConfig(mode)
-			DBReadReplica = initDB(mode, DBReadReplica, pgConfig)
+			baseDBReadReplica = initDB(mode, baseDBReadReplica, pgConfig)
 		}
 		return
 	}
 
 	pgConfig := createPostgreSQLConfig(mode)
-	DB = initDB(mode, DB, pgConfig)
+	baseDB = initDB(mode, baseDB, pgConfig)
 }
 
 // Configure Configure database, PostgreSQL or SQLite connection
@@ -88,7 +93,21 @@ func createGormConfig(debug bool) *gorm.Config {
 // open database connection
 func openPostgreSQL(dbConfig *PostgreSQLConfig) *gorm.DB {
 	connectString := dataSourceName(dbConfig)
-	db, err := gorm.Open(postgres.Open(connectString), createGormConfig(dbConfig.Debug))
+	cfg := createGormConfig(dbConfig.Debug)
+
+	var db *gorm.DB
+	var err error
+	if telemetry.SQLEnabled() {
+		// gorm.io/driver/postgres uses jackc/pgx/v5/stdlib (driver name "pgx")
+		sqlDB, openErr := otelsql.Open("pgx", connectString,
+			otelsql.WithAttributes(semconv.DBSystemPostgreSQL))
+		if openErr != nil {
+			panic(openErr)
+		}
+		db, err = gorm.Open(postgres.New(postgres.Config{Conn: sqlDB}), cfg)
+	} else {
+		db, err = gorm.Open(postgres.Open(connectString), cfg)
+	}
 	if err != nil {
 		panic(err)
 	}
@@ -162,7 +181,7 @@ func dataSourceName(dbConfig *PostgreSQLConfig) string {
 
 func loadAdditionalParamsFromDB() {
 	// Load OtherAdvisoryTypes list
-	err := DB.Table("advisory_type").
+	err := DB(base.Context).Table("advisory_type").
 		Where("name NOT IN ('enhancement', 'bugfix', 'security')").
 		Order("name").
 		Pluck("name", &OtherAdvisoryTypes).Error
@@ -170,4 +189,22 @@ func loadAdditionalParamsFromDB() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func DB(ctx context.Context) *gorm.DB {
+	if baseDB == nil || ctx == nil {
+		return baseDB
+	}
+	return baseDB.WithContext(ctx)
+}
+
+func DBReadReplica(ctx context.Context) *gorm.DB {
+	if baseDBReadReplica == nil || ctx == nil {
+		return baseDBReadReplica
+	}
+	return baseDBReadReplica.WithContext(ctx)
+}
+
+func TestDB() *gorm.DB {
+	return DB(base.Context)
 }

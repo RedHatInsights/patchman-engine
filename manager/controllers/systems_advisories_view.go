@@ -66,9 +66,9 @@ var advisoriesSystemsViewOpts = ListOpts{
 	SearchFields:   nil,
 }
 
-func totalItems(tx *gorm.DB, cols string) (int, error) {
+func totalItems(c *gin.Context, tx *gorm.DB, cols string) (int, error) {
 	var count int64
-	err := database.DB.Table("(?) AS cq", tx.Select(cols)).Count(&count).Error
+	err := middlewares.DBFromContext(c).Table("(?) AS cq", tx.Select(cols)).Count(&count).Error
 	return int(count), err
 }
 
@@ -100,7 +100,7 @@ func systemsAdvisoriesQuery(c *gin.Context, db *gorm.DB, acc int, workspaceIDs [
 		return nil, nil, nil, err
 	} // Error handled by method itself
 
-	total, err := totalItems(sysq, "si.rh_account_id, si.id, si.inventory_id")
+	total, err := totalItems(c, sysq, "si.rh_account_id, si.id, si.inventory_id")
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -145,7 +145,7 @@ func advisoriesSystemsQuery(c *gin.Context, db *gorm.DB, acc int, workspaceIDs [
 		return nil, nil, nil, err
 	} // Error handled by method itself
 
-	total, err := totalItems(advq, "am.id, am.name")
+	total, err := totalItems(c, advq, "am.id, am.name")
 	if err != nil {
 		return nil, nil, nil, err
 	}

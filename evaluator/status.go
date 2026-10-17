@@ -1,6 +1,9 @@
 package evaluator
 
-import "app/base/database"
+import (
+	"app/base"
+	"app/base/database"
+)
 
 var STATUS = make(map[int]string, 2)
 
@@ -15,7 +18,7 @@ type statusRow struct {
 func configureStatus() {
 	var rows []statusRow
 
-	err := database.DB.Table("status s").Select("id, name").Scan(&rows).Error
+	err := database.DB(base.Context).Table("status s").Select("id, name").Scan(&rows).Error
 	if err != nil {
 		panic(err)
 	}

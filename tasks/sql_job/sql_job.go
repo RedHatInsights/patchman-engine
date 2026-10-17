@@ -87,7 +87,7 @@ func run() error {
 	statementTimeout := time.Duration(utils.PodConfig.GetInt("sql_statement_timeout_seconds", 1500)) * time.Second
 	ctx, cancel := context.WithTimeout(base.Context, statementTimeout)
 	defer cancel()
-	db, err := database.DB.DB()
+	db, err := database.TestDB().DB()
 	if err != nil {
 		return err
 	}

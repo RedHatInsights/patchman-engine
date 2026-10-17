@@ -1,8 +1,8 @@
 package mqueue
 
 import (
+	"app/base"
 	"app/base/types"
-	"context"
 	"testing"
 	"time"
 
@@ -54,7 +54,7 @@ func TestAdvisoryUpdateEventsWriteEvents(t *testing.T) {
 		},
 	}
 
-	err := SendMessages(context.Background(), writer, &events)
+	err := SendMessages(base.Context, writer, &events)
 	assert.NoError(t, err)
 
 	mockWriter := writer.(*MockKafkaWriter)

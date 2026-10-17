@@ -1,12 +1,12 @@
 package listener
 
 import (
+	"app/base"
 	"app/base/content_sources"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
-	"context"
 	"testing"
 
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
@@ -36,7 +36,7 @@ func TestCallCSTemplateAdvisories(t *testing.T) {
 	setupContentSourcesClient(t)
 
 	templateUUID := "99900000-0000-0000-0000-000000000001"
-	ctx := identity.WithIdentity(context.Background(), utils.XRHIDForOrg(orgID, utils.CoreCfg.ContentSourcesUser))
+	ctx := identity.WithIdentity(base.Context, utils.XRHIDForOrg(orgID, utils.CoreCfg.ContentSourcesUser))
 	result, err := callCSTemplateAdvisories(ctx, templateUUID)
 
 	assert.NoError(t, err)
@@ -60,7 +60,7 @@ func TestLookUpAdvisoryMetadataIDs(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	advisoryNames := []string{"RH-1", "RH-2"}
-	nameToID, err := lookUpAdvisoryMetadataIDs(advisoryNames)
+	nameToID, err := lookUpAdvisoryMetadataIDs(base.Context, advisoryNames)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(nameToID))
 	assert.Equal(t, int64(1), nameToID["RH-1"])
@@ -108,7 +108,7 @@ func TestLookUpTemplateAdvisories(t *testing.T) {
 	database.CheckTemplateAdvisories(t, templateID, advisoryIDs)
 	defer database.DeleteTemplateAdvisories(t, templateID, advisoryIDs)
 
-	templateAdvisories, err := lookUpTemplateAdvisories(database.DB, accountID, templateID)
+	templateAdvisories, err := lookUpTemplateAdvisories(database.TestDB(), accountID, templateID)
 	assert.Nil(t, err)
 	assert.NotNil(t, templateAdvisories)
 	assert.Equal(t, 2, len(templateAdvisories))
@@ -131,7 +131,7 @@ func TestSyncTemplateAdvisories(t *testing.T) {
 	defer database.DeleteTemplateAdvisories(t, templateID, []int64{1, 2, 3})
 
 	// content sources mock returns RH-1 and RH-3 so we need to add RH-3, remove RH-2
-	ctx := identity.WithIdentity(context.Background(), utils.XRHIDForOrg(orgID, utils.CoreCfg.ContentSourcesUser))
+	ctx := identity.WithIdentity(base.Context, utils.XRHIDForOrg(orgID, utils.CoreCfg.ContentSourcesUser))
 	err := syncTemplateAdvisories(ctx, accountID, templateID, templateUUID, orgID)
 	assert.Nil(t, err)
 
@@ -140,7 +140,7 @@ func TestSyncTemplateAdvisories(t *testing.T) {
 
 	// RH-2 was removed
 	var count int64
-	err = database.DB.Model(&models.TemplateAdvisory{}).
+	err = database.TestDB().Model(&models.TemplateAdvisory{}).
 		Where("template_id = ? AND advisory_id = ?", templateID, 2).
 		Count(&count).Error
 	assert.Nil(t, err)
@@ -160,7 +160,7 @@ func TestSyncTemplateAdvisories_TemplateNotFound(t *testing.T) {
 	defer database.DeleteTemplateAdvisories(t, templateID, []int64{1, 2})
 
 	// content sources mock returns 404 for this template UUID
-	ctx := identity.WithIdentity(context.Background(), utils.XRHIDForOrg(orgID, utils.CoreCfg.ContentSourcesUser))
+	ctx := identity.WithIdentity(base.Context, utils.XRHIDForOrg(orgID, utils.CoreCfg.ContentSourcesUser))
 	err := syncTemplateAdvisories(ctx, accountID, templateID, templateUUID, orgID)
 	assert.Nil(t, err)
 

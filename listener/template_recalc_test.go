@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
@@ -26,7 +27,7 @@ func TestSendTemplateRecalcDisabled(t *testing.T) {
 	createdSystemsWriter = mockWriter
 	enableTemplateAdvisoryEval = false
 
-	err := SendTemplateRecalc(1, "org_1", 42)
+	err := SendTemplateRecalc(base.Context, 1, "org_1", 42)
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(mockWriter.Messages))
 }
@@ -43,7 +44,7 @@ func TestSendTemplateRecalcSkipsEmptyOrgID(t *testing.T) {
 	createdSystemsWriter = mockWriter
 	enableTemplateAdvisoryEval = true
 
-	err := SendTemplateRecalc(1, "", 42)
+	err := SendTemplateRecalc(base.Context, 1, "", 42)
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(mockWriter.Messages))
 }
@@ -80,10 +81,10 @@ func TestSendTemplateRecalcWithAssignedSystems(t *testing.T) {
 	database.CreateTemplate(t, accountID, templateUUID, []uuid.UUID{inv1, inv2})
 
 	var template models.Template
-	err := database.DB.Where("rh_account_id = ? AND uuid = ?::uuid", accountID, templateUUID).First(&template).Error
+	err := database.TestDB().Where("rh_account_id = ? AND uuid = ?::uuid", accountID, templateUUID).First(&template).Error
 	require.Nil(t, err)
 
-	err = SendTemplateRecalc(accountID, orgID, template.ID)
+	err = SendTemplateRecalc(base.Context, accountID, orgID, template.ID)
 	assert.Nil(t, err)
 	require.Equal(t, 1, len(mockWriter.Messages))
 

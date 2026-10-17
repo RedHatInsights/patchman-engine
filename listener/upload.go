@@ -12,6 +12,7 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"app/manager/middlewares"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -137,7 +138,7 @@ func (y *YumUpdates) GetBuiltPkgcache() bool {
 	return y.BuiltPkgcache
 }
 
-func HandleUpload(event HostEvent) error {
+func HandleUpload(ctx context.Context, event HostEvent) error {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messageHandlingDuration.WithLabelValues(EventUpload))
 
@@ -159,13 +160,13 @@ func HandleUpload(event HostEvent) error {
 	}
 
 	sendPayloadStatus(ptWriter, ptEvent, "", "Received by listener")
-	yumUpdates, err := getYumUpdates(event, httpClient)
+	yumUpdates, err := getYumUpdates(ctx, event, httpClient)
 	if err != nil {
 		// don't fail, use vmaas evaluation
 		utils.LogError("err", err, "Could not get yum updates")
 	}
 
-	sys, err := processUpload(&event.Host, yumUpdates)
+	sys, err := processUpload(ctx, &event.Host, yumUpdates)
 	if err != nil {
 		return handleListenerErrors(stdErrors.Join(ErrProcessUpload, err), &event, &ptEvent, tStart, ErrorStatus)
 	}
@@ -184,9 +185,9 @@ func HandleUpload(event HostEvent) error {
 
 	ptEvent.StatusMsg = ProcessingStatus
 	if event.Type == "created" {
-		createdEventsBuffer.bufferEvalEvents(sys.GetInventoryID(), sys.Inventory.RhAccountID, &ptEvent)
+		createdEventsBuffer.bufferEvalEvents(sys.GetInventoryID(), sys.Inventory.RhAccountID, &ptEvent, ctx)
 	} else {
-		updatedEventsBuffer.bufferEvalEvents(sys.GetInventoryID(), sys.Inventory.RhAccountID, &ptEvent)
+		updatedEventsBuffer.bufferEvalEvents(sys.GetInventoryID(), sys.Inventory.RhAccountID, &ptEvent, ctx)
 	}
 	logAndObserve(UploadSuccess, ReceivedSuccess, &event, &ptEvent, tStart, SuccessStatus, false)
 	return nil
@@ -761,11 +762,11 @@ func processModules(systemProfile *inventory.SystemProfile) *[]vmaas.UpdatesV3Re
 }
 
 // We have received new upload, update stored host data, and re-evaluate the host against VMaaS
-func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatformV2, error) {
+func processUpload(ctx context.Context, host *Host, yumUpdates *YumUpdates) (*models.SystemPlatformV2, error) {
 	tStart := time.Now()
 	defer utils.ObserveSecondsSince(tStart, messagePartDuration.WithLabelValues("upload-processing"))
 	// Ensure we have account stored
-	accountID, err := middlewares.GetOrCreateAccount(host.GetOrgID())
+	accountID, err := middlewares.GetOrCreateAccount(ctx, host.GetOrgID())
 	if err != nil {
 		return nil, errors.Wrap(err, "saving account into the database")
 	}
@@ -792,7 +793,7 @@ func processUpload(host *Host, yumUpdates *YumUpdates) (*models.SystemPlatformV2
 		updatesReq.SetReleasever(releasever)
 	}
 
-	tx := database.DB.WithContext(base.Context).Begin()
+	tx := database.DB(ctx).Begin()
 	defer tx.Rollback()
 
 	// Skip Candlepin for recently deleted systems; re-check after the HTTP
@@ -861,14 +862,14 @@ func skipRecentlyDeleted(tx *gorm.DB, inventoryID uuid.UUID) (bool, error) {
 	return false, nil
 }
 
-func getYumUpdates(event HostEvent, client *api.Client) (*YumUpdates, error) {
+func getYumUpdates(ctx context.Context, event HostEvent, client *api.Client) (*YumUpdates, error) {
 	var parsed vmaas.UpdatesV3Response
 	res := &YumUpdates{}
 	yumUpdates := event.PlatformMetadata.CustomMetadata.YumUpdates
 	yumUpdatesURL := event.PlatformMetadata.CustomMetadata.YumUpdatesS3URL
 
 	if yumUpdatesURL != nil && *yumUpdatesURL != "" {
-		resp, err := client.Request(&base.Context, http.MethodGet, *yumUpdatesURL, nil, &parsed)
+		resp, err := client.Request(&ctx, http.MethodGet, *yumUpdatesURL, nil, &parsed)
 		if resp != nil && resp.Body != nil {
 			defer func() {
 				if closeErr := resp.Body.Close(); closeErr != nil {

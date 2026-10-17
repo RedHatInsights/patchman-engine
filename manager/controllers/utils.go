@@ -367,7 +367,7 @@ func parseTags(c *gin.Context, filters Filters) error {
 
 // Filter systems by tags with subquery
 func ApplyInventoryFilter(filters map[string]FilterData, tx *gorm.DB, systemIDExpr string) (*gorm.DB, bool) {
-	subq := database.DB.
+	subq := tx.Session(&gorm.Session{NewDB: true}).
 		Table("system_inventory si").
 		Select("si.inventory_id")
 

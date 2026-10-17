@@ -1,9 +1,25 @@
 package database
 
 import (
+	"context"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
+
+// AutonomousTx starts a transaction on the root connection pool.
+// The caller may already be inside a transaction, and beginning another one
+// on that handle returns gorm.ErrInvalidTransaction. This transaction commits
+// independently of the caller.
+func AutonomousTx(tx *gorm.DB) *gorm.DB {
+	ctx := context.Background()
+	if tx.Statement != nil && tx.Statement.Context != nil {
+		ctx = tx.Statement.Context
+	}
+	session := tx.Session(&gorm.Session{NewDB: true, Context: ctx, Initialized: true})
+	session.Statement.ConnPool = tx.ConnPool
+	return session.Begin()
+}
 
 // Appends `ON CONFLICT (key...) DO UPDATE SET (fields) to following insert query
 func OnConflictUpdate(db *gorm.DB, key string, updateCols ...string) *gorm.DB {

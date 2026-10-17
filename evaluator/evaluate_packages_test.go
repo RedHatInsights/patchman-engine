@@ -41,9 +41,9 @@ func TestAnalyzePackages(t *testing.T) {
 				EVRA:        utils.PtrString("0:2.2.3-1.fc33.x86_64"),
 			}}}}}
 
-	pkgByName, installed, installable, applicable, err := lazySaveAndLoadPackages(system, &vmaasData)
+	pkgByName, installed, installable, applicable, err := lazySaveAndLoadPackages(database.TestDB(), system, &vmaasData)
 	assert.Nil(t, err)
-	err = updateSystemPackages(database.DB, system, pkgByName)
+	err = updateSystemPackages(database.TestDB(), system, pkgByName)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, installed)                                      // kernel, firefox, custom-package
 	assert.Equal(t, 2, installable)                                    // firefox, custom-package have updates
@@ -71,9 +71,9 @@ func TestSystemPackageRemoval(t *testing.T) {
 		"kernel-0:5.6.14-200.fc31.x86_64": {AvailableUpdates: &[]vmaas.UpdatesV3ResponseAvailableUpdates{}},
 	}}
 
-	pkgByName, installed, installable, applicable, err := lazySaveAndLoadPackages(system, &vmaasData)
+	pkgByName, installed, installable, applicable, err := lazySaveAndLoadPackages(database.TestDB(), system, &vmaasData)
 	assert.Nil(t, err)
-	err = updateSystemPackages(database.DB, system, pkgByName)
+	err = updateSystemPackages(database.TestDB(), system, pkgByName)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, installed)
 	assert.Equal(t, 0, installable)
@@ -88,9 +88,9 @@ func TestSystemPackageRemoval(t *testing.T) {
 			EVRA:        utils.PtrString("0:5.6.14-200.fc31.x86_64"),
 		}}}}}
 
-	pkgByName, installed, installable, applicable, err = lazySaveAndLoadPackages(system, &vmaasData)
+	pkgByName, installed, installable, applicable, err = lazySaveAndLoadPackages(database.TestDB(), system, &vmaasData)
 	assert.Nil(t, err)
-	err = updateSystemPackages(database.DB, system, pkgByName)
+	err = updateSystemPackages(database.TestDB(), system, pkgByName)
 	assert.Nil(t, err)
 	// only 1 package should be analyzed
 	assert.Equal(t, 1, installed)
@@ -120,7 +120,7 @@ func TestLazySavePackages(t *testing.T) {
 	}
 	vmaasData := vmaas.UpdatesV3Response{UpdateList: &updateList}
 	database.CheckEVRAsInDB(t, 0, evras...)
-	err := lazySavePackages(&vmaasData)
+	err := lazySavePackages(database.TestDB(), &vmaasData)
 	assert.Nil(t, err)
 	database.CheckEVRAsInDBSynced(t, 2, false, evras[:2]...) // EVRAs were added
 	database.CheckEVRAsInDB(t, 1, evras[2:]...)              // EVRA for unknown package was added

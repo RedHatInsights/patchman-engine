@@ -1,6 +1,7 @@
 package main
 
 import (
+	"app/base"
 	"app/base/database"
 	"os"
 )
@@ -28,7 +29,7 @@ func createInventoryHosts() {
 	if err != nil {
 		panic(err)
 	}
-	err = database.DB.Exec(string(query)).Error
+	err = database.DB(base.Context).Exec(string(query)).Error
 	if err != nil {
 		panic(err)
 	}
@@ -40,7 +41,7 @@ func feed() {
 	if err != nil {
 		panic(err)
 	}
-	err = database.DB.Exec(string(query)).Error
+	err = database.DB(base.Context).Exec(string(query)).Error
 	if err != nil {
 		panic(err)
 	}

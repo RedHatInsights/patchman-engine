@@ -1,6 +1,7 @@
 package aggregator
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/mqueue"
@@ -65,7 +66,7 @@ func TestBufferedEventsProcessedOnBatchThreshold(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	assert.Nil(t, database.DB.Exec("SELECT refresh_advisory_caches(NULL, 1)").Error)
+	assert.Nil(t, database.TestDB().Exec("SELECT refresh_advisory_caches(NULL, 1)").Error)
 	defer database.DeleteAccountAdvisoryByAccount(t, 1)
 
 	batchSize = 3
@@ -75,18 +76,18 @@ func TestBufferedEventsProcessedOnBatchThreshold(t *testing.T) {
 	msg := toKafkaMessage(t, mqueue.AdvisoryUpdateEvent{RhAccountID: 1, AdvisoryIDs: []int64{1, 2}})
 
 	// First two events accumulate in the buffer
-	assert.Nil(t, advisoryUpdateHandler(msg))
+	assert.Nil(t, advisoryUpdateHandler(base.Context, msg))
 	assert.Equal(t, 1, len(advisoryBuffer))
-	assert.Nil(t, advisoryUpdateHandler(msg))
+	assert.Nil(t, advisoryUpdateHandler(base.Context, msg))
 	assert.Equal(t, 2, len(advisoryBuffer))
 
 	// Third event triggers flush and processAdvisoryBatch runs
-	assert.Nil(t, advisoryUpdateHandler(msg))
+	assert.Nil(t, advisoryUpdateHandler(base.Context, msg))
 	assert.Equal(t, 0, len(advisoryBuffer))
 
 	// Verify account_advisory was populated
 	var count int64
-	assert.Nil(t, database.DB.Table("account_advisory").
+	assert.Nil(t, database.TestDB().Table("account_advisory").
 		Where("rh_account_id = 1 AND advisory_id IN (?)", []int64{1, 2}).
 		Count(&count).Error)
 	assert.True(t, count > 0, "account_advisory rows should be created after flush")

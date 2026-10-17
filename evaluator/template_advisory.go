@@ -32,7 +32,7 @@ func getTemplateAdvisoryUpdatesData(ctx context.Context, system *models.SystemPl
 		return nil, nil
 	}
 
-	templateErrata, err := loadTemplateAdvisoryErrata(database.DB, system.Inventory.RhAccountID,
+	templateErrata, err := loadTemplateAdvisoryErrata(database.DB(ctx), system.Inventory.RhAccountID,
 		*system.Patch.TemplateID)
 	if err != nil {
 		return nil, errors.Wrap(err, "loading template advisories")

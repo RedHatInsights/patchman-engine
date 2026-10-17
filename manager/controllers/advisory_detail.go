@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"app/base"
 	"app/base/database"
 	"app/base/utils"
 	"app/manager/config"
@@ -130,7 +131,8 @@ func PreloadAdvisoryCacheItems() {
 
 	utils.LogInfo("cacheSize", config.AdvisoryDetailCacheSize, "loading items to advisory detail cache...")
 	var advisoryNames []string
-	err := database.DB.Table("advisory_metadata").Limit(config.AdvisoryDetailCacheSize).Order("public_date DESC").
+	err := database.DB(base.Context).Table("advisory_metadata").
+		Limit(config.AdvisoryDetailCacheSize).Order("public_date DESC").
 		Pluck("name", &advisoryNames).Error // preload first N most recent advisories to cache
 	if err != nil {
 		panic(err)
@@ -139,7 +141,7 @@ func PreloadAdvisoryCacheItems() {
 	progress, count := utils.LogProgress("Advisory detail cache preload", logProgressDuration, int64(len(advisoryNames)))
 
 	for _, advisoryName := range advisoryNames {
-		_, err = getAdvisory(database.DB, advisoryName, true)
+		_, err = getAdvisory(database.DB(base.Context), advisoryName, true)
 		if err != nil {
 			utils.LogError("advisoryName", advisoryName, "err", err, "can not re-load item to cache")
 		}
