@@ -237,7 +237,7 @@ func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env 
 		return err
 	}
 
-	// check if all systems have owner_id
+	// check if all systems have subscription_manager_id
 	consumers := make([]string, 0, len(hosts))
 	for _, host := range hosts {
 		if host.Consumer == nil {
@@ -247,7 +247,7 @@ func assignCandlepinEnvironment(c *gin.Context, db *gorm.DB, accountID int, env 
 		consumers = append(consumers, *host.Consumer)
 	}
 	if err != nil {
-		err = errors2.Join(errors.New("missing owner_id for systems"), err)
+		err = errors2.Join(errors.New("missing subscription_manager_id for systems"), err)
 		utils.LogAndRespBadRequest(c, err, err.Error())
 		return err
 	}

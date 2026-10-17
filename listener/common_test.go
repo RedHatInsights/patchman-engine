@@ -183,10 +183,13 @@ func assertSystemInventoryProfileMatchesHost(t *testing.T, inventoryID uuid.UUID
 	if host.SystemProfile.OwnerID != nil {
 		require.NotNil(t, inv.OwnerID)
 		assert.Equal(t, *host.SystemProfile.OwnerID, *inv.OwnerID)
-		require.NotNil(t, inv.SubscriptionManagerID)
-		assert.Equal(t, *host.SystemProfile.OwnerID, *inv.SubscriptionManagerID)
 	} else {
 		assert.Nil(t, inv.OwnerID)
+	}
+	if host.SubscriptionManagerID != nil {
+		require.NotNil(t, inv.SubscriptionManagerID)
+		assert.Equal(t, *host.SubscriptionManagerID, *inv.SubscriptionManagerID)
+	} else {
 		assert.Nil(t, inv.SubscriptionManagerID)
 	}
 }

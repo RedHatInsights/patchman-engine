@@ -14,6 +14,7 @@ import (
 
 	stdErrors "errors"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 
@@ -127,6 +128,22 @@ func TurnpikeAuthenticator() gin.HandlerFunc {
 
 var validSystemCertTypes = []string{"system", "satellite", "hypervisor", "rhui", "sam"}
 
+func isValidSystemIdentity(xrhid *identity.XRHID) bool {
+	return xrhid != nil && xrhid.Identity.Type == "System" && xrhid.Identity.System != nil &&
+		slices.Contains(validSystemCertTypes, xrhid.Identity.System.CertType)
+}
+
+func forwardedSubscriptionManagerID(certType, header string) (*uuid.UUID, error) {
+	if certType != "satellite" || strings.TrimSpace(header) == "" {
+		return nil, nil
+	}
+	id, err := uuid.Parse(strings.TrimSpace(header))
+	if err != nil {
+		return nil, err
+	}
+	return &id, nil
+}
+
 func SystemCertAuthenticator() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		xrhid := (*ginContext)(c).GetXRHID()
@@ -135,14 +152,27 @@ func SystemCertAuthenticator() gin.HandlerFunc {
 			return
 		}
 		// SystemAuth endpoints only support system
-		if !(xrhid.Identity.Type == "System" &&
-			slices.Contains(validSystemCertTypes, xrhid.Identity.System.CertType) &&
-			findAccount(c, xrhid.Identity.OrgID)) {
+		if !isValidSystemIdentity(xrhid) {
+			c.AbortWithStatusJSON(http.StatusUnauthorized,
+				utils.ErrorResponse{Error: "Invalid system identity header"})
+			return
+		}
+		forwardedID, err := forwardedSubscriptionManagerID(xrhid.Identity.System.CertType,
+			c.GetHeader("X-Forwarded-Identity"))
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusForbidden,
+				utils.ErrorResponse{Error: "Invalid X-Forwarded-Identity header"})
+			return
+		}
+		if !findAccount(c, xrhid.Identity.OrgID) {
 			c.AbortWithStatusJSON(http.StatusUnauthorized,
 				utils.ErrorResponse{Error: "Invalid system identity header"})
 			return
 		}
 		c.Set(utils.KeySystem, xrhid.Identity.System.CommonName)
+		if forwardedID != nil {
+			c.Set(utils.KeySubscriptionManagerID, forwardedID.String())
+		}
 	}
 }
 

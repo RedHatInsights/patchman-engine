@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func testSetup(t *testing.T) *gin.Context {
@@ -41,6 +42,54 @@ func TestFindAccount(t *testing.T) {
 	// rhAccount.ID should be the same
 	// second find should not create another record
 	assert.Equal(t, accID1, accID2)
+}
+
+//nolint:goconst // Keep identity and header cases readable in the test table.
+func TestSystemCertForwardedIdentity(t *testing.T) {
+	const org = "forwarded-identity-test"
+	AccountIDCache.Lock.Lock()
+	AccountIDCache.Values[org] = 123
+	AccountIDCache.Lock.Unlock()
+	t.Cleanup(func() {
+		AccountIDCache.Lock.Lock()
+		delete(AccountIDCache.Values, org)
+		AccountIDCache.Lock.Unlock()
+	})
+	for _, tc := range []struct {
+		name, cert, header, want string
+		status                   int
+	}{
+		{"absent", "satellite", "", "", http.StatusOK},
+		{"blank", "satellite", " \t ", "", http.StatusOK},
+		{"valid", "satellite", systemCN, systemCN, http.StatusOK},
+		{"trimmed", "satellite", " " + systemCN + " ", systemCN, http.StatusOK},
+		{"malformed", "satellite", "not-a-uuid", "", http.StatusForbidden},
+		{"ignored", "system", "not-a-uuid", "", http.StatusOK},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var header bytes.Buffer
+			require.NoError(t, identityHeaderTmpl.Execute(&header, map[string]string{
+				"OrgID": org, "Type": "System", "CertType": tc.cert, "SystemCN": systemCN,
+			}))
+			reached := false
+			router := gin.New()
+			router.GET("/", SystemCertAuthenticator(), func(c *gin.Context) {
+				reached = true
+				assert.Equal(t, systemCN, c.GetString(utils.KeySystem))
+				assert.Equal(t, tc.want, c.GetString(utils.KeySubscriptionManagerID))
+				c.Status(http.StatusOK)
+			})
+			request := httptest.NewRequest(http.MethodGet, "/", nil)
+			request.Header.Set("x-rh-identity", base64.StdEncoding.EncodeToString(header.Bytes()))
+			if tc.header != "" {
+				request.Header.Set("X-Forwarded-Identity", tc.header)
+			}
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, request)
+			assert.Equal(t, tc.status, w.Code)
+			assert.Equal(t, tc.status == http.StatusOK, reached)
+		})
+	}
 }
 
 func TestUpdateOrgID(t *testing.T) {
