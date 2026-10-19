@@ -520,7 +520,7 @@ func evaluateAndStore(ctx context.Context, system *models.SystemPlatformV2,
 	}
 
 	if enableInventoryViews {
-		err = publishInventoryViewsEvent(tx, []models.SystemPlatformV2{*system}, event)
+		err = publishInventoryViewsEvent(ctx, tx, []models.SystemPlatformV2{*system}, event)
 		if err != nil {
 			evaluationCnt.WithLabelValues("error-inventory-views-publish").Inc()
 			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err,

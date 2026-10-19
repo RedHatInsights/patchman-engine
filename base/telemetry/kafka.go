@@ -120,7 +120,8 @@ func ConsumerContext(ctx context.Context, topic string, headers []kafka.Header) 
 
 func ProducerContext(ctx context.Context, topic string, links []trace.Link) (context.Context, trace.Span) {
 	if !Enabled() || !MQEnabled() {
-		return ctx, trace.SpanFromContext(ctx)
+		// Preserve propagation without returning the caller's span to be ended.
+		return ctx, trace.SpanFromContext(context.Background())
 	}
 	opts := []trace.SpanStartOption{
 		trace.WithSpanKind(trace.SpanKindProducer),

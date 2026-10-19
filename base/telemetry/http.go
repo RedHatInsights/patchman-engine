@@ -59,10 +59,15 @@ func InstrumentHTTPClient(c *http.Client) *http.Client {
 	return c
 }
 
-// RHHTTPAttributes sets rh.request_id and rh.org_id on the current span from request headers.
+// RHHTTPAttributes names the current span using the matched Gin route and sets
+// http.route, rh.request_id and rh.org_id attributes.
 func RHHTTPAttributes() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		span := trace.SpanFromContext(c.Request.Context())
+		if route := c.FullPath(); route != "" {
+			span.SetName(c.Request.Method + " " + route)
+			span.SetAttributes(attribute.String("http.route", route))
+		}
 		if reqID := c.GetHeader("x-rh-insights-request-id"); reqID != "" {
 			span.SetAttributes(attribute.String("rh.request_id", reqID))
 		}

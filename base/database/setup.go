@@ -100,7 +100,8 @@ func openPostgreSQL(dbConfig *PostgreSQLConfig) *gorm.DB {
 	if telemetry.SQLEnabled() {
 		// gorm.io/driver/postgres uses jackc/pgx/v5/stdlib (driver name "pgx")
 		sqlDB, openErr := otelsql.Open("pgx", connectString,
-			otelsql.WithAttributes(semconv.DBSystemPostgreSQL))
+			otelsql.WithAttributes(semconv.DBSystemPostgreSQL),
+			otelsql.WithSpanOptions(telemetry.SQLSpanOptions()))
 		if openErr != nil {
 			panic(openErr)
 		}

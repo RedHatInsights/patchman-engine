@@ -1,11 +1,12 @@
 package evaluator
 
 import (
-	"app/base"
 	"app/base/inventory_views"
 	"app/base/models"
 	"app/base/mqueue"
+	"app/base/telemetry"
 	"app/base/utils"
+	"context"
 	"fmt"
 	"time"
 
@@ -24,7 +25,8 @@ func configureInventoryViews() {
 	}
 }
 
-func publishInventoryViewsEvent(tx *gorm.DB, systems []models.SystemPlatformV2, origin *mqueue.PlatformEvent) error {
+func publishInventoryViewsEvent(ctx context.Context, tx *gorm.DB,
+	systems []models.SystemPlatformV2, origin *mqueue.PlatformEvent) error {
 	if inventoryViewsPublisher == nil {
 		return nil
 	}
@@ -51,7 +53,9 @@ func publishInventoryViewsEvent(tx *gorm.DB, systems []models.SystemPlatformV2, 
 		return errors.Wrap(err, "creating inventory views message failed")
 	}
 
-	err = inventoryViewsPublisher.WriteMessages(base.Context, msg)
+	producerCtx, span := telemetry.ProducerContext(ctx, utils.CoreCfg.InventoryViewsTopic, nil)
+	err = inventoryViewsPublisher.WriteMessages(producerCtx, msg)
+	telemetry.End(span, err)
 	if err != nil {
 		return errors.Wrap(err, "writing message to inventory views publisher failed")
 	}
