@@ -37,4 +37,10 @@ CREATE OR REPLACE VIEW inventory.hosts AS SELECT
 	groups
 FROM inventory.hosts_v1_0;
 
-CREATE USER cyndi;
+DO $$
+BEGIN
+  CREATE USER cyndi;
+  EXCEPTION WHEN DUPLICATE_OBJECT THEN
+    RAISE NOTICE 'cyndi already exists';
+END
+$$;

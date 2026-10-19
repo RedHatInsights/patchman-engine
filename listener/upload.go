@@ -83,6 +83,7 @@ var (
 
 type Host struct {
 	ID                    uuid.UUID                              `json:"id,omitempty"`
+	SubscriptionManagerID *uuid.UUID                             `json:"subscription_manager_id,omitempty"`
 	DisplayName           *string                                `json:"display_name,omitempty"`
 	OrgID                 *string                                `json:"org_id,omitempty"`
 	StaleTimestamp        *types.Rfc3339Timestamp                `json:"stale_timestamp,omitempty"`
@@ -281,13 +282,13 @@ func hostTemplate(tx *gorm.DB, accountID int, host *Host) *int64 {
 	var templateID *int64
 
 	if hasTemplateRepo(&host.SystemProfile) {
-		if host.SystemProfile.OwnerID == nil {
-			utils.LogWarn("inventoryID", host.ID, "Unable to assign templates: missing owner_id")
+		if host.SubscriptionManagerID == nil {
+			utils.LogWarn("inventoryID", host.ID, "Unable to assign templates: missing subscription_manager_id")
 			return templateID
 		}
 
 		// check system's env in candlepin
-		resp, err := callCandlepinEnvironment(base.Context, host.SystemProfile.OwnerID.String())
+		resp, err := callCandlepinEnvironment(base.Context, host.SubscriptionManagerID.String())
 		if err != nil {
 			utils.LogWarn("inventoryID", host.ID, "err", errors.Wrap(err, "Unable to assign templates"))
 		}
@@ -396,7 +397,7 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 			OSMajor:                          &host.SystemProfile.OperatingSystem.Major,
 			OSMinor:                          &host.SystemProfile.OperatingSystem.Minor,
 			RhsmVersion:                      utils.EmptyToNil(&host.SystemProfile.Rhsm.Version),
-			SubscriptionManagerID:            host.SystemProfile.OwnerID,
+			SubscriptionManagerID:            host.SubscriptionManagerID,
 			OwnerID:                          host.SystemProfile.OwnerID,
 			SapWorkload:                      host.SystemProfile.Workloads.Sap.SapSystem,
 			SapWorkloadSIDs:                  pq.StringArray(host.SystemProfile.Workloads.Sap.Sids),
