@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func newSQLTestDB(t *testing.T) (*sql.DB, *tracetest.InMemoryExporter) {
@@ -70,6 +71,45 @@ func TestSQLStatementSpans(t *testing.T) {
 		"evaluate upload", "sql.conn.exec", "sql.conn.query", "sql.stmt.query", "sql.stmt.exec", "sql.conn.exec",
 	}, names)
 	assert.Equal(t, 1, errorSpans)
+}
+
+func TestSQLDoesNotStartTraces(t *testing.T) {
+	db, exporter := newSQLTestDB(t)
+	_, err := db.ExecContext(t.Context(), "UPDATE packages SET synced = true")
+	require.NoError(t, err)
+	var value int
+	require.NoError(t, db.QueryRowContext(t.Context(), "SELECT 1").Scan(&value))
+	assert.Equal(t, 1, value)
+	assert.Empty(t, exporter.GetSpans(), "startup and background SQL must not create standalone traces")
+}
+
+func TestSQLRemoteParent(t *testing.T) {
+	for _, sampled := range []bool{true, false} {
+		t.Run(map[bool]string{true: "sampled", false: "unsampled"}[sampled], func(t *testing.T) {
+			db, exporter := newSQLTestDB(t)
+			flags := trace.TraceFlags(0)
+			if sampled {
+				flags = trace.FlagsSampled
+			}
+			parent := trace.NewSpanContext(trace.SpanContextConfig{
+				TraceID:    mustTraceID("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+				SpanID:     mustSpanID("bbbbbbbbbbbbbbbb"),
+				TraceFlags: flags,
+				Remote:     true,
+			})
+			ctx := trace.ContextWithRemoteSpanContext(t.Context(), parent)
+			var value int
+			require.NoError(t, db.QueryRowContext(ctx, "SELECT 1").Scan(&value))
+			spans := exporter.GetSpans()
+			if !sampled {
+				assert.Empty(t, spans)
+				return
+			}
+			require.Len(t, spans, 1)
+			assert.Equal(t, parent.TraceID(), spans[0].SpanContext.TraceID())
+			assert.Equal(t, parent.SpanID(), spans[0].Parent.SpanID())
+		})
+	}
 }
 
 var errSQLTest = errors.New("invalid SQL statement")
