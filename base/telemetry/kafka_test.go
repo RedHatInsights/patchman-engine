@@ -2,12 +2,14 @@ package telemetry
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -98,6 +100,26 @@ func TestProducerContextLinksOriginalsAndInjectsOwnTraceparent(t *testing.T) {
 	}
 	require.NotEmpty(t, childStub.Name)
 	assert.Equal(t, producerStub.SpanContext.TraceID(), childStub.SpanContext.TraceID())
+}
+
+func TestDisabledProducerDoesNotEndParent(t *testing.T) {
+	exp := setupKafkaTest(t)
+	t.Setenv("OTEL_MQ_ENABLED", "false")
+	ctx, parent := Tracer().Start(t.Context(), "evaluate upload")
+	producerCtx, producer := ProducerContext(ctx, "platform.inventory.host-apps", nil)
+
+	assert.Same(t, ctx, producerCtx)
+	assert.Equal(t, parent.SpanContext(), trace.SpanContextFromContext(producerCtx))
+	End(producer, errors.New("Kafka unavailable"))
+	assert.True(t, parent.IsRecording(), "ending a disabled producer must not end its parent")
+	assert.Empty(t, exp.GetSpans(), "the parent must remain open after publishing")
+	parent.End()
+
+	spans := flushSpans(t, exp)
+	require.Len(t, spans, 1)
+	assert.Equal(t, "evaluate upload", spans[0].Name)
+	assert.Equal(t, codes.Unset, spans[0].Status.Code)
+	assert.Empty(t, spans[0].Events, "a disabled producer must not record errors on the parent")
 }
 
 func TestItemContextParentsOriginalTrace(t *testing.T) {
