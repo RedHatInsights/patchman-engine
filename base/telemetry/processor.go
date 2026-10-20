@@ -2,15 +2,23 @@ package telemetry
 
 import (
 	"context"
+	"sync"
 
 	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
 
-type RHAttributeSpanProcessor struct{}
+type RHAttributeSpanProcessor struct {
+	lock sync.Mutex
+}
 
 func (p *RHAttributeSpanProcessor) OnStart(parent context.Context, s sdktrace.ReadWriteSpan) {
+	// The SDK returns the live attribute slice. Concurrent reads can deduplicate
+	// that slice while another child is copying its parent's attributes.
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
 	s.SetAttributes(attribute.String("rh.service", RHServiceName))
 
 	parentSpan := trace.SpanFromContext(parent)

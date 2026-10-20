@@ -20,7 +20,8 @@ const (
 	KeySystem              = "system_cn"
 	KeyInventoryWorkspaces = "workspaceIDs"
 	// ReadHeaderTimeout same as nginx default
-	ReadHeaderTimeout = 60 * time.Second
+	ReadHeaderTimeout     = 60 * time.Second
+	serverShutdownTimeout = 10 * time.Second
 )
 
 // InstrumentHTTPHandler wraps the server handler (e.g. otelhttp). Default is identity;
@@ -113,10 +114,14 @@ func RunServer(ctx context.Context, handler http.Handler, port int) error {
 		ReadHeaderTimeout: ReadHeaderTimeout,
 		MaxHeaderBytes:    65535,
 	}
+	shutdownDone := make(chan struct{})
 	go func() {
+		defer close(shutdownDone)
 		<-ctx.Done()
 		LogDebug("gracefully shutting down server...")
-		err := srv.Shutdown(context.Background())
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), serverShutdownTimeout)
+		defer cancel()
+		err := srv.Shutdown(shutdownCtx)
 		if err != nil {
 			LogError("err", err, "server shutting down failed")
 			return
@@ -125,6 +130,11 @@ func RunServer(ctx context.Context, handler http.Handler, port int) error {
 	}()
 
 	err := srv.ListenAndServe()
+	if err == http.ErrServerClosed {
+		// ListenAndServe returns as soon as the listener closes. Wait for active
+		// handlers to finish before the caller shuts down telemetry and exits.
+		<-shutdownDone
+	}
 	if err != nil && err != http.ErrServerClosed {
 		return errors.Wrap(err, "server listening failed")
 	}

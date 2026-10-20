@@ -21,6 +21,7 @@ func HandleContextCancel(fn func()) {
 
 func WaitAndExit() {
 	time.Sleep(time.Second) // give some time to close eventual db connections
+	base.ShutdownTelemetry()
 	os.Exit(0)
 }
 

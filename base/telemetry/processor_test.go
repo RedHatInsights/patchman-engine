@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,6 +11,36 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
+
+func TestRHAttributeProcessorConcurrentChildren(t *testing.T) {
+	exp := tracetest.NewInMemoryExporter()
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithSyncer(exp),
+		sdktrace.WithSpanProcessor(&RHAttributeSpanProcessor{}),
+	)
+	t.Cleanup(func() { require.NoError(t, tp.Shutdown(context.Background())) })
+	tracer := tp.Tracer("test")
+	ctx, parent := tracer.Start(t.Context(), "parent")
+	parent.SetAttributes(attribute.String("rh.org_id", "org-1"), attribute.String("rh.request_id", "req-1"))
+	var wg sync.WaitGroup
+	for range 32 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_, child := tracer.Start(ctx, "child")
+			child.End()
+		}()
+	}
+	wg.Wait()
+	parent.End()
+	spans := exp.GetSpans()
+	require.Len(t, spans, 33)
+	for _, span := range spans {
+		assert.Equal(t, "patchman-engine", attr(span, "rh.service"))
+		assert.Equal(t, "org-1", attr(span, "rh.org_id"))
+		assert.Equal(t, "req-1", attr(span, "rh.request_id"))
+	}
+}
 
 func TestRHAttributeProcessorSetsServiceAndCopiesParent(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()

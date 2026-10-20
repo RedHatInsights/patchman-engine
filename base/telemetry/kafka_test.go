@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
@@ -162,6 +163,33 @@ func TestItemContextParentsOriginalTrace(t *testing.T) {
 	assert.Equal(t, origSC.TraceID(), producerStub.SpanContext.TraceID())
 	assert.Equal(t, origSC.SpanID(), producerStub.Parent.SpanID())
 	assert.Equal(t, producerStub.SpanContext.SpanID(), bulkStub.Parent.SpanID())
+}
+
+func TestItemContextPreservesCallerContext(t *testing.T) {
+	setupKafkaTest(t)
+	originalCtx, original := Tracer().Start(t.Context(), "original")
+	tp := EncodeTraceparent(originalCtx)
+	original.End()
+	for _, parentTrace := range []string{tp, "", "invalid"} {
+		t.Run(parentTrace, func(t *testing.T) {
+			type contextKey struct{}
+			deadline := time.Now().Add(time.Minute)
+			caller, cancel := context.WithDeadline(context.WithValue(t.Context(), contextKey{}, "request-state"), deadline)
+			defer cancel()
+			ctx, span := ItemContext(caller, "evaluate upload", parentTrace)
+			defer span.End()
+
+			assert.Equal(t, "request-state", ctx.Value(contextKey{}))
+			actualDeadline, ok := ctx.Deadline()
+			assert.True(t, ok)
+			assert.Equal(t, deadline, actualDeadline)
+			if parentTrace == tp {
+				assert.Equal(t, original.SpanContext().TraceID(), span.SpanContext().TraceID())
+			}
+			cancel()
+			assert.ErrorIs(t, ctx.Err(), context.Canceled)
+		})
+	}
 }
 
 func TestParentContextFromTraceparents(t *testing.T) {

@@ -40,7 +40,8 @@ func InstrumentHandler(h http.Handler) http.Handler {
 	)
 }
 
-// InstrumentHTTPClient wraps c.Transport with otelhttp when outbound HTTP tracing is enabled.
+// InstrumentHTTPClient copies c before wrapping its transport, so callers can
+// safely share the original client.
 func InstrumentHTTPClient(c *http.Client) *http.Client {
 	if c == nil {
 		c = &http.Client{}
@@ -55,8 +56,9 @@ func InstrumentHTTPClient(c *http.Client) *http.Client {
 	if base == nil {
 		base = http.DefaultTransport
 	}
-	c.Transport = otelhttp.NewTransport(base)
-	return c
+	client := *c
+	client.Transport = otelhttp.NewTransport(base)
+	return &client
 }
 
 // RHHTTPAttributes names the current span using the matched Gin route and sets

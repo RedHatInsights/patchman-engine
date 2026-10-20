@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -20,16 +22,22 @@ import (
 )
 
 var (
-	enabled          bool
+	enabled          atomic.Bool
+	providerLock     sync.Mutex
 	tracerProvider   *sdktrace.TracerProvider
 	providerResource *resource.Resource
 	providerSampler  sdktrace.Sampler
 )
 
 func Init() error {
+	providerLock.Lock()
+	defer providerLock.Unlock()
+	if tracerProvider != nil {
+		return nil
+	}
 	if !otelEnabled() {
 		otel.SetTracerProvider(tracenoop.NewTracerProvider())
-		enabled = false
+		enabled.Store(false)
 		utils.LogInfo("OpenTelemetry is disabled")
 		return nil
 	}
@@ -43,6 +51,8 @@ func Init() error {
 }
 
 func initWithExporter(exp sdktrace.SpanExporter) error {
+	providerLock.Lock()
+	defer providerLock.Unlock()
 	return initTracerProvider(exp, false)
 }
 
@@ -84,11 +94,13 @@ func initTracerProvider(exp sdktrace.SpanExporter, useBatch bool) error {
 		propagation.TraceContext{},
 		propagation.Baggage{},
 	))
-	enabled = true
+	enabled.Store(true)
 	return nil
 }
 
 func Shutdown(ctx context.Context) error {
+	providerLock.Lock()
+	defer providerLock.Unlock()
 	if tracerProvider == nil {
 		return nil
 	}
@@ -96,7 +108,7 @@ func Shutdown(ctx context.Context) error {
 	tracerProvider = nil
 	providerResource = nil
 	providerSampler = nil
-	enabled = false
+	enabled.Store(false)
 	return err
 }
 

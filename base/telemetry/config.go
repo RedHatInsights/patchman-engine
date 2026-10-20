@@ -32,21 +32,21 @@ func otelEnabled() bool {
 }
 
 func Enabled() bool {
-	return enabled
+	return enabled.Load()
 }
 
 func MQEnabled() bool {
-	return enabled && utils.GetBoolEnvOrDefault("OTEL_MQ_ENABLED", true)
+	return Enabled() && utils.GetBoolEnvOrDefault("OTEL_MQ_ENABLED", true)
 }
 
 func HTTPInboundEnabled() bool {
-	return enabled && utils.GetBoolEnvOrDefault("OTEL_HTTP_INBOUND_ENABLED", true)
+	return Enabled() && utils.GetBoolEnvOrDefault("OTEL_HTTP_INBOUND_ENABLED", true)
 }
 
 func HTTPOutboundEnabled() bool {
-	return enabled && utils.GetBoolEnvOrDefault("OTEL_HTTP_OUTBOUND_ENABLED", true)
+	return Enabled() && utils.GetBoolEnvOrDefault("OTEL_HTTP_OUTBOUND_ENABLED", true)
 }
 
 func SQLEnabled() bool {
-	return enabled && utils.GetBoolEnvOrDefault("OTEL_SQL_ENABLED", true)
+	return Enabled() && utils.GetBoolEnvOrDefault("OTEL_SQL_ENABLED", true)
 }

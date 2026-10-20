@@ -145,7 +145,7 @@ func ItemContext(parent context.Context, name, traceparent string) (context.Cont
 	if traceparent != "" {
 		orig := ContextFromTraceparent(traceparent)
 		if trace.SpanContextFromContext(orig).IsValid() {
-			startCtx = orig
+			startCtx = trace.ContextWithRemoteSpanContext(parent, trace.SpanContextFromContext(orig))
 		}
 	}
 	return Tracer().Start(startCtx, name, trace.WithSpanKind(trace.SpanKindInternal))
