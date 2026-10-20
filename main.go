@@ -27,6 +27,7 @@ func main() {
 	base.HandleSignals()
 
 	defer utils.LogPanics(true)
+	defer base.ShutdownTelemetry()
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "admin":

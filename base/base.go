@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 const VMaaSAPIPrefix = "/api/v3"
@@ -25,6 +26,7 @@ func init() {
 }
 
 func HandleSignals() {
+	log.RegisterExitHandler(ShutdownTelemetry)
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
@@ -32,9 +34,18 @@ func HandleSignals() {
 		utils.LogInfo("starting grace period for " + sig.String())
 		time.Sleep(defaultK8sGracePeriod / 4)
 		CancelContext()
-		_ = telemetry.Shutdown(Context)
 		utils.LogInfo("SIGTERM/SIGINT handled")
 	}()
+}
+
+// ShutdownTelemetry flushes finished spans after application work has stopped.
+// The application context is already canceled during signal-driven shutdown.
+func ShutdownTelemetry() {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultK8sGracePeriod/3)
+	defer cancel()
+	if err := telemetry.Shutdown(ctx); err != nil {
+		utils.LogError("err", err, "OpenTelemetry shutdown failed")
+	}
 }
 
 func remove(r rune) rune {
