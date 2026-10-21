@@ -1,6 +1,7 @@
 package database
 
 import (
+	"app/base"
 	"app/base/models"
 	"app/base/types"
 	"app/base/utils"
@@ -72,8 +73,8 @@ func SystemAdvisoriesByInventoryID(tx *gorm.DB, accountID int, workspaceIDs []st
 	return (joinsT)(joins).apply(tx)
 }
 
-func SystemAdvisoriesBySystemID(accountID int, systemID int64) *gorm.DB {
-	query := systemAdvisoriesQuery(accountID).Where("si.id = ?", systemID)
+func SystemAdvisoriesBySystemID(tx *gorm.DB, accountID int, systemID int64) *gorm.DB {
+	query := systemAdvisoriesQuery(tx, accountID).Where("si.id = ?", systemID)
 	return query
 }
 
@@ -82,8 +83,8 @@ func AdvisoryMetadata(tx *gorm.DB) *gorm.DB {
 	return JoinAdvisoryType(tx)
 }
 
-func systemAdvisoriesQuery(accountID int) *gorm.DB {
-	query := DB.Table("system_advisories sa").Select("sa.*").
+func systemAdvisoriesQuery(tx *gorm.DB, accountID int) *gorm.DB {
+	query := tx.Table("system_advisories sa").Select("sa.*").
 		Joins("JOIN system_inventory si ON sa.rh_account_id = si.rh_account_id AND sa.system_id = si.id").
 		Where("sa.rh_account_id = ? AND si.rh_account_id = ?", accountID, accountID)
 	return query
@@ -97,17 +98,17 @@ func Timestamp2Str(ts *types.Rfc3339TimestampWithZ) *string {
 	return &ret
 }
 
-func GetTimestampKVValueStr(key string) (*string, error) {
-	ts, err := GetTimestampKVValue(key)
+func GetTimestampKVValueStr(tx *gorm.DB, key string) (*string, error) {
+	ts, err := GetTimestampKVValue(tx, key)
 	if err != nil {
 		return nil, err
 	}
 	return Timestamp2Str(ts), nil
 }
 
-func GetTimestampKVValue(key string) (*types.Rfc3339TimestampWithZ, error) {
+func GetTimestampKVValue(tx *gorm.DB, key string) (*types.Rfc3339TimestampWithZ, error) {
 	var timestamps []*types.Rfc3339TimestampWithZ
-	err := DB.Model(&models.TimestampKV{}).
+	err := tx.Model(&models.TimestampKV{}).
 		Where("name = ?", key).
 		Pluck("value", &timestamps).Error
 	if err != nil {
@@ -121,16 +122,16 @@ func GetTimestampKVValue(key string) (*types.Rfc3339TimestampWithZ, error) {
 	return timestamps[0], nil
 }
 
-func UpdateTimestampKVValue(key string, value time.Time) {
+func UpdateTimestampKVValue(tx *gorm.DB, key string, value time.Time) {
 	ts := value.Format(time.RFC3339Nano)
-	err := UpdateTimestampKVValueStr(key, ts)
+	err := UpdateTimestampKVValueStr(tx, key, ts)
 	if err != nil {
 		utils.LogError("err", err, "key", key, "Unable to updated timestamp KV value")
 	}
 }
 
-func UpdateTimestampKVValueStr(key, value string) error {
-	err := DB.Exec("INSERT INTO timestamp_kv (name, value) values (?, ?)"+
+func UpdateTimestampKVValueStr(tx *gorm.DB, key, value string) error {
+	err := tx.Exec("INSERT INTO timestamp_kv (name, value) values (?, ?)"+
 		"ON CONFLICT (name) DO UPDATE SET value = ?", key, value, value).Error
 	return err
 }
@@ -150,7 +151,7 @@ func ExecFile(filename string) error {
 		panic(err)
 	}
 
-	sqldb, _ := DB.DB()
+	sqldb, _ := DB(base.Context).DB()
 	_, err = sqldb.Exec(string(sql))
 	return err
 }
@@ -224,7 +225,7 @@ func DBWait(waitForDB string) {
 					logAndWait(query)
 				}
 			}()
-			db, _ := DB.DB()
+			db, _ := DB(base.Context).DB()
 			if db != nil {
 				if _, err := db.Exec(query); err == nil {
 					log.Info("Everything is up - executing command")

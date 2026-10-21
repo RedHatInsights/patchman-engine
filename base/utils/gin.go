@@ -20,8 +20,13 @@ const (
 	KeySystem              = "system_cn"
 	KeyInventoryWorkspaces = "workspaceIDs"
 	// ReadHeaderTimeout same as nginx default
-	ReadHeaderTimeout = 60 * time.Second
+	ReadHeaderTimeout     = 60 * time.Second
+	serverShutdownTimeout = 10 * time.Second
 )
+
+// InstrumentHTTPHandler wraps the server handler (e.g. otelhttp). Default is identity;
+// telemetry.Init replaces this with telemetry.InstrumentHandler.
+var InstrumentHTTPHandler = func(h http.Handler) http.Handler { return h }
 
 func LoadParamInt(c *gin.Context, param string, defaultValue int, query bool) (int, error) {
 	var valueStr string
@@ -103,11 +108,20 @@ type ErrorResponse struct {
 
 func RunServer(ctx context.Context, handler http.Handler, port int) error {
 	addr := fmt.Sprintf(":%d", port)
-	srv := http.Server{Addr: addr, Handler: handler, ReadHeaderTimeout: ReadHeaderTimeout, MaxHeaderBytes: 65535}
+	srv := http.Server{
+		Addr:              addr,
+		Handler:           InstrumentHTTPHandler(handler),
+		ReadHeaderTimeout: ReadHeaderTimeout,
+		MaxHeaderBytes:    65535,
+	}
+	shutdownDone := make(chan struct{})
 	go func() {
+		defer close(shutdownDone)
 		<-ctx.Done()
 		LogDebug("gracefully shutting down server...")
-		err := srv.Shutdown(context.Background())
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), serverShutdownTimeout)
+		defer cancel()
+		err := srv.Shutdown(shutdownCtx)
 		if err != nil {
 			LogError("err", err, "server shutting down failed")
 			return
@@ -116,6 +130,11 @@ func RunServer(ctx context.Context, handler http.Handler, port int) error {
 	}()
 
 	err := srv.ListenAndServe()
+	if err == http.ErrServerClosed {
+		// ListenAndServe returns as soon as the listener closes. Wait for active
+		// handlers to finish before the caller shuts down telemetry and exits.
+		<-shutdownDone
+	}
 	if err != nil && err != http.ErrServerClosed {
 		return errors.Wrap(err, "server listening failed")
 	}

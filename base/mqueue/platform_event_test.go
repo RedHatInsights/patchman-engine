@@ -1,7 +1,7 @@
 package mqueue
 
 import (
-	"context"
+	"app/base"
 	"testing"
 
 	"github.com/bytedance/sonic"
@@ -9,8 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var orgID string = "org_1"
+
 func TestPlatformEventSkipNotificationsJSON(t *testing.T) {
-	orgID := "org_1"
 	event := PlatformEvent{
 		AccountID:         1,
 		OrgID:             &orgID,
@@ -43,12 +44,11 @@ func TestWriteEventsOfInventoryAccounts(t *testing.T) {
 
 	var writer Writer = &MockKafkaWriter{}
 
-	orgID := "org_1"
 	var invs EvalDataSlice = []EvalData{
 		{InventoryID: inv2, RhAccountID: acc, OrgID: &orgID},
 		{InventoryID: inv3, RhAccountID: acc, OrgID: &orgID}}
 
-	assert.Nil(t, SendMessages(context.Background(), writer, &invs))
+	assert.Nil(t, SendMessages(base.Context, writer, &invs))
 
 	mockWriter := writer.(*MockKafkaWriter)
 	assert.True(t, len(mockWriter.Messages) > 0)
@@ -61,6 +61,25 @@ func TestWriteEventsOfInventoryAccounts(t *testing.T) {
 	assert.Equal(t, inv2, event.SystemIDs[0])
 	assert.Equal(t, inv3, event.SystemIDs[1])
 	assert.False(t, event.SkipNotifications)
+}
+
+func TestWriteEventsPreservesTraceparents(t *testing.T) {
+	acc := 1
+	inv2 := uuid.MustParse("00000000-0000-0000-0000-000000000002")
+	inv3 := uuid.MustParse("00000000-0000-0000-0000-000000000003")
+	writer := &MockKafkaWriter{}
+	invs := EvalDataSlice{
+		{InventoryID: inv2, RhAccountID: acc, OrgID: &orgID, RequestID: "r1",
+			Traceparent: "00-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-01"},
+		{InventoryID: inv3, RhAccountID: acc, OrgID: &orgID, RequestID: "r2",
+			Traceparent: "00-cccccccccccccccccccccccccccccccc-dddddddddddddddd-01"},
+	}
+	assert.NoError(t, SendMessages(base.Context, writer, &invs))
+	var event PlatformEvent
+	assert.NoError(t, sonic.Unmarshal(writer.Messages[0].Value, &event))
+	assert.Equal(t, invs[0].Traceparent, event.Traceparents[0])
+	assert.Equal(t, invs[1].Traceparent, event.Traceparents[1])
+	assert.Equal(t, []string{"r1", "r2"}, event.RequestIDs)
 }
 
 func TestWriteEventsSkipNotificationsChunking(t *testing.T) {
@@ -76,7 +95,7 @@ func TestWriteEventsSkipNotificationsChunking(t *testing.T) {
 	}
 
 	writer := &MockKafkaWriter{}
-	assert.NoError(t, invs.WriteEventsSkipNotifications(context.Background(), writer, 500))
+	assert.NoError(t, invs.WriteEventsSkipNotifications(base.Context, writer, 500))
 	assert.Equal(t, 2, len(writer.Messages))
 
 	var first, second PlatformEvent

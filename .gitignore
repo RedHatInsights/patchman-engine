@@ -11,3 +11,6 @@ gomodcache/
 gocache/
 gopath/
 .cache/
+
+# Linked git worktrees (local experiments)
+.worktree/

@@ -16,6 +16,7 @@ import (
 
 func testSetup(t *testing.T) *gin.Context {
 	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
 	utils.SkipWithoutDB(t)
 	utils.SetDefaultEnvOrFail("LOG_LEVEL", "debug")
 	utils.ConfigureLogging()

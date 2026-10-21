@@ -31,7 +31,7 @@ func loadSystemsV2(t *testing.T, tx *gorm.DB, rhAccountID int, ids ...int64) []m
 func TestMakeInventoryViewsEvent(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	tx := database.DB.Begin()
+	tx := database.TestDB().Begin()
 	defer tx.Rollback()
 
 	var rhAccount models.RhAccount
@@ -68,7 +68,7 @@ func TestMakeInventoryViewsEventEmpty(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	tx := database.DB.Begin()
+	tx := database.TestDB().Begin()
 	defer tx.Rollback()
 
 	event, err := MakeInventoryViewsEvent(tx, "test-org", []models.SystemPlatformV2{})
@@ -82,7 +82,7 @@ func TestMakeInventoryViewsEventNoTemplate(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	tx := database.DB.Begin()
+	tx := database.TestDB().Begin()
 	defer tx.Rollback()
 
 	var rhAccount models.RhAccount

@@ -34,15 +34,15 @@ func TestSyncDates(t *testing.T) {
 	evalWriter = &mockKafkaWriter{}
 
 	// ensure timestamp_kv is empty
-	assert.NoError(t, database.DB.Table("timestamp_kv").Where("1=1").Delete(&models.TimestampKV{}).Error)
+	assert.NoError(t, database.TestDB().Table("timestamp_kv").Where("1=1").Delete(&models.TimestampKV{}).Error)
 
 	// there's no timestamp before first sync
-	ts := GetLastSync(VmaasExported)
+	ts := GetLastSync(database.TestDB(), VmaasExported)
 	assert.Nil(t, ts)
 
 	runSync()
 
-	ts = GetLastSync(VmaasExported)
+	ts = GetLastSync(database.TestDB(), VmaasExported)
 	assert.Equal(t, "2222-04-16 20:07:59.235962 +0000 UTC", ts.Time().String())
 	database.DeleteNewlyAddedPackages(t)
 	database.DeleteNewlyAddedAdvisories(t)
@@ -55,10 +55,10 @@ func TestSync(t *testing.T) {
 	Configure()
 
 	// ensure timestamp_kv is empty
-	assert.NoError(t, database.DB.Table("timestamp_kv").Where("1=1").Delete(&models.TimestampKV{}).Error)
+	assert.NoError(t, database.TestDB().Table("timestamp_kv").Where("1=1").Delete(&models.TimestampKV{}).Error)
 
 	// ensure all repos to be marked "third_party" = true
-	assert.NoError(t, database.DB.Table("repo").Where("name IN (?)", []string{"repo1", "repo2", "repo3"}).
+	assert.NoError(t, database.TestDB().Table("repo").Where("name IN (?)", []string{"repo1", "repo2", "repo3"}).
 		Update("third_party", true).Error)
 	database.CheckThirdPartyRepos(t, []string{"repo1", "repo2", "repo3", "repo4"}, true) // ensure testing set
 
@@ -70,7 +70,7 @@ func TestSync(t *testing.T) {
 	database.CheckAdvisoriesInDB(t, expected)
 
 	var repos []models.Repo
-	assert.NoError(t, database.DB.Model(&repos).Error)
+	assert.NoError(t, database.TestDB().Model(&repos).Error)
 
 	database.CheckThirdPartyRepos(t, []string{"repo1", "repo2", "repo3"}, false) // sync updated the flag
 	database.CheckThirdPartyRepos(t, []string{"repo4"}, true)                    // third party repo4 has correct flag
@@ -78,7 +78,7 @@ func TestSync(t *testing.T) {
 	// For one account we expect a bulk message
 	assert.Equal(t, 1, len(msgs))
 
-	ts, err := database.GetTimestampKVValueStr(LastEvalRepoBased) // check updated timestamp
+	ts, err := database.GetTimestampKVValueStr(database.TestDB(), LastEvalRepoBased) // check updated timestamp
 	assert.Nil(t, err)
 	// timestamp comes from vmaas - latest_repo_change
 	assert.Equal(t, "2222", (*ts)[0:4])
@@ -93,6 +93,13 @@ func TestHandleContextCancel(t *testing.T) {
 
 	var hook = utils.NewTestLogHook()
 	log.AddHook(hook)
+
+	// save the original context and cancel function and create local one for the test
+	savedCtx, savedCancel := base.Context, base.CancelContext
+	base.Context, base.CancelContext = context.WithCancel(context.Background())
+	t.Cleanup(func() {
+		base.Context, base.CancelContext = savedCtx, savedCancel
+	})
 
 	tasks.HandleContextCancel(func() {})
 	base.CancelContext()
@@ -109,7 +116,7 @@ func TestVMaaSErrataCall(t *testing.T) {
 
 	req := vmaas.ErrataRequest{PageSize: 10, ErrataList: []string{".*"}}
 	resp := vmaas.ErrataResponse{}
-	ctx := context.Background()
+	ctx := base.Context
 	httpResp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasErratasURL, &req, &resp) // nolint: bodyclose
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
@@ -123,7 +130,7 @@ func TestVMaaSReposCall(t *testing.T) {
 
 	req := vmaas.ReposRequest{PageSize: 10, RepositoryList: []string{".*"}}
 	resp := vmaas.ReposResponse{}
-	ctx := context.Background()
+	ctx := base.Context
 	httpResp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasReposURL, &req, &resp) // nolint: bodyclose
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)

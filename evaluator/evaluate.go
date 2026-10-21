@@ -7,9 +7,11 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
+	"app/base/telemetry"
 	"app/base/types"
 	"app/base/utils"
 	"app/base/vmaas"
+	"app/tasks"
 	"context"
 	"net/http"
 	"sync"
@@ -19,6 +21,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -215,7 +218,9 @@ func runEvaluate(
 
 func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, inventoryID uuid.UUID) (
 	*models.SystemPlatformV2, *vmaas.UpdatesV3Response, error) {
-	system, err := tryGetSystem(event.AccountID, inventoryID, event.Timestamp)
+	tx := database.DB(ctx).Begin()
+	defer tx.Rollback()
+	system, err := tryGetSystem(tx, event.AccountID, inventoryID, event.Timestamp)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to get system")
 	}
@@ -224,7 +229,7 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 		return nil, nil, nil
 	}
 
-	thirdParty, err := analyzeRepos(system)
+	thirdParty, err := analyzeRepos(tx, system)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "repo analysis failed")
 	}
@@ -239,7 +244,7 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 		return nil, nil, nil
 	}
 
-	vmaasData, err := evaluateWithVmaas(updatesData, system, event)
+	vmaasData, err := evaluateWithVmaas(ctx, updatesData, system, event)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluation with vmaas failed")
 	}
@@ -290,11 +295,11 @@ func tryGetYumUpdates(system *models.SystemPlatformV2) (*vmaas.UpdatesV3Response
 	return &resp, nil
 }
 
-func evaluateWithVmaas(updatesData *vmaas.UpdatesV3Response,
+func evaluateWithVmaas(ctx context.Context, updatesData *vmaas.UpdatesV3Response,
 	system *models.SystemPlatformV2, event *mqueue.PlatformEvent) (*vmaas.UpdatesV3Response, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("evaluate-with-vmaas-full"))
 
-	err := evaluateAndStore(system, updatesData, event)
+	err := evaluateAndStore(ctx, system, updatesData, event)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to evaluate and store results")
 	}
@@ -438,9 +443,9 @@ func tryGetVmaasRequest(system *models.SystemPlatformV2) (*vmaas.UpdatesV3Reques
 	return &updatesReq, nil
 }
 
-func tryGetSystem(accountID int, inventoryID uuid.UUID,
+func tryGetSystem(tx *gorm.DB, accountID int, inventoryID uuid.UUID,
 	requested *types.Rfc3339Timestamp) (*models.SystemPlatformV2, error) {
-	system, err := loadSystemData(accountID, inventoryID)
+	system, err := loadSystemData(tx, accountID, inventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
 		return nil, base.WrapFatalDBError(err, "error loading system from DB")
@@ -480,21 +485,21 @@ func commitWithObserve(tx *gorm.DB) error {
 // and then executes all deletions, updates, and insertions in a single transaction.
 
 //nolint:funlen
-func evaluateAndStore(system *models.SystemPlatformV2,
+func evaluateAndStore(ctx context.Context, system *models.SystemPlatformV2,
 	vmaasData *vmaas.UpdatesV3Response, event *mqueue.PlatformEvent) error {
-	advisoriesByName, err := lazySaveAndLoadAdvisories(system, vmaasData)
+	tx := database.DB(ctx).Begin()
+	// Don't allow requested TX to hang around locking the rows
+	defer tx.Rollback()
+
+	advisoriesByName, err := lazySaveAndLoadAdvisories(tx, system, vmaasData)
 	if err != nil {
 		return errors.Wrap(err, "Advisory loading failed")
 	}
 
-	pkgByName, installed, installable, applicable, err := lazySaveAndLoadPackages(system, vmaasData)
+	pkgByName, installed, installable, applicable, err := lazySaveAndLoadPackages(tx, system, vmaasData)
 	if err != nil {
 		return errors.Wrap(err, "Package loading failed")
 	}
-
-	tx := database.DB.WithContext(base.Context).Begin()
-	// Don't allow requested TX to hang around locking the rows
-	defer tx.Rollback()
 
 	systemAdvisoriesNew, err := storeAdvisoryData(tx, system, advisoriesByName)
 	if err != nil {
@@ -515,7 +520,7 @@ func evaluateAndStore(system *models.SystemPlatformV2,
 	}
 
 	if enableInventoryViews {
-		err = publishInventoryViewsEvent(tx, []models.SystemPlatformV2{*system}, event)
+		err = publishInventoryViewsEvent(ctx, tx, []models.SystemPlatformV2{*system}, event)
 		if err != nil {
 			evaluationCnt.WithLabelValues("error-inventory-views-publish").Inc()
 			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err,
@@ -553,7 +558,7 @@ func evaluateAndStore(system *models.SystemPlatformV2,
 	return nil
 }
 
-func analyzeRepos(system *models.SystemPlatformV2) (thirdParty bool, err error) {
+func analyzeRepos(tx *gorm.DB, system *models.SystemPlatformV2) (thirdParty bool, err error) {
 	if !enableRepoAnalysis {
 		utils.LogInfo("repo analysis disabled, skipping")
 		return false, nil
@@ -564,7 +569,7 @@ func analyzeRepos(system *models.SystemPlatformV2) (thirdParty bool, err error) 
 	// if system has associated at least one third party repo
 	// it's marked as third party system
 	var thirdPartyCount int64
-	err = database.DB.Table("system_repo sr").
+	err = tx.Table("system_repo sr").
 		Joins("join repo r on r.id = sr.repo_id").
 		Where("sr.rh_account_id = ?", system.Inventory.RhAccountID).
 		Where("sr.system_id = ?", system.Inventory.ID).
@@ -704,11 +709,11 @@ func callVMaas(ctx context.Context, request *vmaas.UpdatesV3Request) (*vmaas.Upd
 	return vmaasDataPtr.(*vmaas.UpdatesV3Response), nil
 }
 
-func loadSystemData(accountID int, inventoryID uuid.UUID) (*models.SystemPlatformV2, error) {
+func loadSystemData(tx *gorm.DB, accountID int, inventoryID uuid.UUID) (*models.SystemPlatformV2, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("data-loading"))
 
 	var system models.SystemPlatformV2
-	err := database.DB.Table("system_inventory si").
+	err := tx.Table("system_inventory si").
 		Select("si.*, sp.*").
 		Joins("JOIN system_patch sp ON sp.system_id = si.id AND sp.rh_account_id = si.rh_account_id").
 		Where("si.rh_account_id = ?", accountID).
@@ -717,9 +722,9 @@ func loadSystemData(accountID int, inventoryID uuid.UUID) (*models.SystemPlatfor
 	return &system, err
 }
 
-func validSystem(accountID int, systemID int64) bool {
+func validSystem(tx *gorm.DB, accountID int, systemID int64) bool {
 	var foundID int64
-	err := database.DB.Model(&models.SystemInventory{}).
+	err := tx.Model(&models.SystemInventory{}).
 		Where("rh_account_id = ? AND id = ?", accountID, systemID).
 		Select("id").
 		Clauses(clause.Locking{Strength: "SHARE", Table: clause.Table{Name: clause.CurrentTable}}).
@@ -735,8 +740,8 @@ func parseVmaasJSON(inv *models.SystemInventory) (vmaas.UpdatesV3Request, error)
 	return utils.ParseVmaasJSON(inv)
 }
 
-func invalidateCaches(orgID string) error {
-	err := database.DB.Model(models.RhAccount{}).
+func invalidateCaches(ctx context.Context, orgID string) error {
+	err := database.DB(ctx).Model(models.RhAccount{}).
 		Where("org_id = ?", orgID).
 		Where("valid_package_cache = true OR valid_advisory_cache = true").
 		// use map because struct updates only non-zero values and we need to update it to `false`
@@ -745,52 +750,69 @@ func invalidateCaches(orgID string) error {
 	return err
 }
 
-func evaluateHandler(m mqueue.KafkaMessage) error {
+func systemIDsAndTraceparents(event mqueue.PlatformEvent) ([]uuid.UUID, []string) {
+	if event.SystemIDs != nil {
+		return event.SystemIDs, event.Traceparents
+	}
+	return []uuid.UUID{event.ID}, event.Traceparents
+}
+
+func firstRequestID(event mqueue.PlatformEvent) string {
+	if len(event.RequestIDs) > 0 {
+		return event.RequestIDs[0]
+	}
+	return ""
+}
+
+func evaluateHandler(ctx context.Context, m mqueue.KafkaMessage) error {
 	var event mqueue.PlatformEvent
 	if err := sonic.Unmarshal(m.Value, &event); err != nil {
 		utils.LogError("err", err, "Could not deserialize platform event")
 		return nil
 	}
 
+	span := trace.SpanFromContext(ctx)
+	telemetry.SetRHAttributes(span, event.GetOrgID(), firstRequestID(event))
+
 	var err error
 	var wg sync.WaitGroup
 	guard := make(chan struct{}, nEvalGoroutines)
 
-	nSystems := 1
-	if event.SystemIDs != nil {
-		nSystems = len(event.SystemIDs)
-	}
-	ptEvents := make(mqueue.PayloadTrackerEvents, 0, nSystems)
+	ids, tps := systemIDsAndTraceparents(event)
+	ptEvents := make(mqueue.PayloadTrackerEvents, 0, len(ids))
 	ptEvent := mqueue.PayloadTrackerEvent{
 		OrgID:     event.OrgID,
 		Status:    "success",
 		StatusMsg: "advisories evaluation",
 	}
 
-	if event.SystemIDs != nil {
-		// Evaluate in bulk
-		nRequestIDs := len(event.RequestIDs)
-		for i, id := range event.SystemIDs {
-			ptEvent.InventoryID = id
-			if nRequestIDs > i {
-				ptEvent.RequestID = &event.RequestIDs[i]
-			}
-			ptEvent, err = runEvaluate(base.Context, event, id, evalLabel, ptEvent, &wg, guard)
-			ptEvents = append(ptEvents, ptEvent)
+	nRequestIDs := len(event.RequestIDs)
+	for i, id := range ids {
+		ptEvent.InventoryID = id
+		if nRequestIDs > i {
+			ptEvent.RequestID = &event.RequestIDs[i]
 		}
-	} else {
-		ptEvent, err = runEvaluate(base.Context, event, event.ID, evalLabel, ptEvent, &wg, guard)
+		tp := ""
+		if i < len(tps) {
+			tp = tps[i]
+		}
+		itemCtx, itemSpan := telemetry.ItemContext(ctx, "evaluate "+evalLabel, tp)
+		if i < len(event.RequestIDs) {
+			telemetry.SetRHAttributes(itemSpan, event.GetOrgID(), event.RequestIDs[i])
+		}
+		ptEvent, err = runEvaluate(itemCtx, event, id, evalLabel, ptEvent, &wg, guard)
+		telemetry.End(itemSpan, err)
 		ptEvents = append(ptEvents, ptEvent)
 	}
 	wg.Wait()
 
-	if cacheErr := invalidateCaches(event.GetOrgID()); cacheErr != nil {
+	if cacheErr := invalidateCaches(ctx, event.GetOrgID()); cacheErr != nil {
 		utils.LogError("err", cacheErr, "org_id", event.GetOrgID(), "Couldn't invalidate caches")
 	}
 
 	// send kafka message to payload tracker
 	if evalLabel == uploadLabel {
-		ptErr := mqueue.SendMessages(base.Context, ptWriter, &ptEvents)
+		ptErr := mqueue.SendMessages(ctx, ptWriter, &ptEvents)
 		if ptErr != nil {
 			// don't fail with err, just log that we couldn't send msg to payload tracker
 			utils.LogWarn("err", ptErr, WarnPayloadTracker)
@@ -802,10 +824,11 @@ func evaluateHandler(m mqueue.KafkaMessage) error {
 func loadCache() {
 	memoryPackageCache = NewPackageCache(enablePackageCache, preloadPackageCache, packageCacheSize, packageNameCacheSize)
 	memoryPackageCache.Load()
-	memoryVmaasCache = NewVmaasPackageCache(enableVmaasCache, vmaasCacheSize, vmaasCacheCheckDuration)
+	tx := tasks.CancelableDB()
+	memoryVmaasCache = NewVmaasPackageCache(tx, enableVmaasCache, vmaasCacheSize, vmaasCacheCheckDuration)
 	if memoryVmaasCache.enabled {
 		// no need to check cache validity when cache is not enabled
-		go memoryVmaasCache.CheckValidity()
+		go memoryVmaasCache.CheckValidity(tx)
 	}
 }
 

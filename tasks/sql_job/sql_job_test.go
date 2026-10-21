@@ -51,7 +51,7 @@ func testDB(t *testing.T) *sql.DB {
 	t.Helper()
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	db, err := database.DB.DB()
+	db, err := database.TestDB().DB()
 	require.NoError(t, err)
 	return db
 }

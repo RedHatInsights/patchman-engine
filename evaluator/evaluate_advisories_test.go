@@ -1,12 +1,12 @@
 package evaluator
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"app/base/vmaas"
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -64,7 +64,7 @@ func TestLoadSystemAdvisories(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	systemAdvisories, err := loadSystemAdvisories(database.DB, 1, 1)
+	systemAdvisories, err := loadSystemAdvisories(database.TestDB(), 1, 1)
 	assert.Nil(t, err)
 	assert.NotNil(t, systemAdvisories)
 	assert.Equal(t, 8, len(systemAdvisories))
@@ -90,11 +90,11 @@ func TestEvaluateChanges(t *testing.T) {
 	vmaasData := vmaas.UpdatesV3Response{UpdateList: &updateList}
 
 	// advisories must be lazy saved before evaluating changes
-	err := lazySaveAdvisories(&vmaasData, testInventoryID)
+	err := lazySaveAdvisories(database.TestDB(), &vmaasData, testInventoryID)
 	defer database.DeleteNewlyAddedAdvisories(t)
 	assert.Nil(t, err)
 
-	extendedAdvisories, err := evaluateChanges(&vmaasData, stored)
+	extendedAdvisories, err := evaluateChanges(database.TestDB(), &vmaasData, stored)
 	assert.Nil(t, err)
 	assert.Equal(t, 4, len(extendedAdvisories))
 
@@ -113,14 +113,14 @@ func TestLoadMissingNamesIDs(t *testing.T) {
 	extendedAdvisories := extendedAdvisoryMap{"ER1": {}, "ER2": {}, "ER3": {}, "ER4": {}}
 
 	// test error if not lazy saved
-	err := loadMissingNamesIDs(missingNames, extendedAdvisories)
+	err := loadMissingNamesIDs(database.TestDB(), missingNames, extendedAdvisories)
 	assert.Error(t, err)
 
 	// test OK if lazy saved
-	err = lazySaveAdvisories(&vmaasData, testInventoryID)
+	err = lazySaveAdvisories(database.TestDB(), &vmaasData, testInventoryID)
 	defer database.DeleteNewlyAddedAdvisories(t)
 	assert.NoError(t, err)
-	err = loadMissingNamesIDs(missingNames, extendedAdvisories)
+	err = loadMissingNamesIDs(database.TestDB(), missingNames, extendedAdvisories)
 	assert.NoError(t, err)
 	assert.NotEqual(t, int64(0), extendedAdvisories["ER1"].AdvisoryID)
 	assert.NotEqual(t, int64(0), extendedAdvisories["ER2"].AdvisoryID)
@@ -178,7 +178,7 @@ func TestUpdateAdvisoryAccountData(t *testing.T) {
 	}
 
 	// Update as if the advisories became patched
-	err := updateAdvisoryAccountData(database.DB, system, advisoriesByName)
+	err := updateAdvisoryAccountData(database.TestDB(), system, advisoriesByName)
 	assert.NoError(t, err)
 	database.CheckSystemAdvisories(t, system.InternalSystemID(), advisoryIDs)
 	database.CheckAdvisoriesAccountData(t, system.Inventory.RhAccountID, advisoryIDs, 0)
@@ -188,7 +188,7 @@ func TestUpdateAdvisoryAccountData(t *testing.T) {
 		ea.change = Add
 		advisoriesByName[name] = ea
 	}
-	err = updateAdvisoryAccountData(database.DB, system, advisoriesByName)
+	err = updateAdvisoryAccountData(database.TestDB(), system, advisoriesByName)
 	assert.NoError(t, err)
 	database.CheckAdvisoriesAccountData(t, system.Inventory.RhAccountID, advisoryIDs, 1)
 
@@ -230,7 +230,7 @@ func TestUpdateAdvisoryAccountDataDisabled(t *testing.T) {
 		},
 	}
 
-	err := updateAdvisoryAccountData(database.DB, system, advisoriesByName)
+	err := updateAdvisoryAccountData(database.TestDB(), system, advisoriesByName)
 	assert.NoError(t, err)
 	database.CheckAdvisoriesAccountData(t, system.Inventory.RhAccountID, advisoryIDs, 1)
 }
@@ -242,7 +242,7 @@ func TestGetMissingAdvisories(t *testing.T) {
 	advisoryNames := []string{"ER-1", "RH-1", "ER-2", "RH-2"}
 	advisoryMap := map[string]int{"ER-1": 0, "RH-1": 0, "ER-2": 0, "RH-2": 0}
 	advisoryIDs := getAdvisoryIDsByNames(t, advisoryNames)
-	missingNames, err := getMissingAdvisories(advisoryMap)
+	missingNames, err := getMissingAdvisories(database.TestDB(), advisoryMap)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(advisoryIDs))
 	assert.Equal(t, 2, len(missingNames))
@@ -254,7 +254,7 @@ func TestGetMissingAdvisoriesEmptyString(t *testing.T) {
 
 	advisories := []string{""}
 	advisoryIDs := getAdvisoryIDsByNames(t, advisories)
-	missingNames, err := getMissingAdvisories(map[string]int{"": 0})
+	missingNames, err := getMissingAdvisories(database.TestDB(), map[string]int{"": 0})
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(advisoryIDs))
 	assert.Equal(t, 1, len(missingNames))
@@ -307,13 +307,13 @@ func TestUpsertSystemAdvisories(t *testing.T) {
 	}
 
 	// check insert
-	err := upsertSystemAdvisories(database.DB, advisoryObjs)
+	err := upsertSystemAdvisories(database.TestDB(), advisoryObjs)
 	assert.Nil(t, err)
 	database.CheckSystemAdvisories(t, testDBID, []int64{3, 4})
 
 	// check update
 	var updatedAdvisory models.SystemAdvisories
-	err = database.DB.Model(models.SystemAdvisories{}).Find(&updatedAdvisory, []int64{3}).Error
+	err = database.TestDB().Model(models.SystemAdvisories{}).Find(&updatedAdvisory, []int64{3}).Error
 	assert.Nil(t, err)
 	assert.Equal(t, APPLICABLE, updatedAdvisory.StatusID)
 
@@ -365,7 +365,7 @@ func TestStoreMissingAdvisories(t *testing.T) {
 	core.SetupTestEnvironment()
 
 	otherAdvisories := []string{"ER-TSMA-1", "ER-TSMA-2", "ER-TSMA-3", "ER-TSMA-4"}
-	err := storeMissingAdvisories(otherAdvisories)
+	err := storeMissingAdvisories(database.TestDB(), otherAdvisories)
 	assert.NoError(t, err)
 	advisories := database.GetAdvisoriesByName(t, otherAdvisories)
 	expectedText := "Not Available for 3rd party systems"
@@ -377,7 +377,7 @@ func TestStoreMissingAdvisories(t *testing.T) {
 	database.DeleteAdvisoriesByName(t, otherAdvisories)
 
 	rhelAdvisories := []string{"RHSA-TSMA-1", "RHEA-TSMA-2", "RHBA-TSMA-3"}
-	err = storeMissingAdvisories(rhelAdvisories)
+	err = storeMissingAdvisories(database.TestDB(), rhelAdvisories)
 	assert.NoError(t, err)
 	advisories = database.GetAdvisoriesByName(t, rhelAdvisories)
 	for _, advisory := range advisories {
@@ -390,7 +390,7 @@ func TestStoreMissingAdvisories(t *testing.T) {
 }
 
 func getVMaaSUpdates(t *testing.T) vmaas.UpdatesV3Response {
-	ctx := context.Background()
+	ctx := base.Context
 	vmaasData := vmaas.UpdatesV3Response{}
 	resp, err := vmaasClient.Request(&ctx, http.MethodPost, vmaasUpdatesURL, nil, &vmaasData)
 	assert.Nil(t, err)
@@ -416,7 +416,7 @@ func mockVMaaSResponse() vmaas.UpdatesV3Response {
 
 func getAdvisoryIDsByNames(t *testing.T, names []string) []int64 {
 	ids := make([]int64, 0, len(names))
-	err := database.DB.Model(&models.AdvisoryMetadata{}).
+	err := database.TestDB().Model(&models.AdvisoryMetadata{}).
 		Where("name IN (?)", names).
 		Pluck("id", &ids).Error
 	assert.NoError(t, err)

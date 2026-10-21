@@ -21,22 +21,23 @@ func HandleContextCancel(fn func()) {
 
 func WaitAndExit() {
 	time.Sleep(time.Second) // give some time to close eventual db connections
+	base.ShutdownTelemetry()
 	os.Exit(0)
 }
 
 // return database handler with base context
 // which will be properly cancled in case of service shutdown
 func CancelableDB() *gorm.DB {
-	return database.DB.WithContext(base.Context)
+	return database.DB(base.Context)
 }
 
 // return read replica (if available) database handler with base context
 // which will be properly canceled in case of service shutdown
 func CancelableReadReplicaDB() *gorm.DB {
 	if utils.CoreCfg.DBReadReplicaEnabled && database.ReadReplicaConfigured() {
-		return database.DBReadReplica.WithContext(base.Context)
+		return database.DBReadReplica(base.Context)
 	}
-	return database.DB.WithContext(base.Context)
+	return database.DB(base.Context)
 }
 
 func withTx(do func(db *gorm.DB) error, cancelableDB func() *gorm.DB) error {

@@ -21,19 +21,19 @@ func TestBatchInsert(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
 
-	err := DB.AutoMigrate(&TestTable{})
+	err := TestDB().AutoMigrate(&TestTable{})
 	assert.NoError(t, err)
-	err = DB.Unscoped().Delete(&TestTable{}, "true").Error
+	err = TestDB().Unscoped().Delete(&TestTable{}, "true").Error
 	assert.NoError(t, err)
 
 	// Bulk insert should create new rows
 	values := make(TestTableSlice, len(defaultValues))
 	copy(values, defaultValues)
-	err = BulkInsert(DB, values, WithReturning("RETURNING *"))
+	err = BulkInsert(TestDB(), values, WithReturning("RETURNING *"))
 	assert.NoError(t, err)
 
 	var res []TestTable
-	assert.NoError(t, DB.Find(&res).Error)
+	assert.NoError(t, TestDB().Find(&res).Error)
 
 	// Reading rows should return same data as the inserted rows
 	assert.Equal(t, len(values), len(res))
@@ -47,11 +47,11 @@ func TestBatchInsert(t *testing.T) {
 func TestBatchInsertOnConflictUpdate(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
-	db := DB
+	db := TestDB()
 
-	err := DB.AutoMigrate(&TestTable{})
+	err := db.AutoMigrate(&TestTable{})
 	assert.NoError(t, err)
-	err = DB.Unscoped().Delete(&TestTable{}, "true").Error
+	err = db.Unscoped().Delete(&TestTable{}, "true").Error
 	assert.NoError(t, err)
 
 	// Perform first insert
@@ -94,20 +94,20 @@ func TestBatchInsertOnConflictUpdate(t *testing.T) {
 func TestBatchInsertNoReturning(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	Configure()
-
-	err := DB.AutoMigrate(&TestTable{})
+	db := TestDB()
+	err := db.AutoMigrate(&TestTable{})
 	assert.NoError(t, err)
-	err = DB.Unscoped().Delete(&TestTable{}, "true").Error
+	err = db.Unscoped().Delete(&TestTable{}, "true").Error
 	assert.NoError(t, err)
 
 	// Bulk insert should create new rows
 	values := make(TestTableSlice, len(defaultValues))
 	copy(values, defaultValues)
-	err = BulkInsert(DB, values)
+	err = BulkInsert(db, values)
 	assert.NoError(t, err)
 
 	var res []TestTable
-	assert.NoError(t, DB.Find(&res).Error)
+	assert.NoError(t, db.Find(&res).Error)
 
 	// Reading rows should return same data as the inserted rows
 	assert.Equal(t, len(values), len(res))

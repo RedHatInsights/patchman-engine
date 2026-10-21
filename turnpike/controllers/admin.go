@@ -30,7 +30,7 @@ func Syncapi(c *gin.Context) {
 	utils.LogInfo("manual syncing called...")
 	sync.Configure()
 	vmaasExportedTS := sync.VmaasDBExported()
-	err := sync.SyncData(nil, vmaasExportedTS)
+	err := sync.SyncData(database.DB(c.Request.Context()), nil, vmaasExportedTS)
 	if err != nil {
 		utils.LogError("err", err, "manual called syncing failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
@@ -51,7 +51,7 @@ func Syncapi(c *gin.Context) {
 // @Router /re-calc [get]
 func Recalc(c *gin.Context) {
 	utils.LogInfo("manual re-calc messages sending called...")
-	err := sync.SendReevaluationMessages()
+	err := sync.SendReevaluationMessages(c.Request.Context())
 	if err != nil {
 		utils.LogError("err", err, "manual re-calc msgs sending failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})

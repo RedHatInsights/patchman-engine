@@ -24,7 +24,7 @@ func TestGroupNameFilter(t *testing.T) {
 
 	var systems []SystemsID
 	workspaceIDs := []string{"00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002"}
-	tx := database.Systems(database.DB, 1, workspaceIDs)
+	tx := database.Systems(database.TestDB(), 1, workspaceIDs)
 	tx, _ = ApplyInventoryFilter(filters, tx, "si.inventory_id")
 	tx.Scan(&systems)
 
@@ -45,7 +45,7 @@ func TestGroupNameFilter2(t *testing.T) {
 
 	var systems []SystemsID
 	workspaceIDs := []string{"00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002"}
-	tx := database.Systems(database.DB, 1, workspaceIDs)
+	tx := database.Systems(database.TestDB(), 1, workspaceIDs)
 	tx, _ = ApplyInventoryFilter(filters, tx, "si.inventory_id")
 	tx.Scan(&systems)
 

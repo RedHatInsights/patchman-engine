@@ -1,6 +1,7 @@
 package mqueue
 
 import (
+	"app/base"
 	"app/base/utils"
 	"context"
 	"errors"
@@ -23,13 +24,13 @@ func TestRoundTripKafkaGo(t *testing.T) {
 	defer reader.Close()
 
 	var eventOut PlatformEvent
-	go reader.HandleMessages(t.Context(), func(m KafkaMessage) error {
+	go reader.HandleMessages(t.Context(), func(_ context.Context, m KafkaMessage) error {
 		return sonic.Unmarshal(m.Value, &eventOut)
 	})
 
 	writer := NewKafkaWriterFromEnv("test")
 	eventIn := PlatformEvent{ID: someid}
-	assert.NoError(t, writePlatformEvents(context.Background(), writer, eventIn))
+	assert.NoError(t, writePlatformEvents(base.Context, writer, eventIn))
 	utils.AssertEqualWait(t, 10, func() (exp, act interface{}) {
 		return eventIn.ID, eventOut.ID
 	})
@@ -38,15 +39,15 @@ func TestRoundTripKafkaGo(t *testing.T) {
 func TestSpawnReader(t *testing.T) {
 	var nReaders int32
 	wg := sync.WaitGroup{}
-	SpawnReader(context.Background(), &wg, "", CreateCountedMockReader(&nReaders),
-		func(_ KafkaMessage) error { return nil })
+	SpawnReader(base.Context, &wg, "", CreateCountedMockReader(&nReaders),
+		func(_ context.Context, _ KafkaMessage) error { return nil })
 	wg.Wait()
 	assert.Equal(t, 1, int(nReaders))
 }
 
 func TestRetry(t *testing.T) {
 	i := 0
-	handler := func(_ KafkaMessage) error {
+	handler := func(_ context.Context, _ KafkaMessage) error {
 		i++
 		if i < 2 {
 			return errors.New("Failed")
@@ -55,8 +56,14 @@ func TestRetry(t *testing.T) {
 	}
 
 	// Without retry handler should fail
-	assert.Error(t, handler(msg))
+	assert.Error(t, handler(base.Context, msg))
 
 	// With retry we handler should eventually succeed
-	assert.NoError(t, MakeRetryingHandler(handler)(msg))
+	assert.NoError(t, MakeRetryingHandler(handler)(base.Context, msg))
+}
+
+func TestWriteMessagesInjectsTraceparent(t *testing.T) {
+	// WriteMessages requires a Kafka broker; inject coverage lives in
+	// telemetry.Inject / TestProducerContextLinksOriginalsAndInjectsOwnTraceparent.
+	t.Skip("no broker-free WriteMessages path; covered by telemetry.Inject tests")
 }

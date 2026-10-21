@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"app/base"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
@@ -64,7 +65,7 @@ func TestAdvisoriesNotificationPublish(t *testing.T) {
 		AccountID:  rhAccountID,
 		OrgID:      &orgID})
 	assert.NoError(t, err)
-	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
+	err = evaluateHandler(base.Context, mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
 	database.CheckAdvisoriesAccountDataNotified(t, rhAccountID, expectedAdvisoryIDs, true)
@@ -118,7 +119,7 @@ func TestAdvisoriesNotificationSkipPublishViaEvaluate(t *testing.T) {
 		SkipNotifications: true,
 	})
 	assert.NoError(t, err)
-	err = evaluateHandler(mqueue.KafkaMessage{Value: data})
+	err = evaluateHandler(base.Context, mqueue.KafkaMessage{Value: data})
 	assert.NoError(t, err)
 
 	advisoryIDs := database.CheckAdvisoriesInDB(t, expectedAddedAdvisories)
@@ -181,7 +182,7 @@ func TestGetSystemTags(t *testing.T) {
 		},
 		Patch: models.SystemPatch{},
 	}
-	tags, err := getSystemTags(database.DB, system)
+	tags, err := getSystemTags(database.TestDB(), system)
 	expected := []ntf.SystemTag{
 		{Key: "k1", Value: "val1", Namespace: "ns1"},
 		{Key: "k2", Value: "val2", Namespace: "ns1"},
@@ -207,7 +208,7 @@ func TestAdvisoriesNotificationAlreadyNotified(t *testing.T) {
 
 	now := time.Now()
 	for _, id := range advisoryIDs {
-		err := database.DB.Create(&models.AdvisoryAccountData{
+		err := database.TestDB().Create(&models.AdvisoryAccountData{
 			AdvisoryID:         id,
 			RhAccountID:        rhAccountID,
 			SystemsInstallable: 1,
@@ -232,7 +233,7 @@ func TestAdvisoriesNotificationAlreadyNotified(t *testing.T) {
 		"RH-2": {AdvisoryID: 2},
 	}
 
-	err := publishNewAdvisoriesNotification(database.DB, system, orgID, newAdvs, false)
+	err := publishNewAdvisoriesNotification(database.TestDB(), system, orgID, newAdvs, false)
 	assert.NoError(t, err)
 	assert.Empty(t, mockWriter.Messages, "no notification should be sent when all advisories are already notified")
 }
@@ -259,7 +260,7 @@ func TestAdvisoriesNotificationEmptyAdvisoryMap(t *testing.T) {
 	}
 
 	// An empty map means there is nothing to query — no messages should be produced regardless.
-	publishNewAdvisoriesNotification(database.DB, system, orgID, SystemAdvisoryMap{}, false) //nolint:errcheck
+	publishNewAdvisoriesNotification(database.TestDB(), system, orgID, SystemAdvisoryMap{}, false) //nolint:errcheck
 	assert.Empty(t, mockWriter.Messages, "no notification should be sent when the advisory map is empty")
 }
 
@@ -293,7 +294,7 @@ func TestAdvisoriesNotificationSkipPublish(t *testing.T) {
 		"RH-2": {AdvisoryID: 2},
 	}
 
-	err := publishNewAdvisoriesNotification(database.DB, system, orgID, newAdvs, true)
+	err := publishNewAdvisoriesNotification(database.TestDB(), system, orgID, newAdvs, true)
 	assert.NoError(t, err)
 	assert.Empty(t, mockWriter.Messages, "no notification should be sent when skipPublish is true")
 	database.CheckAdvisoriesAccountDataNotified(t, rhAccountID, advisoryIDs, true)
@@ -313,7 +314,7 @@ func TestGetUnnotifiedAdvisoriesReturnsEmpty(t *testing.T) {
 
 	now := time.Now()
 	for _, id := range advisoryIDs {
-		err := database.DB.Create(&models.AdvisoryAccountData{
+		err := database.TestDB().Create(&models.AdvisoryAccountData{
 			AdvisoryID:         id,
 			RhAccountID:        rhAccountID,
 			SystemsInstallable: 1,
@@ -329,7 +330,7 @@ func TestGetUnnotifiedAdvisoriesReturnsEmpty(t *testing.T) {
 		"RH-2": {AdvisoryID: 2},
 	}
 
-	result, err := getUnnotifiedAdvisories(database.DB, rhAccountID, newAdvs)
+	result, err := getUnnotifiedAdvisories(database.TestDB(), rhAccountID, newAdvs)
 	assert.NoError(t, err)
 	assert.NotNil(t, result, "result must be a non-nil slice so callers can use len() safely")
 	assert.Empty(t, result, "no advisories should be returned when all are already notified")

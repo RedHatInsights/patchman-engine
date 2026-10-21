@@ -27,8 +27,8 @@ func TestInitDelete(t *testing.T) {
 		WorkspaceID:   database.TestWorkspace1UUID(),
 		WorkspaceName: database.TestWorkspace1NamePtr(),
 	}
-	assert.NoError(t, database.DB.Create(&inv).Error)
-	assert.NoError(t, database.DB.Create(&models.SystemPatch{
+	assert.NoError(t, database.TestDB().Create(&inv).Error)
+	assert.NoError(t, database.TestDB().Create(&models.SystemPatch{
 		SystemID:    inv.ID,
 		RhAccountID: 1,
 	}).Error)
