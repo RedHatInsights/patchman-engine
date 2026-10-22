@@ -1,5 +1,5 @@
-ARG BUILDIMG=registry.access.redhat.com/ubi9
-ARG RUNIMG=registry.access.redhat.com/ubi9-micro
+ARG BUILDIMG=registry.access.redhat.com/ubi10
+ARG RUNIMG=registry.access.redhat.com/ubi10-micro
 FROM ${BUILDIMG} AS buildimg
 
 ARG INSTALL_TOOLS=no
