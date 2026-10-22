@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9
+FROM registry.access.redhat.com/ubi10
 
 RUN yum install -y unzip java && \
     yum clean all
