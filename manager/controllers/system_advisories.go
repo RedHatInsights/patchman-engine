@@ -190,6 +190,7 @@ func SystemAdvisoriesIDsHandler(c *gin.Context) {
 	err = query.Find(&aids).Error
 	if err != nil {
 		utils.LogAndRespError(c, err, "db error")
+		return
 	}
 
 	resp := advisoriesStatusIDs(aids)

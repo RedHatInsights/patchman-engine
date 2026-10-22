@@ -147,6 +147,7 @@ func AdvisoriesListHandler(c *gin.Context) {
 	err = query.Find(&advisories).Error
 	if err != nil {
 		utils.LogAndRespError(c, err, "db error")
+		return
 	}
 	data, total, subtotals := buildAdvisoriesData(advisories)
 	meta, links, err := UpdateMetaLinks(c, meta, total, subtotals, params...)
@@ -207,6 +208,7 @@ func AdvisoriesListIDsHandler(c *gin.Context) {
 	err = query.Find(&aids).Error
 	if err != nil {
 		utils.LogAndRespError(c, err, "db error")
+		return
 	}
 
 	resp := advisoriesIDs(aids)

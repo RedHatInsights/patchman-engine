@@ -49,6 +49,7 @@ func SystemAdvisoriesExportHandler(c *gin.Context) {
 
 	if err != nil {
 		utils.LogAndRespError(c, err, "database error")
+		return
 	}
 	if exists == 0 {
 		utils.LogAndRespNotFound(c, errors.New("System not found"), "System not found")

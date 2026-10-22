@@ -72,6 +72,7 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 		Where("name = ? ", advisoryName).Count(&exists).Error
 	if err != nil {
 		utils.LogAndRespError(c, err, "database error")
+		return
 	}
 	if exists == 0 {
 		utils.LogAndRespNotFound(c, errors.New("advisory not found"), "Advisory not found")
