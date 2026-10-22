@@ -1,13 +1,25 @@
-ARG BUILDIMG=registry.access.redhat.com/ubi9
-ARG RUNIMG=registry.access.redhat.com/ubi9-micro
+ARG BUILDIMG=registry.access.redhat.com/ubi10
+ARG RUNIMG=registry.access.redhat.com/ubi10-micro
 FROM ${BUILDIMG} AS buildimg
 
 ARG INSTALL_TOOLS=no
 
 # install build, development and test environment
-RUN (dnf module enable -y postgresql:18 || curl -o /etc/yum.repos.d/postgresql.repo \
-    https://copr.fedorainfracloud.org/coprs/g/insights/postgresql-18/repo/rhel-9/group_insights-postgresql-18-rhel-9.repo) && \
-    dnf install -y go-toolset postgresql diffutils rpm-devel pg_repack
+# UBI10 has no postgresql dnf module. Use @insights COPR for PostgreSQL 18 (rhel-10).
+# The COPR pg_repack el10 RPM is incorrectly linked against PG16, so build from source.
+ARG PG_REPACK_VERSION=1.5.2
+RUN curl -o /etc/yum.repos.d/postgresql.repo \
+    https://copr.fedorainfracloud.org/coprs/g/insights/postgresql-18/repo/rhel-10/group_insights-postgresql-18-rhel-10.repo && \
+    dnf install -y go-toolset postgresql18 postgresql18-server postgresql18-server-devel \
+        postgresql18-static diffutils rpm-devel gcc make openssl-devel readline-devel \
+        zlib-devel redhat-rpm-config libzstd-devel lz4-devel && \
+    curl -fsSL -o /tmp/pg_repack.tgz \
+        https://github.com/reorg/pg_repack/archive/refs/tags/ver_${PG_REPACK_VERSION}.tar.gz && \
+    tar -xzf /tmp/pg_repack.tgz -C /tmp && \
+    make -C /tmp/pg_repack-ver_${PG_REPACK_VERSION} USE_PGXS=1 && \
+    make -C /tmp/pg_repack-ver_${PG_REPACK_VERSION} USE_PGXS=1 install && \
+    rm -rf /tmp/pg_repack.tgz /tmp/pg_repack-ver_${PG_REPACK_VERSION} && \
+    dnf clean all
 
 ENV GOPATH=/go \
     GO111MODULE=on \
