@@ -137,18 +137,25 @@ func ProducerContext(ctx context.Context, topic string, links []trace.Link) (con
 	return Tracer().Start(ctx, "send "+topic, opts...)
 }
 
+// ItemContext nests work under the current span when it shares the item's trace.
+// Items from other traces retain their original parent and link to the current span.
 func ItemContext(parent context.Context, name, traceparent string) (context.Context, trace.Span) {
 	if !Enabled() {
 		return parent, trace.SpanFromContext(parent)
 	}
 	startCtx := parent
+	opts := []trace.SpanStartOption{trace.WithSpanKind(trace.SpanKindInternal)}
 	if traceparent != "" {
-		orig := ContextFromTraceparent(traceparent)
-		if trace.SpanContextFromContext(orig).IsValid() {
-			startCtx = trace.ContextWithRemoteSpanContext(parent, trace.SpanContextFromContext(orig))
+		origSC := trace.SpanContextFromContext(ContextFromTraceparent(traceparent))
+		parentSC := trace.SpanContextFromContext(parent)
+		if origSC.IsValid() && (!parentSC.IsValid() || origSC.TraceID() != parentSC.TraceID()) {
+			startCtx = trace.ContextWithRemoteSpanContext(parent, origSC)
+			if parentSC.IsValid() {
+				opts = append(opts, trace.WithLinks(trace.Link{SpanContext: parentSC}))
+			}
 		}
 	}
-	return Tracer().Start(startCtx, name, trace.WithSpanKind(trace.SpanKindInternal))
+	return Tracer().Start(startCtx, name, opts...)
 }
 
 func SetRHAttributes(span trace.Span, orgID, requestID string) {

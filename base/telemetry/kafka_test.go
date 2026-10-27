@@ -123,7 +123,7 @@ func TestDisabledProducerDoesNotEndParent(t *testing.T) {
 	assert.Empty(t, spans[0].Events, "a disabled producer must not record errors on the parent")
 }
 
-func TestItemContextParentsOriginalTrace(t *testing.T) {
+func TestItemContextParentsConsumerInSameTrace(t *testing.T) {
 	exp := setupKafkaTest(t)
 
 	origCtx, orig := Tracer().Start(context.Background(), "original-item")
@@ -157,12 +157,93 @@ func TestItemContextParentsOriginalTrace(t *testing.T) {
 
 	origSC := trace.SpanContextFromContext(ContextFromTraceparent(originalTraceparent))
 	assert.Equal(t, origSC.TraceID(), itemStub.SpanContext.TraceID())
-	assert.Equal(t, origSC.SpanID(), itemStub.Parent.SpanID())
+	assert.Equal(t, bulkStub.SpanContext.SpanID(), itemStub.Parent.SpanID())
 	assert.Empty(t, itemStub.Links)
 
 	assert.Equal(t, origSC.TraceID(), producerStub.SpanContext.TraceID())
 	assert.Equal(t, origSC.SpanID(), producerStub.Parent.SpanID())
 	assert.Equal(t, producerStub.SpanContext.SpanID(), bulkStub.Parent.SpanID())
+}
+
+func TestItemContextMixedTraceBatch(t *testing.T) {
+	for _, label := range []string{"upload", "user-evaluation"} {
+		t.Run(label, func(t *testing.T) {
+			exp := setupKafkaTest(t)
+			name := "evaluate " + label
+
+			ctx0, original0 := Tracer().Start(t.Context(), "original-0")
+			tp0 := EncodeTraceparent(ctx0)
+			original0.End()
+			ctx1, original1 := Tracer().Start(t.Context(), "original-1")
+			tp1 := EncodeTraceparent(ctx1)
+			original1.End()
+
+			producerCtx, producer := ProducerContext(ParentContextFromTraceparents([]string{tp0, tp1}),
+				"patchman.evaluator.upload", nil)
+			headers := Inject(producerCtx, nil)
+			producer.End()
+			bulkCtx, bulk := ConsumerContext(t.Context(), "patchman.evaluator.upload", headers)
+
+			_, item0 := ItemContext(bulkCtx, name, tp0)
+			item0.End()
+			_, item1 := ItemContext(bulkCtx, name, tp1)
+			item1.End()
+			bulk.End()
+
+			spans := flushSpans(t, exp)
+			var item0Stub, item1Stub tracetest.SpanStub
+			for _, s := range spans {
+				switch s.SpanContext.SpanID() {
+				case item0.SpanContext().SpanID():
+					item0Stub = s
+				case item1.SpanContext().SpanID():
+					item1Stub = s
+				}
+			}
+			require.NotEmpty(t, item0Stub.Name)
+			require.NotEmpty(t, item1Stub.Name)
+			assert.Equal(t, original0.SpanContext().TraceID(), item0Stub.SpanContext.TraceID())
+			assert.Equal(t, bulk.SpanContext().SpanID(), item0Stub.Parent.SpanID())
+			assert.Empty(t, item0Stub.Links)
+
+			assert.Equal(t, original1.SpanContext().TraceID(), item1Stub.SpanContext.TraceID())
+			assert.Equal(t, original1.SpanContext().SpanID(), item1Stub.Parent.SpanID())
+			require.Len(t, item1Stub.Links, 1)
+			assert.Equal(t, bulk.SpanContext(), item1Stub.Links[0].SpanContext)
+		})
+	}
+}
+
+func TestItemContextFallsBackToAvailableParent(t *testing.T) {
+	const name = "evaluate fallback"
+	for _, tt := range []struct {
+		name        string
+		traceparent string
+		withParent  bool
+	}{
+		{name: "missing traceparent", withParent: true},
+		{name: "invalid traceparent", traceparent: "invalid", withParent: true},
+		{name: "no consumer span"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			exp := setupKafkaTest(t)
+			parentCtx, parent := Tracer().Start(t.Context(), "available-parent")
+			ctx, tp := parentCtx, tt.traceparent
+			if !tt.withParent {
+				ctx, tp = t.Context(), EncodeTraceparent(parentCtx)
+			}
+			_, item := ItemContext(ctx, name, tp)
+			item.End()
+			parent.End()
+
+			spans := flushSpans(t, exp)
+			require.Len(t, spans, 2)
+			assert.Equal(t, name, spans[0].Name)
+			assert.Equal(t, parent.SpanContext().TraceID(), spans[0].SpanContext.TraceID())
+			assert.Equal(t, parent.SpanContext().SpanID(), spans[0].Parent.SpanID())
+			assert.Empty(t, spans[0].Links)
+		})
+	}
 }
 
 func TestItemContextPreservesCallerContext(t *testing.T) {
