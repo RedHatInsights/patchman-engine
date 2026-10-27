@@ -62,8 +62,8 @@ func configure() {
 	ptWriter = mqueue.NewKafkaWriterFromEnv(ptTopic)
 	createdSystemsWriter = mqueue.NewKafkaWriterFromEnv(createdTopic)
 
-	updatedEventsBuffer.initEventBuffer(&evalWriter, &ptWriter)
-	createdEventsBuffer.initEventBuffer(&createdSystemsWriter, &ptWriter)
+	updatedEventsBuffer.initEventBuffer(&evalWriter, &ptWriter, evalTopic)
+	createdEventsBuffer.initEventBuffer(&createdSystemsWriter, &ptWriter, createdTopic)
 
 	configureListener()
 }
