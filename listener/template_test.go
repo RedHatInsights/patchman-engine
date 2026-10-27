@@ -179,3 +179,52 @@ func TestTemplateEmptyDescription(t *testing.T) {
 	// cleanup
 	deleteTemplatesInDB(t, after)
 }
+
+func TestProcessTemplateEventAdvisoryIDs(t *testing.T) {
+	raw := []byte(`{
+		"id": "1",
+		"type": "com.redhat.console.repositories.template-updated",
+		"source": "urn:redhat:source:console:app:repositories",
+		"subject": "urn:redhat:subject:console:rhel:template-updated",
+		"time": "2024-01-02T03:04:05Z",
+		"redhatorgid": "org_1",
+		"data": [{
+			"uuid": "77777777-0000-0000-0000-000000000000",
+			"name": "Template0",
+			"org_id": "org_1",
+			"arch": "x86_64",
+			"version": "8",
+			"date": "2024-01-02T03:04:05Z",
+			"repository_uuids": [],
+			"client_environment_id": "77777777000000000000000000000000",
+			"advisory_ids": ["RHBA-2024:1234", "RHSA-2024:5678"]
+		}]
+	}`)
+
+	eType, event, err := processTemplateEvent(raw)
+	assert.Nil(t, err)
+	assert.Equal(t, "template-updated", eType)
+	assert.Equal(t, []string{"RHBA-2024:1234", "RHSA-2024:5678"}, event.Data[0].AdvisoryIDs)
+
+	omitted := []byte(`{
+		"id": "1",
+		"type": "com.redhat.console.repositories.template-created",
+		"source": "urn:redhat:source:console:app:repositories",
+		"subject": "urn:redhat:subject:console:rhel:template-created",
+		"time": "2024-01-02T03:04:05Z",
+		"redhatorgid": "org_1",
+		"data": [{
+			"uuid": "77777777-0000-0000-0000-000000000000",
+			"name": "Template0",
+			"org_id": "org_1",
+			"arch": "x86_64",
+			"version": "8",
+			"date": "2024-01-02T03:04:05Z",
+			"repository_uuids": [],
+			"client_environment_id": "77777777000000000000000000000000"
+		}]
+	}`)
+	_, event, err = processTemplateEvent(omitted)
+	assert.Nil(t, err)
+	assert.Nil(t, event.Data[0].AdvisoryIDs)
+}
