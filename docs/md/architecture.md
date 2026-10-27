@@ -77,22 +77,6 @@ and the [major migration runbook](major-migration-runbook.md). Using container C
 ### Components cooperation schema
 ![](graphics/schema.png)
 
-### Listener buffer tracing
-
-The listener buffers host evaluation requests before publishing them. Created hosts use the configured
-`CREATED_SYSTEMS_TOPIC` (normally `patchman.evaluator.user-evaluation`); updated hosts use `EVAL_TOPIC`
-(normally `patchman.evaluator.upload`). The `send <topic>` producer span covers the evaluation-message publish
-and ends before payload-tracker messages are published.
-
-With messaging tracing enabled, each buffered host with a recorded listener processing span also gets an internal
-`buffer wait <topic>` span in its own trace. Its duration is the interval from the later of enqueue time and the end
-of listener processing to the start of the evaluation publish. It excludes processing overlap and Kafka publishing.
-If processing is still active at publication, as for the host that triggers a synchronous full-buffer flush, the
-buffer-wait duration is zero. These zero observations keep span-metric averages representative of all traced hosts.
-The spans retain the listener's organization and request attributes; their counts are per host, while producer
-counts are per buffer flush. Buffer-wait durations can be added to listener processing durations without counting
-the same interval twice. The synchronous producer remains inside the listener processing interval.
-
 ### Template content update flow
 
 When Content Sources publishes a `template-updated` event:
