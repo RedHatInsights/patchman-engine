@@ -6,8 +6,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
+
+func InitRouter(handler gin.HandlerFunc) *gin.Engine {
+	router := gin.New()
+	router.GET("/", handler)
+	return router
+}
 
 func TestLiveness(t *testing.T) {
 	w := httptest.NewRecorder()

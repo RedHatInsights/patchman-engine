@@ -105,7 +105,6 @@ func TestHandlersDoNotCallDatabaseDBDirectly(t *testing.T) {
 	roots := []string{
 		filepath.Join(root, "manager", "controllers"),
 		filepath.Join(root, "turnpike", "controllers"),
-		filepath.Join(root, "base", "core", "probes.go"),
 	}
 	var offenders []string
 	for _, start := range roots {

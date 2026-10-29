@@ -14,7 +14,7 @@ import (
 
 func TestAdvisoryDetailDefault(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-9", "", nil, "", AdvisoryDetailHandler, core.V3APICtx)
+	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-9", "", nil, "", AdvisoryDetailHandler, V3APICtx)
 
 	var output AdvisoryDetailResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -43,7 +43,7 @@ func (r *AdvisoryDetailResponse) checkRH9Fields(t *testing.T) {
 
 func TestAdvisoryDetailCVE(t *testing.T) {
 	core.SetupTest(t)
-	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-3", "", nil, "", AdvisoryDetailHandler, core.V3APICtx)
+	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-3", "", nil, "", AdvisoryDetailHandler, V3APICtx)
 
 	var output AdvisoryDetailResponse
 	CheckResponse(t, w, http.StatusOK, &output)
@@ -56,13 +56,13 @@ func TestAdvisoryNoIdProvided(t *testing.T) {
 	core.SetupTest(t)
 	var errResp utils.ErrorResponse
 	w := CreateRequest("GET", "/", nil, "", AdvisoryDetailHandler,
-		core.V3APICtx)
+		V3APICtx)
 
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, "advisory_id param not found", errResp.Error)
 
 	w = CreateRequest("GET", "/", nil, "", AdvisoryDetailHandler,
-		core.V3APICtx)
+		V3APICtx)
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, "advisory_id param not found", errResp.Error)
 }
@@ -71,12 +71,12 @@ func TestAdvisoryNotFound(t *testing.T) {
 	core.SetupTest(t)
 
 	var errResp utils.ErrorResponse
-	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "foo", "", nil, "", AdvisoryDetailHandler, core.V3APICtx)
+	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "foo", "", nil, "", AdvisoryDetailHandler, V3APICtx)
 
 	CheckResponse(t, w, http.StatusNotFound, &errResp)
 	assert.Equal(t, "advisory not found", errResp.Error)
 
-	w = CreateRequestRouterWithPath("GET", "/:advisory_id", "foo", "", nil, "", AdvisoryDetailHandler, core.V3APICtx)
+	w = CreateRequestRouterWithPath("GET", "/:advisory_id", "foo", "", nil, "", AdvisoryDetailHandler, V3APICtx)
 
 	CheckResponse(t, w, http.StatusNotFound, &errResp)
 	assert.Equal(t, "advisory not found", errResp.Error)
@@ -84,7 +84,7 @@ func TestAdvisoryNotFound(t *testing.T) {
 
 func testReq() *httptest.ResponseRecorder {
 	return CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-9", "", nil, "", AdvisoryDetailHandler,
-		core.V3APICtx)
+		V3APICtx)
 }
 
 func TestAdvisoryDetailCached(t *testing.T) {
@@ -121,13 +121,13 @@ func TestAdvisoryDetailFiltering(t *testing.T) {
 
 	var errResp utils.ErrorResponse
 	w := CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-9", "?filter[filter]=abcd", nil, "",
-		AdvisoryDetailHandler, core.V3APICtx)
+		AdvisoryDetailHandler, V3APICtx)
 
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
 
 	w = CreateRequestRouterWithPath("GET", "/:advisory_id", "RH-9", "?filter[filter]=abcd", nil, "",
-		AdvisoryDetailHandler, core.V3APICtx)
+		AdvisoryDetailHandler, V3APICtx)
 
 	CheckResponse(t, w, http.StatusBadRequest, &errResp)
 	assert.Equal(t, FilterNotSupportedMsg, errResp.Error)
