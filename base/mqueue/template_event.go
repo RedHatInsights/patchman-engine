@@ -18,6 +18,7 @@ type TemplateResponse struct {
 	Date            time.Time `json:"date"`                  // Latest date to include snapshots for
 	RepositoryUUIDS []string  `json:"repository_uuids"`      // Repositories added to the template
 	EnvironmentID   string    `json:"client_environment_id"` // Environment ID used by subscription-manager & candlepin
+	AdvisoryIDs     []string  `json:"advisory_ids"`          // List of advisory names (RHSA-…, RHBA-…)
 }
 
 type TemplateEvent struct {

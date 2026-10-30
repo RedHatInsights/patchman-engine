@@ -20,7 +20,9 @@ archive is uploaded, it upserts **`system_inventory`** (including `vmaas_json` w
 Kafka message (`patchman.evaluator.upload` topic) to evaluate the system with the `evaluator-upload` component. This
 component also handles system deleting events (`platform.inventory.events` Kafka topic).
 It consumes template events from Content Sources (`platform.content-sources.template`), upserts **`template`** metadata,
-and on `template-updated` syncs **`template_advisory`** rows from the Content Sources API. When template advisories
+and syncs **`template_advisory`**. With `templates_with_advisories` unset or false, only `template-updated` syncs, by
+calling Content Sources `GET /templates/{uuid}/advisories/ids`. With `templates_with_advisories=true`, `template-created`
+and `template-updated` sync from `advisory_ids` on the message and do not call that API. When template advisories
 change and `template_advisory_eval` is enabled, it sends a bulk re-evaluation message to
 `patchman.evaluator.user-evaluation`.
 See [component environment variables](../../conf/listener.env)
@@ -79,14 +81,31 @@ and the [major migration runbook](major-migration-runbook.md). Using container C
 
 ### Template content update flow
 
-When Content Sources publishes a `template-updated` event:
+Content Sources publishes `template-created`, `template-updated`, and `template-deleted` on
+`platform.content-sources.template`. **listener** always upserts **`template`** metadata on create and update.
+`template-deleted` unassigns systems, deletes **`template_advisory`**, then deletes **`template`**.
 
-1. **listener** upserts **`template`** metadata and calls Content Sources `GET /templates/{uuid}/advisories/ids`.
-2. **listener** diffs the response against **`template_advisory`** and inserts or deletes rows.
-3. If advisories changed and `template_advisory_eval=true`, **listener** looks up systems assigned to the
+Advisory sync on create and update depends on `templates_with_advisories` (listener `POD_CONFIG`, default `false`):
+
+- **false** — only `template-updated` syncs. **listener** calls Content Sources
+  `GET /templates/{uuid}/advisories/ids` when `CONTENT_SOURCES_ADDRESS` and `CONTENT_SOURCES_USER` are set.
+  `template-created` does not sync advisories.
+- **true** — `template-created` and `template-updated` use `advisory_ids` from each object in the message `data`
+  array (advisory names such as `RHBA-2024:1234`). The advisories API is not called. A missing key or an empty
+  array is an empty snapshot and removes stored **`template_advisory`** rows for that template.
+
+Leave the flag false until Content Sources sends `advisory_ids` on every create and update. Enabling it earlier
+treats the omitted field as an empty snapshot. Do not enable it on the listener alone in `deploy/clowdapp.yaml`
+as part of this change.
+
+After either path:
+
+1. **listener** diffs the snapshot against **`template_advisory`** and inserts or deletes rows. Names not yet in
+   **`advisory_metadata`** are skipped.
+2. If advisories changed and `template_advisory_eval=true`, **listener** looks up systems assigned to the
    template and sends `PlatformEvent{system_ids}` to `patchman.evaluator.user-evaluation`.
-4. **evaluator-user-evaluation** re-evaluates each system in the message.
-5. For template-assigned systems, **evaluator** skips yum updates, calls VMaaS, and marks advisories in
+3. **evaluator-user-evaluation** re-evaluates each system in the message.
+4. For template-assigned systems, **evaluator** skips yum updates, calls VMaaS, and marks advisories in
    **`template_advisory`** as installable; other applicable advisories remain applicable.
 
 ### `template_advisory_eval` rollout

@@ -15,7 +15,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// nolint: funlen
 func syncTemplateAdvisories(ctx context.Context, accountID int, templateID int64, templateUUID, orgID string) error {
 	current, err := callCSTemplateAdvisories(ctx, templateUUID)
 	if err != nil {
@@ -25,13 +24,19 @@ func syncTemplateAdvisories(ctx context.Context, accountID int, templateID int64
 		}
 		return errors.Wrap(err, "fetching current template advisories from content-sources")
 	}
+	return applyTemplateAdvisories(ctx, accountID, templateID, templateUUID, orgID, current.AdvisoryIDs)
+}
 
+// applyTemplateAdvisories diffs advisory names against template_advisory and writes the change.
+// advisoryIDs is the full snapshot. Nil and empty both mean no advisories.
+func applyTemplateAdvisories(ctx context.Context, accountID int, templateID int64, templateUUID, orgID string,
+	advisoryIDs []string) error {
 	stored, err := lookUpTemplateAdvisories(database.DB(ctx), accountID, templateID)
 	if err != nil {
 		return errors.Wrap(err, "looking up stored template advisories")
 	}
 
-	toAdd, toRemove := diffTemplateAdvisories(current.AdvisoryIDs, stored)
+	toAdd, toRemove := diffTemplateAdvisories(advisoryIDs, stored)
 	if len(toAdd) == 0 && len(toRemove) == 0 {
 		utils.LogInfo("template_uuid", templateUUID, "template advisories unchanged")
 		return nil

@@ -32,6 +32,7 @@ var (
 	excludedHostTypes          map[string]bool
 	enableBypass               bool
 	enableTemplateAdvisoryEval bool
+	templatesWithAdvisories    bool
 	uploadEvalTimeout          time.Duration
 	deletionThreshold          time.Duration
 	useTraceLevel              bool
@@ -92,6 +93,8 @@ func configureListener() {
 	enableBypass = utils.PodConfig.GetBool("bypass", false)
 	// Template advisory evaluation: recalc on advisory content change and template delete
 	enableTemplateAdvisoryEval = utils.PodConfig.GetBool("template_advisory_eval", false)
+	// Use advisory_ids from the template kafka message instead of the content-sources API.
+	templatesWithAdvisories = utils.PodConfig.GetBool("templates_with_advisories", false)
 	// How long to collect upload messages before grouping them and sending to evaluator
 	uploadEvalTimeout = time.Duration(utils.PodConfig.GetInt("upload_eval_timeout_ms", 500)) * time.Millisecond
 	// Ignore a system if there was a delete message in the last X hours
