@@ -11,7 +11,6 @@ import (
 	"app/base/types"
 	"app/base/utils"
 	"app/base/vmaas"
-	"app/tasks"
 	"context"
 	"net/http"
 	"sync"
@@ -19,7 +18,6 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
-	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
@@ -53,9 +51,6 @@ var (
 	preloadPackageCache           bool
 	packageCacheSize              int
 	packageNameCacheSize          int
-	enableVmaasCache              bool
-	vmaasCacheSize                int
-	vmaasCacheCheckDuration       time.Duration
 	vmaasCallMaxRetries           int
 	vmaasCallUseExpRetry          bool
 	vmaasCallUseOptimisticUpdates bool
@@ -120,12 +115,6 @@ func configureEvaluator() {
 	packageCacheSize = utils.PodConfig.GetInt("package_cache_size", 1000000)
 	// Size of package name cache
 	packageNameCacheSize = utils.PodConfig.GetInt("package_name_cache_size", 60000)
-	// Toggle caching of vmaas responses
-	enableVmaasCache = utils.PodConfig.GetBool("vmaas_cache", true)
-	// Size of vmaas response cache
-	vmaasCacheSize = utils.PodConfig.GetInt("vmaas_cache_size", 10000)
-	// Interval to check vmaas API if there was a data change thus if cache is still valid
-	vmaasCacheCheckDuration = time.Duration(utils.PodConfig.GetInt("vmaas_cache_check_duration_sec", 60)) * time.Second
 	// How many tries before we consider vmaad API call failed
 	vmaasCallMaxRetries = utils.PodConfig.GetInt("vmaas_call_max_retries", 8)
 	// Use exponential delay between two vmaas calls
@@ -362,17 +351,6 @@ func getUpdatesData(ctx context.Context, system *models.SystemPlatformV2) (*vmaa
 func getVmaasUpdates(ctx context.Context, system *models.SystemPlatformV2) (*vmaas.UpdatesV3Response, error) {
 	defer utils.ObserveSecondsSince(time.Now(), evaluationPartDuration.WithLabelValues("vmaas-updates-prepare"))
 
-	var vmaasDataCopy vmaas.UpdatesV3Response
-	// first check if we have data in cache
-	vmaasData, ok := memoryVmaasCache.Get(system.Inventory.JSONChecksum)
-	if ok {
-		// return copy of vmaasData to avoid modification of cached data e.g. by templates
-		err := copier.CopyWithOption(&vmaasDataCopy, vmaasData, copier.Option{DeepCopy: true})
-		if err != nil {
-			return nil, err
-		}
-		return &vmaasDataCopy, nil
-	}
 	updatesReq, err := tryGetVmaasRequest(system)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get vmaas request")
@@ -388,19 +366,10 @@ func getVmaasUpdates(ctx context.Context, system *models.SystemPlatformV2) (*vma
 	updatesReq.OptimisticUpdates = utils.PtrBool(useOptimisticUpdates)
 	updatesReq.EpochRequired = utils.PtrBool(true)
 
-	vmaasData, err = callVMaas(ctx, updatesReq)
+	vmaasData, err := callVMaas(ctx, updatesReq)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-call-vmaas-updates").Inc()
 		return nil, errors.Wrap(err, "vmaas API call failed")
-	}
-
-	if memoryVmaasCache.enabled {
-		// store copy of vmaasData to cache to avoid modification of cached data e.g. by templates
-		err := copier.CopyWithOption(&vmaasDataCopy, vmaasData, copier.Option{DeepCopy: true})
-		if err != nil {
-			return nil, err
-		}
-		memoryVmaasCache.Add(system.Inventory.JSONChecksum, &vmaasDataCopy)
 	}
 	return vmaasData, nil
 }
@@ -824,12 +793,6 @@ func evaluateHandler(ctx context.Context, m mqueue.KafkaMessage) error {
 func loadCache() {
 	memoryPackageCache = NewPackageCache(enablePackageCache, preloadPackageCache, packageCacheSize, packageNameCacheSize)
 	memoryPackageCache.Load()
-	tx := tasks.CancelableDB()
-	memoryVmaasCache = NewVmaasPackageCache(tx, enableVmaasCache, vmaasCacheSize, vmaasCacheCheckDuration)
-	if memoryVmaasCache.enabled {
-		// no need to check cache validity when cache is not enabled
-		go memoryVmaasCache.CheckValidity(tx)
-	}
 }
 
 func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {

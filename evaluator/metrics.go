@@ -68,26 +68,11 @@ var (
 		Subsystem: "evaluator",
 		Name:      "package_cache_size",
 	}, []string{"by"})
-
-	vmaasCacheCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Help:      "How many vmaas checksums hit/miss cache",
-		Namespace: "patchman_engine",
-		Subsystem: "evaluator",
-		Name:      "vmaas_cache",
-	}, []string{"type"})
-
-	vmaasCacheGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Help:      "VMaaS cache size",
-		Namespace: "patchman_engine",
-		Subsystem: "evaluator",
-		Name:      "vmaas_cache_size",
-	})
 )
 
 func RunMetrics() {
 	prometheus.MustRegister(evaluationCnt, updatesCnt, evaluationDuration, evaluationPartDuration,
-		uploadEvaluationDelay, twoEvaluationsInterval, packageCacheCnt, packageCacheGauge,
-		vmaasCacheCnt, vmaasCacheGauge)
+		uploadEvaluationDelay, twoEvaluationsInterval, packageCacheCnt, packageCacheGauge)
 
 	// create web app
 	app := gin.New()

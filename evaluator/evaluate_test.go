@@ -55,13 +55,7 @@ func TestEvaluate(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	utils.SkipWithoutPlatform(t)
 	core.SetupTestEnvironment()
-	// don't use vmaas-cache since tests here are not using vmaas_json
-	// so it will always get the same result from cache for empty vmaas_json
 	configure()
-
-	enableVmaasCache = false
-	defer func() { enableVmaasCache = true }()
-
 	loadCache()
 	mockWriter := mqueue.MockKafkaWriter{}
 	remediationsPublisher = &mockWriter
@@ -235,292 +229,116 @@ func TestGetYumUpdates(t *testing.T) {
 	assert.Equal(t, 2, len(updateList.GetAvailableUpdates()))
 }
 
-// nolint:funlen
-func TestSatelliteSystemAdvisories(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	utils.SkipWithoutPlatform(t)
-	core.SetupTestEnvironment()
+// platform mock /updates returns RH-1 and RH-2 for firefox, and RH-100 for kernel.
+const platformPackagesVmaasJSON = `{
+	"package_list": [
+		"firefox-0:76.0.1-1.fc31.x86_64",
+		"kernel-0:5.6.13-200.fc31.x86_64"
+	],
+	"repository_list": ["repo1"]
+}`
 
-	ogYumUpdatesEval := enableYumUpdatesEval
-	enableYumUpdatesEval = true
-	defer func() { enableYumUpdatesEval = ogYumUpdatesEval }()
-
-	configure()
-	loadCache()
-	mockWriter := mqueue.MockKafkaWriter{}
-	remediationsPublisher = &mockWriter
-
-	vmaasJSON := `
-	{
-		"package_list": [
-			"git-2.30.1-1.el8_8.x86_64",
-			"sqlite-3.21.0-1.el8_6.x86_64"
-		],
-		"repository_list": [
-			"rhel-8-for-x86_64-appstream-rpms"
-		],
-		"releasever": "8",
-		"basearch": "x86_64",
-		"latest_only": true
-	}
-	`
-	// this satellite system has 2 git and 1 sqlite advisories reported by vmaas (APPLICABLE)
-	vmaasDataResp := `
-	{
-		"update_list": {
-			"git-2.30.1-1.el8_8.x86_64": {
-				"available_updates": [
-					{
-						"erratum": "RHSA-2023:3246",
-						"basearch": "x86_64",
-						"releasever": "8",
-						"repository": "rhel-8-for-x86_64-appstream-rpms",
-						"package": "git-2.39.3-1.el8_8.x86_64",
-						"package_name": "git",
-						"evra": "0:2.39.3-1.el8_8.x86_64"
-					},
-					{
-						"erratum": "RHSA-2023:3240",
-						"basearch": "x86_64",
-						"releasever": "8",
-						"repository": "rhel-8-for-x86_64-appstream-rpms",
-						"package": "git-2.39.4-1.el8_8.x86_64",
-						"package_name": "git",
-						"evra": "0:2.39.4-1.el8_8.x86_64"
-					}
-				]
-			},
-			"sqlite-3.21.0-1.el8_6.x86_64": {
-				"available_updates": [
-					{
-						"erratum": "RHSA-2022:7100",
-						"basearch": "x86_64",
-						"releasever": "8",
-						"repository": "rhel-8-for-x86_64-appstream-rpms",
-						"package": "sqlite-3.26.0-16.el8_6.x86_64",
-						"package_name": "sqlite",
-						"evra": "0:3.26.0-16.el8_6.x86_64"
-					}
-				]
-			}
-		}
-	}
-	`
-
-	var vmaasData vmaas.UpdatesV3Response
-	err := sonic.Unmarshal([]byte(vmaasDataResp), &vmaasData)
-	assert.Nil(t, err)
-
-	// lets add the checksum to the cache, so we do not actually call vmaas
-	vmaasJSONChecksum := "1337"
-	memoryVmaasCache.Add(&vmaasJSONChecksum, &vmaasData)
-
-	// this satellite system has 1 git installable advisory which is the same as the applicable one from vmaas
-	// and 1 sqlite different installable advisory
-	yumUpdatesRaw := []byte(`
-		{
-			"update_list": {
-				"git-2.30.1-1.el8_8.x86_64": {
-					"available_updates": [
-						{
-							"erratum": "RHSA-2023:3246",
-							"basearch": "x86_64",
-							"releasever": "8",
-							"repository": "rhel-8-for-x86_64-appstream-rpms",
-							"package": "git-0:2.39.3-1.el8_8.x86_64"
-						}
-					]
-				},
-				"sqlite-3.21.0-1.el8_6.x86_64": {
-					"available_updates": [
-						{
-							"erratum": "RHSA-2022:7108",
-							"basearch": "x86_64",
-							"releasever": "8",
-							"repository": "rhel-8-for-x86_64-appstream-rpms",
-							"package": "sqlite-3.26.0-16.el8_6.x86_64"
-						}
-					]
+// RH-1 matches the mock firefox update, so the merge keeps the yum copy.
+// RH-200 is yum-only.
+var platformYumUpdates = []byte(`{
+	"update_list": {
+		"firefox-0:76.0.1-1.fc31.x86_64": {
+			"available_updates": [
+				{
+					"erratum": "RH-1",
+					"basearch": "i686",
+					"releasever": "ser1",
+					"repository": "repo1",
+					"package": "firefox-0:77.0.1-1.fc31.x86_64"
 				}
-			}
-		}
-		`)
-
-	system := &models.SystemPlatformV2{
-		Inventory: models.SystemInventory{
-			InventoryID:      uuid.MustParse("99999999-0000-0000-0000-000000000015"),
-			JSONChecksum:     &vmaasJSONChecksum,
-			VmaasJSON:        &vmaasJSON,
-			YumUpdates:       yumUpdatesRaw,
-			DisplayName:      "satellite_system_test1",
-			RhAccountID:      1,
-			BuiltPkgcache:    true,
-			SatelliteManaged: true,
+			]
 		},
-		Patch: models.SystemPatch{},
-	}
-
-	result, err := getUpdatesData(base.Context, system)
-	assert.Nil(t, err)
-
-	// result should have 2 git advisories,    1 is installable (taken from yum updates and vmaas, merged)
-	//                                         1 is applicable  (taken from vmaas)
-	//                    2 sqlite advisories, 1 is installable (taken from yum updates)
-	//                                         1 is applicable  (taken from vmaas)
-	var installableCnt, applicableCnt int
-	for _, updates := range result.GetUpdateList() {
-		for _, update := range updates.GetAvailableUpdates() {
-			switch update.StatusID {
-			case INSTALLABLE:
-				installableCnt++
-			case APPLICABLE:
-				applicableCnt++
-			}
+		"kernel-0:5.6.13-200.fc31.x86_64": {
+			"available_updates": [
+				{
+					"erratum": "RH-200",
+					"basearch": "i686",
+					"releasever": "ser1",
+					"repository": "repo1",
+					"package": "kernel-0:5.10.0-1.fc31.x86_64"
+				}
+			]
 		}
 	}
-	assert.Equal(t, 2, installableCnt)
-	assert.Equal(t, 2, applicableCnt)
+}`)
+
+func updateStatuses(resp *vmaas.UpdatesV3Response) (int, map[string]int) {
+	statuses := map[string]int{}
+	total := 0
+	for _, updates := range resp.GetUpdateList() {
+		for _, update := range updates.GetAvailableUpdates() {
+			total++
+			statuses[update.GetErratum()] = update.StatusID
+		}
+	}
+	return total, statuses
 }
 
-// nolint:funlen
-func TestBootcSystemAdvisories(t *testing.T) {
+func platformUpdatesSystem(inventoryID, displayName string, satellite, bootc bool) *models.SystemPlatformV2 {
+	vmaasJSON := platformPackagesVmaasJSON
+	return &models.SystemPlatformV2{
+		Inventory: models.SystemInventory{
+			InventoryID:      uuid.MustParse(inventoryID),
+			VmaasJSON:        &vmaasJSON,
+			YumUpdates:       platformYumUpdates,
+			DisplayName:      displayName,
+			RhAccountID:      1,
+			BuiltPkgcache:    true,
+			SatelliteManaged: satellite,
+			Bootc:            bootc,
+		},
+	}
+}
+
+func checkPlatformUpdates(t *testing.T, system *models.SystemPlatformV2, expected map[string]int) {
+	t.Helper()
 	utils.SkipWithoutDB(t)
 	utils.SkipWithoutPlatform(t)
 	core.SetupTestEnvironment()
 
 	ogYumUpdatesEval := enableYumUpdatesEval
 	enableYumUpdatesEval = true
-	defer func() { enableYumUpdatesEval = ogYumUpdatesEval }()
+	t.Cleanup(func() { enableYumUpdatesEval = ogYumUpdatesEval })
 
 	configure()
 	loadCache()
-	mockWriter := mqueue.MockKafkaWriter{}
-	remediationsPublisher = &mockWriter
-
-	vmaasJSON := `
-	{
-		"package_list": [
-			"git-2.30.1-1.el8_8.x86_64",
-			"sqlite-3.21.0-1.el8_6.x86_64"
-		],
-		"repository_list": [
-			"rhel-8-for-x86_64-appstream-rpms"
-		],
-		"releasever": "8",
-		"basearch": "x86_64",
-		"latest_only": true
-	}
-	`
-	vmaasDataResp := `
-	{
-		"update_list": {
-			"git-2.30.1-1.el8_8.x86_64": {
-				"available_updates": [
-					{
-						"erratum": "RHSA-2023:3246",
-						"basearch": "x86_64",
-						"releasever": "8",
-						"repository": "rhel-8-for-x86_64-appstream-rpms",
-						"package": "git-2.39.3-1.el8_8.x86_64",
-						"package_name": "git",
-						"evra": "0:2.39.3-1.el8_8.x86_64"
-					},
-					{
-						"erratum": "RHSA-2023:3240",
-						"basearch": "x86_64",
-						"releasever": "8",
-						"repository": "rhel-8-for-x86_64-appstream-rpms",
-						"package": "git-2.39.4-1.el8_8.x86_64",
-						"package_name": "git",
-						"evra": "0:2.39.4-1.el8_8.x86_64"
-					}
-				]
-			},
-			"sqlite-3.21.0-1.el8_6.x86_64": {
-				"available_updates": [
-					{
-						"erratum": "RHSA-2022:7100",
-						"basearch": "x86_64",
-						"releasever": "8",
-						"repository": "rhel-8-for-x86_64-appstream-rpms",
-						"package": "sqlite-3.26.0-16.el8_6.x86_64",
-						"package_name": "sqlite",
-						"evra": "0:3.26.0-16.el8_6.x86_64"
-					}
-				]
-			}
-		}
-	}
-	`
-
-	var vmaasData vmaas.UpdatesV3Response
-	err := sonic.Unmarshal([]byte(vmaasDataResp), &vmaasData)
-	assert.Nil(t, err)
-
-	vmaasJSONChecksum := "bootc-1337"
-	memoryVmaasCache.Add(&vmaasJSONChecksum, &vmaasData)
-
-	yumUpdatesRaw := []byte(`
-		{
-			"update_list": {
-				"git-2.30.1-1.el8_8.x86_64": {
-					"available_updates": [
-						{
-							"erratum": "RHSA-2023:3246",
-							"basearch": "x86_64",
-							"releasever": "8",
-							"repository": "rhel-8-for-x86_64-appstream-rpms",
-							"package": "git-0:2.39.3-1.el8_8.x86_64"
-						}
-					]
-				},
-				"sqlite-3.21.0-1.el8_6.x86_64": {
-					"available_updates": [
-						{
-							"erratum": "RHSA-2022:7108",
-							"basearch": "x86_64",
-							"releasever": "8",
-							"repository": "rhel-8-for-x86_64-appstream-rpms",
-							"package": "sqlite-3.26.0-16.el8_6.x86_64"
-						}
-					]
-				}
-			}
-		}
-		`)
-
-	system := &models.SystemPlatformV2{
-		Inventory: models.SystemInventory{
-			InventoryID:   uuid.MustParse("99999999-0000-0000-0000-000000000016"),
-			JSONChecksum:  &vmaasJSONChecksum,
-			VmaasJSON:     &vmaasJSON,
-			YumUpdates:    yumUpdatesRaw,
-			DisplayName:   "bootc_system_test1",
-			RhAccountID:   1,
-			BuiltPkgcache: true,
-			Bootc:         true,
-		},
-		Patch: models.SystemPatch{},
-	}
+	remediationsPublisher = &mqueue.MockKafkaWriter{}
 
 	result, err := getUpdatesData(base.Context, system)
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
+	total, statuses := updateStatuses(result)
+	assert.Equal(t, len(expected), total)
+	assert.Equal(t, expected, statuses)
+}
 
-	// bootc systems cannot be patched via Insights: every update must be applicable
-	var installableCnt, applicableCnt int
-	for _, updates := range result.GetUpdateList() {
-		for _, update := range updates.GetAvailableUpdates() {
-			switch update.StatusID {
-			case INSTALLABLE:
-				installableCnt++
-			case APPLICABLE:
-				applicableCnt++
-			}
-		}
-	}
-	assert.Equal(t, 0, installableCnt)
-	assert.Equal(t, 4, applicableCnt)
+func TestSatelliteSystemAdvisories(t *testing.T) {
+	// VMaaS updates are applicable. Matching yum RH-1 stays installable; RH-200 is yum-only.
+	checkPlatformUpdates(t,
+		platformUpdatesSystem("99999999-0000-0000-0000-000000000015", "satellite_system_test1", true, false),
+		map[string]int{
+			"RH-1":   INSTALLABLE,
+			"RH-2":   APPLICABLE,
+			"RH-100": APPLICABLE,
+			"RH-200": INSTALLABLE,
+		})
+}
+
+func TestBootcSystemAdvisories(t *testing.T) {
+	// Image-mode systems cannot be patched via Insights, so every update is applicable.
+	checkPlatformUpdates(t,
+		platformUpdatesSystem("99999999-0000-0000-0000-000000000016", "bootc_system_test1", false, true),
+		map[string]int{
+			"RH-1":   APPLICABLE,
+			"RH-2":   APPLICABLE,
+			"RH-100": APPLICABLE,
+			"RH-200": APPLICABLE,
+		})
 }
 
 func TestCallVmaas400(t *testing.T) {
@@ -547,45 +365,4 @@ func TestGetUpdatesDataVmaas400(t *testing.T) {
 	// response and error should be nil, system is skipped due to VMaaS 400
 	assert.Nil(t, err)
 	assert.Nil(t, res)
-}
-
-func TestGetVmaasDataCached(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	utils.SkipWithoutPlatform(t)
-	configure()
-	loadCache()
-	req := vmaas.UpdatesV3Request{
-		PackageList: []string{"firefox-0:76.0.1-1.fc31.x86_64"}, RepositoryList: []string{"repo"},
-	}
-	reqJSON, _ := sonic.Marshal(req)
-	reqString := string(reqJSON)
-	chsum := "123"
-	sp := &models.SystemPlatformV2{Inventory: models.SystemInventory{VmaasJSON: &reqString, JSONChecksum: &chsum}}
-
-	var assertInstallable = func() (*vmaas.UpdatesV3Response, []vmaas.UpdatesV3ResponseAvailableUpdates) {
-		vmaasData, _ := getVmaasUpdates(base.Context, sp)
-		updates := (*vmaasData.UpdateList)["firefox-0:76.0.1-1.fc31.x86_64"].GetAvailableUpdates()
-		assert.Equal(t, INSTALLABLE, updates[0].StatusID)
-		return vmaasData, updates
-	}
-	vmaasData, updates := assertInstallable()
-
-	// modify update status id, change data returned by vmaas
-	var setApplicable = func() {
-		updates[0].StatusID = APPLICABLE
-		modifiedUpdateList := vmaas.UpdatesV3ResponseUpdateList{AvailableUpdates: &updates}
-		(*vmaasData.UpdateList)["firefox-0:76.0.1-1.fc31.x86_64"] = &modifiedUpdateList
-		updates = (*vmaasData.UpdateList)["firefox-0:76.0.1-1.fc31.x86_64"].GetAvailableUpdates()
-		assert.Equal(t, APPLICABLE, updates[0].StatusID)
-	}
-	setApplicable()
-
-	// cached value mustn't be changed
-	vmaasData, updates = assertInstallable()
-
-	// modify data again to change data returned from cache
-	setApplicable()
-
-	// cached value mustn't be changed
-	assertInstallable()
 }
