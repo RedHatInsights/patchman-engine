@@ -46,7 +46,7 @@ func SystemPackagesExportHandler(c *gin.Context) {
 	}
 
 	var loaded []SystemPackageDBLoad
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	q := systemPackageQuery(db, account, workspaceIDs, inventoryID)
 	q, err = ExportListCommon(q, c, SystemPackagesOpts)
 	if err != nil {

@@ -68,7 +68,7 @@ var advisoriesSystemsViewOpts = ListOpts{
 
 func totalItems(c *gin.Context, tx *gorm.DB, cols string) (int, error) {
 	var count int64
-	err := middlewares.DBFromContext(c).Table("(?) AS cq", tx.Select(cols)).Count(&count).Error
+	err := middlewares.DB(c).Table("(?) AS cq", tx.Select(cols)).Count(&count).Error
 	return int(count), err
 }
 
@@ -181,7 +181,7 @@ func queryDB(c *gin.Context, endpoint string) ([]systemsAdvisoriesDBLoad, *ListM
 	}
 	acc := c.GetInt(utils.KeyAccount)
 	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	// backward compatibility, put limit/offset from json into querystring
 	if req.Limit != nil {
 		c.Request.URL.RawQuery += fmt.Sprintf("&limit=%d", *req.Limit)

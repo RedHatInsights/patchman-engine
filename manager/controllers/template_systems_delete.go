@@ -37,7 +37,7 @@ func TemplateSystemsDeleteHandler(c *gin.Context) {
 		return
 	}
 
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 
 	err := checkTemplateSystems(c, db, account, nil, req.Systems, workspaceIDs)
 	if err != nil {

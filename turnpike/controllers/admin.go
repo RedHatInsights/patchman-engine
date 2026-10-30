@@ -30,7 +30,7 @@ func Syncapi(c *gin.Context) {
 	utils.LogInfo("manual syncing called...")
 	sync.Configure()
 	vmaasExportedTS := sync.VmaasDBExported()
-	err := sync.SyncData(database.DB(c.Request.Context()), nil, vmaasExportedTS)
+	err := sync.SyncData(middlewares.DBWriter(c), nil, vmaasExportedTS)
 	if err != nil {
 		utils.LogError("err", err, "manual called syncing failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
@@ -221,7 +221,7 @@ func SystemDeleteHandler(c *gin.Context) {
 	}
 
 	var systemInventoryID []uuid.UUID
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	tx := db.Begin()
 
 	defer tx.Rollback()

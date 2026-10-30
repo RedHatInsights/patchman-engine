@@ -86,7 +86,7 @@ func systemAdvisoriesCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, erro
 		return nil, nil, nil, err
 	} // Error handled method itself
 
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	var exists int64
 	err = db.Model(&models.SystemInventory{}).Where("inventory_id = ?", inventoryID).
 		Count(&exists).Error

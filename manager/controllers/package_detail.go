@@ -43,7 +43,7 @@ type PackageDetailAttributes struct {
 var PackageSelect = database.MustGetSelect(&PackageDetailAttributes{})
 
 func packageLatestHandler(c *gin.Context, packageName string) {
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	query := database.PackageByName(db, packageName, database.JoinPackageDetails)
 	var pkg PackageDetailAttributes
 	// Perform 'soft-filtering' by ordering on boolean column first
@@ -66,7 +66,7 @@ func packageLatestHandler(c *gin.Context, packageName string) {
 }
 
 func packageEvraHandler(c *gin.Context, nevra *utils.Nevra) {
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	if !packageNameIsValid(db, nevra.Name) {
 		c.JSON(http.StatusBadRequest, utils.ErrorResponse{Error: "invalid package name"})
 		return
@@ -112,7 +112,7 @@ func PackageDetailHandler(c *gin.Context) {
 		return
 	}
 
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	if packageNameIsValid(db, parameter) {
 		packageLatestHandler(c, parameter)
 		return

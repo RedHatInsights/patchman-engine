@@ -29,7 +29,7 @@ func TemplateSubscribedSystemsUpdateHandler(c *gin.Context) {
 	templateUUID := c.Param("template_id")
 	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 
 	account, orgID, systemUUID, err := getSubscribedSystem(c, db)
 	if err != nil {

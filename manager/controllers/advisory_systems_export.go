@@ -66,7 +66,7 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	var exists int64
 	err := db.Model(&models.AdvisoryMetadata{}).
 		Where("name = ? ", advisoryName).Count(&exists).Error

@@ -9,24 +9,18 @@ import (
 	"gorm.io/gorm"
 )
 
-const DBKey = "DB"
-const DBReadReplicaKey = "DBReadReplica"
-
-// Apply gin context to database so queries within context are canceled when request is aborted
-func DatabaseWithContext() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set(DBKey, database.DB(c.Request.Context()))
-		c.Set(DBReadReplicaKey, database.DBReadReplica(c.Request.Context()))
-		c.Next()
+// DB returns a handle bound to the current request context.
+// GET uses the read replica when one is configured.
+func DB(c *gin.Context) *gorm.DB {
+	if useReadReplica(c) {
+		return database.DBReadReplica(c.Request.Context())
 	}
+	return database.DB(c.Request.Context())
 }
 
-// DB handler stored in request context
-func DBFromContext(c *gin.Context) *gorm.DB {
-	if useReadReplica(c) {
-		return c.MustGet(DBReadReplicaKey).(*gorm.DB)
-	}
-	return c.MustGet(DBKey).(*gorm.DB)
+// DBWriter returns the primary handle bound to the current request context.
+func DBWriter(c *gin.Context) *gorm.DB {
+	return database.DB(c.Request.Context())
 }
 
 func useReadReplica(c *gin.Context) bool {
