@@ -21,7 +21,6 @@ import (
 func prepareTemplateAdvisoryIntegrationTest() {
 	configure()
 	enableTemplateAdvisoryEval = true
-	enableVmaasCache = false
 	loadCache()
 	remediationsPublisher = &mqueue.MockKafkaWriter{}
 }
