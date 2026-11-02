@@ -268,8 +268,8 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/prashantv/gostub v1.1.0 h1:BTyx3RfQjRHnUWaGF9oQos79AlQ5k8WNktv7VGvVH4g=
 github.com/prashantv/gostub v1.1.0/go.mod h1:A5zLQHz7ieHGG7is6LLXLz7I8+3LZzsrV0P1IAHhP5U=
-github.com/project-kessel/kessel-sdk-go v1.13.0 h1:dOhnb93n5wiETJhfLt+vWyCM59e7KA0fXsS6g/lOB5w=
-github.com/project-kessel/kessel-sdk-go v1.13.0/go.mod h1:5nmwwq8L1JUVR6SUYAjCs0RHxUeU96vkXjmi3aipGkw=
+github.com/project-kessel/kessel-sdk-go v1.13.1 h1:wKtLcBHseYfD4SGIO/8tHgizV1fbfYWD3sqeM8Xneao=
+github.com/project-kessel/kessel-sdk-go v1.13.1/go.mod h1:ajgd7ZxsZDUpOyn+cwTfRozc2phbx+P4oltwMKbbbec=
 github.com/prometheus/client_golang v1.25.0 h1:cDtW1TcFsMi1RJc8khwCKB4VhzwV04aKqbYtNOXuiK0=
 github.com/prometheus/client_golang v1.25.0/go.mod h1:j2X/4/kaQHLPnmyEU8zjmkndo1T317VpCIQEml8LTKk=
 github.com/prometheus/client_model v0.6.3 h1:O0jaTVAYNxTHYInEPFJt5I3+sN8zqBtVMPTB1qyxiEo=
