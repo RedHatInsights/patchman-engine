@@ -6,7 +6,7 @@ require (
 	github.com/MichaelMraka/gorpm v0.0.0-20251128174203-65cf25f01bac
 	github.com/XSAM/otelsql v0.41.0
 	github.com/aws/aws-sdk-go v1.55.8
-	github.com/bytedance/sonic v1.15.4
+	github.com/bytedance/sonic v1.15.5
 	github.com/getkin/kin-openapi v0.149.0
 	github.com/getsentry/sentry-go v0.50.0
 	github.com/gin-contrib/timeout v1.2.3
@@ -54,7 +54,7 @@ require (
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/gopkg v0.1.4 // indirect
-	github.com/bytedance/sonic/loader v0.5.2 // indirect
+	github.com/bytedance/sonic/loader v0.5.3 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.7 // indirect
