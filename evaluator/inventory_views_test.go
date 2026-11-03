@@ -60,3 +60,41 @@ func TestInventoryViewsPreservesEvaluationContext(t *testing.T) {
 		})
 	}
 }
+
+func TestInventoryViewsKeepsEachUploadsIdentity(t *testing.T) {
+	previous := inventoryViewsPublisher
+	t.Cleanup(func() { inventoryViewsPublisher = previous })
+	id := uuid.New()
+	orgID := "org-1"
+	origin := mqueue.PlatformEvent{
+		OrgID: &orgID, SystemIDs: []uuid.UUID{id, id, uuid.New()},
+		RequestIDs: []string{"request-A", "request-B"}, Traceparents: []string{"trace-A", "trace-B"},
+		SkipNotifications: true,
+	}
+	for i, hostID := range origin.SystemIDs {
+		item := eventForSystem(origin, i, hostID)
+		assert.Equal(t, hostID, item.ID)
+		assert.Nil(t, item.SystemIDs)
+		assert.True(t, item.SkipNotifications)
+		if i == 2 {
+			assert.Empty(t, item.RequestIDs)
+			assert.Empty(t, item.Traceparents)
+			continue
+		}
+		assert.Equal(t, []string{origin.RequestIDs[i]}, item.RequestIDs)
+		assert.Equal(t, []string{origin.Traceparents[i]}, item.Traceparents)
+		writer := &inventoryViewsContextWriter{}
+		inventoryViewsPublisher = writer
+		systems := []models.SystemPlatformV2{{Inventory: models.SystemInventory{
+			ID: 1, RhAccountID: 1, InventoryID: hostID,
+		}}}
+		require.NoError(t, publishInventoryViewsEvent(t.Context(), nil, systems, &item))
+		require.Len(t, writer.Messages, 1)
+		headers := map[string]string{}
+		for _, header := range writer.Messages[0].Headers {
+			headers[header.Key] = string(header.Value)
+		}
+		assert.Equal(t, origin.RequestIDs[i], headers["request_id"])
+	}
+	assert.Equal(t, []string{"request-A", "request-B"}, origin.RequestIDs)
+}

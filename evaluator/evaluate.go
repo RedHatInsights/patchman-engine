@@ -8,7 +8,6 @@ import (
 	"app/base/models"
 	"app/base/mqueue"
 	"app/base/telemetry"
-	"app/base/types"
 	"app/base/utils"
 	"app/base/vmaas"
 	"app/tasks"
@@ -21,6 +20,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -220,7 +220,7 @@ func evaluateInDatabase(ctx context.Context, event *mqueue.PlatformEvent, invent
 	*models.SystemPlatformV2, *vmaas.UpdatesV3Response, error) {
 	tx := database.DB(ctx).Begin()
 	defer tx.Rollback()
-	system, err := tryGetSystem(tx, event.AccountID, inventoryID, event.Timestamp)
+	system, err := tryGetSystem(ctx, tx, event, inventoryID)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to get system")
 	}
@@ -443,9 +443,9 @@ func tryGetVmaasRequest(system *models.SystemPlatformV2) (*vmaas.UpdatesV3Reques
 	return &updatesReq, nil
 }
 
-func tryGetSystem(tx *gorm.DB, accountID int, inventoryID uuid.UUID,
-	requested *types.Rfc3339Timestamp) (*models.SystemPlatformV2, error) {
-	system, err := loadSystemData(tx, accountID, inventoryID)
+func tryGetSystem(ctx context.Context, tx *gorm.DB, event *mqueue.PlatformEvent,
+	inventoryID uuid.UUID) (*models.SystemPlatformV2, error) {
+	system, err := loadSystemData(tx, event.AccountID, inventoryID)
 	if err != nil {
 		evaluationCnt.WithLabelValues("error-db-read-inventory-data").Inc()
 		return nil, base.WrapFatalDBError(err, "error loading system from DB")
@@ -459,13 +459,15 @@ func tryGetSystem(tx *gorm.DB, accountID int, inventoryID uuid.UUID,
 	if system.Inventory.Stale && !enableStaleSysEval {
 		evaluationCnt.WithLabelValues("skipping-stale").Inc()
 		utils.LogWarn("inventoryID", inventoryID, "Skipping stale system")
+		telemetry.RecordIngestionCompletion(ctx, event.GetOrgID(), firstRequestID(*event), inventoryID.String(), "unchanged")
 		return nil, nil
 	}
 
-	if requested != nil && system.Patch.LastEvaluation != nil &&
-		requested.Time().Before(*system.Patch.LastEvaluation) {
+	if event.Timestamp != nil && system.Patch.LastEvaluation != nil &&
+		event.Timestamp.Time().Before(*system.Patch.LastEvaluation) {
 		evaluationCnt.WithLabelValues("skip-old-msg").Inc()
 		utils.LogWarn("inventoryID", inventoryID, "Skipping old message")
+		telemetry.RecordIngestionCompletion(ctx, event.GetOrgID(), firstRequestID(*event), inventoryID.String(), "unchanged")
 		return nil, nil
 	}
 	return system, nil
@@ -554,6 +556,8 @@ func evaluateAndStore(ctx context.Context, system *models.SystemPlatformV2,
 		evaluationCnt.WithLabelValues("error-database-commit").Inc()
 		return base.WrapFatalDBError(err, "database commit failed")
 	}
+	telemetry.RecordIngestionCompletion(ctx, event.GetOrgID(), firstRequestID(*event),
+		system.Inventory.InventoryID.String(), "processed")
 
 	return nil
 }
@@ -764,6 +768,23 @@ func firstRequestID(event mqueue.PlatformEvent) string {
 	return ""
 }
 
+// Keep each evaluation's positional upload metadata, even if a host occurs twice in a batch.
+func eventForSystem(event mqueue.PlatformEvent, index int, inventoryID uuid.UUID) mqueue.PlatformEvent {
+	event.ID = inventoryID
+	event.SystemIDs = nil
+	if index < len(event.RequestIDs) {
+		event.RequestIDs = event.RequestIDs[index : index+1]
+	} else {
+		event.RequestIDs = nil
+	}
+	if index < len(event.Traceparents) {
+		event.Traceparents = event.Traceparents[index : index+1]
+	} else {
+		event.Traceparents = nil
+	}
+	return event
+}
+
 func evaluateHandler(ctx context.Context, m mqueue.KafkaMessage) error {
 	var event mqueue.PlatformEvent
 	if err := sonic.Unmarshal(m.Value, &event); err != nil {
@@ -780,27 +801,25 @@ func evaluateHandler(ctx context.Context, m mqueue.KafkaMessage) error {
 
 	ids, tps := systemIDsAndTraceparents(event)
 	ptEvents := make(mqueue.PayloadTrackerEvents, 0, len(ids))
-	ptEvent := mqueue.PayloadTrackerEvent{
-		OrgID:     event.OrgID,
-		Status:    "success",
-		StatusMsg: "advisories evaluation",
-	}
-
-	nRequestIDs := len(event.RequestIDs)
 	for i, id := range ids {
-		ptEvent.InventoryID = id
-		if nRequestIDs > i {
-			ptEvent.RequestID = &event.RequestIDs[i]
+		itemEvent := eventForSystem(event, i, id)
+		ptEvent := mqueue.PayloadTrackerEvent{
+			InventoryID: id,
+			OrgID:       itemEvent.OrgID,
+			Status:      "success",
+			StatusMsg:   "advisories evaluation",
+		}
+		if len(itemEvent.RequestIDs) > 0 {
+			ptEvent.RequestID = &itemEvent.RequestIDs[0]
 		}
 		tp := ""
 		if i < len(tps) {
 			tp = tps[i]
 		}
 		itemCtx, itemSpan := telemetry.ItemContext(ctx, "evaluate "+evalLabel, tp)
-		if i < len(event.RequestIDs) {
-			telemetry.SetRHAttributes(itemSpan, event.GetOrgID(), event.RequestIDs[i])
-		}
-		ptEvent, err = runEvaluate(itemCtx, event, id, evalLabel, ptEvent, &wg, guard)
+		itemSpan.SetAttributes(attribute.String("rh.org_id", itemEvent.GetOrgID()),
+			attribute.String("rh.request_id", firstRequestID(itemEvent)))
+		ptEvent, err = runEvaluate(itemCtx, itemEvent, id, evalLabel, ptEvent, &wg, guard)
 		telemetry.End(itemSpan, err)
 		ptEvents = append(ptEvents, ptEvent)
 	}
