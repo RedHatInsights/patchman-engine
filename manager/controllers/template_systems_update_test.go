@@ -240,7 +240,7 @@ func TestUpdateTemplateSystemsCandlepin404(t *testing.T) {
 	})
 	defer database.DeleteTemplate(t, templateAccount, templateUUID)
 	w := CreateRequestRouterWithParams("PUT", templatePath, templateUUID, "", bytes.NewBufferString(data), "",
-		TemplateSystemsUpdateHandler, templateAccount, core.ContextKV{Key: utils.KeyOrgID, Value: orgID})
+		TemplateSystemsUpdateHandler, templateAccount, ContextKV{Key: utils.KeyOrgID, Value: orgID})
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	database.CheckTemplateSystems(t, templateAccount, templateUUID,
@@ -254,7 +254,7 @@ func TestUpdateTemplateSystemsCandlepin404(t *testing.T) {
 		]
 	}`
 	w = CreateRequestRouterWithParams("PUT", templatePath, templateUUID, "", bytes.NewBufferString(data), "",
-		TemplateSystemsUpdateHandler, templateAccount, core.ContextKV{Key: utils.KeyOrgID, Value: orgID})
+		TemplateSystemsUpdateHandler, templateAccount, ContextKV{Key: utils.KeyOrgID, Value: orgID})
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	database.CheckTemplateSystems(t, templateAccount, templateUUID,

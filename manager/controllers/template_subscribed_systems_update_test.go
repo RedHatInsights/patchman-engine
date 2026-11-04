@@ -54,8 +54,8 @@ func TestUpdateTemplateSubscribedSystems(t *testing.T) {
 
 	w := CreateRequestRouterWithParams("PATCH", "/:template_id/subscribed-systems", templateUUID, "", nil, "",
 		TemplateSubscribedSystemsUpdateHandler, templateAccount,
-		core.ContextKV{Key: utils.KeySystem, Value: subscriptionUUID},
-		core.ContextKV{Key: utils.KeyOrgID, Value: orgID})
+		ContextKV{Key: utils.KeySystem, Value: subscriptionUUID},
+		ContextKV{Key: utils.KeyOrgID, Value: orgID})
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	database.CheckTemplateSystems(t, templateAccount, templateUUID, []uuid.UUID{testInventoryID4})
@@ -69,7 +69,7 @@ func TestUpdateTemplateSubscribedSystemsInvalid(t *testing.T) {
 
 	w := CreateRequestRouterWithParams("PATCH", "/:template_id/subscribed-systems", templateUUID, "", nil, "",
 		TemplateSubscribedSystemsUpdateHandler, templateAccount,
-		core.ContextKV{Key: utils.KeySystem, Value: subscriptionInvalidUUID})
+		ContextKV{Key: utils.KeySystem, Value: subscriptionInvalidUUID})
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	database.CheckTemplateSystems(t, templateAccount, templateUUID, []uuid.UUID{})

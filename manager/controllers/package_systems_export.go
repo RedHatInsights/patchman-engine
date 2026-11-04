@@ -46,7 +46,7 @@ func PackageSystemsExportHandler(c *gin.Context) {
 		return
 	}
 
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	var packageIDs []int
 	if err := database.PackageByName(db, packageName).Pluck("p.id", &packageIDs).Error; err != nil {
 		utils.LogAndRespError(c, err, "database error")

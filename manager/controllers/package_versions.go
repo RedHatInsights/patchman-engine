@@ -77,7 +77,7 @@ func PackageVersionsListHandler(c *gin.Context) {
 		return
 	}
 
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	var packageNameIDs []int
 	if err := packagesNameID(db, packageName).Pluck("pn.id", &packageNameIDs).Error; err != nil {
 		utils.LogAndRespError(c, err, "database error")

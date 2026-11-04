@@ -195,7 +195,7 @@ func validateSystemsListIDs(ids []string) error {
 func systemsCommon(c *gin.Context, ids []string) (*gorm.DB, *ListMeta, []string, error) {
 	account := c.GetInt(utils.KeyAccount)
 	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	query := querySystems(db, account, workspaceIDs)
 	filters, err := ParseAllFilters(c, SystemOpts)
 	if err != nil {
