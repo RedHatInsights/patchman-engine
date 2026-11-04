@@ -126,7 +126,7 @@ func PackagesListHandler(c *gin.Context) {
 		return
 	}
 
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	useCache := shouldUseCache(db, account, filters, workspaceIDs)
 	if !useCache {
 		db.Exec("SET work_mem TO '?'", utils.CoreCfg.DBWorkMem)

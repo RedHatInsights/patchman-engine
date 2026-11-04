@@ -83,7 +83,7 @@ func TemplatesListHandler(c *gin.Context) {
 		return
 	}
 
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	query := templatesQuery(db, filters, account, workspaceIDs)
 
 	query, meta, params, err := ListCommon(query, c, filters, TemplateOpts)

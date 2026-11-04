@@ -79,7 +79,7 @@ func getTemplate(c *gin.Context, tx *gorm.DB, account int, uuid string) (*models
 
 func templateSystemsQuery(c *gin.Context, account int, workspaceIDs []string) (*gorm.DB, Filters, error) {
 	templateUUID := c.Param("template_id")
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 
 	template, err := getTemplate(c, db, account, templateUUID)
 	if err != nil {

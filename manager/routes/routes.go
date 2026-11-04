@@ -15,7 +15,6 @@ func InitAPI(api *gin.RouterGroup, config docs.EndpointsConfig) { // nolint: fun
 	api.Use(middlewares.CheckReferer())
 	api.Use(middlewares.SetAPIVersion(api.BasePath()))
 	api.Use(middlewares.Deprecate(deprecations.DeprecateLimit()))
-	api.Use(middlewares.DatabaseWithContext())
 
 	userAuth := api.Group("/")
 	if utils.CoreCfg.KesselEnabled {

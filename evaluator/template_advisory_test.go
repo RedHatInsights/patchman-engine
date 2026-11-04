@@ -68,61 +68,28 @@ func TestLoadTemplateAdvisoryErrata(t *testing.T) {
 	assert.True(t, ok)
 }
 
-//nolint:funlen
 func TestGetUpdatesDataTemplateAdvisoryEval(t *testing.T) {
-	vmaasJSON := `
-	{
-		"package_list": ["git-2.30.1-1.el8_8.x86_64"],
-		"repository_list": ["rhel-8-for-x86_64-appstream-rpms"],
-		"releasever": "8",
-		"basearch": "x86_64",
-		"latest_only": true
-	}
-	`
-	vmaasDataResp := `
-	{
+	// yum update must not be merged; template installability comes from VMaaS errata only
+	yumUpdatesRaw := []byte(`{
 		"update_list": {
-			"git-2.30.1-1.el8_8.x86_64": {
+			"firefox-0:76.0.1-1.fc31.x86_64": {
 				"available_updates": [
 					{
-						"erratum": "RH-1",
-						"package": "git-2.39.3-1.el8_8.x86_64"
-					},
-					{
-						"erratum": "RH-2",
-						"package": "git-2.39.4-1.el8_8.x86_64"
+						"erratum": "RH-YUM-ONLY",
+						"package": "firefox-9:9.9.9-1.fc31.x86_64"
 					}
 				]
 			}
 		}
-	}
-	`
-	yumUpdatesRaw := []byte(`
-	{
-		"update_list": {
-			"git-2.30.1-1.el8_8.x86_64": {
-				"available_updates": [
-					{
-						"erratum": "RH-100",
-						"package": "git-9.9.9-1.el8_8.x86_64"
-					}
-				]
-			}
-		}
-	}
-	`)
+	}`)
 
-	var vmaasData vmaas.UpdatesV3Response
-	assert.Nil(t, sonic.Unmarshal([]byte(vmaasDataResp), &vmaasData))
-	vmaasJSONChecksum := "template-advisory-eval-test"
-
+	vmaasJSON := platformPackagesVmaasJSON
 	templateID := int64(1)
 	system := &models.SystemPlatformV2{
 		Inventory: models.SystemInventory{
-			RhAccountID:  1,
-			JSONChecksum: &vmaasJSONChecksum,
-			VmaasJSON:    &vmaasJSON,
-			YumUpdates:   yumUpdatesRaw,
+			RhAccountID: 1,
+			VmaasJSON:   &vmaasJSON,
+			YumUpdates:  yumUpdatesRaw,
 		},
 		Patch: models.SystemPatch{
 			TemplateID: &templateID,
@@ -130,6 +97,7 @@ func TestGetUpdatesDataTemplateAdvisoryEval(t *testing.T) {
 	}
 
 	utils.SkipWithoutDB(t)
+	utils.SkipWithoutPlatform(t)
 	core.SetupTestEnvironment()
 	configure()
 	loadCache()
@@ -143,7 +111,6 @@ func TestGetUpdatesDataTemplateAdvisoryEval(t *testing.T) {
 		enableTemplateAdvisoryEval = ogTemplateEval
 	}()
 
-	memoryVmaasCache.Add(&vmaasJSONChecksum, &vmaasData)
 	database.CreateTemplateAdvisories(t, 1, templateID, []int64{1})
 	defer database.DeleteTemplateAdvisories(t, templateID, []int64{1})
 
@@ -151,19 +118,14 @@ func TestGetUpdatesDataTemplateAdvisoryEval(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 
-	var installableCnt, applicableCnt int
-	for _, updates := range result.GetUpdateList() {
-		for _, update := range updates.GetAvailableUpdates() {
-			switch update.StatusID {
-			case INSTALLABLE:
-				installableCnt++
-			case APPLICABLE:
-				applicableCnt++
-			}
-		}
-	}
-	assert.Equal(t, 1, installableCnt)
-	assert.Equal(t, 1, applicableCnt)
+	// platform /updates returns RH-1, RH-2, and RH-100. Template advisory id 1 is RH-1.
+	total, statuses := updateStatuses(result)
+	assert.Equal(t, 3, total)
+	assert.Equal(t, INSTALLABLE, statuses["RH-1"])
+	assert.Equal(t, APPLICABLE, statuses["RH-2"])
+	assert.Equal(t, APPLICABLE, statuses["RH-100"])
+	_, yumMerged := statuses["RH-YUM-ONLY"]
+	assert.False(t, yumMerged)
 }
 
 func TestUseTemplateAdvisoryEval(t *testing.T) {

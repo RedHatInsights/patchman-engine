@@ -74,7 +74,7 @@ func SystemTagListHandler(c *gin.Context) {
 	account := c.GetInt(utils.KeyAccount)
 	workspaceIDs := c.GetStringSlice(utils.KeyInventoryWorkspaces)
 
-	db := middlewares.DBFromContext(c)
+	db := middlewares.DB(c)
 	// https://stackoverflow.com/questions/33474778/how-to-group-result-by-array-column-in-postgres
 	sq := database.Systems(db, account, workspaceIDs).
 		Select("jsonb_array_elements(si.tags) AS tag")
