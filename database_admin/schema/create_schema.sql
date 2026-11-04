@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (169, false);
+VALUES (170, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -803,6 +803,7 @@ CREATE INDEX IF NOT EXISTS
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO evaluator;
 GRANT SELECT, INSERT, UPDATE, DELETE ON advisory_metadata TO vmaas_sync;
 GRANT SELECT ON advisory_metadata TO manager;
+GRANT INSERT ON advisory_metadata TO listener;
 
 -- status table
 CREATE TABLE IF NOT EXISTS status

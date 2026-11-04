@@ -69,6 +69,76 @@ func TestLookUpAdvisoryMetadataIDs(t *testing.T) {
 	assert.Equal(t, int64(2), nameToID["RH-2"])
 }
 
+func TestLookUpAdvisoryMetadataIDsCreatesMissing(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	rhelName := "RHSA-LAZY-0001"
+	otherName := "CUSTOM-LAZY-1"
+	t.Cleanup(func() {
+		database.DeleteAdvisoriesByName(t, []string{rhelName, otherName})
+	})
+
+	var before models.AdvisoryMetadata
+	err := database.TestDB().Where("name = ?", "RH-1").First(&before).Error
+	assert.Nil(t, err)
+
+	nameToID, err := lookUpAdvisoryMetadataIDs(base.Context, []string{"RH-1", rhelName, otherName})
+	assert.Nil(t, err)
+	assert.Equal(t, before.ID, nameToID["RH-1"])
+	assert.NotZero(t, nameToID[rhelName])
+	assert.NotZero(t, nameToID[otherName])
+
+	stored := database.GetAdvisoriesByName(t, []string{rhelName, otherName})
+	byName := make(map[string]models.AdvisoryMetadata, len(stored))
+	for _, advisory := range stored {
+		byName[advisory.Name] = advisory
+	}
+	assert.Equal(t, "https://access.redhat.com/errata/"+rhelName, byName[rhelName].Description)
+	assert.Equal(t, byName[rhelName].Description, byName[rhelName].Synopsis)
+	assert.Equal(t, byName[rhelName].Description, byName[rhelName].Summary)
+	assert.Equal(t, 0, byName[rhelName].AdvisoryTypeID)
+	assert.False(t, byName[rhelName].Synced)
+	assert.Equal(t, "Not Available for 3rd party systems", byName[otherName].Description)
+	assert.Equal(t, byName[otherName].Description, byName[otherName].Synopsis)
+	assert.Equal(t, byName[otherName].Description, byName[otherName].Summary)
+	assert.Equal(t, 0, byName[otherName].AdvisoryTypeID)
+	assert.False(t, byName[otherName].Synced)
+
+	var after models.AdvisoryMetadata
+	err = database.TestDB().Where("name = ?", "RH-1").First(&after).Error
+	assert.Nil(t, err)
+	assert.Equal(t, before.ID, after.ID)
+	assert.Equal(t, before.Description, after.Description)
+	assert.Equal(t, before.Synced, after.Synced)
+
+	again, err := lookUpAdvisoryMetadataIDs(base.Context, []string{rhelName, otherName})
+	assert.Nil(t, err)
+	assert.Equal(t, nameToID[rhelName], again[rhelName])
+	assert.Equal(t, nameToID[otherName], again[otherName])
+}
+
+func TestApplyTemplateAdvisoriesCreatesMissingAdvisory(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	templateUUID := "77777777-0000-0000-0000-000000000077"
+	rhelName := "RHBA-LAZY-0002"
+	database.CreateTemplate(t, accountID, templateUUID, nil)
+	t.Cleanup(func() {
+		database.DeleteTemplate(t, accountID, templateUUID)
+		database.DeleteAdvisoriesByName(t, []string{rhelName})
+	})
+
+	stored := loadTemplateByUUID(t, templateUUID)
+	err := applyTemplateAdvisories(base.Context, accountID, stored.ID, templateUUID, "", []string{"RH-1", rhelName})
+	assert.Nil(t, err)
+
+	created := database.GetAdvisoriesByName(t, []string{rhelName})
+	assert.Equal(t, 1, len(created))
+	database.CheckTemplateAdvisories(t, stored.ID, []int64{1, created[0].ID})
+}
+
 func TestBuildTemplateAdvisoryRows(t *testing.T) {
 	nameToID := map[string]int64{
 		"RH-1": 1,
