@@ -16,6 +16,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
+	"gorm.io/gorm"
 )
 
 const (
@@ -145,10 +146,9 @@ func TemplateUpdate(ctx context.Context, template mqueue.TemplateResponse, event
 		Published:   &template.Date,
 	}
 
-	err = database.OnConflictUpdateMulti(database.DB(ctx), []string{"rh_account_id", "uuid"},
-		"name", "environment_id", "description", "creator", "published").Save(&row).Error
+	err = saveTemplate(ctx, &row)
 	if err != nil {
-		return errors.Wrap(err, "creating/updating template from message")
+		return err
 	}
 
 	switch {
@@ -164,6 +164,72 @@ func TemplateUpdate(ctx context.Context, template mqueue.TemplateResponse, event
 		if err != nil {
 			return errors.Wrap(err, "syncing template advisories")
 		}
+	}
+	return nil
+}
+
+// saveTemplate updates an existing template or inserts new one
+// don't use INSERT ... ON CONFLICT, it calls nextval('template_id_seq') before the
+// conflict check and advances the sequence even if the row already exists
+func saveTemplate(ctx context.Context, row *models.Template) error {
+	db := database.DB(ctx)
+
+	templateID, err := findTemplateID(db, row.RhAccountID, row.UUID)
+	if err != nil {
+		return err
+	}
+	if templateID != 0 {
+		row.ID = templateID
+		return updateTemplate(db, row)
+	}
+
+	err = insertTemplate(db, row)
+	if err != nil && database.IsPgErrorCode(db, err, gorm.ErrDuplicatedKey) {
+		templateID, err = findTemplateID(db, row.RhAccountID, row.UUID)
+		if err != nil {
+			return err
+		}
+		if templateID == 0 {
+			return errors.New("template missing after unique conflict")
+		}
+		row.ID = templateID
+		return updateTemplate(db, row)
+	}
+	return err
+}
+
+func findTemplateID(db *gorm.DB, accountID int, templateUUID string) (int64, error) {
+	var templateID int64
+	err := db.Model(&models.Template{}).
+		Select("id").
+		Where("rh_account_id = ? AND uuid = ?::uuid", accountID, templateUUID).
+		Find(&templateID).Error
+	if err != nil {
+		return 0, errors.Wrap(err, "getting template")
+	}
+	return templateID, nil
+}
+
+func updateTemplate(db *gorm.DB, row *models.Template) error {
+	err := db.Model(&models.Template{}).
+		Where("rh_account_id = ? AND id = ?", row.RhAccountID, row.ID).
+		Updates(map[string]interface{}{
+			"name":           row.Name,
+			"environment_id": row.EnvironmentID,
+			"description":    row.Description,
+			"creator":        row.Creator,
+			"published":      row.Published,
+		}).Error
+	if err != nil {
+		return errors.Wrap(err, "updating template from message")
+	}
+	return nil
+}
+
+func insertTemplate(db *gorm.DB, row *models.Template) error {
+	err := db.Omit("ID").Create(row).Error
+	if err != nil {
+		return errors.Wrap(err, "creating template from message")
 	}
 	return nil
 }
