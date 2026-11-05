@@ -170,14 +170,11 @@ func TestSyncTemplateAdvisories_TemplateNotFound(t *testing.T) {
 	database.CheckTemplateAdvisories(t, templateID, []int64{1, 2})
 }
 
-func setTemplateAdvisoryFlags(t *testing.T, withAdvisories bool) {
+func disableTemplateAdvisoryEval(t *testing.T) {
 	t.Helper()
-	originalWith := templatesWithAdvisories
 	originalEval := enableTemplateAdvisoryEval
-	templatesWithAdvisories = withAdvisories
 	enableTemplateAdvisoryEval = false
 	t.Cleanup(func() {
-		templatesWithAdvisories = originalWith
 		enableTemplateAdvisoryEval = originalEval
 	})
 }
@@ -205,9 +202,9 @@ func loadTemplateByUUID(t *testing.T, templateUUID string) models.Template {
 func TestTemplateMessageAdvisoryIDs(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	setTemplateAdvisoryFlags(t, true)
+	disableTemplateAdvisoryEval(t)
 
-	// Prove this path does not call Content Sources.
+	// The message is the snapshot. A nil client must not matter.
 	contentSourcesClient = nil
 	contentSourcesBaseURL = ""
 
@@ -254,45 +251,4 @@ func TestTemplateMessageAdvisoryIDs(t *testing.T) {
 	err = TemplatesMessageHandler(base.Context, mqueue.KafkaMessage{Value: msg})
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), templateAdvisoryCount(t, stored.ID))
-}
-
-func TestTemplateUpdateStillUsesContentSourcesAPI(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-	setupContentSourcesClient(t)
-	setTemplateAdvisoryFlags(t, false)
-
-	templateUUID := "88888888-0000-0000-0000-000000000098"
-	t.Cleanup(func() {
-		database.DeleteTemplate(t, accountID, templateUUID)
-	})
-
-	createEvent := createTempateMsg(t, "template-created", orgID, 1)
-	createEvent.Data[0].UUID = templateUUID
-	createEvent.Data[0].EnvironmentID = "88888888000000000000000000000098"
-	// Even if a producer sends the key, flag off must ignore it.
-	createEvent.Data[0].AdvisoryIDs = []string{"RH-2"}
-	msg, err := sonic.Marshal(createEvent)
-	assert.Nil(t, err)
-
-	err = TemplatesMessageHandler(base.Context, mqueue.KafkaMessage{Value: msg})
-	assert.Nil(t, err)
-
-	stored := loadTemplateByUUID(t, templateUUID)
-	assert.Equal(t, int64(0), templateAdvisoryCount(t, stored.ID))
-
-	database.CreateTemplateAdvisories(t, accountID, stored.ID, []int64{2})
-
-	updateEvent := createEvent
-	updateEvent.Type = "com.redhat.console.repositories.template-updated"
-	updateEvent.Data[0].AdvisoryIDs = []string{"RH-2"}
-	msg, err = sonic.Marshal(updateEvent)
-	assert.Nil(t, err)
-
-	err = TemplatesMessageHandler(base.Context, mqueue.KafkaMessage{Value: msg})
-	assert.Nil(t, err)
-
-	// Platform mock returns RH-1 and RH-3, so the message's RH-2 is not the source.
-	database.CheckTemplateAdvisories(t, stored.ID, []int64{1, 3})
-	assert.Equal(t, int64(2), templateAdvisoryCount(t, stored.ID))
 }

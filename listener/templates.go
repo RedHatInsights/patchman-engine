@@ -1,7 +1,6 @@
 package listener
 
 import (
-	"app/base"
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
@@ -15,7 +14,6 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
-	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 const (
@@ -151,19 +149,9 @@ func TemplateUpdate(ctx context.Context, template mqueue.TemplateResponse, event
 		return errors.Wrap(err, "creating/updating template from message")
 	}
 
-	switch {
-	case templatesWithAdvisories:
-		err = applyTemplateAdvisories(ctx, accountID, row.ID, template.UUID, template.OrgID, template.AdvisoryIDs)
-		if err != nil {
-			return errors.Wrap(err, "syncing template advisories from message")
-		}
-	case contentSourcesBaseURL != "" && utils.CoreCfg.ContentSourcesUser != "" && eventType == TemplateEventUpdate:
-		csCtx := identity.WithIdentity(base.Context,
-			utils.XRHIDForOrg(template.OrgID, utils.CoreCfg.ContentSourcesUser))
-		err = syncTemplateAdvisories(csCtx, accountID, row.ID, template.UUID, template.OrgID)
-		if err != nil {
-			return errors.Wrap(err, "syncing template advisories")
-		}
+	err = applyTemplateAdvisories(ctx, accountID, row.ID, template.UUID, template.OrgID, template.AdvisoryIDs)
+	if err != nil {
+		return errors.Wrap(err, "syncing template advisories from message")
 	}
 	return nil
 }
