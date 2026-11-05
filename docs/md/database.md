@@ -14,7 +14,8 @@ Main database tables description:
 - **template** - Content Sources template metadata per account (`rh_account_id`, `id`, `uuid`, `name`, `environment_id`,
   `arch`, `version`, etc.). Upserted by **listener** from `platform.content-sources.template` events.
 - **template_advisory** - junction table linking a **template** to **advisory_metadata** rows
-  (`rh_account_id`, `template_id`, `advisory_id`). Populated by **listener** on `template-updated` from Content Sources.
+  (`rh_account_id`, `template_id`, `advisory_id`). Populated by **listener** from `advisory_ids` on
+  `template-created` and `template-updated`.
   Read by **evaluator** (when `template_advisory_eval=true`) to determine which advisories are installable for systems
   assigned via **`system_patch.template_id`**. The same flag on **listener** triggers re-evaluation when rows change.
 
