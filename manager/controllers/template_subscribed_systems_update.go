@@ -20,8 +20,10 @@ import (
 // @Accept   json
 // @Produce  json
 // @Param    template_id    path  string   true  "Template ID"
+// @Param    X-Forwarded-Identity header string false "Satellite subscription-manager UUID; also requires owner match"
 // @Success 200
 // @Failure 400 {object} 	utils.ErrorResponse
+// @Failure 403 {object} 	utils.ErrorResponse
 // @Failure 404 {object} 	utils.ErrorResponse
 // @Failure 500 {object} 	utils.ErrorResponse
 // @Router /templates/{template_id}/subscribed-systems [PATCH]
@@ -66,15 +68,22 @@ func TemplateSubscribedSystemsUpdateHandler(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+func systemIdentityQuery(c *gin.Context, tx *gorm.DB) *gorm.DB {
+	query := tx.Table("system_inventory").
+		Where("owner_id = ? AND rh_account_id = ?", c.GetString(utils.KeySystem), c.GetInt(utils.KeyAccount))
+	if forwardedID := c.GetString(utils.KeySubscriptionManagerID); forwardedID != "" {
+		query = query.Where("subscription_manager_id = ?", forwardedID)
+	}
+	return query
+}
+
 func getSubscribedSystem(c *gin.Context, tx *gorm.DB) (int, string, uuid.UUID, error) {
 	account := c.GetInt(utils.KeyAccount)
 	orgID := c.GetString(utils.KeyOrgID)
 	systemCn := c.GetString(utils.KeySystem)
 
 	var inventoryIDStr string
-	err := tx.Select("inventory_id").
-		Table("system_inventory").
-		Where("subscription_manager_id = ? AND rh_account_id = ?", systemCn, account).
+	err := systemIdentityQuery(c, tx).Select("inventory_id").
 		Limit(1).Find(&inventoryIDStr).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		utils.LogAndRespError(c, err, "database error")
