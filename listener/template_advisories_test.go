@@ -2,7 +2,6 @@ package listener
 
 import (
 	"app/base"
-	"app/base/content_sources"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
@@ -11,39 +10,10 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
-	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 	"github.com/stretchr/testify/assert"
 )
 
 const orgID = "org_1"
-
-func setupContentSourcesClient(t *testing.T) {
-	originalAddress := utils.CoreCfg.ContentSourcesAddress
-	address := utils.Getenv("CONTENT_SOURCES_ADDRESS", "http://platform:9001")
-	utils.CoreCfg.ContentSourcesAddress = address
-	originalUser := utils.CoreCfg.ContentSourcesUser
-	user := utils.Getenv("CONTENT_SOURCES_USER", "test-user")
-	utils.CoreCfg.ContentSourcesUser = user
-	contentSourcesClient = content_sources.CreateContentSourcesClient()
-	contentSourcesBaseURL = address + "/api/content-sources/v1"
-	t.Cleanup(func() {
-		utils.CoreCfg.ContentSourcesAddress = originalAddress
-		contentSourcesClient = nil
-		contentSourcesBaseURL = ""
-		utils.CoreCfg.ContentSourcesUser = originalUser
-	})
-}
-
-func TestCallCSTemplateAdvisories(t *testing.T) {
-	setupContentSourcesClient(t)
-
-	templateUUID := "99900000-0000-0000-0000-000000000001"
-	ctx := identity.WithIdentity(base.Context, utils.XRHIDForOrg(orgID, utils.CoreCfg.ContentSourcesUser))
-	result, err := callCSTemplateAdvisories(ctx, templateUUID)
-
-	assert.NoError(t, err)
-	assert.Equal(t, []string{"RH-1", "RH-3"}, result.AdvisoryIDs)
-}
 
 func TestDiffTemplateAdvisories(t *testing.T) {
 	stored := map[string]models.TemplateAdvisory{
@@ -120,64 +90,11 @@ func TestLookUpTemplateAdvisories(t *testing.T) {
 	assert.Equal(t, "adv-2-des", (templateAdvisories)["RH-2"].Advisory.Description)
 }
 
-func TestSyncTemplateAdvisories(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-	setupContentSourcesClient(t)
-
-	templateID := int64(1)
-	templateUUID := "99900000-0000-0000-0000-000000000001"
-
-	// DB has RH-1 and RH-2 linked to the template
-	database.CreateTemplateAdvisories(t, accountID, templateID, []int64{1, 2})
-	defer database.DeleteTemplateAdvisories(t, templateID, []int64{1, 2, 3})
-
-	// content sources mock returns RH-1 and RH-3 so we need to add RH-3, remove RH-2
-	ctx := identity.WithIdentity(base.Context, utils.XRHIDForOrg(orgID, utils.CoreCfg.ContentSourcesUser))
-	err := syncTemplateAdvisories(ctx, accountID, templateID, templateUUID, orgID)
-	assert.Nil(t, err)
-
-	// RH-3 and RH-1 now linked to the template
-	database.CheckTemplateAdvisories(t, templateID, []int64{1, 3})
-
-	// RH-2 was removed
-	var count int64
-	err = database.TestDB().Model(&models.TemplateAdvisory{}).
-		Where("template_id = ? AND advisory_id = ?", templateID, 2).
-		Count(&count).Error
-	assert.Nil(t, err)
-	assert.Equal(t, int64(0), count)
-}
-
-func TestSyncTemplateAdvisories_TemplateNotFound(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-	setupContentSourcesClient(t)
-
-	templateID := int64(1)
-	templateUUID := "40499999-9999-9999-9999-999999999404"
-
-	// DB has RH-1 and RH-2 linked to the template
-	database.CreateTemplateAdvisories(t, accountID, templateID, []int64{1, 2})
-	defer database.DeleteTemplateAdvisories(t, templateID, []int64{1, 2})
-
-	// content sources mock returns 404 for this template UUID
-	ctx := identity.WithIdentity(base.Context, utils.XRHIDForOrg(orgID, utils.CoreCfg.ContentSourcesUser))
-	err := syncTemplateAdvisories(ctx, accountID, templateID, templateUUID, orgID)
-	assert.Nil(t, err)
-
-	// sync was skipped and no advisories were changed
-	database.CheckTemplateAdvisories(t, templateID, []int64{1, 2})
-}
-
-func setTemplateAdvisoryFlags(t *testing.T, withAdvisories bool) {
+func disableTemplateAdvisoryEval(t *testing.T) {
 	t.Helper()
-	originalWith := templatesWithAdvisories
 	originalEval := enableTemplateAdvisoryEval
-	templatesWithAdvisories = withAdvisories
 	enableTemplateAdvisoryEval = false
 	t.Cleanup(func() {
-		templatesWithAdvisories = originalWith
 		enableTemplateAdvisoryEval = originalEval
 	})
 }
@@ -205,11 +122,7 @@ func loadTemplateByUUID(t *testing.T, templateUUID string) models.Template {
 func TestTemplateMessageAdvisoryIDs(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
-	setTemplateAdvisoryFlags(t, true)
-
-	// Prove this path does not call Content Sources.
-	contentSourcesClient = nil
-	contentSourcesBaseURL = ""
+	disableTemplateAdvisoryEval(t)
 
 	templateUUID := "88888888-0000-0000-0000-000000000099"
 	t.Cleanup(func() {
@@ -254,45 +167,4 @@ func TestTemplateMessageAdvisoryIDs(t *testing.T) {
 	err = TemplatesMessageHandler(base.Context, mqueue.KafkaMessage{Value: msg})
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), templateAdvisoryCount(t, stored.ID))
-}
-
-func TestTemplateUpdateStillUsesContentSourcesAPI(t *testing.T) {
-	utils.SkipWithoutDB(t)
-	core.SetupTestEnvironment()
-	setupContentSourcesClient(t)
-	setTemplateAdvisoryFlags(t, false)
-
-	templateUUID := "88888888-0000-0000-0000-000000000098"
-	t.Cleanup(func() {
-		database.DeleteTemplate(t, accountID, templateUUID)
-	})
-
-	createEvent := createTempateMsg(t, "template-created", orgID, 1)
-	createEvent.Data[0].UUID = templateUUID
-	createEvent.Data[0].EnvironmentID = "88888888000000000000000000000098"
-	// Even if a producer sends the key, flag off must ignore it.
-	createEvent.Data[0].AdvisoryIDs = []string{"RH-2"}
-	msg, err := sonic.Marshal(createEvent)
-	assert.Nil(t, err)
-
-	err = TemplatesMessageHandler(base.Context, mqueue.KafkaMessage{Value: msg})
-	assert.Nil(t, err)
-
-	stored := loadTemplateByUUID(t, templateUUID)
-	assert.Equal(t, int64(0), templateAdvisoryCount(t, stored.ID))
-
-	database.CreateTemplateAdvisories(t, accountID, stored.ID, []int64{2})
-
-	updateEvent := createEvent
-	updateEvent.Type = "com.redhat.console.repositories.template-updated"
-	updateEvent.Data[0].AdvisoryIDs = []string{"RH-2"}
-	msg, err = sonic.Marshal(updateEvent)
-	assert.Nil(t, err)
-
-	err = TemplatesMessageHandler(base.Context, mqueue.KafkaMessage{Value: msg})
-	assert.Nil(t, err)
-
-	// Platform mock returns RH-1 and RH-3, so the message's RH-2 is not the source.
-	database.CheckTemplateAdvisories(t, stored.ID, []int64{1, 3})
-	assert.Equal(t, int64(2), templateAdvisoryCount(t, stored.ID))
 }

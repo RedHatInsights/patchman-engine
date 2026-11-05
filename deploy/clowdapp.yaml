@@ -198,7 +198,6 @@ objects:
         - {name: ENABLE_PROFILER, value: '${ENABLE_PROFILER_LISTENER}'}
         - {name: GOMEMLIMIT, value: '${GOMEMLIMIT_LISTENER}'}
         - {name: POD_CONFIG, value: '${LISTENER_CONFIG}'}
-        - {name: CONTENT_SOURCES_USER, value: '${CONTENT_SOURCES_USER}'}
 
         - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
         - {name: OTEL_SERVICE_NAME, value: 'patchman-listener'}
@@ -1066,8 +1065,6 @@ objects:
     - vmaas
     - ingress
     - puptoo
-    optionalDependencies:
-    - content-sources-backend
     testing:
       iqePlugin: patchman
 
@@ -1269,7 +1266,6 @@ parameters:
 - {name: ENABLE_PROFILER_LISTENER, value: 'false'}
 - {name: GOMEMLIMIT_LISTENER, value: '691MiB'} # set to 90% of the default memory limit (don't forget `B`)
 - {name: LISTENER_CONFIG, value: 'template_advisory_eval=true'}
-- {name: CONTENT_SOURCES_USER, value: ''}
 
 # Evaluator
 - {name: GOGC, value: '100'}

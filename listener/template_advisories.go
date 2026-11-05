@@ -1,31 +1,15 @@
 package listener
 
 import (
-	"app/base/api"
-	"app/base/content_sources"
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
 	"context"
-	"net/http"
 
 	"github.com/pkg/errors"
-	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
-
-func syncTemplateAdvisories(ctx context.Context, accountID int, templateID int64, templateUUID, orgID string) error {
-	current, err := callCSTemplateAdvisories(ctx, templateUUID)
-	if err != nil {
-		if errors.Is(err, errContentSourcesTemplateNotFound) {
-			utils.LogWarn("template_uuid", templateUUID, "template not found in content sources, skipping", err.Error())
-			return nil
-		}
-		return errors.Wrap(err, "fetching current template advisories from content-sources")
-	}
-	return applyTemplateAdvisories(ctx, accountID, templateID, templateUUID, orgID, current.AdvisoryIDs)
-}
 
 // applyTemplateAdvisories diffs advisory names against template_advisory and writes the change.
 // advisoryIDs is the full snapshot. Nil and empty both mean no advisories.
@@ -182,48 +166,4 @@ func deleteOldTemplateAdvisories(tx *gorm.DB, accountID int, templateID int64, a
 		Where("advisory_id in (?)", advisoryIDs).
 		Delete(&models.TemplateAdvisory{}).Error
 	return err
-}
-
-func httpCallCSTemplateAdvisories(ctx context.Context, templateUUID string) (
-	interface{}, *http.Response, error) {
-	id := identity.GetIdentity(ctx)
-	header, err := utils.EncodeXRHID(id.Identity)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if contentSourcesClient == nil {
-		return nil, nil, errors.New("content sources client is nil")
-	}
-	client := &api.Client{
-		HTTPClient:     contentSourcesClient.HTTPClient,
-		Debug:          contentSourcesClient.Debug,
-		DefaultHeaders: map[string]string{"x-rh-identity": header},
-	}
-
-	url := contentSourcesBaseURL + "/templates/" + templateUUID + "/advisories/ids"
-	var resp content_sources.TemplateAdvisoryIDsResponse
-	httpResp, err := client.Request(&ctx, http.MethodGet, url, nil, &resp)
-	if err != nil && httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
-		return &resp, httpResp, errors.Wrap(errContentSourcesTemplateNotFound, err.Error())
-	}
-
-	return &resp, httpResp, err
-}
-
-// Fetches advisories for a template.
-// Returns an unpaginated list of advisory IDs (e.g. RHSA-1234:0001)
-func callCSTemplateAdvisories(ctx context.Context,
-	templateUUID string) (*content_sources.TemplateAdvisoryIDsResponse, error) {
-	contentSourcesRespPtr, err := utils.HTTPCallRetry(
-		func() (interface{}, *http.Response, error) {
-			return httpCallCSTemplateAdvisories(ctx, templateUUID)
-		},
-		true,
-		5,
-		http.StatusServiceUnavailable)
-	if err != nil {
-		return nil, errors.Wrap(err, "content sources template advisories call failed")
-	}
-	return contentSourcesRespPtr.(*content_sources.TemplateAdvisoryIDsResponse), nil
 }
