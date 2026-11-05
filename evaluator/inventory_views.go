@@ -54,6 +54,7 @@ func publishInventoryViewsEvent(ctx context.Context, tx *gorm.DB,
 	}
 
 	producerCtx, span := telemetry.ProducerContext(ctx, utils.CoreCfg.InventoryViewsTopic, nil)
+	telemetry.SetRHAttributes(span, orgID, requestID)
 	err = inventoryViewsPublisher.WriteMessages(producerCtx, msg)
 	telemetry.End(span, err)
 	if err != nil {

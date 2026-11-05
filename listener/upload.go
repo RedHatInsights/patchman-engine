@@ -8,6 +8,7 @@ import (
 	"app/base/inventory"
 	"app/base/models"
 	"app/base/mqueue"
+	"app/base/telemetry"
 	"app/base/types"
 	"app/base/utils"
 	"app/base/vmaas"
@@ -179,6 +180,8 @@ func HandleUpload(ctx context.Context, event HostEvent) error {
 
 	if sys.Inventory.UnchangedSince != nil && sys.Patch.LastEvaluation != nil {
 		if sys.Inventory.UnchangedSince.Before(*sys.Patch.LastEvaluation) {
+			telemetry.RecordIngestionCompletion(ctx, event.Host.GetOrgID(), event.Metadata.RequestID,
+				event.Host.ID.String(), "unchanged")
 			logAndObserve(UploadSuccessNoEval, ReceivedSuccessNoEval, &event, &ptEvent, tStart, SuccessStatus, true)
 			return nil
 		}
