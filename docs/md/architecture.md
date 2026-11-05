@@ -20,11 +20,9 @@ archive is uploaded, it upserts **`system_inventory`** (including `vmaas_json` w
 Kafka message (`patchman.evaluator.upload` topic) to evaluate the system with the `evaluator-upload` component. This
 component also handles system deleting events (`platform.inventory.events` Kafka topic).
 It consumes template events from Content Sources (`platform.content-sources.template`), upserts **`template`** metadata,
-and syncs **`template_advisory`**. With `templates_with_advisories` unset or false, only `template-updated` syncs, by
-calling Content Sources `GET /templates/{uuid}/advisories/ids`. With `templates_with_advisories=true`, `template-created`
-and `template-updated` sync from `advisory_ids` on the message and do not call that API. When template advisories
-change and `template_advisory_eval` is enabled, it sends a bulk re-evaluation message to
-`patchman.evaluator.user-evaluation`.
+and syncs **`template_advisory`** from `advisory_ids` on `template-created` and `template-updated`. It does not call
+the Content Sources HTTP API. When template advisories change and `template_advisory_eval` is enabled, it sends a
+bulk re-evaluation message to `patchman.evaluator.user-evaluation`.
 See [component environment variables](../../conf/listener.env)
 
 - **evaluator-upload** - connects to the Kafka service (`patchman.evaluator.upload` topic) and listens for evaluation
@@ -85,20 +83,12 @@ Content Sources publishes `template-created`, `template-updated`, and `template-
 `platform.content-sources.template`. **listener** always upserts **`template`** metadata on create and update.
 `template-deleted` unassigns systems, deletes **`template_advisory`**, then deletes **`template`**.
 
-Advisory sync on create and update depends on `templates_with_advisories` (listener `POD_CONFIG`, default `false`):
+`template-created` and `template-updated` sync **`template_advisory`** from `advisory_ids` on each object in the
+message `data` array (advisory names such as `RHBA-2024:1234`). The Content Sources advisories HTTP API is not
+called. A missing key or an empty array is an empty snapshot and removes stored **`template_advisory`** rows for
+that template.
 
-- **false** — only `template-updated` syncs. **listener** calls Content Sources
-  `GET /templates/{uuid}/advisories/ids` when `CONTENT_SOURCES_ADDRESS` and `CONTENT_SOURCES_USER` are set.
-  `template-created` does not sync advisories.
-- **true** — `template-created` and `template-updated` use `advisory_ids` from each object in the message `data`
-  array (advisory names such as `RHBA-2024:1234`). The advisories API is not called. A missing key or an empty
-  array is an empty snapshot and removes stored **`template_advisory`** rows for that template.
-
-Leave the flag false until Content Sources sends `advisory_ids` on every create and update. Enabling it earlier
-treats the omitted field as an empty snapshot. Do not enable it on the listener alone in `deploy/clowdapp.yaml`
-as part of this change.
-
-After either path:
+After the snapshot is applied:
 
 1. **listener** diffs the snapshot against **`template_advisory`** and inserts or deletes rows. Names not yet in
    **`advisory_metadata`** are skipped.
