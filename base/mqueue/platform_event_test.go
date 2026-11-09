@@ -80,6 +80,8 @@ func TestWriteEventsPreservesTraceparents(t *testing.T) {
 	assert.Equal(t, invs[0].Traceparent, event.Traceparents[0])
 	assert.Equal(t, invs[1].Traceparent, event.Traceparents[1])
 	assert.Equal(t, []string{"r1", "r2"}, event.RequestIDs)
+	assert.NotContains(t, string(writer.Messages[0].Value), "ingestion_origins")
+	assert.NotContains(t, string(writer.Messages[0].Value), "started_at_ns")
 }
 
 func TestWriteEventsSkipNotificationsChunking(t *testing.T) {
