@@ -9,7 +9,7 @@ require (
 	github.com/bytedance/sonic v1.15.5
 	github.com/getkin/kin-openapi v0.149.0
 	github.com/getsentry/sentry-go v0.50.0
-	github.com/gin-contrib/timeout v1.2.3
+	github.com/gin-contrib/timeout v1.2.4
 	github.com/gin-gonic/gin v1.12.0
 	github.com/gocarina/gocsv v0.0.0-20261012193826-401c25af6907
 	github.com/golang-migrate/migrate/v4 v4.20.1
