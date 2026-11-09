@@ -24,6 +24,11 @@ RUN curl -fsSL -o /tmp/pg_repack.tgz \
     make -C /tmp/pg_repack-ver_${PG_REPACK_VERSION} USE_PGXS=1 all install && \
     rm -rf /tmp/pg_repack.tgz /tmp/pg_repack-ver_${PG_REPACK_VERSION}
 
+# Append our internal IT root CA to the system CA bundle. The final image is
+# ubi-micro and has no shell/tooling, so build the combined bundle here.
+COPY 2022-IT-Root-CA.pem /tmp/2022-IT-Root-CA.pem
+RUN cat /tmp/2022-IT-Root-CA.pem >> /etc/pki/tls/certs/ca-bundle.crt
+
 ENV GOPATH=/go \
     GO111MODULE=on \
     GOPROXY=https://proxy.golang.org \
