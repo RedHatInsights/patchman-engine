@@ -11,7 +11,7 @@ require (
 	github.com/getsentry/sentry-go v0.50.0
 	github.com/gin-contrib/timeout v1.2.3
 	github.com/gin-gonic/gin v1.12.0
-	github.com/gocarina/gocsv v0.0.0-20261012193826-401c25af6907
+	github.com/gocarina/gocsv v0.0.0-20261101205459-d0dd027dcbfa
 	github.com/golang-migrate/migrate/v4 v4.20.1
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
