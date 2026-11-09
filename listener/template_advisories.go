@@ -7,7 +7,9 @@ import (
 	"app/base/models"
 	"app/base/utils"
 	"context"
+	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/pkg/errors"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
@@ -130,10 +132,45 @@ func diffTemplateAdvisories(current []string, stored map[string]models.TemplateA
 	return toAdd, toRemove
 }
 
-// Returns the advisory IDs from advisory_metadata that map to the given advisory names
-func lookUpAdvisoryMetadataIDs(ctx context.Context, names []string) (map[string]int64, error) {
-	metadata := make(models.AdvisoryMetadataSlice, 0, len(names))
+// Same placeholder shape as evaluator.storeMissingAdvisories. VMaaS sync overwrites it once the advisory is known.
+var rhelAdvisoryName = regexp.MustCompile(`^RH.A-`)
 
+const thirdPartyAdvisoryText = "Not Available for 3rd party systems"
+
+// Returns advisory_metadata IDs for the given names.
+// Names not yet stored are inserted as unsynced placeholders. Content can publish advisories before VMaaS sync.
+func lookUpAdvisoryMetadataIDs(ctx context.Context, names []string) (map[string]int64, error) {
+	nameToID, err := selectAdvisoryMetadataIDs(ctx, names)
+	if err != nil {
+		return nil, err
+	}
+
+	missing := missingAdvisoryNames(names, nameToID)
+	if len(missing) == 0 {
+		return nameToID, nil
+	}
+
+	if err := insertMissingAdvisoryMetadata(ctx, missing); err != nil {
+		return nil, errors.Wrap(err, "creating missing advisory_metadata")
+	}
+
+	created, err := selectAdvisoryMetadataIDs(ctx, missing)
+	if err != nil {
+		return nil, err
+	}
+	for name, id := range created {
+		nameToID[name] = id
+	}
+	return nameToID, nil
+}
+
+func selectAdvisoryMetadataIDs(ctx context.Context, names []string) (map[string]int64, error) {
+	nameToID := make(map[string]int64, len(names))
+	if len(names) == 0 {
+		return nameToID, nil
+	}
+
+	metadata := make(models.AdvisoryMetadataSlice, 0, len(names))
 	err := database.DB(ctx).Model(&models.AdvisoryMetadata{}).
 		Where("name IN (?)", names).
 		Select("id, name").
@@ -141,13 +178,46 @@ func lookUpAdvisoryMetadataIDs(ctx context.Context, names []string) (map[string]
 	if err != nil {
 		return nil, err
 	}
-
-	nameToID := make(map[string]int64, len(metadata))
 	for _, am := range metadata {
 		nameToID[am.Name] = am.ID
 	}
+	return nameToID, nil
+}
 
-	return nameToID, err
+func missingAdvisoryNames(names []string, nameToID map[string]int64) []string {
+	missing := make([]string, 0)
+	for _, name := range names {
+		if _, found := nameToID[name]; found {
+			continue
+		}
+		missing = append(missing, name)
+	}
+	return missing
+}
+
+func advisoryPlaceholderText(name string) string {
+	if rhelAdvisoryName.MatchString(name) {
+		return fmt.Sprintf("https://access.redhat.com/errata/%s", name)
+	}
+	return thirdPartyAdvisoryText
+}
+
+func insertMissingAdvisoryMetadata(ctx context.Context, names []string) error {
+	toStore := make(models.AdvisoryMetadataSlice, 0, len(names))
+	for _, name := range names {
+		text := advisoryPlaceholderText(name)
+		toStore = append(toStore, models.AdvisoryMetadata{
+			Name:           name,
+			Description:    text,
+			Synopsis:       text,
+			Summary:        text,
+			AdvisoryTypeID: 0,
+			RebootRequired: false,
+			Synced:         false,
+		})
+	}
+	return database.DB(ctx).Clauses(clause.OnConflict{DoNothing: true}).
+		CreateInBatches(&toStore, 500).Error
 }
 
 // Builds the rows to insert in template_advisory
@@ -157,8 +227,7 @@ func buildTemplateAdvisoryRows(accountID int, templateID int64, names []string,
 	for _, name := range names {
 		advisoryID, ok := nameToID[name]
 		if !ok {
-			// log warning and skip if advisory not yet found in advisory_metadata
-			// content sources might know about it before vmaas
+			// missing name even after lookUpAdvisoryMetadataIDs, likely db error
 			utils.LogWarn("template", templateID, "advisory", name, "not in advisory_metadata, skipping")
 			continue
 		}

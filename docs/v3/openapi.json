@@ -8,7 +8,7 @@
             "name": "GPLv3",
             "url": "https://www.gnu.org/licenses/gpl-3.0.en.html"
         },
-        "version": "v3.8.409"
+        "version": "v3.8.415"
     },
     "servers": [
         {
@@ -6470,6 +6470,14 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "X-Forwarded-Identity",
+                        "in": "header",
+                        "description": "Satellite subscription-manager UUID; also requires owner match",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -6479,6 +6487,16 @@
                     },
                     "400": {
                         "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "content": {
                             "application/json": {
                                 "schema": {

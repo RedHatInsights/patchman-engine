@@ -9,9 +9,9 @@ require (
 	github.com/bytedance/sonic v1.15.5
 	github.com/getkin/kin-openapi v0.149.0
 	github.com/getsentry/sentry-go v0.50.0
-	github.com/gin-contrib/timeout v1.2.3
+	github.com/gin-contrib/timeout v1.2.4
 	github.com/gin-gonic/gin v1.12.0
-	github.com/gocarina/gocsv v0.0.0-20261012193826-401c25af6907
+	github.com/gocarina/gocsv v0.0.0-20261101205459-d0dd027dcbfa
 	github.com/golang-migrate/migrate/v4 v4.20.1
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
@@ -20,7 +20,7 @@ require (
 	github.com/lib/pq v1.12.3
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
-	github.com/project-kessel/kessel-sdk-go v1.13.1
+	github.com/project-kessel/kessel-sdk-go v1.13.2
 	github.com/prometheus/client_golang v1.25.0
 	github.com/redhatinsights/app-common-go v1.7.0
 	github.com/redhatinsights/platform-go-middlewares v1.0.0
