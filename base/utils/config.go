@@ -73,6 +73,8 @@ type coreConfig struct {
 	// services
 	VmaasAddress                  string
 	RbacAddress                   string
+	RbacAuthenticated             bool
+	RbacCACert                    string
 	CandlepinAddress              string
 	CandlepinCert                 string
 	CandlepinKey                  string
@@ -276,16 +278,22 @@ func initKafkaFromClowder() {
 type Endpoint clowder.DependencyEndpoint
 type PrivateEndpoint clowder.PrivateDependencyEndpoint
 
-// resolveRbacV2Address returns the RBAC address from V2 dependency endpoints,
-// or empty string if V2 is not available.
-func resolveRbacV2Address() string {
-	if endpoint, ok := clowder.GetV2DependencyEndpoint("rbac", "service"); ok && endpoint.Uri != "" {
-		return endpoint.Uri
+// initRbacFromClowder reads RBAC from the Clowder V2 dependency endpoint only.
+// A missing endpoint leaves RbacAddress empty; the manager fails at startup unless RBAC_ADDRESS is set.
+func initRbacFromClowder() {
+	endpoint, ok := clowder.GetV2DependencyEndpoint("rbac", "service")
+	if !ok || endpoint.Uri == "" {
+		return
 	}
-	return ""
+	CoreCfg.RbacAddress = endpoint.Uri
+	CoreCfg.RbacAuthenticated = endpoint.Authenticated
+	if endpoint.CaCertificate != nil {
+		CoreCfg.RbacCACert = *endpoint.CaCertificate
+	}
 }
 
 func initServicesFromClowder() {
+	initRbacFromClowder()
 	webappName := "webapp-service"
 	if PodConfig.GetBool("use_vmaas_go", true) {
 		webappName = "webapp-go"
@@ -295,13 +303,6 @@ func initServicesFromClowder() {
 		case "vmaas":
 			if strings.Contains(endpoint.Name, webappName) {
 				CoreCfg.VmaasAddress = (*Endpoint)(&endpoint).buildURL()
-			}
-		case "rbac":
-			// Prefer V2 dependency endpoint; fall back to V1 flat list.
-			if addr := resolveRbacV2Address(); addr != "" {
-				CoreCfg.RbacAddress = addr
-			} else {
-				CoreCfg.RbacAddress = (*Endpoint)(&endpoint).buildURL()
 			}
 		case "rbac-service":
 			CoreCfg.RbacURL = (*Endpoint)(&endpoint).buildURL()
