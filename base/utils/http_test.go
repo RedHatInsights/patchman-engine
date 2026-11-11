@@ -1,13 +1,16 @@
 package utils
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"sync/atomic"
 	"testing"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -138,4 +141,30 @@ func TestCloseHTTPResponseLimitsDrain(t *testing.T) {
 	closeHTTPResponse(&http.Response{StatusCode: http.StatusOK, Body: body})
 	assert.True(t, body.closed.Load())
 	assert.Equal(t, int64(maxHTTPResponseDrain), body.readBytes.Load())
+}
+
+func TestCallAPIDebugRedactsAuthorization(t *testing.T) {
+	var gotAuth string
+	srv := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		gotAuth = r.Header.Get("Authorization")
+	}))
+	defer srv.Close()
+
+	var logged bytes.Buffer
+	origOut, origLevel := log.StandardLogger().Out, log.GetLevel()
+	log.SetOutput(&logged)
+	log.SetLevel(log.DebugLevel)
+	defer func() {
+		log.SetOutput(origOut)
+		log.SetLevel(origLevel)
+	}()
+
+	req, _ := http.NewRequest(http.MethodGet, srv.URL, nil)
+	req.Header.Set("Authorization", "Bearer secret-token")
+	resp, err := CallAPI(srv.Client(), req, true)
+	assert.NoError(t, err)
+	resp.Body.Close()
+
+	assert.NotContains(t, logged.String(), "secret-token")
+	assert.Equal(t, "Bearer secret-token", gotAuth) // real request still carries the token
 }

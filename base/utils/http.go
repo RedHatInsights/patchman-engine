@@ -65,7 +65,15 @@ func closeHTTPResponse(resp *http.Response) {
 
 func CallAPI(client *http.Client, request *http.Request, debugEnabled bool) (*http.Response, error) {
 	if debugEnabled {
+		// redact in place: DumpRequestOut restores the body of the request it is given, so a clone would lose it
+		auth := request.Header.Get("Authorization")
+		if auth != "" {
+			request.Header.Set("Authorization", "REDACTED")
+		}
 		dump, err := httputil.DumpRequestOut(request, true)
+		if auth != "" {
+			request.Header.Set("Authorization", auth)
+		}
 		if err != nil {
 			return nil, err
 		}
