@@ -22,6 +22,8 @@ import (
 var (
 	credentialsMu sync.Mutex
 	credentials   *auth.OAuth2ClientCredentials
+	// bounds OIDC discovery and token calls; gin.Context is never cancelled, and discovery runs under credentialsMu
+	oidcHTTPClient = &http.Client{Timeout: 10 * time.Second}
 )
 
 // getCredentials lazily builds the single OAuth2 client shared by Kessel gRPC and authenticated RBAC calls.
@@ -34,9 +36,11 @@ func getCredentials(ctx context.Context) (*auth.OAuth2ClientCredentials, error) 
 	}
 	cfg := &utils.CoreCfg
 	if cfg.KesselAuthOIDCIssuer == "" || cfg.KesselAuthClientID == "" || cfg.KesselAuthClientSecret == "" {
-		return nil, errors.New("KESSEL_AUTH_OIDC_ISSUER, KESSEL_AUTH_CLIENT_ID and KESSEL_AUTH_CLIENT_SECRET must be set")
+		return nil, errors.New(
+			"KESSEL_AUTH_OIDC_ISSUER, KESSEL_AUTH_CLIENT_ID and KESSEL_AUTH_CLIENT_SECRET must be set")
 	}
-	discovery, err := auth.FetchOIDCDiscovery(ctx, cfg.KesselAuthOIDCIssuer, auth.FetchOIDCDiscoveryOptions{})
+	discovery, err := auth.FetchOIDCDiscovery(
+		ctx, cfg.KesselAuthOIDCIssuer, auth.FetchOIDCDiscoveryOptions{HttpClient: oidcHTTPClient})
 	if err != nil {
 		return nil, errors.Wrap(err, "OIDC discovery failed")
 	}
@@ -51,7 +55,7 @@ func getBearerToken(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	token, err := creds.GetToken(ctx, auth.GetTokenOptions{})
+	token, err := creds.GetToken(ctx, auth.GetTokenOptions{HttpClient: oidcHTTPClient})
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get access token")
 	}
