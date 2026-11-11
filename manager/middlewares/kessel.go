@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -18,19 +19,55 @@ import (
 	kesselRbacV2 "github.com/project-kessel/kessel-sdk-go/kessel/rbac/v2"
 )
 
-var credentials = auth.NewOAuth2ClientCredentials(
-	utils.CoreCfg.KesselAuthClientID,
-	utils.CoreCfg.KesselAuthClientSecret,
-	utils.CoreCfg.KesselAuthOIDCIssuer,
+var (
+	credentialsMu sync.Mutex
+	credentials   *auth.OAuth2ClientCredentials
 )
 
-func setupClient() (kesselv2.KesselInventoryServiceClient, *grpc.ClientConn, error) {
-	clientBuilder := kesselv2.NewClientBuilder(utils.CoreCfg.KesselURL)
-	if utils.CoreCfg.KesselAuthEnabled {
-		clientBuilder = clientBuilder.OAuth2ClientAuthenticated(&credentials, nil)
+// getCredentials lazily builds the single OAuth2 client shared by Kessel gRPC and authenticated RBAC calls.
+// Failures are not cached so a transient OIDC discovery error is retried on the next call.
+func getCredentials(ctx context.Context) (*auth.OAuth2ClientCredentials, error) {
+	credentialsMu.Lock()
+	defer credentialsMu.Unlock()
+	if credentials != nil {
+		return credentials, nil
 	}
-	if utils.CoreCfg.KesselInsecure { // insecure TLS
+	cfg := &utils.CoreCfg
+	if cfg.KesselAuthOIDCIssuer == "" || cfg.KesselAuthClientID == "" || cfg.KesselAuthClientSecret == "" {
+		return nil, errors.New("KESSEL_AUTH_OIDC_ISSUER, KESSEL_AUTH_CLIENT_ID and KESSEL_AUTH_CLIENT_SECRET must be set")
+	}
+	discovery, err := auth.FetchOIDCDiscovery(ctx, cfg.KesselAuthOIDCIssuer, auth.FetchOIDCDiscoveryOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "OIDC discovery failed")
+	}
+	creds := auth.NewOAuth2ClientCredentials(cfg.KesselAuthClientID, cfg.KesselAuthClientSecret, discovery.TokenEndpoint)
+	credentials = &creds
+	return credentials, nil
+}
+
+// getBearerToken returns an SSO service-account access token; the SDK caches and refreshes it.
+func getBearerToken(ctx context.Context) (string, error) {
+	creds, err := getCredentials(ctx)
+	if err != nil {
+		return "", err
+	}
+	token, err := creds.GetToken(ctx, auth.GetTokenOptions{})
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get access token")
+	}
+	return token.AccessToken, nil
+}
+
+func setupClient(ctx context.Context) (kesselv2.KesselInventoryServiceClient, *grpc.ClientConn, error) {
+	clientBuilder := kesselv2.NewClientBuilder(utils.CoreCfg.KesselURL)
+	if utils.CoreCfg.KesselInsecure { // insecure TLS, the SDK drops call credentials here
 		clientBuilder = clientBuilder.Insecure()
+	} else if utils.CoreCfg.KesselAuthEnabled {
+		creds, err := getCredentials(ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+		clientBuilder = clientBuilder.OAuth2ClientAuthenticated(creds, nil)
 	}
 	return clientBuilder.Build()
 }
@@ -91,7 +128,7 @@ func useStreamedListObjects(
 }
 
 func hasPermissionKessel(c *gin.Context) {
-	client, conn, err := setupClient()
+	client, conn, err := setupClient(c)
 	if err != nil {
 		utils.LogError("err", err, "failed to setup Kessel service client")
 		c.AbortWithStatusJSON(http.StatusInternalServerError, utils.ErrorResponse{
