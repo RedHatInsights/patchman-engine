@@ -190,7 +190,10 @@ func initTopicsFromEnv() {
 
 func initServicesFromEnv() {
 	CoreCfg.VmaasAddress = Getenv("VMAAS_ADDRESS", CoreCfg.VmaasAddress)
-	CoreCfg.RbacAddress = Getenv("RBAC_ADDRESS", CoreCfg.RbacAddress)
+	if addr := Getenv("RBAC_ADDRESS", CoreCfg.RbacAddress); addr != CoreCfg.RbacAddress {
+		// v2 auth metadata describes the Clowder endpoint only; never send its bearer or CA to an override
+		CoreCfg.RbacAddress, CoreCfg.RbacAuthenticated, CoreCfg.RbacCACert = addr, false, ""
+	}
 	CoreCfg.CandlepinAddress = Getenv("CANDLEPIN_ADDRESS", CoreCfg.CandlepinAddress)
 	CoreCfg.CandlepinCert = Getenv("CANDLEPIN_CERT", CoreCfg.CandlepinCert)
 	CoreCfg.CandlepinKey = Getenv("CANDLEPIN_KEY", CoreCfg.CandlepinKey)

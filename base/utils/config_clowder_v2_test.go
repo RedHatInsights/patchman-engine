@@ -59,25 +59,35 @@ func TestInitRbacFromClowder(t *testing.T) {
 	}
 }
 
-func TestRbacAddressEnvOverride(t *testing.T) {
-	origAddr := CoreCfg.RbacAddress
-	defer func() { CoreCfg.RbacAddress = origAddr }()
+// setAuthenticatedV2Rbac simulates an authenticated V2-resolved RBAC endpoint.
+func setAuthenticatedV2Rbac(t *testing.T) {
+	origCfg := CoreCfg
+	t.Cleanup(func() { CoreCfg = origCfg })
+	CoreCfg.RbacAddress, CoreCfg.RbacAuthenticated, CoreCfg.RbacCACert = testRbacURI, true, "/tmp/ca.crt"
+}
 
-	// Simulate V2-resolved address
-	CoreCfg.RbacAddress = testRbacURI
+func TestRbacAddressEnvOverrideDropsV2Auth(t *testing.T) {
+	setAuthenticatedV2Rbac(t)
 
-	// Env var override takes precedence (initServicesFromEnv behavior)
+	// Env var override takes precedence; the V2 bearer/CA must not follow it
 	t.Setenv("RBAC_ADDRESS", "http://localhost:8080")
 	initServicesFromEnv()
 	assert.Equal(t, "http://localhost:8080", CoreCfg.RbacAddress)
+	assert.False(t, CoreCfg.RbacAuthenticated)
+	assert.Equal(t, "", CoreCfg.RbacCACert)
+}
+
+func TestRbacAddressEnvSameAsV2KeepsAuth(t *testing.T) {
+	setAuthenticatedV2Rbac(t)
+
+	t.Setenv("RBAC_ADDRESS", testRbacURI)
+	initServicesFromEnv()
+	assert.True(t, CoreCfg.RbacAuthenticated)
+	assert.Equal(t, "/tmp/ca.crt", CoreCfg.RbacCACert)
 }
 
 func TestRbacAddressEnvPreservesV2WhenUnset(t *testing.T) {
-	origAddr := CoreCfg.RbacAddress
-	defer func() { CoreCfg.RbacAddress = origAddr }()
-
-	// Simulate V2-resolved address
-	CoreCfg.RbacAddress = testRbacURI
+	setAuthenticatedV2Rbac(t)
 
 	// No env override: Getenv returns current value as default.
 	// t.Setenv registers cleanup to restore original value after test;
@@ -86,4 +96,5 @@ func TestRbacAddressEnvPreservesV2WhenUnset(t *testing.T) {
 	os.Unsetenv("RBAC_ADDRESS")
 	initServicesFromEnv()
 	assert.Equal(t, testRbacURI, CoreCfg.RbacAddress)
+	assert.True(t, CoreCfg.RbacAuthenticated)
 }
