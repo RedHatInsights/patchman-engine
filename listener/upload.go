@@ -55,7 +55,8 @@ const (
 	RepoPathPattern           = "(/content/.*)"
 	RepoBasearchPlaceholder   = "$basearch"
 	RepoReleaseverPlaceholder = "$releasever"
-	TemplateRepoPattern       = `^https://cert\.console.*/api/pulp-content/(cs-)?[[:xdigit:]]+/templates/`
+	TemplateRepoPattern       = `^https://(cert\.console|packages)\.[[:alnum:].-]+` +
+		`/api/pulp-content/(cs-)?[[:xdigit:]]+/templates/`
 )
 
 var (

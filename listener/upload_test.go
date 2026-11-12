@@ -711,6 +711,38 @@ func TestGetRepoPath(t *testing.T) {
 	assert.Equal(t, "/content/dist/rhel8/rhui/8.4/x86_64/baseos/os", repoPath)
 }
 
+func TestHasTemplateRepo(t *testing.T) {
+	const templatePath = "/api/pulp-content/abcdef/templates/template/content/"
+	const csTemplatePath = "/api/pulp-content/cs-0123456789ABCDEF/templates/template/content/"
+	for _, tc := range []struct {
+		baseURL string
+		enabled bool
+		want    bool
+	}{
+		{"https://cert.console.redhat.com" + templatePath, true, true},
+		{"https://cert.console.redhat.com" + csTemplatePath, true, true},
+		{"https://cert.console.stage.redhat.com" + templatePath, true, true},
+		{"https://cert.console.stage.redhat.com" + csTemplatePath, true, true},
+		{"https://packages.redhat.com" + templatePath, true, true},
+		{"https://packages.redhat.com" + csTemplatePath, true, true},
+		{"https://packages.stage.redhat.com" + templatePath, true, true},
+		{"https://packages.stage.redhat.com" + csTemplatePath, true, true},
+		{"https://packages.stage.redhat.com" + templatePath, false, false},
+		{"https://packages.redhat.com/content/dist/rhel9/9/x86_64/baseos/os", true, false},
+		{"https://packages.stage.redhat.com/api/pulp-content/cs-abcdef/snapshots/snapshot/", true, false},
+		{"https://cert.console.example.com" + templatePath, true, true},
+		{"https://packages.example.com" + templatePath, true, true},
+		{"https://unrelated.example.com" + templatePath, true, false},
+		{"https://packagesXexample.com" + templatePath, true, false},
+		{"https://packages.redhat.com/api/pulp-content/not-hex/templates/template/", true, false},
+	} {
+		t.Run(fmt.Sprintf("%s/enabled=%t", tc.baseURL, tc.enabled), func(t *testing.T) {
+			profile := inventory.SystemProfile{YumRepos: &[]inventory.YumRepo{{Enabled: tc.enabled, BaseURL: tc.baseURL}}}
+			assert.Equal(t, tc.want, hasTemplateRepo(&profile))
+		})
+	}
+}
+
 func TestHostTemplateRhsmReporter(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()

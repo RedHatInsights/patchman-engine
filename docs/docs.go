@@ -91,6 +91,8 @@ func filterOpenAPI(config EndpointsConfig, inputOpenapiPath, outputOpenapiPath s
 	outputBytes, err := sw.MarshalJSON()
 	panicErr(err)
 
+	// Output paths come from internal constants, never request input.
+	//nolint:gosec // G703: outputOpenapiPath is controlled by the application.
 	err = os.WriteFile(outputOpenapiPath, outputBytes, 0600)
 	panicErr(err)
 	return removedPaths

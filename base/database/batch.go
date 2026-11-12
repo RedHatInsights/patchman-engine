@@ -237,7 +237,7 @@ func objectToMap(schema *schema.Schema, object interface{}) (map[string]interfac
 
 	// De-reference pointers (and it's values)
 	rv := reflect.ValueOf(object)
-	if rv.Kind() == reflect.Ptr {
+	if rv.Kind() == reflect.Pointer {
 		rv = rv.Elem()
 	}
 	if rv.Kind() != reflect.Struct {

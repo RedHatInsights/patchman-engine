@@ -59,7 +59,7 @@ func parserForType(v reflect.Type) (AttrParser, error) {
 		return func(s string) (i interface{}, err error) {
 			return strconv.Atoi(s)
 		}, nil
-	case reflect.Ptr:
+	case reflect.Pointer:
 		return parserForType(v.Elem())
 	case reflect.Array:
 		if v == reflect.TypeOf(uuid.UUID{}) {
@@ -99,47 +99,48 @@ func getQueryFromTags(v reflect.Type) (AttrMap, []AttrName, error) {
 			for k, v := range nested {
 				res[k] = v
 			}
-		} else {
-			columnName := strings.ToLower(field.Name)
-			if expr, has := field.Tag.Lookup("gorm"); has {
-				match := ColumnNameRe.FindStringSubmatch(expr)
-				if len(match) > 0 {
-					columnName = match[1]
-				}
-			}
-
-			parser, err := parserForType(field.Type)
-			if err != nil {
-				return nil, nil, err
-			}
-			if expr, has := field.Tag.Lookup("query"); has {
-				res[columnName] = AttrInfo{
-					DataQuery: expr,
-					Parser:    parser,
-				}
-			} else {
-				// If we dont have expr, we just use raw column name
-				res[columnName] = AttrInfo{
-					DataQuery: columnName,
-					Parser:    parser,
-				}
-			}
-
-			info := res[columnName]
-			if expr, has := field.Tag.Lookup("order_query"); has {
-				info.OrderQuery = expr
-			} else {
-				info.OrderQuery = info.DataQuery
-			}
-			res[columnName] = info
-			// Allow sort/filter by API name "id" when column is "inventory_id"
-			if columnName == "inventory_id" {
-				res["id"] = info
-			}
-
-			// Result HAS to contain all columns, because gorm loads by index, not by name
-			resNames = append(resNames, columnName)
+			continue
 		}
+
+		columnName := strings.ToLower(field.Name)
+		if expr, has := field.Tag.Lookup("gorm"); has {
+			match := ColumnNameRe.FindStringSubmatch(expr)
+			if len(match) > 0 {
+				columnName = match[1]
+			}
+		}
+
+		parser, err := parserForType(field.Type)
+		if err != nil {
+			return nil, nil, err
+		}
+		if expr, has := field.Tag.Lookup("query"); has {
+			res[columnName] = AttrInfo{
+				DataQuery: expr,
+				Parser:    parser,
+			}
+		} else {
+			// If we dont have expr, we just use raw column name
+			res[columnName] = AttrInfo{
+				DataQuery: columnName,
+				Parser:    parser,
+			}
+		}
+
+		info := res[columnName]
+		if expr, has := field.Tag.Lookup("order_query"); has {
+			info.OrderQuery = expr
+		} else {
+			info.OrderQuery = info.DataQuery
+		}
+		res[columnName] = info
+		// Allow sort/filter by API name "id" when column is "inventory_id"
+		if columnName == "inventory_id" {
+			res["id"] = info
+		}
+
+		// Result HAS to contain all columns, because gorm loads by index, not by name
+		resNames = append(resNames, columnName)
 	}
 	return res, resNames, nil
 }
@@ -148,7 +149,7 @@ func GetQueryAttrs(s interface{}) (AttrMap, []string, error) {
 	v := reflect.ValueOf(s)
 	if v.Kind() == reflect.Struct {
 		return getQueryFromTags(v.Type())
-	} else if v.Kind() == reflect.Ptr || v.Kind() == reflect.Slice {
+	} else if v.Kind() == reflect.Pointer || v.Kind() == reflect.Slice {
 		return getQueryFromTags(v.Type().Elem())
 	}
 	return nil, nil, errors.New("Invalid type")
