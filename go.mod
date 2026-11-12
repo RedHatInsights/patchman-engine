@@ -1,6 +1,6 @@
 module app
 
-go 1.26.10
+go 1.27.3
 
 require (
 	github.com/MichaelMraka/gorpm v0.0.0-20251128174203-65cf25f01bac

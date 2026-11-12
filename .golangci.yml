@@ -28,6 +28,9 @@ linters:
     - unparam # Reports unused function parameters [fast: true, auto-fix: false]
     - whitespace # Tool for detection of leading and trailing whitespace [fast: true, auto-fix: true]
   settings:
+    goconst:
+      # Preserve the checks used before the Go 1.27 tooling upgrade.
+      exclude-types: [Call, CompositeLit]
     depguard:
       # Rules to apply.
       #
@@ -89,6 +92,15 @@ linters:
       - common-false-positives
       - legacy
       - std-error-handling
+    rules:
+      # Shutdown needs a fresh timeout after the server context is cancelled.
+      - path: ^base/utils/gin\.go$
+        linters: [gosec]
+        text: "G118:"
+      # The inline analyzer cannot handle generic type inference yet.
+      - path: ^manager/middlewares/rbac\.go$
+        linters: [govet]
+        text: "inline: cannot inline: type parameter inference is not yet supported"
     paths:
       - third_party$
       - builtin$
