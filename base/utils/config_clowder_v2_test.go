@@ -8,85 +8,86 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestResolveRbacV2Address(t *testing.T) {
+const testRbacURI = "https://rbac-service.svc:8443"
+const testRbacApp = "rbac"
+
+func TestInitRbacFromClowder(t *testing.T) {
 	origV2 := clowder.DependencyEndpointsV2
-	defer func() { clowder.DependencyEndpointsV2 = origV2 }()
+	origCfg := CoreCfg
+	defer func() {
+		clowder.DependencyEndpointsV2 = origV2
+		CoreCfg = origCfg
+	}()
 
-	t.Run("V2 available with URI", func(t *testing.T) {
-		clowder.DependencyEndpointsV2 = map[string]map[string]clowder.DependencyEndpointV2{
-			"rbac": {
-				"service": {Uri: "https://rbac-service.svc:8443", Authenticated: false},
-			},
-		}
-		assert.Equal(t, "https://rbac-service.svc:8443", resolveRbacV2Address())
+	run := func(v2 map[string]map[string]clowder.DependencyEndpointV2) {
+		CoreCfg.RbacAddress, CoreCfg.RbacAuthenticated, CoreCfg.RbacCACert = "", false, ""
+		clowder.DependencyEndpointsV2 = v2
+		initRbacFromClowder()
+	}
+
+	t.Run("V2 unauthenticated", func(t *testing.T) {
+		run(map[string]map[string]clowder.DependencyEndpointV2{
+			testRbacApp: {"service": {Uri: testRbacURI}},
+		})
+		assert.Equal(t, testRbacURI, CoreCfg.RbacAddress)
+		assert.False(t, CoreCfg.RbacAuthenticated)
+		assert.Equal(t, "", CoreCfg.RbacCACert)
 	})
 
-	t.Run("V2 nil map", func(t *testing.T) {
-		clowder.DependencyEndpointsV2 = nil
-		assert.Equal(t, "", resolveRbacV2Address())
-	})
-
-	t.Run("V2 empty URI", func(t *testing.T) {
-		clowder.DependencyEndpointsV2 = map[string]map[string]clowder.DependencyEndpointV2{
-			"rbac": {
-				"service": {Uri: "", Authenticated: false},
-			},
-		}
-		assert.Equal(t, "", resolveRbacV2Address())
-	})
-
-	t.Run("V2 wrong app key", func(t *testing.T) {
-		clowder.DependencyEndpointsV2 = map[string]map[string]clowder.DependencyEndpointV2{
-			"other-app": {
-				"service": {Uri: "https://other.svc:8443", Authenticated: false},
-			},
-		}
-		assert.Equal(t, "", resolveRbacV2Address())
-	})
-
-	t.Run("V2 wrong deployment key", func(t *testing.T) {
-		clowder.DependencyEndpointsV2 = map[string]map[string]clowder.DependencyEndpointV2{
-			"rbac": {
-				"wrong-deploy": {Uri: "https://rbac.svc:8443", Authenticated: false},
-			},
-		}
-		assert.Equal(t, "", resolveRbacV2Address())
-	})
-
-	t.Run("V2 with CA certificate", func(t *testing.T) {
+	t.Run("V2 authenticated with CA certificate", func(t *testing.T) {
 		caPath := "/tmp/ca.crt"
-		clowder.DependencyEndpointsV2 = map[string]map[string]clowder.DependencyEndpointV2{
-			"rbac": {
-				"service": {
-					Uri:           "https://rbac-service.svc:8443",
-					Authenticated: false,
-					CaCertificate: &caPath,
-				},
-			},
-		}
-		assert.Equal(t, "https://rbac-service.svc:8443", resolveRbacV2Address())
+		run(map[string]map[string]clowder.DependencyEndpointV2{
+			testRbacApp: {"service": {Uri: "https://ewgw.example:443", Authenticated: true, CaCertificate: &caPath}},
+		})
+		assert.Equal(t, "https://ewgw.example:443", CoreCfg.RbacAddress)
+		assert.True(t, CoreCfg.RbacAuthenticated)
+		assert.Equal(t, caPath, CoreCfg.RbacCACert)
 	})
+
+	missing := map[string]map[string]map[string]clowder.DependencyEndpointV2{
+		"nil map":        nil,
+		"empty URI":      {testRbacApp: {"service": {Uri: ""}}},
+		"wrong app":      {"other-app": {"service": {Uri: "https://other.svc:8443"}}},
+		"wrong endpoint": {testRbacApp: {"wrong-deploy": {Uri: "https://rbac.svc:8443"}}},
+	}
+	for name, v2 := range missing {
+		t.Run("V2 missing: "+name, func(t *testing.T) {
+			run(v2)
+			assert.Equal(t, "", CoreCfg.RbacAddress)
+			assert.False(t, CoreCfg.RbacAuthenticated)
+		})
+	}
 }
 
-func TestRbacAddressEnvOverride(t *testing.T) {
-	origAddr := CoreCfg.RbacAddress
-	defer func() { CoreCfg.RbacAddress = origAddr }()
+// setAuthenticatedV2Rbac simulates an authenticated V2-resolved RBAC endpoint.
+func setAuthenticatedV2Rbac(t *testing.T) {
+	origCfg := CoreCfg
+	t.Cleanup(func() { CoreCfg = origCfg })
+	CoreCfg.RbacAddress, CoreCfg.RbacAuthenticated, CoreCfg.RbacCACert = testRbacURI, true, "/tmp/ca.crt"
+}
 
-	// Simulate V2-resolved address
-	CoreCfg.RbacAddress = "https://rbac-service.svc:8443"
+func TestRbacAddressEnvOverrideDropsV2Auth(t *testing.T) {
+	setAuthenticatedV2Rbac(t)
 
-	// Env var override takes precedence (initServicesFromEnv behavior)
+	// Env var override takes precedence; the V2 bearer/CA must not follow it
 	t.Setenv("RBAC_ADDRESS", "http://localhost:8080")
 	initServicesFromEnv()
 	assert.Equal(t, "http://localhost:8080", CoreCfg.RbacAddress)
+	assert.False(t, CoreCfg.RbacAuthenticated)
+	assert.Equal(t, "", CoreCfg.RbacCACert)
+}
+
+func TestRbacAddressEnvSameAsV2KeepsAuth(t *testing.T) {
+	setAuthenticatedV2Rbac(t)
+
+	t.Setenv("RBAC_ADDRESS", testRbacURI)
+	initServicesFromEnv()
+	assert.True(t, CoreCfg.RbacAuthenticated)
+	assert.Equal(t, "/tmp/ca.crt", CoreCfg.RbacCACert)
 }
 
 func TestRbacAddressEnvPreservesV2WhenUnset(t *testing.T) {
-	origAddr := CoreCfg.RbacAddress
-	defer func() { CoreCfg.RbacAddress = origAddr }()
-
-	// Simulate V2-resolved address
-	CoreCfg.RbacAddress = "https://rbac-service.svc:8443"
+	setAuthenticatedV2Rbac(t)
 
 	// No env override: Getenv returns current value as default.
 	// t.Setenv registers cleanup to restore original value after test;
@@ -94,5 +95,6 @@ func TestRbacAddressEnvPreservesV2WhenUnset(t *testing.T) {
 	t.Setenv("RBAC_ADDRESS", "")
 	os.Unsetenv("RBAC_ADDRESS")
 	initServicesFromEnv()
-	assert.Equal(t, "https://rbac-service.svc:8443", CoreCfg.RbacAddress)
+	assert.Equal(t, testRbacURI, CoreCfg.RbacAddress)
+	assert.True(t, CoreCfg.RbacAuthenticated)
 }

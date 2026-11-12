@@ -67,15 +67,18 @@
             "hostname": "platform",
             "name": "webapp-go",
             "port": 9001
-        },
-        {
-            "apiPath": "api/patch/v3",
-            "app": "rbac",
-            "hostname": "platform",
-            "name": "",
-            "port": 9001
         }
     ],
+    "dependencyEndpoints": {
+        "v2": {
+            "rbac": {
+                "service": {
+                    "uri": "http://platform:9001",
+                    "authenticated": false
+                }
+            }
+        }
+    },
     "privateEndpoints": [
         {
             "app": "patchman",
