@@ -66,8 +66,8 @@ var AdvisorySystemOpts = ListOpts{
 		},
 	},
 	DefaultSort:  "-last_upload",
-	StableSort:   "si.id",
-	SearchFields: []string{"si.display_name"},
+	StableSort:   systemInventoryID,
+	SearchFields: []string{systemInventoryDisplayName},
 }
 
 func advisorySystemsCommon(c *gin.Context) (*gorm.DB, *ListMeta, []string, error) {

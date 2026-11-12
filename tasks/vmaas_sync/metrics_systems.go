@@ -2,6 +2,7 @@ package vmaas_sync
 
 import (
 	"app/base/database"
+	"app/base/metrics"
 	"app/base/utils"
 	"app/tasks"
 
@@ -17,17 +18,17 @@ const (
 var (
 	systemsCntByType = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Help:      "How many systems are stored and how up-to-date they are",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemVmaasSync,
 		Name:      "systems_count_by_type",
-	}, []string{"type"})
+	}, []string{metrics.LabelType})
 
 	tagsCntByType = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Help:      "How many inventory hosts and which tags are there",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemVmaasSync,
 		Name:      "tags_count_by_type",
-	}, []string{"type"})
+	}, []string{metrics.LabelType})
 )
 
 // nolint: lll

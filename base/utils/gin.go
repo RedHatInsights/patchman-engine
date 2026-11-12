@@ -120,7 +120,8 @@ func RunServer(ctx context.Context, handler http.Handler, port int) error {
 		defer close(shutdownDone)
 		<-ctx.Done()
 		LogDebug("gracefully shutting down server...")
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), serverShutdownTimeout)
+		// Parent ctx is already cancelled; WithoutCancel keeps values and gives Shutdown a fresh timeout budget.
+		shutdownCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), serverShutdownTimeout)
 		defer cancel()
 		err := srv.Shutdown(shutdownCtx)
 		if err != nil {

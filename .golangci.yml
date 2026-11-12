@@ -93,10 +93,6 @@ linters:
       - legacy
       - std-error-handling
     rules:
-      # Shutdown needs a fresh timeout after the server context is cancelled.
-      - path: ^base/utils/gin\.go$
-        linters: [gosec]
-        text: "G118:"
       # The inline analyzer cannot handle generic type inference yet.
       - path: ^manager/middlewares/rbac\.go$
         linters: [govet]

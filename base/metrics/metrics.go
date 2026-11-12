@@ -9,20 +9,33 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const (
+	Namespace          = "patchman_engine"
+	SubsystemCore      = "core"
+	SubsystemEvaluator = "evaluator"
+	SubsystemListener  = "listener"
+	SubsystemManager   = "manager"
+	SubsystemTasks     = "tasks"
+	SubsystemVmaasSync = "vmaas_sync"
+	LabelType          = "type"
+	LabelVersion       = "version"
+	LabelEvent         = "event"
+)
+
 var (
 	KafkaConnectionErrorCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Help:      "Counter vector measuring Kafka connection issues when trying to read or write a message",
-		Namespace: "patchman_engine",
-		Subsystem: "core",
+		Namespace: Namespace,
+		Subsystem: SubsystemCore,
 		Name:      "kafka_connection_errors",
-	}, []string{"type"})
+	}, []string{LabelType})
 
 	EngineVersion = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Help:      "Patchman project deployment information",
-		Namespace: "patchman_engine",
-		Subsystem: "core",
+		Namespace: Namespace,
+		Subsystem: SubsystemCore,
 		Name:      "info",
-	}, []string{"version"})
+	}, []string{LabelVersion})
 )
 
 func init() {

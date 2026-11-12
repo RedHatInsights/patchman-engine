@@ -21,8 +21,8 @@ var AdvisorySystemExportOpts = ListOpts{
 		},
 	},
 	DefaultSort:  "-last_upload",
-	StableSort:   "si.id",
-	SearchFields: []string{"si.display_name"},
+	StableSort:   systemInventoryID,
+	SearchFields: []string{systemInventoryDisplayName},
 }
 
 // @Summary Export systems for my account
@@ -86,7 +86,7 @@ func AdvisorySystemsExportHandler(c *gin.Context) {
 	} // Error handled in method itself
 	query, _ = ApplyInventoryFilter(filters, query, "si.inventory_id")
 
-	query = query.Order("si.id")
+	query = query.Order(systemInventoryID)
 	query, err = ExportListCommon(query, c, AdvisorySystemExportOpts)
 	if err != nil {
 		return
