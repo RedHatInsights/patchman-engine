@@ -74,7 +74,7 @@ func pprofHandler(c *gin.Context, serviceName string) {
 	}
 	data, err := getPprof(serviceName, param, query)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		respondInternalError(c, err)
 		return
 	}
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", param))

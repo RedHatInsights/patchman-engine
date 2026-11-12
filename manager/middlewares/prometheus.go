@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"app/base/metrics"
 	"app/base/utils"
 	"strings"
 
@@ -10,59 +11,59 @@ import (
 )
 
 var serviceErrorCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
-	Namespace: "patchman_engine",
-	Subsystem: "manager",
+	Namespace: metrics.Namespace,
+	Subsystem: metrics.SubsystemManager,
 	Name:      "dependency_call",
 }, []string{"name", "status"})
 
 var requestDurations = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 	Help:      "Request Durations",
-	Namespace: "patchman_engine",
-	Subsystem: "manager",
+	Namespace: metrics.Namespace,
+	Subsystem: metrics.SubsystemManager,
 	Name:      "request_durations",
 	Buckets:   []float64{1, 1.5, 1.75, 2, 2.5, 3, 3.5, 4},
 }, []string{"endpoint"})
 
 var callerSourceCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
-	Namespace: "patchman_engine",
-	Subsystem: "manager",
+	Namespace: metrics.Namespace,
+	Subsystem: metrics.SubsystemManager,
 	Name:      "caller_source",
 }, []string{"source", "account"})
 
 var AdvisoryDetailCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Help:      "How many advisories hit/miss cache",
-	Namespace: "patchman_engine",
-	Subsystem: "manager",
+	Namespace: metrics.Namespace,
+	Subsystem: metrics.SubsystemManager,
 	Name:      "advisory_detail_cache",
-}, []string{"type"})
+}, []string{metrics.LabelType})
 
 var AdvisoryDetailGauge = prometheus.NewGauge(prometheus.GaugeOpts{
 	Help:      "Advisory detail cache size",
-	Namespace: "patchman_engine",
-	Subsystem: "manager",
+	Namespace: metrics.Namespace,
+	Subsystem: metrics.SubsystemManager,
 	Name:      "advisory_detail_cache_size",
 })
 
 var AdvisoryAccountDataCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Help:      "How many requests hit/miss advisory_account_data",
-	Namespace: "patchman_engine",
-	Subsystem: "manager",
+	Namespace: metrics.Namespace,
+	Subsystem: metrics.SubsystemManager,
 	Name:      "advisory_account_data_cache",
-}, []string{"type"})
+}, []string{metrics.LabelType})
 
 var PackageAccountDataCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Help:      "How many requests hit/miss package_account_data",
-	Namespace: "patchman_engine",
-	Subsystem: "manager",
+	Namespace: metrics.Namespace,
+	Subsystem: metrics.SubsystemManager,
 	Name:      "package_account_data_cache",
-}, []string{"type"})
+}, []string{metrics.LabelType})
 
 // Create and configure Prometheus middleware to expose metrics
 func Prometheus() *ginprometheus.Prometheus {
 	prometheus.MustRegister(serviceErrorCnt, requestDurations, callerSourceCnt,
 		AdvisoryDetailCnt, AdvisoryDetailGauge, AdvisoryAccountDataCnt, PackageAccountDataCnt)
 
-	p := ginprometheus.NewPrometheus("patchman_engine")
+	p := ginprometheus.NewPrometheus(metrics.Namespace)
 	p.MetricsPath = utils.CoreCfg.MetricsPath
 	unifyParametrizedUrlsCounters(p)
 	return p
