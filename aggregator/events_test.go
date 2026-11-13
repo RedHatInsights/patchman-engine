@@ -66,7 +66,6 @@ func TestBufferedEventsProcessedOnBatchThreshold(t *testing.T) {
 	utils.SkipWithoutDB(t)
 	core.SetupTestEnvironment()
 
-	assert.Nil(t, database.TestDB().Exec("SELECT refresh_advisory_caches(NULL, 1)").Error)
 	defer database.DeleteAccountAdvisoryByAccount(t, 1)
 
 	batchSize = 3
