@@ -10,6 +10,32 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestAsBatchHandler(t *testing.T) {
+	var got []KafkaMessage
+	err := AsBatchHandler(func(_ context.Context, m KafkaMessage) error {
+		got = append(got, m)
+		return nil
+	})(context.Background(), []KafkaMessage{{Value: []byte("a")}})
+	assert.NoError(t, err)
+	assert.Equal(t, []KafkaMessage{{Value: []byte("a")}}, got)
+
+	got = nil
+	err = AsBatchHandler(func(_ context.Context, m KafkaMessage) error {
+		got = append(got, m)
+		return nil
+	})(context.Background(), []KafkaMessage{{Value: []byte("a")}, {Value: []byte("b")}})
+	assert.NoError(t, err)
+	assert.Equal(t, []KafkaMessage{{Value: []byte("a")}, {Value: []byte("b")}}, got)
+
+	calls := 0
+	err = AsBatchHandler(func(context.Context, KafkaMessage) error {
+		calls++
+		return errors.New("boom")
+	})(context.Background(), []KafkaMessage{{Value: []byte("a")}, {Value: []byte("b")}})
+	assert.EqualError(t, err, "boom")
+	assert.Equal(t, 1, calls)
+}
+
 func TestHandleMessageBatchesBlocksForFirstMessage(t *testing.T) {
 	ch := make(chan kafka.Message)
 	fetch := func(ctx context.Context) (kafka.Message, error) {

@@ -59,6 +59,18 @@ type MessageHandler func(ctx context.Context, message KafkaMessage) error
 
 type BatchHandler func(ctx context.Context, messages []KafkaMessage) error
 
+// AsBatchHandler calls handler for every message and returns the first error.
+func AsBatchHandler(handler MessageHandler) BatchHandler {
+	return func(ctx context.Context, msgs []KafkaMessage) error {
+		for _, m := range msgs {
+			if err := handler(ctx, m); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
 func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 	return func(ctx context.Context, message KafkaMessage) error {
 		var err error
