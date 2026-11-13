@@ -43,9 +43,9 @@ func runServer() {
 }
 
 func subscribeToAdvisoryUpdates(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
-	handler := mqueue.MakeRetryingHandler(advisoryUpdateHandler)
+	handler := mqueue.MakeRetryingHandler(mqueue.AsBatchHandler(advisoryUpdateHandler))
 	for i := 0; i < consumerCount; i++ {
-		mqueue.SpawnReader(base.Context, wg, advisoryUpdateTopic, readerBuilder, handler)
+		mqueue.SpawnReader(base.Context, wg, advisoryUpdateTopic, readerBuilder, 1, 0, handler)
 		utils.LogDebug("spawned advisory update reader", i)
 	}
 	utils.LogInfo("connected to kafka topics")

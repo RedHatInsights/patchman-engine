@@ -125,12 +125,14 @@ func runReaders(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 	// We create multiple consumers, and hope that the partition rebalancing
 	// algorithm assigns each consumer a single partition
 	for i := 0; i < eventsConsumers; i++ {
-		mqueue.SpawnReader(base.Context, wg, eventsTopic, readerBuilder, mqueue.MakeRetryingHandler(EventsMessageHandler))
+		mqueue.SpawnReader(base.Context, wg, eventsTopic, readerBuilder, 1, 0,
+			mqueue.MakeRetryingHandler(mqueue.AsBatchHandler(EventsMessageHandler)))
 		utils.LogDebug("spawned eventsTopic reader", i)
 	}
 	if enableTemplates {
 		for i := 0; i < templatesConsumers; i++ {
-			mqueue.SpawnReader(base.Context, wg, templatesTopic, readerBuilder, mqueue.MakeRetryingHandler(TemplatesMessageHandler)) //nolint:lll
+			mqueue.SpawnReader(base.Context, wg, templatesTopic, readerBuilder, 1, 0,
+				mqueue.MakeRetryingHandler(mqueue.AsBatchHandler(TemplatesMessageHandler)))
 			utils.LogDebug("spawned templatesTopic reader", i)
 		}
 	}

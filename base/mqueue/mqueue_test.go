@@ -6,6 +6,7 @@ import (
 	"context"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
@@ -38,10 +39,25 @@ func TestRoundTripKafkaGo(t *testing.T) {
 func TestSpawnReader(t *testing.T) {
 	var nReaders int32
 	wg := sync.WaitGroup{}
-	SpawnReader(base.Context, &wg, "", CreateCountedMockReader(&nReaders),
-		func(_ context.Context, _ KafkaMessage) error { return nil })
+	SpawnReader(base.Context, &wg, "", CreateCountedMockReader(&nReaders), 1, 0,
+		func(_ context.Context, _ []KafkaMessage) error { return nil })
 	wg.Wait()
 	assert.Equal(t, 1, int(nReaders))
+}
+
+func TestSpawnReaderBatch(t *testing.T) {
+	var nReaders int32
+	wg := sync.WaitGroup{}
+	SpawnReader(base.Context, &wg, "", CreateCountedMockReader(&nReaders), 2, time.Millisecond,
+		func(context.Context, []KafkaMessage) error { return nil })
+	wg.Wait()
+	assert.Equal(t, 1, int(nReaders))
+}
+
+func TestSpawnReaderPanicsWithoutHandler(t *testing.T) {
+	assert.PanicsWithValue(t, "reader loop has no handler", func() {
+		SpawnReader(base.Context, &sync.WaitGroup{}, "", CreateCountedMockReader(new(int32)), 1, 0, nil)
+	})
 }
 
 func TestRetryBatchFatalThenSuccess(t *testing.T) {

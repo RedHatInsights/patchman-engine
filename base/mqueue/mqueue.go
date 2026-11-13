@@ -97,16 +97,19 @@ type CreateReader func(topic string) Reader
 type CreateWriter func(topic string) Writer
 
 func runReader(ctx context.Context, wg *sync.WaitGroup, topic string, createReader CreateReader,
-	msgHandler MessageHandler) {
+	batchSize int, batchWait time.Duration, handler BatchHandler) {
 	defer wg.Done()
 	defer utils.LogPanics(true)
 	reader := createReader(topic)
 	defer reader.Close()
-	reader.HandleMessages(ctx, msgHandler)
+	reader.HandleMessages(ctx, batchSize, batchWait, handler)
 }
 
 func SpawnReader(ctx context.Context, wg *sync.WaitGroup, topic string, createReader CreateReader,
-	msgHandler MessageHandler) {
+	batchSize int, batchWait time.Duration, handler BatchHandler) {
+	if handler == nil {
+		panic("reader loop has no handler")
+	}
 	wg.Add(1)
-	go runReader(ctx, wg, topic, createReader, msgHandler)
+	go runReader(ctx, wg, topic, createReader, batchSize, batchWait, handler)
 }
