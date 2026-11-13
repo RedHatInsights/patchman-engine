@@ -8,7 +8,6 @@ import (
 	"app/base/utils"
 	"sort"
 	"testing"
-	"time"
 
 	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/assert"
@@ -69,21 +68,8 @@ func TestBufferedEventsProcessedOnBatchThreshold(t *testing.T) {
 	assert.Nil(t, database.TestDB().Exec("SELECT refresh_advisory_caches(NULL, 1)").Error)
 	defer database.DeleteAccountAdvisoryByAccount(t, 1)
 
-	batchSize = 3
-	flushTimeout = time.Hour
-	initBuffer()
-
 	msg := toKafkaMessage(t, mqueue.AdvisoryUpdateEvent{RhAccountID: 1, AdvisoryIDs: []int64{1, 2}})
-
-	// First two events accumulate in the buffer
-	assert.Nil(t, advisoryUpdateHandler(base.Context, msg))
-	assert.Equal(t, 1, len(advisoryBuffer))
-	assert.Nil(t, advisoryUpdateHandler(base.Context, msg))
-	assert.Equal(t, 2, len(advisoryBuffer))
-
-	// Third event triggers flush and processAdvisoryBatch runs
-	assert.Nil(t, advisoryUpdateHandler(base.Context, msg))
-	assert.Equal(t, 0, len(advisoryBuffer))
+	assert.Nil(t, advisoryUpdateHandler(base.Context, []mqueue.KafkaMessage{msg, msg, msg}))
 
 	// Verify account_advisory was populated
 	var count int64

@@ -6,7 +6,6 @@ import (
 	"app/base/mqueue"
 	"app/base/utils"
 	"context"
-	"sync"
 	"time"
 
 	"github.com/bytedance/sonic"
@@ -14,55 +13,24 @@ import (
 )
 
 var (
-	batchSize      int
-	flushTimeout   time.Duration
-	advisoryBuffer []mqueue.AdvisoryUpdateEvent
-	bufferLock     sync.Mutex
-	flushTimer     *time.Timer
+	batchSize    int
+	flushTimeout time.Duration
 )
 
-func initBuffer() {
-	advisoryBuffer = make([]mqueue.AdvisoryUpdateEvent, 0, batchSize+1)
-	flushTimer = time.AfterFunc(87600*time.Hour, func() {
-		utils.LogInfo("flushing advisory buffer after timeout")
-		flushAdvisoryBuffer()
-	})
-}
-
-func flushAdvisoryBuffer() {
-	bufferLock.Lock()
-	if len(advisoryBuffer) == 0 {
-		bufferLock.Unlock()
-		return
+func advisoryUpdateHandler(ctx context.Context, msgs []mqueue.KafkaMessage) error {
+	events := make([]mqueue.AdvisoryUpdateEvent, 0, len(msgs))
+	for _, m := range msgs {
+		var event mqueue.AdvisoryUpdateEvent
+		if err := sonic.Unmarshal(m.Value, &event); err != nil {
+			utils.LogError("err", err, "could not deserialize advisory update event")
+			continue
+		}
+		events = append(events, event)
 	}
-	// Copy and unlock before processing so new events can accumulate while DB work runs
-	batch := make([]mqueue.AdvisoryUpdateEvent, len(advisoryBuffer))
-	copy(batch, advisoryBuffer)
-	advisoryBuffer = advisoryBuffer[:0]
-	bufferLock.Unlock()
-
-	grouped := groupAdvisoryUpdates(batch)
-	processAdvisoryBatch(base.Context, grouped)
-}
-
-func advisoryUpdateHandler(_ context.Context, m mqueue.KafkaMessage) error {
-	var event mqueue.AdvisoryUpdateEvent
-	if err := sonic.Unmarshal(m.Value, &event); err != nil {
-		utils.LogError("err", err, "could not deserialize advisory update event")
+	if len(events) == 0 {
 		return nil
 	}
-
-	bufferLock.Lock()
-	advisoryBuffer = append(advisoryBuffer, event)
-	flushTimer.Reset(flushTimeout)
-	shouldFlush := len(advisoryBuffer) >= batchSize
-	bufferLock.Unlock()
-
-	if shouldFlush {
-		utils.LogInfo("flushing full advisory buffer")
-		flushAdvisoryBuffer()
-	}
-	return nil
+	return processAdvisoryBatch(ctx, groupAdvisoryUpdates(events))
 }
 
 func groupAdvisoryUpdates(events []mqueue.AdvisoryUpdateEvent) map[int][]int64 {
@@ -87,19 +55,21 @@ func groupAdvisoryUpdates(events []mqueue.AdvisoryUpdateEvent) map[int][]int64 {
 	return grouped
 }
 
-func processAdvisoryBatch(ctx context.Context, grouped map[int][]int64) {
+func processAdvisoryBatch(ctx context.Context, grouped map[int][]int64) error {
 	for rhAccountID, advisoryIDs := range grouped {
 		utils.LogInfo("rh_account_id", rhAccountID, "advisory_count", len(advisoryIDs), "refreshing account advisory caches")
 		err := database.DB(ctx).Exec("SELECT refresh_account_advisory_caches_multi(?, ?)", pq.Array(advisoryIDs), rhAccountID).Error //nolint:lll
 		if err != nil {
 			utils.LogError("err", err, "rh_account_id", rhAccountID, "failed to refresh account advisory caches")
-			continue
+			return base.WrapFatalDBError(err, "refresh account advisory caches")
 		}
 
 		CheckAdvisoryDrift(rhAccountID, advisoryIDs)
 
 		if err := publishNewAdvisoryNotification(rhAccountID, advisoryIDs); err != nil {
 			utils.LogError("err", err, "rh_account_id", rhAccountID, "failed to publish new advisory notification")
+			return base.WrapFatalKafkaError(err, "publish new advisory notification")
 		}
 	}
+	return nil
 }
