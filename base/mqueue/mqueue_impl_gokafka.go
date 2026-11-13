@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -17,46 +18,121 @@ import (
 	kafkaPlain "github.com/segmentio/kafka-go/sasl/plain"
 	kafkaScram "github.com/segmentio/kafka-go/sasl/scram"
 	log "github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type kafkaGoReaderImpl struct {
 	kafka.Reader
 }
 
-func (t *kafkaGoReaderImpl) HandleMessages(ctx context.Context, handler MessageHandler) {
+func (t *kafkaGoReaderImpl) HandleMessages(ctx context.Context, n int, wait time.Duration, handler BatchHandler) {
+	handleMessageBatches(ctx, t.Config().Topic, t.FetchMessage, t.CommitMessages, n, wait, handler)
+}
+
+func handleMessageBatches(ctx context.Context, topic string, fetch func(context.Context) (kafka.Message, error),
+	commit func(context.Context, ...kafka.Message) error, n int, wait time.Duration, handler BatchHandler) {
+	if n < 1 {
+		n = 1
+	}
 	for {
-		m, err := t.FetchMessage(ctx)
+		batch, err := readBatch(ctx, topic, fetch, n, wait)
 		if err != nil {
-			// Both context cancellation or reader.Close() racing are expected during shutdown
-			if err.Error() == errContextCanceled || err == io.EOF {
+			if readerStopped(err) {
 				break
 			}
-			utils.LogError("err", err, "unable to read message from Kafka reader")
+			utils.LogError("err", err, "unable to read message batch from Kafka reader")
 			panic(err)
 		}
-		if log.IsLevelEnabled(log.TraceLevel) {
-			utils.LogTrace("count", len(m.Headers), "kafka message headers")
-			for _, h := range m.Headers {
-				utils.LogTrace("key", h.Key, "value", string(h.Value), "kafka message header")
-			}
+
+		handlerCtx := ctx
+		if len(batch.app) == 1 {
+			handlerCtx = batch.singleCtx
 		}
-		// At this level, all errors are fatal
-		kafkaMessage := KafkaMessage{Key: m.Key, Value: m.Value, Headers: m.Headers}
-		msgCtx, span := telemetry.ConsumerContext(ctx, t.Config().Topic, m.Headers)
-		err = handler(msgCtx, kafkaMessage)
-		telemetry.End(span, err)
+		err = handler(handlerCtx, batch.app)
+		batch.endSpans(err)
 		if err != nil {
 			utils.LogPanic("err", err, "Handler failed")
 		}
-		err = t.CommitMessages(ctx, m)
-		if err != nil {
-			if err.Error() == errContextCanceled {
+		if err = commit(ctx, batch.raw...); err != nil {
+			if readerStopped(err) {
 				break
 			}
-			utils.LogError("err", err, "unable to commit kafka message")
+			utils.LogError("err", err, "unable to commit kafka message batch")
 			panic(err)
 		}
 	}
+}
+
+type fetchedBatch struct {
+	app       []KafkaMessage
+	raw       []kafka.Message
+	spans     []trace.Span
+	singleCtx context.Context
+}
+
+func (b *fetchedBatch) add(ctx context.Context, topic string, m kafka.Message) {
+	if log.IsLevelEnabled(log.TraceLevel) {
+		utils.LogTrace("count", len(m.Headers), "kafka message headers")
+	}
+	msgCtx, span := telemetry.ConsumerContext(ctx, topic, m.Headers)
+	if len(b.app) == 0 {
+		b.singleCtx = msgCtx
+	}
+	b.app = append(b.app, KafkaMessage{Key: m.Key, Value: m.Value, Headers: m.Headers})
+	b.raw = append(b.raw, m)
+	b.spans = append(b.spans, span)
+}
+
+func (b *fetchedBatch) endSpans(err error) {
+	for _, span := range b.spans {
+		telemetry.End(span, err)
+	}
+}
+
+func readBatch(ctx context.Context, topic string, fetch func(context.Context) (kafka.Message, error),
+	n int, wait time.Duration) (fetchedBatch, error) {
+	batch := fetchedBatch{
+		app:   make([]KafkaMessage, 0, n),
+		raw:   make([]kafka.Message, 0, n),
+		spans: make([]trace.Span, 0, n),
+	}
+	first, err := fetch(ctx)
+	if err != nil {
+		return fetchedBatch{}, err
+	}
+	batch.add(ctx, topic, first)
+	if len(batch.app) >= n {
+		return batch, nil
+	}
+
+	err = batch.fill(ctx, topic, fetch, n, wait)
+	if err != nil {
+		batch.endSpans(err)
+		return fetchedBatch{}, err
+	}
+	return batch, nil
+}
+
+func (b *fetchedBatch) fill(ctx context.Context, topic string, fetch func(context.Context) (kafka.Message, error),
+	n int, wait time.Duration) error {
+	fetchCtx, cancel := context.WithTimeout(ctx, wait)
+	defer cancel()
+	for len(b.app) < n {
+		m, err := fetch(fetchCtx)
+		if err == nil {
+			b.add(ctx, topic, m)
+			continue
+		}
+		if errors.Is(err, context.DeadlineExceeded) {
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
+func readerStopped(err error) bool {
+	return err.Error() == errContextCanceled || errors.Is(err, context.Canceled) || err == io.EOF
 }
 
 type kafkaGoWriterImpl struct {

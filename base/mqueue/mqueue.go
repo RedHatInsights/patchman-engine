@@ -10,6 +10,7 @@ import (
 	"io"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/lestrrat-go/backoff/v2"
 	"github.com/segmentio/kafka-go"
@@ -19,7 +20,7 @@ const errContextCanceled = "context canceled"
 
 // By wrapping raw value we can add new methods & ensure methods of wrapped type are callable
 type Reader interface {
-	HandleMessages(ctx context.Context, handler MessageHandler)
+	HandleMessages(ctx context.Context, n int, wait time.Duration, handler BatchHandler)
 	io.Closer
 }
 
@@ -55,6 +56,8 @@ type KafkaMessage struct {
 }
 
 type MessageHandler func(ctx context.Context, message KafkaMessage) error
+
+type BatchHandler func(ctx context.Context, messages []KafkaMessage) error
 
 func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 	return func(ctx context.Context, message KafkaMessage) error {
