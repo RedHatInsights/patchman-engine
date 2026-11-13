@@ -144,8 +144,8 @@ func TestAdvisoryUpdateKafkaRoundTrip(t *testing.T) {
 	}()
 
 	var received mqueue.KafkaMessage
-	go reader.HandleMessages(t.Context(), func(_ context.Context, m mqueue.KafkaMessage) error {
-		received = m
+	go reader.HandleMessages(t.Context(), 1, 0, func(_ context.Context, m []mqueue.KafkaMessage) error {
+		received = m[0]
 		return nil
 	})
 

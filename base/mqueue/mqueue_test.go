@@ -4,7 +4,6 @@ import (
 	"app/base"
 	"app/base/utils"
 	"context"
-	"errors"
 	"sync"
 	"testing"
 
@@ -24,8 +23,8 @@ func TestRoundTripKafkaGo(t *testing.T) {
 	defer reader.Close()
 
 	var eventOut PlatformEvent
-	go reader.HandleMessages(t.Context(), func(_ context.Context, m KafkaMessage) error {
-		return sonic.Unmarshal(m.Value, &eventOut)
+	go reader.HandleMessages(t.Context(), 1, 0, func(_ context.Context, m []KafkaMessage) error {
+		return sonic.Unmarshal(m[0].Value, &eventOut)
 	})
 
 	writer := NewKafkaWriterFromEnv("test")
@@ -45,21 +44,27 @@ func TestSpawnReader(t *testing.T) {
 	assert.Equal(t, 1, int(nReaders))
 }
 
-func TestRetry(t *testing.T) {
+func TestRetryBatchFatalThenSuccess(t *testing.T) {
 	i := 0
-	handler := func(_ context.Context, _ KafkaMessage) error {
+	handler := func(_ context.Context, _ []KafkaMessage) error {
 		i++
-		if i < 2 {
-			return errors.New("Failed")
+		if i < 3 {
+			return base.ErrFatal
 		}
 		return nil
 	}
 
-	// Without retry handler should fail
-	assert.Error(t, handler(base.Context, msg))
+	assert.NoError(t, MakeRetryingHandler(handler)(base.Context, []KafkaMessage{msg}))
+	assert.Equal(t, 3, i)
+}
 
-	// With retry we handler should eventually succeed
-	assert.NoError(t, MakeRetryingHandler(handler)(base.Context, msg))
+func TestRetryBatchAlwaysFatal(t *testing.T) {
+	handler := func(_ context.Context, _ []KafkaMessage) error {
+		return base.ErrFatal
+	}
+
+	err := MakeRetryingHandler(handler)(base.Context, []KafkaMessage{msg})
+	assert.ErrorIs(t, err, base.ErrFatal)
 }
 
 func TestWriteMessagesInjectsTraceparent(t *testing.T) {

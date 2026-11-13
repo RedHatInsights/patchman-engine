@@ -71,8 +71,8 @@ func AsBatchHandler(handler MessageHandler) BatchHandler {
 	}
 }
 
-func MakeRetryingHandler(handler MessageHandler) MessageHandler {
-	return func(ctx context.Context, message KafkaMessage) error {
+func MakeRetryingHandler(handler BatchHandler) BatchHandler {
+	return func(ctx context.Context, messages []KafkaMessage) error {
 		var err error
 		var attempt int
 
@@ -80,7 +80,7 @@ func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 		backoffState := policy.Start(backoffCtx)
 		defer cancel()
 		for backoff.Continue(backoffState) {
-			if err = handler(ctx, message); err == nil || !errors.Is(err, base.ErrFatal) {
+			if err = handler(ctx, messages); err == nil || !errors.Is(err, base.ErrFatal) {
 				return nil
 			}
 			utils.LogError("err", err, "attempt", attempt, "Try failed")
