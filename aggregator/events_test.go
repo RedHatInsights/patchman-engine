@@ -6,8 +6,10 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/mqueue"
+	"app/base/types"
 	"app/base/utils"
 	"testing"
+	"time"
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
@@ -68,6 +70,7 @@ func TestBufferedEventsProcessedOnBatchThreshold(t *testing.T) {
 
 	msg := toKafkaMessage(t, mqueue.AdvisoryUpdateEvent{
 		RhAccountID: 1, WorkspaceID: recountWorkspace, AdvisoryIDs: []int64{2, 1},
+		ProducedAt: types.Rfc3339Timestamp(time.Now().Add(time.Hour)),
 	})
 	assert.Nil(t, advisoryUpdateHandler(base.Context, []mqueue.KafkaMessage{msg, msg, msg}))
 
@@ -97,7 +100,7 @@ func TestRecountUpdatesCountsAndDeletesEmpty(t *testing.T) {
 		SystemsInstallable: 99, SystemsApplicable: 99,
 	}).Error)
 
-	assert.Nil(t, recountAdvisory(base.Context, 1, recountWorkspace, 1))
+	assert.Nil(t, recountAdvisory(base.Context, 1, recountWorkspace, 1, time.Now().Add(time.Hour)))
 
 	var expected int
 	assert.Nil(t, database.TestDB().Raw(`
@@ -124,11 +127,64 @@ func TestRecountUpdatesCountsAndDeletesEmpty(t *testing.T) {
 		AdvisoryID: 9, RhAccountID: 1, WorkspaceID: recountWorkspace,
 		SystemsInstallable: 1, SystemsApplicable: 1,
 	}).Error)
-	assert.Nil(t, recountAdvisory(base.Context, 1, recountWorkspace, 9))
+	assert.Nil(t, recountAdvisory(base.Context, 1, recountWorkspace, 9, time.Now().Add(time.Hour)))
 
 	var left int64
 	assert.Nil(t, database.TestDB().Table("account_advisory").
 		Where("rh_account_id = 1 AND workspace_id = ? AND advisory_id = 9", recountWorkspace).
 		Count(&left).Error)
 	assert.Equal(t, int64(0), left)
+}
+
+func setAdvisoryUpdated(t *testing.T, advisoryID int64, installable int, updated time.Time) {
+	t.Helper()
+	database.DeleteAccountAdvisory(t, 1, recountWorkspace.String(), []int64{advisoryID})
+	assert.Nil(t, database.TestDB().Create(&models.AccountAdvisory{
+		AdvisoryID: advisoryID, RhAccountID: 1, WorkspaceID: recountWorkspace,
+		SystemsInstallable: installable, SystemsApplicable: installable,
+	}).Error)
+	assert.Nil(t, database.TestDB().Model(&models.AccountAdvisory{}).
+		Where("rh_account_id = 1 AND workspace_id = ? AND advisory_id = ?", recountWorkspace, advisoryID).
+		UpdateColumns(map[string]interface{}{
+			"systems_installable": installable,
+			"systems_applicable":  installable,
+			"updated":             updated,
+		}).Error)
+}
+
+func TestRecountSkipsWhenUpdatedIsYoungerThanProducedAt(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	t.Cleanup(func() { database.DeleteAccountAdvisory(t, 1, recountWorkspace.String(), []int64{1}) })
+
+	producedAt := time.Now().UTC().Truncate(time.Microsecond)
+	setAdvisoryUpdated(t, 1, 99, producedAt.Add(time.Hour))
+
+	assert.Nil(t, recountAdvisory(base.Context, 1, recountWorkspace, 1, producedAt))
+
+	got := database.PluckInt(database.TestDB().Table("account_advisory").
+		Where("rh_account_id = 1 AND workspace_id = ? AND advisory_id = 1", recountWorkspace),
+		"systems_installable")
+	assert.Equal(t, 99, got)
+}
+
+func TestRecountRunsWhenUpdatedIsOlderOrEqual(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	t.Cleanup(func() { database.DeleteAccountAdvisory(t, 1, recountWorkspace.String(), []int64{1}) })
+
+	producedAt := time.Now().UTC().Truncate(time.Microsecond)
+	setAdvisoryUpdated(t, 1, 99, producedAt.Add(-time.Hour))
+	assert.Nil(t, recountAdvisory(base.Context, 1, recountWorkspace, 1, producedAt))
+	got := database.PluckInt(database.TestDB().Table("account_advisory").
+		Where("rh_account_id = 1 AND workspace_id = ? AND advisory_id = 1", recountWorkspace),
+		"systems_installable")
+	assert.NotEqual(t, 99, got)
+
+	setAdvisoryUpdated(t, 1, 99, producedAt)
+	assert.Nil(t, recountAdvisory(base.Context, 1, recountWorkspace, 1, producedAt))
+	got = database.PluckInt(database.TestDB().Table("account_advisory").
+		Where("rh_account_id = 1 AND workspace_id = ? AND advisory_id = 1", recountWorkspace),
+		"systems_installable")
+	assert.NotEqual(t, 99, got)
 }

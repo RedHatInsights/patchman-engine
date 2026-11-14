@@ -114,7 +114,7 @@ func processAdvisoryBatch(ctx context.Context, requests []advisoryRecount) error
 
 	accountAdvisories := make(map[int][]int64)
 	for _, req := range requests {
-		err := recountAdvisory(ctx, req.RhAccountID, req.WorkspaceID, req.AdvisoryID)
+		err := recountAdvisory(ctx, req.RhAccountID, req.WorkspaceID, req.AdvisoryID, req.ProducedAt)
 		if err != nil {
 			utils.LogError("err", err, "rh_account_id", req.RhAccountID,
 				"failed to refresh account advisory caches")
@@ -132,7 +132,8 @@ func processAdvisoryBatch(ctx context.Context, requests []advisoryRecount) error
 	return nil
 }
 
-func recountAdvisory(ctx context.Context, rhAccountID int, workspaceID uuid.UUID, advisoryID int64) error {
+func recountAdvisory(ctx context.Context, rhAccountID int, workspaceID uuid.UUID, advisoryID int64,
+	producedAt time.Time) error {
 	return database.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		var row models.AccountAdvisory
 		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
@@ -140,6 +141,17 @@ func recountAdvisory(ctx context.Context, rhAccountID int, workspaceID uuid.UUID
 			Take(&row).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
+		}
+		if err == nil && row.Updated.After(producedAt) {
+			utils.LogWarn(
+				"rh_account_id", rhAccountID,
+				"workspace_id", workspaceID,
+				"advisory_id", advisoryID,
+				"updated", row.Updated,
+				"produced_at", producedAt,
+				"skipping advisory recount, updated is younger than produced_at",
+			)
+			return nil
 		}
 
 		var counts []advisoryRecountCount
