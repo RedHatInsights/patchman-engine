@@ -309,6 +309,7 @@ type AccountAdvisory struct {
 	SystemsApplicable  int
 	SystemsInstallable int
 	Notified           *time.Time
+	Updated            time.Time `gorm:"autoUpdateTime"`
 }
 
 func (AccountAdvisory) TableName() string {
