@@ -18,6 +18,10 @@ var (
 )
 
 func advisoryUpdateHandler(ctx context.Context, msgs []mqueue.KafkaMessage) error {
+	if enableBypass {
+		utils.LogWarn("Advisory update processing bypassed")
+		return nil
+	}
 	events := make([]mqueue.AdvisoryUpdateEvent, 0, len(msgs))
 	for _, m := range msgs {
 		var event mqueue.AdvisoryUpdateEvent
