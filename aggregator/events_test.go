@@ -188,3 +188,43 @@ func TestRecountRunsWhenUpdatedIsOlderOrEqual(t *testing.T) {
 		"systems_installable")
 	assert.NotEqual(t, 99, got)
 }
+
+func TestRecountAdvisoryWaitsForKeyLock(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+	t.Cleanup(func() { database.DeleteAccountAdvisory(t, 1, recountWorkspace.String(), []int64{1}) })
+
+	hold := database.TestDB().Begin()
+	t.Cleanup(func() { _ = hold.Rollback().Error })
+	lockKey := advisoryRecountLockKey(1, recountWorkspace, 1)
+	assert.Nil(t, hold.Exec("SELECT pg_advisory_xact_lock(?::integer, hashtext(?))",
+		accountAdvisoryLockNamespace, lockKey).Error)
+
+	done := make(chan error, 1)
+	go func() {
+		done <- recountAdvisory(base.Context, 1, recountWorkspace, 1, time.Now().Add(time.Hour))
+	}()
+
+	deadline := time.Now().Add(2 * time.Second)
+	waiting := 0
+	for time.Now().Before(deadline) {
+		assert.Nil(t, database.TestDB().Raw(`
+			SELECT count(*) FROM pg_stat_activity
+			 WHERE wait_event_type = 'Lock'
+			   AND wait_event = 'advisory'
+			   AND query LIKE 'SELECT pg_advisory_xact_lock%'`).Scan(&waiting).Error)
+		if waiting > 0 {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	assert.Greater(t, waiting, 0, "recount should wait on the key lock")
+
+	assert.Nil(t, hold.Rollback().Error)
+	select {
+	case err := <-done:
+		assert.Nil(t, err)
+	case <-time.After(5 * time.Second):
+		t.Fatal("recount did not finish after the key lock was released")
+	}
+}

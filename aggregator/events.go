@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"sort"
 	"time"
 
@@ -132,11 +133,26 @@ func processAdvisoryBatch(ctx context.Context, requests []advisoryRecount) error
 	return nil
 }
 
+// Use two-integer lock as namespace + row key.
+const accountAdvisoryLockNamespace int32 = 1634890860 // "artl" in ASCII as Advisory Recount Lock Namespace
+
+func advisoryRecountLockKey(rhAccountID int, workspaceID uuid.UUID, advisoryID int64) string {
+	return fmt.Sprintf("%d/%s/%d", rhAccountID, workspaceID, advisoryID)
+}
+
 func recountAdvisory(ctx context.Context, rhAccountID int, workspaceID uuid.UUID, advisoryID int64,
 	producedAt time.Time) error {
 	return database.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		// Serialize this key even when account_advisory SELECT ... FOR UPDATE returns nothing
+		// so an older upsert can overwrite newer counts or a delayed delete can remove a fresh row.
+		err := tx.Exec("SELECT pg_advisory_xact_lock(?::integer, hashtext(?))",
+			accountAdvisoryLockNamespace, advisoryRecountLockKey(rhAccountID, workspaceID, advisoryID)).Error
+		if err != nil {
+			return err
+		}
+
 		var row models.AccountAdvisory
-		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+		err = tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("rh_account_id = ? AND workspace_id = ? AND advisory_id = ?", rhAccountID, workspaceID, advisoryID).
 			Take(&row).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
