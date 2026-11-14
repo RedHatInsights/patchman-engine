@@ -21,18 +21,37 @@ var (
 	otherWorkspace   = uuid.MustParse("00000000-0000-0000-0000-000000000002")
 )
 
+func TestSameSecondProducedAtIsNotOlderAfterRoundTrip(t *testing.T) {
+	second := time.Date(2026, 11, 15, 12, 0, 0, 0, time.UTC)
+	updated := second.Add(400 * time.Millisecond)
+	producedAt := second.Add(800 * time.Millisecond)
+	msg := toKafkaMessage(t, mqueue.AdvisoryUpdateEvent{
+		RhAccountID: 1,
+		WorkspaceID: recountWorkspace,
+		AdvisoryIDs: []int64{1},
+		ProducedAt:  types.Rfc3339TimestampWithZ(producedAt),
+	})
+
+	var event mqueue.AdvisoryUpdateEvent
+	assert.NoError(t, sonic.Unmarshal(msg.Value, &event))
+	got := event.ProducedAt.Time()
+	assert.NotNil(t, got)
+	assert.True(t, got.Equal(producedAt))
+	assert.False(t, updated.After(*got))
+}
+
 func TestDedupeAdvisoryUpdatesKeepsYoungestProducedAt(t *testing.T) {
 	older := time.Date(2026, 11, 14, 10, 0, 0, 0, time.UTC)
 	newer := older.Add(time.Minute)
 	events := []mqueue.AdvisoryUpdateEvent{
 		{RhAccountID: 2, WorkspaceID: recountWorkspace, AdvisoryIDs: []int64{5},
-			ProducedAt: types.Rfc3339Timestamp(older)},
+			ProducedAt: types.Rfc3339TimestampWithZ(older)},
 		{RhAccountID: 1, WorkspaceID: otherWorkspace, AdvisoryIDs: []int64{2, 1},
-			ProducedAt: types.Rfc3339Timestamp(older)},
+			ProducedAt: types.Rfc3339TimestampWithZ(older)},
 		{RhAccountID: 1, WorkspaceID: recountWorkspace, AdvisoryIDs: []int64{2, 1},
-			ProducedAt: types.Rfc3339Timestamp(older)},
+			ProducedAt: types.Rfc3339TimestampWithZ(older)},
 		{RhAccountID: 1, WorkspaceID: recountWorkspace, AdvisoryIDs: []int64{1},
-			ProducedAt: types.Rfc3339Timestamp(newer)},
+			ProducedAt: types.Rfc3339TimestampWithZ(newer)},
 	}
 
 	got := groupAdvisoryUpdates(events)
@@ -70,7 +89,7 @@ func TestBufferedEventsProcessedOnBatchThreshold(t *testing.T) {
 
 	msg := toKafkaMessage(t, mqueue.AdvisoryUpdateEvent{
 		RhAccountID: 1, WorkspaceID: recountWorkspace, AdvisoryIDs: []int64{2, 1},
-		ProducedAt: types.Rfc3339Timestamp(time.Now().Add(time.Hour)),
+		ProducedAt: types.Rfc3339TimestampWithZ(time.Now().Add(time.Hour)),
 	})
 	assert.Nil(t, advisoryUpdateHandler(base.Context, []mqueue.KafkaMessage{msg, msg, msg}))
 

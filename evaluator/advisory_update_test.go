@@ -48,7 +48,7 @@ func TestCreateAdvisoryUpdateEvent(t *testing.T) {
 		RhAccountID: system.Inventory.RhAccountID,
 		WorkspaceID: system.Inventory.WorkspaceID,
 		AdvisoryIDs: changedAdvisoryIDs,
-		ProducedAt:  types.Rfc3339Timestamp(time.Now()),
+		ProducedAt:  types.Rfc3339TimestampWithZ(time.Now()),
 	}
 	assert.Equal(t, rhAccountID, event.RhAccountID)
 	assert.Equal(t, wsID, event.WorkspaceID)

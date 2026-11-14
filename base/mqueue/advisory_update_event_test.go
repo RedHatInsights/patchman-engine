@@ -13,7 +13,7 @@ import (
 
 var (
 	testWorkspaceID = uuid.New()
-	testNow         = types.Rfc3339Timestamp(time.Now())
+	testNow         = types.Rfc3339TimestampWithZ(time.Now())
 )
 
 func TestAdvisoryUpdateEventMarshal(t *testing.T) {

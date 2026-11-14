@@ -11,10 +11,10 @@ import (
 )
 
 type AdvisoryUpdateEvent struct {
-	RhAccountID int                    `json:"rh_account_id"`
-	WorkspaceID uuid.UUID              `json:"workspace_id"`
-	AdvisoryIDs []int64                `json:"advisory_ids"`
-	ProducedAt  types.Rfc3339Timestamp `json:"produced_at"`
+	RhAccountID int                         `json:"rh_account_id"`
+	WorkspaceID uuid.UUID                   `json:"workspace_id"`
+	AdvisoryIDs []int64                     `json:"advisory_ids"`
+	ProducedAt  types.Rfc3339TimestampWithZ `json:"produced_at"`
 }
 
 type AdvisoryUpdateEvents []AdvisoryUpdateEvent
