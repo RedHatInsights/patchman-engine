@@ -82,6 +82,7 @@ func TestPublishAdvisoryUpdates(t *testing.T) {
 	err := publishAdvisoryUpdates(system, advisories)
 	assert.NoError(t, err)
 	assert.Len(t, mockWriter.Messages, 1)
+	assert.Equal(t, []byte("3"), mockWriter.Messages[0].Key)
 
 	var event mqueue.AdvisoryUpdateEvent
 	assert.NoError(t, sonic.Unmarshal(mockWriter.Messages[0].Value, &event))
@@ -137,7 +138,7 @@ func TestAdvisoryUpdateKafkaRoundTrip(t *testing.T) {
 		t.Skip("ADVISORY_UPDATE_TOPIC not configured")
 	}
 
-	advisoryUpdatePublisher = mqueue.NewKafkaWriterFromEnv(topic)
+	advisoryUpdatePublisher = mqueue.NewKeyedKafkaWriterFromEnv(topic)
 	reader := mqueue.NewKafkaReaderFromEnv(topic)
 	defer func() {
 		assert.NoError(t, reader.Close(), "failed to close Kafka reader")
@@ -176,6 +177,7 @@ func TestAdvisoryUpdateKafkaRoundTrip(t *testing.T) {
 	})
 	var event mqueue.AdvisoryUpdateEvent
 	assert.NoError(t, sonic.Unmarshal(received.Value, &event), "message should be valid AdvisoryUpdateEvent JSON")
+	assert.Equal(t, []byte("3"), received.Key)
 	assert.Equal(t, rhAccountID, event.RhAccountID)
 	assert.NotEqual(t, uuid.Nil, event.WorkspaceID)
 	assert.NotEmpty(t, event.AdvisoryIDs)

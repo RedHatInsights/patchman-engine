@@ -15,7 +15,7 @@ var advisoryUpdatePublisher mqueue.Writer
 
 func configureAdvisoryUpdates() {
 	if topic := utils.CoreCfg.AdvisoryUpdateTopic; topic != "" {
-		advisoryUpdatePublisher = mqueue.NewKafkaWriterFromEnv(topic)
+		advisoryUpdatePublisher = mqueue.NewKeyedKafkaWriterFromEnv(topic)
 	}
 }
 

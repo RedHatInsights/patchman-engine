@@ -174,6 +174,13 @@ func NewKafkaWriterFromEnv(topic string) Writer {
 	return &kafkaGoWriterImpl{newKafkaWriterFromEnv(topic)}
 }
 
+// NewKeyedKafkaWriterFromEnv routes each message by hashing its key, so the same key stays on one partition.
+func NewKeyedKafkaWriterFromEnv(topic string) Writer {
+	writer := newKafkaWriterFromEnv(topic)
+	writer.Balancer = &kafka.Hash{}
+	return &kafkaGoWriterImpl{writer}
+}
+
 func NewGzipKafkaWriterFromEnv(topic string, batchBytes int64) Writer {
 	writer := newKafkaWriterFromEnv(topic)
 	writer.BatchBytes = batchBytes

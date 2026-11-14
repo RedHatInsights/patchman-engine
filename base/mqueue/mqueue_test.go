@@ -10,6 +10,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
+	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,6 +35,17 @@ func TestRoundTripKafkaGo(t *testing.T) {
 	utils.AssertEqualWait(t, 10, func() (exp, act interface{}) {
 		return eventIn.ID, eventOut.ID
 	})
+}
+
+func TestKeyedKafkaWriterRoutesSameAccountToSamePartition(t *testing.T) {
+	w := NewKeyedKafkaWriterFromEnv("patchman.advisory.update").(*kafkaGoWriterImpl)
+	assert.IsType(t, &kafka.Hash{}, w.Balancer)
+
+	partitions := []int{0, 1, 2, 3, 4, 5}
+	msg := kafka.Message{Key: []byte("42")}
+	first := w.Balancer.Balance(msg, partitions...)
+	second := w.Balancer.Balance(msg, partitions...)
+	assert.Equal(t, first, second)
 }
 
 func TestSpawnReader(t *testing.T) {

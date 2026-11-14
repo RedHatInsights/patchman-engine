@@ -3,6 +3,7 @@ package mqueue
 import (
 	"app/base/types"
 	"context"
+	"strconv"
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
@@ -23,7 +24,7 @@ func (event *AdvisoryUpdateEvent) createKafkaMessage() (KafkaMessage, error) {
 	if err != nil {
 		return KafkaMessage{}, errors.Wrap(err, "Serializing advisory update event")
 	}
-	return KafkaMessage{Value: data}, nil
+	return KafkaMessage{Key: []byte(strconv.Itoa(event.RhAccountID)), Value: data}, nil
 }
 
 func (events AdvisoryUpdateEvents) WriteEvents(ctx context.Context, w Writer) error {
