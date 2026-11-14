@@ -3,19 +3,43 @@ package aggregator
 import (
 	"app/base"
 	"app/base/database"
+	"app/base/models"
 	"app/base/mqueue"
 	"app/base/utils"
+	"bytes"
 	"context"
+	"errors"
+	"sort"
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/lib/pq"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 var (
 	batchSize    int
 	flushTimeout time.Duration
 )
+
+const advisoryCountSQL = `
+SELECT count(sa.*) FILTER (WHERE sa.status_id = 0) AS systems_installable,
+       count(sa.*) AS systems_applicable
+  FROM system_advisories sa
+  JOIN system_inventory si
+    ON sa.rh_account_id = si.rh_account_id AND sa.system_id = si.id
+ WHERE si.stale = FALSE
+   AND sa.rh_account_id = ?
+   AND sa.advisory_id = ?
+   AND si.rh_account_id = ?
+   AND si.workspace_id = ?
+ GROUP BY sa.advisory_id, sa.rh_account_id, si.workspace_id`
+
+type advisoryRecountCount struct {
+	SystemsInstallable int
+	SystemsApplicable  int
+}
 
 func advisoryUpdateHandler(ctx context.Context, msgs []mqueue.KafkaMessage) error {
 	if enableBypass {
@@ -37,43 +61,109 @@ func advisoryUpdateHandler(ctx context.Context, msgs []mqueue.KafkaMessage) erro
 	return processAdvisoryBatch(ctx, groupAdvisoryUpdates(events))
 }
 
-func groupAdvisoryUpdates(events []mqueue.AdvisoryUpdateEvent) map[int][]int64 {
-	sets := make(map[int]map[int64]struct{})
-	for _, e := range events {
-		if _, ok := sets[e.RhAccountID]; !ok {
-			sets[e.RhAccountID] = make(map[int64]struct{})
-		}
-		for _, id := range e.AdvisoryIDs {
-			sets[e.RhAccountID][id] = struct{}{}
-		}
-	}
-
-	grouped := make(map[int][]int64, len(sets))
-	for accID, idSet := range sets {
-		ids := make([]int64, 0, len(idSet))
-		for id := range idSet {
-			ids = append(ids, id)
-		}
-		grouped[accID] = ids
-	}
-	return grouped
+type advisoryRecountKey struct {
+	RhAccountID int
+	WorkspaceID uuid.UUID
+	AdvisoryID  int64
 }
 
-func processAdvisoryBatch(ctx context.Context, grouped map[int][]int64) error {
-	for rhAccountID, advisoryIDs := range grouped {
-		utils.LogInfo("rh_account_id", rhAccountID, "advisory_count", len(advisoryIDs), "refreshing account advisory caches")
-		err := database.DB(ctx).Exec("SELECT refresh_account_advisory_caches_multi(?, ?)", pq.Array(advisoryIDs), rhAccountID).Error //nolint:lll
+type advisoryRecount struct {
+	advisoryRecountKey
+	ProducedAt time.Time
+}
+
+func groupAdvisoryUpdates(events []mqueue.AdvisoryUpdateEvent) []advisoryRecount {
+	newest := make(map[advisoryRecountKey]time.Time)
+	for i := range events {
+		event := &events[i]
+		producedAt := time.Time{}
+		if ts := event.ProducedAt.Time(); ts != nil {
+			producedAt = *ts
+		}
+		for _, advisoryID := range event.AdvisoryIDs {
+			key := advisoryRecountKey{event.RhAccountID, event.WorkspaceID, advisoryID}
+			if existing, ok := newest[key]; !ok || producedAt.After(existing) {
+				newest[key] = producedAt
+			}
+		}
+	}
+
+	requests := make([]advisoryRecount, 0, len(newest))
+	for key, producedAt := range newest {
+		requests = append(requests, advisoryRecount{
+			RhAccountID: key.RhAccountID,
+			WorkspaceID: key.WorkspaceID,
+			AdvisoryID:  key.AdvisoryID,
+			ProducedAt:  producedAt,
+		})
+	}
+	sort.Slice(requests, func(i, j int) bool {
+		if requests[i].RhAccountID != requests[j].RhAccountID {
+			return requests[i].RhAccountID < requests[j].RhAccountID
+		}
+		if c := bytes.Compare(requests[i].WorkspaceID[:], requests[j].WorkspaceID[:]); c != 0 {
+			return c < 0
+		}
+		return requests[i].AdvisoryID < requests[j].AdvisoryID
+	})
+	return requests
+}
+
+func processAdvisoryBatch(ctx context.Context, requests []advisoryRecount) error {
+	utils.LogInfo("advisory_count", len(requests), "refreshing account advisory caches")
+
+	accountAdvisories := make(map[int][]int64)
+	for _, req := range requests {
+		err := recountAdvisory(ctx, req.RhAccountID, req.WorkspaceID, req.AdvisoryID)
 		if err != nil {
-			utils.LogError("err", err, "rh_account_id", rhAccountID, "failed to refresh account advisory caches")
+			utils.LogError("err", err, "rh_account_id", req.RhAccountID,
+				"failed to refresh account advisory caches")
 			return base.WrapFatalDBError(err, "refresh account advisory caches")
 		}
+		accountAdvisories[req.RhAccountID] = append(accountAdvisories[req.RhAccountID], req.AdvisoryID)
+	}
 
-		CheckAdvisoryDrift(rhAccountID, advisoryIDs)
-
+	for rhAccountID, advisoryIDs := range accountAdvisories {
 		if err := publishNewAdvisoryNotification(rhAccountID, advisoryIDs); err != nil {
 			utils.LogError("err", err, "rh_account_id", rhAccountID, "failed to publish new advisory notification")
 			return base.WrapFatalKafkaError(err, "publish new advisory notification")
 		}
 	}
 	return nil
+}
+
+func recountAdvisory(ctx context.Context, rhAccountID int, workspaceID uuid.UUID, advisoryID int64) error {
+	return database.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		var row models.AccountAdvisory
+		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("rh_account_id = ? AND workspace_id = ? AND advisory_id = ?", rhAccountID, workspaceID, advisoryID).
+			Take(&row).Error
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+
+		var counts []advisoryRecountCount
+		err = tx.Raw(advisoryCountSQL, rhAccountID, advisoryID, rhAccountID, workspaceID).Scan(&counts).Error
+		if err != nil {
+			return err
+		}
+		if len(counts) == 0 {
+			return tx.Where("rh_account_id = ? AND workspace_id = ? AND advisory_id = ?",
+				rhAccountID, workspaceID, advisoryID).
+				Delete(&models.AccountAdvisory{}).Error
+		}
+
+		rec := models.AccountAdvisory{
+			AdvisoryID:         advisoryID,
+			RhAccountID:        rhAccountID,
+			WorkspaceID:        workspaceID,
+			SystemsApplicable:  counts[0].SystemsApplicable,
+			SystemsInstallable: counts[0].SystemsInstallable,
+			Updated:            time.Now(),
+		}
+		return database.OnConflictUpdateMulti(tx,
+			[]string{"rh_account_id", "workspace_id", "advisory_id"},
+			"systems_installable", "systems_applicable", "updated").
+			Create(&rec).Error
+	})
 }
