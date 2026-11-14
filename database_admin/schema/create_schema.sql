@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (170, false);
+VALUES (171, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -911,6 +911,7 @@ CREATE TABLE IF NOT EXISTS account_advisory
     systems_applicable       INT    NOT NULL DEFAULT 0,
     systems_installable      INT    NOT NULL DEFAULT 0,
     notified                 TIMESTAMP WITH TIME ZONE NULL,
+    updated                  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     CONSTRAINT account_advisory_advisory_id
         FOREIGN KEY (advisory_id)
             REFERENCES advisory_metadata (id),
