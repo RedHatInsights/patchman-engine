@@ -193,19 +193,33 @@ func TestRecountRunsWhenUpdatedIsOlderOrEqual(t *testing.T) {
 	t.Cleanup(func() { database.DeleteAccountAdvisory(t, 1, recountWorkspace.String(), []int64{1}) })
 
 	producedAt := time.Now().UTC().Truncate(time.Microsecond)
+	var counts []advisoryRecountCount
+	assert.Nil(t, database.TestDB().Raw(advisoryCountSQL, 1, int64(1), 1, recountWorkspace).Scan(&counts).Error)
+	if !assert.NotEmpty(t, counts) {
+		return
+	}
+	expected := counts[0].SystemsInstallable
+
+	assertRecounted := func() {
+		t.Helper()
+		var rows int64
+		assert.Nil(t, database.TestDB().Table("account_advisory").
+			Where("rh_account_id = 1 AND workspace_id = ? AND advisory_id = 1", recountWorkspace).
+			Count(&rows).Error)
+		assert.Equal(t, int64(1), rows)
+		got := database.PluckInt(database.TestDB().Table("account_advisory").
+			Where("rh_account_id = 1 AND workspace_id = ? AND advisory_id = 1", recountWorkspace),
+			"systems_installable")
+		assert.Equal(t, expected, got)
+	}
+
 	setAdvisoryUpdated(t, 1, 99, producedAt.Add(-time.Hour))
 	assert.Nil(t, recountAdvisory(base.Context, 1, recountWorkspace, 1, producedAt))
-	got := database.PluckInt(database.TestDB().Table("account_advisory").
-		Where("rh_account_id = 1 AND workspace_id = ? AND advisory_id = 1", recountWorkspace),
-		"systems_installable")
-	assert.NotEqual(t, 99, got)
+	assertRecounted()
 
 	setAdvisoryUpdated(t, 1, 99, producedAt)
 	assert.Nil(t, recountAdvisory(base.Context, 1, recountWorkspace, 1, producedAt))
-	got = database.PluckInt(database.TestDB().Table("account_advisory").
-		Where("rh_account_id = 1 AND workspace_id = ? AND advisory_id = 1", recountWorkspace),
-		"systems_installable")
-	assert.NotEqual(t, 99, got)
+	assertRecounted()
 }
 
 func TestRecountAdvisoryWaitsForKeyLock(t *testing.T) {
