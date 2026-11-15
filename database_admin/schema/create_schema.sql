@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations
 
 
 INSERT INTO schema_migrations
-VALUES (171, false);
+VALUES (172, false);
 
 -- ---------------------------------------------------------------------------
 -- Functions
@@ -869,6 +869,8 @@ GRANT UPDATE, DELETE ON system_advisories TO manager;
 GRANT SELECT, INSERT, UPDATE, DELETE ON system_advisories TO listener;
 -- vmaas_sync needs to delete culled systems, which cascades to system_advisories
 GRANT SELECT, DELETE ON system_advisories TO vmaas_sync;
+
+CREATE INDEX ON system_advisories (rh_account_id, advisory_id);
 
 -- advisory_account_data
 CREATE TABLE IF NOT EXISTS advisory_account_data
