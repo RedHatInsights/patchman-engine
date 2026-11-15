@@ -1,6 +1,7 @@
 package mqueue
 
 import (
+	"app/base/telemetry"
 	"context"
 	"errors"
 	"testing"
@@ -8,6 +9,8 @@ import (
 
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func TestAsBatchHandler(t *testing.T) {
@@ -75,6 +78,56 @@ func TestHandleMessageBatchesBlocksForFirstMessage(t *testing.T) {
 		t.Fatal("did not return after the first message")
 	}
 	assert.Equal(t, []KafkaMessage{{Value: []byte("one")}}, got)
+}
+
+func TestHandleMessageBatchesMultiMessageUsesMessageTrace(t *testing.T) {
+	t.Setenv("OTEL_ENABLED", "true")
+	t.Setenv("OTEL_SAMPLING_RATE", "1.0")
+	t.Setenv("OTEL_BSP_EXPORT_TIMEOUT", "1")
+	t.Setenv("OTEL_BSP_SCHEDULE_DELAY", "1")
+	require.NoError(t, telemetry.Init())
+	t.Cleanup(func() { _ = telemetry.Shutdown(context.Background()) })
+
+	traceID, err := trace.TraceIDFromHex("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	require.NoError(t, err)
+	spanID, err := trace.SpanIDFromHex("bbbbbbbbbbbbbbbb")
+	require.NoError(t, err)
+	remote := trace.NewSpanContext(trace.SpanContextConfig{
+		TraceID:    traceID,
+		SpanID:     spanID,
+		TraceFlags: trace.FlagsSampled,
+		Remote:     true,
+	})
+	headers := telemetry.Inject(trace.ContextWithRemoteSpanContext(context.Background(), remote), nil)
+	queued := []kafka.Message{
+		{Offset: 1, Value: []byte("a"), Headers: headers},
+		{Offset: 2, Value: []byte("b"), Headers: headers},
+	}
+	calls := 0
+	fetch := func(ctx context.Context) (kafka.Message, error) {
+		calls++
+		if calls > len(queued) {
+			<-ctx.Done()
+			return kafka.Message{}, ctx.Err()
+		}
+		return queued[calls-1], nil
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	var got trace.TraceID
+	var valid bool
+	handleMessageBatches(ctx, "topic", fetch, func(context.Context, ...kafka.Message) error {
+		cancel()
+		return nil
+	}, 2, time.Hour, func(handlerCtx context.Context, _ []KafkaMessage) error {
+		sc := trace.SpanFromContext(handlerCtx).SpanContext()
+		valid = sc.IsValid()
+		got = sc.TraceID()
+		return nil
+	})
+	assert.True(t, valid)
+	assert.Equal(t, traceID, got)
 }
 
 func TestHandleMessageBatchesStopsAtN(t *testing.T) {

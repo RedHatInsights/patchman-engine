@@ -44,11 +44,7 @@ func handleMessageBatches(ctx context.Context, topic string, fetch func(context.
 			panic(err)
 		}
 
-		handlerCtx := ctx
-		if len(batch.app) == 1 {
-			handlerCtx = batch.singleCtx
-		}
-		err = handler(handlerCtx, batch.app)
+		err = handler(batch.messageCtx, batch.app)
 		batch.endSpans(err)
 		if err != nil {
 			utils.LogPanic("err", err, "Handler failed")
@@ -64,10 +60,10 @@ func handleMessageBatches(ctx context.Context, topic string, fetch func(context.
 }
 
 type fetchedBatch struct {
-	app       []KafkaMessage
-	raw       []kafka.Message
-	spans     []trace.Span
-	singleCtx context.Context
+	app        []KafkaMessage
+	raw        []kafka.Message
+	spans      []trace.Span
+	messageCtx context.Context
 }
 
 func (b *fetchedBatch) add(ctx context.Context, topic string, m kafka.Message) {
@@ -75,8 +71,8 @@ func (b *fetchedBatch) add(ctx context.Context, topic string, m kafka.Message) {
 		utils.LogTrace("count", len(m.Headers), "kafka message headers")
 	}
 	msgCtx, span := telemetry.ConsumerContext(ctx, topic, m.Headers)
-	if len(b.app) == 0 {
-		b.singleCtx = msgCtx
+	if b.messageCtx == nil {
+		b.messageCtx = msgCtx
 	}
 	b.app = append(b.app, KafkaMessage{Key: m.Key, Value: m.Value, Headers: m.Headers})
 	b.raw = append(b.raw, m)
