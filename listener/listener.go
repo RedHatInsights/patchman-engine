@@ -25,6 +25,7 @@ var (
 	templatesTopic             string
 	templatesConsumers         int
 	evalWriter                 mqueue.Writer
+	advisoryUpdateWriter       mqueue.Writer
 	createdSystemsWriter       mqueue.Writer
 	ptWriter                   mqueue.Writer
 	validReporters             map[string]int
@@ -62,6 +63,9 @@ func configure() {
 	evalWriter = mqueue.NewKafkaWriterFromEnv(evalTopic)
 	ptWriter = mqueue.NewKafkaWriterFromEnv(ptTopic)
 	createdSystemsWriter = mqueue.NewKafkaWriterFromEnv(createdTopic)
+	if topic := utils.CoreCfg.AdvisoryUpdateTopic; topic != "" {
+		advisoryUpdateWriter = mqueue.NewKeyedKafkaWriterFromEnv(topic)
+	}
 
 	updatedEventsBuffer.initEventBuffer(&evalWriter, &ptWriter, evalTopic)
 	createdEventsBuffer.initEventBuffer(&createdSystemsWriter, &ptWriter, createdTopic)
