@@ -62,7 +62,6 @@ var (
 	enableAdvisoryUpdates         bool
 	enableSatelliteFunctionality  bool
 	enableTemplateAdvisoryEval    bool
-	enableAdvisoryAccountData     bool
 	errVmaasBadRequest            = errors.New("vmaas bad request")
 )
 
@@ -81,7 +80,6 @@ func configure() {
 	}
 	vmaasUpdatesURL = utils.FailIfEmpty(utils.CoreCfg.VmaasAddress, "VMAAS_ADDRESS") + base.VMaaSAPIPrefix + "/updates"
 	configureRemediations()
-	configureNotifications()
 	configureInventoryViews()
 	configureAdvisoryUpdates()
 	configureStatus()
@@ -95,8 +93,6 @@ func configureEvaluator() {
 	disableCompression = !utils.PodConfig.GetBool("vmaas_call_compression", true)
 	// Evaluate advisories
 	enableAdvisoryAnalysis = utils.PodConfig.GetBool("advisory_analysis", true)
-	// Update legacy advisory_account_data counts during evaluation
-	enableAdvisoryAccountData = utils.PodConfig.GetBool("advisory_account_data", true)
 	// evaluate packages
 	enablePackageAnalysis = utils.PodConfig.GetBool("package_analysis", true)
 	// Look for third party repos
@@ -499,18 +495,6 @@ func evaluateAndStore(ctx context.Context, system *models.SystemPlatformV2,
 		}
 	}
 
-	// Instant notifications, or mark-notified only when the event opts out of publishing
-	// (e.g. recovery recalc with skip_notifications).
-	if event.SkipNotifications || enableInstantNotifications {
-		err = publishNewAdvisoriesNotification(tx, system, event.GetOrgID(), systemAdvisoriesNew,
-			event.SkipNotifications)
-		if err != nil {
-			evaluationCnt.WithLabelValues("error-advisory-notification").Inc()
-			utils.LogError("orgID", event.GetOrgID(), "inventoryID", system.GetInventoryID(), "err", err,
-				"publishing new advisories notification failed")
-		}
-	}
-
 	if enableAdvisoryUpdates {
 		err = publishAdvisoryUpdates(system, advisoriesByName)
 		if err != nil {
@@ -713,12 +697,12 @@ func parseVmaasJSON(inv *models.SystemInventory) (vmaas.UpdatesV3Request, error)
 	return utils.ParseVmaasJSON(inv)
 }
 
-func invalidateCaches(ctx context.Context, orgID string) error {
+func invalidatePackageCache(ctx context.Context, orgID string) error {
 	err := database.DB(ctx).Model(models.RhAccount{}).
 		Where("org_id = ?", orgID).
-		Where("valid_package_cache = true OR valid_advisory_cache = true").
+		Where("valid_package_cache = true").
 		// use map because struct updates only non-zero values and we need to update it to `false`
-		Updates(map[string]interface{}{"valid_package_cache": false, "valid_advisory_cache": false}).
+		Updates(map[string]interface{}{"valid_package_cache": false}).
 		Error
 	return err
 }
@@ -794,7 +778,7 @@ func evaluateHandler(ctx context.Context, m mqueue.KafkaMessage) error {
 	}
 	wg.Wait()
 
-	if cacheErr := invalidateCaches(ctx, event.GetOrgID()); cacheErr != nil {
+	if cacheErr := invalidatePackageCache(ctx, event.GetOrgID()); cacheErr != nil {
 		utils.LogError("err", cacheErr, "org_id", event.GetOrgID(), "Couldn't invalidate caches")
 	}
 

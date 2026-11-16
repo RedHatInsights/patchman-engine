@@ -6,27 +6,8 @@ import (
 	"app/tasks"
 )
 
-var (
-	skipNAccountsRefresh int
-)
-
 func configure() {
 	core.ConfigureApp()
-}
-
-func RunAdvisoryRefresh() {
-	tasks.HandleContextCancel(tasks.WaitAndExit)
-	configure()
-	utils.LogInfo("Refreshing advisory cache")
-	RefreshAdvisoryCaches()
-}
-
-func RunAccountAdvisoryBackfill() {
-	tasks.HandleContextCancel(tasks.WaitAndExit)
-	configure()
-	utils.LogInfo("Starting account_advisory backfill")
-	BackfillAccountAdvisory()
-	utils.LogInfo("Finished account_advisory backfill")
 }
 
 func RunPackageRefresh() {

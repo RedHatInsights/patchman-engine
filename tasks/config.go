@@ -8,8 +8,6 @@ import (
 )
 
 var (
-	// Skip first N accounts in advisory refresh job, e.g. after failure
-	SkipNAccountsRefresh = utils.PodConfig.GetInt("skip_n_accounts_refresh", 0)
 	// Remove only LIMIT rows in a run, useful to avoid complete wipe in case of error
 	DeleteUnusedDataLimit = utils.PodConfig.GetInt("delete_unused_data_limit", 1000)
 	// Remove only LIMIT systems in a run, useful to avoid complete wipe in case of error
@@ -25,8 +23,6 @@ var (
 	EnablePackagesSync = utils.PodConfig.GetBool("packages_sync", true)
 	// Toggle repo sync in vmaas_sync
 	EnableReposSync = utils.PodConfig.GetBool("repos_sync", true)
-	// Toggle advisory cache refresh in vmaas_sync
-	EnableAdvisoryCacheRefresh = utils.PodConfig.GetBool("advisory_cache_refresh", true)
 	// Sync data in vnass_sync based on timestamp
 	EnableModifiedSinceSync = utils.PodConfig.GetBool("modified_since_sync", true)
 	// Page size for /errata vmass API call
@@ -42,6 +38,4 @@ var (
 	MaxChangedPackages = utils.PodConfig.GetInt("max_changed_packages", 30000)
 	// prune deleted_system table records older than threshold
 	DeletedSystemsThreshold = time.Hour * time.Duration(utils.PodConfig.GetInt("system_delete_hrs", 4))
-	// One-off: publish recalc for non-stale system_advisories hash remainder 0 (default off)
-	EnableSystemAdvisories0Recovery = utils.PodConfig.GetBool("system_advisories_0_recovery", false)
 )
