@@ -8,8 +8,6 @@ import (
 )
 
 var (
-	// Skip first N accounts in advisory refresh job, e.g. after failure
-	SkipNAccountsRefresh = utils.PodConfig.GetInt("skip_n_accounts_refresh", 0)
 	// Remove only LIMIT rows in a run, useful to avoid complete wipe in case of error
 	DeleteUnusedDataLimit = utils.PodConfig.GetInt("delete_unused_data_limit", 1000)
 	// Remove only LIMIT systems in a run, useful to avoid complete wipe in case of error

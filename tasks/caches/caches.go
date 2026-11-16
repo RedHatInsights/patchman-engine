@@ -6,10 +6,6 @@ import (
 	"app/tasks"
 )
 
-var (
-	skipNAccountsRefresh int
-)
-
 func configure() {
 	core.ConfigureApp()
 }
