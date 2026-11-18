@@ -19,8 +19,8 @@ var TemplateSystemOpts = ListOpts{
 	Fields:         templateSystemFields,
 	DefaultFilters: map[string]FilterData{},
 	DefaultSort:    "-display_name",
-	StableSort:     "si.id",
-	SearchFields:   []string{"si.display_name"},
+	StableSort:     systemInventoryID,
+	SearchFields:   []string{systemInventoryDisplayName},
 }
 
 type TemplateSystemsDBLookup struct {

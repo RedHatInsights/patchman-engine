@@ -33,7 +33,7 @@ func Syncapi(c *gin.Context) {
 	err := sync.SyncData(middlewares.DBWriter(c), nil, vmaasExportedTS)
 	if err != nil {
 		utils.LogError("err", err, "manual called syncing failed")
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		respondInternalError(c, err)
 		return
 	}
 	utils.LogInfo("manual syncing finished successfully")
@@ -54,7 +54,7 @@ func Recalc(c *gin.Context) {
 	err := sync.SendReevaluationMessages(c.Request.Context())
 	if err != nil {
 		utils.LogError("err", err, "manual re-calc msgs sending failed")
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		respondInternalError(c, err)
 		return
 	}
 	utils.LogInfo("manual re-calc messages sent successfully")
@@ -75,7 +75,7 @@ func CheckCaches(c *gin.Context) {
 	valid, err := database.CheckCachesValidRet()
 	if err != nil {
 		utils.LogError("error", err, "Could not check validity of caches")
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		respondInternalError(c, err)
 		return
 	}
 
@@ -102,7 +102,7 @@ func RefreshPackagesHandler(c *gin.Context) {
 	err := caches.RefreshPackagesCaches(nil)
 	if err != nil {
 		utils.LogError("error", err, "Could not refresh package caches")
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		respondInternalError(c, err)
 		return
 	}
 
@@ -134,7 +134,7 @@ func RefreshPackagesAccountHandler(c *gin.Context) {
 	err = caches.RefreshPackagesCaches(&accID)
 	if err != nil {
 		utils.LogError("error", err, "Could not refresh package caches")
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		respondInternalError(c, err)
 		return
 	}
 
@@ -171,7 +171,7 @@ func RepackHandler(c *gin.Context) {
 	err := repack.Repack(tableName, columns)
 	if err != nil {
 		utils.LogError("err", err, "manual repack call failed")
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		respondInternalError(c, err)
 		return
 	}
 
@@ -193,7 +193,7 @@ func CleanAADHandler(c *gin.Context) {
 	err := cleaning.CleanAdvisoryAccountData()
 	if err != nil {
 		utils.LogError("error", err, "Could not clean advisory account data")
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		respondInternalError(c, err)
 		return
 	}
 

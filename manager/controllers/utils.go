@@ -28,6 +28,8 @@ const InvalidFilter = "Invalid filter field: %v"
 const InvalidTagMsg = "Invalid tag '%s'. Use 'namespace/key=val format'"
 const InvalidNestedFilter = "Nested operators not yet implemented for standard filters"
 const FilterNotSupportedMsg = "filtering not supported on this endpoint"
+const systemInventoryID = "si.id"
+const systemInventoryDisplayName = "si.display_name"
 
 var tagRegex = regexp.MustCompile(`([^/=]+)/([^/=]+)(=([^/=]+))?`)
 
