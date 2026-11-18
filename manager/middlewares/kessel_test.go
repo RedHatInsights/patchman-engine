@@ -78,40 +78,37 @@ func TestSetupClient(t *testing.T) {
 	originalKesselAuthEnabled := utils.CoreCfg.KesselAuthEnabled
 	originalKesselAuthClientID := utils.CoreCfg.KesselAuthClientID
 	originalKesselAuthClientSecret := utils.CoreCfg.KesselAuthClientSecret
+	originalKesselAuthOIDCIssuer := utils.CoreCfg.KesselAuthOIDCIssuer
+	originalCredentials := credentials
+	ctx := t.Context()
 
 	// insecure TLS and no auth
 	utils.CoreCfg.KesselInsecure = true
 	utils.CoreCfg.KesselAuthEnabled = false
-	client, conn, err := setupClient()
-	defer conn.Close()
+	client, conn, err := setupClient(ctx)
 	if assert.NoError(t, err) {
+		defer conn.Close()
 		assert.NotNil(t, client)
 	}
 
 	// secure TLS and no auth
 	utils.CoreCfg.KesselInsecure = false
-	client, conn, err = setupClient()
-	defer conn.Close()
+	client, conn, err = setupClient(ctx)
 	if assert.NoError(t, err) {
+		defer conn.Close()
 		assert.NotNil(t, client)
 	}
 
-	// insecure TLS and auth
+	// insecure TLS and auth: credentials are never built
+	credentials = nil
 	utils.CoreCfg.KesselInsecure = true
 	utils.CoreCfg.KesselAuthEnabled = true
 	utils.CoreCfg.KesselAuthClientID = "test-client-id"
 	utils.CoreCfg.KesselAuthClientSecret = "test-client-secret"
-	client, conn, err = setupClient()
-	defer conn.Close()
+	utils.CoreCfg.KesselAuthOIDCIssuer = ""
+	client, conn, err = setupClient(ctx)
 	if assert.NoError(t, err) {
-		assert.NotNil(t, client)
-	}
-
-	// secure TLS and auth
-	utils.CoreCfg.KesselInsecure = false
-	client, conn, err = setupClient()
-	defer conn.Close()
-	if assert.NoError(t, err) {
+		defer conn.Close()
 		assert.NotNil(t, client)
 	}
 
@@ -120,6 +117,59 @@ func TestSetupClient(t *testing.T) {
 	utils.CoreCfg.KesselAuthEnabled = originalKesselAuthEnabled
 	utils.CoreCfg.KesselAuthClientID = originalKesselAuthClientID
 	utils.CoreCfg.KesselAuthClientSecret = originalKesselAuthClientSecret
+	utils.CoreCfg.KesselAuthOIDCIssuer = originalKesselAuthOIDCIssuer
+	credentials = originalCredentials
+}
+
+// newOIDCServer serves OIDC discovery and a client-credentials token endpoint.
+func newOIDCServer(t *testing.T, token string) *httptest.Server {
+	var srv *httptest.Server
+	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/.well-known/openid-configuration":
+			_, _ = w.Write([]byte(`{"issuer":"` + srv.URL + `","token_endpoint":"` + srv.URL + `/token"}`))
+		case "/token":
+			_, _ = w.Write([]byte(`{"access_token":"` + token + `","token_type":"Bearer","expires_in":3600}`))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	t.Cleanup(srv.Close)
+	return srv
+}
+
+// resetKesselAuth restores CoreCfg and the shared credentials after the test.
+func resetKesselAuth(t *testing.T) {
+	orig := utils.CoreCfg
+	credentialsMu.Lock()
+	origCreds := credentials
+	credentials = nil
+	credentialsMu.Unlock()
+	t.Cleanup(func() {
+		utils.CoreCfg = orig
+		credentials = origCreds
+	})
+}
+
+func TestSetupClientSecureAuth(t *testing.T) {
+	resetKesselAuth(t)
+	utils.CoreCfg.KesselInsecure = false
+	utils.CoreCfg.KesselAuthEnabled = true
+	utils.CoreCfg.KesselAuthClientID = "client-id"
+	utils.CoreCfg.KesselAuthClientSecret = "client-secret"
+	utils.CoreCfg.KesselAuthOIDCIssuer = ""
+
+	// no issuer: fails instead of building an unauthenticated client
+	_, _, err := setupClient(t.Context())
+	assert.Error(t, err)
+
+	utils.CoreCfg.KesselAuthOIDCIssuer = newOIDCServer(t, "sso-token").URL
+	client, conn, err := setupClient(t.Context())
+	if assert.NoError(t, err) {
+		defer conn.Close()
+		assert.NotNil(t, client)
+	}
 }
 
 func TestBuildPermission(t *testing.T) {

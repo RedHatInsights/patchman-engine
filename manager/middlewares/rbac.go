@@ -7,8 +7,11 @@ import (
 	"app/base/telemetry"
 	"app/base/utils"
 	"app/manager/config"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -40,23 +43,34 @@ var granularPerms = map[string]string{
 	"SystemDeleteHandler":          "patch:system:write",
 }
 
-// Make RBAC client on demand, with specified identity
-func makeClient(identity string) *api.Client {
-	httpOnce.Do(func() {
-		httpClient = telemetry.InstrumentHTTPClient(httpClient)
-	})
+// Make RBAC client on demand, with specified identity and optional gateway bearer token
+func makeClient(identity, bearer string) *api.Client {
 	debugRequest := log.IsLevelEnabled(log.TraceLevel)
 
-	client := api.Client{
+	headers := map[string]string{xRHIdentity: identity}
+	if bearer != "" {
+		headers["Authorization"] = "Bearer " + bearer
+	}
+	return &api.Client{
 		HTTPClient:     httpClient,
 		Debug:          debugRequest,
-		DefaultHeaders: map[string]string{xRHIdentity: identity},
+		DefaultHeaders: headers,
 	}
-	if rbacURL == "" {
-		rbacURL = utils.FailIfEmpty(utils.CoreCfg.RbacAddress, "RBAC_ADDRESS") + base.RBACApiPrefix +
-			"/access/?application=patch,inventory,content-sources"
+}
+
+func rbacTLSConfig() *tls.Config {
+	pem, err := os.ReadFile(utils.CoreCfg.RbacCACert)
+	if err != nil {
+		panic(fmt.Sprintf("failed to read RBAC CA certificate %s: %v", utils.CoreCfg.RbacCACert, err))
 	}
-	return &client
+	pool, err := x509.SystemCertPool()
+	if err != nil {
+		pool = x509.NewCertPool()
+	}
+	if !pool.AppendCertsFromPEM(pem) {
+		panic(fmt.Sprintf("no certificates found in RBAC CA certificate %s", utils.CoreCfg.RbacCACert))
+	}
+	return &tls.Config{RootCAs: pool, MinVersion: tls.VersionTLS12}
 }
 
 // for short lists like that is slice.Contains() faster than map lookup _, ok := map[key]
@@ -110,8 +124,8 @@ func checkPermissions(access *rbac.AccessPagination, handlerName, method string)
 	return false
 }
 
-func isAccessGranted(c *gin.Context) bool {
-	client := makeClient(c.GetHeader("x-rh-identity"))
+func isAccessGranted(c *gin.Context, bearer string) bool {
+	client := makeClient(c.GetHeader("x-rh-identity"), bearer)
 	access := rbac.AccessPagination{}
 	res, err := client.Request(&base.Context, http.MethodGet, rbacURL, nil, &access)
 	if res != nil && res.Body != nil {
@@ -193,8 +207,28 @@ func RBAC() gin.HandlerFunc {
 		return func(_ *gin.Context) {}
 	}
 
+	rbacURL = utils.FailIfEmpty(utils.CoreCfg.RbacAddress, "RBAC_ADDRESS (or Clowder v2 dependency rbac/service)") +
+		base.RBACApiPrefix + "/access/?application=patch,inventory,content-sources"
+	httpOnce.Do(func() {
+		if utils.CoreCfg.RbacCACert != "" {
+			httpClient = &http.Client{Transport: &http.Transport{TLSClientConfig: rbacTLSConfig()}}
+		}
+		httpClient = telemetry.InstrumentHTTPClient(httpClient)
+	})
+
 	return func(c *gin.Context) {
-		if isAccessGranted(c) {
+		var bearer string
+		if utils.CoreCfg.RbacAuthenticated {
+			var err error
+			// fail closed: never call an authenticated RBAC endpoint without the bearer
+			if bearer, err = getBearerToken(c); err != nil {
+				utils.LogError("err", err, "Failed to get token for authenticated RBAC endpoint")
+				serviceErrorCnt.WithLabelValues("rbac", strconv.Itoa(http.StatusBadGateway)).Inc()
+				c.AbortWithStatusJSON(http.StatusBadGateway, utils.ErrorResponse{Error: "Communication with RBAC failed"})
+				return
+			}
+		}
+		if isAccessGranted(c, bearer) {
 			return
 		}
 		c.AbortWithStatusJSON(http.StatusUnauthorized,
