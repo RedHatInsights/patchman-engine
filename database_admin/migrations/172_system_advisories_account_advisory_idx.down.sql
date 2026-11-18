@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS system_advisories_rh_account_id_advisory_id_idx;

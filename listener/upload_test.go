@@ -99,7 +99,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 		Basearch:       utils.PtrString("x86_64"),
 	}
 
-	sys1, err := updateSystemPlatform(database.TestDB(), accountID1, createTestInvHost(t), nil, &req, nil)
+	sys1, _, err := updateSystemPlatform(database.TestDB(), accountID1, createTestInvHost(t), nil, &req, nil)
 	assert.Nil(t, err)
 
 	reporterID1 := 1
@@ -109,7 +109,7 @@ func TestUpdateSystemPlatform(t *testing.T) {
 	host2 := createTestInvHost(t)
 	host2.Reporter = "yupana"
 	req.PackageList = []string{"package0", "package1"}
-	sys2, err := updateSystemPlatform(database.TestDB(), accountID2, host2, nil, &req, nil)
+	sys2, _, err := updateSystemPlatform(database.TestDB(), accountID2, host2, nil, &req, nil)
 	assert.Nil(t, err)
 
 	reporterID2 := 3
@@ -152,31 +152,31 @@ func TestUpdateSystemPlatformIndependentIdentityIDs(t *testing.T) {
 	ev.Host.SystemProfile.OwnerID = &ownerID1
 	ev.Host.SubscriptionManagerID = &ownerID1
 
-	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
+	_, _, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
 	ownerID2 := uuid.MustParse("22222222-2222-2222-2222-222222222222")
 	ev.Host.SystemProfile.OwnerID = &ownerID2
 
-	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
+	_, _, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
 	subscriptionManagerID := uuid.MustParse("33333333-3333-3333-3333-333333333333")
 	ev.Host.SubscriptionManagerID = &subscriptionManagerID
-	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
+	_, _, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
 	ev.Host.SystemProfile.OwnerID = nil
-	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
+	_, _, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
 	ev.Host.SystemProfile.OwnerID = &ownerID2
 	ev.Host.SubscriptionManagerID = nil
-	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
+	_, _, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
@@ -222,7 +222,7 @@ func TestUpdateSystemPlatformRefreshesInventoryProfileOnConflict(t *testing.T) {
 	}
 	ev := createTestUploadEvent(testOrgID, testInventoryID, "puptoo", true, false, "created")
 	ev.Host.StaleTimestamp = &correctTime
-	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
+	_, _, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
@@ -233,7 +233,7 @@ func TestUpdateSystemPlatformRefreshesInventoryProfileOnConflict(t *testing.T) {
 	ev.Host.SystemProfile.Workloads.Ansible.ControllerVersion = "2.13.0"
 	ev.Host.SystemProfile.Workloads.Mssql.Version = "16.0"
 
-	_, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
+	_, _, err = updateSystemPlatform(database.TestDB(), acc, &ev.Host, nil, &reqProfile, nil)
 	require.NoError(t, err)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &ev.Host)
 
@@ -459,7 +459,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 
 	req := vmaas.UpdatesV3Request{}
 
-	_, err = updateSystemPlatform(database.TestDB(), accountID1, &hostEvent.Host, yumUpdates, &req, nil)
+	_, _, err = updateSystemPlatform(database.TestDB(), accountID1, &hostEvent.Host, yumUpdates, &req, nil)
 	assert.Nil(t, err)
 
 	reporterID1 := 1
@@ -470,7 +470,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 
 	// check that yumUpdates has been updated (keep the same Host so profile columns are not wiped)
 	yumUpdates.RawParsed = []byte("{}")
-	_, err = updateSystemPlatform(database.TestDB(), accountID1, &hostEvent.Host, yumUpdates, &req, nil)
+	_, _, err = updateSystemPlatform(database.TestDB(), accountID1, &hostEvent.Host, yumUpdates, &req, nil)
 	assert.Nil(t, err)
 	assertYumUpdatesInDB(t, testInventoryID, yumUpdates)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &hostEvent.Host)
@@ -481,7 +481,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 	hostEvent.Host.SystemProfile.Workloads.Sap.Sids = []string{"sid-yum-test"}
 	hostEvent.Host.SystemProfile.Workloads.Ansible.ControllerVersion = "2.14.0"
 	hostEvent.Host.SystemProfile.Workloads.Mssql.Version = "17.0"
-	_, err = updateSystemPlatform(database.TestDB(), accountID1, &hostEvent.Host, yumUpdates, &req, nil)
+	_, _, err = updateSystemPlatform(database.TestDB(), accountID1, &hostEvent.Host, yumUpdates, &req, nil)
 	assert.Nil(t, err)
 	assertYumUpdatesInDB(t, testInventoryID, yumUpdates)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &hostEvent.Host)
@@ -492,7 +492,7 @@ func TestUpdateSystemPlatformYumUpdates(t *testing.T) {
 	hostEvent.Host.SystemProfile.Workloads.Sap.Sids = nil
 	hostEvent.Host.SystemProfile.Workloads.Ansible.ControllerVersion = ""
 	hostEvent.Host.SystemProfile.Workloads.Mssql.Version = ""
-	_, err = updateSystemPlatform(database.TestDB(), accountID1, &hostEvent.Host, yumUpdates, &req, nil)
+	_, _, err = updateSystemPlatform(database.TestDB(), accountID1, &hostEvent.Host, yumUpdates, &req, nil)
 	assert.Nil(t, err)
 	assertYumUpdatesInDB(t, testInventoryID, yumUpdates)
 	assertSystemInventoryProfileMatchesHost(t, testInventoryID, &hostEvent.Host)
@@ -795,4 +795,70 @@ func TestHostTemplateCandlepinFailure(t *testing.T) {
 			"12345678-90ab-cdef-1234-567890abcdef/content/dist/rhel9/$releasever/x86_64/baseos/os")
 	templateID := hostTemplate(database.TestDB(), accountID, host)
 	assert.Nil(t, templateID)
+}
+
+func TestUpdateSystemPlatformEmitsBothWorkspaces(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	core.SetupTestEnvironment()
+
+	invID := uuid.MustParse("99c0ffee-0000-0000-0000-0000000000aa")
+	createTestSystemInDB(t, invID, 1, "workspace-move")
+	t.Cleanup(func() { deleteTestSystemInDB(t, invID) })
+
+	var inv models.SystemInventory
+	require.NoError(t, database.TestDB().Where("inventory_id = ?", invID).First(&inv).Error)
+	oldWS := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	newWS := uuid.MustParse("00000000-0000-0000-0000-000000000002")
+	require.NoError(t, database.TestDB().Model(&inv).Updates(map[string]any{
+		"workspace_id":   oldWS,
+		"workspace_name": "old",
+	}).Error)
+	require.NoError(t, database.TestDB().Create(&[]models.SystemAdvisories{
+		{RhAccountID: 1, SystemID: inv.ID, AdvisoryID: 2, StatusID: 1},
+		{RhAccountID: 1, SystemID: inv.ID, AdvisoryID: 1, StatusID: 0},
+	}).Error)
+
+	host := createTestInvHost(t)
+	host.ID = invID
+	host.Groups = []inventory.Group{{ID: newWS.String(), Name: "new"}}
+	req := vmaas.UpdatesV3Request{}
+
+	_, events, err := updateSystemPlatform(database.TestDB(), 1, host, nil, &req, nil)
+	require.NoError(t, err)
+	require.Len(t, events, 2)
+	assert.Equal(t, 1, events[0].RhAccountID)
+	assert.Equal(t, oldWS, events[0].WorkspaceID)
+	assert.Equal(t, []int64{1, 2}, events[0].AdvisoryIDs)
+	assert.Equal(t, newWS, events[1].WorkspaceID)
+	assert.Equal(t, []int64{1, 2}, events[1].AdvisoryIDs)
+	assert.False(t, events[0].ProducedAt.Time().IsZero())
+
+	_, events, err = updateSystemPlatform(database.TestDB(), 1, host, nil, &req, nil)
+	require.NoError(t, err)
+	assert.Empty(t, events)
+}
+
+func TestPublishWorkspaceAdvisoryUpdates(t *testing.T) {
+	writer := &mqueue.MockKafkaWriter{}
+	advisoryUpdateWriter = writer
+	t.Cleanup(func() { advisoryUpdateWriter = nil })
+
+	oldWS := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	newWS := uuid.MustParse("00000000-0000-0000-0000-000000000002")
+	events := mqueue.AdvisoryUpdateEvents{
+		{RhAccountID: 1, WorkspaceID: oldWS, AdvisoryIDs: []int64{1, 2}},
+		{RhAccountID: 1, WorkspaceID: newWS, AdvisoryIDs: []int64{1, 2}},
+	}
+	require.NoError(t, publishWorkspaceAdvisoryUpdates(events))
+	require.Len(t, writer.Messages, 2)
+	assert.Equal(t, []byte("1"), writer.Messages[0].Key)
+	assert.Equal(t, []byte("1"), writer.Messages[1].Key)
+
+	var first, second mqueue.AdvisoryUpdateEvent
+	require.NoError(t, sonic.Unmarshal(writer.Messages[0].Value, &first))
+	require.NoError(t, sonic.Unmarshal(writer.Messages[1].Value, &second))
+	assert.Equal(t, oldWS, first.WorkspaceID)
+	assert.Equal(t, newWS, second.WorkspaceID)
+	assert.Equal(t, []int64{1, 2}, first.AdvisoryIDs)
+	assert.Equal(t, []int64{1, 2}, second.AdvisoryIDs)
 }

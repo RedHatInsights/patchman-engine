@@ -13,7 +13,7 @@ import (
 
 var (
 	testWorkspaceID = uuid.New()
-	testNow         = types.Rfc3339Timestamp(time.Now())
+	testNow         = types.Rfc3339TimestampWithZ(time.Now())
 )
 
 func TestAdvisoryUpdateEventMarshal(t *testing.T) {
@@ -59,6 +59,8 @@ func TestAdvisoryUpdateEventsWriteEvents(t *testing.T) {
 
 	mockWriter := writer.(*MockKafkaWriter)
 	assert.Equal(t, 2, len(mockWriter.Messages))
+	assert.Equal(t, []byte("1"), mockWriter.Messages[0].Key)
+	assert.Equal(t, []byte("2"), mockWriter.Messages[1].Key)
 
 	var firstEvent AdvisoryUpdateEvent
 	err = sonic.Unmarshal(mockWriter.Messages[0].Value, &firstEvent)

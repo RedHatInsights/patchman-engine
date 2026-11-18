@@ -48,7 +48,7 @@ func TestCreateAdvisoryUpdateEvent(t *testing.T) {
 		RhAccountID: system.Inventory.RhAccountID,
 		WorkspaceID: system.Inventory.WorkspaceID,
 		AdvisoryIDs: changedAdvisoryIDs,
-		ProducedAt:  types.Rfc3339Timestamp(time.Now()),
+		ProducedAt:  types.Rfc3339TimestampWithZ(time.Now()),
 	}
 	assert.Equal(t, rhAccountID, event.RhAccountID)
 	assert.Equal(t, wsID, event.WorkspaceID)
@@ -82,6 +82,7 @@ func TestPublishAdvisoryUpdates(t *testing.T) {
 	err := publishAdvisoryUpdates(system, advisories)
 	assert.NoError(t, err)
 	assert.Len(t, mockWriter.Messages, 1)
+	assert.Equal(t, []byte("3"), mockWriter.Messages[0].Key)
 
 	var event mqueue.AdvisoryUpdateEvent
 	assert.NoError(t, sonic.Unmarshal(mockWriter.Messages[0].Value, &event))
@@ -137,15 +138,15 @@ func TestAdvisoryUpdateKafkaRoundTrip(t *testing.T) {
 		t.Skip("ADVISORY_UPDATE_TOPIC not configured")
 	}
 
-	advisoryUpdatePublisher = mqueue.NewKafkaWriterFromEnv(topic)
+	advisoryUpdatePublisher = mqueue.NewKeyedKafkaWriterFromEnv(topic)
 	reader := mqueue.NewKafkaReaderFromEnv(topic)
 	defer func() {
 		assert.NoError(t, reader.Close(), "failed to close Kafka reader")
 	}()
 
 	var received mqueue.KafkaMessage
-	go reader.HandleMessages(t.Context(), func(_ context.Context, m mqueue.KafkaMessage) error {
-		received = m
+	go reader.HandleMessages(t.Context(), 1, 0, func(_ context.Context, m []mqueue.KafkaMessage) error {
+		received = m[0]
 		return nil
 	})
 
@@ -176,6 +177,7 @@ func TestAdvisoryUpdateKafkaRoundTrip(t *testing.T) {
 	})
 	var event mqueue.AdvisoryUpdateEvent
 	assert.NoError(t, sonic.Unmarshal(received.Value, &event), "message should be valid AdvisoryUpdateEvent JSON")
+	assert.Equal(t, []byte("3"), received.Key)
 	assert.Equal(t, rhAccountID, event.RhAccountID)
 	assert.NotEqual(t, uuid.Nil, event.WorkspaceID)
 	assert.NotEmpty(t, event.AdvisoryIDs)

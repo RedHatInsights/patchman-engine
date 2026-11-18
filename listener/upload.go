@@ -317,13 +317,14 @@ func hostTemplate(tx *gorm.DB, accountID int, host *Host) *int64 {
 // Stores or updates base system profile, returning inventory + patch aggregate.
 // templateID must be resolved before SELECT ... FOR UPDATE on system_inventory.
 func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
-	yumUpdates *YumUpdates, updatesReq *vmaas.UpdatesV3Request, templateID *int64) (*models.SystemPlatformV2, error) {
+	yumUpdates *YumUpdates, updatesReq *vmaas.UpdatesV3Request, templateID *int64) (*models.SystemPlatformV2,
+	mqueue.AdvisoryUpdateEvents, error) {
 	defer utils.ObserveSecondsSince(time.Now(), messagePartDuration.WithLabelValues("update-system-platform"))
 	// NOTE: if we add a map to vmaas.UpdatesV3Request in the future, we need to use
 	//  	 `encoder.Encode(updatesReq, encoder.SortMapKeys)` to compute the hash correctly
 	updatesReqJSON, err := sonic.Marshal(updatesReq)
 	if err != nil {
-		return nil, errors.Wrap(err, "Serializing vmaas request")
+		return nil, nil, errors.Wrap(err, "Serializing vmaas request")
 	}
 	inventoryID := host.ID
 	hash := sha256.Sum256(updatesReqJSON)
@@ -374,7 +375,7 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 	updatesReqJSONString := string(updatesReqJSON)
 	workspaceID, workspaceName, err := hostWorkspace(host)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	systemPlatform := &models.SystemPlatformV2{
 		Inventory: models.SystemInventory{
@@ -423,34 +424,40 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 		},
 	}
 
-	type OldChecksums struct {
-		JSONChecksum string `gorm:"column:json_checksum"`
-		YumChecksum  string `gorm:"column:yum_checksum"`
+	type priorInventory struct {
+		ID           int64
+		JSONChecksum string
+		YumChecksum  string
+		WorkspaceID  uuid.UUID
 	}
-	var oldChecksums OldChecksums
-	// Lock the system_inventory row and read prior json_checksum / yum_checksum for incremental updates.
-	tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+	var prior priorInventory
+	// Lock the system_inventory row and read prior checksums and workspace.
+	err = tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 		Model(&models.SystemInventory{}).
 		Where("rh_account_id = ? AND inventory_id = ?", accountID, inventoryID).
-		Select("json_checksum, yum_checksum").
-		First(&oldChecksums)
+		Select("id, json_checksum, yum_checksum, workspace_id").
+		First(&prior).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil, base.WrapFatalDBError(err, "locking system_inventory")
+	}
+	rowExists := err == nil
 
 	shouldUpdateRepos := false
 	var addedRepos, addedSysRepos, deletedSysRepos int64
 
 	// Skip updating vmaas_json if the checksum haven't changed. Should reduce TOAST trashing
-	if oldChecksums.JSONChecksum != jsonChecksum {
+	if prior.JSONChecksum != jsonChecksum {
 		colsToUpdate = append(colsToUpdate, "vmaas_json", "json_checksum", "reporter_id")
 		shouldUpdateRepos = true
 	}
 
 	// Skip updating yum_updates if the checksum haven't changed.
-	if oldChecksums.YumChecksum != yumChecksum {
+	if prior.YumChecksum != yumChecksum {
 		colsToUpdate = append(colsToUpdate, "yum_updates", "yum_checksum")
 	}
 
 	if err := storeOrUpdateSysPlatform(tx, systemPlatform, colsToUpdate); err != nil {
-		return nil, errors.Wrap(err, "Unable to save or update system in database")
+		return nil, nil, errors.Wrap(err, "Unable to save or update system in database")
 	}
 
 	if shouldUpdateRepos {
@@ -460,7 +467,7 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 		if err != nil {
 			utils.LogError("repository_list", updatesReq.RepositoryList, "inventoryID", inventoryID,
 				"repos failed to insert")
-			return nil, errors.Wrap(err, "unable to update system repos")
+			return nil, nil, errors.Wrap(err, "unable to update system repos")
 		}
 	}
 
@@ -468,7 +475,44 @@ func updateSystemPlatform(tx *gorm.DB, accountID int, host *Host,
 		len(updatesReq.RepositoryList), "modules", len(updatesReq.GetModulesList()),
 		"addedRepos", addedRepos, "addedSysRepos", addedSysRepos, "deletedSysRepos", deletedSysRepos,
 		"System created or updated successfully")
-	return systemPlatform, nil
+	events, err := workspaceMoveEvents(tx, accountID, prior.ID, prior.WorkspaceID, workspaceID, rowExists)
+	if err != nil {
+		return nil, nil, err
+	}
+	return systemPlatform, events, nil
+}
+
+func workspaceMoveEvents(tx *gorm.DB, accountID int, systemID int64, oldWorkspace, newWorkspace uuid.UUID,
+	rowExists bool) (mqueue.AdvisoryUpdateEvents, error) {
+	if !rowExists || oldWorkspace == newWorkspace {
+		return nil, nil
+	}
+	var advisoryIDs []int64
+	err := tx.Model(&models.SystemAdvisories{}).
+		Where("rh_account_id = ? AND system_id = ?", accountID, systemID).
+		Order("advisory_id").
+		Pluck("advisory_id", &advisoryIDs).Error
+	if err != nil {
+		return nil, base.WrapFatalDBError(err, "loading system advisories for workspace move")
+	}
+	if len(advisoryIDs) == 0 {
+		return nil, nil
+	}
+	now := types.Rfc3339TimestampWithZ(time.Now())
+	return mqueue.AdvisoryUpdateEvents{
+		{
+			RhAccountID: accountID,
+			WorkspaceID: oldWorkspace,
+			AdvisoryIDs: advisoryIDs,
+			ProducedAt:  now,
+		},
+		{
+			RhAccountID: accountID,
+			WorkspaceID: newWorkspace,
+			AdvisoryIDs: advisoryIDs,
+			ProducedAt:  now,
+		},
+	}, nil
 }
 
 // nolint: funlen
@@ -818,7 +862,7 @@ func processUpload(ctx context.Context, host *Host, yumUpdates *YumUpdates) (*mo
 	if skip, err := skipRecentlyDeleted(tx, host.ID); err != nil || skip {
 		return nil, err
 	}
-	sys, err := updateSystemPlatform(tx, accountID, host, yumUpdates, &updatesReq, templateID)
+	sys, events, err := updateSystemPlatform(tx, accountID, host, yumUpdates, &updatesReq, templateID)
 	if err != nil {
 		return nil, errors.Wrap(err, "saving system into the database")
 	}
@@ -826,7 +870,20 @@ func processUpload(ctx context.Context, host *Host, yumUpdates *YumUpdates) (*mo
 	if err != nil {
 		return nil, base.WrapFatalDBError(err, "committing changes")
 	}
+	if err := publishWorkspaceAdvisoryUpdates(events); err != nil {
+		utils.LogError("inventoryID", host.ID, "err", err, "failed to publish workspace advisory updates")
+	}
 	return sys, nil
+}
+
+func publishWorkspaceAdvisoryUpdates(events mqueue.AdvisoryUpdateEvents) error {
+	if len(events) == 0 || advisoryUpdateWriter == nil {
+		return nil
+	}
+	if err := mqueue.SendMessages(base.Context, advisoryUpdateWriter, &events); err != nil {
+		return errors.Wrap(err, "writing workspace advisory updates")
+	}
+	return nil
 }
 
 func hostWorkspace(host *Host) (uuid.UUID, *string, error) {

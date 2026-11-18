@@ -10,6 +10,7 @@ import (
 	"io"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/lestrrat-go/backoff/v2"
 	"github.com/segmentio/kafka-go"
@@ -19,7 +20,7 @@ const errContextCanceled = "context canceled"
 
 // By wrapping raw value we can add new methods & ensure methods of wrapped type are callable
 type Reader interface {
-	HandleMessages(ctx context.Context, handler MessageHandler)
+	HandleMessages(ctx context.Context, n int, wait time.Duration, handler BatchHandler)
 	io.Closer
 }
 
@@ -56,8 +57,22 @@ type KafkaMessage struct {
 
 type MessageHandler func(ctx context.Context, message KafkaMessage) error
 
-func MakeRetryingHandler(handler MessageHandler) MessageHandler {
-	return func(ctx context.Context, message KafkaMessage) error {
+type BatchHandler func(ctx context.Context, messages []KafkaMessage) error
+
+// AsBatchHandler calls handler for every message and returns the first error.
+func AsBatchHandler(handler MessageHandler) BatchHandler {
+	return func(ctx context.Context, msgs []KafkaMessage) error {
+		for _, m := range msgs {
+			if err := handler(ctx, m); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
+func MakeRetryingHandler(handler BatchHandler) BatchHandler {
+	return func(ctx context.Context, messages []KafkaMessage) error {
 		var err error
 		var attempt int
 
@@ -65,7 +80,7 @@ func MakeRetryingHandler(handler MessageHandler) MessageHandler {
 		backoffState := policy.Start(backoffCtx)
 		defer cancel()
 		for backoff.Continue(backoffState) {
-			if err = handler(ctx, message); err == nil || !errors.Is(err, base.ErrFatal) {
+			if err = handler(ctx, messages); err == nil || !errors.Is(err, base.ErrFatal) {
 				return nil
 			}
 			utils.LogError("err", err, "attempt", attempt, "Try failed")
@@ -82,16 +97,19 @@ type CreateReader func(topic string) Reader
 type CreateWriter func(topic string) Writer
 
 func runReader(ctx context.Context, wg *sync.WaitGroup, topic string, createReader CreateReader,
-	msgHandler MessageHandler) {
+	batchSize int, batchWait time.Duration, handler BatchHandler) {
 	defer wg.Done()
 	defer utils.LogPanics(true)
 	reader := createReader(topic)
 	defer reader.Close()
-	reader.HandleMessages(ctx, msgHandler)
+	reader.HandleMessages(ctx, batchSize, batchWait, handler)
 }
 
 func SpawnReader(ctx context.Context, wg *sync.WaitGroup, topic string, createReader CreateReader,
-	msgHandler MessageHandler) {
+	batchSize int, batchWait time.Duration, handler BatchHandler) {
+	if handler == nil {
+		panic("reader loop has no handler")
+	}
 	wg.Add(1)
-	go runReader(ctx, wg, topic, createReader, msgHandler)
+	go runReader(ctx, wg, topic, createReader, batchSize, batchWait, handler)
 }

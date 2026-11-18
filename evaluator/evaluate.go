@@ -823,11 +823,11 @@ func run(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 
 	loadCache()
 
-	var handler = mqueue.MakeRetryingHandler(evaluateHandler)
+	var handler = mqueue.MakeRetryingHandler(mqueue.AsBatchHandler(evaluateHandler))
 	// We create multiple consumers, and hope that the partition rebalancing
 	// algorithm assigns each consumer a single partition
 	for i := 0; i < consumerCount; i++ {
-		mqueue.SpawnReader(base.Context, wg, evalTopic, readerBuilder, handler)
+		mqueue.SpawnReader(base.Context, wg, evalTopic, readerBuilder, 1, 0, handler)
 	}
 }
 

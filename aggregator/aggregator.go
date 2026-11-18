@@ -13,20 +13,22 @@ import (
 
 var (
 	advisoryUpdateTopic string
+	enableBypass        bool
 	enableNotifications bool
 	consumerCount       int
 )
 
 func readPodConfig() {
 	consumerCount = utils.PodConfig.GetInt("consumer_count", 1)
+	// Toggle bypassing of message processing (in case something goes wrong and we need to clear the queue)
+	enableBypass = utils.PodConfig.GetBool("bypass", false)
 	enableNotifications = utils.PodConfig.GetBool("enable_notifications", false)
 	batchSize = utils.PodConfig.GetInt("advisory_batch_size", 4000)
-	flushTimeout = time.Duration(utils.PodConfig.GetInt("advisory_flush_timeout_ms", 500)) * time.Millisecond
+	flushTimeout = time.Duration(utils.PodConfig.GetInt("advisory_flush_timeout_ms", 5000)) * time.Millisecond
 }
 
 func configure() {
 	advisoryUpdateTopic = utils.FailIfEmpty(utils.CoreCfg.AdvisoryUpdateTopic, "ADVISORY_UPDATE_TOPIC")
-	initBuffer()
 	configureNotifications()
 }
 
@@ -45,7 +47,7 @@ func runServer() {
 func subscribeToAdvisoryUpdates(wg *sync.WaitGroup, readerBuilder mqueue.CreateReader) {
 	handler := mqueue.MakeRetryingHandler(advisoryUpdateHandler)
 	for i := 0; i < consumerCount; i++ {
-		mqueue.SpawnReader(base.Context, wg, advisoryUpdateTopic, readerBuilder, handler)
+		mqueue.SpawnReader(base.Context, wg, advisoryUpdateTopic, readerBuilder, batchSize, flushTimeout, handler)
 		utils.LogDebug("spawned advisory update reader", i)
 	}
 	utils.LogInfo("connected to kafka topics")
