@@ -9,7 +9,7 @@ require (
 	github.com/bytedance/sonic v1.15.5
 	github.com/getkin/kin-openapi v0.149.0
 	github.com/getsentry/sentry-go v0.50.0
-	github.com/gin-contrib/timeout v1.2.4
+	github.com/gin-contrib/timeout v1.2.5
 	github.com/gin-gonic/gin v1.12.0
 	github.com/gocarina/gocsv v0.0.0-20261101205459-d0dd027dcbfa
 	github.com/golang-migrate/migrate/v4 v4.20.1
@@ -132,7 +132,7 @@ require (
 	golang.org/x/arch v0.29.0 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/mod v0.42.0 // indirect
-	golang.org/x/net v0.61.0 // indirect
+	golang.org/x/net v0.62.0 // indirect
 	golang.org/x/oauth2 v0.37.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
