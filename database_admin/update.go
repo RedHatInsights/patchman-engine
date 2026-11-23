@@ -1,6 +1,7 @@
 package database_admin
 
 import (
+	appdb "app/base/database"
 	"app/base/utils"
 	"database/sql"
 	"errors"
@@ -10,6 +11,8 @@ import (
 	"time"
 
 	"github.com/golang-migrate/migrate/v4/database"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 )
@@ -193,17 +196,40 @@ func repairSystemAdvisories0Partition(db *sql.DB) {
 	unblockUsers(db)
 }
 
-func dbConn() (database.Driver, *sql.DB) {
-	sslModeCert := utils.CoreCfg.DBSslMode
-	if utils.CoreCfg.DBSslRootCert != "" {
-		sslModeCert += "&sslrootcert=" + utils.CoreCfg.DBSslRootCert
+func corePostgreSQLConfig(user, password string) appdb.PostgreSQLConfig {
+	return appdb.PostgreSQLConfig{
+		Host:        utils.CoreCfg.DBHost,
+		Port:        utils.CoreCfg.DBPort,
+		User:        user,
+		Database:    utils.CoreCfg.DBName,
+		Passwd:      password,
+		SSLMode:     utils.CoreCfg.DBSslMode,
+		SSLRootCert: utils.CoreCfg.DBSslRootCert,
 	}
-	databaseURL := fmt.Sprintf("postgres://%s/%s?sslmode=%s", utils.CoreCfg.DBHost, utils.CoreCfg.DBName, sslModeCert)
-	databaseURL += "&tcp_keepalives_idle=60&tcp_keepalives_interval=30&tcp_keepalives_count=5"
-	setPgEnv()
+}
 
-	conn, db, err := NewConn(databaseURL)
+func coreConnConfig(user, password string) (*pgx.ConnConfig, error) {
+	cfg := corePostgreSQLConfig(user, password)
+	return appdb.ConnConfig(&cfg)
+}
+
+func dbConn() (database.Driver, *sql.DB) {
+	setPgEnv()
+	cfg, err := coreConnConfig(utils.CoreCfg.DBAdminUser, utils.CoreCfg.DBAdminPassword)
 	if err != nil {
+		panic(err)
+	}
+	cfg.RuntimeParams["tcp_keepalives_idle"] = "60"
+	cfg.RuntimeParams["tcp_keepalives_interval"] = "30"
+	cfg.RuntimeParams["tcp_keepalives_count"] = "5"
+	cfg.OnNotice = func(_ *pgconn.PgConn, notice *pgconn.Notice) {
+		utils.LogInfo("Notice: " + notice.Severity + ": " + notice.Message)
+	}
+
+	db := appdb.OpenDB(cfg)
+	conn, db, err := NewConn(db)
+	if err != nil {
+		_ = db.Close()
 		panic(err)
 	}
 	return conn, db

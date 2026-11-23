@@ -4,7 +4,6 @@ import (
 	"app/base/database"
 	"app/base/utils"
 	"database/sql"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,17 +12,9 @@ import (
 
 func openAppDB(t *testing.T, user, password string) *sql.DB {
 	t.Helper()
-	sslModeCert := utils.CoreCfg.DBSslMode
-	if utils.CoreCfg.DBSslRootCert != "" {
-		sslModeCert += "&sslrootcert=" + utils.CoreCfg.DBSslRootCert
-	}
-	url := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
-		user, password,
-		utils.CoreCfg.DBHost, utils.CoreCfg.DBPort,
-		utils.CoreCfg.DBName, sslModeCert,
-	)
-	db, err := sql.Open("postgres", url)
+	cfg, err := coreConnConfig(user, password)
 	require.NoError(t, err)
+	db := database.OpenDB(cfg)
 	require.NoError(t, db.Ping())
 	t.Cleanup(func() { _ = db.Close() })
 	return db
