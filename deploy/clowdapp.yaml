@@ -93,8 +93,6 @@ objects:
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_MANAGER}'}
         - {name: DB_USER, value: manager}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                       key: manager-database-password}}}
         - {name: DB_HOST_READ_REPLICA, valueFrom: {secretKeyRef: {key: db.host,
                                                                   name: patchman-db-readonly}}}
         - {name: DB_PORT_READ_REPLICA, valueFrom: {secretKeyRef: {key: db.port,
@@ -180,8 +178,6 @@ objects:
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_LISTENER}'}
         - {name: DB_USER, value: listener}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                        key: listener-database-password}}}
         - {name: CANDLEPIN_ADDRESS, value: '${CANDLEPIN_ADDRESS}'}
         - {name: CANDLEPIN_CERT, valueFrom: {secretKeyRef: {name: candlepin, key: cert}}}
         - {name: CANDLEPIN_KEY, valueFrom: {secretKeyRef: {name: candlepin, key: key}}}
@@ -253,8 +249,6 @@ objects:
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_EVALUATOR_UPLOAD}'}
         - {name: DB_USER, value: evaluator}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                       key: evaluator-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
@@ -323,8 +317,6 @@ objects:
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_EVALUATOR_RECALC}'}
         - {name: DB_USER, value: evaluator}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                       key: evaluator-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
@@ -393,8 +385,6 @@ objects:
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_EVALUATOR_USER_EVALUATION}'}
         - {name: DB_USER, value: evaluator}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                       key: evaluator-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
@@ -463,8 +453,6 @@ objects:
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_AGGREGATOR}'}
         - {name: DB_USER, value: evaluator}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                       key: evaluator-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_READER_MAX_ATTEMPTS, value: '${KAFKA_READER_MAX_ATTEMPTS}'}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
@@ -517,14 +505,6 @@ objects:
         - {name: GIN_MODE, value: '${GIN_MODE}'}
         - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: SHOW_CLOWDER_VARS, value: ''}
-        - {name: MANAGER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                                  key: manager-database-password}}}
-        - {name: LISTENER_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                                  key: listener-database-password}}}
-        - {name: EVALUATOR_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                                    key: evaluator-database-password}}}
-        - {name: VMAAS_SYNC_PASSWORD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                                    key: vmaas-sync-database-password}}}
         - {name: POD_CONFIG, value: '${DATABASE_ADMIN_CONFIG}'}
         - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
         - {name: OTEL_SERVICE_NAME, value: 'patchman-db-migration'}
@@ -576,8 +556,6 @@ objects:
         - {name: SHOW_CLOWDER_VARS, value: ''}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                       key: vmaas-sync-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}
@@ -636,8 +614,6 @@ objects:
         - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                      key: vmaas-sync-database-password}}}
         - {name: PROMETHEUS_PUSHGATEWAY,value: '${PROMETHEUS_PUSHGATEWAY}'}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
         - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
@@ -686,8 +662,6 @@ objects:
         - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                      key: vmaas-sync-database-password}}}
         - {name: DB_HOST_READ_REPLICA, valueFrom: {secretKeyRef: {key: db.host,
                                                                   name: patchman-db-readonly}}}
         - {name: DB_PORT_READ_REPLICA, valueFrom: {secretKeyRef: {key: db.port,
@@ -742,8 +716,6 @@ objects:
         - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                      key: vmaas-sync-database-password}}}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
         - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
         - {name: OTEL_SERVICE_NAME, value: 'patchman-advisory-refresh'}
@@ -791,8 +763,6 @@ objects:
         - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                      key: vmaas-sync-database-password}}}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
         - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
         - {name: OTEL_SERVICE_NAME, value: 'patchman-delete-unused'}
@@ -886,8 +856,6 @@ objects:
         - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                      key: vmaas-sync-database-password}}}
         - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
         - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
         - {name: OTEL_SERVICE_NAME, value: 'patchman-clean-advisory-account-data'}
@@ -935,8 +903,6 @@ objects:
           - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
           - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
           - {name: DB_USER, value: vmaas_sync}
-          - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                         key: vmaas-sync-database-password}}}
           - {name: POD_CONFIG, value: '${JOBS_CONFIG}'}
           - {name: IMAGE_TAG, value: '${IMAGE_TAG}'}
           - {name: OTEL_SERVICE_NAME, value: 'patchman-account-advisory-backfill'}
@@ -984,8 +950,6 @@ objects:
           - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
           - {name: DB_DEBUG, value: 'false'}
           - {name: DB_USER, value: vmaas_sync}
-          - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                         key: vmaas-sync-database-password}}}
           - {name: SQL_JOB_FILE, value: '${SQL_JOB_FILE}'}
           - {name: POD_CONFIG, value: '${SQL_JOB_CONFIG}'}
 
@@ -1014,8 +978,6 @@ objects:
         - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
         - {name: DB_DEBUG, value: '${DB_DEBUG_JOBS}'}
         - {name: DB_USER, value: vmaas_sync}
-        - {name: DB_PASSWD, valueFrom: {secretKeyRef: {name: patchman-engine-database-passwords,
-                                                      key: vmaas-sync-database-password}}}
         - {name: KAFKA_GROUP, value: patchman}
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVAL_TOPIC, value: patchman.evaluator.recalc}

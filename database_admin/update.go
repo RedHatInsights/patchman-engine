@@ -148,13 +148,13 @@ func setPgEnv() {
 
 func blockUsers(db *sql.DB) {
 	for _, user := range lockUsers {
-		execOrPanic(db, "ALTER USER "+user+" NOLOGIN")
+		execOrPanic(db, fmt.Sprintf("ALTER USER %s NOLOGIN", pq.QuoteIdentifier(user)))
 	}
 }
 
 func unblockUsers(db *sql.DB) {
 	for _, user := range lockUsers {
-		execOrPanic(db, "ALTER USER "+user+" LOGIN")
+		execOrPanic(db, fmt.Sprintf("ALTER USER %s LOGIN", pq.QuoteIdentifier(user)))
 	}
 }
 
@@ -209,6 +209,11 @@ func dbConn() (database.Driver, *sql.DB) {
 	return conn, db
 }
 
+func setUserPassword(db *sql.DB, user, password string) {
+	execOrPanic(db, fmt.Sprintf("ALTER USER %s WITH PASSWORD %s", pq.QuoteIdentifier(user),
+		pq.QuoteLiteral(password)))
+}
+
 func UpdateDB(migrationFilesURL string) {
 	utils.ConfigureLogging()
 	conn, db := dbConn()
@@ -253,10 +258,9 @@ func UpdateDB(migrationFilesURL string) {
 		log.Info("Setting user passwords")
 		// Set specific password for each user. If the users are already created, change the password.
 		// This is performed on each startup in order to ensure users have latest pasword
-		execOrPanic(db, "ALTER USER listener WITH PASSWORD '"+utils.GetenvOrFail("LISTENER_PASSWORD")+"'")
-		execOrPanic(db, "ALTER USER evaluator WITH PASSWORD '"+utils.GetenvOrFail("EVALUATOR_PASSWORD")+"'")
-		execOrPanic(db, "ALTER USER manager WITH PASSWORD '"+utils.GetenvOrFail("MANAGER_PASSWORD")+"'")
-		execOrPanic(db, "ALTER USER vmaas_sync WITH PASSWORD '"+utils.GetenvOrFail("VMAAS_SYNC_PASSWORD")+"'")
+		for _, user := range lockUsers {
+			setUserPassword(db, user, utils.CoreCfg.DBPassword)
+		}
 	}
 
 	if updateDBConfig {
