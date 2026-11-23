@@ -3,6 +3,7 @@ package listener
 import (
 	"app/base"
 	"app/base/core"
+	"app/base/metrics"
 	"app/base/utils"
 	"app/manager/middlewares"
 
@@ -30,49 +31,49 @@ const (
 var (
 	eventMsgsReceivedCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Help:      "How many messages received by listener, which event type, which process result",
-		Namespace: "patchman_engine",
-		Subsystem: "listener",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemListener,
 		Name:      "kafka_message_received",
-	}, []string{"event", "type"})
+	}, []string{metrics.LabelEvent, metrics.LabelType})
 
 	templateMsgReceivedCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Help:      "Number of template messages received by type",
-		Namespace: "patchman_engine",
-		Subsystem: "listener",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemListener,
 		Name:      "template_message_received",
-	}, []string{"event", "type"})
+	}, []string{metrics.LabelEvent, metrics.LabelType})
 
 	messageHandlingDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Help:      "How long it took to process the message",
-		Namespace: "patchman_engine",
-		Subsystem: "listener",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemListener,
 		Name:      "kafka_message_handling_duration_seconds",
-	}, []string{"event"})
+	}, []string{metrics.LabelEvent})
 
 	templateMsgHandlingDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Help:      "How long it took to process the message",
-		Namespace: "patchman_engine",
-		Subsystem: "listener",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemListener,
 		Name:      "template_message_handling_duration_seconds",
-	}, []string{"event"})
+	}, []string{metrics.LabelEvent})
 	reposAddedCnt = prometheus.NewCounter(prometheus.CounterOpts{
 		Help:      "How many repositories were added",
-		Namespace: "patchman_engine",
-		Subsystem: "listener",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemListener,
 		Name:      "repos_added",
 	})
 
 	receivedFromReporter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Help:      "How many messages were received from which reporter",
-		Namespace: "patchman_engine",
-		Subsystem: "listener",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemListener,
 		Name:      "received_from_reporter",
 	}, []string{"reporter"})
 
 	messagePartDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Help:      "How long particular listener part took",
-		Namespace: "patchman_engine",
-		Subsystem: "listener",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemListener,
 		Name:      "kafka_message_part_duration_seconds",
 	}, []string{"part"})
 )

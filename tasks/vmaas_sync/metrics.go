@@ -24,78 +24,78 @@ const (
 var (
 	vmaasCallCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Help:      "How many times vmaas was called with which result",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemVmaasSync,
 		Name:      "vmaas_call",
-	}, []string{"type"})
+	}, []string{metrics.LabelType})
 
 	storeAdvisoriesCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Help:      "How many advisories were loaded with which result",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemVmaasSync,
 		Name:      "store_advisories",
-	}, []string{"type"})
+	}, []string{metrics.LabelType})
 
 	storePackagesCnt = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Help:      "How many packages were loaded with which result",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemVmaasSync,
 		Name:      "store_packages",
-	}, []string{"type"})
+	}, []string{metrics.LabelType})
 
 	systemsCnt = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Help:      "How many systems are stored and how up-to-date they are",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemVmaasSync,
 		Name:      "systems",
 	}, []string{"opt_out", "last_upload"})
 
 	advisoriesCnt = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Help:      "How many advisories are stored of which type",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemVmaasSync,
 		Name:      "advisories",
-	}, []string{"type"})
+	}, []string{metrics.LabelType})
 
 	packageCnt = prometheus.NewGauge(prometheus.GaugeOpts{
 		Help:      "How many packages are stored",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemVmaasSync,
 		Name:      "packages",
 	})
 
 	packageNameCnt = prometheus.NewGauge(prometheus.GaugeOpts{
 		Help:      "How many package names are stored",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemVmaasSync,
 		Name:      "package_names",
 	})
 
 	systemAdvisoriesStats = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Help:      "Max advisories per system found of which type",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemVmaasSync,
 		Name:      "system_advisories_stats",
-	}, []string{"type"})
+	}, []string{metrics.LabelType})
 
 	syncDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Help:      "How long it took to sync from vmaas service",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemVmaasSync,
 		Name:      "sync_duration_seconds",
 	})
 
 	messageSendDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Help:      "How long it took to send message",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemVmaasSync,
 		Name:      "message_send_duration_seconds",
 	})
 
 	advisoriesCountMismatch = prometheus.NewCounter(prometheus.CounterOpts{
 		Help:      "How many advisories were not synced after incremental sync",
-		Namespace: "patchman_engine",
-		Subsystem: "vmaas_sync",
+		Namespace: metrics.Namespace,
+		Subsystem: metrics.SubsystemVmaasSync,
 		Name:      "advisory_incermental_sync_mismatch",
 	})
 )
@@ -109,7 +109,7 @@ func Metrics() *push.Pusher {
 
 	// update advanced metrics
 	update()
-	pusher := push.New(utils.CoreCfg.PrometheusPushGateway, "vmaas_sync").Gatherer(registry)
+	pusher := push.New(utils.CoreCfg.PrometheusPushGateway, metrics.SubsystemVmaasSync).Gatherer(registry)
 	return pusher
 }
 

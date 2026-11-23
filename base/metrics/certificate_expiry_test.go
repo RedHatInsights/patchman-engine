@@ -41,8 +41,8 @@ func testCandlepinPEMs(t *testing.T) (certPEM, keyPEM string) {
 
 func TestApplyCandlepinCertExpiry_setsGauge(t *testing.T) {
 	gv := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "patchman_engine",
-		Subsystem: "core",
+		Namespace: Namespace,
+		Subsystem: SubsystemCore,
 		Name:      "certificate_expiry_days_test_helper",
 		Help:      "test",
 	}, []string{"certificate_label"})
@@ -57,8 +57,8 @@ func TestApplyCandlepinCertExpiry_setsGauge(t *testing.T) {
 
 func TestApplyCandlepinCertExpiry_badPEMDeletesSeries(t *testing.T) {
 	gv := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "patchman_engine",
-		Subsystem: "core",
+		Namespace: Namespace,
+		Subsystem: SubsystemCore,
 		Name:      "certificate_expiry_days_test_helper_bad",
 		Help:      "test",
 	}, []string{"certificate_label"})
@@ -78,8 +78,8 @@ func TestApplyCandlepinCertExpiry_badPEMDeletesSeries(t *testing.T) {
 
 func TestApplyCandlepinCertExpiry_missingConfigDeletesSeries(t *testing.T) {
 	gv := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "patchman_engine",
-		Subsystem: "core",
+		Namespace: Namespace,
+		Subsystem: SubsystemCore,
 		Name:      "certificate_expiry_days_test_helper_clear",
 		Help:      "test",
 	}, []string{"certificate_label"})

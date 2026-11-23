@@ -14,8 +14,8 @@ const candlepinCertLabel = "candlepin"
 // It is registered only where metrics are pushed (e.g. vmaas_sync), not on every pod's default registry.
 var CertificateExpiryDays = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Help:      "Number of days until the certificate expires by the certificate label",
-	Namespace: "patchman_engine",
-	Subsystem: "core",
+	Namespace: Namespace,
+	Subsystem: SubsystemCore,
 	Name:      "certificate_expiry_days",
 }, []string{"certificate_label"})
 

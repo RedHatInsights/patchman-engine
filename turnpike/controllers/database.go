@@ -31,7 +31,7 @@ func RepackRecreateHandler(c *gin.Context) {
 	}
 	for _, query := range runSequence {
 		if err := middlewares.DBWriter(c).Exec(query).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+			respondInternalError(c, err)
 			return
 		}
 	}
@@ -59,7 +59,7 @@ func GetActiveSessionsHandler(c *gin.Context) {
 	err := q.Find(&data).Error
 	if err != nil {
 		utils.LogError("error", err, "DB query failed")
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		respondInternalError(c, err)
 		return
 	}
 
@@ -86,7 +86,7 @@ func TerminateSessionHandler(c *gin.Context) {
 	err := middlewares.DBWriter(c).Exec("select pg_terminate_backend(?)", param).Error
 	if err != nil {
 		utils.LogError("error", err, "DB query failed")
-		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		respondInternalError(c, err)
 		return
 	}
 
