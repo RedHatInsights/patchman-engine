@@ -2,8 +2,6 @@ package listener
 
 import (
 	"app/base"
-	"app/base/api"
-	"app/base/content_sources"
 	"app/base/core"
 	"app/base/database"
 	"app/base/models"
@@ -12,8 +10,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/pkg/errors"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -40,11 +36,6 @@ var (
 	eventBufferSize     = 5 * mqueue.BatchSize
 	updatedEventsBuffer eventBuffer
 	createdEventsBuffer eventBuffer
-
-	// Content sources client
-	contentSourcesClient              *api.Client
-	contentSourcesBaseURL             string
-	errContentSourcesTemplateNotFound = errors.New("content sources template not found")
 )
 
 const (
@@ -74,10 +65,6 @@ func configureListener() {
 	// Toggle template message processing
 	enableTemplates = utils.PodConfig.GetBool("templates_api", true)
 	if enableTemplates {
-		if utils.CoreCfg.ContentSourcesAddress != "" {
-			contentSourcesClient = content_sources.CreateContentSourcesClient()
-			contentSourcesBaseURL = utils.CoreCfg.ContentSourcesAddress + "/api/content-sources/v1"
-		}
 		// Name of kafka template topic
 		templatesTopic = utils.FailIfEmpty(utils.CoreCfg.TemplateTopic, "TEMPLATE_TOPIC")
 		// Number of kafka readers for template topic
