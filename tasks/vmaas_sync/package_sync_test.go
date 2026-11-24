@@ -5,11 +5,23 @@ import (
 	"app/base/database"
 	"app/base/models"
 	"app/base/utils"
+	"crypto/sha512"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestStringPtr2HashSHA512(t *testing.T) {
+	value := "package summary"
+	got := stringPtr2Hash(&value)
+	sum := sha512.Sum512([]byte(value))
+	assert.Equal(t, sum[:], *got)
+
+	assert.Nil(t, stringPtr2Hash(nil))
+	empty := ""
+	assert.Nil(t, stringPtr2Hash(&empty))
+}
 
 func TestPkgListSyncPackages(t *testing.T) {
 	utils.SkipWithoutDB(t)

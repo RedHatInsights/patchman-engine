@@ -7,7 +7,7 @@ import (
 	"app/base/utils"
 	"app/base/vmaas"
 	"app/tasks"
-	"crypto/sha256"
+	"crypto/sha512"
 	"net/http"
 	"time"
 
@@ -49,12 +49,16 @@ type nameIDandEvra struct {
 	Evra string
 }
 
+func contentHash(str string) [sha512.Size]byte {
+	return sha512.Sum512([]byte(str))
+}
+
 func stringPtr2Hash(str *string) *[]byte {
 	if str == nil || *str == "" {
 		return nil
 	}
-	bytes32 := sha256.Sum256([]byte(*str))
-	bytes := bytes32[:]
+	sum := contentHash(*str)
+	bytes := sum[:]
 	return &bytes
 }
 
@@ -129,17 +133,17 @@ func storePkgListData(vmaasData []vmaas.PkgListItem) error {
 }
 
 func storeStringsFromPkgListItems(tx *gorm.DB, vmaasData []vmaas.PkgListItem) error {
-	stringMap := make(map[[32]byte]string, len(vmaasData))
+	stringMap := make(map[[sha512.Size]byte]string, len(vmaasData))
 	for _, pkgListItem := range vmaasData {
-		stringMap[sha256.Sum256([]byte(pkgListItem.Description))] = pkgListItem.Description
-		stringMap[sha256.Sum256([]byte(pkgListItem.Summary))] = pkgListItem.Summary
+		stringMap[contentHash(pkgListItem.Description)] = pkgListItem.Description
+		stringMap[contentHash(pkgListItem.Summary)] = pkgListItem.Summary
 	}
 
 	strings := make([]models.String, 0, len(stringMap))
 	for key, v := range stringMap {
 		// need to allocate here, otherwise the slice references will point to stack space occupied by last element from
 		// iteration.
-		keySlice := make([]byte, 32)
+		keySlice := make([]byte, sha512.Size)
 		copy(keySlice, key[:])
 		if v != "" {
 			// don't store empty strings
