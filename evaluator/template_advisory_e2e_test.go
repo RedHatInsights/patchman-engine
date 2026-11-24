@@ -81,6 +81,7 @@ func TestTemplateAdvisoryEvalE2E(t *testing.T) {
 			Date:          time.Now(),
 			Arch:          "x86_64",
 			Version:       "8",
+			AdvisoryIDs:   []string{"RH-1", "RH-3"},
 		}},
 	}
 	msg, err := sonic.Marshal(updateEvent)
