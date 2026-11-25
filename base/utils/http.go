@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httputil"
+	"regexp"
 	"time"
 
 	"github.com/lestrrat-go/backoff/v2"
@@ -14,6 +15,8 @@ import (
 	// used only in developer mode
 	_ "net/http/pprof" //nolint:gosec
 )
+
+var authHeaderRegexp = regexp.MustCompile(`(?mi)^Authorization:.*`)
 
 func HTTPCallRetry(httpCallFun func() (outputDataPtr interface{}, resp *http.Response, err error),
 	exponentialRetry bool, maxRetries int, codesToRetry ...int) (outputDataPtr interface{}, err error) {
@@ -69,7 +72,8 @@ func CallAPI(client *http.Client, request *http.Request, debugEnabled bool) (*ht
 		if err != nil {
 			return nil, err
 		}
-		LogDebug("dump", fmt.Sprintf("\n%s\n", string(dump)), "http call")
+		LogDebug("dump", fmt.Sprintf("\n%s\n", authHeaderRegexp.ReplaceAllString(string(dump), "Authorization: [redacted]")),
+			"http call")
 	}
 
 	resp, err := client.Do(request) // #nosec G704
