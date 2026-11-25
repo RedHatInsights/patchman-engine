@@ -7,24 +7,33 @@ import (
 	"app/base/telemetry"
 	"app/base/utils"
 	"app/manager/config"
+	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
+	"github.com/project-kessel/kessel-sdk-go/kessel/auth"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/exp/slices"
 )
 
 const rootWorkspaceID = "00000000-0000-0000-0000-999999999999"
 
+const tokenTimeout = 10 * time.Second
+
 var (
-	rbacURL    = ""
-	httpClient = &http.Client{}
-	httpOnce   sync.Once
+	httpClient    = &http.Client{}
+	httpClientErr error
+	httpOnce      sync.Once
 )
 
 const xRHIdentity = "x-rh-identity"
@@ -40,23 +49,73 @@ var granularPerms = map[string]string{
 	"SystemDeleteHandler":          "patch:system:write",
 }
 
+func newRbacHTTPClient() (*http.Client, error) {
+	client := httpClient
+	if caPath := utils.CoreCfg.RbacCACertificate; caPath != "" {
+		pem, err := os.ReadFile(caPath) // #nosec G304
+		if err != nil {
+			return nil, errors.Wrap(err, "reading RBAC CA certificate")
+		}
+		pool, err := x509.SystemCertPool()
+		if err != nil {
+			return nil, errors.Wrap(err, "loading system cert pool")
+		}
+		if !pool.AppendCertsFromPEM(pem) {
+			return nil, errors.New("could not parse RBAC CA certificate")
+		}
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.TLSClientConfig = &tls.Config{RootCAs: pool, MinVersion: tls.VersionTLS12}
+		client = &http.Client{Transport: transport}
+	}
+	return telemetry.InstrumentHTTPClient(client), nil
+}
+
+// bearerHeader returns the service account token, never an empty one: an authenticated RBAC endpoint must not be
+// called without it.
+func bearerHeader(ctx context.Context) (string, error) {
+	if err := requireAuthConfig(); err != nil {
+		return "", err
+	}
+	token, err := credentials.GetToken(ctx, auth.GetTokenOptions{HttpClient: &http.Client{Timeout: tokenTimeout}})
+	if err != nil {
+		return "", errors.Wrap(err, "fetching RBAC bearer token")
+	}
+	return "Bearer " + token.AccessToken, nil
+}
+
 // Make RBAC client on demand, with specified identity
-func makeClient(identity string) *api.Client {
+func makeClient(ctx context.Context, identity string) (*api.Client, error) {
 	httpOnce.Do(func() {
-		httpClient = telemetry.InstrumentHTTPClient(httpClient)
+		httpClient, httpClientErr = newRbacHTTPClient()
 	})
+	if httpClientErr != nil {
+		return nil, httpClientErr
+	}
 	debugRequest := log.IsLevelEnabled(log.TraceLevel)
+
+	headers := map[string]string{xRHIdentity: identity}
+	if utils.CoreCfg.RbacAuthenticated {
+		if !strings.HasPrefix(utils.CoreCfg.RbacAddress, "https://") {
+			return nil, errors.New("authenticated RBAC endpoint must use https")
+		}
+		bearer, err := bearerHeader(ctx)
+		if err != nil {
+			return nil, err
+		}
+		headers["Authorization"] = bearer
+	}
 
 	client := api.Client{
 		HTTPClient:     httpClient,
 		Debug:          debugRequest,
-		DefaultHeaders: map[string]string{xRHIdentity: identity},
+		DefaultHeaders: headers,
 	}
-	if rbacURL == "" {
-		rbacURL = utils.FailIfEmpty(utils.CoreCfg.RbacAddress, "RBAC_ADDRESS") + base.RBACApiPrefix +
-			"/access/?application=patch,inventory,content-sources"
-	}
-	return &client
+	return &client, nil
+}
+
+func rbacAccessURL() string {
+	return utils.FailIfEmpty(utils.CoreCfg.RbacAddress, "RBAC_ADDRESS") + base.RBACApiPrefix +
+		"/access/?application=patch,inventory,content-sources"
 }
 
 // for short lists like that is slice.Contains() faster than map lookup _, ok := map[key]
@@ -111,9 +170,12 @@ func checkPermissions(access *rbac.AccessPagination, handlerName, method string)
 }
 
 func isAccessGranted(c *gin.Context) bool {
-	client := makeClient(c.GetHeader("x-rh-identity"))
 	access := rbac.AccessPagination{}
-	res, err := client.Request(&base.Context, http.MethodGet, rbacURL, nil, &access)
+	client, err := makeClient(base.Context, c.GetHeader("x-rh-identity"))
+	var res *http.Response
+	if err == nil {
+		res, err = client.Request(&base.Context, http.MethodGet, rbacAccessURL(), nil, &access)
+	}
 	if res != nil && res.Body != nil {
 		defer res.Body.Close()
 	}

@@ -73,6 +73,8 @@ type coreConfig struct {
 	// services
 	VmaasAddress                  string
 	RbacAddress                   string
+	RbacAuthenticated             bool
+	RbacCACertificate             string
 	CandlepinAddress              string
 	CandlepinCert                 string
 	CandlepinKey                  string
@@ -99,7 +101,6 @@ type coreConfig struct {
 	KesselAuthClientID     string
 	KesselAuthClientSecret string
 	KesselAuthOIDCIssuer   string
-	RbacURL                string
 
 	// prometheus pushgateway
 	PrometheusPushGateway string
@@ -276,15 +277,6 @@ func initKafkaFromClowder() {
 type Endpoint clowder.DependencyEndpoint
 type PrivateEndpoint clowder.PrivateDependencyEndpoint
 
-// resolveRbacV2Address returns the RBAC address from V2 dependency endpoints,
-// or empty string if V2 is not available.
-func resolveRbacV2Address() string {
-	if endpoint, ok := clowder.GetV2DependencyEndpoint("rbac", "service"); ok && endpoint.Uri != "" {
-		return endpoint.Uri
-	}
-	return ""
-}
-
 func initServicesFromClowder() {
 	webappName := "webapp-service"
 	if PodConfig.GetBool("use_vmaas_go", true) {
@@ -296,17 +288,16 @@ func initServicesFromClowder() {
 			if strings.Contains(endpoint.Name, webappName) {
 				CoreCfg.VmaasAddress = (*Endpoint)(&endpoint).buildURL()
 			}
-		case "rbac":
-			// Prefer V2 dependency endpoint; fall back to V1 flat list.
-			if addr := resolveRbacV2Address(); addr != "" {
-				CoreCfg.RbacAddress = addr
-			} else {
-				CoreCfg.RbacAddress = (*Endpoint)(&endpoint).buildURL()
-			}
-		case "rbac-service":
-			CoreCfg.RbacURL = (*Endpoint)(&endpoint).buildURL()
 		case "content-sources-backend":
 			CoreCfg.ContentSourcesAddress = (*Endpoint)(&endpoint).buildURL()
+		}
+	}
+
+	if rbac, ok := clowder.GetV2DependencyEndpoint("rbac", "service"); ok {
+		CoreCfg.RbacAddress = rbac.Uri
+		CoreCfg.RbacAuthenticated = rbac.Authenticated
+		if rbac.CaCertificate != nil {
+			CoreCfg.RbacCACertificate = *rbac.CaCertificate
 		}
 	}
 
@@ -386,7 +377,6 @@ func initKesselFromEnv() {
 	CoreCfg.KesselAuthClientID = Getenv("KESSEL_AUTH_CLIENT_ID", CoreCfg.KesselAuthClientID)
 	CoreCfg.KesselAuthClientSecret = Getenv("KESSEL_AUTH_CLIENT_SECRET", CoreCfg.KesselAuthClientSecret)
 	CoreCfg.KesselAuthOIDCIssuer = Getenv("KESSEL_AUTH_OIDC_ISSUER", CoreCfg.KesselAuthOIDCIssuer)
-	CoreCfg.RbacURL = Getenv("RBAC_URL", CoreCfg.RbacURL)
 }
 
 // PrintClowderParams Print Clowder params to export environment variables.

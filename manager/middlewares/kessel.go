@@ -24,6 +24,16 @@ var credentials = auth.NewOAuth2ClientCredentials(
 	utils.CoreCfg.KesselAuthOIDCIssuer,
 )
 
+// requireAuthConfig fails when the OAuth settings needed for an authenticated call are missing.
+func requireAuthConfig() error {
+	if utils.CoreCfg.KesselAuthClientID == "" || utils.CoreCfg.KesselAuthClientSecret == "" ||
+		utils.CoreCfg.KesselAuthOIDCIssuer == "" {
+		return errors.New("authenticated endpoint requires KESSEL_AUTH_CLIENT_ID, KESSEL_AUTH_CLIENT_SECRET " +
+			"and KESSEL_AUTH_OIDC_ISSUER")
+	}
+	return nil
+}
+
 func setupClient() (kesselv2.KesselInventoryServiceClient, *grpc.ClientConn, error) {
 	clientBuilder := kesselv2.NewClientBuilder(utils.CoreCfg.KesselURL)
 	if utils.CoreCfg.KesselAuthEnabled {
