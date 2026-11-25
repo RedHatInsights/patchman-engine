@@ -23,12 +23,13 @@ func resetRbacClient(t *testing.T) {
 		utils.CoreCfg = origCfg
 		credentials = auth.NewOAuth2ClientCredentials(
 			origCfg.KesselAuthClientID, origCfg.KesselAuthClientSecret, origCfg.KesselAuthOIDCIssuer)
-		rbacURL, httpClient, httpClientErr, httpOnce = "", &http.Client{}, nil, sync.Once{}
+		httpClient, httpClientErr, httpOnce = &http.Client{}, nil, sync.Once{}
 	})
-	rbacURL, httpClient, httpClientErr, httpOnce = "", &http.Client{}, nil, sync.Once{}
+	httpClient, httpClientErr, httpOnce = &http.Client{}, nil, sync.Once{}
 }
 
-func fakeSSO(t *testing.T, tokenCalls *int) *httptest.Server {
+// fakeSSO serves OIDC discovery and a token endpoint that returns tokenStatus (200 gives a token).
+func fakeSSO(t *testing.T, tokenCalls *int, tokenStatus int) *httptest.Server {
 	var srv *httptest.Server
 	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -37,6 +38,10 @@ func fakeSSO(t *testing.T, tokenCalls *int) *httptest.Server {
 			return
 		}
 		*tokenCalls++
+		if tokenStatus != http.StatusOK {
+			http.Error(w, "nope", tokenStatus)
+			return
+		}
 		_ = json.NewEncoder(w).Encode(map[string]any{"access_token": "tok", "token_type": "Bearer", "expires_in": 3600})
 	}))
 	t.Cleanup(srv.Close)
@@ -65,13 +70,13 @@ func TestRbacBearerAddedWhenAuthenticated(t *testing.T) {
 	assert.NoError(t, os.WriteFile(caPath, caPEM, 0o600))
 
 	tokenCalls := 0
-	sso := fakeSSO(t, &tokenCalls)
+	sso := fakeSSO(t, &tokenCalls, http.StatusOK)
 	setAuthConfig(rbacSrv.URL, sso.URL)
 	utils.CoreCfg.RbacCACertificate = caPath
 
 	client, err := makeClient(base.Context, "xrhid")
 	assert.NoError(t, err)
-	_, err = client.Request(&base.Context, http.MethodGet, rbacURL, nil, &struct{}{})
+	_, err = client.Request(&base.Context, http.MethodGet, rbacAccessURL(), nil, &struct{}{})
 	assert.NoError(t, err)
 	assert.Equal(t, "Bearer tok", got.Get("Authorization"))
 	assert.Equal(t, "xrhid", got.Get(xRHIdentity))
@@ -81,7 +86,7 @@ func TestRbacBearerAddedWhenAuthenticated(t *testing.T) {
 func TestRbacNoBearerWhenNotAuthenticated(t *testing.T) {
 	resetRbacClient(t)
 	tokenCalls := 0
-	sso := fakeSSO(t, &tokenCalls)
+	sso := fakeSSO(t, &tokenCalls, http.StatusOK)
 	utils.CoreCfg.RbacAddress = "http://rbac-service.svc:8000"
 	utils.CoreCfg.RbacAuthenticated = false
 	utils.CoreCfg.KesselAuthOIDCIssuer = sso.URL
@@ -95,30 +100,35 @@ func TestRbacNoBearerWhenNotAuthenticated(t *testing.T) {
 func TestRbacAuthenticatedFailsClosed(t *testing.T) {
 	resetRbacClient(t)
 
-	// token endpoint failing
-	failing := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		http.Error(w, "nope", http.StatusInternalServerError)
-	}))
-	defer failing.Close()
-	setAuthConfig("https://ewgw:443", failing.URL)
-	credentials = auth.NewOAuth2ClientCredentials("id", "secret", failing.URL, auth.WithMaxRetries(0))
-	client, err := makeClient(base.Context, "xrhid")
-	assert.Error(t, err)
-	assert.Nil(t, client)
+	t.Run("token endpoint failing", func(t *testing.T) {
+		tokenCalls := 0
+		sso := fakeSSO(t, &tokenCalls, http.StatusInternalServerError)
+		setAuthConfig("https://ewgw:443", sso.URL)
+		credentials = auth.NewOAuth2ClientCredentials("id", "secret", sso.URL, auth.WithMaxRetries(0))
+		client, err := makeClient(base.Context, "xrhid")
+		assert.Error(t, err)
+		assert.Nil(t, client)
+		assert.Equal(t, 1, tokenCalls)
+	})
 
-	// missing credentials
-	setAuthConfig("https://ewgw:443", failing.URL)
-	utils.CoreCfg.KesselAuthClientSecret = ""
-	client, err = makeClient(base.Context, "xrhid")
-	assert.Error(t, err)
-	assert.Nil(t, client)
+	t.Run("missing credentials", func(t *testing.T) {
+		tokenCalls := 0
+		sso := fakeSSO(t, &tokenCalls, http.StatusOK)
+		setAuthConfig("https://ewgw:443", sso.URL)
+		utils.CoreCfg.KesselAuthClientSecret = ""
+		client, err := makeClient(base.Context, "xrhid")
+		assert.Error(t, err)
+		assert.Nil(t, client)
+		assert.Equal(t, 0, tokenCalls)
+	})
 
-	// not https
-	tokenCalls := 0
-	sso := fakeSSO(t, &tokenCalls)
-	setAuthConfig("http://ewgw:80", sso.URL)
-	client, err = makeClient(base.Context, "xrhid")
-	assert.Error(t, err)
-	assert.Nil(t, client)
-	assert.Equal(t, 0, tokenCalls)
+	t.Run("not https", func(t *testing.T) {
+		tokenCalls := 0
+		sso := fakeSSO(t, &tokenCalls, http.StatusOK)
+		setAuthConfig("http://ewgw:80", sso.URL)
+		client, err := makeClient(base.Context, "xrhid")
+		assert.Error(t, err)
+		assert.Nil(t, client)
+		assert.Equal(t, 0, tokenCalls)
+	})
 }

@@ -31,7 +31,6 @@ const rootWorkspaceID = "00000000-0000-0000-0000-999999999999"
 const tokenTimeout = 10 * time.Second
 
 var (
-	rbacURL       = ""
 	httpClient    = &http.Client{}
 	httpClientErr error
 	httpOnce      sync.Once
@@ -111,11 +110,12 @@ func makeClient(ctx context.Context, identity string) (*api.Client, error) {
 		Debug:          debugRequest,
 		DefaultHeaders: headers,
 	}
-	if rbacURL == "" {
-		rbacURL = utils.FailIfEmpty(utils.CoreCfg.RbacAddress, "RBAC_ADDRESS") + base.RBACApiPrefix +
-			"/access/?application=patch,inventory,content-sources"
-	}
 	return &client, nil
+}
+
+func rbacAccessURL() string {
+	return utils.FailIfEmpty(utils.CoreCfg.RbacAddress, "RBAC_ADDRESS") + base.RBACApiPrefix +
+		"/access/?application=patch,inventory,content-sources"
 }
 
 // for short lists like that is slice.Contains() faster than map lookup _, ok := map[key]
@@ -174,7 +174,7 @@ func isAccessGranted(c *gin.Context) bool {
 	client, err := makeClient(base.Context, c.GetHeader("x-rh-identity"))
 	var res *http.Response
 	if err == nil {
-		res, err = client.Request(&base.Context, http.MethodGet, rbacURL, nil, &access)
+		res, err = client.Request(&base.Context, http.MethodGet, rbacAccessURL(), nil, &access)
 	}
 	if res != nil && res.Body != nil {
 		defer res.Body.Close()
