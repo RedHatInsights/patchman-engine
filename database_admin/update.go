@@ -227,7 +227,7 @@ func dbConn() (database.Driver, *sql.DB) {
 	}
 
 	db := appdb.OpenDB(cfg)
-	conn, db, err := NewConn(db)
+	conn, err := NewConn(db)
 	if err != nil {
 		_ = db.Close()
 		panic(err)

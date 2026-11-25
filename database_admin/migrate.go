@@ -23,15 +23,15 @@ const (
 	MIGRATE  = 3
 )
 
-func NewConn(db *sql.DB) (database.Driver, *sql.DB, error) {
+func NewConn(db *sql.DB) (database.Driver, error) {
 	if _, err := db.Exec("SET client_min_messages TO NOTICE"); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return driver, db, nil
+	return driver, nil
 }
 
 func MigrateUp(conn database.Driver, sourceURL string) {
