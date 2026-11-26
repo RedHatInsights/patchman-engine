@@ -23,26 +23,3 @@ func ParseXRHID(identityString string) (*identity.XRHID, error) {
 	}
 	return &xrhid, nil
 }
-
-func EncodeXRHID(id identity.Identity) (string, error) {
-	js, err := sonic.Marshal(identity.XRHID{Identity: id})
-	if err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(js), nil
-}
-
-func XRHIDForOrg(orgID string, username string) identity.XRHID {
-	return identity.XRHID{
-		Identity: identity.Identity{
-			Type: "User",
-			User: &identity.User{
-				Username: username,
-			},
-			OrgID: orgID,
-			Internal: identity.Internal{
-				OrgID: orgID,
-			},
-		},
-	}
-}
