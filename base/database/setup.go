@@ -5,10 +5,15 @@ import (
 	"app/base/telemetry"
 	"app/base/utils"
 	"context"
+	"database/sql"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/XSAM/otelsql"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/stdlib"
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -92,23 +97,20 @@ func createGormConfig(debug bool) *gorm.Config {
 
 // open database connection
 func openPostgreSQL(dbConfig *PostgreSQLConfig) *gorm.DB {
-	connectString := dataSourceName(dbConfig)
-	cfg := createGormConfig(dbConfig.Debug)
-
-	var db *gorm.DB
-	var err error
+	pgCfg, err := ConnConfig(dbConfig)
+	if err != nil {
+		panic(err)
+	}
+	var sqlDB *sql.DB
 	if telemetry.SQLEnabled() {
-		// gorm.io/driver/postgres uses jackc/pgx/v5/stdlib (driver name "pgx")
-		sqlDB, openErr := otelsql.Open("pgx", connectString,
+		sqlDB = otelsql.OpenDB(stdlib.GetConnector(*pgCfg),
 			otelsql.WithAttributes(semconv.DBSystemPostgreSQL),
 			otelsql.WithSpanOptions(telemetry.SQLSpanOptions()))
-		if openErr != nil {
-			panic(openErr)
-		}
-		db, err = gorm.Open(postgres.New(postgres.Config{Conn: sqlDB}), cfg)
 	} else {
-		db, err = gorm.Open(postgres.Open(connectString), cfg)
+		sqlDB = OpenDB(pgCfg)
 	}
+
+	db, err := gorm.Open(postgres.New(postgres.Config{Conn: sqlDB}), createGormConfig(dbConfig.Debug))
 	if err != nil {
 		panic(err)
 	}
@@ -116,7 +118,7 @@ func openPostgreSQL(dbConfig *PostgreSQLConfig) *gorm.DB {
 	if dbConfig.Debug {
 		db = db.Debug()
 	}
-	sqlDB, err := db.DB()
+	sqlDB, err = db.DB()
 	if err != nil {
 		panic(err)
 	}
@@ -169,15 +171,32 @@ func createPostgreSQLConfig(mode DBMode) PostgreSQLConfig {
 	return config
 }
 
-// create "data source" config string needed for database connection opening
-func dataSourceName(dbConfig *PostgreSQLConfig) string {
-	dbsource := fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=%s statement_timeout=%d",
-		dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Database, dbConfig.Passwd, dbConfig.SSLMode,
-		dbConfig.StatementTimeoutMs)
+// ConnConfig builds a pgx config. Address and TLS are parsed from a keyword string so pgx
+// can build TLS fallbacks. User, password, database, and statement_timeout are set on the config.
+func ConnConfig(dbConfig *PostgreSQLConfig) (*pgx.ConnConfig, error) {
+	dsn := fmt.Sprintf("host=%s port=%d sslmode=%s",
+		dbConfig.Host, dbConfig.Port, dbConfig.SSLMode)
 	if dbConfig.SSLRootCert != "" {
-		dbsource = fmt.Sprintf("%s sslrootcert=%s", dbsource, dbConfig.SSLRootCert)
+		dsn += " sslrootcert=" + dbConfig.SSLRootCert
 	}
-	return dbsource
+	cfg, err := pgx.ParseConfigWithOptions(dsn, pgx.ParseConfigOptions{
+		ParseConfigOptions: pgconn.ParseConfigOptions{
+			ConnStringAllowedKeys: []string{"host", "port", "sslmode", "sslrootcert"},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	cfg.User = dbConfig.User
+	cfg.Password = dbConfig.Passwd
+	cfg.Database = dbConfig.Database
+	cfg.RuntimeParams["statement_timeout"] = strconv.Itoa(dbConfig.StatementTimeoutMs)
+	return cfg, nil
+}
+
+// OpenDB opens a database/sql pool. cfg must come from ConnConfig.
+func OpenDB(cfg *pgx.ConnConfig) *sql.DB {
+	return stdlib.OpenDB(*cfg)
 }
 
 func loadAdditionalParamsFromDB() {

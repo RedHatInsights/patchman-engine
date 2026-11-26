@@ -14,7 +14,6 @@ import (
 	"github.com/golang-migrate/migrate/v4/database"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // we load migrations from local folder
-	"github.com/lib/pq"
 	"github.com/pkg/errors"
 )
 
@@ -24,25 +23,15 @@ const (
 	MIGRATE  = 3
 )
 
-func NewConn(databaseURL string) (database.Driver, *sql.DB, error) {
-	baseConn, err := pq.NewConnector(databaseURL)
+func NewConn(db *sql.DB) (database.Driver, error) {
+	if _, err := db.Exec("SET client_min_messages TO NOTICE"); err != nil {
+		return nil, err
+	}
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-
-	loggingConn := pq.ConnectorWithNoticeHandler(baseConn, func(e *pq.Error) {
-		utils.LogInfo("Notice: " + e.Error())
-	})
-
-	db := sql.OpenDB(loggingConn)
-	if _, err = db.Exec("SET client_min_messages TO NOTICE"); err != nil {
-		return nil, nil, err
-	}
-	var driver database.Driver
-	if driver, err = postgres.WithInstance(db, &postgres.Config{}); err != nil {
-		return nil, nil, err
-	}
-	return driver, db, nil
+	return driver, nil
 }
 
 func MigrateUp(conn database.Driver, sourceURL string) {

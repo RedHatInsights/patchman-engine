@@ -7,8 +7,8 @@
         "rdsCa": "/opt/postgresql/pgca.crt",
         "adminPassword": "passwd",
         "adminUsername": "admin",
-        "username": "UNSET",
-        "password": "UNSET"
+        "username": "dbuser",
+        "password": "dbpasswd"
     },
     "publicPort": 8080,
     "privatePort": 9000,
