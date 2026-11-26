@@ -29,6 +29,34 @@ func TestRunInvalidScript(t *testing.T) {
 	require.Error(t, run())
 }
 
+func TestRunUsesAdminRole(t *testing.T) {
+	utils.SkipWithoutDB(t)
+	// Save original credentials
+	origUser := utils.CoreCfg.DBUser
+	origPass := utils.CoreCfg.DBPassword
+	t.Cleanup(func() {
+		utils.CoreCfg.DBUser = origUser
+		utils.CoreCfg.DBPassword = origPass
+		database.Configure()
+	})
+	// App-user credentials must not be able to satisfy the job. Admin credentials stay valid.
+	utils.CoreCfg.DBUser = "not-the-admin"
+	utils.CoreCfg.DBPassword = "wrong"
+	require.NotEmpty(t, utils.CoreCfg.DBAdminUser)
+	require.NotEmpty(t, utils.CoreCfg.DBAdminPassword)
+	require.NotEqual(t, utils.CoreCfg.DBAdminUser, utils.CoreCfg.DBUser)
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	t.Chdir(filepath.Join(wd, "..", ".."))
+	t.Setenv("SQL_JOB_FILE", "000_test.sql")
+	require.NoError(t, run())
+
+	var current string
+	require.NoError(t, database.TestDB().Raw("SELECT current_user").Scan(&current).Error)
+	assert.Equal(t, utils.CoreCfg.DBAdminUser, current)
+}
+
 func TestReadScript(t *testing.T) {
 	dir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "valid.sql"), []byte("SELECT 1; SELECT 2;"), 0600))
