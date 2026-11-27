@@ -188,6 +188,7 @@ objects:
         - {name: KAFKA_WRITER_MAX_ATTEMPTS, value: '${KAFKA_WRITER_MAX_ATTEMPTS}'}
         - {name: EVENTS_TOPIC, value: platform.inventory.events}
         - {name: EVAL_TOPIC, value: patchman.evaluator.upload}
+        - {name: ADVISORY_UPDATE_TOPIC, value: 'patchman.advisory.update'}
         - {name: CREATED_SYSTEMS_TOPIC, value: patchman.evaluator.user-evaluation}
         - {name: PAYLOAD_TRACKER_TOPIC, value: platform.payload-status}
         - {name: TEMPLATE_TOPIC, value: platform.content-sources.template}

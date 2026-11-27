@@ -15,7 +15,7 @@ var advisoryUpdatePublisher mqueue.Writer
 
 func configureAdvisoryUpdates() {
 	if topic := utils.CoreCfg.AdvisoryUpdateTopic; topic != "" {
-		advisoryUpdatePublisher = mqueue.NewKafkaWriterFromEnv(topic)
+		advisoryUpdatePublisher = mqueue.NewKeyedKafkaWriterFromEnv(topic)
 	}
 }
 
@@ -50,7 +50,7 @@ func publishAdvisoryUpdates(system *models.SystemPlatformV2, advisoriesByName ex
 		RhAccountID: system.Inventory.RhAccountID,
 		WorkspaceID: system.Inventory.WorkspaceID,
 		AdvisoryIDs: advisoryIDs,
-		ProducedAt:  types.Rfc3339Timestamp(time.Now()),
+		ProducedAt:  types.Rfc3339TimestampWithZ(time.Now()),
 	}
 	if err := mqueue.SendMessages(base.Context, advisoryUpdatePublisher, &mqueue.AdvisoryUpdateEvents{event}); err != nil {
 		return errors.Wrap(err, "writing advisory update events")

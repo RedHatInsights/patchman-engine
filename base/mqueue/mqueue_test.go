@@ -4,12 +4,13 @@ import (
 	"app/base"
 	"app/base/utils"
 	"context"
-	"errors"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
+	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,8 +25,8 @@ func TestRoundTripKafkaGo(t *testing.T) {
 	defer reader.Close()
 
 	var eventOut PlatformEvent
-	go reader.HandleMessages(t.Context(), func(_ context.Context, m KafkaMessage) error {
-		return sonic.Unmarshal(m.Value, &eventOut)
+	go reader.HandleMessages(t.Context(), 1, 0, func(_ context.Context, m []KafkaMessage) error {
+		return sonic.Unmarshal(m[0].Value, &eventOut)
 	})
 
 	writer := NewKafkaWriterFromEnv("test")
@@ -36,30 +37,62 @@ func TestRoundTripKafkaGo(t *testing.T) {
 	})
 }
 
+func TestKeyedKafkaWriterRoutesSameAccountToSamePartition(t *testing.T) {
+	w := NewKeyedKafkaWriterFromEnv("patchman.advisory.update").(*kafkaGoWriterImpl)
+	assert.IsType(t, &kafka.Hash{}, w.Balancer)
+
+	partitions := []int{0, 1, 2, 3, 4, 5}
+	msg := kafka.Message{Key: []byte("42")}
+	first := w.Balancer.Balance(msg, partitions...)
+	second := w.Balancer.Balance(msg, partitions...)
+	assert.Equal(t, first, second)
+}
+
 func TestSpawnReader(t *testing.T) {
 	var nReaders int32
 	wg := sync.WaitGroup{}
-	SpawnReader(base.Context, &wg, "", CreateCountedMockReader(&nReaders),
-		func(_ context.Context, _ KafkaMessage) error { return nil })
+	SpawnReader(base.Context, &wg, "", CreateCountedMockReader(&nReaders), 1, 0,
+		func(_ context.Context, _ []KafkaMessage) error { return nil })
 	wg.Wait()
 	assert.Equal(t, 1, int(nReaders))
 }
 
-func TestRetry(t *testing.T) {
+func TestSpawnReaderBatch(t *testing.T) {
+	var nReaders int32
+	wg := sync.WaitGroup{}
+	SpawnReader(base.Context, &wg, "", CreateCountedMockReader(&nReaders), 2, time.Millisecond,
+		func(context.Context, []KafkaMessage) error { return nil })
+	wg.Wait()
+	assert.Equal(t, 1, int(nReaders))
+}
+
+func TestSpawnReaderPanicsWithoutHandler(t *testing.T) {
+	assert.PanicsWithValue(t, "reader loop has no handler", func() {
+		SpawnReader(base.Context, &sync.WaitGroup{}, "", CreateCountedMockReader(new(int32)), 1, 0, nil)
+	})
+}
+
+func TestRetryBatchFatalThenSuccess(t *testing.T) {
 	i := 0
-	handler := func(_ context.Context, _ KafkaMessage) error {
+	handler := func(_ context.Context, _ []KafkaMessage) error {
 		i++
-		if i < 2 {
-			return errors.New("Failed")
+		if i < 3 {
+			return base.ErrFatal
 		}
 		return nil
 	}
 
-	// Without retry handler should fail
-	assert.Error(t, handler(base.Context, msg))
+	assert.NoError(t, MakeRetryingHandler(handler)(base.Context, []KafkaMessage{msg}))
+	assert.Equal(t, 3, i)
+}
 
-	// With retry we handler should eventually succeed
-	assert.NoError(t, MakeRetryingHandler(handler)(base.Context, msg))
+func TestRetryBatchAlwaysFatal(t *testing.T) {
+	handler := func(_ context.Context, _ []KafkaMessage) error {
+		return base.ErrFatal
+	}
+
+	err := MakeRetryingHandler(handler)(base.Context, []KafkaMessage{msg})
+	assert.ErrorIs(t, err, base.ErrFatal)
 }
 
 func TestWriteMessagesInjectsTraceparent(t *testing.T) {
