@@ -20,9 +20,8 @@ reuse. Leaving a file selected reruns it on subsequent deployments. Kubernetes
 may also retry failed pods. Script authors must make scripts idempotent or
 document when reruns are safe, and operators must clear the selection when done.
 
-The job uses the `vmaas_sync` database role and primary database. Scripts are
-limited to that role's permissions. Do not grant admin access just to make a
-script work. Schema changes belong in database migrations.
+The job uses the database admin role and the primary database. Schema changes
+belong in database migrations.
 
 ## Execution contract
 

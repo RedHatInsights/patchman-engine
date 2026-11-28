@@ -82,7 +82,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	core.ConfigureApp()
+	core.ConfigureAdminApp()
 	lockTimeout := time.Duration(utils.PodConfig.GetInt("sql_lock_timeout_seconds", 30)) * time.Second
 	statementTimeout := time.Duration(utils.PodConfig.GetInt("sql_statement_timeout_seconds", 1500)) * time.Second
 	ctx, cancel := context.WithTimeout(base.Context, statementTimeout)

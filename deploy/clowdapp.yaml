@@ -949,7 +949,6 @@ objects:
           - {name: GIN_MODE, value: '${GIN_MODE}'}
           - {name: SENTRY_DSN, valueFrom: {secretKeyRef: {name: patchman-sentry, key: sentry-dsn}}}
           - {name: DB_DEBUG, value: 'false'}
-          - {name: DB_USER, value: vmaas_sync}
           - {name: SQL_JOB_FILE, value: '${SQL_JOB_FILE}'}
           - {name: POD_CONFIG, value: '${SQL_JOB_CONFIG}'}
 
